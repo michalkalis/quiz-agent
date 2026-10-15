@@ -53,8 +53,20 @@ def cs_from(n: int) -> str:
     return "ze" if n in (2, 3, 4, 6, 7, 12, 13, 14, 16, 17) else "z"
 
 
+def sk_from(n: int) -> str:
+    """Slovak "z" or "zo" before a number ("zo štyroch", "zo siedmich",
+    "zo sto", but "z troch", "z piatich")."""
+    if n >= 1000:
+        return sk_from(n // 1000) if n // 1000 >= 2 else "z"
+    if n >= 100:
+        return "zo" if n // 100 in (1, 4, 6, 7) else "z"
+    if n >= 20:
+        return "zo" if n // 10 in (4, 6, 7) else "z"
+    return "zo" if n in (4, 6, 7, 14, 16, 17) else "z"
+
+
 def _of(language: str, n: int) -> str:
-    return cs_from(n) if language == "cs" else "z"
+    return cs_from(n) if language == "cs" else sk_from(n)
 
 
 FIRST = {
@@ -70,6 +82,8 @@ def strip_text(crowd: Crowd, language: str) -> str:
     lang = _lang(language)
     if crowd.others == 0:
         return FIRST[lang]
+    if crowd.knew == 0:
+        return rare_text(crowd, language)
     k, n, p = crowd.knew, crowd.others, crowd.percent
     if lang == "en":
         return f"{p}% knew." if crowd.uses_percent else f"{k} of {n} knew."
@@ -149,19 +163,19 @@ def rank_text(standing: Standing, language: str) -> Optional[str]:
     n, b = standing.others, standing.beaten
     if standing.beat_everyone:
         return {
-            "sk": f"Najlepšie skóre z {n + 1} hráčov.",
+            "sk": f"Najlepšie skóre {sk_from(n + 1)} {n + 1} hráčov.",
             "cs": f"Nejlepší skóre {cs_from(n + 1)} {n + 1} hráčů.",
             "en": f"Best score of {n + 1} players.",
         }[lang]
     if n >= 20:
         p = round(100 * b / n)
         return {
-            "sk": f"Lepší ako {p}{NBSP}% z {n} hráčov.",
+            "sk": f"Lepší ako {p}{NBSP}% {sk_from(n)} {n} hráčov.",
             "cs": f"Lepší než {p}{NBSP}% {cs_from(n)} {n} hráčů.",
             "en": f"Better than {p}% of {n} players.",
         }[lang]
     return {
-        "sk": f"Lepší ako {b} z {n} hráčov.",
+        "sk": f"Lepší ako {b} {sk_from(n)} {n} hráčov.",
         "cs": f"Lepší než {b} {cs_from(n)} {n} hráčů.",
         "en": f"Better than {b} of {n} players.",
     }[lang]

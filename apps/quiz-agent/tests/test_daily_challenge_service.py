@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from app.auth.account_service import _erase_personal_trail
 from app.daily_challenge.service import DailyChallengeService, DailySetUnavailable
-from app.db.models import DailyChallengeAnswer, DailyChallengePlay
+from app.db.models import AnonymousIdentity, DailyChallengeAnswer, DailyChallengePlay
 from app.usage.account_merge import _fold_daily_challenges
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
@@ -64,9 +64,15 @@ def _session(subject, set_day=DAY, language="en"):
     )
 
 
-async def _play_all(svc, subject, verdicts, language="en"):
+async def _start(svc, subject, language="en"):
     play, remaining = await svc.begin(subject, language, DAY)
     session = _session(subject, language=language)
+    await svc.attach_session(play.id, session.session_id)
+    return session, remaining
+
+
+async def _play_all(svc, subject, verdicts, language="en"):
+    session, remaining = await _start(svc, subject, language)
     for qid, verdict in zip(remaining, verdicts):
         await svc.record_answer(session, qid, verdict)
     await svc.finish(session)
@@ -94,10 +100,10 @@ async def test_too_few_questions_fails_loud(db_sessionmaker):
 
 async def test_one_attempt_per_date_and_resume_skips_answered(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    _, remaining = await svc.begin("anon-a", "en", DAY)
-    await svc.record_answer(_session("anon-a"), remaining[0], "correct")
+    session, remaining = await _start(svc, "anon-a")
+    await svc.record_answer(session, remaining[0], "correct")
     # Interrupted: a second start resumes with the four unanswered questions.
-    _, again = await svc.begin("anon-a", "en", DAY)
+    _, again = await _start(svc, "anon-a")
     assert again == remaining[1:]
     for qid in again:
         await svc.record_answer(_session("anon-a"), qid, "incorrect")
@@ -109,14 +115,23 @@ async def test_one_attempt_per_date_and_resume_skips_answered(db_sessionmaker):
     assert state.status == "played" and state.summary.score == 1
 
 
-async def test_first_verdict_wins_over_a_regrade(db_sessionmaker):
+async def test_first_verdict_wins_but_a_corrected_transcript_regrades(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    _, remaining = await svc.begin("anon-a", "en", DAY)
-    await svc.record_answer(_session("anon-a"), remaining[0], "incorrect")
-    await svc.record_answer(_session("anon-a"), remaining[0], "correct")
+    session, remaining = await _start(svc, "anon-a")
+    await svc.record_answer(session, remaining[0], "incorrect")
+    # A second first-submission (e.g. another live session) cannot overwrite it.
+    await svc.record_answer(session, remaining[0], "correct")
     async with db_sessionmaker() as db:
         rows = (await db.execute(select(DailyChallengeAnswer))).scalars().all()
     assert [(r.result, r.knew) for r in rows] == [("incorrect", False)]
+    for qid in remaining[1:]:
+        await svc.record_answer(session, qid, "incorrect")
+    await svc.finish(session)
+    assert (await svc.state("anon-a", "en", DAY)).summary.score == 0
+    # An edited transcript of the last answer (#189) re-grades the finished play.
+    await svc.record_answer(session, remaining[0], "correct", regrade=True)
+    state = await svc.state("anon-a", "en", DAY)
+    assert state.summary.score == 1 and state.summary.marks[0] is True
 
 
 async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
@@ -134,7 +149,7 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     await _play_all(
         svc, "p2", ["incorrect", "correct", "correct", "incorrect", "incorrect"]
     )
-    crowd = await svc.crowd("en", DAY, ids[0], exclude_subject="p1")
+    crowd = await svc.crowd("en", DAY, ids[0], exclude=["p1"])
     assert (crowd.others, crowd.knew) == (1, 0)
 
     live = await svc.state("p1", "en", DAY)
@@ -154,22 +169,28 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
 async def test_answer_strip_and_spoken_cap(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
     ids = await _play_all(svc, "p1", ["incorrect"] * 5)
-    await svc.begin("p2", "en", DAY)
-    session = _session("p2")
+    session, _ = await _start(svc, "p2")
     spoken = []
-    for qid in ids:
+    for qid in ids[:2]:
         strip, line = await svc.answer_strip(session, qid, "correct")
-        assert strip.kind == "rare" and strip.text == "0 of 1 knew."
+        assert strip.kind == "rare" and strip.text == "Nobody else knew that."
+        spoken.append(line)
+    # A re-grade shows the strip again but never speaks again.
+    strip, line = await svc.answer_strip(session, ids[1], "correct", regrade=True)
+    assert strip is not None and line is None
+    # Resumed in a new session: the count of spoken lines carries over.
+    resumed, _ = await _start(svc, "p2")
+    for qid in ids[2:]:
+        _, line = await svc.answer_strip(resumed, qid, "correct")
         spoken.append(line)
     assert [s is not None for s in spoken] == [True, True, True, False, False]
-    assert session.daily_spoken_lines == 3
 
 
 async def test_wrong_easy_has_no_strip(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
     ids = await _play_all(svc, "p1", ["correct"] * 5)
-    await svc.begin("p2", "en", DAY)
-    strip, line = await svc.answer_strip(_session("p2"), ids[0], "incorrect")
+    session, _ = await _start(svc, "p2")
+    strip, line = await svc.answer_strip(session, ids[0], "incorrect")
     assert strip is None and line is None
 
 
@@ -180,16 +201,42 @@ async def test_erase_removes_plays_from_the_crowd(db_sessionmaker):
         await _erase_personal_trail(db, ["p1"])
         await db.commit()
         assert (await db.execute(select(DailyChallengeAnswer))).first() is None
-    crowd = await svc.crowd("en", DAY, ids[0], exclude_subject="someone")
+    crowd = await svc.crowd("en", DAY, ids[0], exclude=["someone"])
     assert crowd.others == 0
 
 
-async def test_sign_in_moves_the_anon_play_to_the_account(db_sessionmaker):
+async def _sign_in(db_sessionmaker, anon, user):
+    async with db_sessionmaker() as db:
+        db.add(AnonymousIdentity(anon_id=anon, upgraded_to_user_id=user))
+        await _fold_daily_challenges(db, anon, user)
+        await db.commit()
+
+
+async def test_sign_in_moves_the_play_and_sign_out_cannot_replay_the_day(
+    db_sessionmaker,
+):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
     await _play_all(svc, "anon-1", ["correct"] * 5)
+    await _sign_in(db_sessionmaker, "anon-1", "user-1")
     async with db_sessionmaker() as db:
-        await _fold_daily_challenges(db, "anon-1", "user-1")
-        await db.commit()
         subjects = (await db.execute(select(DailyChallengePlay.subject_id))).scalars()
         assert list(subjects) == ["user-1"]
     assert (await svc.state("user-1", "en", DAY)).status == "played"
+    # Signed out: the device is the anon again, and the day is still played.
+    _, remaining = await svc.begin("anon-1", "en", DAY)
+    assert remaining == []
+    assert (await svc.state("anon-1", "en", DAY)).status == "played"
+
+
+async def test_signing_in_mid_challenge_keeps_recording_the_live_session(
+    db_sessionmaker,
+):
+    svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
+    session, remaining = await _start(svc, "anon-2")
+    await svc.record_answer(session, remaining[0], "correct")
+    await _sign_in(db_sessionmaker, "anon-2", "user-2")
+    for qid in remaining[1:]:
+        await svc.record_answer(session, qid, "correct")  # session still says anon-2
+    await svc.finish(session)
+    state = await svc.state("user-2", "en", DAY)
+    assert state.status == "played" and state.summary.score == 5

@@ -75,6 +75,13 @@ class LastEvaluation(BaseModel):
             "text) never touch this counter."
         ),
     )
+    crowd: Optional[Dict[str, Any]] = Field(
+        None,
+        description=(
+            "#205: the daily-challenge crowd strip sent with this verdict, so a "
+            "replayed response shows it again."
+        ),
+    )
 
 
 class QuizSession(BaseModel):
@@ -166,13 +173,6 @@ class QuizSession(BaseModel):
         description=(
             "Questions this session plays, in order (#205 daily challenge). "
             "Empty → the retriever picks each question."
-        ),
-    )
-    daily_spoken_lines: int = Field(
-        0,
-        description=(
-            "#205: crowd lines spoken so far in this daily challenge (capped at "
-            "3 per challenge)."
         ),
     )
 

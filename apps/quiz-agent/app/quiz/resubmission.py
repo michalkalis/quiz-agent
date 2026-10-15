@@ -31,6 +31,7 @@ from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.session import LastEvaluation, QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 
+from ..daily_challenge.schemas import CrowdStrip
 from .errors import QuestionMismatch, QuestionUnavailable
 from ..review_badge import apply_review_badge
 from ..serializers import (
@@ -244,6 +245,12 @@ async def process_resubmission(
         outcome=outcome,
         regrade_count=previous.regrade_count + 1,
     )
+    if result.crowd is not None:
+        session.last_evaluation.crowd = result.crowd.model_dump()
+    # #205: an edited transcript is the same attempt, corrected.
+    await flow._daily_record(
+        session, previous.question_id, result.evaluation.result, regrade=True
+    )
     flow.session_manager.update_session(session)
 
     result.next_question_dict = await _current_question_payload(flow, session)
@@ -271,6 +278,8 @@ async def _replay_stored_verdict(
     """
     result.evaluation = previous.evaluation.model_copy(deep=True)
     result.feedback_received = list(previous.feedback_received)
+    if previous.crowd:
+        result.crowd = CrowdStrip(**previous.crowd)
     result.message = message
     result.next_question_dict = await _current_question_payload(flow, session)
     if include_audio:

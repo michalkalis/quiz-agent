@@ -40,6 +40,7 @@ def upgrade() -> None:
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("score", sa.Integer(), nullable=True),
+        sa.Column("spoken_lines", sa.Integer(), server_default="0", nullable=False),
     )
     op.create_index(
         "ux_daily_challenge_plays_subject_date",

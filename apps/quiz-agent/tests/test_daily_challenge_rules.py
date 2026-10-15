@@ -56,7 +56,8 @@ def test_partially_correct_counts_as_knowing():
         ("sk", Crowd(19, 7), "Vedelo 7 z 19."),
         ("sk", Crowd(20, 3), "Vedelo 15 %."),
         ("cs", Crowd(3, 2), "Věděli 2 ze 3."),
-        ("cs", Crowd(5, 0), "Vědělo 0 z 5."),
+        ("cs", Crowd(5, 0), "Nikdo jiný to nevěděl."),
+        ("sk", Crowd(7, 3), "Vedeli 3 zo 7."),
         ("cs", Crowd(50, 7), "Vědělo 14 %."),
         ("en", Crowd(3, 2), "2 of 3 knew."),
         ("en", Crowd(100, 14), "14% knew."),
@@ -91,6 +92,24 @@ def test_unknown_language_falls_back_to_english():
 )
 def test_czech_z_or_ze(n, prep):
     assert copy.cs_from(n) == prep
+
+
+@pytest.mark.parametrize(
+    "n,prep",
+    [
+        (3, "z"),
+        (4, "zo"),
+        (5, "z"),
+        (7, "zo"),
+        (14, "zo"),
+        (20, "z"),
+        (45, "zo"),
+        (100, "zo"),
+        (200, "z"),
+    ],
+)
+def test_slovak_z_or_zo(n, prep):
+    assert copy.sk_from(n) == prep
 
 
 def test_spoken_lines_rotate_wording_and_stay_one_sentence():

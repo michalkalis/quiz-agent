@@ -145,3 +145,34 @@ async def test_fixed_set_plays_in_order_ignoring_the_players_history():
     nxt = await retriever.get_next_question(session, client_excluded_ids=["q3"])
     # q2 vanished from the corpus → skipped, q3 is served despite the history.
     assert nxt.id == "q3"
+
+
+async def test_a_replayed_response_keeps_its_crowd_strip():
+    """A lost response re-sent with the same text replays the stored verdict;
+    the strip must come back with it, not vanish from the result card."""
+    daily = _daily()
+    flow, _ = _flow(daily)
+    session = _session(["q1"])
+    first = await flow.process_answer(
+        session=session, answer_text="Paris", submitted_question_id="q1"
+    )
+    replay = await flow.process_answer(
+        session=session, answer_text="Paris", submitted_question_id="q1"
+    )
+    assert replay.message == "Answer already processed"
+    assert replay.crowd == first.crowd
+    daily.answer_strip.assert_awaited_once()
+
+
+async def test_an_edited_transcript_regrades_the_recorded_verdict():
+    daily = _daily()
+    flow, _ = _flow(daily)
+    session = _session(["q1"])
+    await flow.process_answer(
+        session=session, answer_text="Paris", submitted_question_id="q1"
+    )
+    await flow.process_answer(
+        session=session, answer_text="Paris, France", submitted_question_id="q1"
+    )
+    assert daily.answer_strip.await_args.kwargs["regrade"] is True
+    assert daily.record_answer.await_args.kwargs["regrade"] is True

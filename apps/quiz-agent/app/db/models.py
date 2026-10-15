@@ -469,6 +469,10 @@ class DailyChallengePlay(Base):
         DateTime(timezone=True), nullable=True
     )
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Crowd lines the host has spoken in this play (max 3, across resumes).
+    spoken_lines: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
 
 
 class DailyChallengeAnswer(Base):

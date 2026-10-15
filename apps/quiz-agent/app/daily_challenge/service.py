@@ -19,11 +19,24 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 
 from ..db.base import utcnow
-from ..db.models import DailyChallengeAnswer, DailyChallengePlay, DailyChallengeSet
+from ..db.models import (
+    AnonymousIdentity,
+    DailyChallengeAnswer,
+    DailyChallengePlay,
+    DailyChallengeSet,
+)
 from ..retrieval.question_retriever import QuestionRetriever
 from ..serializers import correct_option_key
 from . import copy
-from .rules import RARE_SHARE, Crowd, Standing, classify, is_spoken, knew
+from .rules import (
+    MAX_SPOKEN_LINES,
+    RARE_SHARE,
+    Crowd,
+    Standing,
+    classify,
+    is_spoken,
+    knew,
+)
 from .schemas import CrowdStrip, DailyBestHit, DailyChallengeState, DailySummary
 from .selection import SET_SIZE, pick_daily_set
 
@@ -121,48 +134,63 @@ class DailyChallengeService:
             await db.commit()
 
     async def record_answer(
-        self, session: QuizSession, question_id: str, result: str
+        self,
+        session: QuizSession,
+        question_id: str,
+        result: str,
+        regrade: bool = False,
     ) -> None:
-        """First graded verdict wins; a re-grade never overwrites it."""
-        play_id = await self._session_play_id(session)
-        if play_id is None:
+        """The first graded verdict per question counts. A re-grade (an edited
+        transcript of the same answer, #133) replaces it, and re-scores a play
+        that already finished (#189 re-answer after the last question)."""
+        play = await self._session_play(session)
+        if play is None:
             return
-        async with self._sm() as db:
-            await db.execute(
-                pg_insert(DailyChallengeAnswer)
-                .values(
-                    play_id=play_id,
-                    question_id=question_id,
-                    result=result,
-                    knew=knew(result),
-                    answered_at=utcnow(),
-                )
-                .on_conflict_do_nothing()
+        insert = pg_insert(DailyChallengeAnswer).values(
+            play_id=play.id,
+            question_id=question_id,
+            result=result,
+            knew=knew(result),
+            answered_at=utcnow(),
+        )
+        insert = (
+            insert.on_conflict_do_update(
+                index_elements=["play_id", "question_id"],
+                set_={"result": result, "knew": knew(result)},
             )
+            if regrade
+            else insert.on_conflict_do_nothing()
+        )
+        async with self._sm() as db:
+            await db.execute(insert)
             await db.commit()
+        if regrade and play.finished_at is not None:
+            await self._finish(play.id, rescore=True)
 
     async def finish(self, session: QuizSession) -> None:
-        play_id = await self._session_play_id(session)
-        if play_id is not None:
-            await self._finish(play_id)
+        play = await self._session_play(session)
+        if play is not None:
+            await self._finish(play.id)
 
-    async def _finish(self, play_id: uuid.UUID) -> None:
+    async def _finish(self, play_id: uuid.UUID, rescore: bool = False) -> None:
         answers = await self._answers(play_id)
-        async with self._sm() as db:
-            await db.execute(
-                update(DailyChallengePlay)
-                .where(
-                    DailyChallengePlay.id == play_id,
-                    DailyChallengePlay.finished_at.is_(None),
-                )
-                .values(finished_at=utcnow(), score=sum(answers.values()))
+        stmt = update(DailyChallengePlay).where(DailyChallengePlay.id == play_id)
+        if rescore:
+            stmt = stmt.values(score=sum(answers.values()))
+        else:
+            stmt = stmt.where(DailyChallengePlay.finished_at.is_(None)).values(
+                finished_at=utcnow(), score=sum(answers.values())
             )
+        async with self._sm() as db:
+            await db.execute(stmt)
             await db.commit()
 
     # ── 205.3 crowd ────────────────────────────────────────────────────────
     async def crowd(
-        self, language: str, day: date, question_id: str, exclude_subject: str
+        self, language: str, day: date, question_id: str, exclude: List[str]
     ) -> Crowd:
+        """Others' first verdicts on one question; ``exclude`` is every id of
+        the player (see ``_identity_ids``)."""
         async with self._sm() as db:
             others, knew_count = (
                 await db.execute(
@@ -178,7 +206,7 @@ class DailyChallengeService:
                     .where(
                         DailyChallengePlay.language == language,
                         DailyChallengePlay.challenge_date == day,
-                        DailyChallengePlay.subject_id != exclude_subject,
+                        DailyChallengePlay.subject_id.not_in(exclude),
                         DailyChallengeAnswer.question_id == question_id,
                     )
                 )
@@ -186,19 +214,29 @@ class DailyChallengeService:
         return Crowd(others=others, knew=knew_count)
 
     async def answer_strip(
-        self, session: QuizSession, question_id: str, result: str
+        self,
+        session: QuizSession,
+        question_id: str,
+        result: str,
+        regrade: bool = False,
     ) -> Tuple[Optional[CrowdStrip], Optional[str]]:
         """The strip for a just-graded answer and, if this one is worth saying,
-        the sentence the host appends to the feedback utterance."""
-        day = date.fromisoformat(session.daily_challenge_date)
-        crowd = await self.crowd(session.language, day, question_id, session.user_id)
+        the sentence the host appends to the feedback utterance. A re-grade
+        gets the strip but never speaks again."""
+        play = await self._session_play(session)
+        if play is None:
+            return None, None
+        async with self._sm() as db:
+            exclude = await self._identity_ids(db, play.subject_id)
+        crowd = await self.crowd(
+            play.language, play.challenge_date, question_id, exclude
+        )
         kind = classify(crowd, knew(result))
         spoken = None
-        if is_spoken(kind, session.daily_spoken_lines):
-            spoken = copy.spoken_line(
-                kind, crowd, session.language, session.daily_spoken_lines
-            )
-            session.daily_spoken_lines += 1
+        if not regrade and is_spoken(kind, play.spoken_lines):
+            spoken_before = await self._claim_spoken_line(play.id)
+            if spoken_before is not None:
+                spoken = copy.spoken_line(kind, crowd, play.language, spoken_before)
         if kind == "hidden":
             return None, spoken
         return (
@@ -237,6 +275,7 @@ class DailyChallengeService:
         answers = await self._answers(play.id)
         score = play.score or 0
         async with self._sm() as db:
+            exclude = await self._identity_ids(db, play.subject_id)
             others, beaten = (
                 await db.execute(
                     select(
@@ -245,7 +284,7 @@ class DailyChallengeService:
                     ).where(
                         DailyChallengePlay.language == play.language,
                         DailyChallengePlay.challenge_date == play.challenge_date,
-                        DailyChallengePlay.subject_id != play.subject_id,
+                        DailyChallengePlay.subject_id.not_in(exclude),
                         DailyChallengePlay.finished_at.is_not(None),
                     )
                 )
@@ -260,18 +299,18 @@ class DailyChallengeService:
             players=others + 1,
             comparison=copy.comparison_text(standing, play.language),
             rank=copy.rank_text(standing, play.language),
-            best_hit=await self._best_hit(play, [q for q in set_ids if answers.get(q)]),
+            best_hit=await self._best_hit(
+                play, [q for q in set_ids if answers.get(q)], exclude
+            ),
         )
 
     async def _best_hit(
-        self, play: DailyChallengePlay, known_ids: List[str]
+        self, play: DailyChallengePlay, known_ids: List[str], exclude: List[str]
     ) -> Optional[DailyBestHit]:
         """The question the player knew that the fewest others knew."""
         best: Optional[Tuple[float, str, Crowd]] = None
         for qid in known_ids:
-            crowd = await self.crowd(
-                play.language, play.challenge_date, qid, play.subject_id
-            )
+            crowd = await self.crowd(play.language, play.challenge_date, qid, exclude)
             if crowd.others and (best is None or crowd.share < best[0]):
                 best = (crowd.share, qid, crowd)
         if best is None:
@@ -308,23 +347,79 @@ class DailyChallengeService:
         return question.question, str(answer)
 
     # ── helpers ────────────────────────────────────────────────────────────
-    async def _play(
-        self, db: AsyncSession, subject_id: str, day: date
-    ) -> Optional[DailyChallengePlay]:
-        return (
+    async def _identity_ids(self, db: AsyncSession, subject_id: str) -> List[str]:
+        """Every id the same person plays under: the subject, the account its
+        anonymous id was signed in to, and that account's other anonymous ids.
+        Sign-in moves plays to the account and sign-out returns the device to
+        its anon id, so a one-per-day guard on one id alone could be replayed."""
+        ids = {subject_id}
+        upgraded = (
             await db.execute(
-                select(DailyChallengePlay).where(
-                    DailyChallengePlay.subject_id == subject_id,
-                    DailyChallengePlay.challenge_date == day,
+                select(AnonymousIdentity.upgraded_to_user_id).where(
+                    AnonymousIdentity.anon_id == subject_id
                 )
             )
         ).scalar_one_or_none()
+        owner = upgraded or subject_id
+        ids.add(owner)
+        linked = await db.execute(
+            select(AnonymousIdentity.anon_id).where(
+                AnonymousIdentity.upgraded_to_user_id == owner
+            )
+        )
+        ids.update(linked.scalars())
+        return sorted(ids)
 
-    async def _session_play_id(self, session: QuizSession) -> Optional[uuid.UUID]:
-        day = date.fromisoformat(session.daily_challenge_date)
+    async def _play(
+        self, db: AsyncSession, subject_id: str, day: date
+    ) -> Optional[DailyChallengePlay]:
+        ids = await self._identity_ids(db, subject_id)
+        return (
+            (
+                await db.execute(
+                    select(DailyChallengePlay)
+                    .where(
+                        DailyChallengePlay.subject_id.in_(ids),
+                        DailyChallengePlay.challenge_date == day,
+                    )
+                    .order_by(DailyChallengePlay.started_at)
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+    async def _session_play(self, session: QuizSession) -> Optional[DailyChallengePlay]:
+        """The play this session was started for. Looked up by session id, not
+        by subject: signing in mid-challenge moves the play to the account
+        while the live session still carries the anonymous id."""
         async with self._sm() as db:
-            play = await self._play(db, session.user_id, day)
-        return play.id if play else None
+            return (
+                await db.execute(
+                    select(DailyChallengePlay).where(
+                        DailyChallengePlay.session_id == session.session_id
+                    )
+                )
+            ).scalar_one_or_none()
+
+    async def _claim_spoken_line(self, play_id: uuid.UUID) -> Optional[int]:
+        """Reserve one of the play's spoken crowd lines; the number spoken
+        before it, or None when all are used. Kept on the play, so a resumed
+        challenge (a new session) cannot start the count over."""
+        async with self._sm() as db:
+            claimed = (
+                await db.execute(
+                    update(DailyChallengePlay)
+                    .where(
+                        DailyChallengePlay.id == play_id,
+                        DailyChallengePlay.spoken_lines < MAX_SPOKEN_LINES,
+                    )
+                    .values(spoken_lines=DailyChallengePlay.spoken_lines + 1)
+                    .returning(DailyChallengePlay.spoken_lines)
+                )
+            ).scalar_one_or_none()
+            await db.commit()
+        return None if claimed is None else claimed - 1
 
     async def _answers(self, play_id: uuid.UUID) -> Dict[str, bool]:
         async with self._sm() as db:

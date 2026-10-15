@@ -251,6 +251,8 @@ class QuizFlowService:
             participant_id=participant_id,
             outcome=outcome,
         )
+        if result.crowd is not None:
+            session.last_evaluation.crowd = result.crowd.model_dump()
         self.analytics.emit(
             "answer_evaluated",
             subject_id=session.user_id,
@@ -699,9 +701,12 @@ class QuizFlowService:
         A failure only loses the strip — never the verdict."""
         if not (session.daily_challenge_date and self.daily_challenge):
             return None
+        # A re-grade (#133) runs while last_evaluation still holds this question.
+        previous = session.last_evaluation
+        regrade = previous is not None and previous.question_id == question_id
         try:
             result.crowd, line = await self.daily_challenge.answer_strip(
-                session, question_id, result_value
+                session, question_id, result_value, regrade=regrade
             )
             return line
         except Exception as e:
@@ -709,12 +714,18 @@ class QuizFlowService:
             return None
 
     async def _daily_record(
-        self, session: QuizSession, question_id: str, result_value: str
+        self,
+        session: QuizSession,
+        question_id: str,
+        result_value: str,
+        regrade: bool = False,
     ) -> None:
         if not (session.daily_challenge_date and self.daily_challenge):
             return
         try:
-            await self.daily_challenge.record_answer(session, question_id, result_value)
+            await self.daily_challenge.record_answer(
+                session, question_id, result_value, regrade=regrade
+            )
         except Exception as e:
             logger.error("Daily challenge answer not recorded: %s", e, exc_info=True)
 

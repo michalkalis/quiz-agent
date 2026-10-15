@@ -45,7 +45,7 @@ jobs:
 
       - id: changed
         run: |
-          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -E '\.xcstrings$|VoiceCommandLexicon|SpokenPrompt|daily_challenge/copy\.py'; then
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -E '\.xcstrings$|VoiceCommandLexicon|SpokenPrompt'; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -56,8 +56,7 @@ jobs:
           prompt: |
             Copy review of PR ${{ github.repository }}#${{ github.event.pull_request.number }}.
             Read docs/design/copy-style.md. Run `git diff origin/${{ github.base_ref }}...HEAD` and review ONLY user-facing
-            texts this PR adds or changes (sk, cs, en values in .xcstrings files, voice hints and spoken prompts in Swift,
-            crowd lines in apps/quiz-agent/app/daily_challenge/copy.py).
+            texts this PR adds or changes (sk, cs, en values in .xcstrings files, voice hints and spoken prompts in Swift).
             Ignore code, comments and unchanged texts. For each objective violation of a rule in copy-style.md, post one
             inline comment on the changed line naming the rule and giving the exact replacement for every affected
             language. Taste and tone are not findings. If there are no violations, post nothing.

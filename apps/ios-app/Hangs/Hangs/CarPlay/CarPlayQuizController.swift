@@ -281,13 +281,21 @@
 
         private func play(categories: [String]) {
             viewModel.settings.categories = categories
-            interfaceController.popToRootTemplate(animated: false, completion: nil)
-            startRound()
+            closeList { [weak self] in self?.startRound() }
         }
 
         private func play(pack: PackPlay) {
-            interfaceController.popToRootTemplate(animated: false, completion: nil)
-            viewModel.beginQuizStart(pack: pack, skipAvailabilityCheck: true)
+            closeList { [weak self] in
+                self?.viewModel.beginQuizStart(pack: pack, skipAvailabilityCheck: true)
+            }
+        }
+
+        /// The round starts only once the list is gone: swapping the root
+        /// template while the pop still ran left the car on a frozen template.
+        private func closeList(then action: @escaping @MainActor @Sendable () -> Void) {
+            interfaceController.popToRootTemplate(animated: false) { @Sendable _, _ in
+                Task { @MainActor in action() }
+            }
         }
 
         // MARK: - Copy

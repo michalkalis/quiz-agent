@@ -252,7 +252,7 @@
         static func title(for state: CarPlayScreen.Home) -> String {
             switch state {
             case .ready: String(localized: "Say \"start\"", comment: "CarPlay: home screen hint, the spoken command that starts a round")
-            case .finished: String(localized: "Round over", comment: "CarPlay: a quiz round has ended")
+            case .finished: String(localized: "Quiz finished", comment: "CarPlay: a quiz has ended")
             case .failed: String(localized: "Something went wrong", comment: "CarPlay: generic error state")
             case .limitReached: String(localized: "Continue on your phone", comment: "CarPlay: free questions used up, the upgrade screen is on the phone")
             }

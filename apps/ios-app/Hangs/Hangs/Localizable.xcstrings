@@ -1096,13 +1096,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znovu, nebo přeskočit?"
+            "value" : "Znovu, nebo přeskoč?"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znova, alebo preskočiť?"
+            "value" : "Znova, alebo preskoč?"
           }
         }
       }
@@ -6757,6 +6757,23 @@
         }
       }
     },
+    "Quiz finished" : {
+      "comment" : "CarPlay: a quiz has ended",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konec kvízu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koniec kvízu"
+          }
+        }
+      }
+    },
     "Quiz in progress. Question %lld of %lld. Score: %@" : {
       "comment" : "Accessibility label for the minimized quiz widget: progress and score",
       "extractionState" : "stale",
@@ -7482,23 +7499,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rumunčina"
-          }
-        }
-      }
-    },
-    "Round over" : {
-      "comment" : "CarPlay: a quiz round has ended",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolo skončilo"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kolo skončilo"
           }
         }
       }

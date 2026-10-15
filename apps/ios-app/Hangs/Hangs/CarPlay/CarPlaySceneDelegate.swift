@@ -2,7 +2,8 @@
 //  CarPlaySceneDelegate.swift
 //  Hangs
 //
-//  #97 — CarPlay support. The car's screen is a second scene of the same app:
+//  #97 — CarPlay support. The car's screen is a second scene of the same app
+//  (declared in Info.plist, Local builds only):
 //  it drives the app's one QuizViewModel, so a round started in the car is the
 //  round on the phone, and the other way round.
 //

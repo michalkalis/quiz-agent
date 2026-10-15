@@ -23,6 +23,9 @@ BUNDLE_ID_BASE = com.missinghue.hangs
 INFOPLIST_FILE = Hangs/Info.plist
 GENERATE_INFOPLIST_FILE = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
+// #97 — CarPlay support: the CarPlay scene entry sits in `#ifdef CARPLAY`, so
+// the plist goes through the C preprocessor; only Local.xcconfig defines it.
+INFOPLIST_PREPROCESS = YES
 
 // MARK: - API
 API_VERSION = /api/v1

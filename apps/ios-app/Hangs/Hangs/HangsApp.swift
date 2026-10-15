@@ -12,9 +12,6 @@ import SwiftUI
 @main
 struct HangsApp: App {
     @StateObject private var appState: AppState
-    #if CARPLAY
-        @UIApplicationDelegateAdaptor(CarPlayAppDelegate.self) private var carPlayAppDelegate
-    #endif
     @Environment(\.scenePhase) private var scenePhase
 
     init() {

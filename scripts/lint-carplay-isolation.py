@@ -8,7 +8,9 @@ TestFlight and the App Store build from (Staging, Prod) must stay free of it:
 
   1. No Staging/Prod config compiles the CARPLAY flag.
   2. No Staging/Prod config signs with an entitlements file holding a CarPlay key.
-  3. No Info.plist a Staging/Prod config uses declares a CarPlay scene.
+  3. No Info.plist a Staging/Prod config produces declares a CarPlay scene
+     (the scene sits in `#ifdef CARPLAY`; only Local defines CARPLAY for the
+     plist preprocessor).
   4. Every Swift file that imports CarPlay is wrapped in `#if CARPLAY`.
 
 Rules 1-3 read the resolved build settings from xcodebuild, so they need Xcode.
@@ -53,6 +55,24 @@ def build_settings(project_dir: Path, config: str, sdk: str) -> dict[str, str]:
     return json.loads(out)[0]["buildSettings"]
 
 
+def effective_plist(path: Path, settings: dict[str, str]) -> str:
+    """The plist as the build sees it: `#ifdef NAME … #endif` blocks kept only
+    when the preprocessor runs and NAME is defined (no nesting/#else used)."""
+    text = path.read_text()
+    if settings.get("INFOPLIST_PREPROCESS") != "YES":
+        return text
+    defined = {
+        d.split("=")[0]
+        for d in settings.get("INFOPLIST_PREPROCESSOR_DEFINITIONS", "").split()
+    }
+    return re.sub(
+        r"^#ifdef (\w+)\n(.*?)^#endif\n",
+        lambda m: m.group(2) if m.group(1) in defined else "",
+        text,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+
+
 def check_shipped_configs(project_dir: Path) -> list[str]:
     findings = []
     for config in SHIPPED_CONFIGS:
@@ -73,7 +93,9 @@ def check_shipped_configs(project_dir: Path) -> list[str]:
                     f"{where}: signs with CarPlay entitlements ({entitlements})"
                 )
             plist = settings.get("INFOPLIST_FILE")
-            if plist and CARPLAY_SCENE_ROLE in (project_dir / plist).read_text():
+            if plist and CARPLAY_SCENE_ROLE in effective_plist(
+                project_dir / plist, settings
+            ):
                 findings.append(f"{where}: {plist} declares a CarPlay scene")
     return findings
 

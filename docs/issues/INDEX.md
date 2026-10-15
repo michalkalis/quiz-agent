@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 206 | [Voľba „bez lokálnych otázok“](issue-206-local-questions-filter.md) | enhancement · ready-for-agent | `[ ]` #206 | 2026-10-15: štítok „lokálna“ (krajina) na každej otázke, rovnaký klasifikátor pre starý korpus aj nové otázky; prepínač v appke, predvolene lokálne zapnuté |
 | 205 | [Denná výzva: hráč proti davu](issue-205-daily-challenge.md) | enhancement · ready-for-agent | `[~]` #205 | 2026-10-15: 5 otázok denne pre všetkých, pásik s ostatnými hráčmi, koniec kola vs dav, zdieľanie; prvý krok gamifikácie |
 | 204 | [Spoľahlivejšie rozpoznanie hlasovej odpovede](issue-204-answer-recognition.md) | enhancement · in-progress | `[~]` #204 | 2026-10-14: rešerš vs. Wispr Flow; zmeny za prepínačmi (A/B): neurónová VAD, AEC na BT, opakovaný pokus bez zamietnutého prepisu, oprava záložného STT, fonetická zhoda |
 | 203 | [Nudné otázky: príčina a náhrada](issue-203-stock-questions.md) | bug · in-progress | `[~]` #203 | 2026-10-14: zásoba ~2/10 (beh 10-01), čerstvé generovanie 7,3–8,4; open = 200/jazyk cez predplatné podľa receptu, pilot + slepá vzorka ≥ 7 |

@@ -28,6 +28,8 @@
         enum Quiz: String, CaseIterable {
             /// Trubbo reads the question or the result.
             case speaking
+            /// The driver's turn: the think window (Trubbo hears "start", "repeat",
+            /// "skip") or the open mic for the answer.
             case listening
             /// Starting, checking the answer, skipping, waiting for a pack batch.
             case thinking
@@ -40,6 +42,8 @@
         struct Inputs: Equatable {
             var quizState: QuizState
             var isPaused: Bool
+            /// The question has been read and the think countdown runs.
+            var isThinkWindowOpen: Bool
             var showAnswerConfirmation: Bool
             var showPaywall: Bool
         }
@@ -56,6 +60,8 @@
                 self = .home(.finished)
             case .error:
                 self = .home(.failed)
+            case .askingQuestion where inputs.isThinkWindowOpen:
+                self = .quiz(inputs.isPaused ? .paused : .listening)
             case .askingQuestion, .showingResult:
                 self = .quiz(inputs.isPaused ? .paused : .speaking)
             case .recording:

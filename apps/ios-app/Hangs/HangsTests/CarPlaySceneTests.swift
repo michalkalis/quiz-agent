@@ -96,10 +96,11 @@ struct CarPlaySceneTests {
         private func screen(
             _ state: QuizState,
             paused: Bool = false,
+            thinkWindow: Bool = false,
             confirming: Bool = false,
             paywall: Bool = false
         ) -> CarPlayScreen {
-            CarPlayScreen(.init(quizState: state, isPaused: paused, showAnswerConfirmation: confirming, showPaywall: paywall))
+            CarPlayScreen(.init(quizState: state, isPaused: paused, isThinkWindowOpen: thinkWindow, showAnswerConfirmation: confirming, showPaywall: paywall))
         }
 
         @Test("between rounds the car shows the home template")
@@ -118,6 +119,9 @@ struct CarPlaySceneTests {
         @Test("a running round maps to the quiz template's voice states")
         func quizStates() {
             #expect(screen(.askingQuestion) == .quiz(.speaking))
+            // Found on the CarPlay simulator: once the question is read, Trubbo is
+            // silent and hears the driver's commands; "speaking" there misleads.
+            #expect(screen(.askingQuestion, thinkWindow: true) == .quiz(.listening))
             #expect(screen(.recording) == .quiz(.listening))
             #expect(screen(.processing) == .quiz(.thinking))
             #expect(screen(.processing, confirming: true) == .quiz(.confirming))
@@ -139,6 +143,7 @@ struct CarPlaySceneTests {
         @Test("a pause shows as paused wherever the phone can pause")
         func pausedStates() {
             #expect(screen(.askingQuestion, paused: true) == .quiz(.paused))
+            #expect(screen(.askingQuestion, paused: true, thinkWindow: true) == .quiz(.paused))
             #expect(screen(.recording, paused: true) == .quiz(.paused))
             #expect(screen(.processing, paused: true, confirming: true) == .quiz(.paused))
             // Nothing to freeze while Trubbo is checking — the pause flag can't strand it.

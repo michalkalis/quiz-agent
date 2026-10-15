@@ -17,7 +17,7 @@
     import os
 
     @available(iOS 26.4, *)
-    final class CarPlayQuizController {
+    final class CarPlayQuizController: NSObject, CPInterfaceControllerDelegate {
         private let interfaceController: CPInterfaceController
         private let viewModel: QuizViewModel
         private let packOrderService: PackOrderServiceProtocol
@@ -25,6 +25,7 @@
         private lazy var quizTemplate = makeQuizTemplate()
         private var shownScreen: CarPlayScreen?
         private var changes: AnyCancellable?
+        private var recheck: Task<Void, Never>?
 
         init(
             interfaceController: CPInterfaceController,
@@ -34,9 +35,11 @@
             self.interfaceController = interfaceController
             self.viewModel = viewModel
             self.packOrderService = packOrderService
+            super.init()
         }
 
         func start() {
+            interfaceController.delegate = self
             render()
             // objectWillChange fires BEFORE the change lands; the debounce reads
             // the settled state, and keeps state switches under the template's
@@ -48,6 +51,13 @@
 
         func stop() {
             changes = nil
+            recheck?.cancel()
+        }
+
+        /// A state can only be activated on a presented template, so a template
+        /// that just appeared gets its state now.
+        nonisolated func templateDidAppear(_: CPTemplate, animated _: Bool) {
+            Task { @MainActor in self.render() }
         }
 
         // MARK: - Rendering
@@ -56,27 +66,39 @@
             CarPlayScreen(.init(
                 quizState: viewModel.quizState,
                 isPaused: viewModel.isPaused,
+                isThinkWindowOpen: viewModel.answerWindowRemaining > 0,
                 showAnswerConfirmation: viewModel.showAnswerConfirmation,
                 showPaywall: viewModel.showPaywall
             ))
         }
 
+        /// Brings the car's screen to the quiz's current moment. It checks what the
+        /// template really shows rather than what was last asked for: the template
+        /// silently drops a state switch that comes too soon after it appeared or
+        /// after the previous switch (seen on the CarPlay simulator: a blank home
+        /// after launch, a stuck "Listening…" while the phone moved on).
         private func render() {
             let screen = currentScreen
-            guard screen != shownScreen else { return }
             let (template, stateID): (CPVoiceControlTemplate, String) = switch screen {
             case let .home(state): (homeTemplate, state.rawValue)
             case let .quiz(state): (quizTemplate, state.rawValue)
             }
-            shownScreen = screen
-            Logger.quiz.info("🚗 CarPlay screen → \(String(describing: screen), privacy: .public)")
-            if interfaceController.rootTemplate === template {
-                template.activateVoiceControlState(withIdentifier: stateID)
-            } else {
-                // A state can only be activated on a presented template.
-                interfaceController.setRootTemplate(template, animated: false) { _, _ in
-                    template.activateVoiceControlState(withIdentifier: stateID)
-                }
+            if screen != shownScreen {
+                shownScreen = screen
+                Logger.quiz.info("🚗 CarPlay screen → \(String(describing: screen), privacy: .public)")
+            }
+            guard interfaceController.rootTemplate === template else {
+                interfaceController.setRootTemplate(template, animated: false, completion: nil)
+                return
+            }
+            guard template.activeStateIdentifier != stateID else { return }
+            Logger.quiz.debug("🚗 CarPlay activates \(stateID, privacy: .public) over \(template.activeStateIdentifier ?? "none", privacy: .public)")
+            template.activateVoiceControlState(withIdentifier: stateID)
+            recheck?.cancel()
+            recheck = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self?.render()
             }
         }
 
@@ -109,10 +131,13 @@
             }
             let template = CPVoiceControlTemplate(voiceControlStates: states)
             template.leadingNavigationBarButtons = [
-                CPBarButton(title: String(localized: "End quiz", comment: "CarPlay: ends the running quiz round early")) { [weak self] _ in
-                    guard let self else { return }
-                    Task { await self.viewModel.endQuizWithResults() }
-                },
+                CPBarButton(
+                    title: String(localized: "End quiz", comment: "CarPlay: ends the running quiz round early"),
+                    handler: Self.onMain { [weak self] in
+                        guard let self else { return }
+                        Task { await self.viewModel.endQuizWithResults() }
+                    }
+                ),
             ]
             return template
         }
@@ -146,16 +171,37 @@
         }
 
         private func topicsButton() -> CPButton {
-            button(String(localized: "Topics", comment: "CarPlay: opens the list of quiz topics and packs"), "list.bullet") { $0.showTopics() }
+            button(String(localized: "Categories", comment: "CarPlay: opens the list of quiz categories and packs"), "list.bullet") { $0.showTopics() }
         }
 
-        private func button(_ title: String, _ symbol: String, action: @escaping (CarPlayQuizController) -> Void) -> CPButton {
-            let button = CPButton(image: UIImage(systemName: symbol) ?? UIImage()) { [weak self] _ in
+        private func button(_ title: String, _ symbol: String, action: @escaping @MainActor @Sendable (CarPlayQuizController) -> Void) -> CPButton {
+            let button = CPButton(image: UIImage(systemName: symbol) ?? UIImage(), handler: Self.onMain { [weak self] in
                 guard let self else { return }
                 action(self)
-            }
+            })
             button.title = title
             return button
+        }
+
+        // MARK: - Handlers
+
+        /// CarPlay can call a template handler on its own XPC queue (the iOS 26.5
+        /// simulator does for voice control buttons). This target is main-actor
+        /// by default, so an inline handler would trap on the isolation check:
+        /// handlers stay nonisolated and hop to the main actor themselves.
+        private nonisolated static func onMain<Sender>(
+            _ action: @escaping @MainActor @Sendable () -> Void
+        ) -> @Sendable (Sender) -> Void {
+            { _ in Task { @MainActor in action() } }
+        }
+
+        private nonisolated static func onMainListItem(
+            _ action: @escaping @MainActor @Sendable () -> Void
+        ) -> @Sendable (any CPSelectableListItem, @escaping () -> Void) -> Void {
+            { _, completion in
+                completion()
+                Task { @MainActor in action() }
+            }
         }
 
         // MARK: - Actions (the phone's own quiz actions)
@@ -195,14 +241,14 @@
         private func showTopics() {
             let categories = Config.categoryOptions.map { option in
                 let item = CPListItem(text: option.display, detailText: nil)
-                item.handler = { [weak self] _, completion in
-                    self?.play(categories: option.id.map { [$0] } ?? [])
-                    completion()
+                let categories = option.id.map { [$0] } ?? []
+                item.handler = Self.onMainListItem { [weak self] in
+                    self?.play(categories: categories)
                 }
                 return item
             }
             let list = CPListTemplate(
-                title: String(localized: "Topics", comment: "CarPlay: opens the list of quiz topics and packs"),
+                title: String(localized: "Categories", comment: "CarPlay: opens the list of quiz categories and packs"),
                 sections: [CPListSection(items: Array(categories.prefix(Int(CPListTemplate.maximumItemCount))))]
             )
             interfaceController.pushTemplate(list, animated: true, completion: nil)
@@ -215,9 +261,8 @@
             let packs = orders.filter(\.isPlayable).compactMap { order -> CPListItem? in
                 guard let pack = order.packPlay else { return nil }
                 let item = CPListItem(text: order.displayTitle, detailText: nil)
-                item.handler = { [weak self] _, completion in
+                item.handler = Self.onMainListItem { [weak self] in
                     self?.play(pack: pack)
-                    completion()
                 }
                 return item
             }

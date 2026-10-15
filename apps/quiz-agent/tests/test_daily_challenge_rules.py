@@ -133,8 +133,8 @@ def test_spoken_lines_rotate_wording_and_stay_one_sentence():
 
 def test_rank_only_in_top_half_never_worse_than():
     top = Standing(others=11, beaten=7, score=4, total=5)
-    assert copy.comparison_text(top, "sk") == "Lepší ako 7 z 11 hráčov."
-    assert copy.rank_text(top, "sk") == "Lepší ako 7 z 11 hráčov."
+    assert copy.comparison_text(top, "sk") == "Lepšie skóre ako 7 z 11 hráčov."
+    assert copy.rank_text(top, "sk") == "Lepšie skóre ako 7 z 11 hráčov."
 
     bottom = Standing(others=11, beaten=2, score=2, total=5)
     assert copy.rank_text(bottom, "sk") is None
@@ -146,7 +146,7 @@ def test_rank_only_in_top_half_never_worse_than():
 
 def test_rank_uses_percent_from_twenty_players_and_best_of_when_beating_all():
     big = Standing(others=25, beaten=16, score=4, total=5)
-    assert copy.rank_text(big, "sk") == "Lepší ako 64 % z 25 hráčov."
+    assert copy.rank_text(big, "sk") == "Lepšie skóre ako 64 % z 25 hráčov."
     assert copy.rank_text(big, "cs") == "Lepší než 64 % ze 25 hráčů."
     assert copy.rank_text(big, "en") == "Better than 64% of 25 players."
     best = Standing(others=1, beaten=1, score=4, total=5)

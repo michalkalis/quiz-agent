@@ -170,12 +170,12 @@ def rank_text(standing: Standing, language: str) -> Optional[str]:
     if n >= 20:
         p = round(100 * b / n)
         return {
-            "sk": f"Lepší ako {p}{NBSP}% {sk_from(n)} {n} hráčov.",
+            "sk": f"Lepšie skóre ako {p}{NBSP}% {sk_from(n)} {n} hráčov.",
             "cs": f"Lepší než {p}{NBSP}% {cs_from(n)} {n} hráčů.",
             "en": f"Better than {p}% of {n} players.",
         }[lang]
     return {
-        "sk": f"Lepší ako {b} {sk_from(n)} {n} hráčov.",
+        "sk": f"Lepšie skóre ako {b} {sk_from(n)} {n} hráčov.",
         "cs": f"Lepší než {b} {cs_from(n)} {n} hráčů.",
         "en": f"Better than {b} of {n} players.",
     }[lang]

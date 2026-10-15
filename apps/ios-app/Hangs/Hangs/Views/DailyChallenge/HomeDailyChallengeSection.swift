@@ -5,7 +5,7 @@
 //  #205.4: the daily challenge card at the top of Home, shown only while the
 //  server switch is on. Not played yet: five empty tiles and the play pill.
 //  Played: the day's marks, the score and the server's live crowd line
-//  ("Lepší ako 2 z 3 hráčov."); a tap opens the daily round end. The state is
+//  ("Lepšie skóre ako 2 z 3 hráčov."); a tap opens the daily round end. The state is
 //  fetched again every time Home appears, so the crowd line keeps up as
 //  others play. A failed fetch shows the card to play (the start retries).
 //
@@ -59,7 +59,7 @@ struct HomeDailyChallengeSection: View {
                     DailyMarkTiles(marks: Array(repeating: nil, count: viewModel.questionCount))
                         .accessibilityHidden(true)
                     HangsPrimaryButton(
-                        title: "Play today's challenge",
+                        title: "Play today",
                         icon: "play.fill",
                         isLoading: isStarting,
                         height: Metrics.pillHeight,

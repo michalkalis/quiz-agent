@@ -120,7 +120,7 @@ struct DailyRoundEndInspectorTests {
             let order = texts(tree)
             let hero = try #require(order.firstIndex(of: "COMPLETE"))
             let score = try #require(order.firstIndex(of: "final score"))
-            let comparison = try #require(order.firstIndex(of: "Lepší ako 2 z 3 hráčov."))
+            let comparison = try #require(order.firstIndex(of: "Lepšie skóre ako 2 z 3 hráčov."))
             let hitLabel = try #require(order.firstIndex(of: "your rarest hit"))
             let hitText = try #require(order.firstIndex(of: "Vedel to len 1 z 3."))
             #expect(hero < score && score < comparison && comparison < hitLabel && hitLabel < hitText, "\(order)")
@@ -217,7 +217,7 @@ struct HomeDailyChallengeSectionInspectorTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.open") }
             #expect(throws: Never.self) { try tree.find(text: "4/5") }
-            #expect(throws: Never.self) { try tree.find(text: "Lepší ako 2 z 3 hráčov.") }
+            #expect(throws: Never.self) { try tree.find(text: "Lepšie skóre ako 2 z 3 hráčov.") }
             #expect(throws: (any Error).self, "a played day is not offered again") {
                 try tree.find(viewWithAccessibilityIdentifier: "home.daily.play")
             }

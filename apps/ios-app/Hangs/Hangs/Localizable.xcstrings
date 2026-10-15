@@ -6142,7 +6142,7 @@
         }
       }
     },
-    "Play today's challenge" : {
+    "Play today" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -6153,7 +6153,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Play today's challenge"
+            "value" : "Play today"
           }
         },
         "sk" : {

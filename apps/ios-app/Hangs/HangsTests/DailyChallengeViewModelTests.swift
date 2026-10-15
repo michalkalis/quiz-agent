@@ -91,7 +91,7 @@ struct DailyChallengeViewModelTests {
         let model = makeModel(network)
         await model.refreshToday(language: "sk")
 
-        network.stubbedDailyState = played(comparison: "Lepší ako 1 z 1 hráčov.")
+        network.stubbedDailyState = played(comparison: "Najlepšie skóre z 2 hráčov.")
         await model.refreshToday(language: "sk")
 
         #expect(network.fetchDailyChallengeCallCount == 2)
@@ -99,7 +99,7 @@ struct DailyChallengeViewModelTests {
             Issue.record("expected the played card")
             return
         }
-        #expect(summary.comparison == "Lepší ako 1 z 1 hráčov.", "a second player finished: the line must move")
+        #expect(summary.comparison == "Najlepšie skóre z 2 hráčov.", "a second player finished: the line must move")
     }
 
     @Test("a failed fetch with nothing known shows the card to play")

@@ -8,7 +8,7 @@
 //
 //      Trubbo · denná výzva 15. 10.
 //      ✅✅❌✅✅ 4/5
-//      Lepší ako 64 % z 12 hráčov.
+//      Lepšie skóre ako 64 % z 12 hráčov.
 //      trubbo.app
 //
 

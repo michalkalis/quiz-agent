@@ -46,13 +46,13 @@ struct DailyChallengeDecodingTests {
         let json = """
         {"date":"2026-10-15","language":"sk","status":"played","total":5,
          "summary":{"score":3,"total":5,"marks":[true,false,null,true,true],"players":4,
-           "comparison":"Lepší ako 2 z 3 hráčov.","rank":"Lepší ako 2 z 3 hráčov.",
+           "comparison":"Lepšie skóre ako 2 z 3 hráčov.","rank":"Lepšie skóre ako 2 z 3 hráčov.",
            "best_hit":{"question_id":"q1","question":"Ktorá krajina?","answer":"Libanon","rare":true,"text":"Vedel to len 1 z 3."}}}
         """
         let state = try decode(DailyChallengeState.self, json)
         let summary = try #require(state.summary)
         #expect(summary.marks == [true, false, nil, true, true])
-        #expect(summary.comparison == "Lepší ako 2 z 3 hráčov.")
+        #expect(summary.comparison == "Lepšie skóre ako 2 z 3 hráčov.")
         #expect(summary.bestHit?.rare == true)
         #expect(summary.bestHit?.questionId == "q1")
     }
@@ -157,9 +157,9 @@ struct DailyShareTextTests {
     func slovakWithRank() {
         let text = DailyShareText.make(
             day: day, language: "sk", marks: [true, true, false, true, true], score: 4, total: 5,
-            rank: "Lepší ako 2 z 3 hráčov."
+            rank: "Lepšie skóre ako 2 z 3 hráčov."
         )
-        #expect(text == "Trubbo · denná výzva 15. 10.\n✅✅❌✅✅ 4/5\nLepší ako 2 z 3 hráčov.\ntrubbo.app")
+        #expect(text == "Trubbo · denná výzva 15. 10.\n✅✅❌✅✅ 4/5\nLepšie skóre ako 2 z 3 hráčov.\ntrubbo.app")
     }
 
     @Test("no rank below the top half: never a 'worse than' line")

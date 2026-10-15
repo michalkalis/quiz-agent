@@ -89,8 +89,8 @@
                     total: questions.count,
                     marks: marks,
                     players: 4,
-                    comparison: good ? "Lepší ako 2 z 3 hráčov." : "Ťažká výzva.",
-                    rank: good ? "Lepší ako 2 z 3 hráčov." : nil,
+                    comparison: good ? "Lepšie skóre ako 2 z 3 hráčov." : "Ťažká výzva.",
+                    rank: good ? "Lepšie skóre ako 2 z 3 hráčov." : nil,
                     bestHit: good
                         ? DailyBestHit(questionId: "daily_q1", question: questions[0].question.question,
                                        answer: questions[0].answer, rare: true, text: "Vedel to len 1 z 3.")

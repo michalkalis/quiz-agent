@@ -7,3 +7,7 @@
 
 #include "Shared.xcconfig"
 #include "Debug.xcconfig"
+
+// #97 — CarPlay support: the host app compiles its CarPlay code in Local builds
+// only (Local.xcconfig), so the CarPlay tests compile only against that host.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS[config=Debug-Local] = CARPLAY $(inherited)

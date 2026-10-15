@@ -28,7 +28,7 @@ struct ContentView: View {
     @State private var feedbackPresentation: FeedbackPresentation?
 
     init(appState: AppState) {
-        _viewModel = StateObject(wrappedValue: appState.makeQuizViewModel())
+        _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
             persistenceStore: appState.persistenceStore,

@@ -10,6 +10,7 @@ on:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
+      - 'scripts/lint-carplay-isolation.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
@@ -19,6 +20,7 @@ on:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
+      - 'scripts/lint-carplay-isolation.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
@@ -69,6 +71,12 @@ jobs:
       # missing identifier fails in seconds, not after a 20-minute test run.
       - name: Lint accessibility identifiers
         run: python3 scripts/lint-a11y-ids.py
+
+      # #97: CarPlay is built into Local builds only until Apple grants the
+      # entitlement and the founder ships it; Staging/Prod (TestFlight, App
+      # Store) must carry no CarPlay flag, entitlement or scene.
+      - name: Guard CarPlay isolation
+        run: python3 scripts/lint-carplay-isolation.py
 
       # #188: colors, font sizes, spacing and radii come from Theme.swift; the
       # baseline lists pre-#188 values and may only shrink.

@@ -76,8 +76,9 @@ async def start_quiz(
             raise HTTPException(status_code=400, detail="Quiz already started")
 
         # Check usage limit (freemium). #95: custom-pack sessions are paid,
-        # curated content — they bypass the free monthly quota entirely.
-        if usage_tracker and session.user_id and not session.pack_id:
+        # curated content — they bypass the free monthly quota entirely, and so
+        # does the daily challenge (#205).
+        if usage_tracker and session.user_id and not session.is_quota_exempt:
             allowed, remaining, resets_at = await usage_tracker.check_limit(
                 session.user_id
             )
@@ -226,7 +227,7 @@ async def start_quiz(
         session.current_question_id = question.id
         session.asked_question_ids.append(question.id)
 
-        if usage_tracker and session.user_id and not session.pack_id:
+        if usage_tracker and session.user_id and not session.is_quota_exempt:
             await usage_tracker.record_question(session.user_id)
 
         (

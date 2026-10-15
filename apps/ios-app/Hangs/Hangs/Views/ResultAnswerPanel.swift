@@ -29,6 +29,9 @@ struct ResultAnswerPanel: View {
     /// The card the panel is printed on: its text colour, and the fill the
     /// explanation fades into.
     var style = Theme.Hangs.Category.Style(fill: Theme.Hangs.Colors.bgCard, text: Theme.Hangs.Colors.ink)
+    /// #205: how the other players did (daily challenge only). Under the
+    /// sticker on every verdict (founder decision 2), never in recap mode.
+    var crowd: CrowdStrip? = nil
 
     let onHearIt: () -> Void
 
@@ -53,6 +56,11 @@ struct ResultAnswerPanel: View {
                 } else {
                     HangsAnswerSticker(text: answerText)
                 }
+            }
+
+            if let crowd, !isRecap {
+                CrowdStripRow(strip: crowd)
+                    .padding(.top, Metrics.labelGap)
             }
 
             if let userAnswer {

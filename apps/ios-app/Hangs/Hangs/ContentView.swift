@@ -15,6 +15,9 @@ struct ContentView: View {
     // #111: owns the pushed-stack path for the root NavigationStack, replacing
     // the old broadcast-notification + identity-reset teardown bridge.
     @StateObject private var navModel = NavigationModel()
+    /// #205: today's daily challenge for the Home card. Owned here so the
+    /// card keeps its last state while a quiz runs.
+    @StateObject private var dailyChallenge: DailyChallengeViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
@@ -29,6 +32,7 @@ struct ContentView: View {
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
+        _dailyChallenge = StateObject(wrappedValue: DailyChallengeViewModel(network: appState.networkService))
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
             persistenceStore: appState.persistenceStore,
@@ -119,6 +123,7 @@ struct ContentView: View {
                             viewModel: viewModel,
                             packOrderService: appState.packOrderService,
                             appConfig: appState.appConfig,
+                            dailyChallenge: dailyChallenge,
                             onCreatePack: presentOrderFlow
                         )
                     case .question:
@@ -129,6 +134,8 @@ struct ContentView: View {
                         SetRecapView(viewModel: viewModel)
                     case .completion:
                         CompletionView(viewModel: viewModel)
+                    case .dailyEnd:
+                        DailyRoundEndView(viewModel: viewModel)
                     case let .error(model):
                         ErrorView(viewModel: viewModel, model: model)
                     }

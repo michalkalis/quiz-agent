@@ -21,6 +21,7 @@ from .routes import (
     app_config,
     voice_samples,
     voice_experiment,
+    daily_challenge,
 )
 
 # Main router with /api/v1 prefix
@@ -41,3 +42,4 @@ router.include_router(question_stock.router)
 router.include_router(app_config.router)
 router.include_router(voice_samples.router)
 router.include_router(voice_experiment.router)
+router.include_router(daily_challenge.router)

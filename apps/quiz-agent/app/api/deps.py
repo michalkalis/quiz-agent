@@ -21,6 +21,7 @@ from quiz_shared.database.question_store import QuestionStore
 from ..session.manager import SessionManager
 from ..retrieval.question_retriever import QuestionRetriever
 from ..analytics.recorder import AnalyticsRecorder
+from ..daily_challenge.schemas import CrowdStrip
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
@@ -211,6 +212,10 @@ class InputResponse(BaseModel):
             "is not ready yet — the session is not finished; poll "
             "POST /sessions/{id}/next-question"
         ),
+    )
+    crowd: Optional[CrowdStrip] = Field(
+        default=None,
+        description="#205: daily challenge only — the crowd strip for this answer",
     )
 
 
@@ -552,6 +557,23 @@ class AccountVoiceSampleRecord(BaseModel):
     audio: AccountVoiceSampleAudio = Field(description="The stored audio, listed")
 
 
+class AccountDailyChallengeAnswer(BaseModel):
+    question_id: str
+    result: str = Field(description="The graded verdict (no answer text is kept)")
+    answered_at: datetime
+
+
+class AccountDailyChallengeRecord(BaseModel):
+    """One daily challenge played (#205)."""
+
+    challenge_date: date
+    language: str
+    started_at: datetime
+    finished_at: Optional[datetime]
+    score: Optional[int]
+    answers: List[AccountDailyChallengeAnswer]
+
+
 class AccountExportResponse(BaseModel):
     """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
     or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
@@ -584,6 +606,9 @@ class AccountExportResponse(BaseModel):
     voice_samples: List[AccountVoiceSampleRecord] = Field(
         default_factory=list,
         description="Answer recordings sent from voice diagnostics, oldest first",
+    )
+    daily_challenges: List[AccountDailyChallengeRecord] = Field(
+        default_factory=list, description="Daily challenges played, oldest first"
     )
 
 
@@ -657,6 +682,11 @@ def get_analytics(request: Request) -> AnalyticsRecorder:
     return getattr(state, "analytics", None) or AnalyticsRecorder()
 
 
+def get_daily_challenge(request: Request):
+    """#205 DailyChallengeService (None without a database)."""
+    return getattr(request.app.state, "daily_challenge", None)
+
+
 def get_auth_sessionmaker(request: Request):
     """Sessionmaker dedicated to the auth tables (None when auth is disabled)."""
     return getattr(request.app.state, "auth_sessionmaker", None)
@@ -718,4 +748,5 @@ def flow_to_response(flow_result: FlowResult, session: Any) -> InputResponse:
         feedback_received=flow_result.feedback_received,
         audio=flow_result.audio_info,
         awaiting_question=flow_result.awaiting_question,
+        crowd=flow_result.crowd,
     )

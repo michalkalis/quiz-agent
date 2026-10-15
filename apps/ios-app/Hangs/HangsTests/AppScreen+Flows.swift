@@ -33,6 +33,8 @@ extension AppScreen {
             await makePacks()
         case .myPacksLoadFailed:
             await makePacksLoadFailed()
+        case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed:
+            await makeDaily()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

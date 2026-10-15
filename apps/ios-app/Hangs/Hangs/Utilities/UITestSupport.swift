@@ -93,6 +93,9 @@
                 network.getUsageGate = { try? await Task.sleep(for: .seconds(600)) }
             }
 
+            // #205: the daily challenge flags (DailyChallengeFixtures).
+            DailyChallengeFixtures.configure(network)
+
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()
 

@@ -1,7 +1,7 @@
 """The personal-data trail for the GDPR export (Art. 15/20, #193 — beta hardening).
 
 Reads what ``erase_account`` / ``erase_anonymous`` remove or unlink — in-app
-feedback, analytics events and custom pack orders — for every subject id the
+feedback, analytics events, custom pack orders and daily challenge plays — for every subject id the
 person used (the account plus its linked anonymous ids, or just the anon). Sign-in
 does not re-key these rows, so pre-sign-in data only shows up under the anon ids.
 
@@ -18,7 +18,13 @@ from __future__ import annotations
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db.models import AnalyticsEvent, Feedback, VoiceSample
+from ..db.models import (
+    AnalyticsEvent,
+    DailyChallengeAnswer,
+    DailyChallengePlay,
+    Feedback,
+    VoiceSample,
+)
 
 
 async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
@@ -27,7 +33,56 @@ async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
         "analytics_events": await _analytics_events(session, subject_ids),
         "pack_orders": await _pack_orders(session, subject_ids),
         "voice_samples": await _voice_samples(session, subject_ids),
+        "daily_challenges": await _daily_challenges(session, subject_ids),
     }
+
+
+async def _daily_challenges(
+    session: AsyncSession, subject_ids: list[str]
+) -> list[dict]:
+    """#205: each play with its graded verdicts (no answer text is stored)."""
+    plays = (
+        (
+            await session.execute(
+                select(DailyChallengePlay)
+                .where(DailyChallengePlay.subject_id.in_(subject_ids))
+                .order_by(DailyChallengePlay.started_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    out = []
+    for p in plays:
+        answers = (
+            (
+                await session.execute(
+                    select(DailyChallengeAnswer)
+                    .where(DailyChallengeAnswer.play_id == p.id)
+                    .order_by(DailyChallengeAnswer.answered_at)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        out.append(
+            {
+                "challenge_date": p.challenge_date,
+                "language": p.language,
+                "started_at": p.started_at,
+                "finished_at": p.finished_at,
+                "score": p.score,
+                "answers": [
+                    {
+                        "question_id": a.question_id,
+                        "result": a.result,
+                        "answered_at": a.answered_at,
+                    }
+                    for a in answers
+                ],
+            }
+        )
+    return out
 
 
 async def _voice_samples(session: AsyncSession, subject_ids: list[str]) -> list[dict]:

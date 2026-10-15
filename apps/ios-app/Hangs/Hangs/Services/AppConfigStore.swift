@@ -107,12 +107,14 @@ final class AppConfigStore: ObservableObject {
     #if DEBUG
         /// Launch arguments that show each state on the simulator without a
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
-        /// `--app-config-notice`.
+        /// `--app-config-notice`; any `--ui-test-daily-*` flag turns the #205
+        /// daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
             let ordersOff = arguments.contains("--app-config-orders-off")
             let notice = arguments.contains("--app-config-notice")
-            guard update || ordersOff || notice else { return nil }
+            let daily = DailyChallengeFixtures.isActive(arguments)
+            guard update || ordersOff || notice || daily else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -121,7 +123,8 @@ final class AppConfigStore: ObservableObject {
                     sk: "Dnes od 22:00 prebieha údržba. Kvíz môže byť krátko nedostupný.",
                     cs: "Dnes od 22:00 probíhá údržba. Kvíz může být krátce nedostupný.",
                     en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable."
-                ) : nil
+                ) : nil,
+                dailyChallengeEnabled: daily
             )
         }
     #endif

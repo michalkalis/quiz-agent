@@ -1,0 +1,67 @@
+# texts
+trubbo
+daily challenge · Oct 15
+4/5
+Lepšie skóre ako 2 z 3 hráčov.
+Quiz
+History
+Science & Nature
+Geography & World
+10 questions
+All Categories
+English
+Slovenčina
+Čeština
+Quiz language
+Slovenčina
+Easy
+Medium
+Hard
+Random
+Difficulty
+Medium
+Categories
+All Categories
+your plan
+18
+of 30 free questions left
+Get Plus
+18
+of 30 free questions left
+Get Plus
+18
+of 30 free questions left
+Get Plus
+resets in 13 days
+resets in 13 days
+Start
+# identifiers
+home.moreSettings
+home.daily.open
+home.daily.score
+home.daily.comparison
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.planLabel
+home.freePlanUpgradeButton
+home.freePlanCard
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.planPrimary
+home.planCaption
+home.freePlanUpgrade
+home.freePlanReset
+home.freePlanReset
+home.startQuiz

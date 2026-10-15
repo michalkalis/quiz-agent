@@ -29,6 +29,16 @@ struct HomePage {
         app.staticTexts["home.myPacks.progress"].firstMatch
     }
 
+    /// #205: the daily challenge card's play pill (not played yet).
+    var dailyPlayButton: XCUIElement {
+        app.buttons["home.daily.play"]
+    }
+
+    /// #205: the played daily challenge card (opens its round end).
+    var dailyOpenButton: XCUIElement {
+        app.buttons["home.daily.open"]
+    }
+
     /// The "Create your own pack" row closes the packs card, below the deck
     /// and the pills (Home order since 2026-10-13), so on a phone it starts
     /// off screen: scroll Home until it is there.

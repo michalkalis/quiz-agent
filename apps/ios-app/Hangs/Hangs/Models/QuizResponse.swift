@@ -22,6 +22,9 @@ struct QuizResponse: Codable, Sendable {
     /// `POST /sessions/{id}/next-question` until a question (or a finished
     /// session) lands. Absent on every pre-#182 response → false.
     let awaitingQuestion: Bool
+    /// #205: the crowd strip of a daily-challenge answer. Absent = no strip
+    /// (a wrong answer most others knew, or not a daily round).
+    let crowd: CrowdStrip?
 
     enum CodingKeys: String, CodingKey {
         case success
@@ -32,6 +35,7 @@ struct QuizResponse: Codable, Sendable {
         case feedbackReceived = "feedback_received"
         case audio
         case awaitingQuestion = "awaiting_question"
+        case crowd
     }
 
     init(
@@ -42,7 +46,8 @@ struct QuizResponse: Codable, Sendable {
         evaluation: Evaluation?,
         feedbackReceived: [String],
         audio: AudioInfo?,
-        awaitingQuestion: Bool = false
+        awaitingQuestion: Bool = false,
+        crowd: CrowdStrip? = nil
     ) {
         self.success = success
         self.message = message
@@ -52,6 +57,7 @@ struct QuizResponse: Codable, Sendable {
         self.feedbackReceived = feedbackReceived
         self.audio = audio
         self.awaitingQuestion = awaitingQuestion
+        self.crowd = crowd
     }
 
     /// Hand-written so a missing `awaiting_question` decodes as `false` — the
@@ -67,6 +73,8 @@ struct QuizResponse: Codable, Sendable {
         feedbackReceived = try container.decodeIfPresent([String].self, forKey: .feedbackReceived) ?? []
         audio = try container.decodeIfPresent(AudioInfo.self, forKey: .audio)
         awaitingQuestion = try container.decodeIfPresent(Bool.self, forKey: .awaitingQuestion) ?? false
+        // #205: never the reason an answer is lost — an unreadable strip is no strip.
+        crowd = try? container.decodeIfPresent(CrowdStrip.self, forKey: .crowd)
     }
 }
 

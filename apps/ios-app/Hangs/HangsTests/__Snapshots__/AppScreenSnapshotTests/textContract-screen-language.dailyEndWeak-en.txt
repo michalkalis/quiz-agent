@@ -1,0 +1,25 @@
+# texts
+COMPLETE
+final score
+1
+out of 5
+Ťažká výzva.
+your best hit
+Gerlachovský štít
+Ako sa volá najvyšší vrch Slovenska?
+Vedeli 2 z 3.
+Share
+Home
+Share
+Home
+# identifiers
+daily.end
+daily.close
+daily.tiles
+daily.score
+daily.comparison
+daily.bestHit
+daily.share
+daily.home
+daily.share
+daily.home

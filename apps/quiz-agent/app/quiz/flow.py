@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 from ..analytics.recorder import AnalyticsRecorder
 from ..client_capabilities import ANSWER_CODES, has_capability
+from ..daily_challenge.schemas import CrowdStrip
 from ..evaluation.evaluator import UNMATCHED, AnswerEvaluator
 from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
@@ -130,6 +131,8 @@ class FlowResult:
     # yet. The session stays open (phase asking, no current question); the
     # client polls `POST /sessions/{id}/next-question` (`resume_after_wait`).
     awaiting_question: bool = False
+    # #205: the crowd strip of a daily-challenge answer (None = no strip).
+    crowd: Optional[CrowdStrip] = None
 
 
 class QuizFlowService:
@@ -145,8 +148,11 @@ class QuizFlowService:
         usage_tracker: Optional[UsageTracker],
         translation_service: Any,
         analytics: Optional[AnalyticsRecorder] = None,
+        daily_challenge: Any = None,
     ):
         self.analytics = analytics or AnalyticsRecorder()
+        # #205 DailyChallengeService; None without a database.
+        self.daily_challenge = daily_challenge
         self.session_manager = session_manager
         self.input_parser = input_parser
         self.question_retriever = question_retriever
@@ -245,6 +251,8 @@ class QuizFlowService:
             participant_id=participant_id,
             outcome=outcome,
         )
+        if result.crowd is not None:
+            session.last_evaluation.crowd = result.crowd.model_dump()
         self.analytics.emit(
             "answer_evaluated",
             subject_id=session.user_id,
@@ -260,6 +268,9 @@ class QuizFlowService:
                 "question_index": len(session.asked_question_ids),
             },
         )
+        await self._daily_record(
+            session, evaluated_question_id, result.evaluation.result
+        )
 
         # Build audio info
         if include_audio:
@@ -274,13 +285,14 @@ class QuizFlowService:
             )
             self.session_manager.update_session(session)
             self._emit_completed(session, "max_questions")
+            await self._daily_finish(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
             return result
 
         # Check usage limit. #95: custom-pack sessions bypass the free monthly
-        # quota (paid, curated content).
-        if self.usage_tracker and session.user_id and not session.pack_id:
+        # quota (paid, curated content); so does the daily challenge (#205).
+        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
             allowed, remaining, resets_at = await self.usage_tracker.check_limit(
                 session.user_id
             )
@@ -330,6 +342,7 @@ class QuizFlowService:
             )
             self.session_manager.update_session(session)
             self._emit_completed(session, "no_more_questions")
+            await self._daily_finish(session)
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
@@ -430,8 +443,8 @@ class QuizFlowService:
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
 
-        # Record usage (#95: skipped for custom-pack sessions — see check above)
-        if self.usage_tracker and session.user_id and not session.pack_id:
+        # Record usage (#95, #205: skipped for pack and daily sessions — see check above)
+        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
             await self.usage_tracker.record_question(session.user_id)
 
         # Resolve the next question's text ONCE (stem + options + explanation +
@@ -554,10 +567,13 @@ class QuizFlowService:
                     explanation=display_question.explanation,
                 )
 
+                crowd_line = await self._daily_crowd(
+                    session, evaluated_question_id, eval_result, result
+                )
                 # Generate enhanced feedback audio
                 if include_audio and self.tts_service:
                     outcome.feedback_audio = await self._generate_feedback_audio(
-                        eval_result, translated_correct, session.language
+                        eval_result, translated_correct, session.language, crowd_line
                     )
 
                 # Update participant score
@@ -582,9 +598,12 @@ class QuizFlowService:
                 # #188 G4 (founder 2026-10-06): a skip must SAY the answer too —
                 # the static "Skipped." clip left the driver without it unless
                 # they looked at the screen.
+                crowd_line = await self._daily_crowd(
+                    session, evaluated_question_id, "skipped", result
+                )
                 if include_audio and self.tts_service:
                     outcome.feedback_audio = await self._generate_feedback_audio(
-                        "skipped", translated_correct, session.language
+                        "skipped", translated_correct, session.language, crowd_line
                     )
                 result.feedback_received.append("skipped question")
 
@@ -643,15 +662,25 @@ class QuizFlowService:
         )
 
     async def _generate_feedback_audio(
-        self, result: str, correct_answer: str, language: str
+        self,
+        result: str,
+        correct_answer: str,
+        language: str,
+        crowd_line: Optional[str] = None,
     ) -> Optional[bytes]:
-        """Generate TTS audio for answer feedback."""
+        """Generate TTS audio for answer feedback.
+
+        ``crowd_line`` (#205) is one short sentence about the other players,
+        appended to the same utterance — never a TTS call of its own.
+        """
         try:
             from ..translation.feedback_messages import get_correct_answer_message
 
             feedback_text = get_correct_answer_message(
                 result=result, answer=correct_answer, language=language
             )
+            if crowd_line:
+                feedback_text = f"{feedback_text} {crowd_line}"
             # #200: the answer is spoken like the question — digits spelled out
             # in the session language ("tisícdeväťstoosemnásť", "prvého mája"),
             # or the fallback voice reads "1918" in English inside Slovak text.
@@ -660,6 +689,53 @@ class QuizFlowService:
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None
+
+    async def _daily_crowd(
+        self,
+        session: QuizSession,
+        question_id: str,
+        result_value: str,
+        result: FlowResult,
+    ) -> Optional[str]:
+        """#205: set the crowd strip on ``result``; return the line to speak.
+        A failure only loses the strip — never the verdict."""
+        if not (session.daily_challenge_date and self.daily_challenge):
+            return None
+        # A re-grade (#133) runs while last_evaluation still holds this question.
+        previous = session.last_evaluation
+        regrade = previous is not None and previous.question_id == question_id
+        try:
+            result.crowd, line = await self.daily_challenge.answer_strip(
+                session, question_id, result_value, regrade=regrade
+            )
+            return line
+        except Exception as e:
+            logger.warning("Daily challenge crowd lookup failed: %s", e)
+            return None
+
+    async def _daily_record(
+        self,
+        session: QuizSession,
+        question_id: str,
+        result_value: str,
+        regrade: bool = False,
+    ) -> None:
+        if not (session.daily_challenge_date and self.daily_challenge):
+            return
+        try:
+            await self.daily_challenge.record_answer(
+                session, question_id, result_value, regrade=regrade
+            )
+        except Exception as e:
+            logger.error("Daily challenge answer not recorded: %s", e, exc_info=True)
+
+    async def _daily_finish(self, session: QuizSession) -> None:
+        if not (session.daily_challenge_date and self.daily_challenge):
+            return
+        try:
+            await self.daily_challenge.finish(session)
+        except Exception as e:
+            logger.error("Daily challenge finish not recorded: %s", e, exc_info=True)
 
     async def _correct_answer_display(
         self,

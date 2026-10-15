@@ -25,6 +25,8 @@ primary_region = "cdg"
   # #199: daily question-stock check (per language x category, fresh
   # entertainment per language) -> Sentry alert before questions run out.
   QUESTION_STOCK_CHECK_ENABLED = "true"
+  # #205: daily challenge. Off until the founder turns it on ("true").
+  DAILY_CHALLENGE_ENABLED = "false"
   # Park the TTS audio cache on the mounted volume. The default
   # (`./data/tts_cache`) resolves against WORKDIR /app, i.e. container-local
   # storage — so every deploy would re-buy the whole cache from ElevenLabs,

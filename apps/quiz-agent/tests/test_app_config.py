@@ -51,6 +51,8 @@ async def test_defaults_never_block_or_hide_anything():
         "min_version_app_store": None,
         "min_version_testflight": None,
         "orders_enabled": True,
+        # #205: on in dev; prod's fly.toml turns it off until the founder flips it.
+        "daily_challenge_enabled": True,
         "notice": None,
         # No DB in this test app: the voice test block is null (fail open).
         "voice_experiment": None,
@@ -96,3 +98,13 @@ async def test_blank_notice_texts_mean_no_notice(monkeypatch):
     _, body, _ = await _get_config()
 
     assert body["notice"] is None
+
+
+async def test_daily_challenge_switch_hides_the_card(monkeypatch):
+    """#205: prod ships with the daily challenge off; the founder flips one env
+    value to show it — no app release."""
+    monkeypatch.setenv("DAILY_CHALLENGE_ENABLED", "false")
+
+    _, body, _ = await _get_config()
+
+    assert body["daily_challenge_enabled"] is False

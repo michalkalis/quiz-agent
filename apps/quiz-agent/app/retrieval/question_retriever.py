@@ -210,6 +210,11 @@ class QuestionRetriever:
             >>> retriever = QuestionRetriever()
             >>> question = retriever.get_next_question(session)
         """
+        # #205: a daily-challenge session plays its persisted set, in order and
+        # the same for everyone — the player's own history never thins it.
+        if session.fixed_question_ids:
+            return await self._next_fixed_question(session)
+
         # Step 1: Build rich semantic query from session context.
         # A custom pack is a closed set with nothing to rank, and its rows are
         # persisted WITHOUT an embedding (quiz-pack-api PersistStage), while a
@@ -337,6 +342,42 @@ class QuestionRetriever:
             question_difficulty = random.choice(["easy", "medium", "hard"])
             logger.debug("Selected random difficulty: %s", question_difficulty)
         return question_difficulty
+
+    async def _next_fixed_question(self, session: QuizSession) -> Optional[Question]:
+        """The first question of ``fixed_question_ids`` not asked yet. A row that
+        has since disappeared is skipped rather than ending the round."""
+        for question_id in session.fixed_question_ids:
+            if question_id in session.asked_question_ids:
+                continue
+            question = await self._store.get(question_id)
+            if question is not None:
+                return question
+            logger.warning("Daily challenge question %s is gone", question_id)
+        return None
+
+    async def daily_candidates(self, language: str, n: int = 300) -> List[Question]:
+        """Random approved questions a daily challenge in ``language`` may use
+        (#205), each servable to EVERY player of that language the same way.
+
+        Same language predicate as a normal session, but never pending_review
+        (one set for App Store and TestFlight alike), no images, no packs, and
+        in sk/cs an English row only with a stored approved translation — a
+        serve-time translation would word the question differently per player.
+        """
+        session = QuizSession(session_id="daily-challenge", language=language)
+        filters = self._build_metadata_filters("random", session)
+        filters.pop("difficulty")
+        rows = await self._store.sample(
+            filters=filters,
+            n_results=n,
+            excluded_ids=await self._structure_fix_pending(session),
+        )
+        rows = [q for q in rows if not q.is_expired()]
+        if language == "en":
+            return rows
+        english = [q.id for q in rows if q.language != language]
+        translated = await self.get_translations(english, language) if english else {}
+        return [q for q in rows if q.language == language or q.id in translated]
 
     @staticmethod
     def _image_types(session: QuizSession) -> list[str]:

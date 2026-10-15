@@ -75,6 +75,7 @@ from .api import rest, admin
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
+from .daily_challenge.service import DailyChallengeService
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -351,6 +352,13 @@ async def lifespan(app: FastAPI):
     # #51: first-party product analytics (no-op without DATABASE_URL).
     analytics = AnalyticsRecorder(auth_sessionmaker)
     app.state.analytics = analytics
+    # #205: daily challenge (needs the database for its shared sets and plays).
+    daily_challenge = (
+        DailyChallengeService(auth_sessionmaker, question_retriever)
+        if auth_sessionmaker is not None
+        else None
+    )
+    app.state.daily_challenge = daily_challenge
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,
@@ -360,6 +368,7 @@ async def lifespan(app: FastAPI):
         usage_tracker=usage_tracker,
         translation_service=translation_service,
         analytics=analytics,
+        daily_challenge=daily_challenge,
     )
     logger.info("API dependencies configured")
 

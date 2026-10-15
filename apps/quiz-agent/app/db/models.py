@@ -415,3 +415,83 @@ class VoiceExperimentArm(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
+
+
+class DailyChallengeSet(Base):
+    """The day's shared question set for one language (#205 — daily challenge).
+
+    Chosen once, the first time anyone asks for that (language, date), and kept,
+    so every player gets the same five questions even if the corpus changes later
+    that day. ``question_ids`` is the play order.
+    """
+
+    __tablename__ = "daily_challenge_sets"
+
+    language: Mapped[str] = mapped_column(Text, primary_key=True)
+    challenge_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    question_ids: Mapped[list] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class DailyChallengePlay(Base):
+    """One subject's attempt at a day's challenge (#205). One per subject per date.
+
+    Kept apart from ``analytics_events`` on purpose: it is game state shown back
+    to players (crowd numbers, rank), with its own retention, not measurement.
+    ``score`` is the number of questions the player knew; set with
+    ``finished_at`` when the round ends.
+    """
+
+    __tablename__ = "daily_challenge_plays"
+    __table_args__ = (
+        Index(
+            "ux_daily_challenge_plays_subject_date",
+            "subject_id",
+            "challenge_date",
+            unique=True,
+        ),
+        Index("ix_daily_challenge_plays_lang_date", "language", "challenge_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    challenge_date: Mapped[date] = mapped_column(Date, nullable=False)
+    language: Mapped[str] = mapped_column(Text, nullable=False)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Crowd lines the host has spoken in this play (max 3, across resumes).
+    spoken_lines: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
+
+
+class DailyChallengeAnswer(Base):
+    """A player's first graded answer to one question of a day's challenge (#205).
+
+    Only the verdict is kept, never the answer text: the crowd numbers need
+    nothing more. A re-grade of the same question never overwrites the row.
+    """
+
+    __tablename__ = "daily_challenge_answers"
+
+    play_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("daily_challenge_plays.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    question_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    result: Mapped[str] = mapped_column(Text, nullable=False)
+    knew: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    answered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )

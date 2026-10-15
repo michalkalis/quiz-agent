@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..db.models import (
     AnalyticsEvent,
     AnonymousIdentity,
+    DailyChallengePlay,
     DailyUsage,
     Feedback,
     RefreshToken,
@@ -216,9 +217,14 @@ async def erase_anonymous(session: AsyncSession, anon_id: str) -> None:
 
 
 async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -> None:
-    """Delete feedback and analytics events and unlink pack orders for each id."""
+    """Delete feedback, analytics events and daily challenge plays (their answers
+    cascade) and unlink pack orders for each id. A deleted play drops out of
+    that day's crowd numbers too."""
     await session.execute(
         delete(AnalyticsEvent).where(AnalyticsEvent.subject_id.in_(subject_ids))
+    )
+    await session.execute(
+        delete(DailyChallengePlay).where(DailyChallengePlay.subject_id.in_(subject_ids))
     )
     await session.execute(delete(Feedback).where(Feedback.user_id.in_(subject_ids)))
     for subject_id in subject_ids:

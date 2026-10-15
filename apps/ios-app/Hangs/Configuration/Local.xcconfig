@@ -27,3 +27,14 @@ BUNDLE_DISPLAY_NAME = $(APP_DISPLAY_NAME) Local
 CODE_SIGN_ENTITLEMENTS = Hangs/Hangs-Local.entitlements
 
 // Signing lives in the build-type × env composition files (Debug-Local / Release-Local).
+
+// MARK: - CarPlay (#97 — CarPlay support)
+// CarPlay is compiled into Local builds only (Debug-Local, Release-Local), never
+// into Staging/Prod, which are the only configs TestFlight and the App Store
+// build from. The CarPlay entitlement is simulator-only: Apple has not granted
+// it yet, so an on-device Local build must keep the plain entitlements or
+// signing fails. The CarPlay scene is declared in Info.plist under
+// `#ifdef CARPLAY`. scripts/lint-carplay-isolation.py enforces all three.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = CARPLAY $(inherited)
+INFOPLIST_PREPROCESSOR_DEFINITIONS = CARPLAY=1 $(inherited)
+CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*] = Hangs/Hangs-Local-CarPlay.entitlements

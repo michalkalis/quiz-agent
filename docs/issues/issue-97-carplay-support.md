@@ -3,6 +3,32 @@
 **Triage:** enhancement · planned
 **Status:** Planned 2026-07-16 (founder HIGH priority, post-MVP). MVP (#96 — iOS MVP completion) must stay stable: CarPlay code must be mechanically unable to reach mainline TestFlight builds until deliberately enabled in Phase 6.
 
+## Progress 2026-10-15 (branch `feat/97-carplay`)
+
+**Done:** Phase 1 filed. Phase 0 + 2.1 + 2.2 + 3 + 4 implemented, unit-tested and **clicked through on the CarPlay simulator (mba, 2026-10-15)**. Remaining: the Apple wait, then Phase 5.2 (real car) and 6.
+
+**Simulator pass 2026-10-15 (mba, iPhone 17 Pro Max iOS 26.5 + Xcode 26.6 Simulator.app CarPlay window, mock mode `--ui-test`):** home, listening, paused, answer sheet, result, finished, categories list, paywall all reached. Fixed on the way: (1) every car button crashed — CarPlay calls template handlers on its XPC queue, the main-actor-by-default handlers trapped; handlers are nonisolated and hop to the main actor. (2) The voice template silently drops a state switch that comes too soon (blank home after launch, stuck "Listening…"); rendering checks `activeStateIdentifier`, activates on `templateDidAppear`, rechecks after 1 s. (3) The think countdown showed "Trubbo is speaking"; it is the driver's turn, so "Listening…". (4) Picking a category froze the car on a stale template (root swapped while the list pop still ran); the round now starts in the pop's completion. (5) List renamed "Categories" (copy review, existing majority). Kept by design: action buttons are icon-only (the voice template shows no button titles), the answer sheet offers Again + Skip (production auto-confirms; Apple forbids showing the heard text). Driving notes: Simulator must be frontmost for clicks; the mock's HTTP port 9999 is shared by every booted simulator, so with two sims running use `simctl openurl hangs-test://…`.
+
+**Phase 0 changed vs. the plan (simpler, same guarantees):** no new build config or scheme. `CARPLAY` is compiled into the existing Local configs (Debug-Local, Release-Local), which CI already builds and tests; TestFlight/App Store build only Staging/Prod. The CarPlay entitlement is simulator-only (`CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]`), so on-device Local builds still sign before Apple's grant. No Info.plist change at all: `CarPlayAppDelegate` hands the CarPlay scene its delegate in code. Guard: `scripts/lint-carplay-isolation.py` (CI step) fails if a Staging/Prod config resolves the flag, a CarPlay entitlement or a CarPlay scene, or if any `import CarPlay` sits outside `#if CARPLAY`; verified to fail on an injected `CARPLAY` in Prod.
+
+**Phase 2:** 2.1 `AppState.sharedQuizViewModel()` creates the one view model and owns it (HangsApp builds AppState in `init`, so a CarPlay launch with the phone locked has it). 2.2 foreground = phone window OR CarPlay screen (`isPhoneSceneForeground` / `isCarPlaySceneForeground`); the phone's own window phase (not the app-wide one) drives teardown; tests in `HangsTests/CarPlaySceneTests.swift`. 2.3 mapping (`CarPlayScreen`):
+
+| Quiz moment | Car screen | Buttons |
+|---|---|---|
+| idle / finished / error / paywall | home: ready / finished / failed / limitReached | Start + Topics / Play again + Topics / Try again + Topics / none |
+| question or result read aloud | quiz: speaking | Pause, Skip (on result: hold, next) |
+| recording | quiz: listening | Pause, Skip |
+| answer sheet | quiz: confirming | Again, Skip |
+| starting, checking, skipping, pack batch | quiz: thinking | none |
+| paused (incl. result hold) | quiz: paused | Continue |
+
+"End quiz" sits in the quiz template's nav bar. Topics = one pushed list (categories + the user's delivered packs), depth 2 of 3. CarPlay starts skip the phone-only "only N questions left" alert. Launch behaviour (founder 2026-10-15: "nič navyše, k veci"): no spoken greeting; home shows Start + Topics and listens for "start" like the phone's home.
+
+**Apple facts re-checked 2026-10-15** (CarPlay Developer Guide, October 2026): only navigation and voice-based conversational apps may record in CarPlay, and only with the voice control template; voice apps must not show text or imagery in response to requests; ≤3 template levels; ≤5 voice states per template, ≤2 action buttons per state. iOS 27 opens the voice control template to every category but not recording, so the Audio category is no fallback for a quiz.
+
+**Simulator:** Xcode 27 has no Simulator.app CarPlay window (its CarPlay Simulator in Device Hub needs a USB-connected iPhone and, for our app, the granted entitlement). The Xcode 26.5 Simulator.app's I/O → External Displays → CarPlay creates the CarPlay screen; on an iOS 27 device it never starts CarPlay, on the iOS 26.5 iPhone 17 Pro Max CarPlay runs but the window rendered black on the founder's laptop. The laptop grants the agent no screen recording or UI control (founder: do UI checks on mba).
+
+
 ## Why
 
 The product is voice-first trivia while driving; the driver's real surface is the car head unit. A native, audio-first CarPlay presence is competitive white space — Apple blocks screen-based games from CarPlay, so an approved voice experience occupies a surface competitors legally cannot (see `docs/research/competitive-analysis-voice-driving-trivia-2026-06-27.md`).
@@ -46,6 +72,8 @@ Phases 0 and 2 are MVP-safe and land on main normally. Phase 1 starts immediatel
 - Track outcome in this issue. No agent phase waits on this. If rejected → Kill/fallback section.
 
 **Done when:** request filed and confirmation recorded; outcome (grant / rejection / silence) logged when known.
+
+**Status 2026-10-15:** filed (category Voice-Based Conversational, addendum accepted); waiting for Apple's e-mail to hello@missinghue.com. Answer text: `docs/setup/carplay-entitlement-request.md`.
 
 ### Phase 2 — prerequisite refactors on main (agent; MVP-safe, no CarPlay code)
 

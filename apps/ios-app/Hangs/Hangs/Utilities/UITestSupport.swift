@@ -25,7 +25,7 @@
         /// uses this to inject events into the running ViewModel.
         private static var mockSTT: MockElevenLabsSTTService?
 
-        /// Live command sink registered by `AppState.makeQuizViewModel()` when
+        /// Live command sink registered by `AppState.sharedQuizViewModel()` when
         /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
         /// `VoiceCommandCoordinator.handleCommandTranscript` — the real `handleRecognizedCommand`
         /// → `routeCommand` pipeline — so voice-driven navigation is UI-testable even
@@ -206,7 +206,7 @@
             return true
         }
 
-        /// Register the live command sink. Called by `AppState.makeQuizViewModel()`
+        /// Register the live command sink. Called by `AppState.sharedQuizViewModel()`
         /// once the real `QuizViewModel` exists. A later registration replaces the
         /// former (idempotent).
         static func registerCommandSink(_ sink: @escaping @MainActor (String) async -> Void) {

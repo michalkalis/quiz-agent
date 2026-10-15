@@ -718,13 +718,17 @@ final class QuizViewModel: ObservableObject {
     /// Drives the `selected` highlight in MCQOptionPicker without waiting for tap.
     @Published var mcqVoiceMatchedKey: String?
 
-    /// Whether the app scene is foreground-active. Flipped synchronously by
-    /// `handleScenePhase(_:)` BEFORE any teardown so a racing
-    /// `refreshCommandWindow()` or a post-TTS `startSilenceDetectionListening()`
-    /// can never re-arm the mic mid-transition to background (mic-in-background
-    /// fix). `currentCommandScreen` returns nil while this is false.
-    /// Internal for +ScenePhase; the child sub-objects read it via injected closures.
-    var isAppForeground: Bool = true
+    /// Whether a scene the driver is looking at is foreground-active: the phone
+    /// window, or the CarPlay screen (#97 — CarPlay support), which keeps the
+    /// quiz live while the phone itself is locked. The two flags are flipped
+    /// synchronously by `handleScenePhase(_:)` / `handleCarPlayScene(foreground:)`
+    /// BEFORE any teardown so a racing `refreshCommandWindow()` or a post-TTS
+    /// `startSilenceDetectionListening()` can never re-arm the mic mid-transition
+    /// to background (mic-in-background fix). `currentCommandScreen` returns nil
+    /// while this is false. The child sub-objects read it via injected closures.
+    var isAppForeground: Bool { isPhoneSceneForeground || isCarPlaySceneForeground }
+    var isPhoneSceneForeground = true
+    var isCarPlaySceneForeground = false
 
     // MARK: - Dependencies
 

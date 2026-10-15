@@ -29,51 +29,79 @@ extension QuizViewModel {
             // Flip the flag FIRST (synchronously): currentCommandScreen returns
             // nil from here on, so a racing refreshCommandWindow() or a
             // post-TTS startSilenceDetectionListening() cannot re-arm the mic.
-            isAppForeground = false
+            isPhoneSceneForeground = false
             attemptLedger.record(.scene, "background")
-
-            // (a) Tear down the command/VAD listener (idempotent).
-            audioDeviceState.stopSilenceDetectionListening()
-
-            // (b) An in-flight answer recording aborts via the existing #67
-            // interruption teardown — the single recording state-reset path
-            // (no second reset invented here). Since #184 it also drops the
-            // batch capture (`abandonAnswerCapture`), so nothing is stopped
-            // separately for the batch case any more.
-            if quizState == .recording {
-                recordingCoordinator.handleAudioInterruption()
+            // #97: the phone locking under a live CarPlay screen is not leaving
+            // the quiz — the driver is still in it, on the car's screen.
+            guard !isAppForeground else {
+                Logger.audio.info("🌙 Phone → background, CarPlay screen keeps the quiz live")
+                return
             }
-
-            // (c) Release the audio session ONLY when fully idle — never kill
-            // in-flight background TTS (the driving use case).
-            if quizState == .idle, !audioService.isPlaying {
-                audioService.deactivateSession()
-            }
-
-            Logger.audio.info("🌙 Scene → background: mic input torn down (playback untouched)")
+            tearDownAudioInputForBackground()
 
         case .active:
-            isAppForeground = true
+            isPhoneSceneForeground = true
             attemptLedger.record(.scene, "active")
-            refreshCommandWindow() // re-arm via the existing window sync
-            resumeSuppressedAnswerWindow()
-            // #179: a submission that wedged while backgrounded has no live owner
-            // — this branch did nothing at all for `.processing`/`.skipping`. The
-            // watchdog deadline is absolute, so a window that elapsed out of sight
-            // surfaces the retryable error on return instead of a dead screen.
-            rearmStallWatchdog()
-
-            // Foreground reconciliation (#102 findings 1+2): a webhook that
-            // landed while backgrounded (or a purchase sync that failed
-            // offline) otherwise only self-heals on the next identity-mint
-            // event or purchase. Single-flight + retry/backoff live in
-            // `reconcileEntitlements()`.
-            Task { [weak self] in
-                await self?.entitlementReconciler.reconcileEntitlements()
-            }
+            resumeForForeground()
 
         default:
             break
+        }
+    }
+
+    /// #97 — CarPlay support: the CarPlay screen came to the front (the driver
+    /// opened Trubbo on the car's screen) or left it (switched to Maps,
+    /// disconnected). Same rules as the phone window: input runs only while a
+    /// screen the driver is using shows the quiz, playback is never cut.
+    func handleCarPlayScene(foreground: Bool) {
+        let wasForeground = isAppForeground
+        isCarPlaySceneForeground = foreground
+        attemptLedger.record(.scene, foreground ? "carplay.active" : "carplay.background")
+        if foreground {
+            resumeForForeground()
+        } else if wasForeground, !isAppForeground {
+            tearDownAudioInputForBackground()
+        }
+    }
+
+    private func tearDownAudioInputForBackground() {
+        // (a) Tear down the command/VAD listener (idempotent).
+        audioDeviceState.stopSilenceDetectionListening()
+
+        // (b) An in-flight answer recording aborts via the existing #67
+        // interruption teardown — the single recording state-reset path
+        // (no second reset invented here). Since #184 it also drops the
+        // batch capture (`abandonAnswerCapture`), so nothing is stopped
+        // separately for the batch case any more.
+        if quizState == .recording {
+            recordingCoordinator.handleAudioInterruption()
+        }
+
+        // (c) Release the audio session ONLY when fully idle — never kill
+        // in-flight background TTS (the driving use case).
+        if quizState == .idle, !audioService.isPlaying {
+            audioService.deactivateSession()
+        }
+
+        Logger.audio.info("🌙 Scene → background: mic input torn down (playback untouched)")
+    }
+
+    private func resumeForForeground() {
+        refreshCommandWindow() // re-arm via the existing window sync
+        resumeSuppressedAnswerWindow()
+        // #179: a submission that wedged while backgrounded has no live owner
+        // — this branch did nothing at all for `.processing`/`.skipping`. The
+        // watchdog deadline is absolute, so a window that elapsed out of sight
+        // surfaces the retryable error on return instead of a dead screen.
+        rearmStallWatchdog()
+
+        // Foreground reconciliation (#102 findings 1+2): a webhook that
+        // landed while backgrounded (or a purchase sync that failed
+        // offline) otherwise only self-heals on the next identity-mint
+        // event or purchase. Single-flight + retry/backoff live in
+        // `reconcileEntitlements()`.
+        Task { [weak self] in
+            await self?.entitlementReconciler.reconcileEntitlements()
         }
     }
 

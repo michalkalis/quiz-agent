@@ -11,10 +11,18 @@ import SwiftUI
 
 @main
 struct HangsApp: App {
-    @StateObject private var appState = AppState()
+    @StateObject private var appState: AppState
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Built here, not lazily by the first view: the CarPlay scene can
+        // connect while the phone is locked and no phone view exists (#97).
+        let appState = AppState()
+        _appState = StateObject(wrappedValue: appState)
+        #if CARPLAY
+            CarPlaySceneDelegate.appState = appState
+        #endif
+
         // Skip Sentry on simulator — only real-device debug + release builds report.
         // Simulator runs are noisy (hot reloads, repeated launches) and would burn through quota.
         guard !Config.isSimulator, !Config.sentryDSN.isEmpty else { return }
@@ -97,9 +105,11 @@ struct HangsApp: App {
                 // playing while driving, but the mic INPUT must never survive
                 // backgrounding. Route phase changes to the quiz view model,
                 // which tears down input on .background and re-arms on .active.
-                .onChange(of: scenePhase) { _, newPhase in
+                // The phone window's OWN phase, not the app-wide one: a live
+                // CarPlay screen keeps the app active while the phone is locked.
+                .modifier(WindowScenePhaseRelay { newPhase in
                     appState.quizViewModel?.handleScenePhase(newPhase)
-                }
+                })
                 // #51: `app_opened` + flushing queued analytics on background.
                 .onChange(of: scenePhase, initial: true) { _, newPhase in
                     appState.trackScenePhase(newPhase)
@@ -162,5 +172,16 @@ struct HangsApp: App {
         event.extra = extra
 
         return event
+    }
+}
+
+/// Reads the scene phase from inside the window, where it is that window's
+/// own phase; read in `App` it is the aggregate of every scene (#97).
+private struct WindowScenePhaseRelay: ViewModifier {
+    let onChange: (ScenePhase) -> Void
+    @Environment(\.scenePhase) private var scenePhase
+
+    func body(content: Content) -> some View {
+        content.onChange(of: scenePhase) { _, newPhase in onChange(newPhase) }
     }
 }

@@ -49,10 +49,13 @@ final class AppState: ObservableObject {
         analytics: analytics
     )
 
-    /// The live QuizViewModel, registered by `makeQuizViewModel()` (weak — the
-    /// owner is ContentView's `@StateObject`). HangsApp routes scene-phase
-    /// changes through it so the mic input is torn down in the background.
-    private(set) weak var quizViewModel: QuizViewModel?
+    /// The app's one QuizViewModel, created by `sharedQuizViewModel()` and
+    /// owned here for the app's lifetime (#97 — CarPlay support): the phone
+    /// window and the CarPlay scene drive the same quiz, and CarPlay can connect
+    /// while the phone is locked, before any phone view exists. Nil until first
+    /// asked for. HangsApp routes scene-phase changes through it so the mic
+    /// input is torn down in the background.
+    private(set) var quizViewModel: QuizViewModel?
 
     init() {
         #if DEBUG
@@ -84,7 +87,7 @@ final class AppState: ObservableObject {
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 if StoreScreenshotFixtures.isActive {
                     // #190: one ready custom pack on Home (the topic preset for the
-                    // order form is applied in `makeQuizViewModel`).
+                    // order form is applied in `sharedQuizViewModel`).
                     let language = StoreScreenshotFixtures.quizLanguage
                     let content = StoreScreenshotFixtures.content(forQuizLanguage: language)
                     packOrderService = MockPackOrderService(
@@ -331,8 +334,9 @@ final class AppState: ObservableObject {
         }
     #endif
 
-    /// Create a new QuizViewModel with injected dependencies
-    func makeQuizViewModel() -> QuizViewModel {
+    /// The app's QuizViewModel, created with injected dependencies on first use.
+    func sharedQuizViewModel() -> QuizViewModel {
+        if let quizViewModel { return quizViewModel }
         // #102 finding 1: lets the paywall's pre-429 reconciliation check RC's
         // local entitlement cache without QuizViewModel depending on the
         // concrete StoreManager type.

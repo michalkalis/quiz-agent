@@ -279,3 +279,28 @@ async def test_cli_dry_run_output_shape_is_unchanged(
     assert "no_source_url" in out
     assert "Inserted:" not in out
     assert fake_db.statements == []
+
+
+@pytest.mark.asyncio
+async def test_large_import_is_split_under_the_bind_parameter_cap(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#203: one INSERT of 1470 rows broke asyncpg's 32767-parameter cap, so the
+    whole night batch failed. The insert must be chunked so no single statement
+    exceeds the cap, whatever the batch size."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(
+        lib, "_embed_batch", lambda client, texts: [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+    )
+    questions = lib.parse_questions(
+        [_clean(f"q_bulk_{i}") for i in range(5)], lib.AUTO_REVIEW_STATUS
+    )
+    columns = len(lib.QuestionRow.__table__.columns)
+    monkeypatch.setattr(lib, "_MAX_QUERY_PARAMS", columns * 2)  # room for 2 rows
+
+    await lib.import_questions(questions, database_url_or_engine=fake_db, execute=True)
+
+    assert len(fake_db.statements) == 3  # 2 + 2 + 1 rows
+    for stmt in fake_db.statements:
+        assert len(stmt.compile().params) <= columns * 2

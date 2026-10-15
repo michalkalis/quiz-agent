@@ -67,12 +67,14 @@ Not recommended: a global leaderboard (weakest per N-effect, UGC duties), speed 
 
 ## How #1 and #2 would behave
 
-**Phrasing rules (all three languages, copy-review applies):**
-- Correct + rare (≤ 30% knew): celebrate the rarity — "Only 18% of players knew this."
-- Correct + common: short and neutral, or silent — avoid "like 90% of players" deflating the win.
-- Wrong + hard (≤ 30% knew): console — "Only 22% of players knew this one."
-- Wrong + easy: silent. No "80% knew this and you didn't".
-- Round end: compare actual score with the expected score on the same questions; highlight the rarest correct answer; never show a percentile below the middle.
+**Phrasing and timing rules** (second research pass, 2026-10-15; mockups in the [proposal artifact](https://claude.ai/artifact/ChuQmJBB3H4pQhGBhEp4Dq)):
+- Correct + rare (≤ 30% knew): say it right after the verdict, before the explanation — the reward lands while the joy is fresh ("Only 14% of players knew this.").
+- Correct + common: silent about the crowd — "85% knew this" shrinks the win.
+- Wrong + hard (≤ 30% knew): console *after* the explanation, about the task, not the player ("Most players trip on this one."). Consensus information shifts the blame to the task ([data](https://experts.arizona.edu/en/publications/social-comparison-after-success-and-failure-biased-search-for-inf-2/)); a confident error makes the correct answer the thing to hear ([hypercorrection, data](https://pmc.ncbi.nlm.nih.gov/articles/PMC4036076)).
+- Wrong + easy: silent. Negative normative feedback lowers self-efficacy and the wish to retry ([data](https://www.sciencedirect.com/science/article/abs/pii/S1041608016301662)) — the one line with measured harm.
+- At most 3 crowd lines per round, one short sentence each, wording varied (novelty decay, [data](https://gala.gre.ac.uk/id/eprint/19946/); in-car voice still adds load, [data](https://newsroom.aaa.com/wp-content/uploads/2014/10/Cognitive-Distraction-Phase-II-Report-Foundation-October-2014.pdf)). No official limit for spoken feedback exists (gap).
+- Round end: score → crowd comparison → rarest correct answer **last** (peak-end, meta-analysis r≈.58, [data](https://ideas.repec.org/a/eee/jobhdp/v170y2022ics0749597822000334.html)). Below average: no comparison; "hard round, N questions most players missed" + best hit last.
+- No manufactured near-misses ("1 point short") — no added persistence, gambling-adjacent ([data](https://era.library.ualberta.ca/items/ade6408c-33d4-4a81-8379-bcfd7ab685dc)).
 
 **Thin data:**
 - Show a percentage only when a question has at least ~30 real answers (tune once volume is known); below that, say nothing.
@@ -89,9 +91,8 @@ Not recommended: a global leaderboard (weakest per N-effect, UGC duties), speed 
 2. **Then #3 (daily challenge)** — gives the first fair, real ranking, concentrates answers so percentages fill up faster, and gives a reason to share.
 3. **Defer #4–#6.** Family table only with multiplayer/family mode; streaks only if the founder reverses #84.
 
-## Open decisions for the founder
+## Founder decisions
 
-- Phrasing tone and when the host stays silent (rules above are a proposal).
-- Minimum sample before showing a number (proposal: 30).
-- Whether the daily challenge should follow right after, and how it relates to regular rounds (counts toward the monthly quota or not).
-- Whether to revisit #84 (streaks) at all.
+- 2026-10-15: streaks stay off (keeps #84 — drop streak/best score UI).
+- 2026-10-15: tone on wrong answers left to research → rules above.
+- Open: review the [proposal artifact](https://claude.ai/artifact/ChuQmJBB3H4pQhGBhEp4Dq) (mockups 1–6), minimum sample (proposal 30), daily challenge as step 2.

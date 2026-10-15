@@ -152,6 +152,29 @@ class QuizSession(BaseModel):
             "the free monthly quota — a pack is paid, curated content."
         ),
     )
+    daily_challenge_date: Optional[str] = Field(
+        None,
+        description=(
+            "Daily challenge (#205): the player's local date (YYYY-MM-DD) of the "
+            "challenge this session plays. Set → the session plays "
+            "``fixed_question_ids`` in order and is exempt from the free monthly "
+            "quota (the challenge has its own one-per-day guard)."
+        ),
+    )
+    fixed_question_ids: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Questions this session plays, in order (#205 daily challenge). "
+            "Empty → the retriever picks each question."
+        ),
+    )
+    daily_spoken_lines: int = Field(
+        0,
+        description=(
+            "#205: crowd lines spoken so far in this daily challenge (capped at "
+            "3 per challenge)."
+        ),
+    )
 
     # Progress (single-player or aggregate)
     question_number: int = Field(0, description="Current question number (0-indexed)")
@@ -223,6 +246,12 @@ class QuizSession(BaseModel):
             if p.participant_id == participant_id:
                 return p
         return None
+
+    @property
+    def is_quota_exempt(self) -> bool:
+        """Custom-pack (#95, paid content) and daily-challenge (#205, founder
+        decision 4) sessions never draw on the free monthly quota."""
+        return bool(self.pack_id or self.daily_challenge_date)
 
     def is_multiplayer(self) -> bool:
         """Check if session is multiplayer."""

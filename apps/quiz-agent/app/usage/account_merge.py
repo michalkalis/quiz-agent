@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..db.models import (
     AnonymousIdentity,
     CreditLedger,
+    DailyChallengePlay,
     DailyUsage,
     RefreshToken,
     Subscription,
@@ -165,6 +166,7 @@ async def merge_anonymous_identity(
 
     await _fold_subscription(session, anon_id, user_id)
     await _fold_credit_ledger(session, anon_id, user_id)
+    await _fold_daily_challenges(session, anon_id, user_id)
 
     await session.execute(
         update(RefreshToken)
@@ -173,6 +175,26 @@ async def merge_anonymous_identity(
     )
 
     anon.upgraded_to_user_id = user_id
+
+
+async def _fold_daily_challenges(
+    session: AsyncSession, anon_id: str, user_id: str
+) -> None:
+    """#205: the anon's daily challenge plays move to the account, so a
+    challenge played before sign-in still counts as played. On a date the
+    account already played, the anon's play stays where it is (still in that
+    day's crowd, erased with the account through the linked anon id)."""
+    account_dates = select(DailyChallengePlay.challenge_date).where(
+        DailyChallengePlay.subject_id == user_id
+    )
+    await session.execute(
+        update(DailyChallengePlay)
+        .where(
+            DailyChallengePlay.subject_id == anon_id,
+            DailyChallengePlay.challenge_date.not_in(account_dates),
+        )
+        .values(subject_id=user_id)
+    )
 
 
 def _sub_state(row: Subscription) -> SubscriptionState:

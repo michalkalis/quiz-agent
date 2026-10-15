@@ -202,6 +202,9 @@ class Settings(BaseSettings):
     min_app_version_app_store: Optional[str] = None
     min_app_version_testflight: Optional[str] = None
     pack_orders_enabled: bool = True
+    # #205 daily challenge: on in dev/tests, off in prod until the founder
+    # flips it (fly.toml [env] DAILY_CHALLENGE_ENABLED).
+    daily_challenge_enabled: bool = True
     app_notice_sk: Optional[str] = None
     app_notice_cs: Optional[str] = None
     app_notice_en: Optional[str] = None

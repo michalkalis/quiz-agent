@@ -482,6 +482,28 @@ class PgvectorQuestionStore:
                 :n_results
             ]
 
+    async def sample(
+        self,
+        filters: Optional[Dict[str, Any]] = None,
+        n_results: int = 100,
+        excluded_ids: Optional[List[str]] = None,
+    ) -> List[Question]:
+        """A uniformly random sample of rows matching ``filters`` (#205 daily
+        challenge set). ``search`` without a query has no order, so it would
+        always return the same first rows of the table."""
+        async with self._session_factory() as session:
+            stmt = select(questions_table)
+            for clause in _build_where(filters or {}):
+                stmt = stmt.where(clause)
+            excluded_uuids = [
+                u for u in (_coerce_uuid(x) for x in excluded_ids or []) if u
+            ]
+            if excluded_uuids:
+                stmt = stmt.where(~questions_table.c.id.in_(excluded_uuids))
+            stmt = stmt.order_by(func.random()).limit(n_results)
+            result = await session.execute(stmt)
+            return [_row_to_question(row) for row in result.mappings().all()]
+
     async def embed(self, text: str) -> List[float]:
         """The embedding ``find_duplicates`` compares with (#203 203.9: the
         pack-api keeps it in memory for its in-pack cosine check)."""

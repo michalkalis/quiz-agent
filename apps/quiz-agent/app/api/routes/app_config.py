@@ -51,6 +51,8 @@ class AppConfigResponse(BaseModel):
     min_version_app_store: Optional[str] = None
     min_version_testflight: Optional[str] = None
     orders_enabled: bool = True
+    # #205: show the daily challenge card on Home.
+    daily_challenge_enabled: bool = False
     notice: Optional[AppNotice] = None
     # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
     # there is no DB or the read fails; the app then uses its manual switches.
@@ -72,6 +74,7 @@ async def get_app_config(
         min_version_app_store=settings.min_app_version_app_store,
         min_version_testflight=settings.min_app_version_testflight,
         orders_enabled=settings.pack_orders_enabled,
+        daily_challenge_enabled=settings.daily_challenge_enabled,
         notice=notice if (notice.sk or notice.cs or notice.en) else None,
         voice_experiment=await voice_experiment_config(sessionmaker),
     )

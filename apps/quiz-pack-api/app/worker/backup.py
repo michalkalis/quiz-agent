@@ -91,7 +91,7 @@ class BetaOrdersOnly:
     def __init__(self, session_factory: Callable[[], Any] = AsyncSessionLocal) -> None:
         self._session_factory = session_factory
         # The environment of an order never changes, so one lookup per order.
-        self._known: dict[uuid.UUID, bool] = {}
+        self._known: dict[uuid.UUID, str | None] = {}
         self._refusal_logged: set[str] = set()
 
     async def __call__(self, job_id: str) -> bool:
@@ -113,11 +113,13 @@ class BetaOrdersOnly:
                     "backup: cannot read order %s; not taking it", order_id, exc_info=True
                 )
                 return False
-            if env is None:
-                return self._refuse(job_id, "store environment unknown")
-            self._known[order_id] = env in BACKUP_ENVIRONMENTS
-        if not self._known[order_id]:
-            return self._refuse(job_id, "App Store (Production) order")
+            # NULL (or no row) is cached too: the column is written once, at
+            # insert, and the job is enqueued only after that commit.
+            self._known[order_id] = env
+        env = self._known[order_id]
+        if env not in BACKUP_ENVIRONMENTS:
+            why = "store environment unknown" if env is None else f"{env} (App Store) order"
+            return self._refuse(job_id, why)
         return True
 
     def _refuse(self, job_id: str, why: str) -> bool:

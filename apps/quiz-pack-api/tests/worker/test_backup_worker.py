@@ -264,10 +264,12 @@ async def test_a_database_error_refuses_instead_of_guessing() -> None:
 async def test_the_environment_is_looked_up_once_per_order() -> None:
     # ARQ polls about twice a second; an immutable fact needs one query.
     eligible, lookups = _beta_only()
+    orders = [APP_STORE_ORDER, SANDBOX_ORDER, UNKNOWN_ORDER]
     for _ in range(3):
-        await eligible(_job(APP_STORE_ORDER))
-        await eligible(_job(SANDBOX_ORDER))
-    assert sorted(map(str, lookups)) == sorted([str(APP_STORE_ORDER), str(SANDBOX_ORDER)])
+        for order_id in orders:
+            await eligible(_job(order_id))
+    assert sorted(map(str, lookups)) == sorted(map(str, orders))
+    assert await eligible(_job(UNKNOWN_ORDER)) is False  # cached refusal stays a refusal
 
 
 async def test_backup_worker_does_not_claim_app_store_orders_with_fly_down(

@@ -45,7 +45,6 @@ struct QuizEndVoiceTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(TestClock())
         )
         vm.currentSession = Fixtures.makeActiveSession()

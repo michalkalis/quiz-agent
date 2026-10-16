@@ -2,181 +2,132 @@
 //  QuizViewModelSubmissionRaceTests.swift
 //  HangsTests
 //
-//  Issue #79: a TYPED answer submitted while a committed-voice-transcript handler
-//  is suspended mid-flight (inside its STT disconnect) must NOT (a) fire a second
-//  concurrent backend submission, nor (b) resurrect the voice confirmation sheet
-//  with the stale voice transcript. The fix is a single-flight submission epoch
-//  owned by QuizViewModel: every submit path bumps it before its first await, and
-//  handleCommittedTranscript aborts if the epoch moved while it was suspended.
+//  Issue #79: a TYPED answer submitted while a voice answer is still in flight
+//  (its upload not yet back) must NOT (a) grade twice, nor (b) resurrect the
+//  voice confirmation sheet with the stale voice transcript. Since #186 every
+//  submit path begins a new attempt and the voice upload's write-back checks
+//  it still owns the attempt. #208.8: the only voice path is the batch upload
+//  (record → VAD silence → `submitVoiceAnswer`), so the race is driven there,
+//  with the upload parked on `MockNetworkService.submitVoiceAnswerGate`.
 //
 //  Uses withMainSerialExecutor (ConcurrencyExtras) for deterministic scheduling.
-//  The MockElevenLabsSTTService.disconnect() gate parks the committed-transcript
-//  handler so the typed submission can interleave exactly at the race window.
 //
 
-import Foundation
-import Testing
+import Clocks
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 // MARK: - Helpers
 
-/// ViewModel + mocks wired for streaming STT, seeded at .askingQuestion.
+/// One-shot async gate: holds the mocked voice upload in flight.
+private actor UploadGate {
+    private var isOpen = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters.removeAll()
+    }
+}
+
+/// ViewModel + mocks on the batch voice path, seeded at .askingQuestion. A
+/// TestClock nobody advances: no recording window or submit bound can fire
+/// on its own, only the test's events move the flow.
 @MainActor
-private func makeViewModelWithSTT()
-    -> (QuizViewModel, MockNetworkService, MockAudioService, MockElevenLabsSTTService) {
+private func makeBatchViewModel()
+    -> (QuizViewModel, MockNetworkService, MockAudioService, MockSilenceDetectionService) {
     let mockNetwork = Fixtures.makeFullMockNetwork()
     let mockAudio = MockAudioService()
-    let mockPersistence = MockPersistenceStore()
-    let mockSTT = MockElevenLabsSTTService()
+    let silence = MockSilenceDetectionService()
 
     let viewModel = QuizViewModel(
         networkService: mockNetwork,
         audioService: mockAudio,
-        persistenceStore: mockPersistence,
-        silenceDetectionService: MockSilenceDetectionService(),
-        sttService: mockSTT
+        persistenceStore: MockPersistenceStore(),
+        silenceDetectionService: silence,
+        clock: AnyClock(TestClock())
     )
     viewModel.currentSession = Fixtures.makeActiveSession()
     viewModel.currentQuestion = Fixtures.makeQuestion()
     viewModel.quizState = .askingQuestion
-    return (viewModel, mockNetwork, mockAudio, mockSTT)
+    viewModel.settings.isMuted = true // no read-back: the sheet opens at once
+    return (viewModel, mockNetwork, mockAudio, silence)
 }
 
-/// A 4-option MCQ where "Jupiter" is an unambiguous value match (key "b").
+/// Record a spoken answer and let the VAD end it, as in the car: the silence
+/// after speech stops the recording and starts the upload.
 @MainActor
-private func makeMCQQuestion() -> Question {
-    Question(
-        id: "q_mcq_001",
-        question: "Largest planet?",
-        type: .textMultichoice,
-        possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Venus", "d": "Saturn"],
-        difficulty: "medium",
-        topic: "Astronomy",
-        category: "science",
-        sourceUrl: nil,
-        sourceExcerpt: nil,
-        mediaUrl: nil,
-        imageSubtype: nil,
-        explanation: nil,
-        generatedBy: nil
-    )
-}
-
-/// `pumpUntil` for a predicate that lives on the STT ACTOR — the disconnect
-/// gate can only be read with an `await`, which `pumpUntil` (sync, @MainActor)
-/// cannot express. Turn-bounded like its shared twin: #180 track A left nothing
-/// on these paths that sleeps for real time, so a wall-clock deadline here
-/// would only be something for a loaded parallel run to blow.
-@MainActor
-private func pumpUntilAsync(
-    _ predicate: () async -> Bool,
-    turns: Int = 2000,
-    _ comment: Comment? = nil,
-    sourceLocation: SourceLocation = #_sourceLocation
-) async {
-    for _ in 0 ..< turns {
-        if await predicate() { return }
-        await Task.yield()
-    }
-    if await predicate() { return }
-    Issue.record(comment ?? "pumpUntilAsync exhausted \(turns) scheduler turns", sourceLocation: sourceLocation)
+private func speakAnswer(_ viewModel: QuizViewModel, _ silence: MockSilenceDetectionService) async {
+    await viewModel.recordingCoordinator.startRecording()
+    await pumpUntil({ silence.isAnswerCaptureActive }, "answer capture never armed")
+    silence.simulateAnswerAudio(Data(count: 16000))
+    silence.simulateSilenceEvent(.speechStarted)
+    silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.5))
 }
 
 /// Let a just-resumed handler run its (aborting) tail before we assert.
 @MainActor
 private func drainHops() async {
-    for _ in 0 ..< 20 { await Task.yield() }
+    for _ in 0 ..< 30 { await Task.yield() }
 }
 
 // MARK: - Suite
 
-@Suite("QuizViewModel Submission Race Tests (#79)")
+@Suite("QuizViewModel Submission Race Tests (#79)", .serialized)
 @MainActor
 struct QuizViewModelSubmissionRaceTests {
 
-    // MARK: - (a) Free-text race
+    // MARK: - (a) In-flight voice upload
 
-    /// #79 acceptance: a typed answer submitted while the committed free-text
-    /// transcript handler is parked in disconnect() must win — exactly one submit
-    /// (the typed one), sheet stays dismissed, and the stale voice text never
-    /// clobbers transcribedAnswer.
-    @Test("typed answer during a suspended free-text commit yields one submit and no stale sheet")
-    func typedAnswerWinsFreeTextRace() async throws {
+    /// #79 acceptance: a typed answer submitted while the voice upload is still
+    /// in flight must win — exactly one grading (the typed one), the sheet
+    /// stays dismissed, and the stale voice text never lands on it.
+    @Test("typed answer during an in-flight voice upload yields one grading and no stale sheet")
+    func typedAnswerWinsVoiceUploadRace() async throws {
         await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, _, silence) = makeBatchViewModel()
+            let gate = UploadGate()
+            mockNetwork.submitVoiceAnswerGate = { await gate.wait() }
 
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await speakAnswer(viewModel, silence)
+            await pumpUntil({ mockNetwork.submitVoiceAnswerCallCount == 1 }, turns: 2000, "the upload never started")
 
-            // Park the committed-transcript handler inside disconnect().
-            await mockSTT.setGateDisconnect(true)
-            await mockSTT.injectEvent(.committedTranscript("Paris")) // voice
-            await pumpUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
-
-            // Typed answer races in mid-teardown (the #79 window).
-            await viewModel.resubmitAnswer("London") // typed
+            // Typed answer races in while the voice answer is with the server.
+            await viewModel.resubmitAnswer("London")
             #expect(viewModel.quizState.isShowingResult)
 
-            // Resume the parked handler — it must detect the moved epoch and bail.
-            await mockSTT.releaseDisconnect()
-            await pumpUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
+            // The voice upload returns late — its result must be dropped.
+            await gate.open()
             await drainHops()
 
             #expect(mockNetwork.submitTextInputCallCount == 1)
             #expect(mockNetwork.capturedTextInputInput == "London")
             #expect(viewModel.showAnswerConfirmation == false)
-            #expect(viewModel.transcribedAnswer != "Paris")
-        }
-    }
-
-    // MARK: - (b) MCQ race
-
-    /// #79 acceptance: same interleaving on an MCQ question — the typed submit wins
-    /// and the voice MCQ submit (submitMCQAnswer, past the disconnect gate) is
-    /// aborted, so still exactly one backend submission.
-    @Test("typed answer during a suspended MCQ commit aborts the voice MCQ submit")
-    func typedAnswerWinsMCQRace() async throws {
-        await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
-            viewModel.currentQuestion = makeMCQQuestion()
-
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
-
-            await mockSTT.setGateDisconnect(true)
-            await mockSTT.injectEvent(.committedTranscript("Jupiter")) // voice MCQ match
-            await pumpUntilAsync({ await mockSTT.isSuspendedInDisconnect }, "handler never reached disconnect gate")
-
-            await viewModel.resubmitAnswer("London") // typed
+            #expect(viewModel.transcribedAnswer != "Test", "the stale voice transcript resurfaced")
             #expect(viewModel.quizState.isShowingResult)
-
-            await mockSTT.releaseDisconnect()
-            await pumpUntilAsync({ await !mockSTT.isSuspendedInDisconnect }, "handler never resumed")
-            await drainHops()
-
-            #expect(mockNetwork.submitTextInputCallCount == 1)
-            #expect(mockNetwork.capturedTextInputInput == "London")
-            // The MCQ branch (which sets the highlight key) must never be reached.
-            #expect(viewModel.mcqVoiceMatchedKey == nil)
         }
     }
 
     // MARK: - (c) Sheet-dismiss
 
-    /// #79 acceptance: when the voice confirmation sheet is already up (commit
+    /// #79 acceptance: when the voice confirmation sheet is already up (upload
     /// fully processed), a typed answer dismisses it and submits exactly once.
     @Test("typed answer while the confirmation sheet is up dismisses it and submits once")
     func typedAnswerDismissesConfirmationSheet() async throws {
         await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, _, silence) = makeBatchViewModel()
 
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
-
-            await mockSTT.injectEvent(.committedTranscript("Paris")) // no gate → sheet appears
-            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
-            #expect(mockNetwork.submitTextInputCallCount == 0) // sheet only, nothing submitted yet
+            await speakAnswer(viewModel, silence)
+            await pumpUntil({ viewModel.showAnswerConfirmation }, turns: 2000, "confirmation sheet never appeared")
+            #expect(mockNetwork.submitTextInputCallCount == 0) // sheet only, nothing graded via /input
 
             await viewModel.resubmitAnswer("London") // typed
             await pumpUntil({ viewModel.quizState.isShowingResult }, "typed submit never completed")
@@ -189,81 +140,23 @@ struct QuizViewModelSubmissionRaceTests {
 
     // MARK: - (d) Normal voice flow unaffected
 
-    /// #79 regression guard: with NO typed interference the epoch never moves, so
-    /// the committed transcript still surfaces the sheet with the voice text and
-    /// submits nothing until the user confirms — exactly as before the fix.
-    @Test("committed transcript with no typed interference shows the sheet with the voice text")
+    /// #79 regression guard: with NO typed interference nothing supersedes the
+    /// attempt, so the upload's transcript surfaces on the sheet and nothing is
+    /// graded until the user confirms.
+    @Test("a voice answer with no typed interference shows the sheet with the voice text")
     func normalVoiceFlowUnaffected() async throws {
         await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, _, silence) = makeBatchViewModel()
 
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
+            await speakAnswer(viewModel, silence)
+            await pumpUntil({ viewModel.showAnswerConfirmation }, turns: 2000, "confirmation sheet never appeared")
 
-            await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await pumpUntil({ viewModel.quizState == .processing }, "never reached .processing")
-
-            #expect(viewModel.transcribedAnswer == "Paris")
-            #expect(viewModel.showAnswerConfirmation == true)
-            #expect(viewModel.isStreamingSTT == false)
+            #expect(viewModel.quizState == .processing)
+            #expect(viewModel.transcribedAnswer == "Test")
+            // (The sheet may arm its own capture for a spoken replacement, #185 5.1,
+            // so the capture state is not asserted here.)
+            #expect(mockNetwork.submitVoiceAnswerCallCount == 1, "exactly one upload for one answer")
             #expect(mockNetwork.submitTextInputCallCount == 0)
-        }
-    }
-
-    // MARK: - (e) confirmAnswer() double-submit (#100.2)
-
-    /// #100.2 regression guard: auto-confirm timer and a tap both calling
-    /// confirmAnswer() at the same instant must still yield exactly one submit.
-    /// #79's isSubmittingAnswer single-flight flag already closes true
-    /// simultaneity — this should already pass — but it's the sibling case to
-    /// (f) below and worth pinning down explicitly.
-    @Test("two concurrent confirmAnswer calls (auto-confirm + tap) yield exactly one submit")
-    func doubleConfirmAnswerYieldsOneSubmit() async throws {
-        await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
-            await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
-
-            async let first: Void = viewModel.confirmAnswer()
-            async let second: Void = viewModel.confirmAnswer()
-            _ = await (first, second)
-
-            await pumpUntil({ viewModel.quizState.isShowingResult }, "submission never completed")
-            #expect(mockNetwork.submitTextInputCallCount == 1)
-            #expect(mockNetwork.capturedTextInputInput == "Paris")
-        }
-    }
-
-    /// #100.2 actual regression target: a stray/late confirmAnswer() call
-    /// *after* the first has fully resolved (isSubmittingAnswer already reset
-    /// via defer) must not resubmit the stale transcribedAnswer against
-    /// whatever question/session is now current. Fails on pre-fix code
-    /// (transcribedAnswer was never cleared, so the guard at the top of the
-    /// streaming-path tail still sees non-empty text and resubmits "Paris" a
-    /// second time) — passes once confirmAnswer() captures-then-clears
-    /// transcribedAnswer before the await.
-    @Test("a stray confirmAnswer after the sheet already resolved does not resubmit the stale transcript")
-    func staleConfirmAnswerAfterResolutionDoesNotResubmit() async throws {
-        await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, mockSTT) = makeViewModelWithSTT()
-            await viewModel.recordingCoordinator.startRecording()
-            await pumpUntil({ viewModel.isStreamingSTT }, "streaming never started")
-            await mockSTT.injectEvent(.committedTranscript("Paris"))
-            await pumpUntil({ viewModel.showAnswerConfirmation }, "confirmation sheet never appeared")
-
-            // First confirm (e.g. auto-confirm timer) resolves fully.
-            await viewModel.confirmAnswer()
-            await pumpUntil({ viewModel.quizState.isShowingResult }, "first submit never completed")
-            #expect(mockNetwork.submitTextInputCallCount == 1)
-
-            // Stray/delayed second call (e.g. a button tap recognized as the sheet
-            // dismissed) — must be a no-op now that transcribedAnswer was cleared.
-            await viewModel.confirmAnswer()
-            await drainHops()
-
-            #expect(mockNetwork.submitTextInputCallCount == 1) // still one, not two
         }
     }
 
@@ -290,7 +183,7 @@ struct QuizViewModelSubmissionRaceTests {
     @Test("Whisper path: concurrent confirmAnswer calls never resubmit the stale transcript")
     func doubleConfirmAnswerOnWhisperPathDoesNotResubmit() async throws {
         try await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, _) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, _, _) = makeBatchViewModel()
             try seedWhisperConfirmation(viewModel, mockNetwork)
 
             async let first: Void = viewModel.confirmAnswer()
@@ -311,7 +204,7 @@ struct QuizViewModelSubmissionRaceTests {
     @Test("Whisper path: a stray confirmAnswer after resolution does not resubmit the stale transcript")
     func staleConfirmAnswerOnWhisperPathDoesNotResubmit() async throws {
         try await withMainSerialExecutor {
-            let (viewModel, mockNetwork, _, _) = makeViewModelWithSTT()
+            let (viewModel, mockNetwork, _, _) = makeBatchViewModel()
             try seedWhisperConfirmation(viewModel, mockNetwork)
 
             await viewModel.confirmAnswer()

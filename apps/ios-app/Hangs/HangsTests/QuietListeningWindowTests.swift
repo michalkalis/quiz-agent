@@ -22,8 +22,7 @@ private func makeQuietWindowVM() -> (QuizViewModel, MockSilenceDetectionService,
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
-        silenceDetectionService: silence,
-        sttService: nil
+        silenceDetectionService: silence
     )
     return (vm, silence, audio)
 }

@@ -5,13 +5,13 @@
 //  #184 track D — the confirmation sheet reads the recognised VOICE answer back.
 //  Founder (car test 2026-09-21): with eyes on the road the sheet's text is
 //  unreadable, so a mishearing was only discovered on the result screen. Only a
-//  voice answer is read back (the streaming commit and the batch upload both
-//  land here); an MCQ tap or a typed answer never reaches this file — the
+//  voice answer is read back (the answer upload lands here); an MCQ tap or a typed answer never reaches this file — the
 //  founder called reading a tapped option back "useless" (#178, 2026-09-13).
 //
 //  Order of events: sheet opens → listener torn down (the app must not
-//  transcribe its own voice, #119/#149) → TTS via the generic backend endpoint
-//  (`synthesizeSpeech`, cached server-side) → THEN auto-confirm and the
+//  transcribe its own voice, #119/#149) → TTS: the audio the answer upload
+//  already brought back (#208.3, `read_back`), else the generic backend
+//  endpoint (`synthesizeSpeech`, cached server-side) → THEN auto-confirm and the
 //  "ok"/"again" command window arm. Arming them under the read-back would
 //  spend the 5 s auto-confirm on the app talking, and open the mic to it.
 //  #185 5.2: and the countdown waits until the mic is actually live again
@@ -27,7 +27,10 @@ extension RecordingCoordinator {
     /// read-back (immediately when muted, empty, or on any TTS failure).
     /// `owner` (#186 step 1) is the attempt that recorded the answer — the
     /// sheet belongs to it; `nil` = the current attempt.
-    func presentVoiceTranscript(_ text: String, owner: AttemptID? = nil) {
+    /// `readBack` (#208.3): the read-back the server synthesized with the
+    /// upload. Played only when it speaks exactly `text`, the sheet's text;
+    /// otherwise (absent, or another text) the app synthesizes it itself.
+    func presentVoiceTranscript(_ text: String, owner: AttemptID? = nil, readBack: ReadBackAudio? = nil) {
         let owner = owner ?? attemptLedger.current
         cancelAnswerReadBack()
         // #185: a new answer on the sheet — the previous one's audio is done,
@@ -60,13 +63,20 @@ extension RecordingCoordinator {
             // sheet's countdown and listener wait for it — how long synthesis
             // takes in the field decides whether it needs one.
             let synthesisStartedAt = ContinuousClock.now
+            let prepared = Self.preparedReadBackAudio(readBack, for: text)
             do {
-                let audio = try await networkService.synthesizeSpeech(
-                    text: spoken, language: currentSession()?.language ?? settings().language
-                )
+                let audio: Data
+                if let prepared {
+                    audio = prepared
+                } else {
+                    audio = try await networkService.synthesizeSpeech(
+                        text: spoken, language: currentSession()?.language ?? settings().language
+                    )
+                }
                 SentryLog.info("answer read-back synthesized", category: .audio, attributes: [
                     "synthMs": Int((ContinuousClock.now - synthesisStartedAt) / .milliseconds(1)),
                     "bytes": audio.count,
+                    "source": prepared == nil ? "tts" : "submit",
                 ])
                 try Task.checkCancellation()
                 _ = try await audioService.playOpusAudio(audio)
@@ -99,6 +109,14 @@ extension RecordingCoordinator {
             armConfirmationTail()
         }
         taskBag.add(task, key: .answerReadBack)
+    }
+
+    /// The server's read-back audio, if it speaks exactly what the sheet shows
+    /// (#208.3). Anything else — no read-back, a different text, audio that
+    /// does not decode — returns nil and the app synthesizes it as before.
+    nonisolated static func preparedReadBackAudio(_ readBack: ReadBackAudio?, for sheetText: String) -> Data? {
+        guard let readBack, readBack.text == sheetText else { return nil }
+        return Data(base64Encoded: readBack.audioBase64)
     }
 
     /// Stop an in-flight read-back (confirm, re-record, edit, cancel, dismiss).

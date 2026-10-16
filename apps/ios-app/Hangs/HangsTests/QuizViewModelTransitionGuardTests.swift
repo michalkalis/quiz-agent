@@ -81,7 +81,7 @@ struct QuizViewModelTransitionGuardTests {
         // it is the early-exit-with-results path now; a result landing without
         // an evaluation is still illegal from .recording.)
         vm.quizState = .recording
-        vm.liveTranscript = "the driver was mid-answer"
+        vm.recordingCoordinator.speechDetectedDuringAutoRecord = true // the driver was mid-answer
 
         #expect(vm.transition(to: makeResultState()) == false, ".recording → .showingResult is not in the legal table")
 
@@ -90,7 +90,7 @@ struct QuizViewModelTransitionGuardTests {
             "a refused transition must not claim the screen changed — the glow would stop meaning 'your command landed'"
         )
         #expect(
-            vm.liveTranscript == "the driver was mid-answer",
+            vm.recordingCoordinator.speechDetectedDuringAutoRecord,
             "a refused transition must not run the phase-exit reset — it would drop a live answer mid-capture"
         )
     }

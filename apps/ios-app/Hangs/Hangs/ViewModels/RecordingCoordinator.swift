@@ -4,7 +4,7 @@
 //
 //  The recording + confirmation slice extracted from QuizViewModel (#113 T5):
 //  class + state + injection. Body spans RecordingCoordinator+Capture /
-//  +Streaming / +Submission / +Confirmation (decision-7 ≤300-line split).
+//  +Submission / +Confirmation (decision-7 ≤300-line split).
 //
 
 import Combine
@@ -36,18 +36,6 @@ final class RecordingCoordinator: ObservableObject {
     @Published private var confirmationState = ConfirmationState()
 
     // MARK: - Recording-cluster accessors
-
-    /// Live transcript from ElevenLabs (updates as user speaks)
-    var liveTranscript: String {
-        get { recordingState.liveTranscript }
-        set { recordingState.liveTranscript = newValue }
-    }
-
-    /// Whether streaming STT is active
-    var isStreamingSTT: Bool {
-        get { recordingState.isStreamingSTT }
-        set { recordingState.isStreamingSTT = newValue }
-    }
 
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool {
@@ -173,14 +161,13 @@ final class RecordingCoordinator: ObservableObject {
     let audioService: AudioServiceProtocol
     let networkService: NetworkServiceProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
-    let sttService: ElevenLabsSTTServiceProtocol?
     let taskBag: TaskBag
     /// #186 step 1: the façade's attempt owner, shared like `taskBag` — every
     /// async result in this coordinator proves ownership through it.
     let attemptLedger: AttemptLedger
 
-    /// The façade's clock (#180 track A): submit timeout, cold-wake backoff and
-    /// the STT commit watchdog all run on it.
+    /// The façade's clock (#180 track A): submit timeout and cold-wake backoff
+    /// run on it.
     let clock: AnyClock<Duration>
 
     // MARK: - #184 batch answer capture
@@ -227,12 +214,6 @@ final class RecordingCoordinator: ObservableObject {
     /// (the detector could not vouch for the silence), or `nil`. Telemetry
     /// only — logged with the recording's stop.
     var noSpeechWindowDeferral: NoSpeechWindowVerdict?
-
-    /// #184: whether the NEXT recording takes the ElevenLabs Realtime path
-    /// (`sttService` present AND the runtime switch on). The façade injects the
-    /// production read (`VoicePipelineFlags.realtimeSTTEnabled`); tests default
-    /// to `true` so an injected mock STT service still means "streaming".
-    let realtimeSTTEnabled: @MainActor () -> Bool
 
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
 
@@ -313,7 +294,6 @@ final class RecordingCoordinator: ObservableObject {
         audioService: AudioServiceProtocol,
         networkService: NetworkServiceProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol,
-        sttService: ElevenLabsSTTServiceProtocol?,
         taskBag: TaskBag,
         attemptLedger: AttemptLedger,
         clock: AnyClock<Duration>,
@@ -351,14 +331,12 @@ final class RecordingCoordinator: ObservableObject {
         setPlayingAnswerReadBack: @escaping @MainActor (Bool) -> Void = { _ in },
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
         stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
-        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         answerRecordingDecided: @escaping @MainActor () -> Void = {}
     ) {
         self.audioService = audioService
         self.networkService = networkService
         self.silenceDetectionService = silenceDetectionService
-        self.sttService = sttService
         self.taskBag = taskBag
         self.attemptLedger = attemptLedger
         self.clock = clock
@@ -396,7 +374,6 @@ final class RecordingCoordinator: ObservableObject {
         self.setPlayingAnswerReadBack = setPlayingAnswerReadBack
         self.isPlayingQuestionTTS = isPlayingQuestionTTS
         self.stopQuestionReadOut = stopQuestionReadOut
-        self.realtimeSTTEnabled = realtimeSTTEnabled
         self.trackAnalytics = trackAnalytics
         self.answerRecordingDecided = answerRecordingDecided
     }
@@ -435,10 +412,6 @@ final class RecordingCoordinator: ObservableObject {
         stopSheetCapture() // #185 5.1 — before the capture it shares is abandoned
         abandonAnswerCapture()
         inputLevel.reset() // #185 track F — the façade's cancelAll ended its feed
-        // Streaming teardown first: a reset can fire while the engine is still
-        // capturing; zeroing `isStreamingSTT` without stopping it would leak a
-        // live recorder past cleanupStreamingSTT's guard.
-        cleanupStreamingSTT()
         recordingState.reset()
         confirmationState.reset()
     }
@@ -451,7 +424,6 @@ final class RecordingCoordinator: ObservableObject {
     func resetOnPhaseExit() {
         cancelAnswerReadBack() // #184 — see reset()
         stopSheetCapture() // #185 5.1: the sheet it listened for is gone
-        cleanupStreamingSTT()
         recordingState.resetCaptureState()
         confirmationState.reset()
     }
@@ -465,17 +437,5 @@ final class RecordingCoordinator: ObservableObject {
         // when the recording does, and the bar must stop glowing with them.
         taskBag.cancel(.inputLevel)
         inputLevel.reset()
-    }
-
-    /// Clean up streaming STT resources
-    func cleanupStreamingSTT() {
-        taskBag.cancel(.sttEvent)
-        taskBag.cancel(.sttChunk)
-        if isStreamingSTT {
-            audioService.stopStreamingRecording()
-            Task { [sttService] in await sttService?.disconnect() }
-            isStreamingSTT = false
-            liveTranscript = ""
-        }
     }
 }

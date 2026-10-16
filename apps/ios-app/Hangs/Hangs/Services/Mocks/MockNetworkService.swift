@@ -69,6 +69,20 @@ import os
         var capturedVoiceAnswerQuestionId: String?
         /// #204.2: the rejected transcripts each voice upload carried, in order.
         var capturedVoiceAnswerRejectedTranscripts: [[String]] = []
+        /// #208.3: whether each voice upload asked for the read-back, in order.
+        var capturedVoiceAnswerReadBack: [Bool] = []
+        /// #208.8 UI-test seam: what the "server" heard in the NEXT voice
+        /// upload. Set by `UITestSupport` when a scenario injects a spoken
+        /// answer; the upload is then graded like a text answer and comes back
+        /// with this transcript as `evaluation.userAnswer`. Consumed once.
+        var nextVoiceTranscript: String?
+        /// #208.8 dictation: every uploaded clip and its language, in order, and
+        /// what the "server" hears (or the error it throws).
+        var capturedDictationUploads: [(bytes: Int, language: String)] = []
+        var dictationTranscript = "mock dictation"
+        var dictationError: Error?
+        /// Awaited inside `transcribeDictation` — lets a test hold it in flight.
+        var dictationGate: (@Sendable () async -> Void)?
         /// When set, `submitTextInput` throws this instead of returning — the
         /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
         /// failure (e.g. the #133 409 `question_mismatch`) on the text path
@@ -243,9 +257,10 @@ import os
             return response
         }
 
-        func submitVoiceAnswer(sessionId _: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse {
+        func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String], readBack: Bool) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
             capturedVoiceAnswerRejectedTranscripts.append(rejectedTranscripts)
+            capturedVoiceAnswerReadBack.append(readBack)
             capturedVoiceAnswerQuestionId = questionId
             capturedVoiceAnswerFileName = fileName
             capturedVoiceAnswerBytes = audioData.count
@@ -258,10 +273,42 @@ import os
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
+            if let transcript = nextVoiceTranscript {
+                nextVoiceTranscript = nil
+                return try await gradedVoiceResponse(
+                    transcript: transcript, sessionId: sessionId, questionId: questionId
+                )
+            }
             guard let response = mockResponse else {
                 throw NetworkError.invalidResponse
             }
             return response
+        }
+
+        /// The backend grades a voice upload exactly like the text of its
+        /// transcript and echoes that transcript as `evaluation.userAnswer`.
+        private func gradedVoiceResponse(transcript: String, sessionId: String, questionId: String?) async throws -> QuizResponse {
+            let graded = try await submitTextInput(sessionId: sessionId, input: transcript, audio: false, questionId: questionId)
+            guard let verdict = graded.evaluation else { return graded }
+            return QuizResponse(
+                success: graded.success,
+                message: graded.message,
+                session: graded.session,
+                currentQuestion: graded.currentQuestion,
+                evaluation: Evaluation(
+                    userAnswer: transcript,
+                    result: verdict.result,
+                    points: verdict.points,
+                    correctAnswer: verdict.correctAnswer,
+                    questionId: verdict.questionId,
+                    explanation: verdict.explanation,
+                    headlineAnswer: verdict.headlineAnswer
+                ),
+                feedbackReceived: graded.feedbackReceived,
+                audio: graded.audio,
+                awaitingQuestion: graded.awaitingQuestion,
+                crowd: graded.crowd
+            )
         }
 
         // MARK: - Feedback (#109) capture + control
@@ -376,11 +423,14 @@ import os
             }
         }
 
-        func fetchElevenLabsToken() async throws -> String {
+        func transcribeDictation(audioWAV: Data, language: String) async throws -> String {
+            capturedDictationUploads.append((audioWAV.count, language))
+            await dictationGate?()
+            if let dictationError { throw dictationError }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
-            return "mock-elevenlabs-token"
+            return dictationTranscript
         }
 
         /// #132 E recap narration: records each chunk so tests can assert what

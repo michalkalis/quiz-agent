@@ -17,7 +17,6 @@ final class AppState: ObservableObject {
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
-    let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
     let authService: AuthService
@@ -75,7 +74,6 @@ final class AppState: ObservableObject {
                 audioService = mocks.audio
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
-                sttService = mocks.stt
                 analytics = NoopAnalyticsClient()
                 let purchaseMock = MockPurchaseService()
                 // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
@@ -189,13 +187,6 @@ final class AppState: ObservableObject {
         #endif
         silenceDetectionService = resolved
 
-        // ElevenLabs streaming STT (controlled by feature flag)
-        if Config.useElevenLabsSTT {
-            sttService = ElevenLabsSTTService()
-        } else {
-            sttService = nil
-        }
-
         // #136: NO audio-session activation at launch — the eager
         // setupAudioSession here paused external audio (Spotify) the moment the
         // app opened. Home command listening arms its own QUIET mixable session
@@ -256,8 +247,6 @@ final class AppState: ObservableObject {
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
         Logger.quiz.info("🔇 Silence detection: available")
-        let sttEnabled = sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
-        Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
 
     // For testing
@@ -266,7 +255,6 @@ final class AppState: ObservableObject {
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
-        sttService: ElevenLabsSTTServiceProtocol? = nil,
         storeManager: StoreManager? = nil,
         authService: AuthService? = nil,
         packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
@@ -278,7 +266,6 @@ final class AppState: ObservableObject {
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
-        self.sttService = sttService
         self.storeManager = storeManager ?? StoreManager()
         self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
         self.packOrderService = packOrderService
@@ -320,8 +307,6 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = open
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
                 viewModel.quizState = .recording
-                viewModel.liveTranscript = content.openAnswer
-                viewModel.isStreamingSTT = true
             case "confirm":
                 viewModel.currentQuestion = open
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
@@ -337,7 +322,6 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = mcq
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
                 viewModel.quizState = .recording
-                viewModel.isStreamingSTT = true
             default:
                 break
             }
@@ -356,22 +340,7 @@ final class AppState: ObservableObject {
             audioService: audioService,
             persistenceStore: persistenceStore,
             silenceDetectionService: silenceDetectionService,
-            sttService: sttService,
             isLocallyEntitled: { storeManager.isPurchased },
-            // #184: realtime vs. batch answers is the founder's in-car A/B switch.
-            realtimeSTTEnabled: {
-                #if DEBUG
-                    // The --ui-test mock STT (UITestSupport.makeMockServices) is a
-                    // streaming mock: the frozen RS suite drives answers by injecting
-                    // realtime STT events, and the batch path (local VAD → WAV →
-                    // backend) never reads them. #184 flipped the default to batch,
-                    // which silently broke RS-01/03/05/06/07/08/09/16/17 — so under
-                    // --ui-test the answer path stays realtime. Batch has no UI-test
-                    // coverage yet (#184 follow-up).
-                    if UITestSupport.isUITesting { return true }
-                #endif
-                return VoicePipelineFlags.realtimeSTTEnabled
-            },
             analytics: analytics,
             answerRecordingUploader: answerRecordingUploader,
             voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment }
@@ -384,13 +353,14 @@ final class AppState: ObservableObject {
             // injects the transcript; on a loaded CI runner the 5 s window closed
             // first, and the mock's forced commit ("Paris") reached the sheet
             // instead of the injected answer. The cap still ends the recording.
+            // (#208.8: the batch path has no forced commit — an expired window
+            // now lands on the empty sheet instead, so the reason stands.)
             if CommandLine.arguments.contains("--ui-test-park-speech-window") {
                 viewModel.recordingCoordinator.speechStartWindow = viewModel.recordingCoordinator.deadAirCap
             }
             // `--ui-test-error`: land directly on a voice QuestionView with the
             // recording-error banner shown, so the error state can be screenshot-
-            // verified without driving the full record→disconnect flow. Mirrors the
-            // "Connection lost" copy set by RecordingCoordinator+Streaming on STT drop.
+            // verified without driving the full record→interruption flow.
             if CommandLine.arguments.contains("--ui-test-error") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .askingQuestion
@@ -431,8 +401,6 @@ final class AppState: ObservableObject {
             if CommandLine.arguments.contains("--ui-test-recording") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .recording
-                viewModel.liveTranscript = "Paris is the capital of France"
-                viewModel.isStreamingSTT = true
             }
             // `--ui-test-glow-matched` / `--ui-test-glow-unmatched` (#122): voice
             // QuestionView with the ambient-glow feedback phase pinned, so the

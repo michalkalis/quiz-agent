@@ -25,6 +25,10 @@ struct QuizResponse: Codable, Sendable {
     /// #205: the crowd strip of a daily-challenge answer. Absent = no strip
     /// (a wrong answer most others knew, or not a daily round).
     let crowd: CrowdStrip?
+    /// #208.3: the "you said" read-back the server synthesized while grading a
+    /// voice answer (only when the submit asked for it with `read_back=true`).
+    /// Absent = synthesize it with `POST /tts/synthesize` as before.
+    let readBack: ReadBackAudio?
 
     enum CodingKeys: String, CodingKey {
         case success
@@ -36,6 +40,7 @@ struct QuizResponse: Codable, Sendable {
         case audio
         case awaitingQuestion = "awaiting_question"
         case crowd
+        case readBack = "read_back"
     }
 
     init(
@@ -47,7 +52,8 @@ struct QuizResponse: Codable, Sendable {
         feedbackReceived: [String],
         audio: AudioInfo?,
         awaitingQuestion: Bool = false,
-        crowd: CrowdStrip? = nil
+        crowd: CrowdStrip? = nil,
+        readBack: ReadBackAudio? = nil
     ) {
         self.success = success
         self.message = message
@@ -58,6 +64,7 @@ struct QuizResponse: Codable, Sendable {
         self.audio = audio
         self.awaitingQuestion = awaitingQuestion
         self.crowd = crowd
+        self.readBack = readBack
     }
 
     /// Hand-written so a missing `awaiting_question` decodes as `false` — the
@@ -75,6 +82,23 @@ struct QuizResponse: Codable, Sendable {
         awaitingQuestion = try container.decodeIfPresent(Bool.self, forKey: .awaitingQuestion) ?? false
         // #205: never the reason an answer is lost — an unreadable strip is no strip.
         crowd = try? container.decodeIfPresent(CrowdStrip.self, forKey: .crowd)
+        // #208.3: an optional speed-up — an unreadable one falls back to TTS.
+        readBack = try? container.decodeIfPresent(ReadBackAudio.self, forKey: .readBack)
+    }
+}
+
+/// #208.3 `ReadBackAudio` (backend `api/deps.py`): the confirmation read-back,
+/// synthesized during grading. Play it only while the sheet still shows
+/// exactly `text` (= `evaluation.userAnswer`).
+struct ReadBackAudio: Codable, Sendable, Equatable {
+    let text: String
+    let audioBase64: String
+    let format: String
+
+    enum CodingKeys: String, CodingKey {
+        case text
+        case audioBase64 = "audio_base64"
+        case format
     }
 }
 

@@ -220,7 +220,6 @@ struct RecordingFeedbackPipelineTests {
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(TestClock())
         )
         vm.currentSession = Fixtures.makeActiveSession()

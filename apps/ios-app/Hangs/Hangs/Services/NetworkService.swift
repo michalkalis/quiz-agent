@@ -28,7 +28,10 @@ protocol NetworkServiceProtocol: Sendable {
     /// `rejectedTranscripts` (#204.2): what the player already rejected on this
     /// question, sent as the `rejected_transcripts` form field (JSON array);
     /// empty = the field is left out (today's request).
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse
+    /// `readBack` (#208.3): ask the server to synthesize the "you said" read-back
+    /// while it grades and return it as `QuizResponse.readBack`. Send it only
+    /// when the read-back will be played (not muted).
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String], readBack: Bool) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse
     /// #182: fetch the next question of a custom pack that was still generating
     /// when the previous answer was graded (`QuizResponse.awaitingQuestion`).
@@ -53,7 +56,10 @@ protocol NetworkServiceProtocol: Sendable {
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
     func flagQuestion(sessionId: String, reason: String?) async throws
-    func fetchElevenLabsToken() async throws -> String
+    /// #208.8: `POST /voice/dictation` — a dictated clip (16-bit mono WAV) in,
+    /// its text out (empty when nothing intelligible was heard). Used by the
+    /// feedback, rating and pack-prompt dictation; the server runs OpenAI STT.
+    func transcribeDictation(audioWAV: Data, language: String) async throws -> String
     /// `GET /usage/me` — the backend derives the subject from the bearer, the
     /// same identity every write path (sessions, RC webhook grants, sync) is
     /// keyed on. Never pass a client-side id here: reading usage under the
@@ -191,7 +197,7 @@ actor NetworkService: NetworkServiceProtocol {
     //
     // Returns raw `Data` rather than decoding — callers own their own decode
     // (MainActor iso8601 for createSession/startQuiz/submitVoiceAnswer/
-    // submitTextInput; plain decode for getUsage/fetchElevenLabsToken) so this
+    // submitTextInput; plain decode for getUsage/transcribeDictation) so this
     // stays off the main actor and no decode is dragged onto it implicitly.
 
     private func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
@@ -496,14 +502,23 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Voice Submission
 
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil, rejectedTranscripts: [String] = []) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil, rejectedTranscripts: [String] = [], readBack: Bool = false) async throws -> QuizResponse {
         // #133 1a: the route takes `question_id` as a QUERY param (the body is the
         // multipart audio), and rejects a mismatch BEFORE paying for transcription.
         guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)"), resolvingAgainstBaseURL: false) else {
             throw NetworkError.invalidURL
         }
+        var queryItems: [URLQueryItem] = []
         if let questionId {
-            components.queryItems = [URLQueryItem(name: "question_id", value: questionId)]
+            queryItems.append(URLQueryItem(name: "question_id", value: questionId))
+        }
+        // #208.3: a backend without the parameter ignores it (and so does an
+        // old one, which then simply sends no `read_back`).
+        if readBack {
+            queryItems.append(URLQueryItem(name: "read_back", value: "true"))
+        }
+        if !queryItems.isEmpty {
+            components.queryItems = queryItems
         }
 
         guard let endpoint = components.url else {
@@ -760,31 +775,37 @@ actor NetworkService: NetworkServiceProtocol {
         return data
     }
 
-    // MARK: - ElevenLabs Token
+    // MARK: - Dictation (#208.8)
 
-    func fetchElevenLabsToken() async throws -> String {
-        let endpoint = baseURL.appendingPathComponent("/api/v1/elevenlabs/token")
+    func transcribeDictation(audioWAV: Data, language: String) async throws -> String {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/voice/dictation")
 
+        let boundary = UUID().uuidString
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        // #181: this wait is spent with the mic SHUT and the screen saying
-        // "listening". On a cold prod machine it ran the full 10 s before the
-        // batch fallback opened the mic; 5 s is still ~10× a normal round trip.
-        request.timeoutInterval = 5
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        // Upload of up to 2 min of audio plus one transcription.
+        request.timeoutInterval = 60
 
-        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
+        var body = Data()
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"language\"\r\n\r\n".utf8))
+        body.append(Data(language.utf8))
+        body.append(Data("\r\n--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"audio\"; filename=\"dictation.wav\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/wav\r\n\r\n".utf8))
+        body.append(audioWAV)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        request.httpBody = body
 
-        let data = try await performRequestData(request, endpointPath: "/api/v1/elevenlabs/token")
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (dictation: \(audioWAV.count, privacy: .public) bytes)")
 
-        struct TokenResponse: Decodable {
-            let token: String
+        let data = try await performRequestData(request, endpointPath: "/api/v1/voice/dictation")
+
+        struct DictationResponse: Decodable {
+            let text: String
         }
-
-        let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-
-        Logger.network.info("✅ ElevenLabs token received")
-
-        return tokenResponse.token
+        return try JSONDecoder().decode(DictationResponse.self, from: data).text
     }
 
     // MARK: - Usage / Freemium

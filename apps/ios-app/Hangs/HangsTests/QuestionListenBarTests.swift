@@ -255,8 +255,7 @@ struct QuestionViewListenBarPresenceTests {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = question

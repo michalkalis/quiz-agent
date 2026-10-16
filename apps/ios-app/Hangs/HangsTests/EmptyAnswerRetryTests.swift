@@ -35,7 +35,6 @@ struct EmptyAnswerRetryTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -197,7 +196,6 @@ struct RecordingDuringReadOutTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()

@@ -18,12 +18,6 @@ struct RecordingState {
     // Capture-scoped — dropped whenever the quiz leaves the
     // recording/processing pair (`resetCaptureState`).
 
-    /// Live transcript from ElevenLabs (updates as user speaks)
-    var liveTranscript: String = ""
-
-    /// Whether streaming STT is active
-    var isStreamingSTT: Bool = false
-
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
@@ -66,8 +60,6 @@ struct RecordingState {
 
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
-        liveTranscript = ""
-        isStreamingSTT = false
         speechDetectedDuringAutoRecord = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil

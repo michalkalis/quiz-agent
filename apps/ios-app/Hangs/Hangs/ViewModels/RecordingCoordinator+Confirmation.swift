@@ -105,7 +105,7 @@ extension RecordingCoordinator {
             return
         }
 
-        // Streaming STT path: submit the transcribed text via /sessions/{id}/input
+        // No graded upload to reuse (edited, or a typed sheet): submit the text via /sessions/{id}/input
         // An edited transcript is the driver's typing, not a spoken answer.
         await resubmitAnswer(answer, silent, !silent)
     }
@@ -211,10 +211,8 @@ extension RecordingCoordinator {
         cancelAutoConfirm()
         clearPause()
         taskBag.cancel(.voiceSubmission)
-        taskBag.cancel(.sttCommitWatchdog)
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        cleanupStreamingSTT()
         abandonAnswerCapture()
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
@@ -225,7 +223,6 @@ extension RecordingCoordinator {
         transcriptWasEdited = false
         preEditTranscript = nil
         transcribedAnswer = ""
-        liveTranscript = ""
         transition(to: .askingQuestion)
         setErrorMessage(nil)
 

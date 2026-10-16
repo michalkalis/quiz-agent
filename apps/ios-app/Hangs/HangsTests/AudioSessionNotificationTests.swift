@@ -98,10 +98,13 @@ struct AudioSessionNotificationDecodingTests {
 @Suite("AudioService reacts to posted notifications")
 @MainActor
 struct AudioServicePostedNotificationTests {
-    @Test("an interruption while idle never tells the owner a recording was lost")
-    func idleInterruptionDoesNotNotifyOwner() async {
-        // A phone call while the app is merely showing a question must not surface
-        // "Recording interrupted" — the owner callback is for a torn-down recording.
+    @Test("every interruption reaches the owner, even with no engine of ours live")
+    func idleInterruptionNotifiesOwner() async {
+        // #208.8: the quiz answer records on the shared listener engine, not on
+        // one of AudioService's, so the service cannot tell whether a recording
+        // was lost — the owner decides (it no-ops unless it is recording; see
+        // QuizInterruptionNotificationTests). Reporting only its own engine left
+        // a call mid-answer stranded in .recording.
         let center = NotificationCenter()
         let service = AudioService(notificationCenter: center)
         service.registerSessionObservers()
@@ -111,7 +114,7 @@ struct AudioServicePostedNotificationTests {
         center.post(interruptionNotification(.began))
         for _ in 0 ..< 20 { await Task.yield() }
 
-        #expect(notified == false)
+        #expect(notified == true)
         #expect(service.isRecording == false)
     }
 
@@ -157,16 +160,33 @@ struct QuizInterruptionNotificationTests {
         let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio(notificationCenter: center)
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
-        viewModel.quizState = .recording
-        viewModel.isStreamingSTT = true
-        try await mockAudio.startStreamingRecording { _ in }
+        viewModel.quizState = .askingQuestion
+        await viewModel.recordingCoordinator.startRecording()
+        #expect(viewModel.isAnswerCaptureActive)
 
         center.post(interruptionNotification(.began))
         await pumpUntil({ viewModel.quizState == .askingQuestion }, "the interruption must leave .recording")
 
-        #expect(viewModel.isStreamingSTT == false)
+        #expect(viewModel.isAnswerCaptureActive == false, "no capture may survive the call")
         #expect(mockAudio.isRecording == false)
         #expect(viewModel.errorMessage != nil, "the driver must be told why the mic stopped")
+    }
+
+    @Test("a phone call while the question is only showing changes nothing on screen")
+    func callWhileNotRecordingKeepsTheQuestion() async throws {
+        // The owner hears about every interruption now; a call while the mic is
+        // shut must not surface "Recording interrupted" or move the quiz.
+        let center = NotificationCenter()
+        let (viewModel, _) = Fixtures.makeViewModelWithAudio(notificationCenter: center)
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.quizState = .askingQuestion
+
+        center.post(interruptionNotification(.began))
+        for _ in 0 ..< 50 { await Task.yield() }
+
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.errorMessage == nil)
     }
 
     @Test("when the call ends with .shouldResume the next mic tap works without a replay")

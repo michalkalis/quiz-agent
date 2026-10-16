@@ -36,7 +36,6 @@ private func makeRouteVM() -> (QuizViewModel, MockSilenceDetectionService, MockA
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: nil,
         clock: AnyClock(TestClock())
     )
     vm.currentSession = Fixtures.makeActiveSession()

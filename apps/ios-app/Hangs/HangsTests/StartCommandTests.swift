@@ -31,7 +31,6 @@ private func makeStartVM() -> (QuizViewModel, MockAudioService) {
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil, // nil STT → deterministic batch recording path
         clock: AnyClock(TestClock())
     )
     vm.currentSession = Fixtures.makeActiveSession()

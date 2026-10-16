@@ -78,8 +78,7 @@ struct CommandEngineSwitchTests {
             networkService: Fixtures.makeFullMockNetwork(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: silence,
-            sttService: MockElevenLabsSTTService()
+            silenceDetectionService: silence
         )
         vm.currentSession = Fixtures.makeActiveSession(language: "cs")
         vm.currentQuestion = Fixtures.makeQuestion()

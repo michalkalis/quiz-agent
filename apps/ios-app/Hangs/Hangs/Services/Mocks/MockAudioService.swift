@@ -73,12 +73,12 @@ import os
             ) {
             case .streaming:
                 stopStreamingRecording()
-                onInterruptionBegan?()
             case .batch:
                 isRecording = false
             case .none:
                 break
             }
+            onInterruptionBegan?()
         }
 
         // #100.3. Mirrors whether the real AVAudioSession is active, so the

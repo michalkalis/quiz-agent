@@ -53,26 +53,26 @@ enum RSFlow {
         return question
     }
 
-    /// Tap Record and wait for `.recording` — committed STT events are only
-    /// consumed in that state (handleCommittedTranscript guard).
+    /// Tap Record and wait for `.recording` — a spoken answer can only be
+    /// injected into an armed recording.
     static func startRecording(_ question: QuestionPage) {
         question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
     }
 
-    /// Record, inject one committed transcript, wait for the sheet's transcript branch.
+    /// Record, say one answer, wait for the sheet's transcript branch.
     static func recordAndCommit(
         _ app: XCUIApplication, question: QuestionPage, transcript: String,
         client: UITestClient, scenario: String
     ) async throws -> ConfirmationPage {
         startRecording(question)
-        try await client.sendSTTEvent(path: "/stt/committed", text: transcript)
+        try await client.sendSpokenAnswer(transcript)
         let confirmation = ConfirmationPage(app: app)
         confirmation.waitForTranscript(timeout: 10, scenario: scenario)
         return confirmation
     }
 
-    /// Full happy path to the result screen: start, record, commit, confirm.
+    /// Full happy path to the result screen: start, record, answer, confirm.
     static func reachResult(
         _ app: XCUIApplication, client: UITestClient, scenario: String
     ) async throws -> ResultPage {

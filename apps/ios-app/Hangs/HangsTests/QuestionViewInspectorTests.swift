@@ -348,8 +348,7 @@ struct QuestionViewVoiceInspectorTests {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.preview // .text → voice body
         vm.quizState = .askingQuestion

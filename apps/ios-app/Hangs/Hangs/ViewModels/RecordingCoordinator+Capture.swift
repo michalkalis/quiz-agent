@@ -2,9 +2,10 @@
 //  RecordingCoordinator+Capture.swift
 //  Hangs
 //
-//  Capture lifecycle (#113 T5): toggle/start recording (batch + streaming),
-//  silence detection, the STT commit watchdog, and audio-interruption
-//  recovery. What an empty recording leads to lives in +EmptyAnswer (#185).
+//  Capture lifecycle (#113 T5): toggle/start recording, silence detection,
+//  and audio-interruption recovery. What an empty recording leads to lives in
+//  +EmptyAnswer (#185). #208.8: the answer is always recorded on the device and
+//  transcribed by the backend (OpenAI); the ElevenLabs realtime path is gone.
 //
 
 import Clocks
@@ -31,7 +32,6 @@ extension RecordingCoordinator {
 
     /// Start recording the user's voice answer
     /// Handles audio preparation, state transitions, and error rollback
-    /// Routes to streaming STT (ElevenLabs) or batch M4A (Whisper) based on feature flag
     /// `trigger` decides what happens to a question read-out in progress (+Trigger).
     func startRecording(trigger: RecordingTrigger = .tap) async {
         // #185 (founder 2026-09-24): a manual start stops the read-out, the
@@ -110,26 +110,21 @@ extension RecordingCoordinator {
         // nothing to count down yet.
         //
         // The HIDDEN cap is armed here all the same. It is not a countdown, it
-        // is the promise that this recording ends: a handshake that never
-        // returns (dead socket, an engine that refuses to start) would
-        // otherwise leave the mic open in `.recording` with no deadline at all,
-        // which is the guarantee #131 Track B's arming used to carry.
+        // is the promise that this recording ends: an engine that never comes
+        // up would otherwise leave the mic open in `.recording` with no
+        // deadline at all, which is the guarantee #131 Track B's arming used
+        // to carry.
         armRecordingDeadAirCap(deadAirCap)
 
-        // #184: realtime is a runtime A/B choice now (VoicePipelineFlags); the
-        // default answer path is local VAD → WAV → backend batch transcription.
-        if Config.useElevenLabsSTT, sttService != nil, realtimeSTTEnabled() {
-            await startStreamingRecording(attempt: attempt)
-        } else {
-            await startBatchRecording(attempt: attempt)
-        }
+        // Local VAD → WAV → backend transcription (#184; the only path since #208.8).
+        await startBatchRecording(attempt: attempt)
     }
 
     /// Arm the recording window at the one moment it is honest: the mic is open.
     ///
     /// `hasSpeechSignal` is what decides its length (#173). The short "time to
-    /// start speaking" can only be retired by a streaming partial transcript or
-    /// auto-record's VAD; a path with neither keeps the dead-air cap as its
+    /// start speaking" can only be retired by the on-device VAD; a path without
+    /// it keeps the dead-air cap as its
     /// visible window, or the mic would close mid-sentence with nothing able to
     /// say the driver was speaking.
     private func armRecordingWindow(hasSpeechSignal: Bool) {
@@ -148,9 +143,8 @@ extension RecordingCoordinator {
     /// The shared mic engine (SilenceDetectionService) is the recorder: its tap
     /// tees the post-voice-processing PCM the on-device VAD already sees into
     /// `answerCapture`, the VAD's silence-after-speech ends the recording for
-    /// EVERY batch recording (auto and manual — parity with the realtime path's
-    /// server VAD), and the WAV goes to the backend for Scribe v2 batch
-    /// transcription. No `AVAudioRecorder` next to the engine any more: that was
+    /// EVERY recording (auto and manual), and the WAV goes to the backend for
+    /// transcription (OpenAI since #208). No `AVAudioRecorder` next to the engine any more: that was
     /// a second mic client that never saw the voice processing (#64/#77 class).
     private func startBatchRecording(attempt: AttemptID) async {
         await audioService.prepareForRecording()
@@ -292,88 +286,6 @@ extension RecordingCoordinator {
         }
     }
 
-    /// Start streaming recording with ElevenLabs Scribe v2 Realtime STT
-    func startStreamingRecording(attempt: AttemptID) async {
-        guard let sttService else {
-            // Fallback to batch if STT service unavailable
-            await startBatchRecording(attempt: attempt)
-            return
-        }
-
-        // Flip UI flags up front so the LISTENING card appears the moment the
-        // user taps the mic, not after the WebSocket handshake + first partial.
-        // Catch block resets these on setup failure before falling back to batch.
-        liveTranscript = ""
-        isStreamingSTT = true
-
-        // #77 (77.7 / E-topology): converge on ONE AVAudioEngine. The shared
-        // VAD/command-listener engine (SilenceDetectionService) must be torn down
-        // BEFORE the ElevenLabs streaming engine spins up — the two must never run
-        // concurrently (the #64 two-engine crash config). Command listening and the
-        // answer stream are time-disjoint; this is the enforcement point.
-        stopSilenceDetectionListening()
-
-        do {
-            // 1. Get single-use token from backend
-            let token = try await networkService.fetchElevenLabsToken()
-
-            // 2. Connect to ElevenLabs WebSocket
-            let languageCode = currentSession()?.language ?? settings().language
-            try await sttService.connect(token: token, languageCode: languageCode)
-
-            // 3. Start listening for STT events
-            startSTTEventListener(sttService: sttService, attempt: attempt)
-
-            // 4. Start PCM recording and stream chunks to WebSocket
-            await audioService.prepareForRecording()
-            let sttRef = sttService
-            try await audioService.startStreamingRecording { pcmData in
-                Task {
-                    try? await sttRef.sendAudioChunk(pcmData)
-                }
-            }
-
-            // #174: same race as the batch path — the cap fired (or a teardown
-            // ran) during the token/WebSocket/engine handshake. Tear the stream
-            // down rather than arm a window nothing can close.
-            guard quizState() == .recording, attemptLedger.owns(attempt, "streamingRecording.handshake") else {
-                cleanupStreamingSTT()
-                Logger.stt.info("🎙️ Streaming recording ended during handshake — stream closed, no window armed")
-                return
-            }
-
-            // The mic is open and the event stream is live: partial transcripts
-            // are the speech signal, so this path gets the founder's 5 s.
-            armRecordingWindow(hasSpeechSignal: true)
-
-            Logger.stt.info("🎙️ Streaming STT recording started")
-
-        } catch is CancellationError {
-            // A teardown (scene-phase background, stop command) raced the streaming
-            // start's settle wait — recording must stay stopped, so no batch fallback.
-            cancelAutoStopRecordingTimer()
-            isStreamingSTT = false
-            liveTranscript = ""
-            await sttService.disconnect()
-            Logger.stt.info("🎙️ Streaming STT start cancelled by teardown — no fallback")
-        } catch {
-            // Fallback to batch recording on any setup failure
-            isStreamingSTT = false
-            liveTranscript = ""
-            await sttService.disconnect()
-
-            Logger.stt.warning("⚠️ Streaming STT setup failed, falling back to batch: \(error, privacy: .public)")
-
-            // Sentry: fallback metadata only — error type name, not the full description (may contain URLs/tokens).
-            SentryLog.warn("STT fallback", category: .stt, attributes: [
-                "reason": "streaming_setup_failed",
-                "error_type": String(describing: type(of: error)),
-            ])
-
-            await startBatchRecording(attempt: attempt)
-        }
-    }
-
     // MARK: - Silence Detection
 
     /// Subscribe to silence events and auto-stop recording when silence threshold reached
@@ -426,18 +338,16 @@ extension RecordingCoordinator {
         taskBag.add(task, key: .inputLevel)
     }
 
-    /// The driver is audibly answering — recorded once per recording by BOTH
-    /// speech paths (on-device VAD above, and a content-bearing ElevenLabs
-    /// partial on the streaming path, which has no local VAD).
+    /// The driver is audibly answering — recorded once per recording by the
+    /// on-device VAD.
     ///
     /// #173: this is also what retires the visible "time to start speaking"
-    /// countdown. The two signals are the same fact, so they share one funnel —
-    /// a path that set the flag without hiding the countdown would leave the
-    /// driver watching a 5 s clock run out under an answer already in progress.
+    /// countdown. The two are the same fact, so they share one funnel — setting
+    /// the flag without hiding the countdown would leave the driver watching a
+    /// 5 s clock run out under an answer already in progress.
     func noteSpeechStarted() {
         // #185 track F (founder 2026-09-24): a gentle tone the moment the
-        // driver is first heard — once per recording. The streaming path calls
-        // this on EVERY content-bearing partial, so the flag is the gate.
+        // driver is first heard — once per recording; the flag is the gate.
         if !speechDetectedDuringAutoRecord { emitEarcon(.speechStart) }
         speechDetectedDuringAutoRecord = true
         onSpeechStarted()
@@ -449,11 +359,10 @@ extension RecordingCoordinator {
     /// the car the old detector heard nothing ever, so every answer was cut at
     /// 5 s. When the detector cannot vouch, the countdown just disappears and
     /// the hidden dead-air cap ends the recording instead — a late or quiet
-    /// answer is never cut off by a deaf detector. The realtime stream (partial
-    /// transcripts are its signal) and the legacy recorder (its window IS the
-    /// cap) keep the plain expiry.
+    /// answer is never cut off by a deaf detector. The legacy recorder (its
+    /// window IS the cap) keeps the plain expiry.
     func noSpeechWindowMayEndRecording() -> Bool {
-        guard !isStreamingSTT, !usesLegacyRecorder else { return true }
+        guard !usesLegacyRecorder else { return true }
         let verdict = silenceDetectionService.noSpeechWindowVerdict
         guard !verdict.mayEndRecording else { return true }
         noSpeechWindowDeferral = verdict
@@ -462,37 +371,11 @@ extension RecordingCoordinator {
         return false
     }
 
-    // MARK: - STT Commit Watchdog
-
-    /// Rescue net for the streaming path's fire-and-forget commit: if no
-    /// committed transcript resolves the state within `seconds`, clean up and
-    /// hand over to `handleTranscriptionFailure()` instead of leaving the UI
-    /// stuck on RECORDING. Cancelled by handleCommittedTranscript / cancelProcessing.
-    /// `seconds` is injectable for tests; production callers use the default.
-    func startCommitWatchdog(seconds: TimeInterval = Config.sttCommitWatchdogSecs, owner: AttemptID? = nil) {
-        let clock = clock
-        let owner = owner ?? attemptLedger.current
-        let task = Task { [weak self] in
-            try? await clock.sleep(for: .seconds(seconds))
-            guard let self, !Task.isCancelled else { return }
-            guard self.quizState() == .recording,
-                  self.attemptLedger.owns(owner, "sttCommitWatchdog") else { return }
-            self.attemptLedger.record(.timer, "sttCommitWatchdog.fired")
-
-            Logger.stt.warning("⏱️ STT commit watchdog fired — no committed transcript within \(seconds, privacy: .public)s")
-
-            self.cleanupStreamingSTT()
-            self.trackCaptureFailure(.sttTimeout)
-            self.handleTranscriptionFailure(owner: owner)
-        }
-        taskBag.add(task, key: .sttCommitWatchdog)
-    }
-
     // MARK: - Audio Interruption
 
     /// Recover from an audio-session interruption (e.g. an incoming phone call)
-    /// that tore down streaming recording. Leaves `.recording`, resets streaming
-    /// STT, and clears the recording timers so no recording is stranded after the
+    /// that tore down the recording. Leaves `.recording`, drops the capture,
+    /// and clears the recording timers so no recording is stranded after the
     /// call (#67 Part A). No-op unless we were recording.
     func handleAudioInterruption() {
         guard quizState() == .recording else { return }
@@ -500,7 +383,6 @@ extension RecordingCoordinator {
         attemptLedger.begin("interruption")
         cancelAutoStopRecordingTimer()
         cancelSilenceDetection()
-        cleanupStreamingSTT()
         abandonAnswerCapture()
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false

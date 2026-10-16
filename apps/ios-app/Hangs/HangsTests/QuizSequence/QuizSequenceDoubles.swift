@@ -270,7 +270,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
 
     private var requestKeys: [Int: String] = [:]
 
-    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?, rejectedTranscripts _: [String]) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?, rejectedTranscripts _: [String], readBack _: Bool) async throws -> QuizResponse {
         try await send(sessionId: sessionId, isVoice: true, questionId: questionId, input: nil)
     }
 
@@ -317,7 +317,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
     func extendSession(sessionId _: String, minutes _: Int) async throws {}
     func rateQuestion(sessionId _: String, rating _: Int) async throws {}
     func flagQuestion(sessionId _: String, reason _: String?) async throws {}
-    func fetchElevenLabsToken() async throws -> String { "harness-token" }
+    func transcribeDictation(audioWAV _: Data, language _: String) async throws -> String { "" }
     func syncEntitlements() async throws {}
 
     func postAnalyticsEvents(_: AnalyticsBatch) async throws {}

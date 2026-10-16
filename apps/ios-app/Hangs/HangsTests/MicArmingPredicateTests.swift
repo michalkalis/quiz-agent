@@ -30,8 +30,7 @@ private func makeMicVM() -> (QuizViewModel, MockSilenceDetectionService, MockAud
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
-        silenceDetectionService: silence,
-        sttService: nil
+        silenceDetectionService: silence
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion()

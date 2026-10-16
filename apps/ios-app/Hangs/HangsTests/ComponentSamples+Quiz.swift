@@ -103,6 +103,7 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },
+            ComponentSample("spellingHint.default") { AnswerSpellingHint() },
         ]
     }
 

@@ -299,6 +299,13 @@ struct NoAnswerSheetViewTests {
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == false,
                 "Again must work with no countdown running")
         #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm") }
+        // #208.6: the same row as the transcript sheet, Again on the left.
+        let ids = ["confirmation.reRecord", "confirmation.skip"]
+        let order = tree.findAll(where: { view in
+            guard let id = try? view.accessibilityIdentifier() else { return false }
+            return ids.contains(id)
+        }).compactMap { try? $0.accessibilityIdentifier() }
+        #expect(order == ids, "Again must keep its place on the left")
     }
 
     /// WHY: an empty field the driver cleared while editing is not a miss —

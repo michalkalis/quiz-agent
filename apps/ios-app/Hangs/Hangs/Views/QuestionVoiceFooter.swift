@@ -80,6 +80,11 @@ struct QuestionVoiceFooter: View {
                 EmptyAnswerRetryHint()
                     .padding(.horizontal, Self.gutter)
                     .transition(.opacity)
+            } else if viewModel.showsSpellingHint {
+                // #208.6: after a rejected transcript, before the next try.
+                AnswerSpellingHint()
+                    .padding(.horizontal, Self.gutter)
+                    .transition(.opacity)
             }
 
             // #179 D1: the docked bar, in whichever of the four states the quiz

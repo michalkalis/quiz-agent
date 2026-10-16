@@ -203,7 +203,8 @@ struct QuestionView: View {
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
                 noAnswerCaptured: viewModel.noAnswerCaptured,
-                autoConfirmHeld: viewModel.isAutoConfirmHeld
+                autoConfirmHeld: viewModel.isAutoConfirmHeld,
+                showsSpellingHint: viewModel.showsSpellingHint
             )
             // #188 G9: the answer sheet is part of the quiz — same cap.
             .dynamicTypeSize(...QuizTypeSize.screenCap)

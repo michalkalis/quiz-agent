@@ -123,3 +123,25 @@ async def test_on_startup_session_mode_refuses_judges(
 
     with pytest.raises(RuntimeError, match="JUDGE_GATE"):
         await worker_module.on_startup({})
+
+
+@pytest.mark.asyncio
+async def test_on_startup_refuses_a_worker_off_the_order_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#207 207.5: a worker consuming another queue than the one orders go to
+    never sees a paid order, yet looks healthy. That was the beta's session
+    mode, where every `fly deploy` restarted a Fly worker that had to be
+    stopped again by hand. It must fail the boot (and so the deploy) instead.
+    """
+    import app.worker.worker as worker_module
+
+    monkeypatch.setenv("ORDER_QUEUE_NAME", "quiz-pack:session")
+    monkeypatch.delenv("WORKER_QUEUE_NAME", raising=False)
+    monkeypatch.delenv("LLM_GATEWAY", raising=False)
+    get_settings.cache_clear()
+    try:
+        with pytest.raises(RuntimeError, match="never see an order"):
+            await worker_module.on_startup({})
+    finally:
+        get_settings.cache_clear()

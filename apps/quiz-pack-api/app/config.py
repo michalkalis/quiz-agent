@@ -25,6 +25,11 @@ _BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootC
 # the prod monitor (the beta's session worker on mba once lay dead for ~20 h unseen).
 WORKER_HEALTH_CHECK_INTERVAL_S = 60
 
+# #207 207.5: the mba backup worker consumes the SAME queue as the Fly worker, so
+# it writes its heartbeat under its own key. `<queue>:health-check` then stays the
+# Fly worker's alone, and its absence is what tells the backup to step in.
+BACKUP_HEALTH_CHECK_KEY = "quiz-pack:backup:health-check"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -59,15 +64,23 @@ class Settings(BaseSettings):
     # Queue routing (#172 — session worker: custom packy v bete cez subscription).
     # `order_queue_name` is where the API and the sweep PUT jobs; `worker_queue_name`
     # is what this worker process TAKES them from. Both default to ARQ's own default
-    # queue, so an unset deploy behaves exactly as before. Prod flips only
-    # ORDER_QUEUE_NAME (jobs land on the session queue the mba worker consumes); the
-    # mba worker sets both, plus a single slot and a long budget, because a
-    # `claude -p` pack run is far slower than the paid-API one and the subscription
-    # quota is shared with interactive work.
+    # queue, so an unset deploy behaves exactly as before. Since #207 (founder
+    # 2026-10-16: Fly worker primary, mba only a backup) both stay unset
+    # everywhere; a worker whose two values differ refuses to boot (on_startup),
+    # because it would sit idle while paid orders pile up somewhere else. The mba
+    # backup sets a single slot and a long budget, because a `claude -p` pack run
+    # is far slower than the paid-API one.
     order_queue_name: str = arq_default_queue_name
     worker_queue_name: str = arq_default_queue_name
     worker_max_jobs: int = 2
     worker_job_timeout_s: int = 3600
+
+    # #207 207.5 — when the mba backup worker (app.worker.backup) may take orders:
+    # the Fly worker's heartbeat has been gone this long (a deploy restart is
+    # ~1-2 min, so it never triggers a takeover), or an order has waited in the
+    # queue this long with nobody picking it up.
+    backup_fly_down_grace_s: int = 300
+    backup_queue_wait_s: int = 900
 
     # Pause switch for NEW custom-pack orders (#193 task 193.9). Same name as
     # quiz-agent's setting that disables the order entry in the app; this one

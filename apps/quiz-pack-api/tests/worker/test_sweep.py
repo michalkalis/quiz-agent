@@ -855,3 +855,29 @@ async def test_sweep_still_recovers_when_the_worker_died_mid_run(
     assert job.retry_count == 1
 
     await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_a_second_sweep_does_not_requeue_an_order_the_first_just_recovered(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """#207 207.5: the Fly worker and the mba backup each run a sweep. Both can
+    list the same stuck order before either locks it; the one that locks second
+    must see the first one's recovery and leave the order alone. Requeuing it
+    again would start a second paid pipeline for one purchase."""
+    order_id, job_id = await _make_stuck_in_progress(
+        session, age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5)
+    )
+    pool = FakeArqPool(fail=False)
+    ctx: Dict[str, Any] = {"redis": pool, "session_factory": _session_factory(engine)}
+
+    # Both sweeps saw the order as stuck; they recover it one after the other.
+    await sweep_module._recover_stuck_order(ctx, order_id)
+    await sweep_module._recover_stuck_order(ctx, order_id)
+
+    session.expire_all()
+    job = await session.get(GenerationJob, job_id)
+    assert _job_ids_for(pool, order_id) == [f"process_order:{order_id}:1"]
+    assert (job.retry_count, job.attempt_seq) == (1, 1)
+
+    await _cleanup(session, order_id)

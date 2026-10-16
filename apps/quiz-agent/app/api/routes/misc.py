@@ -44,6 +44,11 @@ async def get_elevenlabs_token(
 ):
     """Generate a single-use ElevenLabs token for realtime STT.
 
+    #208.8: kept for old builds only. Since #208 the app uses no ElevenLabs
+    STT (answers and dictation go through OpenAI on the server); 1.0 and the
+    1.1 build in review still fetch this token. Remove once no live build
+    calls it.
+
     Auth + rate-limited (#65): this mints a real, billable ElevenLabs realtime
     token, so it was the clearest budget-drain vector — previously open with no
     limit. `require_auth_or_grace` blocks anonymous callers (once grace is off) and the

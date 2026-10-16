@@ -12,6 +12,7 @@ from .routes import (
     sessions,
     quiz,
     voice,
+    dictation,
     tts,
     misc,
     auth,
@@ -34,6 +35,7 @@ router.include_router(auth.router)
 router.include_router(sessions.router)
 router.include_router(quiz.router)
 router.include_router(voice.router)
+router.include_router(dictation.router)
 router.include_router(tts.router)
 router.include_router(misc.router)
 router.include_router(entitlements.router)

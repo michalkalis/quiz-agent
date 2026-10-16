@@ -1,79 +1,60 @@
 # Multi-stage build for Quiz Agent API
 # Build context: repository root (../..)
 # Dockerfile location: apps/quiz-agent/Dockerfile
+#
+# #207 task 207.24: dependencies come from uv.lock (exact versions + hashes),
+# not a hand-copied pip list, so the image ships exactly what CI tested and a
+# dep declared in apps/quiz-agent/pyproject.toml can no longer be missing here
+# (the old "Dockerfile drift" crash-loop). Base images are pinned by digest;
+# bump the digest deliberately (Dependabot proposes it monthly).
 
-FROM python:3.11-slim as builder
+FROM python:3.11.17-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.24@sha256:3af4716e991d6956a41e573eab705d0ee08500cd829ed30293eb8472f372c65a /uv /bin/uv
 
 WORKDIR /build
 
-# Install ffmpeg (required by pydub for audio processing)
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+# Workspace manifests + lock only, so the dependency layer stays cached until
+# a dependency actually changes.
+COPY pyproject.toml uv.lock ./
+COPY packages/shared/pyproject.toml packages/shared/
+COPY apps/quiz-agent/pyproject.toml apps/quiz-agent/
+COPY apps/quiz-pack-api/pyproject.toml apps/quiz-pack-api/
 
-# Install pip
-RUN pip install --no-cache-dir --upgrade pip
+# Into the system interpreter (not a venv) so `fly ssh console` scripts keep
+# working with the plain `python` on PATH. Hashes are verified.
+RUN uv export --locked --no-dev --package quiz-agent --no-emit-workspace -o requirements.txt \
+    && uv pip install --system --no-deps --require-hashes --compile-bytecode -r requirements.txt
 
-# Copy shared package and install it
-COPY packages/shared /build/packages/shared
-RUN pip install --no-cache-dir /build/packages/shared
-
-# Copy quiz-agent app code
-COPY apps/quiz-agent /build/app
-WORKDIR /build/app
-
-# Install quiz-agent dependencies.
-# Memory project_dockerfile_drift: this list must stay 1:1 with
-# apps/quiz-agent/pyproject.toml for any dep imported at boot or by an HTTP
-# route. The auth stack (sqlalchemy/asyncpg/alembic/pyjwt/pyattest/cbor2) is pulled
-# into the boot path via app/api/deps.py -> app/auth/* — omitting it crash-loops.
-# (cbor2 is a direct import in app/auth/app_attest.py; pyattest does NOT pull it transitively.)
-RUN pip install --no-cache-dir \
-    fastapi>=0.104.0 \
-    uvicorn>=0.24.0 \
-    "openai>=1.0.0,<3" \
-    python-multipart>=0.0.6 \
-    requests>=2.31.0 \
-    rich>=13.0.0 \
-    pydub>=0.25.0 \
-    httpx>=0.27.0 \
-    slowapi>=0.1.9 \
-    sentry-sdk[fastapi]>=2.0.0 \
-    "sqlalchemy[asyncio]>=2.0.0" \
-    asyncpg>=0.29.0 \
-    alembic>=1.13.0 \
-    pydantic-settings>=2.3.0 \
-    "pyjwt[crypto]>=2.8.0" \
-    pyattest>=1.0.4 \
-    cbor2>=5.6.0 \
-    num2words>=0.5.14 \
-    anthropic>=0.42.0 \
-    boto3>=1.34.0
+COPY packages/shared packages/shared
+RUN uv pip install --system --no-deps --compile-bytecode ./packages/shared
 
 # Production stage
-FROM python:3.11-slim
-
-WORKDIR /app
+FROM python:3.11.17-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce
 
 # Install ffmpeg (required by pydub for audio processing)
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
+# Unprivileged runtime user (#207 task 207.24). docker-entrypoint.sh starts as
+# root only to hand the root-owned Fly volume (/data) to it, then drops to it.
+RUN useradd --system --uid 10001 --create-home --shell /usr/sbin/nologin app
+
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
-COPY --from=builder /build/app /app
-# Copy migration scripts (for running via fly ssh console)
+WORKDIR /app
+COPY apps/quiz-agent /app
+# Migration scripts (for running via fly ssh console)
 COPY scripts /scripts
 
-# Create data directory for persistent storage
-RUN mkdir -p /data
+# /data = Fly volume mount point; /app/data = main.py's ./data working dir.
+RUN mkdir -p /data /app/data && chown app:app /data /app/data
 
-# Expose port
 EXPOSE 8002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8002/api/v1/health', timeout=5)"
 
-# Run the application
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]

@@ -8,7 +8,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
     # <3: see packages/shared/pyproject.toml — openai 3.x (httpx2) breaks the
-    # respx-based test mocks; keep in lockstep with shared + Dockerfile.
+    # respx-based test mocks; keep in lockstep with shared.
     "openai>=1.0.0,<3",
     "python-multipart>=0.0.6",
     "requests>=2.31.0",

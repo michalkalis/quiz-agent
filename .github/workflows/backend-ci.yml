@@ -11,6 +11,8 @@ on:
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
       - 'data/examples/**'
+      - 'uv.lock'
+      - 'pyproject.toml'
   # #207 task 207.15: "Backend CI gate" is a required check in the main-pr-flow
   # ruleset, so it must report on EVERY pull request (a path-filtered required
   # check never reports on unrelated PRs and blocks them forever). PRs are
@@ -46,7 +48,7 @@ jobs:
             echo "backend=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
           files=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
-          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|\.github/workflows/backend-ci\.yml$)'; then
+          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|\.github/workflows/backend-ci\.yml$|uv\.lock$|pyproject\.toml$)'; then
             echo "backend=true" >> "$GITHUB_OUTPUT"
           else
             echo "backend=false" >> "$GITHUB_OUTPUT"
@@ -83,15 +85,16 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e apps/quiz-agent
-          uv pip install --system -e apps/quiz-pack-api
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
           uv pip install --system pytest pytest-cov pytest-asyncio httpx
 
       # The shared test DB mirrors prod co-tenancy: quiz-agent's pgvector/pack
@@ -114,7 +117,7 @@ jobs:
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         if: github.event_name == 'pull_request'
         with:
           file: ./apps/quiz-agent/coverage.xml
@@ -137,9 +140,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
@@ -200,14 +203,16 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e "apps/quiz-pack-api[test]"
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
           uv pip install --system pytest pytest-asyncio httpx
 
       - name: Run Alembic migrations
@@ -260,14 +265,16 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e apps/quiz-agent
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
 
       - name: Run Alembic migrations
         working-directory: apps/quiz-agent

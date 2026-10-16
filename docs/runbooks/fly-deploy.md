@@ -5,21 +5,21 @@
 
 Read this before deploying or before changing `[[mounts]]` in `apps/quiz-agent/fly.toml`.
 
-## Pitfall 1: Dockerfile pip deps drift from pyproject.toml
+## Pitfall 1 (RETIRED 2026-10-16): Dockerfile pip deps drift from pyproject.toml
 
-`apps/quiz-agent/Dockerfile` (the one deploy uses — `fly deploy -c apps/quiz-agent/fly.toml`
-resolves `dockerfile="Dockerfile"` relative to the config file's dir) installs
-quiz-agent deps via a hardcoded `RUN pip install fastapi>=... uvicorn>=... ...`
-list, NOT from `apps/quiz-agent/pyproject.toml`. Any new dep added to
-`pyproject.toml` must also be added to the Dockerfile or prod startup will
-`ModuleNotFoundError`.
+Both Dockerfiles used to install a hand-copied `pip install ...` list, and a
+dep added only to `pyproject.toml` crash-looped prod (`slowapi`, `sentry-sdk`,
+`pydub`, `httpx` all drifted). Since #207 task 207.24 the images install from
+`uv.lock` (`uv export --locked --package <app>` + hashes) and CI installs the
+same lock, so what CI tests is what ships. What remains:
 
-History: `slowapi`, `sentry-sdk[fastapi]`, `pydub`, `httpx` have all silently
-drifted in the past — the next deploy after the change is when it's noticed.
-
-Long-term fix: replace the hardcoded list with `pip install /build/app` to
-read from pyproject directly. Shared package install must stay non-editable
-(`pip install /build/packages/shared`, not `-e`) for the multi-stage build to work.
+- Change a dependency in `pyproject.toml` → run `uv lock` and commit
+  `uv.lock`; an out-of-date lock fails CI and the image build (`--locked`).
+- quiz-pack-api script-only deps (gradio, geopandas, cartopy, matplotlib,
+  deepl) live in its `scripts` extra, which the image leaves out.
+- The app runs as the unprivileged `app` user (uid 10001). quiz-agent's
+  `docker-entrypoint.sh` chowns the root-owned `/data` volume at boot, then
+  drops privileges; `fly ssh console` still opens a root shell.
 
 ## Pitfall 2 (RETIRED 2026-07-07): CHROMA_PATH / mount mismatch
 

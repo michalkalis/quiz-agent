@@ -5,8 +5,9 @@ full DB volume, exhausted connections, a backend that got slow). It is only
 useful if
 - it alarms on the right side of each threshold, per prod app, and ignores
   staging and the Fly builder (their numbers are not production);
-- one condition that lasts for hours is one alert per 6 h, not one per 5-min
-  run (5k Sentry events/month on our plan), and re-alerts after recovery;
+- one condition that lasts for hours is one e-mail, not one per 5-min run;
+  recovery is a mail, and a relapse mails again; the worst instance per app
+  counts;
 - a watch that cannot read its sources says so, but not on a single blip;
 - the latency number is a real p95 over the window, and slow health checks or
   old samples never count.
@@ -19,6 +20,7 @@ import pytest
 from app.config import Settings
 from app.monitoring import ops_watch as ow
 from httpx import MockTransport, Response
+from quiz_shared.ops_alerts import AlertBook
 
 pytestmark = pytest.mark.asyncio
 
@@ -71,51 +73,53 @@ async def test_unreadable_source_is_blind_not_an_exception(monkeypatch):
     assert len(blind) == 2
 
 
-def _reading(alarm: bool, value: float = 75.0) -> ow.Reading:
+def _reading(alarm: bool, value: float = 75.0, instance: str = "m1") -> ow.Reading:
     return ow.Reading(
-        kind="disk", target="quiz-pack-db/m1", value=value, threshold=70, alarm=alarm
+        kind="disk",
+        target=f"quiz-pack-db/{instance}",
+        value=value,
+        threshold=70,
+        alarm=alarm,
     )
+
+
+class _Mails:
+    def __init__(self) -> None:
+        self.subjects: list[str] = []
+
+    async def __call__(self, subject: str, body: str) -> bool:
+        self.subjects.append(subject)
+        return True
 
 
 @pytest.fixture
-def captured(monkeypatch) -> list[tuple[str, list[str]]]:
-    calls: list[tuple[str, list[str]]] = []
-    monkeypatch.setattr(
-        ow.sentry_sdk,
-        "capture_message",
-        lambda msg, **kw: calls.append((msg, kw["fingerprint"])),
-    )
-    return calls
+def book(tmp_path):
+    mails = _Mails()
+    return AlertBook("test", tmp_path / "s.json", sender=mails), mails
 
 
-async def test_lasting_alarm_is_throttled_and_realerts_after_recovery(
-    captured, monkeypatch
-):
+async def test_lasting_alarm_mails_once_then_recovery_then_relapse(book):
+    b, mails = book
     w = ow.OpsWatch()
-    w.report([_reading(True)], [], now=0)
-    w.report([_reading(True)], [], now=300)  # next run, same condition
-    assert len(captured) == 1
-    assert captured[0][1][:3] == ["ops-watch", "disk", "quiz-pack-db"]
-    assert "75%" in captured[0][0] and "70%" in captured[0][0]
-    w.report([_reading(True)], [], now=ow.REALERT_S + 1)
-    assert len(captured) == 2
-    w.report([_reading(False, 40)], [], now=ow.REALERT_S + 301)  # recovered
-    monkeypatch.setattr(ow.time, "time", lambda: 1_900_000_000.0)
-    w.report([_reading(True)], [], now=ow.REALERT_S + 601)  # back again
-    assert len(captured) == 3
-    # Same incident → same issue; a new incident → a new issue (a new e-mail,
-    # since the old one may still be open for up to 72 h).
-    assert captured[0][1] == captured[1][1]
-    assert captured[2][1] != captured[1][1]
+    await w.report([_reading(True), _reading(False, 10, "m2")], [], b)
+    await w.report([_reading(True)], [], b)  # next run, same condition
+    assert mails.subjects == ["[Trubbo ALERT] disk quiz-pack-db: high"]
+    await w.report([_reading(False, 40)], [], b)
+    await w.report([_reading(True)], [], b)
+    assert mails.subjects[1:] == [
+        "[Trubbo OK] disk quiz-pack-db recovered",
+        "[Trubbo ALERT] disk quiz-pack-db: high",
+    ]
 
 
-async def test_blind_watch_reports_only_after_consecutive_failures(captured):
+async def test_blind_watch_reports_only_after_consecutive_failures(book):
+    b, mails = book
     w = ow.OpsWatch()
-    w.report([], ["fly disk (HTTPStatusError)"], now=0)
-    w.report([], [], now=300)  # healed: counter resets
-    for i in range(ow.BLIND_AFTER_RUNS):
-        w.report([], ["fly disk (HTTPStatusError)"], now=600 + i * 300)
-    assert [fp[:2] for _, fp in captured] == [["ops-watch", "blind"]]
+    await w.report([], ["fly disk (HTTPStatusError)"], b)
+    await w.report([], [], b)  # healed: counter resets
+    for _ in range(ow.BLIND_AFTER_RUNS):
+        await w.report([], ["fly disk (HTTPStatusError)"], b)
+    assert mails.subjects == ["[Trubbo ALERT] ops watch: blind"]
 
 
 async def test_latency_p95_needs_enough_recent_requests():

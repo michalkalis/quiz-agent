@@ -17,6 +17,9 @@ primary_region = "cdg"
 # separate Fly process groups sharing the same image.
 [env]
   ENVIRONMENT = "production"
+  # #207: the Fly worker e-mails outages it sees (quiz-agent down, paid orders
+  # refund-eligible/stuck); needs the ALERT_SMTP_PASSWORD + OPS_PING_TOKEN secrets.
+  ALERT_EMAIL_TO = "michal.kalis@gmail.com"
 
 [processes]
   web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"

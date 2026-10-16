@@ -1,8 +1,8 @@
 """Infrastructure + latency watch (#207 — production readiness, 207.8/207.9).
 
 Every 5 minutes, off the request path, quiz-agent looks at the things that
-fail slowly and then all at once, and raises a Sentry issue (the alert rule
-e-mails the founder) before they bite:
+fail slowly and then all at once, and e-mails the founder (quiz_shared.
+ops_alerts: one mail per problem and state, one on recovery) before they bite:
 
 - disk of every prod Fly volume (Postgres, Redis, quiz-agent's TTS cache):
   the quiz-pack-db volume was 1 GB with no auto-extend;
@@ -15,9 +15,8 @@ e-mails the founder) before they bite:
 Fly numbers come from Fly's managed Prometheus with a read-only org token
 (``FLY_METRICS_TOKEN``). Disk and connections alarm at 70 %; memory at 90 %
 because quiz-agent normally peaks around 72 % (7-day max, 2026-10-16).
-Repeated alarms for the same thing are sent at most every 6 h while it lasts;
-Sentry groups them into one issue (one e-mail). When the watch itself cannot
-read its sources for 3 runs in a row, that is reported too.
+Per app the worst instance counts. When the watch itself cannot read its
+sources for 3 runs in a row, that is reported too.
 """
 
 from __future__ import annotations
@@ -29,8 +28,8 @@ import time
 from collections import deque
 
 import httpx
-import sentry_sdk
 from pydantic import BaseModel
+from quiz_shared.ops_alerts import AlertBook
 from sqlalchemy import text
 
 from ..config import Settings
@@ -47,7 +46,6 @@ _MEMORY_QUERY = (
     f"1 - fly_instance_memory_mem_available{{{_PROD_APPS}}}"
     f" / fly_instance_memory_mem_total{{{_PROD_APPS}}}"
 )
-REALERT_S = 6 * 3600
 BLIND_AFTER_RUNS = 3
 
 
@@ -184,59 +182,49 @@ async def collect(
 
 
 class OpsWatch:
-    """Turns readings into throttled Sentry issues; keeps the last snapshot."""
+    """Turns readings into e-mail alerts; keeps the last snapshot."""
 
     def __init__(self) -> None:
         self.last: list[Reading] = []
-        self._alerted_at: dict[tuple[str, str], float] = {}
-        # Incident id per condition (wall-clock start) goes into the Sentry
-        # fingerprint: a condition that clears and returns is a NEW issue and
-        # e-mails again, though issues only auto-resolve after 72 h of silence.
-        self._incident: dict[tuple[str, str], str] = {}
         self._blind_runs = 0
 
-    def report(self, readings: list[Reading], blind: list[str], now: float) -> None:
+    async def report(
+        self, readings: list[Reading], blind: list[str], book: AlertBook
+    ) -> None:
         self.last = readings
+        worst: dict[str, Reading] = {}
         for r in readings:
-            key = (r.kind, r.target)
-            if not r.alarm:
-                self._alerted_at.pop(key, None)
-                self._incident.pop(key, None)
-                continue
-            incident = self._incident.setdefault(key, str(int(time.time())))
-            if now - self._alerted_at.get(key, -REALERT_S) < REALERT_S:
-                continue
-            self._alerted_at[key] = now
+            key = f"{r.kind} {r.target.split('/')[0]}"
+            if key not in worst or r.value > worst[key].value:
+                worst[key] = r
+        for key, r in worst.items():
             unit = "s" if r.kind == "latency_p95" else "%"
-            msg = f"{r.kind} high on {r.target}: {r.value:g}{unit} (alarm at {r.threshold:g}{unit})"
-            logger.warning(msg)
-            sentry_sdk.capture_message(
-                msg,
-                level="warning",
-                fingerprint=["ops-watch", r.kind, r.target.split("/")[0], incident],
-                contexts={"reading": r.model_dump()},
+            detail = (
+                f"{r.kind} on {r.target}: {r.value:g}{unit} "
+                f"(alarm at {r.threshold:g}{unit})"
             )
+            if r.alarm:
+                logger.warning("Ops watch: %s", detail)
+            await book.update(key, "high" if r.alarm else None, detail)
         self._blind_runs = self._blind_runs + 1 if blind else 0
-        if self._blind_runs == BLIND_AFTER_RUNS:
-            msg = "ops watch cannot read: " + ", ".join(blind)
-            logger.warning(msg)
-            sentry_sdk.capture_message(
-                msg,
-                level="warning",
-                fingerprint=["ops-watch", "blind", str(int(time.time()))],
+        if self._blind_runs >= BLIND_AFTER_RUNS:
+            await book.update(
+                "ops watch", "blind", "Ops watch cannot read: " + ", ".join(blind)
             )
+        elif not blind:
+            await book.update("ops watch", None)
 
 
 watch = OpsWatch()
 
 
-async def run_ops_watch(s: Settings, sessionmaker) -> None:
+async def run_ops_watch(s: Settings, sessionmaker, book: AlertBook) -> None:
     """Background loop: every ``ops_watch_interval_s``, off the request path."""
     async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
         while True:
             await asyncio.sleep(s.ops_watch_interval_s)
             try:
                 readings, blind = await collect(s, sessionmaker, client)
-                watch.report(readings, blind, time.monotonic())
+                await watch.report(readings, blind, book)
             except Exception:
                 logger.exception("Ops watch crashed")

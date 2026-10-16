@@ -6,6 +6,8 @@ All shared state, models, and helpers live in deps.py.
 
 from fastapi import APIRouter
 
+from ..monitoring import pack_watch
+
 from .routes import (
     sessions,
     quiz,
@@ -43,3 +45,4 @@ router.include_router(app_config.router)
 router.include_router(voice_samples.router)
 router.include_router(voice_experiment.router)
 router.include_router(daily_challenge.router)
+router.include_router(pack_watch.router)  # #207: pack worker's minute ping

@@ -197,6 +197,8 @@ class Settings(BaseSettings):
     # left, ElevenLabs in percent of the character quota left.
     provider_balance_check_enabled: bool = False
     provider_balance_initial_delay_s: float = 120.0
+    # #207: hourly (was daily) so a credit running out is caught the same hour.
+    provider_balance_interval_s: float = 3600.0
     openrouter_low_usd: float = 10.0
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
@@ -213,6 +215,9 @@ class Settings(BaseSettings):
     # #207 (207.8/207.9): infrastructure + latency watch (monitoring/
     # ops_watch.py). Opt-in like the checks above (on in fly.toml).
     ops_watch_enabled: bool = False
+    # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
+    # so a deploy does not re-send ongoing problems. Empty = memory only.
+    ops_alert_state_path: str = ""
     ops_watch_interval_s: float = 300.0
     ops_disk_alarm_pct: float = 70.0
     ops_db_connections_alarm_pct: float = 70.0

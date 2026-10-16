@@ -3,8 +3,8 @@
 During the beta a provider ran out of credit and testers could not play, and
 nobody knew until they said so. This module reads the account-level balance of
 every prepaid provider the live quiz depends on, so the founder sees it coming:
-an admin endpoint shows the numbers on demand, and a daily background check
-raises a Sentry issue (which emails the founder) when one runs low.
+an admin endpoint shows the numbers on demand, and an hourly background check
+e-mails the founder (#207, quiz_shared.ops_alerts) when one runs low.
 
 Here: providers with a balance API, OpenRouter (account credits and the key's
 own spend limit) and ElevenLabs (character quota). Anthropic, OpenAI and Fly
@@ -28,10 +28,11 @@ from datetime import UTC, datetime
 from typing import Literal
 
 import httpx
-import sentry_sdk
 from pydantic import BaseModel
+from quiz_shared.ops_alerts import AlertBook
 
 from ..config import Settings
+from . import self_heal
 
 logger = logging.getLogger(__name__)
 
@@ -188,24 +189,25 @@ def _summary(b: ProviderBalance) -> str:
     )
 
 
-def report_to_sentry(balances: list[ProviderBalance]) -> None:
-    """One Sentry issue per provider+status (stable fingerprint), so a balance
-    that stays low for days adds events to one issue instead of new emails.
-    A failed check is its own issue: the founder must know the watch is blind."""
+async def report(balances: list[ProviderBalance], book: AlertBook) -> None:
+    """E-mail the founder per provider on a change of state (#207): low,
+    critical or a failed check opens a problem, ok closes it with a recovery
+    mail. When OpenRouter runs critical the server moves its OpenRouter traffic
+    to direct OpenAI by itself and says so in the mail."""
     for b in balances:
         if b.status in ("ok", "unconfigured"):
+            await book.update(f"credit {b.provider}", None)
             continue
-        sentry_sdk.capture_message(
-            _summary(b),
-            level="error" if b.status == "critical" else "warning",
-            fingerprint=["provider-balance", b.provider, b.status],
-            tags={"provider": b.provider},
-            contexts={"balance": b.model_dump(mode="json")},
-        )
-        logger.warning("Provider balance: %s", _summary(b))
+        detail = _summary(b)
+        if b.provider.startswith("openrouter") and b.status == "critical":
+            detail += "\n\n" + self_heal.reroute_off_openrouter()
+        logger.warning("Provider balance: %s", detail)
+        await book.update(f"credit {b.provider}", b.status, detail)
 
 
-async def check_once(settings: Settings, retry_delay_s: float = 300.0) -> None:
+async def check_once(
+    settings: Settings, book: AlertBook, retry_delay_s: float = 300.0
+) -> None:
     """Fetch all balances and report; a provider whose fetch failed is asked
     again after ``retry_delay_s`` and only a repeated failure is reported, so
     a one-off network blip does not page anyone."""
@@ -216,21 +218,24 @@ async def check_once(settings: Settings, retry_delay_s: float = 300.0) -> None:
         balances = [
             again.get(b.provider, b) if b.status == "error" else b for b in balances
         ]
-    report_to_sentry(balances)
+    await report(balances, book)
 
 
-async def run_daily_balance_check(settings: Settings) -> None:
-    """Background loop: shortly after startup, then every ~24 h. Runs off the
-    request path; the first check waits so it never delays boot."""
+async def run_balance_check(settings: Settings, book: AlertBook) -> None:
+    """Background loop: shortly after startup, then every
+    ``provider_balance_interval_s`` (1 h). Off the request path; the first
+    check waits so it never delays boot."""
     await asyncio.sleep(settings.provider_balance_initial_delay_s)
     while True:
         try:
-            await check_once(settings)
+            await check_once(settings, book)
         except Exception:
             logger.exception("Provider balance check crashed")
-            sentry_sdk.capture_message(
-                "Provider balance check crashed",
-                level="warning",
-                fingerprint=["provider-balance", "crashed"],
+            await book.update(
+                "credit check",
+                "crashed",
+                "The provider balance check crashed; see logs.",
             )
-        await asyncio.sleep(24 * 3600 + random.uniform(0, 600))
+        await asyncio.sleep(
+            settings.provider_balance_interval_s + random.uniform(0, 60)
+        )

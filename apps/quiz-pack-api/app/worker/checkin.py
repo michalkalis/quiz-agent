@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+import httpx
 import sentry_sdk
 from quiz_shared.llm import factory as llm_factory
 from sentry_sdk.crons import MonitorStatus, capture_checkin
@@ -69,14 +70,22 @@ def check_in() -> bool:
 
 
 async def _loop() -> None:
-    while True:
-        try:
-            check_in()
-        except Exception:
-            # A dead loop would stop check-ins and page "worker dead" while the
-            # worker still runs; log and keep going instead.
-            logger.warning("worker check-in loop error", exc_info=True)
-        await asyncio.sleep(INTERVAL_S)
+    # #207: the primary also runs its half of the mutual watch (watch.py):
+    # minute ping to quiz-agent + order checks, alerts by e-mail.
+    from .watch import WorkerWatch
+
+    watch = WorkerWatch()
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                check_in()
+                if is_primary():
+                    await watch.tick(client)
+            except Exception:
+                # A dead loop would stop check-ins and pings and page "worker
+                # dead" while the worker still runs; log and keep going instead.
+                logger.warning("worker check-in loop error", exc_info=True)
+            await asyncio.sleep(INTERVAL_S)
 
 
 def start_checkins() -> asyncio.Task[None]:

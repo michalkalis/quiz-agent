@@ -149,10 +149,15 @@ async def test_fly_estimate_counts_running_machines_and_all_volumes():
     assert b.monthly_usd == pytest.approx(4.69)
 
 
-async def test_fly_failed_card_is_critical():
-    async with _client(_fly_handler("PAST_DUE")) as c:
+@pytest.mark.parametrize(
+    "billing, expected",
+    [("PAST_DUE", "critical"), ("DELINQUENT", "critical"), ("TRIAL_ACTIVE", "ok")],
+)
+async def test_fly_failed_card_is_critical(billing, expected):
+    """Only states in which Fly suspends apps page; others must not alert daily."""
+    async with _client(_fly_handler(billing)) as c:
         b = await pc.fly(c, _S)
-    assert b.status == "critical"
+    assert b.status == expected
 
 
 @pytest.mark.parametrize(

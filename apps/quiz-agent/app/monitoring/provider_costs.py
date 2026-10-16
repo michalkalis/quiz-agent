@@ -11,8 +11,8 @@ admin/org credential and turned into the same ``ProviderBalance`` rows:
   month's spend is shown: a prepaid balance is not readable by any API.
 - OpenAI: this month's spend from the organisation Costs API (Admin key)
   against ``OPENAI_MONTHLY_BUDGET_USD`` — catches runaway use, not a balance.
-- Fly: the org's billing status (anything but CURRENT means the card failed
-  and apps get suspended) plus a run-rate estimate of the machines that are
+- Fly: the org's billing status (past due / delinquent / no payment source
+  means the card failed and apps get suspended) plus a run-rate estimate of the machines that are
   running right now and all volumes, at Fly's list prices.
 
 A missing credential is ``unconfigured`` (shown, never alerted): these keys
@@ -40,6 +40,10 @@ _FLY_SHARED_CPU = 1.94
 _FLY_RAM_256MB = 1.25
 _FLY_PERF_CPU = 31.0
 _FLY_VOLUME_GB = 0.15
+# Billing states in which Fly stops (or will stop) running the apps.
+_FLY_BILLING_BROKEN = frozenset(
+    {"PAST_DUE", "DELINQUENT", "SOURCE_REQUIRED", "TRIAL_ENDED"}
+)
 
 
 def _unconfigured(provider: str, unit: str, detail: str) -> ProviderBalance:
@@ -219,7 +223,7 @@ async def fly(client: httpx.AsyncClient, s: Settings) -> ProviderBalance:
         provider="fly",
         unit="usd_month",
         monthly_usd=round(estimate, 2),
-        status="ok" if billing == "CURRENT" else "critical",
+        status="critical" if billing in _FLY_BILLING_BROKEN else "ok",
         detail=f"billing {billing}; ~${estimate:.0f}/month if the machines running "
         "now kept running (list prices, volumes included)",
     )

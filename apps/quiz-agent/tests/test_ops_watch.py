@@ -88,18 +88,25 @@ def captured(monkeypatch) -> list[tuple[str, list[str]]]:
     return calls
 
 
-async def test_lasting_alarm_is_throttled_and_realerts_after_recovery(captured):
+async def test_lasting_alarm_is_throttled_and_realerts_after_recovery(
+    captured, monkeypatch
+):
     w = ow.OpsWatch()
     w.report([_reading(True)], [], now=0)
     w.report([_reading(True)], [], now=300)  # next run, same condition
     assert len(captured) == 1
-    assert captured[0][1] == ["ops-watch", "disk", "quiz-pack-db"]
+    assert captured[0][1][:3] == ["ops-watch", "disk", "quiz-pack-db"]
     assert "75%" in captured[0][0] and "70%" in captured[0][0]
     w.report([_reading(True)], [], now=ow.REALERT_S + 1)
     assert len(captured) == 2
     w.report([_reading(False, 40)], [], now=ow.REALERT_S + 301)  # recovered
+    monkeypatch.setattr(ow.time, "time", lambda: 1_900_000_000.0)
     w.report([_reading(True)], [], now=ow.REALERT_S + 601)  # back again
     assert len(captured) == 3
+    # Same incident → same issue; a new incident → a new issue (a new e-mail,
+    # since the old one may still be open for up to 72 h).
+    assert captured[0][1] == captured[1][1]
+    assert captured[2][1] != captured[1][1]
 
 
 async def test_blind_watch_reports_only_after_consecutive_failures(captured):
@@ -108,7 +115,7 @@ async def test_blind_watch_reports_only_after_consecutive_failures(captured):
     w.report([], [], now=300)  # healed: counter resets
     for i in range(ow.BLIND_AFTER_RUNS):
         w.report([], ["fly disk (HTTPStatusError)"], now=600 + i * 300)
-    assert [fp for _, fp in captured] == [["ops-watch", "blind"]]
+    assert [fp[:2] for _, fp in captured] == [["ops-watch", "blind"]]
 
 
 async def test_latency_p95_needs_enough_recent_requests():

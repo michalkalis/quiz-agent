@@ -149,7 +149,8 @@ async def collect(
                 used, cap = (
                     await session.execute(
                         text(
-                            "SELECT (SELECT count(*) FROM pg_stat_activity), "
+                            "SELECT (SELECT count(*) FROM pg_stat_activity "
+                            "WHERE backend_type = 'client backend'), "
                             "current_setting('max_connections')::int"
                         )
                     )
@@ -188,6 +189,10 @@ class OpsWatch:
     def __init__(self) -> None:
         self.last: list[Reading] = []
         self._alerted_at: dict[tuple[str, str], float] = {}
+        # Incident id per condition (wall-clock start) goes into the Sentry
+        # fingerprint: a condition that clears and returns is a NEW issue and
+        # e-mails again, though issues only auto-resolve after 72 h of silence.
+        self._incident: dict[tuple[str, str], str] = {}
         self._blind_runs = 0
 
     def report(self, readings: list[Reading], blind: list[str], now: float) -> None:
@@ -196,7 +201,9 @@ class OpsWatch:
             key = (r.kind, r.target)
             if not r.alarm:
                 self._alerted_at.pop(key, None)
+                self._incident.pop(key, None)
                 continue
+            incident = self._incident.setdefault(key, str(int(time.time())))
             if now - self._alerted_at.get(key, -REALERT_S) < REALERT_S:
                 continue
             self._alerted_at[key] = now
@@ -206,7 +213,7 @@ class OpsWatch:
             sentry_sdk.capture_message(
                 msg,
                 level="warning",
-                fingerprint=["ops-watch", r.kind, r.target.split("/")[0]],
+                fingerprint=["ops-watch", r.kind, r.target.split("/")[0], incident],
                 contexts={"reading": r.model_dump()},
             )
         self._blind_runs = self._blind_runs + 1 if blind else 0
@@ -214,7 +221,9 @@ class OpsWatch:
             msg = "ops watch cannot read: " + ", ".join(blind)
             logger.warning(msg)
             sentry_sdk.capture_message(
-                msg, level="warning", fingerprint=["ops-watch", "blind"]
+                msg,
+                level="warning",
+                fingerprint=["ops-watch", "blind", str(int(time.time()))],
             )
 
 

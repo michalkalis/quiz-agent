@@ -44,9 +44,9 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### D. Peniaze a zneužitie (P1)
 
-- [ ] 207.11 Záložný hodnotiteľ odpovedí na priame OpenAI (nie cez OpenRouter), aby jeden prázdny kredit nezhodil obe cesty.
+- [x] 207.11 Záložný hodnotiteľ odpovedí na priame OpenAI (nie cez OpenRouter), aby jeden prázdny kredit nezhodil obe cesty. *(PR #451, nasadené a overené na prode 10-16)*
 - [ ] 207.12 Denné kontroly kreditov aj pre Anthropic (Admin API cost report vs. promo/kúpený zostatok) a OpenAI (usage API); Fly faktúra — mesačný odhad z Fly API.
-- [ ] 207.13 Limity na používateľa: realtime STT tokeny/deň, dĺžka nahrávky v sekundách, počet pokusov na otázku/deň; rate limit `/entitlements/sync`; globálny denný strop ElevenLabs → automatický prechod na záložný hlas.
+- [x] 207.13 Limity na používateľa: realtime STT tokeny/deň, dĺžka nahrávky v sekundách, počet pokusov na otázku/deň; rate limit `/entitlements/sync`; globálny denný strop ElevenLabs → automatický prechod na záložný hlas. *(PR #456 + nasledujúca PR; limity `DAILY_CAP_*` 500 tokenov / 7200 s / 30 pokusov / 100 syncov, `ELEVENLABS_DAILY_CREDIT_BUDGET` 5000)*
 - [ ] 207.14 Meranie skutočnej ceny otázky (LLM + STT + TTS) z analytiky → podklad pre founder rozhodnutie o limite Plus (dnes odhad ~6 $ pri 1 000 otázkach vs. ~4,6 $ čistý príjem). Rozhodnutie o cene/limite = founder.
 
 ### E. Nasadzovanie a prostredia (P1)

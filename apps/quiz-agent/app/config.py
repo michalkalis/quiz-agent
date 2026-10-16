@@ -226,7 +226,7 @@ class Settings(BaseSettings):
     ops_memory_alarm_pct: float = 90.0
     ops_latency_p95_alarm_s: float = 8.0
     ops_latency_window_s: float = 600.0
-    ops_latency_min_requests: int = 10
+    ops_latency_min_requests: int = 30
     # Question stock early warning (#199): the daily check counts playable
     # questions per (language × category) and fresh entertainment questions per
     # language, and raises a Sentry issue when one runs low so generation can

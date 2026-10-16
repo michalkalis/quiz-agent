@@ -8,7 +8,7 @@ Jedna stránka na prvých 15 minút výpadku. Podrobnosti sú v odkazovaných n�
 
 | Zdroj | Čo chodí | Oneskorenie |
 |---|---|---|
-| E-mail `[Trubbo ALERT] <kľúč>: <stav>` od `monitor@trubbo.app` | quiz-agent ↔ Fly worker sa navzájom strážia (mŕtvy worker, quiz-agent neodpovedá), disk / pamäť / DB spojenia ≥ 70 %, p95 odozvy > 8 s, kredity providerov, zlyhaná kontrola, denný rozpočet ElevenLabs, zaplatené objednávky visia alebo sú na refund | 3 až 5 min |
+| E-mail `[Trubbo ALERT] <kľúč>: <stav>` od `monitor@trubbo.app` | Len keď to hráči cítia teraz alebo čoskoro: quiz-agent neodpovedá (3 min), Fly worker mŕtvy 30 min, disk / pamäť / DB spojenia produkčných appiek ≥ 70 % (pamäť 90 %), p95 odozvy > 8 s 15 min v kuse pri ≥ 30 požiadavkách / 10 min, kredity providerov, zlyhaná kontrola kreditov, denný rozpočet ElevenLabs, zaplatené objednávky visia alebo sú na refund. Zálohy (WAL archív, PITR) sa len logujú, vidno ich v `GET /api/v1/admin/ops-health` | 3 až 30 min |
 | E-mail `[Trubbo OK] <kľúč> recovered` | ten istý problém sa vyriešil (1 mail na problém, deploy nespamuje) | — |
 | GitHub e-mail o zlyhanom behu `prod-monitor` | zdravie oboch API, visiace objednávky, heartbeat workera, aj keď **padol celý región cdg** (vtedy nemá kto poslať `[Trubbo ALERT]`) | ~30 min až 4 h |
 | GitHub issue `deploy-failed` (e-mail) | `backend-deploy.yml` zastal na stagingu alebo prode | hneď |

@@ -18,6 +18,11 @@ Fly numbers come from Fly's managed Prometheus with a read-only org token
 because quiz-agent normally peaks around 72 % (7-day max, 2026-10-16).
 Per app the worst instance counts. When the watch itself cannot read its
 sources for 3 runs in a row, that is reported too.
+
+Founder 2026-10-16 (evening): mail only when players are affected. So only the
+production apps are watched (a drill or rehearsal machine never mails), and
+slow responses mail only when they last 3 runs (15 min) under real traffic
+(``ops_latency_min_requests``): one player's slow answer is not an outage.
 """
 
 from __future__ import annotations
@@ -38,7 +43,7 @@ from ..config import Settings
 logger = logging.getLogger(__name__)
 
 _PROMETHEUS = "https://api.fly.io/prometheus/{org}/api/v1/query"
-_PROD_APPS = 'app!~".*staging.*|fly-builder.*"'
+_PROD_APPS = 'app=~"quiz-agent-api|quiz-pack-api|quiz-pack-db|quiz-pack-redis"'
 _DISK_QUERY = (
     f'1 - fly_instance_filesystem_blocks_avail{{mount="/data",{_PROD_APPS}}}'
     f' / fly_instance_filesystem_blocks{{mount="/data",{_PROD_APPS}}}'
@@ -48,6 +53,7 @@ _MEMORY_QUERY = (
     f" / fly_instance_memory_mem_total{{{_PROD_APPS}}}"
 )
 BLIND_AFTER_RUNS = 3
+LATENCY_SUSTAINED_RUNS = 3
 
 
 class Reading(BaseModel):
@@ -197,13 +203,20 @@ class OpsWatch:
     def __init__(self) -> None:
         self.last: list[Reading] = []
         self._blind_runs = 0
+        self._slow_runs = 0
 
     async def report(
         self, readings: list[Reading], blind: list[str], book: AlertBook
     ) -> None:
         self.last = readings
         worst: dict[str, Reading] = {}
+        slow = any(r.kind == "latency_p95" and r.alarm for r in readings)
+        self._slow_runs = self._slow_runs + 1 if slow else 0
         for r in readings:
+            if r.kind == "latency_p95" and r.alarm:
+                r = r.model_copy(
+                    update={"alarm": self._slow_runs >= LATENCY_SUSTAINED_RUNS}
+                )
             key = f"{r.kind} {r.target.split('/')[0]}"
             if key not in worst or r.value > worst[key].value:
                 worst[key] = r
@@ -216,6 +229,8 @@ class OpsWatch:
             if r.alarm:
                 logger.warning("Ops watch: %s", detail)
                 await book.update(key, "high", detail)
+            elif r.value >= r.threshold:
+                logger.info("Ops watch (not sustained yet): %s", detail)
             elif key not in book.open_problems or r.value < r.threshold - _margin(r):
                 # Hysteresis: an open alarm clears only clearly below the line,
                 # so a value hovering at it does not mail every 5 minutes.

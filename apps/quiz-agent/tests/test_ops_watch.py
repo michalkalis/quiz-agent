@@ -3,8 +3,12 @@
 Why these matter: the watch is the early warning for slow-burn outages (a
 full DB volume, exhausted connections, a backend that got slow). It is only
 useful if
-- it alarms on the right side of each threshold, per prod app, and ignores
-  staging and the Fly builder (their numbers are not production);
+- it alarms on the right side of each threshold, per prod app, and watches
+  only the production apps: staging, the Fly builder, or a drill/rehearsal
+  machine never mails (founder 2026-10-16, evening: mail only when players
+  are affected);
+- slow responses mail only when they last 15 min under real traffic: one
+  player's slow answers (or a 5-min blip) are not an outage;
 - one condition that lasts for hours is one e-mail, not one per 5-min run;
   recovery is a mail, and a relapse mails again; the worst instance per app
   counts;
@@ -24,7 +28,7 @@ from quiz_shared.ops_alerts import AlertBook
 
 pytestmark = pytest.mark.asyncio
 
-_S = Settings()  # disk/conn 70 %, memory 90 %, p95 8 s over ≥10 requests
+_S = Settings()  # disk/conn 70 %, memory 90 %, p95 8 s over ≥30 requests
 
 
 def _prom(disk: dict[str, float], mem: dict[str, float], seen: list[str]):
@@ -61,8 +65,10 @@ async def test_disk_and_memory_alarm_per_app_at_their_thresholds(monkeypatch):
     # 72 % disk ≥ 70 % alarms; 80 % memory is quiz-agent's normal peak, not 90 %.
     assert alarms == {("disk", "quiz-pack-db"), ("memory", "quiz-pack-redis")}
     assert blind == []
-    # Staging apps and the remote builder are excluded in the query itself.
-    assert all("staging" in q and "fly-builder" in q for q in seen)
+    # Only the production apps are asked for: a rehearsal machine (it hit
+    # 96 % memory during the PITR drill, 2026-10-16) or staging never shows up.
+    for q in seen:
+        assert 'app=~"quiz-agent-api|quiz-pack-api|quiz-pack-db|quiz-pack-redis"' in q
 
 
 async def test_unreadable_source_is_blind_not_an_exception(monkeypatch):
@@ -120,6 +126,47 @@ async def test_blind_watch_reports_only_after_consecutive_failures(book):
     for _ in range(ow.BLIND_AFTER_RUNS):
         await w.report([], ["fly disk (HTTPStatusError)"], b)
     assert mails.subjects == ["[Trubbo ALERT] ops watch: blind"]
+
+
+def _slow(value: float = 11.0) -> ow.Reading:
+    return ow.Reading(
+        kind="latency_p95",
+        target="quiz-agent-api",
+        value=value,
+        threshold=8,
+        alarm=value >= 8,
+    )
+
+
+async def test_slow_responses_mail_only_when_sustained(book):
+    """2026-10-16: one player's slow voice answers (p95 11 s, then 5 s, then
+    9.5 s) mailed alarm, recovery, alarm within 25 min. Only 15 min of
+    slowness in a row is news; a dip in between restarts the count."""
+    b, mails = book
+    w = ow.OpsWatch()
+    await w.report([_slow()], [], b)
+    await w.report([_slow()], [], b)
+    await w.report([_slow(5.0)], [], b)  # dip: count restarts
+    await w.report([_slow()], [], b)
+    await w.report([_slow()], [], b)
+    assert mails.subjects == []
+    await w.report([_slow()], [], b)  # third slow run in a row
+    assert mails.subjects == ["[Trubbo ALERT] latency_p95 quiz-agent-api: high"]
+
+
+async def test_one_player_is_not_enough_traffic_for_a_latency_reading(monkeypatch):
+    """A solo player sends ~10-20 requests per 10 min; the p95 of so few is
+    their single slowest answer, so it is not measured at all."""
+    monkeypatch.delenv("FLY_METRICS_TOKEN", raising=False)
+    monkeypatch.setattr(ow, "latency", ow.LatencyWindow())
+    for _ in range(20):
+        ow.latency.add(12.0)
+    readings, _ = await ow.collect(_S, None, None)
+    assert readings == []
+    for _ in range(10):
+        ow.latency.add(12.0)
+    readings, _ = await ow.collect(_S, None, None)
+    assert [r.kind for r in readings] == ["latency_p95"]
 
 
 async def test_latency_p95_needs_enough_recent_requests():

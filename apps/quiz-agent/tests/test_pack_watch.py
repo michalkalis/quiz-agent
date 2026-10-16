@@ -5,7 +5,10 @@ the worker's minute pings are how quiz-agent notices within minutes. The
 watch is only trustworthy if
 - only the worker (shared token) can count as alive — a public caller must
   not be able to mask a dead worker;
-- missing pings for over 3 min alarm, a fresh ping recovers;
+- only an outage long enough to keep a paying player waiting mails (30 min):
+  a worker deploy or restart is minutes and the mba backup takes orders after
+  5 min, so shorter gaps are not news (founder 2026-10-16, evening);
+- a fresh ping recovers, but a silent worker is never declared recovered;
 - a quiz-agent restart is not mistaken for a dead worker (grace period).
 """
 
@@ -62,10 +65,12 @@ async def test_missing_pings_alarm_and_a_ping_recovers(tmp_path, monkeypatch):
     monkeypatch.setattr(pw, "pack_watch", watch)
     await pw.check_worker(book, now=120)  # boot grace: no ping yet is fine
     assert mails.subjects == []
-    await pw.check_worker(book, now=200)  # 200 s since boot, still no ping
+    await pw.check_worker(book, now=600)  # 10 min silent: a deploy, not news
+    assert mails.subjects == []
+    await pw.check_worker(book, now=1900)  # over 30 min silent
     assert mails.subjects == ["[Trubbo ALERT] pack worker: down"]
-    watch.ping(now=210)
-    await pw.check_worker(book, now=220)
+    watch.ping(now=1910)
+    await pw.check_worker(book, now=1920)
     assert mails.subjects[-1] == "[Trubbo OK] pack worker recovered"
 
 
@@ -78,7 +83,8 @@ async def test_restart_with_open_alarm_sends_no_false_recovery(tmp_path, monkeyp
     book = AlertBook("t", path, sender=mails)
     monkeypatch.setattr(pw, "pack_watch", pw.PackWatch(now=0))
     await pw.check_worker(book, now=60)
-    await pw.check_worker(book, now=200)
+    await pw.check_worker(book, now=200)  # still silent, under 30 min
+    await pw.check_worker(book, now=1900)
     assert mails.subjects == ["[Trubbo ALERT] pack worker: down"]
 
 

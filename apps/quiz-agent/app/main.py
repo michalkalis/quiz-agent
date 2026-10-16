@@ -426,7 +426,11 @@ async def lifespan(app: FastAPI):
         from .monitoring.pack_watch import run_pack_watch
 
         ops_tasks.append(
-            asyncio.create_task(run_ops_watch(settings, auth_sessionmaker, alert_book))
+            asyncio.create_task(
+                run_ops_watch(
+                    settings, auth_sessionmaker, alert_book, elevenlabs_budget
+                )
+            )
         )
         ops_tasks.append(asyncio.create_task(run_pack_watch(alert_book)))
 

@@ -70,6 +70,7 @@ class ElevenLabsBudget:
         self._now = now or (lambda: datetime.now(UTC))
         self._clock = clock
         self._exhausted = False
+        self.spent_today: int | None = None
         self._checked_at: float | None = None
         self._day: date | None = None  # UTC day of the last good reading
         self._lock = asyncio.Lock()
@@ -86,6 +87,11 @@ class ElevenLabsBudget:
             if not self._fresh():  # another request may have just refreshed
                 await self._refresh(budget)
         return self._exhausted
+
+    def status(self) -> tuple[date | None, bool, int | None]:
+        """(UTC day of the last good reading, budget reached, credits spent
+        that day) — for the #207 ops-watch mail; no network call."""
+        return self._day, self._exhausted, self.spent_today
 
     def _fresh(self) -> bool:
         return (
@@ -127,6 +133,7 @@ class ElevenLabsBudget:
         self._day = today
         # The billing period can reset mid-day: then all of it is today's.
         spent = used - start if used >= start else used
+        self.spent_today = spent  # #207: read by the ops watch for its mail
         exhausted = spent >= budget
         if exhausted != self._exhausted:
             logger.warning(

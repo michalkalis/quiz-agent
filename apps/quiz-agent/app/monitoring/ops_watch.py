@@ -10,7 +10,8 @@ ops_alerts: one mail per problem and state, one on recovery) before they bite:
 - Postgres connections in use vs ``max_connections`` (shared by both apps);
 - quiz-agent's own response time: p95 time-to-first-byte of API requests
   over the last 10 minutes, measured in-process for every request (Sentry
-  traces are sampled at 10 % and too sparse at beta traffic).
+  traces are sampled at 10 % and too sparse at beta traffic);
+- the day the service-wide ElevenLabs budget is reached (one mail per day).
 
 Fly numbers come from Fly's managed Prometheus with a read-only org token
 (``FLY_METRICS_TOKEN``). Disk and connections alarm at 70 %; memory at 90 %
@@ -231,7 +232,44 @@ class OpsWatch:
 watch = OpsWatch()
 
 
-async def run_ops_watch(s: Settings, sessionmaker, book: AlertBook) -> None:
+_EL_BUDGET_KEY = "elevenlabs daily budget"
+
+
+async def check_elevenlabs_budget(
+    budget, s: Settings, client: httpx.AsyncClient, book: AlertBook
+) -> None:
+    """One mail per UTC day when the service-wide ElevenLabs budget (207.13,
+    usage/elevenlabs_budget.py) is reached and speech moved to OpenAI — the
+    founder watches real beta usage this way. No recovery mail: the budget
+    resets by itself at midnight UTC."""
+    day, reached, spent = budget.status()
+    key = f"{_EL_BUDGET_KEY} {day}"
+    for old in book.open_problems:
+        if old.startswith(_EL_BUDGET_KEY) and old != key:
+            await book.update(old, None, notify_recovery=False)
+    if not reached or key in book.open_problems:
+        return
+    from .provider_balances import _elevenlabs
+
+    month = (await _elevenlabs(client, s))[0]
+    left = (
+        f"{month.remaining:,.0f} of {month.limit:,.0f} credits left this month"
+        if month.remaining is not None and month.limit
+        else f"monthly balance unavailable ({month.detail})"
+    )
+    await book.update(
+        key,
+        "reached",
+        f"{day}: {spent:,} ElevenLabs credits used today (daily budget "
+        f"{s.elevenlabs_daily_credit_budget:,}); new speech now uses the OpenAI "
+        f"voice and recogniser until midnight UTC. {left}.",
+        notify_recovery=False,
+    )
+
+
+async def run_ops_watch(
+    s: Settings, sessionmaker, book: AlertBook, elevenlabs_budget=None
+) -> None:
     """Background loop: every ``ops_watch_interval_s``, off the request path."""
     async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
         while True:
@@ -239,5 +277,7 @@ async def run_ops_watch(s: Settings, sessionmaker, book: AlertBook) -> None:
             try:
                 readings, blind = await collect(s, sessionmaker, client)
                 await watch.report(readings, blind, book)
+                if elevenlabs_budget is not None:
+                    await check_elevenlabs_budget(elevenlabs_budget, s, client, book)
             except Exception:
                 logger.exception("Ops watch crashed")

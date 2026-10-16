@@ -165,3 +165,43 @@ async def test_value_hovering_at_the_line_does_not_flap(book):
     assert mails.subjects == ["[Trubbo ALERT] disk quiz-pack-db: high"]
     await w.report([_reading(False, 60)], [], b)
     assert mails.subjects[-1] == "[Trubbo OK] disk quiz-pack-db recovered"
+
+
+class _Budget:
+    def __init__(self, day, reached, spent):
+        self.value = (day, reached, spent)
+
+    def status(self):
+        return self.value
+
+
+async def test_elevenlabs_budget_hit_mails_once_per_day(book, monkeypatch):
+    """Founder wants one mail the day the daily budget is hit (date, credits
+    today, monthly remaining) — not one per 5-minute run."""
+    from datetime import date
+
+    from app.monitoring import provider_balances as pb
+
+    async def month(client, s):
+        return [
+            pb.ProviderBalance(
+                provider="elevenlabs",
+                unit="characters",
+                remaining=12000,
+                limit=30000,
+                status="ok",
+            )
+        ]
+
+    monkeypatch.setattr(pb, "_elevenlabs", month)
+    b, mails = book
+    d1 = date(2026, 10, 16)
+    await ow.check_elevenlabs_budget(_Budget(d1, False, 3000), _S, None, b)
+    assert mails.subjects == []
+    for _ in range(3):
+        await ow.check_elevenlabs_budget(_Budget(d1, True, 5100), _S, None, b)
+    assert mails.subjects == [f"[Trubbo ALERT] elevenlabs daily budget {d1}: reached"]
+    await ow.check_elevenlabs_budget(
+        _Budget(date(2026, 10, 17), True, 5050), _S, None, b
+    )
+    assert len(mails.subjects) == 2  # next day, next mail; no recovery mails

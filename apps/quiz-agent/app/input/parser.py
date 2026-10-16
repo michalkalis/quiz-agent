@@ -8,8 +8,6 @@ import logging
 from typing import Dict, List, Any
 from difflib import SequenceMatcher
 
-from quiz_shared.llm import factory as llm_factory
-
 from .. import hot_path_llm
 
 logger = logging.getLogger(__name__)
@@ -45,9 +43,9 @@ class InputParser:
         # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
         # client. Injected by the eval harness to record real Claude calls.
         self.claude_client: Any = None
-        self.model = llm_factory.resolve_model(
-            model or hot_path_llm.role_model("PARSE_MODEL")
-        )
+        # Not gateway-resolved (#207.11): the answer path talks to Anthropic
+        # and OpenAI directly, never through LLM_GATEWAY.
+        self.model = model or hot_path_llm.role_model("PARSE_MODEL")
         self.temperature = temperature
 
     async def parse(

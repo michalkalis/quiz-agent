@@ -28,6 +28,7 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test")
 
 from app.api.deps import SubmitInputRequest  # noqa: E402
 from app.api.routes.quiz import submit_input  # noqa: E402
+from app.usage.caps import UsageCaps  # noqa: E402
 from app.auth.identity import AuthSubject  # noqa: E402
 from app.input.parser import InputParser  # noqa: E402
 from app.quiz.flow import QuizFlowService  # noqa: E402
@@ -131,6 +132,7 @@ async def test_overlapping_submits_are_serialized_per_session():
                 subject=AuthSubject(
                     subject_id="u_race", is_legacy=False, authenticated=True
                 ),
+                usage_caps=UsageCaps(None),  # #207.13: caps off, not under test
             )
         )
 

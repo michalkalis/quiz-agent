@@ -61,6 +61,8 @@ When changing API models:
 3. Update iOS Codable structs to match
 4. Run `/verify-api` to confirm sync
 
+Live builds must keep working: CI (`Backend CI gate`) fails a PR whose spec (quiz-agent or quiz-pack-api) drops/renames an endpoint or response field, adds a required request field or a response enum value, against the newest `ios/*` tag of each marketing version (`infra/ci/openapi_compat.py`, oasdiff). Expand now, contract once no live build uses the old shape; a truly unused break goes in `infra/ci/openapi-compat-ignore.txt` with a reason; retire a version in `RETIRED_VERSIONS`.
+
 ## Testing
 
 - **Backend:** `pytest tests/ -v` — mock OpenAI calls, use fixtures

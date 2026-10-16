@@ -6,9 +6,10 @@ clip is written here, so a fresh machine (deploy, second machine, host move)
 serves cached questions with zero ElevenLabs calls — those credits are scarce
 (Starter plan, no top-up) and ~185 credits per first read of a question.
 
-Env (Fly secrets on ``quiz-agent-api``): ``R2_ENDPOINT`` (shared with voice
-samples), ``TTS_R2_ACCESS_KEY_ID`` / ``TTS_R2_SECRET_ACCESS_KEY`` (token
-scoped to this bucket only), ``TTS_R2_BUCKET``. Missing → no L2 (dev/tests),
+Env (Fly secrets on ``quiz-agent-api``): ``TTS_R2_ENDPOINT`` (the company
+Cloudflare account's S3 endpoint), ``TTS_R2_ACCESS_KEY_ID`` /
+``TTS_R2_SECRET_ACCESS_KEY`` (token scoped to this bucket only),
+``TTS_R2_BUCKET`` (``trubbo-tts-cache``). Missing → no L2 (dev/tests),
 exactly the old behaviour.
 
 boto3 is blocking; every call runs in a worker thread. A failing R2 never
@@ -24,7 +25,7 @@ import os
 logger = logging.getLogger(__name__)
 
 REQUIRED_ENV = (
-    "R2_ENDPOINT",
+    "TTS_R2_ENDPOINT",
     "TTS_R2_ACCESS_KEY_ID",
     "TTS_R2_SECRET_ACCESS_KEY",
     "TTS_R2_BUCKET",
@@ -45,7 +46,7 @@ class R2AudioStore:
 
         client = boto3.client(
             "s3",
-            endpoint_url=os.environ["R2_ENDPOINT"],
+            endpoint_url=os.environ["TTS_R2_ENDPOINT"],
             aws_access_key_id=os.environ["TTS_R2_ACCESS_KEY_ID"],
             aws_secret_access_key=os.environ["TTS_R2_SECRET_ACCESS_KEY"],
             config=Config(

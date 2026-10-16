@@ -22,7 +22,7 @@ from app.tts.remote_cache import R2AudioStore
 async def main(cache_dir: str) -> None:
     store = R2AudioStore.from_env()
     if store is None:
-        sys.exit("TTS_R2_* / R2_ENDPOINT env missing")
+        sys.exit("TTS_R2_* env missing")
     root = Path(cache_dir)
     copied = skipped = 0
     for sub in ("questions", "static"):

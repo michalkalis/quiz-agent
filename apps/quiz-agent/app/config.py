@@ -201,6 +201,25 @@ class Settings(BaseSettings):
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
     elevenlabs_critical_pct: float = 10.0
+    # #207 (207.12): spend-based checks (monitoring/provider_costs.py). The
+    # Anthropic API credit (Max plan, ANTHROPIC_CREDIT_* like credit_gate) in
+    # USD left, and a warning this many days before it expires; OpenAI spend
+    # against a monthly budget; Fly billing status + run-rate for this org.
+    anthropic_low_usd: float = 40.0
+    anthropic_critical_usd: float = 15.0
+    anthropic_expiry_warn_days: int = 3
+    openai_monthly_budget_usd: float = 50.0
+    fly_org: str = "personal"
+    # #207 (207.8/207.9): infrastructure + latency watch (monitoring/
+    # ops_watch.py). Opt-in like the checks above (on in fly.toml).
+    ops_watch_enabled: bool = False
+    ops_watch_interval_s: float = 300.0
+    ops_disk_alarm_pct: float = 70.0
+    ops_db_connections_alarm_pct: float = 70.0
+    ops_memory_alarm_pct: float = 90.0
+    ops_latency_p95_alarm_s: float = 8.0
+    ops_latency_window_s: float = 600.0
+    ops_latency_min_requests: int = 10
     # Question stock early warning (#199): the daily check counts playable
     # questions per (language × category) and fresh entertainment questions per
     # language, and raises a Sentry issue when one runs low so generation can

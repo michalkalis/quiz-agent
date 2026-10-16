@@ -74,6 +74,10 @@ def _client(
 def _keys(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-secret-test-key")
     monkeypatch.setenv("ELEVENLABS_API_KEY", "xi-secret-test-key")
+    # Spend-based providers (provider_costs) stay unconfigured here; they
+    # have their own tests in test_provider_costs.py.
+    for var in ("ANTHROPIC_ADMIN_KEY", "OPENAI_ADMIN_KEY", "FLY_METRICS_TOKEN"):
+        monkeypatch.delenv(var, raising=False)
 
 
 async def _fetch(**kw) -> dict[str, pb.ProviderBalance]:
@@ -127,7 +131,7 @@ async def test_unreachable_provider_is_error_and_never_leaks_key():
 
     async with httpx.AsyncClient(transport=MockTransport(boom)) as c:
         got = await pb.fetch_provider_balances(_SETTINGS, c)
-    assert {b.status for b in got} == {"error"}
+    assert {b.status for b in got} == {"error", "unconfigured"}
     dumped = str([b.model_dump() for b in got])
     assert "secret-test-key" not in dumped
 
@@ -140,7 +144,8 @@ async def test_missing_key_is_error_not_silently_skipped(monkeypatch):
 
 async def test_sentry_alert_fingerprint_is_stable_per_provider_and_status(monkeypatch):
     """Same provider+status → same fingerprint regardless of the amount, so
-    daily repeats group into one issue (one email); ok and error never alert."""
+    daily repeats group into one issue (one email). ok and unconfigured never
+    alert; error does (#207) — a blind check is how OpenRouter ran dry unseen."""
     captured: list[tuple[list[str], str]] = []
 
     def fake_capture(message, level=None, **scope_kwargs):
@@ -156,6 +161,7 @@ async def test_sentry_alert_fingerprint_is_stable_per_provider_and_status(monkey
         ),
         pb.ProviderBalance(provider="x", unit="usd", remaining=50.0, status="ok"),
         pb.ProviderBalance(provider="y", unit="usd", status="error", detail="HTTP 500"),
+        pb.ProviderBalance(provider="z", unit="usd", status="unconfigured"),
     ]
     day2 = [
         pb.ProviderBalance(
@@ -167,8 +173,34 @@ async def test_sentry_alert_fingerprint_is_stable_per_provider_and_status(monkey
     assert captured == [
         (["provider-balance", "openrouter", "low"], "warning"),
         (["provider-balance", "elevenlabs", "critical"], "error"),
+        (["provider-balance", "y", "error"], "warning"),
         (["provider-balance", "openrouter", "low"], "warning"),
     ]
+
+
+async def test_one_off_fetch_failure_is_retried_before_alerting(monkeypatch):
+    """A blip that heals on the re-check must not page; a failure that
+    persists must (one alert, not one per attempt)."""
+    calls = {"n": 0}
+
+    async def flaky(settings):
+        calls["n"] += 1
+        status = "error" if calls["n"] == 1 else "ok"
+        return [pb.ProviderBalance(provider="openrouter", unit="usd", status=status)]
+
+    reported: list[list[pb.ProviderBalance]] = []
+    monkeypatch.setattr(pb, "fetch_provider_balances", flaky)
+    monkeypatch.setattr(pb, "report_to_sentry", reported.append)
+    await pb.check_once(_SETTINGS, retry_delay_s=0)
+    assert calls["n"] == 2
+    assert [b.status for b in reported[0]] == ["ok"]
+
+    async def broken(settings):
+        return [pb.ProviderBalance(provider="openrouter", unit="usd", status="error")]
+
+    monkeypatch.setattr(pb, "fetch_provider_balances", broken)
+    await pb.check_once(_SETTINGS, retry_delay_s=0)
+    assert [b.status for b in reported[1]] == ["error"]
 
 
 async def test_background_check_is_opt_in():

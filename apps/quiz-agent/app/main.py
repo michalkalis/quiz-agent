@@ -85,6 +85,7 @@ from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
 from .daily_challenge.service import DailyChallengeService
+from .monitoring.ops_watch import LatencyMiddleware
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -407,6 +408,13 @@ async def lifespan(app: FastAPI):
             run_daily_stock_check(settings, question_retriever)
         )
 
+    # #207: disk / memory / DB connections / response time → Sentry alert.
+    ops_task = None
+    if settings.ops_watch_enabled:
+        from .monitoring.ops_watch import run_ops_watch
+
+        ops_task = asyncio.create_task(run_ops_watch(settings, auth_sessionmaker))
+
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
     yield
@@ -418,6 +426,8 @@ async def lifespan(app: FastAPI):
         balance_task.cancel()
     if stock_task is not None:
         stock_task.cancel()
+    if ops_task is not None:
+        ops_task.cancel()
     await drain_pending()
     logger.info("Cleanup stopped")
 
@@ -438,6 +448,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(AppVersionMiddleware)
+# #207: response-time samples for the ops watch (cheap, always on).
+app.add_middleware(LatencyMiddleware)
 
 # CORS middleware for web clients (iOS native client doesn't use CORS)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")

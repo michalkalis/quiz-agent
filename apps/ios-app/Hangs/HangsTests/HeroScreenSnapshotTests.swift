@@ -93,6 +93,9 @@ enum HeroScreen: String, CaseIterable {
         case .question:
             let vm = Self.quizViewModel()
             vm.quizState = .askingQuestion
+            // #208: the frozen screen is the question being READ, which the bar
+            // now only claims while a read really plays.
+            vm.isPlayingQuestionTTS = true
             return AnyView(QuestionView(viewModel: vm, debugSurfaces: false))
 
         case .questionMCQ:

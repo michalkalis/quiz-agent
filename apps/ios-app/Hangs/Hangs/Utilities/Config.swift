@@ -190,6 +190,15 @@ nonisolated enum Config {
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 
+    /// #208 (founder 2026-10-16): with read-aloud muted, or a question without
+    /// audio, the think countdown stands still (full) for a silent reading pause
+    /// first: question words / `silentReadingWordsPerSecond`, clamped to the
+    /// min/max. Deterministic from the text, so the same question always gets
+    /// the same pause.
+    static let silentReadingWordsPerSecond: Double = 2.5
+    static let silentReadingPauseMin: TimeInterval = 3
+    static let silentReadingPauseMax: TimeInterval = 15
+
     /// Countdown duration for auto-confirm (also controls re-record window) in
     /// seconds. #171 Track F (founder 2026-09-05): 10 s read as "the app froze"
     /// on the TF round — the driver has already spoken and is waiting to hear

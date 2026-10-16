@@ -118,7 +118,7 @@ struct EmptyAnswerRetryTests {
     @Test("muted: the first miss re-records without speaking")
     func mutedFirstMissRetriesSilently() async {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
 
         await vm.toggleRecording()
@@ -157,7 +157,7 @@ struct EmptyAnswerRetryTests {
         #expect(vm.showsEmptyAnswerRetryHint, "…and while the mic is open again")
 
         network.submitVoiceAnswerError = nil
-        vm.quizMuteOverride = true // no read-back of the answer
+        vm.settings.isMuted = true // no read-back of the answer
         await recordUnderstoodAsNothing(vm, silence)
 
         #expect(vm.showAnswerConfirmation, "the retry's answer reached the sheet")
@@ -170,7 +170,7 @@ struct EmptyAnswerRetryTests {
     @Test("muted: the retry line is on the question screen while the mic is open again")
     func mutedRetryLineOnQuestionScreen() async throws {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
 
         await vm.toggleRecording()

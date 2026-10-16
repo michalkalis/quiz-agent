@@ -22,13 +22,15 @@ extension AudioDeviceState {
         // no owner: it is session-scoped and identical across questions.)
         let owner = attemptLedger.current
 
-        // Mute guard: skip TTS but still start silence detection + timer/recording
+        // Mute guard: skip TTS but still start silence detection + timer/recording.
+        // #208: nobody read the question out, so the think window waits a
+        // silent reading pause first (voice commands are live through it).
         guard !isMuted() else {
             await startSilenceDetectionListening()
             guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.mutedTail") else { return }
 
             if !isRerecording() {
-                startThinkingTimeCountdown()
+                startThinkingTimeCountdown(true)
             }
             return
         }
@@ -61,7 +63,7 @@ extension AudioDeviceState {
         guard isAskingQuestion(), attemptLedger.ownsQuestion(owner, "questionReadOut.tail") else { return }
 
         if !isRerecording() {
-            startThinkingTimeCountdown()
+            startThinkingTimeCountdown(false)
         }
     }
 
@@ -303,8 +305,8 @@ extension AudioDeviceState {
     /// stop the in-flight TTS (founder bug 2026-07-11). The interrupted play run's
     /// tail (silence-detection restart + timer arming) proceeds as after barge-in.
     ///
-    /// #173: `setMuted` writes the QUIZ-scoped override, not the persisted
-    /// Settings preference — this mute dies with the current quiz.
+    /// #208 (founder 2026-10-16): `setMuted` writes the persisted preference,
+    /// so the mute holds for the next quiz until the player changes it.
     func toggleMute() async {
         setMuted(!isMuted())
         guard isMuted() else { return }

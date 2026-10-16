@@ -206,10 +206,11 @@ final class PersistenceStore: PersistenceStoreProtocol {
     /// Until this build the in-quiz mute button and the Settings "Sound" toggle
     /// wrote the SAME persisted flag, so a mute tapped mid-drive survived the
     /// app and silenced the first question of the next quiz (the founder's TF
-    /// screenshot). The button is quiz-scoped now, but the polluted value is
-    /// already on disk and nothing can tell it apart from a deliberate Settings
-    /// choice — so it is dropped exactly once, and everything written from here
-    /// on really is a preference.
+    /// screenshot). The polluted value was already on disk and nothing could
+    /// tell it apart from a deliberate Settings choice, so it is dropped exactly
+    /// once, on the first load of a #173 build. #208 (founder 2026-10-16) makes
+    /// the button write the persisted preference again on purpose: the marker
+    /// is spent by then, so this never wipes such a mute.
     private func clearingLegacyMute(_ settings: QuizSettings) -> QuizSettings {
         guard settings.isMuted else { return settings }
 

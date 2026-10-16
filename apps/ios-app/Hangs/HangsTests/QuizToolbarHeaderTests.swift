@@ -191,14 +191,11 @@ struct QuizToolbarTests {
         }
     }
 
-    /// The mute is one source of truth — but #173 Track A (founder decision 4)
-    /// made that source `isAudioMuted`, not the persisted flag. The toolbar
-    /// button silences the RUNNING quiz (`quizMuteOverride`, cleared at quiz
-    /// start) and every TTS guard reads the effective value; `settings.isMuted`
-    /// belongs to the Settings "Sound" toggle alone. Sharing one persisted flag
-    /// is precisely how finding 1a happened — a mute tapped mid-drive silenced
-    /// the first question of the NEXT quiz.
-    @Test("tapping the toolbar mute mutes the running quiz, not the persisted preference")
+    /// The mute is one source of truth. #208 (founder decision 2026-10-16)
+    /// reverses #173 Track A on purpose: the toolbar button now writes the
+    /// persisted `settings.isMuted`, the same switch as Settings › Sound, so a
+    /// mute tapped in one quiz holds for the next until the player changes it.
+    @Test("tapping the toolbar mute mutes the quiz and the saved preference")
     func toolbarMuteTogglesSetting() async throws {
         let vm = makeQuestionViewModel(question: Question.preview, state: .recording)
         vm.settings.isMuted = false
@@ -210,7 +207,7 @@ struct QuizToolbarTests {
             // toggleMute() is async (it also stops in-flight TTS), so drain.
             for _ in 0 ..< 50 where !vm.isAudioMuted { await Task.yield() }
             #expect(vm.isAudioMuted == true, "the quiz the driver is in must go quiet")
-            #expect(vm.settings.isMuted == false, "…but nothing about the next quiz may change")
+            #expect(vm.settings.isMuted == true, "…and stay quiet for the next quiz, as Settings shows")
         }
     }
 }

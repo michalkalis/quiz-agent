@@ -31,7 +31,7 @@ struct RejectedTranscriptRetryTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2]))
         #expect(vm.transcribedAnswer == "Test")
         return (vm, network)

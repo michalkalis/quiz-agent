@@ -162,8 +162,7 @@ struct QuestionView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         // #188 G9 (D9): the same bar the result screen draws.
         .quizToolbar(
-            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
-            // EFFECTIVE mute, not the persisted Settings preference.
+            // #208: the toolbar mute writes the persisted preference (see `isAudioMuted`).
             isMuted: viewModel.isAudioMuted,
             isPaused: viewModel.isPaused,
             isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,

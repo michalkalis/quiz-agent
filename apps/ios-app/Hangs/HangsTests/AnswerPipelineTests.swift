@@ -217,7 +217,7 @@ struct BatchAnswerFlowTests {
     @Test("an engine armed by the command window is left running after the recording")
     func windowOwnedEngineSurvives() async {
         let (vm, silence, _, _) = makeVM()
-        vm.quizMuteOverride = true // no read-back, so no TTS teardown of the listener
+        vm.settings.isMuted = true // no read-back, so no TTS teardown of the listener
         await silence.startListening() // the window armed it
         await vm.recordingCoordinator.startRecording()
         #expect(vm.recordingCoordinator.startedListenerForAnswer == false)
@@ -331,7 +331,7 @@ struct AnswerReadBackTests {
     @Test("muted: no read-back, auto-confirm arms at once")
     func mutedSkipsReadBack() async {
         let (vm, silence, network, _) = makeVM()
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         await vm.recordingCoordinator.startRecording()
         silence.simulateAnswerAudio(Data(count: 16000))
 

@@ -465,19 +465,12 @@ final class QuizViewModel: ObservableObject {
     @Published var settings: QuizSettings = .default
     @Published var showingLanguagePicker = false
 
-    /// #173 (founder 2026-09-07): the in-quiz mute button silences ONLY the quiz
-    /// that is running. It writes THIS non-persisted override; `settings.isMuted`
-    /// stays what the Settings "Sound" toggle wrote and is the only thing that
-    /// survives the app. `startQuiz` clears the override, so a mute tapped in one
-    /// quiz can never silence the first question of the next one — the TF
-    /// screenshot 2026-09-06, where a mute from an earlier run made the opening
-    /// question play silently while the countdown ran.
-    /// `nil` = no in-quiz decision yet → fall back to the persisted preference.
-    @Published var quizMuteOverride: Bool?
-
-    /// The mute every playback path must honour: the in-quiz override while one
-    /// is set, otherwise the persisted Settings preference.
-    var isAudioMuted: Bool { quizMuteOverride ?? settings.isMuted }
+    /// The mute every playback path must honour. #208 (founder 2026-10-16):
+    /// ONE persisted preference again. The quiz header's speaker button and the
+    /// Settings "Sound" toggle both write `settings.isMuted`, so a mute tapped in
+    /// one quiz holds for the next until the player changes it (this reverses
+    /// #173's per-quiz mute on purpose).
+    var isAudioMuted: Bool { settings.isMuted }
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
@@ -680,6 +673,11 @@ final class QuizViewModel: ObservableObject {
     /// so the recognizer never hears its own playback. Internal for +CommandListener;
     /// AudioDeviceState writes it via injected closures (#113 T2, decision 4).
     var isPlayingQuestionTTS: Bool = false
+
+    /// #208: the first question's read is about to start — set across the
+    /// hardware settle before `playQuestionAudio` raises `isPlayingQuestionTTS`,
+    /// so the bar does not flash a think state for those 100 ms.
+    var isQuestionReadPending: Bool = false
 
     /// Bound on a tapped-answer submit (#178); tests shorten it.
     var submitTimeoutSeconds: Int = 30
@@ -961,10 +959,9 @@ final class QuizViewModel: ObservableObject {
             currentSession: { [weak self] in self?.currentSession },
             setAudioMode: { [weak self] in self?.settings.audioMode = $0 },
             setPreferredInputDeviceId: { [weak self] in self?.settings.preferredInputDeviceId = $0 },
-            // #173: the quiz mute is session-scoped — it must NOT write the
-            // persisted Settings preference (see `quizMuteOverride`).
+            // #208: the quiz header's mute IS the persisted preference (see `isAudioMuted`).
             isMuted: { [weak self] in self?.isAudioMuted ?? false },
-            setMuted: { [weak self] in self?.quizMuteOverride = $0 },
+            setMuted: { [weak self] in self?.settings.isMuted = $0 },
             isAskingQuestion: { [weak self] in self?.quizState == .askingQuestion },
             isAnswerInProgress: { [weak self] in
                 self?.quizState == .recording || self?.quizState == .processing
@@ -989,7 +986,12 @@ final class QuizViewModel: ObservableObject {
             onBargeIn: { [weak self] in await self?.handleBargeIn() },
             startCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.startCommandConsumer() },
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
-            startThinkingTimeCountdown: { [weak self] in self?.quizTimersController.startThinkingTimeCountdown() }
+            startThinkingTimeCountdown: { [weak self] afterSilentRead in
+                guard let self else { return }
+                self.quizTimersController.startThinkingTimeCountdown(
+                    readingPause: afterSilentRead ? self.silentReadingPause : .zero
+                )
+            }
         )
     }
 
@@ -1293,10 +1295,6 @@ final class QuizViewModel: ObservableObject {
                 _ = await audioService.requestMicrophonePermission()
             }
 
-            // #173: a new quiz starts audible unless Settings says otherwise —
-            // drop any mute the in-quiz button set during a previous run.
-            quizMuteOverride = nil
-
             // #204.9: this round's voice settings, before the session setup
             // applies the mic-capture switches and before the first mic opens.
             voiceExperiment.beginRound(config: voiceExperimentConfig(), routeGroup: .current)
@@ -1392,12 +1390,15 @@ final class QuizViewModel: ObservableObject {
                 // session before the first AVPlayer starts. Real time on
                 // purpose (#180 track A): a hardware settle is not a quiz
                 // timer, and a parked test clock must not hold the quiz here.
+                isQuestionReadPending = !isAudioMuted
                 try? await settleClock.sleep(for: .milliseconds(100))
+                isQuestionReadPending = false
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
                 // No audio — start silence detection, then the think window
+                // after a silent reading pause (#208).
                 await audioDeviceState.startSilenceDetectionListening()
-                startRecordingOrTimer()
+                startRecordingOrTimer(afterSilentRead: true)
             }
 
         } catch {
@@ -2279,9 +2280,21 @@ final class QuizViewModel: ObservableObject {
     /// always on (#200, founder 2026-10-12). A re-record opens the mic on its
     /// own. `heldSeconds` continues a window a pause held; 0 = the full window.
     /// (Internal so the MCQ guard-removal regression can drive it directly — 45.3.)
-    func startRecordingOrTimer(resumingAt heldSeconds: Int = 0) {
+    /// `afterSilentRead` (#208): nothing read the question aloud, so the window
+    /// waits a silent reading pause first (`silentReadingPause`).
+    func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
-        quizTimersController.startThinkingTimeCountdown(resumingAt: heldSeconds)
+        quizTimersController.startThinkingTimeCountdown(
+            resumingAt: heldSeconds,
+            readingPause: afterSilentRead ? silentReadingPause : .zero
+        )
+    }
+
+    /// #208 (founder 2026-10-16): with read-aloud muted, or a question without
+    /// audio, the driver reads the question off the screen, so the countdown
+    /// gives them that time before it starts draining.
+    var silentReadingPause: Duration {
+        QuizTimersController.silentReadingPause(for: currentQuestion?.question ?? "")
     }
 
     /// `owner` (#186 step 1) is the attempt that submitted the answer; `nil`
@@ -2515,8 +2528,8 @@ final class QuizViewModel: ObservableObject {
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
                 nextQuestionAudioUrl = nil // Clear after use
             } else {
-                // No audio — straight to the think window, then auto-record
-                startRecordingOrTimer()
+                // No audio — a silent reading pause (#208), the think window, then auto-record
+                startRecordingOrTimer(afterSilentRead: true)
             }
 
             let nextQuestionText = currentQuestion?.question ?? "unknown"
@@ -2667,7 +2680,7 @@ final class QuizViewModel: ObservableObject {
             if let questionUrl = response.audio?.questionUrl {
                 await audioDeviceState.playQuestionAudio(from: questionUrl)
             } else {
-                startRecordingOrTimer()
+                startRecordingOrTimer(afterSilentRead: true)
             }
             return true
         }

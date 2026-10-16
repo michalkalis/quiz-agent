@@ -66,7 +66,7 @@ struct ServerReadBackTests {
         #expect(network.capturedVoiceAnswerReadBack == [true])
 
         let (mutedVM, mutedSilence, mutedNetwork, _) = makeVM()
-        mutedVM.quizMuteOverride = true
+        mutedVM.settings.isMuted = true
         await answerByVoice(mutedVM, mutedSilence)
         #expect(mutedNetwork.capturedVoiceAnswerReadBack == [false], "a muted driver must not pay for synthesis")
     }

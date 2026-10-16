@@ -36,7 +36,6 @@ struct SilentReadingPauseTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()

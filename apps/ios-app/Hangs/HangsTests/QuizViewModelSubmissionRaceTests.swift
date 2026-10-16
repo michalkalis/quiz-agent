@@ -58,7 +58,7 @@ private func makeBatchViewModel()
     viewModel.currentSession = Fixtures.makeActiveSession()
     viewModel.currentQuestion = Fixtures.makeQuestion()
     viewModel.quizState = .askingQuestion
-    viewModel.quizMuteOverride = true // no read-back: the sheet opens at once
+    viewModel.settings.isMuted = true // no read-back: the sheet opens at once
     return (viewModel, mockNetwork, mockAudio, silence)
 }
 

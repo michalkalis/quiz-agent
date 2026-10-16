@@ -79,3 +79,9 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 - Sprístupniť `mba` pre Remote Control (návod v session 2026-10-16), aby agent spúšťal sessions sám.
 - 207.22: akceptovať DPA u spracovateľov, kde to vyžaduje klik v ich konzole (zoznam pripraví agent).
 - Neskôr: Anthropic auto-reload so stropom pred 11-06.
+
+## Beh na mba (orchestrátor)
+
+Jedna dlhá session na `mba` riadi celé #207; laptop session ju len sleduje. Zadanie pre ňu:
+
+> Cieľ: dokonči #207 podľa tohto plánu v poradí P0 → P2, bez čakania na foundera okrem bodov v „Founder kroky“. Každý bod = vlastná vetva + PR + merge po review a CI (`shared.md`); backend deploy sám, z čistého `origin/main` worktree. Paralelne najviac 3 workeri, každý vo vlastnom worktree (`claude --bg` alebo subagent), backend a iOS práca sa nemiešajú v jednom checkoute. Návrh 207.19 pred implementáciou cez `/design-soundness`. Pri každom dokončenom bode odškrtni ho tu a v TODO. Hotovo = všetky body `[x]` alebo explicitne presunuté s dôvodom; na konci krátky súhrn pre foundera (Hotovo / Otvorené / Founder kroky).

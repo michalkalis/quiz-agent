@@ -1960,9 +1960,8 @@ final class QuizViewModel: ObservableObject {
             recordingCoordinator.abandonAnswerCapture()
         }
 
-        // The confirmation modal already moved us to .processing in
-        // handleCommittedTranscript; only transition when called from a
-        // pre-modal state (e.g., still .recording on the batch path). A rejected
+        // The voice upload already moved us to .processing; only transition
+        // when called from a pre-modal state (e.g., still .recording). A rejected
         // transition (#79) means the state can't legally reach .processing — bail
         // rather than submit from a bad state.
         if quizState != .processing {

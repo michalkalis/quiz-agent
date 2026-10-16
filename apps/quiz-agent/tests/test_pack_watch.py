@@ -67,3 +67,24 @@ async def test_missing_pings_alarm_and_a_ping_recovers(tmp_path, monkeypatch):
     watch.ping(now=210)
     await pw.check_worker(book, now=220)
     assert mails.subjects[-1] == "[Trubbo OK] pack worker recovered"
+
+
+async def test_restart_with_open_alarm_sends_no_false_recovery(tmp_path, monkeypatch):
+    """After a deploy the state file still says "down"; the boot grace must
+    neither claim recovery nor re-send the alarm."""
+    mails = _Mails()
+    path = tmp_path / "s.json"
+    await AlertBook("t", path, sender=mails).update("pack worker", "down", "no ping")
+    book = AlertBook("t", path, sender=mails)
+    monkeypatch.setattr(pw, "pack_watch", pw.PackWatch(now=0))
+    await pw.check_worker(book, now=60)
+    await pw.check_worker(book, now=200)
+    assert mails.subjects == ["[Trubbo ALERT] pack worker: down"]
+
+
+async def test_non_ascii_token_is_rejected_not_a_500(api):
+    async with api as c:
+        r = await c.post(
+            "/api/v1/ops/worker-ping", headers={"X-Ops-Token": "\u00e9".encode()}
+        )
+    assert r.status_code == 401

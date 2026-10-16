@@ -86,7 +86,12 @@ class LatencyMiddleware:
 
     async def __call__(self, scope, receive, send):
         path = scope.get("path", "") if scope["type"] == "http" else ""
-        if not path.startswith("/api/") or path.endswith("/health"):
+        # Health checks and the pack worker's minute ping are not user traffic.
+        if (
+            not path.startswith("/api/")
+            or path.endswith("/health")
+            or path.startswith("/api/v1/ops/")
+        ):
             await self.app(scope, receive, send)
             return
         start = time.monotonic()
@@ -181,6 +186,10 @@ async def collect(
     return readings, blind
 
 
+def _margin(r: Reading) -> float:
+    return 1.0 if r.kind == "latency_p95" else 5.0
+
+
 class OpsWatch:
     """Turns readings into e-mail alerts; keeps the last snapshot."""
 
@@ -205,7 +214,11 @@ class OpsWatch:
             )
             if r.alarm:
                 logger.warning("Ops watch: %s", detail)
-            await book.update(key, "high" if r.alarm else None, detail)
+                await book.update(key, "high", detail)
+            elif key not in book.open_problems or r.value < r.threshold - _margin(r):
+                # Hysteresis: an open alarm clears only clearly below the line,
+                # so a value hovering at it does not mail every 5 minutes.
+                await book.update(key, None, detail)
         self._blind_runs = self._blind_runs + 1 if blind else 0
         if self._blind_runs >= BLIND_AFTER_RUNS:
             await book.update(

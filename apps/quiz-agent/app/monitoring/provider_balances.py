@@ -229,6 +229,7 @@ async def run_balance_check(settings: Settings, book: AlertBook) -> None:
     while True:
         try:
             await check_once(settings, book)
+            await book.update("credit check", None)
         except Exception:
             logger.exception("Provider balance check crashed")
             await book.update(

@@ -59,13 +59,15 @@ router = APIRouter()
 async def worker_ping(x_ops_token: str = Header(default="")) -> dict:
     """The primary pack worker's minute ping (see module docstring)."""
     expected = os.getenv("OPS_PING_TOKEN") or ""
-    if not expected or not hmac.compare_digest(x_ops_token, expected):
+    if not expected or not hmac.compare_digest(x_ops_token.encode(), expected.encode()):
         raise HTTPException(status_code=401)
     pack_watch.ping()
     return {"ok": True}
 
 
 async def check_worker(book: AlertBook, now: float) -> None:
+    if pack_watch.last_ping is None and now - pack_watch.started <= PING_STALE_S:
+        return  # boot grace: neither "down" nor "recovered" is known yet
     if pack_watch.worker_down(now):
         await book.update(
             "pack worker",

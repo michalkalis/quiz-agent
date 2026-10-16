@@ -153,3 +153,15 @@ async def test_latency_middleware_times_api_requests_but_not_health():
         await c.get("/api/v1/health")
         await c.get("/api/v1/thing")
     assert ow.latency.p95(600)[1] == 1
+
+
+async def test_value_hovering_at_the_line_does_not_flap(book):
+    """Open alarm at 70 %: 68 % is not a recovery (margin 5), 60 % is."""
+    b, mails = book
+    w = ow.OpsWatch()
+    await w.report([_reading(True, 71)], [], b)
+    await w.report([_reading(False, 68)], [], b)
+    await w.report([_reading(True, 70)], [], b)
+    assert mails.subjects == ["[Trubbo ALERT] disk quiz-pack-db: high"]
+    await w.report([_reading(False, 60)], [], b)
+    assert mails.subjects[-1] == "[Trubbo OK] disk quiz-pack-db recovered"

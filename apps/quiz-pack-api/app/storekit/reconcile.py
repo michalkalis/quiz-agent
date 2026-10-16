@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import base64
+import logging
 import uuid
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
@@ -45,6 +46,8 @@ from app.db.models.order import GenerationOrder
 from .models import SignedTransaction
 from .server_api import AppStoreServerClient, ServerApiCredentials
 from .verifier import AppleJWSVerifier
+
+logger = logging.getLogger(__name__)
 
 # Same tiers as POST /v1/orders (app.api.v1.orders._PRODUCT_TIERS), kept in
 # step by test_reconcile; importing the API module here would drag FastAPI in.
@@ -77,14 +80,37 @@ def history_any_environment(
     """The customer's signed transactions from whichever store knows the seed.
 
     A TestFlight / App Review purchase lives in Sandbox, a customer's in
-    Production; asking the wrong one answers 404.
+    Production; asking the wrong one answers 404. Production also answers 401
+    for an app that has never been live on the App Store (1.1 still in review,
+    2026-10-16) even with a valid key, so a 401 moves on to the next store too.
+    Only when every store refuses the key (401 everywhere) is the key itself
+    wrong, and that raises: a silent "nothing found" would read as "no lost
+    orders".
     """
+    refused: httpx.HTTPStatusError | None = None
+    key_accepted = False
     for client in clients:
         try:
-            return list(client.transaction_history(transaction_id))
+            txs = list(client.transaction_history(transaction_id))
         except httpx.HTTPStatusError as exc:
-            if exc.response.status_code != 404:
-                raise
+            status = exc.response.status_code
+            if status == 401:
+                logger.info("reconcile: %s refused the key (401)", client.environment)
+                refused = refused or exc
+                continue
+            if status == 404:
+                # The store took the key; it just has no such transaction.
+                logger.info("reconcile: %s does not know %s (404)", client.environment, transaction_id)
+                key_accepted = True
+                continue
+            raise
+        logger.info(
+            "reconcile: %s answered for %s (%d transactions)",
+            client.environment, transaction_id, len(txs),
+        )
+        return txs
+    if refused is not None and not key_accepted:
+        raise refused
     return []
 
 
@@ -311,6 +337,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--transaction-id", action="append", default=[],
                         help="extra seed transaction id (repeatable)")
     parser.add_argument("--apply", action="store_true", help="recreate and enqueue")
+    # The operator should see which store answered each seed.
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     return asyncio.run(_main(parser.parse_args(argv)))
 
 

@@ -81,6 +81,7 @@ class AppStoreServerClient:
         if environment not in BASE_URLS:
             raise ValueError(f"environment must be one of {sorted(BASE_URLS)}")
         self._creds = creds
+        self.environment = environment
         self._base = BASE_URLS[environment]
         self._http = http or httpx.Client(timeout=30.0)
 

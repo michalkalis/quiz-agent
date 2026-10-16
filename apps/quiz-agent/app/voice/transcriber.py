@@ -151,6 +151,14 @@ class VoiceTranscriber:
         self.client = llm_factory.openai_client(async_=True, direct=True)
         self.model = model or get_settings().stt_fallback_model
         self.language = language
+        # #207.13: service-wide ElevenLabs daily budget (wired in main.py).
+        # Past it, Scribe is skipped for the OpenAI model; None = no budget.
+        self.primary_budget = None
+
+    async def _scribe_enabled(self, settings) -> bool:
+        if settings.stt_provider != "elevenlabs":
+            return False
+        return self.primary_budget is None or not await self.primary_budget.exhausted()
 
     async def transcribe(
         self,
@@ -209,7 +217,7 @@ class VoiceTranscriber:
         effective_language = language or self.language
         settings = get_settings()
 
-        if settings.stt_provider == "elevenlabs":
+        if await self._scribe_enabled(settings):
             try:
                 audio_bytes = audio_file.read()
                 audio_file.seek(0)
@@ -443,7 +451,7 @@ class VoiceTranscriber:
         audio_file.seek(0)
         audio_bytes = audio_file.read()
         steps = []
-        if settings.stt_provider == "elevenlabs":
+        if await self._scribe_enabled(settings):
             steps.append("scribe")
         steps.append("openai")
 

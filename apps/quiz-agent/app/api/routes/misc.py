@@ -64,6 +64,11 @@ async def get_elevenlabs_token(
         )
     except DailyCapExceeded as exc:
         raise exc.http_error() from exc
+    # #207.13: the service spent today's ElevenLabs budget. Same refusal as an
+    # empty quota below, so iOS records in batch mode (OpenAI recogniser).
+    budget = getattr(request.app.state, "elevenlabs_budget", None)
+    if budget is not None and await budget.exhausted():
+        raise HTTPException(status_code=503, detail="ElevenLabs STT quota exhausted")
 
     try:
         async with httpx.AsyncClient() as client:

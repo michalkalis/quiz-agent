@@ -78,6 +78,7 @@ from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
 from .translation import TranslationService
 from .usage.caps import UsageCaps
+from .usage.elevenlabs_budget import ElevenLabsBudget
 from .usage.tracker import UsageTracker
 from .api import rest, admin
 from .api.routes import webhooks
@@ -351,6 +352,11 @@ async def lifespan(app: FastAPI):
     app.state.usage_tracker = usage_tracker
     # #207.13: per-user daily cost caps; disabled without a database.
     app.state.usage_caps = UsageCaps(auth_sessionmaker)
+    # #207.13: service-wide ElevenLabs daily budget -> OpenAI voice/recogniser.
+    elevenlabs_budget = ElevenLabsBudget(auth_sessionmaker)
+    tts_service.primary_budget = elevenlabs_budget
+    voice_transcriber.primary_budget = elevenlabs_budget
+    app.state.elevenlabs_budget = elevenlabs_budget
     app.state.auth_sessionmaker = auth_sessionmaker
     app.state.token_service = token_service
     app.state.refresh_store = refresh_store

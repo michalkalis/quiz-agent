@@ -282,3 +282,12 @@ async def run_ops_watch(
                     await check_elevenlabs_budget(elevenlabs_budget, s, client, book)
             except Exception:
                 logger.exception("Ops watch crashed")
+            if sessionmaker is not None:
+                # #207.20: WAL archive to R2 (PITR) — alert + disk self-heal.
+                try:
+                    from ..db.engine import get_engine
+                    from .wal_watch import check_wal_archive
+
+                    await check_wal_archive(get_engine(), book)
+                except Exception:
+                    logger.exception("WAL archive watch crashed")

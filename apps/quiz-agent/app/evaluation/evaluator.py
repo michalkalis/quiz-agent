@@ -7,7 +7,6 @@ import logging
 import re
 from typing import Tuple, Any
 
-from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
 from quiz_shared.utils.text_normalization import normalize_text
 
@@ -44,9 +43,9 @@ class AnswerEvaluator:
         # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
         # client. Injected by the eval harness to record real Claude calls.
         self.claude_client: Any = None
-        self.model = llm_factory.resolve_model(
-            model or hot_path_llm.role_model("EVAL_MODEL")
-        )
+        # Not gateway-resolved (#207.11): the answer path talks to Anthropic
+        # and OpenAI directly, never through LLM_GATEWAY.
+        self.model = model or hot_path_llm.role_model("EVAL_MODEL")
         self.temperature = temperature
 
     async def evaluate(

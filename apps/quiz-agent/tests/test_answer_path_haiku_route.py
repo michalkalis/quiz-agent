@@ -16,6 +16,7 @@ Why each test exists:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from types import SimpleNamespace
@@ -381,3 +382,73 @@ async def test_eval_harness_records_claude_calls_per_effort_arm(monkeypatch):
         assert len(rec.calls) == 1
         assert rec._anthropic.sent[0]["output_config"] == {"effort": effort}
         assert rec.spend() > 0
+
+
+# ── Independent credits (#207 task 207.11) ───────────────────────────────────
+#
+# Prod runs LLM_GATEWAY=openrouter. With the fallback on OpenRouter, an empty
+# OpenRouter balance (2026-10-16) left Claude as the only judge: one more empty
+# credit and no answer could be graded. The fallback must draw on the direct
+# OpenAI key, so the two judges never share a balance.
+
+
+def _prod_like_gateway(monkeypatch):
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-direct")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-must-not-be-used")
+
+
+async def test_answer_path_client_ignores_the_gateway(monkeypatch):
+    _prod_like_gateway(monkeypatch)
+
+    llm = hot_path_llm.client()
+
+    assert llm.base_url.host == "api.openai.com"
+    assert llm.api_key == "sk-openai-direct"
+    # A gateway slug ("openai/gpt-4o-mini") would 404 on the direct endpoint.
+    assert AnswerEvaluator().model == "claude-haiku-5-5"
+    assert InputParser().model == "claude-haiku-5-5"
+
+
+async def test_claude_out_of_credit_grades_on_direct_openai(monkeypatch):
+    """Forced failure end to end: Anthropic refuses (balance too low) and the
+    verdict comes from api.openai.com on the OpenAI key with the plain model
+    id — OpenRouter is the active gateway and is never touched."""
+    import httpx
+
+    _prod_like_gateway(monkeypatch)
+    _with_claude(monkeypatch, _raising(RuntimeError("credit balance is too low")))
+    seen: list[httpx.Request] = []
+
+    def openai_api(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "id": "c",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "gpt-4o-mini",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": "correct"},
+                    }
+                ],
+            },
+        )
+
+    evaluator = AnswerEvaluator()
+    evaluator.client = evaluator.client.with_options(
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(openai_api))
+    )
+
+    assert await evaluator.evaluate("Venecuela", _question("Venezuela", "sk")) == (
+        "correct",
+        1.0,
+    )
+    (request,) = seen
+    assert request.url.host == "api.openai.com"
+    assert request.headers["authorization"] == "Bearer sk-openai-direct"
+    assert json.loads(request.content)["model"] == "gpt-4o-mini"

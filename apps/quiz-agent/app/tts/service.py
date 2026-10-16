@@ -183,6 +183,9 @@ class TTSService:
         # within ~100 ms of each other on every first question (prod logs
         # 2026-09-13), both missed the cache and both paid the provider.
         self._in_flight: dict[tuple[str, str], "asyncio.Task[bytes]"] = {}
+        # #207.13: service-wide ElevenLabs daily budget (wired in main.py).
+        # Past it, new speech uses the fallback voice; None = no budget.
+        self.primary_budget = None
 
         logger.info(
             "TTS provider: %s (fallback: %s)",
@@ -219,6 +222,11 @@ class TTSService:
             raise ValueError("Text cannot be empty")
 
         primary_voice = voice or self.provider.default_voice
+        if await self._primary_paused():
+            # Same path as a user over their own budget: cached primary audio
+            # is still free to serve, anything new goes to the fallback.
+            billing = billing or TTSBilling()
+            billing.allow_primary = False
         # A budget-blocked caller must not share a single-flight task with
         # (or seed one for) callers who are allowed the primary voice.
         if not use_cache or (billing and not billing.allow_primary):
@@ -237,6 +245,16 @@ class TTSService:
         # Shielded: a caller that goes away (client disconnect) must not cancel
         # the shared synthesis under the other waiters — or the cache warm-up.
         return await asyncio.shield(task)
+
+    async def _primary_paused(self) -> bool:
+        """The service spent today's ElevenLabs budget (#207.13). Never pauses
+        without a fallback: a question must not go silent over a budget."""
+        return (
+            self.primary_budget is not None
+            and self.fallback is not None
+            and self.provider.name == "elevenlabs"
+            and await self.primary_budget.exhausted()
+        )
 
     def _forget_in_flight(self, key: tuple[str, str]):
         def _done(task: "asyncio.Task[bytes]") -> None:

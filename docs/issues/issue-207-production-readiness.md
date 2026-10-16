@@ -70,6 +70,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
   - [ ] krok 6 bez volume — founder 10-16: druhý stroj až po bete; varianta 1 stroj + bluegreen (0 $) až po kroku 4, inak „po bete“
   - [x] krok 7 cvičenie straty Redisu (staging, DB 1, 10-16): objednávka zaradená, `FLUSHDB`, worker spustený → sweep ju o 12:30 znova zaradil (pokus 1, jedno spustenie, žiadny duplikát), o 12:50 znova (pokus 2). Objednávka sa nestratila. Do `done` nedošla: staging má AI kľúče zámerne vypnuté (207.17). Nález: pri neopakovateľnej chybe (401) ostáva objednávka `in_progress` a sweep ju každých ~20 min znova spúšťa, kým ju nezastaví rozpočet pokusov (#145) — na produ by to boli platené pokusy navyše.
   - [x] oprava nálezu z kroku 7: chyba, ktorú opakovanie nevyrieši (HTTP 400/401/402/403/404/422 od providera, zlý kľúč/plán Tavily), ukončí objednávku hneď pri prvom pokuse ako `failed` + nárok na refund (e-mail alert cez existujúcu cestu, `/retry` ostáva po oprave príčiny); timeouty, 5xx, 429, pád workera a neznáme chyby sa opakujú ako doteraz (`app/worker/failure_class.py`).
+- [x] 207.28 R2 do firemného Cloudflare účtu (founder 2026-10-16: všetko R2 pod hello@missinghue.com). **Hotové 2026-10-16:** `quiz-images` 45 obrázkov + `trubbo-voice-samples` všetky nahrávky skopírované a overené (počet, veľkosť, ETag), `questions.media_url` + `reveal_url` v provenance prepísané na novú verejnú URL (25 riadkov, prod aj staging DB, záloha `r2_move_backup.questions_20261016`), `quiz-agent-api` zapisuje nahrávky do nového bucketu od deployu 13:27 UTC (posledný zápis do starého 13:25, rozdiel doskopírovaný), skripty cez root `.env`. iOS nemá URL natvrdo. Popis: [r2-storage.md](../setup/r2-storage.md). Staré buckety ostávajú do 2026-10-23.
 
 ### G. Súkromie a GDPR (P1)
 
@@ -98,6 +99,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 - 207.12 (voliteľné): OpenAI admin kľúč pre kontrolu útraty — platform.openai.com → Settings → Organization → Admin keys → Create; hodnotu do Fly secret `OPENAI_ADMIN_KEY` na `quiz-agent-api` (agent to nastaví, ak kľúč vloží do `.env` ako `OPENAI_ADMIN_KEY`).
 - 207.7 (voliteľné bonus): Sentry token s `alerts:write` → `SENTRY_ALERTS_TOKEN` v `.env`, potom `python3 scripts/sentry_monitoring.py --apply` (uptime + chybovosť v Sentry).
 - Gmail: maily `[Trubbo ALERT]` / `[Trubbo OK]` od `monitor@trubbo.app` označiť ako dôležité (filter), aby chodila notifikácia do telefónu.
+- 207.28, **po 2026-10-23**: prihlásiť osobný Cloudflare účet (michal.kalis@gmail.com), agent potom zmaže buckety `quiz-images` a `trubbo-voice-samples` v tomto účte (najprv over, že v nich nepribudol žiadny objekt po 2026-10-16 13:26 UTC), riadky `R2_PERSONAL_*` z root `.env` a schému `r2_move_backup` v DB.
 
 ### DPA spracovateľov (207.22, overené 2026-10-16)
 

@@ -405,37 +405,46 @@ async def lifespan(app: FastAPI):
         "quiz-agent", store=PostgresAlertState(shared_sm, "quiz-agent")
     )
     pack_watch.heartbeats = HeartbeatStore(shared_sm)
-    # #193/#207: hourly provider credit check → e-mail when one runs low.
-    balance_task = None
-    if settings.provider_balance_check_enabled:
-        from .monitoring.provider_balances import run_balance_check
 
-        balance_task = asyncio.create_task(run_balance_check(settings, alert_book))
-    # #199: daily question-stock check → Sentry alert before a (language ×
-    # category) or the fresh entertainment stock runs out.
-    stock_task = None
-    if settings.question_stock_check_enabled:
-        from .monitoring.question_stock import run_daily_stock_check
+    # #207.20 step 5: the monitors run on ONE machine, the holder of the
+    # `monitors` lease (Postgres row with expiry); another machine takes over
+    # within ~2 min when it dies, at once on a clean shutdown.
+    def start_monitors() -> list[asyncio.Task]:
+        tasks: list[asyncio.Task] = []
+        # #193/#207: hourly provider credit check → e-mail when one runs low.
+        if settings.provider_balance_check_enabled:
+            from .monitoring.provider_balances import run_balance_check
 
-        stock_task = asyncio.create_task(
-            run_daily_stock_check(settings, question_retriever)
-        )
+            tasks.append(asyncio.create_task(run_balance_check(settings, alert_book)))
+        # #199: daily question-stock check → Sentry alert before a (language ×
+        # category) or the fresh entertainment stock runs out.
+        if settings.question_stock_check_enabled:
+            from .monitoring.question_stock import run_daily_stock_check
 
-    # #207: disk / memory / DB connections / response time → e-mail; and the
-    # mutual watch with the pack worker (its minute pings) + quiz-pack-api.
-    ops_tasks: list[asyncio.Task] = []
-    if settings.ops_watch_enabled:
-        from .monitoring.ops_watch import run_ops_watch
-        from .monitoring.pack_watch import run_pack_watch
+            tasks.append(
+                asyncio.create_task(run_daily_stock_check(settings, question_retriever))
+            )
+        # #207: disk / memory / DB connections / response time → e-mail; and the
+        # mutual watch with the pack worker (its minute pings) + quiz-pack-api.
+        if settings.ops_watch_enabled:
+            from .monitoring.ops_watch import run_ops_watch
+            from .monitoring.pack_watch import run_pack_watch
 
-        ops_tasks.append(
-            asyncio.create_task(
-                run_ops_watch(
-                    settings, auth_sessionmaker, alert_book, elevenlabs_budget
+            tasks.append(
+                asyncio.create_task(
+                    run_ops_watch(
+                        settings, auth_sessionmaker, alert_book, elevenlabs_budget
+                    )
                 )
             )
-        )
-        ops_tasks.append(asyncio.create_task(run_pack_watch(alert_book)))
+            tasks.append(asyncio.create_task(run_pack_watch(alert_book)))
+        return tasks
+
+    from .coordination.leases import LeaseStore
+    from .monitoring.leader import MonitorLeader
+
+    monitor_leader = MonitorLeader(LeaseStore(shared_sm), start_monitors)
+    leader_task = asyncio.create_task(monitor_leader.run())
 
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
@@ -444,12 +453,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
-    if balance_task is not None:
-        balance_task.cancel()
-    if stock_task is not None:
-        stock_task.cancel()
-    for task in ops_tasks:
-        task.cancel()
+    leader_task.cancel()
+    await monitor_leader.resign()
     await drain_pending()
     logger.info("Cleanup stopped")
 

@@ -53,5 +53,5 @@ Každý track = vlastný PR do `main`; iOS sa overí na simulátore (18 Pro) a n
 - 2026-10-16: iOS 208.4 PR #510, 208.5 PR #509, 208.6 PR #513, 208.8 PR #514, 208.7 PR #515 v main.
 - Replay 30 nahrávok: počuté odpovede Scribe 22 (časť nezmysly) → gpt-transcribe 20 (10 nahrávok je ticho pre všetky služby).
 - 208.7: „počujem“ ~60 ms po začiatku reči, „spracúvam“ 250 ms po konci; preskoč/pauza bez čakania na finálny výsledok. **Povely počas čítania otázky sú za prepínačom OFF:** s počúvaním počas čítania hrá otázka v hlasitosti hovoru (iOS režim hovoru).
-- Open (founder): zapnúť povely počas čítania po teste? Vrátiť alebo zmazať riadok „B · Jupiter“ pri hovorenej MCQ odpovedi (od #184 sa nezobrazuje)?
+- Open (founder): zapnúť povely počas čítania po teste? Vrátiť alebo zmazať riadok „B · Jupiter“ pri hovorenej MCQ odpovedi (od #184 — prepis po nahratí a hluk v aute sa nezobrazuje)?
 - Open (zariadenie): skutočné časy povelov, hlasitosť pri štarte, Domov bez režimu hovoru, diktovanie, prečítanie odpovede zo servera.

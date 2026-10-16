@@ -69,6 +69,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
   - [x] krok 5 monitory na jednom stroji (PR #492 + oprava #494, nasadené): staging 2 stroje, `fly machine kill` lídra → druhý prevzal monitory po ~95 s
   - [ ] krok 6 bez volume — founder 10-16: druhý stroj až po bete; varianta 1 stroj + bluegreen (0 $) až po kroku 4, inak „po bete“
   - [x] krok 7 cvičenie straty Redisu (staging, DB 1, 10-16): objednávka zaradená, `FLUSHDB`, worker spustený → sweep ju o 12:30 znova zaradil (pokus 1, jedno spustenie, žiadny duplikát), o 12:50 znova (pokus 2). Objednávka sa nestratila. Do `done` nedošla: staging má AI kľúče zámerne vypnuté (207.17). Nález: pri neopakovateľnej chybe (401) ostáva objednávka `in_progress` a sweep ju každých ~20 min znova spúšťa, kým ju nezastaví rozpočet pokusov (#145) — na produ by to boli platené pokusy navyše.
+  - [x] oprava nálezu z kroku 7: chyba, ktorú opakovanie nevyrieši (HTTP 400/401/402/403/404/422 od providera, zlý kľúč/plán Tavily), ukončí objednávku hneď pri prvom pokuse ako `failed` + nárok na refund (e-mail alert cez existujúcu cestu, `/retry` ostáva po oprave príčiny); timeouty, 5xx, 429, pád workera a neznáme chyby sa opakujú ako doteraz (`app/worker/failure_class.py`).
 
 ### G. Súkromie a GDPR (P1)
 

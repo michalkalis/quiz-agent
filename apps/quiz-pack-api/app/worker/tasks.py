@@ -42,6 +42,8 @@ from app.orchestrator.stages import (
 )
 from quiz_shared.llm import factory as llm_factory
 
+from .failure_class import non_retryable_reason
+
 logger = logging.getLogger(__name__)
 
 # #139 — the sweep measures job liveness via `generation_jobs.updated_at`,
@@ -444,12 +446,24 @@ async def _handle_failure(
             # counted twice; the counter is deliberately conservative — it may
             # over-state lifetime attempts, never under-state them.
             effective_try = max(job.retry_count + 1, job_try)
-            # Two ways an attempt is the last one: this arq sequence is out of
+            # Three ways an attempt is the last one: this arq sequence is out of
             # tries (terminal for the order today — it is what makes /retry
-            # reachable), or the order has burned its whole lifetime budget.
-            is_final = job_try >= max_tries or effective_try >= order_budget.attempt_budget()
+            # reachable), the order has burned its whole lifetime budget, or
+            # #207: the failure cannot succeed on a retry (a rejected key, an
+            # invalid request). Left 'in_progress', the sweep would re-drive
+            # such an order every ~20 min, a paid attempt each time, until the
+            # budget stopped it; terminal now, it reaches the refund alert at
+            # once and /retry stays open for after the cause is fixed.
+            non_retryable = non_retryable_reason(exc)
+            is_final = (
+                job_try >= max_tries
+                or effective_try >= order_budget.attempt_budget()
+                or non_retryable is not None
+            )
             job.status = "failed"
-            job.error = repr(exc)
+            job.error = (
+                f"non-retryable ({non_retryable}): {exc!r}" if non_retryable else repr(exc)
+            )
             job.retry_count = effective_try
             # #145: record spend for the attempt that just died — the ceiling
             # is only enforceable because failures pay into this total too.
@@ -485,6 +499,7 @@ async def _handle_failure(
                     "job_try": job_try,
                     "effective_try": effective_try,
                     "is_final_attempt": is_final,
+                    "non_retryable": non_retryable,
                     "attempt_cost_cents": attempt_cost_cents,
                 },
             )

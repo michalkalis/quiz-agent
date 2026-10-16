@@ -191,6 +191,13 @@ nonisolated struct EnergyVAD: Sendable {
         return false
     }
 
+    /// #208.7: back to "not speaking", keeping the noise floor — after a
+    /// stretch the detector must not judge (the app reading a question).
+    mutating func clearSpeech() {
+        isSpeech = false
+        aboveOnsetSecs = 0
+    }
+
     private mutating func calibrate(with sample: InputLevelSample) {
         calibrationLevels.append(sample.db)
         calibrationSecs += sample.duration

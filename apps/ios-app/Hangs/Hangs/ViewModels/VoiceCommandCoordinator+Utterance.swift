@@ -50,9 +50,9 @@ extension VoiceCommandCoordinator {
         // / "hej" confirm here too — both open ordinary sentences ("áno, to
         // bol…"), which on this sheet are a NEW answer (5.1), not a confirm.
         if screen == .confirmation, command == .ok { return true }
-        // #185: on the no-answer sheet "ďalej" SKIPS the question — exactly as
-        // unrecoverable as "preskoč".
-        if screen == .noAnswer, command == .next { return true }
+        // #185: on the no-answer sheet "ďalej" SKIPS the question — and so does
+        // "preskoč" there, with no undo window behind it (#208.7 keeps it final).
+        if screen == .noAnswer, command == .next || command == .skip { return true }
         // #188 G3: on the set-end screen "znova" starts a whole new quiz — a
         // revised hypothesis cannot take that back.
         if screen == .setEnd, command == .again { return true }
@@ -70,9 +70,13 @@ extension VoiceCommandCoordinator {
         case .home: // set-end screen only: the quiz is already over
             return false
 
-        // Destructive — a revised hypothesis cannot undo these.
-        case .skip: // burns a freemium question (100/month) — unrecoverable
-            return true
+        // #208.7 (founder, TF 2026-10-16: "I wait 1-2 s after a command"):
+        // on the question screen a skip opens the 2.5 s undo window, which a
+        // spoken "stop"/"nie" or a tap aborts — so a stable volatile that
+        // cleared the 0.85 volatile floor may open it. Waiting for the final
+        // cost ~1 s every time (2 of the 14 field suppressions).
+        case .skip:
+            return false
         // #185 track D (car test 2026-09-23): "znova" waited for the end-of-
         // speech final and lost the race against the 5 s countdown. A STABLE
         // volatile "znova" / "ešte raz" is not the leading edge of anything
@@ -85,11 +89,12 @@ extension VoiceCommandCoordinator {
         // and holding it early is the point.
         case .stop:
             return false
-        // #171 Track D: pausing STOPS the command listener, so a false
-        // pause is the one command the driver cannot undo by voice — it
-        // forces a hand to the phone. Final results only.
+        // #171 Track D: pausing STOPS the command listener, so a false pause
+        // forces a hand to the phone. #208.7: a STABLE volatile (stopped
+        // growing, ≥ 0.85 match) is enough. Spoken only on the confirmation
+        // sheet (`VoiceCommandLexicon.commands`), never over a question read.
         case .pause:
-            return true
+            return false
         }
     }
 
@@ -357,6 +362,7 @@ extension VoiceCommandCoordinator {
                 "sincePrevMs": sincePrevMs ?? -1,
             ].merging(Self.heardTextAttributes(heard)) { current, _ in current }
         )
+        noteUtteranceMatched() // #208.7 utterance log
         noteCommandFired(command) // latch the utterance + start the cooldown
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
         handleRecognizedCommand(command)
@@ -393,6 +399,7 @@ extension VoiceCommandCoordinator {
         lastVolatileText = nil // the next utterance's first volatile is unproven
         lastTranscriptAt = nil // …and its first transcript has no interval to report
         loggedVolatileThisUtterance = false // …and gets its own drop-log sample
+        utteranceBeganDuringRead = false // …and is judged on its own (#208.7)
         // A settle belongs to the utterance that armed it: a command must never
         // fire for an utterance that already ended or a listener that is gone.
         cancelVolatileSettle()

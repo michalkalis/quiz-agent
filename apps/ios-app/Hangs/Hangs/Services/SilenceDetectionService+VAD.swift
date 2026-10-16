@@ -52,12 +52,20 @@ extension SilenceDetectionService {
     /// One tap buffer's level (drained on the main actor from the tap).
     func handleInputLevel(_ sample: InputLevelSample) {
         lastLevelAt = clock.now
+        lastLevelDb = sample.db
+        // #208.7: during a read with the listener kept up the level is the
+        // app's own voice — metered for the ring, never fed to the detector.
+        if speechEdgesSuspended, answerSession == nil {
+            inputLevelChannel.yield(InputLevel(db: sample.db, noiseFloorDb: energyVAD.noiseFloorDb))
+            return
+        }
         let wasSpeaking = primarySpeaking || speechDetectorSpeaking
         let wasPrimarySpeaking = primarySpeaking
         energySpeaking = energyVAD.process(sample)
         let probability = currentProbability(sample)
         neuralSpeaking = neuralGate.process(probability: probability, duration: sample.duration)
         inputLevelChannel.yield(InputLevel(db: sample.db, noiseFloorDb: energyVAD.noiseFloorDb))
+        if primarySpeaking { utterancePeakDb = max(utterancePeakDb, sample.db) }
         if var session = answerSession {
             session.levelBuffers += 1
             // Timing for #197.6: onset is stamped when the buffer that
@@ -105,6 +113,9 @@ extension SilenceDetectionService {
                 let now = clock.now
                 state = .silenceAccumulating(speechStart: speechStart, since: now)
                 scheduleSilenceCheck(since: now)
+                speechActivityChannel.yield(.paused(
+                    speechSecs: speechStart.duration(to: now).timeInterval, peakDb: utterancePeakDb
+                ))
                 Logger.voice.debug("🔇 Silence detection: silence started after speech")
             case .silenceAccumulating:
                 evaluateSilence()
@@ -132,7 +143,8 @@ extension SilenceDetectionService {
             // VAD speech-start to the first transcriber result.
             pendingFirstHypothesisSince = clock.now
             silenceChannel.yield(.speechStarted)
-            speechActivityChannel.yield(.speechStarted)
+            utterancePeakDb = lastLevelDb
+            speechActivityChannel.yield(.began(levelDb: lastLevelDb, noiseFloorDb: energyVAD.noiseFloorDb))
             Logger.voice.debug("🔇 Silence detection: speech started")
             // Sentry only inside an answer recording: the energy detector also
             // runs through every command window, where this would be a flood.
@@ -147,6 +159,7 @@ extension SilenceDetectionService {
             // mid-utterance pause doesn't reset the speech-duration clock.
             state = .speechActive(since: speechStart)
             cancelSilenceCheck()
+            speechActivityChannel.yield(.resumed)
             Logger.voice.debug("🔇 Silence detection: speech resumed")
         case .speechActive:
             break
@@ -170,7 +183,7 @@ extension SilenceDetectionService {
             cancelSilenceCheck()
             state = .idle
             silenceChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
-            speechActivityChannel.yield(.silenceAfterSpeech(duration: silenceElapsed))
+            speechActivityChannel.yield(.ended)
             if answerSession != nil {
                 SentryLog.info("vad speech ended", category: .voice, attributes: ["speechSecs": speechDuration])
             }
@@ -179,6 +192,7 @@ extension SilenceDetectionService {
             // Utterance too short (cough/blip/mic-pop) — drop it silently.
             cancelSilenceCheck()
             state = .idle
+            speechActivityChannel.yield(.ended)
             Logger.voice.debug("🔇 Silence detection: rejected blip (\(String(format: "%.2f", speechDuration), privacy: .public)s speech)")
         }
     }
@@ -215,6 +229,21 @@ extension SilenceDetectionService {
         neuralEpoch = sileroVAD?.reset() ?? 0
         speechDetectorSpeaking = false
         lastLevelAt = nil
+        pendingFirstHypothesisSince = nil
+    }
+
+    /// #208.7 — see the protocol. Resuming forgets whatever the read left
+    /// in the speech state (an echo can hold it "speaking") but keeps the
+    /// noise floor measured before the read: the cabin, not the app's voice.
+    func suspendSpeechEdges(_ suspended: Bool) {
+        guard speechEdgesSuspended != suspended else { return }
+        speechEdgesSuspended = suspended
+        cancelSilenceCheck()
+        state = .idle
+        energyVAD.clearSpeech()
+        energySpeaking = false
+        neuralSpeaking = false
+        speechDetectorSpeaking = false
         pendingFirstHypothesisSince = nil
     }
 

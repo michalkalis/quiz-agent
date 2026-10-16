@@ -148,6 +148,27 @@ extension VoiceCommandLexicon {
         }
     }
 
+    /// #208.7 (founder, TF 2026-10-16: "it should show it hears me, then that
+    /// it's processing"): the bar's caption while the driver is speaking —
+    /// command language, verbatim, like `listeningCaption`.
+    static func hearingCaption(language: CommandLanguage = .english) -> String {
+        switch language {
+        case .english: return "Hearing you…"
+        case .slovak: return "Počujem…"
+        case .czech: return "Slyším…"
+        }
+    }
+
+    /// #208.7: the caption once the driver stopped and nothing is decided yet
+    /// (the recognizer runs ~1 s behind the voice).
+    static func processingCaption(language: CommandLanguage = .english) -> String {
+        switch language {
+        case .english: return "Processing…"
+        case .slovak: return "Spracúvam…"
+        case .czech: return "Zpracovávám…"
+        }
+    }
+
     /// #122 follow-up (TF 2026-10-07, founder: no feedback that the app heard a
     /// command): the listen bar's caption while a matched command waits to fire
     /// — the recognized word, quoted and trailed by an ellipsis, in the COMMAND

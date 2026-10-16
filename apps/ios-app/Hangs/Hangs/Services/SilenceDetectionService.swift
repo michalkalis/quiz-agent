@@ -44,6 +44,24 @@ enum SilenceEvent: Sendable, Equatable {
     case silenceAfterSpeech(duration: TimeInterval)
 }
 
+/// #208.7 (founder, TF 2026-10-16: "from the moment I start saying a command
+/// it should show it hears me, then that it's processing"): the command bar's
+/// own speech edges. Finer than `SilenceEvent`, which only knows "started" and
+/// "the 0.8 s hangover elapsed": the bar must turn to "processing" as soon as
+/// the level drops, not a second later. Levels are dBFS of the band-limited
+/// meter (`InputLevelMeter`), for the per-utterance log only.
+enum SpeechActivityEvent: Sendable, Equatable {
+    /// The level held the onset margin above the floor (EnergyVAD, 7 dB / 60 ms).
+    case began(levelDb: Float, noiseFloorDb: Float?)
+    /// The level fell under the release margin; `speechSecs` is how long the
+    /// speech before it lasted, `peakDb` its loudest buffer.
+    case paused(speechSecs: TimeInterval, peakDb: Float)
+    /// Speech came back before the hangover elapsed (same utterance).
+    case resumed
+    /// The utterance is over: the hangover elapsed, or it was dropped as a blip.
+    case ended
+}
+
 /// Fail-loud availability of the on-device English voice-command transcriber
 /// (#77 device fix). Every failure that used to be swallowed (missing model
 /// assets, `analyzer.start` throw, nil audio format, transcriber stream error)
@@ -100,11 +118,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     // every listening window, and cancelling a `for await` permanently finishes
     // a shared AsyncStream — the dead-voice-commands P0.
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent>
-    /// The same VAD speech edges as `makeSilenceEventStream`, on a channel of
-    /// their own for the command bar's "hearing" cue (TF 2026-10-07). Separate
+    /// The VAD's speech edges for the command bar's "hearing" / "processing"
+    /// cues (TF 2026-10-07, #208.7), on a channel of their own. Separate
     /// because a channel serves ONE consumer (StreamChannel): sharing the
     /// silence channel would let the cue steal auto-stop from an answer.
-    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent>
+    func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent>
     func makeBargeInStream() -> AsyncStream<Void>
 
     /// English transcripts from the paired command transcriber (#77, task 77.5),
@@ -157,6 +175,14 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// Signal whether TTS is currently playing (enables barge-in detection).
     func setTTSPlaybackActive(_ active: Bool)
 
+    /// #208.7: while the question is read with the listener kept up, the
+    /// detector must not take the app's own voice for speech — an echo would
+    /// hold it "speaking" through the read and the driver's first word after
+    /// it would raise no edge. Suspended, levels are still metered but no
+    /// edge is raised and the noise floor stays the cabin's; resuming starts
+    /// from silence. No effect on an answer recording.
+    func suspendSpeechEdges(_ suspended: Bool)
+
     /// #184 track B: the shared mic engine doubles as the ANSWER recorder. The
     /// batch answer path needs to know whether an engine is live (or coming up)
     /// before it arms a capture, because a start that never happened means no
@@ -195,14 +221,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // re-arm gets a fresh AsyncStream, so cancelling a replaced consumer can
     // never starve the current one. See StreamChannel.swift for the invariant.
     let silenceChannel = StreamChannel<SilenceEvent>()
-    let speechActivityChannel = StreamChannel<SilenceEvent>()
+    let speechActivityChannel = StreamChannel<SpeechActivityEvent>()
     let bargeInChannel = StreamChannel<Void>()
     let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
     let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
-    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent> { speechActivityChannel.makeStream() }
+    func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
@@ -277,6 +303,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var pendingFirstHypothesisSince: AnyClock<Duration>.Instant?
 
     var isTTSPlaybackActive = false
+
+    /// #208.7 — see `suspendSpeechEdges`. `lastLevelDb` / `utterancePeakDb`
+    /// feed the `SpeechActivityEvent` levels.
+    var speechEdgesSuspended = false
+    var lastLevelDb: Float = -160
+    var utterancePeakDb: Float = -160
 
     // MARK: Speech detection (#185 track A — the logic lives in +VAD.swift)
 

@@ -132,6 +132,13 @@ final class AudioDeviceState: ObservableObject {
     let stopCommandConsumer: @MainActor () -> Void
     /// `true` (#208): nothing read the question aloud — a silent reading pause first.
     let startThinkingTimeCountdown: @MainActor (_ afterSilentRead: Bool) -> Void
+    /// #208.7 (VoiceCommandCoordinator+Reading): a question read is about to
+    /// play — `true` when the live listener stays up through it.
+    let beginQuestionRead: @MainActor () -> Bool
+    /// #208.7: the read is over; the kept listener judges speech again.
+    let endQuestionRead: @MainActor () -> Void
+    /// #208.7: the listener was kept up for the read in progress.
+    let isListenerKeptThroughRead: @MainActor () -> Bool
 
     // MARK: - Initialization
 
@@ -162,7 +169,10 @@ final class AudioDeviceState: ObservableObject {
         onBargeIn: @escaping @MainActor () async -> Void,
         startCommandConsumer: @escaping @MainActor () -> Void,
         stopCommandConsumer: @escaping @MainActor () -> Void,
-        startThinkingTimeCountdown: @escaping @MainActor (_ afterSilentRead: Bool) -> Void
+        startThinkingTimeCountdown: @escaping @MainActor (_ afterSilentRead: Bool) -> Void,
+        beginQuestionRead: @escaping @MainActor () -> Bool = { false },
+        endQuestionRead: @escaping @MainActor () -> Void = {},
+        isListenerKeptThroughRead: @escaping @MainActor () -> Bool = { false }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -191,6 +201,9 @@ final class AudioDeviceState: ObservableObject {
         self.startCommandConsumer = startCommandConsumer
         self.stopCommandConsumer = stopCommandConsumer
         self.startThinkingTimeCountdown = startThinkingTimeCountdown
+        self.beginQuestionRead = beginQuestionRead
+        self.endQuestionRead = endQuestionRead
+        self.isListenerKeptThroughRead = isListenerKeptThroughRead
     }
 
     /// T7 unified reset model: clears this child's own scoped device-UI state.
@@ -222,6 +235,11 @@ final class AudioDeviceState: ObservableObject {
         // syncCommandListenerWindow), TTS, recording, a torn-down quiz, and the
         // master switch.
         guard mayCaptureAudio() else { return }
+
+        // #208.7: a listener kept up through the question read is never
+        // re-armed under it — re-minting the consumer streams would drop a
+        // command said in that instant.
+        if service.isListening, isListenerKeptThroughRead() { return }
 
         // #188 G7: while the user has not decided, no listener may be the first
         // to touch the mic (iOS would prompt implicitly, at a random moment).

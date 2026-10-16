@@ -217,7 +217,9 @@ class Settings(BaseSettings):
     ops_watch_enabled: bool = False
     # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
     # so a deploy does not re-send ongoing problems. Empty = memory only.
-    ops_alert_state_path: str = ""
+    # #207.20 cutover: directory of the old volume's SQLite files to copy into
+    # Postgres at boot ("" = off). Goes away with the volume (resilience step 6).
+    legacy_state_dir: str = ""
     ops_watch_interval_s: float = 300.0
     ops_disk_alarm_pct: float = 70.0
     ops_db_connections_alarm_pct: float = 70.0

@@ -530,3 +530,114 @@ class AppSwitch(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
+
+
+# ── #207.20: quiz-agent state off the volume (resilience design §2.1) ──────
+# Everything that lived on the quiz-agent /data volume or only in process
+# memory, so any number of machines share it.
+
+
+class QuizSessionRow(Base):
+    """One quiz session; the source of truth (no in-memory copy).
+
+    ``version`` is the optimistic-concurrency counter: every write is
+    ``UPDATE … WHERE version = :read_version`` (``app.session.store``), so a
+    write based on a stale read fails instead of silently undoing another
+    machine's advance. ``expires_at`` mirrors the JSON field for the cleanup
+    query."""
+
+    __tablename__ = "quiz_sessions"
+
+    session_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    data_json: Mapped[str] = mapped_column(Text, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_quiz_sessions_active_expires", "is_active", "expires_at"),
+    )
+
+
+class CoordinationLease(Base):
+    """A short, expiring claim on a name, shared by all machines.
+
+    Used for the per-session submit lease (``session:<id>``), TTS single-flight
+    and the monitor leader. A lease is a row with an expiry, never a database
+    lock held on a connection: a crashed holder frees it by expiring, and no
+    connection is held across a paid call (resilience design §2.2)."""
+
+    __tablename__ = "coordination_leases"
+
+    name: Mapped[str] = mapped_column(Text, primary_key=True)
+    holder: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
+class QuestionRatingRow(Base):
+    """A player's 1–5 rating of a question (was ``ratings.db`` on the volume)."""
+
+    __tablename__ = "question_ratings"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    question_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    was_correct: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    user_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    difficulty_at_time: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class TranslationCacheRow(Base):
+    """One validated translation (was ``translations.db`` on the volume).
+
+    Keyed by a hash of the source text: a question or explanation can be
+    longer than a btree index entry allows, so the text itself is not in the
+    key."""
+
+    __tablename__ = "translation_cache"
+
+    kind: Mapped[str] = mapped_column(Text, primary_key=True)
+    source_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    target_language: Mapped[str] = mapped_column(Text, primary_key=True)
+    version: Mapped[str] = mapped_column(Text, primary_key=True)
+    source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    translated_text: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class OpsAlertState(Base):
+    """Open alert problems per reporting source (was ``ops_alerts.json``), so
+    whichever machine runs the monitors knows what was already mailed."""
+
+    __tablename__ = "ops_alert_state"
+
+    source: Mapped[str] = mapped_column(Text, primary_key=True)
+    state_json: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class OpsHeartbeat(Base):
+    """Last time a named heartbeat arrived (the pack worker's minute ping can
+    land on any quiz-agent machine)."""
+
+    __tablename__ = "ops_heartbeats"
+
+    name: Mapped[str] = mapped_column(Text, primary_key=True)
+    seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

@@ -26,10 +26,10 @@ primary_region = "cdg"
   # #207: every 5 min — disk / memory / DB connections / response time, and
   # every minute the pack worker's ping → e-mail alert (Fly numbers need the
   # FLY_METRICS_TOKEN secret, mail needs ALERT_SMTP_PASSWORD, the worker watch
-  # OPS_PING_TOKEN). Dedupe state lives on the volume, so deploys don't re-send.
+  # OPS_PING_TOKEN). Dedupe state is a Postgres row (#207.20), so deploys
+  # don't re-send.
   OPS_WATCH_ENABLED = "true"
   ALERT_EMAIL_TO = "michal.kalis@gmail.com"
-  OPS_ALERT_STATE_PATH = "/data/ops_alerts.json"
   # #199: daily question-stock check (per language x category, fresh
   # entertainment per language) -> Sentry alert before questions run out.
   QUESTION_STOCK_CHECK_ENABLED = "true"
@@ -40,13 +40,10 @@ primary_region = "cdg"
   # storage — so every deploy would re-buy the whole cache from ElevenLabs,
   # whose credits are metered and shared with realtime STT.
   TTS_CACHE_DIR = "/data/tts_cache"
-  # Same reason for the two SQLite stores: their defaults (`./data/*.db`) also
-  # resolve against WORKDIR /app, and with min_machines_running = 0 the rootfs
-  # is recreated on every idle wake — not just every deploy. Unpinned, ratings
-  # + persisted sessions are wiped and the claude-opus-5 translation cache is
-  # re-paid each cold start.
-  TRANSLATION_CACHE_URL = "sqlite:////data/translations.db"
-  RATINGS_DATABASE_URL = "sqlite:////data/ratings.db"
+  # #207.20: sessions, ratings and the translation cache moved from SQLite on
+  # this volume to Postgres. Each boot copies what the old release left here
+  # (idempotent) until the volume goes away (resilience design step 6).
+  LEGACY_STATE_DIR = "/data"
 
 [[services]]
   protocol = "tcp"

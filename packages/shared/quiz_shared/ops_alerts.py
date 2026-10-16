@@ -7,9 +7,9 @@ trubbo.app domain) to ``ALERT_EMAIL_TO``.
 
 ``AlertBook`` dedupes: one mail when a problem appears or changes state
 (low → critical), one recovery mail when it clears, nothing while it stays the
-same. With a state file (quiz-agent keeps it on its /data volume) a deploy or
-restart does not re-send ongoing problems; without one (the pack worker) a
-restart re-sends at most once. A mail that fails to send is not recorded, so
+same. With a durable store (quiz-agent: a Postgres row shared by its machines,
+#207.20) or a state file, a deploy or restart does not re-send ongoing
+problems; without one (the pack worker) a restart re-sends at most once. A mail that fails to send is not recorded, so
 the next check tries again.
 
 Config (env): ``ALERT_SMTP_PASSWORD`` (Resend SMTP key, sending only),
@@ -29,6 +29,7 @@ import time
 from collections.abc import Awaitable, Callable
 from email.message import EmailMessage
 from pathlib import Path
+from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,14 @@ async def send_email_async(subject: str, body: str) -> bool:
 Sender = Callable[[str, str], Awaitable[bool]]
 
 
+class AlertStateStore(Protocol):
+    """Durable open-problem state shared by several processes."""
+
+    async def load(self) -> dict[str, dict]: ...
+
+    async def save(self, state: dict[str, dict]) -> None: ...
+
+
 class AlertBook:
     """Problem state per key → mails only on change (see module docstring)."""
 
@@ -81,11 +90,32 @@ class AlertBook:
         source: str,
         state_path: Path | None = None,
         sender: Sender = send_email_async,
+        store: AlertStateStore | None = None,
     ) -> None:
         self.source = source
         self._path = state_path
         self._send = sender
+        self._store = store
         self._open: dict[str, dict] = self._load()
+
+    async def refresh(self) -> None:
+        """Re-read the shared store: another machine may have mailed or
+        cleared a problem since this one last looked."""
+        if self._store is None:
+            return
+        try:
+            self._open = await self._store.load()
+        except Exception:  # noqa: BLE001 — keep the last known state
+            logger.warning("Alert state not loaded", exc_info=True)
+
+    async def _persist(self) -> None:
+        self._save()
+        if self._store is None:
+            return
+        try:
+            await self._store.save(self._open)
+        except Exception:  # noqa: BLE001 — alerting must never crash a caller
+            logger.warning("Alert state not saved", exc_info=True)
 
     def _load(self) -> dict[str, dict]:
         if self._path is None:
@@ -126,6 +156,7 @@ class AlertBook:
     ) -> None:
         """``state`` None = healthy. Mails on a new or changed state and on
         recovery; a failed send leaves the book unchanged so it retries."""
+        await self.refresh()
         prev = self._open.get(key)
         if state is None:
             if prev is None:
@@ -140,7 +171,7 @@ class AlertBook:
                 if not ok and mail_configured():
                     return
             self._open.pop(key)
-            self._save()
+            await self._persist()
             return
         if prev is not None and prev["state"] == state:
             return
@@ -151,4 +182,4 @@ class AlertBook:
         if not ok and mail_configured():
             return
         self._open[key] = {"state": state, "since": since, "detail": detail}
-        self._save()
+        await self._persist()

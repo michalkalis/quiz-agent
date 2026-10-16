@@ -371,7 +371,7 @@ async def test_pre_record_retrieval_500_no_debit(db_sessionmaker):
     )
 
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=question_retriever,
         answer_evaluator=MagicMock(),

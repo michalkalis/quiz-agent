@@ -24,7 +24,7 @@ Bez kľúča sa žiadna záloha nedá obnoviť; kto má kľúč a prístup k rep
 
 **Týždenná kontrola** (workflow `quiz-pack-db backup verify`, pondelky 05:43 UTC + ručne): stiahne najnovšiu zálohu, dešifruje ju secretom `BACKUP_DECRYPT_KEY_PEM`, spustí `pg_restore --list` (postgres 17) a overí, že tabuľka `questions` je v dumpe. Vypisuje len počty. Zlyhanie = e-mail od GitHubu; znamená, že záloha alebo secret kópia kľúča je pokazená.
 
-SQLite súbory na volume `quiz-agent-api` (`/data/ratings.db`, `/data/translations.db`) sa nezálohujú: `ratings.db` obsahuje len rozohrané hlasové sessions s krátkou životnosťou (hodnotenia už bývajú v Postgrese) a `translations.db` je cache preložených textov, ktorú prekladač znova doplní. Volume má aj tak denné Fly snapshoty.
+Sessions, hodnotenia, cache prekladov a stav upozornení quiz-agentu sú od #207.20 v Postgrese, takže ich záloha je súčasťou tohto dumpu. Staré SQLite súbory na volume `quiz-agent-api` (`/data/ratings.db`, `/data/translations.db`) sa pri štarte jednorazovo skopírujú do Postgresu a s volume zaniknú (krok 6 návrhu odolnosti).
 
 ## Obnova
 

@@ -58,7 +58,7 @@ async def test_audio_route_reads_translated_mcq_options():
     provider = CountingProvider()
     service = TTSService(provider=provider)
     manager = SessionManager()
-    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
+    session = await manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_mcq"
@@ -71,7 +71,7 @@ async def test_audio_route_reads_translated_mcq_options():
         "correct_answer": "Mexiko",
         "correct_answer_key": "b",
     }
-    manager.update_session(session)
+    await manager.update_session(session)
 
     await get_question_audio(
         request=_Req(),
@@ -86,7 +86,7 @@ async def test_audio_route_reads_translated_mcq_options():
     assert len(provider.calls) == 1
     spoken = provider.calls[0]
     assert "Taliansko" in spoken and "Spojené štáty" in spoken
-    assert manager.get_session(session.session_id).current_question_text == STEM
+    assert (await manager.get_session(session.session_id)).current_question_text == STEM
 
 
 async def test_audio_route_reads_source_options_for_english_session():
@@ -95,12 +95,12 @@ async def test_audio_route_reads_source_options_for_english_session():
     provider = CountingProvider()
     service = TTSService(provider=provider)
     manager = SessionManager()
-    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
+    session = await manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "en"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_mcq"
     session.current_question_text = "Which country invented the Caesar salad?"
-    manager.update_session(session)
+    await manager.update_session(session)
 
     retriever = MagicMock()
     retriever.get = AsyncMock(return_value=_mcq())

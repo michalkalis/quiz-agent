@@ -122,7 +122,7 @@ async def start_daily_challenge(
         logger.error("Daily challenge set unavailable: %s", e)
         raise HTTPException(status_code=503, detail="Daily challenge unavailable")
 
-    session = session_manager.create_session(
+    session = await session_manager.create_session(
         max_questions=len(remaining),
         difficulty="random",
         user_id=subject.subject_id,
@@ -135,7 +135,7 @@ async def start_daily_challenge(
     )
     session.daily_challenge_date = day.isoformat()
     session.fixed_question_ids = remaining
-    session_manager.update_session(session)
+    await session_manager.update_session(session)
     await svc.attach_session(play.id, session.session_id)
     return DailyStartResponse(
         state=await svc.state(subject.subject_id, language, day),

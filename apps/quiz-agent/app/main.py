@@ -65,7 +65,6 @@ if sentry_dsn:
     )
 
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.database.sql_client import SQLClient
 from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
 from .config import get_settings
@@ -96,7 +95,6 @@ from .rate_limit import limiter
 
 # Global service instances
 session_manager: SessionManager = None
-sql_client: SQLClient = None
 tts_service: TTSService = None
 translation_service: TranslationService = None
 
@@ -110,7 +108,7 @@ async def lifespan(app: FastAPI):
     - Start background cleanup
     - Graceful shutdown
     """
-    global session_manager, sql_client, tts_service, translation_service
+    global session_manager, tts_service, translation_service
 
     logger.info("Starting Quiz Agent API...")
 
@@ -176,36 +174,37 @@ async def lifespan(app: FastAPI):
     question_store = SyncPgvectorStore(async_pgvector)
     logger.info("Question store: PgvectorQuestionStore (canonical, read + write)")
 
-    try:
-        logger.info("Initializing SQL client...")
-        # DATABASE_URL is the pgvector questions store (postgresql+asyncpg://,
-        # async-only driver). The sync sqlite ratings store must not inherit
-        # it — with DATABASE_URL set, startup died in create_all (MissingGreenlet).
-        sql_client = SQLClient(
-            database_url=os.getenv(
-                "RATINGS_DATABASE_URL", "sqlite:///./data/ratings.db"
-            )
-        )
-        logger.info("SQL client initialized")
-    except Exception as e:
-        logger.error("Failed to initialize SQL client: %s", e, exc_info=True)
-        raise
-
     # Initialize services
     try:
         logger.info("Initializing services...")
-        session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
+        # #207.20: sessions, ratings, translation cache and monitor state live
+        # in Postgres, not on a machine volume, so any number of machines can
+        # serve any request (resilience design §2).
+        from .coordination.leases import LeaseStore
+        from .db.engine import get_sessionmaker
+        from .rating.store import PostgresRatingStore
+        from .session.store import PostgresSessionStore
+        from .translation.store import PostgresTranslationStore
+
+        shared_sm = get_sessionmaker()
+        session_manager = SessionManager(
+            cleanup_interval=300,
+            store=PostgresSessionStore(shared_sm),
+            leases=LeaseStore(shared_sm),
+        )
         input_parser = InputParser()
         question_retriever = QuestionRetriever(question_store=async_pgvector)
         answer_evaluator = AnswerEvaluator()
         # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(
-            sql_client=sql_client,
+            rating_store=PostgresRatingStore(shared_sm),
             low_rating_threshold=2.5,
         )
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
-        translation_service = TranslationService()
+        translation_service = TranslationService(
+            store=PostgresTranslationStore(shared_sm)
+        )
         # Persistent usage tracker on the auth Postgres (#60). Without
         # DATABASE_URL (plain local dev) usage limits are simply not enforced —
         # the dependents all guard a None tracker.
@@ -304,13 +303,15 @@ async def lifespan(app: FastAPI):
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
 
-    # Reload persisted sessions (survives fly deploy restarts)
-    try:
-        reloaded = session_manager.reload_active_sessions()
-        if reloaded:
-            logger.info("Restored %d sessions from previous run", reloaded)
-    except Exception as e:
-        logger.warning("Failed to reload sessions: %s", e)
+    # #207.20 cutover: copy what the previous release kept on the volume
+    # (idempotent; removed with the volume in resilience step 6).
+    if settings.legacy_state_dir:
+        try:
+            from .legacy_volume_import import import_legacy_state
+
+            await import_legacy_state(settings.legacy_state_dir, shared_sm)
+        except Exception as e:
+            logger.warning("Legacy volume import failed: %s", e, exc_info=True)
 
     # Question health check on startup
     try:
@@ -393,15 +394,17 @@ async def lifespan(app: FastAPI):
     await session_manager.start_cleanup()
     logger.info("Background cleanup started")
     # #207: ops alerts are e-mailed (quiz_shared.ops_alerts), deduped per
-    # problem+state; the state file on /data survives deploys.
-    from pathlib import Path
-
+    # problem+state; the state is a Postgres row every machine shares, so a
+    # deploy does not re-send and a new leader knows what was mailed.
     from quiz_shared.ops_alerts import AlertBook
 
+    from .monitoring.pack_watch import pack_watch
+    from .monitoring.shared_state import HeartbeatStore, PostgresAlertState
+
     alert_book = AlertBook(
-        "quiz-agent",
-        Path(settings.ops_alert_state_path) if settings.ops_alert_state_path else None,
+        "quiz-agent", store=PostgresAlertState(shared_sm, "quiz-agent")
     )
+    pack_watch.heartbeats = HeartbeatStore(shared_sm)
     # #193/#207: hourly provider credit check → e-mail when one runs low.
     balance_task = None
     if settings.provider_balance_check_enabled:

@@ -127,7 +127,7 @@ async def create_session(
         )
         max_questions = min(body.max_questions, target_count)
     try:
-        session = session_manager.create_session(
+        session = await session_manager.create_session(
             max_questions=max_questions,
             difficulty=body.difficulty,
             user_id=subject.subject_id,
@@ -158,7 +158,7 @@ async def create_session(
         # retriever + quota bypass). Set last so it is authoritative.
         if body.pack_id:
             session.pack_id = body.pack_id
-        session_manager.update_session(session)
+        await session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:
         logger.error("Failed to create session: %s", e, exc_info=True)
@@ -172,7 +172,7 @@ async def get_session(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get session state."""
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     require_session_ownership(session, subject, session_id=session_id)  # #144
     return session_to_response(session)
 
@@ -187,9 +187,9 @@ async def delete_session(
     # #144: load and authorize BEFORE mutating — otherwise a stranger's DELETE
     # destroys the session and only then learns it was not theirs.
     require_session_ownership(
-        session_manager.get_session(session_id), subject, session_id=session_id
+        await session_manager.get_session(session_id), subject, session_id=session_id
     )
-    session_manager.delete_session(session_id)
+    await session_manager.delete_session(session_id)
 
 
 @router.post("/sessions/{session_id}/extend", response_model=SessionResponse)
@@ -201,13 +201,13 @@ async def extend_session(
 ):
     """Extend session expiry time."""
     require_session_ownership(
-        session_manager.get_session(session_id), subject, session_id=session_id
+        await session_manager.get_session(session_id), subject, session_id=session_id
     )  # #144
-    success = session_manager.extend_session(session_id, minutes)
+    success = await session_manager.extend_session(session_id, minutes)
     if not success:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     return session_to_response(session)
 
 
@@ -228,9 +228,9 @@ async def add_participant(
     ``require_session_ownership``, not in a conditional here.
     """
     require_session_ownership(
-        session_manager.get_session(session_id), subject, session_id=session_id
+        await session_manager.get_session(session_id), subject, session_id=session_id
     )
-    participant = session_manager.add_participant(
+    participant = await session_manager.add_participant(
         session_id=session_id,
         display_name=request.display_name,
         user_id=request.user_id,
@@ -252,8 +252,8 @@ async def remove_participant(
 ):
     """Remove participant from session (owner-only, see ``add_participant``)."""
     require_session_ownership(
-        session_manager.get_session(session_id), subject, session_id=session_id
+        await session_manager.get_session(session_id), subject, session_id=session_id
     )  # #144
-    success = session_manager.remove_participant(session_id, participant_id)
+    success = await session_manager.remove_participant(session_id, participant_id)
     if not success:
         raise HTTPException(status_code=404, detail="Session or participant not found")

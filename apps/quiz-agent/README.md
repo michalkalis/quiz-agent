@@ -475,13 +475,13 @@ POST /api/v1/sessions/{session_id}/input
 ## Environment Variables
 
 - `OPENAI_API_KEY`: Required for AI features
-- `DATABASE_URL`: Optional (defaults to SQLite: `sqlite:///./data/ratings.db`)
+- `DATABASE_URL`: Required. Postgres holds questions, accounts and (#207.20) quiz sessions, ratings, the translation cache and monitor state, shared by every machine
 
 ## Architecture
 
 ```
 Quiz Agent API
-├── Session Manager (in-memory with TTL)
+├── Session Manager (Postgres rows with TTL, version check + lease)
 ├── Input Parser (AI-powered NLP)
 ├── Question Retriever (RAG/ChromaDB)
 ├── Answer Evaluator (two-tier: text match + LLM)

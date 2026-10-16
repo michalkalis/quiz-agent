@@ -1,128 +1,129 @@
-"""In-memory session manager with TTL and automatic cleanup."""
+"""Quiz sessions with TTL, shared by every quiz-agent machine (#207.20).
 
-import copy
-import logging
-import uuid
+The stored row is the only copy of a session (``app.session.store``;
+Postgres in production), so a request can land on any machine. Two rules keep
+concurrent requests from losing each other's writes:
+
+- **Every write is conditional** on the version the writer read
+  (``update_session`` raises ``SessionConflict`` when the row moved on). That
+  is the backstop: a stale write fails loudly instead of undoing an advance.
+- **Writers of an existing session hold its lease** (``session_lock``): an
+  in-process ``asyncio.Lock`` (the cheap same-machine path) plus, with a
+  ``LeaseStore``, an expiring Postgres lease row, so a duplicate submit landing
+  on the other machine waits for the first and then reads its result — the
+  same contract the single-machine lock gave (see ``session_lock``).
+"""
+
+from __future__ import annotations
+
 import asyncio
+import logging
+import time
+import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
-from threading import Lock
+from typing import AsyncIterator, Optional
+
+from quiz_shared.models.participant import Participant
+from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.session import QuizSession
+
+from ..coordination.leases import LeaseStore, new_holder
+from .store import MemorySessionStore, SessionStore
 
 logger = logging.getLogger(__name__)
 
-from quiz_shared.models.session import QuizSession
-from quiz_shared.models.participant import Participant
-from quiz_shared.models.phase import SessionPhase
+# Longer than any one submit (STT + judge + next question + translation), so a
+# live holder never loses its lease; a crashed holder frees it after this.
+SESSION_LEASE_TTL_S = 120.0
+_LEASE_POLL_MAX_S = 0.25
+
+
+class SessionConflict(Exception):
+    """The session changed after this copy was read; the write was refused."""
+
+
+class SessionBusy(Exception):
+    """Another request holds the session's lease (non-blocking acquire only)."""
 
 
 class SessionManager:
-    """Manages quiz sessions in memory with automatic expiration.
-
-    Features:
-    - In-memory storage (fast, simple)
-    - Write-through SQLite persistence (survives restarts)
-    - TTL-based expiration (30 min default)
-    - Automatic cleanup of expired sessions
-    - Thread-safe operations
-    - Multiplayer-ready (supports participants)
-
-    Scaling constraint: sessions live only in this process's memory, backed
-    by a per-machine SQLite volume for write-through persistence. Neither
-    is shared across Fly machines, so a session created on one machine is
-    invisible to another — a second machine would 404 on any session it
-    didn't create, mid-quiz. Sessions must move to Postgres or Redis before
-    running with more than one machine.
-    """
-
-    def __init__(self, cleanup_interval: int = 300, sql_client=None):
-        """Initialize session manager.
-
-        Args:
-            cleanup_interval: Seconds between cleanup runs (default: 5 min)
-            sql_client: Optional SQLClient for write-through persistence
-        """
-        self._sessions: Dict[str, QuizSession] = {}
-        self._lock = Lock()
-        self._session_locks: Dict[str, asyncio.Lock] = {}
+    def __init__(
+        self,
+        cleanup_interval: int = 300,
+        store: SessionStore | None = None,
+        leases: LeaseStore | None = None,
+    ):
+        """``store`` defaults to the in-process store (tests, DB-less dev);
+        ``leases`` None means a single process, where the asyncio lock alone
+        serializes."""
+        self._store: SessionStore = store or MemorySessionStore()
+        self._leases = leases
+        # session_id -> [asyncio.Lock, users]; dropped when nobody uses it.
+        self._local: dict[str, list] = {}
         self._cleanup_interval = cleanup_interval
         self._cleanup_task: Optional[asyncio.Task] = None
-        self._sql_client = sql_client
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
-        """Mutex serializing the answer-submit read→process→write for one session.
+    # ── Lease ──────────────────────────────────────────────────────────────
 
-        ``get_session`` hands out a deep copy and ``update_session`` replaces the
-        whole object with no version check, so two overlapping submits both read
-        the same snapshot and the last write wins: the question returned to the
-        first client is never recorded in ``asked_question_ids``, the stored
-        ``current_question_id`` disagrees with what that client is showing, and
-        one of the two recorded freemium questions has no served question behind
-        it. The submit routes hold this lock across the whole flow so the second
-        submit reads the first one's result. The lock dies with its session."""
-        with self._lock:
-            lock = self._session_locks.get(session_id)
-            if lock is None:
-                lock = asyncio.Lock()
-                self._session_locks[session_id] = lock
-            return lock
+    @asynccontextmanager
+    async def session_lock(
+        self, session_id: str, *, wait: bool = True
+    ) -> AsyncIterator[None]:
+        """Serialize the read→process→write of one session across machines.
 
-    def _persist(self, session: QuizSession) -> None:
-        """Write session to SQLite (best-effort, non-blocking)."""
-        if self._sql_client:
-            try:
-                self._sql_client.save_session(
-                    session.session_id, session.model_dump_json()
-                )
-            except Exception as e:
-                logger.warning(
-                    "Failed to persist session %s: %s", session.session_id, e
-                )
+        The submit routes hold this across the whole flow: it mutates a copy
+        over several awaits (paid STT, judge) and writes it back wholesale, so
+        two overlapping submits must not both read the same snapshot. The
+        second one waits, then reads the first one's result and takes the
+        free resubmission path. ``wait=False`` raises ``SessionBusy`` instead
+        of waiting (for best-effort writers that must never delay a reply).
 
-    def _deactivate(self, session_id: str) -> None:
-        """Mark session inactive in SQLite (best-effort)."""
-        if self._sql_client:
-            try:
-                self._sql_client.deactivate_session(session_id)
-            except Exception as e:
-                logger.warning("Failed to deactivate session %s: %s", session_id, e)
+        The Postgres lease is a row with an expiry, not a database lock: no
+        connection is held while the caller awaits paid calls."""
+        entry = self._local.setdefault(session_id, [asyncio.Lock(), 0])
+        lock = entry[0]
+        if not wait and lock.locked():
+            raise SessionBusy(session_id)
+        entry[1] += 1
+        try:
+            async with lock:
+                if self._leases is None:
+                    yield
+                    return
+                name = f"session:{session_id}"
+                holder = new_holder()
+                await self._acquire_lease(name, holder, wait)
+                try:
+                    yield
+                finally:
+                    try:
+                        await self._leases.release(name, holder)
+                    except Exception:  # noqa: BLE001 — it expires on its own
+                        logger.warning("Lease release failed for %s", name)
+        finally:
+            entry[1] -= 1
+            if entry[1] == 0 and self._local.get(session_id) is entry:
+                del self._local[session_id]
 
-    def reload_active_sessions(self) -> int:
-        """Reload active sessions from SQLite on startup.
+    async def _acquire_lease(self, name: str, holder: str, wait: bool) -> None:
+        delay = 0.02
+        # A holder that dies frees the lease within its TTL, so waiting a TTL
+        # always ends; the deadline only guards against a clock surprise.
+        deadline = time.monotonic() + SESSION_LEASE_TTL_S + 10
+        while not await self._leases.try_acquire(name, holder, SESSION_LEASE_TTL_S):
+            if not wait or time.monotonic() > deadline:
+                raise SessionBusy(name)
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, _LEASE_POLL_MAX_S)
 
-        Discards sessions that have already expired.
-
-        Returns:
-            Number of sessions reloaded
-        """
-        if not self._sql_client:
-            return 0
-
-        now = datetime.now(timezone.utc)
-        rows = self._sql_client.load_active_sessions()
-        reloaded = 0
-        for session_id, data_json in rows:
-            try:
-                session = QuizSession.model_validate_json(data_json)
-                if session.expires_at >= now:
-                    with self._lock:
-                        self._sessions[session_id] = session
-                    reloaded += 1
-                else:
-                    self._sql_client.deactivate_session(session_id)
-            except Exception as e:
-                logger.warning("Failed to reload session %s: %s", session_id, e)
-
-        if reloaded:
-            logger.info("Reloaded %d active sessions from database", reloaded)
-        return reloaded
+    # ── Background cleanup ─────────────────────────────────────────────────
 
     async def start_cleanup(self):
-        """Start background cleanup task."""
         if self._cleanup_task is None:
             self._cleanup_task = asyncio.create_task(self._cleanup_loop())
 
     async def stop_cleanup(self):
-        """Stop background cleanup task."""
         if self._cleanup_task:
             self._cleanup_task.cancel()
             try:
@@ -132,34 +133,27 @@ class SessionManager:
             self._cleanup_task = None
 
     async def _cleanup_loop(self):
-        """Background task to cleanup expired sessions."""
         while True:
             try:
                 await asyncio.sleep(self._cleanup_interval)
-                self._cleanup_expired()
+                await self.cleanup_expired()
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error("Cleanup error: %s", e)
 
-    def _cleanup_expired(self):
-        """Remove expired sessions."""
-        now = datetime.now(timezone.utc)
-        with self._lock:
-            expired = [
-                sid
-                for sid, session in self._sessions.items()
-                if session.expires_at < now
-            ]
-            for sid in expired:
-                del self._sessions[sid]
-                self._session_locks.pop(sid, None)
-            if expired:
-                logger.info("Cleaned up %d expired sessions", len(expired))
-        for sid in expired:
-            self._deactivate(sid)
+    async def cleanup_expired(self) -> int:
+        """Deactivate expired sessions (idempotent; any machine may run it)."""
+        n = await self._store.expire_stale()
+        if self._leases is not None:
+            await self._leases.purge_expired()
+        if n:
+            logger.info("Cleaned up %d expired sessions", n)
+        return n
 
-    def create_session(
+    # ── CRUD ───────────────────────────────────────────────────────────────
+
+    async def create_session(
         self,
         max_questions: int = 10,
         difficulty: str = "medium",
@@ -167,24 +161,7 @@ class SessionManager:
         mode: str = "single",
         ttl_minutes: int = 30,
     ) -> QuizSession:
-        """Create a new quiz session.
-
-        Args:
-            max_questions: Number of questions in quiz
-            difficulty: Initial difficulty
-            user_id: User ID (optional)
-            mode: "single" or "multiplayer"
-            ttl_minutes: Session expiry time
-
-        Returns:
-            New QuizSession
-
-        Example:
-            >>> manager = SessionManager()
-            >>> session = manager.create_session(max_questions=10, difficulty="medium")
-        """
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
-
         session = QuizSession(
             session_id=session_id,
             user_id=user_id,
@@ -194,184 +171,105 @@ class SessionManager:
             phase=SessionPhase.IDLE,
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=ttl_minutes),
         )
-
-        # For single-player, create default participant
         if mode == "single":
+            session.participants = [
+                Participant(
+                    participant_id=f"p_{uuid.uuid4().hex[:8]}",
+                    user_id=user_id,
+                    display_name=user_id or "Player",
+                    is_host=True,
+                )
+            ]
+        await self._store.insert(
+            session_id, session.model_dump_json(), session.expires_at
+        )
+        session._store_version = 1
+        return session
+
+    async def get_session(self, session_id: str) -> Optional[QuizSession]:
+        """A fresh copy of the stored session (mutations stay local until
+        ``update_session``), or None when unknown, deleted or expired."""
+        stored = await self._store.get(session_id)
+        if stored is None:
+            return None
+        session = QuizSession.model_validate_json(stored.data_json)
+        if session.expires_at < datetime.now(timezone.utc):
+            await self._store.deactivate(session_id)
+            return None
+        session._store_version = stored.version
+        return session
+
+    async def update_session(self, session: QuizSession) -> bool:
+        """Write ``session`` back if nobody else wrote since it was read.
+
+        False when the session is gone (deleted/expired); ``SessionConflict``
+        when it changed in the meantime."""
+        session.updated_at = datetime.now(timezone.utc)
+        new_version = await self._store.update(
+            session.session_id,
+            session.model_dump_json(),
+            session.expires_at,
+            session._store_version,
+        )
+        if new_version is None:
+            if await self._store.get(session.session_id) is None:
+                return False
+            raise SessionConflict(session.session_id)
+        session._store_version = new_version
+        return True
+
+    async def delete_session(self, session_id: str) -> bool:
+        return await self._store.deactivate(session_id)
+
+    async def forget_user(self, user_id: str, db=None) -> tuple[int, int]:
+        """Unlink an erased account from its quiz sessions and ratings (GDPR).
+
+        Rows are kept so answers and ratings still count in statistics but no
+        longer point at the person; touched sessions are deactivated and their
+        version bumped, so an in-flight request holding an old copy cannot
+        write the id back. ``db`` = the erasure route's transaction (Postgres
+        store). Raises on failure so the caller can abort the erasure.
+        Returns (sessions_unlinked, ratings_unlinked)."""
+        return await self._store.forget_user(user_id, db)
+
+    async def extend_session(self, session_id: str, minutes: int = 30) -> bool:
+        async with self.session_lock(session_id):
+            session = await self.get_session(session_id)
+            if not session:
+                return False
+            session.expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+            return await self.update_session(session)
+
+    # ── Multiplayer ────────────────────────────────────────────────────────
+
+    async def add_participant(
+        self, session_id: str, display_name: str, user_id: Optional[str] = None
+    ) -> Optional[Participant]:
+        async with self.session_lock(session_id):
+            session = await self.get_session(session_id)
+            if not session:
+                return None
             participant = Participant(
                 participant_id=f"p_{uuid.uuid4().hex[:8]}",
                 user_id=user_id,
-                display_name=user_id or "Player",
-                is_host=True,
+                display_name=display_name,
+                is_host=len(session.participants) == 0,
             )
-            session.participants = [participant]
+            session.participants.append(participant)
+            await self.update_session(session)
+            return participant
 
-        with self._lock:
-            self._sessions[session_id] = session
-
-        self._persist(session)
-        return session
-
-    def get_session(self, session_id: str) -> Optional[QuizSession]:
-        """Get session by ID.
-
-        Returns a deep copy so callers get an isolated snapshot.
-        Mutations won't affect the stored session until update_session() is called.
-
-        Args:
-            session_id: Session ID
-
-        Returns:
-            QuizSession (deep copy) or None if not found/expired
-        """
-        with self._lock:
-            session = self._sessions.get(session_id)
-
-        if session and session.expires_at < datetime.now(timezone.utc):
-            # Expired, remove it
-            self.delete_session(session_id)
-            return None
-
-        return copy.deepcopy(session) if session else None
-
-    def update_session(self, session: QuizSession) -> bool:
-        """Update session state.
-
-        Args:
-            session: Updated session object
-
-        Returns:
-            True if successful, False if session not found
-        """
-        if session.session_id not in self._sessions:
-            return False
-
-        # Update timestamp
-        session.updated_at = datetime.now(timezone.utc)
-
-        with self._lock:
-            self._sessions[session.session_id] = session
-
-        self._persist(session)
-        return True
-
-    def delete_session(self, session_id: str) -> bool:
-        """Delete a session.
-
-        Args:
-            session_id: Session ID
-
-        Returns:
-            True if deleted, False if not found
-        """
-        with self._lock:
-            if session_id in self._sessions:
-                del self._sessions[session_id]
-                self._session_locks.pop(session_id, None)
-                self._deactivate(session_id)
-                return True
-            return False
-
-    def forget_user(self, user_id: str) -> tuple[int, int]:
-        """Unlink an erased account from its quiz sessions and ratings (GDPR).
-
-        Live in-memory sessions owned by the account are dropped first: they would
-        otherwise re-persist the id on their next update, and scrubbing the owner
-        in place would turn one into an unmetered (``user_id=None``) session. The
-        stored rows are then unlinked in the ratings store, which raises on
-        failure so the caller can abort the erasure. Returns
-        (sessions_unlinked, ratings_unlinked); (0, 0) without a store."""
-        with self._lock:
-            owned = [
-                sid
-                for sid, s in self._sessions.items()
-                if s.user_id == user_id
-                or any(p.user_id == user_id for p in s.participants)
+    async def remove_participant(self, session_id: str, participant_id: str) -> bool:
+        async with self.session_lock(session_id):
+            session = await self.get_session(session_id)
+            if not session:
+                return False
+            session.participants = [
+                p for p in session.participants if p.participant_id != participant_id
             ]
-            for sid in owned:
-                del self._sessions[sid]
-                self._session_locks.pop(sid, None)
-        if not self._sql_client:
-            return 0, 0
-        return self._sql_client.unlink_user(user_id)
-
-    def extend_session(self, session_id: str, minutes: int = 30) -> bool:
-        """Extend session expiry time.
-
-        Args:
-            session_id: Session ID
-            minutes: Minutes to extend
-
-        Returns:
-            True if successful
-        """
-        session = self.get_session(session_id)
-        if not session:
-            return False
-
-        session.expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
-        return self.update_session(session)
-
-    def get_active_sessions_count(self) -> int:
-        """Get count of active (non-expired) sessions."""
-        now = datetime.now(timezone.utc)
-        with self._lock:
-            active = sum(
-                1 for session in self._sessions.values() if session.expires_at >= now
-            )
-        return active
-
-    # Multiplayer support methods
-
-    def add_participant(
-        self, session_id: str, display_name: str, user_id: Optional[str] = None
-    ) -> Optional[Participant]:
-        """Add participant to multiplayer session.
-
-        Args:
-            session_id: Session ID
-            display_name: Participant display name
-            user_id: User ID (optional)
-
-        Returns:
-            Created Participant or None if session not found
-        """
-        session = self.get_session(session_id)
-        if not session:
-            return None
-
-        participant = Participant(
-            participant_id=f"p_{uuid.uuid4().hex[:8]}",
-            user_id=user_id,
-            display_name=display_name,
-            is_host=len(session.participants) == 0,  # First participant is host
-        )
-
-        session.participants.append(participant)
-        self.update_session(session)
-
-        return participant
-
-    def remove_participant(self, session_id: str, participant_id: str) -> bool:
-        """Remove participant from session.
-
-        Args:
-            session_id: Session ID
-            participant_id: Participant ID
-
-        Returns:
-            True if removed
-        """
-        session = self.get_session(session_id)
-        if not session:
-            return False
-
-        session.participants = [
-            p for p in session.participants if p.participant_id != participant_id
-        ]
-
-        # If host left, assign new host
-        if session.participants and not any(p.is_host for p in session.participants):
-            session.participants[0].is_host = True
-
-        self.update_session(session)
-        return True
+            if session.participants and not any(
+                p.is_host for p in session.participants
+            ):
+                session.participants[0].is_host = True
+            await self.update_session(session)
+            return True

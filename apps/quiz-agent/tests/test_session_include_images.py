@@ -55,7 +55,7 @@ async def _create(manager: SessionManager, body: CreateSessionRequest):
         token_service=None,
         auth_sessionmaker=None,
     )
-    return manager.get_session(response.session_id)
+    return await manager.get_session(response.session_id)
 
 
 async def test_include_images_defaults_off():

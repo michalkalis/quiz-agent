@@ -77,14 +77,22 @@ class TranslationService:
     serving path falls back to English (#132 pattern).
     """
 
-    def __init__(self, model: str | None = None, store_url: str | None = None):
+    def __init__(
+        self,
+        model: str | None = None,
+        store_url: str | None = None,
+        store=None,
+    ):
         """Initialize translation service.
 
         Args:
             model: direct-provider model id; defaults to TRANSLATION_MODEL env
                 var, then claude-opus-5-5
-            store_url: SQLAlchemy URL for the durable translation store; defaults to
-                TRANSLATION_CACHE_URL env var, then sqlite under ./data (→ /data in prod)
+            store_url: SQLite URL for the durable translation store when no
+                ``store`` is given (dev/tests); defaults to TRANSLATION_CACHE_URL,
+                then sqlite under ./data
+            store: a durable store with async ``get``/``put`` — production passes
+                the shared Postgres one (#207.20)
         """
         model_id = model or os.getenv("TRANSLATION_MODEL", "claude-opus-5-5")
         # #196: a Claude TRANSLATION_MODEL goes straight to the Anthropic API
@@ -105,16 +113,19 @@ class TranslationService:
         # Process-lifetime cache of validated translations, keyed (kind, text, target_language).
         # TranslationService is a process-wide singleton, so this survives every request/session.
         self._cache: dict[tuple[str, str, str], str] = {}
-        # Durable store: warm-load current-version rows into the dict at startup, write
-        # through on each validated success. Fail-soft is mandatory — this __init__ runs
-        # inside main.py's re-raising services block, so a bad /data/translations.db must
-        # degrade to an empty in-memory cache, never crash-loop the app (#69 Decision #1).
+        # Durable store: read through on an in-memory miss (#207.20: shared by
+        # every machine, so a row another machine wrote is reused, not re-paid),
+        # write through on each validated success. Fail-soft is mandatory — this
+        # __init__ runs inside main.py's re-raising services block, so a bad store
+        # must degrade to the in-memory cache, never crash-loop the app (#69).
+        if store is not None:
+            self._store = store
+            return
         store_url = store_url or os.getenv(
             "TRANSLATION_CACHE_URL", "sqlite:///./data/translations.db"
         )
         try:
-            self._store: TranslationStore | None = TranslationStore(store_url)
-            self._cache = self._store.load_version(TRANSLATION_PROMPT_VERSION)
+            self._store = TranslationStore(store_url)
         except Exception as e:
             logger.warning(
                 "Translation store unavailable (%s), degrading to in-memory cache: %s",
@@ -122,7 +133,6 @@ class TranslationService:
                 e,
             )
             self._store = None
-            self._cache = {}
 
     async def _complete(
         self, system: str, user: str, *, max_tokens: int, json_mode: bool = False
@@ -158,7 +168,22 @@ class TranslationService:
         )
         return response.choices[0].message.content
 
-    def _maybe_store(self, key: tuple[str, str, str], value: str) -> None:
+    async def _cached(self, key: tuple[str, str, str]) -> str | None:
+        """In-memory hit, else the durable store (fail-soft: an error is a miss)."""
+        value = self._cache.get(key)
+        if value is not None or self._store is None:
+            return value
+        kind, text, lang = key
+        try:
+            value = await self._store.get(kind, text, lang, TRANSLATION_PROMPT_VERSION)
+        except Exception as e:
+            logger.warning("Durable translation read failed (treated as miss): %s", e)
+            return None
+        if value is not None and len(self._cache) < CACHE_MAX_ENTRIES:
+            self._cache[key] = value
+        return value
+
+    async def _maybe_store(self, key: tuple[str, str, str], value: str) -> None:
         """Cache a validated translation, bounded by CACHE_MAX_ENTRIES.
 
         Reads the module-global cap at call-time (so a test can monkeypatch it). Once full,
@@ -175,7 +200,9 @@ class TranslationService:
         if self._store is not None:
             kind, text, lang = key
             try:
-                self._store.upsert(kind, text, lang, TRANSLATION_PROMPT_VERSION, value)
+                await self._store.put(
+                    kind, text, lang, TRANSLATION_PROMPT_VERSION, value
+                )
             except Exception as e:
                 logger.warning(
                     "Durable translation write failed (kept in-memory): %s", e
@@ -259,7 +286,7 @@ class TranslationService:
             return question
 
         cache_key = ("question", question, target_language)
-        cached = self._cache.get(cache_key)
+        cached = await self._cached(cache_key)
         if cached is not None:
             return cached
 
@@ -300,7 +327,7 @@ class TranslationService:
                         "translated_len": len(translated),
                     }
                     continue
-                self._maybe_store(cache_key, validated)
+                await self._maybe_store(cache_key, validated)
                 return validated
 
             except Exception as e:
@@ -444,7 +471,7 @@ class TranslationService:
             json.dumps(payload, sort_keys=True, ensure_ascii=False),
             target_language,
         )
-        cached = self._cache.get(cache_key)
+        cached = await self._cached(cache_key)
         if cached is not None:
             try:
                 return json.loads(cached)
@@ -498,7 +525,9 @@ class TranslationService:
                     last_failure = {"kind": "validation_reject"}
                     continue
 
-                self._maybe_store(cache_key, json.dumps(validated, ensure_ascii=False))
+                await self._maybe_store(
+                    cache_key, json.dumps(validated, ensure_ascii=False)
+                )
                 return validated
 
             except Exception as e:
@@ -553,7 +582,7 @@ class TranslationService:
             return feedback
 
         cache_key = ("feedback", feedback, target_language)
-        cached = self._cache.get(cache_key)
+        cached = await self._cached(cache_key)
         if cached is not None:
             return cached
 
@@ -599,7 +628,7 @@ class TranslationService:
                     }
                     continue
 
-                self._maybe_store(cache_key, validated)
+                await self._maybe_store(cache_key, validated)
                 return validated
 
             except Exception as e:

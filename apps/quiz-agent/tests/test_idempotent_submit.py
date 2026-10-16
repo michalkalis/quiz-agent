@@ -82,15 +82,15 @@ class _FakeSessionManager:
         self.writes: List[QuizSession] = []
         self._lock = asyncio.Lock()
 
-    def get_session(self, session_id: str) -> QuizSession:
+    async def get_session(self, session_id: str) -> QuizSession:
         return _roundtrip(self.stored)
 
-    def update_session(self, session: QuizSession) -> bool:
+    async def update_session(self, session: QuizSession) -> bool:
         self.stored = _roundtrip(session)
         self.writes.append(self.stored)
         return True
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
+    def session_lock(self, session_id: str, *, wait: bool = True) -> asyncio.Lock:
         return self._lock
 
 
@@ -164,7 +164,7 @@ async def _submit(
     question_id: Optional[str] = None,
 ):
     """One submit, the way the route does it: fresh copy in, FlowResult out."""
-    session = manager.get_session(_SESSION_ID)
+    session = await manager.get_session(_SESSION_ID)
     return await flow.process_answer(
         session=session, answer_text=text, submitted_question_id=question_id
     )

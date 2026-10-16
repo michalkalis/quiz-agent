@@ -82,11 +82,11 @@ async def test_overlapping_submits_are_serialized_per_session():
     served question — never for a question the server then forgot.
     """
     manager = SessionManager()
-    session = manager.create_session(user_id="u_race")
+    session = await manager.create_session(user_id="u_race")
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q1"
     session.asked_question_ids = ["q1"]
-    manager.update_session(session)
+    await manager.update_session(session)
 
     evaluated: list[str] = []
     first_entered = asyncio.Event()
@@ -153,7 +153,7 @@ async def test_overlapping_submits_are_serialized_per_session():
         response_first.current_question.id,
         response_second.current_question.id,
     ]
-    stored = manager.get_session(session.session_id)
+    stored = await manager.get_session(session.session_id)
 
     assert served == ["q2", "q3"]
     assert evaluated == ["q1", "q2"]  # the second submit saw the first's write
@@ -162,25 +162,43 @@ async def test_overlapping_submits_are_serialized_per_session():
     assert usage_tracker.record_question.await_count == len(served)
 
 
-async def test_session_lock_is_dropped_with_the_session():
-    """The lock table must not outlive its sessions — one lock per live session,
-    released on delete and on expiry cleanup."""
+async def test_session_lock_entry_is_dropped_once_nobody_uses_it():
+    """The lock table must not grow with every session ever seen — an entry
+    lives only while a request holds or awaits it."""
     manager = SessionManager()
-    session = manager.create_session()
+    session = await manager.create_session()
 
-    manager.session_lock(session.session_id)
-    assert session.session_id in manager._session_locks
+    async with manager.session_lock(session.session_id):
+        assert session.session_id in manager._local
 
-    manager.delete_session(session.session_id)
-    assert manager._session_locks == {}
+    assert manager._local == {}
 
 
-async def test_same_session_returns_the_same_lock_object():
+async def test_same_session_contends_on_one_lock():
     """Two concurrent requests must contend on ONE mutex — a fresh lock per call
-    would serialize nothing."""
+    would serialize nothing. The second entrant must wait for the first."""
     manager = SessionManager()
-    session = manager.create_session()
+    session = await manager.create_session()
+    order: list[str] = []
+    first_in = asyncio.Event()
+    release_first = asyncio.Event()
 
-    assert manager.session_lock(session.session_id) is manager.session_lock(
-        session.session_id
-    )
+    async def first():
+        async with manager.session_lock(session.session_id):
+            order.append("first-in")
+            first_in.set()
+            await release_first.wait()
+            order.append("first-out")
+
+    async def second():
+        await first_in.wait()
+        async with manager.session_lock(session.session_id):
+            order.append("second-in")
+
+    t1, t2 = asyncio.create_task(first()), asyncio.create_task(second())
+    await first_in.wait()
+    await asyncio.sleep(0.05)  # give the second one every chance to barge in
+    assert order == ["first-in"]
+    release_first.set()
+    await asyncio.gather(t1, t2)
+    assert order == ["first-in", "first-out", "second-in"]

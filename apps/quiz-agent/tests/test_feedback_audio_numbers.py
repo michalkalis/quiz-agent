@@ -34,7 +34,7 @@ def _flow(tts, correct_answer: str) -> QuizFlowService:
     )
     retriever.get_next_question = AsyncMock(return_value=None)
     return QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=MagicMock(),
         question_retriever=retriever,
         answer_evaluator=MagicMock(),

@@ -85,6 +85,7 @@ from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
 from .daily_challenge.service import DailyChallengeService
+from .monitoring.ops_watch import LatencyMiddleware
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -391,12 +392,22 @@ async def lifespan(app: FastAPI):
     # Start background tasks
     await session_manager.start_cleanup()
     logger.info("Background cleanup started")
-    # #193: daily provider credit check → Sentry alert when one runs low.
+    # #207: ops alerts are e-mailed (quiz_shared.ops_alerts), deduped per
+    # problem+state; the state file on /data survives deploys.
+    from pathlib import Path
+
+    from quiz_shared.ops_alerts import AlertBook
+
+    alert_book = AlertBook(
+        "quiz-agent",
+        Path(settings.ops_alert_state_path) if settings.ops_alert_state_path else None,
+    )
+    # #193/#207: hourly provider credit check → e-mail when one runs low.
     balance_task = None
     if settings.provider_balance_check_enabled:
-        from .monitoring.provider_balances import run_daily_balance_check
+        from .monitoring.provider_balances import run_balance_check
 
-        balance_task = asyncio.create_task(run_daily_balance_check(settings))
+        balance_task = asyncio.create_task(run_balance_check(settings, alert_book))
     # #199: daily question-stock check → Sentry alert before a (language ×
     # category) or the fresh entertainment stock runs out.
     stock_task = None
@@ -406,6 +417,22 @@ async def lifespan(app: FastAPI):
         stock_task = asyncio.create_task(
             run_daily_stock_check(settings, question_retriever)
         )
+
+    # #207: disk / memory / DB connections / response time → e-mail; and the
+    # mutual watch with the pack worker (its minute pings) + quiz-pack-api.
+    ops_tasks: list[asyncio.Task] = []
+    if settings.ops_watch_enabled:
+        from .monitoring.ops_watch import run_ops_watch
+        from .monitoring.pack_watch import run_pack_watch
+
+        ops_tasks.append(
+            asyncio.create_task(
+                run_ops_watch(
+                    settings, auth_sessionmaker, alert_book, elevenlabs_budget
+                )
+            )
+        )
+        ops_tasks.append(asyncio.create_task(run_pack_watch(alert_book)))
 
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
@@ -418,6 +445,8 @@ async def lifespan(app: FastAPI):
         balance_task.cancel()
     if stock_task is not None:
         stock_task.cancel()
+    for task in ops_tasks:
+        task.cancel()
     await drain_pending()
     logger.info("Cleanup stopped")
 
@@ -438,6 +467,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(AppVersionMiddleware)
+# #207: response-time samples for the ops watch (cheap, always on).
+app.add_middleware(LatencyMiddleware)
 
 # CORS middleware for web clients (iOS native client doesn't use CORS)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")

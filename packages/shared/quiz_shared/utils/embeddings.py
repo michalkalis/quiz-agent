@@ -11,6 +11,14 @@ _openai_client = None
 _async_openai_client = None
 
 
+def reset_clients() -> None:
+    """Drop the cached clients so the next call follows the current gateway
+    (#207: quiz-agent self-heal moves off an empty OpenRouter balance)."""
+    global _openai_client, _async_openai_client
+    _openai_client = None
+    _async_openai_client = None
+
+
 def _get_openai_client(api_key: Optional[str] = None):
     """Get or create a cached embeddings client, routed through the gateway."""
     global _openai_client

@@ -19,9 +19,17 @@ primary_region = "cdg"
   # warnings (warn_if_insecure_production) — without it prod boots as
   # "development" and every prod-only check is silently skipped (#65).
   ENVIRONMENT = "production"
-  # #193: daily provider credit check (OpenRouter, ElevenLabs) → Sentry alert
-  # when a balance runs low. Off by default so tests/dev make no calls.
+  # #193/#207: hourly provider credit check (OpenRouter, ElevenLabs; Anthropic,
+  # OpenAI, Fly when their admin credentials are set) → e-mail when a
+  # balance runs low or the check fails. Off by default so tests/dev make no calls.
   PROVIDER_BALANCE_CHECK_ENABLED = "true"
+  # #207: every 5 min — disk / memory / DB connections / response time, and
+  # every minute the pack worker's ping → e-mail alert (Fly numbers need the
+  # FLY_METRICS_TOKEN secret, mail needs ALERT_SMTP_PASSWORD, the worker watch
+  # OPS_PING_TOKEN). Dedupe state lives on the volume, so deploys don't re-send.
+  OPS_WATCH_ENABLED = "true"
+  ALERT_EMAIL_TO = "michal.kalis@gmail.com"
+  OPS_ALERT_STATE_PATH = "/data/ops_alerts.json"
   # #199: daily question-stock check (per language x category, fresh
   # entertainment per language) -> Sentry alert before questions run out.
   QUESTION_STOCK_CHECK_ENABLED = "true"

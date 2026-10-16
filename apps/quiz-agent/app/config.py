@@ -197,10 +197,34 @@ class Settings(BaseSettings):
     # left, ElevenLabs in percent of the character quota left.
     provider_balance_check_enabled: bool = False
     provider_balance_initial_delay_s: float = 120.0
+    # #207: hourly (was daily) so a credit running out is caught the same hour.
+    provider_balance_interval_s: float = 3600.0
     openrouter_low_usd: float = 10.0
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
     elevenlabs_critical_pct: float = 10.0
+    # #207 (207.12): spend-based checks (monitoring/provider_costs.py). The
+    # Anthropic API credit (Max plan, ANTHROPIC_CREDIT_* like credit_gate) in
+    # USD left, and a warning this many days before it expires; OpenAI spend
+    # against a monthly budget; Fly billing status + run-rate for this org.
+    anthropic_low_usd: float = 40.0
+    anthropic_critical_usd: float = 15.0
+    anthropic_expiry_warn_days: int = 3
+    openai_monthly_budget_usd: float = 50.0
+    fly_org: str = "personal"
+    # #207 (207.8/207.9): infrastructure + latency watch (monitoring/
+    # ops_watch.py). Opt-in like the checks above (on in fly.toml).
+    ops_watch_enabled: bool = False
+    # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
+    # so a deploy does not re-send ongoing problems. Empty = memory only.
+    ops_alert_state_path: str = ""
+    ops_watch_interval_s: float = 300.0
+    ops_disk_alarm_pct: float = 70.0
+    ops_db_connections_alarm_pct: float = 70.0
+    ops_memory_alarm_pct: float = 90.0
+    ops_latency_p95_alarm_s: float = 8.0
+    ops_latency_window_s: float = 600.0
+    ops_latency_min_requests: int = 10
     # Question stock early warning (#199): the daily check counts playable
     # questions per (language × category) and fresh entertainment questions per
     # language, and raises a Sentry issue when one runs low so generation can

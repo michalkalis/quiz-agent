@@ -39,6 +39,24 @@ async def test_only_one_of_two_machines_runs_the_monitors(db_sessionmaker):
     await a.leader.resign()
 
 
+async def test_a_machine_with_every_monitor_off_still_leads_without_restarting(
+    db_sessionmaker,
+):
+    """Staging switches every monitor off: leadership must not depend on there
+    being tasks, or each renewal 'becomes leader' again (staging log, 207.20)."""
+    starts: list[int] = []
+
+    def _start() -> list[asyncio.Task]:
+        starts.append(1)
+        return []
+
+    leader = MonitorLeader(LeaseStore(db_sessionmaker), _start, ttl_s=30)
+    for _ in range(3):
+        await leader.tick()
+    assert leader.is_leader and len(starts) == 1
+    await leader.resign()
+
+
 async def test_a_killed_leader_is_replaced_once_its_lease_expires(db_sessionmaker):
     """``fly machine kill`` gives no chance to resign: the lease must expire."""
     a, b = _Machine(LeaseStore(db_sessionmaker)), _Machine(LeaseStore(db_sessionmaker))

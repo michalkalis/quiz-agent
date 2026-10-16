@@ -37,7 +37,8 @@ jobs:
     runs-on: xcode-27
     timeout-minutes: 45
     permissions:
-      contents: read
+      # write: the job tags the built commit (ios/<version>-b<build>) after upload.
+      contents: write
 
     env:
       # Consumed by Fastfile / Matchfile.
@@ -136,6 +137,23 @@ jobs:
           BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
         # environment input picks the lane: staging → beta (Hangs-Staging), production → release (Hangs-Prod).
         run: bundle exec fastlane ios ${{ inputs.environment == 'production' && 'release' || 'beta' }}
+
+      - name: Tag the built commit
+        # Every uploaded build gets a tag, so a hotfix branch can be cut from the
+        # exact commit a store version was built from (#207 — production readiness).
+        if: success()
+        run: |
+          set -euo pipefail
+          IPA=$(ls apps/ios-app/Hangs/build/*.ipa | head -1)
+          PLIST=$(mktemp)
+          unzip -p "$IPA" 'Payload/*.app/Info.plist' > "$PLIST"
+          VERSION=$(plutil -extract CFBundleShortVersionString raw "$PLIST")
+          BUILD=$(plutil -extract CFBundleVersion raw "$PLIST")
+          SUFFIX=${{ inputs.environment == 'production' && '""' || '"-staging"' }}
+          TAG="ios/${VERSION}-b${BUILD}${SUFFIX}"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+          echo "Tagged $GITHUB_SHA as $TAG"
 
       - name: Upload build artifacts
         # IPA + dSYM only — the dSYM is needed for Sentry symbolication.

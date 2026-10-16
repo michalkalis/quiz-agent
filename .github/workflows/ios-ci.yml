@@ -4,8 +4,8 @@ on:
   push:
     # ralph/**: overnight-agent branches get a remote test run when pushed for
     # review, so a red branch is visible before it merges (#54 §54.8 item 1).
-    # release/**: beta line cut from main (redesign plan, issue #194); its PRs and pushes get the same checks.
-    branches: [main, 'ralph/**', 'release/**']
+    # hotfix/**: fix line cut from a store build tag (shared.md › Releases); release/**: archived 1.0 line.
+    branches: [main, 'ralph/**', 'release/**', 'hotfix/**']
     paths:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'
@@ -15,7 +15,7 @@ on:
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
   pull_request:
-    branches: [main, 'release/**']
+    branches: [main, 'release/**', 'hotfix/**']
     paths:
       - 'apps/ios-app/**'
       - 'scripts/lint-a11y-ids.py'

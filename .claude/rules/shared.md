@@ -15,14 +15,14 @@ Granularity: one PR per coherent change. Don't batch unrelated work into one PR;
 
 Destructive ops (force-push, reset --hard, amend, history rewrites) require a heads-up. Force-push to your own un-merged PR branch after a rebase is fine.
 
-### Beta line vs redesign (founder, 2026-10-08)
+### Releases: trunk-based, tagged builds (founder, 2026-10-16)
 
-The public TestFlight beta (1.0) must never pick up redesign work (#194 — redesign "Sklo nad kartami"). `release/1.0` is the beta line, `main` carries the next release.
+`main` is production: the redesign (1.1+) ships from it. Agents work on short-lived branches merged through PRs; unfinished features stay behind flags (server `/app-config` or build-config flags like CarPlay's `Local.xcconfig`), never on long-lived branches.
 
-- **Switched 2026-10-08** (founder go, before any redesign code): `release/1.0` frozen at `main` e691530c (all #193 beta hardening included), `release/**` added to the `main-pr-flow` ruleset, `MARKETING_VERSION` on `main` bumped to 1.1. Since then:
-  - **Beta TestFlight builds** run from the beta line only: `gh workflow run ios-release.yml --ref release/1.0`. A build from `main` is a redesign build, internal testers only, on founder request.
-  - **Beta fixes** (iOS): PR into `release/1.0`, then in the same task a second PR cherry-picking the squash commit onto `main`, so the fix is never lost. Never merge `main` into `release/1.0`.
-  - **Backend** stays single-line (deploys from `main`) and must keep the 1.0 app working: no breaking API changes while 1.0 is live.
+- **Every uploaded build is tagged** `ios/<version>-b<build>` by `ios-release.yml` (`-staging` suffix for the staging lane). Store versions are found by tag, not by branch.
+- **Hotfix for a live store version** only when `main` already carries unreleased work that must not ship: `git switch -c hotfix/<version> ios/<version>-b<build>`, fix via PR into `hotfix/<version>`, build with `gh workflow run ios-release.yml --ref hotfix/<version>`, then cherry-pick the squash commit onto `main` in the same task. Otherwise fix on `main` and ship the next build.
+- **Old design (1.0)** is archived: tag `ios/1.0-final` + frozen branch `release/1.0`. No more builds or fixes from it.
+- **Backend** deploys from `main` only and must keep every live app version working (store version + any TestFlight build still in testers' hands): no breaking API changes; the min-version switch in `/app-config` retires old builds.
 
 ### Commit Messages
 Follow Conventional Commits: `<type>(<scope>): <subject>`

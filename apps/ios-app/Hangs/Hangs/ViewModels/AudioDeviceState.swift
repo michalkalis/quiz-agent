@@ -95,9 +95,8 @@ final class AudioDeviceState: ObservableObject {
     let currentSession: @MainActor () -> QuizSession?
     let setAudioMode: @MainActor (String) -> Void
     let setPreferredInputDeviceId: @MainActor (String?) -> Void
-    /// #173: the EFFECTIVE mute (in-quiz override over the persisted Settings
-    /// preference) — every playback guard in this child reads it, never
-    /// `settings().isMuted`, which is only what Settings persisted.
+    /// The quiz mute every playback guard in this child reads (#208: the
+    /// persisted preference both the header button and Settings write).
     let isMuted: @MainActor () -> Bool
     let setMuted: @MainActor (Bool) -> Void
     let isAskingQuestion: @MainActor () -> Bool
@@ -131,7 +130,8 @@ final class AudioDeviceState: ObservableObject {
     let onBargeIn: @MainActor () async -> Void
     let startCommandConsumer: @MainActor () -> Void
     let stopCommandConsumer: @MainActor () -> Void
-    let startThinkingTimeCountdown: @MainActor () -> Void
+    /// `true` (#208): nothing read the question aloud — a silent reading pause first.
+    let startThinkingTimeCountdown: @MainActor (_ afterSilentRead: Bool) -> Void
 
     // MARK: - Initialization
 
@@ -162,7 +162,7 @@ final class AudioDeviceState: ObservableObject {
         onBargeIn: @escaping @MainActor () async -> Void,
         startCommandConsumer: @escaping @MainActor () -> Void,
         stopCommandConsumer: @escaping @MainActor () -> Void,
-        startThinkingTimeCountdown: @escaping @MainActor () -> Void
+        startThinkingTimeCountdown: @escaping @MainActor (_ afterSilentRead: Bool) -> Void
     ) {
         self.audioService = audioService
         self.networkService = networkService

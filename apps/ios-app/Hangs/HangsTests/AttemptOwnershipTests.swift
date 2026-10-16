@@ -124,7 +124,7 @@ struct AttemptOwnershipTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .processing
-        vm.quizMuteOverride = true // no read-back: the countdown arms once the mic is live (#185 5.2)
+        vm.settings.isMuted = true // no read-back: the countdown arms once the mic is live (#185 5.2)
         vm.recordingCoordinator.presentVoiceTranscript("Paris")
         await pumpUntil({ vm.taskBag.contains(.autoConfirm) }, "the countdown never armed")
 
@@ -199,7 +199,7 @@ struct AttemptOwnershipTests {
         let stale = vm.currentAttempt
         vm.attemptLedger.begin("test.newAttempt")
         vm.quizState = .processing
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         vm.recordingCoordinator.presentVoiceTranscript("Paris", owner: stale)
 
@@ -224,7 +224,7 @@ struct AttemptOwnershipTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         await vm.recordingCoordinator.startRecording()
         await pumpUntil({ vm.isStreamingSTT }, "streaming never started")
@@ -258,7 +258,7 @@ struct AttemptOwnershipTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         await vm.toggleRecording()
         silence.simulateAnswerAudio(Data(count: 16000))

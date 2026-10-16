@@ -224,7 +224,9 @@ struct QuizPauseResumeTests {
 
         vm.isPaused = false // what an answer tap or a skip does to the pause
 
-        #expect(vm.listenPhase(for: question) == .readingQuestion, "no window is running, so none may be shown")
+        // #208: and nothing reads either, so it is the bare command bar.
+        #expect(vm.listenPhase(for: question) == .thinking(remaining: 0, total: 0), "no window is running, so none may be shown")
+        #expect(vm.listenPhase(for: question)?.countdown == nil)
     }
 
     /// WHY: what the founder tests on device is what the driver SEES, on both

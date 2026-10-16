@@ -78,7 +78,14 @@ extension QuizViewModel {
             answerWindowTotal: answerWindowTotal,
             answerKind: question.sortedAnswerOptions.count == 2
                 ? .trueFalse
-                : (question.usesLetterLabels ? .mcqLetters : .mcq)
+                : (question.usesLetterLabels ? .mcqLetters : .mcq),
+            isReadingQuestion: isReadingQuestion
         )
+    }
+
+    /// #208: a question read is playing, or is about to (the first question's
+    /// hardware settle). What the bar may call "Reading the question".
+    var isReadingQuestion: Bool {
+        isPlayingQuestionTTS || isQuestionReadPending
     }
 }

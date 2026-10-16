@@ -267,7 +267,8 @@ struct QuestionVoiceFooter: View {
             quizState: viewModel.quizState,
             answerWindowRemaining: viewModel.answerWindowRemaining,
             answerWindowTotal: viewModel.answerWindowTotal,
-            answerKind: .open
+            answerKind: .open,
+            isReadingQuestion: viewModel.isReadingQuestion
         )
     }
 

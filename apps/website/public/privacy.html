@@ -82,20 +82,21 @@ footer address{font-style:normal;margin-top:12px}
 
   <main class="doc">
 <h1>Privacy Policy · Trubbo</h1>
-<p class="meta">Effective: October 10, 2026</p>
+<p class="meta">Effective: October 16, 2026</p>
 
 <h2>Who we are</h2>
 <p>Trubbo (a voice-first trivia quiz app) is operated by missinghue s.r.o., company ID (IČO) 07288093, with its registered office at Kotěrova 1588/2a, Dejvice, 160 00 Prague 6, Czech Republic ("we"). We are the controller of your personal data. Contact: <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>.</p>
 
 <h2>What we process</h2>
 <ul>
-<li><strong>Account &amp; identifiers:</strong> an anonymous device identifier and sign-in tokens created on first launch. If you optionally sign in with Apple, we also process the stable identifier Apple assigns to you; we do not request your name or e-mail from Apple.</li>
-<li><strong>Voice:</strong> recordings of your answers and voice commands are processed solely to convert speech to text. Answer recordings are not stored permanently (exception: the test version with your consent, see below); we store the text of your answer as part of your quiz history. If you submit voice feedback, we keep that recording until the feedback is handled.</li>
-<li><strong>Quiz activity:</strong> answers, scores, monthly usage counts (for the free-tier limit), question ratings.</li>
+<li><strong>Account &amp; identifiers:</strong> an anonymous identifier and sign-in tokens created on first launch, and a device integrity key from Apple (App Attest) that protects the free tier against abuse. If you optionally sign in with Apple, we also process the stable identifier Apple assigns to you; we do not request your name or e-mail from Apple.</li>
+<li><strong>Voice:</strong> recordings of your spoken answers are sent to our server and converted to text by a speech recognition provider; we do not store them (exception: the test version with your consent, see below). Voice commands such as “skip” are recognized on your device and never leave it. We store the text of your answer as part of your quiz history. When the app reads your answer back to you, its text is turned into speech by a speech provider.</li>
+<li><strong>Quiz activity:</strong> answers, scores, daily challenge results, monthly usage counts (for the free-tier limit), question ratings.</li>
 <li><strong>Purchases:</strong> subscription and pack status. Payments are handled entirely by Apple; we never see your card details.</li>
-<li><strong>Diagnostics:</strong> crash and error reports (Sentry) so we can fix problems.</li>
+<li><strong>Diagnostics:</strong> crash and error reports and technical logs (Sentry) so we can fix problems. They do not contain the text of your answers or of what you said.</li>
 <li><strong>Usage statistics:</strong> in-app events (for example a started quiz or a viewed subscription offer), stored in our own database without advertising identifiers, so we can improve the app.</li>
-<li><strong>Custom packs and feedback:</strong> the topic you enter when ordering a pack, and the feedback you send us (text, screenshot and, if you choose, a voice message).</li>
+<li><strong>Custom packs:</strong> the topic you enter when ordering a pack.</li>
+<li><strong>Feedback:</strong> what you send us in the feedback form: your text, a screenshot of the current screen (you can remove it before sending), a voice message if you choose to record one, technical details (device model, iOS and app version, language, quiz state) and a recent app log, which may contain the recognized text of your recent answers.</li>
 </ul>
 <p>We show no ads and do not track you across other companies' apps.</p>
 
@@ -104,7 +105,7 @@ footer address{font-style:normal;margin-top:12px}
 <ul>
 <li><strong>Only with consent:</strong> before your first quiz we ask you once whether you want to send us recordings of your answers. Nothing is sent unless you say “Yes”.</li>
 <li><strong>Purpose:</strong> improving speech recognition and answer grading. We use the recordings for automated tests, for nothing else, and never sell them.</li>
-<li><strong>What is sent:</strong> the audio of your spoken answer and technical details about it (language, question, recognized text, grading result, microphone type), linked to your anonymous device identifier or your account.</li>
+<li><strong>What is sent:</strong> the audio of your spoken answer and technical details about it (language, question, recognized text, grading result, microphone type), linked to your anonymous identifier or your account.</li>
 <li><strong>Storage:</strong> a private Cloudflare R2 storage bucket that only the developer can access.</li>
 <li><strong>Retention:</strong> at most 12 months from recording, then deleted. Deleting your data or account deletes them immediately.</li>
 <li><strong>Withdrawing consent:</strong> turn off the “Send answer recordings” switch in Settings at any time. Recordings already sent are deleted via “Delete my data” or by email.</li>
@@ -115,16 +116,40 @@ footer address{font-style:normal;margin-top:12px}
 
 <h2>Legal bases and purposes</h2>
 <ul>
-<li><strong>Contract:</strong> providing the quiz, evaluating answers, managing subscriptions and limits.</li>
-<li><strong>Legitimate interest:</strong> diagnostics, usage statistics, security, abuse prevention.</li>
+<li><strong>Contract:</strong> providing the quiz, evaluating answers, generating ordered packs, managing subscriptions and limits.</li>
+<li><strong>Legitimate interest:</strong> diagnostics, usage statistics, handling feedback, security, abuse prevention.</li>
 <li><strong>Consent:</strong> microphone access (granted via the iOS system dialog, revocable any time in Settings) and sending answer recordings in the test version.</li>
 </ul>
 
 <h2>Recipients (processors)</h2>
-<p>We rely on these providers: Apple (distribution, payments, sign-in), RevenueCat (subscription management), ElevenLabs (speech-to-text), OpenAI and Anthropic/OpenRouter (processing answer text, generating and evaluating quiz content, speech synthesis), Sentry (error diagnostics), Cloudflare (storage of answer recordings in the test version), Fly.io (hosting; EU servers in Paris). Data is shared only to the extent necessary for each purpose.</p>
+<p>We rely on these providers, each only to the extent necessary for its purpose:</p>
+<ul>
+<li><strong>Fly.io, Inc.</strong> (USA): hosting of our servers and database, located in the EU (Paris).</li>
+<li><strong>ElevenLabs</strong> (Eleven Labs Inc., USA): speech to text for your answers and voice feedback, speech synthesis.</li>
+<li><strong>OpenAI</strong> (OpenAI Ireland Ltd, with processing in the USA): evaluating answers, backup speech to text and speech synthesis.</li>
+<li><strong>Anthropic</strong> (Anthropic Ireland, Limited, with processing in the USA): evaluating answers, generating custom packs from your topic.</li>
+<li><strong>OpenRouter, Inc.</strong> (USA): a backup route for the same AI requests.</li>
+<li><strong>RevenueCat, Inc.</strong> (USA): subscription management, linked to your anonymous identifier or account.</li>
+<li><strong>Sentry</strong> (Functional Software, Inc., USA): error diagnostics, data stored in the EU (Frankfurt).</li>
+<li><strong>Cloudflare, Inc.</strong> (USA): storage of answer recordings in the test version.</li>
+<li><strong>ImprovMX</strong> and <strong>Resend</strong> (USA): receiving and sending e-mail when you write to us at hi@trubbo.app.</li>
+<li><strong>GitHub, Inc.</strong> (USA): storage of our encrypted database backups and hosting of this website (technical access data such as IP addresses; the website uses no cookies and no analytics).</li>
+</ul>
+<p>Apple acts as an independent controller for the App Store, payments, Sign in with Apple and App Attest, under its own privacy policy.</p>
+
+<h2>Transfers outside the EU</h2>
+<p>Some providers are based in the USA or process data there. For ElevenLabs, Sentry, Cloudflare, Fly.io, Resend and GitHub, the transfer relies on their certification under the EU-U.S. Data Privacy Framework (European Commission adequacy decision of July 10, 2023), with the standard contractual clauses as a fallback. For OpenAI, Anthropic, OpenRouter, RevenueCat and ImprovMX, it relies on the European Commission's standard contractual clauses (Decision 2021/914) in their data processing agreements. You can ask us for a copy of the relevant safeguards.</p>
 
 <h2>Retention and deletion</h2>
-<p>Account data and quiz history are kept while you use the app. You can delete your data at any time directly in the app (Settings → Delete my data) or by e-mail. After deletion, your personal data is removed without undue delay. Purchase records are kept for as long as accounting rules and refund handling require. Your answers and question ratings are kept only in anonymised form for statistics, and pack orders are kept without the link to your account.</p>
+<ul>
+<li><strong>Account data, quiz history, usage statistics and feedback:</strong> kept while you use the app, until you delete them in the app (Settings → Delete my data) or ask us by e-mail. After deletion, your personal data is removed without undue delay.</li>
+<li><strong>Answer recordings:</strong> not stored, only converted to text (test version recordings: see above).</li>
+<li><strong>Speech synthesis cache:</strong> spoken audio of read-back answers is kept in a server cache without a link to your account and is overwritten as the cache fills.</li>
+<li><strong>Diagnostics (Sentry):</strong> at most 90 days.</li>
+<li><strong>Backups:</strong> encrypted database backups are kept for at most 30 days, so deleted data disappears from them within 30 days.</li>
+<li><strong>Purchase records:</strong> kept for as long as accounting rules and refund handling require.</li>
+<li><strong>Kept without a link to you after deletion:</strong> your answers and question ratings in anonymised form for statistics, pack orders, and, to prevent repeated use of the free tier, the device integrity key and this month's usage counts.</li>
+</ul>
 
 <h2>Your rights</h2>
 <p>Under the GDPR you have the right of access, rectification, erasure, restriction, portability and objection. Exercise them via <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>. You may also lodge a complaint with the Czech Office for Personal Data Protection (Úřad pro ochranu osobních údajů, uoou.gov.cz) or with the supervisory authority in your country of residence.</p>

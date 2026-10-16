@@ -81,8 +81,31 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 - Sprístupniť `mba` pre Remote Control (návod v session 2026-10-16), aby agent spúšťal sessions sám.
 - 207.6: In-App Purchase kľúč v App Store Connect (Users and Access → Integrations → In-App Purchase → Generate) a jeho Key ID, Issuer ID a obsah `.p8` do Fly secrets `quiz-pack-api` (`APP_STORE_SERVER_KEY_ID`, `APP_STORE_SERVER_ISSUER_ID`, `APP_STORE_SERVER_PRIVATE_KEY`). Bez neho príkaz na kontrolu objednávok po obnove nebeží (ak má RevenueCat už vlastný kľúč a `.p8` je stiahnutý, dá sa použiť ten).
 - 207.17 (voliteľné, len ak chceš na stagingu skúšať AI volania): staging kľúče s limitom ~2 $ u OpenRouter, OpenAI, ElevenLabs, Anthropic a ich nastavenie na staging appky, presný postup v `docs/setup/staging.md` → Founder kroky. Bez toho staging AI volania zlyhajú, deploy a smoke testy idú.
-- 207.22: akceptovať DPA u spracovateľov, kde to vyžaduje klik v ich konzole (zoznam pripraví agent).
+- 207.21: v App Store Connect → Trubbo → App Privacy → Data Types → Purchases → Edit: pri Purchase History nechať Analytics + App Functionality, „linked to the user's identity“ = Yes → Save → Publish. Dôvod: zvyšok štítkov sedí, ale náhľad stránky ukazuje Purchases aj pod „Not Linked to You“ (zabudnutý riadok Analytics / Not linked). Agentovi zmenu v ASC zablokovala kontrola oprávnení.
+- 207.22: DPA na klik (ostatné platia automaticky cez ich podmienky, zoznam nižšie):
+  1. Sentry: sentry.io → Settings (organizácia missinghue) → Legal & Compliance → Data Processing Addendum → Accept (treba rolu Owner alebo Billing).
+  2. Fly.io: fly.io/dashboard → v ľavom menu Compliance → stiahnuť / podpísať Data Processing Agreement.
+  3. ImprovMX: improvmx.com/transparency/gdpr-compliance → stiahnuť DPA (improvmx_dpa.pdf), podpísať a poslať im, alebo si vyžiadať podpísaný na ich podpore.
 - Neskôr: Anthropic auto-reload so stropom pred 11-06.
+
+### DPA spracovateľov (207.22, overené 2026-10-16)
+
+| Spracovateľ | DPA | Akceptácia | Prenos do USA |
+|---|---|---|---|
+| Fly.io | dashboard → Compliance | klik (founder) | DPF |
+| ElevenLabs | https://elevenlabs.io/dpa | automaticky (ToS) | DPF + SCC |
+| OpenAI | https://openai.com/policies/data-processing-addendum/ | automaticky (Services Agreement) | SCC |
+| Anthropic | https://www.anthropic.com/legal/data-processing-addendum | automaticky (Commercial Terms) | SCC |
+| OpenRouter | https://openrouter.ai/data-processing-agreement | automaticky (ToS 10.2) | SCC |
+| RevenueCat | https://www.revenuecat.com/dpa/ | automaticky (ToS 4.2) | SCC |
+| Sentry (EU región, Frankfurt) | https://sentry.io/legal/dpa/ | klik (founder) | DPF + SCC |
+| Cloudflare (R2) | https://www.cloudflare.com/cloudflare-customer-dpa/ | automaticky (Self-Serve 6.1) | DPF (recertifikácia v posudzovaní) + SCC |
+| Resend | https://resend.com/legal/dpa | automaticky | DPF + SCC |
+| ImprovMX | https://improvmx-public-assets.s3.eu-west-3.amazonaws.com/improvmx_dpa.pdf | podpis (founder) | SCC |
+| GitHub (zálohy DB, web) | https://github.com/customer-terms/github-data-protection-agreement | automaticky len pri GitHub Customer Agreement; pri bezplatnom účte neoverené | DPF + SCC |
+| Apple | žiadne, samostatný prevádzkovateľ (App Store, platby, Sign in with Apple, App Attest) | n/a | n/a |
+
+DPF zoznam: https://www.dataprivacyframework.gov/list (Sentry participant/5869, Cloudflare 5666, Resend 8907).
 
 ## Beh na mba (orchestrátor)
 

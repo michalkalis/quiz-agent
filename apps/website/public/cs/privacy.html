@@ -82,20 +82,21 @@ footer address{font-style:normal;margin-top:12px}
 
   <main class="doc">
 <h1>Zásady ochrany soukromí · Trubbo</h1>
-<p class="meta">Účinné od: 10. října 2026</p>
+<p class="meta">Účinné od: 16. října 2026</p>
 
 <h2>Kdo jsme</h2>
 <p>Aplikaci Trubbo (hlasový vědomostní kvíz) provozuje společnost missinghue s.r.o., IČO 07288093, se sídlem Kotěrova 1588/2a, Dejvice, 160 00 Praha 6, Česká republika (dále „my“). Jsme správcem vašich osobních údajů. Kontakt: <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>.</p>
 
 <h2>Jaké údaje zpracováváme</h2>
 <ul>
-<li><strong>Účet a identifikátory:</strong> anonymní identifikátor zařízení a přihlašovací tokeny vytvořené při prvním spuštění. Pokud se dobrovolně přihlásíte přes Apple, zpracováváme také stabilní identifikátor, který nám Apple přidělí; jméno ani e-mail od Apple nežádáme.</li>
-<li><strong>Hlas:</strong> nahrávky vašich odpovědí a hlasových příkazů se zpracovávají výhradně pro převod řeči na text. Nahrávky odpovědí trvale neukládáme (výjimka: testovací verze se souhlasem, viz níže); ukládáme text odpovědi jako součást historie kvízu. Pokud nám pošlete hlasovou zpětnou vazbu, její nahrávku uchováváme, dokud ji nevyřídíme.</li>
-<li><strong>Herní aktivita:</strong> odpovědi, skóre, počty využitých otázek (kvůli měsíčnímu limitu), hodnocení otázek.</li>
+<li><strong>Účet a identifikátory:</strong> anonymní identifikátor a přihlašovací tokeny vytvořené při prvním spuštění a klíč k ověření zařízení od Apple (App Attest), který chrání bezplatnou verzi před zneužitím. Pokud se dobrovolně přihlásíte přes Apple, zpracováváme také stabilní identifikátor, který nám Apple přidělí; jméno ani e-mail od Apple nežádáme.</li>
+<li><strong>Hlas:</strong> nahrávky vašich mluvených odpovědí posíláme na náš server, kde je poskytovatel rozpoznávání řeči převede na text; neukládáme je (výjimka: testovací verze se souhlasem, viz níže). Hlasové povely, například „přeskoč“, se rozpoznávají přímo ve vašem zařízení a zařízení neopouštějí. Text odpovědi ukládáme jako součást historie kvízu. Když vám aplikace odpověď přečte, její text převede na řeč poskytovatel syntézy hlasu.</li>
+<li><strong>Herní aktivita:</strong> odpovědi, skóre, výsledky denní výzvy, počty využitých otázek (kvůli měsíčnímu limitu), hodnocení otázek.</li>
 <li><strong>Nákupy:</strong> stav předplatného a balíčků. Platby zpracovává výhradně Apple; k číslu vaší karty nemáme přístup.</li>
-<li><strong>Diagnostika:</strong> záznamy o pádech a chybách aplikace (Sentry), abychom mohli opravovat problémy.</li>
+<li><strong>Diagnostika:</strong> záznamy o pádech a chybách aplikace a technické logy (Sentry), abychom mohli opravovat problémy. Neobsahují text vašich odpovědí ani to, co jste řekli.</li>
 <li><strong>Statistiky používání:</strong> události v aplikaci (například spuštěný kvíz nebo zobrazená nabídka předplatného), které ukládáme ve vlastní databázi bez reklamních identifikátorů, abychom mohli aplikaci zlepšovat.</li>
-<li><strong>Vlastní balíčky a zpětná vazba:</strong> téma, které zadáte při objednávce balíčku, a zpětná vazba, kterou nám pošlete (text, snímek obrazovky, případně hlasová zpráva).</li>
+<li><strong>Vlastní balíčky:</strong> téma, které zadáte při objednávce balíčku.</li>
+<li><strong>Zpětná vazba:</strong> to, co nám pošlete přes formulář zpětné vazby: váš text, snímek aktuální obrazovky (před odesláním jej můžete odstranit), hlasová zpráva, pokud ji nahrajete, technické údaje (model zařízení, verze iOS a aplikace, jazyk, stav kvízu) a nedávný log aplikace, který může obsahovat rozpoznaný text vašich posledních odpovědí.</li>
 </ul>
 <p>Nezobrazujeme reklamu a nesledujeme vás napříč aplikacemi jiných společností.</p>
 
@@ -104,7 +105,7 @@ footer address{font-style:normal;margin-top:12px}
 <ul>
 <li><strong>Jen se souhlasem:</strong> před prvním kvízem se vás jednou zeptáme, zda nám chcete posílat nahrávky svých odpovědí. Bez vašeho „Ano“ se nic neposílá.</li>
 <li><strong>Účel:</strong> zlepšování rozpoznávání řeči a vyhodnocování odpovědí. Nahrávky používáme pro automatické testy, k ničemu jinému, a nikomu je neprodáváme.</li>
-<li><strong>Co posíláme:</strong> zvukovou nahrávku mluvené odpovědi a technické údaje k ní (jazyk, otázka, rozpoznaný text, výsledek vyhodnocení, typ mikrofonu), spojené s anonymním identifikátorem zařízení nebo s vaším účtem.</li>
+<li><strong>Co posíláme:</strong> zvukovou nahrávku mluvené odpovědi a technické údaje k ní (jazyk, otázka, rozpoznaný text, výsledek vyhodnocení, typ mikrofonu), spojené s anonymním identifikátorem nebo s vaším účtem.</li>
 <li><strong>Uložení:</strong> v neveřejném úložišti Cloudflare R2, přístupném jen vývojáři.</li>
 <li><strong>Uchovávání:</strong> nejvýše 12 měsíců od nahrání, poté je smažeme. Při smazání údajů nebo účtu se smažou hned.</li>
 <li><strong>Odvolání souhlasu:</strong> kdykoli v Nastavení vypněte přepínač „Posílat nahrávky odpovědí“. Již odeslané nahrávky smažete přes „Smaž moje údaje“ nebo e-mailem.</li>
@@ -115,16 +116,40 @@ footer address{font-style:normal;margin-top:12px}
 
 <h2>Právní základy a účely</h2>
 <ul>
-<li><strong>Plnění smlouvy:</strong> poskytování kvízu, vyhodnocování odpovědí, správa předplatného a limitů.</li>
-<li><strong>Oprávněný zájem:</strong> diagnostika chyb, statistiky používání, bezpečnost a ochrana před zneužitím služby.</li>
+<li><strong>Plnění smlouvy:</strong> poskytování kvízu, vyhodnocování odpovědí, generování objednaných balíčků, správa předplatného a limitů.</li>
+<li><strong>Oprávněný zájem:</strong> diagnostika chyb, statistiky používání, vyřizování zpětné vazby, bezpečnost a ochrana před zneužitím služby.</li>
 <li><strong>Souhlas:</strong> přístup k mikrofonu (udělujete jej v systémovém dialogu iOS a můžete jej kdykoli odvolat v Nastavení) a posílání nahrávek odpovědí v testovací verzi.</li>
 </ul>
 
 <h2>Příjemci údajů (zpracovatelé)</h2>
-<p>K poskytování služby využíváme tyto poskytovatele: Apple (distribuce, platby, přihlášení), RevenueCat (správa předplatného), ElevenLabs (převod řeči na text), OpenAI a Anthropic/OpenRouter (zpracování textu odpovědí, generování a vyhodnocování kvízového obsahu, syntéza hlasu), Sentry (diagnostika chyb), Cloudflare (úložiště nahrávek odpovědí v testovací verzi), Fly.io (hosting; servery v EU, Paříž). Údaje jim předáváme jen v rozsahu nezbytném pro daný účel.</p>
+<p>Využíváme tyto poskytovatele, každého jen v rozsahu nezbytném pro daný účel:</p>
+<ul>
+<li><strong>Fly.io, Inc.</strong> (USA): provoz našich serverů a databáze, umístěných v EU (Paříž).</li>
+<li><strong>ElevenLabs</strong> (Eleven Labs Inc., USA): převod řeči na text u odpovědí a hlasové zpětné vazby, syntéza hlasu.</li>
+<li><strong>OpenAI</strong> (OpenAI Ireland Ltd, zpracování v USA): vyhodnocování odpovědí, záložní převod řeči na text a syntéza hlasu.</li>
+<li><strong>Anthropic</strong> (Anthropic Ireland, Limited, zpracování v USA): vyhodnocování odpovědí, generování vlastních balíčků z vašeho tématu.</li>
+<li><strong>OpenRouter, Inc.</strong> (USA): záložní cesta pro tytéž požadavky na AI.</li>
+<li><strong>RevenueCat, Inc.</strong> (USA): správa předplatného, propojená s vaším anonymním identifikátorem nebo účtem.</li>
+<li><strong>Sentry</strong> (Functional Software, Inc., USA): diagnostika chyb, údaje uložené v EU (Frankfurt).</li>
+<li><strong>Cloudflare, Inc.</strong> (USA): úložiště nahrávek odpovědí v testovací verzi.</li>
+<li><strong>ImprovMX</strong> a <strong>Resend</strong> (USA): příjem a odesílání e-mailů, když nám napíšete na hi@trubbo.app.</li>
+<li><strong>GitHub, Inc.</strong> (USA): úložiště našich šifrovaných záloh databáze a hosting tohoto webu (technické údaje o přístupu, například IP adresy; web nepoužívá cookies ani analytiku).</li>
+</ul>
+<p>Apple vystupuje jako samostatný správce pro App Store, platby, přihlášení přes Apple a App Attest podle vlastních zásad ochrany soukromí.</p>
+
+<h2>Předávání mimo EU</h2>
+<p>Někteří poskytovatelé sídlí v USA nebo tam údaje zpracovávají. U ElevenLabs, Sentry, Cloudflare, Fly.io, Resend a GitHub se předávání opírá o jejich certifikaci v rámci EU-U.S. Data Privacy Framework (rozhodnutí Evropské komise o odpovídající ochraně z 10. července 2023) a záložně o standardní smluvní doložky. U OpenAI, Anthropic, OpenRouter, RevenueCat a ImprovMX se opírá o standardní smluvní doložky Evropské komise (rozhodnutí 2021/914) v jejich smlouvách o zpracování údajů. O kopii příslušných záruk nás můžete požádat.</p>
 
 <h2>Uchovávání a výmaz</h2>
-<p>Údaje o účtu a herní historii uchováváme, dokud aplikaci používáte. Své údaje můžete kdykoli smazat přímo v aplikaci (Nastavení → Smazat moje údaje) nebo e-mailem. Po smazání účtu budou vaše osobní údaje odstraněny bez zbytečného odkladu. Záznamy o nákupech uchováváme, dokud to vyžadují účetní předpisy a vyřizování refundací. Vaše odpovědi a hodnocení otázek si ponecháme jen v anonymizované podobě pro statistiky a objednávky balíčků bez propojení s vaším účtem.</p>
+<ul>
+<li><strong>Údaje o účtu, herní historie, statistiky používání a zpětná vazba:</strong> uchováváme po dobu používání aplikace, dokud je nesmažete v aplikaci (Nastavení → Smaž moje údaje) nebo nás nepožádáte e-mailem. Po smazání budou vaše osobní údaje odstraněny bez zbytečného odkladu.</li>
+<li><strong>Nahrávky odpovědí:</strong> neukládáme, jen je převedeme na text (nahrávky z testovací verze: viz výše).</li>
+<li><strong>Mezipaměť syntézy hlasu:</strong> zvuk přečtených odpovědí zůstává v mezipaměti serveru bez propojení s vaším účtem a postupně se přepisuje novým obsahem.</li>
+<li><strong>Diagnostika (Sentry):</strong> nejvýše 90 dní.</li>
+<li><strong>Zálohy:</strong> šifrované zálohy databáze uchováváme nejvýše 30 dní, takže smazané údaje z nich zmizí do 30 dní.</li>
+<li><strong>Záznamy o nákupech:</strong> uchováváme, dokud to vyžadují účetní předpisy a vyřizování refundací.</li>
+<li><strong>Po smazání zůstává bez propojení s vámi:</strong> vaše odpovědi a hodnocení otázek v anonymizované podobě pro statistiky, objednávky balíčků a, aby bezplatnou verzi nešlo využívat opakovaně, klíč k ověření zařízení a počty využitých otázek za aktuální měsíc.</li>
+</ul>
 
 <h2>Vaše práva</h2>
 <p>Podle GDPR máte právo na přístup k údajům, jejich opravu, výmaz, omezení zpracování, přenositelnost a právo vznést námitku. Uplatníte je e-mailem na <a href="mailto:hello@missinghue.com">hello@missinghue.com</a>. Máte také právo podat stížnost u Úřadu pro ochranu osobních údajů (uoou.gov.cz) nebo u dozorového úřadu v zemi svého bydliště.</p>

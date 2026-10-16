@@ -49,7 +49,7 @@ jobs:
       quiz_agent: ${{ steps.plan.outputs.quiz_agent }}
       quiz_pack_api: ${{ steps.plan.outputs.quiz_pack_api }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - id: plan
@@ -93,8 +93,8 @@ jobs:
     environment:
       name: staging
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - uses: actions/checkout@v7
+      - uses: superfly/flyctl-actions/setup-flyctl@1.6
         with:
           version: ${{ env.FLYCTL_VERSION }}
 
@@ -128,8 +128,8 @@ jobs:
     permissions:
       contents: write # move the deployed/<app> tags
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - uses: actions/checkout@v7
+      - uses: superfly/flyctl-actions/setup-flyctl@1.6
         with:
           version: ${{ env.FLYCTL_VERSION }}
 

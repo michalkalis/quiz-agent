@@ -45,6 +45,25 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
 
+  # fastlane (TestFlight / App Store uploads). Listed so its security fixes
+  # arrive as one grouped PR instead of one PR per gem.
+  - package-ecosystem: bundler
+    directory: /apps/ios-app/Hangs
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(ios)"
+    groups:
+      fastlane:
+        applies-to: version-updates
+        patterns: ["*"]
+      fastlane-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
   # Workflow actions (third-party ones are pinned to SHAs; Dependabot bumps
   # the SHA and its version comment together).
   - package-ecosystem: github-actions

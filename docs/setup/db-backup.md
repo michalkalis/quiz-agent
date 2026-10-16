@@ -26,6 +26,27 @@ Bez kľúča sa žiadna záloha nedá obnoviť; kto má kľúč a prístup k rep
 
 Sessions, hodnotenia, cache prekladov a stav upozornení quiz-agentu sú od #207.20 v Postgrese, takže ich záloha je súčasťou tohto dumpu. Staré SQLite súbory na volume `quiz-agent-api` (`/data/ratings.db`, `/data/translations.db`) sa pri štarte jednorazovo skopírujú do Postgresu a s volume zaniknú (krok 6 návrhu odolnosti).
 
+## Obnova k ľubovoľnému okamihu (PITR, #207.20, od 2026-10-16)
+
+Druhá vrstva vedľa nočného dumpu: postgres-flex (barman-cloud 3.10 v našom obraze) posiela každý WAL segment do súkromného R2 bucketu `quiz-pack-db-wal` (firemný Cloudflare účet hello@missinghue.com, jurisdikcia EÚ). Segment sa uzavrie najneskôr každých 300 s, takže strata pri havárii je ≤ ~5 min (RPO). Plná záloha (base backup) raz za 24 h, drží sa 7 dní: obnoviť sa dá ktorákoľvek sekunda za posledných 7 dní.
+
+- Zapnuté Fly secretom `S3_ARCHIVE_CONFIG` na `quiz-pack-db` (`https://<key>:<secret>@<účet>.eu.r2.cloudflarestorage.com/quiz-pack-db-wal/quiz-pack-db`; posledná časť = meno barman servera). Token je zapisovací, len na tento bucket.
+- `archive_timeout` 300 s: `flexctl backup config update --archive-timeout 300s` (platí po reštarte) a zároveň `ALTER SYSTEM SET archive_timeout = 300` (hneď, prežije reštart). Kontrola: `SHOW archive_timeout`, `flexctl backup list`.
+- Stav: `fly ssh console -a quiz-pack-db -C "flexctl backup list"`, v DB `select * from pg_stat_archiver`.
+- **Stráž** (quiz-agent ops watch, `app/monitoring/wal_watch.py`): e-mail pri zlyhaní archivácie alebo keď 15 min nič neodišlo, pri `pg_wal` > 500 MB; pri > 1,5 GB sama vypne archiváciu (`archive_command = '/bin/true'`), aby sa disk nezaplnil, a pošle „PITR gap“. **Návrat po oprave R2/tokenu:** `ALTER SYSTEM RESET archive_command` + `SELECT pg_reload_conf()` (bez reštartu), potom `flexctl backup create`. Vyskúšané 2026-10-16 na skúšobnej kópii aj bez reštartu.
+- **Týždenná skúška obnovy:** workflow `quiz-pack-db PITR restore verify` v súkromnom repe (pondelky 06:17 UTC + ručne). Obnoví najnovšiu base + celý WAL bežným barman-cloud (bez Fly) do Postgres 17 + pgvector a overí, že posledný heartbeat workera je ≤ 10 min pred štartom a `questions` > 1000. Token len na čítanie (`PITR_R2_RO_*` secrets, `PITR_*` variables). Ručný beh s `server` = prázdny adresár musí zlyhať (červený test, overené).
+
+**Obnova k času T** (skript `scripts/pitr-restore.sh` v súkromnom repe; bez Fly, rovnaká cesta ako odchod do iného regiónu/Hetzneru):
+
+1. Potrebuješ token na čítanie (R2 → API tokens, alebo secrets zo súkromného repa) a Docker.
+2. `docker run -d --name pitr --entrypoint sleep -e AWS_ACCESS_KEY_ID=… -e AWS_SECRET_ACCESS_KEY=… -e ENDPOINT=https://bff6d086844b7b18fbb5065d179f1fcf.eu.r2.cloudflarestorage.com -e ARCHIVE=s3://quiz-pack-db-wal -e SERVER=quiz-pack-db -v <repo>/scripts:/s:ro pgvector/pgvector:pg17 infinity`
+3. `docker exec pitr bash /s/pitr-restore.sh "2026-10-16 13:34:33+00"` (bez času = koniec archívu). Hotovo za ~1 min (223 MB).
+4. Kontrola: `docker exec -u postgres pitr psql -p 5499 -d quiz_pack -c "…"`. Potom buď vybrané riadky ručne späť do produ, alebo celá DB podľa postupu B nižšie (dump z kontajnera namiesto zálohy z GitHubu).
+
+Overené 2026-10-16 naostro na produ: obnova k 13:34:33 UTC vrátila presne stav z toho okamihu (heartbeat 13:34:14, 3439 otázok, 3 sessions, 319 analytických udalostí, ako v prode v tej sekunde); posledná transakcia 13:34:29, nasledujúca (13:34:34) už nie. Skúška na kópii: zmazanie 1000 riadkov po čase T bolo v obnove vrátené.
+
+Pozn.: obraz `pgvector/pgvector:pg17` má staršiu glibc (2.36) než DB stroj (2.39); Postgres to len ohlási ako varovanie o verzii collation. Pri obnove, ktorá má nahradiť prod, sprav na obnovenej DB `REINDEX DATABASE` alebo obnovuj do nášho obrazu `quiz-pack-db`.
+
 ## Obnova
 
 Potrebuješ: `gh` prihlásený na účet `michalkalis`, `openssl` 3 (`brew install openssl@3`), Docker, `fly` prihlásený na org, súkromný kľúč uložený do súboru `key.pem` (`chmod 600 key.pem`, po obnove zmazať).

@@ -2104,13 +2104,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povely během čtení otázky"
+            "value" : "Příkazy během čtení otázky"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povely počas čítania otázky"
+            "value" : "Príkazy počas čítania otázky"
           }
         }
       }

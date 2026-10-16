@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group — or app-review alone (needs build) to submit the version to App Review"
+        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group,phased-release — or app-review alone (needs build) to submit the version to App Review"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"

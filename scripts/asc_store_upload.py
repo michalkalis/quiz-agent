@@ -11,7 +11,7 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -194,15 +194,19 @@ def step_screenshots(app_id: str) -> None:
                                                                          "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
 
 
-def step_version(app_id: str) -> None:
-    """The App Store version record follows the app's MARKETING_VERSION (the redesign ships as 1.1)."""
-    print("version")
+def marketing_version() -> str:
     pbx = (FL.parent / "Hangs.xcodeproj/project.pbxproj").read_text()
     wanted = {m.split("=")[1].strip(" ;") for m in pbx.splitlines() if "MARKETING_VERSION =" in m}
     if len(wanted) != 1:
         raise SystemExit(f"  !! MARKETING_VERSION differs between configurations: {wanted}")
+    return wanted.pop()
+
+
+def step_version(app_id: str) -> None:
+    """The App Store version record follows the app's MARKETING_VERSION (the redesign ships as 1.1)."""
+    print("version")
     ver = editable_version(app_id)
-    if ver["attributes"]["versionString"] != (v := wanted.pop()):
+    if ver["attributes"]["versionString"] != (v := marketing_version()):
         send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"versionString": v}}})
 
 
@@ -215,6 +219,31 @@ def step_age_rating(app_id: str) -> None:
     diff = {k: v for k, v in answers.items() if not k.startswith("_") and cur["attributes"].get(k) != v}
     if diff:
         send("PATCH", f"/ageRatingDeclarations/{cur['id']}", {"data": {"type": "ageRatingDeclarations", "id": cur["id"], "attributes": diff}})
+
+
+def step_phased_release(app_id: str) -> None:
+    """Release the MARKETING_VERSION over Apple's 7-day phased rollout (#207 task 207.3).
+
+    A phased release can be attached until the version goes live; it starts INACTIVE and
+    Apple activates it on release, so a bad build reaches ~1 % of auto-updaters first.
+    """
+    print("phased-release")
+    v = marketing_version()
+    vers = get(f"/apps/{app_id}/appStoreVersions", **{"filter[versionString]": v, "filter[platform]": "IOS"}).get("data", [])
+    if not vers:
+        raise SystemExit(f"  !! no App Store version {v}")
+    ver = vers[0]
+    print(f"  {v}: {ver['attributes'].get('appStoreState')}")
+    cur = get(f"/appStoreVersions/{ver['id']}/appStoreVersionPhasedRelease")
+    if "_error" in cur:
+        raise SystemExit(f"  !! {cur}")
+    if cur.get("data"):
+        a = cur["data"]["attributes"]
+        print(f"  phased release: {a.get('phasedReleaseState')} day {a.get('currentDayNumber')}")
+        return
+    send("POST", "/appStoreVersionPhasedReleases", {"data": {
+        "type": "appStoreVersionPhasedReleases", "attributes": {"phasedReleaseState": "INACTIVE"},
+        "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver["id"]}}}}})
 
 
 PUBLIC_GROUP = "Public beta"
@@ -271,6 +300,8 @@ def main() -> int:
         step_age_rating(app_id)
     if "beta-group" in steps:
         step_beta_group(app_id, args.build, args.submit_beta_review)
+    if "phased-release" in steps:
+        step_phased_release(app_id)
     return 0
 
 

@@ -65,9 +65,9 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### G. Súkromie a GDPR (P1)
 
-- [ ] 207.21 Privacy štítky: pregenerovať `fastlane/app_privacy_details.json` z `PrivacyInfo.xcprivacy` a skutočných dát (bez mena/e-mailu; ID zariadenia, fotky z feedbacku, analytika, diagnostika), porovnať s ASC a nahrať.
-- [ ] 207.22 Zásady ochrany súkromia sk/cs/en: zoznam spracovateľov, prenos mimo EÚ (štandardné zmluvné doložky / adekvátnosť), doba uchovávania. Zoznam DPA so spracovateľmi + odkazy (podpis/akceptácia = founder krok).
-- [ ] 207.23 Sentry backend `before_send`: odfiltrovať texty odpovedí a telá požiadaviek; TF build neposiela text hlasových povelov bez zmienky v zásadách.
+- [ ] 207.21 Privacy štítky: pregenerovať `fastlane/app_privacy_details.json` z `PrivacyInfo.xcprivacy` a skutočných dát (bez mena/e-mailu; ID zariadenia, fotky z feedbacku, analytika, diagnostika), porovnať s ASC a nahrať. — Repo hotové (PR #465); ASC sedí okrem jedného riadku (Purchase History / Analytics „Not linked“), oprava = founder krok nižšie.
+- [x] 207.22 Zásady ochrany súkromia sk/cs/en: zoznam spracovateľov, prenos mimo EÚ (štandardné zmluvné doložky / adekvátnosť), doba uchovávania. Zoznam DPA so spracovateľmi + odkazy (podpis/akceptácia = founder krok). — PR #466, živé na trubbo.app/privacy (16. 10.).
+- [x] 207.23 Sentry backend `before_send`: odfiltrovať texty odpovedí a telá požiadaviek; TF build neposiela text hlasových povelov bez zmienky v zásadách. — PR #464, nasadené quiz-agent + quiz-pack-api 16. 10.; iOS zmena ide s ďalším buildom.
 
 ### H. Hygiena a kompatibilita (P2)
 

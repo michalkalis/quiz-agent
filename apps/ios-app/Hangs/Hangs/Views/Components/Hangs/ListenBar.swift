@@ -404,14 +404,18 @@ struct ListenBar: View {
     /// catalog-localized like the answer captions, since it narrates the answer
     /// flow ("listening in N s"), not the command engine.
     private var captionText: Text {
+        // #208.7: what the mic is doing right now outranks the countdown — on
+        // the question screen the think caption used to hide both cues.
+        if isRecognizing {
+            return Text(verbatim: recognizingWord ?? VoiceCommandLexicon.processingCaption(language: language))
+        }
+        if isHearing { return Text(verbatim: VoiceCommandLexicon.hearingCaption(language: language)) }
         if let countdown = activeThinkCountdown {
             // #188 G11: in the status layout the seconds are their own large
             // number, so the state line is the one word.
             if usesStatusLayout { return Text("Think") }
             return Text("THINK — LISTENING IN \(countdown.remaining) S")
         }
-        // #122 follow-up: a matched command waiting to fire names itself.
-        if isRecognizing, let recognizingWord { return Text(verbatim: recognizingWord) }
         switch mode {
         // #179 D1 state 1: during the read the bar was missing entirely on MCQ
         // (founder screenshot 9) — it now names what the app is doing.
@@ -624,17 +628,19 @@ struct ListenBar: View {
                 .font(.system(size: usesStatusLayout ? 18 : 14, weight: .semibold))
                 .foregroundColor(accent)
                 .accessibilityHidden(true)
-        } else if isBusy {
+        } else if isBusy || (isRecognizing && usesStatusLayout) { // #208.7: the status layout has no trailing spinner
             ProgressView()
                 .controlSize(usesStatusLayout ? .regular : .small)
                 .tint(accent)
                 .accessibilityIdentifier("listen-bar.spinner")
         } else {
-            Image(systemName: activeThinkCountdown == nil ? "waveform" : "clock")
+            // #208.7: while the driver speaks the clock gives way to the live
+            // waveform — the mic, not the timer, is the news.
+            Image(systemName: activeThinkCountdown == nil || isHearing ? "waveform" : "clock")
                 .font(.system(size: usesStatusLayout ? 18 : 14, weight: .semibold))
                 .foregroundColor(accent)
                 .symbolEffect(.variableColor.iterative.dimInactiveLayers,
-                              isActive: activeThinkCountdown == nil)
+                              isActive: activeThinkCountdown == nil || isHearing)
                 .accessibilityHidden(true)
         }
     }
@@ -735,7 +741,7 @@ struct ListenBar: View {
     @ViewBuilder
     private var trailingIndicator: some View {
         if showsDots {
-            if isRecognizing, recognizingWord != nil {
+            if isRecognizing {
                 ProgressView()
                     .controlSize(.mini)
                     .tint(live)

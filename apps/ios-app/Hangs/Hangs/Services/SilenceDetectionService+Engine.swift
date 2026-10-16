@@ -373,6 +373,7 @@ extension SilenceDetectionService {
 
         analyzer = nil
         neuralVADActive = false
+        speechEdgesSuspended = false // #208.7: a suspension never outlives its engine
         resetSpeechDetection()
 
         Logger.voice.info("🔇 SilenceDetection: listening stopped")

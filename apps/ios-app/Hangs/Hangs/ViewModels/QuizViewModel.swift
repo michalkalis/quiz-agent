@@ -977,10 +977,16 @@ final class QuizViewModel: ObservableObject {
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
             startThinkingTimeCountdown: { [weak self] afterSilentRead in
                 guard let self else { return }
+                // #208.7: a skip said over the read stops it; its tail must not
+                // start the think window under the pending skip.
+                guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
                 self.quizTimersController.startThinkingTimeCountdown(
                     readingPause: afterSilentRead ? self.silentReadingPause : .zero
                 )
-            }
+            },
+            beginQuestionRead: { [weak self] in self?.voiceCommandCoordinator.beginQuestionRead() ?? false },
+            endQuestionRead: { [weak self] in self?.voiceCommandCoordinator.endQuestionRead() },
+            isListenerKeptThroughRead: { [weak self] in self?.voiceCommandCoordinator.listenerKeptThroughRead ?? false }
         )
     }
 
@@ -1039,7 +1045,17 @@ final class QuizViewModel: ObservableObject {
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
             playAgain: { [weak self] in _ = self?.playAgain() },
             goHome: { [weak self] in self?.resetToHome() },
-            trackAnalytics: { [weak self] in self?.trackAnalytics($0) }
+            trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
+            isReadingQuestionAloud: { [weak self] in
+                guard let self else { return false }
+                return self.isPlayingQuestionTTS && !self.isPlayingFeedbackTTS && !self.isPlayingAnswerReadBack
+            },
+            textBeingRead: { [weak self] in
+                guard let question = self?.currentQuestion else { return nil }
+                return ([question.question] + (question.possibleAnswers.map { Array($0.values) } ?? []))
+                    .joined(separator: " ")
+            },
+            stopQuestionRead: { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
         )
     }
 

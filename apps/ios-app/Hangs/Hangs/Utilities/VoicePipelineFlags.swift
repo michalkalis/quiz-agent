@@ -30,6 +30,7 @@ nonisolated enum VoicePipelineFlags {
         static let neuralVAD = "voicePipeline.neuralVADEnabled"
         static let avoidRejectedTranscriptOnRetry = "voicePipeline.avoidRejectedTranscriptOnRetry"
         static let autoTesting = "voicePipeline.autoTesting"
+        static let commandsDuringReading = "voicePipeline.commandsDuringReading"
         static let aecBlockedGeneration = "voicePipeline.experiment.aecBlockedGeneration"
         static let echoCancelledInputCapable = "voicePipeline.experiment.echoCancelledInputCapable"
     }
@@ -121,6 +122,17 @@ nonisolated enum VoicePipelineFlags {
     static var autoTesting: Bool {
         get { autoTesting(in: .standard) }
         set { UserDefaults.standard.set(newValue, forKey: Key.autoTesting) }
+    }
+
+    /// #208.7: keep an echo-cancelling command listener up through the
+    /// question read, so "zopakuj" / "preskoč" / "pauza" work while the
+    /// question is read (`VoiceCommandCoordinator+Reading`). OFF by default
+    /// until the founder hears it on a device: with the listener up, iOS keeps
+    /// the session in `.voiceChat`, so the question plays at call volume —
+    /// the volume #208.5 removed from Home.
+    static var commandsDuringReading: Bool {
+        get { bool(Key.commandsDuringReading, default: false) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.commandsDuringReading) }
     }
 
     static func autoTesting(in defaults: UserDefaults) -> Bool {

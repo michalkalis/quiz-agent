@@ -2083,6 +2083,22 @@
         }
       }
     },
+    "Commands while the question is read" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Povely během čtení otázky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Povely počas čítania otázky"
+          }
+        }
+      }
+    },
     "Configuration error" : {
       "comment" : "Error title: app could not build a valid request URL",
       "localizations" : {
@@ -7206,6 +7222,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odstráni zvuk kvízu z mikrofónu pri výstupe cez Bluetooth, CarPlay alebo kábel a zvuk ostane, kde je. iPhony od roku 2024"
+          }
+        }
+      }
+    },
+    "Repeat and skip work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Zopakuj“ a „přeskoč“ fungují i během čtení otázky, na reproduktoru iPhonu nebo při hands-free hovoru. Otázka pak hraje hlasitostí hovoru"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Zopakuj“ a „preskoč“ fungujú aj počas čítania otázky, na reproduktore iPhonu alebo pri hands-free hovore. Otázka potom hrá hlasitosťou hovoru"
           }
         }
       }

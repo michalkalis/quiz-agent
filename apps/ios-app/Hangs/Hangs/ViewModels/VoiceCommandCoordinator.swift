@@ -92,6 +92,30 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// not lie about progress.
     var hearingGlowMaxDisplay: TimeInterval = 3.0
     var recognizingGlowMaxDisplay: TimeInterval = 3.0
+    /// #208.7: how long the level must stay down before "hearing" turns to
+    /// "processing" (a breath inside a word must not flip it), and how long
+    /// "processing" may stand with nothing decided.
+    var processingHoldDelay: TimeInterval = 0.25
+    var processingGlowMaxDisplay: TimeInterval = 2.5
+    /// How long the speech before the pause lasted, from the last
+    /// `SpeechActivityEvent.paused` — a blip never shows "processing".
+    var lastPausedSpeechSecs: TimeInterval = 0
+
+    // MARK: - #208.7 Read + Utterance Log State (policy in +Reading)
+
+    /// The listener stayed up for the question read in progress (an armed,
+    /// echo-cancelling engine was live when it began). Written only by
+    /// `beginQuestionRead` / `endQuestionRead` / `stopCommandConsumer`.
+    var listenerKeptThroughRead = false
+    /// The rollback switch, read at each read start; a seam so a test never
+    /// flips the process-wide UserDefaults value under a parallel suite.
+    var commandsDuringReadingEnabled: () -> Bool = { VoicePipelineFlags.commandsDuringReading }
+    /// The utterance in progress began while the question was read — its
+    /// transcripts stay under the echo guard until its final, which can land
+    /// after the read ended. Cleared by `endUtterance()`.
+    var utteranceBeganDuringRead = false
+    /// The per-utterance numbers for the "voice cmd utterance" log.
+    var utteranceLog = CommandUtteranceLog()
 
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
@@ -284,6 +308,14 @@ final class VoiceCommandCoordinator: ObservableObject {
     let goHome: @MainActor () -> Void
     /// #51 product analytics — the façade attaches the session id.
     let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
+    /// #208.7: the QUESTION is being read aloud (not feedback, not the
+    /// answer read-back) — the one TTS the listener may stay up through.
+    let isReadingQuestionAloud: @MainActor () -> Bool
+    /// #208.7: what the read says (question + options), for the echo guard.
+    let textBeingRead: @MainActor () -> String?
+    /// #208.7: a skip said during the read stops the read — the driver hears
+    /// that it worked, and the undo window is not spent under the question.
+    let stopQuestionRead: @MainActor () async -> Void
 
     /// Long-lived observer of `commandAvailabilityUpdates`. Deliberately NOT in
     /// `taskBag` (quiz-scoped, cleared by `resetState`) — availability changes
@@ -324,7 +356,10 @@ final class VoiceCommandCoordinator: ObservableObject {
         retryFromError: @escaping @MainActor () async -> Void,
         playAgain: @escaping @MainActor () -> Void,
         goHome: @escaping @MainActor () -> Void,
-        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in }
+        trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
+        isReadingQuestionAloud: @escaping @MainActor () -> Bool = { false },
+        textBeingRead: @escaping @MainActor () -> String? = { nil },
+        stopQuestionRead: @escaping @MainActor () async -> Void = {}
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
@@ -358,6 +393,9 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.playAgain = playAgain
         self.goHome = goHome
         self.trackAnalytics = trackAnalytics
+        self.isReadingQuestionAloud = isReadingQuestionAloud
+        self.textBeingRead = textBeingRead
+        self.stopQuestionRead = stopQuestionRead
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object
@@ -388,6 +426,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         abortSkipUndoWindow()
         endUtterance() // no utterance survives a reset (#119)
         resetFeedbackGlow() // #122: no glow survives a reset either
+        endQuestionRead() // #208.7: nor a kept-up read listener
     }
 
     // MARK: - Capture Phase

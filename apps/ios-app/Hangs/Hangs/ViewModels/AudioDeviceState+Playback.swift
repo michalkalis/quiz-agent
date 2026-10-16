@@ -38,10 +38,13 @@ extension AudioDeviceState {
         // Stop silence detection before TTS to avoid AVAudioEngine + AVPlayer conflict
         // (SpeechAnalyzer's RealtimeMessenger crashes when both run simultaneously).
         // isPlayingQuestionTTS closes the command window for the duration (77.5).
+        // #208.7: unless an echo-cancelling listener is already live — then it
+        // stays up and the question's commands work during the read.
         questionReadOutGeneration += 1
         let generation = questionReadOutGeneration
+        let keptListener = beginQuestionRead()
         setPlayingQuestionTTS(true)
-        stopSilenceDetectionListening()
+        if !keptListener { stopSilenceDetectionListening() }
 
         let heard = await playQuestionTTSWithRetry(from: urlString, generation: generation)
         // #186 step 2: when the read-out ended — the one timing a field dump
@@ -53,8 +56,7 @@ extension AudioDeviceState {
         // sequence harness): clearing the flag under it let the hands-free
         // start open the mic over the replay. The replay's own tail does both.
         if generation == questionReadOutGeneration {
-            setPlayingQuestionTTS(false)
-            await startSilenceDetectionListening()
+            await endQuestionReadOut()
         }
 
         // After TTS finishes (or was interrupted by barge-in): the think
@@ -65,6 +67,17 @@ extension AudioDeviceState {
         if !isRerecording() {
             startThinkingTimeCountdown(false)
         }
+    }
+
+    /// A question read (or replay) this call still owns has ended: clear the
+    /// flag and bring the listener back — unless it stayed up through the read
+    /// (#208.7), where re-arming would only re-mint its streams and drop a
+    /// command said as the read ended.
+    private func endQuestionReadOut() async {
+        let stillLive = isListenerKeptThroughRead() && silenceDetectionService.isListening
+        endQuestionRead()
+        setPlayingQuestionTTS(false)
+        if !stillLive { await startSilenceDetectionListening() }
     }
 
     /// What became of the question read a pause held (#200).
@@ -201,8 +214,9 @@ extension AudioDeviceState {
             // conflict (SpeechAnalyzer's RealtimeMessenger crashes if both run).
             questionReadOutGeneration += 1
             let generation = questionReadOutGeneration
+            let keptListener = beginQuestionRead() // #208.7, as in playQuestionAudio
             setPlayingQuestionTTS(true)
-            stopSilenceDetectionListening()
+            if !keptListener { stopSilenceDetectionListening() }
 
             do {
                 let audioData = try await networkService.downloadAudio(from: urlString)
@@ -219,7 +233,10 @@ extension AudioDeviceState {
             // leak `true` past the run, but re-arming the engine here would
             // race the newer run's playback.
             guard !Task.isCancelled else {
-                if generation == questionReadOutGeneration { setPlayingQuestionTTS(false) }
+                if generation == questionReadOutGeneration {
+                    endQuestionRead()
+                    setPlayingQuestionTTS(false)
+                }
                 return
             }
 
@@ -227,8 +244,7 @@ extension AudioDeviceState {
             // deliberately NO timer re-arming, unlike playQuestionAudio's tail.
             // A newer read that took over owns the flag (#186 step 2).
             guard generation == questionReadOutGeneration else { return }
-            setPlayingQuestionTTS(false)
-            await startSilenceDetectionListening()
+            await endQuestionReadOut()
         }
         taskBag.add(run, key: .questionReplay)
         await run.value

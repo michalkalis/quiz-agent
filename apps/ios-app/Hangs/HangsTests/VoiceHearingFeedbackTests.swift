@@ -60,14 +60,20 @@ struct VoiceHearingFeedbackTests {
         #expect(coordinator.voiceFeedbackPhase == .idle)
     }
 
-    @Test("silenceAfterSpeech clears hearing (speech is over, nothing left to say)")
-    func silenceClearsHearing() async {
+    /// #208.7 (founder, TF 2026-10-16): going quiet after a word used to drop
+    /// the bar back to idle while the recognizer still worked — "nothing
+    /// happens". The end of real speech now says "processing" instead.
+    @Test("the end of speech turns hearing into processing (the recognizer is still working)")
+    func silenceTurnsHearingIntoProcessing() async {
         let (_, coordinator, silence, _) = make()
         coordinator.startCommandConsumer()
         silence.simulateSilenceEvent(.speechStarted)
         await pumpUntil({ coordinator.voiceFeedbackPhase == .hearing })
         silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.0))
-        await pumpUntil({ coordinator.voiceFeedbackPhase == .idle }, "hearing outlived the end of speech")
+        await pumpUntil(
+            { coordinator.voiceFeedbackPhase == .recognizing && coordinator.recognizingCommand == nil },
+            "the end of speech must say processing, not go quiet"
+        )
     }
 
     @Test("Hearing self-clears at 3.0 s (a rejected blip emits no end event)")

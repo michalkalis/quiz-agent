@@ -780,6 +780,19 @@ struct SettingsView: View {
 
             hairline
 
+            // #208.7: the command listener stays up through the question read.
+            HangsToggleRow(
+                label: "Commands while the question is read",
+                subtitle: "Repeat and skip work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume",
+                isOn: Binding(
+                    get: { diagnostics.commandsDuringReading },
+                    set: diagnostics.setCommandsDuringReading
+                )
+            )
+            .accessibilityIdentifier("settings.commandsDuringReadingToggle")
+
+            hairline
+
             // #204.9: the app A/B tests the three switches below it marks
             // inactive (echo cancellation, front mic, neural detection).
             HangsToggleRow(

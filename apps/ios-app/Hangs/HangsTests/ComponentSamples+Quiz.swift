@@ -95,6 +95,22 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.thinkingDismissable") {
                 QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {})
             },
+            // #208.7: the founder's "hears me → processing" on the question
+            // screen, where the think caption used to hide both cues.
+            ComponentSample("questionListenBar.thinkingHearing") {
+                QuestionListenBar(phase: .thinking(remaining: 21, total: 30), feedback: .hearing, language: .slovak)
+            },
+            ComponentSample("questionListenBar.thinkingProcessing") {
+                QuestionListenBar(phase: .thinking(remaining: 20, total: 30), feedback: .recognizing, language: .slovak)
+            },
+            ComponentSample("questionListenBar.readingRecognizing") {
+                QuestionListenBar(phase: .readingQuestion, feedback: .recognizing,
+                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak),
+                                  language: .slovak)
+            },
+            ComponentSample("listenBar.commandProcessing") {
+                ListenBar(mode: .command, feedback: .recognizing, commandWords: ["skip", "repeat", "pause"])
+            },
             ComponentSample("questionListenBar.listeningMCQ") { QuestionListenBar(phase: .listening(.mcq)) },
             ComponentSample("questionListenBar.listeningCountdown") {
                 // With the ✕: the countdown and the ✕ each need their own room.

@@ -14,10 +14,17 @@ from typing import Optional
 
 from ..config import get_settings
 from .cache import TTSCache
+from .remote_cache import R2AudioStore
 from .providers import TTSProvider, build_provider
 from .voices import STATIC_FEEDBACK
 
 logger = logging.getLogger(__name__)
+
+# #207.20 cross-machine single-flight: the synthesizing machine holds a lease
+# this long; the other polls R2 for its upload, then synthesizes itself.
+TTS_LEASE_TTL_S = 30.0
+TTS_SHARED_WAIT_S = 10.0
+TTS_SHARED_POLL_S = 0.5
 
 # Target peak level after volume boost (in dBFS)
 # 0 dBFS = maximum digital level. We target -0.5 to leave tiny headroom.
@@ -186,6 +193,11 @@ class TTSService:
         # #207.13: service-wide ElevenLabs daily budget (wired in main.py).
         # Past it, new speech uses the fallback voice; None = no budget.
         self.primary_budget = None
+        # #207.20: the disk cache is a per-machine L1; R2 is the durable L2
+        # every machine shares (None without its env: dev/tests). ``leases``
+        # (wired in main.py) makes single-flight work across machines too.
+        self.remote: Optional[R2AudioStore] = R2AudioStore.from_env()
+        self.leases = None
 
         logger.info(
             "TTS provider: %s (fallback: %s)",
@@ -275,7 +287,9 @@ class TTSService:
             if billing and not billing.allow_primary:
                 # Over budget: already-cached primary audio is free to serve,
                 # anything that would cost credits goes to the fallback.
-                cached = self.cache.get(text, primary_voice) if use_cache else None
+                cached = (
+                    await self._cached_audio(text, primary_voice) if use_cache else None
+                )
                 if cached:
                     return cached
                 if self.fallback is None:
@@ -325,23 +339,94 @@ class TTSService:
         and fallback audio coexist in one cache without shadowing each other.
         """
         if use_cache:
-            cached = self.cache.get(text, voice)
+            cached = await self._cached_audio(text, voice)
             if cached:
                 return cached
 
-        async with self._semaphore:
-            audio_data = await provider.synthesize(text, voice)
-        if billing is not None and provider is self.provider:
-            billing.billed_chars = len(text)
+        lease = await self._claim_synthesis(text, voice) if use_cache else None
+        if lease is False:
+            # Another machine is synthesizing this exact audio right now:
+            # wait for its upload instead of paying the provider twice.
+            shared = await self._await_remote(text, voice)
+            if shared:
+                return shared
+        try:
+            async with self._semaphore:
+                audio_data = await provider.synthesize(text, voice)
+            if billing is not None and provider is self.provider:
+                billing.billed_chars = len(text)
 
-        # Apply volume boost (normalize + extra boost for max loudness)
-        audio_data = boost_volume(audio_data)
+            # Apply volume boost (normalize + extra boost for max loudness)
+            audio_data = boost_volume(audio_data)
 
-        # Cache result (cache the boosted version)
-        if use_cache:
-            self.cache.set(text, voice, audio_data)
+            # Cache result (cache the boosted version)
+            if use_cache:
+                await self._store_audio(text, voice, audio_data)
+        finally:
+            if isinstance(lease, tuple):
+                await self._release_synthesis(*lease)
 
         return audio_data
+
+    # ── #207.20: shared L2 in R2 + cross-machine single-flight ────────────
+
+    def _remote_key(self, text: str, voice: str) -> str:
+        return f"questions/{self.cache._hash(text, voice)}.opus"
+
+    def _remote_static_key(self, result: str, variant: int) -> str:
+        return f"static/{self.cache._static_path(result, variant).name}"
+
+    async def _cached_audio(self, text: str, voice: str) -> Optional[bytes]:
+        """L1 disk, else R2 (refilling L1)."""
+        cached = self.cache.get(text, voice)
+        if cached or self.remote is None:
+            return cached
+        remote = await self.remote.get(self._remote_key(text, voice))
+        if remote:
+            self.cache.set(text, voice, remote)
+        return remote
+
+    async def _store_audio(self, text: str, voice: str, audio: bytes) -> None:
+        self.cache.set(text, voice, audio)
+        if self.remote is not None:
+            await self.remote.put(self._remote_key(text, voice), audio)
+
+    async def _claim_synthesis(self, text: str, voice: str):
+        """(name, holder) when this machine may synthesize, False when another
+        machine already is, None when there is nothing to coordinate (no
+        shared store, or the lease table is unreachable: synthesize)."""
+        if self.leases is None or self.remote is None:
+            return None
+        from ..coordination.leases import new_holder
+
+        name = f"tts:{self.cache._hash(text, voice)}"
+        holder = new_holder()
+        try:
+            if await self.leases.try_acquire(name, holder, TTS_LEASE_TTL_S):
+                return (name, holder)
+            return False
+        except Exception as e:  # noqa: BLE001 — coordination is best effort
+            logger.warning("TTS lease unavailable, synthesizing: %s", e)
+            return None
+
+    async def _release_synthesis(self, name: str, holder: str) -> None:
+        try:
+            await self.leases.release(name, holder)
+        except Exception:  # noqa: BLE001 — it expires on its own
+            logger.warning("TTS lease release failed for %s", name)
+
+    async def _await_remote(self, text: str, voice: str) -> Optional[bytes]:
+        """Poll R2 for the other machine's upload; None after the wait, so the
+        worst case is today's duplicate synthesis, never a silent question."""
+        key = self._remote_key(text, voice)
+        deadline = asyncio.get_running_loop().time() + TTS_SHARED_WAIT_S
+        while asyncio.get_running_loop().time() < deadline:
+            await asyncio.sleep(TTS_SHARED_POLL_S)
+            audio = await self.remote.get(key)
+            if audio:
+                self.cache.set(text, voice, audio)
+                return audio
+        return None
 
     async def get_feedback_audio(
         self, result: str, variant: Optional[int] = None
@@ -370,8 +455,17 @@ class TTSService:
         elif variant >= len(phrases):
             variant = 0
 
-        # Get from static cache
-        return self.cache.get_static_feedback(result, variant)
+        return await self._static_audio(result, variant)
+
+    async def _static_audio(self, result: str, variant: int) -> Optional[bytes]:
+        """Static clip from L1, else R2 (refilling L1)."""
+        audio = self.cache.get_static_feedback(result, variant)
+        if audio or self.remote is None:
+            return audio
+        audio = await self.remote.get(self._remote_static_key(result, variant))
+        if audio:
+            self.cache.set_static_feedback(result, variant, audio)
+        return audio
 
     async def pregenerate_static_feedback(self):
         """Pre-generate all static feedback phrases.
@@ -396,7 +490,7 @@ class TTSService:
         for result, phrases in STATIC_FEEDBACK.items():
             for i, phrase in enumerate(phrases):
                 # Check if already exists
-                existing = self.cache.get_static_feedback(result, i)
+                existing = await self._static_audio(result, i)
                 if existing:
                     total_skipped += 1
                     continue
@@ -408,8 +502,12 @@ class TTSService:
                         use_cache=False,  # Don't cache in LRU, goes to static
                     )
 
-                    # Store in static cache
+                    # Store in static cache (+ the shared R2 copy, #207.20)
                     self.cache.set_static_feedback(result, i, audio_data)
+                    if self.remote is not None:
+                        await self.remote.put(
+                            self._remote_static_key(result, i), audio_data
+                        )
                     total_generated += 1
 
                     logger.debug('Generated: %s variant %d - "%s"', result, i, phrase)

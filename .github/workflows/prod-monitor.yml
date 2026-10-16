@@ -1,8 +1,8 @@
 # Prod monitor (#193 — beta hardening, task 193.3).
 #
 # Every 30 min: both APIs answer their health check, no paid custom-pack
-# order is stuck or has just gone refund-eligible, and (when orders go to the
-# session queue) the worker consuming it has a heartbeat. Any failed check fails the
+# order is stuck or has just gone refund-eligible, and the pack worker
+# consuming the order queue has a heartbeat. Any failed check fails the
 # run, and GitHub emails a failed scheduled run to the user who last changed
 # this cron line (the founder) — that email IS the alert.
 #
@@ -74,12 +74,12 @@ jobs:
           EOF
 
       # The orders check above stays silent when nothing is queued, so a dead
-      # session worker went unnoticed for ~20 h (2026-10-08). The worker
-      # refreshes its heartbeat every 60 s; no heartbeat = no worker. Re-ask
-      # for ~3 min first so a launchd restart (~30 s) never pages anyone.
-      # Fly-worker mode (orders on arq:queue) is not checked: that machine is
-      # stopped on purpose whenever the session queue is in use.
-      - name: session worker is alive
+      # worker went unnoticed for ~20 h (2026-10-08). The worker refreshes its
+      # heartbeat every 60 s; no heartbeat = no worker. Re-ask for ~3 min first
+      # so a deploy or restart (~1 min) never pages anyone. #207: the Fly worker
+      # is primary, the mba backup only steps in when it is gone, so a missing
+      # Fly heartbeat alerts even when the backup is covering.
+      - name: pack worker is alive
         if: always()
         env:
           ADMIN_KEY: ${{ secrets.QUIZ_PACK_ADMIN_API_KEY }}
@@ -91,16 +91,15 @@ jobs:
             if python3 - <<'EOF'
           import json, sys
           b = json.load(open("heartbeat.json"))
-          if not b["session_queue"]:
-              print(f"orders go to {b['queue_name']} (Fly worker), not checked")
-          elif b["heartbeat_age_s"] is None:
-              print(f"no heartbeat from the {b['queue_name']} worker")
+          backup = b.get("backup_heartbeat_age_s")
+          backup_txt = "mba backup down" if backup is None else f"mba backup alive ({backup} s)"
+          if b["heartbeat_age_s"] is None:
+              print(f"no heartbeat from the {b['queue_name']} worker; {backup_txt}")
               sys.exit(1)
-          else:
-              print(f"{b['queue_name']} worker alive, heartbeat {b['heartbeat_age_s']} s ago")
+          print(f"{b['queue_name']} worker alive, heartbeat {b['heartbeat_age_s']} s ago; {backup_txt}")
           EOF
             then exit 0; fi
             if [ "$attempt" -lt 4 ]; then sleep 60; fi
           done
-          echo "::error::session worker is down. Restart it on mba (docs/setup/session-worker-mba.md)."
+          echo "::error::Fly pack worker is down. Check: fly status -a quiz-pack-api (machine 'worker' must be started); see docs/setup/session-worker-mba.md."
           exit 1

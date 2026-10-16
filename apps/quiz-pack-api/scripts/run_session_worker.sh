@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# ARQ worker on the Claude Code subscription (#172 — session worker: custom
-# packy v bete cez subscription). Run on `mba`, inside tmux, with the two
-# `fly proxy` tunnels already up in their own windows:
+# Backup pack worker on the Claude Code subscription (#172 — session worker,
+# #207 207.5 — mba only a backup to the Fly worker). It consumes the Fly
+# worker's queue but takes orders only while the Fly worker has no heartbeat
+# or an order sits unclaimed (app/worker/backup.py). Normally started by
+# session_worker_local.sh (launchd on mba), which opens the two tunnels:
 #
 #   fly proxy 15432:5432 -a quiz-pack-db
 #   fly proxy 16379:6379 -a quiz-pack-redis
@@ -32,5 +34,5 @@ done
 export LLM_GATEWAY=session
 
 cd "$(dirname "$0")/.."
-echo "run_session_worker: queue=${WORKER_QUEUE_NAME:-arq:queue} max_jobs=${WORKER_MAX_JOBS:-2} timeout=${WORKER_JOB_TIMEOUT_S:-3600}"
-exec arq app.worker.WorkerSettings
+echo "run_session_worker: backup mode, queue=${WORKER_QUEUE_NAME:-arq:queue} max_jobs=${WORKER_MAX_JOBS:-2} timeout=${WORKER_JOB_TIMEOUT_S:-3600}"
+exec python -m app.worker.backup

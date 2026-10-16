@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# #172 — session worker on a Mac (founder MacBook now, mba later): opens the
-# prod Fly tunnels (Postgres + Redis) and runs the ARQ worker on the Claude
-# Code subscription via run_session_worker.sh. Logs + pids in
+# #172 / #207 — backup pack worker on mba: opens the prod Fly tunnels
+# (Postgres + Redis) and runs the gated backup worker on the Claude Code
+# subscription via run_session_worker.sh. It takes orders only while the Fly
+# worker is down or an order sits unclaimed (app/worker/backup.py). Logs + pids in
 # ~/Library/Logs/quiz-session-worker/.
 #
 #   session_worker_local.sh start | stop | status   one-off run, detached (nohup)
@@ -60,8 +61,9 @@ prepare() {  # env + tunnels, shared by start and supervise
   export PYTHONPATH="$REPO/apps/quiz-pack-api${PYTHONPATH:+:$PYTHONPATH}"
   export DATABASE_URL="$PROD_DATABASE_URL"
   export REDIS_URL="$PROD_REDIS_URL"
-  export ORDER_QUEUE_NAME="quiz-pack:session"
-  export WORKER_QUEUE_NAME="quiz-pack:session"
+  # #207: the backup consumes the Fly worker's queue (ARQ default) and takes
+  # orders only when the Fly worker is down or an order sits unclaimed.
+  unset ORDER_QUEUE_NAME WORKER_QUEUE_NAME
   export WORKER_MAX_JOBS="${WORKER_MAX_JOBS:-1}"
   export WORKER_JOB_TIMEOUT_S="${WORKER_JOB_TIMEOUT_S:-14400}"
   export ENVIRONMENT=production

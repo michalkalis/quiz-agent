@@ -4,6 +4,8 @@
 #   lands, grouped per ecosystem too;
 # - a 7-day cooldown skips releases that get yanked or hot-fixed right away.
 # Every Dependabot PR goes through the normal PR flow (Claude review + CI).
+# Dependabot-triggered runs only see Dependabot secrets, so the review token
+# lives there too: `gh secret set CLAUDE_CODE_OAUTH_TOKEN --app dependabot`.
 version: 2
 updates:
   # Python workspace (uv.lock). lockfile-only keeps the pyproject ranges and
@@ -46,7 +48,8 @@ updates:
         patterns: ["*"]
 
   # fastlane (TestFlight / App Store uploads). Listed so its security fixes
-  # arrive as one grouped PR instead of one PR per gem.
+  # arrive as one grouped PR instead of one PR per gem. fastlane-check.yml
+  # proves a bump (bundle, Fastfile, ASC token, IPA read) without an upload.
   - package-ecosystem: bundler
     directory: /apps/ios-app/Hangs
     schedule:

@@ -110,7 +110,9 @@ jobs:
 
       - name: Run backend tests
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Tests mock OpenAI; the placeholder covers runs without repo secrets
+          # (Dependabot), where an empty key beats the tests' own setdefault.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
           TEST_DATABASE_URL: postgresql+asyncpg://quiz:quiz@localhost:5432/quiz_pack_test
           REQUIRE_DB_TESTS: "1"
         run: |

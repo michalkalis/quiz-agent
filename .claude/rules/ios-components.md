@@ -14,8 +14,8 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 
 | Component | Use for |
 |---|---|
-| `HangsPrimaryButton` | The one main action of a screen (start, next, buy). States: disabled, `isLoading`/`showsSpinner` (`loadingStyle: .spinnerOnly` under a status surface that already names the wait), countdown fill (auto-advance). Title: one line at default size, two at larger text, never "…". One per screen. |
-| `HangsSecondaryButton` | A secondary full-width action under the primary (settings, maybe later). |
+| `HangsPrimaryButton` | The one main action of a screen (start, next, buy). States: disabled, `isLoading`/`showsSpinner` (`loadingStyle: .spinnerOnly` under a status surface that already names the wait), countdown fill (auto-advance). Title: one line at default size, two at larger text, never "…" (`singleLineTitle`: always one line, for a two-button row). One per screen. |
+| `HangsSecondaryButton` | A secondary full-width action under the primary (settings, maybe later), or the equal-width twin beside it (answer sheet: Again next to Confirm, #208.6). |
 | `HangsGhostButton` | Low-emphasis text action (restore purchases, "not now"). |
 | `QuestionSkipButton` | Skipping the current question; has its own skipping/disabled states. |
 | `HangsNavChip` | Square icon chip in a top bar (close, back). |
@@ -53,6 +53,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
 | `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |
+| `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6). |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |
 | `ReviewBadge`, `QuestionProvenanceRow` | TestFlight-only review/translation badge and the question's provenance row. |
 | `AmbientGlowWash`, `GlowSweepLine` | Voice feedback glow (animated; no snapshot). |

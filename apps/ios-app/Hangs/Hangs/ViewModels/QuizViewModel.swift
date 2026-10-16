@@ -275,6 +275,21 @@ final class QuizViewModel: ObservableObject {
         return quizState == .askingQuestion || quizState == .recording
     }
 
+    /// #208.6 (founder 2026-10-16): once the player has thrown a transcript of
+    /// this question away (Again, "znova", "nie", a new answer over it), the
+    /// question screen and the answer sheet say the answer can be spelled. The
+    /// rejected transcripts are keyed by question, so the next question starts
+    /// without it. Never on MCQ: an option is named by its number or letter.
+    var showsSpellingHint: Bool {
+        guard let question = currentQuestion, !question.isMultipleChoice,
+              recordingCoordinator.hasRejectedTranscriptOnCurrentQuestion
+        else { return false }
+        switch quizState {
+        case .askingQuestion, .recording, .processing: return true
+        default: return false
+        }
+    }
+
     /// #185 track F: the answer recording has heard the driver speak — the
     /// listen bar says "Capturing…" instead of "Listening…" from here on.
     var isHearingAnswer: Bool {

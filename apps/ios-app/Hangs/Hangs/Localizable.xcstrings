@@ -10527,6 +10527,23 @@
         }
       }
     },
+    "You can also spell your answer: P, A, R, I, S." : {
+      "comment" : "Hint after the player rejected a transcript: the answer can be spoken letter by letter. The example spells Paris as it is written in this language.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověď můžeš i hláskovat: P, A, Ř, Í, Ž."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpoveď môžeš aj vyhláskovať: P, A, R, Í, Ž."
+          }
+        }
+      }
+    },
     "You can close the app — your finished pack will be waiting in My packs." : {
       "comment" : "Reassurance that closing the app does not cancel a custom-pack order",
       "localizations" : {

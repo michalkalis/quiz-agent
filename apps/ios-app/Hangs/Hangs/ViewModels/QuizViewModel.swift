@@ -1022,6 +1022,8 @@ final class QuizViewModel: ObservableObject {
                 // Failure is non-fatal: the listener still arms; worst case the
                 // session keeps its previous category (logged in AudioService).
                 try? self?.audioService.setupQuietListeningSession()
+                // #208.5: the quiet session runs without voice processing.
+                self?.silenceDetectionService.voiceProcessingAllowed = false
             },
             emitEarcon: { [weak self] in self?.emitEarcon($0) },
             startNewQuiz: { [weak self] in _ = self?.beginQuizStart() },
@@ -1298,6 +1300,10 @@ final class QuizViewModel: ObservableObject {
             // #204.9: this round's voice settings, before the session setup
             // applies the mic-capture switches and before the first mic opens.
             voiceExperiment.beginRound(config: voiceExperimentConfig(), routeGroup: .current)
+
+            // #208.5: the quiz session is the one voice processing may run
+            // under (the Home listener above was stopped without it).
+            silenceDetectionService.voiceProcessingAllowed = true
 
             // Configure audio session with user's preferred mode
             do {

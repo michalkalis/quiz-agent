@@ -17,9 +17,10 @@ struct HomeView: View {
     @State private var showingCategoryPicker = false
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
-    /// packs. Nil (inspector tests / previews that don't exercise the packs
-    /// section) renders Home without the section.
-    var packOrderService: PackOrderServiceProtocol?
+    /// packs — the app's one long-lived list model (#208.5). Nil (inspector
+    /// tests / previews that don't exercise the packs section) renders Home
+    /// without the section.
+    var myPacks: MyPacksViewModel?
     /// #193 task 193.9: source of the server notice. Nil in inspector tests and
     /// previews, which then render Home without it.
     var appConfig: AppConfigStore?
@@ -63,10 +64,9 @@ struct HomeView: View {
 
                     // #141: pick-and-play entry for owned custom packs, plus
                     // the always-on "Create your own pack" row.
-                    if let packOrderService {
+                    if let myPacks {
                         HomePacksSection(
-                            service: packOrderService,
-                            playedCount: viewModel.playedQuestionCount(inPack:),
+                            viewModel: myPacks,
                             createPack: createPackEntry,
                             quizStart: packQuizStart,
                             onPlayPack: startPack
@@ -470,7 +470,7 @@ struct HomeView: View {
 #if DEBUG
     #Preview {
         NavigationStack {
-            HomeView(viewModel: QuizViewModel.preview, packOrderService: MockPackOrderService())
+            HomeView(viewModel: QuizViewModel.preview, myPacks: MyPacksViewModel(service: MockPackOrderService()))
         }
     }
 #endif

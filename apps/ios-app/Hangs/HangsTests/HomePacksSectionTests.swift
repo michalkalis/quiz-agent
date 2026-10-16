@@ -20,6 +20,7 @@
 import Clocks
 import Foundation
 @testable import Hangs
+import os
 import SwiftUI
 import Testing
 import ViewInspector
@@ -299,5 +300,75 @@ struct HomePacksSectionStateRenderingTests {
         let progress = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.progress")
         #expect(try progress.text().string() == "Played 10 / 30")
         _ = try tree.find(text: "30 questions") // the unplayed pack keeps its question count
+    }
+}
+
+// MARK: - #208.5 the list survives a quiz
+
+/// A pack API that answers the first list request, then hangs (a cold API on
+/// the reload after a quiz) until the task is cancelled.
+private final class FirstThenHangingListService: PackOrderServiceProtocol, Sendable {
+    private let first: [OrderSnapshot]
+    private let calls = OSAllocatedUnfairLock(initialState: 0)
+    private let clock = TestClock()
+
+    init(first: [OrderSnapshot]) { self.first = first }
+
+    var listCallCount: Int { calls.withLock { $0 } }
+
+    func listOrders() async throws -> [OrderSnapshot] {
+        let call = calls.withLock { $0 += 1; return $0 }
+        if call == 1 { return first }
+        try await clock.sleep(for: .seconds(3600))
+        return []
+    }
+
+    func createOrder(intent _: PackOrderIntent) async throws -> OrderCreatedResponse { throw CancellationError() }
+    func getOrder(id _: String) async throws -> OrderSnapshot { throw CancellationError() }
+    func retryOrder(id _: String, paymentProof _: PackPaymentProof?) async throws -> OrderCreatedResponse { throw CancellationError() }
+}
+
+@MainActor
+@Suite("Home packs after a quiz (#208.5)")
+struct HomePacksAfterQuizTests {
+    /// WHY (TF 2026-10-16): ContentView swaps Home out for every quiz. A
+    /// view-owned list came back as "Loading your packs…" after each round,
+    /// so the packs the player just saw were gone until the API answered.
+    @Test("returning home keeps the packs shown while the refresh runs")
+    func packsStayWhileRefreshing() async throws {
+        let service = FirstThenHangingListService(first: [order(status: "delivered", orderId: "d1", packId: "p1")])
+        let appState = AppState(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            packOrderService: service
+        )
+
+        // First visit to Home: the list loads, then a quiz takes Home away.
+        let firstVisit = Task { await appState.myPacksViewModel.start() }
+        await pumpUntil({ !appState.myPacksViewModel.orders.isEmpty }, "the first load never landed")
+        firstVisit.cancel()
+
+        // Back on Home: a NEW section view, its reload still in flight.
+        let secondVisit = Task { await appState.myPacksViewModel.start() }
+        await pumpUntil({ service.listCallCount == 2 }, "Home never reloaded the list")
+        let tree = try HomePacksSection(viewModel: appState.myPacksViewModel) { _ in }.inspect()
+
+        #expect(throws: (any Error).self, "no loading line over packs already known") {
+            try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.loading")
+        }
+        _ = try tree.find(viewWithAccessibilityIdentifier: "home.myPacks.showAll")
+        secondVisit.cancel()
+    }
+
+    /// WHY: the list is app-wide now, so after a sign-out it would show the
+    /// previous account's packs until the next load answered.
+    @Test("an account change drops the old account's packs")
+    func resetClearsTheList() async {
+        let vm = await loadedViewModel([order(status: "delivered", orderId: "d1", packId: "p1")])
+        vm.reset()
+        #expect(vm.orders.isEmpty)
+        #expect(vm.isLoading, "the next appearance starts from the loading line")
+        #expect(!vm.loadFailed)
     }
 }

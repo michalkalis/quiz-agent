@@ -161,10 +161,13 @@ struct AccountSettingsModelTests {
         model.reloadTokens()
         #expect(model.currentTokens?.isSignedIn == true)
 
-        await model.signOut(auth: auth).value
+        var identityChanges = 0
+        await model.signOut(auth: auth, onIdentityChanged: { identityChanges += 1 }).value
 
         #expect(model.currentTokens?.isSignedIn == false)
         #expect(model.currentTokens?.anonId == "anon-2")
+        // #208.5: Home's long-lived pack list must drop the old account's packs.
+        #expect(identityChanges == 1)
     }
 
     /// WHY: a failed deletion must be surfaced (App Store 5.1.1(v) — the user
@@ -178,11 +181,13 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(tokenStore: store, presentShareSheet: { _ in })
         model.reloadTokens()
 
-        await model.deleteAccount(auth: auth).value
+        var identityChanges = 0
+        await model.deleteAccount(auth: auth, onIdentityChanged: { identityChanges += 1 }).value
 
         #expect(model.errorMessage == "server said no")
         #expect(!model.isDeletingAccount)
         #expect(model.currentTokens?.isSignedIn == true)
+        #expect(identityChanges == 0, "the account still exists, so its packs stay")
     }
 
     @Test("a successful delete reloads the fresh identity without an error")
@@ -193,11 +198,13 @@ struct AccountSettingsModelTests {
         let model = AccountSettingsModel(tokenStore: store, presentShareSheet: { _ in })
         model.reloadTokens()
 
-        await model.deleteAccount(auth: auth).value
+        var identityChanges = 0
+        await model.deleteAccount(auth: auth, onIdentityChanged: { identityChanges += 1 }).value
 
         #expect(model.errorMessage == nil)
         #expect(!model.isDeletingAccount)
         #expect(model.currentTokens?.anonId == "anon-3")
+        #expect(identityChanges == 1, "the deleted account's packs must leave Home")
     }
 
     /// WHY: GDPR export hands the user a JSON file of exactly what the server

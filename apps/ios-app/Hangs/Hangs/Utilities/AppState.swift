@@ -49,6 +49,16 @@ final class AppState: ObservableObject {
         analytics: analytics
     )
 
+    /// The custom-pack list Home and My packs show (#208.5). Owned HERE, not
+    /// by either view: ContentView swaps Home out for every quiz, and a
+    /// view-owned model came back empty ("Loading your packs…") after each
+    /// round. Long-lived, the list stays on screen while it refreshes. Reset
+    /// when the account changes (sign-out, deletion).
+    private(set) lazy var myPacksViewModel = MyPacksViewModel(
+        service: packOrderService,
+        playedCount: { [weak self] in self?.quizViewModel?.playedQuestionCount(inPack: $0) ?? 0 }
+    )
+
     /// The app's one QuizViewModel, created by `sharedQuizViewModel()` and
     /// owned here for the app's lifetime (#97 — CarPlay support): the phone
     /// window and the CarPlay scene drive the same quiz, and CarPlay can connect

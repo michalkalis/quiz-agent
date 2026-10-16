@@ -81,21 +81,25 @@ final class AccountSettingsModel: ObservableObject {
         }
     }
 
+    /// `onIdentityChanged` runs once the device holds the new (anonymous)
+    /// identity — #208.5: app-wide lists of the old account are cleared there.
     @discardableResult
-    func signOut(auth: any AccountAuthActions) -> Task<Void, Never> {
+    func signOut(auth: any AccountAuthActions, onIdentityChanged: @escaping @MainActor () -> Void = {}) -> Task<Void, Never> {
         Task {
             await auth.signOut()
             reloadTokens()
+            onIdentityChanged()
         }
     }
 
     @discardableResult
-    func deleteAccount(auth: any AccountAuthActions) -> Task<Void, Never> {
+    func deleteAccount(auth: any AccountAuthActions, onIdentityChanged: @escaping @MainActor () -> Void = {}) -> Task<Void, Never> {
         Task {
             isDeletingAccount = true
             do {
                 try await auth.deleteAccount()
                 reloadTokens()
+                onIdentityChanged()
             } catch {
                 errorMessage = error.localizedDescription
             }

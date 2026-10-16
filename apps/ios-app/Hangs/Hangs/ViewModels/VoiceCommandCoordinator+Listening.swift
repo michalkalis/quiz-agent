@@ -153,6 +153,11 @@ extension VoiceCommandCoordinator {
             // startNewQuiz configured (ducking included).
             if screen == .home || screen == .setEnd {
                 configureQuietListeningSession()
+                // #208.5: a quiz engine still up here would keep `.voiceChat`
+                // (call volume) on Home; the restart below comes up without it.
+                if silenceDetectionService.voiceProcessingStatus?.armed == true {
+                    stopSilenceDetectionListening()
+                }
             }
             await startSilenceDetectionListening()
         } else {

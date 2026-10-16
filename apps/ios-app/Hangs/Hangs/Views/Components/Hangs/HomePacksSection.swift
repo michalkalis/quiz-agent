@@ -16,12 +16,17 @@
 //  to load (with Retry), or the rows. A row shows how much of the pack this
 //  phone has played.
 //
+//  #208.5 (TF 2026-10-16: after a quiz Home said "Loading your packs…"): the
+//  list model is the app's one long-lived `MyPacksViewModel` (AppState), not
+//  owned here. ContentView rebuilds Home after every quiz; the list stays on
+//  screen while it refreshes.
+//
 
 import SwiftUI
 
 struct HomePacksSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @StateObject private var viewModel: MyPacksViewModel
+    @ObservedObject private var viewModel: MyPacksViewModel
     /// Play a delivered pack (same path as MyPacksView).
     let onPlayPack: (PackPlay) -> Void
     /// The "Create your own pack" card. Nil (inspector tests, previews) hides it.
@@ -43,34 +48,18 @@ struct HomePacksSection: View {
         let action: () -> Void
     }
 
+    /// `viewModel` outlives this view (AppState owns it, #208.5).
     init(
-        service: PackOrderServiceProtocol,
-        playedCount: @escaping (String) -> Int = { _ in 0 },
+        viewModel: MyPacksViewModel,
         createPack: CreatePackEntry? = nil,
         quizStart: QuizStart = .idle,
         onPlayPack: @escaping (PackPlay) -> Void
     ) {
-        _viewModel = StateObject(wrappedValue: MyPacksViewModel(service: service, playedCount: playedCount))
+        self.viewModel = viewModel
         self.createPack = createPack
         self.quizStart = quizStart
         self.onPlayPack = onPlayPack
     }
-
-    #if DEBUG
-        /// Test seam: inject a pre-populated view model so inspector tests can
-        /// assert the rendered rows without waiting on the async `.task` load.
-        init(
-            viewModel: MyPacksViewModel,
-            createPack: CreatePackEntry? = nil,
-            quizStart: QuizStart = .idle,
-            onPlayPack: @escaping (PackPlay) -> Void
-        ) {
-            _viewModel = StateObject(wrappedValue: viewModel)
-            self.createPack = createPack
-            self.quizStart = quizStart
-            self.onPlayPack = onPlayPack
-        }
-    #endif
 
     /// Orders Home surfaces: playable (delivered with a packId) or still
     /// brewing (non-terminal), newest-first as the service returns them,
@@ -244,7 +233,7 @@ private struct SectionStatusLine: ViewModifier {
     #Preview {
         NavigationStack {
             ScrollView {
-                HomePacksSection(service: MockPackOrderService(), onPlayPack: { _ in })
+                HomePacksSection(viewModel: MyPacksViewModel(service: MockPackOrderService()), onPlayPack: { _ in })
             }
             .background(Theme.Hangs.Colors.bg)
         }

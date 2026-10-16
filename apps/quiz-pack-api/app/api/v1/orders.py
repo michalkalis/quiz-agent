@@ -50,7 +50,7 @@ from arq.connections import ArqRedis
 
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
 
-from ... import order_budget
+from ... import app_switches, order_budget
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
@@ -394,8 +394,9 @@ async def create_order(
     # 5b. Orders paused (#193 task 193.9). After the idempotency check, so a
     # replay of an order that already exists (and was paid for) still gets its
     # 200. A refused verified purchase leaves the reconciliation trail; the
-    # device keeps the proof and spends it once ordering resumes.
-    if not settings.pack_orders_enabled:
+    # device keeps the proof and spends it once ordering resumes. The live
+    # switch is quiz-agent's DB row, env as the default (#207 task 207.18).
+    if not await app_switches.orders_enabled(session, settings):
         detail = _orders_paused_detail(
             request.headers.get("accept-language"), paid=verified_tx is not None
         )

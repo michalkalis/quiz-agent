@@ -3,8 +3,8 @@
 Why these tests matter: every public build blocks play when it is below the
 served minimum version. So the defaults must be fully permissive (a deploy
 that forgets the env must not lock anyone out), a malformed minimum must be
-dropped rather than served, and every switch must come from env so the
-founder can flip it with a Fly secret instead of shipping code.
+dropped rather than served, and every switch must have an env default that
+applies when no DB override exists (#207 task 207.18, test_app_switches_db.py).
 """
 
 from __future__ import annotations

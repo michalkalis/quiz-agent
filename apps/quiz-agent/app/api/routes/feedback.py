@@ -176,7 +176,8 @@ async def submit_feedback(
 
     if sentry_sdk.get_client().is_active():
         sentry_sdk.capture_message(
-            f"feedback.received id={row.id} message={message[:100]!r}",
+            # #207 (207.23): length only; the text stays in our own table.
+            f"feedback.received id={row.id} chars={len(message)}",
             level="info",
         )
 

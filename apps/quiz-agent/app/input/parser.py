@@ -8,6 +8,8 @@ import logging
 from typing import Dict, List, Any
 from difflib import SequenceMatcher
 
+from quiz_shared.sentry_privacy import user_text_log
+
 from .. import hot_path_llm
 
 logger = logging.getLogger(__name__)
@@ -212,10 +214,9 @@ class InputParser:
                 # Check if answer suspiciously long (likely captured question)
                 if len(answer) > 100:
                     logger.warning(
-                        "Suspiciously long answer detected (%d chars): %s...",
-                        len(answer),
-                        answer[:50],
+                        "Suspiciously long answer detected (%d chars)", len(answer)
                     )
+                    user_text_log.info("Suspiciously long answer: %.50s...", answer)
                     intent["intent_type"] = "skip"
                     intent["extracted_data"] = {}
                     intent["confirmation_message"] = "Answer too long, treating as skip"

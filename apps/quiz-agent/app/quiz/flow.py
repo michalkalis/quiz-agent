@@ -30,6 +30,7 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.sentry_privacy import user_text_log
 
 from .errors import (  # noqa: F401 — re-exported: routes and tests import from here
     AnswerUnmatched,
@@ -541,7 +542,7 @@ class QuizFlowService:
                     question_text=display_question.question,
                 )
                 if eval_result == UNMATCHED:
-                    logger.info(
+                    user_text_log.info(
                         "MCQ answer matched no option: heard=%r question=%s",
                         user_answer,
                         evaluated_question_id,

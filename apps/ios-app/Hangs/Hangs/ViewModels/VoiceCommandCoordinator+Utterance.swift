@@ -364,12 +364,12 @@ extension VoiceCommandCoordinator {
 
     // MARK: - What was heard (#185 3.5)
 
-    /// Whether command-path logs carry the recognized text. Founder 2026-09-24
-    /// (3.5): commands could not be debugged from Sentry because only the text
-    /// LENGTH was logged — so TestFlight and debug builds log what the
-    /// recognizer heard. App Store builds keep the no-raw-speech rule
-    /// (Logging.swift): metadata only.
-    static let logsHeardText = BuildChannel.debugSurfacesEnabled()
+    /// Whether command-path logs carry the recognized text. #185 3.5 turned it
+    /// on for TestFlight and debug builds; #207 (207.23) turned it off in every
+    /// build: the privacy policy does not name speech text among the data sent
+    /// to Sentry, so all builds keep the no-raw-speech rule (Logging.swift) and
+    /// log metadata only (length, tokens, command, screen, reason).
+    static let logsHeardText = false
 
     /// The `text` attribute for a command-path log, or nothing when the build
     /// may not log speech. Pure so the gate is testable without Sentry.

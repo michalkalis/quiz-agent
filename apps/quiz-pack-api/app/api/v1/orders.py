@@ -412,6 +412,9 @@ async def create_order(
         target_count=target_count,
         category=body.category,
         theme=body.theme,
+        # From the verified JWS only, never the request body: it decides
+        # whether the mba backup (Claude subscription) may generate this order.
+        storekit_environment=verified_tx.environment if verified_tx else None,
         status="pending",
         # The sweep measures 'pending' staleness by `enqueued_at`; stamp it at
         # the same point the row is parked at 'pending', here and on every

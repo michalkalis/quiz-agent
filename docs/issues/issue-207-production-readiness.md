@@ -10,6 +10,7 @@
 - Anthropic auto-reload pred koncom promo kreditu (11-06) — **vyriešime neskôr**, nepripomínať každú session.
 - ElevenLabs Starter (30k kreditov, nedá sa dokúpiť) — **ostáva, beta ukáže** skutočnú spotrebu.
 - **Vlastné balíčky: primárne Fly worker cez Anthropic API (mesačný Max kredit), `mba` session worker len ako záloha** — opak dnešného stavu.
+- **Záloha na predplatnom zatiaľ len pre beta objednávky** (StoreKit Sandbox / TestFlight); objednávky z App Store nikdy na predplatnom (207.5).
 - **Git:** starý dizajn (1.0) ostane v gite, redizajn je odteraz produkčná verzia; správu gitu necháva na agentovi (zjednodušený flow vhodný pre agentov).
 - **Monitoring bez novej služby** — postaviť na tom, čo už máme (Sentry, Fly, GitHub, mba), prípadne cloud routine cez Claude.
 - Body „krátko po spustení“ aj „neskôr“ z auditu riešiť **teraz**; poradie určuje agent; práca beží na `mba`, sessions si spravuje agent sám.
@@ -33,6 +34,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 - [x] 207.4 Fly `worker` na predvolenej fronte s Claude cez priame Anthropic API (Max kredit, rezerva podľa `credit_gate`); `ORDER_QUEUE_NAME` späť na predvolenú. **Hotové 2026-10-16 (PR #452, nasadené v93):** secret zrušený, worker beží na `arq:queue`, generovanie `claude-opus-5-5` overené priamo cez Anthropic z worker stroja.
 - [x] 207.5 `mba` session worker ako záloha: preberá objednávky, len keď Fly worker nedáva heartbeat / objednávka visí > N min (bez dvojitej generácie — existujúce zámky z PR #275). Deploy `quiz-pack-api` už nesmie omylom spúšťať/zastavovať zlý worker. **Hotové 2026-10-16 (PR #452):** `python -m app.worker.backup` (prevezme po 5 min bez Fly heartbeatu alebo pri objednávke nevyzdvihnutej 15 min), worker s inou frontou odmietne štart, monitor alarmuje mŕtvy Fly worker. Open = na mba spustiť `session_worker_local.sh install-launchd` (mba dnes nedostupný; dovtedy tam beží starý worker na nepoužívanej fronte `quiz-pack:session`), návod `docs/setup/session-worker-mba.md`.
+  - **Pravidlo (founder 2026-10-16): záloha na predplatnom generuje zatiaľ len beta objednávky** = zaplatené StoreKit Sandbox transakciou (TestFlight). Objednávka z App Store sa na predplatnom nikdy negeneruje; keď Fly worker nebeží, čaká naň vo fronte a rieši ju alarm / sweep / refund. Vynucuje to server z overeného JWS: nový stĺpec `generation_orders.storekit_environment` (Sandbox / Production, plní ho vytvorenie objednávky a obnova po reštore DB), záloha si ARQ úlohu ani nezaberie, kým nie je `Sandbox`. Neznáme prostredie (staré riadky, admin objednávky, chyba DB) = nie. Rozšírenie na App Store je zmena kódu (`BACKUP_ENVIRONMENTS`), nie prepínač.
 - [x] 207.6 Kontrola objednávok po obnove zo zálohy: admin príkaz porovná App Store transakcie (App Store Server API) s objednávkami v DB a dorobí chýbajúce. **Hotové 2026-10-16:** `python -m app.storekit.reconcile` (krok 10 v `docs/setup/db-backup.md`); obnoví objednávky z `quiz_pack_broken`, ostatné vypíše na refund (prompt Apple nepozná). Open = founder: In-App Purchase kľúč do Fly secrets.
 
 ### C. Zachytenie výpadkov bez novej služby (P0)

@@ -39,15 +39,15 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### C. Zachytenie výpadkov bez novej služby (P0)
 
-- [ ] 207.7 Minútová kontrola z existujúcich nástrojov: Sentry Uptime monitor na oba `/health` (overiť, či náš Sentry plán má uptime monitory) + `mba` launchd watchdog každú minútu ako druhý pozorovateľ; upozornenie do telefónu cez Sentry (e-mail/push). Ak Sentry uptime nie je v pláne → Sentry Cron monitor (heartbeat posiela samotná služba) + mba watchdog.
-- [ ] 207.8 Upozornenia Sentry na chybovosť a latenciu (pravidlá ako kód cez Sentry API), worker heartbeat ako Sentry Cron; zlyhanie samotnej kontroly kreditov tiež alarmuje (dnes len log).
-- [ ] 207.9 Stav DB: zaplnenie disku, spojenia, pamäť → denne + alarm pri ≥ 70 %; zväčšiť volume `quiz-pack-db` (1 GB) s rezervou.
-- [ ] 207.10 Logy dlhšie ako Fly ring buffer: štruktúrované chyby do Sentry Logs (už platíme) namiesto novej log služby.
+- [x] 207.7 Minútová kontrola výpadkov. **Hotové 2026-10-16 (PR #453, #454):** founder rozhodol, že upozornenia sú **e-maily z našich serverov** (Resend SMTP, `monitor@trubbo.app` → `ALERT_EMAIL_TO`), Sentry je len bonus. Vzájomný dozor: Fly worker každú minútu pinguje quiz-agent (`OPS_PING_TOKEN`); quiz-agent mailuje, keď pingy 3 min chýbajú (mŕtvy worker), worker mailuje, keď quiz-agent 3× neodpovie; quiz-pack-api `/health` každých 30 min. Pri každom probléme 1 mail, pri náprave 1 mail (stav na volume, deploy nespamuje). Overené ostrým testom 10-16: Fly worker zastavený 10:58:56 → mail „pack worker: down“ 11:02:10 (3 min 14 s), štart 11:02:34 → „recovered“ 11:03:11, heartbeat 2 s; z prod strojov aj quiz-agent down/recovered, kredity, disk, zlyhaná kontrola, rozpočet ElevenLabs (Resend: delivered). **Limit:** oba stroje sú v regióne cdg — výpadok celého regiónu nikto z nich nenahlási, ostáva len GitHub `prod-monitor` (~raz za 4 h). Sentry má 1 uptime monitor (beží na quiz-agent) a `scripts/sentry_monitoring.py` (pravidlá ako kód) — zapne sa, až bude token s `alerts:write`. mba watchdog odložený.
+- [x] 207.8 Chybovosť/latencia/heartbeat/zlyhanie kontroly. **Hotové 2026-10-16:** p95 odozvy quiz-agentu (každá požiadavka, okno 10 min, alarm 8 s), heartbeat workera = minútový ping (vyššie) + Sentry Cron check-in, zlyhaná kontrola kreditov po opakovaní o 5 min mailuje (aj pád kontroly). Chybovosť ako Sentry metric alert je v skripte, čaká na token.
+- [x] 207.9 Stav DB a strojov. **Hotové 2026-10-16:** každých 5 min disk každého prod volume + pamäť strojov (Fly Prometheus, read-only org token) a Postgres spojenia → mail pri ≥ 70 % (pamäť 90 %, quiz-agent má bežne až 72 %), s hysteréziou 5 bodov; `GET /api/v1/admin/ops-health`. Volume `quiz-pack-db` zväčšený 1 → 3 GB bez reštartu (11 % plný, +0,30 $/mes).
+- [x] 207.10 Dlhšie logy. **Hotové 2026-10-16 (PR #453):** oba backendy posielajú varovania a chyby do Sentry Logs (30 dní, 5 GB v pláne).
 
 ### D. Peniaze a zneužitie (P1)
 
 - [x] 207.11 Záložný hodnotiteľ odpovedí na priame OpenAI (nie cez OpenRouter), aby jeden prázdny kredit nezhodil obe cesty. *(PR #451, nasadené a overené na prode 10-16)*
-- [ ] 207.12 Denné kontroly kreditov aj pre Anthropic (Admin API cost report vs. promo/kúpený zostatok) a OpenAI (usage API); Fly faktúra — mesačný odhad z Fly API.
+- [x] 207.12 Kredity Anthropic/OpenAI/Fly. **Hotové 2026-10-16 (PR #454):** kontrola kreditov teraz každú hodinu: Anthropic (Cost API − kredit z Max, varovanie 3 dni pred koncom; prod: 139,71 $ z 200 $), OpenAI mesačná útrata vs. rozpočet 50 $ (čaká na admin kľúč), Fly stav platby + odhad behu (~22 $/mes). Samoliečenie: OpenRouter kritický → quiz-agent sám prepne svoje OpenRouter volania (embeddingy) na priame OpenAI a napíše to v maile. Deň, keď sa minie denný rozpočet ElevenLabs (207.13), príde 1 mail (dátum, kredity za deň, zostatok mesiaca).
 - [x] 207.13 Limity na používateľa: realtime STT tokeny/deň, dĺžka nahrávky v sekundách, počet pokusov na otázku/deň; rate limit `/entitlements/sync`; globálny denný strop ElevenLabs → automatický prechod na záložný hlas. *(PR #456 + nasledujúca PR; limity `DAILY_CAP_*` 500 tokenov / 7200 s / 30 pokusov / 100 syncov, `ELEVENLABS_DAILY_CREDIT_BUDGET` 5000)*
 - [ ] 207.14 Meranie skutočnej ceny otázky (LLM + STT + TTS) z analytiky → podklad pre founder rozhodnutie o limite Plus (dnes odhad ~6 $ pri 1 000 otázkach vs. ~4,6 $ čistý príjem). Rozhodnutie o cene/limite = founder.
 
@@ -87,6 +87,9 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
   2. Fly.io: fly.io/dashboard → v ľavom menu Compliance → stiahnuť / podpísať Data Processing Agreement.
   3. ImprovMX: improvmx.com/transparency/gdpr-compliance → stiahnuť DPA (improvmx_dpa.pdf), podpísať a poslať im, alebo si vyžiadať podpísaný na ich podpore.
 - Neskôr: Anthropic auto-reload so stropom pred 11-06.
+- 207.12 (voliteľné): OpenAI admin kľúč pre kontrolu útraty — platform.openai.com → Settings → Organization → Admin keys → Create; hodnotu do Fly secret `OPENAI_ADMIN_KEY` na `quiz-agent-api` (agent to nastaví, ak kľúč vloží do `.env` ako `OPENAI_ADMIN_KEY`).
+- 207.7 (voliteľné bonus): Sentry token s `alerts:write` → `SENTRY_ALERTS_TOKEN` v `.env`, potom `python3 scripts/sentry_monitoring.py --apply` (uptime + chybovosť v Sentry).
+- Gmail: maily `[Trubbo ALERT]` / `[Trubbo OK]` od `monitor@trubbo.app` označiť ako dôležité (filter), aby chodila notifikácia do telefónu.
 
 ### DPA spracovateľov (207.22, overené 2026-10-16)
 

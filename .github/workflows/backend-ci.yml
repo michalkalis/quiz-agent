@@ -13,6 +13,7 @@ on:
       - 'data/examples/**'
       - 'uv.lock'
       - 'pyproject.toml'
+      - 'infra/ci/**'
   # #207 task 207.15: "Backend CI gate" is a required check in the main-pr-flow
   # ruleset, so it must report on EVERY pull request (a path-filtered required
   # check never reports on unrelated PRs and blocks them forever). PRs are
@@ -48,7 +49,7 @@ jobs:
             echo "backend=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
           files=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
-          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|\.github/workflows/backend-ci\.yml$|uv\.lock$|pyproject\.toml$)'; then
+          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|infra/ci/|\.github/workflows/backend-ci\.yml$|uv\.lock$|pyproject\.toml$)'; then
             echo "backend=true" >> "$GITHUB_OUTPUT"
           else
             echo "backend=false" >> "$GITHUB_OUTPUT"
@@ -232,7 +233,7 @@ jobs:
         run: pytest tests/integration/ -v -m integration
 
   verify-openapi:
-    name: Verify OpenAPI Spec Generation
+    name: Verify OpenAPI Spec + iOS compatibility
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
@@ -314,6 +315,26 @@ jobs:
           name: openapi-spec
           path: openapi.json
           retention-days: 30
+
+      # #207 task 207.26: the spec must not break a live iOS build. Compares
+      # both apps' specs against the newest ios/* tag of every marketing
+      # version (oasdiff ERR rules); see infra/ci/openapi_compat.py.
+      - name: Fetch iOS release tags
+        run: git fetch --no-tags --depth=1 origin '+refs/tags/ios/*:refs/tags/ios/*'
+
+      - name: Install oasdiff
+        env:
+          OASDIFF_VERSION: "1.33.0"
+          OASDIFF_SHA256: 43a4e328e2d13ba1552d760aa68d2485c75c5621f309f6ff64ae895188345247
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/oasdiff.tgz" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          echo "${OASDIFF_SHA256}  $RUNNER_TEMP/oasdiff.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/oasdiff.tgz" -C "$RUNNER_TEMP" oasdiff
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: API compatibility with live iOS builds
+        run: python infra/ci/openapi_compat.py
 
   # The one required check (#207 task 207.15). Green when every suite passed,
   # or when the PR touches no backend path and the suites were skipped; red on

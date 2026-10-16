@@ -1,0 +1,8 @@
+# Intentional API breaks the iOS compatibility gate (infra/ci/openapi_compat.py) accepts.
+# One line per oasdiff error: "<METHOD> <path> <error text>", plus a comment saying why it is safe.
+
+# #364 (legal pages move to trubbo.app): no iOS build calls these; only the 1.0 store
+# listing linked them, and that metadata now points to trubbo.app.
+GET /legal/privacy api path removed without deprecation
+GET /legal/support api path removed without deprecation
+GET /legal/terms api path removed without deprecation

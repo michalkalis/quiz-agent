@@ -59,7 +59,7 @@ def _make_flow(intents, current_question, usage_tracker):
     )
 
     return QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=question_retriever,
         answer_evaluator=MagicMock(),

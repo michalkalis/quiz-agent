@@ -284,7 +284,7 @@ class QuizFlowService:
             session.transition(
                 to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions"
             )
-            self.session_manager.update_session(session)
+            await self.session_manager.update_session(session)
             self._emit_completed(session, "max_questions")
             await self._daily_finish(session)
             result.quiz_finished = True
@@ -301,7 +301,7 @@ class QuizFlowService:
                 session.transition(
                     to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit"
                 )
-                self.session_manager.update_session(session)
+                await self.session_manager.update_session(session)
                 usage = await self.usage_tracker.get_usage(session.user_id)
                 self.analytics.emit(
                     "quota_hit",
@@ -337,11 +337,11 @@ class QuizFlowService:
             if session.pack_id and await self.question_retriever.pack_is_generating(
                 session.pack_id
             ):
-                return self._await_question(session, result)
+                return await self._await_question(session, result)
             session.transition(
                 to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions"
             )
-            self.session_manager.update_session(session)
+            await self.session_manager.update_session(session)
             self._emit_completed(session, "no_more_questions")
             await self._daily_finish(session)
             result.quiz_finished = True
@@ -369,7 +369,9 @@ class QuizFlowService:
             },
         )
 
-    def _await_question(self, session: QuizSession, result: FlowResult) -> FlowResult:
+    async def _await_question(
+        self, session: QuizSession, result: FlowResult
+    ) -> FlowResult:
         """#182: park the session between questions while the pack fills.
 
         Phase stays `asking` with no current question — the same shape the
@@ -379,7 +381,7 @@ class QuizFlowService:
         session.current_question_id = None
         session.current_question_text = None
         session.current_question_translation = None
-        self.session_manager.update_session(session)
+        await self.session_manager.update_session(session)
         result.awaiting_question = True
         result.message = "Next question is being prepared"
         return result
@@ -418,14 +420,14 @@ class QuizFlowService:
                     to=SessionPhase.FINISHED,
                     caller="flow.resume_after_wait:no_more_questions",
                 )
-                self.session_manager.update_session(session)
+                await self.session_manager.update_session(session)
                 self._emit_completed(session, "no_more_questions")
                 result.quiz_finished = True
                 result.message = "No more questions available"
                 return result
             remaining = deadline - asyncio.get_running_loop().time()
             if remaining <= 0:
-                return self._await_question(session, result)
+                return await self._await_question(session, result)
             await asyncio.sleep(min(poll_interval, remaining))
 
     async def _advance_to_question(
@@ -462,7 +464,7 @@ class QuizFlowService:
         )
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record
-        self.session_manager.update_session(session)
+        await self.session_manager.update_session(session)
 
         result.next_question_dict = translated_q_dict
 

@@ -69,7 +69,7 @@ def _make_flow(current_question: Question) -> QuizFlowService:
     question_retriever.get_next_question = AsyncMock(return_value=None)
 
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=question_retriever,
         answer_evaluator=MagicMock(),

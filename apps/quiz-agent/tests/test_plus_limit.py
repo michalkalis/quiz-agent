@@ -253,8 +253,8 @@ def _no_rate_limit(monkeypatch):
 
 async def _start_at_wall(tracker: UsageTracker) -> HTTPException:
     manager = SessionManager()
-    session = manager.create_session(user_id=SUBJECT)
-    manager.update_session(session)
+    session = await manager.create_session(user_id=SUBJECT)
+    await manager.update_session(session)
     with pytest.raises(HTTPException) as exc_info:
         await start_quiz(
             request=_Req(),
@@ -326,7 +326,7 @@ def _flow(tracker: UsageTracker, spy: _Spy) -> QuizFlowService:
     retriever.get = AsyncMock(return_value=current)
     retriever.get_next_question = AsyncMock(return_value=current)
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=parser,
         question_retriever=retriever,
         answer_evaluator=MagicMock(),

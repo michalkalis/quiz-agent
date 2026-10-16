@@ -164,7 +164,7 @@ async def transcribe_and_submit(
     # deep copy across several awaits and writes it back wholesale, so overlapping
     # submits would lose one another's advance (see SessionManager.session_lock).
     async with session_manager.session_lock(session_id):
-        session = session_manager.get_session(session_id)
+        session = await session_manager.get_session(session_id)
         # #144: this route already carried the auth dependency but discarded the
         # subject — "is this *a* valid user", never "is this *the* session's user".
         require_session_ownership(session, subject, session_id=session_id)

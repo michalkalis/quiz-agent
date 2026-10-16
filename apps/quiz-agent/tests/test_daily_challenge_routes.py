@@ -106,7 +106,7 @@ async def test_start_returns_a_quota_exempt_session_with_the_days_set(client, ap
     assert resp.status_code == 200
     body = resp.json()
     assert body["state"]["status"] == "in_progress"
-    session = app.state.session_manager.get_session(body["session"]["session_id"])
+    session = await app.state.session_manager.get_session(body["session"]["session_id"])
     assert session.max_questions == 5
     assert session.fixed_question_ids == await app.state.daily_challenge.question_ids(
         "en", datetime.fromisoformat(_today()).date()
@@ -122,7 +122,7 @@ async def test_a_finished_challenge_comes_back_as_its_result(client, app):
         json={"date": _today(), "language": "en"},
         headers=_bearer(),
     )
-    session = app.state.session_manager.get_session(
+    session = await app.state.session_manager.get_session(
         resp.json()["session"]["session_id"]
     )
     for qid in session.fixed_question_ids:

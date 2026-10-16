@@ -69,230 +69,241 @@ async def start_quiz(
     # Resolved here rather than as a Depends param: several tests call this
     # route function directly and pass only the params they care about.
     analytics = get_analytics(request)
-    try:
-        session = session_manager.get_session(session_id)
-        # #144: the session id alone is not a credential — the bearer's subject
-        # must own this session (404, never 403; see require_session_ownership).
-        require_session_ownership(session, subject, session_id=session_id)
-
-        if session.phase != SessionPhase.IDLE:
-            raise HTTPException(status_code=400, detail="Quiz already started")
-
-        # Check usage limit (freemium). #95: custom-pack sessions are paid,
-        # curated content — they bypass the free monthly quota entirely, and so
-        # does the daily challenge (#205).
-        if usage_tracker and session.user_id and not session.is_quota_exempt:
-            allowed, remaining, resets_at = await usage_tracker.check_limit(
-                session.user_id
-            )
-            if not allowed:
-                usage = await usage_tracker.get_usage(session.user_id)
-                analytics.emit(
-                    "quota_hit",
-                    subject_id=session.user_id,
-                    session_id=session_id,
-                    properties={
-                        "stage": "start",
-                        "questions_used": usage["questions_used"],
-                        "questions_limit": usage["questions_limit"],
-                        "plan": usage["plan"],
-                    },
-                )
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "quota_limit_reached",
-                        "questions_used": usage["questions_used"],
-                        "questions_limit": usage["questions_limit"],
-                        "resets_at": usage["resets_at"],
-                        # Trubbo Plus is the only plan: a subscriber at the wall
-                        # has nothing to upgrade to (packs are the way on).
-                        "upgrade_available": usage["plan"] == "free",
-                    },
-                )
-
-        client_excluded_ids = body.excluded_question_ids or []
-        logger.debug("Client excluded %d questions", len(client_excluded_ids))
-        # Persist on the session so every subsequent question (voice.py's
-        # get_next_question has no client history of its own) keeps excluding
-        # cross-session history, not just the first one.
-        session.client_excluded_ids = client_excluded_ids
-
-        # Phase transition is deferred to just before update_session() — if
-        # question retrieval below fails, the stored session stays in IDLE
-        # so the user can retry /start. (Mutating here would be lost since
-        # get_session() returns a deep copy.)
-        session.asked_question_ids = []
-
-        # Get first question
-        logger.debug(
-            "Getting next question for session %s, difficulty: %s",
-            session_id,
-            session.current_difficulty,
-        )
+    # Serialized like the submit routes: two overlapping /start calls would
+    # both see IDLE and the later write would replace the question the
+    # first client is showing. The second now waits and gets the normal
+    # "already started" answer (#207.20, any machine).
+    async with session_manager.session_lock(session_id):
         try:
-            # #151: awaited end to end (pgvector + embedding), so concurrent
-            # /start calls overlap instead of serializing on one bridge thread.
-            question = await question_retriever.get_next_question(
-                session,
-                client_excluded_ids=client_excluded_ids,
-            )
-        except Exception as e:
-            logger.error("Exception in get_next_question: %s", e, exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to retrieve question")
+            session = await session_manager.get_session(session_id)
+            # #144: the session id alone is not a credential — the bearer's subject
+            # must own this session (404, never 403; see require_session_ownership).
+            require_session_ownership(session, subject, session_id=session_id)
 
-        if (
-            not question
-            and session.pack_id
-            and await question_retriever.pack_is_generating(session.pack_id)
-        ):
-            # #182: the pack exists but every persisted question is already in
-            # the client's history (a second run on a still-filling pack).
-            # Park the session; the client polls /next-question.
-            session.current_question_id = None
-            session.transition(
-                to=SessionPhase.ASKING, caller="routes.start_quiz:awaiting"
-            )
-            session_manager.update_session(session)
-            return InputResponse(
-                success=True,
-                message="Next question is being prepared",
-                session=session_to_response(session),
-                current_question=None,
-                feedback_received=[],
-                awaiting_question=True,
-            )
+            if session.phase != SessionPhase.IDLE:
+                raise HTTPException(status_code=400, detail="Quiz already started")
 
-        if not question and session.pack_id:
-            # #200: a closed pack whose every question is already in the
-            # client's history (the player has heard the whole pack across
-            # shorter sets). An expected end state, not a server fault — the
-            # corpus diagnostics below would count the shared library and
-            # answer a misleading 500. Coded like the other client-recognisable
-            # errors ({"code": …}); a build that does not know the code still
-            # gets a plain non-retryable 4xx.
-            logger.info(
-                "Pack %s has no unplayed questions for session %s",
-                session.pack_id,
+            # Check usage limit (freemium). #95: custom-pack sessions are paid,
+            # curated content — they bypass the free monthly quota entirely, and so
+            # does the daily challenge (#205).
+            if usage_tracker and session.user_id and not session.is_quota_exempt:
+                allowed, remaining, resets_at = await usage_tracker.check_limit(
+                    session.user_id
+                )
+                if not allowed:
+                    usage = await usage_tracker.get_usage(session.user_id)
+                    analytics.emit(
+                        "quota_hit",
+                        subject_id=session.user_id,
+                        session_id=session_id,
+                        properties={
+                            "stage": "start",
+                            "questions_used": usage["questions_used"],
+                            "questions_limit": usage["questions_limit"],
+                            "plan": usage["plan"],
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=429,
+                        detail={
+                            "error": "quota_limit_reached",
+                            "questions_used": usage["questions_used"],
+                            "questions_limit": usage["questions_limit"],
+                            "resets_at": usage["resets_at"],
+                            # Trubbo Plus is the only plan: a subscriber at the wall
+                            # has nothing to upgrade to (packs are the way on).
+                            "upgrade_available": usage["plan"] == "free",
+                        },
+                    )
+
+            client_excluded_ids = body.excluded_question_ids or []
+            logger.debug("Client excluded %d questions", len(client_excluded_ids))
+            # Persist on the session so every subsequent question (voice.py's
+            # get_next_question has no client history of its own) keeps excluding
+            # cross-session history, not just the first one.
+            session.client_excluded_ids = client_excluded_ids
+
+            # Phase transition is deferred to just before update_session() — if
+            # question retrieval below fails, the stored session stays in IDLE
+            # so the user can retry /start. (Mutating here would be lost since
+            # get_session() returns a deep copy.)
+            session.asked_question_ids = []
+
+            # Get first question
+            logger.debug(
+                "Getting next question for session %s, difficulty: %s",
                 session_id,
+                session.current_difficulty,
             )
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "code": "pack_exhausted",
-                    "message": "Every question in this pack has been played",
-                    "pack_id": session.pack_id,
-                },
-            )
+            try:
+                # #151: awaited end to end (pgvector + embedding), so concurrent
+                # /start calls overlap instead of serializing on one bridge thread.
+                question = await question_retriever.get_next_question(
+                    session,
+                    client_excluded_ids=client_excluded_ids,
+                )
+            except Exception as e:
+                logger.error("Exception in get_next_question: %s", e, exc_info=True)
+                raise HTTPException(
+                    status_code=500, detail="Failed to retrieve question"
+                )
 
-        if not question:
-            logger.error("get_next_question returned None for session %s", session_id)
-            total_count = await question_retriever.count(
-                filters={"review_status": "approved"}
-            )
-            client_seen_count = len(client_excluded_ids)
+            if (
+                not question
+                and session.pack_id
+                and await question_retriever.pack_is_generating(session.pack_id)
+            ):
+                # #182: the pack exists but every persisted question is already in
+                # the client's history (a second run on a still-filling pack).
+                # Park the session; the client polls /next-question.
+                session.current_question_id = None
+                session.transition(
+                    to=SessionPhase.ASKING, caller="routes.start_quiz:awaiting"
+                )
+                await session_manager.update_session(session)
+                return InputResponse(
+                    success=True,
+                    message="Next question is being prepared",
+                    session=session_to_response(session),
+                    current_question=None,
+                    feedback_received=[],
+                    awaiting_question=True,
+                )
 
-            if total_count > 0 and client_seen_count >= total_count * 0.8:
+            if not question and session.pack_id:
+                # #200: a closed pack whose every question is already in the
+                # client's history (the player has heard the whole pack across
+                # shorter sets). An expected end state, not a server fault — the
+                # corpus diagnostics below would count the shared library and
+                # answer a misleading 500. Coded like the other client-recognisable
+                # errors ({"code": …}); a build that does not know the code still
+                # gets a plain non-retryable 4xx.
+                logger.info(
+                    "Pack %s has no unplayed questions for session %s",
+                    session.pack_id,
+                    session_id,
+                )
                 raise HTTPException(
                     status_code=409,
                     detail={
-                        "message": "You've seen most available questions",
-                        "total_questions": total_count,
-                        "questions_seen": client_seen_count,
-                        "suggestion": "reset_history",
+                        "code": "pack_exhausted",
+                        "message": "Every question in this pack has been played",
+                        "pack_id": session.pack_id,
                     },
                 )
 
-            if total_count == 0:
-                error_detail = (
-                    "The question database is empty. "
-                    "Please generate or import questions first."
+            if not question:
+                logger.error(
+                    "get_next_question returned None for session %s", session_id
                 )
-            else:
-                filter_lines = [
-                    f"- Difficulty: {session.current_difficulty}",
-                    "- Type: text",
-                    "- Review status: approved",
-                ]
-                if session.language and session.language != "en":
-                    filter_lines.append(
-                        f"- Language-dependent: excluded (session language: {session.language})"
+                total_count = await question_retriever.count(
+                    filters={"review_status": "approved"}
+                )
+                client_seen_count = len(client_excluded_ids)
+
+                if total_count > 0 and client_seen_count >= total_count * 0.8:
+                    raise HTTPException(
+                        status_code=409,
+                        detail={
+                            "message": "You've seen most available questions",
+                            "total_questions": total_count,
+                            "questions_seen": client_seen_count,
+                            "suggestion": "reset_history",
+                        },
                     )
-                if session.preferred_categories:
-                    filter_lines.append(f"- Categories: {session.preferred_categories}")
-                error_detail = (
-                    f"No questions match the criteria. "
-                    f"Database has {total_count} approved questions, but none match:\n"
-                    + "\n".join(filter_lines)
-                )
-            raise HTTPException(status_code=500, detail=error_detail)
 
-        session.current_question_id = question.id
-        session.asked_question_ids.append(question.id)
+                if total_count == 0:
+                    error_detail = (
+                        "The question database is empty. "
+                        "Please generate or import questions first."
+                    )
+                else:
+                    filter_lines = [
+                        f"- Difficulty: {session.current_difficulty}",
+                        "- Type: text",
+                        "- Review status: approved",
+                    ]
+                    if session.language and session.language != "en":
+                        filter_lines.append(
+                            f"- Language-dependent: excluded (session language: {session.language})"
+                        )
+                    if session.preferred_categories:
+                        filter_lines.append(
+                            f"- Categories: {session.preferred_categories}"
+                        )
+                    error_detail = (
+                        f"No questions match the criteria. "
+                        f"Database has {total_count} approved questions, but none match:\n"
+                        + "\n".join(filter_lines)
+                    )
+                raise HTTPException(status_code=500, detail=error_detail)
 
-        if usage_tracker and session.user_id and not session.is_quota_exempt:
-            await usage_tracker.record_question(session.user_id)
+            session.current_question_id = question.id
+            session.asked_question_ids.append(question.id)
 
-        (
-            translated_question_dict,
-            translation_record,
-        ) = await translated_question_payload(
-            question,
-            session.language,
-            translation_service,
-            session_id=session_id,
-            question_store=question_retriever,
-            build_channel=session.build_channel,
-        )
-        session.current_question_text = translated_question_dict["question"]
-        session.current_question_translation = translation_record
-        session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
-        session_manager.update_session(session)
-        analytics.emit(
-            "quiz_started",
-            subject_id=session.user_id,
-            session_id=session_id,
-            properties={
-                "category": session.category,
-                "language": session.language,
-                "difficulty": session.current_difficulty,
-                "mode": session.mode,
-                "is_pack": bool(session.pack_id),
-                "max_questions": session.max_questions,
-            },
-        )
+            if usage_tracker and session.user_id and not session.is_quota_exempt:
+                await usage_tracker.record_question(session.user_id)
 
-        audio_info = None
-        if audio:
-            audio_info = AudioInfo(
-                question_url=f"/api/v1/sessions/{session_id}/question/audio",
-            )
-            # Warm TTS cache while iOS is still rendering the question UI.
-            # Best-effort: if iOS requests audio before this finishes, both calls
-            # run in parallel and the second wins (cache write is idempotent).
-            prefetch_question_audio(
-                tts_service,
-                spoken_question_text(
-                    translated_question_dict["question"],
-                    translated_question_dict.get("possible_answers"),
-                    session,
-                ),
+            (
+                translated_question_dict,
+                translation_record,
+            ) = await translated_question_payload(
+                question,
                 session.language,
+                translation_service,
+                session_id=session_id,
+                question_store=question_retriever,
+                build_channel=session.build_channel,
+            )
+            session.current_question_text = translated_question_dict["question"]
+            session.current_question_translation = translation_record
+            session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
+            await session_manager.update_session(session)
+            analytics.emit(
+                "quiz_started",
+                subject_id=session.user_id,
+                session_id=session_id,
+                properties={
+                    "category": session.category,
+                    "language": session.language,
+                    "difficulty": session.current_difficulty,
+                    "mode": session.mode,
+                    "is_pack": bool(session.pack_id),
+                    "max_questions": session.max_questions,
+                },
             )
 
-        return InputResponse(
-            success=True,
-            message="Quiz started",
-            session=session_to_response(session),
-            current_question=translated_question_dict,
-            feedback_received=[],
-            audio=audio_info,
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("Unexpected exception in start_quiz: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to start quiz")
+            audio_info = None
+            if audio:
+                audio_info = AudioInfo(
+                    question_url=f"/api/v1/sessions/{session_id}/question/audio",
+                )
+                # Warm TTS cache while iOS is still rendering the question UI.
+                # Best-effort: if iOS requests audio before this finishes, both calls
+                # run in parallel and the second wins (cache write is idempotent).
+                prefetch_question_audio(
+                    tts_service,
+                    spoken_question_text(
+                        translated_question_dict["question"],
+                        translated_question_dict.get("possible_answers"),
+                        session,
+                    ),
+                    session.language,
+                )
+
+            return InputResponse(
+                success=True,
+                message="Quiz started",
+                session=session_to_response(session),
+                current_question=translated_question_dict,
+                feedback_received=[],
+                audio=audio_info,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Unexpected exception in start_quiz: %s", e, exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to start quiz")
 
 
 @router.post("/sessions/{session_id}/input", response_model=InputResponse)
@@ -312,7 +323,7 @@ async def submit_input(
     # deep copy across several awaits and writes it back wholesale, so overlapping
     # submits would lose one another's advance (see SessionManager.session_lock).
     async with session_manager.session_lock(session_id):
-        session = session_manager.get_session(session_id)
+        session = await session_manager.get_session(session_id)
         require_session_ownership(session, subject, session_id=session_id)  # #144
 
         if session.phase not in (
@@ -380,7 +391,7 @@ async def get_current_question(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get current question without submitting input."""
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:
@@ -464,7 +475,7 @@ async def next_question(
     question is already active it is returned instead of skipped.
     """
     async with session_manager.session_lock(session_id):
-        session = session_manager.get_session(session_id)
+        session = await session_manager.get_session(session_id)
         require_session_ownership(session, subject, session_id=session_id)  # #144
 
         if session.phase != SessionPhase.ASKING:
@@ -511,7 +522,7 @@ async def rate_question(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Rate the current or last question."""
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:
@@ -551,7 +562,7 @@ async def flag_question(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Flag the current question as potentially incorrect."""
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     require_session_ownership(session, subject, session_id=session_id)  # #144
 
     if not session.current_question_id:

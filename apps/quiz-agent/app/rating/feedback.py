@@ -1,18 +1,22 @@
 """User feedback and rating service.
 
-Ratings persist in the SQL ratings store only (#41 D1) — the old embedded
+Ratings persist in the ratings store only (#41 D1; Postgres since #207.20,
+``app.rating.store``) — the old embedded
 `user_ratings`/`usage_count`/`review_status` writes to the question store
 had zero readers and were dropped with the ChromaDB decommission.
 """
 
 import logging
-from typing import Optional, List, Tuple
-from datetime import datetime
+from typing import Optional, Protocol, Tuple
+from datetime import datetime, timezone
+
+from quiz_shared.models.rating import QuestionRating
 
 logger = logging.getLogger(__name__)
 
-from quiz_shared.database.sql_client import SQLClient
-from quiz_shared.models.rating import QuestionRating
+
+class RatingStore(Protocol):
+    async def add_rating(self, rating: QuestionRating) -> bool: ...
 
 
 class FeedbackService:
@@ -27,16 +31,16 @@ class FeedbackService:
 
     def __init__(
         self,
-        sql_client: SQLClient,
+        rating_store: RatingStore,
         low_rating_threshold: float = 2.5,
     ):
         """Initialize feedback service.
 
         Args:
-            sql_client: SQL client for rating analytics
+            rating_store: durable rating store (``app.rating.store``)
             low_rating_threshold: Threshold for flagging questions (default: 2.5)
         """
-        self.sql = sql_client
+        self.store = rating_store
         self.low_rating_threshold = low_rating_threshold
 
     async def submit_rating(
@@ -79,57 +83,16 @@ class FeedbackService:
                 user_id=user_id,
                 rating=rating,
                 feedback=feedback_text,
-                created_at=datetime.now(),
+                created_at=datetime.now(timezone.utc),
             )
 
-            if not self.sql.add_rating(rating_obj):
+            if not await self.store.add_rating(rating_obj):
                 return False, "Failed to persist rating"
 
             return True, "Rating submitted successfully"
 
         except Exception as e:
             return False, f"Failed to submit rating: {str(e)}"
-
-    def get_question_ratings(self, question_id: str) -> List[QuestionRating]:
-        """Get all ratings for a question.
-
-        Args:
-            question_id: Question ID
-
-        Returns:
-            List of QuestionRating objects
-        """
-        return self.sql.get_ratings_by_question(question_id)
-
-    def get_average_rating(self, question_id: str) -> Optional[float]:
-        """Get average rating for a question.
-
-        Args:
-            question_id: Question ID
-
-        Returns:
-            Average rating or None if no ratings
-        """
-        return self.sql.get_avg_rating(question_id)
-
-    def get_low_rated_questions(
-        self, threshold: Optional[float] = None
-    ) -> List[Tuple[str, float]]:
-        """Get questions with low average ratings.
-
-        Args:
-            threshold: Rating threshold (default: use service threshold)
-
-        Returns:
-            List of (question_id, avg_rating) tuples
-
-        Example:
-            >>> low_rated = service.get_low_rated_questions()
-            >>> for qid, rating in low_rated:
-            ...     print(f"Question {qid}: {rating:.2f} avg")
-        """
-        threshold = threshold or self.low_rating_threshold
-        return self.sql.get_low_rated_questions(threshold)
 
     async def flag_question(
         self,
@@ -145,22 +108,3 @@ class FeedbackService:
         """
         logger.info("Question %s flagged by %s: %s", question_id, user_id, reason)
         return True, "Question flagged for review"
-
-    def flag_poor_quality_questions(self) -> List[str]:
-        """Flag questions that consistently receive low ratings.
-
-        Returns:
-            List of question IDs to review
-        """
-        low_rated = self.get_low_rated_questions()
-
-        if low_rated:
-            logger.info(
-                "Found %d low-rated questions (< %.1f)",
-                len(low_rated),
-                self.low_rating_threshold,
-            )
-            for qid, rating in low_rated:
-                logger.info("  %s: %.2f avg rating", qid, rating)
-
-        return [qid for qid, _ in low_rated]

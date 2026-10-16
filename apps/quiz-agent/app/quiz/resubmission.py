@@ -251,7 +251,7 @@ async def process_resubmission(
     await flow._daily_record(
         session, previous.question_id, result.evaluation.result, regrade=True
     )
-    flow.session_manager.update_session(session)
+    await flow.session_manager.update_session(session)
 
     result.next_question_dict = await _current_question_payload(flow, session)
     result.message = "Answer re-evaluated"

@@ -12,48 +12,26 @@ sys.path.insert(
 )
 
 from app.quiz.flow import QuizFlowService
-from app.session.manager import SessionManager
+from app.session.manager import SessionConflict, SessionManager
+from app.session.store import MemorySessionStore
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.question import Question
 
-
-class StubSQLClient:
-    """Minimal in-memory stub for SQLClient session persistence methods.
-
-    Avoids importing the real SQLClient which pulls in chromadb.
-    """
-
-    def __init__(self):
-        self._store: dict[
-            str, tuple[str, bool]
-        ] = {}  # session_id -> (data_json, is_active)
-
-    def save_session(self, session_id: str, data_json: str) -> bool:
-        self._store[session_id] = (data_json, True)
-        return True
-
-    def deactivate_session(self, session_id: str) -> bool:
-        if session_id in self._store:
-            data_json, _ = self._store[session_id]
-            self._store[session_id] = (data_json, False)
-        return True
-
-    def load_active_sessions(self) -> list[tuple[str, str]]:
-        return [(sid, data) for sid, (data, active) in self._store.items() if active]
+pytestmark = pytest.mark.asyncio
 
 
 class TestSessionManagerDeepCopy:
     """Verify get_session() returns isolated copies, not shared references."""
 
-    def test_get_session_returns_copy_not_reference(self):
+    async def test_get_session_returns_copy_not_reference(self):
         """Mutating a returned session must not affect the stored session."""
         manager = SessionManager()
-        session = manager.create_session(max_questions=5, difficulty="easy")
+        session = await manager.create_session(max_questions=5, difficulty="easy")
         session_id = session.session_id
 
         # Get two independent copies
-        copy_a = manager.get_session(session_id)
-        copy_b = manager.get_session(session_id)
+        copy_a = await manager.get_session(session_id)
+        copy_b = await manager.get_session(session_id)
 
         # Mutate copy_a
         copy_a.current_question_id = "q_mutated"
@@ -65,60 +43,60 @@ class TestSessionManagerDeepCopy:
         assert copy_b.phase != "finished"
         assert "q_mutated" not in copy_b.asked_question_ids
 
-    def test_get_session_mutation_does_not_affect_stored(self):
+    async def test_get_session_mutation_does_not_affect_stored(self):
         """Mutating a returned session must not affect a subsequent get_session() call."""
         manager = SessionManager()
-        session = manager.create_session(max_questions=10, difficulty="medium")
+        session = await manager.create_session(max_questions=10, difficulty="medium")
         session_id = session.session_id
 
         # Get and mutate
-        fetched = manager.get_session(session_id)
+        fetched = await manager.get_session(session_id)
         fetched.current_question_id = "q_race_condition"
         fetched.score = 999.0
 
         # Fresh get should return original state
-        fresh = manager.get_session(session_id)
+        fresh = await manager.get_session(session_id)
         assert fresh.current_question_id is None
         assert fresh.score == 0.0
 
-    def test_update_session_writes_back_correctly(self):
+    async def test_update_session_writes_back_correctly(self):
         """update_session() should persist the caller's changes."""
         manager = SessionManager()
-        session = manager.create_session(max_questions=5)
+        session = await manager.create_session(max_questions=5)
         session_id = session.session_id
 
         # Get, modify, write back
-        copy = manager.get_session(session_id)
+        copy = await manager.get_session(session_id)
         copy.current_question_id = "q_123"
         copy.phase = "asking"
-        manager.update_session(copy)
+        await manager.update_session(copy)
 
         # New get should reflect the update
-        refreshed = manager.get_session(session_id)
+        refreshed = await manager.get_session(session_id)
         assert refreshed.current_question_id == "q_123"
         assert refreshed.phase == "asking"
 
-    def test_concurrent_readers_get_independent_snapshots(self):
+    async def test_concurrent_readers_get_independent_snapshots(self):
         """Simulates the race: two requests read session, one mutates before the other evaluates."""
         manager = SessionManager()
-        session = manager.create_session(max_questions=10)
+        session = await manager.create_session(max_questions=10)
         session_id = session.session_id
 
         # Set up initial question
-        setup = manager.get_session(session_id)
+        setup = await manager.get_session(session_id)
         setup.current_question_id = "q_question_1"
         setup.phase = "asking"
-        manager.update_session(setup)
+        await manager.update_session(setup)
 
         # Request A reads session (about to evaluate q_question_1)
-        request_a_session = manager.get_session(session_id)
+        request_a_session = await manager.get_session(session_id)
         evaluated_question_id = request_a_session.current_question_id
 
         # Request B reads and advances to next question (parallel fetch)
-        request_b_session = manager.get_session(session_id)
+        request_b_session = await manager.get_session(session_id)
         request_b_session.current_question_id = "q_question_2"
         request_b_session.asked_question_ids.append("q_question_2")
-        manager.update_session(request_b_session)
+        await manager.update_session(request_b_session)
 
         # Request A should still see q_question_1 (its snapshot is isolated)
         assert evaluated_question_id == "q_question_1"
@@ -159,14 +137,14 @@ class TestEvaluationQuestionId:
             difficulty="medium",
         )
 
-    def _manager_at_graded_question(self) -> tuple[SessionManager, str]:
+    async def _manager_at_graded_question(self) -> tuple[SessionManager, str]:
         manager = SessionManager()
-        sid = manager.create_session(max_questions=10).session_id
-        session = manager.get_session(sid)
+        sid = (await manager.create_session(max_questions=10)).session_id
+        session = await manager.get_session(sid)
         session.phase = SessionPhase.ASKING
         session.current_question_id = self.GRADED
         session.asked_question_ids = [self.GRADED]
-        manager.update_session(session)
+        await manager.update_session(session)
         return manager, sid
 
     def _flow(self, manager: SessionManager, intents) -> QuizFlowService:
@@ -190,15 +168,14 @@ class TestEvaluationQuestionId:
             translation_service=None,
         )
 
-    @pytest.mark.asyncio
     async def test_answer_evaluation_names_the_graded_question_not_the_next_one(self):
-        manager, sid = self._manager_at_graded_question()
+        manager, sid = await self._manager_at_graded_question()
         flow = self._flow(
             manager, [{"intent_type": "answer", "extracted_data": {"answer": "Paris"}}]
         )
 
         result = await flow.process_answer(
-            session=manager.get_session(sid), answer_text="Paris"
+            session=await manager.get_session(sid), answer_text="Paris"
         )
 
         assert result.evaluation.question_id == self.GRADED
@@ -206,101 +183,108 @@ class TestEvaluationQuestionId:
         # Non-vacuous: the session really did move on, and the client is being
         # handed the next question in the same response — so "graded" and
         # "current" are genuinely two different ids at this point.
-        assert manager.get_session(sid).current_question_id == self.NEXT
+        assert (await manager.get_session(sid)).current_question_id == self.NEXT
         assert result.next_question_dict["id"] == self.NEXT
 
-    @pytest.mark.asyncio
     async def test_skip_evaluation_names_the_skipped_question(self):
         """A skip is graded state too, and builds its own evaluation dict — it
         must carry the id of the question that was skipped, not the one served
         in its place."""
-        manager, sid = self._manager_at_graded_question()
+        manager, sid = await self._manager_at_graded_question()
         flow = self._flow(manager, [])  # literal "skip" never reaches the parser
 
         result = await flow.process_answer(
-            session=manager.get_session(sid), answer_text="skip"
+            session=await manager.get_session(sid), answer_text="skip"
         )
 
         assert result.evaluation.question_id == self.GRADED
         assert result.evaluation.result == "skipped"
         assert result.evaluation.points == 0.0
-        assert manager.get_session(sid).current_question_id == self.NEXT
+        assert (await manager.get_session(sid)).current_question_id == self.NEXT
 
-    @pytest.mark.asyncio
     async def test_graded_id_is_remembered_on_the_session_for_a_retry(self):
         """The same id is snapshotted onto ``session.last_evaluation`` before the
         advance — that is what lets a re-sent submit be recognised as a retry of
         the graded question instead of being scored against the next one."""
-        manager, sid = self._manager_at_graded_question()
+        manager, sid = await self._manager_at_graded_question()
         flow = self._flow(
             manager, [{"intent_type": "answer", "extracted_data": {"answer": "Paris"}}]
         )
 
-        await flow.process_answer(session=manager.get_session(sid), answer_text="Paris")
+        await flow.process_answer(
+            session=await manager.get_session(sid), answer_text="Paris"
+        )
 
-        stored = manager.get_session(sid)
+        stored = await manager.get_session(sid)
         assert stored.last_evaluation is not None
         assert stored.last_evaluation.question_id == self.GRADED
         assert stored.current_question_id == self.NEXT
 
 
 class TestSessionPersistence:
-    """Verify sessions survive a simulated restart via SQLite persistence."""
+    """A session lives in the shared store, not in one manager's memory (#207.20).
 
-    def test_session_survives_restart(self):
-        """Create session in manager A, reload in manager B — session survives."""
-        sql = StubSQLClient()
-        manager_a = SessionManager(sql_client=sql)
-        session = manager_a.create_session(max_questions=5, difficulty="hard")
+    A request can land on any machine, so a second manager over the same store
+    (a restarted or sibling machine) must see exactly what the first wrote.
+    """
+
+    async def test_session_visible_to_a_fresh_manager_on_the_same_store(self):
+        store = MemorySessionStore()
+        manager_a = SessionManager(store=store)
+        session = await manager_a.create_session(max_questions=5, difficulty="hard")
         sid = session.session_id
 
-        # Simulate restart: new manager, same SQL client
-        manager_b = SessionManager(sql_client=sql)
-        reloaded = manager_b.reload_active_sessions()
-        assert reloaded == 1
-
-        restored = manager_b.get_session(sid)
+        manager_b = SessionManager(store=store)
+        restored = await manager_b.get_session(sid)
         assert restored is not None
         assert restored.max_questions == 5
         assert restored.current_difficulty == "hard"
 
-    def test_updated_session_persists(self):
-        """Updates to session state are reflected after reload."""
-        sql = StubSQLClient()
-        manager_a = SessionManager(sql_client=sql)
-        session = manager_a.create_session(max_questions=10)
+    async def test_updated_session_is_visible_to_a_fresh_manager(self):
+        store = MemorySessionStore()
+        manager_a = SessionManager(store=store)
+        session = await manager_a.create_session(max_questions=10)
         sid = session.session_id
 
-        # Advance quiz state
-        copy = manager_a.get_session(sid)
+        copy = await manager_a.get_session(sid)
         copy.phase = "asking"
         copy.score = 3.5
         copy.question_number = 4
-        manager_a.update_session(copy)
+        await manager_a.update_session(copy)
 
-        # Reload
-        manager_b = SessionManager(sql_client=sql)
-        manager_b.reload_active_sessions()
-        restored = manager_b.get_session(sid)
+        restored = await SessionManager(store=store).get_session(sid)
         assert restored.phase == "asking"
         assert restored.score == 3.5
         assert restored.question_number == 4
 
-    def test_deleted_session_not_reloaded(self):
-        """Deleted sessions should not be reloaded."""
-        sql = StubSQLClient()
-        manager_a = SessionManager(sql_client=sql)
-        session = manager_a.create_session()
-        sid = session.session_id
-        manager_a.delete_session(sid)
+    async def test_deleted_session_is_gone_for_a_fresh_manager(self):
+        store = MemorySessionStore()
+        manager_a = SessionManager(store=store)
+        sid = (await manager_a.create_session()).session_id
+        await manager_a.delete_session(sid)
 
-        manager_b = SessionManager(sql_client=sql)
-        reloaded = manager_b.reload_active_sessions()
-        assert reloaded == 0
-        assert manager_b.get_session(sid) is None
+        assert await SessionManager(store=store).get_session(sid) is None
 
-    def test_no_sql_client_works_fine(self):
-        """SessionManager without sql_client should work as before (in-memory only)."""
+    async def test_stale_copy_write_is_refused_not_silently_applied(self):
+        """Two requests read the same version; the second writer must fail
+        loudly instead of undoing the first one's advance."""
         manager = SessionManager()
-        session = manager.create_session(max_questions=5)
-        assert manager.get_session(session.session_id) is not None
+        sid = (await manager.create_session()).session_id
+        first = await manager.get_session(sid)
+        stale = await manager.get_session(sid)
+
+        first.score = 2.0
+        await manager.update_session(first)
+
+        stale.score = 99.0
+        with pytest.raises(SessionConflict):
+            await manager.update_session(stale)
+        assert (await manager.get_session(sid)).score == 2.0
+
+    async def test_local_lock_entry_is_dropped_once_nobody_uses_it(self):
+        """The per-session lock map must not grow with every session ever seen."""
+        manager = SessionManager()
+        sid = (await manager.create_session()).session_id
+        async with manager.session_lock(sid):
+            assert sid in manager._local
+        assert sid not in manager._local

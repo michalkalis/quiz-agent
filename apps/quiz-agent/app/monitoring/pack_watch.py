@@ -12,6 +12,9 @@ service. The always-on Fly pack worker pings quiz-agent every minute
 quiz-pack-api's web process scales to zero, so it is checked only every
 30 min (each check wakes it; ~1 h of machine time a day).
 
+#207.20: the ping may land on any quiz-agent machine, so it is recorded as a
+Postgres heartbeat row (``HeartbeatStore``) and the check reads that row.
+
 Limit: both apps run in one Fly region (cdg). A region outage takes both
 watchers down with the services; only the GitHub prod monitor (runs every ~4 h)
 would notice.
@@ -24,6 +27,7 @@ import hmac
 import logging
 import os
 import time
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
@@ -35,6 +39,7 @@ PING_STALE_S = 180.0
 PACK_API_HEALTH = "https://quiz-pack-api.fly.dev/health"
 PACK_API_EVERY_S = 1800.0
 PACK_API_FAILS_TO_ALERT = 2
+WORKER_HEARTBEAT = "pack worker"
 
 
 class PackWatch:
@@ -42,13 +47,25 @@ class PackWatch:
         self.started = time.monotonic() if now is None else now
         self.last_ping: float | None = None
         self.pack_api_fails = 0
+        # Shared heartbeat row (production); None = this process only (tests).
+        self.heartbeats = None
 
     def ping(self, now: float | None = None) -> None:
         self.last_ping = time.monotonic() if now is None else now
 
-    def worker_down(self, now: float) -> bool:
-        seen = self.last_ping if self.last_ping is not None else self.started
-        return now - seen > PING_STALE_S
+    async def record_ping(self) -> None:
+        self.ping()
+        if self.heartbeats is not None:
+            await self.heartbeats.beat(WORKER_HEARTBEAT)
+
+    async def ping_age(self, now: float) -> float | None:
+        """Seconds since the last ping seen by any machine; None = never."""
+        if self.heartbeats is not None:
+            seen = await self.heartbeats.last(WORKER_HEARTBEAT)
+            if seen is None:
+                return None
+            return (datetime.now(timezone.utc) - seen).total_seconds()
+        return None if self.last_ping is None else now - self.last_ping
 
 
 pack_watch = PackWatch()
@@ -61,14 +78,16 @@ async def worker_ping(x_ops_token: str = Header(default="")) -> dict:
     expected = os.getenv("OPS_PING_TOKEN") or ""
     if not expected or not hmac.compare_digest(x_ops_token.encode(), expected.encode()):
         raise HTTPException(status_code=401)
-    pack_watch.ping()
+    await pack_watch.record_ping()
     return {"ok": True}
 
 
 async def check_worker(book: AlertBook, now: float) -> None:
-    if pack_watch.last_ping is None and now - pack_watch.started <= PING_STALE_S:
+    age = await pack_watch.ping_age(now)
+    since_boot = now - pack_watch.started
+    if age is None and since_boot <= PING_STALE_S:
         return  # boot grace: neither "down" nor "recovered" is known yet
-    if pack_watch.worker_down(now):
+    if (age if age is not None else since_boot) > PING_STALE_S:
         await book.update(
             "pack worker",
             "down",

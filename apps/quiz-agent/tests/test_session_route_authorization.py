@@ -192,15 +192,15 @@ async def client(app: FastAPI):
         yield c
 
 
-def _owned_session(manager: SessionManager, *, pack: bool = False):
-    session = manager.create_session(user_id=SUBJECT_A)
+async def _owned_session(manager: SessionManager, *, pack: bool = False):
+    session = await manager.create_session(user_id=SUBJECT_A)
     session.phase = SessionPhase.ASKING
     session.current_question_id = "q-pack-1"
     session.asked_question_ids = ["q-pack-1"]
     session.participants = []
     if pack:
         session.pack_id = PACK_ID
-    manager.update_session(session)
+    await manager.update_session(session)
     return session
 
 
@@ -240,7 +240,7 @@ def _requests(session_id: str):
 async def test_other_subject_gets_404_on_every_session_route(client, manager):
     """B holds a valid bearer and A's session id — the id must buy nothing, and
     the denial must be indistinguishable from "no such session"."""
-    session = _owned_session(manager)
+    session = await _owned_session(manager)
 
     for method, url, kwargs in _requests(session.session_id):
         resp = await client.request(method, url, headers=_bearer(SUBJECT_B), **kwargs)
@@ -250,19 +250,19 @@ async def test_other_subject_gets_404_on_every_session_route(client, manager):
         )
 
     # ...and nothing was mutated or spent on B's behalf.
-    assert manager.get_session(session.session_id) is not None
+    assert await manager.get_session(session.session_id) is not None
 
 
 async def test_denied_delete_does_not_destroy_the_session(client, manager):
     """Authorize before mutating: a stranger's DELETE must not take effect."""
-    session = _owned_session(manager)
+    session = await _owned_session(manager)
 
     resp = await client.delete(
         f"/api/v1/sessions/{session.session_id}", headers=_bearer(SUBJECT_B)
     )
 
     assert resp.status_code == 404
-    assert manager.get_session(session.session_id) is not None
+    assert await manager.get_session(session.session_id) is not None
 
 
 async def test_other_subject_cannot_read_a_custom_packs_questions(
@@ -270,7 +270,7 @@ async def test_other_subject_cannot_read_a_custom_packs_questions(
 ):
     """The #96 gap end to end: pack content is authorized once at creation, so
     the serve path is where a leaked id would have paid off."""
-    session = _owned_session(manager, pack=True)
+    session = await _owned_session(manager, pack=True)
 
     resp = await client.get(
         f"/api/v1/sessions/{session.session_id}/question", headers=_bearer(SUBJECT_B)
@@ -283,7 +283,7 @@ async def test_other_subject_cannot_read_a_custom_packs_questions(
 
 async def test_other_subject_cannot_hear_a_custom_packs_question(client, manager):
     """The audio route speaks the same question text — same gate."""
-    session = _owned_session(manager, pack=True)
+    session = await _owned_session(manager, pack=True)
 
     resp = await client.get(
         f"/api/v1/sessions/{session.session_id}/question/audio",
@@ -303,7 +303,7 @@ async def test_no_bearer_is_denied_even_during_the_grace_window(
     on, with ``authenticated=False`` and no subject id. That is not enough to own
     a session, so the helper — not the route — must deny it."""
     monkeypatch.setenv("LEGACY_USER_ID_GRACE", "on")
-    session = _owned_session(manager)
+    session = await _owned_session(manager)
 
     for method, url, kwargs in _requests(session.session_id):
         resp = await client.request(method, url, **kwargs)
@@ -312,7 +312,7 @@ async def test_no_bearer_is_denied_even_during_the_grace_window(
 
 async def test_no_bearer_is_denied_with_grace_off(client, manager, monkeypatch):
     monkeypatch.setenv("LEGACY_USER_ID_GRACE", "off")
-    session = _owned_session(manager)
+    session = await _owned_session(manager)
 
     resp = await client.get(f"/api/v1/sessions/{session.session_id}")
 
@@ -320,7 +320,7 @@ async def test_no_bearer_is_denied_with_grace_off(client, manager, monkeypatch):
 
 
 async def test_invalid_bearer_is_rejected(client, manager):
-    session = _owned_session(manager)
+    session = await _owned_session(manager)
 
     resp = await client.get(
         f"/api/v1/sessions/{session.session_id}",
@@ -333,8 +333,8 @@ async def test_invalid_bearer_is_rejected(client, manager):
 async def test_ownerless_session_is_denied(client, manager):
     """A session with no ``user_id`` (pre-#89 shape) belongs to nobody — it must
     not become readable by every authenticated caller."""
-    session = manager.create_session(user_id=None)
-    manager.update_session(session)
+    session = await manager.create_session(user_id=None)
+    await manager.update_session(session)
 
     resp = await client.get(
         f"/api/v1/sessions/{session.session_id}", headers=_bearer(SUBJECT_A)
@@ -349,7 +349,7 @@ async def test_ownerless_session_is_denied(client, manager):
 async def test_owner_still_reads_their_own_session_and_question(
     client, manager, retriever
 ):
-    session = _owned_session(manager, pack=True)
+    session = await _owned_session(manager, pack=True)
 
     state = await client.get(
         f"/api/v1/sessions/{session.session_id}", headers=_bearer(SUBJECT_A)

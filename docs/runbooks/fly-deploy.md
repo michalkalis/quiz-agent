@@ -26,7 +26,9 @@ same lock, so what CI tests is what ships. What remains:
 ChromaDB was decommissioned in #41 (Phase B done 2026-07-07): `/data/chroma`
 wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
 `DATABASE_URL`. **The volume `vol_r1l5163d2gjekdz4` (`/data` mount) must
-stay** — it holds `tts_cache/`, `ratings.db` and `translations.db`. Questions
+stay** — it holds `tts_cache/` (and, until resilience step 6 of #207.20, the
+old `ratings.db` / `translations.db` that each boot copies into Postgres once;
+sessions, ratings and translations live in Postgres since #207.20). Questions
 live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
 

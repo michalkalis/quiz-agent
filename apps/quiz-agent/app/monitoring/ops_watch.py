@@ -275,6 +275,7 @@ async def run_ops_watch(
         while True:
             await asyncio.sleep(s.ops_watch_interval_s)
             try:
+                await book.refresh()
                 readings, blind = await collect(s, sessionmaker, client)
                 await watch.report(readings, blind, book)
                 if elevenlabs_budget is not None:

@@ -26,9 +26,7 @@ from app.db.models import (
     Feedback,
     RefreshToken,
 )
-from app.session.manager import SessionManager
 from app.usage.tracker import _month_start
-from quiz_shared.database.sql_client import RatingDB
 from sqlalchemy import text
 
 from tests.test_auth_me_endpoints import (
@@ -47,7 +45,8 @@ from tests.test_auth_me_erase_unlinks import (
     _delete,
     _order_and_pack,
     _rate,
-    _ratings_store,
+    _manager,
+    _ratings_by_session,
     _seed_order,
 )
 
@@ -98,29 +97,24 @@ async def test_account_delete_erases_feedback_and_events_from_before_sign_in(
 
 
 async def test_account_delete_unlinks_sessions_and_orders_from_before_sign_in(
-    db_sessionmaker, tmp_path
+    db_sessionmaker,
 ):
     """Quiz sessions, ratings and a pack bought while anonymous must stop pointing
     at the person once the account is erased (rows kept, as for the account's own)."""
-    store = _ratings_store(tmp_path)
-    manager = SessionManager(sql_client=store)
+    manager = _manager(db_sessionmaker)
     app = _make_app(db_sessionmaker)
     app.state.session_manager = manager
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="a.sess2")
     anon_id = await _seed_anon_upgraded(db_sessionmaker, user_id)
-    session = manager.create_session(user_id=anon_id)
-    _rate(store, anon_id, session.session_id)
-    _rate(store, OTHER, "other-session")
+    session = await manager.create_session(user_id=anon_id)
+    await _rate(db_sessionmaker, anon_id, session.session_id)
+    await _rate(db_sessionmaker, OTHER, "other-session")
     order_id = await _seed_order(db_sessionmaker, anon_id, "pre-sign-in pack")
     try:
         assert (await _delete(app, bearer)).status_code == 204
 
-        assert manager.get_session(session.session_id) is None
-        db = store._get_session()
-        try:
-            ratings = {r.session_id: r.user_id for r in db.query(RatingDB).all()}
-        finally:
-            db.close()
+        assert await manager.get_session(session.session_id) is None
+        ratings = await _ratings_by_session(db_sessionmaker)
         assert ratings == {session.session_id: None, "other-session": OTHER}
         order, pack = await _order_and_pack(db_sessionmaker, order_id)
         assert order == (None, "pre-sign-in pack") and pack[0] is None

@@ -99,7 +99,7 @@ async def _create(
         token_service=None,
         auth_sessionmaker=auth_sessionmaker,
     )
-    return manager.get_session(response.session_id)
+    return await manager.get_session(response.session_id)
 
 
 async def test_owned_pack_id_reaches_session():

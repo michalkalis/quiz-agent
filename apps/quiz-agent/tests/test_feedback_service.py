@@ -1,4 +1,4 @@
-"""FeedbackService — SQL-only persistence (#41 A4/A6, decision D1).
+"""FeedbackService — rating-store-only persistence (#41 A4/A6, decision D1).
 
 Why these tests matter: #41 D1 drops the ChromaDB write-back
 (`user_ratings`/`usage_count` on rate, `review_status` on flag) because
@@ -23,14 +23,14 @@ from app.rating.feedback import FeedbackService
 from quiz_shared.models.rating import QuestionRating
 
 
-class FakeSQLClient:
+class FakeRatingStore:
     """Records ratings in memory; can simulate a write failure."""
 
     def __init__(self, fail: bool = False) -> None:
         self.fail = fail
         self.ratings: List[QuestionRating] = []
 
-    def add_rating(self, rating: QuestionRating) -> bool:
+    async def add_rating(self, rating: QuestionRating) -> bool:
         if self.fail:
             return False
         self.ratings.append(rating)
@@ -41,8 +41,8 @@ class FakeSQLClient:
 async def test_submit_rating_persists_to_sql_only() -> None:
     """The SQL record is the single durable trace of a rating after D1 —
     it must carry the full detail (who, what, score, text)."""
-    sql = FakeSQLClient()
-    service = FeedbackService(sql_client=sql)
+    sql = FakeRatingStore()
+    service = FeedbackService(rating_store=sql)
 
     ok, msg = await service.submit_rating(
         "q-1", "user-1", 5, "Great question!", session_id="sess-1"
@@ -63,7 +63,7 @@ async def test_submit_rating_persists_to_sql_only() -> None:
 async def test_submit_rating_fails_loud_when_sql_write_fails() -> None:
     """With Chroma gone there is no second store to fall back on — a failed
     SQL write means the rating is lost and the API must return an error."""
-    service = FeedbackService(sql_client=FakeSQLClient(fail=True))
+    service = FeedbackService(rating_store=FakeRatingStore(fail=True))
     ok, msg = await service.submit_rating("q-1", "user-1", 4)
     assert ok is False
     assert "persist" in msg.lower()
@@ -74,8 +74,8 @@ async def test_submit_rating_fails_loud_when_sql_write_fails() -> None:
 async def test_submit_rating_rejects_out_of_range(rating: int) -> None:
     """Invalid ratings must be rejected before any write — garbage in the
     analytics store would skew the low-rated-question flagging."""
-    sql = FakeSQLClient()
-    service = FeedbackService(sql_client=sql)
+    sql = FakeRatingStore()
+    service = FeedbackService(rating_store=sql)
     ok, _ = await service.submit_rating("q-1", "user-1", rating)
     assert ok is False
     assert sql.ratings == []
@@ -86,65 +86,47 @@ async def test_flag_question_succeeds_without_any_store_write() -> None:
     """Flagging is acknowledge-and-log after D1 (the old review_status
     write-back had zero readers) — /flag must still return success so the
     voice UX confirms the flag to the driver."""
-    sql = FakeSQLClient()
-    service = FeedbackService(sql_client=sql)
+    sql = FakeRatingStore()
+    service = FeedbackService(rating_store=sql)
     ok, msg = await service.flag_question("q-1", "user-1", "wrong answer")
     assert ok is True
     assert sql.ratings == []  # no rating record, no store write
 
 
 @pytest.mark.asyncio
-async def test_rating_roundtrips_through_real_sqlite(tmp_path) -> None:
-    """End-to-end through the real SQLClient: the pre-#41 schema made every
-    rating insert fail silently (NOT NULL context columns + required model
-    fields the endpoint can't supply), so 'ratings persist in SQLite' was a
-    lie. This locks in that a /rate-shaped call actually lands a row that can
-    be read back for analytics."""
-    from quiz_shared.database.sql_client import SQLClient
+async def test_rating_roundtrips_through_postgres(db_sessionmaker) -> None:
+    """End-to-end through the real Postgres store: a /rate-shaped call (no
+    answer/difficulty context the endpoint can't supply) must actually land a
+    row that can be read back for analytics, not fail on NOT NULL columns."""
+    from sqlalchemy import select
 
-    sql = SQLClient(database_url=f"sqlite:///{tmp_path}/ratings.db")
-    service = FeedbackService(sql_client=sql)
+    from app.db.models import QuestionRatingRow
+    from app.rating.store import PostgresRatingStore
+
+    service = FeedbackService(rating_store=PostgresRatingStore(db_sessionmaker))
 
     ok, _ = await service.submit_rating(
         "q-42", "user-1", 2, "confusing", session_id="sess-9"
     )
     assert ok is True
 
-    stored = sql.get_ratings_by_question("q-42")
-    assert len(stored) == 1
-    assert stored[0].rating == 2
-    assert stored[0].feedback == "confusing"
-    assert sql.get_avg_rating("q-42") == 2.0
-
-
-@pytest.mark.asyncio
-async def test_legacy_ratings_table_is_rebuilt_when_empty(tmp_path) -> None:
-    """Existing deployments carry the legacy NOT NULL table (always empty —
-    inserts never succeeded). SQLClient must rebuild it on init, or the fixed
-    write path would keep failing against the old schema."""
-    import sqlite3
-
-    from quiz_shared.database.sql_client import SQLClient
-
-    db = tmp_path / "ratings.db"
-    con = sqlite3.connect(db)
-    con.execute(
-        """CREATE TABLE question_ratings (
-            id VARCHAR NOT NULL, question_id VARCHAR NOT NULL,
-            session_id VARCHAR NOT NULL, user_id VARCHAR,
-            rating INTEGER NOT NULL, feedback TEXT,
-            was_correct BOOLEAN NOT NULL, user_answer VARCHAR NOT NULL,
-            difficulty_at_time VARCHAR NOT NULL, created_at DATETIME,
-            PRIMARY KEY (id))"""
-    )
-    con.commit()
-    con.close()
-
-    sql = SQLClient(database_url=f"sqlite:///{db}")
-    service = FeedbackService(sql_client=sql)
-    ok, _ = await service.submit_rating("q-1", "user-1", 4, session_id="sess-1")
-    assert ok is True
-    assert len(sql.get_ratings_by_question("q-1")) == 1
+    async with db_sessionmaker() as db:
+        rows = (
+            (
+                await db.execute(
+                    select(QuestionRatingRow).where(
+                        QuestionRatingRow.question_id == "q-42"
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert len(rows) == 1
+    assert rows[0].rating == 2
+    assert rows[0].feedback == "confusing"
+    assert rows[0].session_id == "sess-9"
+    assert rows[0].user_id == "user-1"
 
 
 def test_service_takes_no_question_store() -> None:

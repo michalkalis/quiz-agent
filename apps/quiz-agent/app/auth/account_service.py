@@ -174,7 +174,7 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     accounting but are unlinked (see ``_unlink_pack_orders``). Purchase records
     (``subscription``, ``credit_ledger``, ``revoked_transactions``) are kept
     untouched: accounting/refund law requires them. Quiz sessions and ratings
-    live in the separate ratings store and are unlinked by the route
+    are unlinked by the route in the same transaction
     (``SessionManager.forget_user``). The caller commits.
 
     Sign-in does not re-key feedback, analytics, orders or sessions, so what the

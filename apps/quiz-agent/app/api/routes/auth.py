@@ -375,15 +375,12 @@ async def delete_account(
                 status_code=503,
                 detail="Could not delete your voice recordings, please try again",
             )
-        # Sessions + ratings live in the separate ratings store (its own engine),
-        # so they cannot share this transaction. Unlink them *before* the commit:
-        # if that fails, nothing is committed and the user can retry (after the
-        # commit a retry would 404 and leave them linked). Unlinking is harmless
-        # if the commit then fails.
+        # Sessions + ratings live in this same Postgres (#207.20): unlink them
+        # inside this transaction, so the erasure commits all or nothing.
         session_manager = getattr(request.app.state, "session_manager", None)
         if session_manager is not None:
             for subject_id in erased_ids:
-                session_manager.forget_user(subject_id)
+                await session_manager.forget_user(subject_id, db=session)
         await session.commit()
 
     if user_id is None:

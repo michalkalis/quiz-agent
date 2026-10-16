@@ -56,7 +56,7 @@ async def _create(manager: SessionManager, headers: dict | None):
         token_service=None,
         auth_sessionmaker=None,
     )
-    return manager.get_session(response.session_id)
+    return await manager.get_session(response.session_id)
 
 
 async def test_testflight_header_reaches_session():

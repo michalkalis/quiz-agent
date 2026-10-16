@@ -69,16 +69,16 @@ async def _start(manager, session_id, retriever, heard: list[str]):
     )
 
 
-def _session(manager: SessionManager, pack_id: str | None):
-    session = manager.create_session(user_id="u1", max_questions=10)
+async def _session(manager: SessionManager, pack_id: str | None):
+    session = await manager.create_session(user_id="u1", max_questions=10)
     session.pack_id = pack_id
-    manager.update_session(session)
+    await manager.update_session(session)
     return session
 
 
 async def test_a_fully_heard_closed_pack_answers_a_coded_409():
     manager = SessionManager()
-    session = _session(manager, PACK_ID)
+    session = await _session(manager, PACK_ID)
 
     with pytest.raises(HTTPException) as exc:
         await _start(manager, session.session_id, _retriever(generating=False), ["q1"])
@@ -86,12 +86,12 @@ async def test_a_fully_heard_closed_pack_answers_a_coded_409():
     assert exc.value.status_code == 409
     assert exc.value.detail["code"] == "pack_exhausted"
     # Nothing was started: the stored session can still be started or dropped.
-    assert manager.get_session(session.session_id).phase == SessionPhase.IDLE
+    assert (await manager.get_session(session.session_id)).phase == SessionPhase.IDLE
 
 
 async def test_a_still_generating_pack_parks_instead_of_failing():
     manager = SessionManager()
-    session = _session(manager, PACK_ID)
+    session = await _session(manager, PACK_ID)
 
     response = await _start(
         manager, session.session_id, _retriever(generating=True), ["q1"]
@@ -102,7 +102,7 @@ async def test_a_still_generating_pack_parks_instead_of_failing():
 
 async def test_a_normal_session_keeps_its_corpus_diagnostics():
     manager = SessionManager()
-    session = _session(manager, None)
+    session = await _session(manager, None)
 
     with pytest.raises(HTTPException) as exc:
         await _start(manager, session.session_id, _retriever(generating=False), [])

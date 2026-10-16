@@ -241,7 +241,7 @@ def _flow_with(intents, question: Question) -> QuizFlowService:
     evaluator.evaluate = AsyncMock(return_value=("correct", 1.0))
 
     return QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=retriever,
         answer_evaluator=evaluator,

@@ -57,7 +57,7 @@ def _flow(daily, usage=None):
     tts.synthesize = AsyncMock(return_value=b"opus")
     tts.synthesize_question = AsyncMock(return_value=b"opus")
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=parser,
         question_retriever=retriever,
         answer_evaluator=evaluator,

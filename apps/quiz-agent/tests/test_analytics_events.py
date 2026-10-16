@@ -245,7 +245,7 @@ def _mcq(qid: str) -> Question:
 
 
 class _Manager:
-    def update_session(self, session):
+    async def update_session(self, session):
         return True
 
 

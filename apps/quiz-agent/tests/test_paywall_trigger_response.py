@@ -91,8 +91,8 @@ async def test_start_quiz_denies_with_paywall_contract_when_quota_and_credits_ex
     tracker.record_question = spy_record
 
     manager = SessionManager()
-    session = manager.create_session(user_id=SUBJECT)
-    manager.update_session(session)
+    session = await manager.create_session(user_id=SUBJECT)
+    await manager.update_session(session)
 
     retriever = MagicMock()
     retriever.get_next_question.return_value = _make_question()

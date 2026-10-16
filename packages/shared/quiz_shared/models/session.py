@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from .participant import Participant
 from .phase import InvalidPhaseTransition, SessionPhase, is_valid_transition
@@ -90,6 +90,11 @@ class QuizSession(BaseModel):
     Supports both single-player and multiplayer modes.
     Tracks quiz progress, participants, and question history.
     """
+
+    # #207.20: the stored row's version this copy was read at (optimistic
+    # concurrency in quiz-agent's session store). Private: never serialized,
+    # never part of the API.
+    _store_version: int = PrivateAttr(default=0)
 
     # Identifiers
     session_id: str = Field(..., description="Unique session ID")

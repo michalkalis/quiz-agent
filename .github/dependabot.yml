@@ -1,0 +1,83 @@
+# Dependabot (#207 task 207.25). Low noise by design:
+# - version updates once a month, one grouped PR per ecosystem;
+# - security updates (enabled in repo settings) open as soon as an advisory
+#   lands, grouped per ecosystem too;
+# - a 7-day cooldown skips releases that get yanked or hot-fixed right away.
+# Every Dependabot PR goes through the normal PR flow (Claude review + CI).
+version: 2
+updates:
+  # Python workspace (uv.lock). lockfile-only keeps the pyproject ranges and
+  # their deliberate caps (openai<3, langchain-openai<1.5: httpx2 breaks the
+  # respx test mocks) untouched; the Docker images install exactly this lock.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: monthly
+    versioning-strategy: lockfile-only
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(backend)"
+    groups:
+      python:
+        applies-to: version-updates
+        patterns: ["*"]
+      python-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  # iOS app: SwiftPM packages pinned in the Xcode project's Package.resolved.
+  - package-ecosystem: swift
+    directory: /apps/ios-app/Hangs
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(ios)"
+    groups:
+      swift:
+        applies-to: version-updates
+        patterns: ["*"]
+      swift-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  # Workflow actions (third-party ones are pinned to SHAs; Dependabot bumps
+  # the SHA and its version comment together).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  # Backend base images (pinned by digest in both Dockerfiles). Majors only by
+  # hand: a Python minor bump (3.11 -> 3.12) is a runtime change, not hygiene.
+  - package-ecosystem: docker
+    directories:
+      - /apps/quiz-agent
+      - /apps/quiz-pack-api
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(backend)"
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    groups:
+      docker:
+        applies-to: version-updates
+        patterns: ["*"]

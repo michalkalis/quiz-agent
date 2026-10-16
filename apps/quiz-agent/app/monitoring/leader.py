@@ -41,11 +41,14 @@ class MonitorLeader:
         self.ttl_s = ttl_s
         self.holder = new_holder()
         self._tasks: list[asyncio.Task] = []
+        # Leadership is its own flag: a machine with every monitor switched
+        # off (staging) still leads, it just has no tasks to run.
+        self._leading = False
         self._held_until = 0.0  # monotonic
 
     @property
     def is_leader(self) -> bool:
-        return bool(self._tasks)
+        return self._leading
 
     async def tick(self) -> None:
         """One renew attempt; starts or stops the monitors accordingly."""
@@ -57,13 +60,14 @@ class MonitorLeader:
             held = None
         if held:
             self._held_until = now + self.ttl_s
-            if not self._tasks:
+            if not self._leading:
                 logger.info("Monitor leader: this machine runs the monitors")
+                self._leading = True
                 self._tasks = self._start()
             return
         if held is None and now < self._held_until:
             return  # DB blip: our lease is still valid, keep running
-        if self._tasks:
+        if self._leading:
             logger.info("Monitor leader: lease lost, stopping the monitors")
             self._stop()
 
@@ -71,6 +75,7 @@ class MonitorLeader:
         for task in self._tasks:
             task.cancel()
         self._tasks = []
+        self._leading = False
 
     async def run(self) -> None:
         try:

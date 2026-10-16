@@ -16,6 +16,13 @@ kill_timeout = 30
 # the boot-time migration-head check never meets a behind database.
 [deploy]
   release_command = "alembic upgrade head"
+  # #207.20 step 6 ($0 variant, founder 2026-10-16: second machine after the
+  # beta): without a volume a single machine can deploy bluegreen — the new
+  # machine boots and passes its health check before traffic moves and the
+  # old one stops, so a deploy no longer drops ~18 s of requests. A secret
+  # change still restarts in place: stage it (`fly secrets set --stage`) and
+  # let the next deploy apply it.
+  strategy = "bluegreen"
 
 [env]
   # Drives Sentry env labeling and the production-only startup SECURITY
@@ -38,15 +45,11 @@ kill_timeout = 30
   QUESTION_STOCK_CHECK_ENABLED = "true"
   # #205: daily challenge. Off until the founder turns it on ("true").
   DAILY_CHALLENGE_ENABLED = "false"
-  # Park the TTS audio cache on the mounted volume. The default
-  # (`./data/tts_cache`) resolves against WORKDIR /app, i.e. container-local
-  # storage — so every deploy would re-buy the whole cache from ElevenLabs,
-  # whose credits are metered and shared with realtime STT.
-  TTS_CACHE_DIR = "/data/tts_cache"
-  # #207.20: sessions, ratings and the translation cache moved from SQLite on
-  # this volume to Postgres. Each boot copies what the old release left here
-  # (idempotent) until the volume goes away (resilience design step 6).
-  LEGACY_STATE_DIR = "/data"
+  # #207.20: no volume. The TTS disk cache (./data/tts_cache on the machine's
+  # own disk) is only a per-machine L1; every clip lives in the private R2
+  # bucket (TTS_R2_* secrets), so a new machine re-downloads, never re-buys.
+  # Sessions, ratings, translations and alert state are in Postgres.
+  TTS_CACHE_MAX_MB = "500"
 
 [[services]]
   protocol = "tcp"
@@ -75,10 +78,6 @@ kill_timeout = 30
     timeout = "10s"
     method = "GET"
     path = "/api/v1/health"
-
-[[mounts]]
-  source = "quiz_agent_data"
-  destination = "/data"
 
 # Prod runs 512MB (set via `fly scale`, not its toml); 256MB default fails the
 # boot health check — pin it here so redeploys keep parity.

@@ -307,16 +307,6 @@ async def lifespan(app: FastAPI):
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
 
-    # #207.20 cutover: copy what the previous release kept on the volume
-    # (idempotent; removed with the volume in resilience step 6).
-    if settings.legacy_state_dir:
-        try:
-            from .legacy_volume_import import import_legacy_state
-
-            await import_legacy_state(settings.legacy_state_dir, shared_sm)
-        except Exception as e:
-            logger.warning("Legacy volume import failed: %s", e, exc_info=True)
-
     # Question health check on startup
     try:
         if QuestionMonitor is not None:

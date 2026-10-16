@@ -13,18 +13,15 @@ primary_region = "cdg"
 # Same as prod: migrate before rollout, so a migration is rehearsed here first.
 [deploy]
   release_command = "alembic upgrade head"
+  strategy = "bluegreen"
 
 [env]
   # RC_ALLOWED_ENVIRONMENT=SANDBOX is set as a Fly secret alongside
   # DATABASE_URL/REVENUECAT_* (issue #101 §3.5) — not duplicated here since
   # those are per-deploy secrets, not build-time config.
   ENVIRONMENT = "staging"
-  # Keep the TTS audio cache on the mounted volume — see fly.toml for why the
-  # default path would silently re-buy the cache on every deploy.
-  TTS_CACHE_DIR = "/data/tts_cache"
-  # #207.20: sessions, ratings and translations are in Postgres; copy the
-  # old volume's SQLite state once (see fly.toml).
-  LEGACY_STATE_DIR = "/data"
+  # #207.20: no volume, same as prod (see fly.toml).
+  TTS_CACHE_MAX_MB = "500"
 
 [[services]]
   protocol = "tcp"
@@ -50,10 +47,6 @@ primary_region = "cdg"
     timeout = "10s"
     method = "GET"
     path = "/api/v1/health"
-
-[[mounts]]
-  source = "quiz_agent_data_staging"
-  destination = "/data"
 
 # Prod runs 512MB (set via `fly scale`, not its toml); 256MB default fails the
 # boot health check — pin it here so redeploys keep parity.

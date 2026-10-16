@@ -129,8 +129,8 @@ class Settings(BaseSettings):
     # deleted). `tts_fallback_provider` set to "none"/empty disables failover.
     # `tts_voice` overrides the provider's default voice — an ElevenLabs voice
     # id or an OpenAI voice name, so it only makes sense alongside a pinned
-    # `tts_provider`. `tts_cache_dir` must point at the Fly volume (/data/…)
-    # for the audio cache to survive a deploy.
+    # `tts_provider`. `tts_cache_dir` is a per-machine L1 since
+    # #207.20; the shared copy is the private R2 bucket (``tts.remote_cache``).
     tts_provider: str = "elevenlabs"
     tts_fallback_provider: Optional[str] = "openai"
     tts_voice: Optional[str] = None
@@ -217,9 +217,6 @@ class Settings(BaseSettings):
     ops_watch_enabled: bool = False
     # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
     # so a deploy does not re-send ongoing problems. Empty = memory only.
-    # #207.20 cutover: directory of the old volume's SQLite files to copy into
-    # Postgres at boot ("" = off). Goes away with the volume (resilience step 6).
-    legacy_state_dir: str = ""
     ops_watch_interval_s: float = 300.0
     ops_disk_alarm_pct: float = 70.0
     ops_db_connections_alarm_pct: float = 70.0

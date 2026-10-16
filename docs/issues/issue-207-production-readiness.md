@@ -31,9 +31,9 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### B. Vlastné balíčky: Fly worker primárne, mba záloha (P0)
 
-- [ ] 207.4 Fly `worker` na predvolenej fronte s Claude cez priame Anthropic API (Max kredit, rezerva podľa `credit_gate`); `ORDER_QUEUE_NAME` späť na predvolenú.
-- [ ] 207.5 `mba` session worker ako záloha: preberá objednávky, len keď Fly worker nedáva heartbeat / objednávka visí > N min (bez dvojitej generácie — existujúce zámky z PR #275). Deploy `quiz-pack-api` už nesmie omylom spúšťať/zastavovať zlý worker.
-- [ ] 207.6 Kontrola objednávok po obnove zo zálohy: admin príkaz porovná App Store transakcie (App Store Server API) s objednávkami v DB a dorobí chýbajúce.
+- [x] 207.4 Fly `worker` na predvolenej fronte s Claude cez priame Anthropic API (Max kredit, rezerva podľa `credit_gate`); `ORDER_QUEUE_NAME` späť na predvolenú. **Hotové 2026-10-16 (PR #452, nasadené v93):** secret zrušený, worker beží na `arq:queue`, generovanie `claude-opus-5-5` overené priamo cez Anthropic z worker stroja.
+- [x] 207.5 `mba` session worker ako záloha: preberá objednávky, len keď Fly worker nedáva heartbeat / objednávka visí > N min (bez dvojitej generácie — existujúce zámky z PR #275). Deploy `quiz-pack-api` už nesmie omylom spúšťať/zastavovať zlý worker. **Hotové 2026-10-16 (PR #452):** `python -m app.worker.backup` (prevezme po 5 min bez Fly heartbeatu alebo pri objednávke nevyzdvihnutej 15 min), worker s inou frontou odmietne štart, monitor alarmuje mŕtvy Fly worker. Open = na mba spustiť `session_worker_local.sh install-launchd` (mba dnes nedostupný; dovtedy tam beží starý worker na nepoužívanej fronte `quiz-pack:session`), návod `docs/setup/session-worker-mba.md`.
+- [x] 207.6 Kontrola objednávok po obnove zo zálohy: admin príkaz porovná App Store transakcie (App Store Server API) s objednávkami v DB a dorobí chýbajúce. **Hotové 2026-10-16:** `python -m app.storekit.reconcile` (krok 10 v `docs/setup/db-backup.md`); obnoví objednávky z `quiz_pack_broken`, ostatné vypíše na refund (prompt Apple nepozná). Open = founder: In-App Purchase kľúč do Fly secrets.
 
 ### C. Zachytenie výpadkov bez novej služby (P0)
 
@@ -77,6 +77,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 ## Founder kroky
 
 - Sprístupniť `mba` pre Remote Control (návod v session 2026-10-16), aby agent spúšťal sessions sám.
+- 207.6: In-App Purchase kľúč v App Store Connect (Users and Access → Integrations → In-App Purchase → Generate) a jeho Key ID, Issuer ID a obsah `.p8` do Fly secrets `quiz-pack-api` (`APP_STORE_SERVER_KEY_ID`, `APP_STORE_SERVER_ISSUER_ID`, `APP_STORE_SERVER_PRIVATE_KEY`). Bez neho príkaz na kontrolu objednávok po obnove nebeží (ak má RevenueCat už vlastný kľúč a `.p8` je stiahnutý, dá sa použiť ten).
 - 207.22: akceptovať DPA u spracovateľov, kde to vyžaduje klik v ich konzole (zoznam pripraví agent).
 - Neskôr: Anthropic auto-reload so stropom pred 11-06.
 

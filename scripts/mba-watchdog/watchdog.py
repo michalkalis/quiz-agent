@@ -96,8 +96,11 @@ def check_pack(cfg: dict) -> str | None:
     )
 
 
-def send_sentry(dsn: str, check: str, message: str) -> None:
-    """One error event via the DSN's envelope endpoint (no SDK on mba)."""
+def send_sentry(dsn: str, check: str, message: str, incident: str = "") -> None:
+    """One error event via the DSN's envelope endpoint (no SDK on mba). The
+    incident id (start of the failure streak) is in the fingerprint, so each new
+    outage is a new Sentry issue and e-mails, even while an older one is still
+    open (issues auto-resolve only after 72 h of silence)."""
     u = urllib.parse.urlsplit(dsn)
     project = u.path.strip("/")
     event = {
@@ -109,7 +112,7 @@ def send_sentry(dsn: str, check: str, message: str) -> None:
         "environment": "production",
         "server_name": "mba-watchdog",
         "message": {"formatted": message},
-        "fingerprint": ["mba-watchdog", check],
+        "fingerprint": ["mba-watchdog", check, incident],
         "tags": {"watchdog_check": check},
     }
     envelope = b"\n".join(
@@ -150,24 +153,31 @@ def main() -> int:
         state = json.loads(STATE.read_text())
     except (OSError, ValueError):
         state = {}
-    minute = int(time.time() // 60)
+    now = time.time()
     checks = [("agent", check_agent, 3)]
-    if minute % PACK_EVERY_MIN == 0 or "--all" in sys.argv:
+    # Elapsed time, not clock minutes: launchd runs drift and skip while asleep.
+    if (
+        now - state.get("pack_checked_at", 0) >= PACK_EVERY_MIN * 60 - 30
+        or "--all" in sys.argv
+    ):
+        state["pack_checked_at"] = now
         checks.append(("pack", check_pack, 2))
     for name, fn, threshold in checks:
-        s = state.setdefault(name, {"fails": 0, "alerted_at": 0})
+        s = state.setdefault(name, {"fails": 0, "alerted_at": 0, "since": 0})
         problem = fn(cfg)
         stamp = time.strftime("%Y-%m-%dT%H:%M:%S")
         if problem is None:
             if s["fails"]:
                 print(f"{stamp} {name} recovered after {s['fails']} failed run(s)")
-            s.update(fails=0, alerted_at=0)
+            s.update(fails=0, alerted_at=0, since=0)
             continue
         s["fails"] += 1
+        if s["fails"] == 1:
+            s["since"] = int(now)
         print(f"{stamp} {name} FAIL #{s['fails']}: {problem}")
         if s["fails"] >= threshold and time.time() - s["alerted_at"] > REALERT_S:
             try:
-                send_sentry(cfg["SENTRY_DSN"], name, problem)
+                send_sentry(cfg["SENTRY_DSN"], name, problem, str(s.get("since", 0)))
                 s["alerted_at"] = time.time()
                 print(f"{stamp} {name} alert sent to Sentry")
             except Exception as exc:  # noqa: BLE001 — still notify locally

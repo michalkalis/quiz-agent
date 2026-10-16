@@ -70,7 +70,12 @@ def check_in() -> bool:
 
 async def _loop() -> None:
     while True:
-        check_in()
+        try:
+            check_in()
+        except Exception:
+            # A dead loop would stop check-ins and page "worker dead" while the
+            # worker still runs; log and keep going instead.
+            logger.warning("worker check-in loop error", exc_info=True)
         await asyncio.sleep(INTERVAL_S)
 
 

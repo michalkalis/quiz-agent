@@ -232,11 +232,10 @@ struct VoiceCommandObservabilityTests {
 
     /// WHY (#185 3.5, founder 2026-09-24): commands that did not fire could not
     /// be debugged from Sentry, because only the text LENGTH was logged — so
-    /// TestFlight and debug builds now log what the recognizer heard (and a
-    /// final's alternatives). The App Store build keeps the no-raw-speech rule
-    /// of Logging.swift: that half of the gate is the privacy invariant, and
-    /// the Settings switch has no say in it either way.
-    @Test("drop logs carry what was heard in TestFlight/debug builds only")
+    /// With the gate off, drop logs carry metadata only (the no-raw-speech
+    /// rule of Logging.swift). Since #207 (207.23) the gate is off in every
+    /// build, TestFlight included; the Settings switch has no say either way.
+    @Test("drop logs never carry what was heard")
     func dropLogTextFollowsBuildChannel() {
         let (vm, _, _) = makeVM()
         let coordinator = vm.voiceCommandCoordinator
@@ -258,8 +257,9 @@ struct VoiceCommandObservabilityTests {
 
         #expect(VoiceCommandCoordinator.heardTextAttributes("stop", enabled: false).isEmpty)
         #expect(VoiceCommandCoordinator.heardTextAttributes("stop", enabled: true)["text"] as? String == "stop")
-        // The gate itself is the build channel, not a Settings toggle.
-        #expect(VoiceCommandCoordinator.logsHeardText == BuildChannel.debugSurfacesEnabled())
+        // #207 (207.23): the gate is off in every build, TestFlight included,
+        // because the privacy policy does not cover speech text in Sentry.
+        #expect(VoiceCommandCoordinator.logsHeardText == false)
     }
 
     // MARK: - Persisted settings backward-compat

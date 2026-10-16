@@ -43,6 +43,7 @@ from ...usage.caps import STT_SECONDS, UsageCaps, answer_attempts, recording_sec
 from ...rate_limit import limiter
 from quiz_shared.utils.text_normalization import normalize_text
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.sentry_privacy import user_text_log
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -246,12 +247,17 @@ async def transcribe_and_submit(
                     min_chars=min_chars
                 )
                 logger.warning(
-                    "Transcription rejected for session %s: %s (text='%s', no_speech=%.3f, logprob=%.3f)",
+                    "Transcription rejected for session %s: %s (chars=%d, no_speech=%.3f, logprob=%.3f)",
                     session_id,
                     rejection_reason,
-                    transcription_result.text,
+                    len(transcription_result.text),
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,
+                )
+                user_text_log.info(
+                    "Rejected transcript session=%s: %r",
+                    session_id,
+                    transcription_result.text,
                 )
                 quiz_flow.analytics.emit(
                     "transcription_failed",
@@ -294,7 +300,7 @@ async def transcribe_and_submit(
                     )
 
             transcribed_text = transcription_result.text
-            logger.info(
+            user_text_log.info(
                 "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
                 transcribed_text,
                 transcription_result.no_speech_prob,
@@ -346,7 +352,11 @@ async def transcribe_and_submit(
             # Voice-specific: require an answer intent
             if flow_result.evaluation is None:
                 logger.warning(
-                    "No answer intent detected in transcription: '%s'", transcribed_text
+                    "No answer intent detected in transcription (chars=%d)",
+                    len(transcribed_text),
+                )
+                user_text_log.info(
+                    "No answer intent in transcription: %r", transcribed_text
                 )
                 raise retry_answer_error(
                     session,

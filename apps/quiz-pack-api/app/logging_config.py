@@ -79,6 +79,8 @@ def init_sentry(dsn: Optional[str]) -> None:
         return
     from sentry_sdk.integrations.logging import LoggingIntegration
 
+    from quiz_shared.sentry_privacy import sentry_privacy_options
+
     sentry_sdk.init(
         dsn=dsn,
         traces_sample_rate=0.1,
@@ -87,6 +89,9 @@ def init_sentry(dsn: Optional[str]) -> None:
         # retention) — Fly's log buffer is too short to investigate an incident.
         enable_logs=True,
         integrations=[LoggingIntegration(sentry_logs_level=logging.WARNING)],
+        # #207 (207.23): no request bodies (pack topics), local variables or
+        # player text.
+        **sentry_privacy_options(),
     )
     logging.getLogger(__name__).info(
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")

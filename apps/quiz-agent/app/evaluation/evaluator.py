@@ -8,6 +8,7 @@ import re
 from typing import Tuple, Any
 
 from quiz_shared.models.question import Question
+from quiz_shared.sentry_privacy import user_text_log
 from quiz_shared.utils.text_normalization import normalize_text
 
 from .. import hot_path_llm
@@ -109,7 +110,7 @@ class AnswerEvaluator:
         if sounds_like_any(
             user_answer, [str(scoring_answer), *question.alternative_answers]
         ):
-            logger.info(
+            user_text_log.info(
                 "Sound-alike accepted without LLM: heard=%r expected=%r",
                 user_answer,
                 str(scoring_answer),

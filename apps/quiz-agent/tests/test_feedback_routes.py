@@ -96,10 +96,11 @@ async def test_happy_path_multipart_insert_and_detail_read(client):
     feedback_id = resp.json()["id"]
     assert feedback_id
 
-    # feedback.received fired with the id + a message excerpt (#109 design).
+    # feedback.received fires with the id + length only: the feedback text stays
+    # in our own table, never in Sentry (#207, 207.23).
     mock_capture.assert_called_once()
     assert feedback_id in mock_capture.call_args[0][0]
-    assert "the mic cuts out" in mock_capture.call_args[0][0]
+    assert "the mic cuts out" not in mock_capture.call_args[0][0]
 
     detail = await client.get(
         f"/api/v1/feedback/{feedback_id}", headers={"X-Admin-Key": _ADMIN_KEY}

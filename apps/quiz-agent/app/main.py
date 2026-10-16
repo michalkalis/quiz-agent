@@ -50,6 +50,8 @@ sentry_dsn = os.environ.get("SENTRY_DSN")
 if sentry_dsn:
     from sentry_sdk.integrations.logging import LoggingIntegration
 
+    from quiz_shared.sentry_privacy import sentry_privacy_options
+
     sentry_sdk.init(
         dsn=sentry_dsn,
         traces_sample_rate=0.1,
@@ -59,6 +61,8 @@ if sentry_dsn:
         # back minutes, too short to investigate an incident afterwards.
         enable_logs=True,
         integrations=[LoggingIntegration(sentry_logs_level=logging.WARNING)],
+        # #207 (207.23): no request bodies, local variables or player text.
+        **sentry_privacy_options(),
     )
     logger.info(
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")

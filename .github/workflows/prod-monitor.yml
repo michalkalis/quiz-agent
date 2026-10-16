@@ -9,9 +9,11 @@
 # Why here: the repo is public, so Actions minutes are free; nothing new to
 # sign up for. Why every 30 min: each run cold-starts quiz-pack-api (scales to
 # zero), which costs machine time; 30 min keeps that well under ~$1/month.
-# GitHub may delay scheduled runs at busy times, so worst-case detection is
-# roughly an hour — fine for a beta. Logs are public: print states, never
-# customer data (the endpoint returns none).
+# GitHub may delay scheduled runs at busy times; in practice it runs about
+# every 4 h (2026-10), so this is the slow backstop. Minute-level alerts come
+# from Sentry (#207: uptime + worker cron monitor + alert rules, see
+# scripts/sentry_monitoring.py) and the mba watchdog (scripts/mba-watchdog/).
+# Logs are public: print states, never customer data (the endpoint returns none).
 name: prod-monitor
 
 on:

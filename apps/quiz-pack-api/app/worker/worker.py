@@ -82,6 +82,13 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
 
     await assert_migrations_at_head(get_settings().database_url, logger)
 
+    # #207: liveness check-ins to the Sentry Cron monitor (checkin.py). A
+    # background task, not an arq cron job: cron jobs wait for a free job slot,
+    # and a worker busy with long packs would look dead.
+    from .checkin import start_checkins
+
+    ctx["checkin_task"] = start_checkins()
+
     from app.db.session import AsyncSessionLocal
     from app.generation.advanced_generator import AdvancedQuestionGenerator
     from app.generation.answer_normalizer import AnswerNormalizer

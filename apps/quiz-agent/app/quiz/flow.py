@@ -17,6 +17,7 @@ from ..analytics.recorder import AnalyticsRecorder
 from ..client_capabilities import ANSWER_CODES, has_capability
 from ..daily_challenge.schemas import CrowdStrip
 from ..evaluation.evaluator import UNMATCHED, AnswerEvaluator
+from ..evaluation.spelling import collapse_spelling
 from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
@@ -69,6 +70,10 @@ async def parse_answer_intents(
     Module-level so ``scripts/voice_replay.py`` (#197) replays recordings
     through exactly this path instead of a copy that could drift.
     """
+    if not display_question.possible_answers:
+        # #208.2: "V A H" / "pé á er í žet" -> one word before anything reads it.
+        # Not for MCQ, where single letters are option labels.
+        answer_text = collapse_spelling(answer_text)
     # Fast-path for literal "skip"
     if answer_text.strip().lower() == "skip":
         return [{"intent_type": "skip", "extracted_data": {}}]

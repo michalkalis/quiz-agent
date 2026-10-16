@@ -208,6 +208,7 @@ class AnswerEvaluator:
         eval_prompt = f"""You are a fair quiz answer evaluator for a voice quiz played in a car. Compare the user's answer to the correct answer.
 
 The user's answer is a speech-to-text transcript of the player talking in a moving car. The recogniser is set to the language of the quiz, so it makes predictable mistakes: foreign words and names come back respelled the way they sound in that language, or as a similar-sounding real word or brand name (e.g. "Carling" or "Karling" for "curling"), and road noise can swap or drop a sound.
+The transcript may contain a spelled-out answer: letters the player spelled are joined into one word (e.g. "VAH" for "Váh"), so judge the word it spells.
 
 Question: {question_text}
 Correct Answer: {correct_answer}

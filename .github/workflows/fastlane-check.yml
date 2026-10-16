@@ -1,0 +1,41 @@
+name: fastlane check
+
+# iOS CI never runs fastlane, so a gem bump (Dependabot bundler PRs) would only
+# surface in a real TestFlight run. This proves the bundle installs, the
+# Fastfile loads and the ASC token / IPA reading still work, on a cheap Linux
+# runner without secrets (#207 task 207.25).
+on:
+  pull_request:
+    paths:
+      - 'apps/ios-app/Hangs/Gemfile*'
+      - 'apps/ios-app/Hangs/fastlane/Fastfile'
+      - 'scripts/fastlane-smoke.rb'
+      - '.github/workflows/fastlane-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fastlane-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/ios-app/Hangs
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
+        with:
+          ruby-version: "3.3" # same as ios-release.yml
+          bundler-cache: true
+          working-directory: apps/ios-app/Hangs
+
+      - name: Fastfile loads
+        run: bundle exec fastlane lanes
+
+      - name: Token + IPA smoke
+        run: bundle exec ruby ../../../scripts/fastlane-smoke.rb

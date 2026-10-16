@@ -29,7 +29,6 @@ private func makeVM(clock: AnyClock<Duration> = .continuous) -> (QuizViewModel, 
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: nil,
         clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()

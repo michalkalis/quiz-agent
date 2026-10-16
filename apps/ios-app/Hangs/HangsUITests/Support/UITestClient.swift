@@ -8,7 +8,7 @@
 //
 //  Usage:
 //    let client = UITestClient()
-//    try await client.sendSTTEvent(path: "/stt/committed", text: "Paris")
+//    try await client.sendSpokenAnswer("Paris")
 //
 
 import Foundation
@@ -17,13 +17,19 @@ import XCTest
 struct UITestClient {
     private let base = URL(string: "http://127.0.0.1:9999")!
 
-    /// POST a synthetic STT event to the in-app HTTP listener.
-    ///
-    /// - Parameters:
-    ///   - path: Listener path, e.g. `"/stt/committed"`, `"/stt/partial"`,
-    ///           `"/stt/connected"`, `"/stt/disconnect"`.
-    ///   - text: Optional query value for the `text` parameter.
-    func sendSTTEvent(path: String, text: String?) async throws {
+    /// The player says `text` into the open answer recording (#208.8): the
+    /// app's real batch path uploads it and the mock server hears `text`.
+    /// Requires `.recording`; the listener answers 404 when no recording is armed.
+    func sendSpokenAnswer(_ text: String) async throws {
+        try await post(path: "/stt/committed", text: text)
+    }
+
+    /// An audio interruption (phone call) hits the recording.
+    func interruptRecording() async throws {
+        try await post(path: "/recording/interrupt", text: nil)
+    }
+
+    private func post(path: String, text: String?) async throws {
         var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if let text {
             components.queryItems = [URLQueryItem(name: "text", value: text)]

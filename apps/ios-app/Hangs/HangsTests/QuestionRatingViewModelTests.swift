@@ -26,13 +26,13 @@ private func makeRatingVM(
     service: MockQuestionRatingService = MockQuestionRatingService(),
     quizRecording: Bool = false,
     micGranted: Bool = true,
-    stt: MockElevenLabsSTTService? = MockElevenLabsSTTService(),
-    audio: MockAudioService = MockAudioService()
+    withVoice: Bool = true,
+    audio: MockAudioService = MockAudioService(),
+    network: MockNetworkService = MockNetworkService()
 ) -> (QuestionRatingViewModel, MockQuestionRatingService, MockAudioService) {
     audio.micPermissionResult = micGranted
     let voice = FeedbackVoiceServices(
         audioService: audio,
-        sttService: stt,
         isQuizRecording: { quizRecording },
         languageCode: "sk"
     )
@@ -40,8 +40,8 @@ private func makeRatingVM(
         questionId: questionId,
         questionText: "Which planet rotates on its side?",
         ratingService: service,
-        networkService: MockNetworkService(),
-        voice: voice
+        networkService: network,
+        voice: withVoice ? voice : nil
     )
     return (vm, service, audio)
 }
@@ -174,60 +174,59 @@ struct QuestionRatingDictationTests {
         }
     }
 
-    // WHY: the cap fires mid-sentence (partial transcript pending). The cap task
-    // runs the stop; if the stop cancels that same task, its final drain busy-spins
-    // on the main actor and the forced-commit words never land.
-    @Test("the cap stops rating dictation mid-sentence without losing the last words")
-    func capKeepsTheLastWords_rating() async {
+    // WHY: the justification is what the #154 calibration reads; dictated
+    // words must land in it (in the quiz language) once the recording stops.
+    @Test("the transcript appends to the justification after stop, in the quiz language")
+    func transcriptAppendsAfterStop() async {
         await withMainSerialExecutor {
-            let stt = MockElevenLabsSTTService()
-            // The forced commit answers late, as ElevenLabs does: only a drain
-            // that really suspends lets the listener deliver it.
-            await stt.setCommitEmitsNothing(true)
-            let (vm, _, _) = makeRatingVM(stt: stt)
-            vm.maxDictationSeconds = 0.02
-            await vm.startDictation()
-            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
-            await stt.injectEvent(.partialTranscript("and the pla"))
-            await pumpUntil({ vm.partialTranscript == "and the pla" }, turns: 2000, "partial never arrived")
+            let network = MockNetworkService()
+            network.dictationTranscript = "for adults"
+            let (vm, _, audio) = makeRatingVM(network: network)
+            vm.justification = "too easy"
 
-            Task {
-                try? await Task.sleep(for: .milliseconds(300))
-                await stt.injectEvent(.committedTranscript("and the planets"))
+            await vm.startDictation()
+            audio.emitStreamingChunk(dictationChunk)
+            #expect(vm.justification == "too easy", "no text before the recording stops")
+            await vm.stopDictation()
+
+            #expect(vm.justification == "too easy for adults")
+            #expect(network.capturedDictationUploads.map(\.language) == ["sk"])
+            #expect(network.capturedDictationUploads.first?.bytes == 44 + 640)
+        }
+    }
+
+    // WHY: a Save tapped mid-dictation must not post the rating without the
+    // words the rater just said.
+    @Test("Save tapped while dictating waits for the text and posts it")
+    func saveWaitsForTranscription() async {
+        await withMainSerialExecutor {
+            let network = MockNetworkService()
+            let gate = DictationGate()
+            network.dictationGate = { await gate.wait() }
+            network.dictationTranscript = "checkable and fun"
+            let (vm, service, audio) = makeRatingVM(network: network)
+            vm.select(score: 9)
+
+            await vm.startDictation()
+            audio.emitStreamingChunk(dictationChunk)
+            let saving = Task { await vm.submit() }
+            await pumpUntil({ vm.isTranscribing }, turns: 2000, "transcription never started")
+            for _ in 0 ..< 20 {
+                await Task.yield()
             }
-            try? await Task.sleep(for: .milliseconds(150))
-            await pumpUntil({ vm.micState == .idle }, turns: 4000, "cap never stopped dictation")
+            #expect(service.capturedRatings.isEmpty, "saved before the dictated text arrived")
 
-            #expect(vm.didHitDictationCap)
-            #expect(await !stt.commitRanCancelled, "stopping must not cancel the cap task that is running it")
-            #expect(vm.justification == "and the planets", "the forced-commit words must survive the cap stop")
+            await gate.open()
+            await saving.value
+
+            #expect(service.capturedRatings.count == 1)
+            #expect(service.capturedRatings.first?.reason == "checkable and fun")
         }
     }
 
-    @Test("committed segments append to the editable justification")
-    func committedSegmentsAppend() async {
-        await withMainSerialExecutor {
-            let stt = MockElevenLabsSTTService()
-            let (vm, _, _) = makeRatingVM(stt: stt)
-
-            await vm.startDictation()
-            await pumpUntil({ vm.isDictating }, turns: 2000, "dictation never started")
-
-            await stt.injectEvent(.partialTranscript("too ea..."))
-            await pumpUntil({ vm.partialTranscript == "too ea..." }, turns: 2000, "partial never propagated")
-
-            await stt.injectEvent(.committedTranscript("too easy"))
-            await pumpUntil({ vm.justification == "too easy" }, turns: 2000, "committed segment never appended")
-            #expect(vm.partialTranscript == "")
-
-            await stt.injectEvent(.committedTranscript("for adults"))
-            await pumpUntil({ vm.justification == "too easy for adults" }, turns: 2000, "second segment never appended")
-        }
-    }
-
-    @Test("with no STT service the panel stays text-only instead of hiding the mic state")
-    func noSTTMeansNoVoice() async {
-        let (vm, _, audio) = makeRatingVM(stt: nil)
+    @Test("with no voice services the panel stays text-only")
+    func noVoiceMeansTextOnly() async {
+        let (vm, _, audio) = makeRatingVM(withVoice: false)
         #expect(vm.voiceAvailable == false)
         await vm.startDictation()
         #expect(vm.micState == .idle)
@@ -255,7 +254,6 @@ struct QuestionRatingQuizIsolationTests {
             networkService: MockNetworkService(),
             voice: FeedbackVoiceServices(
                 audioService: MockAudioService(),
-                sttService: nil,
                 isQuizRecording: { quiz.quizState == .recording },
                 languageCode: "en"
             )

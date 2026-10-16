@@ -55,7 +55,6 @@ struct MicEngineStateTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()

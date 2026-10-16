@@ -483,8 +483,10 @@ struct MockAudioServiceInterruptionTests {
         #expect(notified == true)
     }
 
-    @Test("interruption while not recording notifies nobody and stays idle")
+    @Test("interruption while not recording tears nothing down but still reaches the owner")
     func interruptionWhileIdleIsNoOp() {
+        // #208.8: the owner decides whether a recording was lost (the answer
+        // records on the listener engine, which this service does not own).
         let service = MockAudioService()
         var notified = false
         service.onInterruptionBegan = { notified = true }
@@ -492,7 +494,7 @@ struct MockAudioServiceInterruptionTests {
         service.simulateInterruptionBegan()
 
         #expect(service.isRecording == false)
-        #expect(notified == false)
+        #expect(notified == true)
     }
 
     // #100.3: the actual "mic does not recover" regression. Without the fix,
@@ -543,33 +545,33 @@ struct MockAudioServiceInterruptionTests {
 @Suite("QuizViewModel Interruption Recovery")
 @MainActor
 struct QuizViewModelInterruptionTests {
-    @Test("a phone-call interruption during streaming leaves .recording and resets streaming state")
-    func interruptionDuringStreamingLeavesRecording() async throws {
+    @Test("a phone-call interruption during an answer recording leaves .recording and drops the capture")
+    func interruptionDuringRecordingLeavesRecording() async throws {
         let mockAudio = MockAudioService()
+        let silence = MockSilenceDetectionService()
         let viewModel = QuizViewModel(
             networkService: Fixtures.makeFullMockNetwork(),
             audioService: mockAudio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil
+            silenceDetectionService: silence
         )
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.quizState = .askingQuestion
 
-        // Simulate an active streaming recording.
-        viewModel.quizState = .recording
-        viewModel.isStreamingSTT = true
-        try await mockAudio.startStreamingRecording { _ in }
-        #expect(mockAudio.isRecording == true)
+        // A live answer recording on the shared mic engine.
+        await viewModel.recordingCoordinator.startRecording()
+        #expect(silence.isAnswerCaptureActive)
 
         // Phone call arrives → AudioService fires onInterruptionBegan (wired in init).
         mockAudio.simulateInterruptionBegan()
 
-        // VM left .recording; audio + streaming state reset — no stranded recording.
+        // VM left .recording; the capture and the engine it started are released —
+        // no stranded recording, nothing uploaded on the call's behalf.
         #expect(viewModel.quizState == .askingQuestion)
-        #expect(viewModel.isStreamingSTT == false)
-        #expect(mockAudio.isRecording == false)
-        #expect(mockAudio.audioEngineActive == false)
+        #expect(silence.isAnswerCaptureActive == false)
+        #expect(silence.isAnswerDetectionActive == false)
+        #expect(silence.isListening == false)
     }
 }
 

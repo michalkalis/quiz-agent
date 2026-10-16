@@ -6,7 +6,7 @@
 //  Each method covers one regression scenario; the test name is the canonical
 //  scenario identifier used by the /regression skill.
 //
-//  STT events are injected via the HTTP listener at 127.0.0.1:9999 (UITestClient)
+//  Spoken answers are injected via the HTTP listener at 127.0.0.1:9999 (UITestClient)
 //  rather than the URL scheme — the iOS 26.3 simulator drops custom scheme
 //  delivery (kLSApplicationNotFoundErr); see memory project_ios26_url_scheme_bug.md.
 //
@@ -84,8 +84,7 @@ final nonisolated class RegressionTests: XCTestCase {
     // MARK: - RS-correct
 
     //
-    // Scenario: from askingQuestion state, inject a committed STT event with the
-    // correct answer, confirm via the confirmation sheet, and assert the result
+    // Scenario: from askingQuestion state, record and say the correct answer, confirm via the confirmation sheet, and assert the result
     // screen shows the CORRECT verdict ("NAILED IT.") plus the continue button.
     //
     // Regression guarded: STT→processAnswer→showingResult pipeline for correct
@@ -110,19 +109,19 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap Record to start recording — committed STT events are only consumed
-        // while the VM is in .recording (handleCommittedTranscript guard).
+        // Tap Record to start recording — a spoken answer can only be injected
+        // into an armed recording.
         question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
-        // Inject a committed STT event (simulates user saying the answer).
-        try await client.sendSTTEvent(path: "/stt/committed", text: "Paris")
+        // The player says the answer; the mock server hears "Paris".
+        try await client.sendSpokenAnswer("Paris")
 
         // Wait for the confirmation sheet to appear.
         let confirmButton = app.buttons["confirmation.confirm"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 10),
-            "RS-correct: confirmation.confirm not found after STT event"
+            "RS-correct: confirmation.confirm not found after the spoken answer"
         )
         confirmButton.tap()
 
@@ -157,16 +156,16 @@ final nonisolated class RegressionTests: XCTestCase {
         question.waitForQuestion(timeout: 15)
         question.waitForState("askingQuestion", timeout: 10)
 
-        // Tap Record to enter .recording so handleCommittedTranscript will accept the event.
+        // Tap Record to enter .recording so the spoken answer has a recording.
         question.recordButton.tap()
         question.waitForState("recording", timeout: 5)
 
-        try await client.sendSTTEvent(path: "/stt/committed", text: "London")
+        try await client.sendSpokenAnswer("London")
 
         let confirmButton = app.buttons["confirmation.confirm"]
         XCTAssertTrue(
             confirmButton.waitForExistence(timeout: 10),
-            "RS-incorrect: confirmation.confirm not found after STT event"
+            "RS-incorrect: confirmation.confirm not found after the spoken answer"
         )
         confirmButton.tap()
 

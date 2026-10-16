@@ -52,13 +52,12 @@ struct OrderPackFormStep: View {
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
 
-                    if !dictation.partialTranscript.isEmpty {
-                        Text(verbatim: dictation.partialTranscript)
+                    if dictation.isTranscribing {
+                        Text("Transcribing…")
                             .font(.hangsCaption)
                             .italic()
                             .foregroundStyle(Theme.Hangs.Colors.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("orderPack.partialTranscript")
+                            .accessibilityIdentifier("orderPack.transcribing")
                     }
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
@@ -105,6 +104,9 @@ struct OrderPackFormStep: View {
     private var micHint: String? {
         if dictation.micState == .denied {
             return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", comment: "Order form: mic disabled because permission was denied")
+        }
+        if dictation.didFailTranscription {
+            return String(localized: "Couldn't transcribe that. Try again or type it.", comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
         }
         if dictation.didHitDictationCap {
             return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", comment: "Order form: dictation auto-stopped at the 120-second cap")

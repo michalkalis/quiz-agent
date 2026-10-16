@@ -16,7 +16,6 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     @Published private(set) var voiceProcessingEnabled = VoicePipelineFlags.voiceProcessingEnabled
     @Published private(set) var voiceProcessingOnExternalOutput = VoicePipelineFlags.voiceProcessingOnExternalOutput
     @Published private(set) var conditionAnswerUpload = VoicePipelineFlags.conditionAnswerUpload
-    @Published private(set) var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
     @Published private(set) var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
     @Published private(set) var echoCancelledInputOnExternalRoutes = VoicePipelineFlags.echoCancelledInputOnExternalRoutes
     @Published private(set) var frontCardioidMic = VoicePipelineFlags.frontCardioidMic
@@ -61,11 +60,6 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     func setConditionAnswerUpload(_ isOn: Bool) {
         conditionAnswerUpload = isOn
         VoicePipelineFlags.conditionAnswerUpload = isOn
-    }
-
-    func setRealtimeSTTEnabled(_ isOn: Bool) {
-        realtimeSTTEnabled = isOn
-        VoicePipelineFlags.realtimeSTTEnabled = isOn
     }
 
     func setSaveAnswerRecordings(_ isOn: Bool) {

@@ -840,18 +840,6 @@ struct SettingsView: View {
 
             hairline
 
-            HangsToggleRow(
-                label: "Realtime transcription",
-                subtitle: "ElevenLabs Realtime with server-side end-of-speech instead of on-device silence detection and batch upload",
-                isOn: Binding(
-                    get: { diagnostics.realtimeSTTEnabled },
-                    set: diagnostics.setRealtimeSTTEnabled
-                )
-            )
-            .accessibilityIdentifier("settings-realtime-stt-toggle")
-
-            hairline
-
             // #204 track 204.3: A/B of the end-of-answer detector in the car.
             HangsToggleRow(
                 label: "Neural speech detection",

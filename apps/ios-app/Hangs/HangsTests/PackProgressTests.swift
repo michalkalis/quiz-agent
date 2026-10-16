@@ -43,7 +43,6 @@ struct PackProgressTests {
             audioService: audio,
             persistenceStore: store,
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(TestClock())
         )
         return Rig(vm: vm, network: network, store: store, silence: silence)

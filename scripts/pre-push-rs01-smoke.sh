@@ -11,8 +11,7 @@
 #
 # What "clear FAIL" means here: Hangs.app is installed and was launched in
 # --ui-test mode, but the DEBUG-Local HTTP listener never bound on
-# 127.0.0.1:9999, OR didn't accept a /stt/committed event. That signals the
-# UI-test surface is broken on main and the regression suite cannot run.
+# 127.0.0.1:9999. That signals the UI-test surface is broken on main and the regression suite cannot run.
 
 set -u
 
@@ -111,20 +110,7 @@ if [ "$LISTENER_READY" -ne 1 ]; then
     exit 1
 fi
 
-# --- 6. Inject one committed event to prove the event path is alive --------
-if [ "$(remaining)" -lt 5 ]; then
-    verdict "PASS — listener bound (skipped event-path probe, near time cap)"
-    exit 0
-fi
-
-INJECT_CODE=$(curl -sf -o /dev/null -w '%{http_code}' \
-    --max-time 3 \
-    "http://${LISTENER_HOST}:${LISTENER_PORT}/stt/committed?text=Paris" 2>/dev/null || true)
-
-if [ "$INJECT_CODE" != "200" ]; then
-    verdict "FAIL — listener bound but /stt/committed returned ${INJECT_CODE:-no-response}. Bypass with: git push --no-verify"
-    exit 1
-fi
-
-verdict "PASS — listener bound, /stt/committed accepted ($(elapsed)s elapsed)"
+# A spoken-answer injection needs an armed recording since #208.8 (the batch
+# path), which this lite probe never reaches — the bound listener is the proof.
+verdict "PASS — listener bound ($(elapsed)s elapsed)"
 exit 0

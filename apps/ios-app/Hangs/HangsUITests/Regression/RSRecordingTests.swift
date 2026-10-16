@@ -3,9 +3,10 @@
 //  HangsUITests
 //
 //  RS-01..RS-05 from docs/testing/regression-scenarios.md, frozen into XCUITest
-//  (#180 track D). Recording state machine: leaving `recording` on a committed
-//  transcript, on the hard auto-stop, on a dropped connection, under a double
-//  tap, and on re-record from the sheet.
+//  (#180 track D). Recording state machine: leaving `recording` on a spoken
+//  answer, on the hard auto-stop, on an audio interruption, under a double
+//  tap, and on re-record from the sheet. #208.8: answers are recorded and
+//  transcribed by the backend; the harness injects what the "server" heard.
 //
 
 import XCTest
@@ -18,11 +19,11 @@ final nonisolated class RSRecordingTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    // MARK: RS-01 — Recording stops on committed transcript
+    // MARK: RS-01 — Recording stops on the end of the spoken answer
 
-    // Regression guarded: after STT commits the final transcript the app must
-    // leave `recording`, surface the confirmation sheet with that transcript,
-    // and not raise the inline error.
+    // Regression guarded: when the player stops speaking the app must leave
+    // `recording`, upload the answer, surface the confirmation sheet with the
+    // transcript the server heard, and not raise the inline error.
     @MainActor
     func testRS01RecordingStopsOnCommittedTranscript() async throws {
         let app = RSFlow.launch()
@@ -41,11 +42,11 @@ final nonisolated class RSRecordingTests: XCTestCase {
         RSFlow.assertAlive(app, "RS-01")
     }
 
-    // MARK: RS-02 — Hard auto-stop fires when no STT events arrive
+    // MARK: RS-02 — Hard auto-stop fires when nothing is said
 
-    // Regression guarded: with no committed transcript ever landing, the 15 s
-    // safety timer (Config.autoRecordingDuration, real time — not shortened
-    // under --ui-test) must stop recording and route to a recoverable state.
+    // Regression guarded: with no answer ever spoken, the speech-start window
+    // and the hidden dead-air cap (real time — not shortened under --ui-test)
+    // must stop recording and route to a recoverable state.
     // If it lands on `error`, the banner text must be human-readable.
     @MainActor
     func testRS02HardAutoStopWithoutSTTEvents() async throws {
@@ -53,7 +54,7 @@ final nonisolated class RSRecordingTests: XCTestCase {
         let question = RSFlow.startQuiz(app)
         RSFlow.startRecording(question)
 
-        // No STT events. The 15 s hard stop is the only thing that can end this.
+        // Nothing spoken. Only the recording's own deadlines can end this.
         question.waitForStateToLeave("recording", timeout: 20)
 
         let landed = question.stateValue
@@ -71,20 +72,20 @@ final nonisolated class RSRecordingTests: XCTestCase {
 
     // MARK: RS-03 — Stale error does not bleed into the next recording
 
-    // Regression guarded: a dropped STT connection mid-recording shows the
-    // inline error and returns to askingQuestion (#54 stuck-state class);
-    // starting a fresh recording must clear that error.
+    // Regression guarded: an audio interruption (phone call) mid-recording
+    // shows the inline error and returns to askingQuestion (#54 / #67
+    // stuck-state class); starting a fresh recording must clear that error.
     @MainActor
     func testRS03StaleErrorClearedByNextRecording() async throws {
         let app = RSFlow.launch()
         let question = RSFlow.startQuiz(app)
         RSFlow.startRecording(question)
 
-        try await client.sendSTTEvent(path: "/stt/disconnect", text: nil)
+        try await client.interruptRecording()
 
         XCTAssertTrue(
             question.errorBanner.waitForExistence(timeout: 5),
-            "RS-03: question.errorBanner never appeared after the STT drop"
+            "RS-03: question.errorBanner never appeared after the interruption"
         )
         question.waitForState("askingQuestion", timeout: 5)
 

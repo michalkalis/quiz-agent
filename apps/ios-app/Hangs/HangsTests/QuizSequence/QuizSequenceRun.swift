@@ -111,7 +111,6 @@ final class QuizSequenceRun {
             audioService: audio,
             persistenceStore: store,
             silenceDetectionService: silence,
-            sttService: nil,
             clock: anyClock,
             flightRecorder: recorder
         )

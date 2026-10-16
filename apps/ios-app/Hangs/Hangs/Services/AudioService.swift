@@ -603,20 +603,23 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 // Interruption started - stop any active operations to prevent corruption.
                 // #67 Part A: route to the correct teardown. The streaming PCM path holds an
                 // AVAudioEngine that the batch stopRecording() never stops — misrouting it
-                // strands the recording after the call. Also notify the owner so the
-                // view model leaves .recording and resets streaming STT.
+                // strands the recording after the call.
                 switch AudioService.interruptionTeardown(
                     isStreaming: self.audioEngine != nil,
                     isRecording: self.isRecording
                 ) {
                 case .streaming:
                     self.stopStreamingRecording()
-                    self.onInterruptionBegan?()
                 case .batch:
                     _ = try? await self.stopRecording()
                 case .none:
                     break
                 }
+                // Notify the owner on EVERY interruption: the quiz answer records
+                // on the shared listener engine (#184), not on one of ours, and
+                // was left stranded in .recording when only the streaming branch
+                // notified (#208.8). The owner no-ops unless it is recording.
+                self.onInterruptionBegan?()
                 if self.isPlaying {
                     await self.stopPlayback()
                 }

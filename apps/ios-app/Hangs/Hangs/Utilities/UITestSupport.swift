@@ -4,8 +4,8 @@
 //
 //  Active only in DEBUG builds when launched with `--ui-test`.
 //  Wires deterministic mock services and exposes a registry so the
-//  hangs-test:// URL scheme handler can drive STT events programmatically
-//  without real audio input.
+//  hangs-test:// URL scheme handler can inject a spoken answer, a voice
+//  command or an audio interruption without real audio input.
 //
 
 #if DEBUG
@@ -21,9 +21,14 @@
             CommandLine.arguments.contains("--ui-test")
         }
 
-        /// Live mock STT registered by `makeMockServices()`. The URL-scheme handler
-        /// uses this to inject events into the running ViewModel.
-        private static var mockSTT: MockElevenLabsSTTService?
+        /// The live mocks registered by `makeMockServices()`. A spoken answer is
+        /// injected through them (#208.8): the "mic" delivers a short clip and
+        /// the end of speech, and the "server" hears the injected transcript.
+        private static var mockNetwork: MockNetworkService?
+        private static var mockSilence: MockSilenceDetectionService?
+        /// `/recording/interrupt` drives a phone call through it, along the
+        /// same routing the real `AudioService` uses.
+        private static var mockAudio: MockAudioService?
 
         /// Live command sink registered by `AppState.sharedQuizViewModel()` when
         /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
@@ -42,8 +47,7 @@
             network: NetworkServiceProtocol,
             audio: AudioServiceProtocol,
             persistence: PersistenceStoreProtocol,
-            silence: SilenceDetectionServiceProtocol,
-            stt: ElevenLabsSTTServiceProtocol?
+            silence: SilenceDetectionServiceProtocol
         ) {
             let network = MockNetworkService()
             network.mockSession = QuizResponse.previewStartQuiz.session
@@ -133,8 +137,8 @@
             // taps and field typing; the timer fires before they can land.
             seededSettings.autoConfirmEnabled = false
             // #200: auto-record is always on, so the think window is what opens
-            // the mic under UI test (recording is then driven by injected STT
-            // events). Voice scenarios keep the 30 s the retired answer timer
+            // the mic under UI test (recording is then driven by an injected
+            // spoken answer). Voice scenarios keep the 30 s the retired answer timer
             // gave them — they tap Record well inside it.
             // MCQ: a short window so recording auto-starts within ~1s (no mic
             // button in redesigned UI). #125: the long-stem MCQ fixture needs an
@@ -173,9 +177,6 @@
                 }
             }
 
-            let stt = MockElevenLabsSTTService()
-            mockSTT = stt
-
             // Silence mock seeded `.unavailable`: keeps the command-listener hint
             // (and, before #179 D1, the ListenBar itself) hidden exactly as the
             // old `nil` service did — a default `.ready` mock would arm the
@@ -190,21 +191,44 @@
                 silence.commandAvailability = .unavailable(reason: "UI-test mock")
             }
 
+            mockNetwork = network
+            mockSilence = silence
+            mockAudio = audio
+
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
-            return (network, audio, persistence, silence, stt)
+            return (network, audio, persistence, silence)
         }
 
-        /// Inject an arbitrary STT event into the live mock STT.
-        /// Returns false if no mock has been registered (e.g., not in UI test mode).
+        /// The player says `text` into the open answer recording (#208.8). The
+        /// real batch path runs: the capture receives half a second of audio,
+        /// the VAD reports the end of speech, the coordinator uploads the WAV,
+        /// and the mock server hears `text` and grades it. Returns false —
+        /// the seam fails loudly — when no answer recording is armed.
         @discardableResult
-        static func injectSTTEvent(_ event: STTEvent) async -> Bool {
-            guard let stt = mockSTT else {
-                Logger.quiz.error("🧪 UITestSupport: injectSTTEvent called but no mock STT is registered")
+        static func injectSpokenAnswer(_ text: String) async -> Bool {
+            guard let network = mockNetwork, let silence = mockSilence else {
+                Logger.quiz.error("🧪 UITestSupport: injectSpokenAnswer called but no mocks are registered")
                 return false
             }
-            await stt.injectEvent(event)
+            // The capture arms a few hops after the probe reads `recording`
+            // (engine start, detector session): wait for it, bounded.
+            var waitedMs = 0
+            while !(silence.isAnswerCaptureActive && silence.isAnswerDetectionActive), waitedMs < 3000 {
+                try? await Task.sleep(for: .milliseconds(50))
+                waitedMs += 50
+            }
+            guard silence.isAnswerCaptureActive else {
+                Logger.quiz.error("🧪 UITestSupport: injectSpokenAnswer found no armed answer recording")
+                return false
+            }
+            network.nextVoiceTranscript = text
+            silence.simulateSilenceEvent(.speechStarted)
+            // 0.5 s of 16 kHz 16-bit silence: past the "nothing captured" floor.
+            silence.simulateAnswerAudio(Data(count: Int(silence.answerAudioSampleRate)))
+            silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.0))
             return true
         }
+
 
         /// Register the live command sink. Called by `AppState.sharedQuizViewModel()`
         /// once the real `QuizViewModel` exists. A later registration replaces the
@@ -228,10 +252,11 @@
         /// Route a `hangs-test://` URL to the appropriate mock action.
         ///
         /// Supported URLs:
-        /// - `hangs-test://stt/partial?text=foo`   → `STTEvent.partialTranscript("foo")`
-        /// - `hangs-test://stt/committed?text=foo` → `STTEvent.committedTranscript("foo")`
-        /// - `hangs-test://stt/connected`          → `STTEvent.connected`
-        /// - `hangs-test://stt/disconnect?msg=x`   → `STTEvent.disconnected(error)`
+        /// - `hangs-test://stt/committed?text=foo` → the player answers "foo" into
+        ///   the open recording (`injectSpokenAnswer`; the path name predates #208.8)
+        /// - `hangs-test://stt/connected`          → readiness ping, no effect
+        /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
+        ///   call) hits the recording
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
@@ -251,19 +276,13 @@
             Logger.quiz.info("🧪 UITestSupport: handling URL host=\(host, privacy: .public) path=\(path, privacy: .public)")
 
             switch (host, path) {
-            case ("stt", "/partial"):
-                await injectSTTEvent(.partialTranscript(text))
-                return true
             case ("stt", "/committed"):
-                await injectSTTEvent(.committedTranscript(text))
-                return true
+                return await injectSpokenAnswer(text)
             case ("stt", "/connected"):
-                await injectSTTEvent(.connected)
                 return true
-            case ("stt", "/disconnect"):
-                let msg = queryItems.first(where: { $0.name == "msg" })?.value
-                let err: Error? = msg.map { ElevenLabsSTTError.serverError($0) }
-                await injectSTTEvent(.disconnected(err))
+            case ("recording", "/interrupt"):
+                guard let mockAudio else { return false }
+                mockAudio.simulateInterruptionBegan()
                 return true
             case ("command", "/send"):
                 return await handleCommand(text)
@@ -274,7 +293,7 @@
         }
 
         /// Bind a tiny HTTP server on `127.0.0.1:9999` that translates incoming
-        /// requests into the same mock-STT events as the `hangs-test://` URL
+        /// requests into the same mock actions as the `hangs-test://` URL
         /// scheme. Workaround for the iOS 26.3 simulator LaunchServices bug
         /// (`kLSApplicationNotFoundErr`) which drops custom URL scheme delivery.
         /// Idempotent — calling twice is a no-op.

@@ -202,8 +202,6 @@ struct QuestionFooterInspectorTests {
     func recordingShowsOnlyTheAnswerBar() async throws {
         let vm = makeVoiceViewModel()
         vm.quizState = .recording
-        vm.recordingCoordinator.isStreamingSTT = false // batch path, nothing streamed yet
-        vm.recordingCoordinator.liveTranscript = ""
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -223,8 +221,7 @@ struct QuestionFooterInspectorTests {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentQuestion = Question.preview
         vm.quizState = .askingQuestion

@@ -311,14 +311,12 @@ What the hook checks (no Claude required):
 3. `Hangs.app` (`com.missinghue.hangs`) is installed on that sim.
 4. Launching with `--ui-test` succeeds.
 5. `GET http://127.0.0.1:9999/stt/connected` returns 200.
-6. `GET http://127.0.0.1:9999/stt/committed?text=Paris` returns 200.
 
 Total runtime is hard-capped at 90s (real RS-01 takes ~75s; the lite hook
 is typically <15s once the app is installed).
 
 **Failure conditions** (only these block the push):
 - Listener never bound after launch (build broken, `UITestSupport` regression).
-- `/stt/committed` rejected after listener was up.
 
 Bypass per-push: `git push --no-verify`.
 

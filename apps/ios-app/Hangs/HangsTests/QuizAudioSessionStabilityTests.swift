@@ -57,8 +57,7 @@ private func makeStartingVM() -> (QuizViewModel, MockAudioService, MockSilenceDe
         networkService: network,
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
-        silenceDetectionService: silence,
-        sttService: nil
+        silenceDetectionService: silence
     )
     return (vm, audio, silence)
 }

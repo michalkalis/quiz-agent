@@ -65,24 +65,20 @@ struct VoiceDiagnosticsSettingsModelTests {
     @Test("the pipeline switches write their flags without touching the route line")
     func pipelineSwitchesWriteFlags() {
         preservingFlag(VoicePipelineFlags.Key.conditionAnswerUpload) {
-            preservingFlag(VoicePipelineFlags.Key.realtimeSTT) {
-                preservingFlag(VoicePipelineFlags.Key.saveAnswerRecordings) {
-                    var refreshes = 0
-                    let model = VoiceDiagnosticsSettingsModel(
-                        routeSummary: { refreshes += 1; return "" },
-                        recordingsDirectory: tempDir(),
-                        presentShareSheet: { _ in }
-                    )
+            preservingFlag(VoicePipelineFlags.Key.saveAnswerRecordings) {
+                var refreshes = 0
+                let model = VoiceDiagnosticsSettingsModel(
+                    routeSummary: { refreshes += 1; return "" },
+                    recordingsDirectory: tempDir(),
+                    presentShareSheet: { _ in }
+                )
 
-                    model.setConditionAnswerUpload(true)
-                    model.setRealtimeSTTEnabled(true)
-                    model.setSaveAnswerRecordings(true)
+                model.setConditionAnswerUpload(true)
+                model.setSaveAnswerRecordings(true)
 
-                    #expect(VoicePipelineFlags.conditionAnswerUpload && model.conditionAnswerUpload)
-                    #expect(VoicePipelineFlags.realtimeSTTEnabled && model.realtimeSTTEnabled)
-                    #expect(VoicePipelineFlags.saveAnswerRecordings && model.saveAnswerRecordings)
-                    #expect(refreshes == 1, "only the initial read")
-                }
+                #expect(VoicePipelineFlags.conditionAnswerUpload && model.conditionAnswerUpload)
+                #expect(VoicePipelineFlags.saveAnswerRecordings && model.saveAnswerRecordings)
+                #expect(refreshes == 1, "only the initial read")
             }
         }
     }

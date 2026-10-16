@@ -24,8 +24,7 @@ private func makeCarPlayVM() -> (QuizViewModel, MockSilenceDetectionService, Moc
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
-        silenceDetectionService: silence,
-        sttService: nil
+        silenceDetectionService: silence
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion()

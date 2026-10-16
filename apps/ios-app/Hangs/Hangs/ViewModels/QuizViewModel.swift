@@ -666,22 +666,6 @@ final class QuizViewModel: ObservableObject {
     /// façade-resident (decision 4); children reach it via injected closures.
     @Published var isAutoRecording: Bool = false
 
-    // MARK: - Streaming STT — forwarded to RecordingCoordinator (#113 T5)
-
-    /// Live transcript from ElevenLabs (updates as user speaks) — see
-    /// `RecordingCoordinator.liveTranscript`. Settable: the DEBUG UI-test
-    /// seed (AppState) and `resetState` write it.
-    var liveTranscript: String {
-        get { recordingCoordinator.liveTranscript }
-        set { recordingCoordinator.liveTranscript = newValue }
-    }
-
-    /// Whether streaming STT is active — see `RecordingCoordinator.isStreamingSTT`.
-    var isStreamingSTT: Bool {
-        get { recordingCoordinator.isStreamingSTT }
-        set { recordingCoordinator.isStreamingSTT = newValue }
-    }
-
     /// Whether question TTS is currently playing. The command listener is torn
     /// down during TTS and re-armed after (77.5 windowed lifecycle / the 1a19438
     /// self-trigger guard) — `currentCommandScreen` returns nil while this is true
@@ -749,11 +733,6 @@ final class QuizViewModel: ObservableObject {
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
-    let sttService: ElevenLabsSTTServiceProtocol?
-    /// #184: whether a recording may take the realtime path (see
-    /// `RecordingCoordinator.realtimeSTTEnabled`). AppState injects the runtime
-    /// switch; tests keep the `{ true }` default so a mock STT service streams.
-    let realtimeSTTEnabled: @MainActor () -> Bool
 
     /// The one clock every timer, backoff and deadline on the quiz path runs on
     /// (#180 track A) — handed to each child so a test drives them all at once.
@@ -817,7 +796,7 @@ final class QuizViewModel: ObservableObject {
     private(set) lazy var quizTimersController: QuizTimersController = makeQuizTimersController()
 
     /// Recording + confirmation slice owner (#113 T5): capture lifecycle,
-    /// streaming STT, submission, and answer confirmation. The façade owns
+    /// submission, and answer confirmation. The façade owns
     /// the child, re-publishes its `objectWillChange`, and re-exposes the
     /// slice via the forwarding accessors above (decision 2). `lazy` so the
     /// injected closures can capture `self` weakly — built by
@@ -870,9 +849,7 @@ final class QuizViewModel: ObservableObject {
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
         silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
-        sttService: ElevenLabsSTTServiceProtocol? = nil,
         isLocallyEntitled: @escaping @MainActor () -> Bool = { false },
-        realtimeSTTEnabled: @escaping @MainActor () -> Bool = { true },
         clock: AnyClock<Duration> = .continuous,
         flightRecorder: QuizFlightRecorder = .shared,
         analytics: AnalyticsClient = NoopAnalyticsClient(),
@@ -888,8 +865,6 @@ final class QuizViewModel: ObservableObject {
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
-        self.sttService = sttService
-        self.realtimeSTTEnabled = realtimeSTTEnabled
         self.clock = clock
         // The app keeps one black box; the #186 sequence harness gives each run
         // its own so a failing seed prints only its own input trail.
@@ -904,8 +879,8 @@ final class QuizViewModel: ObservableObject {
         )
 
         // #67 Part A: recover from a phone-call/Siri interruption that tears down
-        // streaming recording — leave .recording and reset streaming STT so no
-        // recording is stranded after the call.
+        // the recording — leave .recording so no recording is stranded after
+        // the call.
         self.audioService.onInterruptionBegan = { [weak self] in
             self?.attemptLedger.record(.route, "audioInterruption.began")
             self?.recordingCoordinator.handleAudioInterruption()
@@ -991,7 +966,6 @@ final class QuizViewModel: ObservableObject {
             answerRecordingOwnsListener: { [weak self] in
                 guard let self else { return false }
                 return self.quizState == .recording && !self.isPaused
-                    && !self.recordingCoordinator.isStreamingSTT
             },
             setPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS = $0 },
             setPlayingFeedbackTTS: { [weak self] in self?.isPlayingFeedbackTTS = $0 },
@@ -1101,7 +1075,6 @@ final class QuizViewModel: ObservableObject {
             audioService: audioService,
             networkService: networkService,
             silenceDetectionService: silenceDetectionService,
-            sttService: sttService,
             taskBag: taskBag,
             attemptLedger: attemptLedger,
             clock: clock,
@@ -1151,7 +1124,6 @@ final class QuizViewModel: ObservableObject {
             setPlayingAnswerReadBack: { [weak self] in self?.isPlayingAnswerReadBack = $0 },
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
-            realtimeSTTEnabled: { [weak self] in self?.realtimeSTTEnabled() ?? false },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
             answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() }
         )
@@ -1895,9 +1867,7 @@ final class QuizViewModel: ObservableObject {
         // (`resubmitAnswer`). The answer capture used to stay armed through the
         // whole evaluation, and with voice commands off the mic stayed live.
         recordingCoordinator.cancelSilenceDetection()
-        if isStreamingSTT {
-            recordingCoordinator.cleanupStreamingSTT()
-        } else if quizState == .recording {
+        if quizState == .recording {
             recordingCoordinator.abandonAnswerCapture()
         }
         isAutoRecording = false
@@ -1971,13 +1941,11 @@ final class QuizViewModel: ObservableObject {
         attemptLedger.markAnswerSent() // #186: a sent answer is final
         recordingCoordinator.cancelRetryPrompt()
 
-        // #79: a committed-voice-transcript handler may be suspended mid-flight
-        // (inside its STT disconnect) with the confirmation sheet about to appear.
-        // Dismiss the sheet + auto-confirm and drop the STT event listener up front
-        // so the typed answer wins and no stale voice sheet resurfaces.
+        // #79: a voice answer may be in flight with the confirmation sheet about
+        // to appear. Dismiss the sheet + auto-confirm up front so the typed
+        // answer wins and no stale voice sheet resurfaces.
         showAnswerConfirmation = false
         quizTimersController.cancelAutoConfirm()
-        taskBag.cancel(.sttEvent)
 
         // Stop any in-flight voice machinery so the typed answer wins the race
         // against a silent auto-stop submission. Answer/thinking timers are left
@@ -1987,13 +1955,8 @@ final class QuizViewModel: ObservableObject {
         recordingCoordinator.cancelSilenceDetection()
         isAutoRecording = false
         recordingCoordinator.speechDetectedDuringAutoRecord = false
-        // Streaming STT can still be live even after the committed-transcript
-        // handler left .recording (it suspends in disconnect() before flipping
-        // state), so tear it down regardless of quizState. Batch recording is
-        // only ever live while .recording.
-        if isStreamingSTT {
-            recordingCoordinator.cleanupStreamingSTT()
-        } else if quizState == .recording {
+        // The answer capture is only ever live while .recording.
+        if quizState == .recording {
             recordingCoordinator.abandonAnswerCapture()
         }
 
@@ -2178,7 +2141,6 @@ final class QuizViewModel: ObservableObject {
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.
         taskBag.cancelAll()
-        recordingCoordinator.cleanupStreamingSTT()
         audioDeviceState.stopSilenceDetectionListening()
         quizTimersController.reset()
         isAutoRecording = false
@@ -2615,7 +2577,6 @@ final class QuizViewModel: ObservableObject {
         quizTimersController.cancelAutoStopRecordingTimer()
         recordingCoordinator.cancelSilenceDetection()
         audioDeviceState.stopSilenceDetectionListening()
-        if isStreamingSTT { recordingCoordinator.cleanupStreamingSTT() }
         isAutoRecording = false
 
         guard transition(to: .awaitingQuestion) else { return }
@@ -2722,9 +2683,6 @@ final class QuizViewModel: ObservableObject {
     private func resetState() {
         // Cancel every long-lived background task in one call.
         taskBag.cancelAll()
-
-        // Clean up streaming STT
-        recordingCoordinator.cleanupStreamingSTT()
 
         // Stop silence detection / barge-in listening
         audioDeviceState.stopSilenceDetectionListening()

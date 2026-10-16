@@ -36,25 +36,7 @@ extension RecordingCoordinator {
         let heardSpeech = speechDetectedDuringAutoRecord
         speechDetectedDuringAutoRecord = false
 
-        if isStreamingSTT {
-            // Streaming path: commit and let the event listener handle the response
-            do {
-                try await sttService?.commitAndClose()
-                // The STT event listener will call handleCommittedTranscript.
-                // If ElevenLabs never answers the forced commit (dead air, dropped
-                // socket), only this watchdog stops the UI from showing RECORDING
-                // forever (#54 task 54.4, founder #5).
-                startCommitWatchdog(owner: attempt)
-            } catch {
-                // Cleanup and fallback
-                isStreamingSTT = false
-                audioService.stopStreamingRecording()
-                await sttService?.disconnect()
-                trackCaptureFailure(.sttCommitFailed)
-                setErrorMessage(String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Inline error when streaming speech-to-text fails; placeholder is the underlying error"))
-                transition(to: .askingQuestion)
-            }
-        } else if usesLegacyRecorder {
+        if usesLegacyRecorder {
             // The no-engine fallback (see startLegacyRecorderFallback): M4A upload.
             usesLegacyRecorder = false
             do {
@@ -183,6 +165,9 @@ extension RecordingCoordinator {
         let answeredQuestionId = currentQuestion()?.id
         // #204.2: read with the question id, for the same reason.
         let rejectedTranscripts = rejectedTranscriptsForUpload()
+        // #208.3: the server synthesizes the read-back while it grades — only
+        // worth it when the read-back will be played.
+        let wantsReadBack = !isMuted()
         trackVoiceAnswerSubmitted(questionId: answeredQuestionId)
         // #197: the saved car sample this upload answers, if any.
         let recordingStamp = savedRecordingStamp
@@ -224,7 +209,8 @@ extension RecordingCoordinator {
                             audioData: audioData,
                             fileName: fileName,
                             questionId: answeredQuestionId,
-                            rejectedTranscripts: rejectedTranscripts
+                            rejectedTranscripts: rejectedTranscripts,
+                            readBack: wantsReadBack
                         )
                     }
                 }
@@ -272,7 +258,7 @@ extension RecordingCoordinator {
                     self.pendingResponse = response
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.
-                    self.presentVoiceTranscript(evaluation.userAnswer, owner: owner)
+                    self.presentVoiceTranscript(evaluation.userAnswer, owner: owner, readBack: response.readBack)
                 }
 
                 // Don't call handleQuizResponse yet - wait for user confirmation

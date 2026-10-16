@@ -4,7 +4,7 @@
 //
 //  #184 — the batch answer pipeline (tracks A–D): PCM → WAV, the capture
 //  accumulator, the car-sample store, the record → VAD-stop → WAV upload flow on
-//  the shared mic engine, the realtime A/B switch, and the confirmation-sheet
+//  the shared mic engine, and the confirmation-sheet
 //  read-back of a voice answer. Every test says WHY the behaviour matters.
 //
 
@@ -151,7 +151,6 @@ struct BatchAnswerFlowTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: clock
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -246,34 +245,6 @@ struct BatchAnswerFlowTests {
         #expect(network.capturedVoiceAnswerFileName == "answer.m4a")
         #expect(vm.recordingCoordinator.usesLegacyRecorder == false)
     }
-
-    /// WHY: the realtime path is the founder's A/B switch — OFF must take the
-    /// batch capture even when an STT service is wired, ON must stream.
-    @Test("the realtime switch decides between streaming and the batch capture")
-    func realtimeSwitch() async {
-        for (enabled, expectStreaming) in [(false, false), (true, true)] {
-            let silence = MockSilenceDetectionService()
-            let audio = MockAudioService()
-            let stt = MockElevenLabsSTTService()
-            let vm = QuizViewModel(
-                networkService: Fixtures.makeFullMockNetwork(),
-                audioService: audio,
-                persistenceStore: MockPersistenceStore(),
-                silenceDetectionService: silence,
-                sttService: stt,
-                realtimeSTTEnabled: { enabled }
-            )
-            vm.currentSession = Fixtures.makeActiveSession()
-            vm.currentQuestion = Fixtures.makeQuestion()
-            vm.quizState = .askingQuestion
-
-            await vm.recordingCoordinator.startRecording()
-
-            #expect(vm.isStreamingSTT == expectStreaming, "realtimeSTTEnabled=\(enabled)")
-            #expect(silence.isAnswerCaptureActive == !expectStreaming, "realtimeSTTEnabled=\(enabled)")
-            vm.recordingCoordinator.cancelProcessing()
-        }
-    }
 }
 
 // MARK: - Read-back of the recognised voice answer (track D)
@@ -289,8 +260,7 @@ struct AnswerReadBackTests {
             networkService: network,
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: silence,
-            sttService: nil
+            silenceDetectionService: silence
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion()
@@ -341,19 +311,6 @@ struct AnswerReadBackTests {
         #expect(network.synthesizedTexts.isEmpty)
         #expect(vm.isPlayingAnswerReadBack == false)
         #expect(vm.autoConfirmCountdown == Config.autoConfirmDelaySecs)
-    }
-
-    /// WHY: the streaming path lands on the same sheet and must read back too.
-    @Test("a committed streaming transcript is read back")
-    func streamingTranscriptIsReadBack() async {
-        let (vm, _, network, _) = makeVM()
-        vm.quizState = .recording
-
-        await vm.recordingCoordinator.handleCommittedTranscript("Paris")
-
-        #expect(vm.showAnswerConfirmation)
-        #expect(vm.transcribedAnswer == "Paris")
-        await pumpUntil({ network.synthesizedTexts == ["Paris"] }, "the committed transcript was never spoken")
     }
 
     /// WHY: "again" spoken (or tapped) during the read-back must stop the app

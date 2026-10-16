@@ -162,8 +162,8 @@ nonisolated enum Config {
 
     /// HIDDEN dead-air cap for one recording (seconds). The driver never sees
     /// it: it only guarantees the mic closes when nothing is ever said and no
-    /// VAD commit arrives. Once speech starts, the answer ends on ElevenLabs
-    /// VAD (1.5 s of silence), not here — which is why it can stay this long
+    /// VAD commit arrives. Once speech starts, the answer ends on the
+    /// on-device VAD's silence, not here — which is why it can stay this long
     /// (raised from 4 s to 15 s for Phase 2 silence detection so a long spoken
     /// answer is never cut off mid-sentence).
     /// Lowered 15 → 8 s (founder 2026-10-10): in car noise the energy VAD
@@ -183,10 +183,6 @@ nonisolated enum Config {
     /// empty transcript → confirmation sheet with an empty field (#171 B).
     static let speechStartWindow: TimeInterval = 5.0
 
-    /// How long the streaming path waits after a forced STT commit before
-    /// treating the silence as a transcription failure (#54 task 54.4)
-    static let sttCommitWatchdogSecs: TimeInterval = 5.0
-
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 
@@ -205,34 +201,14 @@ nonisolated enum Config {
     /// the result. 5 s is still long enough to say "again" or tap Re-record.
     static let autoConfirmDelaySecs: Int = 5
 
-    // MARK: - ElevenLabs Streaming STT
+    // MARK: - Dictation (feedback, rating, pack prompt)
 
-    /// Compile-time availability of the ElevenLabs Scribe v2 Realtime answer
-    /// path (live word-by-word transcript, server-side VAD). Whether a recording
-    /// actually takes it is a RUNTIME choice since #184 —
-    /// `VoicePipelineFlags.realtimeSTTEnabled`, default OFF: the car test showed
-    /// the server VAD (1.5 s) appending trailing words, so answers now go local
-    /// VAD → WAV → backend batch (Scribe v2). The realtime path stays wired for
-    /// the A/B measurement; on any setup/connection failure it too falls back to
-    /// the batch upload.
-    static let useElevenLabsSTT: Bool = true
-
-    /// ElevenLabs Scribe v2 Realtime model ID
-    static let elevenLabsModel: String = "scribe_v2_realtime"
-
-    /// Audio format for ElevenLabs WebSocket (raw PCM, 16kHz, 16-bit, mono)
-    static let elevenLabsAudioFormat: String = "pcm_16000"
-
-    /// Interval for streaming audio chunks to ElevenLabs WebSocket (milliseconds)
+    /// How often the dictation recorder hands its PCM chunks over (milliseconds).
     static let sttStreamingChunkIntervalMs: UInt64 = 250
 
     /// Hard cap on a single in-app feedback dictation (#109). ~120 s of 16 kHz
-    /// 16-bit mono PCM ≈ 3.8 MB WAV, under the backend's 10 MB audio guideline.
+    /// 16-bit mono PCM ≈ 3.8 MB WAV, under the dictation endpoint's 5 MB limit.
     static let feedbackDictationCapSecs: TimeInterval = 120
-
-    /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence.
-    /// Centralised in `VADTuning` (77.11); forwarded here for back-compat.
-    static let elevenLabsVadSilenceThresholdSecs: Double = VADTuning.elevenLabsVadSilenceThresholdSecs
 
     // MARK: - Voice Commands (#77)
 

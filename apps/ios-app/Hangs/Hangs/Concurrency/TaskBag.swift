@@ -21,9 +21,6 @@ enum TaskKey: Hashable, Sendable {
     case silenceDetection
     case autoConfirm
     case thinkingTime
-    case sttEvent
-    case sttChunk
-    case sttCommitWatchdog
     case bargeIn
     case commandListener
     case volatileSettle

@@ -12,17 +12,17 @@ Preconditions are set up by launching the app with `--ui-test` (see
 
 Steps drive UI via XcodeBuildMCP accessibility-tree taps and a tiny
 DEBUG-only HTTP listener on `127.0.0.1:9999` (see
-`UITestSupport.startTestListener()`) for STT events. The legacy
+`UITestSupport.startTestListener()`) for spoken answers and interruptions. The legacy
 `hangs-test://` URL scheme handler is still wired and may work on real
 devices, but iOS 26.3 simulator drops it (LaunchServices bug), so the
 HTTP path is canonical.
 
 | Curl | Effect |
 |---|---|
-| `curl -s "http://127.0.0.1:9999/stt/connected"`           | injects `STTEvent.connected` |
-| `curl -s "http://127.0.0.1:9999/stt/partial?text=foo"`    | injects `STTEvent.partialTranscript("foo")` |
-| `curl -s "http://127.0.0.1:9999/stt/committed?text=foo"`  | injects `STTEvent.committedTranscript("foo")` |
-| `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=..."`  | injects `STTEvent.disconnected(error)` |
+| `curl -s "http://127.0.0.1:9999/stt/connected"`           | readiness ping (200 once the listener is up) |
+| `curl -s "http://127.0.0.1:9999/stt/committed?text=foo"`  | the player says "foo" into the open recording: the real batch path uploads it and the mock server hears "foo" (#208.8). 404 when no recording is armed |
+| `curl -s "http://127.0.0.1:9999/recording/interrupt"`     | an audio interruption (phone call) hits the recording |
+| `curl -s "http://127.0.0.1:9999/command/send?text=start"` | a voice command |
 
 State assertions read the label of the hidden static text element
 `question.state` (values: `idle`, `startingQuiz`, `askingQuestion`,
@@ -94,7 +94,7 @@ Stay/Resume is one `result.stayHere` toggle. Page objects in
 
 ## RS-01: Recording stops on committed transcript
 
-**Hypothesis:** After ElevenLabs commits the final transcript, the app
+**Hypothesis:** After the player finishes the spoken answer and the server transcribes it, the app
 must leave `recording` state, surface the confirmation sheet, and not
 crash.
 
@@ -150,12 +150,12 @@ recording must clear it.
 **Preconditions**
 - Launch with `--ui-test`
 - Pre-existing error on screen: trigger via
-  `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=fake-error"` mid-recording
+  `curl -s "http://127.0.0.1:9999/recording/interrupt"` mid-recording
 
 **Steps**
 1. Tap `home.startQuiz`
 2. Tap `question.micButton`; wait for `recording`
-3. `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=upstream-down" >/dev/null`
+3. `curl -s "http://127.0.0.1:9999/recording/interrupt" >/dev/null`
 4. Wait until `question.errorBanner` is visible
 5. Tap `question.micButton` again to start a fresh recording
 6. Wait for `question.state` label `recording`
@@ -304,16 +304,14 @@ edit", not a global "abandon this answer".
 
 ---
 
-## RS-09: MCQ voice answer highlights the option and goes through confirmation
+## RS-09: MCQ voice answer goes through confirmation
 
-**Hypothesis:** When the app receives a committed transcript that matches an MCQ option,
-`MCQTranscriptMatcher` maps it to the correct key, `mcqVoiceMatchedKey` is set so the matching
-`AnswerOption` highlights as `selected` — and the answer then goes through the **confirmation
-sheet**, not straight to the backend (issue #171 Track I, founder 2026-09-05, restoring #45
-decision D4). The sheet is prefilled with the option's **value** (the backend MCQ evaluator
-matches by value with no LLM fallback) and shows the matched option as `A · <text>`. Confirm —
-by tap, by the spoken "ok", or by letting the 5 s auto-confirm expire — submits it and the quiz
-reaches the result. A mishearing is therefore always correctable before it is graded.
+**Hypothesis:** A spoken MCQ answer goes through the **confirmation sheet**, not straight to
+the result (issue #171 Track I, founder 2026-09-05, restoring #45 decision D4). Since #208.8 the
+backend transcribes and places the answer among the options (#185 track G); the sheet shows
+exactly what it heard. Confirm — by tap, by the spoken "ok", or by letting the 5 s auto-confirm
+expire — and the quiz reaches the result. A mishearing is therefore always correctable before
+it is graded.
 
 **Preconditions**
 - Launch with `--ui-test --ui-test-mcq`
@@ -330,24 +328,22 @@ reaches the result. A mishearing is therefore always correctable before it is gr
 3. Confirm `mcq.option.a` is present in the accessibility tree (MCQ screen rendered)
 4. Confirm the answer `listen-bar` caption reads "Listening — say A–D or the answer" (#171 Track I3
    — answering with the option TEXT is supported, and the caption must say so)
-5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
+5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s)
 6. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
 7. Wait up to 3s for `confirmation.answer` to appear
 8. Tap `confirmation.confirm`
 9. Wait up to 5s
 
 **Asserts**
-- After step 7: `confirmation.answer` reads `Jupiter` — the option VALUE, never the raw transcript
-- After step 7: `confirmation.matchedOption` reads `B · Jupiter`
+- After step 7: `confirmation.answer` reads `Jupiter` — what the server heard
 - After step 7: `question.state` label is `processing` and **no** `submitTextInput` has fired yet
 - After step 9: `question.state` label is `showingResult`
 - `mcq.option.b` is present in the accessibility tree while the question is up (options still rendered)
 - App process is alive; no `EXC_*` in log
 - `question.errorBanner` is **not** present
 
-**Variant (#171 Track I2, tolerant matching):** replay step 6 with an inflected form
-(`?text=Jupitera`) — the sheet must still prefill `Jupiter`. An unmatched transcript
-(`?text=something%20unrelated`) instead prefills the RAW transcript, unchanged from before.
+**Variant:** replay step 6 with a free answer (`?text=something%20unrelated`) — the sheet
+shows it unchanged.
 
 ---
 

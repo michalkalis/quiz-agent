@@ -538,8 +538,7 @@ struct QuizViewModelBargeInTests {
             networkService: MockNetworkService(),
             audioService: mockAudio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: mockSilence,
-            sttService: nil
+            silenceDetectionService: mockSilence
         )
         viewModel.currentQuestion = Fixtures.makeQuestion()
         return (viewModel, mockAudio, mockSilence)

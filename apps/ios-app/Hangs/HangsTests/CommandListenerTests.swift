@@ -33,7 +33,6 @@ import Testing
 @MainActor
 private func makeCommandVM(
     silence: MockSilenceDetectionService = MockSilenceDetectionService(),
-    stt: MockElevenLabsSTTService? = nil,
     clock: AnyClock<Duration> = .continuous
 ) -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
     let audio = MockAudioService()
@@ -42,7 +41,6 @@ private func makeCommandVM(
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: stt,
         clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()

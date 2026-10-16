@@ -28,7 +28,6 @@ private func makeCommandVM() -> QuizViewModel {
         audioService: MockAudioService(),
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil,
         clock: .continuous
     )
     vm.currentSession = Fixtures.makeActiveSession()

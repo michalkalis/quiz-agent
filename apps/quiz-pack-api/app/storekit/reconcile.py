@@ -123,7 +123,12 @@ async def _seed_ids(session: AsyncSession) -> list[str]:
     """One real transaction id per customer the DB knows, newest first."""
     rows = await session.execute(
         select(GenerationOrder.user_id, GenerationOrder.transaction_id)
-        .where(~GenerationOrder.transaction_id.startswith(ADMIN_TX_PREFIX))
+        # Only App Store purchases: admin orders and generation-CLI rows
+        # (`cli-…`, product `pack_cli`) carry ids Apple rejects with a 400.
+        .where(
+            GenerationOrder.product_id.in_(PACK_PRODUCTS),
+            ~GenerationOrder.transaction_id.startswith(ADMIN_TX_PREFIX),
+        )
         .order_by(GenerationOrder.created_at.desc())
     )
     seeds: list[str] = []
@@ -144,9 +149,10 @@ async def _source_rows(source_url: str, since: datetime) -> dict[str, dict]:
             result = await conn.execute(
                 text(
                     f"SELECT {_SOURCE_COLUMNS} FROM generation_orders "
-                    "WHERE created_at >= :since AND transaction_id NOT LIKE 'admin-%'"
+                    "WHERE created_at >= :since AND transaction_id NOT LIKE 'admin-%' "
+                    "AND product_id = ANY(:products)"
                 ),
-                {"since": since},
+                {"since": since, "products": sorted(PACK_PRODUCTS)},
             )
             return {row["transaction_id"]: dict(row) for row in result.mappings()}
     finally:

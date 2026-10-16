@@ -204,7 +204,7 @@ def _alembic_head() -> None:
     )
 
 
-def _order(tx_id: str, user: str) -> GenerationOrder:
+def _order(tx_id: str, user: str | None) -> GenerationOrder:
     return GenerationOrder(
         user_id=user, transaction_id=tx_id, product_id="pack_30", prompt="Jazz in Prague",
         target_count=30, language="sk", status="delivered",
@@ -217,6 +217,10 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
 ) -> None:
     await truncate_order_graph(session)
     session.add(_order("kept", "user-1"))
+    # A generation-CLI row: not an App Store purchase, Apple would 400 on it.
+    cli = _order("cli-0123456789ab", None)
+    cli.product_id = "pack_cli"
+    session.add(cli)
     await session.commit()
 
     txs = {t: _tx(t) for t in ("kept", "lost-with-row", "lost-no-row")}
@@ -236,9 +240,15 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     pool = AsyncMock()
 
+    seeds_asked: list[str] = []
+
+    def history(seed: str) -> list[str]:
+        seeds_asked.append(seed)
+        return list(txs)
+
     async def run(apply: bool):
         return await reconcile(
-            Settings(), since=SINCE, history=lambda seed: list(txs),
+            Settings(), since=SINCE, history=history,
             verifier=_FakeVerifier(txs),  # type: ignore[arg-type]
             session_factory=factory, arq_pool=pool, source_url="postgresql://src", apply=apply,
         )
@@ -248,6 +258,7 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
         ("lost-with-row", "would_recreate"), ("lost-no-row", "no_source_row"),
     }
     assert pool.enqueue_job.await_count == 0
+    assert not any(seed.startswith("cli-") for seed in seeds_asked)
 
     applied = await run(apply=True)
     recreated = [f for f in applied if f.action == "recreated"]
@@ -280,10 +291,13 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
 @pytest.mark.usefixtures("_alembic_head")
 async def test_source_rows_read_the_pre_restore_orders(session: AsyncSession) -> None:
     # The source query is raw SQL against another database; it must return
-    # every column a recreated order needs, and skip admin test orders.
+    # every column a recreated order needs, and skip admin and CLI orders.
     await truncate_order_graph(session)
     session.add(_order("tx-after", "user-1"))
     session.add(_order(f"{ADMIN_TX_PREFIX}x", "user-1"))
+    cli = _order("cli-0123456789ab", None)
+    cli.product_id = "pack_cli"
+    session.add(cli)
     await session.commit()
 
     source_url = os.environ.get("TEST_DATABASE_URL") or os.environ["DATABASE_URL"]

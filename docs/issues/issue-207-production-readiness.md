@@ -74,7 +74,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 - [ ] 207.24 Docker: inštalácia z `uv.lock` (nie ručný zoznam), base image pinnutý na digest, beh ako non-root; pinnuté verzie GitHub actions.
 - [x] 207.25 Dependabot (security updates + mesačné verzie) pre Python, Swift balíčky a actions. **Hotové 2026-10-16:** `.github/dependabot.yml` — uv (len lock, stropy v pyproject ostávajú), Swift (Package.resolved v Xcode projekte), actions, Docker base image; mesačne, 1 skupinová PR na ekosystém, max 1–2 otvorené, 7 dní odstup od vydania. Upozornenia + bezpečnostné PR zapnuté cez API.
 - [ ] 207.26 CI kontrola kompatibility API: OpenAPI diff voči poslednému vydanému tagu `ios/*`; zlyhá pri odobratom poli/endpointe.
-- [ ] 207.27 Jeden runbook výpadku `docs/setup/incident-runbook.md`: ako zistiť, kto čo robí, vypínače, rollback, obnova DB, oznam používateľom.
+- [x] 207.27 Jeden runbook výpadku `docs/setup/incident-runbook.md`: ako zistiť, kto čo robí, vypínače, rollback, obnova DB, oznam používateľom. **Hotové 2026-10-16:** [incident-runbook.md](../setup/incident-runbook.md) (alarmy → prvé kontroly → prepínače → rollback → obnova DB + reconcile → pack worker → komunikácia → po incidente), odkazuje na existujúce návody.
 
 ## Founder kroky
 

@@ -1,7 +1,7 @@
 # #208 — TF test 2026-10-16: hlasové povely, prepis odpovede, stavy kvízu
 
-**Triage:** bug · in-progress
-**Status:** 208.0 nasadené (prod STT = OpenAI); tracky 208.1–208.8 v práci
+**Triage:** bug · ready-for-human (kód hotový 2026-10-16; overenie na zariadení)
+**Status:** všetky tracky v main, backend v174; open = TF build na požiadanie → test na zariadení; povely počas čítania (prepínač OFF) a MCQ riadok čakajú na founder
 **Založené:** 2026-10-16 (founder testuje TF build z `main`, sk, reproduktor iPhonu, „Posielať nahrávky“ ON)
 **Súvisí:** #204 — rozpoznanie odpovede (A/B prepínače), #197 — nahrávky z auta (replay), #185 — test v aute, #173 — stlmenie počas jazdy
 
@@ -49,3 +49,9 @@ Každý track = vlastný PR do `main`; iOS sa overí na simulátore (18 Pro) a n
 ## Stav
 
 - 2026-10-16: 208.0 nasadené (v168, health OK).
+- 2026-10-16: 208.1 PR #506 (v170), 208.2 PR #508 (v171), 208.3 PR #511 (v172), 208.8 endpoint diktovania PR #512 (v174); `STT_PROVIDER` secret zrušený (v173).
+- 2026-10-16: iOS 208.4 PR #510, 208.5 PR #509, 208.6 PR #513, 208.8 PR #514, 208.7 PR #515 v main.
+- Replay 30 nahrávok: počuté odpovede Scribe 22 (časť nezmysly) → gpt-transcribe 20 (10 nahrávok je ticho pre všetky služby).
+- 208.7: „počujem“ ~60 ms po začiatku reči, „spracúvam“ 250 ms po konci; preskoč/pauza bez čakania na finálny výsledok. **Povely počas čítania otázky sú za prepínačom OFF:** s počúvaním počas čítania hrá otázka v hlasitosti hovoru (iOS režim hovoru).
+- Open (founder): zapnúť povely počas čítania po teste? Vrátiť alebo zmazať riadok „B · Jupiter“ pri hovorenej MCQ odpovedi (od #184 sa nezobrazuje)?
+- Open (zariadenie): skutočné časy povelov, hlasitosť pri štarte, Domov bez režimu hovoru, diktovanie, prečítanie odpovede zo servera.

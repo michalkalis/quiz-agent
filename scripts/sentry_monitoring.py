@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Sentry monitors + alert rules as code (#207 — production readiness, 207.7/207.8).
 
-The desired state of every Sentry piece that decides whether an outage reaches
-the founder lives here; running the script makes Sentry match it. Dry run by
+Optional extra (founder 2026-10-16): the primary alert path is our own e-mail
+from the servers (quiz_shared.ops_alerts). This script adds Sentry's error-rate
+and uptime alerts on top once a token with alerts:write exists; running it
+makes Sentry match the desired state below. Dry run by
 default (prints what it would change); ``--apply`` writes.
 
     python3 scripts/sentry_monitoring.py           # plan

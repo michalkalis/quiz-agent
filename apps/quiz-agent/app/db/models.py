@@ -512,3 +512,21 @@ class DailyChallengeAnswer(Base):
     answered_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
+
+
+class AppSwitch(Base):
+    """One remote app switch overriding its env value (#207 task 207.18).
+
+    Keys are ``app.app_switches.KEYS``. A row wins over the env / Fly secret of
+    the same switch; ``value`` NULL means "off" (no minimum version, no
+    notice). Changed via ``PUT /admin/app-switches`` without a restart.
+    quiz-pack-api also reads ``orders_enabled`` from this table (same DB).
+    """
+
+    __tablename__ = "app_switches"
+
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )

@@ -77,10 +77,16 @@ def init_sentry(dsn: Optional[str]) -> None:
     """
     if not dsn:
         return
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
     sentry_sdk.init(
         dsn=dsn,
         traces_sample_rate=0.1,
         environment=os.environ.get("ENVIRONMENT", "development"),
+        # #207 (207.10): warnings and errors also go to Sentry Logs (30-day
+        # retention) — Fly's log buffer is too short to investigate an incident.
+        enable_logs=True,
+        integrations=[LoggingIntegration(sentry_logs_level=logging.WARNING)],
     )
     logging.getLogger(__name__).info(
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")

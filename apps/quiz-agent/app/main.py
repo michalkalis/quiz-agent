@@ -48,10 +48,17 @@ logger = logging.getLogger(__name__)
 # Initialize Sentry (no-op if SENTRY_DSN is not set)
 sentry_dsn = os.environ.get("SENTRY_DSN")
 if sentry_dsn:
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
     sentry_sdk.init(
         dsn=sentry_dsn,
         traces_sample_rate=0.1,
         environment=os.environ.get("ENVIRONMENT", "development"),
+        # #207 (207.10): warnings and errors also go to Sentry Logs (5 GB/month
+        # on our plan, 30-day retention) — Fly's own log buffer only reaches
+        # back minutes, too short to investigate an incident afterwards.
+        enable_logs=True,
+        integrations=[LoggingIntegration(sentry_logs_level=logging.WARNING)],
     )
     logger.info(
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")

@@ -361,6 +361,8 @@ async def lifespan(app: FastAPI):
     # #207.13: service-wide ElevenLabs daily budget -> OpenAI voice/recogniser.
     elevenlabs_budget = ElevenLabsBudget(auth_sessionmaker)
     tts_service.primary_budget = elevenlabs_budget
+    # #207.20: one synthesis per audio across machines (lease + shared R2).
+    tts_service.leases = LeaseStore(shared_sm)
     voice_transcriber.primary_budget = elevenlabs_budget
     app.state.elevenlabs_budget = elevenlabs_budget
     app.state.auth_sessionmaker = auth_sessionmaker

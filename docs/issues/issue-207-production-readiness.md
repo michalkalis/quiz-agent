@@ -28,7 +28,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 - [ ] 207.1 Trunk-based flow: `main` = produkcia (redizajn), krátke vetvy + PR, nedokončené veci za prepínačmi. Tagy `ios/1.0-final` (hlava `release/1.0`, starý dizajn) a `ios/1.1-b76` (f0f5c5eb, build odoslaný do review 10-14). Opravná vetva `hotfix/<verzia>` sa zakladá z tagu len keď treba, oprava sa cherry-pickne do `main`. `release/1.0` zmraziť ako archív; pravidlá v `.claude/rules/shared.md` + TestFlight skill.
 - [ ] 207.2 `ios-release.yml` po úspešnom uploade sám pushne tag `ios/<verzia>-b<build>` (každý build dohľadateľný bez ručnej práce).
-- [ ] 207.3 Phased release pre 1.1 v App Store Connect — overiť/zapnúť cez ASC API.
+- [x] 207.3 Phased release pre 1.1 v App Store Connect — overiť/zapnúť cez ASC API. **Hotové 2026-10-16 (PR #457):** krok `phased-release` v `asc-store-upload` workflow; 1.1 (Waiting for Review) má phased release `INACTIVE`, Apple ho spustí pri vydaní (7 dní).
 
 ### B. Vlastné balíčky: Fly worker primárne, mba záloha (P0)
 
@@ -53,10 +53,10 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### E. Nasadzovanie a prostredia (P1)
 
-- [ ] 207.15 Backend CI ako povinná kontrola v rulesete (vedľa `claude-review`).
-- [ ] 207.16 Deploy cez GitHub Actions po merge do `main`: staging → smoke test → prod → smoke test; pri zlyhaní stop + Sentry/e-mail. `/deploy` skill ostáva ako ručná núdzová cesta.
-- [ ] 207.17 Staging so samostatnými kľúčmi providerov s nízkymi limitmi (staging nesmie míňať prod kredit) a vlastnou DB inštanciou alebo aspoň oddelenými rolami (dnes zdieľa prod cluster).
-- [ ] 207.18 Prepínače (min. verzia, objednávky, oznam) bez reštartu stroja: hodnoty z DB s admin endpointom namiesto Fly secrets.
+- [x] 207.15 Backend CI ako povinná kontrola v rulesete (vedľa `claude-review`). **Hotové 2026-10-16 (PR #459):** job `Backend CI gate` hlási na každej PR (sady sa preskočia, keď PR nemení backend), je povinný v `main-pr-flow` (GitHub Actions app).
+- [~] 207.16 Deploy cez GitHub Actions po merge do `main`: staging → smoke test → prod → smoke test; pri zlyhaní stop + Sentry/e-mail. `/deploy` skill ostáva ako ručná núdzová cesta. **2026-10-16 (PR #459):** `backend-deploy.yml` (ručné spustenie): celé Backend CI → staging → `infra/deploy/smoke.sh` → prod (len `main`, prostredie `production`) → smoke + čerstvý heartbeat Fly workera → tag `deployed/<app>`; zlyhanie = issue `deploy-failed` (e-mail). Beh 38887817197 nasadil 13d8c1b6 staging→prod, všetko zelené. Open = zapnúť spúšťanie po merge, keď skončia ručné deploye ostatných sessions.
+- [x] 207.17 Staging so samostatnými kľúčmi providerov s nízkymi limitmi (staging nesmie míňať prod kredit) a vlastnou DB inštanciou alebo aspoň oddelenými rolami (dnes zdieľa prod cluster). **Hotové 2026-10-16:** platené kľúče stagingu (zhodovali sa s prodom) nahradené nefunkčnými zástupnými hodnotami, staging admin kľúč vlastný; DB ostáva na oddelených rolách (vlastná inštancia by stála ~2 $/mes. bez praktického prínosu). Vlastné kľúče s nízkym limitom = founder krok (`docs/setup/staging.md`), len ak treba skúšať AI volania.
+- [x] 207.18 Prepínače (min. verzia, objednávky, oznam) bez reštartu stroja: hodnoty z DB s admin endpointom namiesto Fly secrets. **Hotové 2026-10-16 (PR #461, nasadené):** tabuľka `app_switches` prebíja env, `PUT /api/v1/admin/app-switches`, quiz-pack-api z nej čítá vypínač objednávok; `/app-config` bez zmeny tvaru. Overené na stagingu (set → hneď v `/app-config`, reset → env). Návod `docs/setup/app-switches.md`.
 
 ### F. Odolnosť a dáta (P1)
 
@@ -80,6 +80,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 - Sprístupniť `mba` pre Remote Control (návod v session 2026-10-16), aby agent spúšťal sessions sám.
 - 207.6: In-App Purchase kľúč v App Store Connect (Users and Access → Integrations → In-App Purchase → Generate) a jeho Key ID, Issuer ID a obsah `.p8` do Fly secrets `quiz-pack-api` (`APP_STORE_SERVER_KEY_ID`, `APP_STORE_SERVER_ISSUER_ID`, `APP_STORE_SERVER_PRIVATE_KEY`). Bez neho príkaz na kontrolu objednávok po obnove nebeží (ak má RevenueCat už vlastný kľúč a `.p8` je stiahnutý, dá sa použiť ten).
+- 207.17 (voliteľné, len ak chceš na stagingu skúšať AI volania): staging kľúče s limitom ~2 $ u OpenRouter, OpenAI, ElevenLabs, Anthropic a ich nastavenie na staging appky, presný postup v `docs/setup/staging.md` → Founder kroky. Bez toho staging AI volania zlyhajú, deploy a smoke testy idú.
 - 207.22: akceptovať DPA u spracovateľov, kde to vyžaduje klik v ich konzole (zoznam pripraví agent).
 - Neskôr: Anthropic auto-reload so stropom pred 11-06.
 

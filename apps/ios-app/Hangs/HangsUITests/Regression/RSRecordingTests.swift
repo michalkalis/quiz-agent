@@ -54,10 +54,11 @@ final nonisolated class RSRecordingTests: XCTestCase {
         let question = RSFlow.startQuiz(app)
         RSFlow.startRecording(question)
 
-        // Nothing spoken. Only the recording's own deadlines can end this.
-        question.waitForStateToLeave("recording", timeout: 20)
-
-        let landed = question.stateValue
+        // Nothing spoken. Only the recording's own deadlines can end this. The
+        // first empty recording re-records once on its own (#185 track B, the
+        // "didn't catch that" retry, passing through askingQuestion); the
+        // second lands on the no-answer sheet (`processing`) or an error.
+        let landed = question.waitForState(in: ["processing", "error"], timeout: 45)
         XCTAssertTrue(
             ["processing", "askingQuestion", "error"].contains(landed),
             "RS-02: auto-stop landed on '\(landed)', not a recoverable state"

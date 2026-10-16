@@ -166,6 +166,83 @@ struct VoiceProcessingRouteFlowTests {
     }
 }
 
+// MARK: - #208.5 Home listens without voice processing
+
+/// WHY (TF 2026-10-16): arming voice processing for the Home command listener
+/// switched iOS to `.voiceChat` right at launch, and with it to the call
+/// volume, so the volume the player raised snapped back. Home must listen on
+/// the raw mic (commands still recognised); the quiz keeps voice processing.
+@Suite("Home command listener without voice processing (#208.5)")
+@MainActor
+struct HomeListenerVoiceProcessingTests {
+    private func makeHomeVM() -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
+        let (vm, silence, audio) = makeRouteVM()
+        vm.currentSession = nil
+        vm.currentQuestion = nil
+        vm.quizState = .idle
+        silence.voiceProcessingOnStart = speakerArmed
+        return (vm, silence, audio)
+    }
+
+    @Test("Home's listener comes up on the quiet session without voice processing, commands still live")
+    func homeListenerSkipsVoiceProcessing() async {
+        let (vm, silence, audio) = makeHomeVM()
+
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+
+        #expect(audio.setupQuietListeningSessionCallCount == 1)
+        #expect(silence.voiceProcessingStatus?.mode == .offQuietSession)
+        #expect(silence.voiceProcessingStatus?.armed == false, "armed here = call volume at launch")
+        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "\"start\" must still be heard on Home")
+    }
+
+    @Test("an in-quiz listener still up when Home arms is restarted without voice processing")
+    func quizEngineLeftOnHomeIsRestarted() async {
+        let (vm, silence, _) = makeRouteVM()
+        silence.voiceProcessingOnStart = speakerArmed
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+        #expect(silence.voiceProcessingStatus == speakerArmed)
+
+        vm.quizState = .idle
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+
+        #expect(silence.stopListeningCallCount == 1)
+        #expect(silence.startListeningCallCount == 2)
+        #expect(silence.voiceProcessingStatus?.armed == false)
+    }
+
+    @Test("a re-sync on Home leaves its listener up: no extra mode flap")
+    func homeListenerNotFlapped() async {
+        let (vm, silence, _) = makeHomeVM()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+
+        #expect(silence.stopListeningCallCount == 0, "every teardown re-routes other apps' audio")
+        #expect(silence.voiceProcessingStatus?.armed == false)
+    }
+
+    @Test("a device arriving on Home does not restart the listener for voice processing")
+    func routeChangeOnHomeLeavesListener() async {
+        let (vm, silence, _) = makeHomeVM()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+
+        await vm.audioDeviceState.handleAudioRouteChange(change(.newDeviceAvailable, .on))
+
+        #expect(silence.stopListeningCallCount == 0)
+    }
+
+    @Test("starting a quiz gives the quiz session its voice processing back")
+    func quizStartReenablesVoiceProcessing() async {
+        let (vm, silence, _) = makeHomeVM()
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+        #expect(!silence.voiceProcessingAllowed)
+
+        await vm.startNewQuiz()
+
+        #expect(silence.voiceProcessingAllowed, "the quiz answers need echo cancellation and noise suppression")
+    }
+}
+
 // MARK: - Settings › voice diagnostics
 
 @MainActor

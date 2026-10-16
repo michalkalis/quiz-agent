@@ -121,7 +121,7 @@ struct ContentView: View {
                     case .home:
                         HomeView(
                             viewModel: viewModel,
-                            packOrderService: appState.packOrderService,
+                            myPacks: appState.myPacksViewModel,
                             appConfig: appState.appConfig,
                             dailyChallenge: dailyChallenge,
                             onCreatePack: presentOrderFlow
@@ -149,8 +149,7 @@ struct ContentView: View {
                         SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
                     case .myPacks:
                         MyPacksView(
-                            service: appState.packOrderService,
-                            playedCount: viewModel.playedQuestionCount(inPack:),
+                            viewModel: appState.myPacksViewModel,
                             onPlayPack: playPack,
                             createPack: MyPacksCreatePack(
                                 orderViewModel: appState.orderPackViewModel,

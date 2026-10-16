@@ -48,6 +48,11 @@ nonisolated enum VoiceProcessingMode: String, Sendable, Equatable, CaseIterable 
     case offOutput = "off_output"
     /// Off: the diagnostics master switch is off.
     case offSwitch = "off_switch"
+    /// Off: the quiet Home / set-end session (#208.5). Arming there switched
+    /// iOS to `.voiceChat`, and with it to the call volume, right at launch
+    /// (the volume the player raised snapped back). Voice processing belongs
+    /// to the quiz session only.
+    case offQuietSession = "off_quiet"
 
     var armsVoiceProcessing: Bool {
         self == .on || self == .forcedOn

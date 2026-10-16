@@ -111,7 +111,11 @@ extension SilenceDetectionService {
         // or the tap installed — see VoiceProcessingPolicy for why it is back
         // after #173, why it must be on every engine or none, and why (#185 C)
         // the output route decides whether it is armed at all.
-        let voiceProcessing = VoiceProcessingPolicy.arm(inputNode)
+        // #208.5: never under the quiet Home session (call volume at launch).
+        let voiceProcessing = VoiceProcessingPolicy.arm(
+            inputNode,
+            mode: voiceProcessingAllowed ? VoiceProcessingPolicy.currentMode() : .offQuietSession
+        )
         voiceProcessingStatus = voiceProcessing
         var inputFormat = inputNode.outputFormat(forBus: 0)
 

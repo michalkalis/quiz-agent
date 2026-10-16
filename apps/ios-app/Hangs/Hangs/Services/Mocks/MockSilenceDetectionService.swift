@@ -73,6 +73,8 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     /// default for tests that don't care), cleared by `stopListening()`.
     private(set) var voiceProcessingStatus: VoiceProcessingStatus?
     var voiceProcessingOnStart: VoiceProcessingStatus?
+    /// #208.5: as the real service — a start with this `false` never arms.
+    var voiceProcessingAllowed = true
 
     /// #184 track B: the answer tee. `isAnswerCaptureActive` is what the
     /// recording tests assert where they used to assert `audio.isRecording`.
@@ -121,7 +123,11 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
             return
         }
         isListening = true
-        voiceProcessingStatus = voiceProcessingOnStart
+        voiceProcessingStatus = voiceProcessingAllowed
+            ? voiceProcessingOnStart
+            : voiceProcessingOnStart.map {
+                VoiceProcessingStatus(mode: .offQuietSession, armed: false, outputPort: $0.outputPort)
+            }
     }
 
     func stopListening() {

@@ -170,6 +170,12 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// read it.
     var voiceProcessingStatus: VoiceProcessingStatus? { get }
 
+    /// #208.5: whether the next engine start may arm voice processing at all.
+    /// `false` under the quiet Home / set-end session, `true` under the quiz
+    /// session; the route policy still decides within the quiz. Read once per
+    /// engine start.
+    var voiceProcessingAllowed: Bool { get set }
+
     /// Sample rate of the 16-bit mono PCM the answer sink receives (the
     /// analyzer format: 16 kHz, or 8 kHz on a narrowband Bluetooth route).
     var answerAudioSampleRate: Double { get }
@@ -234,6 +240,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
 
     /// #185 track C — see the protocol. Written by the +Engine lifecycle.
     var voiceProcessingStatus: VoiceProcessingStatus?
+
+    /// #208.5 — see the protocol.
+    var voiceProcessingAllowed = true
 
     /// #184 track B — see the protocol. Set when the tap is installed.
     var answerAudioSampleRate: Double = 16000

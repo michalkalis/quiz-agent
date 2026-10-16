@@ -14,7 +14,8 @@
 import SwiftUI
 
 struct MyPacksView: View {
-    @StateObject private var viewModel: MyPacksViewModel
+    /// #208.5: the app's one list model (AppState), shared with Home.
+    @ObservedObject private var viewModel: MyPacksViewModel
     @State private var showingOrderFlow = false
     /// Play a delivered pack.
     let onPlayPack: (PackPlay) -> Void
@@ -22,24 +23,8 @@ struct MyPacksView: View {
     /// Bg-MyPacks). Nil in tests and previews, which render the list alone.
     let createPack: MyPacksCreatePack?
 
-    init(
-        service: PackOrderServiceProtocol,
-        playedCount: @escaping (String) -> Int = { _ in 0 },
-        onPlayPack: @escaping (PackPlay) -> Void,
-        createPack: MyPacksCreatePack? = nil
-    ) {
-        self.init(
-            viewModel: MyPacksViewModel(service: service, playedCount: playedCount),
-            onPlayPack: onPlayPack,
-            createPack: createPack
-        )
-    }
-
-    /// Adopt an already-built list model. Used by previews and by the row
-    /// structure tests, which need the list in a known loaded state rather than
-    /// racing the `.task` that fetches it.
     init(viewModel: MyPacksViewModel, onPlayPack: @escaping (PackPlay) -> Void, createPack: MyPacksCreatePack? = nil) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
         self.onPlayPack = onPlayPack
         self.createPack = createPack
     }
@@ -326,7 +311,7 @@ private struct MyPacksCreateButton: View {
 #if DEBUG
     #Preview {
         NavigationStack {
-            MyPacksView(service: MockPackOrderService(), onPlayPack: { _ in })
+            MyPacksView(viewModel: MyPacksViewModel(service: MockPackOrderService()), onPlayPack: { _ in })
         }
     }
 #endif

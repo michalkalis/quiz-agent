@@ -5,6 +5,11 @@ him within minutes, without a new external service. The servers e-mail him
 themselves through the Trubbo mail setup (Resend SMTP, sender on the verified
 trubbo.app domain) to ``ALERT_EMAIL_TO``.
 
+Founder 2026-10-16 (evening): mail only when players are affected, now or
+soon (live quiz down, paid order stuck, a credit running out, a disk filling).
+Problems players never feel (backups, which a self-heal keeps off the disk)
+are recorded with ``mail=False``: same state and dedupe, log line only.
+
 ``AlertBook`` dedupes: one mail when a problem appears or changes state
 (low → critical), one recovery mail when it clears, nothing while it stays the
 same. With a durable store (quiz-agent: a Postgres row shared by its machines,
@@ -82,6 +87,11 @@ class AlertStateStore(Protocol):
     async def save(self, state: dict[str, dict]) -> None: ...
 
 
+async def _log_only(subject: str, body: str) -> bool:
+    logger.warning("Ops (no mail, players not affected): %s", subject)
+    return True
+
+
 class AlertBook:
     """Problem state per key → mails only on change (see module docstring)."""
 
@@ -153,16 +163,19 @@ class AlertBook:
         detail: str = "",
         *,
         notify_recovery: bool = True,
+        mail: bool = True,
     ) -> None:
         """``state`` None = healthy. Mails on a new or changed state and on
-        recovery; a failed send leaves the book unchanged so it retries."""
+        recovery; a failed send leaves the book unchanged so it retries.
+        ``mail=False``: players are not affected, so only log it."""
         await self.refresh()
         prev = self._open.get(key)
+        send = self._send if mail else _log_only
         if state is None:
             if prev is None:
                 return
             if notify_recovery:
-                ok = await self._send(
+                ok = await send(
                     f"[Trubbo OK] {key} recovered",
                     self._body(
                         f"{key} is back to normal. {detail}".strip(), prev["since"]
@@ -176,9 +189,7 @@ class AlertBook:
         if prev is not None and prev["state"] == state:
             return
         since = prev["since"] if prev else time.time()
-        ok = await self._send(
-            f"[Trubbo ALERT] {key}: {state}", self._body(detail, since)
-        )
+        ok = await send(f"[Trubbo ALERT] {key}: {state}", self._body(detail, since))
         if not ok and mail_configured():
             return
         self._open[key] = {"state": state, "since": since, "detail": detail}

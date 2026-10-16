@@ -14,6 +14,10 @@ gameplay. Three layers, run by the monitor leader on every ops-watch tick:
    + reload (no restart), so Postgres recycles WAL. Availability beats PITR;
    the nightly dump still covers the gap. The mail says how to undo it.
 
+Logged only, never mailed (founder 2026-10-16, evening: mail only when
+players are affected): layer 3 keeps the disk from filling, and the disk
+watch in ops_watch still mails if it fills anyway.
+
 Silent while archiving is not configured (``archive_mode`` off), so this can
 ship before the archive is switched on.
 """
@@ -117,10 +121,11 @@ async def check_wal_archive(
             "WAL archiving to R2 is switched off (archive_command = /bin/true), "
             "so point-in-time recovery has a gap; the nightly dump still runs. " + UNDO,
             notify_recovery=True,
+            mail=False,
         )
-        await book.update(KEY_ARCHIVE, None, notify_recovery=False)
+        await book.update(KEY_ARCHIVE, None, notify_recovery=False, mail=False)
     else:
-        await book.update(KEY_GAP, None)
+        await book.update(KEY_GAP, None, mail=False)
         failing = st.last_failed is not None and (
             st.last_archived is None or st.last_failed > st.last_archived
         )
@@ -142,9 +147,10 @@ async def check_wal_archive(
                 f"~190 MB/h; at {_mb(WAL_HEAL_BYTES)} archiving is switched off "
                 "automatically to protect the disk. Check R2 status and the "
                 "token (fly ssh console -a quiz-pack-db, flexctl backup list).",
+                mail=False,
             )
         else:
-            await book.update(KEY_ARCHIVE, None)
+            await book.update(KEY_ARCHIVE, None, mail=False)
 
     if st.wal_bytes >= WAL_HEAL_BYTES and not st.healed:
         logger.error("pg_wal %s: switching WAL archiving off", _mb(st.wal_bytes))
@@ -155,9 +161,12 @@ async def check_wal_archive(
             f"pg_wal reached {_mb(st.wal_bytes)} because archiving kept failing; "
             "archiving was switched off automatically so the disk does not fill. "
             + UNDO,
+            mail=False,
         )
     if st.wal_bytes >= WAL_WARN_BYTES:
-        await book.update(KEY_WAL, "high", f"pg_wal is {_mb(st.wal_bytes)}.")
+        await book.update(
+            KEY_WAL, "high", f"pg_wal is {_mb(st.wal_bytes)}.", mail=False
+        )
     else:
-        await book.update(KEY_WAL, None)
+        await book.update(KEY_WAL, None, mail=False)
     return st

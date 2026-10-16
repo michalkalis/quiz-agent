@@ -2,9 +2,11 @@
 
 Why: a stuck archiver (R2 outage, revoked token) makes Postgres keep every WAL
 segment until the 3 GB volume fills and Postgres stops — all gameplay with it.
-The founder must hear about a stuck archive long before that, and past 1.5 GB
-the watch must switch archiving off by itself (availability beats PITR). And
-the watch must stay silent while archiving is simply not configured, so it can
+A stuck archive must be on record (ops-health) long before that, and past
+1.5 GB the watch must switch archiving off by itself (availability beats PITR).
+None of it mails the founder: thanks to the self-heal players never feel it
+(founder 2026-10-16, evening: mail only when players are affected). And the
+watch must stay silent while archiving is simply not configured, so it can
 ship before PITR is switched on.
 """
 
@@ -81,29 +83,32 @@ async def test_failing_archiver_alerts_once_and_recovers(db):
     book = AlertBook("t", sender=mails)
     db["status"] = _status(last_failed=NOW - timedelta(minutes=1), failed_count=4)
     await ww.check_wal_archive(None, book, NOW)
-    await ww.check_wal_archive(None, book, NOW)  # same state: no second mail
+    await ww.check_wal_archive(None, book, NOW)
+    assert book.open_problems["wal archive"]["state"] == "failing"
     db["status"] = _status(last_failed=NOW - timedelta(minutes=10))
     await ww.check_wal_archive(None, book, NOW)
-    assert mails.subjects == [
-        "[Trubbo ALERT] wal archive: failing",
-        "[Trubbo OK] wal archive recovered",
-    ]
+    assert "wal archive" not in book.open_problems
+    assert mails.subjects == []  # backups only: never a mail
 
 
 async def test_stalled_archiver_alerts(db):
     """No failure recorded, but nothing shipped for > 15 min although the
     worker heartbeat writes every minute: archiving is stuck."""
     mails = _Mails()
+    book = AlertBook("t", sender=mails)
     db["status"] = _status(last_archived=NOW - timedelta(minutes=20))
-    await ww.check_wal_archive(None, AlertBook("t", sender=mails), NOW)
-    assert mails.subjects == ["[Trubbo ALERT] wal archive: stalled"]
+    await ww.check_wal_archive(None, book, NOW)
+    assert book.open_problems["wal archive"]["state"] == "stalled"
+    assert mails.subjects == []
 
 
 async def test_growing_pg_wal_warns_before_the_self_heal(db):
     mails = _Mails()
+    book = AlertBook("t", sender=mails)
     db["status"] = _status(last_failed=NOW, failed_count=99, wal_bytes=600 * MB)
-    await ww.check_wal_archive(None, AlertBook("t", sender=mails), NOW)
-    assert "[Trubbo ALERT] pg_wal size: high" in mails.subjects
+    await ww.check_wal_archive(None, book, NOW)
+    assert book.open_problems["pg_wal size"]["state"] == "high"
+    assert mails.subjects == []
     assert db["disabled"] == 0  # 600 MB is a warning, not yet a cut
 
 
@@ -113,7 +118,7 @@ async def test_self_heal_cuts_archiving_once_and_reports_the_gap(db):
     db["status"] = _status(last_failed=NOW, failed_count=999, wal_bytes=1600 * MB)
     await ww.check_wal_archive(None, book, NOW)
     assert db["disabled"] == 1
-    assert "[Trubbo ALERT] PITR gap: archiving off" in mails.subjects
+    assert book.open_problems["PITR gap"]["state"] == "archiving off"
     # Next tick: already cut, WAL recycled; no second cut, the gap stays open.
     db["status"] = _status(command=ww.HEALED_COMMAND, wal_bytes=80 * MB)
     await ww.check_wal_archive(None, book, NOW)
@@ -122,4 +127,5 @@ async def test_self_heal_cuts_archiving_once_and_reports_the_gap(db):
     # The founder repaired R2 and reset archive_command: gap closes.
     db["status"] = _status()
     await ww.check_wal_archive(None, book, NOW)
-    assert mails.subjects[-1] == "[Trubbo OK] PITR gap recovered"
+    assert "PITR gap" not in book.open_problems
+    assert mails.subjects == []

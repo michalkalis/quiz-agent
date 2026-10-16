@@ -6,8 +6,11 @@ service. The always-on Fly pack worker pings quiz-agent every minute
 - the worker mails when quiz-agent stops answering (its half, in
   quiz-pack-api ``app/worker/checkin.py``);
 - quiz-agent mails when the pings stop, i.e. no primary worker is taking paid
-  orders (this half). Missing pings for 3 min = down; the first 3 min after a
-  quiz-agent boot never alarm (no ping seen yet is not "worker dead").
+  orders (this half). Missing pings for 30 min = down: a deploy or restart
+  is minutes and the mba backup takes orders after 5 min, so only an outage
+  long enough to keep a paying player waiting mails (founder 2026-10-16,
+  evening). The first 3 min after a quiz-agent boot never alarm (no ping
+  seen yet is not "worker dead").
 
 quiz-pack-api's web process scales to zero, so it is checked only every
 30 min (each check wakes it; ~1 h of machine time a day).
@@ -36,6 +39,7 @@ from quiz_shared.ops_alerts import AlertBook
 logger = logging.getLogger(__name__)
 
 PING_STALE_S = 180.0
+WORKER_DOWN_ALERT_S = 1800.0
 PACK_API_HEALTH = "https://quiz-pack-api.fly.dev/health"
 PACK_API_EVERY_S = 1800.0
 PACK_API_FAILS_TO_ALERT = 2
@@ -87,16 +91,18 @@ async def check_worker(book: AlertBook, now: float) -> None:
     since_boot = now - pack_watch.started
     if age is None and since_boot <= PING_STALE_S:
         return  # boot grace: neither "down" nor "recovered" is known yet
-    if (age if age is not None else since_boot) > PING_STALE_S:
+    silent_for = age if age is not None else since_boot
+    if silent_for > WORKER_DOWN_ALERT_S:
         await book.update(
             "pack worker",
             "down",
-            "No ping from the Fly pack worker for over 3 minutes: paid custom "
+            "No ping from the Fly pack worker for over 30 minutes: paid custom "
             "packs are not being generated (the mba backup takes over after 5 min "
             "if it runs). Check: fly status -a quiz-pack-api (process 'worker').",
         )
-    else:
+    elif silent_for <= PING_STALE_S:
         await book.update("pack worker", None)
+    # In between: a deploy or restart may be under way; no news either way.
 
 
 async def check_pack_api(client: httpx.AsyncClient, book: AlertBook) -> None:

@@ -88,6 +88,10 @@ async def test_create_order_happy_path_202(
     # The queue handoff is stamped, not left to chance: the stuck-order sweep
     # gates its 'pending' branch on `enqueued_at` (#133 item 1e).
     assert order.enqueued_at is not None
+    # Copied from the verified JWS (#207 207.5): it is what lets the mba backup
+    # tell a TestFlight order (Claude subscription allowed) from an App Store
+    # customer's (never on the subscription). The fixture JWS is Sandbox.
+    assert order.storekit_environment == "Sandbox"
 
     # ARQ assertions — exactly one enqueue call with the right args, carrying the
     # deterministic attempt id (adversarial audit 2026-07-30, #133 item 1e).

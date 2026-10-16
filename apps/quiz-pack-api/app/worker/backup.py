@@ -5,11 +5,17 @@ Anthropic API; the mba session worker (Claude Code subscription, #172) only
 steps in when the Fly worker cannot. Run as ``python -m app.worker.backup``
 (``scripts/run_session_worker.sh`` does, under launchd on mba).
 
-It is the ordinary ARQ worker with three differences:
+It is the ordinary ARQ worker with four differences:
 
 * it consumes the SAME queue as the Fly worker, but takes nothing while
   ``BackupGate`` says the Fly worker is coping (``Worker.allow_pick_jobs``,
   ARQ's own switch for "stay connected, pick no new jobs");
+* it claims only beta-testing orders (``BetaOrdersOnly``). Founder 2026-10-16:
+  the subscription may generate orders bought in the StoreKit Sandbox
+  (TestFlight) and nothing else. An App Store customer's order is never
+  claimed here: while the Fly worker is down it stays in the queue for Fly,
+  and the stuck-order sweep / refund path handles it. Unknown environment =
+  not eligible;
 * it writes its heartbeat under ``BACKUP_HEALTH_CHECK_KEY``, so the queue's own
   ``<queue>:health-check`` key stays the Fly worker's and its absence means
   exactly "no Fly worker";
@@ -28,14 +34,18 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Callable
+import uuid
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import sentry_sdk
 from arq.constants import health_check_key_suffix, in_progress_key_prefix
-from arq.worker import Worker, create_worker
+from arq.worker import Worker, get_kwargs
+from sqlalchemy import select
 
 from app.config import BACKUP_HEALTH_CHECK_KEY, get_settings
+from app.db.models.order import GenerationOrder
+from app.db.session import AsyncSessionLocal
 
 from .worker import WorkerSettings
 
@@ -47,6 +57,80 @@ _CRON_PREFIX = "cron:"
 # How many overdue queue entries one check looks at. Orders are few; this only
 # bounds a pathological backlog.
 _SCAN_LIMIT = 50
+# `attempt_job_id`: "process_order:<order id>:<attempt>".
+_ORDER_PREFIX = "process_order:"
+# Founder 2026-10-16: the subscription serves beta testers only. Widening this
+# is a founder decision and a code change on purpose, not a config knob.
+BACKUP_ENVIRONMENTS = frozenset({"Sandbox"})
+
+Eligibility = Callable[[str], Awaitable[bool]]
+
+
+def _is_cron(job_id: str) -> bool:
+    return job_id.startswith(_CRON_PREFIX)
+
+
+def _order_id(job_id: str) -> uuid.UUID | None:
+    if not job_id.startswith(_ORDER_PREFIX):
+        return None
+    try:
+        return uuid.UUID(job_id[len(_ORDER_PREFIX) :].split(":", 1)[0])
+    except ValueError:
+        return None
+
+
+class BetaOrdersOnly:
+    """May the backup run this queued job? Only a Sandbox (TestFlight) order.
+
+    Reads the order's ``storekit_environment``, which the server copied from
+    the verified StoreKit JWS when it created the order. Anything it cannot
+    positively place in the Sandbox is refused: a job id that is not an order
+    attempt, a missing row, NULL (pre-#207 or admin-key order), a DB error.
+    """
+
+    def __init__(self, session_factory: Callable[[], Any] = AsyncSessionLocal) -> None:
+        self._session_factory = session_factory
+        # The environment of an order never changes, so one lookup per order.
+        self._known: dict[uuid.UUID, bool] = {}
+        self._refusal_logged: set[str] = set()
+
+    async def __call__(self, job_id: str) -> bool:
+        order_id = _order_id(job_id)
+        if order_id is None:
+            return self._refuse(job_id, "not an order job")
+        if order_id not in self._known:
+            try:
+                async with self._session_factory() as session:
+                    env = (
+                        await session.execute(
+                            select(GenerationOrder.storekit_environment).where(
+                                GenerationOrder.id == order_id
+                            )
+                        )
+                    ).scalar_one_or_none()
+            except Exception:
+                logger.warning(
+                    "backup: cannot read order %s; not taking it", order_id, exc_info=True
+                )
+                return False
+            if env is None:
+                return self._refuse(job_id, "store environment unknown")
+            self._known[order_id] = env in BACKUP_ENVIRONMENTS
+        if not self._known[order_id]:
+            return self._refuse(job_id, "App Store (Production) order")
+        return True
+
+    def _refuse(self, job_id: str, why: str) -> bool:
+        # Polled every ~0.5 s while the gate is open: log each job once.
+        if job_id not in self._refusal_logged:
+            self._refusal_logged.add(job_id)
+            logger.warning(
+                "backup: leaving %s for the Fly worker (%s); the subscription "
+                "generates beta (Sandbox) orders only",
+                job_id,
+                why,
+            )
+        return False
 
 
 class BackupGate:
@@ -58,6 +142,7 @@ class BackupGate:
         *,
         fly_down_grace_s: float,
         queue_wait_s: float,
+        eligible: Eligibility,
         monotonic: Callable[[], float] = time.monotonic,
         wall_ms: Callable[[], float] = lambda: time.time() * 1000,
     ) -> None:
@@ -65,6 +150,7 @@ class BackupGate:
         self.fly_health_key = queue_name + health_check_key_suffix
         self.fly_down_grace_s = fly_down_grace_s
         self.queue_wait_s = queue_wait_s
+        self._eligible = eligible
         self._monotonic = monotonic
         self._wall_ms = wall_ms
         self._fly_missing_since: float | None = None
@@ -87,11 +173,13 @@ class BackupGate:
         return None
 
     async def _longest_unclaimed_wait_s(self, redis: Any) -> float | None:
-        """Longest wait past `queue_wait_s` of a due job no worker has claimed.
+        """Longest wait past `queue_wait_s` of a due job the backup could run.
 
         ARQ keeps a job in the queue sorted set (score = when it is due, ms)
         until it finishes, so an entry alone is not a waiting order: one with
-        an in-progress marker is being run.
+        an in-progress marker is being run. An order the backup may not run
+        (App Store, unknown) does not count either: taking over for it would
+        do nothing.
         """
         now_ms = self._wall_ms()
         overdue = await redis.zrangebyscore(
@@ -105,13 +193,37 @@ class BackupGate:
         longest: float | None = None
         for raw_id, score in overdue:
             job_id = raw_id.decode() if isinstance(raw_id, bytes) else str(raw_id)
-            if job_id.startswith(_CRON_PREFIX):
+            if _is_cron(job_id):
                 continue
             if await redis.exists(in_progress_key_prefix + job_id):
+                continue
+            if not await self._eligible(job_id):
                 continue
             waited = (now_ms - score) / 1000
             longest = waited if longest is None else max(longest, waited)
         return longest
+
+
+class BackupWorker(Worker):
+    """ARQ worker that never claims a job ``eligible`` refuses.
+
+    The filter runs before ARQ's claim (``start_jobs`` sets the in-progress
+    marker), so a refused order stays untouched in the queue for the Fly
+    worker: nothing to release, no retry counted against it.
+    """
+
+    def __init__(self, *args: Any, eligible: Eligibility, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.eligible = eligible
+
+    async def start_jobs(self, job_ids: list[bytes]) -> None:
+        allowed = []
+        for raw in job_ids:
+            job_id = raw.decode()
+            # The stuck-order sweep only re-enqueues; it generates nothing.
+            if _is_cron(job_id) or await self.eligible(job_id):
+                allowed.append(raw)
+        await super().start_jobs(allowed)
 
 
 async def run_gate(worker: Worker, gate: BackupGate, interval_s: float = GATE_INTERVAL_S) -> None:
@@ -127,11 +239,12 @@ async def run_gate(worker: Worker, gate: BackupGate, interval_s: float = GATE_IN
         take = reason is not None
         if take != worker.allow_pick_jobs:
             if take:
-                logger.warning("backup worker taking over pack orders: %s", reason)
-                # The founder should know the backup is generating paid packs:
-                # it means the Fly worker is down or overloaded.
+                logger.warning("backup worker taking over beta pack orders: %s", reason)
+                # The founder should know the backup is generating packs on the
+                # subscription: it means the Fly worker is down or overloaded.
                 sentry_sdk.capture_message(
-                    f"mba backup worker took over pack orders: {reason}", level="warning"
+                    f"mba backup worker took over beta (Sandbox) pack orders: {reason}",
+                    level="warning",
                 )
             else:
                 logger.info("backup worker standing down: the Fly worker copes again")
@@ -139,15 +252,20 @@ async def run_gate(worker: Worker, gate: BackupGate, interval_s: float = GATE_IN
         await asyncio.sleep(interval_s)
 
 
-def build_worker() -> Worker:
-    """The ARQ worker from WorkerSettings, gated and with its own heartbeat key."""
+def build_worker(eligible: Eligibility | None = None) -> BackupWorker:
+    """The ARQ worker from WorkerSettings: gated, beta-only, own heartbeat key."""
     settings = get_settings()
-    worker = create_worker(WorkerSettings, health_check_key=BACKUP_HEALTH_CHECK_KEY)
+    eligible = eligible or BetaOrdersOnly()
+    worker = BackupWorker(
+        **{**get_kwargs(WorkerSettings), "health_check_key": BACKUP_HEALTH_CHECK_KEY},
+        eligible=eligible,
+    )
     worker.allow_pick_jobs = False
     gate = BackupGate(
         worker.queue_name,
         fly_down_grace_s=settings.backup_fly_down_grace_s,
         queue_wait_s=settings.backup_queue_wait_s,
+        eligible=eligible,
     )
     base_startup = worker.on_startup
 
@@ -156,8 +274,8 @@ def build_worker() -> Worker:
             await base_startup(ctx)
         ctx["backup_gate_task"] = asyncio.create_task(run_gate(worker, gate))
         logger.info(
-            "backup worker ready: queue=%s, takes jobs only after %s s without a "
-            "Fly worker heartbeat or an order unclaimed for %s s",
+            "backup worker ready: queue=%s, beta (Sandbox) orders only, taken only "
+            "after %s s without a Fly worker heartbeat or an order unclaimed for %s s",
             worker.queue_name,
             settings.backup_fly_down_grace_s,
             settings.backup_queue_wait_s,

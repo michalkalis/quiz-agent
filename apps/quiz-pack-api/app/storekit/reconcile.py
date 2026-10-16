@@ -159,7 +159,9 @@ async def _source_rows(source_url: str, since: datetime) -> dict[str, dict]:
         await engine.dispose()
 
 
-async def _recreate(session: AsyncSession, row: dict) -> tuple[uuid.UUID, str]:
+async def _recreate(
+    session: AsyncSession, row: dict, tx: SignedTransaction
+) -> tuple[uuid.UUID, str]:
     """Insert the lost order as a fresh queued one; returns (order id, arq job id)."""
     order = GenerationOrder(
         user_id=row["user_id"],
@@ -171,6 +173,8 @@ async def _recreate(session: AsyncSession, row: dict) -> tuple[uuid.UUID, str]:
         target_count=row["target_count"],
         language=row["language"],
         generation_mode=row["generation_mode"],
+        # Apple's verified record, as on the original order (#207 207.5).
+        storekit_environment=tx.environment,
         status="pending",
         created_at=row["created_at"],
         enqueued_at=datetime.now(timezone.utc),
@@ -221,7 +225,7 @@ async def reconcile(
             findings.append(Finding(tx, "would_recreate"))
             continue
         async with session_factory() as session:
-            order_id, job_id = await _recreate(session, row)
+            order_id, job_id = await _recreate(session, row, tx)
             await session.commit()
         # A failed enqueue leaves the order 'pending'; the worker sweep
         # requeues it within minutes, so the order is never stranded.

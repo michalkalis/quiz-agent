@@ -54,6 +54,14 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     generation_mode: Mapped[Optional[str]] = mapped_column(
         String(16), nullable=True
     )
+    # #207 207.5: Apple's store environment of the verified purchase
+    # ("Sandbox" = TestFlight/App Review, "Production" = App Store customer).
+    # NULL = unknown (pre-#207 rows, admin-key orders). The mba backup worker
+    # runs on the founder's Claude subscription and may generate only Sandbox
+    # orders; NULL is not eligible (fail closed).
+    storekit_environment: Mapped[Optional[str]] = mapped_column(
+        String(16), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         String(32), nullable=False, default="pending", server_default="pending"
     )
@@ -116,5 +124,9 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
         CheckConstraint(
             "generation_mode IS NULL OR generation_mode IN ('grounded','direct')",
             name="ck_orders_generation_mode",
+        ),
+        CheckConstraint(
+            "storekit_environment IS NULL OR storekit_environment IN ('Sandbox','Production')",
+            name="ck_orders_storekit_environment",
         ),
     )

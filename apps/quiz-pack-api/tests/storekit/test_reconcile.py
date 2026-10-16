@@ -275,7 +275,10 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
     assert (order.user_id, order.prompt, order.language, order.status) == (
         "user-1", "Techno in Berlin", "cs", "pending",
     )
-    job = await session.get(GenerationJob, order.job_id)
+    # Apple's environment travels with the rebuilt order (#207 207.5): an App
+    # Store purchase must stay off the mba backup's Claude subscription.
+    assert order.storekit_environment == "Production"
+    job =await session.get(GenerationJob, order.job_id)
     assert job is not None and job.status == "queued"
     pool.enqueue_job.assert_awaited_once()
     assert pool.enqueue_job.await_args.args == ("process_order", str(order.id))

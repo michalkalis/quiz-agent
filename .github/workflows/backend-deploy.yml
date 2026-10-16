@@ -65,9 +65,9 @@ jobs:
           }
           case "$APPS" in
             changed)
-              qa=$(changed quiz-agent apps/quiz-agent packages/shared \
+              qa=$(changed quiz-agent apps/quiz-agent packages/shared uv.lock pyproject.toml \
                 ':(exclude)apps/quiz-agent/tests' ':(exclude)*.md')
-              qp=$(changed quiz-pack-api apps/quiz-pack-api packages/shared data/examples \
+              qp=$(changed quiz-pack-api apps/quiz-pack-api packages/shared data/examples uv.lock pyproject.toml \
                 ':(exclude)apps/quiz-pack-api/tests' ':(exclude)*.md') ;;
             both) qa=true; qp=true ;;
             quiz-agent) qa=true; qp=false ;;
@@ -94,7 +94,7 @@ jobs:
       name: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5
         with:
           version: ${{ env.FLYCTL_VERSION }}
 
@@ -129,7 +129,7 @@ jobs:
       contents: write # move the deployed/<app> tags
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # 1.5
         with:
           version: ${{ env.FLYCTL_VERSION }}
 

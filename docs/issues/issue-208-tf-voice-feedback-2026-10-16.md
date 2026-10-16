@@ -9,7 +9,7 @@
 
 - **30 odpovedí:** 18 skončilo detekciou ticha, 9 na strope 8 s, 3 bez reči; **13 z 30 server zahodil** (prázdny prepis / „žiadna odpoveď“).
 - Všetkých 9 stropov 8 s bolo s energetickou detekciou (neurónová 0/14, energetická 9/16, ale skoro všetky v jednom kole, takže prostredie je zmiešané). Ostáva na automatickom A/B (204.9).
-- **Prepis (replay 30 nahrávok, `docs/testing/runs/voice-replay-2026-10-16/`):** ElevenLabs Scribe v2 nepočul nič alebo nezmysel tam, kde OpenAI `gpt-transcribe` (s textom otázky ako kontextom) počul správne: „Reset hesiel“ (4 z 5 opakovaní), „Kapitalizmus“, „Rubikova kocka“, „Harper's Bazaar“, „Váh“. Scribe navyše hádzal 429 (system busy).
+- **Prepis (replay 30 nahrávok; report mimo repa, repo je verejné):** ElevenLabs Scribe v2 nepočul nič alebo nezmysel tam, kde OpenAI `gpt-transcribe` (s textom otázky ako kontextom) počul správne: „Reset hesiel“ (4 z 5 opakovaní), „Kapitalizmus“, „Rubikova kocka“, „Harper's Bazaar“, „Váh“. Scribe navyše hádzal 429 (system busy).
 - **Povely:** prvá hypotéza rozpoznávača medián 1,1 s (max 16 s); 21 prepisov zahodených, lebo okno už bolo zavreté; počas čítania otázky na reproduktore mikrofón nepočúva vôbec, hoci lišta ponúka „zopakuj / preskoč“.
 - **Hlasitosť:** pri štarte sa audio prepne do režimu hovoru (`VoiceChat`) kvôli počúvaniu povelov na domove a iOS prepne aj na hlasitosť hovoru (0 → 0,55 → 0 → 0,05).
 

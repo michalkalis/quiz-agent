@@ -16,11 +16,14 @@ from ..deps import (
     UsageResponse,
     get_auth_sessionmaker,
     get_question_retriever,
+    get_usage_caps,
     get_usage_tracker,
     require_auth_or_grace,
 )
 from ...retrieval.question_retriever import QuestionRetriever
 from ...usage.tracker import UsageTracker
+from ...usage.caps import STT_TOKENS, DailyCapExceeded, UsageCaps
+from ...config import get_settings
 from ...rate_limit import limiter
 from quiz_shared.models.session import QuizSession
 
@@ -36,14 +39,16 @@ ELEVENLABS_MIN_CREDITS = 500
 @limiter.limit("10/minute")
 async def get_elevenlabs_token(
     request: Request,
-    _auth=Depends(require_auth_or_grace),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+    usage_caps: UsageCaps = Depends(get_usage_caps),
 ):
     """Generate a single-use ElevenLabs token for realtime STT.
 
     Auth + rate-limited (#65): this mints a real, billable ElevenLabs realtime
     token, so it was the clearest budget-drain vector — previously open with no
     limit. `require_auth_or_grace` blocks anonymous callers (once grace is off) and the
-    10/min cap bounds abuse per client IP.
+    10/min cap bounds abuse per client IP. #207.13 adds a per-account daily
+    cap; over it the 429 makes iOS record the answer in batch mode instead.
     """
     import httpx
 
@@ -53,6 +58,12 @@ async def get_elevenlabs_token(
             status_code=503,
             detail="ElevenLabs STT not configured (missing ELEVENLABS_API_KEY)",
         )
+    try:
+        await usage_caps.consume(
+            subject.subject_id, STT_TOKENS, 1, get_settings().daily_cap_stt_tokens
+        )
+    except DailyCapExceeded as exc:
+        raise exc.http_error() from exc
 
     try:
         async with httpx.AsyncClient() as client:

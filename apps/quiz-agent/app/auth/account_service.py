@@ -31,6 +31,7 @@ from ..db.models import (
     DailyUsage,
     Feedback,
     RefreshToken,
+    UsageCounter,
     User,
 )
 from ..usage.tracker import _month_start
@@ -185,6 +186,11 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     anon_ids = await linked_anon_ids(session, user_id)
     await _preserve_month_usage_on_anons(session, user_id, anon_ids)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
+    # #207.13 cost-cap counters (today's only). The linked anons keep theirs,
+    # like their month usage above: the device stays bound to them.
+    await session.execute(
+        delete(UsageCounter).where(UsageCounter.subject_id == user_id)
+    )
     subject_ids = [user_id, *anon_ids]
     await _erase_personal_trail(session, subject_ids)
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))

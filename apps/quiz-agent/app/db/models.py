@@ -164,6 +164,23 @@ class DailyUsage(Base):
     )
 
 
+class UsageCounter(Base):
+    """Per-subject daily cost counters behind the abuse caps (#207 task 207.13).
+
+    One row per (subject, UTC day, metric), e.g. ``stt_seconds`` or
+    ``answer_attempts:<question id>``. Only today's rows matter; older ones are
+    purged (``app.usage.caps``)."""
+
+    __tablename__ = "usage_counters"
+
+    subject_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    usage_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    metric: Mapped[str] = mapped_column(Text, primary_key=True)
+    amount: Mapped[int] = mapped_column(
+        BigInteger, default=0, nullable=False, server_default="0"
+    )
+
+
 class User(Base):
     """A real account, minted the first time an anonymous identity signs in with
     Apple (issue #61). The upgrade folds that anon's ``daily_usage`` (keyed on

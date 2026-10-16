@@ -147,6 +147,17 @@ class Settings(BaseSettings):
     # so 10k never blocks it. Over budget -> OpenAI fallback, not an
     # error. 0 disables the cap.
     tts_synthesize_daily_char_budget: int = 10000
+    # #207 (207.13): per-user daily caps so one account, or one leaked attested
+    # identity, cannot drain provider credit. Sized from the heaviest real day
+    # (Plus = 1,000 questions/month; a long road trip ~200 answers, ~1.5 tries
+    # each, ≤ 15 s per recording) with headroom; a real player never meets
+    # them. Over a cap the request gets a plain 429, which shipped builds
+    # already treat as "too many requests" (realtime token → batch recording,
+    # entitlement sync → best effort). 0 disables a cap.
+    daily_cap_stt_tokens: int = 500  # realtime STT token mints (~300 heavy day)
+    daily_cap_stt_seconds: int = 7200  # audio sent to /voice/submit (~1.25 h heavy)
+    daily_cap_answer_attempts: int = 30  # submits for ONE question (normal ≤ 6)
+    daily_cap_entitlement_syncs: int = 100  # RevenueCat REST syncs (~10-30 normal)
     elevenlabs_tts_model: str = "eleven_multilingual_v2"
     openai_tts_model: str = "tts-1"
     # Answer transcription (#184 — batch STT for car noise). Scribe v2 batch is

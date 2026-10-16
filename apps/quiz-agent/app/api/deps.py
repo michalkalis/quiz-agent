@@ -25,6 +25,7 @@ from ..daily_challenge.schemas import CrowdStrip
 from ..rating.feedback import FeedbackService
 from ..voice.transcriber import VoiceTranscriber
 from ..tts.service import TTSService
+from ..usage.caps import UsageCaps
 from ..usage.tracker import UsageTracker
 from ..auth.tokens import TokenService
 from ..auth.refresh import RefreshTokenStore
@@ -640,6 +641,11 @@ def get_tts_service(request: Request) -> TTSService:
 def get_usage_tracker(request: Request) -> Optional[UsageTracker]:
     # None when DATABASE_URL is unset (usage persistence disabled); callers guard.
     return getattr(request.app.state, "usage_tracker", None)
+
+
+def get_usage_caps(request: Request) -> UsageCaps:
+    # #207.13: a disabled instance (no caps) when the app has none wired.
+    return getattr(request.app.state, "usage_caps", None) or UsageCaps(None)
 
 
 def get_token_service(request: Request) -> Optional[TokenService]:

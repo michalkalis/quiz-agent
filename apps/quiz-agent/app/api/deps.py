@@ -190,6 +190,21 @@ class SubmitInputRequest(BaseModel):
     )
 
 
+class ReadBackAudio(BaseModel):
+    """#208.3: the confirmation read-back, synthesized during grading."""
+
+    text: str = Field(
+        description=(
+            "The text this audio speaks (= evaluation.user_answer); play it only "
+            "while the sheet still shows exactly this text"
+        )
+    )
+    audio_base64: str = Field(
+        description="Same audio POST /tts/synthesize returns for that text"
+    )
+    format: str = Field(default="opus", description="Audio codec")
+
+
 class InputResponse(BaseModel):
     """Response after processing input."""
 
@@ -217,6 +232,14 @@ class InputResponse(BaseModel):
     crowd: Optional[CrowdStrip] = Field(
         default=None,
         description="#205: daily challenge only — the crowd strip for this answer",
+    )
+    read_back: Optional[ReadBackAudio] = Field(
+        default=None,
+        description=(
+            "#208.3: /voice/submit with read_back=true only — the answer read "
+            "aloud, so the app skips its own /tts/synthesize call. Absent when "
+            "synthesis failed or was not ready in time; the app then falls back."
+        ),
     )
 
 

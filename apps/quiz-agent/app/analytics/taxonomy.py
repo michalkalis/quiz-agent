@@ -25,6 +25,11 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
             "route",
             "is_regrade",
             "question_index",
+            # #208.3: voice route stage durations (ms)
+            "stt_ms",
+            "parse_ms",
+            "judge_ms",
+            "feedback_tts_ms",
         }
     ),
     "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),

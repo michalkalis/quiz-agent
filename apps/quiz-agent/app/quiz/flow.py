@@ -10,6 +10,8 @@ advance. Everything about a submit for a question that was ALREADY graded
 import asyncio
 import base64
 import logging
+import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -139,6 +141,13 @@ class FlowResult:
     awaiting_question: bool = False
     # #205: the crowd strip of a daily-challenge answer (None = no strip).
     crowd: Optional[CrowdStrip] = None
+    # #208.3: the answer's read-back synthesis, started as soon as the parser
+    # extracted the answer so it runs alongside the judge (voice route only).
+    read_back_task: Optional["asyncio.Task[Optional[bytes]]"] = None
+
+
+def elapsed_ms(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
 
 
 class QuizFlowService:
@@ -186,6 +195,9 @@ class QuizFlowService:
         next_question: Optional[Question] = None,
         submitted_question_id: Optional[str] = None,
         route: Optional[str] = None,
+        next_question_task: Optional["asyncio.Task[Optional[Question]]"] = None,
+        stage_ms: Optional[Dict[str, int]] = None,
+        read_back: Optional[Callable[[str], Awaitable[Optional[bytes]]]] = None,
     ) -> FlowResult:
         """Process a user's answer through the full quiz flow.
 
@@ -202,6 +214,13 @@ class QuizFlowService:
                 ``QuestionMismatch``.
             route: Which submit route carried the answer ("voice" | "text"),
                 for analytics only (#51).
+            next_question_task: #208.3 — the next-question retrieval already
+                running since before STT; awaited only when the session advances.
+            stage_ms: #208.3 — stage durations; the caller's (``stt_ms``) are
+                kept, ``parse_ms`` / ``judge_ms`` / ``feedback_tts_ms`` are
+                added, and all of them ride on ``answer_evaluated``.
+            read_back: #208.3 — synthesizes the extracted answer for the
+                confirmation read-back; started before the judge runs.
 
         Returns:
             FlowResult with evaluation, next question, audio info, etc.
@@ -237,6 +256,8 @@ class QuizFlowService:
             participant_id=participant_id,
             include_audio=include_audio,
             result=result,
+            stage_ms=stage_ms,
+            read_back=read_back,
         )
 
         # Ghost-question guard (#66): a non-answer intent (rating, explanation
@@ -272,6 +293,7 @@ class QuizFlowService:
                 "route": route,
                 "is_regrade": False,
                 "question_index": len(session.asked_question_ids),
+                **(stage_ms or {}),
             },
         )
         await self._daily_record(
@@ -335,6 +357,8 @@ class QuizFlowService:
                 return result
 
         # Get next question (use pre-fetched if available)
+        if next_question is None and next_question_task is not None:
+            next_question = await next_question_task
         if next_question is None:
             next_question = await self.question_retriever.get_next_question(session)
 
@@ -506,6 +530,8 @@ class QuizFlowService:
         participant_id: Optional[str],
         include_audio: bool,
         result: FlowResult,
+        stage_ms: Optional[Dict[str, int]] = None,
+        read_back: Optional[Callable[[str], Awaitable[Optional[bytes]]]] = None,
     ) -> IntentOutcome:
         """Parse ``answer_text`` and apply every intent it carries to session + result.
 
@@ -523,9 +549,12 @@ class QuizFlowService:
         # translation that fell back) → the original English question, unchanged.
         display_question = translated_question_view(question, translation)
 
+        timings = stage_ms if stage_ms is not None else {}
+        started = time.perf_counter()
         intents = await parse_answer_intents(
             answer_text, display_question, session.phase, self.input_parser
         )
+        timings["parse_ms"] = elapsed_ms(started)
 
         outcome = IntentOutcome()
 
@@ -543,11 +572,19 @@ class QuizFlowService:
                 # charged for. Empty string is the contract: iOS renders it as
                 # "said nothing", and the evaluator already grades it "skipped".
                 user_answer = extracted_data.get("answer") or ""
+                if read_back and user_answer.strip():
+                    task = asyncio.create_task(read_back(user_answer))
+                    # Strong ref: an unmatched MCQ raises past the caller's await.
+                    _prefetch_tasks.add(task)
+                    task.add_done_callback(_prefetch_tasks.discard)
+                    result.read_back_task = task
+                started = time.perf_counter()
                 eval_result, score_delta = await self.answer_evaluator.evaluate(
                     user_answer=user_answer,
                     question=display_question,
                     question_text=display_question.question,
                 )
+                timings["judge_ms"] = elapsed_ms(started)
                 if eval_result == UNMATCHED:
                     user_text_log.info(
                         "MCQ answer matched no option: heard=%r question=%s",
@@ -580,9 +617,11 @@ class QuizFlowService:
                 )
                 # Generate enhanced feedback audio
                 if include_audio and self.tts_service:
+                    started = time.perf_counter()
                     outcome.feedback_audio = await self._generate_feedback_audio(
                         eval_result, translated_correct, session.language, crowd_line
                     )
+                    timings["feedback_tts_ms"] = elapsed_ms(started)
 
                 # Update participant score
                 self._update_participant_score(session, participant_id, score_delta)

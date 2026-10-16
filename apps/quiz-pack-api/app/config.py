@@ -61,6 +61,14 @@ class Settings(BaseSettings):
     storekit_environment: Optional[frozenset[str]] = None
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
 
+    # App Store Server API (#207 207.6 — order check after a DB restore). An
+    # In-App Purchase key from App Store Connect; the private key is the .p8
+    # contents (PEM, or that PEM base64-encoded). Unset → the reconcile
+    # command refuses to run; nothing else reads these.
+    app_store_server_key_id: Optional[str] = None
+    app_store_server_issuer_id: Optional[str] = None
+    app_store_server_private_key: Optional[str] = None
+
     # Queue routing (#172 — session worker: custom packy v bete cez subscription).
     # `order_queue_name` is where the API and the sweep PUT jobs; `worker_queue_name`
     # is what this worker process TAKES them from. Both default to ARQ's own default

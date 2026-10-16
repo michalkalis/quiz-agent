@@ -28,7 +28,7 @@ wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
 `DATABASE_URL`. Questions live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
 
-**No volume since #207.20 step 6 (2026-10-16).** quiz-agent keeps no state on
+**No volume since step 6 of task 207.20 (resilience design, #207 — production readiness), 2026-10-16.** quiz-agent keeps no state on
 its machine: sessions, ratings, translations and alert state are in Postgres,
 TTS audio in the private R2 bucket `trubbo-tts-cache` (the local
 `./data/tts_cache` is a per-machine L1 only). That is what lets one machine

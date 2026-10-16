@@ -13,6 +13,7 @@ from ..deps import (
     get_session_manager,
     get_question_retriever,
     get_usage_tracker,
+    get_usage_caps,
     get_feedback_service,
     get_quiz_flow,
     get_analytics,
@@ -36,6 +37,8 @@ from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
+from ...usage.caps import UsageCaps, answer_attempts
+from ...config import get_settings
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...quiz.resubmission import reanswers_finished_session
@@ -302,6 +305,7 @@ async def submit_input(
     quiz_flow: QuizFlowService = Depends(get_quiz_flow),
     audio: bool = False,
     subject: AuthSubject = Depends(require_auth_or_grace),
+    usage_caps: UsageCaps = Depends(get_usage_caps),
 ):
     """Submit user input (AI-powered natural language parsing)."""
     # The whole read→process→write is serialized per session: the flow mutates a
@@ -322,6 +326,16 @@ async def submit_input(
             raise HTTPException(status_code=409, detail="Waiting for the next question")
 
         try:
+            # #207.13: an id the session cannot grade is refused (409) before it
+            # can open a counter row; then the per-question daily cap, before
+            # the paid parse/judge calls.
+            quiz_flow.classify_submission(session, body.question_id)
+            await usage_caps.consume(
+                subject.subject_id or session.user_id,
+                answer_attempts(body.question_id or session.current_question_id),
+                1,
+                get_settings().daily_cap_answer_attempts,
+            )
             flow_result = await quiz_flow.process_answer(
                 session=session,
                 answer_text=body.input,

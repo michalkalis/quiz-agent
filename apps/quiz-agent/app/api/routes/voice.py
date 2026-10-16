@@ -22,6 +22,7 @@ from ..deps import (
     get_voice_transcriber,
     get_question_retriever,
     get_quiz_flow,
+    get_usage_caps,
     flow_to_response,
     require_auth_or_grace,
 )
@@ -38,6 +39,7 @@ from ...quiz.errors import InvalidSubmission, QuestionUnavailable
 from ...quiz.flow import QuizFlowService
 from ...quiz.resubmission import reanswers_finished_session
 from ...config import get_settings
+from ...usage.caps import STT_SECONDS, UsageCaps, answer_attempts, recording_seconds
 from ...rate_limit import limiter
 from quiz_shared.utils.text_normalization import normalize_text
 from quiz_shared.models.phase import SessionPhase
@@ -154,6 +156,7 @@ async def transcribe_and_submit(
         ),
     ),
     subject: AuthSubject = Depends(require_auth_or_grace),
+    usage_caps: UsageCaps = Depends(get_usage_caps),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
     # The whole read→process→write is serialized per session: the flow mutates a
@@ -185,6 +188,24 @@ async def transcribe_and_submit(
             # #133 1a: reject an out-of-step question_id here, before paying
             # OpenAI for a transcription the flow would refuse to grade anyway.
             is_resubmission = quiz_flow.classify_submission(session, question_id)
+
+            # #207.13: daily caps, before transcription is paid for. A re-submit
+            # or an answer nobody could hear is free to the caller, so only
+            # these bound how much STT one account can buy.
+            settings = get_settings()
+            cap_subject = subject.subject_id or session.user_id
+            await usage_caps.consume(
+                cap_subject,
+                answer_attempts(question_id or session.current_question_id),
+                1,
+                settings.daily_cap_answer_attempts,
+            )
+            await usage_caps.consume(
+                cap_subject,
+                STT_SECONDS,
+                recording_seconds(audio.file),
+                settings.daily_cap_stt_seconds,
+            )
 
             # Transcribe against the question this recording is FOR: a retry of a
             # lost submit carries the already-graded id, and priming Whisper with

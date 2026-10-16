@@ -77,6 +77,7 @@ from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
 from .translation import TranslationService
+from .usage.caps import UsageCaps
 from .usage.tracker import UsageTracker
 from .api import rest, admin
 from .api.routes import webhooks
@@ -348,6 +349,8 @@ async def lifespan(app: FastAPI):
     app.state.translation_service = translation_service
     app.state.question_store = question_store
     app.state.usage_tracker = usage_tracker
+    # #207.13: per-user daily cost caps; disabled without a database.
+    app.state.usage_caps = UsageCaps(auth_sessionmaker)
     app.state.auth_sessionmaker = auth_sessionmaker
     app.state.token_service = token_service
     app.state.refresh_store = refresh_store

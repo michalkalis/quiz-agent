@@ -5,7 +5,7 @@ Od 2026-10-16 sú všetky súbory appky vo **firemnom** Cloudflare účte `hello
 | Bucket | Prístup | Čo v ňom je | Kto zapisuje |
 |---|---|---|---|
 | `quiz-images` | verejný cez r2.dev: `https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev` | obrázky obrázkových otázok (`silhouettes/`, `blind_maps/`, `hint_images/`) | lokálne skripty `apps/quiz-pack-api/scripts/generate_*.py` cez `app/image_generation/r2_uploader.py` |
-| `trubbo-voice-samples` | súkromný | nahrávky odpovedí z TestFlight (#197) | `quiz-agent-api` (`app/voice/sample_storage.py`) |
+| `trubbo-voice-samples` | súkromný | nahrávky odpovedí z TestFlight (#197 — korpus nahrávok na prehrávanie hlasovej cesty) | `quiz-agent-api` (`app/voice/sample_storage.py`) |
 
 Jeden token (Object Read & Write na oba buckety) je v root `.env` ako `R2_COMPANY_*` a skopírovaný do mien, ktoré čítá kód:
 

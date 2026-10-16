@@ -60,7 +60,7 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### F. Odolnosť a dáta (P1)
 
-- [ ] 207.19 Návrh (pred implementáciou `/design-soundness`): quiz-agent bez volume (TTS cache → R2, `ratings.db` → Postgres) → 2 stroje a rolling deploy bez výpadku; Postgres WAL archív (point-in-time obnova) do R2 alebo replika; Redis perzistencia. Rešpektovať: Fly Managed Postgres nie, Hetzner preferovaný hosting do budúcna.
+- [x] 207.19 Návrh (pred implementáciou `/design-soundness`): quiz-agent bez volume (TTS cache → R2, `ratings.db` → Postgres) → 2 stroje a rolling deploy bez výpadku; Postgres WAL archív (point-in-time obnova) do R2 alebo replika; Redis perzistencia. Rešpektovať: Fly Managed Postgres nie, Hetzner preferovaný hosting do budúcna. **Návrh hotový 2026-10-16:** [resilience-design-207-2026-10-16.md](../research/resilience-design-207-2026-10-16.md) — PITR cez barman-cloud, ktorý už je v postgres-flex obraze, do R2 (RPO 24 h → ≤ 5 min, samoliečenie pri zaseknutom archíve); quiz-agent bez volume (stav do Postgresu s kontrolou verzie, TTS do R2), 2 stroje + rolling; Redis bez zmeny; región: obnova z R2 inde. +≈3,2 $/mes., čaká na súhlas foundera s druhým strojom (+3,69 $).
 - [ ] 207.20 Implementácia podľa schváleného návrhu 207.19 (po krokoch, každý s overenou obnovou).
 
 ### G. Súkromie a GDPR (P1)

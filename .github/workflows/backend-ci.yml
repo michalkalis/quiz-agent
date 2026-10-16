@@ -10,23 +10,52 @@ on:
       - 'apps/quiz-pack-api/**'
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
+      - 'data/examples/**'
+  # #207 task 207.15: "Backend CI gate" is a required check in the main-pr-flow
+  # ruleset, so it must report on EVERY pull request (a path-filtered required
+  # check never reports on unrelated PRs and blocks them forever). PRs are
+  # therefore unfiltered; the `changes` job decides whether the suites run and
+  # the gate passes when they were skipped.
   pull_request:
-    # feat/170-coverage-dedup: #170 integration branch (founder 2026-09-04 — work
-    # stays off main until duplicates are a real problem); PRs into it get CI too.
-    branches: [main, 'feat/170-coverage-dedup']
-    paths:
-      - 'apps/quiz-agent/**'
-      - 'apps/quiz-pack-api/**'
-      - 'packages/shared/**'
-      - '.github/workflows/backend-ci.yml'
+  # The deploy workflow (backend-deploy.yml) runs this whole suite first, so a
+  # change cannot reach staging or prod without passing it.
+  workflow_call:
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  changes:
+    name: Detect backend changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # push/dispatch/workflow_call are path-filtered or explicit: always run.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
+          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|\.github/workflows/backend-ci\.yml$)'; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test-backend:
     name: Test Quiz Agent Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -94,6 +123,8 @@ jobs:
 
   lint-backend:
     name: Lint Backend Code
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -125,6 +156,8 @@ jobs:
 
   test-quiz-pack-api:
     name: Test Quiz Pack API (integration)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -195,6 +228,8 @@ jobs:
 
   verify-openapi:
     name: Verify OpenAPI Spec Generation
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     # Startup requires DATABASE_URL (#41 D6, no fallback) AND a migrated schema:
@@ -272,3 +307,20 @@ jobs:
           name: openapi-spec
           path: openapi.json
           retention-days: 30
+
+  # The one required check (#207 task 207.15). Green when every suite passed,
+  # or when the PR touches no backend path and the suites were skipped; red on
+  # any failed or cancelled suite.
+  gate:
+    name: Backend CI gate
+    needs: [changes, test-backend, lint-backend, test-quiz-pack-api, verify-openapi]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "::error::a backend suite did not pass ($r)"; exit 1 ;; esac
+          done

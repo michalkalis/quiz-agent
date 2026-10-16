@@ -1,0 +1,204 @@
+# Backend deploy: tests -> staging -> smoke -> prod -> smoke (#207 task 207.16).
+#
+# Every run first runs the full Backend CI suite (backend-ci.yml via
+# workflow_call), so nothing reaches staging or prod untested. quiz-pack-api
+# goes first in each stage because it owns the co-tenant tables quiz-agent
+# reads; migrations run in each app's Fly release_command and are expand-only.
+# A failed stage stops the run (prod is never touched after a red staging)
+# and opens a `deploy-failed` issue, which emails the founder.
+#
+# Which apps: `changed` (default) deploys an app only when its image inputs
+# changed since its last successful prod deploy, tracked by the tag
+# `deployed/<app>` that this workflow moves after the prod smoke test passes.
+# Prod runs only from `main` (the `production` environment also only accepts
+# main); dispatching from a branch rehearses that branch on staging only.
+#
+# Manual emergency path: the /deploy skill (laptop, founder Fly login). It
+# does not move the `deployed/*` tags, so the next run here may redeploy the
+# same code once, which is harmless. Laptop deploys use the local lock
+# `mkdir /tmp/trubbo-deploy-<app>.lock`, which this workflow cannot see:
+# take that lock yourself before dispatching while anyone deploys by hand.
+name: Backend Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: "changed = only apps changed since their last prod deploy"
+        type: choice
+        options: [changed, both, quiz-agent, quiz-pack-api]
+        default: changed
+
+permissions:
+  contents: read
+  pull-requests: read # backend-ci.yml's change detection
+
+concurrency:
+  group: backend-deploy
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  FLYCTL_VERSION: "0.4.113"
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    outputs:
+      quiz_agent: ${{ steps.plan.outputs.quiz_agent }}
+      quiz_pack_api: ${{ steps.plan.outputs.quiz_pack_api }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: plan
+        env:
+          APPS: ${{ inputs.apps || 'changed' }}
+        run: |
+          # changed <app> <pathspec...>: true unless the app's image inputs are
+          # identical to the commit last deployed to prod.
+          changed() {
+            local tag="deployed/$1"; shift
+            if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then echo true; return; fi
+            if git diff --quiet "$tag" HEAD -- "$@"; then echo false; else echo true; fi
+          }
+          case "$APPS" in
+            changed)
+              qa=$(changed quiz-agent apps/quiz-agent packages/shared \
+                ':(exclude)apps/quiz-agent/tests' ':(exclude)*.md')
+              qp=$(changed quiz-pack-api apps/quiz-pack-api packages/shared data/examples \
+                ':(exclude)apps/quiz-pack-api/tests' ':(exclude)*.md') ;;
+            both) qa=true; qp=true ;;
+            quiz-agent) qa=true; qp=false ;;
+            quiz-pack-api) qa=false; qp=true ;;
+            *) echo "unknown apps input: $APPS"; exit 1 ;;
+          esac
+          echo "quiz_agent=$qa" >> "$GITHUB_OUTPUT"
+          echo "quiz_pack_api=$qp" >> "$GITHUB_OUTPUT"
+          echo "### Deploy plan for ${GITHUB_SHA::8}: quiz-agent=$qa, quiz-pack-api=$qp" >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    name: Tests
+    needs: plan
+    if: needs.plan.outputs.quiz_agent == 'true' || needs.plan.outputs.quiz_pack_api == 'true'
+    uses: ./.github/workflows/backend-ci.yml
+    secrets: inherit
+
+  staging:
+    name: Staging
+    needs: [plan, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+        with:
+          version: ${{ env.FLYCTL_VERSION }}
+
+      # Web only: a staging worker would re-run copied prod orders on paid keys.
+      - name: Deploy quiz-pack-api-staging
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_PACK_API }}
+        run: flyctl deploy -c apps/quiz-pack-api/fly.staging.toml --process-groups web --ha=false --yes
+      - name: Smoke quiz-pack-api-staging
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        run: infra/deploy/smoke.sh quiz-pack-api https://quiz-pack-api-staging.fly.dev
+
+      - name: Deploy quiz-agent-api-staging
+        if: needs.plan.outputs.quiz_agent == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_AGENT }}
+        run: flyctl deploy -c apps/quiz-agent/fly.staging.toml --ha=false --yes
+      - name: Smoke quiz-agent-api-staging
+        if: needs.plan.outputs.quiz_agent == 'true'
+        run: infra/deploy/smoke.sh quiz-agent https://quiz-agent-api-staging.fly.dev
+
+  production:
+    name: Production
+    needs: [plan, staging]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: production
+    permissions:
+      contents: write # move the deployed/<app> tags
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+        with:
+          version: ${{ env.FLYCTL_VERSION }}
+
+      - name: Deploy quiz-pack-api
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_PACK_API }}
+        run: flyctl deploy -c apps/quiz-pack-api/fly.toml --yes
+      - name: Smoke quiz-pack-api
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        run: infra/deploy/smoke.sh quiz-pack-api https://quiz-pack-api.fly.dev
+      # Custom packs run on the Fly worker (#207): it has no HTTP check, so a
+      # deploy can "succeed" with the worker crash-looping. Require its
+      # heartbeat (refreshed every 60 s) to be newer than the deploy, within
+      # ~3 min; an older one could still come from the replaced machine.
+      - name: Pack worker is alive
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        env:
+          ADMIN_KEY: ${{ secrets.QUIZ_PACK_ADMIN_API_KEY }}
+        run: |
+          deployed_at=$(date +%s)
+          for attempt in 1 2 3 4; do
+            sleep 45
+            age=$(curl -fsS --retry 2 --retry-all-errors --retry-delay 10 --max-time 60 \
+              -H "X-Admin-Key: ${ADMIN_KEY}" \
+              https://quiz-pack-api.fly.dev/api/v1/admin/worker/heartbeat \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["heartbeat_age_s"])') || age=None
+            since=$(( $(date +%s) - deployed_at ))
+            echo "attempt $attempt: worker heartbeat ${age} s old, deploy finished ${since} s ago"
+            if [ "$age" != "None" ] && [ "${age%.*}" -lt "$since" ]; then exit 0; fi
+          done
+          echo "::error::Fly pack worker has no fresh heartbeat after deploy (fly status -a quiz-pack-api)"
+          exit 1
+      - name: Mark quiz-pack-api deployed
+        if: needs.plan.outputs.quiz_pack_api == 'true'
+        run: |
+          git tag -f deployed/quiz-pack-api "$GITHUB_SHA"
+          git push -f origin refs/tags/deployed/quiz-pack-api
+
+      - name: Deploy quiz-agent-api
+        if: needs.plan.outputs.quiz_agent == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_AGENT }}
+        run: flyctl deploy -c apps/quiz-agent/fly.toml --yes
+      - name: Smoke quiz-agent-api
+        if: needs.plan.outputs.quiz_agent == 'true'
+        run: infra/deploy/smoke.sh quiz-agent https://quiz-agent-api.fly.dev
+      - name: Mark quiz-agent deployed
+        if: needs.plan.outputs.quiz_agent == 'true'
+        run: |
+          git tag -f deployed/quiz-agent "$GITHUB_SHA"
+          git push -f origin refs/tags/deployed/quiz-agent
+
+  alert:
+    name: Alert on failure
+    needs: [plan, test, staging, production]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULTS: "tests=${{ needs.test.result }} staging=${{ needs.staging.result }} production=${{ needs.production.result }}"
+        run: |
+          gh label create deploy-failed --repo "$REPO" --color B60205 \
+            --description "Backend deploy workflow failed" --force
+          gh issue create --repo "$REPO" --label deploy-failed \
+            --title "Backend deploy failed at ${GITHUB_SHA::8}" \
+            --body "$(printf 'Run: %s\nCommit: %s\nStages: %s\n\nProd is untouched when tests or staging failed. If production failed mid-way, check `fly status` and roll back per the /deploy skill (Rollback).' "$RUN_URL" "$GITHUB_SHA" "$RESULTS")"

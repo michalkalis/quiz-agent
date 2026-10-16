@@ -61,6 +61,8 @@ When updating shared models, verify iOS still builds (`/verify-api`).
 
 ## Deployment
 
+Normal path: the **Backend Deploy** workflow (`.github/workflows/backend-deploy.yml`, #207): full Backend CI → staging → smoke → prod → smoke, quiz-pack-api before quiz-agent, `deployed/<app>` tags mark what prod runs. Run it with `gh workflow run backend-deploy.yml --ref main` (add `--ref <branch>` to rehearse a branch on staging only). The `/deploy` skill (laptop) is the manual emergency path. Backend CI's `Backend CI gate` job is a required PR check.
+
 Known Fly.io pitfalls (Dockerfile dep drift, volume mounts): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.
 
 ## Migrations

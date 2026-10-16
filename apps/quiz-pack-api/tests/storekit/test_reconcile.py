@@ -135,6 +135,56 @@ def test_history_falls_back_to_sandbox_for_a_testflight_purchase() -> None:
     assert history_any_environment(clients, "tx") == ["s"]
 
 
+def _clients(pem: str, prod_status: int, sandbox_status: int) -> list[AppStoreServerClient]:
+    def answer(status: int) -> httpx.Client:
+        def handler(request: httpx.Request) -> httpx.Response:
+            if status == 200:
+                return httpx.Response(200, json={"signedTransactions": ["s"], "hasMore": False})
+            return httpx.Response(status, json={})
+
+        return httpx.Client(transport=httpx.MockTransport(handler))
+
+    return [
+        AppStoreServerClient(_creds(pem), "Production", http=answer(prod_status)),
+        AppStoreServerClient(_creds(pem), "Sandbox", http=answer(sandbox_status)),
+    ]
+
+
+def test_history_moves_on_when_production_refuses_an_app_never_live_on_the_store(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # 2026-10-16: with a valid key Apple answers 401 on Production while the
+    # app has never been live (1.1 in review) and 200 on Sandbox. Raising on
+    # that 401 crashed every reconcile dry run, so a DB restore could not
+    # recover any TestFlight order.
+    _, pem = _key()
+    with caplog.at_level("INFO", logger="app.storekit.reconcile"):
+        assert history_any_environment(_clients(pem, 401, 200), "tx") == ["s"]
+    assert "Sandbox answered for tx" in caplog.text
+
+
+def test_a_key_only_one_store_refuses_is_still_a_working_key() -> None:
+    # Sandbox took the key and just has no such purchase: nothing to recover,
+    # not a credentials failure.
+    _, pem = _key()
+    assert history_any_environment(_clients(pem, 401, 404), "tx") == []
+
+
+def test_a_key_every_store_refuses_fails_loud() -> None:
+    # A wrong or revoked key must not read as "no lost orders": the operator
+    # would skip recovering paid orders after a DB restore.
+    _, pem = _key()
+    with pytest.raises(httpx.HTTPStatusError) as exc:
+        history_any_environment(_clients(pem, 401, 401), "tx")
+    assert exc.value.response.status_code == 401
+
+
+def test_a_store_outage_is_not_swallowed() -> None:
+    _, pem = _key()
+    with pytest.raises(httpx.HTTPStatusError):
+        history_any_environment(_clients(pem, 500, 200), "tx")
+
+
 def test_pack_products_and_admin_prefix_match_the_order_endpoint() -> None:
     # A tier added to POST /v1/orders but not here would be paid for and
     # never reconciled.

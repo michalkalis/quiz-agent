@@ -156,6 +156,8 @@ async def test_cutover_import_copies_live_state_once(db_sessionmaker, tmp_path):
 
     first = await import_legacy_state(str(tmp_path), db_sessionmaker)
     assert first == {"sessions": 1, "ratings": 1, "translations": 1}
+    # Personal data must not linger where a later account erasure can't reach.
+    assert not (tmp_path / "ratings.db").exists()
 
     # The new release advances the session; a later boot must not revert it.
     moved = await manager.get_session("sess_live")

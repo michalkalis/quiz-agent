@@ -5,7 +5,11 @@ Until the volume is removed (resilience design step 6), a boot with
 ``/data`` — live quiz sessions, ratings and the paid translation cache — into
 the shared tables. Idempotent: rows that already exist are never overwritten
 (Postgres wins), expired sessions are skipped, so running it on every boot is
-harmless. Delete this module together with the volume.
+harmless. Once its rows are safely in Postgres, ``ratings.db`` (sessions
+and ratings: personal data) is deleted from the volume, so an account erased
+later is not left behind in a file the erasure never reaches. The translation
+cache holds no personal data and stays for a rollback. Delete this module
+together with the volume.
 """
 
 from __future__ import annotations
@@ -131,5 +135,11 @@ async def import_legacy_state(
                 inserted += result.rowcount or 0
             counts[name] = inserted
         await db.commit()
+    legacy_ratings = root / "ratings.db"
+    if legacy_ratings.exists():
+        try:
+            legacy_ratings.unlink()
+        except OSError as e:
+            logger.warning("Legacy import: could not delete %s: %s", legacy_ratings, e)
     logger.info("Legacy volume import from %s: %s", state_dir, counts)
     return counts

@@ -469,6 +469,26 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+# #207.20: session reads and the session lease now hit Postgres before a
+# route's own error mapping runs; a DB blip or a session stuck behind another
+# request must reach iOS as the retryable 503 (TransientRetry), not a 500.
+from .api.submit_errors import TRANSIENT_INFRA_ERRORS  # noqa: E402
+from .session.manager import SessionBusy  # noqa: E402
+
+
+async def _retryable_503(request, exc):
+    from fastapi.responses import JSONResponse
+
+    logger.warning("Retryable 503 on %s: %s", request.url.path, type(exc).__name__)
+    return JSONResponse(
+        status_code=503, content={"detail": "Temporary server issue, please retry"}
+    )
+
+
+for _exc in (*TRANSIENT_INFRA_ERRORS, SessionBusy):
+    app.add_exception_handler(_exc, _retryable_503)
+
 app.add_middleware(AppVersionMiddleware)
 # #207: response-time samples for the ops watch (cheap, always on).
 app.add_middleware(LatencyMiddleware)

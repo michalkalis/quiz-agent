@@ -33,9 +33,13 @@ from .store import MemorySessionStore, SessionStore
 
 logger = logging.getLogger(__name__)
 
-# Longer than any one submit (STT + judge + next question + translation), so a
-# live holder never loses its lease; a crashed holder frees it after this.
-SESSION_LEASE_TTL_S = 120.0
+# A live holder renews its lease every TTL/3 for as long as the request runs;
+# a holder killed mid-request (deploy SIGKILL, host loss) frees it within the
+# TTL, so the player's retry on the other machine waits at most this long.
+SESSION_LEASE_TTL_S = 30.0
+# A waiter gives up (503, retryable) after this: today's single-machine lock
+# waited without bound, but a submit never legitimately takes this long.
+SESSION_LEASE_WAIT_S = 120.0
 _LEASE_POLL_MAX_S = 0.25
 
 
@@ -44,7 +48,8 @@ class SessionConflict(Exception):
 
 
 class SessionBusy(Exception):
-    """Another request holds the session's lease (non-blocking acquire only)."""
+    """Another request holds the session's lease (``wait=False``, or the
+    wait exceeded ``SESSION_LEASE_WAIT_S``)."""
 
 
 class SessionManager:
@@ -94,9 +99,11 @@ class SessionManager:
                 name = f"session:{session_id}"
                 holder = new_holder()
                 await self._acquire_lease(name, holder, wait)
+                renew = asyncio.create_task(self._renew_lease(name, holder))
                 try:
                     yield
                 finally:
+                    renew.cancel()
                     try:
                         await self._leases.release(name, holder)
                     except Exception:  # noqa: BLE001 — it expires on its own
@@ -108,14 +115,22 @@ class SessionManager:
 
     async def _acquire_lease(self, name: str, holder: str, wait: bool) -> None:
         delay = 0.02
-        # A holder that dies frees the lease within its TTL, so waiting a TTL
-        # always ends; the deadline only guards against a clock surprise.
-        deadline = time.monotonic() + SESSION_LEASE_TTL_S + 10
+        deadline = time.monotonic() + SESSION_LEASE_WAIT_S
         while not await self._leases.try_acquire(name, holder, SESSION_LEASE_TTL_S):
             if not wait or time.monotonic() > deadline:
                 raise SessionBusy(name)
             await asyncio.sleep(delay)
             delay = min(delay * 2, _LEASE_POLL_MAX_S)
+
+    async def _renew_lease(self, name: str, holder: str) -> None:
+        """Keep a held lease alive while the request runs (a failed renewal
+        is retried next round; the TTL covers two misses)."""
+        while True:
+            await asyncio.sleep(SESSION_LEASE_TTL_S / 3)
+            try:
+                await self._leases.try_acquire(name, holder, SESSION_LEASE_TTL_S)
+            except Exception:  # noqa: BLE001
+                logger.warning("Lease renewal failed for %s", name)
 
     # ── Background cleanup ─────────────────────────────────────────────────
 

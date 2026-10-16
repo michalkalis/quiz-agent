@@ -1,6 +1,9 @@
 # Fly.io configuration for Quiz Agent API
 app = "quiz-agent-api"
 primary_region = "cdg"
+# #207.20: let an in-flight submit (STT + judge) finish on deploy instead of
+# being SIGKILLed after Fly's default 5 s with its session lease held.
+kill_timeout = 30
 
 # Build from repository root to access monorepo packages
 # Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.toml

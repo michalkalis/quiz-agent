@@ -261,3 +261,30 @@ async def test_erasure_mid_request_cannot_write_the_id_back(db_sessionmaker):
             {"s": session.session_id},
         )
     assert "u_erase" not in raw
+
+
+async def test_a_long_submit_keeps_its_lease_and_a_waiter_gets_a_retryable_503(
+    db_sessionmaker, monkeypatch
+):
+    """The lease is short so a killed machine frees it fast, so a live holder
+    must renew it: a submit slower than the TTL must not let the other
+    machine in. A waiter past its limit answers 503 (iOS retries), never 500."""
+    from app.session import manager as m
+
+    monkeypatch.setattr(m, "SESSION_LEASE_TTL_S", 0.3)
+    monkeypatch.setattr(m, "SESSION_LEASE_WAIT_S", 0.9)
+    a, b = _machine(db_sessionmaker), _machine(db_sessionmaker)
+    session = await _asking_session(a, "u_slow")
+    async with a.session_lock(session.session_id):
+        await asyncio.sleep(0.5)  # longer than the TTL: renewal must hold it
+        with pytest.raises(m.SessionBusy):
+            async with b.session_lock(session.session_id):
+                pytest.fail("the other machine got in while the holder was alive")
+
+    from app.main import app
+    from sqlalchemy.exc import OperationalError
+
+    for exc in (m.SessionBusy("session:x"), OperationalError("x", {}, Exception())):
+        handler = app.exception_handlers[type(exc)]
+        response = await handler(MagicMock(), exc)
+        assert response.status_code == 503

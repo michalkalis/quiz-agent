@@ -130,8 +130,13 @@ extension VoiceCommandCoordinator {
         taskBag.add(task, key: .voiceProcessingCue)
     }
 
+    /// Speech came back inside the hangover: the same utterance goes on. A
+    /// "processing" the hold already showed was premature — back to hearing.
     func noteSpeechResumedForFeedback() {
         taskBag.cancel(.voiceProcessingCue)
+        guard isProcessingWithoutWord else { return }
+        voiceFeedbackPhase = .hearing
+        scheduleGlowClear(after: hearingGlowMaxDisplay)
     }
 
     /// Speech is over (hangover elapsed, or a blip was dropped). Real speech

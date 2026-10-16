@@ -100,7 +100,9 @@ extension VoiceCommandCoordinator {
         var matchText = transcript.text
         var guardedNormalized = normalized
         if underEchoGuard, let stripped = strippingReadWords(normalized) {
-            guard VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
+            let keepsCancelWord = stripped.split(separator: " ")
+                .contains { VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
+            guard keepsCancelWord || VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
                 utteranceLog.echoDrops += 1
                 utteranceOutcome = "echo"
                 return

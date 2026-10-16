@@ -142,6 +142,20 @@ struct VoiceCommandReadingTests {
         #expect(coordinator.pendingSkipWindow != nil)
     }
 
+    /// WHY: a cancel word that also occurs in the question ("no") must still
+    /// abort a skip said over the read.
+    @Test("a cancel word survives the echo guard")
+    func cancelWordSurvivesGuard() async {
+        let (vm, coordinator, _, _) = await make()
+        vm.currentQuestion = Fixtures.makeQuestion(text: "Is the answer no or yes")
+        _ = coordinator.beginQuestionRead()
+        vm.isPlayingQuestionTTS = true
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
+        #expect(coordinator.pendingSkipWindow != nil)
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
+        #expect(coordinator.pendingSkipWindow == nil)
+    }
+
     /// WHY: an echo segment's final can arrive after the read ended.
     @Test("an utterance that began during the read stays guarded to its final")
     func lateEchoFinalGuarded() async {

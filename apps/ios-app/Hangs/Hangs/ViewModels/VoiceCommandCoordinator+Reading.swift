@@ -75,15 +75,21 @@ extension VoiceCommandCoordinator {
             && vpArmed
         listenerKeptThroughRead = keep
         if keep {
+            // A volatile parked just before the read must not fire under it
+            // ("start" would open the answer mic over the sentence).
+            cancelVolatileSettle()
             silenceDetectionService.suspendSpeechEdges(true)
             // Speech edges stop here; a hearing / processing cue lit before
             // the read has nothing left to report.
             noteFinalProcessedForFeedback()
         }
-        SentryLog.info("voice cmd read listener", category: .voice, attributes: [
-            "kept": keep, "flag": flag,
-            "live": silenceDetectionService.isListening, "vpArmed": vpArmed,
-        ])
+        // Only with the switch on: off, every read would log `kept=false`.
+        if flag {
+            SentryLog.info("voice cmd read listener", category: .voice, attributes: [
+                "kept": keep, "flag": flag,
+                "live": silenceDetectionService.isListening, "vpArmed": vpArmed,
+            ])
+        }
         return keep
     }
 
@@ -103,7 +109,11 @@ extension VoiceCommandCoordinator {
     func strippingReadWords(_ normalized: String) -> String? {
         guard let read = textBeingRead(), !read.isEmpty else { return nil }
         let readWords = Set(VoiceCommandMatcher.normalize(read, language: commandLanguage).split(separator: " "))
-        return normalized.split(separator: " ").filter { !readWords.contains($0) }.joined(separator: " ")
+        // Cancel words survive: a question with "nie" in it must not swallow
+        // the "nie" that aborts a skip said over the read.
+        return normalized.split(separator: " ")
+            .filter { !readWords.contains($0) || VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
+            .joined(separator: " ")
     }
 
     // MARK: - Utterance log

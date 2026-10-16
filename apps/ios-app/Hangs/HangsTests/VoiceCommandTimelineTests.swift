@@ -163,6 +163,21 @@ struct VoiceCommandTimelineTests {
         #expect(coordinator.voiceFeedbackPhase == .hearing, "the driver is still talking")
     }
 
+    /// WHY: a pause inside a sentence (0.25–0.8 s) is not the end of it; the
+    /// bar must not say "processing" while the driver keeps talking.
+    @Test("speech resuming after the hold turns processing back into hearing")
+    func resumeAfterHoldReturnsToHearing() async {
+        let (_, coordinator, silence, clock) = make()
+        silence.simulateSpeechActivity(.began(levelDb: -30, noiseFloorDb: -50))
+        silence.simulateSpeechActivity(.paused(speechSecs: 0.5, peakDb: -28))
+        await pumpUntil({ coordinator.voiceFeedbackPhase == .hearing })
+        for _ in 0 ..< 20 { await Task.yield() }
+        await clock.advance(by: .milliseconds(300))
+        await pumpUntil({ self.isProcessing(coordinator) })
+        silence.simulateSpeechActivity(.resumed)
+        await pumpUntil({ coordinator.voiceFeedbackPhase == .hearing }, "he is still talking")
+    }
+
     /// WHY: a cough must not claim the app is working on something.
     @Test("a blip (speech under the 0.25 s bar) clears hearing instead of processing")
     func blipNeverProcesses() async {

@@ -3,8 +3,8 @@
 Founder 2026-10-14: the player says "modrá", the app hears "mokrá" and the
 player re-records. Re-grading "mokrá" a second time is the one outcome that
 makes the retry pointless, so when the new transcript equals one the player
-already rejected the server tries another hypothesis (Scribe with the answer as
-bias and a new seed, then the OpenAI fallback). A client that never sends the
+already rejected the server tries another hypothesis (#208.1: gpt-transcribe
+without the question prompt, then a sampled decoding). A client that never sends the
 field (the shipped 1.0 build) must see exactly the old single-call behaviour.
 """
 
@@ -40,16 +40,17 @@ def _res(text: str, logprob: float = -0.1) -> TranscriptionResult:
     )
 
 
-def _transcriber(monkeypatch, first="mokrá", scribe=None, openai=None):
+def _transcriber(monkeypatch, first="mokrá", retries=()):
+    """``retries``: what each extra decoding returns (a result or an exception)."""
     monkeypatch.setenv("LLM_GATEWAY", "direct")
     t = VoiceTranscriber()
     t.transcribe_with_quiz_context = AsyncMock(return_value=_res(first))
-    t._transcribe_scribe = AsyncMock(
-        side_effect=scribe if isinstance(scribe, Exception) else None,
-        return_value=scribe if not isinstance(scribe, Exception) else None,
-    )
-    t._transcribe_openai = AsyncMock(return_value=openai)
+    t._transcribe_openai = AsyncMock(side_effect=list(retries))
     return t
+
+
+def _retry_calls(h) -> list[dict]:
+    return [c.kwargs for c in h.transcriber._transcribe_openai.await_args_list]
 
 
 async def _submit(h, client, rejected=None):
@@ -71,16 +72,16 @@ async def test_rejected_mokra_is_replaced_by_the_second_hypothesis(
 ):
     """The whole point: the retry must grade "modrá", not "mokrá" again."""
     h = _Harness(_mcq())
-    h.transcriber = _transcriber(monkeypatch, scribe=_res("modrá"))
+    h.transcriber = _transcriber(monkeypatch, retries=[_res("modrá")])
     client = await client_for(h)
 
     await _submit(h, client, rejected=["Mokrá."])
 
     assert _graded_text(h) == "modrá"
-    kwargs = h.transcriber._transcribe_scribe.await_args.kwargs
-    assert kwargs["seed"] is not None  # a different decoding, not a replay
+    (kwargs,) = _retry_calls(h)
+    # A different decoding, not a replay: the first pass was primed.
+    assert kwargs["prompt"] is None
     assert "Jupiter" in kwargs["keyterms"]  # same options as the first pass
-    h.transcriber._transcribe_openai.assert_not_awaited()
 
 
 async def test_open_question_retry_never_carries_the_expected_answer(
@@ -90,24 +91,26 @@ async def test_open_question_retry_never_carries_the_expected_answer(
     answer and get it accepted without the player knowing it."""
     h = _Harness(_open())  # correct answer: "curling"
     h.transcriber = _transcriber(
-        monkeypatch, first="kurling", scribe=_res("kurling"), openai=_res("kurling")
+        monkeypatch, first="kurling", retries=[_res("kurling"), _res("kurling")]
     )
     client = await client_for(h)
 
     await _submit(h, client, rejected=["kurling"])
 
-    for call in (h.transcriber._transcribe_scribe, h.transcriber._transcribe_openai):
-        kw = call.await_args.kwargs
+    calls = _retry_calls(h)
+    assert len(calls) == 2
+    for kw in calls:
         assert not kw["keyterms"]
         assert "curling" not in json.dumps(kw, default=str).lower()
-    assert "prompt" in h.transcriber._transcribe_openai.await_args.kwargs
+    # The sampled decoding keeps the question prompt (never the answer).
+    assert calls[1]["prompt"] and calls[1]["temperature"] > 0
 
 
-async def test_falls_through_to_openai_then_keeps_the_original(client_for, monkeypatch):
+async def test_falls_through_to_sampling_then_keeps_the_original(
+    client_for, monkeypatch
+):
     h = _Harness(_mcq())
-    h.transcriber = _transcriber(
-        monkeypatch, scribe=_res("mokrá"), openai=_res("Mokrá")
-    )
+    h.transcriber = _transcriber(monkeypatch, retries=[_res("mokrá"), _res("Mokrá")])
     client = await client_for(h)
 
     await _submit(h, client, rejected=["mokrá"])
@@ -115,14 +118,13 @@ async def test_falls_through_to_openai_then_keeps_the_original(client_for, monke
     # Both extra hypotheses repeat the rejected words: nothing better exists,
     # so the original goes through (and the extra calls are capped at two).
     assert _graded_text(h) == "mokrá"
-    assert h.transcriber._transcribe_scribe.await_count == 1
-    assert h.transcriber._transcribe_openai.await_count == 1
+    assert h.transcriber._transcribe_openai.await_count == 2
 
 
 async def test_a_failing_provider_does_not_cost_the_answer(client_for, monkeypatch):
     h = _Harness(_mcq())
     h.transcriber = _transcriber(
-        monkeypatch, scribe=RuntimeError("quota"), openai=_res("modrá")
+        monkeypatch, retries=[RuntimeError("busy"), _res("modrá")]
     )
     client = await client_for(h)
 
@@ -134,13 +136,12 @@ async def test_a_failing_provider_does_not_cost_the_answer(client_for, monkeypat
 async def test_no_field_means_exactly_one_recognition(client_for, monkeypatch):
     """1.0 builds never send the field: no extra paid STT call, same transcript."""
     h = _Harness(_mcq())
-    h.transcriber = _transcriber(monkeypatch, scribe=_res("modrá"))
+    h.transcriber = _transcriber(monkeypatch, retries=[_res("modrá")])
     client = await client_for(h)
 
     await _submit(h, client, rejected=None)
 
     assert _graded_text(h) == "mokrá"
-    h.transcriber._transcribe_scribe.assert_not_awaited()
     h.transcriber._transcribe_openai.assert_not_awaited()
 
 
@@ -148,18 +149,18 @@ async def test_a_transcript_that_was_not_rejected_costs_no_extra_call(
     client_for, monkeypatch
 ):
     h = _Harness(_mcq())
-    h.transcriber = _transcriber(monkeypatch, first="modrá", scribe=_res("x"))
+    h.transcriber = _transcriber(monkeypatch, first="modrá", retries=[_res("x")])
     client = await client_for(h)
 
     await _submit(h, client, rejected=["mokrá"])
 
     assert _graded_text(h) == "modrá"
-    h.transcriber._transcribe_scribe.assert_not_awaited()
+    h.transcriber._transcribe_openai.assert_not_awaited()
 
 
 async def test_server_flag_off_ignores_the_field(client_for, monkeypatch):
     h = _Harness(_mcq())
-    h.transcriber = _transcriber(monkeypatch, scribe=_res("modrá"))
+    h.transcriber = _transcriber(monkeypatch, retries=[_res("modrá")])
     monkeypatch.setenv("STT_RETRY_AVOID_REJECTED", "false")
     client = await client_for(h)
 
@@ -184,7 +185,7 @@ async def test_malformed_field_is_a_400_before_any_stt(client_for, monkeypatch, 
 
 
 async def test_retry_logs_never_contain_the_player_words(monkeypatch, caplog):
-    t = _transcriber(monkeypatch, scribe=_res("modrá"))
+    t = _transcriber(monkeypatch, retries=[_res("modrá")])
     caplog.set_level("INFO")
 
     result, calls = await t.transcribe_avoiding_rejected(

@@ -6,7 +6,7 @@ fallbacks took over, the quiz kept working — and nobody noticed until the
 founder heard the fallback voice mangle Slovak years. The daily balance check
 reads the account quota (which still had credit), so it stayed green.
 
-Pinned here, for both TTS and STT:
+Pinned here for TTS (#208.1 took ElevenLabs STT off the answer path):
 - a 401/402/403 refusal raises a Sentry error (Sentry emails the founder) with
   ElevenLabs' own reason, while the fallback still serves the player;
 - the alert is rate-limited per service+reason (one per hour), so an outage is
@@ -26,7 +26,6 @@ from httpx import MockTransport, Response
 from app.monitoring import provider_alerts
 from app.tts.providers import ElevenLabsTTSProvider
 from app.tts.service import TTSService
-from app.voice.scribe import ScribeBatchTranscriber, ScribeUnavailable
 
 pytestmark = pytest.mark.asyncio
 
@@ -153,17 +152,6 @@ async def test_one_alert_per_hour_not_one_per_question(monkeypatch, sentry, cloc
     assert len(sentry.alerts) == 2  # still broken an hour later → reminded
 
 
-async def test_stt_quota_refusal_alerts_separately_from_tts(monkeypatch, sentry, clock):
-    _route_elevenlabs(monkeypatch, 401, QUOTA_BODY)
-
-    with pytest.raises(ScribeUnavailable):
-        await ScribeBatchTranscriber().transcribe(b"audio", "answer.m4a")
-
-    assert [a["fingerprint"] for a in sentry.alerts] == [
-        ["elevenlabs-refused", "stt", "quota_exceeded"]
-    ]
-
-
 @pytest.mark.parametrize(
     "status,body,reason",
     [
@@ -186,7 +174,5 @@ async def test_a_transient_outage_does_not_page_anyone(monkeypatch, sentry, cloc
     _route_elevenlabs(monkeypatch, 503, {"detail": "busy"})
 
     assert await _tts().synthesize("Otázka?") == b"backup-audio"
-    with pytest.raises(ScribeUnavailable):
-        await ScribeBatchTranscriber().transcribe(b"audio", "answer.m4a")
 
     assert sentry.alerts == []

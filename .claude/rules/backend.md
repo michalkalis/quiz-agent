@@ -11,7 +11,7 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 - UUID4 session IDs; accounts via Sign in with Apple + App Attest (`app/auth/`)
 
 ### AI Integration
-- **Transcription:** ElevenLabs Scribe v2 batch, OpenAI fallback (`stt_fallback_model`) — `app/voice/`
+- **Transcription:** OpenAI `gpt-transcribe` only (`stt_model`; #208 removed Scribe from the answer path) — `app/voice/`
 - **Evaluation:** `EVAL_MODEL`, default Claude Haiku 5.5 (`app/evaluation/evaluator.py`)
 - **TTS:** ElevenLabs primary, OpenAI TTS as live fallback — `app/tts/providers.py`
 - **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)

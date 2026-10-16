@@ -152,7 +152,7 @@ async def transcribe_and_submit(
             "#204.2, optional. JSON array (max 5 strings, each max 200 chars) of "
             "transcripts the player already rejected for this question. If the "
             "new transcript equals one (normalised), the server re-recognises "
-            "with the answer as bias and returns a different hypothesis when it "
+            "with another decoding and returns a different hypothesis when it "
             "finds one. Missing = legacy behaviour."
         ),
     ),

@@ -10,6 +10,8 @@ argument-hint: "[backend|pack-api|both] [--skip-tests] [--dry-run]"
 
 Guided deployment with safety checks. Two deployable apps; every step below is keyed on the **target**.
 
+**This is the manual emergency path (#207).** The normal path is the **Backend Deploy** GitHub workflow (`gh workflow run backend-deploy.yml --ref main`): tests → staging → smoke → prod → smoke, alert issue on failure. Use this skill only when that workflow cannot run (GitHub Actions down, a hotfix that must skip staging). A deploy here does not move the `deployed/<app>` tags, so the next workflow run may redeploy the same code once (harmless). Post-deploy, `infra/deploy/smoke.sh <quiz-agent|quiz-pack-api> <URL>` is the same smoke test the workflow runs.
+
 ## Targets
 
 | Target (arg) | App dir | Fly app | Token env var (repo-root `.env`) | Health URL | Processes |

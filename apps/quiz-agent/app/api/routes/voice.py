@@ -1,8 +1,10 @@
 """Voice transcription and submission endpoints."""
 
 import asyncio
+import base64
 import json
 import logging
+import time
 from difflib import SequenceMatcher
 from typing import Optional
 from fastapi import (
@@ -18,7 +20,10 @@ from fastapi import (
 
 from ..deps import (
     InputResponse,
+    ReadBackAudio,
     get_session_manager,
+    get_tts_service,
+    get_usage_tracker,
     get_voice_transcriber,
     get_question_retriever,
     get_quiz_flow,
@@ -26,6 +31,7 @@ from ..deps import (
     flow_to_response,
     require_auth_or_grace,
 )
+from .tts import synthesize_metered
 from ..session_auth import require_session_ownership
 from ...serializers import session_translation
 from ..submit_errors import phase_guard_error, retry_answer_error, submit_http_error
@@ -36,17 +42,33 @@ from ...session.manager import SessionManager
 from ...voice.transcriber import VoiceTranscriber
 from ...retrieval.question_retriever import QuestionRetriever
 from ...quiz.errors import InvalidSubmission, QuestionUnavailable
-from ...quiz.flow import QuizFlowService
+from ...quiz.flow import QuizFlowService, elapsed_ms
 from ...quiz.resubmission import reanswers_finished_session
 from ...config import get_settings
 from ...usage.caps import STT_SECONDS, UsageCaps, answer_attempts, recording_seconds
 from ...rate_limit import limiter
 from quiz_shared.utils.text_normalization import normalize_text
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.question import Question
 from quiz_shared.sentry_privacy import user_text_log
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# #208.3: after grading, how long the response may wait for a read-back still
+# being synthesized. Past it the field is left out and the synthesis carries
+# on: the app's own /tts/synthesize request then joins it (same cache key).
+READ_BACK_WAIT_S = 1.0
+
+
+async def _await_read_back(task: "asyncio.Task[Optional[bytes]]") -> Optional[bytes]:
+    try:
+        return await asyncio.wait_for(asyncio.shield(task), READ_BACK_WAIT_S)
+    except TimeoutError:
+        logger.info(
+            "Read-back not ready within %.1fs, left to the app", READ_BACK_WAIT_S
+        )
+        return None
 
 
 def served_options(current_question, session) -> Optional[dict]:
@@ -156,234 +178,302 @@ async def transcribe_and_submit(
             "finds one. Missing = legacy behaviour."
         ),
     ),
+    read_back: bool = Query(
+        default=False,
+        description=(
+            "#208.3, optional. true = also synthesize the answer read-back while "
+            "grading and return it as `read_back` (send it only when the app will "
+            "play it, i.e. not muted). Missing = legacy behaviour."
+        ),
+    ),
     subject: AuthSubject = Depends(require_auth_or_grace),
     usage_caps: UsageCaps = Depends(get_usage_caps),
 ):
     """Transcribe audio and submit to quiz (one-step voice operation)."""
-    # The whole read→process→write is serialized per session: the flow mutates a
-    # deep copy across several awaits and writes it back wholesale, so overlapping
-    # submits would lose one another's advance (see SessionManager.session_lock).
-    async with session_manager.session_lock(session_id):
-        session = await session_manager.get_session(session_id)
-        # #144: this route already carried the auth dependency but discarded the
-        # subject — "is this *a* valid user", never "is this *the* session's user".
-        require_session_ownership(session, subject, session_id=session_id)
+    started = time.perf_counter()
+    # #208.3: per-stage durations, one log line per submit — counts only,
+    # never the player's words. The flow adds parse/judge/feedback stages.
+    stage_ms: dict[str, int] = {}
+    status = 500
+    next_question_task: Optional["asyncio.Task[Optional[Question]]"] = None
+    read_back_task = None
+    try:
+        # The whole read→process→write is serialized per session: the flow mutates a
+        # deep copy across several awaits and writes it back wholesale, so overlapping
+        # submits would lose one another's advance (see SessionManager.session_lock).
+        async with session_manager.session_lock(session_id):
+            session = await session_manager.get_session(session_id)
+            # #144: this route already carried the auth dependency but discarded the
+            # subject — "is this *a* valid user", never "is this *the* session's user".
+            require_session_ownership(session, subject, session_id=session_id)
 
-        if session.phase not in (
-            SessionPhase.ASKING,
-            SessionPhase.AWAITING_ANSWER,
-        ) and not reanswers_finished_session(session, question_id):
-            raise phase_guard_error(session)
-        if session.pack_id and session.current_question_id is None:
-            # #182: parked between questions while the pack fills — there is
-            # nothing to grade; the client should be polling /next-question.
-            raise HTTPException(status_code=409, detail="Waiting for the next question")
-
-        try:
-            if not voice_transcriber.is_supported_format(audio.filename):
-                raise InvalidSubmission(
-                    "Unsupported audio format. Supported: "
-                    f"{', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}"
+            if session.phase not in (
+                SessionPhase.ASKING,
+                SessionPhase.AWAITING_ANSWER,
+            ) and not reanswers_finished_session(session, question_id):
+                raise phase_guard_error(session)
+            if session.pack_id and session.current_question_id is None:
+                # #182: parked between questions while the pack fills — there is
+                # nothing to grade; the client should be polling /next-question.
+                raise HTTPException(
+                    status_code=409, detail="Waiting for the next question"
                 )
 
-            # #133 1a: reject an out-of-step question_id here, before paying
-            # OpenAI for a transcription the flow would refuse to grade anyway.
-            is_resubmission = quiz_flow.classify_submission(session, question_id)
+            try:
+                if not voice_transcriber.is_supported_format(audio.filename):
+                    raise InvalidSubmission(
+                        "Unsupported audio format. Supported: "
+                        f"{', '.join(VoiceTranscriber.SUPPORTED_FORMATS)}"
+                    )
 
-            # #207.13: daily caps, before transcription is paid for. A re-submit
-            # or an answer nobody could hear is free to the caller, so only
-            # these bound how much STT one account can buy.
-            settings = get_settings()
-            cap_subject = subject.subject_id or session.user_id
-            await usage_caps.consume(
-                cap_subject,
-                answer_attempts(question_id or session.current_question_id),
-                1,
-                settings.daily_cap_answer_attempts,
-            )
-            await usage_caps.consume(
-                cap_subject,
-                STT_SECONDS,
-                recording_seconds(audio.file),
-                settings.daily_cap_stt_seconds,
-            )
+                # #133 1a: reject an out-of-step question_id here, before paying
+                # OpenAI for a transcription the flow would refuse to grade anyway.
+                is_resubmission = quiz_flow.classify_submission(session, question_id)
 
-            # Transcribe against the question this recording is FOR: a retry of a
-            # lost submit carries the already-graded id, and priming Whisper with
-            # the question the session has since advanced to would transcribe the
-            # same audio differently — turning a free replay into a paid re-grade.
-            current_question = await question_retriever.get(
-                question_id or session.current_question_id
-            )
-            if not current_question:
-                # Server-side data fault, not bad input (#148): mapped to a 500
-                # + Sentry capture exactly as on the text route.
-                raise QuestionUnavailable(
-                    question_id or session.current_question_id, stage="current"
+                # #207.13: daily caps, before transcription is paid for. A re-submit
+                # or an answer nobody could hear is free to the caller, so only
+                # these bound how much STT one account can buy.
+                settings = get_settings()
+                cap_subject = subject.subject_id or session.user_id
+                await usage_caps.consume(
+                    cap_subject,
+                    answer_attempts(question_id or session.current_question_id),
+                    1,
+                    settings.daily_cap_answer_attempts,
+                )
+                await usage_caps.consume(
+                    cap_subject,
+                    STT_SECONDS,
+                    recording_seconds(audio.file),
+                    settings.daily_cap_stt_seconds,
                 )
 
-            rejected = parse_rejected_transcripts(rejected_transcripts)
-
-            # Transcribe with quiz context
-            transcription_result = await voice_transcriber.transcribe_with_quiz_context(
-                audio_file=audio.file,
-                filename=audio.filename,
-                current_question=current_question.question,
-                language=session.language,
-                keyterms=mcq_keyterms(current_question, session),
-            )
-
-            # #185 G: a one-character MCQ answer ("C", "3") is a whole answer
-            # when it names an option — the 2-char floor exists for open answers.
-            min_chars = 2
-            if match_option(
-                transcription_result.text,
-                served_options(current_question, session),
-            ):
-                min_chars = 1
-
-            if not transcription_result.is_valid(min_chars=min_chars):
-                rejection_reason = transcription_result.get_rejection_reason(
-                    min_chars=min_chars
+                # Transcribe against the question this recording is FOR: a retry of a
+                # lost submit carries the already-graded id, and priming Whisper with
+                # the question the session has since advanced to would transcribe the
+                # same audio differently — turning a free replay into a paid re-grade.
+                current_question = await question_retriever.get(
+                    question_id or session.current_question_id
                 )
-                logger.warning(
-                    "Transcription rejected for session %s: %s (chars=%d, no_speech=%.3f, logprob=%.3f)",
-                    session_id,
-                    rejection_reason,
-                    len(transcription_result.text),
+                if not current_question:
+                    # Server-side data fault, not bad input (#148): mapped to a 500
+                    # + Sentry capture exactly as on the text route.
+                    raise QuestionUnavailable(
+                        question_id or session.current_question_id, stage="current"
+                    )
+
+                rejected = parse_rejected_transcripts(rejected_transcripts)
+
+                # Next-question prefetch (#208.3: started BEFORE STT, so the pgvector
+                # query and embedding call overlap STT and grading instead of adding
+                # to them). Skipped for a re-submitted question (#133 1a): that path
+                # never advances, so the retrieval would be paid for nothing.
+                if (
+                    not is_resubmission
+                    and len(session.asked_question_ids) < session.max_questions
+                ):
+                    next_question_task = asyncio.create_task(
+                        question_retriever.get_next_question(session)
+                    )
+
+                # Transcribe with quiz context
+                stage_started = time.perf_counter()
+                transcription_result = (
+                    await voice_transcriber.transcribe_with_quiz_context(
+                        audio_file=audio.file,
+                        filename=audio.filename,
+                        current_question=current_question.question,
+                        language=session.language,
+                        keyterms=mcq_keyterms(current_question, session),
+                    )
+                )
+                stage_ms["stt_ms"] = elapsed_ms(stage_started)
+
+                # #185 G: a one-character MCQ answer ("C", "3") is a whole answer
+                # when it names an option — the 2-char floor exists for open answers.
+                min_chars = 2
+                if match_option(
+                    transcription_result.text,
+                    served_options(current_question, session),
+                ):
+                    min_chars = 1
+
+                if not transcription_result.is_valid(min_chars=min_chars):
+                    rejection_reason = transcription_result.get_rejection_reason(
+                        min_chars=min_chars
+                    )
+                    logger.warning(
+                        "Transcription rejected for session %s: %s (chars=%d, no_speech=%.3f, logprob=%.3f)",
+                        session_id,
+                        rejection_reason,
+                        len(transcription_result.text),
+                        transcription_result.no_speech_prob,
+                        transcription_result.avg_logprob,
+                    )
+                    user_text_log.info(
+                        "Rejected transcript session=%s: %r",
+                        session_id,
+                        transcription_result.text,
+                    )
+                    quiz_flow.analytics.emit(
+                        "transcription_failed",
+                        subject_id=session.user_id,
+                        session_id=session_id,
+                        properties={
+                            "reason": "no_speech",
+                            "question_id": session.current_question_id,
+                        },
+                    )
+                    raise retry_answer_error(
+                        session,
+                        "no_speech",
+                        "No clear speech detected. Please speak clearly and try again.",
+                    )
+
+                if rejected and get_settings().stt_retry_avoid_rejected:
+                    (
+                        transcription_result,
+                        extra_calls,
+                    ) = await voice_transcriber.transcribe_avoiding_rejected(
+                        audio_file=audio.file,
+                        filename=audio.filename,
+                        first=transcription_result,
+                        rejected=rejected,
+                        language=session.language,
+                        # Same terms as the first pass: MCQ options (unbiased among
+                        # them), nothing for open questions. Never the expected
+                        # answer, or mumble → reject → retry would hand it over.
+                        keyterms=mcq_keyterms(current_question, session),
+                        prompt=VoiceTranscriber.quiz_prompt(current_question.question),
+                        min_chars=min_chars,
+                    )
+                    if extra_calls:
+                        # #193: a flag and a count, never the player's words.
+                        logger.info(
+                            "Voice retry re-recognised session=%s extra_calls=%d",
+                            session_id,
+                            extra_calls,
+                        )
+                    stage_ms["stt_ms"] = elapsed_ms(stage_started)
+
+                transcribed_text = transcription_result.text
+                user_text_log.info(
+                    "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
+                    transcribed_text,
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,
                 )
-                user_text_log.info(
-                    "Rejected transcript session=%s: %r",
-                    session_id,
-                    transcription_result.text,
-                )
-                quiz_flow.analytics.emit(
-                    "transcription_failed",
-                    subject_id=session.user_id,
-                    session_id=session_id,
-                    properties={
-                        "reason": "no_speech",
-                        "question_id": session.current_question_id,
-                    },
-                )
-                raise retry_answer_error(
-                    session,
-                    "no_speech",
-                    "No clear speech detected. Please speak clearly and try again.",
-                )
 
-            if rejected and get_settings().stt_retry_avoid_rejected:
-                (
-                    transcription_result,
-                    extra_calls,
-                ) = await voice_transcriber.transcribe_avoiding_rejected(
-                    audio_file=audio.file,
-                    filename=audio.filename,
-                    first=transcription_result,
-                    rejected=rejected,
-                    language=session.language,
-                    # Same terms as the first pass: MCQ options (unbiased among
-                    # them), nothing for open questions. Never the expected
-                    # answer, or mumble → reject → retry would hand it over.
-                    keyterms=mcq_keyterms(current_question, session),
-                    prompt=VoiceTranscriber.quiz_prompt(current_question.question),
-                    min_chars=min_chars,
-                )
-                if extra_calls:
-                    # #193: a flag and a count, never the player's words.
-                    logger.info(
-                        "Voice retry re-recognised session=%s extra_calls=%d",
-                        session_id,
-                        extra_calls,
+                # Contamination detection
+                if len(transcribed_text) > 100:
+                    logger.warning(
+                        "Transcription unusually long (%d chars) - possible TTS leakage",
+                        len(transcribed_text),
+                    )
+                similarity = SequenceMatcher(
+                    None, transcribed_text.lower(), current_question.question.lower()
+                ).ratio()
+                if similarity > 0.5:
+                    logger.warning(
+                        "Transcription %.0f%% similar to question - possible TTS leakage",
+                        similarity * 100,
                     )
 
-            transcribed_text = transcription_result.text
-            user_text_log.info(
-                "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
-                transcribed_text,
-                transcription_result.no_speech_prob,
-                transcription_result.avg_logprob,
-            )
+                async def synthesize_read_back(text: str) -> Optional[bytes]:
+                    # What the app's own read-back request sends (#184 track D):
+                    # the trimmed answer, the session language, the default voice.
+                    try:
+                        return await synthesize_metered(
+                            get_tts_service(request),
+                            get_usage_tracker(request),
+                            subject.subject_id,
+                            text.strip(),
+                            language=session.language,
+                        )
+                    except Exception as e:  # the app falls back to its own request
+                        logger.warning(
+                            "Read-back synthesis failed: %s", type(e).__name__
+                        )
+                        return None
 
-            # Contamination detection
-            if len(transcribed_text) > 100:
-                logger.warning(
-                    "Transcription unusually long (%d chars) - possible TTS leakage",
-                    len(transcribed_text),
-                )
-            similarity = SequenceMatcher(
-                None, transcribed_text.lower(), current_question.question.lower()
-            ).ratio()
-            if similarity > 0.5:
-                logger.warning(
-                    "Transcription %.0f%% similar to question - possible TTS leakage",
-                    similarity * 100,
-                )
-
-            # Parallel next-question prefetch. Skipped for a re-submitted question
-            # (#133 1a): that path never advances, so the retrieval — a pgvector
-            # query plus an embedding call — would be paid for nothing.
-            next_question_task = None
-            if (
-                not is_resubmission
-                and len(session.asked_question_ids) < session.max_questions
-            ):
-                next_question_task = asyncio.create_task(
-                    question_retriever.get_next_question(session)
+                # Delegate to shared quiz flow
+                flow_result = await quiz_flow.process_answer(
+                    session=session,
+                    answer_text=transcribed_text,
+                    participant_id=participant_id,
+                    include_audio=include_audio,
+                    submitted_question_id=question_id,
+                    route="voice",
+                    next_question_task=next_question_task,
+                    stage_ms=stage_ms,
+                    read_back=synthesize_read_back if read_back else None,
                 )
 
-            next_question = None
-            if next_question_task:
-                next_question = await next_question_task
+                # Voice-specific: require an answer intent
+                if flow_result.evaluation is None:
+                    logger.warning(
+                        "No answer intent detected in transcription (chars=%d)",
+                        len(transcribed_text),
+                    )
+                    user_text_log.info(
+                        "No answer intent in transcription: %r", transcribed_text
+                    )
+                    raise retry_answer_error(
+                        session,
+                        "no_answer",
+                        "Could not understand your answer. Please speak clearly and try again.",
+                    )
 
-            # Delegate to shared quiz flow
-            flow_result = await quiz_flow.process_answer(
-                session=session,
-                answer_text=transcribed_text,
-                participant_id=participant_id,
-                include_audio=include_audio,
-                next_question=next_question,
-                submitted_question_id=question_id,
-                route="voice",
-            )
-
-            # Voice-specific: require an answer intent
-            if flow_result.evaluation is None:
-                logger.warning(
-                    "No answer intent detected in transcription (chars=%d)",
-                    len(transcribed_text),
+                flow_result.feedback_received.insert(
+                    0, f"voice_input: {transcribed_text}"
                 )
-                user_text_log.info(
-                    "No answer intent in transcription: %r", transcribed_text
+                flow_result.message = "Voice input processed"
+
+                if flow_result.usage_limit_error:
+                    raise HTTPException(
+                        status_code=429, detail=flow_result.usage_limit_error
+                    )
+
+                response = flow_to_response(flow_result, session)
+                read_back_task = flow_result.read_back_task
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                # #148: the shared submit mapping — no bare ``ValueError`` catch here
+                # any more. A server-side data fault pages on this route too, and a
+                # transient DB error now reaches iOS as the retryable 503 the text
+                # route has answered with since #131 Track A.
+                raise submit_http_error(
+                    e,
+                    session_id=session_id,
+                    fallback_detail="Voice submission failed",
+                    session=session,
+                ) from e
+
+        # Outside the session lock: the verdict is final, only audio is pending.
+        if read_back_task is not None:
+            stage_started = time.perf_counter()
+            audio_bytes = await _await_read_back(read_back_task)
+            stage_ms["read_back_wait_ms"] = elapsed_ms(stage_started)
+            if audio_bytes:
+                response.read_back = ReadBackAudio(
+                    text=response.evaluation.user_answer,
+                    audio_base64=base64.b64encode(audio_bytes).decode(),
                 )
-                raise retry_answer_error(
-                    session,
-                    "no_answer",
-                    "Could not understand your answer. Please speak clearly and try again.",
-                )
-
-            flow_result.feedback_received.insert(0, f"voice_input: {transcribed_text}")
-            flow_result.message = "Voice input processed"
-
-            if flow_result.usage_limit_error:
-                raise HTTPException(
-                    status_code=429, detail=flow_result.usage_limit_error
-                )
-
-            return flow_to_response(flow_result, session)
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            # #148: the shared submit mapping — no bare ``ValueError`` catch here
-            # any more. A server-side data fault pages on this route too, and a
-            # transient DB error now reaches iOS as the retryable 503 the text
-            # route has answered with since #131 Track A.
-            raise submit_http_error(
-                e,
-                session_id=session_id,
-                fallback_detail="Voice submission failed",
-                session=session,
-            ) from e
+        status = 200
+        return response
+    except HTTPException as e:
+        status = e.status_code
+        raise
+    finally:
+        if next_question_task is not None and not next_question_task.done():
+            # Rejected or never advanced (usage limit, finished): not needed.
+            next_question_task.cancel()
+        logger.info(
+            "Voice submit stages session=%s status=%d total_ms=%d %s",
+            session_id,
+            status,
+            elapsed_ms(started),
+            " ".join(f"{k}={v}" for k, v in stage_ms.items()),
+        )

@@ -30,6 +30,36 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def synthesize_metered(
+    tts_service: TTSService,
+    usage_tracker: Optional[UsageTracker],
+    subject_id: Optional[str],
+    text: str,
+    language: Optional[str] = None,
+    voice: Optional[str] = None,
+) -> bytes:
+    """Client-chosen text to speech under the per-user daily budget (#193.13).
+
+    Shared by ``POST /tts/synthesize`` and the answer read-back that
+    ``/voice/submit`` synthesizes itself (#208.3): same text normalisation,
+    voice and cache key, so either one's audio is the other's cache hit.
+    """
+    budget = get_settings().tts_synthesize_daily_char_budget
+    metered = bool(budget and usage_tracker and subject_id)
+    billing = TTSBilling()
+    if metered:
+        used = await usage_tracker.tts_chars_today(subject_id)
+        billing.allow_primary = used < budget
+    if language:
+        text = normalize_numbers_for_tts(text, language)
+    audio_data = await tts_service.synthesize(
+        text=text, voice=voice, use_cache=True, billing=billing
+    )
+    if metered and billing.billed_chars:
+        await usage_tracker.add_tts_chars(subject_id, billing.billed_chars)
+    return audio_data
+
+
 @router.post("/tts/synthesize")
 @limiter.limit("60/minute")
 async def synthesize_tts(
@@ -45,23 +75,15 @@ async def synthesize_tts(
     character budget for the billed primary. Over it, the free-to-us fallback
     speaks instead (cache hits cost nothing and are never counted).
     """
-    budget = get_settings().tts_synthesize_daily_char_budget
-    metered = bool(budget and usage_tracker and subject.subject_id)
-    billing = TTSBilling()
     try:
-        if metered:
-            used = await usage_tracker.tts_chars_today(subject.subject_id)
-            billing.allow_primary = used < budget
-        text = (
-            normalize_numbers_for_tts(body.text, body.language)
-            if body.language
-            else body.text
+        audio_data = await synthesize_metered(
+            tts_service,
+            usage_tracker,
+            subject.subject_id,
+            body.text,
+            language=body.language,
+            voice=body.voice,
         )
-        audio_data = await tts_service.synthesize(
-            text=text, voice=body.voice, use_cache=True, billing=billing
-        )
-        if metered and billing.billed_chars:
-            await usage_tracker.add_tts_chars(subject.subject_id, billing.billed_chars)
         return Response(
             content=audio_data,
             media_type=f"audio/{body.format}",

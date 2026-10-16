@@ -1,14 +1,17 @@
-"""Voice transcription service (ElevenLabs Scribe v2 batch → OpenAI fallback).
+"""Voice transcription service (OpenAI gpt-transcribe, the only answer recogniser).
 
-Converts audio files to text for voice-based quiz interaction. #184 track C:
-Scribe v2 batch is the primary recogniser (per-word confidence + keyterm
-biasing), with an OpenAI model behind it so a quota outage or provider 5xx
-still grades the answer.
+Converts audio files to text for voice-based quiz interaction. #208.1: replaying
+the 2026-10-16 car-test recordings, ElevenLabs Scribe v2 heard nothing or
+nonsense where gpt-transcribe primed with the question heard the answer, so
+Scribe left the answer path (it was primary since #184; TTS stays ElevenLabs).
 """
 
+import asyncio
 import logging
 from typing import Optional, BinaryIO
 from dataclasses import dataclass
+
+import openai
 
 from quiz_shared.llm import factory as llm_factory
 
@@ -41,8 +44,52 @@ HALLUCINATION_PATTERNS = [
 ]
 
 
-# Any value other than the default (unset) decoding; fixed so a retry is reproducible.
-RETRY_SEED = 7
+# #208.1: a dropped connection, 429 or 5xx is retried once after this pause;
+# anything else (bad request, auth) would fail the same way again.
+TRANSIENT_ERRORS = (
+    openai.APIConnectionError,  # includes APITimeoutError
+    openai.RateLimitError,
+    openai.InternalServerError,
+)
+TRANSIENT_RETRY_BACKOFF_S = 0.3
+
+# #204.2: a sampled decoding is a different hypothesis of the same audio
+# (gpt-transcribe accepts `temperature`, checked against the API 2026-10-16).
+RETRY_TEMPERATURE = 0.8
+
+# Keyword hygiene for gpt-transcribe `keywords` (kept from the Scribe limits,
+# #184): these characters and line breaks make the API reject the request.
+KEYTERM_MAX_COUNT = 1000
+KEYTERM_MAX_CHARS = 49
+KEYTERM_MAX_WORDS = 5
+KEYTERM_FORBIDDEN_CHARS = "<>{}[]"
+
+
+def sanitize_keyterms(keyterms: Optional[list[str]]) -> list[str]:
+    """Drop terms the API would reject, so one bad option never 400s the call."""
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for raw in keyterms or []:
+        if not raw:
+            continue
+        term = raw
+        for ch in KEYTERM_FORBIDDEN_CHARS:
+            term = term.replace(ch, " ")
+        term = " ".join(term.split())
+        if not term:
+            continue
+        if len(term.split(" ")) > KEYTERM_MAX_WORDS:
+            continue
+        if len(term) > KEYTERM_MAX_CHARS:
+            continue
+        key = term.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(term)
+        if len(cleaned) >= KEYTERM_MAX_COUNT:
+            break
+    return cleaned
 
 
 @dataclass
@@ -119,7 +166,7 @@ class TranscriptionResult:
 
 
 class VoiceTranscriber:
-    """Transcribes audio files to text using Whisper API.
+    """Transcribes audio files to text using the OpenAI transcription API.
 
     Supports multiple audio formats:
     - mp3, mp4, mpeg, mpga, m4a, wav, webm
@@ -142,23 +189,19 @@ class VoiceTranscriber:
         """Initialize voice transcriber.
 
         Args:
-            model: OpenAI *fallback* model (default: settings.stt_fallback_model).
+            model: OpenAI transcription model (default: settings.stt_model).
                    Set to "whisper-1" to roll back to the pre-#184 behaviour.
             language: ISO 639-1 language code (e.g., "en", "es")
                      If None, auto-detect language
         """
         # OpenAI transcription is direct-only: OpenRouter does not serve it (issue #53).
-        self.client = llm_factory.openai_client(async_=True, direct=True)
-        self.model = model or get_settings().stt_fallback_model
+        # #208.1: the SDK's own retries are off — one retry with a short pause
+        # is done here, so a provider hiccup costs ~0.3 s, not up to 8 s.
+        self.client = llm_factory.openai_client(async_=True, direct=True).with_options(
+            max_retries=0
+        )
+        self.model = model or get_settings().stt_model
         self.language = language
-        # #207.13: service-wide ElevenLabs daily budget (wired in main.py).
-        # Past it, Scribe is skipped for the OpenAI model; None = no budget.
-        self.primary_budget = None
-
-    async def _scribe_enabled(self, settings) -> bool:
-        if settings.stt_provider != "elevenlabs":
-            return False
-        return self.primary_budget is None or not await self.primary_budget.exhausted()
 
     async def transcribe(
         self,
@@ -177,7 +220,7 @@ class VoiceTranscriber:
             language: Optional ISO 639-1 language code for this request
                      Overrides instance language if provided
             keyterms: Words the recogniser should be biased toward (MCQ option
-                     texts). Scribe only — the OpenAI fallback ignores them.
+                     texts); sent as gpt-transcribe `keywords`.
 
         Returns:
             TranscriptionResult with text, language, and confidence metrics
@@ -215,49 +258,34 @@ class VoiceTranscriber:
             )
 
         effective_language = language or self.language
-        settings = get_settings()
-
-        if await self._scribe_enabled(settings):
-            try:
-                audio_bytes = audio_file.read()
-                audio_file.seek(0)
-                result = await self._transcribe_scribe(
-                    audio_bytes=audio_bytes,
-                    filename=filename,
-                    language=effective_language,
-                    keyterms=keyterms,
-                    settings=settings,
-                )
-                logger.info(
-                    # #193: length only — the player's words stay out of logs.
-                    "Transcribed provider=scribe chars=%d logprob=%.3f duration=%.2fs",
-                    len(result.text),
-                    result.avg_logprob,
-                    result.duration,
-                )
-                return result
-            except Exception as e:
-                # Any Scribe failure is recoverable by definition — the whole
-                # point of the fallback is that a quota outage or a 5xx must not
-                # cost the player their answer.
-                logger.warning(
-                    "Scribe transcription failed, falling back to OpenAI %s: reason=%s",
-                    self.model,
-                    e,
-                )
 
         try:
-            result = await self._transcribe_openai(
+            result = await self._transcribe_retrying(
                 audio_file=audio_file,
                 filename=filename,
                 prompt=prompt,
                 language=effective_language,
                 keyterms=keyterms,
             )
+            if not result.text and prompt:
+                # #208.1: primed with the question, gpt-transcribe now and then
+                # returns nothing for a clearly spoken answer that the unprimed
+                # decoding hears (2026-10-16 replay: "Reset hesla", "Harper's
+                # Bazaar"). One more call on an empty clip is cheaper than the
+                # player having to answer again.
+                audio_file.seek(0)
+                result = await self._transcribe_retrying(
+                    audio_file=audio_file,
+                    filename=filename,
+                    prompt=None,
+                    language=effective_language,
+                    keyterms=keyterms,
+                )
         except Exception as e:
             raise RuntimeError(f"Transcription failed: {str(e)}")
 
         logger.info(
+            # #193: length only — the player's words stay out of logs.
             "Transcribed provider=openai:%s chars=%d no_speech=%.3f logprob=%.3f",
             self.model,
             len(result.text),
@@ -266,31 +294,17 @@ class VoiceTranscriber:
         )
         return result
 
-    async def _transcribe_scribe(
-        self,
-        audio_bytes: bytes,
-        filename: str,
-        language: Optional[str],
-        keyterms: Optional[list[str]],
-        settings,
-        seed: Optional[int] = None,
-    ) -> TranscriptionResult:
-        # Imported here, not at module scope: scribe.py imports
-        # TranscriptionResult from this module.
-        from .scribe import ScribeBatchTranscriber
-
-        scribe = ScribeBatchTranscriber(
-            model=settings.elevenlabs_stt_model,
-            logprob_cutoff=settings.stt_trailing_logprob_cutoff,
-            trim_trailing=settings.stt_trim_trailing_low_confidence,
-        )
-        return await scribe.transcribe(
-            audio_bytes=audio_bytes,
-            filename=filename,
-            language=language,
-            keyterms=keyterms,
-            seed=seed,
-        )
+    async def _transcribe_retrying(self, **kwargs) -> TranscriptionResult:
+        """One OpenAI transcription, retried once on a transient failure (#208.1)."""
+        try:
+            return await self._transcribe_openai(**kwargs)
+        except TRANSIENT_ERRORS as e:
+            logger.warning(
+                "Transcription transient failure, retrying once: %s", type(e).__name__
+            )
+        await asyncio.sleep(TRANSIENT_RETRY_BACKOFF_S)
+        kwargs["audio_file"].seek(0)
+        return await self._transcribe_openai(**kwargs)
 
     async def _transcribe_openai(
         self,
@@ -299,6 +313,7 @@ class VoiceTranscriber:
         prompt: Optional[str],
         language: Optional[str],
         keyterms: Optional[list[str]] = None,
+        temperature: Optional[float] = None,
     ) -> TranscriptionResult:
         # `verbose_json` (and the per-segment no_speech_prob / avg_logprob that
         # is_valid() leans on) is a whisper-1-only response format; the newer
@@ -312,6 +327,8 @@ class VoiceTranscriber:
         }
         if prompt:
             params["prompt"] = prompt
+        if temperature is not None:
+            params["temperature"] = temperature
         if self.model.startswith("gpt-transcribe"):
             # #204.1: gpt-transcribe takes `languages` (array) INSTEAD of
             # `language` ("Don't send both"); the SDK has no typed argument for
@@ -319,10 +336,8 @@ class VoiceTranscriber:
             extra: dict = {}
             if language:
                 extra["languages"] = [language]
-            # Same hygiene as Scribe: the sanitiser strips `<`, `>` and folds
-            # line breaks, which are what make this API reject the request.
-            from .scribe import sanitize_keyterms
-
+            # The sanitiser strips `<`, `>` and folds line breaks, which are
+            # what make this API reject the request.
             keywords = sanitize_keyterms(keyterms)
             if keywords:
                 extra["keywords"] = keywords
@@ -439,44 +454,31 @@ class VoiceTranscriber:
 
         ``rejected`` holds ``normalize_text``-ed transcripts. If ``first`` is not
         among them it is returned untouched (0 extra calls). Otherwise at most
-        two other hypotheses are tried — Scribe with a different seed, then the
-        OpenAI fallback — with the same ``keyterms`` as the first pass (never the answer); the first valid one
+        two other gpt-transcribe decodings are tried (#208.1) — without the
+        question prompt, then sampled at ``RETRY_TEMPERATURE`` — with the same
+        ``keyterms`` as the first pass (never the answer); the first valid one
         that is not a rejected transcript wins, else ``first`` comes back.
         Returns (result, extra_calls). Only counts are logged (#193 privacy).
         """
         if normalize_text(first.text) not in rejected:
             return first, 0
 
-        settings = get_settings()
-        audio_file.seek(0)
-        audio_bytes = audio_file.read()
-        steps = []
-        if await self._scribe_enabled(settings):
-            steps.append("scribe")
-        steps.append("openai")
-
+        steps = (
+            ("no_prompt", {"prompt": None}),
+            ("sampled", {"prompt": prompt, "temperature": RETRY_TEMPERATURE}),
+        )
         attempts = 0
-        for step in steps[:2]:
+        for step, overrides in steps:
             attempts += 1
+            audio_file.seek(0)
             try:
-                if step == "scribe":
-                    candidate = await self._transcribe_scribe(
-                        audio_bytes=audio_bytes,
-                        filename=filename,
-                        language=language,
-                        keyterms=keyterms,
-                        settings=settings,
-                        seed=RETRY_SEED,
-                    )
-                else:
-                    audio_file.seek(0)
-                    candidate = await self._transcribe_openai(
-                        audio_file=audio_file,
-                        filename=filename,
-                        prompt=prompt,
-                        language=language,
-                        keyterms=keyterms,
-                    )
+                candidate = await self._transcribe_openai(
+                    audio_file=audio_file,
+                    filename=filename,
+                    language=language,
+                    keyterms=keyterms,
+                    **overrides,
+                )
             except Exception as e:
                 logger.warning(
                     "Retry recognition step=%s failed: %s", step, type(e).__name__

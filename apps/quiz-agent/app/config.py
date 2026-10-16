@@ -165,26 +165,13 @@ class Settings(BaseSettings):
     elevenlabs_daily_credit_budget: int = 5000
     elevenlabs_tts_model: str = "eleven_multilingual_v2"
     openai_tts_model: str = "tts-1"
-    # Answer transcription (#184 — batch STT for car noise). Scribe v2 batch is
-    # primary: it publishes Slovak quality, takes `keyterms` biasing and returns
-    # per-word logprob so trailing noise words can be cut. `stt_fallback_model`
-    # is the OpenAI model used when Scribe is unavailable — set it back to
-    # "whisper-1" to roll all the way back, or `stt_provider="openai"` to skip
-    # Scribe entirely. `stt_trailing_logprob_cutoff`: words below this at the end
-    # of a transcript count as noise (logprob ≤ 0, higher = confident).
-    # `stt_trim_trailing_low_confidence` (#185 E): whether that noise run is
-    # actually cut from the text. OFF until the cutoff is measured on car
-    # recordings — an answer in a foreign language ("curling" in a Slovak quiz)
-    # scores low confidence and was at risk of being cut; while off, the run is
-    # only logged ("would have trimmed …") so it can be calibrated.
-    stt_provider: str = "elevenlabs"
-    stt_fallback_model: str = "gpt-transcribe"
-    elevenlabs_stt_model: str = "scribe_v2"
-    stt_trailing_logprob_cutoff: float = -1.0
-    stt_trim_trailing_low_confidence: bool = False
+    # Answer transcription (#208.1): OpenAI is the only answer recogniser
+    # (ElevenLabs Scribe left the answer path after the 2026-10-16 replay).
+    # Set to "whisper-1" to roll back to the pre-#184 model.
+    stt_model: str = "gpt-transcribe"
     # #204.2: when a retry's transcript equals one the player already rejected,
-    # re-recognise with the answer as bias and a different seed instead of
-    # grading the same wrong words again. Only acts when the client sends
+    # re-recognise with another decoding (#208.1: no prompt, then sampled)
+    # instead of grading the same wrong words again. Only acts when the client sends
     # `rejected_transcripts`; this is the server-side kill switch.
     stt_retry_avoid_rejected: bool = True
     # #204.6: deterministic sk/cs/en pronunciation-key tier between the

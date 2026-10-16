@@ -348,12 +348,11 @@ async def lifespan(app: FastAPI):
     app.state.usage_tracker = usage_tracker
     # #207.13: per-user daily cost caps; disabled without a database.
     app.state.usage_caps = UsageCaps(auth_sessionmaker)
-    # #207.13: service-wide ElevenLabs daily budget -> OpenAI voice/recogniser.
+    # #207.13: service-wide ElevenLabs daily budget -> OpenAI voice.
     elevenlabs_budget = ElevenLabsBudget(auth_sessionmaker)
     tts_service.primary_budget = elevenlabs_budget
     # #207.20: one synthesis per audio across machines (lease + shared R2).
     tts_service.leases = LeaseStore(shared_sm)
-    voice_transcriber.primary_budget = elevenlabs_budget
     app.state.elevenlabs_budget = elevenlabs_budget
     app.state.auth_sessionmaker = auth_sessionmaker
     app.state.token_service = token_service

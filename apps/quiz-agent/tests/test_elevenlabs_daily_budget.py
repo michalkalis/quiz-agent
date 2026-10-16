@@ -2,15 +2,14 @@
 
 Why: ElevenLabs Starter is 30k credits a month and cannot be topped up. Per-user
 caps bound one account, not many accounts (or a bug) on one bad day. Past the
-day's budget new speech must switch to the OpenAI voice and recogniser that
-already back ElevenLabs up — degrade, never go silent — and switch back the
+day's budget new speech must switch to the OpenAI voice that already
+backs ElevenLabs up — degrade, never go silent — and switch back the
 next UTC day. Spend is ElevenLabs' own meter, so the day's first reading must
 survive a deploy, and a meter that cannot be read must never block play.
 """
 
 from __future__ import annotations
 
-import io
 import os
 from datetime import UTC, datetime, timedelta
 
@@ -19,7 +18,6 @@ os.environ.setdefault("OPENAI_API_KEY", "sk-test")
 import pytest
 from app.tts.service import TTSService
 from app.usage.elevenlabs_budget import ElevenLabsBudget
-from app.voice.transcriber import TranscriptionResult, VoiceTranscriber
 
 from tests.test_tts_synthesize_budget import FakeProvider
 
@@ -148,29 +146,6 @@ async def test_without_a_fallback_voice_the_question_still_speaks():
     tts.fallback = None
     tts.primary_budget = Spent(True)
     assert await tts.synthesize("Hello") == b"elevenlabs-audio"
-
-
-async def test_spent_budget_moves_recognition_to_openai(monkeypatch):
-    monkeypatch.setenv("STT_PROVIDER", "elevenlabs")
-    stt = VoiceTranscriber()
-    used: list[str] = []
-
-    async def scribe(**kwargs):
-        used.append("scribe")
-        return TranscriptionResult("a", "en", 0.0, -0.1, 1.0)
-
-    async def openai(**kwargs):
-        used.append("openai")
-        return TranscriptionResult("b", "en", 0.0, -0.1, 1.0)
-
-    monkeypatch.setattr(stt, "_transcribe_scribe", scribe)
-    monkeypatch.setattr(stt, "_transcribe_openai", openai)
-    stt.primary_budget = Spent(True)
-
-    await stt.transcribe(io.BytesIO(b"RIFF....WAVE"), "answer.wav")
-    stt.primary_budget = Spent(False)
-    await stt.transcribe(io.BytesIO(b"RIFF....WAVE"), "answer.wav")
-    assert used == ["openai", "scribe"]
 
 
 async def test_spent_budget_refuses_realtime_tokens(monkeypatch):

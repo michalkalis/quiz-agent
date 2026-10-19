@@ -65,7 +65,7 @@ Všetky prod stroje (quiz-agent, quiz-pack-api, quiz-pack-db, Redis) sú v `cdg`
 ## 6. Pack worker nebeží
 
 - Fly worker padol: alarm `pack worker: down`. Najprv `fly status -a quiz-pack-api` a `fly machine start <id worker> -a quiz-pack-api`; logy ukážu dôvod (Redis, kredit Anthropic, OOM).
-- Worker sa po páde reštartuje sám (Fly `restart policy = always`) a pri štarte čaká na Redis až ~10 min (207.29). Ak napriek tomu stojí, bol zastavený ručne (`fly machine stop`) alebo má problém Fly; vtedy ho spusti ručne.
+- Worker sa po páde reštartuje sám (Fly `restart policy = always`) a pri štarte čaká na Redis až ~10 min (#207 úloha 207.29 — incident: Fly pack worker stál). Ak napriek tomu stojí, bol zastavený ručne (`fly machine stop`) alebo má problém Fly; vtedy ho spusti ručne.
 - Záloha na `mba` preberá **len beta (Sandbox) objednávky** sama po 5 min bez heartbeatu, nič sa neprepína. Objednávky z App Store čakajú vo fronte na Fly worker. Postup a núdzové prepnutie: [session-worker-mba.md](session-worker-mba.md).
 - Výpadok dlhší ako ~1 h: **Objednávky stop** + oznam; visiace zaplatené objednávky z `orders/attention` po oprave dobehnú samy (sweep), inak refund cez Apple.
 

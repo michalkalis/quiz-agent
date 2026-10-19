@@ -9,8 +9,11 @@ The always-on primary Fly worker, every minute:
 - every 5 minutes, mails each paid order that turned refund-eligible in the
   last 2 hours, or that is stuck (same query as the admin attention endpoint).
 
-Alerts dedupe in memory (``AlertBook`` without a state file): a worker restart
-re-sends an open problem at most once.
+Alert state lives in quiz-agent's ``ops_alert_state`` table (same Postgres,
+own row): 207.29, the 2026-10-16 host crash restarted this worker while
+quiz-agent was down, the in-memory book forgot the open "down" and the
+recovery mail never came. A worker restart now neither re-sends an open
+problem nor loses its recovery.
 
 Limit: quiz-agent and this worker both run in Fly region cdg; a region outage
 silences both (only the GitHub prod monitor, ~every 4 h, would notice).
@@ -18,8 +21,10 @@ silences both (only the GitHub prod monitor, ~every 4 h, would notice).
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+from datetime import datetime, timezone
 
 import httpx
 from quiz_shared.ops_alerts import AlertBook
@@ -30,9 +35,50 @@ FAILS_TO_ALERT = 3
 ORDERS_EVERY_TICKS = 5
 
 
+SOURCE = "pack worker (Fly)"
+
+
+class WorkerAlertState:
+    """``quiz_shared.ops_alerts.AlertStateStore`` on this worker's row of
+    quiz-agent's ``ops_alert_state`` table (quiz-agent migration 0016 owns it;
+    the same DB). Raw SQL: the model lives in quiz-agent. A failing load/save
+    only logs (``AlertBook`` keeps its in-memory state)."""
+
+    def __init__(self, source: str = SOURCE) -> None:
+        self._source = source
+
+    async def load(self) -> dict[str, dict]:
+        from app.db.session import AsyncSessionLocal
+        from sqlalchemy import text
+
+        async with AsyncSessionLocal() as db:
+            raw = (
+                await db.execute(
+                    text("SELECT state_json FROM ops_alert_state WHERE source = :s"),
+                    {"s": self._source},
+                )
+            ).scalar_one_or_none()
+        return json.loads(raw) if raw else {}
+
+    async def save(self, state: dict[str, dict]) -> None:
+        from app.db.session import AsyncSessionLocal
+        from sqlalchemy import text
+
+        async with AsyncSessionLocal() as db:
+            await db.execute(
+                text(
+                    "INSERT INTO ops_alert_state (source, state_json, updated_at) "
+                    "VALUES (:s, :j, :t) ON CONFLICT (source) DO UPDATE "
+                    "SET state_json = EXCLUDED.state_json, updated_at = EXCLUDED.updated_at"
+                ),
+                {"s": self._source, "j": json.dumps(state), "t": datetime.now(timezone.utc)},
+            )
+            await db.commit()
+
+
 class WorkerWatch:
     def __init__(self, book: AlertBook | None = None) -> None:
-        self.book = book or AlertBook("pack worker (Fly)")
+        self.book = book or AlertBook(SOURCE, store=WorkerAlertState())
         self.fails = 0
         self.ticks = 0
         self._order_keys: set[str] = set()

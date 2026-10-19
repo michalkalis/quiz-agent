@@ -88,3 +88,49 @@ async def test_refund_eligible_order_mails_once(monkeypatch):
     await w.check_orders()
     await w.check_orders()
     assert mails.subjects == [f"[Trubbo ALERT] order {str(oid)[:8]}: refund-eligible"]
+
+
+class _RowStore:
+    """In-memory stand-in for the ``ops_alert_state`` row (WorkerAlertState)."""
+
+    def __init__(self) -> None:
+        self.state: dict[str, dict] = {}
+
+    async def load(self) -> dict[str, dict]:
+        return dict(self.state)
+
+    async def save(self, state: dict[str, dict]) -> None:
+        self.state = dict(state)
+
+
+async def test_worker_restart_mid_outage_still_mails_recovery_once(monkeypatch):
+    # 207.29 (2026-10-16): the host crash restarted the worker while quiz-agent
+    # was down. The in-memory book forgot the open "down", so the founder got
+    # the down mail and never a recovery. With the shared row a restarted
+    # worker neither re-mails "down" nor loses the recovery.
+    monkeypatch.setenv("OPS_PING_TOKEN", "tok")
+    up = {"ok": False}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200 if up["ok"] else 502)
+
+    row, mails = _RowStore(), _Mails()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
+        before = ww.WorkerWatch(AlertBook("t", None, sender=mails, store=row))
+        for _ in range(3):
+            await before.ping_quiz_agent(c)
+        after = ww.WorkerWatch(AlertBook("t", None, sender=mails, store=row))  # restart
+        for _ in range(3):
+            await after.ping_quiz_agent(c)
+        up["ok"] = True
+        await after.ping_quiz_agent(c)
+        await after.ping_quiz_agent(c)
+    assert mails.subjects == [
+        "[Trubbo ALERT] quiz-agent-api: down",
+        "[Trubbo OK] quiz-agent-api recovered",
+    ]
+
+
+async def test_the_fly_worker_book_keeps_its_state_in_postgres():
+    # Without the store the restart above loses the recovery mail again.
+    assert isinstance(ww.WorkerWatch().book._store, ww.WorkerAlertState)

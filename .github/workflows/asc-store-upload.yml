@@ -6,10 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group,phased-release — or app-review alone (needs build) to submit the version to App Review"
+        description: "Comma list: listing,review,testflight,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release — or app-review alone (needs build) to submit the version to App Review"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"
+        default: ""
+      group:
+        description: "promote: TestFlight group that gets the build (external group also submits to Beta App Review)"
+        type: choice
+        options: ["", Founder, family+friends, Public beta]
         default: ""
       submit_beta_review:
         description: "beta-group + build: submit the build to Beta App Review"
@@ -39,6 +44,7 @@ jobs:
           # Inputs go through env, never into the script text (no shell injection).
           STEPS: ${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}
           BUILD: ${{ inputs.build }}
+          GROUP: ${{ inputs.group }}
           SUBMIT: ${{ inputs.submit_beta_review }}
           APPLY: ${{ inputs.apply }}
         run: |
@@ -46,6 +52,7 @@ jobs:
           [[ -z "$BUILD" || "$BUILD" =~ ^[0-9]+$ ]] || { echo "invalid build: $BUILD"; exit 1; }
           args=(--steps "$STEPS")
           [[ -n "$BUILD" ]] && args+=(--build "$BUILD")
+          [[ -n "$GROUP" ]] && args+=(--group "$GROUP")
           [[ "$SUBMIT" == "true" ]] && args+=(--submit-beta-review)
           [[ "$APPLY" == "true" ]] && args+=(--apply)
           if [[ "$STEPS" == "app-review" ]]; then

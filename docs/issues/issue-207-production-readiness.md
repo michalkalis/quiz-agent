@@ -1,6 +1,6 @@
 # #207 — Pripravenosť na produkciu so skutočnými používateľmi
 
-**Triage:** chore · in-progress
+**Triage:** chore · in-progress (plán hotový 2026-10-19; otvorený len incident 207.29 — Fly pack worker stojí)
 **Založené:** 2026-10-16 (founder: „ako moc sme nachystaný na beh na produkcii s reálnymi užívateľmi — migrácie, verzovanie, výpadky, provideri, bezpečnosť, náklady, kredity“)
 **Zdroj:** 3 read-only audity nad `origin/main` de6df64a + živý stav prodov 2026-10-16 (prevádzka/infra, náklady/kredity, bezpečnosť/súkromie/iOS release). Nadväzuje na [#193 — spevnenie pred betou](issue-193-beta-hardening.md); čo je tam hotové, sa tu neopakuje.
 
@@ -13,6 +13,10 @@
 - **Záloha na predplatnom zatiaľ len pre beta objednávky** (StoreKit Sandbox / TestFlight); objednávky z App Store nikdy na predplatnom (207.5).
 - **Git:** starý dizajn (1.0) ostane v gite, redizajn je odteraz produkčná verzia; správu gitu necháva na agentovi (zjednodušený flow vhodný pre agentov).
 - **Monitoring bez novej služby** — postaviť na tom, čo už máme (Sentry, Fly, GitHub, mba), prípadne cloud routine cez Claude.
+- **Druhý stroj quiz-agentu až po bete**; dovtedy 1 stroj + bluegreen deploy (207.20 krok 6).
+- **Automatický deploy po merge (207.16) vypnutý až počas / po bete**; dovtedy ručné `backend-deploy.yml`.
+- **Denný strop ElevenLabs 5 000 kreditov je pevný** (`ELEVENLABS_DAILY_CREDIT_BUDGET`, 207.13).
+- **Dependabot PR bez Claude review** (nečerpať predplatné na zmeny verzií; chránia ich CI testy, 207.25).
 - Body „krátko po spustení“ aj „neskôr“ z auditu riešiť **teraz**; poradie určuje agent; práca beží na `mba`, sessions si spravuje agent sám.
 
 ## Stav auditu (zhrnutie)
@@ -26,8 +30,8 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ### A. Git a vydávanie (P0)
 
-- [ ] 207.1 Trunk-based flow: `main` = produkcia (redizajn), krátke vetvy + PR, nedokončené veci za prepínačmi. Tagy `ios/1.0-final` (hlava `release/1.0`, starý dizajn) a `ios/1.1-b76` (f0f5c5eb, build odoslaný do review 10-14). Opravná vetva `hotfix/<verzia>` sa zakladá z tagu len keď treba, oprava sa cherry-pickne do `main`. `release/1.0` zmraziť ako archív; pravidlá v `.claude/rules/shared.md` + TestFlight skill.
-- [ ] 207.2 `ios-release.yml` po úspešnom uploade sám pushne tag `ios/<verzia>-b<build>` (každý build dohľadateľný bez ručnej práce).
+- [x] 207.1 Trunk-based flow: `main` = produkcia (redizajn), krátke vetvy + PR, nedokončené veci za prepínačmi. Tagy `ios/1.0-final` (hlava `release/1.0`, starý dizajn) a `ios/1.1-b76` (f0f5c5eb, build odoslaný do review 10-14). Opravná vetva `hotfix/<verzia>` sa zakladá z tagu len keď treba, oprava sa cherry-pickne do `main`. `release/1.0` zmraziť ako archív; pravidlá v `.claude/rules/shared.md` + TestFlight skill. **Hotové 2026-10-16 (PR #449):** `shared.md` → „Releases: trunk-based, tagged builds“, tagy `ios/1.0-final` a `ios/1.1-b76` na remote.
+- [x] 207.2 `ios-release.yml` po úspešnom uploade sám pushne tag `ios/<verzia>-b<build>` (každý build dohľadateľný bez ručnej práce). **Hotové (PR #449):** buildy 77–79 otagované automaticky (`ios/1.1-b77` … `ios/1.1-b79`).
 - [x] 207.3 Phased release pre 1.1 v App Store Connect — overiť/zapnúť cez ASC API. **Hotové 2026-10-16 (PR #457):** krok `phased-release` v `asc-store-upload` workflow; 1.1 (Waiting for Review) má phased release `INACTIVE`, Apple ho spustí pri vydaní (7 dní).
 
 ### B. Vlastné balíčky: Fly worker primárne, mba záloha (P0)
@@ -49,32 +53,34 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 - [x] 207.11 Záložný hodnotiteľ odpovedí na priame OpenAI (nie cez OpenRouter), aby jeden prázdny kredit nezhodil obe cesty. *(PR #451, nasadené a overené na prode 10-16)*
 - [x] 207.12 Kredity Anthropic/OpenAI/Fly. **Hotové 2026-10-16 (PR #454):** kontrola kreditov teraz každú hodinu: Anthropic (Cost API − kredit z Max, varovanie 3 dni pred koncom; prod: 139,71 $ z 200 $), OpenAI mesačná útrata vs. rozpočet 50 $ (čaká na admin kľúč), Fly stav platby + odhad behu (~22 $/mes). Samoliečenie: OpenRouter kritický → quiz-agent sám prepne svoje OpenRouter volania (embeddingy) na priame OpenAI a napíše to v maile. Deň, keď sa minie denný rozpočet ElevenLabs (207.13), príde 1 mail (dátum, kredity za deň, zostatok mesiaca).
 - [x] 207.13 Limity na používateľa: realtime STT tokeny/deň, dĺžka nahrávky v sekundách, počet pokusov na otázku/deň; rate limit `/entitlements/sync`; globálny denný strop ElevenLabs → automatický prechod na záložný hlas. *(PR #456 + nasledujúca PR; limity `DAILY_CAP_*` 500 tokenov / 7200 s / 30 pokusov / 100 syncov, `ELEVENLABS_DAILY_CREDIT_BUDGET` 5000)*
-- [ ] 207.14 Meranie skutočnej ceny otázky (LLM + STT + TTS) z analytiky → podklad pre founder rozhodnutie o limite Plus (dnes odhad ~6 $ pri 1 000 otázkach vs. ~4,6 $ čistý príjem). Rozhodnutie o cene/limite = founder.
+- [ ] 207.14 Meranie skutočnej ceny otázky (LLM + STT + TTS) z analytiky → podklad pre founder rozhodnutie o limite Plus (dnes odhad ~6 $ pri 1 000 otázkach vs. ~4,6 $ čistý príjem). Rozhodnutie o cene/limite = founder. **Presunuté po betu (2026-10-19):** v prode je zatiaľ 1 účet a ~400 udalostí analytiky, z toho sa skutočná cena otázky odmerať nedá; zmerať po prvých týždňoch bety.
 
 ### E. Nasadzovanie a prostredia (P1)
 
 - [x] 207.15 Backend CI ako povinná kontrola v rulesete (vedľa `claude-review`). **Hotové 2026-10-16 (PR #459):** job `Backend CI gate` hlási na každej PR (sady sa preskočia, keď PR nemení backend), je povinný v `main-pr-flow` (GitHub Actions app).
-- [~] 207.16 Deploy cez GitHub Actions po merge do `main`: staging → smoke test → prod → smoke test; pri zlyhaní stop + Sentry/e-mail. `/deploy` skill ostáva ako ručná núdzová cesta. **2026-10-16 (PR #459):** `backend-deploy.yml` (ručné spustenie): celé Backend CI → staging → `infra/deploy/smoke.sh` → prod (len `main`, prostredie `production`) → smoke + čerstvý heartbeat Fly workera → tag `deployed/<app>`; zlyhanie = issue `deploy-failed` (e-mail). Beh 38887817197 nasadil 13d8c1b6 staging→prod, všetko zelené. Open = zapnúť spúšťanie po merge, keď skončia ručné deploye ostatných sessions.
+- [~] 207.16 Deploy cez GitHub Actions po merge do `main`: staging → smoke test → prod → smoke test; pri zlyhaní stop + Sentry/e-mail. `/deploy` skill ostáva ako ručná núdzová cesta. **2026-10-16 (PR #459):** `backend-deploy.yml` (ručné spustenie): celé Backend CI → staging → `infra/deploy/smoke.sh` → prod (len `main`, prostredie `production`) → smoke + čerstvý heartbeat Fly workera → tag `deployed/<app>`; zlyhanie = issue `deploy-failed` (e-mail). Beh 38887817197 nasadil 13d8c1b6 staging→prod, všetko zelené. **Presunuté:** spúšťanie po merge zapneme až počas / po bete (founder 2026-10-16). Ručný beh znova overený 2026-10-19 (39214550826: CI → staging → prod zelené).
 - [x] 207.17 Staging so samostatnými kľúčmi providerov s nízkymi limitmi (staging nesmie míňať prod kredit) a vlastnou DB inštanciou alebo aspoň oddelenými rolami (dnes zdieľa prod cluster). **Hotové 2026-10-16:** platené kľúče stagingu (zhodovali sa s prodom) nahradené nefunkčnými zástupnými hodnotami, staging admin kľúč vlastný; DB ostáva na oddelených rolách (vlastná inštancia by stála ~2 $/mes. bez praktického prínosu). Vlastné kľúče s nízkym limitom = founder krok (`docs/setup/staging.md`), len ak treba skúšať AI volania.
 - [x] 207.18 Prepínače (min. verzia, objednávky, oznam) bez reštartu stroja: hodnoty z DB s admin endpointom namiesto Fly secrets. **Hotové 2026-10-16 (PR #461, nasadené):** tabuľka `app_switches` prebíja env, `PUT /api/v1/admin/app-switches`, quiz-pack-api z nej čítá vypínač objednávok; `/app-config` bez zmeny tvaru. Overené na stagingu (set → hneď v `/app-config`, reset → env). Návod `docs/setup/app-switches.md`.
 
 ### F. Odolnosť a dáta (P1)
 
 - [x] 207.19 Návrh (pred implementáciou `/design-soundness`): quiz-agent bez volume (TTS cache → R2, `ratings.db` → Postgres) → 2 stroje a rolling deploy bez výpadku; Postgres WAL archív (point-in-time obnova) do R2 alebo replika; Redis perzistencia. Rešpektovať: Fly Managed Postgres nie, Hetzner preferovaný hosting do budúcna. **Návrh hotový 2026-10-16:** [resilience-design-207-2026-10-16.md](../research/resilience-design-207-2026-10-16.md) — PITR cez barman-cloud, ktorý už je v postgres-flex obraze, do R2 (RPO 24 h → ≤ 5 min, samoliečenie pri zaseknutom archíve); quiz-agent bez volume (stav do Postgresu s kontrolou verzie, TTS do R2), 2 stroje + rolling; Redis bez zmeny; región: obnova z R2 inde. +≈3,2 $/mes., čaká na súhlas foundera s druhým strojom (+3,69 $).
-- [~] 207.20 Implementácia podľa schváleného návrhu 207.19 (po krokoch, každý s overenou obnovou).
+- [x] 207.20 Implementácia podľa schváleného návrhu 207.19 (po krokoch, každý s overenou obnovou).
   - [x] krok 1 PITR do R2 (10-16): bucket `quiz-pack-db-wal` vo firemnom Cloudflare účte (EÚ), `S3_ARCHIVE_CONFIG` na `quiz-pack-db`, `archive_timeout` 300 s. Skúška najprv na dočasnej Fly DB (rovnaký obraz; 256 MB nestačí na barman, prod má 1 GB): archív, zlyhanie, samoliečenie a návrat bez reštartu, obnova k času T vrátila zmazané riadky. Prod: base backup 16 s, **naostro obnova k 13:34:33 UTC = presne stav produ v tej sekunde** (heartbeat, 3439 otázok, sessions, udalosti). **RPO 24 h → ≤ 5 min**, obnova ~1 min. Postup v [db-backup.md](../setup/db-backup.md#obnova-k-ľubovoľnému-okamihu-pitr-20720-od-2026-10-16).
   - [x] krok 2 stráž archívu (PR #493, aktívna od zapnutia archívu) + týždenná automatická obnova (workflow `quiz-pack-db PITR restore verify` v súkromnom repe, pondelky): zelený beh 10-16 (base 7 s, celá obnova 24 s, heartbeat 86 s pred štartom), červený beh na prázdnom adresári zlyhal.
   - [x] krok 3 stav quiz-agentu do Postgresu (PR #481, nasadené 10-16): sessions s verziou + lease (30 s, obnovuje sa), hodnotenia, cache prekladov (66 prekladov prenesených z volume), stav upozornení, ping workera. Overené: testy dvoch „strojov“ na jednom Postgrese + staging s 2 strojmi (kvíz začatý na A, A zastavený, otázka aj odpoveď na B, späť na A rovnaký stav). Odchýlka: duplicitný submit chráni lease na session namiesto tabuľky `answer_claims` (rovnaký kontrakt ako dnešný zámok).
   - [x] krok 4 TTS do R2 (PR #498, nasadené 10-16): bucket `trubbo-tts-cache` (firemný účet), 652 súborov z volume skopírovaných; overené na produ: čistá lokálna cache podáva klipy z R2 s 0 volaniami ElevenLabs. Zásady ochrany súkromia sk/cs/en: Cloudflare aj pre zálohy DB a cache zvuku.
   - [x] krok 5 monitory na jednom stroji (PR #492 + oprava #494, nasadené): staging 2 stroje, `fly machine kill` lídra → druhý prevzal monitory po ~95 s
-  - [ ] krok 6 bez volume — founder 10-16: druhý stroj až po bete; varianta 1 stroj + bluegreen (0 $) až po kroku 4, inak „po bete“
+  - [x] krok 6 bez volume, 1 stroj + bluegreen (0 $; founder 10-16: druhý stroj až po bete). PR #502, nasadené 10-16. **Overené na produ 2026-10-19:** počas `backend-deploy.yml` (beh 39214550826, prod 07:18:13–07:20:16 UTC, stroj 837244c7 → 860095fe, v175) 521 požiadaviek na `/health` + `/app-config` každých ~0,9 s, **0 chýb** (138 v okne prod jobu), p50 0,10 s, max 1,7 s. Starý volume `quiz_agent_data` (vol_v3gn898ylew5geo4, 3 GB) zmazaný 10-19 po kontrole: všetkých 654 TTS klipov je v R2 `trubbo-tts-cache` (rovnaká veľkosť; R2 má 705), všetkých 66 prekladov v Postgrese (`translation_cache` 78), `ratings.db` už neexistoval (prenesený pri cutover), `ops_alerts.json` prázdny. Návrat na volume už nie je možný.
+  - [x] krok 8 cvičenie výpadku regiónu (2026-10-19): obnova R2 WAL archívu bežným barman-cloud do dočasného Postgresu vo `fra` (Fly, pgvector:pg17, 2 GB), potom appka zmazaná. **RPO ~1,5 min** (≤ 5 min zaručené), **RTO DB ~11 min** od štartu stroja (base 10 s, 218 WAL segmentov 549 s), ~15 min od vytvorenia appky; 20 tabuliek + obe migračné hlavy zhodné s prodom k času T; cena < 0,01 $. Prepnutie appiek na novú DB nebolo súčasťou cvičenia (odhad +30–60 min). Postup a rozdiely: [incident-runbook.md § 5a](../setup/incident-runbook.md). Pri tom zmazaná aj zabudnutá appka `trubbo-region-drill` (ams, 3 GB volume) z prerušeného behu 10-16.
   - [x] krok 7 cvičenie straty Redisu (staging, DB 1, 10-16): objednávka zaradená, `FLUSHDB`, worker spustený → sweep ju o 12:30 znova zaradil (pokus 1, jedno spustenie, žiadny duplikát), o 12:50 znova (pokus 2). Objednávka sa nestratila. Do `done` nedošla: staging má AI kľúče zámerne vypnuté (207.17). Nález: pri neopakovateľnej chybe (401) ostáva objednávka `in_progress` a sweep ju každých ~20 min znova spúšťa, kým ju nezastaví rozpočet pokusov (#145) — na produ by to boli platené pokusy navyše.
   - [x] oprava nálezu z kroku 7: chyba, ktorú opakovanie nevyrieši (HTTP 400/401/402/403/404/422 od providera, zlý kľúč/plán Tavily), ukončí objednávku hneď pri prvom pokuse ako `failed` + nárok na refund (e-mail alert cez existujúcu cestu, `/retry` ostáva po oprave príčiny); timeouty, 5xx, 429, pád workera a neznáme chyby sa opakujú ako doteraz (`app/worker/failure_class.py`).
 - [x] 207.28 R2 do firemného Cloudflare účtu (founder 2026-10-16: všetko R2 pod hello@missinghue.com). **Hotové 2026-10-16:** `quiz-images` 45 obrázkov + `trubbo-voice-samples` všetky nahrávky skopírované a overené (počet, veľkosť, ETag), `questions.media_url` + `reveal_url` v provenance prepísané na novú verejnú URL (25 riadkov, prod aj staging DB, záloha `r2_move_backup.questions_20261016`), `quiz-agent-api` zapisuje nahrávky do nového bucketu od deployu 13:27 UTC (posledný zápis do starého 13:25, rozdiel doskopírovaný), skripty cez root `.env`. iOS nemá URL natvrdo. Popis: [r2-storage.md](../setup/r2-storage.md). Staré buckety ostávajú do 2026-10-23.
+- [ ] 207.29 **Incident (nájdený 2026-10-19):** Fly pack worker (`quiz-pack-api`, stroj 0805539c979618) dvakrát spadol s `exit_code=1` (2026-10-16 18:33 a 18:34 UTC, nie OOM, nie požiadaný stop) a odvtedy stojí; `prod-monitor` od vtedy každý beh hlási „Fly pack worker is down“. Žiadna objednávka zasiahnutá (všetky 4 `delivered`, posledná 10-10). Fly logy z 10-16 už nie sú. Treba: stroj spustiť, z logov zistiť príčinu pádu, opraviť; zvážiť `restart` politiku `always` pre worker, aby jeden pád nezastavil generovanie. Agentovi spustenie stroja 10-19 zablokovala kontrola oprávnení.
 
 ### G. Súkromie a GDPR (P1)
 
-- [ ] 207.21 Privacy štítky: pregenerovať `fastlane/app_privacy_details.json` z `PrivacyInfo.xcprivacy` a skutočných dát (bez mena/e-mailu; ID zariadenia, fotky z feedbacku, analytika, diagnostika), porovnať s ASC a nahrať. — Repo hotové (PR #465); ASC sedí okrem jedného riadku (Purchase History / Analytics „Not linked“), oprava = founder krok nižšie.
+- [x] 207.21 Privacy štítky: pregenerovať `fastlane/app_privacy_details.json` z `PrivacyInfo.xcprivacy` a skutočných dát (bez mena/e-mailu; ID zariadenia, fotky z feedbacku, analytika, diagnostika), porovnať s ASC a nahrať. — Repo hotové (PR #465); ASC sedí okrem jedného riadku (Purchase History / Analytics „Not linked“), **Hotové 2026-10-16:** v ASC Purchase History prepojené s identitou, „Data Not Linked to You“ zmizlo, publikované (orchestrátor z poverenia foundera).
 - [x] 207.22 Zásady ochrany súkromia sk/cs/en: zoznam spracovateľov, prenos mimo EÚ (štandardné zmluvné doložky / adekvátnosť), doba uchovávania. Zoznam DPA so spracovateľmi + odkazy (podpis/akceptácia = founder krok). — PR #466, živé na trubbo.app/privacy (16. 10.).
 - [x] 207.23 Sentry backend `before_send`: odfiltrovať texty odpovedí a telá požiadaviek; TF build neposiela text hlasových povelov bez zmienky v zásadách. — PR #464, nasadené quiz-agent + quiz-pack-api 16. 10.; iOS zmena ide s ďalším buildom.
 
@@ -87,19 +93,24 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ## Founder kroky
 
-- Sprístupniť `mba` pre Remote Control (návod v session 2026-10-16), aby agent spúšťal sessions sám.
-- 207.6: In-App Purchase kľúč v App Store Connect (Users and Access → Integrations → In-App Purchase → Generate) a jeho Key ID, Issuer ID a obsah `.p8` do Fly secrets `quiz-pack-api` (`APP_STORE_SERVER_KEY_ID`, `APP_STORE_SERVER_ISSUER_ID`, `APP_STORE_SERVER_PRIVATE_KEY`). Bez neho príkaz na kontrolu objednávok po obnove nebeží (ak má RevenueCat už vlastný kľúč a `.p8` je stiahnutý, dá sa použiť ten).
-- 207.17 (voliteľné, len ak chceš na stagingu skúšať AI volania): staging kľúče s limitom ~2 $ u OpenRouter, OpenAI, ElevenLabs, Anthropic a ich nastavenie na staging appky, presný postup v `docs/setup/staging.md` → Founder kroky. Bez toho staging AI volania zlyhajú, deploy a smoke testy idú.
-- 207.21: v App Store Connect → Trubbo → App Privacy → Data Types → Purchases → Edit: pri Purchase History nechať Analytics + App Functionality, „linked to the user's identity“ = Yes → Save → Publish. Dôvod: zvyšok štítkov sedí, ale náhľad stránky ukazuje Purchases aj pod „Not Linked to You“ (zabudnutý riadok Analytics / Not linked). Agentovi zmenu v ASC zablokovala kontrola oprávnení.
-- 207.22: DPA na klik (ostatné platia automaticky cez ich podmienky, zoznam nižšie):
+Otvorené k 2026-10-19 (hotové položky vyradené):
+
+- `mba`: sprístupniť pre Remote Control, a keď si doma, spustiť `apps/quiz-pack-api/scripts/session_worker_local.sh install-launchd` (záloha Fly workera, 207.5; návod `docs/setup/session-worker-mba.md`).
+- 207.22: DPA na klik (ostatné platia automaticky cez ich podmienky, tabuľka nižšie):
   1. Sentry: sentry.io → Settings (organizácia missinghue) → Legal & Compliance → Data Processing Addendum → Accept (treba rolu Owner alebo Billing).
   2. Fly.io: fly.io/dashboard → v ľavom menu Compliance → stiahnuť / podpísať Data Processing Agreement.
   3. ImprovMX: improvmx.com/transparency/gdpr-compliance → stiahnuť DPA (improvmx_dpa.pdf), podpísať a poslať im, alebo si vyžiadať podpísaný na ich podpore.
-- Neskôr: Anthropic auto-reload so stropom pred 11-06.
-- 207.12 (voliteľné): OpenAI admin kľúč pre kontrolu útraty — platform.openai.com → Settings → Organization → Admin keys → Create; hodnotu do Fly secret `OPENAI_ADMIN_KEY` na `quiz-agent-api` (agent to nastaví, ak kľúč vloží do `.env` ako `OPENAI_ADMIN_KEY`).
-- 207.7 (voliteľné bonus): Sentry token s `alerts:write` → `SENTRY_ALERTS_TOKEN` v `.env`, potom `python3 scripts/sentry_monitoring.py --apply` (uptime + chybovosť v Sentry).
 - Gmail: maily `[Trubbo ALERT]` / `[Trubbo OK]` od `monitor@trubbo.app` označiť ako dôležité (filter), aby chodila notifikácia do telefónu.
+- Anthropic: auto-reload so stropom **pred 2026-11-06** (koniec promo kreditu z Max).
 - 207.28, **po 2026-10-23**: prihlásiť osobný Cloudflare účet (michal.kalis@gmail.com), agent potom zmaže buckety `quiz-images` a `trubbo-voice-samples` v tomto účte (najprv over, že v nich nepribudol žiadny objekt po 2026-10-16 13:26 UTC), riadky `R2_PERSONAL_*` z root `.env` a schému `r2_move_backup` v DB.
+- Výpadok regiónu (207.20 krok 8): v Cloudflare (firemný účet) → R2 → Manage API tokens → Create → Object Read only, len bucket `quiz-pack-db-wal` → hodnoty do root `.env` ako `PITR_R2_ACCESS_KEY_ID` a `PITR_R2_SECRET_ACCESS_KEY`. Bez toho sa pri výpadku cdg k archívu dostane len workflow v súkromnom repe, nie obnova v inom regióne ([runbook § 5a](../setup/incident-runbook.md)).
+- Voliteľné: staging kľúče s limitom ~2 $ u OpenRouter, OpenAI, ElevenLabs, Anthropic (207.17), len ak chceš na stagingu skúšať AI volania; postup v `docs/setup/staging.md` → Founder kroky.
+- Voliteľné: OpenAI admin kľúč pre kontrolu útraty (207.12) — platform.openai.com → Settings → Organization → Admin keys → Create; vlož do root `.env` ako `OPENAI_ADMIN_KEY`, agent ho nastaví do Fly secrets `quiz-agent-api`.
+- Voliteľné bonus: Sentry token s `alerts:write` → `SENTRY_ALERTS_TOKEN` v `.env`, agent potom spustí `python3 scripts/sentry_monitoring.py --apply` (uptime + chybovosť v Sentry, 207.7).
+
+## Známe nestabilné iOS testy
+
+- `HangsSurfaceAdaptivityTests.cardSurfaceAdapts` a `QuizViewModelAutoStopRecordingTests.injectedDeadAirCapEndsTheRecording` raz zlyhali na PR #478 a pri opakovanom behu prešli. Pri jednorazovom zlyhaní najprv rerun; keď sa zopakuje, opraviť (nie preskakovať).
 
 ### DPA spracovateľov (207.22, overené 2026-10-16)
 

@@ -51,6 +51,17 @@ Ručný deploy z laptopu: najprv zámok `mkdir /tmp/trubbo-deploy-<app>.lock`, p
 
 Dáta poškodené / zmazané alebo zmizol DB stroj: [db-backup.md](db-backup.md), časť Obnova. Najprv **Objednávky stop** (bod 3) a oznam, potom kroky B.1 až B.9 (obnova do novej DB vedľa pôvodnej, prepnutie až po kontrole) a **vždy krok 10**: `python -m app.storekit.reconcile` porovná App Store nákupy s DB a dorobí objednávky zaplatené po čase zálohy; čo sa dorobiť nedá, ide na refund. Na konci prepínače späť (`reset`). Staré dáta (`quiz_pack_broken`) mazať až po reconcile.
 
+### 5a. Výpadok celého regiónu cdg (DB aj appky preč)
+
+Všetky prod stroje (quiz-agent, quiz-pack-api, quiz-pack-db, Redis) sú v `cdg`. Pri výpadku regiónu nemá kto poslať `[Trubbo ALERT]` a nefungujú ani prepínače (sú v DB): signál je len zlyhaný `prod-monitor` a https://status.flyio.net. Krátky výpadok (Fly ho rieši, odhad < ~1 h) sa prečká; dlhší = obnova z R2 inde.
+
+Čo sa líši od bodu 5:
+
+1. **Token na R2 archív musí byť mimo cdg.** Zapisovací token je len Fly secret `S3_ARCHIVE_CONFIG` na `quiz-pack-db` (pri výpadku nečitateľný), čítací len v GitHub secrets súkromného repa (použiteľný iba vo workflow). Founder krok v #207: čítací token pre `quiz-pack-db-wal` uložiť do root `.env` ako `PITR_R2_ACCESS_KEY_ID` / `PITR_R2_SECRET_ACCESS_KEY`.
+2. **Obnova v inom regióne** (`fra` / `ams`, cvičenie 2026-10-19 v `fra`): `fly apps create <app>`, token cez `fly secrets import` (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENDPOINT `https://bff6d086844b7b18fbb5065d179f1fcf.eu.r2.cloudflarestorage.com`, ARCHIVE `s3://quiz-pack-db-wal`, SERVER `quiz-pack-db`) **pred** vytvorením stroja (`fly secrets deploy` na appke bez deployu nefunguje), potom `fly machine run pgvector/pgvector:pg17 infinity --entrypoint sleep --region fra --vm-memory 2048 --file-local /s/pitr-restore.sh=<súkromné repo>/scripts/pitr-restore.sh` a `fly ssh console -C "bash /s/pitr-restore.sh"` (koniec archívu). Kontrola počtov a `alembic_version` (obe hlavy) ako v [db-backup.md](db-backup.md).
+3. **Namerané 2026-10-19:** RPO ~1,5 min (posledná obnovená transakcia 07:34:24 UTC, obnova hotová ~07:36; zaručené ≤ 5 min cez `archive_timeout`). RTO databázy ~11 min od štartu stroja (base 10 s, 218 WAL segmentov 549 s ≈ 2,5 s/segment, rastie s časom od posledného base backupu, najhoršie ~12 min), ~15 min od `fly apps create`. 20 tabuliek (otázky, preklady, účty, objednávky, kredity, sessions, hodnotenia, nahrávky, analytika…) a obe migračné hlavy zhodné s prodom k času T. Cena < 0,01 $.
+4. **Neskúšané, odhad +30–60 min:** pre ostrý beh obnovovať do stroja s volume a naším obrazom `quiz-pack-db` (heslo, `listen_addresses` na 6PN; pri `pgvector` obraze `REINDEX DATABASE` kvôli inej glibc), nastaviť `DATABASE_URL` oboch appiek na nový stroj, appky naklonovať do nového regiónu (`fly machine clone <id> --region fra`, alebo `fly deploy` s novým `primary_region`), nový prázdny Redis (objednávky z fronty dorovná sweep). Názvy appiek a `*.fly.dev` sú globálne, iOS sa nemení. Potom bod 5, krok 10 (reconcile objednávok po čase T).
+
 ## 6. Pack worker nebeží
 
 - Fly worker padol: alarm `pack worker: down`. Najprv `fly status -a quiz-pack-api` a `fly machine start <id worker> -a quiz-pack-api`; logy ukážu dôvod (Redis, kredit Anthropic, OOM).

@@ -68,7 +68,7 @@ Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live →
 
 ## Founder steps
 
-**210.1 Accounts:** step-by-step guide with emails, handles, bios and the Passwords check: https://claude.ai/artifact/1CaAA5ks9a9hq7BCRr9iNc (founder creates all accounts himself on the Mac in Safari, 2026-10-19; second address ahoj@trubbo.app via ImprovMX for the SK/CZ accounts; profile picture rendered from the mascot master). Then send the handles you got.
+**210.1 Accounts:** step-by-step guide with emails, handles, bios and the Passwords check: https://claude.ai/artifact/1CaAA5ks9a9hq7BCRr9iNc (founder creates all accounts himself on the Mac in Safari, 2026-10-19; SK/CZ accounts on hello@missinghue.com; profile picture rendered from the mascot master). Then send the handles you got.
 
 **210.7 Campaign links** — when I ask: App Store Connect → Apps → Trubbo → Analytics → Acquisition → Campaigns → Generate campaign link → I'll give you the exact names to type.
 

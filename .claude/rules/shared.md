@@ -17,7 +17,7 @@ Destructive ops (force-push, reset --hard, amend, history rewrites) require a he
 
 ### Releases: trunk-based, tagged builds (founder, 2026-10-16)
 
-`main` is production: the redesign (1.1+) ships from it. Agents work on short-lived branches merged through PRs; unfinished features stay behind flags (server `/app-config` or build-config flags like CarPlay's `Local.xcconfig`), never on long-lived branches.
+`main` is production: the redesign (1.1+) ships from it. Which build variant goes to which tester group / App Review, environments and versioning: `docs/setup/release-flow.md`. Agents work on short-lived branches merged through PRs; unfinished features stay behind flags (server `/app-config` or build-config flags like CarPlay's `Local.xcconfig`), never on long-lived branches.
 
 - **Every uploaded build is tagged** `ios/<version>-b<build>` by `ios-release.yml` (`-staging` suffix for the staging lane). Store versions are found by tag, not by branch.
 - **Hotfix for a live store version** only when `main` already carries unreleased work that must not ship: `git switch -c hotfix/<version> ios/<version>-b<build>`, fix via PR into `hotfix/<version>`, build with `gh workflow run ios-release.yml --ref hotfix/<version>`, then cherry-pick the squash commit onto `main` in the same task. Otherwise fix on `main` and ship the next build.

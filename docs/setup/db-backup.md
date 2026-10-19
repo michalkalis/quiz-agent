@@ -24,7 +24,7 @@ Bez kľúča sa žiadna záloha nedá obnoviť; kto má kľúč a prístup k rep
 
 **Týždenná kontrola** (workflow `quiz-pack-db backup verify`, pondelky 05:43 UTC + ručne): stiahne najnovšiu zálohu, dešifruje ju secretom `BACKUP_DECRYPT_KEY_PEM`, spustí `pg_restore --list` (postgres 17) a overí, že tabuľka `questions` je v dumpe. Vypisuje len počty. Zlyhanie = e-mail od GitHubu; znamená, že záloha alebo secret kópia kľúča je pokazená.
 
-Sessions, hodnotenia, cache prekladov a stav upozornení quiz-agentu sú od #207.20 v Postgrese, takže ich záloha je súčasťou tohto dumpu. Staré SQLite súbory na volume `quiz-agent-api` (`/data/ratings.db`, `/data/translations.db`) sa pri štarte jednorazovo skopírujú do Postgresu a s volume zaniknú (krok 6 návrhu odolnosti).
+Sessions, hodnotenia, cache prekladov a stav upozornení quiz-agentu sú od #207.20 v Postgrese, takže ich záloha je súčasťou tohto dumpu. Staré SQLite súbory z volume `quiz-agent-api` boli 2026-10-16 jednorazovo skopírované do Postgresu; volume bol 2026-10-19 zmazaný po kontrole, že v Postgrese aj R2 je všetko (krok 6 návrhu odolnosti).
 
 ## Obnova k ľubovoľnému okamihu (PITR, #207.20, od 2026-10-16)
 
@@ -40,7 +40,7 @@ Druhá vrstva vedľa nočného dumpu: postgres-flex (barman-cloud 3.10 v našom 
 
 1. Potrebuješ token na čítanie (R2 → API tokens, alebo secrets zo súkromného repa) a Docker.
 2. `docker run -d --name pitr --entrypoint sleep -e AWS_ACCESS_KEY_ID=… -e AWS_SECRET_ACCESS_KEY=… -e ENDPOINT=https://bff6d086844b7b18fbb5065d179f1fcf.eu.r2.cloudflarestorage.com -e ARCHIVE=s3://quiz-pack-db-wal -e SERVER=quiz-pack-db -v <repo>/scripts:/s:ro pgvector/pgvector:pg17 infinity`
-3. `docker exec pitr bash /s/pitr-restore.sh "2026-10-16 13:34:33+00"` (bez času = koniec archívu). Hotovo za ~1 min (223 MB).
+3. `docker exec pitr bash /s/pitr-restore.sh "2026-10-16 13:34:33+00"` (bez času = koniec archívu). Base (223 MB) ~10 s, potom prehrávanie WAL ~2,5 s na segment: tesne po base backupe ~1 min, deň po ňom (~220 segmentov) ~9 min, najhoršie (24 h WAL) ~12 min.
 4. Kontrola: `docker exec -u postgres pitr psql -p 5499 -d quiz_pack -c "…"`. Potom buď vybrané riadky ručne späť do produ, alebo celá DB podľa postupu B nižšie (dump z kontajnera namiesto zálohy z GitHubu).
 
 Overené 2026-10-16 naostro na produ: obnova k 13:34:33 UTC vrátila presne stav z toho okamihu (heartbeat 13:34:14, 3439 otázok, 3 sessions, 319 analytických udalostí, ako v prode v tej sekunde); posledná transakcia 13:34:29, nasledujúca (13:34:34) už nie. Skúška na kópii: zmazanie 1000 riadkov po čase T bolo v obnove vrátené.

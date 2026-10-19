@@ -12,13 +12,13 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 
 1. **Language: English main + SK/CZ secondary.** Brand account @trubbo in English (≈5× the SK+CZ revenue in the mid estimate, ≈6× upside). One shared SK/CZ account from the same pipeline (native sk and cs questions, one language per video). Compare after 4 weeks.
 2. **People:** brand account + a **new** personal account (not the founder's existing one), in **English**: the solo-dev story and the founder playing the quiz. The monkey is the recurring character on the brand account.
-3. **Content:** mostly AI/code-generated; **occasionally real clips** (~1 per week: kids vs parents, a couple in the car). Real clips in Slovak go to the SK/CZ account.
+3. **Content:** mostly AI/code-generated; **occasionally real clips** (~1 per week) of the **founder playing the app himself and answering out loud** (screen recording + his voice, optionally his face). **No videos from the car** (founder, 2026-10-19, follow-up). Driving appears only in AI/motion content.
 4. **Approval:** the agent prepares a **weekly batch** (5–7 posts per account with captions); the founder approves it on one page, then it schedules itself.
 5. Free tools only. No paid ads in English markets (a payer would cost $120–250 vs ~$25 year-1 revenue).
 
 ## Hard rules
 
-- **Driving safety:** the driver never touches or looks at the phone on camera; a passenger films or the car is parked. Nothing that looks like distracted driving, ever — one such clip damages the whole brand and gets removed on YouTube/TikTok.
+- **Driving safety:** no real footage from a moving car. Any driving visual (AI/motion) never shows a driver touching or looking at a phone — one such clip damages the whole brand and gets removed on YouTube/TikTok.
 - **Only approved questions** (App Store rule: state `approved`), each with its source; the explanation line comes from the question's own explanation, not invented.
 - **Real numbers only** in "X % of players knew this" posts (from #205 — daily challenge vs the crowd), never estimated.
 - **Copy:** no cheesy filler, no dashes as punctuation in public text, sk/cs written natively (copy-style rules apply to captions too).
@@ -35,7 +35,7 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 | YouTube Shorts (Trubbo channel) | EN | Same reels | Buffer free |
 | Instagram SK/CZ (handle TBD) | sk / cs | Same formats + real clips | Official Instagram API |
 | TikTok SK/CZ | sk / cs | Same reels | Buffer free (3rd channel) |
-| Founder personal IG (new) | EN | Story, playing the quiz | Manual |
+| Founder personal IG (new) | EN | Founder plays the quiz and answers, solo-dev story | Manual |
 | Facebook groups, CZ pub-quiz organizers | sk / cs | Permission-first posts, free codes | Manual (see 210.9) |
 
 Buffer free = 3 channels × 10 queued posts → TikTok EN, TikTok SK/CZ, YouTube EN. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
@@ -47,7 +47,7 @@ Buffer free = 3 channels × 10 queued posts → TikTok EN, TikTok SK/CZ, YouTube
 3. **Story** — daily question with a quiz/poll sticker (sticker added by hand, ~30 s/day).
 4. **"Only N % of players knew this"** — real numbers once #205 is on in prod.
 5. **Comment a topic → custom pack** — next video shows the pack being made and played (custom pack showcase).
-6. **Real clip** — family/couple in the car, passenger films.
+6. **Founder plays** — screen recording of a real round + the founder answering out loud; on the personal account, best ones reposted to the brand account.
 
 Target cadence per account: 4–5 reels/carousels per week + daily story.
 
@@ -68,15 +68,7 @@ Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live →
 
 ## Founder steps
 
-**210.1 Accounts** (log in with hi@trubbo.app where possible; company accounts rule):
-1. Instagram app → Settings → Add account → Create new account → username `trubbo` (fallback `trubbo.app` or `trubboapp`).
-2. In that account: Settings → Account type and tools → Switch to professional account → Business → category "App page".
-3. Repeat 1–2 for the SK/CZ account (suggested handle `trubbo.sk`, or `trubbo.cz` / `trubbo_skcz`).
-4. TikTok app → Sign up with hi@trubbo.app → username `trubbo` → Settings → Account → Switch to Business account. Second TikTok account for SK/CZ the same way.
-5. YouTube: youtube.com signed in to the trubbo Google account → profile icon → Create a channel → name "Trubbo".
-6. buffer.com → sign up free with hi@trubbo.app → connect TikTok EN, TikTok SK/CZ, YouTube.
-7. New personal Instagram (your own email, not the existing account): Creator type; name it as yourself.
-8. Send me the handles you actually got. I'll do the Meta app and tokens with you when 210.5 starts.
+**210.1 Accounts:** step-by-step guide with emails, handles, bios and the Passwords check: https://claude.ai/artifact/1CaAA5ks9a9hq7BCRr9iNc (founder creates all accounts himself on the Mac in Safari, 2026-10-19; second address ahoj@trubbo.app via ImprovMX for the SK/CZ accounts; profile picture rendered from the mascot master). Then send the handles you got.
 
 **210.7 Campaign links** — when I ask: App Store Connect → Apps → Trubbo → Analytics → Acquisition → Campaigns → Generate campaign link → I'll give you the exact names to type.
 

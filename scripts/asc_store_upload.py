@@ -11,7 +11,7 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group,phased-release [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -270,12 +270,93 @@ def step_beta_group(app_id: str, build: str | None, submit: bool) -> None:
         send("POST", "/betaAppReviewSubmissions", {"data": {"type": "betaAppReviewSubmissions",
                                                             "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
 
+FOUNDER_GROUP = "Founder"
+FRIENDS_GROUP = "family+friends"
+PROMOTE_GROUPS = (FOUNDER_GROUP, FRIENDS_GROUP, PUBLIC_GROUP)
+LEGACY_GROUP = "Alpha"  # retired; reported only, never deleted by code
+
+
+def tester_count(group_id: str) -> str:
+    r = get(f"/betaGroups/{group_id}/relationships/betaTesters", limit=1)
+    return str(r.get("meta", {}).get("paging", {}).get("total", "?")) if "_error" not in r else f"? ({r['_error']})"
+
+
+def find_group(app_id: str, name: str) -> dict | None:
+    groups = get(f"/apps/{app_id}/betaGroups", limit=200).get("data", [])
+    return next((g for g in groups if g["attributes"]["name"] == name), None)
+
+
+def step_groups_setup(app_id: str) -> None:
+    """TestFlight ladder: Founder (internal, all builds) / family+friends (internal, manual) / Public beta (external)."""
+    print("groups-setup")
+    founder = find_group(app_id, FOUNDER_GROUP)
+    if founder:
+        print(f"  {FOUNDER_GROUP}: exists, hasAccessToAllBuilds={founder['attributes'].get('hasAccessToAllBuilds')}")
+    else:
+        send("POST", "/betaGroups", {"data": {"type": "betaGroups", "attributes": {
+            "name": FOUNDER_GROUP, "isInternalGroup": True, "hasAccessToAllBuilds": True, "feedbackEnabled": True},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+    friends = find_group(app_id, FRIENDS_GROUP)
+    if not friends:
+        print(f"  !! group '{FRIENDS_GROUP}' not found")
+    elif friends["attributes"].get("hasAccessToAllBuilds") is False:
+        print(f"  {FRIENDS_GROUP}: already manual (hasAccessToAllBuilds=false)")
+    else:
+        # Docs list hasAccessToAllBuilds on BetaGroupUpdateRequest; unverified for existing internal groups, so fall back to manual steps.
+        print(f"  {FRIENDS_GROUP}: hasAccessToAllBuilds=true, PATCH to false")
+        if APPLY:
+            r = requests.patch(f"{BASE}/betaGroups/{friends['id']}", headers={**HEADERS, "Content-Type": "application/json"}, timeout=60,
+                               json={"data": {"type": "betaGroups", "id": friends["id"], "attributes": {"hasAccessToAllBuilds": False}}})
+            if r.status_code >= 300:
+                print(f"  !! API refused ({r.status_code}: {r.text[:300]}). Manual: App Store Connect > TestFlight > Internal Testing > "
+                      f"{FRIENDS_GROUP} > untick 'Enable automatic distribution' (access to all builds) > Save")
+            else:
+                print("  patched")
+        else:
+            print("  (dry run; if the API refuses on apply, manual steps are printed)")
+    for g in get(f"/apps/{app_id}/betaGroups", limit=200).get("data", []):
+        a = g["attributes"]
+        kind = "internal" if a.get("isInternalGroup") else "external"
+        note = "  <- legacy, retire manually in ASC" if a["name"] == LEGACY_GROUP else ""
+        print(f"  [{kind}] {a['name']}: testers={tester_count(g['id'])} allBuilds={a.get('hasAccessToAllBuilds')}{note}")
+
+
+def step_promote(app_id: str, copy: dict, build: str | None, group_name: str | None) -> None:
+    """Add build N to a named group; external group also gets What to Test + Beta App Review. Idempotent."""
+    print("promote")
+    if not build or group_name not in PROMOTE_GROUPS:
+        raise SystemExit(f"promote needs --build and --group one of {PROMOTE_GROUPS}")
+    if group_name == PUBLIC_GROUP:
+        step_beta_group(app_id, None, False)  # make sure the capped public group exists
+    group = find_group(app_id, group_name)
+    if not group:
+        print(f"  !! group '{group_name}' missing (run groups-setup first)")
+        if APPLY:
+            raise SystemExit(1)
+        return
+    b = get("/builds", **{"filter[app]": app_id, "filter[version]": build})["data"][0]
+    have = get(f"/betaGroups/{group['id']}/relationships/builds", limit=200).get("data", [])
+    if any(x["id"] == b["id"] for x in have):
+        print(f"  build {build} already in {group_name}")
+    else:
+        send("POST", f"/betaGroups/{group['id']}/relationships/builds", {"data": [{"type": "builds", "id": b["id"]}]})
+    if group["attributes"].get("isInternalGroup"):
+        return
+    step_testflight(app_id, copy, build)  # What to Test must exist before review
+    sub = get(f"/builds/{b['id']}/betaAppReviewSubmission").get("data")
+    if sub:
+        print(f"  Beta App Review: {sub['attributes'].get('betaReviewState')} (not resubmitting)")
+    else:
+        send("POST", "/betaAppReviewSubmissions", {"data": {"type": "betaAppReviewSubmissions",
+                                                            "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
+
 
 def main() -> int:
     global APPLY
     ap = argparse.ArgumentParser()
     ap.add_argument("--steps", default="listing,review,testflight,iap")
     ap.add_argument("--build", help="build number that gets What to Test")
+    ap.add_argument("--group", choices=PROMOTE_GROUPS, help="with promote: target TestFlight group")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--submit-beta-review", action="store_true", help="with beta-group + --build: submit the build to Beta App Review")
     args = ap.parse_args()
@@ -300,6 +381,10 @@ def main() -> int:
         step_age_rating(app_id)
     if "beta-group" in steps:
         step_beta_group(app_id, args.build, args.submit_beta_review)
+    if "groups-setup" in steps:
+        step_groups_setup(app_id)
+    if "promote" in steps:
+        step_promote(app_id, copy, args.build, args.group)
     if "phased-release" in steps:
         step_phased_release(app_id)
     return 0

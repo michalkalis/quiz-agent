@@ -8,6 +8,7 @@
 //
 
 import Combine
+import Foundation
 
 @MainActor
 final class OnboardingViewModel: ObservableObject {
@@ -27,15 +28,18 @@ final class OnboardingViewModel: ObservableObject {
     private let audioService: AudioServiceProtocol
     private let persistenceStore: PersistenceStoreProtocol
     private let analytics: AnalyticsClient
+    private let consentDefaults: UserDefaults
 
     init(
         audioService: AudioServiceProtocol,
         persistenceStore: PersistenceStoreProtocol,
-        analytics: AnalyticsClient = NoopAnalyticsClient()
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
+        consentDefaults: UserDefaults = .standard
     ) {
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.analytics = analytics
+        self.consentDefaults = consentDefaults
     }
 
     /// First-launch gate: present onboarding only while the persisted flag is unset.
@@ -51,7 +55,9 @@ final class OnboardingViewModel: ObservableObject {
     /// via `requestMicPermission()`, not `advance()`.
     func advance() {
         switch page {
-        case .welcome: page = .features
+        case .welcome:
+            recordAIConsentIfOnWelcome()
+            page = .features
         case .features: page = .permission
         case .permission, .permissionDenied: break
         }
@@ -69,6 +75,7 @@ final class OnboardingViewModel: ObservableObject {
 
     /// Exit from the denied page without mic access (typed answers remain available).
     func continueWithoutMic() {
+        recordAIConsentIfOnWelcome()
         let outcome: OnboardingOutcome = switch page {
         case .welcome, .features: .skipped
         case .permission: .micLater
@@ -83,6 +90,14 @@ final class OnboardingViewModel: ObservableObject {
         page = .welcome
         isComplete = false
         micPermissionGranted = false
+    }
+
+    /// #209 (guideline 5.1.2(i)): the welcome page shows the AI services
+    /// disclosure above both of its buttons, so leaving it by Continue or Skip
+    /// is the player's consent.
+    private func recordAIConsentIfOnWelcome() {
+        guard page == .welcome else { return }
+        AIProcessingConsent.record(defaults: consentDefaults)
     }
 
     private func finish(_ outcome: OnboardingOutcome) {

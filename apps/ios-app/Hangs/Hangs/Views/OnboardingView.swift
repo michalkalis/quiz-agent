@@ -62,6 +62,8 @@ struct OnboardingView: View {
                     soundBars(color: style.text)
                 }
             }
+        } footer: {
+            aiDisclosure
         }
         .accessibilityIdentifier("onboarding.welcome")
     }
@@ -108,15 +110,19 @@ struct OnboardingView: View {
     private func illustratedPage(
         title: LocalizedStringKey,
         text: LocalizedStringKey,
-        @ViewBuilder illustration: () -> some View
+        @ViewBuilder illustration: () -> some View,
+        @ViewBuilder footer: () -> some View = { EmptyView() }
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: Theme.Hangs.Spacing.md)
             illustration()
                 .frame(maxWidth: .infinity)
             Spacer(minLength: Theme.Hangs.Spacing.xl)
-            textBlock(title: title, text: text)
-                .padding(.horizontal, Theme.Hangs.Spacing.sm)
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
+                textBlock(title: title, text: text)
+                footer()
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.sm)
             Spacer(minLength: Theme.Hangs.Spacing.md)
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -248,6 +254,29 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.sm)
+    }
+
+    /// #209 (App Review guideline 5.1.2(i)): before first use, name the AI
+    /// services that process the player's spoken answers and typed pack topics.
+    /// It sits on the welcome page above both of its buttons, so Continue and
+    /// Skip are the consent (`OnboardingViewModel` records it). The list must
+    /// match the backend.
+    private var aiDisclosure: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+            Text("Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter. By continuing, you agree.")
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("onboarding.aiDisclosure")
+
+            Button("Privacy Policy") {
+                openURL(Config.privacyPolicyURL)
+            }
+            .font(.hangsCaption.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .accessibilityIdentifier("onboarding.privacyPolicy")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder

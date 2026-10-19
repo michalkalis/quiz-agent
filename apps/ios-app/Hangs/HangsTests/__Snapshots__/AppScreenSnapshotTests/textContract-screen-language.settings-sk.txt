@@ -80,7 +80,7 @@ Zvuky nahrávania
 Krátky tón, keď sa zapne mikrofón. Vibrácia ostáva.
 
 účet
-Prihlás sa, aby ti po preinštalovaní zostalo Premium aj história.
+Prihlás sa, aby ti po preinštalovaní zostalo Trubbo Plus aj história.
 Exportuj moje údaje
 
 Exportuj moje údaje
@@ -122,6 +122,7 @@ Podmienky používania
 Podmienky používania
 
 Otázky a vyhodnotenie odpovedí generuje umelá inteligencia a môžu obsahovať nepresnosti.
+Tvoje hovorené odpovede a témy, ktoré napíšeš pre balíky, spracúvajú AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter.
 spätná väzba
 Odošli spätnú väzbu
 
@@ -176,4 +177,5 @@ settings.resetHistory
 settings.privacyPolicy
 settings.termsOfUse
 settings.aiDisclosure
+settings.aiServices
 settings.sendFeedback

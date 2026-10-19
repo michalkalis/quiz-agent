@@ -27,6 +27,17 @@ INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
 // the plist goes through the C preprocessor; only Local.xcconfig defines it.
 INFOPLIST_PREPROCESS = YES
 
+// MARK: - App Store variant (#209)
+// App Review installs with a sandbox receipt, the same signal TestFlight
+// tester surfaces key off (`BuildChannel`). The build submitted for review is
+// cut with `APP_STORE_VARIANT=YES` on the xcodebuild command line
+// (ios-release.yml input `store: true`), which adds the `APP_STORE` condition
+// and compiles every tester surface off. Default NO = the TestFlight build.
+APP_STORE_VARIANT = NO
+APP_STORE_CONDITION_YES = APP_STORE
+APP_STORE_CONDITION_NO =
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(APP_STORE_CONDITION_$(APP_STORE_VARIANT))
+
 // MARK: - API
 API_VERSION = /api/v1
 

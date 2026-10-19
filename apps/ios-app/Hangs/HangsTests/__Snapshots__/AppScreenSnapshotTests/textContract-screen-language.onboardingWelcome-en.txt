@@ -2,14 +2,22 @@
 trubbo
 ANSWER BY VOICE
 Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.
+Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter. By continuing, you agree.
+Privacy Policy
 ANSWER BY VOICE
 Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz.
+Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter. By continuing, you agree.
+Privacy Policy
 Continue
 Skip
 # identifiers
 onboarding.root
 onboarding.welcome
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.welcome
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.pageIndicator
 onboarding.continue
 onboarding.skip

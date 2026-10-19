@@ -69,7 +69,7 @@ struct OrderPackSummaryStep: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.hangsBody.weight(.semibold))
                 .foregroundStyle(Theme.Hangs.Colors.warning)
-            Text("Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.")
+            Text("Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately.")
                 .font(.hangsBody)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)

@@ -141,7 +141,7 @@ struct SettingsView: View {
                 account.deleteAccount(auth: appState.authService, onIdentityChanged: appState.myPacksViewModel.reset)
             }
         } message: {
-            Text("This permanently removes your data, history, and premium access. This can't be undone.")
+            Text("This permanently removes your data, history, and Trubbo Plus access. This can't be undone.")
         }
         .alert(
             "Something went wrong",
@@ -443,7 +443,7 @@ struct SettingsView: View {
                 // #194 C8: the gap belongs between the intro and the button only;
                 // the rows below sit flush like every other group.
                 VStack(spacing: Theme.Hangs.Spacing.sm) {
-                    Text("Sign in to keep your premium and history when you reinstall.")
+                    Text("Sign in to keep Trubbo Plus and your history when you reinstall.")
                         .font(.hangsBody)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                         .multilineTextAlignment(.leading)
@@ -632,16 +632,23 @@ struct SettingsView: View {
             }
             .accessibilityIdentifier("settings.termsOfUse")
 
-            // EU AI Act Art. 50 transparency: users must be told they are
-            // interacting with AI-generated content.
-            Text("Questions and answer evaluation are AI-generated and may contain inaccuracies.")
-                .font(.hangsBody(12))
-                .foregroundColor(Theme.Hangs.Colors.mutedFaint)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 18)
-                .padding(.vertical, Theme.Hangs.Spacing.sm)
-                .accessibilityIdentifier("settings.aiDisclosure")
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
+                // EU AI Act Art. 50 transparency: users must be told they are
+                // interacting with AI-generated content.
+                Text("Questions and answer evaluation are AI-generated and may contain inaccuracies.")
+                    .accessibilityIdentifier("settings.aiDisclosure")
+
+                // #209 (guideline 5.1.2(i)): the onboarding AI services disclosure,
+                // reachable again after onboarding. Keep the provider list in sync.
+                Text("Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter.")
+                    .accessibilityIdentifier("settings.aiServices")
+            }
+            .font(.hangsBody(12))
+            .foregroundColor(Theme.Hangs.Colors.mutedFaint)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 18)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
         }
     }
 

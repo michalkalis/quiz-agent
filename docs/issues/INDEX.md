@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 209 | [App Store review: verzia bez testerských prvkov, súhlas s AI](issue-209-app-store-review-cleanup.md) | bug · ready-for-human | `[~]` #209 | 2026-10-19: App Store variant buildu (`store: true`), AI súhlas v onboardingu; open = build pre App Review, privacy policy doplniť Amazon |
 | 208 | [TF test 2026-10-16: hlasové povely, prepis odpovede, stavy kvízu](issue-208-tf-voice-feedback-2026-10-16.md) | bug · ready-for-human | `[~]` #208 | 2026-10-16: 11 nálezov; prepis odpovede prepnutý na OpenAI (ElevenLabs STT preč), okamžitá odozva povelov, hláskovanie, stavy kvízu |
 | 207 | [Pripravenosť na produkciu so skutočnými používateľmi](issue-207-production-readiness.md) | chore · in-progress | `[~]` #207 | 2026-10-19: plán hotový (207.14, 207.16 po betu); otvorený incident 207.29 (Fly pack worker stojí od 10-16) + founder kroky |
 | 206 | [Voľba „bez lokálnych otázok“](issue-206-local-questions-filter.md) | enhancement · ready-for-agent | `[ ]` #206 | 2026-10-15: štítok „lokálna“ (krajina) na každej otázke, rovnaký klasifikátor pre starý korpus aj nové otázky; prepínač v appke, predvolene lokálne zapnuté |

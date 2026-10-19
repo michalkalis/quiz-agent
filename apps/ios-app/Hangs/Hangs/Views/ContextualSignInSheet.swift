@@ -102,7 +102,7 @@ struct ContextualSignInSheet: View {
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("signInPrompt.title")
 
-            Text("Signing in links Premium to your Apple account — it stays with you on a new phone or after reinstalling.")
+            Text("Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling.")
                 .font(.hangsBodyLG)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)

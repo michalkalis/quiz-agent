@@ -80,7 +80,7 @@ Recording sounds
 A short tone when the microphone turns on. The vibration stays.
 
 account
-Sign in to keep your premium and history when you reinstall.
+Sign in to keep Trubbo Plus and your history when you reinstall.
 Export my data
 
 Export my data
@@ -122,6 +122,7 @@ Terms of Use
 Terms of Use
 
 Questions and answer evaluation are AI-generated and may contain inaccuracies.
+Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter.
 feedback
 Send feedback
 
@@ -176,4 +177,5 @@ settings.resetHistory
 settings.privacyPolicy
 settings.termsOfUse
 settings.aiDisclosure
+settings.aiServices
 settings.sendFeedback

@@ -92,3 +92,25 @@ def test_worker_uses_the_resilient_settings_and_minute_heartbeat() -> None:
     assert WorkerSettings.redis_settings.retry is not None
     assert RedisConnectionError in WorkerSettings.redis_settings.retry_on_error
     assert WorkerSettings.health_check_interval == WORKER_HEALTH_CHECK_INTERVAL_S == 60
+
+
+def test_worker_boot_waits_out_a_redis_restart() -> None:
+    # 207.29 (2026-10-16): a Fly host crash took Redis away for minutes; ARQ's
+    # boot default gave up after ~5 s, every restart exited, Fly stopped the
+    # worker and paid orders had no generator for 2.5 days. A Redis machine
+    # restart is ~2-3 min; boot must keep trying well past that.
+    rs = WorkerSettings.redis_settings
+    assert rs.conn_retries * rs.conn_retry_delay >= 600
+    assert rs.conn_timeout >= 5
+
+
+def test_fly_always_restarts_the_worker() -> None:
+    # Second layer of 207.29: Fly's default (on-failure, 10 tries in 5 min)
+    # gives up on a crash loop. Whatever kills the worker, Fly brings it back.
+    import tomllib
+    from pathlib import Path
+
+    app_dir = Path(__file__).resolve().parents[2]
+    for name in ("fly.toml", "fly.staging.toml"):
+        cfg = tomllib.loads((app_dir / name).read_text())
+        assert {"policy": "always", "processes": ["worker"]} in cfg["restart"], name

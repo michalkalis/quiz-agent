@@ -214,10 +214,20 @@ def _worker_redis_settings(dsn: str) -> RedisSettings:
     an outage longer than that still exits, loudly, and the supervisor
     (launchd on mba, Fly on the Fly worker) restarts the process. WATCHed
     transactions are never retried by redis-py, so job pickup stays atomic.
+
+    #207 207.29: the retry above does not cover the FIRST connect at boot;
+    ARQ's own startup loop does (``conn_*``), and its default (5 tries, 1 s
+    apart, 1 s connect timeout) gave up within ~5-11 s. On 2026-10-16 a Fly
+    host crash took Redis away for minutes; every boot exited and Fly stopped
+    the worker for good. Boot now waits up to ~10 min (120 tries, 5 s apart,
+    5 s connect timeout: Fly's private network can be slow on a fresh boot).
     """
     rs = RedisSettings.from_dsn(dsn)
     rs.retry_on_error = [RedisConnectionError, RedisTimeoutError]
     rs.retry = Retry(ExponentialBackoff(cap=30, base=1), retries=6)
+    rs.conn_timeout = 5
+    rs.conn_retries = 120
+    rs.conn_retry_delay = 5
     return rs
 
 

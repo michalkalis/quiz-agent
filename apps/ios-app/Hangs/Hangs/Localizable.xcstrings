@@ -5653,19 +5653,19 @@
         }
       }
     },
-    "Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately." : {
+    "Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately." : {
       "comment" : "No-cancellation notice on the custom-pack payment step",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po zaplacení už objednávku nelze zrušit. Generování balíčku je prémiová placená služba a spustí se okamžitě."
+            "value" : "Po zaplacení už objednávku nelze zrušit. Generování balíčku je placená služba a spustí se okamžitě."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po zaplatení sa objednávka nedá zrušiť. Generovanie balíka je prémiová platená služba a spustí sa okamžite."
+            "value" : "Po zaplatení sa objednávka nedá zrušiť. Generovanie balíka je platená služba a spustí sa okamžite."
           }
         }
       }
@@ -8226,19 +8226,19 @@
         }
       }
     },
-    "Sign in to keep your premium and history when you reinstall." : {
+    "Sign in to keep Trubbo Plus and your history when you reinstall." : {
       "comment" : "Settings account section: benefit line shown above Sign in with Apple",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přihlas se, aby ti po přeinstalování zůstalo Premium i historie."
+            "value" : "Přihlas se, aby ti po přeinstalování zůstalo Trubbo Plus i historie."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prihlás sa, aby ti po preinštalovaní zostalo Premium aj história."
+            "value" : "Prihlás sa, aby ti po preinštalovaní zostalo Trubbo Plus aj história."
           }
         }
       }
@@ -8315,24 +8315,18 @@
         }
       }
     },
-    "Signing in links Premium to your Apple account — it stays with you on a new phone or after reinstalling." : {
+    "Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přihlášením se Premium naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování."
+            "value" : "Přihlášením se Trubbo Plus naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Po prihlásení sa Premium naviaže na tvoj Apple účet. Zostane ti aj na novom telefóne či po preinštalovaní."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Signing in links Premium to your Apple account, so it stays with you on a new phone or after reinstalling."
+            "value" : "Po prihlásení sa Trubbo Plus naviaže na tvoj Apple účet. Zostane ti aj na novom telefóne či po preinštalovaní."
           }
         }
       }
@@ -9521,19 +9515,19 @@
         }
       }
     },
-    "This permanently removes your data, history, and premium access. This can't be undone." : {
+    "This permanently removes your data, history, and Trubbo Plus access. This can't be undone." : {
       "comment" : "Delete-account alert message",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Natrvalo se odstraní tvoje údaje, historie i prémiový přístup. Nedá se to vrátit."
+            "value" : "Natrvalo se odstraní tvoje údaje, historie i přístup k Trubbo Plus. Nedá se to vrátit."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Natrvalo sa odstránia tvoje údaje, história aj prémiový prístup. Nedá sa to vrátiť."
+            "value" : "Natrvalo sa odstránia tvoje údaje, história aj prístup k Trubbo Plus. Nedá sa to vrátiť."
           }
         }
       }
@@ -10877,6 +10871,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Relácia vypršala. Prihlás sa znova."
+          }
+        }
+      }
+    },
+    "Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter." : {
+      "comment" : "Settings about section: which third-party AI services process the player's data (guideline 5.1.2(i))",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje hovorené odpovede a témy, ktoré napíšeš pre balíky, spracúvajú AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter."
+          }
+        }
+      }
+    },
+    "Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter. By continuing, you agree." : {
+      "comment" : "Onboarding welcome page: AI services disclosure; continuing counts as consent (guideline 5.1.2(i))",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračováním s tím souhlasíš."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje hovorené odpovede a témy, ktoré napíšeš pre balíky, spracúvajú AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračovaním s tým súhlasíš."
           }
         }
       }

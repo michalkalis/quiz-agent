@@ -128,6 +128,15 @@ platform :ios do
     # Env separation (#101): scheme/configuration always arrive explicitly from the
     # calling lane (`beta` = staging, `release` = prod) — env-critical settings never
     # ride Gymfile ambient defaults.
+    #
+    # #209: APP_STORE_VARIANT=YES (ios-release.yml input `store: true`) builds the
+    # App Store variant: the APP_STORE condition compiles every TestFlight tester
+    # surface off, because App Review's sandbox receipt looks like a TestFlight
+    # install. Anything else builds the TestFlight variant, unchanged.
+    store_variant = ENV["APP_STORE_VARIANT"] == "YES"
+    UI.user_error!("The App Store variant is a production build only.") if store_variant && configuration != "Release-Prod"
+    UI.important("App Store variant: tester surfaces compiled off.") if store_variant
+
     build_app(
       scheme: scheme,
       configuration: configuration,
@@ -139,9 +148,12 @@ platform :ios do
         signingStyle: "manual",
         teamID: "KAGWHPZZFQ"
       },
-      xcargs: "-allowProvisioningUpdates CURRENT_PROJECT_VERSION=#{next_build}"
+      xcargs: "-allowProvisioningUpdates CURRENT_PROJECT_VERSION=#{next_build} APP_STORE_VARIANT=#{store_variant ? 'YES' : 'NO'}"
     )
 
+    # Never distributed to external testers from here, the public beta group
+    # included: a store build reaches internal testers only, and an external
+    # group gets a build only when someone adds it in App Store Connect.
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,
@@ -149,7 +161,7 @@ platform :ios do
       skip_submission: true
     )
 
-    UI.success("Uploaded #{configuration} build #{next_build} to TestFlight.")
+    UI.success("Uploaded #{configuration} #{store_variant ? 'App Store variant' : 'TestFlight'} build #{next_build}.")
   end
 
   desc "Set export compliance (uses_non_exempt_encryption = false) for the latest TestFlight build."

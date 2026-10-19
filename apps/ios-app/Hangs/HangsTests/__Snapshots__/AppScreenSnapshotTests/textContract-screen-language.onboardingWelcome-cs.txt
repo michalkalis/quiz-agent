@@ -2,14 +2,22 @@
 trubbo
 ODPOVĚZ HLASEM
 Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Během kvízu nemusíš na nic klepat.
+Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračováním s tím souhlasíš.
+Zásady ochrany soukromí
 ODPOVĚZ HLASEM
 Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Během kvízu nemusíš na nic klepat.
+Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračováním s tím souhlasíš.
+Zásady ochrany soukromí
 Pokračuj
 Přeskoč
 # identifiers
 onboarding.root
 onboarding.welcome
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.welcome
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.pageIndicator
 onboarding.continue
 onboarding.skip

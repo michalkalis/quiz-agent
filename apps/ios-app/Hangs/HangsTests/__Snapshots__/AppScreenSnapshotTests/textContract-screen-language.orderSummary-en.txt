@@ -5,7 +5,7 @@ Quiz language
 English
 Price
 8,99 €
-Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.
+Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately.
 Pay & create pack
 # identifiers
 orderPack.summaryPrompt

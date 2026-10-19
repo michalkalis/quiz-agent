@@ -21,6 +21,11 @@ on:
         description: "Minimum build number (use to nudge past a stuck number reserved by Apple)"
         required: false
         default: "0"
+      store:
+        description: "App Store variant (#209): every TestFlight tester surface compiled off. Only for App Review; production only; never sent to the external beta group"
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   # Prevent parallel release runs stepping on each other (match cert locks, build number races).
@@ -62,6 +67,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Guard — App Store variant is production only
+        # #209: the store build is the one App Review installs; a staging store
+        # build would point the reviewer at the staging backend.
+        if: inputs.store && inputs.environment != 'production'
+        run: |
+          echo "::error::store: true needs environment: production"
+          exit 1
 
       - name: Guard — required secrets present
         # Fail fast with a friendly message if any secret is missing, instead of leaking
@@ -135,6 +148,8 @@ jobs:
           # Override Matchfile to point at the isolated keychain on disk.
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
           BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
+          # #209: YES compiles the APP_STORE condition in (Shared.xcconfig).
+          APP_STORE_VARIANT: ${{ inputs.store && 'YES' || 'NO' }}
         # environment input picks the lane: staging → beta (Hangs-Staging), production → release (Hangs-Prod).
         run: bundle exec fastlane ios ${{ inputs.environment == 'production' && 'release' || 'beta' }}
 
@@ -150,6 +165,9 @@ jobs:
           VERSION=$(plutil -extract CFBundleShortVersionString raw "$PLIST")
           BUILD=$(plutil -extract CFBundleVersion raw "$PLIST")
           SUFFIX=${{ inputs.environment == 'production' && '""' || '"-staging"' }}
+          # #209: the App Store variant is tagged apart, never mistaken for a
+          # TestFlight build with tester surfaces.
+          if [ "${{ inputs.store }}" = "true" ]; then SUFFIX="${SUFFIX}-store"; fi
           TAG="ios/${VERSION}-b${BUILD}${SUFFIX}"
           git tag "$TAG" "$GITHUB_SHA"
           git push origin "refs/tags/$TAG"

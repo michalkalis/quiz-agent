@@ -41,6 +41,7 @@
 		</dict>
 #endif
 	</dict>
+#ifdef DEBUG
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -52,6 +53,7 @@
 			</array>
 		</dict>
 	</array>
+#endif
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

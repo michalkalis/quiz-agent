@@ -13,6 +13,7 @@
 //    `hasCompletedOnboarding` — clearing it would re-trigger onboarding on next launch.
 //
 
+import Foundation
 @testable import Hangs
 import Testing
 
@@ -135,5 +136,54 @@ struct OnboardingViewModelTests {
         await vm.requestMicPermission()
         // 3b-Denied is a branch of the permission step, not a fourth dot
         #expect(vm.pageIndex == 2)
+    }
+}
+
+// MARK: - AI services consent (#209, guideline 5.1.2(i))
+
+/// App Review requires explicit consent before spoken answers and typed topics
+/// reach third-party AI services. The welcome page shows the disclosure above
+/// both of its buttons, so leaving it either way is the consent, and nothing
+/// else may count: a consent recorded before the player saw the text is void.
+@MainActor
+@Suite("Onboarding AI services consent (#209)")
+struct OnboardingAIConsentTests {
+    private func make() -> (OnboardingViewModel, UserDefaults) {
+        let defaults = UserDefaults(suiteName: "OnboardingAIConsentTests.\(UUID().uuidString)")!
+        let vm = OnboardingViewModel(
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            consentDefaults: defaults
+        )
+        return (vm, defaults)
+    }
+
+    @Test("no consent before the player leaves the welcome page")
+    func noConsentUpFront() {
+        let (_, defaults) = make()
+        #expect(!AIProcessingConsent.hasConsented(defaults: defaults))
+    }
+
+    @Test("Continue on the welcome page records consent")
+    func continueConsents() {
+        let (vm, defaults) = make()
+        vm.advance()
+        #expect(AIProcessingConsent.hasConsented(defaults: defaults))
+    }
+
+    @Test("Skip on the welcome page records consent too")
+    func skipConsents() {
+        let (vm, defaults) = make()
+        vm.continueWithoutMic()
+        #expect(vm.isComplete)
+        #expect(AIProcessingConsent.hasConsented(defaults: defaults))
+    }
+
+    @Test("a consent from an older disclosure text no longer counts")
+    func olderVersionIsVoid() {
+        let (_, defaults) = make()
+        AIProcessingConsent.record(defaults: defaults)
+        defaults.set(AIProcessingConsent.currentVersion - 1, forKey: AIProcessingConsent.versionKey)
+        #expect(!AIProcessingConsent.hasConsented(defaults: defaults))
     }
 }

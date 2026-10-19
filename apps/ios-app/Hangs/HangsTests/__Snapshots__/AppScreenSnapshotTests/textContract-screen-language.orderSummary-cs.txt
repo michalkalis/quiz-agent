@@ -5,7 +5,7 @@ Jazyk kvízu
 English
 Cena
 8,99 €
-Po zaplacení už objednávku nelze zrušit. Generování balíčku je prémiová placená služba a spustí se okamžitě.
+Po zaplacení už objednávku nelze zrušit. Generování balíčku je placená služba a spustí se okamžitě.
 Zaplať a vytvoř balíček
 # identifiers
 orderPack.summaryPrompt

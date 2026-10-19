@@ -62,7 +62,7 @@ Evidence is thin: no named trivia account with verified numbers was found; forma
 | # | Format | Why |
 |---|---|---|
 | 1 | Timer reel: voice asks, 5 s countdown, monkey reveals, one-line "why" | Native to the product, fully automatable |
-| 2 | Question carousel ("10 questions, answers on the last slide") | Carousels win saves/sends on IG; fully automatable |
+| 2 | Question carousel ("9 questions, answers on the last slide"; API cap 10 items) | Carousels win saves/sends on IG; fully automatable |
 | 3 | Kids vs parents / couple in the car (real, passenger films) | Highest shareability; human content the algorithm prefers |
 | 4 | "Only 23 % of Trubbo players knew this" — real numbers from #205 | Honest version of the "1 % get this" bait |
 | 5 | Comment a topic → custom pack built and played next video | Showcases the €8.99 custom pack (hypothesis) |

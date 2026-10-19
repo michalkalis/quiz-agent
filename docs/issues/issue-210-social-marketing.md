@@ -43,7 +43,7 @@ Buffer free = 3 channels × 10 queued posts → TikTok EN, TikTok SK/CZ, YouTube
 ## Formats (test designs; keep what wins)
 
 1. **Timer reel** — voice asks, 5 s countdown, monkey reveals the answer, one-line "why", ends with "send this to someone who'd get it wrong". 9:16, 12–20 s.
-2. **Carousel** — 5–10 questions, answers on the last slide. 1080×1350.
+2. **Carousel** — 5–9 questions, answers on the last slide (Instagram API cap: 10 items). 1080×1350.
 3. **Story** — daily question with a quiz/poll sticker (sticker added by hand, ~30 s/day).
 4. **"Only N % of players knew this"** — real numbers once #205 is on in prod.
 5. **Comment a topic → custom pack** — next video shows the pack being made and played (custom pack showcase).

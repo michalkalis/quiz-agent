@@ -33,6 +33,8 @@ TestFlight buildy len na požiadanie foundera (CLAUDE.md, pravidlo 8). Každý n
 | **Public beta** | externá | verejný link (limit 50) + pozvaní e-mailom | len na povel „pošli do bety“; každý build prejde beta kontrolou Apple (zvyčajne hodiny) |
 | ~~Alpha~~ | externá | zrušená, e-mailoví testeri patria do Public beta | |
 
+Automatické buildy internej skupiny Apple nastavuje len pri jej založení, neskôr sa nedajú zmeniť (API ani web). Preto family+friends bola 2026-10-19 založená nanovo bez nich; nová interná skupina sa zakladá rovno so správnym nastavením.
+
 Povel foundera = súhlas na zápis do App Store Connect pre ten krok. Príkazy (bez `-f apply=true` len skúšobný beh):
 
 - nastavenie skupín: `gh workflow run asc-store-upload.yml -f steps=groups-setup -f apply=true`

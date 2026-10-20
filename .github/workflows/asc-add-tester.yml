@@ -1,0 +1,59 @@
+name: asc-add-tester
+
+# Adds a TestFlight tester to a group (skill /add-tester). Dry run unless `apply` is checked.
+# The repo is public: e-mail and name are masked before anything is logged.
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Tester e-mail (their Apple ID)"
+        required: true
+      first_name:
+        description: "First name"
+        default: ""
+      last_name:
+        description: "Last name"
+        default: ""
+      group:
+        description: "TestFlight group"
+        type: choice
+        options: [family+friends, Public beta, Founder]
+        default: family+friends
+      apply:
+        description: "Write to App Store Connect (unchecked = dry run)"
+        type: boolean
+        default: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Mask tester details
+        run: |
+          for k in email first_name last_name; do
+            v=$(jq -r ".inputs.$k // empty" "$GITHUB_EVENT_PATH")
+            [[ -n "$v" ]] && echo "::add-mask::$v"
+          done
+          true
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyjwt cryptography requests
+      - name: Add tester
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+          # Inputs go through env, never into the script text (no shell injection).
+          EMAIL: ${{ inputs.email }}
+          FIRST: ${{ inputs.first_name }}
+          LAST: ${{ inputs.last_name }}
+          GROUP: ${{ inputs.group }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          [[ "$EMAIL" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[a-zA-Z]+$ ]] || { echo "invalid email"; exit 1; }
+          args=(--email "$EMAIL" --first-name "$FIRST" --last-name "$LAST" --group "$GROUP")
+          [[ "$APPLY" == "true" ]] && args+=(--apply)
+          python scripts/asc_add_tester.py "${args[@]}"

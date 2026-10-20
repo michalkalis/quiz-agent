@@ -40,7 +40,9 @@ Povel foundera = súhlas na zápis do App Store Connect pre ten krok. Príkazy (
 - nastavenie skupín: `gh workflow run asc-store-upload.yml -f steps=groups-setup -f apply=true`
 - poslať build N skupine: `gh workflow run asc-store-upload.yml -f steps=promote -f build=N -f group="family+friends" -f apply=true` (alebo `Founder`, `Public beta`)
 
-**Pridanie blízkeho testera (robí founder):**
+**Nový tester cez agenta:** skill `/add-tester <e-mail>` (workflow `asc-add-tester.yml`). Blízkemu najprv príde pozvánka do App Store Connect; po jej prijatí agent beh zopakuje a pridá ho do skupiny. Ručný postup nižšie platí, ak API pozvánku odmietne.
+
+**Pridanie blízkeho testera ručne:**
 1. App Store Connect → Users and Access → „+“.
 2. Meno, e-mail jeho Apple ID, rola **Customer Support**; v časti Apps zvoliť len Trubbo.
 3. Po prijatí pozvánky: Apps → Trubbo → TestFlight → Internal Testing → family+friends → Testers „+“ → vybrať ho.

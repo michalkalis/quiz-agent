@@ -33,6 +33,6 @@ If the dry run looks right, repeat with `-f apply=true`. The repo is public: e-m
 | `invited:` | internal group, person had no App Store Connect access yet; invitation sent | they accept the App Store Connect e-mail (signing in with their Apple ID), then rerun this skill to finish |
 | `pending:` | invitation still not accepted | same as above, ping the tester |
 | `done: already a tester` | nothing to do | — |
-| `!! 403` on `/userInvitations` | API key lacks Admin role | founder does steps 1–2 of „Pridanie blízkeho testera“ in `docs/setup/release-flow.md` manually, then rerun |
+| `!! 403` on `/userInvitations` | the `ASC_ADMIN_API_KEY_*` secrets are missing or the key is not Admin (the regular App Manager key gets `ROLES_NOT_ALLOWED`) | founder checks the Admin key; meanwhile steps 1–2 of „Pridanie blízkeho testera“ in `docs/setup/release-flow.md` by hand, then rerun |
 
 The tester gets builds only once a build is in their group: Founder automatically, others on the founder's command (`asc-store-upload.yml -f steps=promote`). Offer to add the latest build if the founder wants them testing now.

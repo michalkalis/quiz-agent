@@ -43,9 +43,10 @@ jobs:
       - run: pip install pyjwt cryptography requests
       - name: Add tester
         env:
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          # Inviting App Store Connect users needs an Admin key; kept separate so other workflows stay on the App Manager key.
+          ASC_API_KEY_ID: ${{ secrets.ASC_ADMIN_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
-          ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
+          ASC_API_KEY_CONTENT: ${{ secrets.ASC_ADMIN_API_KEY_CONTENT }}
           # Inputs go through env, never into the script text (no shell injection).
           EMAIL: ${{ inputs.email }}
           FIRST: ${{ inputs.first_name }}

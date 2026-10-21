@@ -42,6 +42,8 @@ Buffer free = 3 channels × 10 queued posts → TikTok EN, TikTok SK/CZ, YouTube
 
 ## Formats (test designs; keep what wins)
 
+**Content plan (2026-10-21):** [issue-210-content-plan.md](issue-210-content-plan.md) — series, week rhythm, reel anatomy, hooks, captions, season, metrics. It supersedes the cadence and format 6 below: founder clips are a bonus, not planned; voice = the app's voice; the monkey doesn't speak.
+
 1. **Timer reel** — voice asks, 5 s countdown, monkey reveals the answer, one-line "why", ends with "send this to someone who'd get it wrong". 9:16, 12–20 s.
 2. **Carousel** — 5–9 questions, answers on the last slide (Instagram API cap: 10 items). 1080×1350.
 3. **Story** — daily question with a quiz/poll sticker (sticker added by hand, ~30 s/day).
@@ -53,9 +55,9 @@ Target cadence per account: 4–5 reels/carousels per week + daily story.
 
 ## Sub-tasks
 
-- [ ] **210.1 Founder: accounts** (founder steps below). Brand accounts on hi@trubbo.app, professional (Business) Instagram, TikTok, YouTube channel, Buffer free; new personal Instagram.
+- [~] **210.1 Founder: accounts** (2026-10-21: Instagram EN + SK/CZ, YouTube, Buffer done; TikTok blocked on the email code; personal IG later — neither blocks 210.2–210.4) (founder steps below). Brand accounts on hi@trubbo.app, professional (Business) Instagram, TikTok, YouTube channel, Buffer free; new personal Instagram.
 - [ ] **210.2 Skills setup.** Project-scoped install of Remotion agent skills and `coreyhaines31/marketingskills` (`social`, `video`, `aso`, `launch`, `attribution`, `paywalls`); a short brand-voice note for captions (EN + sk/cs) reusing copy-style rules.
-- [ ] **210.3 Content renderer** (`apps/social-studio`, Remotion, one README). Compositions: timer reel 9:16, carousel slides, story frame; monkey animated from the master SVG (blink, bounce, correct/wrong); word-level captions; brand fonts/colors from the design tokens. Input = one question row (text, answer, explanation, language, category). Voice: reuse the question's existing ElevenLabs audio, generate only if missing.
+- [ ] **210.3 Content renderer** (`apps/social-studio`, Remotion, one README). Compositions: timer reel 9:16, MCQ reel, "How it plays" round (app screens + app voice), carousel slides, story frame; monkey animated from the master SVG (blink, bounce, correct/wrong); word-level captions; brand fonts/colors from the design tokens. Input = one question row (text, answer, explanation, language, category). Voice: reuse the question's existing ElevenLabs audio, generate only if missing.
 - [ ] **210.4 Weekly batch job.** Picks questions (approved, fun-scored, fresh entertainment preferred, mixed categories, ~20–30 % MCQ), never repeats one already posted (posted log), renders EN + sk/cs, writes captions + hashtags, and publishes a review page (claude.ai artifact) where the founder approves or rejects each post.
 - [ ] **210.5 Instagram publishing.** Own Meta app (Instagram API with Instagram Login, Standard Access, no app review), media on R2 (public bucket), long-lived token in `.env` with a refresh job, schedules approved posts, sets the AI-generated flag where appropriate. Check the account's real posting limit first.
 - [ ] **210.6 Buffer for TikTok + Shorts.** Approved reels pushed to Buffer via its API (free plan includes API); stickers/music added on the phone via "Notify me".

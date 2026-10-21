@@ -206,6 +206,10 @@ def prepare_questions(
     return prepared
 
 
+# asyncpg's limit on bind parameters in one query.
+_MAX_QUERY_PARAMS = 32767
+
+
 def _batched(items: Sequence, size: int) -> Iterable[Sequence]:
     for i in range(0, len(items), size):
         yield items[i:i + size]
@@ -338,14 +342,20 @@ async def import_questions(
 
         rows = [_row_to_insert_dict(question_to_row(q)) for q in to_insert]
         if rows:
+            # One multi-row INSERT binds one parameter per column per row, and
+            # asyncpg caps a query at 32767 (#203: a 1470-row import failed).
+            # Chunk under that cap, all inside one transaction: still all or nothing.
+            # The compiled INSERT carries every table column (defaults included).
+            rows_per_insert = _MAX_QUERY_PARAMS // len(QuestionRow.__table__.columns)
             async with async_engine.begin() as conn:
-                stmt = (
-                    pg_insert(QuestionRow.__table__)
-                    .values(rows)
-                    .on_conflict_do_nothing(index_elements=["id"])
-                )
-                insert_result = await conn.execute(stmt)
-                result.inserted = insert_result.rowcount or 0
+                for chunk in _batched(rows, rows_per_insert):
+                    stmt = (
+                        pg_insert(QuestionRow.__table__)
+                        .values(list(chunk))
+                        .on_conflict_do_nothing(index_elements=["id"])
+                    )
+                    insert_result = await conn.execute(stmt)
+                    result.inserted += insert_result.rowcount or 0
         return result
     finally:
         if owned_engine:

@@ -1,5 +1,7 @@
 # Issue #210 — Content plan (what we post, how it is made)
 
+**Status:** draft direction, parked 2026-10-21 — founder wants strategy research first (what to optimize, what worked for comparable apps); revisit after it.
+
 **Created:** 2026-10-21 · Parent: [issue-210-social-marketing.md](issue-210-social-marketing.md) · Founder-facing version: https://claude.ai/artifact/8MK4jssMpjSdkbRY8wMvNL
 
 ## Founder decisions (2026-10-21)
@@ -21,7 +23,7 @@
 
 | Pillar | Share | Series |
 |---|---|---|
-| Play along | 70 % | **5 Seconds** (3×/wk reel), **A, B or C** (MCQ reel, "comment the letter", 1×/wk), **Road Trip Round** (IG carousel, 7 questions + answers slide, 1×/wk) |
+| Play along | 70 % | **5 Seconds** (2×/wk reel), **A, B or C** (MCQ reel, "comment the letter", 1×/wk), **Road Trip Round** (IG carousel, 7 questions + answers slide, 1×/wk) |
 | How it plays | 20 % | **How it plays** (1×/wk): one round in the app, app screens + app voice, player's answer as caption, right/wrong |
 | Season | 10 % | Halloween 31. 10. (only if the renderer is ready), Martin 11. 11. (SK/CZ), Black Friday 27. 11. (offer = founder decides), Advent 1.–24. 12., Christmas road trips, New Year party, January = Plus month |
 | Bonus | — | **I play Trubbo** (founder clip), later **Duel** (two people head to head) |
@@ -45,7 +47,7 @@ CS: Řekni to nahlas. Máš 5 vteřin. · Odpověz dřív než opička. · Jedna
 
 ## Captions
 
-Line 1 = the question (platform search). Line 2 = answer in the comments before the reveal. App named explicitly in every 3rd post, logo always. 3–5 hashtags. Link in bio → per-language page on trubbo.app with a campaign token per channel (210.7). Clean export per platform (no other platform's watermark), caption rewritten per platform.
+Line 1 = the question (platform search). Line 2 = answer in the comments before the reveal. App named explicitly in every 3rd post, logo always. 3–5 hashtags. Link in bio → per-language page on trubbo.app with a campaign token per channel (210.7 — attribution). Clean export per platform (no other platform's watermark), caption rewritten per platform.
 
 ## Measure
 

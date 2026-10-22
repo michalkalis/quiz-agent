@@ -6,6 +6,8 @@
 //  Dec-Zabava-Topics). Multi-select stays (#82 decision 7): each tile toggles
 //  its category, "All Categories" clears the selection. Changes apply at once
 //  (as in the beta menu); Done and the swipe only close the sheet.
+//  #206: the "local questions" switch sits under the tiles (founder picked
+//  variant B, 2026-10-22) — it shapes which questions come, like categories.
 //
 
 import SwiftUI
@@ -14,6 +16,7 @@ struct HomeCategoryPicker: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var categories: [String]
+    @Binding var includeLocalQuestions: Bool
 
     var body: some View {
         ScrollView {
@@ -31,6 +34,7 @@ struct HomeCategoryPicker: View {
                         tile(id)
                     }
                 }
+                localQuestionsRow
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.top, Theme.Hangs.Spacing.xl)
@@ -108,6 +112,16 @@ struct HomeCategoryPicker: View {
         .accessibilityIdentifier("home.category.\(id)")
     }
 
+    private var localQuestionsRow: some View {
+        HangsToggleRow(
+            label: "Local questions",
+            subtitle: "For example, a city's bus routes or a local card game",
+            isOn: $includeLocalQuestions
+        )
+        .background(surface(cornerRadius: Theme.Hangs.Radius.card))
+        .accessibilityIdentifier("home.categories.localQuestions")
+    }
+
     /// Filled check in the tile's text colour when on, an empty ring when off.
     private func checkMark(isOn: Bool, style: Theme.Hangs.Category.Style?) -> some View {
         let ink = style?.text ?? Theme.Hangs.Colors.ink
@@ -168,6 +182,7 @@ struct HomeCategoryPicker: View {
 #if DEBUG
     #Preview {
         @Previewable @State var categories = ["geography-world", "history"]
-        HomeCategoryPicker(categories: $categories)
+        @Previewable @State var includeLocal = true
+        HomeCategoryPicker(categories: $categories, includeLocalQuestions: $includeLocal)
     }
 #endif

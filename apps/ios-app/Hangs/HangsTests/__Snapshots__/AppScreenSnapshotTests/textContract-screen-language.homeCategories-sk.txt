@@ -8,6 +8,9 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
+Lokálne otázky
+Napríklad bratislavská MHD alebo kartová hra prší
+
 Hotovo
 # identifiers
 home.category.all
@@ -18,4 +21,5 @@ home.category.movies-music
 home.category.sports
 home.category.food-everyday
 home.category.entertainment
+home.categories.localQuestions
 home.categories.done

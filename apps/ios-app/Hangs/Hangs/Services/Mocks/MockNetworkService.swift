@@ -150,6 +150,10 @@ import os
         /// Last `includeImages` value passed to `createSession` — asserts the Home
         /// toggle actually reaches the session request (#68).
         var capturedIncludeImages: Bool?
+        /// Last `skipLocalQuestions` sent with `createSession` / the availability
+        /// probe — asserts the Categories switch reaches both requests (#206).
+        var capturedSkipLocalQuestions: Bool?
+        var capturedAvailabilitySkipLocalQuestions: Bool?
 
         /// Last `categories` value passed to `createSession` — asserts the Home
         /// multi-select actually reaches the session request (#82 item 4).
@@ -195,7 +199,7 @@ import os
         /// (five questions, crowd strips, the result once it is played).
         var dailyScript: DailyMockScript?
 
-        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
+        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions
             capturedPackId = packId
@@ -206,6 +210,7 @@ import os
             // deterministically cancel from `onCreateSession` and observe the throw.
             try Task.checkCancellation()
             capturedIncludeImages = includeImages
+            capturedSkipLocalQuestions = skipLocalQuestions
             capturedCategories = categories
             if createSessionFailuresBeforeSuccess > 0 {
                 createSessionFailuresBeforeSuccess -= 1
@@ -234,8 +239,9 @@ import os
         var capturedAvailabilityExcludedIds: [String]?
         var capturedAvailabilityRequestedCount: Int?
 
-        func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+        func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
             questionAvailabilityCallCount += 1
+            capturedAvailabilitySkipLocalQuestions = skipLocalQuestions
             capturedAvailabilityRequestedCount = requestedCount
             capturedAvailabilityExcludedIds = excludedQuestionIds
             if let error = questionAvailabilityError { throw error }

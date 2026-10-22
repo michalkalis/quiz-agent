@@ -125,7 +125,10 @@ struct HomeView: View {
             AudioDevicePickerView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingCategoryPicker) {
-            HomeCategoryPicker(categories: $viewModel.settings.categories)
+            HomeCategoryPicker(
+                categories: $viewModel.settings.categories,
+                includeLocalQuestions: $viewModel.settings.includeLocalQuestions
+            )
         }
     }
 

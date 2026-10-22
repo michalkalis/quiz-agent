@@ -12,11 +12,11 @@ import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession
     /// #174: how many unseen questions this configuration still has, asked
     /// BEFORE the session is created. Read-only and cheap (one COUNT server
     /// side) so it can sit on the tap-to-start path.
-    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     /// `questionId` (#133 1a) is the id of the question the submission answers —
     /// pass it on EVERY submit. The backend then replays an already-graded
@@ -296,7 +296,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, packId: String? = nil) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, skipLocalQuestions: Bool = false, packId: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         let base = baseURL
@@ -324,6 +324,8 @@ actor NetworkService: NetworkServiceProtocol {
             "mode": "single",
             "language": language,
             "include_images": includeImages,
+            // #206: only universal questions when the player switched local ones off.
+            "skip_local_questions": skipLocalQuestions,
         ]
 
         // Add category filter if any selected (#82 item 4: multi-select list;
@@ -357,7 +359,7 @@ actor NetworkService: NetworkServiceProtocol {
         }
     }
 
-    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
         let endpoint = baseURL.appendingPathComponent("/api/v1/questions/availability")
 
         var request = URLRequest(url: endpoint)
@@ -376,6 +378,7 @@ actor NetworkService: NetworkServiceProtocol {
             "difficulty": difficulty,
             "language": language,
             "include_images": includeImages,
+            "skip_local_questions": skipLocalQuestions,
             "excluded_question_ids": excludedQuestionIds,
         ]
         if !categories.isEmpty {

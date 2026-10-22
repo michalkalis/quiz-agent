@@ -3613,6 +3613,22 @@
         }
       }
     },
+    "For example, a city's bus routes or a local card game" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Třeba pražská MHD nebo karetní hra prší"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napríklad bratislavská MHD alebo kartová hra prší"
+          }
+        }
+      }
+    },
     "Free limit reached" : {
       "comment" : "Error title: user hit the free monthly question quota",
       "localizations" : {
@@ -4716,6 +4732,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Načítavam…"
+          }
+        }
+      }
+    },
+    "Local questions" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Místní otázky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokálne otázky"
           }
         }
       }

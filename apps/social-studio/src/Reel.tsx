@@ -300,10 +300,10 @@ const EndCard: React.FC<{q: ReelProps['q']; appear: number; startFrame: number}>
 			<div style={{width: 340, height: 340, borderRadius: 170, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 				<Monkey size={260} mood="happy" delay={startFrame} />
 			</div>
-			<div style={{fontSize: 84, fontWeight: 800, lineHeight: 1.08, textAlign: 'center', color: tint.onBg, letterSpacing: -1.2}}>{copy.send}</div>
-			<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14}}>
-				<div style={{fontSize: 64, fontWeight: 800, color: tint.onBg}}>Trubbo</div>
-				<div style={{fontSize: 38, fontWeight: 600, color: tint.onBg, opacity: 0.85}}>{copy.soon}</div>
+			<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20}}>
+				<div style={{fontSize: 120, fontWeight: 800, color: tint.onBg, letterSpacing: -2}}>Trubbo</div>
+				<div style={{fontSize: 60, fontWeight: 700, lineHeight: 1.1, textAlign: 'center', color: tint.onBg}}>{copy.tagline}</div>
+				<div style={{fontSize: 38, fontWeight: 600, color: tint.onBg, opacity: 0.85, marginTop: 24}}>{copy.soon}</div>
 			</div>
 		</AbsoluteFill>
 	);

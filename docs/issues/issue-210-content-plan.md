@@ -29,21 +29,27 @@
 | Bonus | — | **I play Trubbo** (founder clip), later **Duel** (two people head to head) |
 | Later | — | **Only N % knew** (after #205 — daily challenge vs the crowd is live), **You pick the topic** (custom pack from a comment) |
 
-Story "Question of the day": agent renders the frame, founder adds the quiz sticker when there is time.
+Stories (followers only, 24 h): published by the agent like everything else, without interactive stickers. Founder decision 2026-10-22: no quiz or poll stickers, they can only be added by hand in the Instagram app. A, B or C stays a reel, answers in the comments.
 
 ## 5 Seconds reel (9:16, ~17 s, no baked-in music)
 
-0–1.5 s hook text · 1.5–6 s question read by the app voice, word-level captions · 6–11 s countdown, monkey thinking · 11–15 s answer + one-line why from the question's explanation · 15–17 s "Send this to someone who'd get it wrong", logo, "link in bio". Long questions get a shortened on-screen/voice wording shown on the approval page. Test a 3-question ~45 s variant (2026 Reels data: 45–60 s gets the most views).
+0–1.5 s hook text · 1.5–6 s question read by the app voice, word-level captions · 6–11 s countdown, monkey thinking · 11–15 s answer + one-line why from the question's explanation · 15–17 s end card: logo, tagline ("Trivia you answer out loud" · "Kvíz, ktorý hráš hlasom" · "Kvíz, který hraješ hlasem"), coming soon + trubbo.app. No call to action (founder pick 2026-10-22). Long questions get a shortened on-screen/voice wording shown on the approval page. Test a 3-question ~45 s variant (2026 Reels data: 45–60 s gets the most views).
 
 ## Week per account
 
 Mon 5 Seconds · Tue Road Trip Round · Wed A, B or C · Thu How it plays (or founder clip) · Fri 5 Seconds (weekend theme) · Sat/Sun off; Sunday batch approval. = 5 IG posts + 4 videos to TikTok/Shorts. Buffer data (2.1M posts, 2026): 3–5/wk is the sweet spot. SK/CZ account: same rhythm, one language per video, alternating sk/cs.
 
-## Hooks (rotate; never invented percentages)
+## Hooks (rotate; never invented percentages, never "pause the video")
 
-EN: Say it out loud. 5 seconds. · Answer before the monkey does. · One question. No googling. · Road trip round, part N. · Pause if you need more time.
+EN: Say it out loud. 5 seconds. · Answer before the monkey does. · One question. No googling. · Road trip round, part N.
 SK: Povedz to nahlas. Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvíz na cestu, N. diel.
 CS: Řekni to nahlas. Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvíz na cestu, N. díl.
+
+## Profile bio (founder pick 2026-10-22)
+
+EN: Odd, funny questions with a story behind the answer. You answer out loud.
+SK/CZ: Zvláštne, vtipné otázky s príbehom za odpoveďou. Odpovedáš nahlas.
+Second line on both: coming soon + trubbo.app in the link field. Never claim "no tapping" or "no screen": the app has buttons and a screen.
 
 ## Captions
 

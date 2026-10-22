@@ -34,9 +34,9 @@ Všetko za prepínačom `GEN_HOUSE_STYLE_V2` (predvolene vypnutý): štýl domu 
 
 ## Úlohy
 
-- [ ] **211.1 Štýl domu v2** (sk/cs natívne + en pravidlo stavby), prepínač, pečiatka verzie, testy hranice (hák bez pointy zakázaný, kontrastný hák povolený, kvóta ostáva).
-- [ ] **211.2 Kontrola prirodzenosti**: modul + prompt + testy, hook v importéri (sk/cs), prepínač `NATURALNESS_CHECK`.
-- [ ] **211.3 Pilot**: sk, cs, en, súčasný recept vs v2 v jednom kole, 10 + 10 na jazyk naslepo; do produ pri v2 ≥ súčasný a ≥ 7. Pri tom zmerať, či otázky označené kontrolou majú nižšie hodnotenie.
+- [x] **211.1 Štýl domu v2** (PR #545, 2026-10-22; vypnutý) (sk/cs natívne + en pravidlo stavby), prepínač, pečiatka verzie, testy hranice (hák bez pointy zakázaný, kontrastný hák povolený, kvóta ostáva).
+- [x] **211.2 Kontrola prirodzenosti** (PR #546, nasadené 2026-10-22, zapnutá; Opus 5.5): modul + prompt + testy, hook v importéri (sk/cs), prepínač `NATURALNESS_CHECK`.
+- [~] **211.3 Pilot** (2026-10-22: `docs/testing/runs/natural-sk-cs-2026-10-22/`, 6 tém × 2 otázky, predplatné; 57 otázok na hodnotenie https://claude.ai/artifact/YSkhBYaVKpD2BdicrHSAAA, os navyše „znie prirodzene“; kontrola prirodzenosti predbežne A 10/22 vs B 5/23 sk+cs označených, `naturalness.json`; open = founder hodnotenie): sk, cs, en, súčasný recept vs v2 v jednom kole, 10 + 10 na jazyk naslepo; do produ pri v2 ≥ súčasný a ≥ 7. Pri tom zmerať, či otázky označené kontrolou majú nižšie hodnotenie.
 - [ ] **211.4 Upratanie korpusu**: backfill sk/cs, slepé páry prepisov, potom prepis alebo vyradenie označených.
 - [ ] **211.5 Zapnutie**: `GEN_HOUSE_STYLE_V2=1` (prod + mba worker), recept `general-corpus-recipe.md` a `fresh-entertainment-recipe.md` na v2.
 

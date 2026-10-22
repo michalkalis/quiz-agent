@@ -30,6 +30,9 @@ os.environ["LLM_GATEWAY"] = "direct"
 # above; its own tests stub the classifier or set the flag explicitly.
 os.environ["TOPICALITY_CLASSIFICATION"] = "0"
 os.environ["LOCAL_SCOPE_CLASSIFICATION"] = "0"
+# The dedup gray-zone judge is default-on too (2026-10-22): pinned off for the
+# same reason; its own tests set or clear the flag explicitly.
+os.environ["DEDUP_GRAYZONE_JUDGE"] = "0"
 # #196: with ANTHROPIC_API_KEY set, every Claude chat id routes to the native
 # Anthropic API instead of the OpenAI-compatible endpoints these tests mock.
 # Blank it BEFORE .env loads (load_dotenv never overrides an existing var) so a

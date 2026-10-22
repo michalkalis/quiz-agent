@@ -384,7 +384,7 @@ def judge_models() -> list[str] | None:
 # Read ONLY by the corpus CLI (`scripts/generate_pack.py`) and the replay
 # harness (`scripts/replay_dedup_json.py`). `app/worker/tasks.py` never reads
 # them, so a mis-set prod secret cannot change a customer pack (locked 3).
-# Every default is OFF; nothing here is enabled in prod.
+# Every default is OFF except the gray-zone judge (founder 2026-10-22).
 
 
 def coverage_steering() -> bool:
@@ -420,8 +420,13 @@ def dedup_strictness_per_category() -> str | None:
 def dedup_grayzone_judge() -> bool:
     """#170 D7: pairwise same-fact judge for cosine 0.70–0.85. Independent of
     `JUDGE_GATE` / the session-mode judge cut — it is a dedup verdict, not a
-    quality judge."""
-    return _truthy(os.getenv("DEDUP_GRAYZONE_JUDGE"))
+    quality judge.
+
+    Default ON (founder 2026-10-22): on the 2026-10-01 corpus batch it caught
+    50 of 80 hand-dropped duplicates the 0.85 cosine missed, plus 15 the
+    review had let through, with no wrong drop. ``DEDUP_GRAYZONE_JUDGE=0``
+    turns it off."""
+    return _default_on(os.getenv("DEDUP_GRAYZONE_JUDGE"))
 
 
 def grayzone_judge_max_calls() -> int | None:

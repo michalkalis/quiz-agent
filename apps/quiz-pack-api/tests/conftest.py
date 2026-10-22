@@ -29,6 +29,7 @@ os.environ["LLM_GATEWAY"] = "direct"
 # pipeline — incl. the order-e2e gate. Pin it off suite-wide, same reason as
 # above; its own tests stub the classifier or set the flag explicitly.
 os.environ["TOPICALITY_CLASSIFICATION"] = "0"
+os.environ["LOCAL_SCOPE_CLASSIFICATION"] = "0"
 # #196: with ANTHROPIC_API_KEY set, every Claude chat id routes to the native
 # Anthropic API instead of the OpenAI-compatible endpoints these tests mock.
 # Blank it BEFORE .env loads (load_dotenv never overrides an existing var) so a

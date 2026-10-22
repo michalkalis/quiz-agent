@@ -81,3 +81,15 @@ def test_pgvector_read_path_keeps_boost_until() -> None:
     assert _row_to_question(as_row).boost_until == UNTIL
     legacy = {k: v for k, v in as_row.items() if k != "boost_until"}
     assert _row_to_question(legacy).boost_until is None
+
+
+def test_local_scope_survives_orm_and_pgvector_paths() -> None:
+    """#206: the live retriever filters on `local_scope`; a seam that drops it
+    serves a local question to a player who switched them off, silently."""
+    q = Question.model_validate(_row("7c9e6679-7425-40de-944b-e07fc1f90ae7", local_scope="sk"))
+    assert row_to_question(question_to_row(q)).local_scope == "sk"
+    as_row = _question_to_row_dict(q, embedding=None)
+    assert as_row["local_scope"] == "sk"
+    assert _row_to_question(as_row).local_scope == "sk"
+    legacy = {k: v for k, v in as_row.items() if k != "local_scope"}
+    assert _row_to_question(legacy).local_scope is None

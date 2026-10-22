@@ -144,6 +144,18 @@ def topicality_classification() -> bool:
     return _default_on(os.getenv("TOPICALITY_CLASSIFICATION"))
 
 
+def local_scope_classification() -> bool:
+    """Issue #206: label every question the corpus importer inserts with the
+    country it is tied to (``local_scope``), so "skip local questions" works
+    for new rows without a manual step.
+
+    ``True`` by default — founder 2026-10-15: new questions are labelled the
+    same way as the existing corpus. Set ``LOCAL_SCOPE_CLASSIFICATION=0`` to
+    import unlabelled; ``scripts/classify_local_scope.py`` picks those up.
+    """
+    return _default_on(os.getenv("LOCAL_SCOPE_CLASSIFICATION"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a

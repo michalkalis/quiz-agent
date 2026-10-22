@@ -208,6 +208,57 @@ async def test_boost_until_reaches_the_db_row_dict(
     assert question_to_row(questions[0]).boost_until == UNTIL
 
 
+class _StubLocalScope:
+    """Labels every row it is given as Slovak-local; records what it saw."""
+
+    def __init__(self) -> None:
+        self.seen: list[str] = []
+
+    async def label(self, questions, batch_size=25):
+        from app.generation.local_scope_classifier import LocalScope, apply_local_scope
+
+        for q in questions:
+            self.seen.append(q.id)
+            apply_local_scope(q, LocalScope(scope="sk", reason="Bratislava MHD"))
+        return len(questions)
+
+
+@pytest.mark.asyncio
+async def test_new_rows_are_labelled_local_before_insert(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#206: every corpus writer goes through this importer, so this is where a
+    new question gets its "local" label — without it, a player who switched
+    local questions off would still get every newly generated one. A row that
+    already carries a verdict (labelled JSON) is not classified twice."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LOCAL_SCOPE_CLASSIFICATION", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(
+        lib, "_embed_batch", lambda client, texts: [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+    )
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    already = _clean("q_done", language="sk")
+    already["generation_metadata"]["extra"]["local_scope"] = {"scope": None, "reason": "x"}
+    questions = lib.parse_questions(
+        [_clean("q_mhd", language="sk"), already], lib.AUTO_REVIEW_STATUS
+    )
+    stub = _StubLocalScope()
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True, local_scope_classifier=stub
+    )
+
+    assert stub.seen == [_id("q_mhd")]
+    assert result.local_scope_labelled == 1
+    by_id = {str(r["id"]): r for r in captured}
+    assert by_id[_id("q_mhd")]["local_scope"] == "sk"
+    assert by_id[_id("q_mhd")]["provenance"]["extra"]["local_scope"]["scope"] == "sk"
+    assert by_id[_id("q_done")]["local_scope"] is None
+
+
 @pytest.mark.asyncio
 async def test_execute_without_openai_key_raises_and_writes_nothing(
     fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch

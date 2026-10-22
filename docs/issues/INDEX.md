@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 211 | [Prirodzené sk/cs otázky](issue-211-natural-sk-cs-questions.md) | enhancement · in-progress | `[~]` #211 | 2026-10-22: bez prilepenej domácej vety a kalkov; štýl domu v2 sk/cs natívne, kontrola prirodzenosti ako upozornenie, pilot naslepo, upratanie korpusu |
 | 210 | [Marketing: sociálne siete s AI obsahom](issue-210-social-marketing.md) | enhancement · ready-for-agent | `[ ]` #210 | 2026-10-19: EN hlavný účet + SK/CZ vedľajší, nový osobný účet v EN; reels/karusely z databázy otázok (Remotion), Instagram cez oficiálne API, TikTok/Shorts cez Buffer free, týždenná dávka na schválenie; po 4 týždňoch vyhodnotenie |
 | 209 | [App Store review: verzia bez testerských prvkov, súhlas s AI](issue-209-app-store-review-cleanup.md) | bug · ready-for-human | `[~]` #209 | 2026-10-19: App Store variant buildu (`store: true`), AI súhlas v onboardingu; open = build pre App Review, privacy policy doplniť Amazon |
 | 208 | [TF test 2026-10-16: hlasové povely, prepis odpovede, stavy kvízu](issue-208-tf-voice-feedback-2026-10-16.md) | bug · ready-for-human | `[~]` #208 | 2026-10-16: 11 nálezov; prepis odpovede prepnutý na OpenAI (ElevenLabs STT preč), okamžitá odozva povelov, hláskovanie, stavy kvízu |

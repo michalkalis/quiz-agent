@@ -1,0 +1,48 @@
+# Issue #211 — Prirodzené sk/cs otázky (bez prilepenej domácej vety a kalkov)
+
+**Triage:** enhancement · in-progress (2026-10-22)
+
+**Created:** 2026-10-22 · **Founder:** Michal · Súvisí: #203 (nudné otázky, štýl domu), #206 (štítok lokálnych otázok)
+
+## Problém
+
+Founder pri revízii lokálnosti (#206): *„Krčmové kvízy, pri ktorých tímy súťažia nad pivom, dnes nájdete v Bratislave, Košiciach aj v menších mestách. Z ktorej krajiny tento formát zábavy pôvodne pochádza?“* Znie to divne a „cringe“: „súťažia nad pivom“ je kalk z angličtiny („over a pint“) a veta o Bratislave a Košiciach nič nepridáva.
+
+## Príčiny (overené v kóde 2026-10-22)
+
+1. **Kvóta 7 z 10 bez hranice.** Domáci odsek štýlu domu (`prompts/house_style.md`) žiada ~7/10 otázok o krajine. Pri všeobecnom fakte ju model splní najlacnejšie: prilepí mesto. Výskum to opisuje ako povrchné kultúrne značky pri výslovnom „buď lokálny“ ([2504.10191](https://arxiv.org/html/2504.10191v1), [AIES 2025 localized word problems](https://ojs.aaai.org/index.php/AIES/article/download/43321/50881/47427)).
+2. **Model rozmýšľa po anglicky.** Šablóna `question_generation_direct.md` („writing in English for a broad international adult audience“), štýl domu aj ukážky sú anglické; slovenčina je len dodatok, ktorý dovoľuje `reasoning` po anglicky. Výsledok: anglický „prízvuk“ v slovníku a syntaxi ([2410.15956](https://arxiv.org/html/2410.15956v1)).
+3. **Žiadna kontrola jazyka pri natívnom generovaní.** MQM sudca s kategóriami kalkov (`app/translation_verification/judge.py`) a pravidlo stavby vety (`translation_runner/translate.py`) bežia len na prekladoch; corpus behy majú `--no-judges`.
+
+Pozn.: hák sám nie je zlý. Founder dal 9/10 otázke „Kým na Slovensku je na Štedrý večer kapor so šalátom, v ktorej ázijskej krajine…“ (kontrast so skutočným zážitkom hráča). Zlý je hák, ktorý nič nenesie.
+
+## Rozhodnutia foundera (2026-10-22)
+
+- **Kvóta 7 z 10 ostáva.** Pridá sa hranica: do domácej sedmičky sa počíta len otázka, ktorej fakt je naozaj domáci, alebo kde domáci zážitok nesie pointu.
+- **Fakt zo zdroja ako prvý krok NIE.** Už sme to mali: D21 (#164) grounded v3 8,00 vs direct 8,38 na tom istom modeli; #72 RC-5 povinný fakt zabíja nápaditosť.
+- Áno: zadanie po slovensky a po česky s natívnymi ukážkami · pravidlo stavby otázky vo všetkých jazykoch · kontrola prirodzenosti ako upozornenie, nie stopka · upratanie existujúcich sk/cs otázok.
+- Všetko rovnako pre češtinu.
+
+## Prístup
+
+Všetko za prepínačom `GEN_HOUSE_STYLE_V2` (predvolene vypnutý): štýl domu je od 10-14 živý v prode pre vlastné balíky (`GEN_HOUSE_STYLE=1`), kvalita sa nesmie zmeniť bez slepého kola.
+
+- **Štýl domu v2:** `house_style_v2.md` (en) + `house_style_v2.sk.md` + `house_style_v2.cs.md`, sk/cs napísané natívne (nie preklad), s founderovými 9–10 otázkami v danom jazyku ako ukážkami a pár zlými príkladmi (kalky, prázdny hák). Obsah = doterajší vkus + tvrdé pravidlá + nové pravidlo stavby („každá časť otázky pomáha odpovedať alebo baví“) + domáci odsek s hranicou. Sekcia výstupného jazyka pri v2 natívne a `reasoning` v jazyku otázky.
+- **Technický kontrakt šablóny ostáva anglický** (JSON, pravidlá pravdivosti). Predpoklad: štýl a jazyk robí štýlová časť; ak pilot nepomôže, ďalší krok je preložiť celú šablónu.
+- **Kontrola prirodzenosti:** dávkový klasifikátor (tvar `local_scope_classifier.py`), Sonnet 5.5, pre sk/cs vráti na otázku `{ok, problems[{kind, quote}], rewrite}`; `kind` = kalk · prázdny hák · neprirodzená väzba · gramatika. Ukladá sa do `provenance.extra.naturalness`. Nič neblokuje: AI hodnotitelia sú v menších jazykoch nespoľahliví a uprednostňujú preklad ([2505.12201](https://arxiv.org/pdf/2505.12201), [2603.10351](https://arxiv.org/html/2603.10351)) → rozhoduje slepé hodnotenie foundera.
+- **Upratanie:** ten istý klasifikátor ako backfill na schválené sk/cs otázky (`--sample` / `--execute`, ako #206). Prepis sa použije až keď founder v slepom páre (pôvodná vs prepísaná, ~10 párov na jazyk) potvrdí, že prepis je lepší.
+
+## Úlohy
+
+- [ ] **211.1 Štýl domu v2** (sk/cs natívne + en pravidlo stavby), prepínač, pečiatka verzie, testy hranice (hák bez pointy zakázaný, kontrastný hák povolený, kvóta ostáva).
+- [ ] **211.2 Kontrola prirodzenosti**: modul + prompt + testy, hook v importéri (sk/cs), prepínač `NATURALNESS_CHECK`.
+- [ ] **211.3 Pilot**: sk, cs, en, súčasný recept vs v2 v jednom kole, 10 + 10 na jazyk naslepo; do produ pri v2 ≥ súčasný a ≥ 7. Pri tom zmerať, či otázky označené kontrolou majú nižšie hodnotenie.
+- [ ] **211.4 Upratanie korpusu**: backfill sk/cs, slepé páry prepisov, potom prepis alebo vyradenie označených.
+- [ ] **211.5 Zapnutie**: `GEN_HOUSE_STYLE_V2=1` (prod + mba worker), recept `general-corpus-recipe.md` a `fresh-entertainment-recipe.md` na v2.
+
+## Hotovo keď
+
+- Pilot naslepo: v2 ≥ súčasný recept v sk aj cs (a en nie horšie), priemer ≥ 7.
+- Nové sk/cs otázky majú štítok prirodzenosti bez ručného kroku.
+- Existujúce označené sk/cs otázky prepísané alebo vyradené podľa schváleného postupu; počty nahlásené.
+- Testy zelené, PR cez review + CI, nasadené. Žiadny TF build.

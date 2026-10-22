@@ -156,6 +156,15 @@ def local_scope_classification() -> bool:
     return _default_on(os.getenv("LOCAL_SCOPE_CLASSIFICATION"))
 
 
+def naturalness_check() -> bool:
+    """#211: on import, check every new native sk/cs corpus row for calques and
+    empty home hooks and record the verdict (a label, never a gate). Default
+    on; ``NATURALNESS_CHECK=0`` imports unchecked and
+    ``scripts/check_naturalness.py`` picks those rows up later.
+    """
+    return _default_on(os.getenv("NATURALNESS_CHECK"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a

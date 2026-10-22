@@ -30,6 +30,7 @@ os.environ["LLM_GATEWAY"] = "direct"
 # above; its own tests stub the classifier or set the flag explicitly.
 os.environ["TOPICALITY_CLASSIFICATION"] = "0"
 os.environ["LOCAL_SCOPE_CLASSIFICATION"] = "0"
+os.environ["NATURALNESS_CHECK"] = "0"  # #211: same reason, no live LLM call
 # The dedup gray-zone judge is default-on too (2026-10-22): pinned off for the
 # same reason; its own tests set or clear the flag explicitly.
 os.environ["DEDUP_GRAYZONE_JUDGE"] = "0"

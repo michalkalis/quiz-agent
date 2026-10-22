@@ -330,3 +330,56 @@ async def test_cli_dry_run_output_shape_is_unchanged(
     assert "no_source_url" in out
     assert "Inserted:" not in out
     assert fake_db.statements == []
+
+
+class _StubNaturalness:
+    """Flags every row it is given; records what it saw."""
+
+    def __init__(self) -> None:
+        self.seen: list[str] = []
+
+    async def label(self, questions, batch_size=20):
+        from app.generation.naturalness_check import Naturalness, apply_naturalness
+
+        for q in questions:
+            self.seen.append(q.id)
+            apply_naturalness(
+                q, Naturalness(ok=False, problems=[{"kind": "calque", "quote": "x"}], rewrite="y")
+            )
+        return len(questions)
+
+
+@pytest.mark.asyncio
+async def test_new_sk_cs_rows_get_the_naturalness_label_before_insert(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#211: the importer is the one write point of every corpus writer, so a
+    new native sk/cs row is checked here without a manual step. English rows
+    and rows already checked are not sent; the question text is stored as
+    generated (the verdict is a label, the founder decides on rewrites)."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("NATURALNESS_CHECK", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(
+        lib, "_embed_batch", lambda client, texts: [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+    )
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    already = _clean("q_cs_done", language="cs")
+    already["generation_metadata"]["extra"]["naturalness"] = {"ok": True}
+    questions = lib.parse_questions(
+        [_clean("q_sk", language="sk"), _clean("q_en"), already], lib.AUTO_REVIEW_STATUS
+    )
+    original = questions[0].question
+    stub = _StubNaturalness()
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True, naturalness_checker=stub
+    )
+
+    assert stub.seen == [_id("q_sk")]
+    assert result.naturalness_checked == 1
+    by_id = {str(r["id"]): r for r in captured}
+    assert by_id[_id("q_sk")]["provenance"]["extra"]["naturalness"]["ok"] is False
+    assert by_id[_id("q_sk")]["question"] == original

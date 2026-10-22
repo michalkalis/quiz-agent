@@ -203,6 +203,10 @@ HINT_VALIDATE = _role("LLM_ROLE_HINT_VALIDATE", "claude-haiku-5-5")  # was gpt-4
 # not haiku: it must know which sk/cs shows, people and customs are domestic,
 # the same small-market knowledge CASUAL_PLAYER needs.
 LOCAL_SCOPE = _role("LLM_ROLE_LOCAL_SCOPE", "claude-sonnet-5-5")
+# #211: native sk/cs naturalness check (calques, empty home hooks) + proposed
+# rewrite. Opus: the rewrite may replace a live question once the founder's
+# blind pairs approve it, so it must write the best Slovak/Czech we have.
+NATURALNESS = _role("LLM_ROLE_NATURALNESS", "claude-opus-5-5")
 
 
 def pick_generation_model(rand=random.random) -> str:

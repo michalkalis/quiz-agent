@@ -531,10 +531,11 @@ class Test170SwitchInjection:
             "COVERAGE_STEERING",
             "DEDUP_QA_EMBEDDING",
             "ANSWER_CAP",
-            "DEDUP_GRAYZONE_JUDGE",
             "DEDUP_STRICTNESS_PER_CATEGORY",
         ):
             monkeypatch.delenv(name, raising=False)
+        # The judge defaults ON (test_generate_pack_session); "off" is explicit.
+        monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "0")
         from app.orchestrator.stages import DedupStage, GenerationStage, TopUpStage
 
         stages = self._stages(monkeypatch)

@@ -176,10 +176,11 @@ SCORE_THIRD = "deepseek-v4-pro"
 # cheap model can't reach the answer blind, a player won't either.
 ANSWERABILITY = "deepseek-v4-flash"
 # #170 D7: pairwise "same fact yes/no" for the dedup gray zone (cosine
-# 0.70–0.85). A one-word comprehension verdict, not a quality judge — the
-# cheap FACTCHECK-class model is enough and stays family-disjoint from the
-# generator. Session tier: sonnet (via the gpt-5-mini alias below).
-DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
+# 0.70–0.85). A one-word comprehension verdict, not a quality judge, so
+# family overlap with the generator does not matter. Sonnet since the judge
+# went default-on (2026-10-22): the model the 2026-10-01 replay measured, and
+# the weekly job already pinned it. Rollback: LLM_ROLE_DEDUP_JUDGE=gpt-5-mini.
+DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "claude-sonnet-5-5")
 # #201: "casual player" check — estimates how many ordinary adults in the
 # player's country would get an entertainment question. Sonnet, not the
 # flash-class ANSWERABILITY proxy: it must know small-market (sk/cs) pop

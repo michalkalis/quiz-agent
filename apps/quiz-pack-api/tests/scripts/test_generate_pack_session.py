@@ -41,11 +41,17 @@ class TestGrayZoneJudgeUnderSessionGateway:
         assert judge.max_calls == 7
         assert judge.model == llm_factory.DEDUP_JUDGE
 
-    def test_default_off_in_every_mode(self, monkeypatch):
+    def test_default_on_in_every_mode(self, monkeypatch):
+        """Founder 2026-10-22: corpus runs drop same-fact rephrasings by
+        default — an unset flag must not silently skip the judge again."""
         monkeypatch.delenv("DEDUP_GRAYZONE_JUDGE", raising=False)
         for gateway in ("session", "direct"):
             monkeypatch.setenv("LLM_GATEWAY", gateway)
-            assert replay_dedup_json.build_grayzone_judge() is None
+            assert isinstance(replay_dedup_json.build_grayzone_judge(), GrayZoneJudge)
+
+    def test_explicit_zero_turns_it_off(self, monkeypatch):
+        monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "0")
+        assert replay_dedup_json.build_grayzone_judge() is None
 
     def test_bad_budget_value_fails_loud(self, monkeypatch):
         monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "1")

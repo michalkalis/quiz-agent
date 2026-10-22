@@ -443,6 +443,12 @@ class QuestionRetriever:
         else:
             filters.update(english_rows)
 
+        # #206: a player who switched local questions off gets only universal
+        # rows. Unlabelled rows are NULL too, so a classifier miss never hides
+        # a question from anyone.
+        if session.skip_local_questions:
+            filters["local_scope"] = None
+
         # Add category filter if specified
         if session.preferred_categories:
             filters["category"] = {"$in": session.preferred_categories}

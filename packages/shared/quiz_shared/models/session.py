@@ -140,6 +140,14 @@ class QuizSession(BaseModel):
             "images are unsuitable while driving; user opts in per session."
         ),
     )
+    skip_local_questions: bool = Field(
+        False,
+        description=(
+            "Serve only universal questions (#206): skip ones tied to a single "
+            "country (`local_scope` set). Default off — local questions are "
+            "included; the player opts out per session."
+        ),
+    )
     preferred_topics: List[str] = Field(
         default_factory=list, description="Preferred topics: ['science', 'history']"
     )

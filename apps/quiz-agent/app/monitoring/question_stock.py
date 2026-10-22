@@ -127,13 +127,18 @@ def evaluate(
 
 def _probe(language: str, category: str) -> QuizSession:
     """Throwaway session, same inputs `/questions/availability` builds: the
-    default build channel (approved only), no exclusions, not persisted."""
+    default build channel (approved only), no exclusions, not persisted.
+
+    Counts the "skip local questions" pool (#206): it is the smaller one, so a
+    player who switched local questions off runs dry first and the warning
+    has to come in time for them too."""
     return QuizSession(
         session_id="stock-probe",
         current_difficulty="medium",
         language=language,
         category=category,
         preferred_categories=[category],
+        skip_local_questions=True,
     )
 
 

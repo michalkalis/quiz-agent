@@ -193,8 +193,11 @@ def test_weekly_job_house_style_follows_only_its_own_switch(monkeypatch, env, ex
     #202 arm of the blind round; only FRESH_HOUSE_STYLE=1 turns it on there."""
     from app.corpus import fresh_pins
 
-    fake_env = {"PACK_SUBTHEMES": "1", **env}
+    fake_env = {"PACK_SUBTHEMES": "1", "GEN_HOUSE_STYLE_V2": "1", **env}
     monkeypatch.setattr(fresh_pins.os, "environ", fake_env)
     fresh_pins.apply()
     assert fake_env["GEN_HOUSE_STYLE"] == expected
     assert fake_env["PACK_SUBTHEMES"] == "0"  # sub-themes are customer-only
+    # #211: v2 is on for customer packs in prod; the weekly job must not pick
+    # up its native sk/cs brief, which no #202 blind round has rated.
+    assert fake_env["GEN_HOUSE_STYLE_V2"] == "0"

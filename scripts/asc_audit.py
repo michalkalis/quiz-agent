@@ -78,7 +78,7 @@ def main() -> int:
     app_id = app["id"]
     report["app"] = attrs(app)
 
-    versions = get(f"/apps/{app_id}/appStoreVersions", limit=5, **{"fields[appStoreVersions]": "versionString,appStoreState,platform,createdDate"})
+    versions = get(f"/apps/{app_id}/appStoreVersions", limit=5, **{"fields[appStoreVersions]": "versionString,appStoreState,platform,createdDate,releaseType,earliestReleaseDate"})
     report["appStoreVersions"] = [attrs(v) for v in versions.get("data", [])]
 
     infos = get(f"/apps/{app_id}/appInfos", include="appInfoLocalizations", limit=2)

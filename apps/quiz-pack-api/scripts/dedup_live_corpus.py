@@ -297,7 +297,7 @@ async def run(args: argparse.Namespace) -> int:
                 res = await conn.execute(
                     text(
                         "UPDATE questions SET review_status = 'approved' "
-                        "WHERE id::text = ANY(:ids) AND review_status = 'archived'"
+                        "WHERE id::text = ANY(CAST(:ids AS text[])) AND review_status = 'archived'"
                     ),
                     {"ids": ids},
                 )
@@ -363,7 +363,7 @@ async def run(args: argparse.Namespace) -> int:
                 res = await conn.execute(
                     text(
                         "UPDATE questions SET review_status = 'archived', reviewed_at = now(), "
-                        "review_notes = concat_ws(' | ', review_notes, :note) "
+                        "review_notes = concat_ws(' | ', review_notes, CAST(:note AS text)) "
                         "WHERE id::text = :id AND review_status = 'approved'"
                     ),
                     {"id": gone, "note": f"{NOTE_PREFIX} {info['twin']}"},

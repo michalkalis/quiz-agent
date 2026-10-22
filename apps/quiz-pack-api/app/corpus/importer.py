@@ -50,6 +50,7 @@ from app.generation.local_scope_classifier import (
     LocalScopeClassifier,
     has_local_scope_verdict,
 )
+from app.generation.naturalness_check import NaturalnessChecker, needs_check
 from app.scoring.machine_approval import (
     GATE_VERSION,
     machine_approval_block_reason,
@@ -89,6 +90,8 @@ class ImportResult:
     inserted: int = 0
     # #206: rows the local-scope classifier labelled during this import.
     local_scope_labelled: int = 0
+    # #211: sk/cs rows the naturalness check labelled during this import.
+    naturalness_checked: int = 0
     # question id -> reason the #158 guard kept it out of the corpus.
     skipped: dict[str, str] = field(default_factory=dict)
     # reason -> number of unique rows left pending (auto mode only).
@@ -282,6 +285,7 @@ async def import_questions(
     batch_size: int = 100,
     on_plan: Callable[[ImportResult], None] | None = None,
     local_scope_classifier: LocalScopeClassifier | None = None,
+    naturalness_checker: NaturalnessChecker | None = None,
 ) -> ImportResult:
     """Guard, stamp, embed and insert ``questions``; return what happened.
 
@@ -291,7 +295,8 @@ async def import_questions(
     and before any write, so a caller can report even when embedding then
     fails. Raises :class:`EmbeddingKeyMissing` when rows need vectors and
     ``execute`` is on but ``OPENAI_API_KEY`` is unset (nothing is written).
-    ``local_scope_classifier`` overrides the default #206 labeller (tests).
+    ``local_scope_classifier`` overrides the default #206 labeller (tests),
+    ``naturalness_checker`` the #211 sk/cs check (tests).
     """
     stats: dict = {}
     prepared = prepare_questions(questions, review_status, stats)
@@ -355,6 +360,13 @@ async def import_questions(
             if unlabelled:
                 labeller = local_scope_classifier or LocalScopeClassifier()
                 result.local_scope_labelled = await labeller.label(unlabelled)
+
+        # #211: same single write point for the sk/cs naturalness label.
+        if feature_flags.naturalness_check():
+            unchecked = [q for q in to_insert if needs_check(q)]
+            if unchecked:
+                checker = naturalness_checker or NaturalnessChecker()
+                result.naturalness_checked = await checker.label(unchecked)
 
         rows = [_row_to_insert_dict(question_to_row(q)) for q in to_insert]
         if rows:

@@ -18,14 +18,14 @@ far beyond today's corpus, and with WHERE filters it needs iterative scans to
 keep recall — revisit then, with a recall check, not before.
 
 Revision ID: c3f8a6d2e914
-Revises: b207e5a0c1d2
+Revises: a206c0a1e5b7
 Create Date: 2026-10-22
 """
 
 from alembic import op
 
 revision = "c3f8a6d2e914"
-down_revision = "b207e5a0c1d2"
+down_revision = "a206c0a1e5b7"
 branch_labels = None
 depends_on = None
 

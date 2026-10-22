@@ -6,7 +6,8 @@ import type {Language} from './types';
 type Copy = {
 	hooks: string[];
 	answer: string;
-	send: string;
+	/** End card line under the logo (founder pick 2026-10-22: no call to action). */
+	tagline: string;
 	soon: string;
 	roundTitle: (part: number) => string;
 	roundSub: (n: number) => string;
@@ -25,10 +26,9 @@ export const COPY: Record<Language, Copy> = {
 			'Say it out loud. 5 seconds.',
 			'Answer before the monkey does.',
 			'One question. No googling.',
-			'Pause if you need more time.',
 		],
 		answer: 'Answer',
-		send: "Send this to someone who'd get it wrong",
+		tagline: 'Trivia you answer out loud',
 		soon: 'Coming soon to the App Store · trubbo.app',
 		roundTitle: (p) => `Road trip round, part ${p}.`,
 		roundSub: (n) => `${n} questions. Answers on the last slide.`,
@@ -43,7 +43,7 @@ export const COPY: Record<Language, Copy> = {
 			'Jedna otázka, bez googlenia.',
 		],
 		answer: 'Odpoveď',
-		send: 'Pošli to niekomu, kto by to netrafil',
+		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Čoskoro v App Store · trubbo.app',
 		roundTitle: (p) => `Kvíz na cestu, ${p}. diel.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
@@ -58,7 +58,7 @@ export const COPY: Record<Language, Copy> = {
 			'Jedna otázka, bez googlení.',
 		],
 		answer: 'Odpověď',
-		send: 'Pošli to někomu, kdo by to netrefil',
+		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Brzy v App Store · trubbo.app',
 		roundTitle: (p) => `Kvíz na cestu, ${p}. díl.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,

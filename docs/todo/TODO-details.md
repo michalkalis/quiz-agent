@@ -30,7 +30,7 @@ hotové položky sú v `docs/archive/todo/TODO-done-archive-2026-08-26.md`.
 
 ### Apple root cert (AppleRootCA-G3.cer) nie je v gite
 
-- [ ] Apple root cert (`AppleRootCA-G3.cer`) nie je v gite — deploy z čerstvého worktree/checkoutu bez ručne stiahnutého certu nasadí rozbitý StoreKit (stalo sa 2026-08-06, retry endpoint 500). Fix: commitnúť cert do repa (je verejný) alebo sťahovať v Dockerfile s checksumom
+- [x] (vyriešené 2026-10-09, PR #324: cert v repe so SHA-256, Docker build ho vyžaduje) Apple root cert (`AppleRootCA-G3.cer`) nie je v gite — deploy z čerstvého worktree/checkoutu bez ručne stiahnutého certu nasadí rozbitý StoreKit (stalo sa 2026-08-06, retry endpoint 500). Fix: commitnúť cert do repa (je verejný) alebo sťahovať v Dockerfile s checksumom
 
 ### Remove TEMP `generatedBy` provenance badge
 

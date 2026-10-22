@@ -1,8 +1,9 @@
-// npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR]
+// npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR] [--make-voice]
 // npm run render -- --carousel <id,id,id> [--part N] [--lang en|sk|cs] [--out DIR]
 //
 // Fetches approved rows read-only from prod (or reads a JSON file), reuses the
-// question's existing app voice clip if there is one (never synthesizes), times
+// question's existing app voice clip if there is one (--make-voice: has the
+// app's own TTS on prod make a missing one, at most 5 a week), times
 // the caption words with local whisper.cpp, and renders mp4 + cover jpg (reels)
 // or jpg slides (carousel). Chrome = Remotion's own chrome-headless-shell.
 import {execFileSync} from 'node:child_process';
@@ -27,16 +28,44 @@ const {values, positionals} = parseArgs({
 		out: {type: 'string'},
 		carousel: {type: 'string'},
 		part: {type: 'string', default: '1'},
+		'make-voice': {type: 'boolean', default: false},
 	},
 });
 const OUT = path.resolve(values.out ?? path.join(APP_DIR, 'out'));
 const LANG = values.lang as Language | undefined;
 
-/** Read-only prod fetch: pipes scripts/fetch_question.py into the API machine. */
-function fetchFromProd(id: string, lang?: Language): QuestionInput {
+// Founder 2026-10-22: a missing clip may be made through the app's own TTS
+// path, about 5 questions a week (ElevenLabs Starter, no top-ups).
+const VOICE_LEDGER = path.join(CACHE_DIR, 'voice-ledger.json');
+const VOICES_PER_WEEK = 5;
+type LedgerEntry = {at: string; id: string; language: string; chars: number};
+
+function voicesThisWeek(): LedgerEntry[] {
+	if (!existsSync(VOICE_LEDGER)) return [];
+	const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+	return (JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) as LedgerEntry[]).filter((e) => Date.parse(e.at) >= weekAgo);
+}
+
+function logVoice(entry: LedgerEntry) {
+	const all: LedgerEntry[] = existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : [];
+	mkdirSync(CACHE_DIR, {recursive: true});
+	writeFileSync(VOICE_LEDGER, JSON.stringify([...all, entry], null, 1));
+}
+
+/** Prod fetch: pipes scripts/fetch_question.py into the API machine. Read-only
+ * unless `ensureAudio`, which lets the app's own TTS make a missing clip. */
+function fetchFromProd(id: string, lang?: Language, ensureAudio = false): QuestionInput {
 	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}.json`);
-	if (existsSync(cacheFile)) return JSON.parse(readFileSync(cacheFile, 'utf8'));
-	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', `python - ${id}${lang ? ` ${lang}` : ''}`], {
+	if (existsSync(cacheFile)) {
+		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
+		if (cached.audio_b64 || !ensureAudio) return cached;
+	}
+	if (ensureAudio) {
+		const used = voicesThisWeek().length;
+		if (used >= VOICES_PER_WEEK) throw new Error(`${id}: ${used} clips made in the last 7 days, the weekly limit is ${VOICES_PER_WEEK}`);
+	}
+	const args = `python - ${id}${lang ? ` ${lang}` : ''}${ensureAudio ? ' --ensure-audio' : ''}`;
+	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
 		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
 		maxBuffer: 64 * 1024 * 1024,
 		stdio: ['pipe', 'pipe', 'ignore'],
@@ -45,6 +74,12 @@ function fetchFromProd(id: string, lang?: Language): QuestionInput {
 	if (marker < 0) throw new Error(`prod fetch for ${id} returned no data`);
 	const row = JSON.parse(out.slice(marker + 8).trim());
 	if (row.error) throw new Error(row.error);
+	if (row.generated) {
+		const g = row.generated;
+		logVoice({at: new Date().toISOString(), id, language: row.language, chars: g.chars});
+		console.log(`  voice made by the app TTS: ${g.chars} characters (ElevenLabs had ${g.credits_left_before} credits left), R2 ${g.r2_key}`);
+		delete row.generated;
+	}
 	mkdirSync(path.dirname(cacheFile), {recursive: true});
 	writeFileSync(cacheFile, JSON.stringify(row));
 	return row;
@@ -52,7 +87,7 @@ function fetchFromProd(id: string, lang?: Language): QuestionInput {
 
 function loadInput(arg: string): QuestionInput {
 	if (arg.endsWith('.json')) return JSON.parse(readFileSync(path.resolve(arg), 'utf8'));
-	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG);
+	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel);
 	throw new Error(`expected a question id or a .json file, got "${arg}"`);
 }
 
@@ -118,7 +153,7 @@ async function main() {
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');
 		const hook = values.hook ? Number(values.hook) : parseInt(q.id.replace(/-/g, '').slice(0, 6), 16);
 		const props = await reelProps(raw, format === 'five' ? {...q, options: [], correctIndex: null} : q, hook);
-		if (!props.audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice`);
+		if (!props.audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
 		// Cover = the question fully on screen, just before the countdown,
 		// nudged back if the monkey happens to blink on that frame.
 		let coverMs = HOOK_MS + props.questionMs - 200;

@@ -9,7 +9,7 @@ export type ReelQuestion = {
 	category: string;
 	question: string;
 	answer: string;
-	/** One sentence, cut by hand from the question's explanation (never an LLM). */
+	/** First full sentence of the question's explanation (never an LLM); fitWhy fits it on the card. */
 	why: string;
 	/** MCQ options in the order given; empty for an open question. */
 	options: string[];

@@ -3,6 +3,7 @@
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {COPY} from './copy';
+import {fitWhy} from './fitWhy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
 import type {CarouselSlideProps} from './types';
@@ -17,6 +18,12 @@ const Brand: React.FC<{color: string}> = ({color}) => (
 		<div style={{fontSize: 42, fontWeight: 800, color, letterSpacing: -0.5}}>Trubbo</div>
 	</div>
 );
+
+// Answer text column = slide (1080) − padding − card padding − number − gap.
+const Why: React.FC<{sentence: string}> = ({sentence}) => {
+	const why = fitWhy(sentence, {width: 1080 - 2 * PAD - 80 - 40 - 28, maxLines: 3, size: 32, minSize: 26});
+	return why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: 10, fontWeight: 500}}>{why.text}</div> : null;
+};
 
 export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, part, questions, index}) => {
 	const copy = COPY[language];
@@ -64,7 +71,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, par
 							<div style={{fontSize: 48, fontWeight: 800, color: OK, minWidth: 40}}>{i + 1}</div>
 							<div>
 								<div style={{fontSize: 50, fontWeight: 800, lineHeight: 1.1}}>{a.answer}</div>
-								{a.why ? <div style={{fontSize: 32, lineHeight: 1.3, color: INK2, marginTop: 10, fontWeight: 500}}>{a.why}</div> : null}
+								<Why sentence={a.why} />
+
 							</div>
 						</div>
 					))}

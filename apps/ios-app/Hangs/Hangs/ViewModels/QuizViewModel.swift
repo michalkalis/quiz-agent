@@ -1336,6 +1336,7 @@ final class QuizViewModel: ObservableObject {
                         categories: settings.categories,
                         userId: persistenceStore.deviceId,
                         includeImages: settings.includeImageQuestions,
+                        skipLocalQuestions: !settings.includeLocalQuestions,
                         packId: pack?.packId
                     )
                 }
@@ -1447,6 +1448,7 @@ final class QuizViewModel: ObservableObject {
                 language: language,
                 categories: settings.categories,
                 includeImages: settings.includeImageQuestions,
+                skipLocalQuestions: !settings.includeLocalQuestions,
                 excludedQuestionIds: persistenceStore.getExclusionList()
             )
             guard !availability.sufficient else { return nil }

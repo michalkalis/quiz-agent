@@ -278,11 +278,11 @@ final class SequenceNetwork: NetworkServiceProtocol {
         try await send(sessionId: sessionId, isVoice: false, questionId: questionId, input: input)
     }
 
-    func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories _: [String], userId _: String?, includeImages _: Bool, packId _: String?) async throws -> QuizSession {
+    func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories _: [String], userId _: String?, includeImages _: Bool, skipLocalQuestions _: Bool, packId _: String?) async throws -> QuizSession {
         SequenceQuiz.session(finished: false, config)
     }
 
-    func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, excludedQuestionIds _: [String]) async throws -> QuestionAvailability {
+    func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, skipLocalQuestions _: Bool, excludedQuestionIds _: [String]) async throws -> QuestionAvailability {
         QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
     }
 

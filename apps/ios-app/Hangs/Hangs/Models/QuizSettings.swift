@@ -87,6 +87,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// fun but unsuitable while driving (founder decision 6, 2026-07-05).
     var includeImageQuestions: Bool
 
+    /// Whether questions only people from one country understand may be served
+    /// (#206, e.g. Bratislava public transport). Default ON (founder
+    /// 2026-10-15); OFF sends `skip_local_questions` with the session.
+    var includeLocalQuestions: Bool
+
     /// Master switch for the hands-free English voice-command listener (#77 /
     /// #96 P2). Default ON. When OFF, the screen-scoped command window never arms
     /// (`QuizViewModel.currentCommandScreen` returns nil) and the on-screen
@@ -131,6 +136,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         ageAppropriate: String? = nil,
         recordingSoundsEnabled: Bool = true,
         includeImageQuestions: Bool = false,
+        includeLocalQuestions: Bool = true,
         voiceCommandsEnabled: Bool = true,
         answerRevealMode reveal: AnswerRevealMode = .perQuestion,
         voiceHintsEnabled: Bool? = nil
@@ -149,6 +155,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.ageAppropriate = ageAppropriate
         self.recordingSoundsEnabled = recordingSoundsEnabled
         self.includeImageQuestions = includeImageQuestions
+        self.includeLocalQuestions = includeLocalQuestions
         self.voiceCommandsEnabled = voiceCommandsEnabled
         answerRevealMode = reveal
         self.voiceHintsEnabled = voiceHintsEnabled
@@ -215,6 +222,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         ageAppropriate = try container.decodeIfPresent(String.self, forKey: .ageAppropriate)
         recordingSoundsEnabled = try container.decodeIfPresent(Bool.self, forKey: .recordingSoundsEnabled) ?? true
         includeImageQuestions = try container.decodeIfPresent(Bool.self, forKey: .includeImageQuestions) ?? false
+        includeLocalQuestions = try container.decodeIfPresent(Bool.self, forKey: .includeLocalQuestions) ?? true
         voiceCommandsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceCommandsEnabled) ?? true
         // #132 E: pre-existing blobs (and unknown future raw values) fall back
         // to today's per-question flow — the founder-picked default.

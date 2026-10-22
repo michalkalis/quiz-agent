@@ -38,7 +38,7 @@ Všetko za prepínačom `GEN_HOUSE_STYLE_V2` (predvolene vypnutý): štýl domu 
 - [x] **211.2 Kontrola prirodzenosti** (PR #546, nasadené 2026-10-22, zapnutá; Opus 5.5): modul + prompt + testy, hook v importéri (sk/cs), prepínač `NATURALNESS_CHECK`.
 - [x] **211.3 Pilot** (2026-10-22, `docs/testing/runs/natural-sk-cs-2026-10-22/`, 6 tém × 2 otázky, predplatné, 57 otázok naslepo; founder hodnotil „zbežne“). Zábava súčasný A vs v2 B: sk 8,3 vs 8,1 (šum), cs 7,5 vs 8,4, en 7,8 vs 8,3, spolu 7,86 vs 8,25; šanca 57/57; „neznie prirodzene“ A 2 vs B 0. Kontrola prirodzenosti: A 10 vs B 4 z 20 sk/cs; označené 7,9 vs neoznačené 8,2, founder pritom označil za neprirodzenú len 1 zo 14 → kontrola chytá jemné chyby (urazit, opření, „pod Rysmi“), ktoré pri rýchlom čítaní nevadia; prepisy sú vecne správne. Gate splnený → 211.5. Mimo: med z egyptských hrobiek (B-en) má slabý zdroj (stránka neotvorená), founder ho už raz spochybnil → neimportovať.
 - [ ] **211.4 Upratanie korpusu**: backfill sk/cs, slepé páry prepisov, potom prepis alebo vyradenie označených.
-- [~] **211.5 Zapnutie** (čaká na founderov súhlas so zápisom prepínača na Fly; auto mode ho blokuje): `GEN_HOUSE_STYLE_V2=1` (prod + mba worker), recept `general-corpus-recipe.md` a `fresh-entertainment-recipe.md` na v2.
+- [x] **211.5 Zapnutie** (2026-10-22, founder „zapni“: Fly secret `GEN_HOUSE_STYLE_V2=1` na quiz-pack-api; týždenný job ho má pripnutý na 0, PR #551; recept `general-corpus-recipe.md`; mba záložný worker zatiaľ bez neho, beží len pri výpadku Fly): `GEN_HOUSE_STYLE_V2=1` (prod + mba worker), recept `general-corpus-recipe.md` a `fresh-entertainment-recipe.md` na v2.
 
 ## Hotovo keď
 

@@ -1,0 +1,96 @@
+import React from 'react';
+import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
+import {CarouselSlide} from './CarouselSlide';
+import {Reel} from './Reel';
+import {reelDurationMs} from './timing';
+import {loadBrandFonts} from './theme';
+import type {CarouselSlideProps, ReelProps} from './types';
+
+loadBrandFonts();
+
+const FPS = 30;
+
+// Preview data for `npm run studio` only; real renders pass props from the CLI.
+const sampleWords = (text: string, wps = 2.8) =>
+	text.split(/\s+/).map((w, i) => ({text: w, startMs: Math.round((i / wps) * 1000)}));
+
+const FIVE_SAMPLE: ReelProps = {
+	q: {
+		id: 'preview',
+		language: 'en',
+		category: 'science-nature',
+		question: "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
+		answer: 'Milk',
+		why: "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk.",
+		options: [],
+		correctIndex: null,
+	},
+	audio: null,
+	words: sampleWords("The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?"),
+	questionMs: 5500,
+	optionsAtMs: 0,
+	hookIndex: 0,
+};
+
+const ABC_SAMPLE: ReelProps = {
+	...FIVE_SAMPLE,
+	q: {
+		...FIVE_SAMPLE.q,
+		category: 'entertainment',
+		question: 'Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?',
+		answer: 'About 300',
+		why: 'About 300 comic fans met in a hotel basement in 1970.',
+		options: ['About 30', 'About 300', 'About 3,000', 'About 30,000'],
+		correctIndex: 1,
+	},
+	words: sampleWords('Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?'),
+	questionMs: 7500,
+	optionsAtMs: 5000,
+};
+
+const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
+	durationInFrames: Math.ceil((reelDurationMs(props.questionMs) / 1000) * FPS),
+});
+
+const FiveSeconds: React.FC<ReelProps> = (p) => <Reel {...p} variant="five" />;
+const ABC: React.FC<ReelProps> = (p) => <Reel {...p} variant="abc" />;
+
+export const RemotionRoot: React.FC = () => (
+	<>
+		<Composition
+			id="FiveSeconds"
+			component={FiveSeconds}
+			width={1080}
+			height={1920}
+			fps={FPS}
+			durationInFrames={510}
+			defaultProps={FIVE_SAMPLE}
+			calculateMetadata={reelMetadata}
+		/>
+		<Composition
+			id="ABC"
+			component={ABC}
+			width={1080}
+			height={1920}
+			fps={FPS}
+			durationInFrames={600}
+			defaultProps={ABC_SAMPLE}
+			calculateMetadata={reelMetadata}
+		/>
+		<Still
+			id="CarouselSlide"
+			component={CarouselSlide}
+			width={1080}
+			height={1350}
+			defaultProps={
+				{
+					kind: 'cover',
+					language: 'en',
+					part: 1,
+					questions: [FIVE_SAMPLE.q, ABC_SAMPLE.q],
+					index: 0,
+				} satisfies CarouselSlideProps
+			}
+		/>
+	</>
+);

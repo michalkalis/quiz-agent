@@ -1,0 +1,9 @@
+node_modules/
+# whisper.cpp + model, fetched prod rows (re-created on demand)
+.cache/
+# render output (mp4/jpg) and staged voice clips
+out/
+public/audio/
+# copied/generated from apps/website/src by scripts/sync-brand.mjs (npm install)
+public/brand/
+src/brand/

@@ -1,0 +1,30 @@
+{
+  "name": "social-studio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Trubbo social video renderer (#210): reels and carousel slides from approved questions",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/sync-brand.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "tsx cli/render.ts",
+    "coverage": "fly ssh console -a quiz-agent-api -C 'python - --coverage' < scripts/fetch_question.py",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.537",
+    "@remotion/captions": "4.0.537",
+    "@remotion/cli": "4.0.537",
+    "@remotion/install-whisper-cpp": "4.0.537",
+    "@remotion/renderer": "4.0.537",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.537"
+  },
+  "devDependencies": {
+    "@types/node": "24.9.1",
+    "@types/react": "19.2.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

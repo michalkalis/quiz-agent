@@ -349,7 +349,8 @@ shows it unchanged.
 
 ## RS-10: MCQ tap answer submits and transitions to processing
 
-**Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` after the 500ms confirm delay
+**Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` at the tap (no delay since the
+RS-10 flake fix: a 500 ms hand-off let the speech-start window end the open recording first)
 and the ViewModel transitions to `processing`. This covers the tap-to-answer path that complements
 the voice path tested in RS-09 — a tap is an explicit choice, so it submits directly and does NOT
 go through the confirmation sheet the voice path uses (#171 Track I).

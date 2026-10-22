@@ -1,6 +1,6 @@
 # Issue #210 — Content plan (what we post, how it is made)
 
-**Status:** draft direction, parked 2026-10-21 — founder wants strategy research first (what to optimize, what worked for comparable apps); revisit after it.
+**Status:** active from 2026-10-22 — posting starts as soon as the renderer exists (bios: coming soon + trubbo.app). Production uses no paid external services or models.
 
 **Created:** 2026-10-21 · Parent: [issue-210-social-marketing.md](issue-210-social-marketing.md) · Founder-facing version: https://claude.ai/artifact/8MK4jssMpjSdkbRY8wMvNL
 

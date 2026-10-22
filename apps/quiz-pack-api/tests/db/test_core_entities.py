@@ -226,7 +226,6 @@ async def test_required_indexes_exist(session: AsyncSession) -> None:
             "names": [
                 "ix_questions_pack_id",
                 "ix_questions_language_category_review_status",
-                "ix_questions_embedding_ivfflat",
             ]
         },
     )
@@ -234,19 +233,27 @@ async def test_required_indexes_exist(session: AsyncSession) -> None:
     assert names == {
         "ix_questions_pack_id",
         "ix_questions_language_category_review_status",
-        "ix_questions_embedding_ivfflat",
     }
 
-    # And the ivfflat one is actually using ivfflat, not a default btree.
-    detail = await session.execute(
+
+@pytest.mark.asyncio
+async def test_questions_embedding_has_no_approximate_index(session: AsyncSession) -> None:
+    """Vector search over `questions` must stay exact (c3f8a6d2e914).
+
+    The May ivfflat index (built on an empty table, probes = 1) made live quiz
+    retrieval return 1-11 of 50 requested candidates and blinded generation
+    dedup on prod. An approximate index silently trades recall for speed the
+    corpus does not need; adding one back must be a deliberate, measured
+    decision that also updates this test.
+    """
+    result = await session.execute(
         text(
-            "SELECT indexdef FROM pg_indexes "
-            "WHERE indexname = 'ix_questions_embedding_ivfflat'"
+            "SELECT indexname FROM pg_indexes "
+            "WHERE tablename = 'questions' "
+            "AND (indexdef ILIKE '%USING ivfflat%' OR indexdef ILIKE '%USING hnsw%')"
         )
     )
-    indexdef = detail.scalar_one()
-    assert "ivfflat" in indexdef
-    assert "vector_cosine_ops" in indexdef
+    assert [row.indexname for row in result.all()] == []
 
 
 # ── Concurrent append_step ────────────────────────────────────────────────────

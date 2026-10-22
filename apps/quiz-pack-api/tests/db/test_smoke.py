@@ -59,7 +59,7 @@ def test_alembic_upgrade_head_is_idempotent() -> None:
     # local_scope, on top of the order storekit environment b207e5a0c1d2).
     # It is what makes "at head" mean the head THIS build expects, not merely
     # "some revision".
-    assert "a206c0a1e5b7" in (current.stdout + current.stderr)
+    assert "c3f8a6d2e914" in (current.stdout + current.stderr)
     # First run is allowed to be a no-op too (DB may already be at head from a
     # prior pytest invocation), so we don't assert on it — its purpose is only
     # to guarantee the DB is at head before the second-run idempotency check.

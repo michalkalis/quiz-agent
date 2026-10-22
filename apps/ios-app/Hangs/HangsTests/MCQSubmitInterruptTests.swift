@@ -16,7 +16,9 @@
 import Clocks
 import Foundation
 @testable import Hangs
+import SwiftUI
 import Testing
+import ViewInspector
 
 @Suite("MCQ tap submit interrupts the read and is bounded (#178)")
 @MainActor
@@ -114,4 +116,68 @@ struct MCQSubmitInterruptTests {
         #expect(silence.isListening == false, "voice commands are off — nothing may keep the mic live")
         submission.cancel()
     }
+
+    /// WHY (RS-10 flake, CI 2026-10-07…10-16): a tap is the driver's answer and
+    /// must claim the question AT the tap. The option picker held it for 500 ms
+    /// first, with the quiz still `.recording`; when the 5 s "time to start
+    /// speaking" window (or VAD, or the cap) ran out in that gap, the recording
+    /// was uploaded, the voice sheet opened over the tapped option, and the
+    /// late tap found `.processing` and was dropped — the driver tapped an
+    /// answer and got "say it again" or a transcript to confirm instead.
+    @Test("a tap while the mic listens answers the question even if the speech window runs out right after")
+    func tapBeatsSpeechWindowExpiry() async throws {
+        let clock = TestClock()
+        let silence = MockSilenceDetectionService()
+        silence.noSpeechWindowVerdict = .quiet // the window is allowed to end the recording
+        let network = Fixtures.makeFullMockNetwork()
+        let vm = QuizViewModel(
+            networkService: network,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence,
+            clock: AnyClock(clock)
+        )
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = Self.mcqQuestion
+        vm.quizState = .askingQuestion
+        await vm.recordingCoordinator.startRecording()
+        #expect(vm.quizState == .recording)
+        // The mic heard the car: enough audio that a window stop would upload it.
+        silence.simulateAnswerAudio(Data(count: 16000))
+
+        let view = QuestionView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            try view.inspect().find(viewWithAccessibilityIdentifier: "mcq.option.b")
+                .find(ViewType.Button.self).tap()
+        }
+        await pumpUntil({ vm.quizState != .recording }, "the tap did not claim the question at once")
+
+        // The speech-start window runs out right after the tap.
+        await clock.advance(by: .seconds(Int(Config.speechStartWindow)))
+        await pumpUntil({
+            if case .showingResult = vm.quizState { return true }
+            return false
+        }, "the tapped answer never reached its result")
+
+        #expect(network.submitVoiceAnswerCallCount == 0, "the abandoned recording was uploaded after the tap")
+        #expect(network.submitTextInputCallCount == 1)
+        #expect(network.capturedTextInputInput == "Jupiter")
+        #expect(vm.showAnswerConfirmation == false, "the voice sheet opened over a tapped answer")
+    }
+
+    private static let mcqQuestion = Question(
+        id: "q_mcq_rs10",
+        question: "What is the largest planet in our solar system?",
+        type: .textMultichoice,
+        possibleAnswers: ["a": "Mars", "b": "Jupiter", "c": "Saturn", "d": "Neptune"],
+        difficulty: "easy",
+        topic: "Astronomy",
+        category: "science",
+        sourceUrl: nil,
+        sourceExcerpt: nil,
+        mediaUrl: nil,
+        imageSubtype: nil,
+        explanation: nil,
+        generatedBy: nil
+    )
 }

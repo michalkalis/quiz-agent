@@ -198,6 +198,10 @@ OTDB_REWRITE = _role("LLM_ROLE_OTDB_REWRITE", "claude-haiku-5-5")  # was gpt-4o-
 HINT_QUESTION = _role("LLM_ROLE_HINT_QUESTION", "gpt-4o")  # kept: Claude over-clues
 SILHOUETTE_QUESTION = _role("LLM_ROLE_SILHOUETTE_QUESTION", "gpt-4o")  # kept: 2x longer
 HINT_VALIDATE = _role("LLM_ROLE_HINT_VALIDATE", "claude-haiku-5-5")  # was gpt-4o-mini
+# #206: "local question" label (which country a question is tied to). Sonnet,
+# not haiku: it must know which sk/cs shows, people and customs are domestic,
+# the same small-market knowledge CASUAL_PLAYER needs.
+LOCAL_SCOPE = _role("LLM_ROLE_LOCAL_SCOPE", "claude-sonnet-5-5")
 
 
 def pick_generation_model(rand=random.random) -> str:

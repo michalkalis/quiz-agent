@@ -116,6 +116,10 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
     boost_until: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # #206 — country a local question is tied to (migration a206c0a1e5b7);
+    # NULL = universal / not labelled yet. Read by the live retriever's
+    # "skip local questions" filter.
+    local_scope: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
 
     # Fields not in the schema sketch but present in Pydantic `Question`.
     # Kept as plain columns so round-trip is value-equal without leaning on
@@ -256,6 +260,7 @@ def question_to_row(q: Question) -> QuestionRow:
         expires_at=_ensure_utc(q.expires_at),
         freshness_tag=q.freshness_tag,
         boost_until=_ensure_utc(q.boost_until),
+        local_scope=q.local_scope,
         created_by=q.created_by,
         reviewed_by=q.reviewed_by,
         reviewed_at=_ensure_utc(q.reviewed_at),
@@ -326,6 +331,7 @@ def row_to_question(row: QuestionRow) -> Question:
         expires_at=row.expires_at,
         freshness_tag=row.freshness_tag,
         boost_until=row.boost_until,
+        local_scope=row.local_scope,
         created_by=row.created_by,
         reviewed_by=row.reviewed_by,
         reviewed_at=row.reviewed_at,

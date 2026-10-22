@@ -38,12 +38,17 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
+from app import feature_flags
 from app.db import (
     PIPELINE_OWNED_COLUMNS,
     QuestionRow,
     engine,
     normalize_async_url,
     question_to_row,
+)
+from app.generation.local_scope_classifier import (
+    LocalScopeClassifier,
+    has_local_scope_verdict,
 )
 from app.scoring.machine_approval import (
     GATE_VERSION,
@@ -82,6 +87,8 @@ class ImportResult:
     pending: int = 0
     needs_embedding: int = 0
     inserted: int = 0
+    # #206: rows the local-scope classifier labelled during this import.
+    local_scope_labelled: int = 0
     # question id -> reason the #158 guard kept it out of the corpus.
     skipped: dict[str, str] = field(default_factory=dict)
     # reason -> number of unique rows left pending (auto mode only).
@@ -274,6 +281,7 @@ async def import_questions(
     execute: bool,
     batch_size: int = 100,
     on_plan: Callable[[ImportResult], None] | None = None,
+    local_scope_classifier: LocalScopeClassifier | None = None,
 ) -> ImportResult:
     """Guard, stamp, embed and insert ``questions``; return what happened.
 
@@ -283,6 +291,7 @@ async def import_questions(
     and before any write, so a caller can report even when embedding then
     fails. Raises :class:`EmbeddingKeyMissing` when rows need vectors and
     ``execute`` is on but ``OPENAI_API_KEY`` is unset (nothing is written).
+    ``local_scope_classifier`` overrides the default #206 labeller (tests).
     """
     stats: dict = {}
     prepared = prepare_questions(questions, review_status, stats)
@@ -335,6 +344,17 @@ async def import_questions(
                     f"OPENAI_API_KEY not set; cannot embed {len(needs_embedding)} row(s)."
                 )
             _embed_questions(needs_embedding, batch_size)
+
+        # #206: every new corpus row gets its "local question" label here, the
+        # one place all corpus writers (CLI import, weekly fresh job, native
+        # sk/cs runs) pass through, so new rows are labelled exactly like the
+        # backfilled corpus. A row the classifier misses goes in unlabelled
+        # (= universal) and the backfill script picks it up later.
+        if feature_flags.local_scope_classification():
+            unlabelled = [q for q in to_insert if not has_local_scope_verdict(q)]
+            if unlabelled:
+                labeller = local_scope_classifier or LocalScopeClassifier()
+                result.local_scope_labelled = await labeller.label(unlabelled)
 
         rows = [_row_to_insert_dict(question_to_row(q)) for q in to_insert]
         if rows:

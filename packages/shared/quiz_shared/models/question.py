@@ -267,6 +267,13 @@ class Question(BaseModel):
     # `expires_at` it never hides the question — after the window it simply
     # behaves like an ordinary one.
     boost_until: Optional[datetime] = None
+    # #206 — the country a "local" question is tied to (ISO 3166-1 alpha-2,
+    # lowercase, e.g. "sk", "cz", "us"): answering needs knowledge people from
+    # that one country have and others generally do not (city transport,
+    # domestic TV, national holidays). `None` = universal, which is also every
+    # row the local-scope classifier has not labelled yet. A player who opts
+    # out of local questions gets only `None` rows.
+    local_scope: Optional[str] = None
 
     def is_expired(self) -> bool:
         """Check if this question has expired."""
@@ -407,6 +414,7 @@ class Question(BaseModel):
             difficulty=data.get("difficulty", default_difficulty),
             tags=data.get("tags", []),
             language_dependent=data.get("language_dependent", False),
+            local_scope=data.get("local_scope"),
             age_appropriate=data.get("age_appropriate"),
             media_url=data.get("media_url"),
             image_subtype=data.get("image_subtype"),

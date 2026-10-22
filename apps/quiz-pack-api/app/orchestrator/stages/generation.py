@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any
 from app import feature_flags
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
-from app.generation.prompt_builder import HOUSE_STYLE_VERSION, order_brief_section
+from app.generation.prompt_builder import house_style_version, order_brief_section
 from app.generation.classification import normalize_category, normalize_difficulty
 from app.generation.mcq_answer import is_bare_option_key, resolve_mcq_answer
 from app.generation.expiry_classifier import (
@@ -479,7 +479,7 @@ class GenerationStage:
                     update={
                         "extra": {
                             **provenance.extra,
-                            "house_style": HOUSE_STYLE_VERSION,
+                            "house_style": house_style_version(),
                         }
                     }
                 )

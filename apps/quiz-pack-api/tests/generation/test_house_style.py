@@ -97,3 +97,76 @@ def test_english_corpus_top_up_still_gets_no_pack_list_with_house_style() -> Non
     assert brief == house_style_section("en")
     customer = order_brief_section("Harry Potter", "en", ["Q one?"], True)
     assert customer.index("ALREADY IN THIS PACK") < customer.index("HOUSE STYLE")
+
+
+# --- #211: house style v2 (GEN_HOUSE_STYLE_V2) -------------------------------
+
+
+def test_v2_off_keeps_the_live_prompt_byte_identical(monkeypatch) -> None:
+    """House style is live for customer packs since 10-14; v2 must change
+    nothing until the founder's blind round switches it on."""
+    monkeypatch.delenv("GEN_HOUSE_STYLE_V2", raising=False)
+    for lang in ("en", "sk", "cs"):
+        assert "HOW A QUESTION SOUNDS" not in house_style_section(lang)
+    assert "OUTPUT LANGUAGE: Slovak" in order_brief_section(None, "sk")
+
+
+def test_v2_slovak_and_czech_are_native_not_an_english_brief(monkeypatch) -> None:
+    """The calque "súťažia nad pivom" came from a model reasoning in English;
+    v2 sk/cs carry no English brief, ask for reasoning in the language, and
+    show the founder's own 9-10 questions in that language."""
+    monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
+    sk = order_brief_section(None, "sk", house_style=True)
+    cs = order_brief_section(None, "cs", house_style=True)
+    assert "OUTPUT LANGUAGE" not in sk + cs
+    assert "delighted, not tested" not in sk + cs
+    assert "Aj `reasoning` píš po slovensky" in sk
+    assert "I `reasoning` piš česky" in cs
+    assert "Medzilaborce" in sk and "Medzilaborce" not in cs
+    assert "Krtek" in cs and "Krtek" not in sk
+    assert sk.index("VÝSTUPNÝ JAZYK") < sk.index("## ŠTÝL DOMU")
+    assert "<!--" not in sk + cs
+
+
+def test_v2_keeps_the_home_share_but_forbids_a_bolted_on_home_hook(monkeypatch) -> None:
+    """Founder 10-22: 7 in 10 stays; only the empty hook goes ("nájdete v
+    Bratislave, Košiciach"). A hook that carries the point (Christmas carp vs
+    KFC in Japan, rated 9) must stay allowed, so the rule names that case."""
+    monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
+    sk = house_style_section("sk")
+    cs = house_style_section("cs")
+    assert "7 z 10" in sk and "7 z 10" in cs
+    assert "Nikdy neprilepuj Slovensko" in sk
+    assert "Nikdy nepřilepuj Česko" in cs
+    assert "kontrast s ich Štedrým večerom" in sk
+    assert "kontrast s jejich Štědrým večerem" in cs
+    for section in (sk, cs):
+        assert "nevnucuj" in section  # foreign subjects still not forced
+
+
+def test_v2_hard_rules_survive_the_rewrite_in_every_language(monkeypatch) -> None:
+    """The native rewrite must not drop what 10-14 found missing in code:
+    no riddles, one word origin per batch, no giveaway, request wins."""
+    monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
+    en, sk, cs = (house_style_section(lang) for lang in ("en", "sk", "cs"))
+    assert '"what am I"' in en and "the request wins" in en
+    assert "HOW A QUESTION SOUNDS" in en and "HOME COUNTRY" not in en
+    assert "„čo som“" in sk and "platí požiadavka" in sk
+    assert "„co jsem“" in cs and "platí požadavek" in cs
+    for section in (sk, cs):
+        assert "Rusko" in section
+    assert "{" not in en + sk + cs
+
+
+def test_v2_stamps_its_own_version(monkeypatch) -> None:
+    """Ratings of v2 questions must be separable from v1 ones afterwards."""
+    from app.generation.prompt_builder import (
+        HOUSE_STYLE_V2_VERSION,
+        HOUSE_STYLE_VERSION,
+        house_style_version,
+    )
+
+    monkeypatch.delenv("GEN_HOUSE_STYLE_V2", raising=False)
+    assert house_style_version() == HOUSE_STYLE_VERSION
+    monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
+    assert house_style_version() == HOUSE_STYLE_V2_VERSION != HOUSE_STYLE_VERSION

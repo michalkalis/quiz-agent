@@ -349,6 +349,16 @@ def gen_house_style() -> bool:
     return _truthy(os.getenv("GEN_HOUSE_STYLE"))
 
 
+def gen_house_style_v2() -> bool:
+    """#211: house style v2 — sk/cs written natively (examples from the
+    founder's 9-10 sk/cs ratings, no bolted-on home hook, no English calques)
+    and the "every part of the question earns its place" rule for all
+    languages. Also swaps the English output-language override for a native
+    sk/cs one. OFF until the founder's blind round (``GEN_HOUSE_STYLE_V2=1``).
+    """
+    return _truthy(os.getenv("GEN_HOUSE_STYLE_V2"))
+
+
 def best_of_n() -> bool:
     """#166: best-of-N over-generation + critique + pairwise duels, now OFF
     by default (duels already ruled out in D21 #164; critique added no signal

@@ -6,6 +6,7 @@ from typing import List, Optional, Sequence
 
 from quiz_shared.llm import factory as llm_factory
 
+from .. import feature_flags
 from .classification import CATEGORIES
 from .examples import BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
@@ -229,8 +230,43 @@ def _house_style_parts() -> tuple[str, str]:
     return body.strip(), home.split("\n", 1)[1].strip()
 
 
+# #211 — v2 (``GEN_HOUSE_STYLE_V2``): en adds the "every part earns its place"
+# rule; sk/cs are written natively, not translated, because a model reasoning
+# from an English brief wrote calques ("súťažia nad pivom") and bolted a city
+# onto world facts to meet the 7-in-10 home share. A sk/cs file holds the
+# native output-language override, then the house style after the marker.
+HOUSE_STYLE_V2_VERSION = "2026-10-22"
+_HOUSE_STYLE_V2_DIR = os.path.dirname(_HOUSE_STYLE_PATH)
+_V2_STYLE_MARKER = "<!-- house style -->"
+_V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU"}
+
+
+@lru_cache(maxsize=4)
+def _house_style_v2_parts(language: str) -> tuple[str | None, str]:
+    """(native output-language section or None for en, house style body)."""
+    suffix = f".{language}" if language in _HOME_COUNTRY else ""
+    path = os.path.join(_HOUSE_STYLE_V2_DIR, f"house_style_v2{suffix}.md")
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    if not suffix:
+        return None, text.strip()
+    lang_section, _, body = text.partition(_V2_STYLE_MARKER)
+    return lang_section.strip(), body.strip()
+
+
+def house_style_version() -> str:
+    """Version stamped on every question generated with the house style."""
+    if feature_flags.gen_house_style_v2():
+        return HOUSE_STYLE_V2_VERSION
+    return HOUSE_STYLE_VERSION
+
+
 def house_style_section(language: str) -> str:
     """The house style section; sk/cs add the home-country paragraph."""
+    if feature_flags.gen_house_style_v2():
+        _, body = _house_style_v2_parts(language)
+        heading = _V2_HEADINGS.get(language, _V2_HEADINGS["en"])
+        return f"\n\n## {heading}\n\n{body}"
     body, home = _house_style_parts()
     section = f"\n\n## HOUSE STYLE\n\n{body}"
     if language in _HOME_COUNTRY:
@@ -255,7 +291,9 @@ def order_brief_section(
     if request and request.strip():
         section += _ORDER_REQUEST_SECTION.format(request=request.strip())
     name = _LANGUAGE_NAMES.get(language)
-    if name:
+    if name and feature_flags.gen_house_style_v2():
+        section += "\n\n" + _house_style_v2_parts(language)[0]
+    elif name:
         section += _OUTPUT_LANGUAGE_SECTION.format(
             name=name, neighbour=_NEIGHBOUR[language]
         )

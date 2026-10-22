@@ -16,6 +16,14 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 4. **Approval:** the agent prepares a **weekly batch** (5–7 posts per account with captions); the founder approves it on one page, then it schedules itself.
 5. Free tools only. No paid ads in English markets (a payer would cost $120–250 vs ~$25 year-1 revenue).
 
+## Founder decisions (2026-10-22) — direction after the [growth research](../research/growth-strategy-2026-10-21.md)
+
+1. **Direction accepted:** goal = paying users; conversion before traffic. Now: measurement page + content renderer + start posting. After App Store launch: shareable result card, product page (screenshots, custom product pages, ratings prompt). After 2–4 weeks of data: offer shape, maybe a small Apple Ads CZ/SK test.
+2. **Content production: no paid external services or models.** Remotion (free licence), existing ElevenLabs question clips only (skip questions without audio), captions by the agent, local tools only.
+3. **No hard paywall, ever** (founder hates them and uninstalls such apps). Stay as free as possible; a trial is acceptable to discuss later.
+4. **Start posting now**, before the App Store launch: bios say "coming soon" + link to trubbo.app (public beta CTA already there).
+5. **Apple featuring nomination: later**, for the version that is actually launched after real testing (1.1 has only been tested by the founder). 1.1 stays on automatic release after approval (founder, 2026-10-22).
+
 ## Hard rules
 
 - **Driving safety:** no real footage from a moving car. Any driving visual (AI/motion) never shows a driver touching or looking at a phone — one such clip damages the whole brand and gets removed on YouTube/TikTok.

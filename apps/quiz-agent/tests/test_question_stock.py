@@ -174,6 +174,9 @@ async def test_counts_use_the_app_store_serve_predicate():
     sk = [c for c in store.calls if "$or" in c["filters"]]
     assert sk
     assert all(c["filters"]["$or"][0].get("language_dependent") is False for c in sk)
+    # #206: the smaller "skip local questions" pool runs dry first, so that is
+    # the one the warning has to cover.
+    assert all(c["filters"]["local_scope"] is None for c in store.calls)
 
 
 async def test_fresh_window_excludes_permanent_boosts_and_short_boosts():

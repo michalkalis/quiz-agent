@@ -136,6 +136,7 @@ async def create_session(
         )
         session.language = language
         session.include_images = body.include_images
+        session.skip_local_questions = body.skip_local_questions
         # TestFlight builds may see pending_review questions (founder rule,
         # 2026-08-28); the value is whitelisted so a garbage header can never
         # widen the pool — anything but the exact literal stays App Store-safe.

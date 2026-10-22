@@ -82,6 +82,13 @@ class CreateSessionRequest(BaseModel):
         default=False,
         description="Whether image-type questions may be served (#68, default off)",
     )
+    skip_local_questions: bool = Field(
+        default=False,
+        description=(
+            "Skip questions only people from one country understand (#206, "
+            "default off = local questions included). Older builds never send it."
+        ),
+    )
     pack_id: Optional[str] = Field(
         default=None,
         description=(
@@ -371,6 +378,7 @@ class QuestionAvailabilityRequest(BaseModel):
     )
     language: str = Field(default="en", description="Language code (ISO 639-1)")
     include_images: bool = Field(default=False)
+    skip_local_questions: bool = Field(default=False)
     excluded_question_ids: Optional[List[str]] = Field(
         default=None, description="Client-side seen history, same list /start sends"
     )

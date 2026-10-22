@@ -394,3 +394,47 @@ def test_custom_pack_branch_has_no_language_filter():
     filters = _retriever()._build_metadata_filters("medium", session)
 
     assert "language" not in filters and "$or" not in filters
+
+
+def test_local_questions_are_served_by_default():
+    # #206 founder decision: local questions stay ON unless the player opts
+    # out — the native sk/cs home-country share is deliberate (#203).
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language="sk"
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert "local_scope" not in filters
+
+
+def test_skip_local_questions_keeps_only_universal_rows():
+    # #206: a player who switched local questions off must get none — and an
+    # unlabelled row (NULL) still counts as universal, so a classifier miss
+    # never hides a question.
+    session = QuizSession(
+        session_id="sess_test",
+        current_difficulty="medium",
+        language="sk",
+        skip_local_questions=True,
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert filters["local_scope"] is None
+
+
+def test_pack_session_ignores_skip_local_questions():
+    # A custom pack is the exact set the player ordered and paid for (#95);
+    # the corpus preference must not shrink it.
+    session = QuizSession(
+        session_id="sess_test",
+        current_difficulty="medium",
+        language="sk",
+        pack_id="pack-1",
+        skip_local_questions=True,
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert "local_scope" not in filters

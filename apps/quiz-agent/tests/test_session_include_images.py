@@ -68,3 +68,19 @@ async def test_include_images_opt_in_reaches_session():
     manager = SessionManager()
     session = await _create(manager, CreateSessionRequest(include_images=True))
     assert session.include_images is True
+
+
+# #206 — same contract for the "skip local questions" switch: if the route
+# stops copying it, the setting silently does nothing.
+
+
+async def test_skip_local_questions_defaults_off_so_older_builds_keep_local_ones():
+    manager = SessionManager()
+    session = await _create(manager, CreateSessionRequest())
+    assert session.skip_local_questions is False
+
+
+async def test_skip_local_questions_reaches_session():
+    manager = SessionManager()
+    session = await _create(manager, CreateSessionRequest(skip_local_questions=True))
+    assert session.skip_local_questions is True

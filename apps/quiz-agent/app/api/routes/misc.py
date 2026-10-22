@@ -193,6 +193,7 @@ async def get_question_availability(
         current_difficulty=body.difficulty,
         language=body.language,
         include_images=body.include_images,
+        skip_local_questions=body.skip_local_questions,
         category=body.category,
         preferred_categories=body.categories
         or ([body.category] if body.category else []),

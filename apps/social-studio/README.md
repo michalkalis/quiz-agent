@@ -1,6 +1,6 @@
 # social-studio
 
-Renders Trubbo's social posts from approved questions (#210 — Marketing on social networks, sub-task 210.3). Remotion + TypeScript, everything local and free: no paid API is ever called.
+Renders Trubbo's social posts from approved questions (#210 — Marketing on social networks, sub-task 210.3). Remotion + TypeScript, everything local and free; the only paid call is the opt-in `--make-voice` below.
 
 Spec: [content plan](../../docs/issues/issue-210-content-plan.md) · [issue](../../docs/issues/issue-210-social-marketing.md).
 
@@ -20,6 +20,7 @@ Background colour follows the category (`src/theme.ts`) so a series does not loo
 npm install                      # also copies fonts + mascot from apps/website/src
 npm run render -- <question-id>  # mp4 + cover jpg into out/ (gitignored)
 npm run render -- <id> --lang sk --format abc --hook 2 --out ~/Movies/trubbo
+npm run render -- <id> --make-voice  # no clip yet: the app's own TTS makes it (max 5 a week)
 npm run render -- question.json  # hand-written input, see cli/shape.ts (QuestionInput)
 npm run render -- --carousel <id>,<id>,<id> --part 4
 npm run coverage                 # how many approved questions already have a voice clip
@@ -30,7 +31,9 @@ A question id is fetched **read-only** from prod: `scripts/fetch_question.py` is
 
 ## Voice and captions
 
-- **Voice** = the clip the app already made for that question, looked up in the private R2 TTS store under the app's own cache key (spoken text + voice). If there is no clip, the reel is rendered **without voice** (silent reading pace) and the CLI says so. It never synthesizes.
+- **Voice** = the clip the app already made for that question, looked up in the private R2 TTS store under the app's own cache key (spoken text + voice). If there is no clip, the reel is rendered **without voice** (silent reading pace) and the CLI says so.
+- **`--make-voice`** (founder 2026-10-22, opt-in): for a question without a clip, `fetch_question.py --ensure-audio` runs the app's own `TTSService` on the prod machine. It speaks exactly what the app reads (shipped client capabilities, MCQ options included) in the app voice and stores it in R2 under the app's key, so a player who later gets the question hears the same clip and nothing is paid twice. ElevenLabs only (no fallback voice), refused past the app's ElevenLabs daily budget. The CLI prints the characters used and keeps a local ledger (`.cache/voice-ledger.json`) that stops at **5 clips per 7 days** (the ElevenLabs plan has no top-ups).
+- **Why line** = the first full sentence of the explanation, never cut mid-sentence: the font shrinks to fit (`src/fitWhy.ts`), and only if it still does not fit, the sentence up to a comma is shown.
 - **Word captions**: whisper.cpp runs locally (`@remotion/install-whisper-cpp`, release 1.5.5, multilingual `base` model, installed into `.cache/` on first use). Its word timestamps are mapped onto the on-screen words by character position, so spelled-out numbers and read-aloud MCQ options in the clip still line up.
 - ffmpeg/ffprobe and Chrome come from Remotion itself (chrome-headless-shell), not from the system.
 

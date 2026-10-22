@@ -4,6 +4,7 @@
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COPY, LETTERS, hookFor} from './copy';
+import {fitWhy} from './fitWhy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, OK_BG, SURF, tintFor} from './theme';
 import {COUNTDOWN_MS, HOOK_MS, REVEAL_MS} from './timing';
@@ -251,6 +252,8 @@ const Countdown: React.FC<{startFrame: number; onBg: string; deep: string; comme
 const Reveal: React.FC<{q: ReelProps['q']; appear: number; variant: 'five' | 'abc'; startFrame: number}> = ({q, appear, variant, startFrame}) => {
 	const copy = COPY[q.language];
 	const abc = variant === 'abc' && q.correctIndex !== null;
+	// Text column = reel width (920) − card padding − gap − monkey.
+	const why = fitWhy(q.why, abc ? {width: 920 - 96 - 28 - 110, maxLines: 4, size: 38, minSize: 30} : {width: 920 - 112 - 28 - 150, maxLines: 4, size: 40, minSize: 30});
 	return (
 		<div
 			style={{
@@ -271,7 +274,7 @@ const Reveal: React.FC<{q: ReelProps['q']; appear: number; variant: 'five' | 'ab
 					{abc ? ` ${LETTERS[q.correctIndex!]}` : ''}
 				</div>
 				{abc ? null : <div style={{fontSize: 80, fontWeight: 800, lineHeight: 1.05, marginTop: 10, letterSpacing: -1}}>{q.answer}</div>}
-				{q.why ? <div style={{fontSize: abc ? 38 : 40, lineHeight: 1.3, color: INK2, marginTop: abc ? 12 : 24, fontWeight: 500}}>{q.why}</div> : null}
+				{why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: abc ? 12 : 24, fontWeight: 500}}>{why.text}</div> : null}
 			</div>
 			<div style={{marginTop: -6}}>
 				<Monkey size={abc ? 110 : 150} mood="happy" delay={startFrame} />

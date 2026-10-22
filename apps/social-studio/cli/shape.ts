@@ -1,6 +1,6 @@
 // Turns a question row into on-screen text. Deterministic string handling
-// only: the "why" line is cut from the question's own explanation, never
-// rewritten by a model.
+// only: the "why" line is the first sentence of the question's own
+// explanation, never rewritten by a model.
 import type {Language, ReelQuestion} from '../src/types';
 
 /** Raw input: a prod row (fetch_question.py) or a hand-written JSON file. */
@@ -24,8 +24,6 @@ export type QuestionInput = {
 	spoken_text?: string;
 };
 
-const MAX_WHY = 150;
-
 /** Public text rule: no dashes as punctuation (hyphenated words stay). */
 export const noDashes = (s: string) =>
 	s
@@ -34,19 +32,15 @@ export const noDashes = (s: string) =>
 		.replace(/,\s*,/g, ',')
 		.trim();
 
-/** First sentence of the explanation; if still long, cut at the last comma or word. */
+/** First full sentence of the explanation, never cut: the card fits it
+ * (src/fitWhy.ts shrinks the font, or falls back to a clause ending at a comma). */
 export const oneSentence = (text: string | null | undefined): string => {
 	if (!text) return '';
 	const clean = noDashes(text.replace(/\s+/g, ' ').trim());
 	// A sentence ends at . ! ? followed by a space and an uppercase letter or quote
 	// (so "Dr. Who" or "3.5" do not cut it).
 	const m = clean.match(/^.+?[.!?](?=\s+["'„“A-ZÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ])/u);
-	let first = m ? m[0] : clean;
-	if (first.length <= MAX_WHY) return first;
-	const slice = first.slice(0, MAX_WHY);
-	const comma = slice.lastIndexOf(',');
-	first = comma > MAX_WHY * 0.55 ? slice.slice(0, comma) : slice.slice(0, slice.lastIndexOf(' '));
-	return first.replace(/[,;:\s]+$/, '') + '…';
+	return m ? m[0] : clean;
 };
 
 export const shapeQuestion = (raw: QuestionInput): ReelQuestion => {

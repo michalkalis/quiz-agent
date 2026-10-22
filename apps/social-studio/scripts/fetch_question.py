@@ -1,16 +1,21 @@
-"""READ-ONLY: one approved question + its existing app voice clip, from prod.
+"""One approved question + its app voice clip, from prod.
 
 Not run locally: the CLI pipes this file into the prod API machine
 (`fly ssh console -a quiz-agent-api -C "python - <id> <lang>"`), where the app
 code, DB URL and R2 credentials already live, so no secret ever leaves Fly.
 
 - SELECT only, inside a READ ONLY transaction; R2 GET only.
-- Never synthesizes: the clip is looked up under the exact cache key the app
-  uses (TTSCache hash of spoken text + voice). No clip -> "audio_b64": null and
-  the reel renders without voice.
+- The clip is looked up under the exact cache key the app uses (TTSCache hash
+  of spoken text + voice). No clip -> "audio_b64": null and the reel renders
+  without voice.
+- The one write, only with --ensure-audio and only when there is no clip:
+  the app's own TTSService speaks the text the app would read (shipped client
+  capabilities) in the app voice and stores it in R2 under the app's key, so a
+  player who later gets the question hears this same clip (founder 2026-10-22).
+  ElevenLabs only (no fallback voice); refused past the app's daily budget.
 
-Usage: python - <question-id> [en|sk|cs]   (prints "@@JSON@@{...}")
-       python - --coverage                 (clip counts per language)
+Usage: python - <question-id> [en|sk|cs] [--ensure-audio]   (prints "@@JSON@@{...}")
+       python - --coverage                                   (clip counts per language)
 """
 
 import asyncio
@@ -24,6 +29,7 @@ sys.path.insert(0, "/app")
 
 import asyncpg
 import boto3
+from app.client_capabilities import ANSWER_CODES, OPTION_LABELS
 from app.tts.cache import TTSCache
 from app.tts.number_normalization import normalize_numbers_for_tts
 from app.tts.spoken_text import spoken_question_text
@@ -129,6 +135,87 @@ async def one(qid, lang):
     return out
 
 
+# What the shipped apps (1.0 beta and 1.1) send as X-Client-Capabilities.
+APP_CAPABILITIES = (ANSWER_CODES, OPTION_LABELS)
+
+
+async def elevenlabs_usage():
+    """(credits used this billing period, period limit): read-only GET."""
+    import httpx
+    from app.usage.elevenlabs_budget import SUBSCRIPTION_URL
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            SUBSCRIPTION_URL, headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"]}
+        )
+        resp.raise_for_status()
+        sub = resp.json()
+        return int(sub["character_count"]), int(sub["character_limit"])
+
+
+async def ensure(qid, lang):
+    """`one`, plus a clip made through the app's own TTS path when missing."""
+    import tempfile
+
+    from app.config import get_settings
+    from app.tts.service import TTSBilling, TTSService
+
+    out = await one(qid, lang)
+    if out.get("error") or out["audio_b64"]:
+        return out  # an existing clip is never paid for twice
+    session = SimpleNamespace(
+        client_capabilities=APP_CAPABILITIES, language=out["language"]
+    )
+    # Same text GET /sessions/{id}/question/audio builds for such a session.
+    spoken = normalize_numbers_for_tts(
+        spoken_question_text(out["question"], out["possible_answers"], session),
+        out["language"],
+    )
+    used, limit = await elevenlabs_usage()
+    # The app's own service-wide gate (#207.13): today's spend from the
+    # day-start reading the app stored. Never eat into what players need.
+    start = await fetch_rows(
+        "select amount from usage_counters where subject_id = '__service__' "
+        "and usage_date = current_date and metric = 'elevenlabs_credits_at_day_start'"
+    )
+    day_start = start[0]["amount"] if start else used
+    spent_today = used - day_start if used >= day_start else used
+    budget = get_settings().elevenlabs_daily_credit_budget
+    if budget and spent_today + len(spoken) > budget:
+        return {
+            "error": f"{qid}: ElevenLabs daily budget would be passed "
+            f"({spent_today} + {len(spoken)} > {budget})"
+        }
+    if limit - used < len(spoken):
+        return {"error": f"{qid}: not enough ElevenLabs credits ({limit - used} left)"}
+    # Temp L1 dir: the machine's own cache belongs to the app user; R2 (L2)
+    # is the shared store every machine reads on a miss.
+    with tempfile.TemporaryDirectory() as tmp:
+        tts = TTSService(cache_dir=tmp)
+        tts.fallback = None  # the app voice or nothing, never a fallback-voice clip
+        if tts.provider.name != "elevenlabs" or tts.remote is None:
+            return {"error": "app TTS is not ElevenLabs + R2 on this machine"}
+        voice = tts.provider.default_voice
+        billing = TTSBilling()
+        audio = await tts.synthesize(text=spoken, use_cache=True, billing=billing)
+        key = tts._remote_key(spoken, voice)
+        stored = await tts.remote.get(key)
+    if stored is None:
+        return {"error": f"{qid}: clip made but not found in R2 under {key}"}
+    out.update(
+        audio_b64=base64.b64encode(audio).decode(),
+        spoken_text=spoken,
+        generated={
+            "chars": billing.billed_chars,
+            # ElevenLabs' usage counter lags; this is the reading before.
+            "credits_left_before": limit - used,
+            "voice": voice,
+            "r2_key": key,
+        },
+    )
+    return out
+
+
 async def coverage():
     qs = await fetch_rows(
         "select id::text, question, possible_answers, coalesce(language, 'en') as language "
@@ -154,8 +241,10 @@ async def coverage():
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "--coverage":
+    args = [a for a in sys.argv[1:] if a != "--ensure-audio"]
+    if args[0] == "--coverage":
         result = asyncio.run(coverage())
     else:
-        result = asyncio.run(one(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None))
+        run = ensure if "--ensure-audio" in sys.argv else one
+        result = asyncio.run(run(args[0], args[1] if len(args) > 1 else None))
     print("@@JSON@@" + json.dumps(result, ensure_ascii=False, default=str))

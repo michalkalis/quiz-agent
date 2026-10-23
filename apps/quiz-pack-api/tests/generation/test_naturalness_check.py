@@ -195,9 +195,11 @@ async def test_prompt_asks_for_the_smallest_meaning_preserving_edit() -> None:
     prompt = checker.prompts[0]
     for rule in ("smallest edit", "Never add words", "never rebuild", "keep the exact meaning"):
         assert rule in prompt
+    # round 2: the v2 leniency line let real problems through; it must not return
+    assert "When in doubt" not in prompt and "small ones too" in prompt
     q = _question(POPRAD)
     apply_naturalness(q, Naturalness(ok=True))
-    assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 2
+    assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 3
 
 
 @pytest.mark.asyncio

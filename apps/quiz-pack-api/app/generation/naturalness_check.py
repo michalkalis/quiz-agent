@@ -53,8 +53,10 @@ PROBLEM_KINDS = (
 
 DEFAULT_BATCH_SIZE = 20
 
-#: Stamped on every verdict; 2 = the smallest-edit rules after the 10-23 pairs.
-PROMPT_VERSION = 2
+#: Stamped on every verdict. 2 = smallest-edit rewrites (10-23 round 1);
+#: 3 = v1's sensitivity back: round 2 showed v2's "when in doubt, ok" let
+#: through 4/4 rows whose v1 rewrite the founder preferred.
+PROMPT_VERSION = 3
 
 _PROMPT_HEADER = """You are a native Slovak and Czech editor of a voice quiz \
 read aloud to friends in a car. Judge each question as a native speaker of its \
@@ -77,10 +79,14 @@ participles, needless passive, a collocation natives would not use.
 - "grammar": a grammar or spelling error.
 - "neighbour": a Czech word or form in a Slovak question, or the reverse.
 
-Flag only what a native listener would stumble on. Common colloquial forms \
-are fine (sk "poprosíte niečo na hnačku"), and so is a phrasing that is \
-merely not the one you would pick (sk "postupne nás robí ospalými"). When in \
-doubt, "ok": true.
+Report every problem a native listener would notice, small ones too: a \
+clumsy clitic order (cs "čeho na jeho oblečení byste se měli chytit", proper \
+"čeho byste se na jeho oblečení měli chytit"), an unclear reference (sk \
+"zastavujú autá a prikážu im", proper "prikazujú vodičom"), a home mention \
+that adds nothing (cs "Úhoř, kterého rybáři chytají i v Labi, …"; sk "v \
+slovenskej florbalovej extralige"). Do not flag common colloquial forms (sk \
+"poprosíte niečo na hnačku") or a sound phrasing that is merely not the one \
+you would pick (sk "postupne nás robí ospalými").
 
 For every question with a problem, quote the exact offending words and give \
 a "rewrite": the whole question with the smallest edit that removes the \
@@ -89,7 +95,9 @@ copy every other word as it is. Never add words or information (not "aby v \
 nej mohol pracovať" → "aby v nej mohol na železnici pracovať"), never rebuild \
 a sentence that has no problem, and keep the exact meaning ("robí ospalými", \
 makes sleepy, is not "uspáva", puts to sleep). Deleting an empty hook or \
-padding is the right edit. Same facts, same correct answer, same difficulty. \
+padding is the right edit; then check that what is left still reads on its \
+own: a word that pointed to the deleted part ("ich", "to", "tam") gets its \
+noun back. Same facts, same correct answer, same difficulty. \
 When the question is fine, "ok": true, no problems, "rewrite": null.
 
 Respond with JSON only, no prose:

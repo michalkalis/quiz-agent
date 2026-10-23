@@ -221,7 +221,16 @@ async def main() -> int:
     llm_factory.set_usage_handler(llm_usage.UsageCallbackHandler(recorder))
     try:
         if args.ids:
-            questions = await load_ids(engine, read_ids(args.ids))
+            loaded = await load_ids(engine, read_ids(args.ids))
+            # A swapped row's verdict is the only copy of its original text;
+            # re-checking it would erase that and re-arm the swap.
+            questions = [
+                q for q in loaded
+                if "original_question"
+                not in q.generation_metadata.extra.get("naturalness", {})
+            ]
+            if len(questions) != len(loaded):
+                print(f"skipped {len(loaded) - len(questions)} already rewritten row(s)")
             for q in questions:  # the current prompt replaces the old verdict
                 q.generation_metadata.extra.pop("naturalness", None)
         else:

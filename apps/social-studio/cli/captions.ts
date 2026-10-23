@@ -11,7 +11,7 @@ export type PostFormat = 'five' | 'abc' | 'carousel';
 // `abc` gets the option letters already joined ("A, B or C", "A, B, C or D").
 const T: Record<Language, {five: string; abc: (letters: string) => string; carousel: string; app: string; or: string; tags: string[]}> = {
 	en: {
-		five: 'Say your answer in the comments before the reveal.',
+		five: 'Your answer in the comments before the reveal.',
 		abc: (l) => `${l}? Comment before the reveal.`,
 		or: 'or',
 		carousel: 'How many did you get right? Comment your score.',

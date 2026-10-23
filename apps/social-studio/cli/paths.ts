@@ -11,5 +11,6 @@ export const PUBLIC_AUDIO_DIR = path.join(APP_DIR, 'public', 'audio');
 export const BATCH_DIR = path.join(APP_DIR, 'batches');
 export const VOICE_LEDGER = path.join(BATCH_DIR, 'voice-ledger.json');
 /** Clips the app's TTS may make for social posts per rolling 7 days (founder
- * 2026-10-22: ElevenLabs Starter, no top-ups). */
-export const VOICES_PER_WEEK = 5;
+ * 2026-10-22: ElevenLabs Starter, no top-ups). EXTRA_VOICES raises it for one
+ * run when the founder okays more (2026-10-23: the launch posts). */
+export const VOICES_PER_WEEK = 5 + Number(process.env.EXTRA_VOICES ?? 0);

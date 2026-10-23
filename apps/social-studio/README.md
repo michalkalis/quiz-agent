@@ -27,7 +27,7 @@ npm run coverage                 # how many approved questions already have a vo
 npm run studio                   # Remotion preview
 ```
 
-A question id is fetched **read-only** from prod: `scripts/fetch_question.py` is piped into the `quiz-agent-api` machine over `fly ssh console` (SELECT in a read-only transaction, R2 GET only), so no prod secret leaves Fly. Only `review_status = 'approved'` rows (and approved translations for `--lang`) are accepted. Rows are cached in `.cache/rows/`.
+A question id is fetched **read-only** from prod: `scripts/fetch_question.py` is piped into the `quiz-agent-api` machine over `fly ssh console` (SELECT in a read-only transaction, R2 GET only), so no prod secret leaves Fly. Only `review_status = 'approved'` rows (and approved translations for `--lang`) are accepted. Rows are cached in `.cache/rows/` for 6 hours only, because approved question text can be rewritten in place.
 
 ## Weekly batch (210.4)
 

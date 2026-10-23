@@ -8,7 +8,7 @@
 // or jpg slides (carousel). Chrome = Remotion's own chrome-headless-shell.
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
@@ -50,11 +50,16 @@ function logVoice(entry: LedgerEntry) {
 	writeFileSync(VOICE_LEDGER, JSON.stringify([...all, entry], null, 1));
 }
 
+/** Cached rows outlive one batch run only: approved question text can be
+ * rewritten in place (#211 naturalness pass), so an old copy would render
+ * wording the app no longer uses. */
+const ROW_CACHE_MS = 6 * 60 * 60 * 1000;
+
 /** Prod fetch: pipes scripts/fetch_question.py into the API machine. Read-only
  * unless `ensureAudio`, which lets the app's own TTS make a missing clip. */
 function fetchFromProd(id: string, lang?: Language, ensureAudio = false): QuestionInput {
 	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}.json`);
-	if (existsSync(cacheFile)) {
+	if (existsSync(cacheFile) && Date.now() - statSync(cacheFile).mtimeMs < ROW_CACHE_MS) {
 		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
 		if (cached.audio_b64 || !ensureAudio) return cached;
 	}

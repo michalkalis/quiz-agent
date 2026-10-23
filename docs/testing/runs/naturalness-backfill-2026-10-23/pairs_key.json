@@ -1,0 +1,143 @@
+{
+ "P1": {
+  "qid": "c614e844-f4f2-4f72-99d6-9e190b40fe38",
+  "rewrite_side": "2",
+  "kinds": [
+   "padding"
+  ]
+ },
+ "P2": {
+  "qid": "2debd4f6-f38d-4e9c-9e43-e677f09fed0e",
+  "rewrite_side": "2",
+  "kinds": [
+   "empty_hook"
+  ]
+ },
+ "P3": {
+  "qid": "eb459051-f6b3-4137-ac90-abec5c55e100",
+  "rewrite_side": "1",
+  "kinds": [
+   "neighbour",
+   "unnatural"
+  ]
+ },
+ "P4": {
+  "qid": "32b4d4d6-16f7-4704-90db-478784eb3d5f",
+  "rewrite_side": "2",
+  "kinds": [
+   "empty_hook"
+  ]
+ },
+ "P5": {
+  "qid": "eaf0bc20-5c63-4838-9db8-701c770b0690",
+  "rewrite_side": "2",
+  "kinds": [
+   "calque"
+  ]
+ },
+ "P6": {
+  "qid": "62dfeab0-1a0e-46bd-bb63-c62d0566be6e",
+  "rewrite_side": "1",
+  "kinds": [
+   "padding"
+  ]
+ },
+ "P7": {
+  "qid": "92c75bb5-8b36-4a11-bb03-9ecc29d0cbda",
+  "rewrite_side": "1",
+  "kinds": [
+   "padding"
+  ]
+ },
+ "P8": {
+  "qid": "78ae560d-09ff-4339-9a8a-25428cfb0741",
+  "rewrite_side": "1",
+  "kinds": [
+   "calque"
+  ]
+ },
+ "P9": {
+  "qid": "e41735c9-4360-4c15-8a2a-dc16d6c79074",
+  "rewrite_side": "2",
+  "kinds": [
+   "empty_hook"
+  ]
+ },
+ "P10": {
+  "qid": "67383641-7239-4d1b-a9b1-7f84ab66935b",
+  "rewrite_side": "2",
+  "kinds": [
+   "grammar"
+  ]
+ },
+ "P11": {
+  "qid": "de43b9b6-cb00-49e1-aaf5-c5a1ac32f727",
+  "rewrite_side": "1",
+  "kinds": [
+   "grammar"
+  ]
+ },
+ "P12": {
+  "qid": "bde931fe-4d53-4411-84b2-1714ed202c9d",
+  "rewrite_side": "2",
+  "kinds": [
+   "unnatural"
+  ]
+ },
+ "P13": {
+  "qid": "685ecf96-8729-4e5c-a322-4151c8d22b32",
+  "rewrite_side": "1",
+  "kinds": [
+   "empty_hook"
+  ]
+ },
+ "P14": {
+  "qid": "c7936450-16f4-457d-91bc-1d45d7b3c98f",
+  "rewrite_side": "2",
+  "kinds": [
+   "empty_hook"
+  ]
+ },
+ "P15": {
+  "qid": "e8728cd3-4a00-44e5-9bfe-25bad98bbbb5",
+  "rewrite_side": "1",
+  "kinds": [
+   "padding"
+  ]
+ },
+ "P16": {
+  "qid": "445438b7-f13f-4e1b-8d23-ac1c21ac3d38",
+  "rewrite_side": "2",
+  "kinds": [
+   "grammar"
+  ]
+ },
+ "P17": {
+  "qid": "74fdd47d-f87e-4f33-bc3d-b6c841288255",
+  "rewrite_side": "2",
+  "kinds": [
+   "unnatural"
+  ]
+ },
+ "P18": {
+  "qid": "35b0ccf3-6423-4123-9fb1-a8f93f95f545",
+  "rewrite_side": "1",
+  "kinds": [
+   "grammar"
+  ]
+ },
+ "P19": {
+  "qid": "74f48272-c091-4337-832c-b0132d30eed8",
+  "rewrite_side": "1",
+  "kinds": [
+   "unnatural"
+  ]
+ },
+ "P20": {
+  "qid": "40816a77-4738-4222-b65e-e7beb8a96ea9",
+  "rewrite_side": "1",
+  "kinds": [
+   "grammar"
+  ]
+ }
+}

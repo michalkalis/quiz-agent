@@ -136,3 +136,65 @@ def test_only_native_sk_cs_rows_need_the_check() -> None:
     assert needs_check(_question(PUB_QUIZ, "sk"))
     assert needs_check(_question(PUB_QUIZ, "cs"))
     assert not needs_check(_question("Where do pub quizzes come from?", "en"))
+
+
+def _flagged(text: str = PUB_QUIZ, rewrite: str | None = REWRITE) -> Question:
+    from app.generation.naturalness_check import Naturalness, apply_naturalness
+
+    q = _question(text)
+    q.embedding, q.embedding_qa = [0.1], [0.2]
+    apply_naturalness(q, Naturalness(ok=False, problems=[{"kind": "calque", "quote": "nad pivom"}], rewrite=rewrite))
+    return q
+
+
+def test_apply_rewrite_keeps_the_original_and_clears_stale_vectors() -> None:
+    """#211 211.4: a swapped row must be auditable and undoable (the original
+    text stays in the verdict) and must not keep vectors of the old text, or
+    dedup and retrieval would compare against words players never see."""
+    from app.generation.naturalness_check import apply_rewrite
+
+    q = _flagged()
+    assert apply_rewrite(q, "founder-pairs-2026-10-23") is True
+    assert q.question == REWRITE
+    verdict = q.generation_metadata.extra["naturalness"]
+    assert verdict["original_question"] == PUB_QUIZ
+    assert verdict["applied_by"] == "founder-pairs-2026-10-23"
+    assert q.embedding is None and q.embedding_qa is None
+    # a second run must not swap again (the original would be lost)
+    assert apply_rewrite(q, "import") is False
+    assert q.generation_metadata.extra["naturalness"]["original_question"] == PUB_QUIZ
+
+
+def test_apply_rewrite_leaves_ok_and_unchecked_rows_alone() -> None:
+    from app.generation.naturalness_check import (
+        Naturalness,
+        apply_naturalness,
+        apply_rewrite,
+    )
+
+    unchecked = _question(POPRAD)
+    ok = _question(POPRAD)
+    apply_naturalness(ok, Naturalness(ok=True))
+    assert not apply_rewrite(unchecked, "import") and not apply_rewrite(ok, "import")
+    assert unchecked.question == POPRAD == ok.question
+
+
+@pytest.mark.asyncio
+async def test_prompt_asks_for_the_smallest_meaning_preserving_edit() -> None:
+    """The 4 rewrites the founder rejected (10-23) changed the meaning, added
+    words or rebuilt a sound sentence; the prompt must forbid each of those and
+    the verdict must carry the prompt version so old verdicts can be told apart."""
+    from app.generation.naturalness_check import (
+        PROMPT_VERSION,
+        Naturalness,
+        apply_naturalness,
+    )
+
+    checker = _checker_with(_checks({"index": 1, "ok": True, "problems": [], "rewrite": None}))
+    await checker.check([_question(POPRAD)])
+    prompt = checker.prompts[0]
+    for rule in ("smallest edit", "Never add words", "never rebuild", "keep the exact meaning"):
+        assert rule in prompt
+    q = _question(POPRAD)
+    apply_naturalness(q, Naturalness(ok=True))
+    assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 2

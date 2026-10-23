@@ -383,3 +383,43 @@ async def test_new_sk_cs_rows_get_the_naturalness_label_before_insert(
     by_id = {str(r["id"]): r for r in captured}
     assert by_id[_id("q_sk")]["provenance"]["extra"]["naturalness"]["ok"] is False
     assert by_id[_id("q_sk")]["question"] == original
+
+
+@pytest.mark.asyncio
+async def test_autofix_stores_the_rewrite_embedded_from_the_new_text(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#211 211.4: founder 2026-10-23 chose auto-fix for new sk/cs rows after
+    the blind pairs (rewrite 15/20). With NATURALNESS_AUTOFIX the flagged row
+    goes in with the rewrite, the original stays in provenance for audit, and
+    the vectors embed the text players get, not the replaced one."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("NATURALNESS_CHECK", "1")
+    monkeypatch.setenv("NATURALNESS_AUTOFIX", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    embedded: list[str] = []
+
+    def _fake_embed(client, texts):
+        embedded.extend(texts)
+        return [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+
+    monkeypatch.setattr(lib, "_embed_batch", _fake_embed)
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    questions = lib.parse_questions(
+        [_clean("q_sk", language="sk"), _clean("q_en")], lib.AUTO_REVIEW_STATUS
+    )
+    original = questions[0].question
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True,
+        naturalness_checker=_StubNaturalness(),
+    )
+
+    assert result.naturalness_rewritten == 1
+    row = {str(r["id"]): r for r in captured}[_id("q_sk")]
+    assert row["question"] == "y"
+    verdict = row["provenance"]["extra"]["naturalness"]
+    assert (verdict["original_question"], verdict["applied_by"]) == (original, "import")
+    assert "y" in embedded and original not in embedded

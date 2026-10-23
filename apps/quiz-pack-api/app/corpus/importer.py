@@ -50,7 +50,11 @@ from app.generation.local_scope_classifier import (
     LocalScopeClassifier,
     has_local_scope_verdict,
 )
-from app.generation.naturalness_check import NaturalnessChecker, needs_check
+from app.generation.naturalness_check import (
+    NaturalnessChecker,
+    apply_rewrite,
+    needs_check,
+)
 from app.scoring.machine_approval import (
     GATE_VERSION,
     machine_approval_block_reason,
@@ -92,6 +96,8 @@ class ImportResult:
     local_scope_labelled: int = 0
     # #211: sk/cs rows the naturalness check labelled during this import.
     naturalness_checked: int = 0
+    # #211: flagged rows whose text the auto-fix replaced (NATURALNESS_AUTOFIX).
+    naturalness_rewritten: int = 0
     # question id -> reason the #158 guard kept it out of the corpus.
     skipped: dict[str, str] = field(default_factory=dict)
     # reason -> number of unique rows left pending (auto mode only).
@@ -343,6 +349,23 @@ async def import_questions(
         if not execute:
             return result
 
+        # #211: same single write point for the sk/cs naturalness label. It
+        # runs before embedding because an auto-fixed row is embedded with its
+        # new text.
+        if feature_flags.naturalness_check():
+            unchecked = [q for q in to_insert if needs_check(q)]
+            if unchecked:
+                checker = naturalness_checker or NaturalnessChecker()
+                result.naturalness_checked = await checker.label(unchecked)
+            if feature_flags.naturalness_autofix():
+                result.naturalness_rewritten = sum(
+                    apply_rewrite(q, "import") for q in to_insert
+                )
+                needs_embedding = [
+                    q for q in to_insert
+                    if q.embedding is None or q.embedding_qa is None
+                ]
+
         if needs_embedding:
             if not os.getenv("OPENAI_API_KEY"):
                 raise EmbeddingKeyMissing(
@@ -360,13 +383,6 @@ async def import_questions(
             if unlabelled:
                 labeller = local_scope_classifier or LocalScopeClassifier()
                 result.local_scope_labelled = await labeller.label(unlabelled)
-
-        # #211: same single write point for the sk/cs naturalness label.
-        if feature_flags.naturalness_check():
-            unchecked = [q for q in to_insert if needs_check(q)]
-            if unchecked:
-                checker = naturalness_checker or NaturalnessChecker()
-                result.naturalness_checked = await checker.label(unchecked)
 
         rows = [_row_to_insert_dict(question_to_row(q)) for q in to_insert]
         if rows:

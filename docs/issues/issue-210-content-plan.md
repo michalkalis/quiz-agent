@@ -15,7 +15,7 @@
 ## Principles
 
 1. Every post is playable: the viewer guesses before the reveal (watch time, sends).
-2. Voice is the differentiator: question read aloud, "say it out loud" prompt.
+2. Voice is the differentiator: question read aloud. Never tell viewers to answer out loud or pause the video (founder 2026-10-23: it is Instagram, not our app; people watch however they like).
 3. Series, not one-offs: numbered parts, same shape, varied visuals.
 4. Vary background colour and monkey motion per category and rotate hooks: YouTube's inauthentic-content rule (2025-07) and Instagram's originality ranking (2026-04) penalise identical-looking mass output.
 
@@ -39,16 +39,16 @@ Stories (followers only, 24 h): published by the agent like everything else, wit
 
 Mon 5 Seconds · Tue Road Trip Round · Wed A, B or C · Thu How it plays (or founder clip) · Fri 5 Seconds (weekend theme) · Sat/Sun off; Sunday batch approval. = 5 IG posts + 4 videos to Shorts (TikTok deferred 2026-10-23). Buffer data (2.1M posts, 2026): 3–5/wk is the sweet spot. SK/CZ account: same rhythm, one language per video, alternating sk/cs.
 
-## Hooks (rotate; never invented percentages, never "pause the video")
+## Hooks (rotate; never invented percentages, no instructions to the viewer)
 
-EN: Say it out loud. 5 seconds. · Answer before the monkey does. · One question. No googling. · Road trip round, part N.
-SK: Povedz to nahlas. Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvíz na cestu, N. diel.
-CS: Řekni to nahlas. Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvíz na cestu, N. díl.
+EN: You've got 5 seconds. · Answer before the monkey does. · One question. No googling. · Road trip round, part N.
+SK: Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvíz na cestu, N. diel.
+CS: Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvíz na cestu, N. díl.
 
 ## Profile bio (founder pick 2026-10-22)
 
 EN: Odd, funny questions with a story behind the answer. You answer out loud.
-SK/CZ: Zvláštne, vtipné otázky s príbehom za odpoveďou. Odpovedáš nahlas.
+SK/CZ: Vtipné a prekvapivé otázky. Pri každej odpovedi sa niečo dozvieš. Odpovedáš nahlas.
 Second line on both: coming soon + trubbo.app in the link field. Never claim "no tapping" or "no screen": the app has buttons and a screen.
 
 ## Captions

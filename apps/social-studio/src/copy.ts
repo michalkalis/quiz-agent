@@ -23,7 +23,7 @@ const list = (letters: string[], or: string) =>
 export const COPY: Record<Language, Copy> = {
 	en: {
 		hooks: [
-			'Say it out loud. 5 seconds.',
+			"You've got 5 seconds.",
 			'Answer before the monkey does.',
 			'One question. No googling.',
 		],
@@ -38,7 +38,7 @@ export const COPY: Record<Language, Copy> = {
 	},
 	sk: {
 		hooks: [
-			'Povedz to nahlas. Máš 5 sekúnd.',
+			'Máš 5 sekúnd.',
 			'Odpovedz skôr ako opička.',
 			'Jedna otázka, bez googlenia.',
 		],
@@ -53,7 +53,7 @@ export const COPY: Record<Language, Copy> = {
 	},
 	cs: {
 		hooks: [
-			'Řekni to nahlas. Máš 5 vteřin.',
+			'Máš 5 vteřin.',
 			'Odpověz dřív než opička.',
 			'Jedna otázka, bez googlení.',
 		],

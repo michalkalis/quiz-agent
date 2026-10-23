@@ -1,0 +1,169 @@
+<title>Prepisy otázok naslepo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+.ver { border: 1px solid var(--line); border-radius: 10px; padding: 0.75rem; display: grid; gap: 0.25rem; }
+.ver .tag { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+.ver p { margin: 0; font-size: 1.02rem; }
+mark { background: var(--accent-soft); color: inherit; border-radius: 3px; padding: 0 1px; }
+.pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.pick button { font: inherit; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0; }
+.pick button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Prepisy otázok naslepo</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Každá otázka je tu dvakrát: raz pôvodná, raz prepísaná. Poradie je náhodné. Miesta, kde sa líšia, sú zvýraznené v oboch. Vyber, ktorá znie lepšie po slovensky alebo po česky, alebo že sú rovnako dobré. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "P1", "lang": "sk", "answer": "1972", "v1": [["Krasokorčuliar ", true], ["Ondrej Nepela je dodnes jediným slovenským olympijským víťazom v krasokorčuľovaní. V ktorom roku získal svoje olympijské zlato?", false]], "v2": [["Ondrej Nepela je dodnes jediným slovenským olympijským víťazom v krasokorčuľovaní. V ktorom roku získal svoje olympijské zlato?", false]]}, {"id": "P2", "lang": "cs", "answer": "Dyslexii", "v1": [["Zakladatel IKEA Ingvar Kamprad dal výrobkům místo číselných kódů jména, protože se mu čísla při čtení pletla. Jakou ", false], ["poruchu, kterou zná snad každá česká škola,", true], [" měl?", false]], "v2": [["Zakladatel IKEA Ingvar Kamprad dal výrobkům místo číselných kódů jména, protože se mu čísla při čtení pletla. Jakou ", false], ["poruchu", true], [" měl?", false]]}, {"id": "P3", "lang": "sk", "answer": "Pečeň", "v1": [["Jaternica, kráľovná každej zabíjačky, má názov podľa jednej bravčovej vnútornosti. ", false], ["Česi", true], [" ", false], ["jej", true], [" ", false], ["hovoria", true], [" ", false], ["„jitrnice“.", true], [" O ktorú vnútornosť ide?", false]], "v2": [["Jaternica, kráľovná každej zabíjačky, má názov podľa jednej bravčovej vnútornosti. ", false], ["Češi", true], [" ", false], ["ju", true], [" ", false], ["dodnes", true], [" ", false], ["volajú „játra“.", true], [" O ktorú vnútornosť ide?", false]]}, {"id": "P4", "lang": "sk", "answer": "rádiový čip (RFID)", "v1": [["Lyžiarsku kartu ", false], ["v", true], [" ", false], ["Jasnej", true], [" nemusíte vyťahovať. Stačí ju mať vo vrecku bundy a turniket sa sám otvorí. Akou technológiou ju turniket prečíta na diaľku?", false]], "v2": [["Lyžiarsku kartu ", false], ["pri", true], [" ", false], ["turnikete", true], [" nemusíte vyťahovať. Stačí ju mať vo vrecku bundy a turniket sa sám otvorí. Akou technológiou ju turniket prečíta na diaľku?", false]]}, {"id": "P5", "lang": "sk", "answer": "Adenozín", "v1": [["Ranná káva nám v práci nedodáva energiu. Kofeín iba v mozgu zablokuje receptory látky, ktorá sa v ňom počas bdenia hromadí a postupne nás ", false], ["robí ospalými.", true], [" Ako sa táto látka volá?", false]], "v2": [["Ranná káva nám v práci nedodáva energiu. Kofeín iba v mozgu zablokuje receptory látky, ktorá sa v ňom počas bdenia hromadí a postupne nás ", false], ["uspáva.", true], [" Ako sa táto látka volá?", false]]}, {"id": "P6", "lang": "cs", "answer": "Brno", "v1": [["Ve kterém", false], [" městě se každoročně koná Animefest, největší festival anime a japonské popkultury v Česku, kam se sjíždějí tisíce fanoušků v kostýmech?", false]], "v2": [["Ve kterém", false], [" českém", true], [" městě se každoročně koná Animefest, největší festival anime a japonské popkultury v Česku, kam se sjíždějí tisíce fanoušků v kostýmech?", false]]}, {"id": "P7", "lang": "cs", "answer": "Nepravda", "v1": [["Thajský předchůdce Red Bullu jménem Krating Daeng se dodnes prodává v malých hnědých lahvičkách. Pravda, nebo nepravda: stejně jako plechovka z naší benzinky je ", false], ["perlivý?", true]], "v2": [["Thajský předchůdce Red Bullu jménem Krating Daeng se dodnes prodává v malých hnědých lahvičkách. Pravda, nebo nepravda: stejně jako plechovka z naší benzinky je ", false], ["perlivý a plný bublinek?", true]]}, {"id": "P8", "lang": "sk", "answer": "Plávať na hladine", "v1": [["Domáci pekári majú jednoduchý test, či je kvások pripravený na cesto: lyžičku kvásku pustia do pohára s vodou. Čo musí kvások urobiť, aby ", false], ["v", true], [" ", false], ["teste obstál?", true]], "v2": [["Domáci pekári majú jednoduchý test, či je kvások pripravený na cesto: lyžičku kvásku pustia do pohára s vodou. Čo musí kvások urobiť, aby ", false], ["test", true], [" ", false], ["prešiel?", true]]}, {"id": "P9", "lang": "sk", "answer": "Nemecko", "v1": [["Záhradní trpaslíci s červenou čiapkou strážia nejednu", false], [" slovenskú", true], [" predzáhradku. V ktorej krajine ich ako prví začali vyrábať vo veľkom?", false]], "v2": [["Záhradní trpaslíci s červenou čiapkou strážia nejednu", false], [" predzáhradku. V ktorej krajine ich ako prví začali vyrábať vo veľkom?", false]]}, {"id": "P10", "lang": "cs", "answer": "Do vesmíru", "v1": [["Plyšový Krteček se v roce 2011 vydal na šestnáctidenní výlet, na jaký se dostane jen málokterá hračka, a to stovky kilometrů nad ", false], ["Zemi.", true], [" Kam se podíval?", false]], "v2": [["Plyšový Krteček se v roce 2011 vydal na šestnáctidenní výlet, na jaký se dostane jen málokterá hračka, a to stovky kilometrů nad ", false], ["Zemí.", true], [" Kam se podíval?", false]]}, {"id": "P11", "lang": "sk", "answer": "aktívne uhlie", "v1": [["Keď v lekárni bez receptu poprosíte", false], [" o", true], [" niečo na hnačku alebo pokazený žalúdok, lekárnik vám často ponúkne čierne tabletky, ktoré na seba naviažu toxíny. Z čoho sú vyrobené?", false]], "v2": [["Keď v lekárni bez receptu poprosíte", false], [" niečo na hnačku alebo pokazený žalúdok, lekárnik vám často ponúkne čierne tabletky, ktoré na seba naviažu toxíny. Z čoho sú vyrobené?", false]]}, {"id": "P12", "lang": "sk", "answer": "Rod Stewart", "v1": [["Ktorý svetoznámy britský rocker s chrapľavým hlasom si roky staval obrovskú modelovú železnicu s veľkomestom a mrakodrapmi a na turné si v hoteloch objednával izbu navyše, aby ", false], ["na", true], [" nej mohol ", false], ["pracovať?", false]], "v2": [["Ktorý svetoznámy britský rocker s chrapľavým hlasom si roky staval obrovskú modelovú železnicu s veľkomestom a mrakodrapmi a na turné si v hoteloch objednával izbu navyše, aby ", false], ["v", true], [" nej mohol ", false], ["na železnici ", true], ["pracovať?", false]]}, {"id": "P13", "lang": "cs", "answer": "Pavoukovci", "v1": [["Klíště, kvůli kterému se", false], [" po každé procházce lesem ", false], ["prohlížíme,", true], [" ve skutečnosti vůbec není hmyz. Do které skupiny živočichů patří? Napoví vám počet jeho nohou.", false]], "v2": [["Klíště, kvůli kterému se", false], [" Češi", true], [" po každé procházce lesem ", false], ["prohlížejí,", true], [" ve skutečnosti vůbec není hmyz. Do které skupiny živočichů patří? Napoví vám počet jeho nohou.", false]]}, {"id": "P14", "lang": "cs", "answer": "Japonsko", "v1": [["Airsoft, se kterým dnes o víkendech běhají partičky po českých lesích,", true], [" vznikl v asijské zemi s tak přísnými zákony, že tam civilista skutečnou pistoli skoro nesežene. Která je to země?", false]], "v2": [["Airsoft", true], [" vznikl v asijské zemi s tak přísnými zákony, že tam civilista skutečnou pistoli skoro nesežene. Která je to země?", false]]}, {"id": "P15", "lang": "sk", "answer": "asi 30 000 km", "v1": [["Jeden blok v Minecrafte zodpovedá približne jednému metru. Ako ďaleko by ste museli kráčať zo stredu sveta až k jeho ", false], ["okraju?", true]], "v2": [["Jeden blok v Minecrafte zodpovedá približne jednému metru. Ako ďaleko by ste museli kráčať zo stredu sveta až k jeho ", false], ["okraju, teda k hranici sveta?", true]]}, {"id": "P16", "lang": "cs", "answer": "obložený chlebíček", "v1": [["Hotelovému bufetu říkáme švédský stůl. Švédsky se mu říká smörgåsbord, kde „bord“ znamená stůl. Co znamená „smörgås“? Nápověda: v Česku ", false], ["ho ", true], ["nesmí chybět na žádné oslavě.", false]], "v2": [["Hotelovému bufetu říkáme švédský stůl. Švédsky se mu říká smörgåsbord, kde „bord“ znamená stůl. Co znamená „smörgås“? Nápověda: v Česku ", false], ["nesmí chybět na žádné oslavě.", false]]}, {"id": "P17", "lang": "cs", "answer": "Ušní lalůčky", "v1": [["V obchodě kupujeme hlavně hnědá vejce, ale některá plemena slepic snášejí bílá. ", false], ["Kterou", true], [" část hlavy ", false], ["si podle chovatelů stačí na slepici prohlédnout, abyste", true], [" barvu jejích vajec ", false], ["většinou", true], [" ", false], ["odhadli?", true]], "v2": [["V obchodě kupujeme hlavně hnědá vejce, ale některá plemena slepic snášejí bílá. ", false], ["Podle chovatelů vám většinou stačí prohlédnout si slepici jednu", true], [" část hlavy ", false], ["a", true], [" barvu jejích vajec ", false], ["odhadnete.", true], [" ", false], ["Kterou?", true]]}, {"id": "P18", "lang": "sk", "answer": "štyrmi", "v1": [["Dunaj drží svetový rekord: preteká ", false], ["cez", true], [" ", false], ["viac", true], [" ", false], ["hlavných", true], [" ", false], ["miest", true], [" ako ktorákoľvek iná rieka na svete. ", false], ["Cez koľko?", true]], "v2": [["Dunaj drží svetový rekord: preteká ", false], ["priamo", true], [" ", false], ["viacerými", true], [" ", false], ["hlavnými", true], [" ", false], ["mestami", true], [" ako ktorákoľvek iná rieka na svete. ", false], ["Koľkými?", true]]}, {"id": "P19", "lang": "cs", "answer": "Gin", "v1": [["Podle známé legendy si italský hrabě Negroni ve Florencii objednal koktejl Americano, ale chtěl ho silnější. Barman proto místo sodovky přilil ", false], ["lihovinu, a tak vznikl koktejl Negroni. Kterou lihovinu přilil?", false]], "v2": [["Podle známé legendy si italský hrabě Negroni ve Florencii objednal koktejl Americano, ale chtěl ho silnější. Barman proto místo sodovky přilil ", false], ["jinou ", true], ["lihovinu, a tak vznikl koktejl Negroni. Kterou lihovinu přilil?", false]]}, {"id": "P20", "lang": "cs", "answer": "V němčině", "v1": [["V Praze", false], [" se", true], [" jezdí tramvají, v Brně šalinou. To slovo vzniklo zkomolením nápisu, který kdysi býval na brněnských tramvajích. V jakém jazyce ten nápis byl?", false]], "v2": [["V Praze", false], [" jezdí tramvají, v Brně šalinou. To slovo vzniklo zkomolením nápisu, který kdysi býval na brněnských tramvajích. V jakém jazyce ten nápis byl?", false]]}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].pick).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!r.pick);
+    card.querySelectorAll(".pick button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.pick)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, voľba sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("pairs").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function version(tag, segs) {
+  const p = el("p", {});
+  for (const [text, changed] of segs) p.append(changed ? el("mark", {}, text) : document.createTextNode(text));
+  return el("div", { class: "ver" }, el("span", { class: "tag" }, tag), p);
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const pick = el("div", { class: "pick" });
+    for (const [v, label] of [["1", "Lepšia 1"], ["same", "Rovnaké"], ["2", "Lepšia 2"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { pick: v }));
+      pick.append(b);
+    }
+    const ta = el("textarea", { placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      version("1", it.v1),
+      version("2", it.v2),
+      el("p", {}, "Odpoveď: ", el("span", { class: "ans" }, it.answer)),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Ktorá znie lepšie?"), pick),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, voľba sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Voľba sa ukladá hneď.");
+  db.collection("pairs").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

@@ -22,4 +22,4 @@ Predtým boli oba buckety v osobnom účte `michal.kalis@gmail.com` (account `a4
 - Skopírované všetky objekty (`quiz-images` 45, `trubbo-voice-samples` všetky vrátane nahrávok pribudnutých počas prepnutia), overené počty, veľkosti a ETag (MD5).
 - `questions.media_url` + `reveal_url` v `questions.provenance` prepísané na novú verejnú URL v `quiz_pack` aj `quiz_pack_staging` (25 riadkov v každej, všetky `archived`). Záloha pôvodných hodnôt: tabuľka `r2_move_backup.questions_20261016` v oboch databázach; návrat = `update questions q set media_url = b.media_url, provenance = b.provenance from r2_move_backup.questions_20261016 b where b.id = q.id`.
 - Staré prihlasovacie údaje ostávajú v root `.env` ako `R2_PERSONAL_*` len na dobu odkladu; nič do starých bucketov už nezapisuje.
-- **Po 2026-10-23:** zmazať staré buckety v osobnom účte, riadky `R2_PERSONAL_*` z `.env` a schému `r2_move_backup` (krok v #207 → Founder kroky).
+- **2026-10-22/23:** staré buckety v osobnom účte zmazané (po overení, že po presune nepribudol objekt). Ostávajú neškodné zvyšky: riadky `R2_PERSONAL_*` v `.env` a schéma `r2_move_backup` (#207 → Founder kroky).

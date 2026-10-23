@@ -321,8 +321,12 @@
      "source_url": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
     }
    ],
-   "status": "pending",
-   "publish_at": "2026-10-25T10:00:00Z"
+   "status": "approved",
+   "publish_at": "2026-10-25T10:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-41cf874c.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-41cf874c.jpg"
+   ]
   },
   {
    "key": "sun1-ig_skcz",

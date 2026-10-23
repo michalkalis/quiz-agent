@@ -1,6 +1,6 @@
 # #207 — Pripravenosť na produkciu so skutočnými používateľmi
 
-**Triage:** chore · done (plán hotový 2026-10-19; incident 207.29 opravený a overený 2026-10-19; ostávajú len founder kroky)
+**Triage:** chore · done (plán hotový 2026-10-19; incident 207.29 opravený a overený 2026-10-19; founder kroky hotové 2026-10-23 okrem zálohy na mba)
 **Založené:** 2026-10-16 (founder: „ako moc sme nachystaný na beh na produkcii s reálnymi užívateľmi — migrácie, verzovanie, výpadky, provideri, bezpečnosť, náklady, kredity“)
 **Zdroj:** 3 read-only audity nad `origin/main` de6df64a + živý stav prodov 2026-10-16 (prevádzka/infra, náklady/kredity, bezpečnosť/súkromie/iOS release). Nadväzuje na [#193 — spevnenie pred betou](issue-193-beta-hardening.md); čo je tam hotové, sa tu neopakuje.
 
@@ -93,16 +93,14 @@ P0 = pred/ihneď po vydaní 1.1 · P1 = do pár dní · P2 = hneď potom. Každ�
 
 ## Founder kroky
 
-Otvorené k 2026-10-19 (hotové položky vyradené):
+Stav k 2026-10-23:
 
-- `mba`: sprístupniť pre Remote Control, a keď si doma, spustiť `apps/quiz-pack-api/scripts/session_worker_local.sh install-launchd` (záloha Fly workera, 207.5; návod `docs/setup/session-worker-mba.md`).
-- 207.22: DPA na klik (ostatné platia automaticky cez ich podmienky, tabuľka nižšie):
-  1. Sentry: sentry.io → Settings (organizácia missinghue) → Legal & Compliance → Data Processing Addendum → Accept (treba rolu Owner alebo Billing).
-  2. Fly.io: fly.io/dashboard → v ľavom menu Compliance → stiahnuť / podpísať Data Processing Agreement.
-  3. ImprovMX: improvmx.com/transparency/gdpr-compliance → stiahnuť DPA (improvmx_dpa.pdf), podpísať a poslať im, alebo si vyžiadať podpísaný na ich podpore.
-- Gmail: maily `[Trubbo ALERT]` / `[Trubbo OK]` od `monitor@trubbo.app` označiť ako dôležité (filter), aby chodila notifikácia do telefónu.
-- Anthropic: auto-reload so stropom **pred 2026-11-06** (koniec promo kreditu z Max).
-- 207.28, **po 2026-10-23**: prihlásiť osobný Cloudflare účet (michal.kalis@gmail.com), agent potom zmaže buckety `quiz-images` a `trubbo-voice-samples` v tomto účte (najprv over, že v nich nepribudol žiadny objekt po 2026-10-16 13:26 UTC), riadky `R2_PERSONAL_*` z root `.env` a schému `r2_move_backup` v DB.
+- **Otvorené — `mba`:** sprístupniť pre Remote Control, a keď je founder pri mba, spustiť `apps/quiz-pack-api/scripts/session_worker_local.sh install-launchd` (záloha Fly workera, 207.5; návod `docs/setup/session-worker-mba.md`). 10-22/23 mba neodpovedal (ssh LAN aj Tailscale timeout).
+- **Hotové 2026-10-22/23 — 207.22 DPA:** Sentry Data Processing Amendment prijatý v Legal & Compliance (founder). Fly.io: DPA vyžiadaný v Trust Center, podpísaný cez Dropbox Sign (Annex I.B: citlivé údaje žiadne, prenos priebežný), podpisová žiadosť uzavretá; podpísaná kópia od Fly príde do hello@missinghue.com. ImprovMX: podpora (10-22) potvrdila, že ich štandardný DPA platí pre všetky účty, podpíše sa a uschová, nič sa neposiela; podpísaný founderom 10-23. Obe zmluvy pred podpisom prečítané celé: bez poplatkov (okrem voliteľného auditu na mieste pri Fly), bez odškodnenia a neobmedzenej zodpovednosti zákazníka; ImprovMX má spory mimo SCC v Delaware (nízke riziko).
+- **Zrušené (founder 2026-10-22):** Gmail filter pre `monitor@trubbo.app` — maily vidí aj bez neho.
+- **Rozhodnuté (founder 2026-10-22): Anthropic auto-reload NIE.** Kontrola Console 10-23: promo kredit $127,47 z $200 (do 11-06), kúpený zostatok $18,52 bez zmeny od 10-10, posledná platba kartou 08-25, auto-reload vypnutý.
+- **Hotové 2026-10-22/23 — 207.28 staré R2:** v osobnom účte overené, že v `quiz-images` (45) ani `trubbo-voice-samples` (88) nepribudol objekt po presune (najnovší 2026-10-16 13:25:56 UTC); founder oba buckety vyprázdnil a zmazal, účet je bez bucketov. Ostáva (neškodné, kľúče už nič neotvoria): riadky `R2_PERSONAL_*` v root `.env` (agentovi úpravu `.env` zablokovala poistka), R2 API token v osobnom Cloudflare účte, schéma `r2_move_backup` v DB (25 riadkov URL, bez osobných údajov).
+- **Nové:** agent číta firemnú schránku hello@missinghue.com (IMAP, len na čítanie; heslo v Keychain položke `missinghue-imap`), kam chodí aj hi@trubbo.app.
 - Voliteľné: staging kľúče s limitom ~2 $ u OpenRouter, OpenAI, ElevenLabs, Anthropic (207.17), len ak chceš na stagingu skúšať AI volania; postup v `docs/setup/staging.md` → Founder kroky.
 - Voliteľné: OpenAI admin kľúč pre kontrolu útraty (207.12) — platform.openai.com → Settings → Organization → Admin keys → Create; vlož do root `.env` ako `OPENAI_ADMIN_KEY`, agent ho nastaví do Fly secrets `quiz-agent-api`.
 - Voliteľné bonus: Sentry token s `alerts:write` → `SENTRY_ALERTS_TOKEN` v `.env`, agent potom spustí `python3 scripts/sentry_monitoring.py --apply` (uptime + chybovosť v Sentry, 207.7).
@@ -115,16 +113,16 @@ Otvorené k 2026-10-19 (hotové položky vyradené):
 
 | Spracovateľ | DPA | Akceptácia | Prenos do USA |
 |---|---|---|---|
-| Fly.io | dashboard → Compliance | klik (founder) | DPF |
+| Fly.io | dashboard → Trust Center → DPA | podpísané 2026-10-23 (Dropbox Sign) | DPF |
 | ElevenLabs | https://elevenlabs.io/dpa | automaticky (ToS) | DPF + SCC |
 | OpenAI | https://openai.com/policies/data-processing-addendum/ | automaticky (Services Agreement) | SCC |
 | Anthropic | https://www.anthropic.com/legal/data-processing-addendum | automaticky (Commercial Terms) | SCC |
 | OpenRouter | https://openrouter.ai/data-processing-agreement | automaticky (ToS 10.2) | SCC |
 | RevenueCat | https://www.revenuecat.com/dpa/ | automaticky (ToS 4.2) | SCC |
-| Sentry (EU región, Frankfurt) | https://sentry.io/legal/dpa/ | klik (founder) | DPF + SCC |
+| Sentry (EU región, Frankfurt) | https://sentry.io/legal/dpa/ | prijaté 2026-10-22 | DPF + SCC |
 | Cloudflare (R2) | https://www.cloudflare.com/cloudflare-customer-dpa/ | automaticky (Self-Serve 6.1) | DPF (recertifikácia v posudzovaní) + SCC |
 | Resend | https://resend.com/legal/dpa | automaticky | DPF + SCC |
-| ImprovMX | https://improvmx-public-assets.s3.eu-west-3.amazonaws.com/improvmx_dpa.pdf | podpis (founder) | SCC |
+| ImprovMX | https://improvmx-public-assets.s3.eu-west-3.amazonaws.com/improvmx_dpa.pdf | podpísané 2026-10-23 (len uschovať) | SCC |
 | GitHub (zálohy DB, web) | https://github.com/customer-terms/github-data-protection-agreement | automaticky len pri GitHub Customer Agreement; pri bezplatnom účte neoverené | DPF + SCC |
 | Apple | žiadne, samostatný prevádzkovateľ (App Store, platby, Sign in with Apple, App Attest) | n/a | n/a |
 

@@ -19,16 +19,22 @@ players see it:
   question, unless the founder rated it higher (rated beats unrated at the
   neutral 0.5). An English row is never archived from a native pool — it
   still serves English players — the native row goes instead.
+- **``--pending``** (2026-10-23) adds the public ``pending_review`` rows, so
+  review never approves a twin of a live question. Approved rows are then
+  anchored (never archived, their pairs already judged on 10-22): a pending
+  row goes when it duplicates an approved one or an earlier pending one.
 
 Archiving flips ``review_status`` to ``'archived'`` (the read path serves
 only ``approved``) and appends a note naming the kept twin; nothing is
-deleted. ``--restore <decisions.json>`` puts every row of a run back.
+deleted. ``--restore <decisions.json>`` puts every row of a run back into the
+status it had.
 
 Usage (from ``apps/quiz-pack-api``; ``LLM_GATEWAY=session`` keeps the judge on
 the subscription)::
 
     python scripts/dedup_live_corpus.py --database-url "$PROD_DATABASE_URL" --out DIR
     python scripts/dedup_live_corpus.py --database-url ... --out DIR --execute
+    python scripts/dedup_live_corpus.py --database-url ... --out DIR --pending --execute
     python scripts/dedup_live_corpus.py --database-url ... --restore DIR/decisions.json
 """
 
@@ -62,7 +68,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 logger = logging.getLogger("dedup_live_corpus")
 
-NOTE_PREFIX = "archived 2026-10-22 corpus dedup: same fact as"
+NOTE_PREFIX = "corpus dedup: same fact as"
 NATIVE_LANGUAGES = ("sk", "cs")
 NEUTRAL_RATING = 0.5
 JUDGE_CONCURRENCY = 6
@@ -82,6 +88,10 @@ class Item:
     rating: float | None
     emb: np.ndarray
     emb_qa: np.ndarray | None = None
+    status: str = "approved"
+    # Anchored rows are never archived and their mutual pairs never judged:
+    # English rows in a native pool, approved rows in a --pending run.
+    anchored: bool = False
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -90,24 +100,25 @@ def _unit(rows: list[np.ndarray]) -> np.ndarray:
     return m / np.linalg.norm(m, axis=1, keepdims=True)
 
 
-def candidate_pairs(
-    items: list[Item], skip_en_en: bool
-) -> list[tuple[int, int, float, float | None]]:
+def candidate_pairs(items: list[Item]) -> list[tuple[int, int, float, float | None]]:
     """Index pairs worth a verdict: question cosine ≥ ``CANDIDATE_Q_FLOOR``
-    or QA cosine ≥ ``CANDIDATE_QA_FLOOR``. ``skip_en_en`` in native pools, where two
-    English rows were already judged in the ``en`` pool."""
+    or QA cosine ≥ ``CANDIDATE_QA_FLOOR`` (when both rows have a QA vector;
+    translations and some pending rows do not). Two anchored rows are never a
+    candidate: neither may be archived and the pair was judged elsewhere."""
     sim = _unit([it.emb for it in items]) @ _unit([it.emb for it in items]).T
+    has_qa = [it.emb_qa is not None for it in items]
     qa = None
-    if all(it.emb_qa is not None for it in items):
-        u = _unit([it.emb_qa for it in items])
+    if any(has_qa):
+        dim = next(it.emb_qa for it in items if it.emb_qa is not None).shape
+        u = _unit([it.emb_qa if ok else np.ones(dim) for it, ok in zip(items, has_qa)])
         qa = u @ u.T
     out = []
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
-            if skip_en_en and items[i].language == items[j].language == "en":
+            if items[i].anchored and items[j].anchored:
                 continue
             q_s = float(sim[i, j])
-            qa_s = float(qa[i, j]) if qa is not None else None
+            qa_s = float(qa[i, j]) if has_qa[i] and has_qa[j] else None
             if q_s >= CANDIDATE_Q_FLOOR or (
                 qa_s is not None and qa_s >= CANDIDATE_QA_FLOOR
             ):
@@ -115,17 +126,16 @@ def candidate_pairs(
     return out
 
 
-def keep_order(item: Item, native_pool: bool) -> tuple:
-    """Lower sorts first = kept first. English rows lead a native pool (never
-    archived there); then the founder's rating; then the earlier question,
-    which is the one the dedup gate would have let in."""
+def keep_order(item: Item) -> tuple:
+    """Lower sorts first = kept first. Anchored rows lead (never archived);
+    then the founder's rating; then the earlier question, which is the one
+    the dedup gate would have let in."""
     rating = item.rating if item.rating is not None else NEUTRAL_RATING
-    english_first = 0 if (native_pool and item.language == "en") else 1
-    return (english_first, -rating, item.created_at, item.id)
+    return (0 if item.anchored else 1, -rating, item.created_at, item.id)
 
 
 def choose_archive(
-    items: list[Item], dup_edges: set[tuple[str, str]], native_pool: bool
+    items: list[Item], dup_edges: set[tuple[str, str]]
 ) -> dict[str, str]:
     """Greedy keep-set: walk in keep order, archive an item only when it is a
     judged duplicate of an item already KEPT. Never chains A→B→C, so every
@@ -137,9 +147,9 @@ def choose_archive(
         linked.setdefault(b, set()).add(a)
     kept: list[str] = []
     archived: dict[str, str] = {}
-    for it in sorted(items, key=lambda x: keep_order(x, native_pool)):
+    for it in sorted(items, key=keep_order):
         twin = next((k for k in kept if k in linked.get(it.id, ())), None)
-        if twin is None or (native_pool and it.language == "en"):
+        if twin is None or it.anchored:
             kept.append(it.id)
         else:
             archived[it.id] = twin
@@ -160,7 +170,7 @@ def _vec(raw: Any) -> np.ndarray | None:
     )
 
 
-async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
+async def load_pools(conn, cache: Path, pending: bool) -> dict[str, list[Item]]:
     ratings = {
         r.qid: float(r.mean)
         for r in await conn.execute(
@@ -176,11 +186,18 @@ async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
             text(
                 "SELECT id::text AS id, COALESCE(language, 'en') AS language, question, "
                 "correct_answer, possible_answers, created_at, approved_languages, "
-                "embedding::text AS emb, embedding_qa::text AS emb_qa FROM questions "
-                "WHERE review_status = 'approved' AND pack_id IS NULL"
-            )
+                "review_status, embedding::text AS emb, embedding_qa::text AS emb_qa "
+                "FROM questions WHERE review_status = ANY(CAST(:st AS text[])) "
+                "AND pack_id IS NULL"
+            ),
+            {"st": ["approved", "pending_review"] if pending else ["approved"]},
         )
     ).all()
+    no_emb = [r.id for r in rows if r.emb is None]
+    if no_emb:
+        raise SystemExit(
+            f"{len(no_emb)} rows have no embedding — refusing: {no_emb[:5]}"
+        )
     pools: dict[str, list[Item]] = {"en": [], **{lang: [] for lang in NATIVE_LANGUAGES}}
     for r in rows:
         it = Item(
@@ -192,6 +209,8 @@ async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
             ratings.get(r.id),
             _vec(r.emb),
             _vec(r.emb_qa),
+            r.review_status,
+            pending and r.review_status == "approved",
             {"approved_languages": list(r.approved_languages or [])},
         )
         pools.setdefault(r.language, []).append(it)
@@ -215,7 +234,7 @@ async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
         ).all()
         translated = {t.qid: t for t in tr}
         for en in pools["en"]:
-            if lang not in en.extra["approved_languages"]:
+            if en.status != "approved" or lang not in en.extra["approved_languages"]:
                 continue
             t = translated.get(en.id)
             if t is None:
@@ -231,6 +250,7 @@ async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
                     en.created_at,
                     en.rating,
                     np.zeros(1),
+                    anchored=True,
                 )
             )
         missing = [
@@ -246,7 +266,7 @@ async def load_pools(conn, cache: Path) -> dict[str, list[Item]]:
             )
             embed_cache.update({q: d.embedding for q, d in zip(chunk, resp.data)})
         cache.write_text(json.dumps(embed_cache))
-        # Translations carry no QA vector, so a native pool is compared on
+        # Translations carry no QA vector: their pairs are compared on
         # question cosine only (`candidate_pairs` skips QA when one is missing).
         for it in pools[lang]:
             if it.language == "en":
@@ -292,24 +312,29 @@ async def run(args: argparse.Namespace) -> int:
     engine = create_async_engine(normalize_async_url(args.database_url))
     try:
         if args.restore:
-            ids = list(json.loads(Path(args.restore).read_text())["archived"])
+            gone = json.loads(Path(args.restore).read_text())["archived"]
+            n = 0
             async with engine.begin() as conn:
-                res = await conn.execute(
-                    text(
-                        "UPDATE questions SET review_status = 'approved' "
-                        "WHERE id::text = ANY(CAST(:ids AS text[])) AND review_status = 'archived'"
-                    ),
-                    {"ids": ids},
-                )
-            print(f"Restored {res.rowcount}/{len(ids)}")
+                for qid, info in gone.items():
+                    res = await conn.execute(
+                        text(
+                            "UPDATE questions SET review_status = :st "
+                            "WHERE id::text = :id AND review_status = 'archived'"
+                        ),
+                        # The 10-22 run predates "status": it archived approved rows only.
+                        {"id": qid, "st": info.get("status", "approved")},
+                    )
+                    n += res.rowcount
+            print(f"Restored {n}/{len(gone)}")
             return 0
 
         async with engine.connect() as conn:
-            pools = await load_pools(conn, out / "translation_embeddings.json")
+            pools = await load_pools(
+                conn, out / "translation_embeddings.json", args.pending
+            )
         all_pairs, decisions = [], {}
         for name, items in pools.items():
-            native = name != "en"
-            pairs = candidate_pairs(items, skip_en_en=native)
+            pairs = candidate_pairs(items)
             print(f"pool {name}: {len(items)} questions, {len(pairs)} candidate pairs")
             all_pairs.append((name, items, pairs))
         verdicts = await judge_pairs(
@@ -326,11 +351,10 @@ async def run(args: argparse.Namespace) -> int:
                 if verdicts.get("|".join(sorted((items[i].id, items[j].id)))):
                     edges.add((items[i].id, items[j].id))
             by_id = {it.id: it for it in items}
-            for gone, twin in choose_archive(
-                live, edges, native_pool=name != "en"
-            ).items():
+            for gone, twin in choose_archive(live, edges).items():
                 archived[gone] = {
                     "pool": name,
+                    "status": by_id[gone].status,
                     "twin": twin,
                     "question": by_id[gone].question,
                     "twin_question": by_id[twin].question,
@@ -357,6 +381,7 @@ async def run(args: argparse.Namespace) -> int:
             return 1
         if not args.execute:
             return 0
+        today = datetime.now(UTC).date().isoformat()
         async with engine.begin() as conn:
             n = 0
             for gone, info in archived.items():
@@ -364,9 +389,13 @@ async def run(args: argparse.Namespace) -> int:
                     text(
                         "UPDATE questions SET review_status = 'archived', reviewed_at = now(), "
                         "review_notes = concat_ws(' | ', review_notes, CAST(:note AS text)) "
-                        "WHERE id::text = :id AND review_status = 'approved'"
+                        "WHERE id::text = :id AND review_status = :st"
                     ),
-                    {"id": gone, "note": f"{NOTE_PREFIX} {info['twin']}"},
+                    {
+                        "id": gone,
+                        "st": info["status"],
+                        "note": f"archived {today} {NOTE_PREFIX} {info['twin']}",
+                    },
                 )
                 n += res.rowcount
         print(f"Archived {n}/{len(archived)}")
@@ -387,6 +416,11 @@ def main() -> int:
         "--execute", action="store_true", help="Archive (default: dry run)"
     )
     mode.add_argument("--restore", help="decisions.json of a run to put back")
+    p.add_argument(
+        "--pending",
+        action="store_true",
+        help="Also clean public pending_review rows (approved rows stay anchored)",
+    )
     return asyncio.run(run(p.parse_args()))
 
 

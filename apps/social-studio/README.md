@@ -43,6 +43,21 @@ npm run batch -- --monday 2026-11-02
 - **Captions**: fixed per-language templates in `cli/captions.ts` (question first, prompt, app named every 3rd post, 3–5 hashtags), no model.
 - **Approval page**: `review/index.html`, published as the claude.ai artifact https://claude.ai/artifact/TmE5zjEF8kn1yKyFMpzzj5 (same URL every week) with `capabilities: {db: {}}` and files `batch.json` ← `batches/<week>.json`, `media/<file>` ← `out/<week>/<file>` (drop last week's media with `null`). The founder's decisions land in the artifact's `decisions` collection (doc `<week>_<key>`: status `approved` / `rejected` / null, note), read back with ArtifactData.
 
+## Publishing to Instagram (210.5)
+
+The Instagram API (with Instagram Login, own Meta app, Standard Access) has no scheduling, so we schedule ourselves:
+
+```sh
+# after the founder approved the week (decisions read with ArtifactData into a JSON list), from the main checkout:
+uv run --no-sync python apps/social-studio/scripts/stage_week.py 2026-W44 decisions.json [media dir]
+uv run --no-sync python apps/social-studio/scripts/ig_tokens.py   # refresh tokens, copy to GitHub secrets
+# commit batches/<week>.json through a PR before Monday
+```
+
+- **Stage**: approved posts' media go to the public `quiz-images` R2 bucket under `social/<week>/`; the manifest gets `status`, `publish_at` (18:00 London for EN, 18:00 Bratislava for SK/CZ, stored in UTC) and `media_urls`.
+- **Publish**: `.github/workflows/social-publish.yml` runs `scripts/publish_due.py` hourly. Reels (cover = the jpg, shared to feed, labelled AI-generated because of the synthetic voice) and carousels; a post already on the account (same caption) is skipped, so reruns never double-post. A failure or a post that missed its 24 h window turns the run red. Manual run: `gh workflow run social-publish.yml -f mode=check` (tokens + quota) or `-f mode=dry-run`.
+- **Tokens**: `IG_TOKEN_IG_EN`, `IG_TOKEN_IG_SKCZ` in the root `.env` (from the Meta dashboard, 60 days), refreshed and copied to GitHub secrets by `ig_tokens.py` with every weekly batch. An expired token cannot be refreshed: generate a new one in the dashboard.
+
 ## Voice and captions
 
 - **Voice** = the clip the app already made for that question, looked up in the private R2 TTS store under the app's own cache key (spoken text + voice). If there is no clip, the reel is rendered **without voice** (silent reading pace) and the CLI says so.

@@ -1,0 +1,41 @@
+name: social-publish
+
+# #210 (marketing on social networks), 210.5: the Instagram API has no
+# scheduling, so this hourly run publishes the approved posts whose slot has
+# passed (apps/social-studio/scripts/publish_due.py). Red run = a post failed
+# or missed its window.
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "publish (due posts), dry-run (list them) or check (tokens + quota)"
+        default: dry-run
+        type: choice
+        options: [publish, dry-run, check]
+
+concurrency:
+  group: social-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Publish due Instagram posts
+        env:
+          IG_TOKEN_IG_EN: ${{ secrets.IG_TOKEN_IG_EN }}
+          IG_TOKEN_IG_SKCZ: ${{ secrets.IG_TOKEN_IG_SKCZ }}
+          MODE: ${{ inputs.mode || 'publish' }}
+        run: |
+          case "$MODE" in
+            publish) python apps/social-studio/scripts/publish_due.py ;;
+            *) python apps/social-studio/scripts/publish_due.py "--$MODE" ;;
+          esac

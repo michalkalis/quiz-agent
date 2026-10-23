@@ -1,4 +1,4 @@
-# Issue #210 — Marketing: sociálne siete s AI obsahom (Instagram, TikTok, Shorts)
+# Issue #210 — Marketing: sociálne siete s AI obsahom (Instagram, YouTube Shorts; TikTok later)
 
 **Triage:** enhancement · ready-for-agent
 
@@ -15,6 +15,11 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 3. **Content:** mostly AI/code-generated; **occasionally real clips** (~1 per week) of the **founder playing the app himself and answering out loud** (screen recording + his voice, optionally his face). **No videos from the car** (founder, 2026-10-19, follow-up). Driving appears only in AI/motion content.
 4. **Approval:** the agent prepares a **weekly batch** (5–7 posts per account with captions); the founder approves it on one page, then it schedules itself.
 5. Free tools only. No paid ads in English markets (a payer would cost $120–250 vs ~$25 year-1 revenue).
+
+## Founder decisions (2026-10-23)
+
+6. **TikTok deferred, not dropped.** TikTok asks for a phone number and the founder's only number is on his personal account; it comes back (EN + SK/CZ) when he has a second number. Channels now: Instagram EN, Instagram SK/CZ, YouTube Shorts.
+7. **Publish directly through the platforms' own APIs, no extra services** ("a Buffer-like scheduler is quick to build, Buffer adds little"). Instagram: own Meta app for both accounts. YouTube: own Data API project; Google locks API uploads to private until the project passes its free compliance audit, so Shorts go through Buffer free (already set up, an audited client) only until the audit passes, then Buffer is dropped.
 
 ## Founder decisions (2026-10-22) — direction after the [growth research](../research/growth-strategy-2026-10-21.md)
 
@@ -38,15 +43,15 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 
 | Account | Language | Content | Publishing |
 |---|---|---|---|
-| Instagram @trubbo | EN | Timer reels, carousels, stories | Official Instagram API (own script) |
-| TikTok @trubbo | EN | Same reels | Buffer free (TikTok's API keeps self-built posters private) |
-| YouTube Shorts (Trubbo channel) | EN | Same reels | Buffer free |
-| Instagram SK/CZ (handle TBD) | sk / cs | Same formats + real clips | Official Instagram API |
-| TikTok SK/CZ | sk / cs | Same reels | Buffer free (3rd channel) |
+| Instagram @trubbo | EN | Timer reels, carousels, stories | Official Instagram API (own script, own scheduler) |
+| TikTok @trubbo | EN | Same reels | **Deferred** (decision 6) |
+| YouTube Shorts (Trubbo channel) | EN | Same reels | YouTube Data API (own script) after the audit; Buffer free until then |
+| Instagram SK/CZ (handle TBD) | sk / cs | Same formats + real clips | Official Instagram API (same Meta app) |
+| TikTok SK/CZ | sk / cs | Same reels | **Deferred** (decision 6) |
 | Founder personal IG (new) | EN | Founder plays the quiz and answers, solo-dev story | Manual |
 | Facebook groups, CZ pub-quiz organizers | sk / cs | Permission-first posts, free codes | Manual (see 210.9) |
 
-Buffer free = 3 channels × 10 queued posts → TikTok EN, TikTok SK/CZ, YouTube EN. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
+Publishing = own scripts on the official APIs (decision 7); Buffer free only bridges YouTube until the audit. When TikTok returns: TikTok's Content Posting API keeps unaudited apps' posts private too, so it gets the same audit-or-bridge treatment. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
 
 ## Formats (test designs; keep what wins)
 
@@ -63,18 +68,18 @@ Target cadence per account: 4–5 reels/carousels per week + daily story.
 
 ## Sub-tasks
 
-- [~] **210.1 Founder: accounts** (2026-10-21: Instagram EN + SK/CZ, YouTube, Buffer done; TikTok blocked on the email code; personal IG later — neither blocks 210.2–210.4) (founder steps below). Brand accounts on hi@trubbo.app, professional (Business) Instagram, TikTok, YouTube channel, Buffer free; new personal Instagram.
+- [x] **210.1 Founder: accounts** (2026-10-21: Instagram EN + SK/CZ, YouTube, Buffer done; 2026-10-23: TikTok deferred, decision 6; personal IG later, doesn't block) (founder steps below). Brand accounts on hi@trubbo.app, professional (Business) Instagram, TikTok, YouTube channel, Buffer free; new personal Instagram.
 - [ ] **210.2 Skills setup.** Project-scoped install of Remotion agent skills and `coreyhaines31/marketingskills` (`social`, `video`, `aso`, `launch`, `attribution`, `paywalls`); a short brand-voice note for captions (EN + sk/cs) reusing copy-style rules.
 - [~] **210.3 Content renderer** (2026-10-22 v1: `FiveSeconds`, `ABC`, `CarouselSlide` + `npm run render` CLI; voice = existing app clip only, none → silent reel; captions = local whisper.cpp; open = "How it plays", story frame, correct/wrong monkey) (`apps/social-studio`, Remotion, one README). Compositions: timer reel 9:16, MCQ reel, "How it plays" round (app screens + app voice), carousel slides, story frame; monkey animated from the master SVG (blink, bounce, correct/wrong); word-level captions; brand fonts/colors from the design tokens. Input = one question row (text, answer, explanation, language, category). Voice: reuse the question's existing ElevenLabs audio, generate only if missing.
 - [ ] **210.4 Weekly batch job.** Picks questions (approved, fun-scored, fresh entertainment preferred, mixed categories, ~20–30 % MCQ), never repeats one already posted (posted log), renders EN + sk/cs, writes captions + hashtags, and publishes a review page (claude.ai artifact) where the founder approves or rejects each post.
-- [ ] **210.5 Instagram publishing.** Own Meta app (Instagram API with Instagram Login, Standard Access, no app review), media on R2 (public bucket), long-lived token in `.env` with a refresh job, schedules approved posts, sets the AI-generated flag where appropriate. Check the account's real posting limit first.
-- [ ] **210.6 Buffer for TikTok + Shorts.** Approved reels pushed to Buffer via its API (free plan includes API); stickers/music added on the phone via "Notify me".
+- [ ] **210.5 Instagram publishing** (both accounts, decision 7). Own Meta app (Instagram API with Instagram Login, Standard Access, no app review), media on R2 (public bucket), long-lived tokens in `.env` with a refresh job; the API has no scheduling, so our own scheduler (GitHub Actions cron) publishes each approved post at its slot; sets the AI-generated flag where appropriate. Check the account's real posting limit first.
+- [ ] **210.6 YouTube Shorts publishing** (decision 7). Own Google Cloud project with the YouTube Data API, upload by the same scheduler; submit the YouTube API compliance audit right away (uploads stay private until it passes). Until then approved reels go to Buffer free via its API (1 key, 3,000 requests/30 days, 10 queued posts per channel); drop Buffer once the audit passes. TikTok (deferred) gets the same treatment when it returns.
 - [ ] **210.7 Attribution.** App Store Connect campaign link per channel (`ct=ig_en`, `tt_en`, `yt_en`, `ig_skcz`, `tt_skcz`, `personal`, `fb_groups`); link-in-bio page on trubbo.app (apps/website) per language. Weekly numbers: views per post (platform insights) + installs per campaign link (ASC). Founder creates the links in ASC (no API) — steps below.
 - [ ] **210.8 Conversion hooks.** Custom product page per series (road trip / party / family, from PR #148); a topical pack every 3–4 weeks with its own reel (Christmas road trips, ski season, New Year); New Year is the strongest promo window (subscription conversion peaks in January). Pricing/offer changes → founder decides.
 - [ ] **210.9 Manual community channels** (light): Facebook family/camping/road-trip groups SK/CZ (admin permission first, free codes), CZ pub-quiz organizers (Chytrý kvíz etc.: codes + a custom pack for quizmasters), Reddit participation only.
 - [ ] **210.10 4-week review.** One page: views per post per account/format, installs per channel, purchases trend. Decide: keep/split SK/CZ, which formats stay, whether a ~€50–100 Apple Ads test CZ/SK vs IE/CA is worth it (needs founder approval — spend).
 
-Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live → 210.6, 210.7 in parallel → 210.8–210.9 → 210.10.
+Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live → 210.6 (start the audit early), 210.7 in parallel → 210.8–210.9 → 210.10.
 
 ## Founder steps
 
@@ -84,10 +89,10 @@ Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live →
 
 ## Cost
 
-Tools €0 (Remotion is free for companies of ≤3 people, Buffer free, official Instagram API). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
+Tools €0 (Remotion is free for companies of ≤3 people, official Instagram and YouTube APIs, Buffer free only as the YouTube bridge). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
 
 ## Done when
 
-- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram posts published automatically, TikTok/Shorts queued in Buffer, every link carries a campaign token.
+- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram and YouTube posts published automatically (YouTube via Buffer until the audit passes), every link carries a campaign token.
 - 4 consecutive weeks posted, then 210.10 review page delivered and the next-step decision made with the founder.
 - Code via PRs on `main` with review; no TestFlight build needed (no app change unless 210.8 adds one).

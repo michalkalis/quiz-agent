@@ -45,11 +45,12 @@ EN: You've got 5 seconds. · Answer before the monkey does. · One question. No 
 SK: Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvíz na cestu, N. diel.
 CS: Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvíz na cestu, N. díl.
 
-## Profile bio (founder pick 2026-10-22)
+## Profile bio (founder pick 2026-10-22, split 2026-10-23)
 
-EN: Odd, funny questions with a story behind the answer. You answer out loud.
-SK/CZ: Vtipné a prekvapivé otázky. Pri každej odpovedi sa niečo dozvieš. Odpovedáš nahlas.
-Second line on both: coming soon + trubbo.app in the link field. Never claim "no tapping" or "no screen": the app has buttons and a screen.
+Line 1 describes what the Instagram account posts; line 2 promotes the app. "You answer out loud" belongs to the app, not to the account (founder 2026-10-23).
+EN: Odd, funny questions with a story behind every answer. / Our app Trubbo: trivia you answer out loud. Coming soon.
+SK/CZ: Vtipné a prekvapivé otázky. Pri každej odpovedi sa niečo dozvieš. / Appka Trubbo: kvíz, ktorý hráš hlasom. Už čoskoro.
+trubbo.app in the link field. Never claim "no tapping" or "no screen": the app has buttons and a screen.
 
 ## Captions
 

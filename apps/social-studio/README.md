@@ -29,6 +29,20 @@ npm run studio                   # Remotion preview
 
 A question id is fetched **read-only** from prod: `scripts/fetch_question.py` is piped into the `quiz-agent-api` machine over `fly ssh console` (SELECT in a read-only transaction, R2 GET only), so no prod secret leaves Fly. Only `review_status = 'approved'` rows (and approved translations for `--lang`) are accepted. Rows are cached in `.cache/rows/`.
 
+## Weekly batch (210.4)
+
+```sh
+npm run batch -- --dry-run       # show next week's picks only
+npm run batch                    # pick, render into out/<week>/, write batches/<week>.json
+npm run batch -- --monday 2026-11-02
+```
+
+- **Week per account** (content plan): Mon 5 Seconds · Tue Road Trip Round (7-question carousel) · Wed A, B or C · Fri 5 Seconds, for Instagram EN and Instagram SK/CZ (one language per post, sk/cs alternating, flipped weekly). Thu "How it plays" is not built yet. EN reels also go to YouTube Shorts.
+- **Picks**: approved native rows (`--candidates` in `scripts/fetch_question.py`, read-only), founder/rater score first, then fresh pop culture; the EN account skips local questions, SK/CZ keeps sk/cz ones. Reels need a voice clip: existing ones are used first, the slots with the fewest clips (MCQ, cs) get the weekly voice budget.
+- **Never repeat**: `batches/*.json` are committed and are the posted log; a question in any earlier manifest is never picked again. `batches/voice-ledger.json` (committed) holds the 5-clips-per-7-days cap.
+- **Captions**: fixed per-language templates in `cli/captions.ts` (question first, prompt, app named every 3rd post, 3–5 hashtags), no model.
+- **Approval page**: `review/index.html`, published as the claude.ai artifact https://claude.ai/artifact/TmE5zjEF8kn1yKyFMpzzj5 (same URL every week) with `capabilities: {db: {}}` and files `batch.json` ← `batches/<week>.json`, `media/<file>` ← `out/<week>/<file>` (drop last week's media with `null`). The founder's decisions land in the artifact's `decisions` collection (doc `<week>_<key>`: status `approved` / `rejected` / null, note), read back with ArtifactData.
+
 ## Voice and captions
 
 - **Voice** = the clip the app already made for that question, looked up in the private R2 TTS store under the app's own cache key (spoken text + voice). If there is no clip, the reel is rendered **without voice** (silent reading pace) and the CLI says so.

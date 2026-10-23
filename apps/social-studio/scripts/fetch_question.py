@@ -16,6 +16,7 @@ code, DB URL and R2 credentials already live, so no secret ever leaves Fly.
 
 Usage: python - <question-id> [en|sk|cs] [--ensure-audio]   (prints "@@JSON@@{...}")
        python - --coverage                                   (clip counts per language)
+       python - --candidates                                 (weekly batch pool, cli/batch.ts)
 """
 
 import asyncio
@@ -85,7 +86,7 @@ async def fetch_rows(sql, *args):
 async def one(qid, lang):
     rows = await fetch_rows(
         "select id::text, question, possible_answers, correct_answer, headline_answer, "
-        "explanation, category, coalesce(language, 'en') as language from questions "
+        "explanation, category, coalesce(language, 'en') as language, source_url from questions "
         "where id = $1::uuid and review_status = 'approved'",
         qid,
     )
@@ -101,6 +102,7 @@ async def one(qid, lang):
         "correct_answer": _json(r["correct_answer"]),
         "headline_answer": r["headline_answer"],
         "explanation": r["explanation"],
+        "source_url": r["source_url"],
     }
     lang = lang or out["language"]
     if lang != out["language"]:
@@ -240,10 +242,50 @@ async def coverage():
     return {"r2_question_clips": len(keys), "per_language": stats}
 
 
+async def candidates():
+    """Approved native rows for the weekly batch (#210 sub-task 210.4): human
+    rating (founder/rater 0..1), topicality, local scope, and whether the app
+    clip already exists. Read-only."""
+    rows = await fetch_rows(
+        "select q.id::text, coalesce(q.language, 'en') as language, q.category, "
+        "q.question, q.possible_answers, q.local_scope, "
+        "coalesce(q.headline_answer, q.correct_answer->>0, q.correct_answer#>>'{}') as answer, q.created_at::date::text as created, "
+        "q.provenance->'extra'->'topicality'->>'tier' as topicality, "
+        "(select avg(r.score / r.scale_max) from ratings r where r.question_id = q.id::text) as rating "
+        "from questions q where q.review_status = 'approved' "
+        "and (q.expires_at is null or q.expires_at > now() + interval '14 days')"
+    )
+    s3, bucket = s3_client(), os.environ["TTS_R2_BUCKET"]
+    keys = set()
+    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix="questions/"):
+        keys.update(o["Key"] for o in page.get("Contents", []))
+    out = []
+    for r in rows:
+        opts = _json(r["possible_answers"])
+        out.append(
+            {
+                "id": r["id"],
+                "language": r["language"],
+                "category": r["category"],
+                "chars": len(r["question"]),
+                "answer_chars": len(r["answer"] or ""),
+                "mcq": bool(opts),
+                "local_scope": r["local_scope"],
+                "created": r["created"],
+                "topicality": r["topicality"],
+                "rating": float(r["rating"]) if r["rating"] is not None else None,
+                "has_clip": any(k in keys for _, k in clip_keys(r["question"], opts, r["language"])),
+            }
+        )
+    return out
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if a != "--ensure-audio"]
     if args[0] == "--coverage":
         result = asyncio.run(coverage())
+    elif args[0] == "--candidates":
+        result = asyncio.run(candidates())
     else:
         run = ensure if "--ensure-audio" in sys.argv else one
         result = asyncio.run(run(args[0], args[1] if len(args) > 1 else None))

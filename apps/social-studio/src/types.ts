@@ -35,6 +35,6 @@ export type CarouselSlideProps = {
 	language: Language;
 	part: number;
 	questions: ReelQuestion[];
-	/** For kind = 'question': which one (0-based). */
+	/** kind = 'question': which one (0-based); kind = 'answers': which answers slide (0-based). */
 	index: number;
 };

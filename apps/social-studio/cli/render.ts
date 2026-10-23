@@ -13,9 +13,10 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
+import {ANSWERS_PER_SLIDE} from '../src/CarouselSlide';
 import {HOOK_MS, eyeOpenAt, reelDurationMs} from '../src/timing';
 import type {CarouselSlideProps, Language, ReelProps, ReelQuestion, TimedWord} from '../src/types';
-import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR} from './paths';
+import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_LEDGER, VOICES_PER_WEEK} from './paths';
 import {shapeQuestion, type QuestionInput} from './shape';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
 
@@ -36,8 +37,6 @@ const LANG = values.lang as Language | undefined;
 
 // Founder 2026-10-22: a missing clip may be made through the app's own TTS
 // path, about 5 questions a week (ElevenLabs Starter, no top-ups).
-const VOICE_LEDGER = path.join(CACHE_DIR, 'voice-ledger.json');
-const VOICES_PER_WEEK = 5;
 type LedgerEntry = {at: string; id: string; language: string; chars: number};
 
 function voicesThisWeek(): LedgerEntry[] {
@@ -48,7 +47,6 @@ function voicesThisWeek(): LedgerEntry[] {
 
 function logVoice(entry: LedgerEntry) {
 	const all: LedgerEntry[] = existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : [];
-	mkdirSync(CACHE_DIR, {recursive: true});
 	writeFileSync(VOICE_LEDGER, JSON.stringify([...all, entry], null, 1));
 }
 
@@ -144,7 +142,8 @@ async function main() {
 		qs.forEach((_, i) =>
 			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'question', index: i}, name: `carousel-${language}-p${part}-${i + 1}`, still: true}),
 		);
-		jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'answers'}, name: `carousel-${language}-p${part}-${qs.length + 1}-answers`, still: true});
+		for (let i = 0; i * ANSWERS_PER_SLIDE < qs.length; i++)
+			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'answers', index: i}, name: `carousel-${language}-p${part}-${qs.length + 1 + i}-answers`, still: true});
 	} else {
 		if (positionals.length !== 1) throw new Error('usage: npm run render -- <question-id | file.json> [--format five|abc]');
 		const raw = loadInput(positionals[0]);

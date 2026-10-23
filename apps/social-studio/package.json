@@ -8,6 +8,7 @@
     "postinstall": "node scripts/sync-brand.mjs",
     "studio": "remotion studio src/index.ts",
     "render": "tsx cli/render.ts",
+    "batch": "tsx cli/batch.ts",
     "coverage": "fly ssh console -a quiz-agent-api -C 'python - --coverage' < scripts/fetch_question.py",
     "typecheck": "tsc --noEmit"
   },

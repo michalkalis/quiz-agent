@@ -198,3 +198,29 @@ async def test_prompt_asks_for_the_smallest_meaning_preserving_edit() -> None:
     q = _question(POPRAD)
     apply_naturalness(q, Naturalness(ok=True))
     assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 2
+
+
+@pytest.mark.asyncio
+async def test_rewrite_with_a_look_alike_cyrillic_letter_is_discarded() -> None:
+    """10-23 re-check: a rewrite of "minisériu" came back as "minisériа" with a
+    Cyrillic "а". It looks identical, so nobody would catch it in review, and
+    once swapped in it breaks search and speech. Such a verdict stays unchecked."""
+    checker = _checker_with(_checks({
+        "index": 1, "ok": False,
+        "problems": [{"kind": "grammar", "quote": "minisériu"}],
+        "rewrite": "Britská minisériа Adolescence získala osem cien Emmy. Akých?",
+    }))
+    assert await checker.check([_question("Britská minisériu Adolescence získala osem cien Emmy. Akých?")]) == [None]
+
+
+@pytest.mark.asyncio
+async def test_non_latin_letters_already_in_the_question_are_kept() -> None:
+    """A Japanese or Greek name in the question is not a look-alike swap."""
+    text = "Hra Ghost of Yōtei nesie meno podľa sopky 羊蹄山. Na ktorom ostrove leží?"
+    checker = _checker_with(_checks({
+        "index": 1, "ok": False,
+        "problems": [{"kind": "unnatural", "quote": "nesie meno"}],
+        "rewrite": "Hra Ghost of Yōtei je pomenovaná podľa sopky 羊蹄山. Na ktorom ostrove leží?",
+    }))
+    [verdict] = await checker.check([_question(text)])
+    assert verdict is not None and verdict.rewrite.startswith("Hra Ghost")

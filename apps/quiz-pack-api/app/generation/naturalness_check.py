@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import logging
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
@@ -97,6 +98,15 @@ Respond with JSON only, no prose:
 
 Questions:
 """
+
+
+def _foreign_letters(text: str) -> set[str]:
+    """Letters outside Latin script. A 10-23 re-check rewrite carried a
+    look-alike Cyrillic "а": it reads the same and breaks search and speech."""
+    return {
+        ch for ch in text
+        if ch.isalpha() and not unicodedata.name(ch, "").startswith("LATIN")
+    }
 
 
 @dataclass
@@ -265,7 +275,18 @@ class NaturalnessChecker:
             text = await self._complete(self._build_prompt(questions))
             if text is None:
                 return [None] * n
-            return self._parse(text, n)
+            verdicts = self._parse(text, n)
+            for i, (q, v) in enumerate(zip(questions, verdicts)):
+                added = v and v.rewrite and (
+                    _foreign_letters(v.rewrite) - _foreign_letters(q.question)
+                )
+                if added:
+                    logger.warning(
+                        "NaturalnessChecker: rewrite of %s adds non-Latin letters; "
+                        "left unchecked", q.id,
+                    )
+                    verdicts[i] = None
+            return verdicts
         except Exception as exc:  # bulletproof: never propagate into a caller
             logger.warning(
                 "NaturalnessChecker failed (%r); %d questions left unchecked",

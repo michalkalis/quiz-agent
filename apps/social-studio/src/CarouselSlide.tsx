@@ -9,6 +9,8 @@ import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
 import type {CarouselSlideProps} from './types';
 
 const PAD = 84;
+/** More than 4 answers with their why line do not fit one 1350 px slide. */
+export const ANSWERS_PER_SLIDE = 4;
 
 const Brand: React.FC<{color: string}> = ({color}) => (
 	<div style={{display: 'flex', alignItems: 'center', gap: 16}}>
@@ -66,7 +68,9 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, par
 			{kind === 'answers' ? (
 				<div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 28}}>
 					<div style={{fontSize: 80, fontWeight: 800, color: tint.onBg, letterSpacing: -1.2, marginBottom: 8}}>{copy.answersTitle}</div>
-					{questions.map((a, i) => (
+					{questions.slice(index * ANSWERS_PER_SLIDE, (index + 1) * ANSWERS_PER_SLIDE).map((a, j) => {
+						const i = index * ANSWERS_PER_SLIDE + j;
+						return (
 						<div key={a.id} style={{background: SURF, borderRadius: 36, padding: '30px 40px', display: 'flex', gap: 28, alignItems: 'flex-start'}}>
 							<div style={{fontSize: 48, fontWeight: 800, color: OK, minWidth: 40}}>{i + 1}</div>
 							<div>
@@ -75,7 +79,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, par
 
 							</div>
 						</div>
-					))}
+						);
+					})}
 				</div>
 			) : null}
 		</AbsoluteFill>

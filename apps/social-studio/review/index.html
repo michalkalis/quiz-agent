@@ -1,0 +1,190 @@
+<title>Trubbo týždenná dávka</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: one column of posts grouped by account, phone frame for each reel, a sticky tally bar. Brand tokens from apps/website. */
+:root {
+  --bg: #F3F4F8; --surface: #FFFFFF; --ink: #111216; --ink2: #4A4E5C; --line: #DDE0EA;
+  --accent: #2C45F5; --ok: #0E8A66; --ok-bg: #DDF7EE; --bad: #C0264F; --bad-bg: #FBE3EA;
+  --font: "Rethink Sans", -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1015; --surface: #191B22; --ink: #EEF0F6; --ink2: #A3A8B8; --line: #2C2F3A;
+  --accent: #7D8CFF; --ok: #3FE0AE; --ok-bg: #12352B; --bad: #FF7A9C; --bad-bg: #3A1824; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0F1015; --surface: #191B22; --ink: #EEF0F6; --ink2: #A3A8B8; --line: #2C2F3A;
+  --accent: #7D8CFF; --ok: #3FE0AE; --ok-bg: #12352B; --bad: #FF7A9C; --bad-bg: #3A1824; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+header .wrap { padding-block: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; justify-content: space-between; }
+h1 { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.sub { color: var(--ink2); font-size: 14px; }
+.tally { display: flex; gap: 8px; font-variant-numeric: tabular-nums; font-size: 13px; }
+.pill { padding: 3px 10px; border-radius: 99px; background: var(--bg); color: var(--ink2); font-weight: 500; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); } .pill.bad { background: var(--bad-bg); color: var(--bad); }
+.note { margin: 20px 0 0; color: var(--ink2); font-size: 14px; max-width: 65ch; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink2); margin: 36px 0 12px; font-weight: 700; }
+.post { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.post[data-status="approved"] { border-color: var(--ok); } .post[data-status="rejected"] { border-color: var(--bad); opacity: .8; }
+@media (max-width: 640px) { .post { grid-template-columns: minmax(0, 1fr); } }
+video, .slide { width: 100%; border-radius: 10px; background: #000; display: block; }
+video { aspect-ratio: 9 / 16; max-width: 100%; }
+.strip { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+.strip img { flex: 0 0 85%; scroll-snap-align: start; aspect-ratio: 4 / 5; max-width: 100%; border-radius: 10px; object-fit: cover; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--ink2); }
+.meta b { color: var(--ink); font-size: 15px; }
+.body { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink2); font-weight: 700; margin-bottom: 4px; }
+.caption { white-space: pre-wrap; background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 14px; overflow-wrap: anywhere; }
+details { border-top: 1px solid var(--line); padding-top: 8px; }
+summary { cursor: pointer; font-weight: 500; font-size: 14px; }
+.q { padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.q:last-child { border-bottom: 0; }
+.q .a { color: var(--ok); font-weight: 700; }
+.q .x { color: var(--ink2); }
+a { color: var(--accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 14px var(--font); border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 14px; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.approve[aria-pressed="true"] { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+button.reject[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+textarea { width: 100%; box-sizing: border-box; font: 14px var(--font); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); color: var(--ink); resize: vertical; min-height: 40px; }
+.saved { font-size: 12px; color: var(--ink2); }
+.offline { background: var(--bad-bg); color: var(--bad); padding: 10px 12px; border-radius: 10px; margin-top: 16px; font-size: 14px; }
+</style>
+
+<header><div class="wrap">
+  <div><h1 id="title">Týždenná dávka</h1><div class="sub" id="range">Načítavam dávku…</div></div>
+  <div class="tally" aria-live="polite"><span class="pill ok" id="n-ok">0 schválených</span><span class="pill bad" id="n-bad">0 zamietnutých</span><span class="pill" id="n-open">0 čaká</span></div>
+</div></header>
+
+<main class="wrap">
+  <p class="note">Ku každému príspevku daj Schváliť alebo Zamietnuť, prípadne pripíš, čo zmeniť. Schválené sa uverejnia v uvedený deň. Reels zo @trubbo idú aj na YouTube Shorts.</p>
+  <div id="offline" class="offline" hidden>Rozhodnutia sa teraz nedajú uložiť (chýba prihlásenie alebo prístup). Napíš mi ich do chatu.</div>
+  <div id="posts"></div>
+</main>
+
+<script>
+const ACCOUNTS = {ig_en: 'Instagram EN · @trubbo', ig_skcz: 'Instagram SK/CZ'};
+const FORMATS = {five: '5 sekúnd', abc: 'A, B alebo C', carousel: 'Kvíz na cestu (karusel)'};
+const LANGS = {en: 'angličtina', sk: 'slovenčina', cs: 'čeština'};
+const DAYS = {Mon: 'Pondelok', Tue: 'Utorok', Wed: 'Streda', Fri: 'Piatok'};
+let batch = null, db = null;
+const decisions = {};
+
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === 'text' ? (e.textContent = v) : e.setAttribute(k, v);
+  for (const k of kids) if (k) e.append(k);
+  return e;
+};
+const fmtDate = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('sk-SK', {day: 'numeric', month: 'numeric'});
+const docId = (key) => `${batch.week}_${key}`;
+
+function media(p) {
+  if (p.format === 'carousel') {
+    const strip = el('div', {class: 'strip', 'aria-label': 'Snímky karuselu, posúvaj do strany'});
+    for (const f of p.files) strip.append(el('img', {src: 'media/' + f, alt: 'Snímka karuselu', loading: 'lazy'}));
+    return strip;
+  }
+  const mp4 = p.files.find((f) => f.endsWith('.mp4')), jpg = p.files.find((f) => f.endsWith('.jpg'));
+  return el('video', {src: 'media/' + mp4, poster: 'media/' + jpg, controls: '', playsinline: '', preload: 'none'});
+}
+
+function questions(p) {
+  const d = el('details', {}, el('summary', {text: p.questions.length > 1 ? `${p.questions.length} otázok, odpovede a zdroje` : 'Otázka, odpoveď a zdroj'}));
+  for (const q of p.questions) {
+    const row = el('div', {class: 'q'}, el('div', {text: q.question}));
+    if (q.options.length) row.append(el('div', {class: 'x', text: q.options.map((o, i) => 'ABCDE'[i] + ': ' + o).join(' · ')}));
+    row.append(el('div', {class: 'a', text: q.answer}));
+    if (q.explanation) row.append(el('div', {class: 'x', text: q.explanation}));
+    if (q.source_url) row.append(el('a', {href: q.source_url, target: '_blank', rel: 'noopener', text: 'Zdroj'}));
+    d.append(row);
+  }
+  return d;
+}
+
+function card(p) {
+  const s = decisions[p.key] || {};
+  const art = el('article', {class: 'post', id: 'post-' + p.key, 'data-status': s.status || 'open'});
+  const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : 'hlas: klip z appky') : '';
+  const meta = el('div', {class: 'meta'}, el('b', {text: `${DAYS[p.day]} ${fmtDate(p.date)}`}),
+    el('span', {class: 'pill', text: FORMATS[p.format]}), el('span', {text: LANGS[p.language]}), voice && el('span', {text: voice}));
+  const body = el('div', {class: 'body'}, meta,
+    el('div', {}, el('div', {class: 'label', text: 'Popis na Instagram'}), el('div', {class: 'caption', text: p.caption})));
+  if (p.youtube) body.append(el('div', {}, el('div', {class: 'label', text: 'Názov na YouTube Shorts'}), el('div', {class: 'caption', text: p.youtube.title})));
+  body.append(questions(p));
+  const ok = el('button', {class: 'approve', 'aria-pressed': String(s.status === 'approved'), type: 'button', text: 'Schváliť'});
+  const no = el('button', {class: 'reject', 'aria-pressed': String(s.status === 'rejected'), type: 'button', text: 'Zamietnuť'});
+  const note = el('textarea', {id: 'note-' + p.key, rows: '1', placeholder: 'Poznámka, napr. čo zmeniť (nepovinné)'});
+  note.value = s.note || '';
+  const saved = el('span', {class: 'saved', text: s.at ? 'Uložené' : ''});
+  const now = () => (decisions[p.key] || {}).status;
+  ok.onclick = () => save(p, now() === 'approved' ? null : 'approved', note.value, saved);
+  no.onclick = () => save(p, now() === 'rejected' ? null : 'rejected', note.value, saved);
+  let t;
+  note.oninput = () => { clearTimeout(t); t = setTimeout(() => save(p, now() || null, note.value, saved), 800); };
+  body.append(el('div', {class: 'actions'}, ok, no, saved), note);
+  art.append(el('div', {}, media(p)), body);
+  return art;
+}
+
+async function save(p, status, note, saved) {
+  if (!db) { document.getElementById('offline').hidden = false; return; }
+  const rec = {week: batch.week, key: p.key, status, note: note.trim(), at: new Date().toISOString()};
+  decisions[p.key] = rec;
+  refresh(p.key);
+  saved.textContent = 'Ukladám…';
+  try { await db.collection('decisions').doc(docId(p.key)).set(rec); saved.textContent = 'Uložené'; }
+  catch (e) { saved.textContent = 'Neuložené: ' + (e.message || e.code); }
+}
+
+function refresh(key) {
+  const s = decisions[key] || {};
+  const art = document.getElementById('post-' + key);
+  if (art) {
+    art.dataset.status = s.status || 'open';
+    art.querySelector('.approve').setAttribute('aria-pressed', String(s.status === 'approved'));
+    art.querySelector('.reject').setAttribute('aria-pressed', String(s.status === 'rejected'));
+  }
+  const all = batch.posts.map((p) => (decisions[p.key] || {}).status);
+  const n = (v) => all.filter((x) => x === v).length;
+  document.getElementById('n-ok').textContent = `${n('approved')} schválených`;
+  document.getElementById('n-bad').textContent = `${n('rejected')} zamietnutých`;
+  document.getElementById('n-open').textContent = `${all.filter((x) => !x).length} čaká`;
+}
+
+function render() {
+  const last = batch.posts[batch.posts.length - 1];
+  document.getElementById('title').textContent = `Týždenná dávka ${batch.week.replace(/^\d{4}-W/, '')}. týždeň`;
+  document.getElementById('range').textContent = `${fmtDate(batch.monday)} až ${fmtDate(last.date)} · ${batch.posts.length} príspevkov`;
+  const root = document.getElementById('posts');
+  root.replaceChildren();
+  for (const [acc, name] of Object.entries(ACCOUNTS)) {
+    const posts = batch.posts.filter((p) => p.account === acc);
+    if (!posts.length) continue;
+    root.append(el('h2', {text: name}), ...posts.map(card));
+  }
+  batch.posts.forEach((p) => refresh(p.key));
+}
+
+(async () => {
+  try { batch = await (await fetch('batch.json')).json(); }
+  catch { document.getElementById('range').textContent = 'Dávku sa nepodarilo načítať.'; return; }
+  render();
+  db = await window.claude?.use('db');
+  if (!db) { document.getElementById('offline').hidden = false; return; }
+  db.collection('decisions').where('week', '==', batch.week).onSnapshot((snap) => {
+    for (const d of snap.docs) { const v = d.data(); if (v) decisions[v.key] = v; }
+    batch.posts.forEach((p) => {
+      refresh(p.key);
+      const note = document.getElementById('note-' + p.key);
+      if (note && document.activeElement !== note) note.value = (decisions[p.key] || {}).note || '';
+    });
+  }, () => { document.getElementById('offline').hidden = false; });
+})();
+</script>

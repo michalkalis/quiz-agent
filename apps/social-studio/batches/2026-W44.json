@@ -1,0 +1,358 @@
+{
+ "week": "2026-W44",
+ "monday": "2026-10-26",
+ "created": "2026-10-23T08:21:04.163Z",
+ "posts": [
+  {
+   "key": "mon-ig_en",
+   "account": "ig_en",
+   "day": "Mon",
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-26",
+   "files": [
+    "five-en-1696975f.mp4",
+    "five-en-1696975f.jpg"
+   ],
+   "caption": "The oldest international trophy in sport, first won in 1851 and still contested today, is awarded in which sport?\n\nSay your answer in the comments before the reveal.\n\n#trivia #quiz #sports #didyouknow",
+   "youtube": {
+    "title": "The oldest international trophy in sport, first won in 1851 and still contested today, is…",
+    "description": "The oldest international trophy in sport, first won in 1851 and still contested today, is awarded in which sport?\n\nSay your answer in the comments before the reveal.\n\n#trivia #quiz #sports #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "1696975f-e6c4-4d5c-b43d-7ebae366548f",
+     "category": "sports",
+     "question": "The oldest international trophy in sport, first won in 1851 and still contested today, is awarded in which sport?",
+     "answer": "Sailing",
+     "options": [],
+     "explanation": "The America's Cup was first won by the yacht America off the Isle of Wight in 1851, decades before the first modern Olympics or the first football World Cup.",
+     "source_url": "https://en.wikipedia.org/wiki/America's_Cup"
+    }
+   ]
+  },
+  {
+   "key": "mon-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "five",
+   "language": "cs",
+   "date": "2026-10-26",
+   "files": [
+    "five-cs-ff61ac0c.mp4",
+    "five-cs-ff61ac0c.jpg"
+   ],
+   "caption": "Čím tradičně krájely české babičky houskový knedlík, aby se při krájení nezmáčkl?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\n#kvíz #kviz #jídlo #vědomosti",
+   "youtube": null,
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
+     "category": "food-everyday",
+     "question": "Čím tradičně krájely české babičky houskový knedlík, aby se při krájení nezmáčkl?",
+     "answer": "Nití",
+     "options": [],
+     "explanation": "Nit knedlíkem projede, aniž by ho stlačila. Nůž by měkké těsto zmáčkl a plátky by byly gumové a slepené. Proto dnes existují i kráječe na knedlíky s napnutými strunami.",
+     "source_url": "https://www.novinky.cz/clanek/zena-styl-neni-knedlik-jako-knedlik-40027615"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_en",
+   "account": "ig_en",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-10-27",
+   "files": [
+    "carousel-en-p1-0-cover.jpg",
+    "carousel-en-p1-1.jpg",
+    "carousel-en-p1-2.jpg",
+    "carousel-en-p1-3.jpg",
+    "carousel-en-p1-4.jpg",
+    "carousel-en-p1-5.jpg",
+    "carousel-en-p1-6.jpg",
+    "carousel-en-p1-7.jpg",
+    "carousel-en-p1-8-answers.jpg",
+    "carousel-en-p1-9-answers.jpg"
+   ],
+   "caption": "Road trip round, part 1.\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #popculture #movies #roadtrip",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
+     "category": "entertainment",
+     "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?",
+     "answer": "Sinners",
+     "options": [],
+     "explanation": "The bloodsoaked thriller out-nominated every film in Academy history and took home four statuettes on the night.",
+     "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"
+    },
+    {
+     "id": "a8290869-57c6-4d6e-bb1d-914828225559",
+     "category": "entertainment",
+     "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?",
+     "answer": "Drake",
+     "options": [],
+     "explanation": "Releasing three albums with no warning flooded playlists worldwide and handed him the biggest streaming day of any artist that year.",
+     "source_url": "https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/"
+    },
+    {
+     "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+     "category": "movies-music",
+     "question": "Which actor was working as a carpenter before being cast as Han Solo in the original Star Wars?",
+     "answer": "Harrison Ford",
+     "options": [],
+     "explanation": "Ford said he was quite surprised to be offered the part. His carpentry skills reportedly helped him land studio work where he was noticed.",
+     "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+    },
+    {
+     "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+     "category": "geography-world",
+     "question": "Which continent contains more sovereign countries than any other?",
+     "answer": "Africa",
+     "options": [],
+     "explanation": "Africa has 54 internationally recognised countries, comfortably ahead of Europe and Asia.",
+     "source_url": "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent"
+    },
+    {
+     "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+     "category": "history",
+     "question": "In 1952, which world-famous physicist was offered the presidency of Israel and politely turned it down?",
+     "answer": "Albert Einstein",
+     "options": [],
+     "explanation": "The offer came from Prime Minister David Ben-Gurion after the first president died, and Einstein replied that he lacked the aptitude for dealing with people and official functions.",
+     "source_url": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+    },
+    {
+     "id": "035077c2-f271-4f2a-846c-1459ef636270",
+     "category": "food-everyday",
+     "question": "On a standard six-sided die, the numbers on any two opposite faces always add up to what?",
+     "answer": "Seven",
+     "options": [],
+     "explanation": "One sits opposite six, two opposite five and three opposite four, so every pair of opposite faces totals seven.",
+     "source_url": "https://mathworld.wolfram.com/Dice.html"
+    },
+    {
+     "id": "00e29bed-accf-461e-826a-31e0c8520828",
+     "category": "food-everyday",
+     "question": "The world's most famous restaurant star ratings are awarded by a guide that was launched in 1900 to sell which product?",
+     "answer": "Tyres",
+     "options": [],
+     "explanation": "The Michelin brothers gave the guide away free to French motorists, hoping that more driving would wear out more tyres.",
+     "source_url": "https://en.wikipedia.org/wiki/Michelin_Guide"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "sk",
+   "date": "2026-10-27",
+   "files": [
+    "carousel-sk-p1-0-cover.jpg",
+    "carousel-sk-p1-1.jpg",
+    "carousel-sk-p1-2.jpg",
+    "carousel-sk-p1-3.jpg",
+    "carousel-sk-p1-4.jpg",
+    "carousel-sk-p1-5.jpg",
+    "carousel-sk-p1-6.jpg",
+    "carousel-sk-p1-7.jpg",
+    "carousel-sk-p1-8-answers.jpg",
+    "carousel-sk-p1-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 1. diel.\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #popkultúra #filmy #naceste",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "20f92ef9-546c-4a4a-b97a-363c5ae5dc8d",
+     "category": "entertainment",
+     "question": "Vo filmovom muzikáli Wicked: For Good z novembra 2025 hrá dobrú čarodejnicu Glindu známa popová speváčka. Ktorá?",
+     "answer": "Ariana Grande",
+     "options": [],
+     "explanation": "Ariana Grande si Glindu zopakovala z prvého dielu Wicked, zatiaľ čo Elphabu opäť stvárnila Cynthia Erivo.",
+     "source_url": "https://en.wikipedia.org/wiki/Wicked:_For_Good"
+    },
+    {
+     "id": "c7c4d61d-c518-42ca-afcd-773b6ebd2df3",
+     "category": "entertainment",
+     "question": "Ktorý hollywoodsky herec v roku 2026 opäť prepožičal hlas Mariovi vo filme The Super Mario Galaxy Movie?",
+     "answer": "Chris Pratt",
+     "options": [],
+     "explanation": "Pratt nahovoril Maria už v prvom filme z roku 2023, ktorý celosvetovo zarobil vyše 1,3 miliardy dolárov. Novú postavu Rosalinu v pokračovaní nahovorila Brie Larson.",
+     "source_url": "https://www.capitalxtra.com/news/the-super-mario-galaxy-movie-cast/"
+    },
+    {
+     "id": "a1bc8d74-187e-4f52-8f25-690e2dea9c91",
+     "category": "movies-music",
+     "question": "Slávna slovenská pieseň Hej, Slováci má rovnakú melódiu ako štátna hymna jednej našej susednej krajiny. Ktorej?",
+     "answer": "Poľsko",
+     "options": [],
+     "explanation": "Samo Tomášik napísal svoj text na melódiu poľskej piesne Mazurek Dąbrowského, ktorá sa neskôr stala poľskou hymnou. Ten istý nápev dlhé roky slúžil aj ako hymna Juhoslávie.",
+     "source_url": "https://en.wikipedia.org/wiki/Hej,_Slované"
+    },
+    {
+     "id": "e4b6e7b6-fadc-4102-b483-a50d90c0b103",
+     "category": "movies-music",
+     "question": "Ktorá slovenská speváčka reprezentovala Slovensko na Eurovízii v roku 2010 s piesňou Horehronie?",
+     "answer": "Kristína",
+     "options": [],
+     "explanation": "Pieseň sa doma stala obrovským hitom, no v Osle sa zo semifinále do finálového večera nedostala.",
+     "source_url": "https://en.wikipedia.org/wiki/Slovakia_in_the_Eurovision_Song_Contest_2010"
+    },
+    {
+     "id": "6673cb78-90ee-4628-933c-7f2aa6d4d5dc",
+     "category": "food-everyday",
+     "question": "Ktorý obchodný reťazec má na Slovensku zďaleka najviac predajní, oveľa viac než Lidl, Tesco či Kaufland?",
+     "answer": "COOP Jednota",
+     "options": [],
+     "explanation": "COOP Jednota má na Slovensku vyše dvetisíc predajní, lebo stojí takmer v každej dedine. Veľké zahraničné reťazce majú len zlomok tohto počtu, hoci ich obchody sú oveľa väčšie.",
+     "source_url": "https://sk.wikipedia.org/wiki/COOP_Jednota_Slovensko"
+    },
+    {
+     "id": "086a967e-a379-4b09-ab0a-8ce9faf989c3",
+     "category": "general",
+     "question": "V Jasnej sa dá lanovkami prejsť zo severnej strany Nízkych Tatier až na južnú. Cez ktorý vrch vás vyvezú?",
+     "answer": "Chopok",
+     "options": [],
+     "explanation": "Lanovky vyvezú lyžiarov až pod vrchol Chopka vo výške vyše 2000 metrov. Odtiaľ sa dá zlyžovať na druhú stranu hôr, takže Jasná je najväčším lyžiarskym strediskom na Slovensku.",
+     "source_url": "https://www.jasna.sk/fileadmin/resort_upload/jasna/jasna_presskit_A4_2024__2_.pdf"
+    },
+    {
+     "id": "f93b3c33-936f-4ada-8fd3-a1911209386d",
+     "category": "general",
+     "question": "Ktoré slovenské mesto sa pre svoje bane prezýva „zlaté mesto“ a dodnes sa v ňom razia slovenské euromince?",
+     "answer": "Kremnica",
+     "options": [],
+     "explanation": "Kremnické zlaté dukáty patrili v stredoveku k najcennejším minciam v Európe. Tamojšia mincovňa razí peniaze nepretržite už takmer sedem storočí, takže euro vo vašej peňaženke pochádza z rovnakej dielne ako dukáty kráľov.",
+     "source_url": "https://nbs.sk/_img/documents/_publik_nbs_fsr/biatec/rok2008/biatec_9_2008.pdf"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_en",
+   "account": "ig_en",
+   "day": "Wed",
+   "format": "abc",
+   "language": "en",
+   "date": "2026-10-28",
+   "files": [
+    "abc-en-5beff181.mp4",
+    "abc-en-5beff181.jpg"
+   ],
+   "caption": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #popculture #didyouknow",
+   "youtube": {
+    "title": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very…",
+    "description": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #popculture #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "5beff181-5929-4604-8ae8-c3ae17222abf",
+     "category": "entertainment",
+     "question": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?",
+     "answer": "About 300",
+     "options": [
+      "About 30",
+      "About 300",
+      "About 3,000",
+      "About 30,000"
+     ],
+     "explanation": "About 300 comic fans met in a hotel basement in 1970. The event has since grown to more than 400 times that size and now sells out its badges within minutes.",
+     "source_url": "https://en.wikipedia.org/wiki/San_Diego_Comic-Con"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Wed",
+   "format": "abc",
+   "language": "cs",
+   "date": "2026-10-28",
+   "files": [
+    "abc-cs-3ae58406.mp4",
+    "abc-cs-3ae58406.jpg"
+   ],
+   "caption": "Kolik diváků přibližně přišlo za celý rok 2025 do českých kin?\n\nA, B, C nebo D? Napiš do komentáře dřív, než prozradíme odpověď.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #popkultura #vědomosti",
+   "youtube": null,
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "3ae58406-795b-49e3-8218-8710000d12cd",
+     "category": "entertainment",
+     "question": "Kolik diváků přibližně přišlo za celý rok 2025 do českých kin?",
+     "answer": "zhruba 12 milionů",
+     "options": [
+      "zhruba 1 milion",
+      "zhruba 12 milionů",
+      "zhruba 50 milionů",
+      "zhruba 120 milionů"
+     ],
+     "explanation": "Přesně 12,6 milionu, tedy zhruba jedna návštěva na obyvatele. Oproti roku 2024 jich bylo o něco méně, zato platili za dražší vstupenky.",
+     "source_url": "https://www.mediaguru.cz/do-kin-loni-prislo-o-neco-mene-divaku-filmem-roku-byl-minecraft"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_en",
+   "account": "ig_en",
+   "day": "Fri",
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-30",
+   "files": [
+    "five-en-949d87b6.mp4",
+    "five-en-949d87b6.jpg"
+   ],
+   "caption": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?\n\nSay your answer in the comments before the reveal.\n\n#trivia #quiz #science #didyouknow",
+   "youtube": {
+    "title": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an…",
+    "description": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?\n\nSay your answer in the comments before the reveal.\n\n#trivia #quiz #science #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "949d87b6-e997-4062-aac9-911ef8525213",
+     "category": "science-nature",
+     "question": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?",
+     "answer": "A rock",
+     "options": [],
+     "explanation": "Otters float on their backs, put the rock on their chest and smash clams and sea urchins against it, and many keep the same favourite rock for a long time.",
+     "source_url": "https://en.wikipedia.org/wiki/Sea_otter"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Fri",
+   "format": "five",
+   "language": "sk",
+   "date": "2026-10-30",
+   "files": [
+    "five-sk-9faf2e1f.mp4",
+    "five-sk-9faf2e1f.jpg"
+   ],
+   "caption": "Ktoré hlavné mesto na svete ako jediné susedí priamo s dvoma inými štátmi?\n\nNapíš odpoveď do komentára skôr, ako ju prezradíme.\n\n#kvíz #kviz #cestovanie #vedomosti",
+   "youtube": null,
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "9faf2e1f-847f-45e6-97df-5eec226c2688",
+     "category": "geography-world",
+     "question": "Ktoré hlavné mesto na svete ako jediné susedí priamo s dvoma inými štátmi?",
+     "answer": "Bratislava",
+     "options": [],
+     "explanation": "Bratislava hraničí s Rakúskom aj s Maďarskom. Z jej južných mestských častí sa dá na bicykli za chvíľu prejsť do dvoch cudzích krajín.",
+     "source_url": "https://en.wikipedia.org/wiki/Bratislava"
+    }
+   ]
+  }
+ ]
+}

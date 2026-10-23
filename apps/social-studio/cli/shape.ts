@@ -22,6 +22,8 @@ export type QuestionInput = {
 	audio?: string | null;
 	audio_b64?: string | null;
 	spoken_text?: string;
+	/** Prod rows: the question's source, shown on the approval page. */
+	source_url?: string | null;
 };
 
 /** Public text rule: no dashes as punctuation (hyphenated words stay). */

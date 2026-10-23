@@ -165,6 +165,15 @@ def naturalness_check() -> bool:
     return _default_on(os.getenv("NATURALNESS_CHECK"))
 
 
+def naturalness_autofix() -> bool:
+    """#211 211.4: on import, replace a flagged sk/cs row's text with the
+    check's smallest-edit rewrite (the original stays in provenance). Founder
+    2026-10-23 chose auto-fix over label-only; OFF until the second blind
+    round of the stricter rewrites passes (``NATURALNESS_AUTOFIX=1``).
+    """
+    return _truthy(os.getenv("NATURALNESS_AUTOFIX"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a

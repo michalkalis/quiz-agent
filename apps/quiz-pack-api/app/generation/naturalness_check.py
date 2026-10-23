@@ -6,12 +6,16 @@ pint") and a home reference that neither helps answer nor carries the point.
 The MQM judge that knows calques (``translation_verification/judge.py``) only
 runs on translations, so native sk/cs rows had no language check at all.
 
-This check is a LABEL, never a gate: LLM judges are unreliable on fluency in
-smaller languages and tend to prefer translationese, so the founder's blind
-rating decides what happens to flagged rows (#211 211.3 / 211.4). The verdict,
-including a proposed rewrite of the stem, lands in
+The verdict, including a proposed rewrite of the stem, lands in
 ``generation_metadata.extra["naturalness"]`` (the ``provenance`` JSONB column),
-which doubles as the "already checked" marker for the backfill.
+which doubles as the "already checked" marker for the backfill. It started as
+a LABEL only, because LLM judges are unreliable on fluency in smaller
+languages. Founder's blind pairs 2026-10-23 (#211 211.4): the rewrite won
+15/20 and the originals had "quite big errors", but the 4 losing rewrites
+changed the meaning, added words or rebuilt a sound sentence. So the prompt
+now asks for the smallest edit (``PROMPT_VERSION`` 2), and
+:func:`apply_rewrite` swaps the text in, keeping the original in provenance.
+The importer does that only behind ``NATURALNESS_AUTOFIX``.
 
 Shape mirrors ``LocalScopeClassifier`` (#206): one batched call through
 ``quiz_shared.llm.factory``. Fail-safe, fail-loud: any LLM error, malformed
@@ -48,6 +52,9 @@ PROBLEM_KINDS = (
 
 DEFAULT_BATCH_SIZE = 20
 
+#: Stamped on every verdict; 2 = the smallest-edit rules after the 10-23 pairs.
+PROMPT_VERSION = 2
+
 _PROMPT_HEADER = """You are a native Slovak and Czech editor of a voice quiz \
 read aloud to friends in a car. Judge each question as a native speaker of its \
 language would hear it. Think in that language, not in English.
@@ -69,11 +76,20 @@ participles, needless passive, a collocation natives would not use.
 - "grammar": a grammar or spelling error.
 - "neighbour": a Czech word or form in a Slovak question, or the reverse.
 
+Flag only what a native listener would stumble on. Common colloquial forms \
+are fine (sk "poprosíte niečo na hnačku"), and so is a phrasing that is \
+merely not the one you would pick (sk "postupne nás robí ospalými"). When in \
+doubt, "ok": true.
+
 For every question with a problem, quote the exact offending words and give \
-a "rewrite": the whole question as a native quiz host would say it, same \
-facts, same correct answer, same difficulty, nothing added, problems removed. \
-When the question is fine, "ok": true, no problems, "rewrite": null. Do not \
-flag style you merely would have written differently.
+a "rewrite": the whole question with the smallest edit that removes the \
+problems. Change only the quoted words and what grammar forces around them; \
+copy every other word as it is. Never add words or information (not "aby v \
+nej mohol pracovať" → "aby v nej mohol na železnici pracovať"), never rebuild \
+a sentence that has no problem, and keep the exact meaning ("robí ospalými", \
+makes sleepy, is not "uspáva", puts to sleep). Deleting an empty hook or \
+padding is the right edit. Same facts, same correct answer, same difficulty. \
+When the question is fine, "ok": true, no problems, "rewrite": null.
 
 Respond with JSON only, no prose:
 {"checks": [{"index": <1-based int>, "ok": <bool>, "problems": \
@@ -104,10 +120,44 @@ def apply_naturalness(q: Question, verdict: Naturalness) -> None:
                     "problems": verdict.problems,
                     "rewrite": verdict.rewrite,
                     "model": _CHECK_MODEL,
+                    "version": PROMPT_VERSION,
                 },
             }
         }
     )
+
+
+def apply_rewrite(q: Question, applied_by: str) -> bool:
+    """Swap a flagged question's text for its proposed rewrite.
+
+    The original text stays in the verdict (``original_question``) so a swap
+    can be audited and undone. Both vectors are cleared: they embed the old
+    text, and a writer re-embeds a row whose vector is ``None``. Returns
+    ``False`` (nothing changed) for an ok, unchecked or already applied row.
+    """
+    meta = q.generation_metadata
+    verdict = meta.extra.get("naturalness") if meta else None
+    if not verdict or verdict.get("ok") or "original_question" in verdict:
+        return False
+    rewrite = verdict.get("rewrite")
+    if not rewrite or rewrite == q.question:
+        return False
+    q.generation_metadata = meta.model_copy(
+        update={
+            "extra": {
+                **meta.extra,
+                "naturalness": {
+                    **verdict,
+                    "original_question": q.question,
+                    "applied_by": applied_by,
+                },
+            }
+        }
+    )
+    q.question = rewrite
+    q.embedding = q.embedding_model = q.embedding_dim = None
+    q.embedding_qa = q.embedding_qa_model = None
+    return True
 
 
 def has_naturalness_verdict(q: Question) -> bool:

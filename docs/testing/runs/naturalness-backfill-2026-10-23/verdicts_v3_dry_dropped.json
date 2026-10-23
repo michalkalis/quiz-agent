@@ -1,0 +1,1151 @@
+[
+  {
+    "id": "8faba77f-e9c8-4af3-8ec1-871d6d660731",
+    "language": "sk",
+    "question": "Na Kube štát zamestnáva ľudí, ktorí na krajnici zastavujú služobné autá a prikážu im zobrať čakajúcich stopárov. Ľudia ich volajú podľa farby uniformy. Akej?",
+    "answer": "Žltej",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "prikážu im"
+        }
+      ],
+      "rewrite": "Na Kube štát zamestnáva ľudí, ktorí na krajnici zastavujú služobné autá a prikazujú vodičom zobrať čakajúcich stopárov. Ľudia ich volajú podľa farby uniformy. Akej?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "df5d56fd-16e5-460b-8a3d-5f1dc8aa6b33",
+    "language": "cs",
+    "question": "Podle pověsti kněžny Libuše dostala Praha jméno podle věci, kterou v lese tesal jeden muž. Co to bylo?",
+    "answer": "Práh",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Podle pověsti kněžny Libuše"
+        }
+      ],
+      "rewrite": "Podle pověsti o kněžně Libuši dostala Praha jméno podle věci, kterou v lese tesal jeden muž. Co to bylo?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "fa41e92f-31ef-45db-998f-c8286cba6d7b",
+    "language": "cs",
+    "question": "Česko bývá nazýváno střechou Evropy, protože jeho řeky odtékají do tří moří. Na kterém pohraničním horském masivu, kde pramení i řeka Morava, se rozvodí všech tří moří stýká v jediném bodě?",
+    "answer": "Králický Sněžník",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "grammar",
+          "quote": "se rozvodí všech tří moří stýká"
+        }
+      ],
+      "rewrite": "Česko bývá nazýváno střechou Evropy, protože jeho řeky odtékají do tří moří. Na kterém pohraničním horském masivu, kde pramení i řeka Morava, se rozvodí všech tří moří stýkají v jediném bodě?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca",
+    "language": "cs",
+    "question": "Který chorvatský ostrov, kam se dá dojet autem po mostě, má název, jenž v češtině znamená část lidského těla?",
+    "answer": "Krk",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "f6ddbedf-3ef4-4fd1-b319-b45626b19c69",
+    "language": "cs",
+    "question": "Který herec, který už měl Oscary za filmy Tajemná řeka a Milk, získal na Oscarech 2026 svou třetí sošku za vedlejší roli ve filmu Jedna bitva za druhou (One Battle After Another)?",
+    "answer": "Sean Penn",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Který herec, který"
+        }
+      ],
+      "rewrite": "Který herec, jenž už měl Oscary za filmy Tajemná řeka a Milk, získal na Oscarech 2026 svou třetí sošku za vedlejší roli ve filmu Jedna bitva za druhou (One Battle After Another)?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "d4683b67-7b03-4575-9b42-934913b727d6",
+    "language": "cs",
+    "question": "Mladá herečka Kateřina Falbrová získala Českého lva 2026 za nejlepší ženský herecký výkon za roli zpěvačky v dívčím pěveckém sboru. Jak se jmenuje tento film režiséra Ondřeje Provazníka?",
+    "answer": "Sbormistr",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "60d8f443-fb6f-4474-9c06-3bec9aa1ea52",
+    "language": "sk",
+    "question": "Dráma Otec Terezy Nvotovej získala na cenách Slnko v sieti v apríli 2026 Najlepší film aj Najlepšiu réžiu. Keď však Slovenská filmová a televízna akadémia v júli 2026 vyberala slovenského kandidáta na Oscara pre ceremoniál v roku 2027, siahla po Potope. Prečo víťazný Otec vôbec neprichádzal do úvahy?",
+    "answer": "Otec už bol kandidátom rok predtým",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "789b44f9-9dee-440d-9cde-191deb5c1d82",
+    "language": "sk",
+    "question": "Ryan Gosling hrá vo filme Project Hail Mary z marca 2026 vedca, ktorý sa prebudí sám na vesmírnej lodi. Predloha je od autora, podľa ktorého knihy vznikol aj slávny film s Mattom Damonom o preživšom na Marse. Ako sa ten starší film volá?",
+    "answer": "Marťan",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "992c9068-2ef3-4327-9bdf-9ab70709477a",
+    "language": "sk",
+    "question": "Španielska speváčka Rosalía vydala v novembri 2025 album nahratý s Londýnskym symfonickým orchestrom, na ktorom spieva v trinástich jazykoch. Jeho názov je jediné latinské slovo, ktoré znamená svetlo. Ako sa album volá?",
+    "answer": "LUX",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "f885e69f-2d94-4150-9163-5e6ea7df06a6",
+    "language": "sk",
+    "question": "Čarovnú Perinbabu, ktorá vytriasaním periny posiela na zem sneh, hrala v rozprávke z roku 1985 svetoznáma zahraničná herečka, manželka Federica Felliniho. Z ktorej krajiny pochádzala?",
+    "answer": "Z Talianska",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1709ebea-27ee-46b9-b0fd-26ef7f60c882",
+    "language": "cs",
+    "question": "Když po zavařování chladnou sklenice, jejich víčka se prohnou dovnitř a často při tom cvaknou. Co je dovnitř vtáhne?",
+    "answer": "Podtlak",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "cfb918ea-8b34-45a4-a467-4435f11649d7",
+    "language": "sk",
+    "question": "Väčšina slovenských dní v týždni má jednoduchý domáci pôvod: streda je stred týždňa, štvrtok štvrtý deň, piatok piaty. Jeden deň však prišiel až z hebrejčiny. Ktorý?",
+    "answer": "Sobota",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Väčšina slovenských dní v týždni"
+        }
+      ],
+      "rewrite": "Väčšina slovenských názvov dní v týždni má jednoduchý domáci pôvod: streda je stred týždňa, štvrtok štvrtý deň, piatok piaty. Jeden deň však prišiel až z hebrejčiny. Ktorý?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "0d42a3bc-18ec-4790-8496-528229eb8b7d",
+    "language": "sk",
+    "question": "Slávne americké karavany Airstream lesklé ako trup lietadla sa vyrábajú od 30. rokov. Z akého kovu majú karosériu?",
+    "answer": "Z hliníka",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "f6104550-837a-4767-a835-460cbe30db1c",
+    "language": "cs",
+    "question": "Když na ulici potkáte kominíka, čeho na jeho oblečení byste se podle staré pověry měli chytit, aby vám přinesl štěstí?",
+    "answer": "knoflíku",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "čeho na jeho oblečení byste se"
+        }
+      ],
+      "rewrite": "Když na ulici potkáte kominíka, čeho byste se na jeho oblečení podle staré pověry měli chytit, aby vám přinesl štěstí?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "768ff3fe-e78d-4ed2-ae75-0a4b2bc12dcf",
+    "language": "sk",
+    "question": "V telocvični aj v slovenskej florbalovej extralige drží hokejku každý hráč na ihrisku, až na jedného. Ktorý hráč podľa pravidiel hrá bez hokejky?",
+    "answer": "brankár",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "v slovenskej florbalovej extralige"
+        }
+      ],
+      "rewrite": "V telocvični aj vo florbalovej extralige drží hokejku každý hráč na ihrisku, až na jedného. Ktorý hráč podľa pravidiel hrá bez hokejky?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "434fe387-08ad-4dd7-a315-7e8f9e0a344b",
+    "language": "sk",
+    "question": "Pri tarote na jarmoku sa ľudia najviac boja jednej karty z veľkých arkán, ktorá má práve nešťastné číslo trinásť. Ako sa táto karta volá?",
+    "answer": "Smrť",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "8e8180a9-8e3d-4e08-973e-ce2d075e0b39",
+    "language": "cs",
+    "question": "Pražské noční tramvaje se v noci sjíždějí na jediné centrální zastávce, kde na sebe všechny počkají, aby lidé mohli pohodlně přestoupit. Která zastávka to je?",
+    "answer": "Lazarská",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "padding",
+          "quote": "v noci"
+        }
+      ],
+      "rewrite": "Pražské noční tramvaje se sjíždějí na jediné centrální zastávce, kde na sebe všechny počkají, aby lidé mohli pohodlně přestoupit. Která zastávka to je?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1fd7c897-bc20-44c7-a394-d70b7065aa2a",
+    "language": "sk",
+    "question": "Na nočnej ceste autobusom k moru vás vodič zobudí zastávkou na odpočívadle. Väčšinou nejde o toalety ani o kávu, ale o prísny predpis EÚ. Najviac koľko hodín môže vodič autobusu šoférovať bez prestávky?",
+    "answer": "4,5 hodiny",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Najviac koľko hodín"
+        }
+      ],
+      "rewrite": "Na nočnej ceste autobusom k moru vás vodič zobudí zastávkou na odpočívadle. Väčšinou nejde o toalety ani o kávu, ale o prísny predpis EÚ. Koľko hodín najviac môže vodič autobusu šoférovať bez prestávky?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "d3284309-2df6-4b03-9798-73a9f5a79a64",
+    "language": "sk",
+    "question": "V mnohých slovenských kanceláriách sa ráno pije káva, pri ktorej sa mletá káva zaleje vriacou vodou priamo v hrnčeku a usadenina zostane na dne. Ako sa jej ľudovo hovorí?",
+    "answer": "Turek",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "0b653a7e-5d29-4d77-9a25-bde1a2a5a428",
+    "language": "sk",
+    "question": "Skôr než sa únikové hry rozšírili do slovenských miest, Európa ich vo veľkom objavila v hlavnom meste jedného z našich susedov. Ktoré mesto je považované za európsku kolísku únikových hier?",
+    "answer": "Budapešť",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "Skôr než sa únikové hry rozšírili do slovenských miest,"
+        },
+        {
+          "kind": "unnatural",
+          "quote": "je považované za"
+        }
+      ],
+      "rewrite": "Európa únikové hry vo veľkom objavila v hlavnom meste jedného z našich susedov. Ktoré mesto sa považuje za európsku kolísku únikových hier?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "05296ad6-2be6-48ea-8fe5-4ed0a7ee7a84",
+    "language": "cs",
+    "question": "Většina proteinových nápojů, které se pijí v posilovnách, se vyrábí z tekuté zbytkové suroviny. Ta zbude při výrobě jedné obyčejné potraviny. Které?",
+    "answer": "Sýr",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "b73797df-8aae-4fe5-ace9-4bcd71c8b5b6",
+    "language": "cs",
+    "question": "První komerční bungee jumping na světě začal z mostu nad řekou v zemi, kterou mnoho lidí zná jako filmovou Středozem. O jakou zemi jde?",
+    "answer": "Nový Zéland",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "začal z mostu"
+        }
+      ],
+      "rewrite": "První komerční bungee jumping na světě se odehrál na mostě nad řekou v zemi, kterou mnoho lidí zná jako filmovou Středozem. O jakou zemi jde?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "22926d89-e4dc-431d-af4d-236cfee9139e",
+    "language": "cs",
+    "question": "Žlutý obličej, kterému z nosu fučí dva obláčky páry, posílá většina lidí, když zuří. Jaký pocit ale tomuto emoji dává jeho oficiální název ve standardu Unicode?",
+    "answer": "Triumf",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "6a818adc-95dc-4d23-b96c-d821b02e9fc4",
+    "language": "cs",
+    "question": "Ve školní tělocvičně často chytá ten, na koho zbyde místo v bráně. Ve skutečném florbalu ale brankáři chybí jedna věc, kterou mají všichni ostatní hráči na hřišti. Co to je?",
+    "answer": "hokejka",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "na koho zbyde místo v bráně"
+        }
+      ],
+      "rewrite": "Ve školní tělocvičně často chytá ten, na koho zbyde brána. Ve skutečném florbalu ale brankáři chybí jedna věc, kterou mají všichni ostatní hráči na hřišti. Co to je?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "93e561a0-cad6-421e-90b5-9b97362492ec",
+    "language": "sk",
+    "question": "Starú klasickú 60-wattovú žiarovku nahradí LED žiarovka. Približne koľko lúmenov bude mať napísaných na obale?",
+    "answer": "asi 800",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "ea667661-e3d9-4849-b9d4-880d78d8f604",
+    "language": "sk",
+    "question": "Parkrun je pravidelný sobotňajší beh na päť kilometrov v parku, s presným meraním času a výsledkami na internete. Koľko zaplatí bežec za štartovné?",
+    "answer": "nič",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "053d821c-c66a-4fed-a739-29cfa91d6daa",
+    "language": "sk",
+    "question": "Do 18. série reality šou Farma na Markíze v roku 2026 sa jeden zo súťažiacich dostal spôsobom, aký v histórii Farmy dovtedy nebol. Kto a ako o ňom rozhodol?",
+    "answer": "Vybrali ho diváci hlasovaním",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "25f78d16-1eca-4cfe-93fc-7f319c3e811f",
+    "language": "sk",
+    "question": "Štrbské pleso je najznámejšie, no nie najväčšie. Ako sa volá najväčšie a najhlbšie pleso na slovenskej strane Vysokých Tatier, ležiace v Mengusovskej doline pod Rysmi?",
+    "answer": "Veľké Hincovo pleso",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "ležiace v Mengusovskej doline"
+        }
+      ],
+      "rewrite": "Štrbské pleso je najznámejšie, no nie najväčšie. Ako sa volá najväčšie a najhlbšie pleso na slovenskej strane Vysokých Tatier, ktoré leží v Mengusovskej doline pod Rysmi?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "b2455207-1400-4d09-89a3-8ac3122c3a68",
+    "language": "sk",
+    "question": "V piatom filme Toy Story: Príbeh hračiek z roku 2026 majú hračky nového súpera o pozornosť svojej majiteľky. Nie je to hračka, ale aké elektronické zariadenie?",
+    "answer": "Tablet",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "nového súpera o pozornosť"
+        }
+      ],
+      "rewrite": "V piatom filme Toy Story: Príbeh hračiek z roku 2026 majú hračky nového súpera v boji o pozornosť svojej majiteľky. Nie je to hračka, ale aké elektronické zariadenie?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "64903dc6-0aa3-4af5-a95d-f88159f57c24",
+    "language": "sk",
+    "question": "Keď Slováci nakupujú v Maďarsku, platia forintmi. Názov tejto meny pochádza z mena jedného talianskeho mesta. Ktorého?",
+    "answer": "Florencia",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "Keď Slováci nakupujú v Maďarsku, platia forintmi."
+        }
+      ],
+      "rewrite": "V Maďarsku sa platí forintmi. Názov tejto meny pochádza z mena jedného talianskeho mesta. Ktorého?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "22b9fd02-d244-4838-929e-27f747da0c2f",
+    "language": "sk",
+    "question": "Na každej mape sveta sú dve rovnobežky, nad ktorými stojí Slnko raz za rok kolmo nad hlavou. Severná sa volá obratník Raka. Po ktorom znamení zverokruhu je pomenovaná južná?",
+    "answer": "Kozorožec",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "nad ktorými stojí Slnko"
+        },
+        {
+          "kind": "calque",
+          "quote": "Po ktorom znamení zverokruhu je pomenovaná južná?"
+        }
+      ],
+      "rewrite": "Na každej mape sveta sú dve rovnobežky, na ktorých stojí Slnko raz za rok kolmo nad hlavou. Severná sa volá obratník Raka. Podľa ktorého znamenia zverokruhu je pomenovaná južná?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "02044c9f-fbd2-4ff7-95f7-a9cb7b43c256",
+    "language": "sk",
+    "question": "Legendárny vreckový nožík, ktorý v Československu nosil vo vrecku takmer každý chlapec, dostal meno podľa tvaru svojej rúčky. Ako sa volá?",
+    "answer": "Rybička",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "88b584e5-d14c-47de-afb8-ae226eed6527",
+    "language": "cs",
+    "question": "Rallye Dakar, kde Tatra slavila tolik vítězství, se v posledních letech jezdí v zemi, kde žádný Dakar neleží, a dokonce ani v Africe. Ve které zemi?",
+    "answer": "Saúdská Arábie",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Rallye Dakar, kde Tatra"
+        },
+        {
+          "kind": "unnatural",
+          "quote": "a dokonce ani v Africe"
+        }
+      ],
+      "rewrite": "Rallye Dakar, na které Tatra slavila tolik vítězství, se v posledních letech jezdí v zemi, kde žádný Dakar neleží, a ta dokonce není ani v Africe. Ve které zemi?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1b748139-c86f-4b09-b045-8befaba81a72",
+    "language": "sk",
+    "question": "V tradičnom slovenskom kroji ste už z diaľky spoznali, či je žena slobodná alebo vydatá. Slobodné dievčatá mali vlasy odkryté. Čo dostala nevesta na svadbe na hlavu a nosila to potom celý život?",
+    "answer": "Čepiec",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "V tradičnom slovenskom kroji ste už z diaľky spoznali"
+        }
+      ],
+      "rewrite": "Podľa tradičného slovenského kroja ste už z diaľky spoznali, či je žena slobodná alebo vydatá. Slobodné dievčatá mali vlasy odkryté. Čo dostala nevesta na svadbe na hlavu a nosila to potom celý život?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "feb10a2d-8a1c-4bca-a778-97c337d1bce5",
+    "language": "sk",
+    "question": "Kofola sa nezrodila v limonádovke, ale vo farmaceutickom podniku. Chemici tam hľadali, čo urobiť so zvyškami, ktoré vznikali pri spracovaní jednej obľúbenej suroviny. Akej?",
+    "answer": "Káva",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "33cbada0-6a72-4c51-a458-112f20fca3cc",
+    "language": "sk",
+    "question": "Andy Warhol, ktorého rodičia pochádzali zo slovenskej obce Miková, preslávil obraz plechoviek s jedlom, ktoré vraj sám jedol na obed dvadsať rokov. Čo bolo v tých plechovkách?",
+    "answer": "polievka",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "ktorého rodičia pochádzali zo slovenskej obce Miková,"
+        },
+        {
+          "kind": "unnatural",
+          "quote": "preslávil obraz plechoviek"
+        }
+      ],
+      "rewrite": "Andy Warhol sa preslávil obrazom plechoviek s jedlom, ktoré vraj sám jedol na obed dvadsať rokov. Čo bolo v tých plechovkách?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "e51a6236-527c-4761-8650-3952cc9572d3",
+    "language": "cs",
+    "question": "Pražský hrad má zápis v Guinnessově knize rekordů. Jaký světový rekord drží?",
+    "answer": "Největší hradní komplex",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "2c2ebb54-4169-4840-a24c-208a7e478dd6",
+    "language": "cs",
+    "question": "Po mátové žvýkačce vám obyčejná voda z kohoutku připadá ledová, i když teplota v ústech se vůbec nezměnila. Která látka z máty takhle oklame nervy, které hlásí chlad?",
+    "answer": "Mentol",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "i když teplota v ústech se vůbec nezměnila"
+        }
+      ],
+      "rewrite": "Po mátové žvýkačce vám obyčejná voda z kohoutku připadá ledová, i když se teplota v ústech vůbec nezměnila. Která látka z máty takhle oklame nervy, které hlásí chlad?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "d6633a3e-3934-4d89-86c4-dbd3dfea9cbe",
+    "language": "cs",
+    "question": "Kofola vznikla v Československu jako náhrada za Coca-Colu. Při pražení které suroviny zbýval kofein, pro který se hledalo využití, a tak se z něj nakonec stala limonáda?",
+    "answer": "Kávy",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "8026c912-e7d3-4c8c-8f06-77ed8c8b7d73",
+    "language": "cs",
+    "question": "V běžné hře mariáše je hned pod esem jediná karta s číslem, která přebije i krále. Která to je?",
+    "answer": "Desítka",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "V běžné hře mariáše"
+        }
+      ],
+      "rewrite": "V běžném mariáši je hned pod esem jediná karta s číslem, která přebije i krále. Která to je?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "5f7ffe67-e8f8-4117-abfb-c2fbf26b1daa",
+    "language": "cs",
+    "question": "Samotné slovo pomlázka prozrazuje, co mělo velikonoční šlehání ženám a dívkám původně dát. Co to je?",
+    "answer": "Mládí",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Co to je?"
+        }
+      ],
+      "rewrite": "Samotné slovo pomlázka prozrazuje, co mělo velikonoční šlehání ženám a dívkám původně dát. Co?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "65d97f23-7e6e-4601-bff9-9f9f3a896b83",
+    "language": "cs",
+    "question": "Utopence z hospody děláme ze stejného buřtu, který Češi jinak nejraději opékají na klacku u táboráku. O jaký buřt jde?",
+    "answer": "Špekáček",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "grammar",
+          "quote": "ze stejného buřtu, který"
+        }
+      ],
+      "rewrite": "Utopence z hospody děláme ze stejného buřtu, jaký Češi jinak nejraději opékají na klacku u táboráku. O jaký buřt jde?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "35a66df5-be4f-4c88-bd7c-3eda142d6684",
+    "language": "sk",
+    "question": "Najdrahšia karta Pokémon na svete, predaná za milióny dolárov, sa nikdy nedala kúpiť v obchode. Japonský detský časopis ňou koncom 90. rokov odmenil víťazov súťaže. V čom súťažili?",
+    "answer": "V kreslení",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "predaná za milióny dolárov"
+        }
+      ],
+      "rewrite": "Najdrahšia karta Pokémon na svete, ktorú predali za milióny dolárov, sa nikdy nedala kúpiť v obchode. Japonský detský časopis ňou koncom 90. rokov odmenil víťazov súťaže. V čom súťažili?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "c3de804e-f0a8-4a73-b3d1-0befe1d6f023",
+    "language": "cs",
+    "question": "Podle staré lidové víry škodily čarodějnice o téhle noci hlavně jednomu druhu domácích zvířat. Hospodáři se báli, že jim čarodějnice vezmou mléko, a proto chránili chlévy. O která zvířata šlo?",
+    "answer": "krávy",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "o téhle noci"
+        }
+      ],
+      "rewrite": "Podle staré lidové víry škodily čarodějnice o filipojakubské noci hlavně jednomu druhu domácích zvířat. Hospodáři se báli, že jim čarodějnice vezmou mléko, a proto chránili chlévy. O která zvířata šlo?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "bdd00890-58d0-43a3-af7c-62446683dedb",
+    "language": "sk",
+    "question": "Zelená pasta wasabi, ktorú dostanete k sushi v bežnom obchode, väčšinou vôbec nie je pravé wasabi. Na akej koreninovej zelenine je naozaj založená? Slováci ju poznajú najmä z Veľkej noci k šunke.",
+    "answer": "Chren",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "2fd013d9-8c01-4a71-82db-ad407c2fe0e2",
+    "language": "sk",
+    "question": "Dobrá správa pre každého, komu z paličiek padá sushi: nigiri sa podľa japonskej etikety pokojne smie jesť aj bez nich. Čím teda?",
+    "answer": "Rukami",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "8c673282-dfa2-4ba0-bb3b-bb072f9d626f",
+    "language": "sk",
+    "question": "Keď Turci obsadili Budín, Uhorsko si muselo nájsť nové hlavné mesto. Ktoré mesto, dnes hlavné mesto iného štátu, ním zostalo vyše 200 rokov?",
+    "answer": "Bratislava",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "edba7233-a419-4df7-96a1-1c99a8278ff0",
+    "language": "cs",
+    "question": "Únikové hry vznikly v Japonsku, ale první úniková hra v Evropě vznikla v metropoli, kam mnoho Čechů jezdí na výlety do termálních lázní a k parlamentu na břehu Dunaje. Které město to je?",
+    "answer": "Budapešť",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "c46f22f9-3f9f-43ac-a1e7-13f318f344a7",
+    "language": "cs",
+    "question": "Když Česko vstoupilo do Evropské unie, musel se tuzemský rum přejmenovat na Tuzemák. Z jaké rostliny se podle unijních pravidel musí vyrábět pravý rum, kterou ten český vůbec neobsahuje?",
+    "answer": "Z cukrové třtiny",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "pravý rum, kterou ten český vůbec neobsahuje"
+        }
+      ],
+      "rewrite": "Když Česko vstoupilo do Evropské unie, musel se tuzemský rum přejmenovat na Tuzemák. Z jaké rostliny, kterou ten český vůbec neobsahuje, se podle unijních pravidel musí vyrábět pravý rum?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "473cbb2d-0409-4ae2-985f-c1b0da4c0d11",
+    "language": "cs",
+    "question": "Saunový rituál, kdy saunér polévá kameny vonnou vodou a ručníkem rozhání horký vzduch, najdete na rozpisech českých wellness často pod jedním německým slovem. Jakým?",
+    "answer": "Aufguss",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "na rozpisech"
+        }
+      ],
+      "rewrite": "Saunový rituál, kdy saunér polévá kameny vonnou vodou a ručníkem rozhání horký vzduch, najdete v rozpisech českých wellness často pod jedním německým slovem. Jakým?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "dcc05c98-5d90-4234-b548-7919f34b1541",
+    "language": "sk",
+    "question": "Za slnečného dňa krúžia paraglidisti nad Donovalmi niekedy celé hodiny a stúpajú vyššie, než odkiaľ štartovali. Často krúžia vedľa myšiakov, ktorí pritom vôbec nemávajú krídlami. Čo neviditeľné ich oboch dvíha nahor?",
+    "answer": "termika",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "nad Donovalmi"
+        },
+        {
+          "kind": "unnatural",
+          "quote": "vyššie, než odkiaľ štartovali"
+        },
+        {
+          "kind": "unnatural",
+          "quote": "ich oboch"
+        }
+      ],
+      "rewrite": "Za slnečného dňa krúžia paraglidisti niekedy celé hodiny a stúpajú vyššie, než je miesto, odkiaľ štartovali. Často krúžia vedľa myšiakov, ktorí pritom vôbec nemávajú krídlami. Čo neviditeľné jedných aj druhých dvíha nahor?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "85efb889-3c08-4180-add2-3a0f29ee1f92",
+    "language": "cs",
+    "question": "Úhoř, kterého rybáři chytají i v Labi, se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?",
+    "answer": "Sargasové moře",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": ", kterého rybáři chytají i v Labi,"
+        }
+      ],
+      "rewrite": "Úhoř se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "71c1bc58-0cab-4afc-9b42-e5e8d6574421",
+    "language": "cs",
+    "question": "Rorýsi, kteří v létě s pištěním krouží nad českými paneláky, umějí v letu jíst, pít i spát. Co pak za zbytek roku, až deset měsíců v kuse, neudělají ani jednou?",
+    "answer": "Nepřistanou",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "českými"
+        }
+      ],
+      "rewrite": "Rorýsi, kteří v létě s pištěním krouží nad paneláky, umějí v letu jíst, pít i spát. Co pak za zbytek roku, až deset měsíců v kuse, neudělají ani jednou?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "cb18a14f-8c36-49be-9520-fcecaca77eba",
+    "language": "cs",
+    "question": "Podle staré české pověry by se měla dívka prvního máje políbit pod rozkvetlým stromem. Když ji nikdo nepolíbí, má se jí do roka stát něco, co se jinak děje rostlinám. Co?",
+    "answer": "Uschne",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "b752dca4-31bc-4a11-8ec9-ae679e443ebf",
+    "language": "sk",
+    "question": "Slovenský film Golian, ohlásený do kín na rok 2026, rozpráva o generálovi Jánovi Golianovi. Ten v roku 1944 velil vojenským silám odboja, ktoré mali centrum v Banskej Bystrici. Ako sa volá táto historická udalosť?",
+    "answer": "Slovenské národné povstanie",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "padding",
+          "quote": ", ohlásený do kín na rok 2026,"
+        }
+      ],
+      "rewrite": "Slovenský film Golian rozpráva o generálovi Jánovi Golianovi. Ten v roku 1944 velil vojenským silám odboja, ktoré mali centrum v Banskej Bystrici. Ako sa volá táto historická udalosť?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "8482a128-955f-4b56-88d1-be84e2c21e4b",
+    "language": "sk",
+    "question": "Každý Slovák nosí v peňaženke kartičku zdravotnej poisťovne. Čo sa skrýva na jej zadnej strane a môže vás to zachrániť na dovolenke v Chorvátsku?",
+    "answer": "Európsky preukaz poistenca",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "a môže vás to zachrániť"
+        }
+      ],
+      "rewrite": "Každý Slovák nosí v peňaženke kartičku zdravotnej poisťovne. Čo sa skrýva na jej zadnej strane a môže vás zachrániť na dovolenke v Chorvátsku?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "9e0e4adc-a56f-43a7-be5e-38ad8cf71356",
+    "language": "sk",
+    "question": "Keď lavína zasype skialpinistu alebo freeridera, zvyčajne si ju predstavíme ako nešťastie z čistého neba. Kto alebo čo však takúto lavínu v drvivej väčšine prípadov spustí?",
+    "answer": "Obeť alebo jej skupina",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "ff3cf288-74f1-4378-b51f-dd0206e6795c",
+    "language": "sk",
+    "question": "Úhor, ktorý žije v európskych riekach a rybníkoch, sa v nich nikdy nenarodil. Vyliahol sa ďaleko za Atlantikom, neďaleko Bermúd. Ako sa volá more, kam sa každý úhor vracia, aby sa rozmnožil?",
+    "answer": "Sargasové more",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "ďaleko za Atlantikom"
+        }
+      ],
+      "rewrite": "Úhor, ktorý žije v európskych riekach a rybníkoch, sa v nich nikdy nenarodil. Vyliahol sa ďaleko v Atlantiku, neďaleko Bermúd. Ako sa volá more, kam sa každý úhor vracia, aby sa rozmnožil?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1b3ec28e-96cd-4820-b97e-d168bb556cbf",
+    "language": "sk",
+    "question": "Na slovenských dedinách sa ženy v zimných večeroch schádzali u susedy, spievali, klebetili a pritom spoločne pracovali na niečom z husí, z čoho sa potom plnili duchny a vankúše. Čo robili?",
+    "answer": "Drápali perie",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "pracovali na niečom z husí"
+        }
+      ],
+      "rewrite": "Na slovenských dedinách sa ženy v zimných večeroch schádzali u susedy, spievali, klebetili a pritom spoločne pracovali s niečím z husí, z čoho sa potom plnili duchny a vankúše. Čo robili?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "a03d7573-0ca8-45af-a2d5-3f6eb30d2ef5",
+    "language": "sk",
+    "question": "Zápalky na zakúrenie v piecke má na chate každý. Bezpečnostná zápalka sa však zapáli len o bok škatuľky. Ktorý chemický prvok je totiž na škrtadle, a nie na hlavičke?",
+    "answer": "Fosfor",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "padding",
+          "quote": "Zápalky na zakúrenie v piecke má na chate každý."
+        }
+      ],
+      "rewrite": "Bezpečnostná zápalka sa zapáli len o bok škatuľky. Ktorý chemický prvok je totiž na škrtadle, a nie na hlavičke?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "978ae353-e96d-4794-8b4f-8281ef202ce2",
+    "language": "sk",
+    "question": "Pneuservisy radia prezuť na zimné pneumatiky, ešte kým napadne prvý sneh. Letná guma totiž v chlade stvrdne a horšie drží cestu. Pod koľko stupňov Celzia by mala klesnúť teplota, aby ste už prezúvali?",
+    "answer": "7 °C",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "ešte kým napadne"
+        }
+      ],
+      "rewrite": "Pneuservisy radia prezuť na zimné pneumatiky ešte predtým, ako napadne prvý sneh. Letná guma totiž v chlade stvrdne a horšie drží cestu. Pod koľko stupňov Celzia by mala klesnúť teplota, aby ste už prezúvali?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "918d3901-1796-4683-b999-a3b7f082ca2b",
+    "language": "sk",
+    "question": "Zatopené lomy bývajú hlboké aj desiatky metrov. Čo nepríjemne prekvapí plavca, keď sa v horúcom júlovom dni ponorí len pár metrov pod hladinu?",
+    "answer": "Ľadová voda",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "v horúcom júlovom dni"
+        }
+      ],
+      "rewrite": "Zatopené lomy bývajú hlboké aj desiatky metrov. Čo nepríjemne prekvapí plavca, keď sa v horúci júlový deň ponorí len pár metrov pod hladinu?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "c0af7bc6-e7f0-4c7d-9294-819104a5ba80",
+    "language": "sk",
+    "question": "Bežkári na klasiku si pod nohu natierajú stúpací vosk, ktorý sa predáva v zelenom, modrom, fialovom či červenom balení. Podľa čoho si vyberajú farbu?",
+    "answer": "Podľa teploty snehu",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "a7ca9152-a5c2-48b7-a7d8-75de42902ba1",
+    "language": "cs",
+    "question": "Jedna z nejznámějších jógových pozic se jmenuje „pes hlavou dolů“: ruce a nohy na zemi, zadek nahoru, tělo jako obrácené V. Co dělá každý pes, podle čehož pozice dostala jméno?",
+    "answer": "Protahuje se",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "podle čehož pozice dostala jméno"
+        }
+      ],
+      "rewrite": "Jedna z nejznámějších jógových pozic se jmenuje „pes hlavou dolů“: ruce a nohy na zemi, zadek nahoru, tělo jako obrácené V. Co dělá každý pes, že podle toho pozice dostala jméno?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "64e8e6ca-e169-401c-8ff5-4f4d01ab2d20",
+    "language": "sk",
+    "question": "Vedci skenovali chrbticu ľudí sediacich v rôznych polohách. Platničky v drieku najmenej trpeli nie pri vzpriamenom sedení v pravom uhle, ale pri opretí dozadu. Aký uhol medzi trupom a stehnami vyšiel ako najlepší?",
+    "answer": "135 stupňov",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "429f2b3a-1036-4bad-a4ea-d30ee797d24d",
+    "language": "sk",
+    "question": "Ktorá rieka je najdlhšou riekou tečúcou výlučne po území Slovenska?",
+    "answer": "Váh",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "Ktorá rieka je najdlhšou riekou tečúcou"
+        }
+      ],
+      "rewrite": "Ktorá je najdlhšia rieka tečúca výlučne po území Slovenska?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "9bd651a8-7be4-44e1-92a5-6ce6cf9a4609",
+    "language": "sk",
+    "question": "Festival Pohoda v Trenčíne vypredal v roku 2026 všetky vstupenky už v apríli, tri mesiace pred začiatkom. V ktorom roku sa konal jeho úplne prvý ročník?",
+    "answer": "1997",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "padding",
+          "quote": "Festival Pohoda v Trenčíne vypredal v roku 2026 všetky vstupenky už v apríli, tri mesiace pred začiatkom."
+        }
+      ],
+      "rewrite": "V ktorom roku sa konal úplne prvý ročník festivalu Pohoda v Trenčíne?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "5783843b-a7f1-467b-ba54-9eebd650f4d5",
+    "language": "sk",
+    "question": "Ktorý malý nočný návštevník slovenských záhrad si poradí aj s jedovatou vretenicou, pretože je voči jej jedu do veľkej miery odolný?",
+    "answer": "jež",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "empty_hook",
+          "quote": "slovenských záhrad"
+        }
+      ],
+      "rewrite": "Ktorý malý nočný návštevník záhrad si poradí aj s jedovatou vretenicou, pretože je voči jej jedu do veľkej miery odolný?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "3f879bdc-2d5a-43a0-b97f-a6f78df363bf",
+    "language": "cs",
+    "question": "Program Eco na pračce běží často přes tři hodiny, a přesto spotřebuje méně elektřiny než kratší programy. Na co pračka při praní spotřebuje zdaleka nejvíc energie, že se ten dlouhý program vyplatí?",
+    "answer": "ohřev vody",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "že se ten dlouhý program vyplatí"
+        }
+      ],
+      "rewrite": "Program Eco na pračce běží často přes tři hodiny, a přesto spotřebuje méně elektřiny než kratší programy. Na co pračka při praní spotřebuje zdaleka nejvíc energie, takže se ten dlouhý program vyplatí?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "72247b4c-f589-499d-8433-106798c2e48b",
+    "language": "sk",
+    "question": "Keď sa na opekačke opeká slanina, tuk, ktorý z nej kvapká, sa nenechá padať do ohňa. Na čo ho Slováci tradične zachytávajú?",
+    "answer": "Na chlieb",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "sa nenechá padať do ohňa"
+        }
+      ],
+      "rewrite": "Keď sa na opekačke opeká slanina, tuk, ktorý z nej kvapká, nenechávajú padať do ohňa. Na čo ho Slováci tradične zachytávajú?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  }
+]

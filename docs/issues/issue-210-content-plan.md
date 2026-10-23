@@ -37,7 +37,7 @@ Stories (followers only, 24 h): published by the agent like everything else, wit
 
 ## Week per account
 
-Mon 5 Seconds · Tue Road Trip Round · Wed A, B or C · Thu How it plays (or founder clip) · Fri 5 Seconds (weekend theme) · Sat/Sun off; Sunday batch approval. = 5 IG posts + 4 videos to TikTok/Shorts. Buffer data (2.1M posts, 2026): 3–5/wk is the sweet spot. SK/CZ account: same rhythm, one language per video, alternating sk/cs.
+Mon 5 Seconds · Tue Road Trip Round · Wed A, B or C · Thu How it plays (or founder clip) · Fri 5 Seconds (weekend theme) · Sat/Sun off; Sunday batch approval. = 5 IG posts + 4 videos to Shorts (TikTok deferred 2026-10-23). Buffer data (2.1M posts, 2026): 3–5/wk is the sweet spot. SK/CZ account: same rhythm, one language per video, alternating sk/cs.
 
 ## Hooks (rotate; never invented percentages, never "pause the video")
 

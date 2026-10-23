@@ -1,6 +1,6 @@
 # Issue #211 — Prirodzené sk/cs otázky (bez prilepenej domácej vety a kalkov)
 
-**Triage:** enhancement · in-progress (2026-10-22)
+**Triage:** enhancement · done (2026-10-23)
 
 **Created:** 2026-10-22 · **Founder:** Michal · Súvisí: #203 (nudné otázky, štýl domu), #206 (štítok lokálnych otázok)
 
@@ -37,12 +37,12 @@ Všetko za prepínačom `GEN_HOUSE_STYLE_V2` (predvolene vypnutý): štýl domu 
 - [x] **211.1 Štýl domu v2** (PR #545, 2026-10-22; vypnutý) (sk/cs natívne + en pravidlo stavby), prepínač, pečiatka verzie, testy hranice (hák bez pointy zakázaný, kontrastný hák povolený, kvóta ostáva).
 - [x] **211.2 Kontrola prirodzenosti** (PR #546, nasadené 2026-10-22, zapnutá; Opus 5.5): modul + prompt + testy, hook v importéri (sk/cs), prepínač `NATURALNESS_CHECK`.
 - [x] **211.3 Pilot** (2026-10-22, `docs/testing/runs/natural-sk-cs-2026-10-22/`, 6 tém × 2 otázky, predplatné, 57 otázok naslepo; founder hodnotil „zbežne“). Zábava súčasný A vs v2 B: sk 8,3 vs 8,1 (šum), cs 7,5 vs 8,4, en 7,8 vs 8,3, spolu 7,86 vs 8,25; šanca 57/57; „neznie prirodzene“ A 2 vs B 0. Kontrola prirodzenosti: A 10 vs B 4 z 20 sk/cs; označené 7,9 vs neoznačené 8,2, founder pritom označil za neprirodzenú len 1 zo 14 → kontrola chytá jemné chyby (urazit, opření, „pod Rysmi“), ktoré pri rýchlom čítaní nevadia; prepisy sú vecne správne. Gate splnený → 211.5. Mimo: med z egyptských hrobiek (B-en) má slabý zdroj (stránka neotvorená), founder ho už raz spochybnil → neimportovať.
-- [~] **211.4 Upratanie korpusu** (`docs/testing/runs/naturalness-backfill-2026-10-23/`). 10-22/23: backfill 824 sk/cs riadkov, označených 135 ($2,73). 1. kolo naslepo (20 párov): prepis 15, originál 4, remíza 1; founder: „v horších verziách dosť veľké chyby“. 15 schválených prepisov nasadených (`--apply`, `applied_by=founder-pairs-2026-10-23`, originál v provenance, prenovené vektory). Prehrávajúce prepisy menili význam, pridávali slová alebo prestavali zdravú vetu → prompt v2 = najmenšia úprava (PR #560), poistka proti azbuke (PR #561). Re-check zvyšných 115 s v2: označených 45, 70 teraz ok ($0,52). Founder 10-23: zvyšok = sprísniť + 2. kolo; nové otázky = opravovať automaticky (`NATURALNESS_AUTOFIX`, zapnúť po 2. kole). 2. kolo https://claude.ai/artifact/VuutPxfXqvV6jBZUeCQcjc (kolekcia `pairs2`, 16 v2 + 4 „v2 pustil, v1 označil“, kľúč `pairs_round2_key.json`); open = voľby → `--apply` v2 prepisov, zapnúť autofix.
+- [x] **211.4 Upratanie korpusu** (2026-10-23, `docs/testing/runs/naturalness-backfill-2026-10-23/`). Backfill 824 sk/cs riadkov, označených 135 ($2,73). 1. kolo naslepo: prepis 15/20 → 15 nasadených. Prompt v2 (najmenšia úprava, PR #560) + poistka proti azbuke (PR #561); re-check 115 → 45 označených. 2. kolo naslepo: v2 prepis 11 lepší / 3 rovnaké / 2 horšie (čiarka, jedno slovo) zo 16; 4/4 kontrolné riadky, ktoré v2 pustil, boli s prepisom lepšie → prompt v3 = citlivosť v1 + úpravy v2 (PR #564); suchý beh 2/40 falošných na ok riadkoch. Nasadené: 43 v2 prepisov (bez 2 prehratých), 39 v3 prepisov zo 41 (ručne vynechané 2: vecná nepresnosť „na ktorých“, skutočne domáca Miková pri Warholovi). Spolu 97 riadkov prepísaných, originál v `provenance.extra.naturalness.original_question`, prenovené vektory; nič nevyradené. `NATURALNESS_AUTOFIX=1` na Fly (founder 10-23 „opraviť automaticky“), nasadené. Founder poznámky k obsahu (nie k jazyku): S15 prezrádza odpoveď, S13/S18 „nič moc otázka“.
 - [x] **211.5 Zapnutie** (2026-10-22, founder „zapni“: Fly secret `GEN_HOUSE_STYLE_V2=1` na quiz-pack-api; týždenný job ho má pripnutý na 0, PR #551; recept `general-corpus-recipe.md`; mba záložný worker zatiaľ bez neho, beží len pri výpadku Fly): `GEN_HOUSE_STYLE_V2=1` (prod + mba worker), recept `general-corpus-recipe.md` a `fresh-entertainment-recipe.md` na v2.
 
 ## Hotovo keď
 
 - Pilot naslepo: v2 ≥ súčasný recept v sk aj cs (a en nie horšie), priemer ≥ 7.
 - Nové sk/cs otázky majú štítok prirodzenosti bez ručného kroku.
-- Existujúce označené sk/cs otázky prepísané alebo vyradené podľa schváleného postupu; počty nahlásené.
+- Existujúce označené sk/cs otázky prepísané alebo vyradené podľa schváleného postupu; počty nahlásené. ✓ 97 prepísaných, 0 vyradených.
 - Testy zelené, PR cez review + CI, nasadené. Žiadny TF build.

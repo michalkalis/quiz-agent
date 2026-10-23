@@ -4,6 +4,494 @@
  "created": "2026-10-23T08:27:55.375Z",
  "posts": [
   {
+   "key": "sat1-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "time": "10:00",
+   "n": 1,
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-24",
+   "files": [
+    "five-en-a7d2a02d.mp4",
+    "five-en-a7d2a02d.jpg"
+   ],
+   "caption": "Who plays the title role in the 2026 biopic Michael, an actor who is Michael Jackson's real-life nephew?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #popculture #didyouknow",
+   "youtube": {
+    "title": "Who plays the title role in the 2026 biopic Michael, an actor who is Michael Jackson's real-life…",
+    "description": "Who plays the title role in the 2026 biopic Michael, an actor who is Michael Jackson's real-life nephew?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #popculture #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "a7d2a02d-68f5-4302-9fe5-a6374f05aba1",
+     "category": "entertainment",
+     "question": "Who plays the title role in the 2026 biopic Michael, an actor who is Michael Jackson's real-life nephew?",
+     "answer": "Jaafar Jackson",
+     "options": [],
+     "explanation": "Jaafar is the son of Jermaine Jackson of the Jackson 5, and the film became the biggest-opening music biopic ever when it debuted in April 2026.",
+     "source_url": "https://thesource.com/2026/04/21/jaafar-jackson-steps-into-legacy-role-as-epic-michael-biopic-approaches-release/"
+    }
+   ]
+  },
+  {
+   "key": "sat1-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "time": "10:00",
+   "n": 1,
+   "format": "five",
+   "language": "sk",
+   "date": "2026-10-24",
+   "files": [
+    "five-sk-e9d545fc.mp4",
+    "five-sk-e9d545fc.jpg"
+   ],
+   "caption": "Ako sa volá diakritické znamienko nad písmenom ô v slovách ako kôň alebo stôl?\n\nNapíš odpoveď do komentára skôr, ako ju prezradíme.\n\n#kvíz #kviz #jedlo #vedomosti",
+   "youtube": null,
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "e9d545fc-d4ad-45ea-b30c-a04acbc0e405",
+     "category": "food-everyday",
+     "question": "Ako sa volá diakritické znamienko nad písmenom ô v slovách ako kôň alebo stôl?",
+     "answer": "Vokáň",
+     "options": [],
+     "explanation": "Vokáň označuje dvojhlásku uo a písmeno ô patrí medzi typické znaky slovenského pravopisu.",
+     "source_url": "https://sk.wikipedia.org/wiki/Vokáň"
+    }
+   ]
+  },
+  {
+   "key": "sat2-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "time": "14:00",
+   "n": 2,
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-24",
+   "files": [
+    "five-en-003963e3.mp4",
+    "five-en-003963e3.jpg"
+   ],
+   "caption": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #didyouknow",
+   "youtube": {
+    "title": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
+    "description": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+     "category": "science-nature",
+     "question": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
+     "answer": "Milk",
+     "options": [],
+     "explanation": "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. That is also why we still call our home galaxy the Milky Way.",
+     "source_url": "https://www.merriam-webster.com/wordplay/word-history-of-galaxy"
+    }
+   ]
+  },
+  {
+   "key": "sat2-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "time": "14:00",
+   "n": 2,
+   "format": "carousel",
+   "language": "cs",
+   "date": "2026-10-24",
+   "files": [
+    "carousel-cs-p1-0-cover.jpg",
+    "carousel-cs-p1-1.jpg",
+    "carousel-cs-p1-2.jpg",
+    "carousel-cs-p1-3.jpg",
+    "carousel-cs-p1-4.jpg",
+    "carousel-cs-p1-5.jpg",
+    "carousel-cs-p1-6.jpg",
+    "carousel-cs-p1-7.jpg",
+    "carousel-cs-p1-8-answers.jpg",
+    "carousel-cs-p1-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 1. díl.\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #popkultura #filmy #nacestu",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "93643585-6fa8-4996-ae8e-c5d286f1bcbc",
+     "category": "entertainment",
+     "question": "Které španělské zpěvačce vyšlo v listopadu 2025 album Lux, na kterém zpívá ve třinácti různých jazycích?",
+     "answer": "Rosalía",
+     "options": [],
+     "explanation": "Rosalía nahrála Lux s Londýnským symfonickým orchestrem a kromě španělštiny a katalánštiny na něm zpívá třeba i německy, italsky nebo japonsky.",
+     "source_url": "https://en.wikipedia.org/wiki/Lux_(Rosalía_album)"
+    },
+    {
+     "id": "d85c3cf1-f2c1-4a9f-a183-c0b997bd4a82",
+     "category": "entertainment",
+     "question": "Která zpěvačka si na galavečeru Český slavík 2025 odnesla titul Absolutní slavík?",
+     "answer": "Ewa Farna",
+     "options": [],
+     "explanation": "Farna vyhrála i mezi zpěvačkami, mezi zpěváky uspěl poprvé v kariéře Václav Noid Bárta a kapelou roku se stal Kabát. O půl roku později odehrála Farna tři vyprodané koncerty v pražském Edenu jako první česká zpěvačka na stadionu.",
+     "source_url": "https://www.seznamzpravy.cz/clanek/kultura-ceskou-slavici-je-potreti-v-rade-ewa-farna-292227"
+    },
+    {
+     "id": "d437176e-7a03-4d46-8ef8-e9657e1166b3",
+     "category": "movies-music",
+     "question": "Česká hymna Kde domov můj poprvé zazněla v roce 1834 jako píseň v divadelní hře. Jak se ta hra jmenuje?",
+     "answer": "Fidlovačka",
+     "options": [],
+     "explanation": "Ve hře Josefa Kajetána Tyla ji zpíval slepý houslista Mareš. Hudbu složil František Škroup a píseň byla populárnější než celá hra.",
+     "source_url": "https://en.wikipedia.org/wiki/Kde_domov_můj"
+    },
+    {
+     "id": "afecd933-0fe3-4893-b332-46b046bff230",
+     "category": "movies-music",
+     "question": "Ve kterém městě složil Antonín Dvořák svou nejslavnější symfonii Z Nového světa?",
+     "answer": "v New Yorku",
+     "options": [],
+     "explanation": "Dvořák tam v letech 1892 až 1895 řídil Národní konzervatoř a symfonie měla premiéru v Carnegie Hall v prosinci 1893.",
+     "source_url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Dvo%C5%99%C3%A1k)"
+    },
+    {
+     "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+     "category": "food-everyday",
+     "question": "Symbolu @ v e-mailu říkáme zavináč podle stočené naložené mořské ryby z lahůdek. O jakou rybu jde?",
+     "answer": "Sleď",
+     "options": [],
+     "explanation": "Zavináč je stočený marinovaný sleď, často spíchnutý párátkem kolem okurky nebo cibule. Zakroucený tvar symbolu @ Čechům připomněl právě tuhle rybí ruličku.",
+     "source_url": "https://en.wikipedia.org/wiki/Rollmops"
+    },
+    {
+     "id": "b47c5372-ac71-42f0-8a78-a41337326a02",
+     "category": "general",
+     "question": "Vynálezce bankomatu John Shepherd-Barron chtěl původně, aby PIN měl šest číslic. Kvůli komu nakonec zůstalo jen u čtyř?",
+     "answer": "jeho manželka",
+     "options": [],
+     "explanation": "Jeho žena Caroline mu u kuchyňského stolu řekla, že si spolehlivě zapamatuje nejvýš čtyři číslice. Proto dnes v každé peněžence nosíme čtyřmístný PIN.",
+     "source_url": "https://en.wikipedia.org/wiki/John_Shepherd-Barron"
+    },
+    {
+     "id": "f6fdf444-79f2-4ea8-a454-d4cc7d5a3815",
+     "category": "general",
+     "question": "Jméno amerického Santa Clause vzniklo zkomolením nizozemského jména jednoho světce. Kterého?",
+     "answer": "svatý Mikuláš",
+     "options": [],
+     "explanation": "Nizozemci mu říkají Sinterklaas, tedy svatý Mikuláš. Jejich osadníci ho přivezli do dnešního New Yorku, takže Santa Claus je vlastně náš Mikuláš, jen bez čerta.",
+     "source_url": "https://www.pbs.org/newshour/world/from-st-nick-to-santa-to-kris-kringle-why-we-have-different-names-for-the-jolly-bringer-of-christmas-gifts"
+    }
+   ]
+  },
+  {
+   "key": "sat3-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "time": "18:00",
+   "n": 3,
+   "format": "abc",
+   "language": "en",
+   "date": "2026-10-24",
+   "files": [
+    "abc-en-adb15ec9.mp4",
+    "abc-en-adb15ec9.jpg"
+   ],
+   "caption": "Roughly how many different ways can a standard Rubik's Cube be scrambled?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #funfacts #didyouknow",
+   "youtube": {
+    "title": "Roughly how many different ways can a standard Rubik's Cube be scrambled?",
+    "description": "Roughly how many different ways can a standard Rubik's Cube be scrambled?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #funfacts #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "adb15ec9-60ef-4155-a290-79f0ac79a12e",
+     "category": "general",
+     "question": "Roughly how many different ways can a standard Rubik's Cube be scrambled?",
+     "answer": "About 43 quintillion",
+     "options": [
+      "About 43 thousand",
+      "About 43 million",
+      "About 43 billion",
+      "About 43 quintillion"
+     ],
+     "explanation": "It's about 43 quintillion arrangements. If you tried one every second, you'd need roughly a hundred times the age of the universe to see them all.",
+     "source_url": "https://en.wikipedia.org/wiki/Rubik%27s_Cube"
+    }
+   ]
+  },
+  {
+   "key": "sat3-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "time": "18:00",
+   "n": 3,
+   "format": "five",
+   "language": "cs",
+   "date": "2026-10-24",
+   "files": [
+    "five-cs-ef458c41.mp4",
+    "five-cs-ef458c41.jpg"
+   ],
+   "caption": "Než začne koncert, celý symfonický orchestr ladí podle jediného tónu, který zahraje jeden dechový nástroj. Který to je?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #filmy #vědomosti",
+   "youtube": null,
+   "voice": "made this week",
+   "questions": [
+    {
+     "id": "ef458c41-a541-42e1-8950-8ccf4aa7b157",
+     "category": "movies-music",
+     "question": "Než začne koncert, celý symfonický orchestr ladí podle jediného tónu, který zahraje jeden dechový nástroj. Který to je?",
+     "answer": "Hoboj",
+     "options": [],
+     "explanation": "Hoboj má velmi stálé ladění a pronikavý zvuk, který je slyšet přes celý orchestr. Proto se všichni ladí podle jeho tónu A.",
+     "source_url": "https://www.rockfordsymphony.com/faqs/why-does-the-orchestra-tune-to-the-oboe"
+    }
+   ]
+  },
+  {
+   "key": "sun1-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "time": "10:00",
+   "n": 1,
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-25",
+   "files": [
+    "five-en-41cf874c.mp4",
+    "five-en-41cf874c.jpg"
+   ],
+   "caption": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #history #didyouknow",
+   "youtube": {
+    "title": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752.…",
+    "description": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #history #didyouknow"
+   },
+   "voice": "existing app clip",
+   "questions": [
+    {
+     "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
+     "category": "history",
+     "question": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?",
+     "answer": "Switch from Julian to Gregorian calendar",
+     "options": [],
+     "explanation": "Britain adopted the Gregorian calendar with the Calendar (New Style) Act 1750, catching up with most of Catholic Europe, which had switched back in 1582. The older Julian calendar counted every fourth year as a leap year without exception, so it drifted about three days every four centuries against the solar year. By 1752 the gap had grown to eleven days, so Parliament ordered them dropped in one jump: people went to bed on 2 September and woke up on 14 September. The same act also moved the start of the legal year from 25 March to 1 January.",
+     "source_url": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
+    }
+   ]
+  },
+  {
+   "key": "sun1-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "time": "10:00",
+   "n": 1,
+   "format": "abc",
+   "language": "sk",
+   "date": "2026-10-25",
+   "files": [
+    "abc-sk-0518901b.mp4",
+    "abc-sk-0518901b.jpg"
+   ],
+   "caption": "Koľko divákov prišlo v roku 2025 dokopy do všetkých slovenských kín?\n\nA, B, C alebo D? Napíš do komentára skôr, ako prezradíme odpoveď.\n\n#kvíz #kviz #popkultúra #vedomosti",
+   "youtube": null,
+   "voice": "made this week",
+   "questions": [
+    {
+     "id": "0518901b-e498-49a3-a574-20e0305fdc67",
+     "category": "entertainment",
+     "question": "Koľko divákov prišlo v roku 2025 dokopy do všetkých slovenských kín?",
+     "answer": "približne 5 miliónov",
+     "options": [
+      "približne 500-tisíc",
+      "približne 5 miliónov",
+      "približne 20 miliónov",
+      "približne 50 miliónov"
+     ],
+     "explanation": "Kiná zaznamenali zhruba 5,1 milióna vstupov, čo je približne jedna návšteva na každého obyvateľa Slovenska.",
+     "source_url": "https://www.teraz.sk/slovensko/v-roku-2025-prislo-na-slovenske-filmy/971094-clanok.html"
+    }
+   ]
+  },
+  {
+   "key": "sun2-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "time": "14:00",
+   "n": 2,
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-25",
+   "files": [
+    "five-en-0f015294.mp4",
+    "five-en-0f015294.jpg"
+   ],
+   "caption": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #sports #didyouknow",
+   "youtube": {
+    "title": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for…",
+    "description": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #sports #didyouknow"
+   },
+   "voice": "made this week",
+   "questions": [
+    {
+     "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+     "category": "sports",
+     "question": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?",
+     "answer": "The organising newspaper's paper",
+     "options": [],
+     "explanation": "The race was founded and run by the sports newspaper L'Auto, which was printed on yellow paper, so the 1919 leader's jersey became a moving advertisement in the same shade.",
+     "source_url": "https://www.smithsonianmag.com/history/original-tour-de-france-yellow-jersey-was-made-wool-180972664/"
+    }
+   ]
+  },
+  {
+   "key": "sun2-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "time": "14:00",
+   "n": 2,
+   "format": "carousel",
+   "language": "cs",
+   "date": "2026-10-25",
+   "files": [
+    "carousel-cs-p2-0-cover.jpg",
+    "carousel-cs-p2-1.jpg",
+    "carousel-cs-p2-2.jpg",
+    "carousel-cs-p2-3.jpg",
+    "carousel-cs-p2-4.jpg",
+    "carousel-cs-p2-5.jpg",
+    "carousel-cs-p2-6.jpg",
+    "carousel-cs-p2-7.jpg",
+    "carousel-cs-p2-8-answers.jpg",
+    "carousel-cs-p2-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 2. díl.\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #popkultura #filmy #nacestu",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "98e2fc22-954b-498d-b15b-1eed6f2407fe",
+     "category": "entertainment",
+     "question": "Pěvecká soutěž SuperStar se v září 2026 po pauze vrátila na obrazovky Novy a Markízy s novou porotou. Kdo ji moderoval?",
+     "answer": "Leoš Mareš",
+     "options": [],
+     "explanation": "Leoš Mareš provází SuperStar už od její úplně první řady z roku 2004 a v porotě mu v roce 2026 seděli Pavol Habera, Ewa Farna, Jakub Prachař a Calin.",
+     "source_url": "https://tv.nova.cz/porad/superstar/clanek/648400-superstar-2026-legendarni-show-se-vraci-ve-velkem-stylu-calin-prachar-farna-habera"
+    },
+    {
+     "id": "dad5cc85-3ab1-43f6-a34b-d49a7ef93a04",
+     "category": "entertainment",
+     "question": "Která americká komička moderovala slavnostní vyhlášení Zlatých glóbů v lednu 2026, a to už podruhé za sebou?",
+     "answer": "Nikki Glaser",
+     "options": [],
+     "explanation": "Nikki Glaser byla v roce 2025 vůbec první ženou, která Zlaté glóby moderovala sama, a ohlasy byly tak dobré, že ji pořadatelé pozvali i na ročník 2026.",
+     "source_url": "https://aol.com/comedian-nikki-glaser-return-host-143642821.html"
+    },
+    {
+     "id": "13d0f6e8-8f72-4755-8708-b34baa04dd04",
+     "category": "movies-music",
+     "question": "Symfonická báseň Vltava je jen jednou částí Smetanova cyklu Má vlast. Z kolika částí se celý cyklus skládá?",
+     "answer": "Šest",
+     "options": [],
+     "explanation": "Vyšehrad, Vltava, Šárka, Z českých luhů a hájů, Tábor a Blaník. Celý cyklus každoročně zahajuje festival Pražské jaro 12. května, v den výročí Smetanovy smrti.",
+     "source_url": "https://en.wikipedia.org/wiki/Má_vlast"
+    },
+    {
+     "id": "7c3c3453-44d5-4a16-b3a9-8b82b7a2facd",
+     "category": "movies-music",
+     "question": "Kolik obrovských pláten tvoří Slovanská epopej Alfonse Muchy?",
+     "answer": "dvacet",
+     "options": [],
+     "explanation": "Mucha na cyklu pracoval skoro dvacet let, největší plátna měří zhruba šest krát osm metrů a roku 1928 celý cyklus daroval Praze.",
+     "source_url": "https://www.kudyznudy.cz/ceska-nej/kulturni/slovanska-epopej-monumentalni-kolekce-obrazu-alfon"
+    },
+    {
+     "id": "c4faa4e9-0dd7-47f8-8183-db276c2c2a71",
+     "category": "general",
+     "question": "Podle staré irské tradice mohla žena sama požádat muže o ruku jen jeden jediný den, a to ne každý rok. Který den to byl?",
+     "answer": "29. února",
+     "options": [],
+     "explanation": "Legenda tvrdí, že tento přestupný den vyjednala pro ženy svatá Brigita u svatého Patrika. Muž, který nabídku odmítl, jí prý musel jako omluvu koupit rukavice nebo hedvábné šaty.",
+     "source_url": "https://en.wikipedia.org/wiki/Leap_year"
+    },
+    {
+     "id": "8f0a53b1-32a6-4a0b-9b97-7d7bc52175c8",
+     "category": "food-everyday",
+     "question": "Svařák se paradoxně nemá vařit, i když to má skoro v názvu. Co by z hrnce při varu unikalo nejrychleji?",
+     "answer": "Alkohol",
+     "options": [],
+     "explanation": "Alkohol se vypařuje už kolem 78 °C, tedy dřív, než se voda vůbec začne vařit. Kdo nechá svařák bublat, prodává vlastně horký ovocný čaj s vínovou příchutí. Ideálně se proto ohřívá jen na zhruba 70 °C.",
+     "source_url": "https://b2b-sk.vwr.com/store/product/33757365/null"
+    },
+    {
+     "id": "9dbfef99-c16c-43de-9286-0227f4cc20e2",
+     "category": "geography-world",
+     "question": "Ve kterém městě na řece Otavě stojí nejstarší dochovaný kamenný most v Česku, starší než pražský Karlův most?",
+     "answer": "Písek",
+     "options": [],
+     "explanation": "Písecký most pochází z konce 13. století a přežil i velkou povodeň v roce 2002, Karlův most začali stavět až v roce 1357.",
+     "source_url": "https://www.cnb.cz/cs/cnb-news/tiskove-zpravy/Pisecky-kamenny-most-na-zlate-minci-CNB"
+    }
+   ]
+  },
+  {
+   "key": "sun3-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "time": "18:00",
+   "n": 3,
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-25",
+   "files": [
+    "five-en-b23b6cc5.mp4",
+    "five-en-b23b6cc5.jpg"
+   ],
+   "caption": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #movies #didyouknow",
+   "youtube": {
+    "title": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling…",
+    "description": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #movies #didyouknow"
+   },
+   "voice": "made this week",
+   "questions": [
+    {
+     "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+     "category": "movies-music",
+     "question": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?",
+     "answer": "Phil Lord and Christopher Miller",
+     "options": [],
+     "explanation": "The pair brought their trademark fast, cheerful energy to Andy Weir's novel, written by the same author as The Martian, turning a potentially bleak survival story into one of 2026's most crowd-pleasing blockbusters.",
+     "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
+    }
+   ]
+  },
+  {
+   "key": "sun3-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "time": "18:00",
+   "n": 3,
+   "format": "five",
+   "language": "sk",
+   "date": "2026-10-25",
+   "files": [
+    "five-sk-f1f90366.mp4",
+    "five-sk-f1f90366.jpg"
+   ],
+   "caption": "Keď v bratislavskej parkovacej zóne zaplatíte cez aplikáciu, za sklo nedávate žiadny lístok. Podľa čoho kontrola zistí, že máte zaplatené?\n\nNapíš odpoveď do komentára skôr, ako ju prezradíme.\n\nTrubbo, kvíz, ktorý hráš hlasom. Čoskoro v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #vedomosti",
+   "youtube": null,
+   "voice": "made this week",
+   "questions": [
+    {
+     "id": "f1f90366-31fb-4c8c-aec7-05936446f1b1",
+     "category": "general",
+     "question": "Keď v bratislavskej parkovacej zóne zaplatíte cez aplikáciu, za sklo nedávate žiadny lístok. Podľa čoho kontrola zistí, že máte zaplatené?",
+     "answer": "podľa evidenčného čísla",
+     "options": [],
+     "explanation": "Platba sa viaže na evidenčné číslo vozidla a ulicami jazdia skenovacie autá s kamerami, ktoré čítajú značky a porovnávajú ich s databázou zaplatených parkovaní. Lístok za sklom by ich vlastne vôbec nezaujímal.",
+     "source_url": "https://paas.sk/wp-content/uploads/2026/07/NOVINY-KVa-FINAL-WEB.pdf"
+    }
+   ]
+  },
+  {
    "key": "mon-ig_en",
    "account": "ig_en",
    "day": "Mon",

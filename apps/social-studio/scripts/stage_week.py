@@ -17,7 +17,7 @@ Runs locally after the founder approved the batch on the approval page:
 import json
 import os
 import sys
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -27,18 +27,20 @@ from dotenv import find_dotenv, load_dotenv
 
 APP_DIR = Path(__file__).resolve().parent.parent
 
-# Local posting time per account. EN: 18:00 London = early afternoon US East.
+# Default local posting time per account (a post's own `time` wins, e.g. the
+# 10:00 / 14:00 launch posts). EN: 18:00 London = early afternoon US East.
 SLOTS = {
     "ig_en": (time(18, 0), ZoneInfo("Europe/London")),
     "ig_skcz": (time(18, 0), ZoneInfo("Europe/Bratislava")),
 }
-DAYS = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
 TYPES = {".mp4": "video/mp4", ".jpg": "image/jpeg"}
 
 
-def publish_at(monday: date, day: str, account: str) -> str:
-    at, tz = SLOTS[account]
-    local = datetime.combine(monday + timedelta(days=DAYS[day]), at, tz)
+def publish_at(post: dict) -> str:
+    at, tz = SLOTS[post["account"]]
+    if post.get("time"):
+        at = time.fromisoformat(post["time"])
+    local = datetime.combine(date.fromisoformat(post["date"]), at, tz)
     return local.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
@@ -49,7 +51,6 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
     status = {
         d["key"]: d.get("status") for d in json.loads(Path(decisions_file).read_text())
     }
-    monday = date.fromisoformat(manifest["monday"])
 
     s3 = boto3.client(
         "s3",
@@ -64,7 +65,9 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
 
     for post in manifest["posts"]:
         post["status"] = status.get(post["key"]) or "pending"
-        post["publish_at"] = publish_at(monday, post["day"], post["account"])
+        # A staged post keeps its slot (it may have been moved by hand).
+        if not post.get("media_urls"):
+            post["publish_at"] = publish_at(post)
         if post["status"] != "approved":
             post.pop("media_urls", None)
             print(f"  {post['key']}: {post['status']}, not staged")

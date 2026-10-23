@@ -1,4 +1,4 @@
-// npm run batch -- [--monday YYYY-MM-DD] [--dry-run]
+// npm run batch -- [--monday YYYY-MM-DD] [--seed] [--dry-run]
 //
 // Weekly batch (#210 sub-task 210.4): picks approved questions for next week's
 // posts on both Instagram accounts (EN, SK/CZ), renders them with cli/render.ts,
@@ -7,6 +7,9 @@
 // Week per account (content plan): Mon 5 Seconds · Tue Road Trip Round
 // (carousel) · Wed A, B or C · Fri 5 Seconds. Thu "How it plays" is not built
 // yet, so that slot stays empty.
+// --seed (founder 2026-10-23): six launch posts per account on the weekend
+// before that Monday, 10:00 / 14:00 / 18:00, added to the week's existing
+// manifest so one approval page shows them all.
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
@@ -17,7 +20,10 @@ import {caption, youtubeTitle, type PostFormat} from './captions';
 import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, VOICES_PER_WEEK} from './paths';
 import {shapeQuestion, type QuestionInput} from './shape';
 
-const {values} = parseArgs({options: {monday: {type: 'string'}, 'dry-run': {type: 'boolean', default: false}}});
+const {values} = parseArgs({
+	options: {monday: {type: 'string'}, seed: {type: 'boolean', default: false}, 'dry-run': {type: 'boolean', default: false}},
+});
+const SEED = values.seed;
 
 type Candidate = {
 	id: string;
@@ -32,7 +38,7 @@ type Candidate = {
 	has_clip: boolean;
 };
 type Account = 'ig_en' | 'ig_skcz';
-type Slot = {account: Account; day: 'Mon' | 'Tue' | 'Wed' | 'Fri'; format: PostFormat; language: Language};
+type Slot = {account: Account; day: 'Sat' | 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Fri'; format: PostFormat; language: Language; time?: string; n?: number};
 
 const CAROUSEL_SIZE = 7;
 const REEL_MAX_CHARS = 150; // longer questions do not read well in a ~17 s reel
@@ -56,17 +62,20 @@ function isoWeek(day: string): {id: string; n: number} {
 const WEEK = isoWeek(MONDAY);
 const dayDate = (day: Slot['day']) => {
 	const d = new Date(`${MONDAY}T00:00:00Z`);
-	d.setUTCDate(d.getUTCDate() + {Mon: 0, Tue: 1, Wed: 2, Fri: 4}[day]);
+	d.setUTCDate(d.getUTCDate() + {Sat: -2, Sun: -1, Mon: 0, Tue: 1, Wed: 2, Fri: 4}[day]);
 	return d.toISOString().slice(0, 10);
 };
 
-type Manifest = {week: string; posts: {format: PostFormat; language: Language; questions: {id: string}[]}[]};
+type Manifest = {week: string; monday: string; created: string; posts: {key: string; format: PostFormat; language: Language; questions: {id: string}[]}[]};
+const WEEK_FILE = path.join(BATCH_DIR, `${WEEK.id}.json`);
 const earlier: Manifest[] = existsSync(BATCH_DIR)
 	? readdirSync(BATCH_DIR)
 			.filter((f) => /^\d{4}-W\d{2}\.json$/.test(f) && f !== `${WEEK.id}.json`)
 			.map((f) => JSON.parse(readFileSync(path.join(BATCH_DIR, f), 'utf8')))
 	: [];
-const used = new Set(earlier.flatMap((m) => m.posts.flatMap((p) => p.questions.map((q) => q.id))));
+// --seed adds to this week's manifest, so its questions are taken too.
+const current: Manifest | null = SEED ? JSON.parse(readFileSync(WEEK_FILE, 'utf8')) : null;
+const used = new Set([...earlier, ...(current ? [current] : [])].flatMap((m) => m.posts.flatMap((p) => p.questions.map((q) => q.id))));
 
 function voicesLeft(): number {
 	if (!existsSync(VOICE_LEDGER)) return VOICES_PER_WEEK;
@@ -115,6 +124,21 @@ function plan(): Slot[] {
 	]);
 }
 
+// Launch posts. EN reels only: its clips are there and its carousel part 1
+// runs Tuesday. SK/CZ carousels in cs only (no cs carousel yet; the sk part 1
+// runs Tuesday), so part numbers go up in posting order.
+function seedPlan(): Slot[] {
+	const en: PostFormat[] = ['five', 'five', 'abc', 'five', 'five', 'five'];
+	const skcz: [PostFormat, Language][] = [['five', 'sk'], ['carousel', 'cs'], ['five', 'cs'], ['abc', 'sk'], ['carousel', 'cs'], ['five', 'sk']];
+	return en.flatMap((format, i) => {
+		const at = {day: (i < 3 ? 'Sat' : 'Sun') as Slot['day'], time: ['10:00', '14:00', '18:00'][i % 3], n: (i % 3) + 1};
+		return [
+			{account: 'ig_en' as const, ...at, format, language: 'en' as Language},
+			{account: 'ig_skcz' as const, ...at, format: skcz[i][0], language: skcz[i][1]},
+		];
+	});
+}
+
 type Pick = {slot: Slot; ids: string[]; makeVoice: boolean};
 
 function pick(cands: Candidate[]): Pick[] {
@@ -126,7 +150,7 @@ function pick(cands: Candidate[]): Pick[] {
 	// Slots with the fewest existing clips first (MCQ, then cs), so they get
 	// the weekly voice budget and the others use clips the app already made.
 	const clips = (s: Slot) => cands.filter((c) => c.has_clip && c.mcq === (s.format === 'abc') && fitsAccount(c, s)).length;
-	const order = plan().sort((x, y) => Number(y.format === 'abc') - Number(x.format === 'abc') || clips(x) - clips(y));
+	const order = (SEED ? seedPlan() : plan()).sort((x, y) => Number(y.format === 'abc') - Number(x.format === 'abc') || clips(x) - clips(y));
 	for (const slot of order) {
 		const pool = byScore.filter((c) => !taken.has(c.id) && fitsAccount(c, slot));
 		if (slot.format === 'carousel') {
@@ -143,13 +167,9 @@ function pick(cands: Candidate[]): Pick[] {
 			picks.push({slot, ids, makeVoice: false});
 			continue;
 		}
-		const c = pool.find(
-			(c) =>
-				c.mcq === (slot.format === 'abc') &&
-				c.chars <= REEL_MAX_CHARS &&
-				!reelCategories[slot.account].has(c.category) &&
-				(c.has_clip || voices > 0),
-		);
+		const fits = (c: Candidate) => c.mcq === (slot.format === 'abc') && c.chars <= REEL_MAX_CHARS && !reelCategories[slot.account].has(c.category);
+		// An existing clip first, so the voice budget goes where there is none.
+		const c = pool.find((c) => fits(c) && c.has_clip) ?? (voices > 0 ? pool.find(fits) : undefined);
 		if (!c) {
 			console.warn(`! ${slot.account} ${slot.day} ${slot.format} ${slot.language}: no question with a voice clip left this week, slot skipped`);
 			continue;
@@ -159,8 +179,11 @@ function pick(cands: Candidate[]): Pick[] {
 		reelCategories[slot.account].add(c.category);
 		picks.push({slot, ids: [c.id], makeVoice: !c.has_clip});
 	}
-	const dayOrder = ['Mon', 'Tue', 'Wed', 'Fri'];
-	return picks.sort((x, y) => dayOrder.indexOf(x.slot.day) - dayOrder.indexOf(y.slot.day) || x.slot.account.localeCompare(y.slot.account));
+	const dayOrder = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Fri'];
+	return picks.sort(
+		(x, y) =>
+			dayOrder.indexOf(x.slot.day) - dayOrder.indexOf(y.slot.day) || (x.slot.n ?? 0) - (y.slot.n ?? 0) || x.slot.account.localeCompare(y.slot.account),
+	);
 }
 
 const row = (id: string): QuestionInput => JSON.parse(readFileSync(path.join(CACHE_DIR, 'rows', `${id}.native.json`), 'utf8'));
@@ -179,7 +202,7 @@ function main() {
 
 	const outDir = path.join(APP_DIR, 'out', WEEK.id);
 	const carouselParts: Partial<Record<Language, number>> = {};
-	for (const m of earlier) for (const p of m.posts) if (p.format === 'carousel') carouselParts[p.language] = (carouselParts[p.language] ?? 0) + 1;
+	for (const m of [...earlier, ...(current ? [current] : [])]) for (const p of m.posts) if (p.format === 'carousel') carouselParts[p.language] = (carouselParts[p.language] ?? 0) + 1;
 	const posts = [];
 	let n = 0;
 	for (const {slot, ids, makeVoice} of picks) {
@@ -200,7 +223,7 @@ function main() {
 		});
 		const text = caption({language: slot.language, format: slot.format, firstLine, categories: questions.map((q) => q.category), nameApp: ++n % 3 === 0, options: questions[0].options.length});
 		posts.push({
-			key: `${slot.day.toLowerCase()}-${slot.account}`,
+			key: `${slot.day.toLowerCase()}${slot.n ?? ''}-${slot.account}`,
 			...slot,
 			date: dayDate(slot.day),
 			files,
@@ -212,9 +235,9 @@ function main() {
 		});
 	}
 	mkdirSync(BATCH_DIR, {recursive: true});
-	const file = path.join(BATCH_DIR, `${WEEK.id}.json`);
-	writeFileSync(file, JSON.stringify({week: WEEK.id, monday: MONDAY, created: new Date().toISOString(), posts}, null, 1));
-	console.log(`✓ ${file}\n  media in ${outDir}`);
+	const manifest = current ? {...current, posts: [...posts, ...current.posts]} : {week: WEEK.id, monday: MONDAY, created: new Date().toISOString(), posts};
+	writeFileSync(WEEK_FILE, JSON.stringify(manifest, null, 1));
+	console.log(`✓ ${WEEK_FILE}\n  media in ${outDir}`);
 }
 
 main();

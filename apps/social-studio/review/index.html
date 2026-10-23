@@ -72,7 +72,7 @@ textarea { width: 100%; box-sizing: border-box; font: 14px var(--font); border: 
 const ACCOUNTS = {ig_en: 'Instagram EN · @trubboapp', ig_skcz: 'Instagram SK/CZ · @trubboapp.sk'};
 const FORMATS = {five: '5 sekúnd', abc: 'A, B alebo C', carousel: 'Kvíz na cestu (karusel)'};
 const LANGS = {en: 'angličtina', sk: 'slovenčina', cs: 'čeština'};
-const DAYS = {Mon: 'Pondelok', Tue: 'Utorok', Wed: 'Streda', Fri: 'Piatok'};
+const DAYS = {Sat: 'Sobota', Sun: 'Nedeľa', Mon: 'Pondelok', Tue: 'Utorok', Wed: 'Streda', Fri: 'Piatok'};
 let batch = null, db = null;
 const decisions = {};
 
@@ -112,7 +112,7 @@ function card(p) {
   const s = decisions[p.key] || {};
   const art = el('article', {class: 'post', id: 'post-' + p.key, 'data-status': s.status || 'open'});
   const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : 'hlas: klip z appky') : '';
-  const meta = el('div', {class: 'meta'}, el('b', {text: `${DAYS[p.day]} ${fmtDate(p.date)}`}),
+  const meta = el('div', {class: 'meta'}, el('b', {text: `${DAYS[p.day]} ${fmtDate(p.date)}${p.time ? ' o ' + p.time : ''}`}),
     el('span', {class: 'pill', text: FORMATS[p.format]}), el('span', {text: LANGS[p.language]}), voice && el('span', {text: voice}));
   const body = el('div', {class: 'body'}, meta,
     el('div', {}, el('div', {class: 'label', text: 'Popis na Instagram'}), el('div', {class: 'caption', text: p.caption})));
@@ -159,9 +159,9 @@ function refresh(key) {
 }
 
 function render() {
-  const last = batch.posts[batch.posts.length - 1];
+  const dates = batch.posts.map((p) => p.date).sort();
   document.getElementById('title').textContent = `Týždenná dávka ${batch.week.replace(/^\d{4}-W/, '')}. týždeň`;
-  document.getElementById('range').textContent = `${fmtDate(batch.monday)} až ${fmtDate(last.date)} · ${batch.posts.length} príspevkov`;
+  document.getElementById('range').textContent = `${fmtDate(dates[0])} až ${fmtDate(dates[dates.length - 1])} · ${batch.posts.length} príspevkov`;
   const root = document.getElementById('posts');
   root.replaceChildren();
   for (const [acc, name] of Object.entries(ACCOUNTS)) {

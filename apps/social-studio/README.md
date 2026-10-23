@@ -35,6 +35,7 @@ A question id is fetched **read-only** from prod: `scripts/fetch_question.py` is
 npm run batch -- --dry-run       # show next week's picks only
 npm run batch                    # pick, render into out/<week>/, write batches/<week>.json
 npm run batch -- --monday 2026-11-02
+EXTRA_VOICES=3 npm run batch -- --seed   # launch posts: 6 per account on the weekend before, added to that week's manifest
 ```
 
 - **Week per account** (content plan): Mon 5 Seconds · Tue Road Trip Round (7-question carousel) · Wed A, B or C · Fri 5 Seconds, for Instagram EN and Instagram SK/CZ (one language per post, sk/cs alternating, flipped weekly). Thu "How it plays" is not built yet. EN reels also go to YouTube Shorts.

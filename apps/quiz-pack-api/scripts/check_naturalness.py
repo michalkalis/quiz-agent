@@ -226,13 +226,15 @@ async def main() -> int:
             # re-checking it would erase that and re-arm the swap.
             questions = [
                 q for q in loaded
-                if "original_question"
+                if q.generation_metadata is None
+                or "original_question"
                 not in q.generation_metadata.extra.get("naturalness", {})
             ]
             if len(questions) != len(loaded):
                 print(f"skipped {len(loaded) - len(questions)} already rewritten row(s)")
             for q in questions:  # the current prompt replaces the old verdict
-                q.generation_metadata.extra.pop("naturalness", None)
+                if q.generation_metadata is not None:
+                    q.generation_metadata.extra.pop("naturalness", None)
         else:
             questions = await load_unlabelled(
                 engine, sample=args.sample, limit=args.limit

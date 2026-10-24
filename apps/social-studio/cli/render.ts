@@ -1,4 +1,5 @@
 // npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR] [--make-voice]
+//                    [--opening intro|fused|plain] [--explain line|parts|captions]
 // npm run render -- --carousel <id,id,id> [--part N] [--lang en|sk|cs] [--out DIR]
 //
 // Fetches approved rows read-only from prod (or reads a JSON file), reuses the
@@ -14,10 +15,10 @@ import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
 import {ANSWERS_PER_SLIDE} from '../src/CarouselSlide';
-import {HOOK_MS, eyeOpenAt, reelDurationMs} from '../src/timing';
-import type {CarouselSlideProps, Language, ReelProps, ReelQuestion, TimedWord} from '../src/types';
-import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_LEDGER, VOICES_PER_WEEK} from './paths';
-import {shapeQuestion, type QuestionInput} from './shape';
+import {LEAD_MS, eyeOpenAt, reelTimeline} from '../src/timing';
+import type {CarouselSlideProps, ExplainTrack, Language, ReelProps, ReelQuestion, ReelStyle, TimedWord} from '../src/types';
+import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
+import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
 
 const {values, positionals} = parseArgs({
@@ -30,24 +31,21 @@ const {values, positionals} = parseArgs({
 		carousel: {type: 'string'},
 		part: {type: 'string', default: '1'},
 		'make-voice': {type: 'boolean', default: false},
+		opening: {type: 'string', default: 'fused'},
+		explain: {type: 'string', default: 'parts'},
 	},
 });
 const OUT = path.resolve(values.out ?? path.join(APP_DIR, 'out'));
 const LANG = values.lang as Language | undefined;
 
-// Founder 2026-10-22: a missing clip may be made through the app's own TTS
-// path, about 5 questions a week (ElevenLabs Starter, no top-ups).
-type LedgerEntry = {at: string; id: string; language: string; chars: number};
+// A missing clip may be made through the app's own TTS path within the
+// weekly character budget (cli/paths.ts, founder 2026-10-22 / 2026-10-24).
+type LedgerEntry = {at: string; id: string; language: string; chars: number; what?: string};
 
-function voicesThisWeek(): LedgerEntry[] {
-	if (!existsSync(VOICE_LEDGER)) return [];
-	const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-	return (JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) as LedgerEntry[]).filter((e) => Date.parse(e.at) >= weekAgo);
-}
+const ledger = (): LedgerEntry[] => (existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : []);
 
 function logVoice(entry: LedgerEntry) {
-	const all: LedgerEntry[] = existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : [];
-	writeFileSync(VOICE_LEDGER, JSON.stringify([...all, entry], null, 1));
+	writeFileSync(VOICE_LEDGER, JSON.stringify([...ledger(), entry], null, 1));
 }
 
 /** Cached rows outlive one batch run only: approved question text can be
@@ -61,12 +59,10 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false): Questi
 	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}.json`);
 	if (existsSync(cacheFile) && Date.now() - statSync(cacheFile).mtimeMs < ROW_CACHE_MS) {
 		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
-		if (cached.audio_b64 || !ensureAudio) return cached;
+		if ((cached.audio_b64 && (cached.explanation_audio_b64 || !cached.explanation)) || !ensureAudio) return cached;
 	}
-	if (ensureAudio) {
-		const used = voicesThisWeek().length;
-		if (used >= VOICES_PER_WEEK) throw new Error(`${id}: ${used} clips made in the last 7 days, the weekly limit is ${VOICES_PER_WEEK}`);
-	}
+	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
+		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
 	const args = `python - ${id}${lang ? ` ${lang}` : ''}${ensureAudio ? ' --ensure-audio' : ''}`;
 	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
 		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
@@ -78,9 +74,11 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false): Questi
 	const row = JSON.parse(out.slice(marker + 8).trim());
 	if (row.error) throw new Error(row.error);
 	if (row.generated) {
-		const g = row.generated;
-		logVoice({at: new Date().toISOString(), id, language: row.language, chars: g.chars});
-		console.log(`  voice made by the app TTS: ${g.chars} characters (ElevenLabs had ${g.credits_left_before} credits left), R2 ${g.r2_key}`);
+		const g = row.generated as {chars: number; credits_left_before: number; clips: {what: string; chars: number; r2_key: string}[]};
+		for (const c of g.clips) logVoice({at: new Date().toISOString(), id, language: row.language, chars: c.chars, what: c.what});
+		console.log(
+			`  voice made by the app TTS: ${g.clips.map((c) => `${c.what} ${c.chars}`).join(', ')} characters (ElevenLabs had ${g.credits_left_before} credits left, ${voiceCharsLeft(ledger())} characters left this week)`,
+		);
 		delete row.generated;
 	}
 	mkdirSync(path.dirname(cacheFile), {recursive: true});
@@ -94,7 +92,15 @@ function loadInput(arg: string): QuestionInput {
 	throw new Error(`expected a question id or a .json file, got "${arg}"`);
 }
 
-/** Puts the existing clip under public/audio/ and returns its staticFile path, or null. */
+/** Puts clip bytes under public/audio/ and returns their staticFile path. */
+function stageBytes(bytes: Buffer): string {
+	mkdirSync(PUBLIC_AUDIO_DIR, {recursive: true});
+	const name = `${createHash('sha1').update(bytes).digest('hex').slice(0, 16)}.mp3`;
+	writeFileSync(path.join(PUBLIC_AUDIO_DIR, name), bytes);
+	return `audio/${name}`;
+}
+
+/** Puts the existing question clip under public/audio/ and returns its staticFile path, or null. */
 async function stageAudio(raw: QuestionInput): Promise<string | null> {
 	let bytes: Buffer | null = null;
 	if (raw.audio_b64) bytes = Buffer.from(raw.audio_b64, 'base64');
@@ -103,23 +109,48 @@ async function stageAudio(raw: QuestionInput): Promise<string | null> {
 		if (!res.ok) throw new Error(`audio ${raw.audio}: HTTP ${res.status}`);
 		bytes = Buffer.from(await res.arrayBuffer());
 	} else if (raw.audio) bytes = readFileSync(path.resolve(raw.audio));
-	if (!bytes) return null;
-	mkdirSync(PUBLIC_AUDIO_DIR, {recursive: true});
-	const name = `${createHash('sha1').update(bytes).digest('hex').slice(0, 16)}.mp3`;
-	writeFileSync(path.join(PUBLIC_AUDIO_DIR, name), bytes);
-	return `audio/${name}`;
+	return bytes ? stageBytes(bytes) : null;
 }
 
 const WORD_MS = 320; // silent reading pace when there is no voice
+const PART_PAUSE_MS = 500; // silent pace: a breath between explanation parts
 
-async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number): Promise<ReelProps> {
+/** The whole explanation in parts, timed to its app clip, or at reading pace without one. */
+async function explainTrack(raw: QuestionInput, q: ReelQuestion): Promise<ExplainTrack> {
+	const parts = explainParts(q.explanation);
+	const split = parts.map((p) => p.split(/\s+/).filter(Boolean));
+	const flat = split.flat();
+	let n = 0;
+	const indexed = parts.map((text, i) => {
+		const firstWord = n;
+		n += split[i].length;
+		return {text, firstWord};
+	});
+	const audio = raw.explanation_audio_b64 ? stageBytes(Buffer.from(raw.explanation_audio_b64, 'base64')) : null;
+	if (!audio || !flat.length) {
+		let t = 0;
+		const words = split.flatMap((ws) => {
+			const timed = ws.map((text, i) => ({text, startMs: t + i * WORD_MS}));
+			t += ws.length * WORD_MS + PART_PAUSE_MS;
+			return timed;
+		});
+		return {audio: null, words, parts: indexed, ms: t};
+	}
+	const file = path.join(PUBLIC_AUDIO_DIR, path.basename(audio));
+	await ensureWhisper();
+	const {words} = await timeWords(file, q.language, flat);
+	return {audio, words, parts: indexed, ms: audioDurationMs(file)};
+}
+
+async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number, style: ReelStyle): Promise<ReelProps> {
 	const displayWords = q.question.split(/\s+/).filter(Boolean);
 	const audio = await stageAudio(raw);
+	const explain = await explainTrack(raw, q);
 	if (!audio) {
 		const words: TimedWord[] = displayWords.map((text, i) => ({text, startMs: i * WORD_MS}));
 		const optionsAtMs = displayWords.length * WORD_MS + 300;
 		const questionMs = q.options.length ? optionsAtMs + q.options.length * 500 + 900 : Math.max(3500, optionsAtMs + 900);
-		return {q, audio: null, words, questionMs, optionsAtMs, hookIndex};
+		return {q, audio: null, words, questionMs, optionsAtMs, hookIndex, style, explain};
 	}
 	const file = path.join(PUBLIC_AUDIO_DIR, path.basename(audio));
 	await ensureWhisper();
@@ -127,7 +158,7 @@ async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number)
 	const spoken = raw.spoken_text ?? [q.question, ...q.options].join(' ');
 	const share = q.options.length ? Math.min(1, raw.question.length / spoken.length) : 1;
 	const {words, optionsAtMs} = await timeWords(file, q.language, displayWords, share);
-	return {q, audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, hookIndex};
+	return {q, audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, hookIndex, style, explain};
 }
 
 const slug = (s: string) => s.slice(0, 8);
@@ -156,11 +187,17 @@ async function main() {
 		const format = values.format ?? (q.options.length ? 'abc' : 'five');
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');
 		const hook = values.hook ? Number(values.hook) : parseInt(q.id.replace(/-/g, '').slice(0, 6), 16);
-		const props = await reelProps(raw, format === 'five' ? {...q, options: [], correctIndex: null} : q, hook);
+		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
+		if (!['intro', 'fused', 'plain'].includes(style.opening) || !['line', 'parts', 'captions'].includes(style.explain))
+			throw new Error('--opening intro|fused|plain, --explain line|parts|captions');
+		const props = await reelProps(raw, format === 'five' ? {...q, options: [], correctIndex: null} : q, hook, style);
 		if (!props.audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
+		if (style.explain !== 'line' && !props.explain.audio) console.warn(`! ${q.id}: no explanation clip, explanation shown at reading pace (--make-voice makes one)`);
+		const lead = style.opening === 'intro' ? 0 : LEAD_MS;
+		const timeline = reelTimeline(style, props.questionMs + lead, props.explain.ms);
 		// Cover = the question fully on screen, just before the countdown,
 		// nudged back if the monkey happens to blink on that frame.
-		let coverMs = HOOK_MS + props.questionMs - 200;
+		let coverMs = timeline.cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;
 		jobs.push({
 			composition: format === 'abc' ? 'ABC' : 'FiveSeconds',
@@ -168,7 +205,7 @@ async function main() {
 			name: `${format}-${q.language}-${slug(q.id)}`,
 			coverMs,
 		});
-		console.log(`  ${(reelDurationMs(props.questionMs) / 1000).toFixed(1)} s, voice: ${props.audio ? 'app clip' : 'none'}`);
+		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, voice: ${props.audio ? 'app clip' : 'none'}, explanation voice: ${props.explain.audio ? 'app clip' : 'none'}`);
 	}
 
 	const serveUrl = await bundle({entryPoint: path.join(APP_DIR, 'src', 'index.ts')});

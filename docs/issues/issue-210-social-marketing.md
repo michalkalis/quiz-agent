@@ -29,6 +29,14 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 4. **Start posting now**, before the App Store launch: bios say "coming soon" + link to trubbo.app (public beta CTA already there).
 5. **Apple featuring nomination: later**, for the version that is actually launched after real testing (1.1 has only been tested by the founder). 1.1 stays on automatic release after approval (founder, 2026-10-22).
 
+## Founder decisions (2026-10-24) — redo of the reels after a stricter content review
+
+1. **Reel questions ≤ 90 characters** (MCQ: stem ≤ 70, each option ≤ 22): under ~6 s of voice, readable at a glance.
+2. **Voice for the question and the whole explanation** (the app's "hear it" clip, shared with the app through the same R2 key): weekly budget 2,500 characters ≈ 1,000 ElevenLabs credits (`cli/paths.ts`).
+3. **Week per account: 5 reels + 2 carousels**, no single images, Stories only as shared reels ([format research](../research/social-format-mix-2026-10-24.md)).
+4. **The three reels already published stay** (founder: they already have reach). Publishing (`social-publish.yml`) paused 2026-10-24 until the new week is approved; the 17 unpublished W44 posts are replaced.
+5. Opening, hook line and explanation style: chosen from samples on https://claude.ai/artifact/Kbt9ttGGdpMyoQjwi538fq ([hook/captions research](../research/social-reels-hook-text-and-captions-2026-10-24.md), [hook rate](../research/social-reels-hook-rate-2026-10-23.md)).
+
 ## Hard rules
 
 - **Driving safety:** no real footage from a moving car. Any driving visual (AI/motion) never shows a driver touching or looking at a phone — one such clip damages the whole brand and gets removed on YouTube/TikTok.

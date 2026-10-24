@@ -59,5 +59,19 @@
   "id": "f1f90366-31fb-4c8c-aec7-05936446f1b1",
   "language": "sk",
   "chars": 138
+ },
+ {
+  "at": "2026-10-24T12:14:45.933Z",
+  "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+  "language": "en",
+  "chars": 180,
+  "what": "explanation"
+ },
+ {
+  "at": "2026-10-24T12:18:55.350Z",
+  "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
+  "language": "cs",
+  "chars": 168,
+  "what": "explanation"
  }
 ]

@@ -7,8 +7,9 @@ code, DB URL and R2 credentials already live, so no secret ever leaves Fly.
 - SELECT only, inside a READ ONLY transaction; R2 GET only.
 - The clip is looked up under the exact cache key the app uses (TTSCache hash
   of spoken text + voice). No clip -> "audio_b64": null and the reel renders
-  without voice.
-- The one write, only with --ensure-audio and only when there is no clip:
+  without voice. Same for the explanation: the app reads the bare explanation
+  ("hear it" on the result screen), so its clip is shared the same way.
+- The one write, only with --ensure-audio and only for a missing clip:
   the app's own TTSService speaks the text the app would read (shipped client
   capabilities) in the app voice and stores it in R2 under the app's key, so a
   player who later gets the question hears this same clip (founder 2026-10-22).
@@ -53,13 +54,32 @@ def spoken_candidates(text, options, lang):
     caps = [()] + ([("option-labels",)] if options else [])
     for c in caps:
         session = SimpleNamespace(client_capabilities=c, language=lang)
-        yield normalize_numbers_for_tts(spoken_question_text(text, options, session), lang)
+        yield normalize_numbers_for_tts(
+            spoken_question_text(text, options, session), lang
+        )
 
 
 def clip_keys(text, options, lang):
     for spoken in spoken_candidates(text, options, lang):
         for voice in VOICES:
             yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
+
+
+def explanation_keys(explanation, lang):
+    """The app's "hear it" clip: the bare explanation (iOS splits only past
+    1000 characters, which no approved explanation reaches)."""
+    spoken = normalize_numbers_for_tts(explanation or "", lang)
+    for voice in VOICES:
+        yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
+
+
+def first_clip(s3, bucket, keys):
+    for spoken, key in keys:
+        try:
+            return spoken, s3.get_object(Bucket=bucket, Key=key)["Body"].read()
+        except s3.exceptions.NoSuchKey:
+            continue
+    return None, None
 
 
 def s3_client():
@@ -126,14 +146,21 @@ async def one(qid, lang):
             explanation=t["explanation"],
         )
     s3, bucket = s3_client(), os.environ["TTS_R2_BUCKET"]
-    out["audio_b64"] = None
-    for spoken, key in clip_keys(out["question"], out["possible_answers"], lang):
-        try:
-            body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
-        except s3.exceptions.NoSuchKey:
-            continue
+    out["audio_b64"] = out["explanation_audio_b64"] = None
+    spoken, body = first_clip(
+        s3, bucket, clip_keys(out["question"], out["possible_answers"], lang)
+    )
+    if body:
         out.update(audio_b64=base64.b64encode(body).decode(), spoken_text=spoken)
-        break
+    if out["explanation"] and len(out["explanation"]) <= 1000:
+        spoken, body = first_clip(
+            s3, bucket, explanation_keys(out["explanation"], lang)
+        )
+        if body:
+            out.update(
+                explanation_audio_b64=base64.b64encode(body).decode(),
+                explanation_spoken=spoken,
+            )
     return out
 
 
@@ -156,23 +183,40 @@ async def elevenlabs_usage():
 
 
 async def ensure(qid, lang):
-    """`one`, plus a clip made through the app's own TTS path when missing."""
+    """`one`, plus clips made through the app's own TTS path for what is
+    missing: the question as the app reads it, and the explanation as the
+    app's "hear it" button reads it."""
     import tempfile
 
     from app.config import get_settings
     from app.tts.service import TTSBilling, TTSService
 
     out = await one(qid, lang)
-    if out.get("error") or out["audio_b64"]:
-        return out  # an existing clip is never paid for twice
-    session = SimpleNamespace(
-        client_capabilities=APP_CAPABILITIES, language=out["language"]
-    )
-    # Same text GET /sessions/{id}/question/audio builds for such a session.
-    spoken = normalize_numbers_for_tts(
-        spoken_question_text(out["question"], out["possible_answers"], session),
-        out["language"],
-    )
+    if out.get("error"):
+        return out
+    todo = []  # (what, audio field, text field, spoken); an existing clip is never paid for twice
+    if not out["audio_b64"]:
+        session = SimpleNamespace(
+            client_capabilities=APP_CAPABILITIES, language=out["language"]
+        )
+        # Same text GET /sessions/{id}/question/audio builds for such a session.
+        spoken = normalize_numbers_for_tts(
+            spoken_question_text(out["question"], out["possible_answers"], session),
+            out["language"],
+        )
+        todo.append(("question", "audio_b64", "spoken_text", spoken))
+    if (
+        out["explanation"]
+        and not out["explanation_audio_b64"]
+        and len(out["explanation"]) <= 1000
+    ):
+        spoken = normalize_numbers_for_tts(out["explanation"], out["language"])
+        todo.append(
+            ("explanation", "explanation_audio_b64", "explanation_spoken", spoken)
+        )
+    if not todo:
+        return out
+    chars = sum(len(t[3]) for t in todo)
     used, limit = await elevenlabs_usage()
     # The app's own service-wide gate (#207.13): today's spend from the
     # day-start reading the app stored. Never eat into what players need.
@@ -183,13 +227,14 @@ async def ensure(qid, lang):
     day_start = start[0]["amount"] if start else used
     spent_today = used - day_start if used >= day_start else used
     budget = get_settings().elevenlabs_daily_credit_budget
-    if budget and spent_today + len(spoken) > budget:
+    if budget and spent_today + chars > budget:
         return {
             "error": f"{qid}: ElevenLabs daily budget would be passed "
-            f"({spent_today} + {len(spoken)} > {budget})"
+            f"({spent_today} + {chars} > {budget})"
         }
-    if limit - used < len(spoken):
+    if limit - used < chars:
         return {"error": f"{qid}: not enough ElevenLabs credits ({limit - used} left)"}
+    clips = []
     # Temp L1 dir: the machine's own cache belongs to the app user; R2 (L2)
     # is the shared store every machine reads on a miss.
     with tempfile.TemporaryDirectory() as tmp:
@@ -198,23 +243,25 @@ async def ensure(qid, lang):
         if tts.provider.name != "elevenlabs" or tts.remote is None:
             return {"error": "app TTS is not ElevenLabs + R2 on this machine"}
         voice = tts.provider.default_voice
-        billing = TTSBilling()
-        audio = await tts.synthesize(text=spoken, use_cache=True, billing=billing)
-        key = tts._remote_key(spoken, voice)
-        stored = await tts.remote.get(key)
-    if stored is None:
-        return {"error": f"{qid}: clip made but not found in R2 under {key}"}
-    out.update(
-        audio_b64=base64.b64encode(audio).decode(),
-        spoken_text=spoken,
-        generated={
-            "chars": billing.billed_chars,
-            # ElevenLabs' usage counter lags; this is the reading before.
-            "credits_left_before": limit - used,
-            "voice": voice,
-            "r2_key": key,
-        },
-    )
+        for what, audio_field, text_field, spoken in todo:
+            billing = TTSBilling()
+            audio = await tts.synthesize(text=spoken, use_cache=True, billing=billing)
+            key = tts._remote_key(spoken, voice)
+            if await tts.remote.get(key) is None:
+                return {
+                    "error": f"{qid}: {what} clip made but not found in R2 under {key}"
+                }
+            out.update(
+                {audio_field: base64.b64encode(audio).decode(), text_field: spoken}
+            )
+            clips.append({"what": what, "chars": billing.billed_chars, "r2_key": key})
+    out["generated"] = {
+        "clips": clips,
+        "chars": sum(c["chars"] for c in clips),
+        # ElevenLabs' usage counter lags; this is the reading before.
+        "credits_left_before": limit - used,
+        "voice": voice,
+    }
     return out
 
 
@@ -230,7 +277,9 @@ async def coverage():
     )
     s3, bucket = s3_client(), os.environ["TTS_R2_BUCKET"]
     keys = set()
-    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix="questions/"):
+    for page in s3.get_paginator("list_objects_v2").paginate(
+        Bucket=bucket, Prefix="questions/"
+    ):
         keys.update(o["Key"] for o in page.get("Contents", []))
     stats = {}
     for r in list(qs) + list(trs):
@@ -248,7 +297,7 @@ async def candidates():
     clip already exists. Read-only."""
     rows = await fetch_rows(
         "select q.id::text, coalesce(q.language, 'en') as language, q.category, "
-        "q.question, q.possible_answers, q.local_scope, "
+        "q.question, q.possible_answers, q.local_scope, q.explanation, q.source_url, "
         "coalesce(q.headline_answer, q.correct_answer->>0, q.correct_answer#>>'{}') as answer, q.created_at::date::text as created, "
         "q.provenance->'extra'->'topicality'->>'tier' as topicality, "
         "(select avg(r.score / r.scale_max) from ratings r where r.question_id = q.id::text) as rating "
@@ -257,7 +306,9 @@ async def candidates():
     )
     s3, bucket = s3_client(), os.environ["TTS_R2_BUCKET"]
     keys = set()
-    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix="questions/"):
+    for page in s3.get_paginator("list_objects_v2").paginate(
+        Bucket=bucket, Prefix="questions/"
+    ):
         keys.update(o["Key"] for o in page.get("Contents", []))
     out = []
     for r in rows:
@@ -268,13 +319,21 @@ async def candidates():
                 "language": r["language"],
                 "category": r["category"],
                 "chars": len(r["question"]),
+                # Full text for the content review before a batch (210.4).
+                "question": r["question"],
+                "answer": r["answer"],
+                "options": opts,
+                "explanation": r["explanation"],
+                "source_url": r["source_url"],
                 "answer_chars": len(r["answer"] or ""),
                 "mcq": bool(opts),
                 "local_scope": r["local_scope"],
                 "created": r["created"],
                 "topicality": r["topicality"],
                 "rating": float(r["rating"]) if r["rating"] is not None else None,
-                "has_clip": any(k in keys for _, k in clip_keys(r["question"], opts, r["language"])),
+                "has_clip": any(
+                    k in keys for _, k in clip_keys(r["question"], opts, r["language"])
+                ),
             }
         )
     return out

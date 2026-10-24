@@ -17,7 +17,7 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import type {Language} from '../src/types';
 import {caption, youtubeTitle, type PostFormat} from './captions';
-import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, VOICES_PER_WEEK} from './paths';
+import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, voiceCharsLeft} from './paths';
 import {shapeQuestion, type QuestionInput} from './shape';
 
 const {values} = parseArgs({
@@ -77,11 +77,12 @@ const earlier: Manifest[] = existsSync(BATCH_DIR)
 const current: Manifest | null = SEED ? JSON.parse(readFileSync(WEEK_FILE, 'utf8')) : null;
 const used = new Set([...earlier, ...(current ? [current] : [])].flatMap((m) => m.posts.flatMap((p) => p.questions.map((q) => q.id))));
 
+/** A reel's new voice = question (≤ 90) + explanation (~150) characters. */
+const CHARS_PER_REEL_VOICE = 240;
+
 function voicesLeft(): number {
-	if (!existsSync(VOICE_LEDGER)) return VOICES_PER_WEEK;
-	const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-	const recent = (JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) as {at: string}[]).filter((e) => Date.parse(e.at) >= weekAgo);
-	return Math.max(0, VOICES_PER_WEEK - recent.length);
+	const ledger = existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : [];
+	return Math.floor(voiceCharsLeft(ledger) / CHARS_PER_REEL_VOICE);
 }
 
 function loadCandidates(): Candidate[] {

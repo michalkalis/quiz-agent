@@ -22,6 +22,8 @@ export type QuestionInput = {
 	audio?: string | null;
 	audio_b64?: string | null;
 	spoken_text?: string;
+	/** The app's "hear it" clip of the explanation (prod fetch), if any. */
+	explanation_audio_b64?: string | null;
 	/** Prod rows: the question's source, shown on the approval page. */
 	source_url?: string | null;
 };
@@ -44,6 +46,25 @@ export const oneSentence = (text: string | null | undefined): string => {
 	const m = clean.match(/^.+?[.!?](?=\s+["'„“A-ZÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ])/u);
 	return m ? m[0] : clean;
 };
+
+const SENTENCE_END = /(?<=[.!?])\s+(?=["'„“A-ZÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ0-9])/u;
+/** Longest on-screen part of the explanation: about two lines on the reel card. */
+export const PART_MAX_CHARS = 110;
+
+/** Splits a sentence at the comma or semicolon nearest its middle until every
+ * piece fits; a sentence without one stays whole. Words are never changed. */
+const splitLong = (sentence: string): string[] => {
+	if (sentence.length <= PART_MAX_CHARS) return [sentence];
+	const cuts = [...sentence.matchAll(/[,;:](?=\s)/g)].map((m) => m.index! + 1);
+	if (!cuts.length) return [sentence];
+	const mid = sentence.length / 2;
+	const cut = cuts.reduce((best, c) => (Math.abs(c - mid) < Math.abs(best - mid) ? c : best));
+	return [...splitLong(sentence.slice(0, cut).trim()), ...splitLong(sentence.slice(cut).trim())];
+};
+
+/** The whole explanation as short on-screen parts (sentences, long ones split at a comma). */
+export const explainParts = (text: string): string[] =>
+	text ? text.split(SENTENCE_END).flatMap(splitLong).filter(Boolean) : [];
 
 export const shapeQuestion = (raw: QuestionInput): ReelQuestion => {
 	const entries = raw.possible_answers ? Object.entries(raw.possible_answers).sort(([a], [b]) => a.localeCompare(b)) : [];
@@ -68,6 +89,7 @@ export const shapeQuestion = (raw: QuestionInput): ReelQuestion => {
 		question: noDashes(raw.question),
 		answer: noDashes(correctIndex !== null ? options[correctIndex] : correct),
 		why: oneSentence(raw.explanation),
+		explanation: noDashes((raw.explanation ?? '').replace(/\s+/g, ' ').trim()),
 		options: options.map(noDashes),
 		correctIndex,
 	};

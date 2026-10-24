@@ -2,7 +2,7 @@ import React from 'react';
 import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
 import {CarouselSlide} from './CarouselSlide';
 import {Reel} from './Reel';
-import {reelDurationMs} from './timing';
+import {LEAD_MS, reelTimeline} from './timing';
 import {loadBrandFonts} from './theme';
 import type {CarouselSlideProps, ReelProps} from './types';
 
@@ -22,6 +22,7 @@ const FIVE_SAMPLE: ReelProps = {
 		question: "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
 		answer: 'Milk',
 		why: "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk.",
+		explanation: "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. Our own galaxy kept the image: the Milky Way.",
 		options: [],
 		correctIndex: null,
 	},
@@ -30,6 +31,16 @@ const FIVE_SAMPLE: ReelProps = {
 	questionMs: 5500,
 	optionsAtMs: 0,
 	hookIndex: 0,
+	style: {opening: 'fused', explain: 'parts'},
+	explain: {
+		audio: null,
+		words: sampleWords("The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. Our own galaxy kept the image: the Milky Way."),
+		parts: [
+			{text: "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk.", firstWord: 0},
+			{text: 'Our own galaxy kept the image: the Milky Way.', firstWord: 21},
+		],
+		ms: 10500,
+	},
 };
 
 const ABC_SAMPLE: ReelProps = {
@@ -40,6 +51,7 @@ const ABC_SAMPLE: ReelProps = {
 		question: 'Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?',
 		answer: 'About 300',
 		why: 'About 300 comic fans met in a hotel basement in 1970.',
+		explanation: 'About 300 comic fans met in a hotel basement in 1970.',
 		options: ['About 30', 'About 300', 'About 3,000', 'About 30,000'],
 		correctIndex: 1,
 	},
@@ -49,7 +61,9 @@ const ABC_SAMPLE: ReelProps = {
 };
 
 const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
-	durationInFrames: Math.ceil((reelDurationMs(props.questionMs) / 1000) * FPS),
+	durationInFrames: Math.ceil(
+		(reelTimeline(props.style, props.questionMs + (props.style.opening === 'intro' ? 0 : LEAD_MS), props.explain.ms).totalMs / 1000) * FPS,
+	),
 });
 
 const FiveSeconds: React.FC<ReelProps> = (p) => <Reel {...p} variant="five" />;

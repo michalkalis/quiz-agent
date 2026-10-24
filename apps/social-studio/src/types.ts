@@ -11,13 +11,35 @@ export type ReelQuestion = {
 	answer: string;
 	/** First full sentence of the question's explanation (never an LLM); fitWhy fits it on the card. */
 	why: string;
+	/** The whole explanation, unchanged (reels read it aloud in parts). */
+	explanation: string;
 	/** MCQ options in the order given; empty for an open question. */
 	options: string[];
 	/** Index into `options` of the right one (MCQ only). */
 	correctIndex: number | null;
 };
 
+/** How the reel opens: a separate hook card before the question (the v1
+ * reel), a hook line on screen with the question from frame 1, or the
+ * question alone. */
+export type Opening = 'intro' | 'fused' | 'plain';
+/** How the explanation is shown: its first sentence under the answer (v1),
+ * the whole explanation part by part, or big spoken-word captions. */
+export type ExplainStyle = 'line' | 'parts' | 'captions';
+export type ReelStyle = {opening: Opening; explain: ExplainStyle};
+
+/** The explanation phase: the whole text, timed to its clip (or reading pace). */
+export type ExplainTrack = {
+	audio: string | null;
+	words: TimedWord[];
+	/** Parts of at most ~110 characters, each with the index of its first word. */
+	parts: {text: string; firstWord: number}[];
+	ms: number;
+};
+
 export type ReelProps = {
+	style: ReelStyle;
+	explain: ExplainTrack;
 	q: ReelQuestion;
 	/** Path under public/ (staticFile) of the existing app clip, or null = no voice. */
 	audio: string | null;

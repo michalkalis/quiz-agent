@@ -1,13 +1,15 @@
 // "5 Seconds" and "A, B or C" reels (9:16). One timeline, two variants:
-// hook → question read by the app voice with word captions → 5 s countdown
-// with the monkey thinking → answer + one line why → end card.
+// question read by the app voice (with a hook card before it, a hook line
+// above it, or alone) → 5 s countdown with the monkey thinking → answer +
+// the explanation (one line, or the whole of it read aloud) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COPY, LETTERS, hookFor} from './copy';
 import {fitWhy} from './fitWhy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, OK_BG, SURF, tintFor} from './theme';
-import {COUNTDOWN_MS, HOOK_MS, REVEAL_MS} from './timing';
+import {ExplainPhase} from './Explain';
+import {COUNTDOWN_MS, LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
 
 
@@ -18,16 +20,16 @@ const f = (millis: number, fps: number) => Math.round((millis / 1000) * fps);
 // everything important stays inside this box.
 const SAFE = {top: 170, bottom: 400, left: 80, right: 130};
 
-export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, hookIndex, variant}) => {
+export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, hookIndex, variant, style, explain}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const tint = tintFor(q.category);
 	const copy = COPY[q.language];
 
-	const qStart = HOOK_MS;
-	const cdStart = qStart + questionMs;
-	const revealStart = cdStart + COUNTDOWN_MS;
-	const endStart = revealStart + REVEAL_MS;
+	const intro = style.opening === 'intro';
+	// Without the intro card the question is complete on frame 1 and the voice follows.
+	const lead = intro ? 0 : LEAD_MS;
+	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms);
 	const now = ms(frame, fps);
 
 	const enter = (atMs: number, damping = 18) =>
@@ -39,7 +41,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 	return (
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio ? (
-				<Sequence from={f(qStart, fps)}>
+				<Sequence from={f(qStart + lead, fps)}>
 					<Audio src={staticFile(audio)} />
 				</Sequence>
 			) : null}
@@ -48,8 +50,8 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 				<>
 					<Logo color={tint.onBg} />
 
-					{/* Hook */}
-					{now < qStart ? (
+					{/* Hook card before the question (v1) */}
+					{intro && now < qStart ? (
 						<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', padding: `0 ${SAFE.right}px 0 ${SAFE.left}px`}}>
 							<div
 								style={{
@@ -82,14 +84,20 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 								gap: 44,
 							}}
 						>
-							<QuestionCard
-								q={q}
-								words={words}
-								tMs={now - qStart}
-								optionsAtMs={optionsAtMs}
-								revealed={now >= revealStart}
-								appear={enter(qStart)}
-							/>
+							{style.opening === 'fused' && now < revealStart ? <HookLine text={hookFor(q.language, hookIndex)} color={tint.onBg} /> : null}
+							{style.explain !== 'line' && now >= revealStart ? null : (
+								<QuestionCard
+									q={q}
+									words={words}
+									tMs={now - qStart - lead}
+									optionsAtMs={optionsAtMs}
+									revealed={now >= revealStart}
+									appear={intro ? enter(qStart) : 1}
+									readable={!intro}
+									markBg={tint.bg}
+									markInk={tint.onBg}
+								/>
+							)}
 							{now >= cdStart && now < revealStart ? (
 								<Countdown
 									startFrame={f(cdStart, fps)}
@@ -98,7 +106,20 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 									comment={variant === 'abc' ? copy.comment(LETTERS.slice(0, q.options.length)) : null}
 								/>
 							) : null}
-							{now >= revealStart ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
+							{now >= revealStart && style.explain === 'line' ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
+							{now >= revealStart && style.explain !== 'line' ? (
+								<ExplainPhase
+									q={q}
+									abc={variant === 'abc'}
+									style={style.explain}
+									track={explain}
+									revealFrame={f(revealStart, fps)}
+									whyFrame={f(whyStart, fps)}
+									appear={enter(revealStart, 16)}
+									markBg={tint.bg}
+									markInk={tint.onBg}
+								/>
+							) : null}
 						</div>
 					) : null}
 
@@ -125,6 +146,11 @@ const Logo: React.FC<{color: string}> = ({color}) => (
 	</div>
 );
 
+/** Hook line on screen together with the question, from frame 1. */
+const HookLine: React.FC<{text: string; color: string}> = ({text, color}) => (
+	<div style={{fontSize: 58, fontWeight: 800, lineHeight: 1.1, color, letterSpacing: -1, marginBottom: -14}}>{text}</div>
+);
+
 const QuestionCard: React.FC<{
 	q: ReelProps['q'];
 	words: ReelProps['words'];
@@ -132,7 +158,11 @@ const QuestionCard: React.FC<{
 	optionsAtMs: number;
 	revealed: boolean;
 	appear: number;
-}> = ({q, words, tMs, optionsAtMs, revealed, appear}) => {
+	/** true: every word readable from frame 1, the word being said marked (v1 dims unsaid words). */
+	readable: boolean;
+	markBg: string;
+	markInk: string;
+}> = ({q, words, tMs, optionsAtMs, revealed, appear, readable, markBg, markInk}) => {
 	const long = q.question.length > 110;
 	const mcq = q.options.length > 0;
 	return (
@@ -147,12 +177,23 @@ const QuestionCard: React.FC<{
 			}}
 		>
 			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
-				{words.map((w, i) => (
-					<span key={i} style={{opacity: tMs >= w.startMs ? 1 : 0.18}}>
-						{w.text}
-						{i < words.length - 1 ? ' ' : ''}
-					</span>
-				))}
+				{words.map((w, i) => {
+					const saying = readable && tMs >= w.startMs && (i === words.length - 1 ? tMs < optionsAtMs : tMs < words[i + 1].startMs);
+					return (
+						<React.Fragment key={i}>
+							<span
+								style={
+									readable
+										? {background: saying ? markBg : 'transparent', color: saying ? markInk : INK, borderRadius: 12, padding: '0 6px', margin: '0 -6px'}
+										: {opacity: tMs >= w.startMs ? 1 : 0.18}
+								}
+							>
+								{w.text}
+							</span>
+							{i < words.length - 1 ? ' ' : ''}
+						</React.Fragment>
+					);
+				})}
 			</div>
 			{q.options.length > 0 ? (
 				<div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 32}}>

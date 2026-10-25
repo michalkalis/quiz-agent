@@ -31,6 +31,9 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 	const lead = intro ? 0 : LEAD_MS;
 	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms);
 	const now = ms(frame, fps);
+	// Fused opening (founder pick 2026-10-24): big hook line over a small but readable
+	// question; when the line leaves, the question grows to full size.
+	const grow = style.opening === 'fused' ? spring({frame: frame - f(HOOK_HOLD_MS, fps), fps, config: {damping: 20, mass: 0.8}}) : 1;
 
 	const enter = (atMs: number, damping = 18) =>
 		spring({frame: frame - f(atMs, fps), fps, config: {damping, mass: 0.7}});
@@ -84,7 +87,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 								gap: 44,
 							}}
 						>
-							{style.opening === 'fused' && now < revealStart ? <HookLine text={hookFor(q.language, hookIndex)} color={tint.onBg} /> : null}
+							{style.opening === 'fused' ? <HookLine text={hookFor(q.language, hookIndex)} color={tint.onBg} grow={grow} /> : null}
 							{style.explain !== 'line' && now >= revealStart ? null : (
 								<QuestionCard
 									q={q}
@@ -94,6 +97,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 									revealed={now >= revealStart}
 									appear={intro ? enter(qStart) : 1}
 									readable={!intro}
+									scale={style.opening === 'fused' ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
 									markBg={tint.bg}
 									markInk={tint.onBg}
 								/>
@@ -146,10 +150,18 @@ const Logo: React.FC<{color: string}> = ({color}) => (
 	</div>
 );
 
-/** Hook line on screen together with the question, from frame 1. */
-const HookLine: React.FC<{text: string; color: string}> = ({text, color}) => (
-	<div style={{fontSize: 58, fontWeight: 800, lineHeight: 1.1, color, letterSpacing: -1, marginBottom: -14}}>{text}</div>
-);
+/** How long the fused hook line holds before the question grows. */
+const HOOK_HOLD_MS = 1400;
+/** Question text size under the hook line, relative to full size. */
+const SMALL_Q = 0.66;
+
+/** Hook line on screen together with the question from frame 1; it folds away as `grow` goes 0 → 1. */
+const HookLine: React.FC<{text: string; color: string; grow: number}> = ({text, color, grow}) =>
+	grow >= 1 ? null : (
+		<div style={{height: 230 * (1 - grow), marginBottom: -44 * grow, overflow: 'hidden', opacity: Math.max(0, 1 - 2.5 * grow), display: 'flex', alignItems: 'flex-end'}}>
+			<div style={{fontSize: 92, fontWeight: 800, lineHeight: 1.05, color, letterSpacing: -2, transform: `translateY(${-40 * grow}px)`}}>{text}</div>
+		</div>
+	);
 
 const QuestionCard: React.FC<{
 	q: ReelProps['q'];
@@ -160,9 +172,11 @@ const QuestionCard: React.FC<{
 	appear: number;
 	/** true: every word readable from frame 1, the word being said marked (v1 dims unsaid words). */
 	readable: boolean;
+	/** Question text size factor (the fused opening starts it small). */
+	scale?: number;
 	markBg: string;
 	markInk: string;
-}> = ({q, words, tMs, optionsAtMs, revealed, appear, readable, markBg, markInk}) => {
+}> = ({q, words, tMs, optionsAtMs, revealed, appear, readable, scale = 1, markBg, markInk}) => {
 	const long = q.question.length > 110;
 	const mcq = q.options.length > 0;
 	return (
@@ -176,7 +190,7 @@ const QuestionCard: React.FC<{
 				transform: `translateY(${(1 - appear) * 60}px)`,
 			}}
 		>
-			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
+			<div style={{fontSize: (long || mcq ? 56 : 66) * scale, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
 				{words.map((w, i) => {
 					const saying = readable && tMs >= w.startMs && (i === words.length - 1 ? tMs < optionsAtMs : tMs < words[i + 1].startMs);
 					return (

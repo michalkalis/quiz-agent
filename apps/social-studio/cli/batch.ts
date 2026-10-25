@@ -4,9 +4,10 @@
 // posts on both Instagram accounts (EN, SK/CZ), renders them with cli/render.ts,
 // writes captions + hashtags, and saves batches/<week>.json. The manifests are
 // the posted log: a question in any earlier manifest is never picked again.
-// Week per account (content plan): Mon 5 Seconds · Tue Road Trip Round
-// (carousel) · Wed A, B or C · Fri 5 Seconds. Thu "How it plays" is not built
-// yet, so that slot stays empty.
+// Week per account (founder 2026-10-24: 5 reels + 2 carousels): Mon, Thu, Fri,
+// Sun 5 Seconds · Wed A, B or C · Tue and Sat Road Trip Round (carousel).
+// Only questions that passed the content review (batches/content-review.json,
+// verdict "keep") are picked, strongest first.
 // --seed (founder 2026-10-23): six launch posts per account on the weekend
 // before that Monday, 10:00 / 14:00 / 18:00, added to the week's existing
 // manifest so one approval page shows them all.
@@ -36,12 +37,19 @@ type Candidate = {
 	topicality: string | null;
 	rating: number | null;
 	has_clip: boolean;
+	options: Record<string, string> | null;
+	explanation: string | null;
 };
 type Account = 'ig_en' | 'ig_skcz';
-type Slot = {account: Account; day: 'Sat' | 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Fri'; format: PostFormat; language: Language; time?: string; n?: number};
+type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+/** Seed slots are the weekend before Monday; weekly slots run Mon..Sun. */
+type Slot = {account: Account; day: Day; format: PostFormat; language: Language; time?: string; n?: number; before?: boolean};
 
 const CAROUSEL_SIZE = 7;
-const REEL_MAX_CHARS = 150; // longer questions do not read well in a ~17 s reel
+// Founder 2026-10-24: a reel question reads in under ~6 s of voice.
+const REEL_MAX_CHARS = 90;
+const MCQ_MAX_CHARS = 70;
+const MCQ_MAX_OPTION = 22;
 const CAROUSEL_MAX_CHARS = 120;
 const CAROUSEL_MAX_ANSWER = 30;
 
@@ -60,30 +68,34 @@ function isoWeek(day: string): {id: string; n: number} {
 	return {id: `${d.getUTCFullYear()}-W${String(n).padStart(2, '0')}`, n};
 }
 const WEEK = isoWeek(MONDAY);
-const dayDate = (day: Slot['day']) => {
+const DAYS: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const dayOffset = (s: {day: Day; before?: boolean}) => DAYS.indexOf(s.day) - (s.before ? 7 : 0);
+const dayDate = (s: {day: Day; before?: boolean}) => {
 	const d = new Date(`${MONDAY}T00:00:00Z`);
-	d.setUTCDate(d.getUTCDate() + {Sat: -2, Sun: -1, Mon: 0, Tue: 1, Wed: 2, Fri: 4}[day]);
+	d.setUTCDate(d.getUTCDate() + dayOffset(s));
 	return d.toISOString().slice(0, 10);
 };
 
-type Manifest = {week: string; monday: string; created: string; posts: {key: string; format: PostFormat; language: Language; questions: {id: string}[]}[]};
+type Manifest = {week: string; monday: string; created: string; posts: {key: string; format: PostFormat; language: Language; status?: string; questions: {id: string}[]}[]};
 const WEEK_FILE = path.join(BATCH_DIR, `${WEEK.id}.json`);
 const earlier: Manifest[] = existsSync(BATCH_DIR)
 	? readdirSync(BATCH_DIR)
 			.filter((f) => /^\d{4}-W\d{2}\.json$/.test(f) && f !== `${WEEK.id}.json`)
 			.map((f) => JSON.parse(readFileSync(path.join(BATCH_DIR, f), 'utf8')))
 	: [];
-// --seed adds to this week's manifest, so its questions are taken too.
-const current: Manifest | null = SEED ? JSON.parse(readFileSync(WEEK_FILE, 'utf8')) : null;
+// --seed adds to this week's manifest, so its questions are taken too. A
+// re-run of a week keeps only its posts that already went out (the posted log).
+const existing: Manifest | null = existsSync(WEEK_FILE) ? JSON.parse(readFileSync(WEEK_FILE, 'utf8')) : null;
+const current: Manifest | null = existing && (SEED ? existing : {...existing, posts: existing.posts.filter((p) => p.status === 'published')});
 const used = new Set([...earlier, ...(current ? [current] : [])].flatMap((m) => m.posts.flatMap((p) => p.questions.map((q) => q.id))));
 
-/** A reel's new voice = question (≤ 90) + explanation (~150) characters. */
-const CHARS_PER_REEL_VOICE = 240;
-
-function voicesLeft(): number {
-	const ledger = existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : [];
-	return Math.floor(voiceCharsLeft(ledger) / CHARS_PER_REEL_VOICE);
+function voiceCharsAvailable(): number {
+	return voiceCharsLeft(existsSync(VOICE_LEDGER) ? JSON.parse(readFileSync(VOICE_LEDGER, 'utf8')) : []);
 }
+
+/** Characters a reel's new clips cost: the question when the app has no clip
+ * yet, plus the explanation (rarely voiced by players, so assumed missing). */
+const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + (c.explanation?.length ?? 0);
 
 function loadCandidates(): Candidate[] {
 	const file = path.join(CACHE_DIR, `candidates-${new Date().toISOString().slice(0, 10)}.json`);
@@ -100,11 +112,17 @@ function loadCandidates(): Candidate[] {
 	return JSON.parse(out.slice(marker + 8));
 }
 
-// Founder/rater score first (unrated = a little under the 8/10 bar), then
-// fresh pop culture; a per-week jitter keeps equal rows from always winning.
+/** Content review before a batch (founder 2026-10-24: approved is not enough
+ * for Instagram). Only "keep" is picked; "drop" and "hold" (a defect to fix
+ * in the app first) never are. Unreviewed questions are not picked either. */
+type Review = {verdict: 'keep' | 'drop' | 'hold'; stop_power: number; note: string};
+const REVIEW: Record<string, Review> = JSON.parse(readFileSync(path.join(BATCH_DIR, 'content-review.json'), 'utf8'));
+
+// Reviewer's stop power first (would a stranger stop scrolling), then the
+// founder/rater score; a per-week jitter keeps equal rows from always winning.
 function score(c: Candidate): number {
 	const jitter = parseInt(createHash('sha1').update(c.id + WEEK.id).digest('hex').slice(0, 6), 16) / 0xffffff;
-	return (c.rating ?? 0.7) + (c.topicality ? 0.1 : 0) + (['entertainment', 'movies-music'].includes(c.category) ? 0.05 : 0) + jitter * 0.1;
+	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + jitter * 0.05;
 }
 
 const fitsAccount = (c: Candidate, s: Slot) =>
@@ -113,11 +131,14 @@ const fitsAccount = (c: Candidate, s: Slot) =>
 function plan(): Slot[] {
 	// SK/CZ: one language per post, alternating, flipped every week.
 	const [a, b]: Language[] = WEEK.n % 2 ? ['sk', 'cs'] : ['cs', 'sk'];
-	const week: [Slot['day'], PostFormat, Language, Language][] = [
+	const week: [Day, PostFormat, Language, Language][] = [
 		['Mon', 'five', 'en', a],
 		['Tue', 'carousel', 'en', b],
 		['Wed', 'abc', 'en', a],
-		['Fri', 'five', 'en', b],
+		['Thu', 'five', 'en', b],
+		['Fri', 'five', 'en', a],
+		['Sat', 'carousel', 'en', a],
+		['Sun', 'five', 'en', b],
 	];
 	return week.flatMap(([day, format, en, skcz]) => [
 		{account: 'ig_en' as const, day, format, language: en},
@@ -132,7 +153,7 @@ function seedPlan(): Slot[] {
 	const en: PostFormat[] = ['five', 'five', 'abc', 'five', 'five', 'five'];
 	const skcz: [PostFormat, Language][] = [['five', 'sk'], ['carousel', 'cs'], ['five', 'cs'], ['abc', 'sk'], ['carousel', 'cs'], ['five', 'sk']];
 	return en.flatMap((format, i) => {
-		const at = {day: (i < 3 ? 'Sat' : 'Sun') as Slot['day'], time: ['10:00', '14:00', '18:00'][i % 3], n: (i % 3) + 1};
+		const at = {day: (i < 3 ? 'Sat' : 'Sun') as Day, before: true, time: ['10:00', '14:00', '18:00'][i % 3], n: (i % 3) + 1};
 		return [
 			{account: 'ig_en' as const, ...at, format, language: 'en' as Language},
 			{account: 'ig_skcz' as const, ...at, format: skcz[i][0], language: skcz[i][1]},
@@ -144,20 +165,24 @@ type Pick = {slot: Slot; ids: string[]; makeVoice: boolean};
 
 function pick(cands: Candidate[]): Pick[] {
 	const taken = new Set(used);
-	const byScore = [...cands].sort((x, y) => score(y) - score(x));
-	let voices = voicesLeft();
+	const byScore = cands.filter((c) => REVIEW[c.id]?.verdict === 'keep').sort((x, y) => score(y) - score(x));
+	let voiceChars = voiceCharsAvailable();
 	const picks: Pick[] = [];
-	const reelCategories: Record<Account, Set<string>> = {ig_en: new Set(), ig_skcz: new Set()};
+	const reelCategories: Record<Account, Record<string, number>> = {ig_en: {}, ig_skcz: {}};
 	// Slots with the fewest existing clips first (MCQ, then cs), so they get
 	// the weekly voice budget and the others use clips the app already made.
 	const clips = (s: Slot) => cands.filter((c) => c.has_clip && c.mcq === (s.format === 'abc') && fitsAccount(c, s)).length;
-	const order = (SEED ? seedPlan() : plan()).sort((x, y) => Number(y.format === 'abc') - Number(x.format === 'abc') || clips(x) - clips(y));
+	// Reels pick first: carousels can use the longer questions a reel cannot.
+	const rank = (s: Slot) => ({abc: 0, five: 1, carousel: 2})[s.format];
+	const order = (SEED ? seedPlan() : plan()).sort((x, y) => rank(x) - rank(y) || clips(x) - clips(y));
 	for (const slot of order) {
 		const pool = byScore.filter((c) => !taken.has(c.id) && fitsAccount(c, slot));
 		if (slot.format === 'carousel') {
 			const ids: string[] = [];
 			const perCategory: Record<string, number> = {};
-			for (const c of pool) {
+			// Questions too long for a reel first, so short ones stay for the reels.
+			const longFirst = [...pool.filter((c) => c.chars > REEL_MAX_CHARS), ...pool.filter((c) => c.chars <= REEL_MAX_CHARS)];
+			for (const c of longFirst) {
 				if (c.mcq || c.chars > CAROUSEL_MAX_CHARS || c.answer_chars > CAROUSEL_MAX_ANSWER || (perCategory[c.category] ?? 0) >= 2) continue;
 				ids.push(c.id);
 				perCategory[c.category] = (perCategory[c.category] ?? 0) + 1;
@@ -168,22 +193,23 @@ function pick(cands: Candidate[]): Pick[] {
 			picks.push({slot, ids, makeVoice: false});
 			continue;
 		}
-		const fits = (c: Candidate) => c.mcq === (slot.format === 'abc') && c.chars <= REEL_MAX_CHARS && !reelCategories[slot.account].has(c.category);
+		const short = (c: Candidate) =>
+			c.mcq ? c.chars <= MCQ_MAX_CHARS && Object.values(c.options ?? {}).every((o) => o.length <= MCQ_MAX_OPTION) : c.chars <= REEL_MAX_CHARS;
+		// At most two reels of one category a week per account, so the colours vary.
+		const fits = (c: Candidate) => c.mcq === (slot.format === 'abc') && short(c) && (reelCategories[slot.account][c.category] ?? 0) < 2;
 		// An existing clip first, so the voice budget goes where there is none.
-		const c = pool.find((c) => fits(c) && c.has_clip) ?? (voices > 0 ? pool.find(fits) : undefined);
+		const c = pool.find((c) => fits(c) && voiceCost(c) <= voiceChars);
 		if (!c) {
-			console.warn(`! ${slot.account} ${slot.day} ${slot.format} ${slot.language}: no question with a voice clip left this week, slot skipped`);
+			console.warn(`! ${slot.account} ${slot.day} ${slot.format} ${slot.language}: no reviewed question fits (or the weekly voice budget is used up), slot skipped`);
 			continue;
 		}
-		if (!c.has_clip) voices--;
+		voiceChars -= voiceCost(c);
 		taken.add(c.id);
-		reelCategories[slot.account].add(c.category);
-		picks.push({slot, ids: [c.id], makeVoice: !c.has_clip});
+		reelCategories[slot.account][c.category] = (reelCategories[slot.account][c.category] ?? 0) + 1;
+		picks.push({slot, ids: [c.id], makeVoice: true});
 	}
-	const dayOrder = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Fri'];
 	return picks.sort(
-		(x, y) =>
-			dayOrder.indexOf(x.slot.day) - dayOrder.indexOf(y.slot.day) || (x.slot.n ?? 0) - (y.slot.n ?? 0) || x.slot.account.localeCompare(y.slot.account),
+		(x, y) => dayOffset(x.slot) - dayOffset(y.slot) || (x.slot.n ?? 0) - (y.slot.n ?? 0) || x.slot.account.localeCompare(y.slot.account),
 	);
 }
 
@@ -197,8 +223,8 @@ function render(args: string[]): string[] {
 
 function main() {
 	const picks = pick(loadCandidates());
-	console.log(`${WEEK.id} (from ${MONDAY}): ${picks.length} posts, ${picks.filter((p) => p.makeVoice).length} new voice clips (${voicesLeft()} left this week)`);
-	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}: ${p.ids.join(',')}${p.makeVoice ? ' (new voice)' : ''}`);
+	console.log(`${WEEK.id} (from ${MONDAY}): ${picks.length} posts, voice budget ${voiceCharsAvailable()} characters left this week`);
+	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}: ${p.ids.join(',')}`);
 	if (values['dry-run']) return;
 
 	const outDir = path.join(APP_DIR, 'out', WEEK.id);
@@ -226,12 +252,12 @@ function main() {
 		posts.push({
 			key: `${slot.day.toLowerCase()}${slot.n ?? ''}-${slot.account}`,
 			...slot,
-			date: dayDate(slot.day),
+			date: dayDate(slot),
 			files,
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
 			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(questions[0].question), description: text} : null,
-			voice: slot.format === 'carousel' ? null : makeVoice ? 'made this week' : 'existing app clip',
+			voice: slot.format === 'carousel' ? null : 'app voice: question + explanation',
 			questions,
 		});
 	}

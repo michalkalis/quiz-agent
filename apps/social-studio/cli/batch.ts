@@ -173,7 +173,7 @@ function pick(cands: Candidate[]): Pick[] {
 	// the weekly voice budget and the others use clips the app already made.
 	const clips = (s: Slot) => cands.filter((c) => c.has_clip && c.mcq === (s.format === 'abc') && fitsAccount(c, s)).length;
 	// Reels pick first: carousels can use the longer questions a reel cannot.
-	const rank = (s: Slot) => ({abc: 0, five: 1, carousel: 2})[s.format];
+	const rank = (s: Slot) => ({abc: 0, round: 1, five: 2, carousel: 3})[s.format];
 	const order = (SEED ? seedPlan() : plan()).sort((x, y) => rank(x) - rank(y) || clips(x) - clips(y));
 	for (const slot of order) {
 		const pool = byScore.filter((c) => !taken.has(c.id) && fitsAccount(c, slot));

@@ -76,7 +76,7 @@ const ROUND_SAMPLE: RoundProps = {
 const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
 	durationInFrames: Math.ceil(
 		(roundTimeline(
-			props.items.map((it) => ({questionMs: it.questionMs, why: it.q.why})),
+			props.items.map((it) => it.questionMs),
 			props.explain.ms,
 		).totalMs /
 			1000) *

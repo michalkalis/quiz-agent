@@ -30,24 +30,28 @@ export const eyeOpenAt = (t: number) => {
 	return phase < 0.07 ? 1 - (phase / 0.07) * 0.88 : phase < 0.13 ? 0.12 : 0.12 + ((phase - 0.13) / 0.07) * 0.88;
 };
 
-/** Round reel (3 questions, founder asked 2026-10-24; research 2026-10-25):
- * 4 s countdown before the last question, 5 s on it; only the last answer
- * gets the whole explanation, the others their first sentence on screen. */
-export const ROUND_COUNTDOWN_MS = 4000;
-export const shortRevealMs = (why: string) => Math.min(6000, Math.max(3000, 1500 + why.split(/\s+/).filter(Boolean).length * 300));
+/** Round reel (founder 2026-10-25): 3 or 5 questions in a row, each with a
+ * short countdown, and every answer only at the end, one after another; then
+ * the last (hardest) question's whole explanation read aloud. */
+export const roundCountdownMs = (n: number) => (n >= 5 ? 3000 : 4000);
+/** Gap between two answers popping in on the answers card. */
+export const ANSWER_STEP_MS = 1500;
+/** The full answers card stays up this long after the last answer. */
+export const ANSWERS_HOLD_MS = 2000;
 
-export const roundTimeline = (items: {questionMs: number; why: string}[], explainMs: number) => {
+export const roundTimeline = (questionMs: number[], explainMs: number) => {
+	const countdownMs = roundCountdownMs(questionMs.length);
 	let start = 0;
-	const steps = items.map((it, i) => {
-		const last = i === items.length - 1;
+	const steps = questionMs.map((qMs) => {
 		const voiceStart = start + LEAD_MS;
-		const cdStart = voiceStart + it.questionMs;
-		const countdownMs = last ? COUNTDOWN_MS : ROUND_COUNTDOWN_MS;
-		const revealStart = cdStart + countdownMs;
-		const end = last ? revealStart + ANSWER_MS + explainMs + WHY_TAIL_MS : revealStart + shortRevealMs(it.why);
-		const step = {start, voiceStart, cdStart, countdownMs, revealStart, whyStart: revealStart + ANSWER_MS, end};
-		start = end;
+		const cdStart = voiceStart + qMs;
+		const step = {start, voiceStart, cdStart, end: cdStart + countdownMs};
+		start = step.end;
 		return step;
 	});
-	return {steps, endStart: start, totalMs: start + END_MS};
+	const answersStart = start;
+	const revealStart = answersStart + 600 + questionMs.length * ANSWER_STEP_MS + ANSWERS_HOLD_MS;
+	const whyStart = revealStart + ANSWER_MS;
+	const endStart = whyStart + explainMs + WHY_TAIL_MS;
+	return {steps, countdownMs, answersStart, revealStart, whyStart, endStart, totalMs: endStart + END_MS};
 };

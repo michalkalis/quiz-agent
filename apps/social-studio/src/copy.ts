@@ -53,7 +53,7 @@ export const COPY: Record<Language, Copy> = {
 		answersTitle: 'Odpovede',
 		swipe: 'Posuň',
 		comment: (l) => `Napíš do komentára ${list(l, 'alebo')}`,
-		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : `Trafíš všetkých ${n}?`),
+		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 	},
 	cs: {
 		hooks: [
@@ -69,7 +69,7 @@ export const COPY: Record<Language, Copy> = {
 		answersTitle: 'Odpovědi',
 		swipe: 'Posuň',
 		comment: (l) => `Napiš do komentáře ${list(l, 'nebo')}`,
-		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : `Trefíš všech ${n}?`),
+		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
 	},
 };
 

@@ -6,7 +6,8 @@ import type {Language} from '../src/types';
 import {LETTERS} from '../src/copy';
 import {noDashes} from './shape';
 
-export type PostFormat = 'five' | 'abc' | 'carousel';
+/** `round` = 3 or 5 questions in one reel, answers at the end. */
+export type PostFormat = 'five' | 'abc' | 'carousel' | 'round';
 
 // `abc` gets the option letters already joined ("A, B or C", "A, B, C or D").
 const T: Record<Language, {five: string; abc: (letters: string) => string; carousel: string; app: string; or: string; tags: string[]}> = {
@@ -59,11 +60,13 @@ export function hashtags(language: Language, categories: string[], format: PostF
 	return tags.slice(0, 5);
 }
 
-/** `firstLine` = the question (reels) or the round title (carousel). */
+/** `firstLine` = the question (reels), the round title (carousel) or the hook line (round). */
 export function caption(o: {language: Language; format: PostFormat; firstLine: string; categories: string[]; nameApp: boolean; options?: number}): string {
 	const t = T[o.language];
 	const letters = LETTERS.slice(0, o.options ?? 3);
-	const prompt = o.format === 'abc' ? t.abc(`${letters.slice(0, -1).join(', ')} ${t.or} ${letters[letters.length - 1]}`) : t[o.format];
+	// A round asks for a score, like the carousel.
+	const prompt =
+		o.format === 'abc' ? t.abc(`${letters.slice(0, -1).join(', ')} ${t.or} ${letters[letters.length - 1]}`) : o.format === 'round' ? t.carousel : t[o.format];
 	const parts = [noDashes(o.firstLine), prompt];
 	if (o.nameApp) parts.push(t.app);
 	parts.push(hashtags(o.language, o.categories, o.format).join(' '));

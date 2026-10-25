@@ -190,7 +190,10 @@ async function main() {
 		const explain = await explainTrack(raws[raws.length - 1], qs[qs.length - 1]);
 		if (!explain.audio) console.warn(`! ${qs[qs.length - 1].id}: no explanation clip, explanation shown at reading pace`);
 		const props: RoundProps = {items, hookIndex: 0, explain};
-		const timeline = roundTimeline(items.map((it) => ({questionMs: it.questionMs, why: it.q.why})), explain.ms);
+		const timeline = roundTimeline(
+			items.map((it) => it.questionMs),
+			explain.ms,
+		);
 		let coverMs = timeline.steps[0].cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;
 		jobs.push({composition: 'Round', props, name: `round-${qs[0].language}-${slug(qs[0].id)}`, coverMs});

@@ -14,12 +14,15 @@ export const ANSWER_MS = 1400;
 export const WHY_TAIL_MS = 900;
 export const END_MS = 2000;
 
-export const reelTimeline = (style: ReelStyle, questionMs: number, explainMs: number) => {
+/** `card`: the answer is read (`answerMs`), then the whole explanation (`whyChars`) stays up to be read. */
+export const reelTimeline = (style: ReelStyle, questionMs: number, explainMs: number, answerMs = 0, whyChars = 0) => {
 	const qStart = style.opening === 'intro' ? HOOK_MS : 0;
 	const cdStart = qStart + questionMs;
 	const revealStart = cdStart + COUNTDOWN_MS;
-	const whyStart = revealStart + ANSWER_MS;
-	const endStart = style.explain === 'line' ? revealStart + REVEAL_MS : whyStart + explainMs + WHY_TAIL_MS;
+	const card = style.explain === 'card';
+	const whyStart = card ? revealStart + ANSWER_LEAD_MS + answerMs : revealStart + ANSWER_MS;
+	const endStart =
+		style.explain === 'line' ? revealStart + REVEAL_MS : card ? whyStart + whyHoldMs(whyChars, 10000) : whyStart + explainMs + WHY_TAIL_MS;
 	return {qStart, cdStart, revealStart, whyStart, endStart, totalMs: endStart + END_MS};
 };
 
@@ -39,7 +42,7 @@ export const roundCountdownMs = (n: number) => (n >= 5 ? 5000 : 4000);
 export const ANSWER_LEAD_MS = 300;
 /** Reading time for an explanation shown on screen, per character, and its bounds. */
 const WHY_MS_PER_CHAR = 50;
-export const whyHoldMs = (chars: number) => Math.min(5500, Math.max(2800, chars * WHY_MS_PER_CHAR));
+export const whyHoldMs = (chars: number, maxMs = 5500) => Math.min(maxMs, Math.max(2800, chars * WHY_MS_PER_CHAR));
 
 export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[]) => {
 	const countdownMs = roundCountdownMs(questionMs.length);

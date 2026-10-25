@@ -34,7 +34,8 @@ const FIVE_SAMPLE: ReelProps = {
 	optionsAtMs: 0,
 	optionAtMs: [],
 	hookIndex: 0,
-	style: {opening: 'fused', explain: 'parts'},
+	style: {opening: 'fused', explain: 'card'},
+	answer: {audio: null, ms: 1200},
 	explain: {
 		audio: null,
 		words: sampleWords("The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. Our own galaxy kept the image: the Milky Way."),
@@ -67,7 +68,7 @@ const ABC_SAMPLE: ReelProps = {
 
 const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
 	durationInFrames: Math.ceil(
-		(reelTimeline(props.style, props.questionMs + (props.style.opening === 'intro' ? 0 : LEAD_MS), props.explain.ms).totalMs / 1000) * FPS,
+		(reelTimeline(props.style, props.questionMs + (props.style.opening === 'intro' ? 0 : LEAD_MS), props.explain.ms, props.answer.ms, props.q.explanation.length).totalMs / 1000) * FPS,
 	),
 });
 

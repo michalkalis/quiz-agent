@@ -1,18 +1,20 @@
 // "5 Seconds" and "A, B or C" reels (9:16). One timeline, two variants:
 // question read by the app voice (with a hook card before it, a hook line
 // above it, or alone) → 5 s countdown with the monkey thinking → answer +
-// the explanation (one line, or the whole of it read aloud) → end card.
+// the explanation (one line, read aloud part by part, or, since 2026-10-25,
+// one card: the answer read aloud and the whole explanation shown) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {hookFor} from './copy';
 import {Monkey} from './Monkey';
+import {AnswerReveal} from './AnswerReveal';
 import {ExplainPhase} from './Explain';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, tintFor} from './theme';
-import {LEAD_MS, reelTimeline} from './timing';
+import {ANSWER_LEAD_MS, LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
 
-export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, optionAtMs, hookIndex, variant, style, explain}) => {
+export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, optionAtMs, hookIndex, variant, style, explain, answer}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const tint = tintFor(q.category);
@@ -20,7 +22,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 	const intro = style.opening === 'intro';
 	// Without the intro card the question is complete on frame 1 and the voice follows.
 	const lead = intro ? 0 : LEAD_MS;
-	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms);
+	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms, answer.ms, q.explanation.length);
 	const now = ms(frame, fps);
 	// Fused opening (founder pick 2026-10-24): big hook line over a small but readable
 	// question; when the line leaves, the question grows to full size.
@@ -37,6 +39,11 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 			{audio ? (
 				<Sequence from={f(qStart + lead, fps)}>
 					<Audio src={staticFile(audio)} />
+				</Sequence>
+			) : null}
+			{style.explain === 'card' && answer.audio ? (
+				<Sequence from={f(revealStart + ANSWER_LEAD_MS, fps)}>
+					<Audio src={staticFile(answer.audio)} />
 				</Sequence>
 			) : null}
 
@@ -98,7 +105,10 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 								<Countdown startFrame={f(cdStart, fps)} onBg={tint.onBg} />
 							) : null}
 							{now >= revealStart && style.explain === 'line' ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
-							{now >= revealStart && style.explain !== 'line' ? (
+							{now >= revealStart && style.explain === 'card' ? (
+								<AnswerReveal q={q} text={q.explanation} appear={enter(revealStart, 16)} why={enter(whyStart, 20)} startFrame={f(revealStart, fps)} />
+							) : null}
+							{now >= revealStart && style.explain !== 'line' && style.explain !== 'card' ? (
 								<ExplainPhase
 									q={q}
 									abc={variant === 'abc'}

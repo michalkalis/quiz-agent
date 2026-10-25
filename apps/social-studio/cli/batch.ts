@@ -102,8 +102,10 @@ function voiceCharsAvailable(): number {
 }
 
 /** Characters a reel's new clips cost: the question when the app has no clip
- * yet, plus the explanation (rarely voiced by players, so assumed missing). */
-const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + (c.explanation?.length ?? 0);
+ * yet, plus the answer read at the end (founder 2026-10-25: explanations are only shown). */
+const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + c.answer_chars;
+/** A round's answer clip also says the question number ("Otázka číslo jeden: "). */
+const ANSWER_NUMBER_CHARS = 20;
 
 function loadCandidates(): Candidate[] {
 	const file = path.join(CACHE_DIR, `candidates-${new Date().toISOString().slice(0, 10)}.json`);
@@ -219,7 +221,7 @@ function pick(cands: Candidate[]): Pick[] {
 			// The strongest of the rest closes the round.
 			const ids = first && rest.length === n - 1 ? [first, ...rest.reverse()] : [];
 			// Voice: every question without a clip, plus every answer read at the end (a clip each, explanations are only shown).
-			const cost = ids.reduce((sum, c) => sum + (c.has_clip ? 0 : c.chars) + c.answer_chars, 0);
+			const cost = ids.reduce((sum, c) => sum + voiceCost(c) + ANSWER_NUMBER_CHARS, 0);
 			if (!ids.length || cost > voiceChars) {
 				console.warn(`! ${slot.account} ${slot.day} round of ${n} ${slot.language}: ${ids.length ? 'over the weekly voice budget' : 'not enough reviewed questions'}, slot skipped`);
 				continue;
@@ -310,7 +312,7 @@ function main() {
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
 			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(slot.format === 'round' ? `${firstLine} ${questions[0].question}` : questions[0].question), description: text} : null,
-			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'app voice: questions + answers' : 'app voice: question + explanation',
+			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'app voice: questions + answers' : 'app voice: question + answer',
 			questions,
 		});
 	}

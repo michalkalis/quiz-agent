@@ -104,7 +104,7 @@ async def fetch_rows(sql, *args):
         await conn.close()
 
 
-async def one(qid, lang):
+async def one(qid, lang, answer_number=None):
     rows = await fetch_rows(
         "select id::text, question, possible_answers, correct_answer, headline_answer, "
         "explanation, category, coalesce(language, 'en') as language, source_url from questions "
@@ -161,12 +161,30 @@ async def one(qid, lang):
                 explanation_spoken=spoken,
             )
     out["answer_audio_b64"] = None
-    spoken, body = first_clip(s3, bucket, text_keys(display_answer(out), lang))
-    if body:
-        out.update(
-            answer_audio_b64=base64.b64encode(body).decode(), answer_spoken=spoken
+    if answer_number is not None:
+        spoken, body = first_clip(
+            s3, bucket, text_keys(answer_text(out, answer_number), lang)
         )
+        if body:
+            out.update(
+                answer_audio_b64=base64.b64encode(body).decode(), answer_spoken=spoken
+            )
     return out
+
+
+# A round reel says which question an answer belongs to (founder 2026-10-25);
+# digits are spelled out for sk/cs by the TTS normalization.
+ANSWER_PREFIX = {
+    "en": "Question {n}: ",
+    "sk": "Otázka číslo {n}: ",
+    "cs": "Otázka číslo {n}: ",
+}
+
+
+def answer_text(row, number):
+    """What a reel's answer clip says: the answer, after its question number in a round (number > 0)."""
+    prefix = ANSWER_PREFIX[row["language"]].format(n=number) if number else ""
+    return prefix + display_answer(row)
 
 
 def display_answer(row):
@@ -195,7 +213,7 @@ async def elevenlabs_usage():
         return int(sub["character_count"]), int(sub["character_limit"])
 
 
-async def ensure(qid, lang, question_only=False, with_answer=False):
+async def ensure(qid, lang, question_only=False, answer_number=None):
     """`one`, plus clips made through the app's own TTS path for what is
     missing: the question as the app reads it, and the explanation as the
     app's "hear it" button reads it (or, for a round reel, the answer)."""
@@ -204,7 +222,7 @@ async def ensure(qid, lang, question_only=False, with_answer=False):
     from app.config import get_settings
     from app.tts.service import TTSBilling, TTSService
 
-    out = await one(qid, lang)
+    out = await one(qid, lang, answer_number)
     if out.get("error"):
         return out
     todo = []  # (what, audio field, text field, spoken); an existing clip is never paid for twice
@@ -228,8 +246,10 @@ async def ensure(qid, lang, question_only=False, with_answer=False):
         todo.append(
             ("explanation", "explanation_audio_b64", "explanation_spoken", spoken)
         )
-    if with_answer and not out["answer_audio_b64"]:
-        spoken = normalize_numbers_for_tts(display_answer(out), out["language"])
+    if answer_number is not None and not out["answer_audio_b64"]:
+        spoken = normalize_numbers_for_tts(
+            answer_text(out, answer_number), out["language"]
+        )
         todo.append(("answer", "answer_audio_b64", "answer_spoken", spoken))
     if not todo:
         return out
@@ -357,8 +377,10 @@ async def candidates():
 
 
 if __name__ == "__main__":
-    flags = ("--ensure-audio", "--question-only", "--with-answer")
-    args = [a for a in sys.argv[1:] if a not in flags]
+    # --answer=N: also the answer clip (N = its question number in a round, 0 = none).
+    answer = next((int(a[9:]) for a in sys.argv if a.startswith("--answer=")), None)
+    flags = ("--ensure-audio", "--question-only")
+    args = [a for a in sys.argv[1:] if a not in flags and not a.startswith("--answer=")]
     if args[0] == "--coverage":
         result = asyncio.run(coverage())
     elif args[0] == "--candidates":
@@ -371,9 +393,9 @@ if __name__ == "__main__":
                     args[0],
                     lang,
                     "--question-only" in sys.argv,
-                    "--with-answer" in sys.argv,
+                    answer,
                 )
             )
         else:
-            result = asyncio.run(one(args[0], lang))
+            result = asyncio.run(one(args[0], lang, answer))
     print("@@JSON@@" + json.dumps(result, ensure_ascii=False, default=str))

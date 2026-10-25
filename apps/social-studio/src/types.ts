@@ -26,8 +26,9 @@ export type ReelQuestion = {
  * question alone. */
 export type Opening = 'intro' | 'fused' | 'plain';
 /** How the explanation is shown: its first sentence under the answer (v1),
- * the whole explanation part by part, or big spoken-word captions. */
-export type ExplainStyle = 'line' | 'parts' | 'captions';
+ * the whole explanation read part by part, big spoken-word captions, or
+ * (founder 2026-10-25) one card: the answer read aloud, the whole explanation shown under it. */
+export type ExplainStyle = 'line' | 'parts' | 'captions' | 'card';
 export type ReelStyle = {opening: Opening; explain: ExplainStyle};
 
 /** The explanation phase: the whole text, timed to its clip (or reading pace). */
@@ -42,6 +43,8 @@ export type ExplainTrack = {
 export type ReelProps = {
 	style: ReelStyle;
 	explain: ExplainTrack;
+	/** The answer said by the app voice ('card' style), or null = shown only. */
+	answer: {audio: string | null; ms: number};
 	q: ReelQuestion;
 	/** Path under public/ (staticFile) of the existing app clip, or null = no voice. */
 	audio: string | null;

@@ -34,7 +34,7 @@ const {values, positionals} = parseArgs({
 		part: {type: 'string', default: '1'},
 		'make-voice': {type: 'boolean', default: false},
 		opening: {type: 'string', default: 'fused'},
-		explain: {type: 'string', default: 'parts'},
+		explain: {type: 'string', default: 'card'},
 	},
 });
 const OUT = path.resolve(values.out ?? path.join(APP_DIR, 'out'));
@@ -57,9 +57,11 @@ const ROW_CACHE_MS = 6 * 60 * 60 * 1000;
 
 /** Prod fetch: pipes scripts/fetch_question.py into the API machine. Read-only
  * unless `ensureAudio`, which lets the app's own TTS make a missing clip. */
-/** `questionOnly`: a round's first questions show their explanation as text, so only the question clip is needed. */
-function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questionOnly = false, withAnswer = false): QuestionInput {
-	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}.json`);
+/** `questionOnly`: no explanation clip (reels show it, only the carousel-era styles read it).
+ * `answerNumber`: also the answer clip, said after its question number in a round (0 = no number). */
+function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questionOnly = false, answerNumber?: number): QuestionInput {
+	const withAnswer = answerNumber !== undefined;
+	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}${withAnswer ? `.a${answerNumber}` : ''}.json`);
 	if (existsSync(cacheFile) && Date.now() - statSync(cacheFile).mtimeMs < ROW_CACHE_MS) {
 		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
 		const done = cached.audio_b64 && (questionOnly || cached.explanation_audio_b64 || !cached.explanation) && (!withAnswer || cached.answer_audio_b64);
@@ -67,7 +69,7 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	}
 	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
 		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
-	const flags = ensureAudio ? ` --ensure-audio${questionOnly ? ' --question-only' : ''}${withAnswer ? ' --with-answer' : ''}` : '';
+	const flags = `${ensureAudio ? ` --ensure-audio${questionOnly ? ' --question-only' : ''}` : ''}${withAnswer ? ` --answer=${answerNumber}` : ''}`;
 	const args = `python - ${id}${lang ? ` ${lang}` : ''}${flags}`;
 	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
 		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
@@ -91,9 +93,9 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	return row;
 }
 
-function loadInput(arg: string, questionOnly = false, withAnswer = false): QuestionInput {
+function loadInput(arg: string, questionOnly = false, answerNumber?: number): QuestionInput {
 	if (arg.endsWith('.json')) return JSON.parse(readFileSync(path.resolve(arg), 'utf8'));
-	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly, withAnswer);
+	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly, answerNumber);
 	throw new Error(`expected a question id or a .json file, got "${arg}"`);
 }
 
@@ -186,8 +188,18 @@ async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<Quest
 	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, optionAtMs: extraMs};
 }
 
+/** A clip staged under public/ with its length, or none. */
+function clipTrack(b64: string | null | undefined): {audio: string | null; ms: number} {
+	if (!b64) return {audio: null, ms: 900};
+	const audio = stageBytes(Buffer.from(b64, 'base64'));
+	return {audio, ms: audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
+}
+
+const NO_EXPLAIN: ExplainTrack = {audio: null, words: [], parts: [], ms: 0};
+
 async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number, style: ReelStyle): Promise<ReelProps> {
-	return {q, ...(await questionTrack(raw, q)), hookIndex, style, explain: await explainTrack(raw, q)};
+	const card = style.explain === 'card';
+	return {q, ...(await questionTrack(raw, q)), hookIndex, style, explain: card ? NO_EXPLAIN : await explainTrack(raw, q), answer: clipTrack(card ? raw.answer_audio_b64 : null)};
 }
 
 const slug = (s: string) => s.slice(0, 8);
@@ -200,15 +212,14 @@ async function main() {
 	if (values.round) {
 		const ids = values.round.split(',').map((s) => s.trim());
 		// Founder 2026-10-25: every answer is read at the end, explanations are only shown.
-		const raws = ids.map((id) => loadInput(id, true, true));
+		const raws = ids.map((id, k) => loadInput(id, true, k + 1));
 		const qs = raws.map((r) => ({...shapeQuestion(r), options: [], correctIndex: null}));
 		const items = [];
 		for (const [k, q] of qs.entries()) {
 			const {audio, words, questionMs} = await questionTrack(raws[k], q);
 			if (!audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
-			const answerAudio = raws[k].answer_audio_b64 ? stageBytes(Buffer.from(raws[k].answer_audio_b64!, 'base64')) : null;
+			const {audio: answerAudio, ms: answerMs} = clipTrack(raws[k].answer_audio_b64);
 			if (!answerAudio) console.warn(`! ${q.id}: no answer clip, the answer is only shown (--make-voice makes one)`);
-			const answerMs = answerAudio ? audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(answerAudio))) : 900;
 			items.push({q, audio, words, questionMs, answerAudio, answerMs});
 		}
 		const props: RoundProps = {items, hookIndex: 0};
@@ -234,20 +245,22 @@ async function main() {
 			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'answers', index: i}, name: `carousel-${language}-p${part}-${qs.length + 1 + i}-answers`, still: true});
 	} else {
 		if (positionals.length !== 1) throw new Error('usage: npm run render -- <question-id | file.json> [--format five|abc]');
-		const raw = loadInput(positionals[0]);
+		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
+		if (!['intro', 'fused', 'plain'].includes(style.opening) || !['line', 'parts', 'captions', 'card'].includes(style.explain))
+			throw new Error('--opening intro|fused|plain, --explain line|parts|captions|card');
+		// card (founder 2026-10-25): the answer is read, the explanation only shown.
+		const raw = style.explain === 'card' ? loadInput(positionals[0], true, 0) : loadInput(positionals[0]);
 		const q = shapeQuestion(raw);
 		const format = values.format ?? (q.options.length ? 'abc' : 'five');
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');
 		// One fixed hook line (founder 2026-10-25); --hook 1 renders the challenger.
 		const hook = values.hook ? Number(values.hook) : 0;
-		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
-		if (!['intro', 'fused', 'plain'].includes(style.opening) || !['line', 'parts', 'captions'].includes(style.explain))
-			throw new Error('--opening intro|fused|plain, --explain line|parts|captions');
 		const props = await reelProps(raw, format === 'five' ? {...q, options: [], correctIndex: null} : q, hook, style);
 		if (!props.audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
-		if (style.explain !== 'line' && !props.explain.audio) console.warn(`! ${q.id}: no explanation clip, explanation shown at reading pace (--make-voice makes one)`);
+		if (style.explain === 'card' && !props.answer.audio) console.warn(`! ${q.id}: no answer clip, the answer is only shown (--make-voice makes one)`);
+		if (style.explain !== 'line' && style.explain !== 'card' && !props.explain.audio) console.warn(`! ${q.id}: no explanation clip, explanation shown at reading pace (--make-voice makes one)`);
 		const lead = style.opening === 'intro' ? 0 : LEAD_MS;
-		const timeline = reelTimeline(style, props.questionMs + lead, props.explain.ms);
+		const timeline = reelTimeline(style, props.questionMs + lead, props.explain.ms, props.answer.ms, props.q.explanation.length);
 		// Cover = the question fully on screen, just before the countdown,
 		// nudged back if the monkey happens to blink on that frame.
 		let coverMs = timeline.cdStart - 200;
@@ -258,7 +271,7 @@ async function main() {
 			name: `${format}-${q.language}-${slug(q.id)}`,
 			coverMs,
 		});
-		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, voice: ${props.audio ? 'app clip' : 'none'}, explanation voice: ${props.explain.audio ? 'app clip' : 'none'}`);
+		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, voice: ${props.audio ? 'app clip' : 'none'}, ${style.explain === 'card' ? `answer voice: ${props.answer.audio ? 'app clip' : 'none'}` : `explanation voice: ${props.explain.audio ? 'app clip' : 'none'}`}`);
 	}
 
 	const serveUrl = await bundle({entryPoint: path.join(APP_DIR, 'src', 'index.ts')});

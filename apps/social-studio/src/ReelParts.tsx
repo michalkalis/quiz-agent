@@ -26,6 +26,9 @@ export const Logo: React.FC<{color: string}> = ({color}) => (
 	</div>
 );
 
+/** The MCQ option being read: neutral grey (founder 2026-10-25: a colour reads as "the right one"). */
+const READING_BG = '#D9DCE3';
+
 /** How long the fused hook line holds before the question grows. */
 export const HOOK_HOLD_MS = 1400;
 /** Question text size under the hook line, relative to full size. */
@@ -55,7 +58,9 @@ export const QuestionCard: React.FC<{
 	scale?: number;
 	markBg: string;
 	markInk: string;
-}> = ({q, words, tMs, optionsAtMs, optionAtMs = [], revealed, appear, readable, scale = 1, markBg, markInk}) => {
+	/** A round question's number, shown above it. */
+	number?: number;
+}> = ({q, words, tMs, optionsAtMs, optionAtMs = [], revealed, appear, readable, scale = 1, markBg, markInk, number}) => {
 	const long = q.question.length > 110;
 	const mcq = q.options.length > 0;
 	return (
@@ -70,6 +75,9 @@ export const QuestionCard: React.FC<{
 				transformOrigin: 'top left',
 			}}
 		>
+			{number !== undefined ? (
+				<div style={{fontSize: 30, fontWeight: 700, color: INK2, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14}}>{`${COPY[q.language].question} ${number}`}</div>
+			) : null}
 			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
 				{words.map((w, i) => {
 					const saying = readable && tMs >= w.startMs && (i === words.length - 1 ? tMs < optionsAtMs : tMs < words[i + 1].startMs);
@@ -112,7 +120,7 @@ export const QuestionCard: React.FC<{
 									gap: 24,
 									padding: '16px 24px',
 									borderRadius: 28,
-									background: revealed && right ? OK_BG : reading ? markBg : '#F1F2F5',
+									background: revealed && right ? OK_BG : reading ? READING_BG : '#F1F2F5',
 									opacity: shown * (dim ? 0.38 : 1),
 									transform: `translateX(${(1 - reached) * 30}px)`,
 								}}
@@ -134,7 +142,7 @@ export const QuestionCard: React.FC<{
 								>
 									{q.labels[i]}
 								</div>
-								<div style={{fontSize: 44, fontWeight: 600, color: reading ? markInk : INK}}>{opt}</div>
+								<div style={{fontSize: 44, fontWeight: 600}}>{opt}</div>
 							</div>
 						);
 					})}

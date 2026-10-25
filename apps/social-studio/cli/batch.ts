@@ -168,7 +168,7 @@ function seedPlan(): Slot[] {
 	});
 }
 
-type Pick = {slot: Slot; ids: string[]; makeVoice: boolean};
+type Pick = {slot: Slot; ids: string[]; makeVoice: boolean; voiceChars?: number};
 
 function pick(cands: Candidate[]): Pick[] {
 	const taken = new Set(used);
@@ -224,7 +224,7 @@ function pick(cands: Candidate[]): Pick[] {
 			voiceChars -= cost;
 			ids.forEach((c) => taken.add(c.id));
 			reelCategories[slot.account][first!.category] = (reelCategories[slot.account][first!.category] ?? 0) + 1;
-			picks.push({slot, ids: ids.map((c) => c.id), makeVoice: true});
+			picks.push({slot, ids: ids.map((c) => c.id), makeVoice: true, voiceChars: cost});
 			continue;
 		}
 		const short = (c: Candidate) =>
@@ -237,10 +237,11 @@ function pick(cands: Candidate[]): Pick[] {
 			console.warn(`! ${slot.account} ${slot.day} ${slot.format} ${slot.language}: no reviewed question fits (or the weekly voice budget is used up), slot skipped`);
 			continue;
 		}
-		voiceChars -= voiceCost(c);
+		const cost = voiceCost(c);
+		voiceChars -= cost;
 		taken.add(c.id);
 		reelCategories[slot.account][c.category] = (reelCategories[slot.account][c.category] ?? 0) + 1;
-		picks.push({slot, ids: [c.id], makeVoice: true});
+		picks.push({slot, ids: [c.id], makeVoice: true, voiceChars: cost});
 	}
 	return picks.sort(
 		(x, y) => dayOffset(x.slot) - dayOffset(y.slot) || (x.slot.n ?? 0) - (y.slot.n ?? 0) || x.slot.account.localeCompare(y.slot.account),
@@ -258,7 +259,7 @@ function render(args: string[]): string[] {
 function main() {
 	const picks = pick(loadCandidates());
 	console.log(`${WEEK.id} (from ${MONDAY}): ${picks.length} posts, voice budget ${voiceCharsAvailable()} characters left this week`);
-	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}: ${p.ids.join(',')}`);
+	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}${p.voiceChars ? ` (voice ~${p.voiceChars})` : ''}: ${p.ids.join(',')}`);
 	if (values['dry-run']) return;
 
 	const outDir = path.join(APP_DIR, 'out', WEEK.id);

@@ -37,6 +37,16 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 4. **The three reels already published stay** (founder: they already have reach). Publishing (`social-publish.yml`) paused 2026-10-24 until the new week is approved; the 17 unpublished W44 posts are replaced.
 5. Opening, hook line and explanation style: chosen from samples on https://claude.ai/artifact/Kbt9ttGGdpMyoQjwi538fq ([hook/captions research](../research/social-reels-hook-text-and-captions-2026-10-24.md), [hook rate](../research/social-reels-hook-rate-2026-10-23.md)).
 
+## Founder decisions (2026-10-25)
+
+1. **Opening:** a big hook line over a small, readable question; the line leaves after 1.4 s and the question grows. The word being read is highlighted.
+2. **Explanation:** the whole explanation read by the app voice, part by part on a card (C2).
+3. **Hook line fixed per format:** one question = "Bet you know this one." (sk "Stavím sa, že toto vieš.", cs "Vsadím se, že tohle víš."), tested against "Can you get it right?" in weeks 4 to 6; rounds = "Can you get 3 out of 3?" ([research](../research/social-reels-question-count-and-hook-lines-2026-10-25.md)).
+4. **Format test, 3 weeks from W44, alternating on real posts:** one question vs a 3-question round vs a 5-question round (2 s to think). In rounds every answer comes only at the end, then the last question's whole explanation.
+5. **Question length:** the first question people see ≤ 90 characters, a round's later questions ≤ 110. New short questions wait for #212 (question QA gates); until then only rows from the Instagram content review (`batches/content-review.json`) are posted.
+6. **Voice budget 4,000 characters a week** (~1,600 ElevenLabs credits) during the test.
+7. **QA failures** found by the content review are root-caused in [question-qa-root-cause-2026-10-25.md](../research/question-qa-root-cause-2026-10-25.md); fix + re-check of the approved pool runs as #212 in its own session.
+
 ## Hard rules
 
 - **Driving safety:** no real footage from a moving car. Any driving visual (AI/motion) never shows a driver touching or looking at a phone — one such clip damages the whole brand and gets removed on YouTube/TikTok.

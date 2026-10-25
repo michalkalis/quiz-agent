@@ -29,3 +29,25 @@ export const eyeOpenAt = (t: number) => {
 	if (phase >= 0.2) return 1;
 	return phase < 0.07 ? 1 - (phase / 0.07) * 0.88 : phase < 0.13 ? 0.12 : 0.12 + ((phase - 0.13) / 0.07) * 0.88;
 };
+
+/** Round reel (3 questions, founder asked 2026-10-24; research 2026-10-25):
+ * 4 s countdown before the last question, 5 s on it; only the last answer
+ * gets the whole explanation, the others their first sentence on screen. */
+export const ROUND_COUNTDOWN_MS = 4000;
+export const shortRevealMs = (why: string) => Math.min(6000, Math.max(3000, 1500 + why.split(/\s+/).filter(Boolean).length * 300));
+
+export const roundTimeline = (items: {questionMs: number; why: string}[], explainMs: number) => {
+	let start = 0;
+	const steps = items.map((it, i) => {
+		const last = i === items.length - 1;
+		const voiceStart = start + LEAD_MS;
+		const cdStart = voiceStart + it.questionMs;
+		const countdownMs = last ? COUNTDOWN_MS : ROUND_COUNTDOWN_MS;
+		const revealStart = cdStart + countdownMs;
+		const end = last ? revealStart + ANSWER_MS + explainMs + WHY_TAIL_MS : revealStart + shortRevealMs(it.why);
+		const step = {start, voiceStart, cdStart, countdownMs, revealStart, whyStart: revealStart + ANSWER_MS, end};
+		start = end;
+		return step;
+	});
+	return {steps, endStart: start, totalMs: start + END_MS};
+};

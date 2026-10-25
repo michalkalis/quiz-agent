@@ -15,7 +15,7 @@ code, DB URL and R2 credentials already live, so no secret ever leaves Fly.
   player who later gets the question hears this same clip (founder 2026-10-22).
   ElevenLabs only (no fallback voice); refused past the app's daily budget.
 
-Usage: python - <question-id> [en|sk|cs] [--ensure-audio]   (prints "@@JSON@@{...}")
+Usage: python - <question-id> [en|sk|cs] [--ensure-audio [--question-only]]   (prints "@@JSON@@{...}")
        python - --coverage                                   (clip counts per language)
        python - --candidates                                 (weekly batch pool, cli/batch.ts)
 """
@@ -182,7 +182,7 @@ async def elevenlabs_usage():
         return int(sub["character_count"]), int(sub["character_limit"])
 
 
-async def ensure(qid, lang):
+async def ensure(qid, lang, question_only=False):
     """`one`, plus clips made through the app's own TTS path for what is
     missing: the question as the app reads it, and the explanation as the
     app's "hear it" button reads it."""
@@ -206,7 +206,8 @@ async def ensure(qid, lang):
         )
         todo.append(("question", "audio_b64", "spoken_text", spoken))
     if (
-        out["explanation"]
+        not question_only
+        and out["explanation"]
         and not out["explanation_audio_b64"]
         and len(out["explanation"]) <= 1000
     ):
@@ -340,12 +341,15 @@ async def candidates():
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a != "--ensure-audio"]
+    args = [a for a in sys.argv[1:] if a not in ("--ensure-audio", "--question-only")]
     if args[0] == "--coverage":
         result = asyncio.run(coverage())
     elif args[0] == "--candidates":
         result = asyncio.run(candidates())
     else:
-        run = ensure if "--ensure-audio" in sys.argv else one
-        result = asyncio.run(run(args[0], args[1] if len(args) > 1 else None))
+        lang = args[1] if len(args) > 1 else None
+        if "--ensure-audio" in sys.argv:
+            result = asyncio.run(ensure(args[0], lang, "--question-only" in sys.argv))
+        else:
+            result = asyncio.run(one(args[0], lang))
     print("@@JSON@@" + json.dumps(result, ensure_ascii=False, default=str))

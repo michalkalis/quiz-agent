@@ -60,3 +60,13 @@ export type CarouselSlideProps = {
 	/** kind = 'question': which one (0-based); kind = 'answers': which answers slide (0-based). */
 	index: number;
 };
+
+/** One question of a round reel, timed like a one-question reel. */
+export type RoundItem = {q: ReelQuestion; audio: string | null; words: TimedWord[]; questionMs: number};
+
+export type RoundProps = {
+	items: RoundItem[];
+	hookIndex: number;
+	/** The last question's whole explanation. */
+	explain: ExplainTrack;
+};

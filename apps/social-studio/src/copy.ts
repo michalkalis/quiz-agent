@@ -15,6 +15,8 @@ type Copy = {
 	swipe: string;
 	/** "Comment A, B or C" for however many options there are. */
 	comment: (letters: string[]) => string;
+	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
+	roundHook: (n: number) => string;
 };
 
 const list = (letters: string[], or: string) =>
@@ -35,6 +37,7 @@ export const COPY: Record<Language, Copy> = {
 		answersTitle: 'Answers',
 		swipe: 'Swipe',
 		comment: (l) => `Comment ${list(l, 'or')}`,
+		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 	},
 	sk: {
 		hooks: [
@@ -50,6 +53,7 @@ export const COPY: Record<Language, Copy> = {
 		answersTitle: 'Odpovede',
 		swipe: 'Posuň',
 		comment: (l) => `Napíš do komentára ${list(l, 'alebo')}`,
+		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : `Trafíš všetkých ${n}?`),
 	},
 	cs: {
 		hooks: [
@@ -65,6 +69,7 @@ export const COPY: Record<Language, Copy> = {
 		answersTitle: 'Odpovědi',
 		swipe: 'Posuň',
 		comment: (l) => `Napiš do komentáře ${list(l, 'nebo')}`,
+		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : `Trefíš všech ${n}?`),
 	},
 };
 

@@ -2,9 +2,10 @@ import React from 'react';
 import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
 import {CarouselSlide} from './CarouselSlide';
 import {Reel} from './Reel';
-import {LEAD_MS, reelTimeline} from './timing';
+import {Round} from './Round';
+import {LEAD_MS, reelTimeline, roundTimeline} from './timing';
 import {loadBrandFonts} from './theme';
-import type {CarouselSlideProps, ReelProps} from './types';
+import type {CarouselSlideProps, ReelProps, RoundProps} from './types';
 
 loadBrandFonts();
 
@@ -66,6 +67,23 @@ const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
 	),
 });
 
+const ROUND_SAMPLE: RoundProps = {
+	items: [FIVE_SAMPLE, FIVE_SAMPLE, FIVE_SAMPLE].map((p) => ({q: p.q, audio: null, words: p.words, questionMs: p.questionMs})),
+	hookIndex: 0,
+	explain: FIVE_SAMPLE.explain,
+};
+
+const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
+	durationInFrames: Math.ceil(
+		(roundTimeline(
+			props.items.map((it) => ({questionMs: it.questionMs, why: it.q.why})),
+			props.explain.ms,
+		).totalMs /
+			1000) *
+			FPS,
+	),
+});
+
 const FiveSeconds: React.FC<ReelProps> = (p) => <Reel {...p} variant="five" />;
 const ABC: React.FC<ReelProps> = (p) => <Reel {...p} variant="abc" />;
 
@@ -90,6 +108,16 @@ export const RemotionRoot: React.FC = () => (
 			durationInFrames={600}
 			defaultProps={ABC_SAMPLE}
 			calculateMetadata={reelMetadata}
+		/>
+		<Composition
+			id="Round"
+			component={Round}
+			width={1080}
+			height={1920}
+			fps={FPS}
+			durationInFrames={1500}
+			defaultProps={ROUND_SAMPLE}
+			calculateMetadata={roundMetadata}
 		/>
 		<Still
 			id="CarouselSlide"

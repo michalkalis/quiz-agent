@@ -23,10 +23,10 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 
 ## Founder decisions (2026-10-25)
 
-8. **YouTube now, via the browser:** until the API audit passes, the agent uploads and schedules approved Shorts in YouTube Studio through Playwright (founder only logs in). Supersedes the Buffer bridge in decision 7; the API project + audit (210.6) still starts now.
-9. **YouTube SK/CZ channel:** second channel (Brand channel under the same Google account hi@trubbo.app, no new number/email), same SK/CZ reels as @trubboapp.sk.
+8. **YouTube now, via the browser:** until the API audit passes, the agent uploads and schedules approved Shorts in YouTube Studio through Playwright (founder only logs in). Supersedes the Buffer bridge in decision 7; the API project + audit (210.6) still starts now. **2026-10-25:** W44 reels (9 EN + 7 SK/CZ) were uploaded and scheduled, then set to **Private** on the founder's word ("don't upload videos yet, they will be reworked" — rework runs in a separate session). Re-upload only after the reworked videos are approved; delete the 16 private drafts then.
+9. **YouTube SK/CZ channel:** second channel (Brand channel under the same Google account hi@trubbo.app, no new number/email), same SK/CZ reels as @trubboapp.sk. Created 2026-10-25: **Trubbo SK & CZ, @trubboapp_sk** (@trubboapp.sk was rejected by YouTube). EN channel = Trubbo @trubboapp.
 10. **Facebook Pages, EN + SK/CZ:** two Pages under the founder's personal Facebook profile, each gets the reels of its Instagram account, published through the existing Meta app.
-11. **TikTok retry without a second number:** founder tries sign-up in the TikTok iPhone app (Add account → Continue with Google/Apple). Free SMS-receive sites are ruled out (anyone can read the code). Fallback if it still asks for a phone: a ~€5 prepaid SIM as a company number (needs a go).
+11. **TikTok retry without a second number:** founder tries sign-up in the TikTok iPhone app (Add account → Continue with Google/Apple). Free SMS-receive sites are ruled out (anyone can read the code). Fallback if it still asks for a phone: a ~€5 prepaid SIM as a company number (needs a go). **Outcome 2026-10-25:** the iPhone app still asked for a phone, but web sign-up with "Continue with Google" (hi@trubbo.app) went through without one → TikTok EN **@trubboapp** (name Trubbo, mascot avatar, bio within TikTok's 80-char limit: "Odd, funny questions with a story behind every answer. / Trubbo app: coming soon."). TikTok SK/CZ still open: one Google account = one TikTok account, so it needs a second Google/Apple login.
 
 ## Founder decisions (2026-10-22) — direction after the [growth research](../research/growth-strategy-2026-10-21.md)
 
@@ -51,7 +51,7 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 | Account | Language | Content | Publishing |
 |---|---|---|---|
 | Instagram @trubboapp | EN | Timer reels, carousels, stories | Official Instagram API (own script, own scheduler) |
-| TikTok (handle tbd) | EN | Same reels | **Deferred** (decision 6) |
+| TikTok @trubboapp | EN | Same reels | Account created 2026-10-25 (decision 11); publishing TBD |
 | YouTube Shorts (Trubbo channel) | EN | Same reels | YouTube Data API (own script) after the audit; Studio via Playwright until then (decision 8) |
 | YouTube Shorts SK/CZ channel | sk / cs | Same reels | Same as EN (decision 9) |
 | Facebook Page EN + Page SK/CZ | EN / sk+cs | Reels of the matching Instagram | Meta app, Pages API (decision 10) |

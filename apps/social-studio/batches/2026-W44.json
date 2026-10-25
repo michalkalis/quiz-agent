@@ -1,8 +1,793 @@
 {
  "week": "2026-W44",
  "monday": "2026-10-26",
- "created": "2026-10-23T08:27:55.375Z",
+ "created": "2026-10-25T14:32:46.917Z",
  "posts": [
+  {
+   "key": "mon-ig_en",
+   "account": "ig_en",
+   "day": "Mon",
+   "format": "five",
+   "language": "en",
+   "date": "2026-10-26",
+   "files": [
+    "five-en-a9450d1e.mp4",
+    "five-en-a9450d1e.jpg"
+   ],
+   "caption": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #funfacts #didyouknow",
+   "youtube": {
+    "title": "The cappuccino is named after the brown hooded robes worn by which order of monks?",
+    "description": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #funfacts #didyouknow"
+   },
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "a9450d1e-fc0c-40fe-af28-b2af439c6f19",
+     "category": "general",
+     "question": "The cappuccino is named after the brown hooded robes worn by which order of monks?",
+     "answer": "Capuchin friars",
+     "options": [],
+     "explanation": "The milky-brown coffee matched the colour of the Capuchins' habits. The capuchin monkey got its name from the same friars, thanks to its brown, hood-like fur.",
+     "source_url": "https://en.wikipedia.org/wiki/Cappuccino"
+    }
+   ]
+  },
+  {
+   "key": "mon-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "five",
+   "language": "cs",
+   "date": "2026-10-26",
+   "files": [
+    "five-cs-a22a3ae5.mp4",
+    "five-cs-a22a3ae5.jpg"
+   ],
+   "caption": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\n#kvíz #kviz #filmy #vědomosti",
+   "youtube": null,
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "a22a3ae5-255d-4723-a9af-1f4e797dc8f1",
+     "category": "movies-music",
+     "question": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?",
+     "answer": "Rakousko",
+     "options": [],
+     "explanation": "Československo se Eurovize neúčastnilo, a tak Gott zpíval v Londýně za Rakousko německy píseň Tausend Fenster od Uda Jürgense.",
+     "source_url": "https://en.wikipedia.org/wiki/Austria_in_the_Eurovision_Song_Contest_1968"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_en",
+   "account": "ig_en",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-10-27",
+   "files": [
+    "carousel-en-p1-0-cover.jpg",
+    "carousel-en-p1-1.jpg",
+    "carousel-en-p1-2.jpg",
+    "carousel-en-p1-3.jpg",
+    "carousel-en-p1-4.jpg",
+    "carousel-en-p1-5.jpg",
+    "carousel-en-p1-6.jpg",
+    "carousel-en-p1-7.jpg",
+    "carousel-en-p1-8-answers.jpg",
+    "carousel-en-p1-9-answers.jpg"
+   ],
+   "caption": "Road trip round, part 1.\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #funfacts #food #roadtrip",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "9f8035ae-65e7-4511-b973-9bc0d020b64b",
+     "category": "general",
+     "question": "The cap of a classic BIC ballpoint pen has a small hole at its tip. It isn't there to help the ink. What is it for?",
+     "answer": "To prevent choking",
+     "options": [],
+     "explanation": "If someone swallows the cap and it lodges in their throat, air can still pass through the hole. It is a tiny design detail meant to save lives.",
+     "source_url": "https://www.snopes.com/fact-check/holes-pen-caps-prevent-choking/"
+    },
+    {
+     "id": "00e29bed-accf-461e-826a-31e0c8520828",
+     "category": "food-everyday",
+     "question": "The world's most famous restaurant star ratings are awarded by a guide that was launched in 1900 to sell which product?",
+     "answer": "Tyres",
+     "options": [],
+     "explanation": "The Michelin brothers gave the guide away free to French motorists, hoping that more driving would wear out more tyres.",
+     "source_url": "https://en.wikipedia.org/wiki/Michelin_Guide"
+    },
+    {
+     "id": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+     "category": "geography-world",
+     "question": "Every summer, the Eiffel Tower measurably grows, by as much as 15 centimetres. What causes this seasonal growth spurt?",
+     "answer": "Heat expands the iron",
+     "options": [],
+     "explanation": "The tower's wrought iron expands in summer heat and contracts again in winter, so its official height quietly changes with the seasons — the sun-facing side even expands more, making the top lean slightly away from the sun.",
+     "source_url": "https://theconversation.com/the-eiffel-tower-gets-bigger-every-summer-heres-why-261904"
+    },
+    {
+     "id": "99b44897-59cd-4b88-a5d6-5109b16dc0d3",
+     "category": "science-nature",
+     "question": "From the ground a rainbow always looks like an arch, but pilots flying above the rain sometimes see it as what shape?",
+     "answer": "A full circle",
+     "options": [],
+     "explanation": "A rainbow is really a ring of light centred on the spot directly opposite the sun, and on the ground the earth simply blocks the bottom half. So there is no end of the rainbow, and no pot of gold either.",
+     "source_url": "https://en.wikipedia.org/wiki/Rainbow"
+    },
+    {
+     "id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+     "category": "geography-world",
+     "question": "Measured from its base on the sea floor to its summit, which Hawaiian volcano is taller than Mount Everest?",
+     "answer": "Mauna Kea",
+     "options": [],
+     "explanation": "Only about 4,200 metres of it stand above the sea, but the volcano rises more than 10,000 metres from the ocean floor, over a kilometre more than Everest.",
+     "source_url": "https://mossandfog.com/mauna-kea-not-mount-everest-is-the-tallest-mountain-from-base-to-summit/"
+    },
+    {
+     "id": "d881ea4e-1179-4cdc-a8c9-92427434930f",
+     "category": "general",
+     "question": "The Gen Z word 'rizz', meaning the power to charm or flirt, is a shortened form of which longer word?",
+     "answer": "Charisma",
+     "options": [],
+     "explanation": "Rizz is taken from the middle of 'charisma', which is an unusual way to shorten a word. Oxford University Press named it its Word of the Year in 2023.",
+     "source_url": "https://corp.oup.com/?p=1983"
+    },
+    {
+     "id": "9015951b-446e-4752-8b33-e22f747a3f12",
+     "category": "history",
+     "question": "The wireless technology that pairs your phone with your car is named after a tenth-century king of which country?",
+     "answer": "Denmark",
+     "options": [],
+     "explanation": "Harald Bluetooth united Danish tribes, so engineers borrowed his name for a standard meant to unite devices, and the logo merges his runic initials.",
+     "source_url": "https://www.bluetooth.com/about-us/bluetooth-origin/"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "sk",
+   "date": "2026-10-27",
+   "files": [
+    "carousel-sk-p1-0-cover.jpg",
+    "carousel-sk-p1-1.jpg",
+    "carousel-sk-p1-2.jpg",
+    "carousel-sk-p1-3.jpg",
+    "carousel-sk-p1-4.jpg",
+    "carousel-sk-p1-5.jpg",
+    "carousel-sk-p1-6.jpg",
+    "carousel-sk-p1-7.jpg",
+    "carousel-sk-p1-8-answers.jpg",
+    "carousel-sk-p1-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 1. diel.\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #zaujímavosti #jedlo #naceste",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "6369bab7-47d2-45f8-bbd2-02c85904d7b7",
+     "category": "general",
+     "question": "Prečo ľudia na sídliskách v zime vynášali koberce na čerstvý sneh, položili ich lícom nadol a tam ich vyklepávali?",
+     "answer": "Sneh pohltí prach a špinu",
+     "options": [],
+     "explanation": "Suchý mrazivý sneh nasaje prach a nečistoty, takže po zdvihnutí koberca ostane na snehu tmavý odtlačok. Mráz navyše zabíja roztoče a koberec nezmokne, lebo sneh je suchý.",
+     "source_url": "https://www.bosch-home.com/sk/inspirujte-sa/tipy-triky/blogoveclanky-proconcepts"
+    },
+    {
+     "id": "2e679b47-fbb5-44d9-9484-04558a676c49",
+     "category": "food-everyday",
+     "question": "Na Slovensku im bežne hovoríme „čínske polievky“. V ktorej krajine však instantné rezance v skutočnosti vymysleli?",
+     "answer": "Japonsko",
+     "options": [],
+     "explanation": "Vymyslel ich Momofuku Ando, ktorý ich doma v kôlni vyvíjal pre firmu Nissin. Japonci ich v ankete dokonca vyhlásili za najlepší japonský vynález 20. storočia, pred karaoke aj walkmanom.",
+     "source_url": "https://en.wikipedia.org/wiki/Instant_noodles"
+    },
+    {
+     "id": "9623de07-128e-47a9-82cc-50b0f2b651ba",
+     "category": "general",
+     "question": "Na ukazovateli paliva v aute je vedľa ikonky benzínovej pumpy malá šípka alebo trojuholníček. Čo vodičovi prezrádza?",
+     "answer": "Na ktorej strane tankovať",
+     "options": [],
+     "explanation": "Šípka ukazuje, na ktorej strane auta je uzáver nádrže, takže aj v požičanom aute zastavíte k stojanu správne.",
+     "source_url": "https://www.volvocars.com/us/support/car/v90/article/588830d089221b31c0a8015166485c00"
+    },
+    {
+     "id": "adf77782-7fff-4100-94af-0e214a222399",
+     "category": "science-nature",
+     "question": "Vianočný kapor, ktorý pláva vo vani, nemá v papuli ani jeden zub, a predsa potravu drví. Kde má kapor zuby?",
+     "answer": "v hrdle",
+     "options": [],
+     "explanation": "Kapor má takzvané hltanové zuby hlboko v hrdle a drví nimi potravu o tvrdú platničku. Preto vás pri chytaní do ruky nepohryzie.",
+     "source_url": "https://www.georgiaaquarium.org/animal/common-carp/"
+    },
+    {
+     "id": "c8c19574-5546-4dbb-be1a-6178385b8439",
+     "category": "food-everyday",
+     "question": "Turecký döner, grécky gyros aj arabská šaurma majú v pôvodnom jazyku takmer rovnaký význam. Čo znamenajú?",
+     "answer": "otáčanie",
+     "options": [],
+     "explanation": "Všetky tri názvy opisujú mäso, ktoré sa pomaly otáča na zvislom ražni pred ohňom. Keď si nabudúce v noci budete objednávať, v podstate si pýtate „to, čo sa točí“.",
+     "source_url": "https://en.wikipedia.org/wiki/Doner_kebab"
+    },
+    {
+     "id": "99e9990e-1fa1-4cce-a1ec-33f6f011c7dc",
+     "category": "sports",
+     "question": "Padel si väčšina ľudí spája so Španielskom. V ktorej krajine však tento šport v skutočnosti vznikol?",
+     "answer": "Mexiko",
+     "options": [],
+     "explanation": "Padel vymyslel v roku 1969 Enrique Corcuera na svojom pozemku v mexickom Acapulku. Do Španielska ho až neskôr priniesol jeho priateľ, princ Alfonso z Hohenlohe, a odtiaľ sa rozšíril do celej Európy.",
+     "source_url": "https://en.wikipedia.org/wiki/Padel"
+    },
+    {
+     "id": "a1bc8d74-187e-4f52-8f25-690e2dea9c91",
+     "category": "movies-music",
+     "question": "Slávna slovenská pieseň Hej, Slováci má rovnakú melódiu ako štátna hymna jednej našej susednej krajiny. Ktorej?",
+     "answer": "Poľsko",
+     "options": [],
+     "explanation": "Samo Tomášik napísal svoj text na melódiu poľskej piesne Mazurek Dąbrowského, ktorá sa neskôr stala poľskou hymnou. Ten istý nápev dlhé roky slúžil aj ako hymna Juhoslávie.",
+     "source_url": "https://en.wikipedia.org/wiki/Hej,_Slované"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_en",
+   "account": "ig_en",
+   "day": "Wed",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-10-28",
+   "files": [
+    "round-en-0a4fd580.mp4",
+    "round-en-0a4fd580.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #food #history",
+   "youtube": {
+    "title": "Can you get 3 out of 3? Until New Zealand exporters rebranded it in 1959, the kiwifruit was sold…",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #food #history"
+   },
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+     "category": "food-everyday",
+     "question": "Until New Zealand exporters rebranded it in 1959, the kiwifruit was sold under what name?",
+     "answer": "Chinese gooseberry",
+     "options": [],
+     "explanation": "The plant is native to China, and exporters wanted a friendlier, more New Zealand-sounding name, so they borrowed the national bird.",
+     "source_url": "https://nzhistory.govt.nz/chinese-gooseberry-becomes-kiwifruit"
+    },
+    {
+     "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+     "category": "history",
+     "question": "In 1952, which world-famous physicist was offered the presidency of Israel and politely turned it down?",
+     "answer": "Albert Einstein",
+     "options": [],
+     "explanation": "The offer came from Prime Minister David Ben-Gurion after the first president died, and Einstein replied that he lacked the aptitude for dealing with people and official functions.",
+     "source_url": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+    },
+    {
+     "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+     "category": "science-nature",
+     "question": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?",
+     "answer": "Wombat",
+     "options": [],
+     "explanation": "The cubes form thanks to uneven elasticity in the wombat's intestines, and the flat-sided pellets don't roll away — handy for marking territory on rocks and logs.",
+     "source_url": "https://en.wikipedia.org/wiki/Wombat_feces"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Wed",
+   "format": "round",
+   "language": "cs",
+   "size": 3,
+   "date": "2026-10-28",
+   "files": [
+    "round-cs-b6e8303d.mp4",
+    "round-cs-b6e8303d.jpg"
+   ],
+   "caption": "Trefíš všechny tři?\n\nKolik máš správně? Napiš do komentáře.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #jídlo",
+   "youtube": null,
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "b6e8303d-8938-4dd4-819c-d588c2fe5a96",
+     "category": "general",
+     "question": "České slovo „král“ vzniklo ze jména jednoho slavného středověkého panovníka. Kterého?",
+     "answer": "Karel Veliký",
+     "options": [],
+     "explanation": "Slované tak velkého vládce nikdy neviděli, a tak se jeho jméno Karel změnilo na „král“. Proto i Poláci říkají „król“.",
+     "source_url": "https://en.wiktionary.org/wiki/Reconstruction:Proto-Slavic/kor%C4%BE%D1%8C"
+    },
+    {
+     "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+     "category": "food-everyday",
+     "question": "Symbolu @ v e-mailu říkáme zavináč podle stočené naložené mořské ryby z lahůdek. O jakou rybu jde?",
+     "answer": "Sleď",
+     "options": [],
+     "explanation": "Zavináč je stočený marinovaný sleď, často spíchnutý párátkem kolem okurky nebo cibule. Zakroucený tvar symbolu @ Čechům připomněl právě tuhle rybí ruličku.",
+     "source_url": "https://en.wikipedia.org/wiki/Rollmops"
+    },
+    {
+     "id": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+     "category": "entertainment",
+     "question": "Který hrdina českých večerníčků se v roce 2011 podíval do vesmíru na palubě amerického raketoplánu Endeavour?",
+     "answer": "Krtek",
+     "options": [],
+     "explanation": "Plyšového Krtka vzal s sebou astronaut Andrew Feustel, jehož manželka má české kořeny, a Krtek tak strávil dva týdny na oběžné dráze.",
+     "source_url": "https://english.radio.cz/node/8565035"
+    }
+   ]
+  },
+  {
+   "key": "thu-ig_en",
+   "account": "ig_en",
+   "day": "Thu",
+   "format": "abc",
+   "language": "en",
+   "date": "2026-10-29",
+   "files": [
+    "abc-en-6d3e5a61.mp4",
+    "abc-en-6d3e5a61.jpg"
+   ],
+   "caption": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nA or B? Comment before the reveal.\n\n#trivia #quiz #science #didyouknow",
+   "youtube": {
+    "title": "Which is hotter: the surface of the Sun or a bolt of lightning?",
+    "description": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nA or B? Comment before the reveal.\n\n#trivia #quiz #science #didyouknow"
+   },
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "6d3e5a61-f775-4667-a04c-042824d46fde",
+     "category": "science-nature",
+     "question": "Which is hotter: the surface of the Sun or a bolt of lightning?",
+     "answer": "A bolt of lightning",
+     "options": [
+      "The surface of the Sun",
+      "A bolt of lightning"
+     ],
+     "explanation": "A lightning channel briefly reaches around 30,000 degrees Celsius, while the Sun's visible surface is only about 5,500 degrees. The Sun's core is far hotter, but its surface loses to a summer thunderstorm.",
+     "source_url": "https://www.weather.gov/safety/lightning-science-overview"
+    }
+   ]
+  },
+  {
+   "key": "thu-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Thu",
+   "format": "abc",
+   "language": "sk",
+   "date": "2026-10-29",
+   "files": [
+    "abc-sk-dd84906d.mp4",
+    "abc-sk-dd84906d.jpg"
+   ],
+   "caption": "Ktorá z týchto minerálnych vôd nepochádza zo slovenského prameňa?\n\nA, B, C alebo D? Napíš do komentára skôr, ako prezradíme odpoveď.\n\n#kvíz #kviz #jedlo #vedomosti",
+   "youtube": null,
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "dd84906d-1008-4838-bb11-b226f1e0f7c1",
+     "category": "food-everyday",
+     "question": "Ktorá z týchto minerálnych vôd nepochádza zo slovenského prameňa?",
+     "answer": "Mattoni",
+     "options": [
+      "Budiš",
+      "Rajec",
+      "Mattoni",
+      "Baldovská"
+     ],
+     "explanation": "Mattoni sa plní v Česku pri Karlových Varoch, kým Budiš pramení v Turci, Rajec pod Malou Fatrou a Baldovská na Spiši.",
+     "source_url": "https://en.wikipedia.org/wiki/Mattoni_1873"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_en",
+   "account": "ig_en",
+   "day": "Fri",
+   "format": "round",
+   "language": "en",
+   "size": 5,
+   "date": "2026-10-30",
+   "files": [
+    "round-en-003963e3.mp4",
+    "round-en-003963e3.jpg"
+   ],
+   "caption": "Can you get 5 out of 5?\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts",
+   "youtube": {
+    "title": "Can you get 5 out of 5? The word 'galaxy' comes from an Ancient Greek word for an everyday…",
+    "description": "Can you get 5 out of 5?\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts"
+   },
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+     "category": "science-nature",
+     "question": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
+     "answer": "Milk",
+     "options": [],
+     "explanation": "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. That is also why we still call our home galaxy the Milky Way.",
+     "source_url": "https://www.merriam-webster.com/wordplay/word-history-of-galaxy"
+    },
+    {
+     "id": "9e0334f6-496f-419c-9726-18ca2adf9592",
+     "category": "general",
+     "question": "The word 'gym' comes from an ancient Greek word describing how athletes trained. What did that word mean?",
+     "answer": "Naked",
+     "options": [],
+     "explanation": "'Gymnasium' comes from the Greek 'gymnos', meaning naked, because Greek athletes exercised in the nude. A dress code your local gym has firmly abandoned.",
+     "source_url": "https://www.etymonline.com/word/gym"
+    },
+    {
+     "id": "47049a19-40af-40ee-8ddf-964df5670c91",
+     "category": "general",
+     "question": "High heels weren't invented for fashion. They began as practical footwear for men doing which activity?",
+     "answer": "Horse riding",
+     "options": [],
+     "explanation": "Persian cavalrymen wore heels so their feet would stay locked in the stirrups while they stood up to shoot arrows. European noblemen later copied the look, and only after that did heels become a women's fashion.",
+     "source_url": "https://www.today.com/today/amp/tdna100969"
+    },
+    {
+     "id": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+     "category": "geography-world",
+     "question": "France's longest land border isn't with any European country at all. Which country is it shared with?",
+     "answer": "Brazil",
+     "options": [],
+     "explanation": "French Guiana in South America is a full part of France, and its border with Brazil runs about 730 kilometres, longer than France's border with Spain. So in a sense, Brazil is France's biggest neighbour.",
+     "source_url": "https://en.wikipedia.org/wiki/France–Brazil_border"
+    },
+    {
+     "id": "a20909a9-a454-487c-b3ad-087d9a1be8a9",
+     "category": "science-nature",
+     "question": "Climbers who reach the top of Mount Everest are standing on rock that formed at the bottom of what?",
+     "answer": "The sea",
+     "options": [],
+     "explanation": "The summit is limestone packed with fossils of tiny sea creatures, laid down on an ancient ocean floor. When India crashed into Asia, that seabed was pushed almost nine kilometres into the sky.",
+     "source_url": "https://www.earthsciences.hku.hk/shmuseum/earth_evo_08_2.5.2.5.php"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Fri",
+   "format": "round",
+   "language": "cs",
+   "size": 5,
+   "date": "2026-10-30",
+   "files": [
+    "round-cs-ff61ac0c.mp4",
+    "round-cs-ff61ac0c.jpg"
+   ],
+   "caption": "Trefíš všech pět?\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #jídlo #cestování",
+   "youtube": null,
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
+     "category": "food-everyday",
+     "question": "Čím tradičně krájely české babičky houskový knedlík, aby se při krájení nezmáčkl?",
+     "answer": "Nití",
+     "options": [],
+     "explanation": "Nit knedlíkem projede, aniž by ho stlačila. Nůž by měkké těsto zmáčkl a plátky by byly gumové a slepené. Proto dnes existují i kráječe na knedlíky s napnutými strunami.",
+     "source_url": "https://www.novinky.cz/clanek/zena-styl-neni-knedlik-jako-knedlik-40027615"
+    },
+    {
+     "id": "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca",
+     "category": "geography-world",
+     "question": "Který chorvatský ostrov, kam se dá dojet autem po mostě, má název, jenž v češtině znamená část lidského těla?",
+     "answer": "Krk",
+     "options": [],
+     "explanation": "Krk je jeden z největších ostrovů Jadranu a s pevninou ho spojuje Krčký most. Jeho název se tak hodí do slovní hry stejně dobře jako náš „strč prst skrz krk“.",
+     "source_url": "https://en.wikipedia.org/wiki/Krk"
+    },
+    {
+     "id": "b3eb4628-c2f8-4762-9cc2-b444f8736689",
+     "category": "general",
+     "question": "Patronem hasičů je svatý Florián. Jeho smrt má ale podle legendy ironický nádech. Jak zemřel?",
+     "answer": "Utopili ho v řece",
+     "options": [],
+     "explanation": "Římané ho svrhli do řeky Enns v dnešním Rakousku s kamenem uvázaným na krku. Ochránce před ohněm tak zahynul ve vodě.",
+     "source_url": "https://catholicexchange.com/st-florian"
+    },
+    {
+     "id": "682864b3-9356-46db-b496-06605e6df995",
+     "category": "food-everyday",
+     "question": "Olomoucké tvarůžky se navzdory názvu nevyrábějí v Olomouci. Ve kterém městě na Hané vznikají?",
+     "answer": "Loštice",
+     "options": [],
+     "explanation": "Výroba se v Lošticích drží už od devatenáctého století a město má dokonce vlastní Muzeum Olomouckých tvarůžků.",
+     "source_url": "https://www.kudyznudy.cz/aktuality/mesto-lostice-a-olomoucke-tvaruzky-chystaji-lostic"
+    },
+    {
+     "id": "d192e405-c28d-4d82-807f-bd48e943fae2",
+     "category": "general",
+     "question": "Která česká lidovka z tanečních zábav obletěla svět pod anglickým názvem Beer Barrel Polka?",
+     "answer": "Škoda lásky",
+     "options": [],
+     "explanation": "Vejvodovu polku hráli Glenn Miller i Andrews Sisters. Na konci druhé světové války ji zpívali vojáci po celém světě, aniž tušili, že pochází ze Zbraslavi.",
+     "source_url": "https://en.wikipedia.org/wiki/Beer_Barrel_Polka"
+    }
+   ]
+  },
+  {
+   "key": "sat-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-10-31",
+   "files": [
+    "carousel-en-p2-0-cover.jpg",
+    "carousel-en-p2-1.jpg",
+    "carousel-en-p2-2.jpg",
+    "carousel-en-p2-3.jpg",
+    "carousel-en-p2-4.jpg",
+    "carousel-en-p2-5.jpg",
+    "carousel-en-p2-6.jpg",
+    "carousel-en-p2-7.jpg",
+    "carousel-en-p2-8-answers.jpg",
+    "carousel-en-p2-9-answers.jpg"
+   ],
+   "caption": "Road trip round, part 2.\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #movies #popculture #roadtrip",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+     "category": "movies-music",
+     "question": "David Bowie's eyes famously looked like two different colours. What actually caused this illusion?",
+     "answer": "A permanently dilated pupil",
+     "options": [],
+     "explanation": "His eyeball was scratched in a fight with a friend, leaving one pupil permanently dilated. Both eyes are actually the same colour.",
+     "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+    },
+    {
+     "id": "aaef6548-e3d8-4c99-84b8-c1e7b05181ed",
+     "category": "entertainment",
+     "question": "Which song from the animated film KPop Demon Hunters won Best Original Song at the 2026 Oscars?",
+     "answer": "Golden",
+     "options": [],
+     "explanation": "Performed in the film by the fictional group HUNTR/X, it had already spent weeks at number one on the Billboard Hot 100 in 2025 before adding an Oscar.",
+     "source_url": "https://sports.khan.co.kr/en/article/202603161131007"
+    },
+    {
+     "id": "718f1648-8742-4a96-9ac5-53b3d28c7b4d",
+     "category": "science-nature",
+     "question": "Those little 'seeds' dotted over the outside of a strawberry aren't really seeds. Botanically, what is each one?",
+     "answer": "A tiny fruit",
+     "options": [],
+     "explanation": "Each speck is an achene, a complete little fruit with its own seed inside. The juicy red part we eat is just the swollen base of the flower.",
+     "source_url": "https://www.livescience.com/planet-earth/plants/why-do-strawberries-have-seeds-on-the-outside"
+    },
+    {
+     "id": "2073ce96-36e4-4f46-8d1f-cd24994c14e4",
+     "category": "general",
+     "question": "When a teenager replies to your joke with nothing but a skull emoji, what are they actually telling you?",
+     "answer": "It's hilarious",
+     "options": [],
+     "explanation": "The skull is shorthand for 'I'm dead', as in dying of laughter. Many younger users now prefer it to the crying-laughing face, which they consider something their parents send.",
+     "source_url": "https://www.dictionary.com/e/?p=208339"
+    },
+    {
+     "id": "b388a69e-91a6-4f87-8b09-1bceca1a5fd2",
+     "category": "food-everyday",
+     "question": "Since 1971, the United States has banned imports of traditional Scottish haggis because it contains which ingredient?",
+     "answer": "Sheep lungs",
+     "options": [],
+     "explanation": "American food rules forbid lungs in food for people, so authentic haggis with its sheep lung cannot be imported, though lung-free versions are made locally.",
+     "source_url": "https://news.northeastern.edu/2025/01/24/scottish-haggis-in-the-us/"
+    },
+    {
+     "id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
+     "category": "entertainment",
+     "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?",
+     "answer": "Sinners",
+     "options": [],
+     "explanation": "The bloodsoaked thriller out-nominated every film in Academy history and took home four statuettes on the night.",
+     "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"
+    },
+    {
+     "id": "0749f72f-0ddb-4eb6-88ab-98424dda713e",
+     "category": "general",
+     "question": "Your ten fingernails don't all grow at the same speed. On a typical hand, which finger's nail grows the fastest?",
+     "answer": "Middle finger",
+     "options": [],
+     "explanation": "As a rough rule, the longer the finger, the faster its nail grows, so the middle finger leads and the little finger trails behind. Nails on your dominant hand also tend to grow a little faster than those on the other hand.",
+     "source_url": "https://discovermagazine.com/health/this-professor-measured-his-fingernail-growth-for-35-years-the-results-will-amaze-you"
+    }
+   ]
+  },
+  {
+   "key": "sat-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "cs",
+   "date": "2026-10-31",
+   "files": [
+    "carousel-cs-p1-0-cover.jpg",
+    "carousel-cs-p1-1.jpg",
+    "carousel-cs-p1-2.jpg",
+    "carousel-cs-p1-3.jpg",
+    "carousel-cs-p1-4.jpg",
+    "carousel-cs-p1-5.jpg",
+    "carousel-cs-p1-6.jpg",
+    "carousel-cs-p1-7.jpg",
+    "carousel-cs-p1-8-answers.jpg",
+    "carousel-cs-p1-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 1. díl.\n\nKolik máš správně? Napiš do komentáře.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #věda #nacestu",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "b47c5372-ac71-42f0-8a78-a41337326a02",
+     "category": "general",
+     "question": "Vynálezce bankomatu John Shepherd-Barron chtěl původně, aby PIN měl šest číslic. Kvůli komu nakonec zůstalo jen u čtyř?",
+     "answer": "jeho manželka",
+     "options": [],
+     "explanation": "Jeho žena Caroline mu u kuchyňského stolu řekla, že si spolehlivě zapamatuje nejvýš čtyři číslice. Proto dnes v každé peněžence nosíme čtyřmístný PIN.",
+     "source_url": "https://en.wikipedia.org/wiki/John_Shepherd-Barron"
+    },
+    {
+     "id": "8a81f852-cc5c-42ac-a2d3-6c6711612077",
+     "category": "general",
+     "question": "Na palivoměru v autě je vedle ikonky benzínové pumpy malá šipka nebo trojúhelníček. Co vám ta šipka prozrazuje?",
+     "answer": "Na které straně je nádrž",
+     "options": [],
+     "explanation": "Šipka ukazuje, na které straně auta je víčko nádrže, takže v půjčeném autě víte, ke kterému stojanu zajet. Klidně se teď podívejte na palubní desku.",
+     "source_url": "https://www.motor1.com/news/804101/what-fuel-gauge-arrow-means/"
+    },
+    {
+     "id": "279b79a0-9bf6-42e1-9f34-dc7dec53e594",
+     "category": "science-nature",
+     "question": "Když vezmete slunéčko sedmitečné do dlaně, často po něm zůstane žlutá, hořce páchnoucí kapička. Co to ve skutečnosti je?",
+     "answer": "Jeho krev",
+     "options": [],
+     "explanation": "Vyděšené slunéčko vytlačí z kloubů na nohou vlastní krev, tedy hemolymfu. Je hořká a jedovatá, takže ptáci si ho příště rozmyslí.",
+     "source_url": "https://www.prirodovedci.cz/zeptejte-se-prirodovedcu/10"
+    },
+    {
+     "id": "4af0f85c-b11e-4480-99df-5b364fa6ad69",
+     "category": "food-everyday",
+     "question": "Slovo brambory vzniklo z názvu německé země, odkud k nám tyto hlízy kdysi přišly. Která země to byla?",
+     "answer": "Braniborsko",
+     "options": [],
+     "explanation": "Brambory k nám přicházely z Braniborska, a tak se jim říkalo braniborky, z čehož časem vznikly brambory. Na Moravě se proto dodnes drží jiné názvy, třeba kobzole nebo zemáky.",
+     "source_url": "https://en.wiktionary.org/wiki/brambor"
+    },
+    {
+     "id": "ff69eb09-a0d2-4f5e-b800-50a5368b93dd",
+     "category": "food-everyday",
+     "question": "Pouťový perník dostal své jméno po koření, které se do těsta kdysi přidávalo. O jaké koření jde?",
+     "answer": "Pepř",
+     "options": [],
+     "explanation": "Perník byl původně „pepřník“, protože se do medového těsta dával pepř. Slovo se časem obrousilo, ale ostrá stopa v něm zůstala.",
+     "source_url": "https://ziva.avcr.cz/files/ziva/pdf/nekdo-to-rad-ostre-slozite-cesty-prejatych-slov.pdf"
+    },
+    {
+     "id": "906a921a-b216-442a-8bfe-15185f2e1a4b",
+     "category": "sports",
+     "question": "Kterou disciplínu běžel Emil Zátopek na olympiádě v Helsinkách roku 1952 poprvé v životě, a přesto v ní vyhrál?",
+     "answer": "maraton",
+     "options": [],
+     "explanation": "Ke zlatům na pět a deset kilometrů přidal i maratonské, a tento trojnásobný triumf na jedné olympiádě dodnes nikdo nezopakoval.",
+     "source_url": "https://en.wikipedia.org/wiki/Emil_Zátopek"
+    },
+    {
+     "id": "85efb889-3c08-4180-add2-3a0f29ee1f92",
+     "category": "science-nature",
+     "question": "Úhoř se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?",
+     "answer": "Sargasové moře",
+     "options": [],
+     "explanation": "Úhoři se třou v Sargasovém moři nedaleko Bermud a pak tam umírají. Jejich drobné larvy se nechají unášet proudy zpátky do Evropy, kde jejich rodiče žili.",
+     "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6501356"
+    }
+   ]
+  },
+  {
+   "key": "sun-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-01",
+   "files": [
+    "round-en-5bc4d047.mp4",
+    "round-en-5bc4d047.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #funfacts #movies",
+   "youtube": {
+    "title": "Can you get 3 out of 3? The 'lady' in the name ladybird, or ladybug, honours one specific woman.…",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #funfacts #movies"
+   },
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "5bc4d047-918c-4013-b807-bdc7f8ec6d77",
+     "category": "general",
+     "question": "The 'lady' in the name ladybird, or ladybug, honours one specific woman. Who is she?",
+     "answer": "The Virgin Mary",
+     "options": [],
+     "explanation": "Medieval farmers called it 'Our Lady's bird' and linked its red wings to Mary's cloak and its seven spots to her seven sorrows. German still calls it Marienkäfer, 'Mary's beetle'.",
+     "source_url": "https://en.wikipedia.org/wiki/Coccinellidae"
+    },
+    {
+     "id": "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f",
+     "category": "general",
+     "question": "The Italian surname Ferrari, now famous for sports cars, originally described a man's trade. Which trade?",
+     "answer": "Blacksmith",
+     "options": [],
+     "explanation": "Ferrari comes from 'ferro', Italian for iron, so the world's most glamorous car brand is really Mr. Smith. It's the Italian cousin of Schmidt, Kovář and Kowalski.",
+     "source_url": "https://en.wikipedia.org/wiki/Ferrari_(surname)"
+    },
+    {
+     "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+     "category": "movies-music",
+     "question": "Which actor was working as a carpenter before being cast as Han Solo in the original Star Wars?",
+     "answer": "Harrison Ford",
+     "options": [],
+     "explanation": "Ford said he was quite surprised to be offered the part. His carpentry skills reportedly helped him land studio work where he was noticed.",
+     "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+    }
+   ]
+  },
+  {
+   "key": "sun-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "format": "round",
+   "language": "sk",
+   "size": 3,
+   "date": "2026-11-01",
+   "files": [
+    "round-sk-03134bc3.mp4",
+    "round-sk-03134bc3.jpg"
+   ],
+   "caption": "Trafíš všetky tri?\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #zaujímavosti #jedlo",
+   "youtube": null,
+   "voice": "app voice: question + explanation",
+   "questions": [
+    {
+     "id": "03134bc3-3324-4a3e-9fd7-1ea01d5f0eae",
+     "category": "general",
+     "question": "Najčastejšie priezvisko na Slovensku je Horváth. Čo toto slovo v maďarčine znamená?",
+     "answer": "Chorvát",
+     "options": [],
+     "explanation": "Horvát je po maďarsky Chorvát, takže najrozšírenejšie slovenské priezvisko v skutočnosti hovorí, že predkovia jeho nositeľov prišli z Chorvátska.",
+     "source_url": "https://en.wikipedia.org/wiki/Horv%C3%A1th"
+    },
+    {
+     "id": "9e5af35d-c105-42b0-a73d-0eea16e08e2e",
+     "category": "general",
+     "question": "Krt si pod zemou zakladá špajzu so zásobami na horšie časy. Aké zvieratá si do nej ukladá, a to ešte živé?",
+     "answer": "dážďovky",
+     "options": [],
+     "explanation": "Krt dážďovkám prehryzne prednú časť tela, takže ochrnú, ale zostanú živé a čerstvé. V jednej krtej špajzi našli aj vyše tisíc dážďoviek.",
+     "source_url": "https://ypte.org.uk/factsheets/mole/food-and-feeding"
+    },
+    {
+     "id": "6673cb78-90ee-4628-933c-7f2aa6d4d5dc",
+     "category": "food-everyday",
+     "question": "Ktorý obchodný reťazec má na Slovensku zďaleka najviac predajní, oveľa viac než Lidl, Tesco či Kaufland?",
+     "answer": "COOP Jednota",
+     "options": [],
+     "explanation": "COOP Jednota má na Slovensku vyše dvetisíc predajní, lebo stojí takmer v každej dedine. Veľké zahraničné reťazce majú len zlomok tohto počtu, hoci ich obchody sú oveľa väčšie.",
+     "source_url": "https://sk.wikipedia.org/wiki/COOP_Jednota_Slovensko"
+    }
+   ]
+  },
   {
    "key": "sat1-ig_en",
    "account": "ig_en",
@@ -77,511 +862,6 @@
    "permalink": "https://www.instagram.com/reel/De39FgzgNQG/"
   },
   {
-   "key": "sat2-ig_en",
-   "account": "ig_en",
-   "day": "Sat",
-   "time": "14:00",
-   "n": 2,
-   "format": "five",
-   "language": "en",
-   "date": "2026-10-24",
-   "files": [
-    "five-en-003963e3.mp4",
-    "five-en-003963e3.jpg"
-   ],
-   "caption": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #didyouknow",
-   "youtube": {
-    "title": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
-    "description": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #didyouknow"
-   },
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
-     "category": "science-nature",
-     "question": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
-     "answer": "Milk",
-     "options": [],
-     "explanation": "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. That is also why we still call our home galaxy the Milky Way.",
-     "source_url": "https://www.merriam-webster.com/wordplay/word-history-of-galaxy"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-24T13:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-003963e3.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-003963e3.jpg"
-   ]
-  },
-  {
-   "key": "sat2-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Sat",
-   "time": "14:00",
-   "n": 2,
-   "format": "carousel",
-   "language": "cs",
-   "date": "2026-10-24",
-   "files": [
-    "carousel-cs-p1-0-cover.jpg",
-    "carousel-cs-p1-1.jpg",
-    "carousel-cs-p1-2.jpg",
-    "carousel-cs-p1-3.jpg",
-    "carousel-cs-p1-4.jpg",
-    "carousel-cs-p1-5.jpg",
-    "carousel-cs-p1-6.jpg",
-    "carousel-cs-p1-7.jpg",
-    "carousel-cs-p1-8-answers.jpg",
-    "carousel-cs-p1-9-answers.jpg"
-   ],
-   "caption": "Kvíz na cestu, 1. díl.\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #popkultura #filmy #nacestu",
-   "youtube": null,
-   "voice": null,
-   "questions": [
-    {
-     "id": "93643585-6fa8-4996-ae8e-c5d286f1bcbc",
-     "category": "entertainment",
-     "question": "Které španělské zpěvačce vyšlo v listopadu 2025 album Lux, na kterém zpívá ve třinácti různých jazycích?",
-     "answer": "Rosalía",
-     "options": [],
-     "explanation": "Rosalía nahrála Lux s Londýnským symfonickým orchestrem a kromě španělštiny a katalánštiny na něm zpívá třeba i německy, italsky nebo japonsky.",
-     "source_url": "https://en.wikipedia.org/wiki/Lux_(Rosalía_album)"
-    },
-    {
-     "id": "d85c3cf1-f2c1-4a9f-a183-c0b997bd4a82",
-     "category": "entertainment",
-     "question": "Která zpěvačka si na galavečeru Český slavík 2025 odnesla titul Absolutní slavík?",
-     "answer": "Ewa Farna",
-     "options": [],
-     "explanation": "Farna vyhrála i mezi zpěvačkami, mezi zpěváky uspěl poprvé v kariéře Václav Noid Bárta a kapelou roku se stal Kabát. O půl roku později odehrála Farna tři vyprodané koncerty v pražském Edenu jako první česká zpěvačka na stadionu.",
-     "source_url": "https://www.seznamzpravy.cz/clanek/kultura-ceskou-slavici-je-potreti-v-rade-ewa-farna-292227"
-    },
-    {
-     "id": "d437176e-7a03-4d46-8ef8-e9657e1166b3",
-     "category": "movies-music",
-     "question": "Česká hymna Kde domov můj poprvé zazněla v roce 1834 jako píseň v divadelní hře. Jak se ta hra jmenuje?",
-     "answer": "Fidlovačka",
-     "options": [],
-     "explanation": "Ve hře Josefa Kajetána Tyla ji zpíval slepý houslista Mareš. Hudbu složil František Škroup a píseň byla populárnější než celá hra.",
-     "source_url": "https://en.wikipedia.org/wiki/Kde_domov_můj"
-    },
-    {
-     "id": "afecd933-0fe3-4893-b332-46b046bff230",
-     "category": "movies-music",
-     "question": "Ve kterém městě složil Antonín Dvořák svou nejslavnější symfonii Z Nového světa?",
-     "answer": "v New Yorku",
-     "options": [],
-     "explanation": "Dvořák tam v letech 1892 až 1895 řídil Národní konzervatoř a symfonie měla premiéru v Carnegie Hall v prosinci 1893.",
-     "source_url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Dvo%C5%99%C3%A1k)"
-    },
-    {
-     "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
-     "category": "food-everyday",
-     "question": "Symbolu @ v e-mailu říkáme zavináč podle stočené naložené mořské ryby z lahůdek. O jakou rybu jde?",
-     "answer": "Sleď",
-     "options": [],
-     "explanation": "Zavináč je stočený marinovaný sleď, často spíchnutý párátkem kolem okurky nebo cibule. Zakroucený tvar symbolu @ Čechům připomněl právě tuhle rybí ruličku.",
-     "source_url": "https://en.wikipedia.org/wiki/Rollmops"
-    },
-    {
-     "id": "b47c5372-ac71-42f0-8a78-a41337326a02",
-     "category": "general",
-     "question": "Vynálezce bankomatu John Shepherd-Barron chtěl původně, aby PIN měl šest číslic. Kvůli komu nakonec zůstalo jen u čtyř?",
-     "answer": "jeho manželka",
-     "options": [],
-     "explanation": "Jeho žena Caroline mu u kuchyňského stolu řekla, že si spolehlivě zapamatuje nejvýš čtyři číslice. Proto dnes v každé peněžence nosíme čtyřmístný PIN.",
-     "source_url": "https://en.wikipedia.org/wiki/John_Shepherd-Barron"
-    },
-    {
-     "id": "f6fdf444-79f2-4ea8-a454-d4cc7d5a3815",
-     "category": "general",
-     "question": "Jméno amerického Santa Clause vzniklo zkomolením nizozemského jména jednoho světce. Kterého?",
-     "answer": "svatý Mikuláš",
-     "options": [],
-     "explanation": "Nizozemci mu říkají Sinterklaas, tedy svatý Mikuláš. Jejich osadníci ho přivezli do dnešního New Yorku, takže Santa Claus je vlastně náš Mikuláš, jen bez čerta.",
-     "source_url": "https://www.pbs.org/newshour/world/from-st-nick-to-santa-to-kris-kringle-why-we-have-different-names-for-the-jolly-bringer-of-christmas-gifts"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-24T12:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p1-9-answers.jpg"
-   ]
-  },
-  {
-   "key": "sat3-ig_en",
-   "account": "ig_en",
-   "day": "Sat",
-   "time": "18:00",
-   "n": 3,
-   "format": "abc",
-   "language": "en",
-   "date": "2026-10-24",
-   "files": [
-    "abc-en-adb15ec9.mp4",
-    "abc-en-adb15ec9.jpg"
-   ],
-   "caption": "Roughly how many different ways can a standard Rubik's Cube be scrambled?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #funfacts #didyouknow",
-   "youtube": {
-    "title": "Roughly how many different ways can a standard Rubik's Cube be scrambled?",
-    "description": "Roughly how many different ways can a standard Rubik's Cube be scrambled?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #funfacts #didyouknow"
-   },
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "adb15ec9-60ef-4155-a290-79f0ac79a12e",
-     "category": "general",
-     "question": "Roughly how many different ways can a standard Rubik's Cube be scrambled?",
-     "answer": "About 43 quintillion",
-     "options": [
-      "About 43 thousand",
-      "About 43 million",
-      "About 43 billion",
-      "About 43 quintillion"
-     ],
-     "explanation": "It's about 43 quintillion arrangements. If you tried one every second, you'd need roughly a hundred times the age of the universe to see them all.",
-     "source_url": "https://en.wikipedia.org/wiki/Rubik%27s_Cube"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-24T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-en-adb15ec9.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-en-adb15ec9.jpg"
-   ]
-  },
-  {
-   "key": "sat3-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Sat",
-   "time": "18:00",
-   "n": 3,
-   "format": "five",
-   "language": "cs",
-   "date": "2026-10-24",
-   "files": [
-    "five-cs-ef458c41.mp4",
-    "five-cs-ef458c41.jpg"
-   ],
-   "caption": "Než začne koncert, celý symfonický orchestr ladí podle jediného tónu, který zahraje jeden dechový nástroj. Který to je?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #filmy #vědomosti",
-   "youtube": null,
-   "voice": "made this week",
-   "questions": [
-    {
-     "id": "ef458c41-a541-42e1-8950-8ccf4aa7b157",
-     "category": "movies-music",
-     "question": "Než začne koncert, celý symfonický orchestr ladí podle jediného tónu, který zahraje jeden dechový nástroj. Který to je?",
-     "answer": "Hoboj",
-     "options": [],
-     "explanation": "Hoboj má velmi stálé ladění a pronikavý zvuk, který je slyšet přes celý orchestr. Proto se všichni ladí podle jeho tónu A.",
-     "source_url": "https://www.rockfordsymphony.com/faqs/why-does-the-orchestra-tune-to-the-oboe"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-24T16:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-cs-ef458c41.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-cs-ef458c41.jpg"
-   ]
-  },
-  {
-   "key": "sun1-ig_en",
-   "account": "ig_en",
-   "day": "Sun",
-   "time": "10:00",
-   "n": 1,
-   "format": "five",
-   "language": "en",
-   "date": "2026-10-25",
-   "files": [
-    "five-en-41cf874c.mp4",
-    "five-en-41cf874c.jpg"
-   ],
-   "caption": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #history #didyouknow",
-   "youtube": {
-    "title": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752.…",
-    "description": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #history #didyouknow"
-   },
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
-     "category": "history",
-     "question": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?",
-     "answer": "Switch from Julian to Gregorian calendar",
-     "options": [],
-     "explanation": "Britain adopted the Gregorian calendar with the Calendar (New Style) Act 1750, catching up with most of Catholic Europe, which had switched back in 1582. The older Julian calendar counted every fourth year as a leap year without exception, so it drifted about three days every four centuries against the solar year. By 1752 the gap had grown to eleven days, so Parliament ordered them dropped in one jump: people went to bed on 2 September and woke up on 14 September. The same act also moved the start of the legal year from 25 March to 1 January.",
-     "source_url": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T10:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-41cf874c.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-41cf874c.jpg"
-   ]
-  },
-  {
-   "key": "sun1-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Sun",
-   "time": "10:00",
-   "n": 1,
-   "format": "abc",
-   "language": "sk",
-   "date": "2026-10-25",
-   "files": [
-    "abc-sk-0518901b.mp4",
-    "abc-sk-0518901b.jpg"
-   ],
-   "caption": "Koľko divákov prišlo v roku 2025 dokopy do všetkých slovenských kín?\n\nA, B, C alebo D? Napíš do komentára skôr, ako prezradíme odpoveď.\n\n#kvíz #kviz #popkultúra #vedomosti",
-   "youtube": null,
-   "voice": "made this week",
-   "questions": [
-    {
-     "id": "0518901b-e498-49a3-a574-20e0305fdc67",
-     "category": "entertainment",
-     "question": "Koľko divákov prišlo v roku 2025 dokopy do všetkých slovenských kín?",
-     "answer": "približne 5 miliónov",
-     "options": [
-      "približne 500-tisíc",
-      "približne 5 miliónov",
-      "približne 20 miliónov",
-      "približne 50 miliónov"
-     ],
-     "explanation": "Kiná zaznamenali zhruba 5,1 milióna vstupov, čo je približne jedna návšteva na každého obyvateľa Slovenska.",
-     "source_url": "https://www.teraz.sk/slovensko/v-roku-2025-prislo-na-slovenske-filmy/971094-clanok.html"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T09:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-sk-0518901b.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-sk-0518901b.jpg"
-   ]
-  },
-  {
-   "key": "sun2-ig_en",
-   "account": "ig_en",
-   "day": "Sun",
-   "time": "14:00",
-   "n": 2,
-   "format": "five",
-   "language": "en",
-   "date": "2026-10-25",
-   "files": [
-    "five-en-0f015294.mp4",
-    "five-en-0f015294.jpg"
-   ],
-   "caption": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #sports #didyouknow",
-   "youtube": {
-    "title": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for…",
-    "description": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?\n\nYour answer in the comments before the reveal.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #sports #didyouknow"
-   },
-   "voice": "made this week",
-   "questions": [
-    {
-     "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
-     "category": "sports",
-     "question": "The leader of the Tour de France wears a yellow jersey. The colour was not chosen for visibility, it was copied from what?",
-     "answer": "The organising newspaper's paper",
-     "options": [],
-     "explanation": "The race was founded and run by the sports newspaper L'Auto, which was printed on yellow paper, so the 1919 leader's jersey became a moving advertisement in the same shade.",
-     "source_url": "https://www.smithsonianmag.com/history/original-tour-de-france-yellow-jersey-was-made-wool-180972664/"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T14:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-0f015294.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-0f015294.jpg"
-   ]
-  },
-  {
-   "key": "sun2-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Sun",
-   "time": "14:00",
-   "n": 2,
-   "format": "carousel",
-   "language": "cs",
-   "date": "2026-10-25",
-   "files": [
-    "carousel-cs-p2-0-cover.jpg",
-    "carousel-cs-p2-1.jpg",
-    "carousel-cs-p2-2.jpg",
-    "carousel-cs-p2-3.jpg",
-    "carousel-cs-p2-4.jpg",
-    "carousel-cs-p2-5.jpg",
-    "carousel-cs-p2-6.jpg",
-    "carousel-cs-p2-7.jpg",
-    "carousel-cs-p2-8-answers.jpg",
-    "carousel-cs-p2-9-answers.jpg"
-   ],
-   "caption": "Kvíz na cestu, 2. díl.\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #popkultura #filmy #nacestu",
-   "youtube": null,
-   "voice": null,
-   "questions": [
-    {
-     "id": "98e2fc22-954b-498d-b15b-1eed6f2407fe",
-     "category": "entertainment",
-     "question": "Pěvecká soutěž SuperStar se v září 2026 po pauze vrátila na obrazovky Novy a Markízy s novou porotou. Kdo ji moderoval?",
-     "answer": "Leoš Mareš",
-     "options": [],
-     "explanation": "Leoš Mareš provází SuperStar už od její úplně první řady z roku 2004 a v porotě mu v roce 2026 seděli Pavol Habera, Ewa Farna, Jakub Prachař a Calin.",
-     "source_url": "https://tv.nova.cz/porad/superstar/clanek/648400-superstar-2026-legendarni-show-se-vraci-ve-velkem-stylu-calin-prachar-farna-habera"
-    },
-    {
-     "id": "dad5cc85-3ab1-43f6-a34b-d49a7ef93a04",
-     "category": "entertainment",
-     "question": "Která americká komička moderovala slavnostní vyhlášení Zlatých glóbů v lednu 2026, a to už podruhé za sebou?",
-     "answer": "Nikki Glaser",
-     "options": [],
-     "explanation": "Nikki Glaser byla v roce 2025 vůbec první ženou, která Zlaté glóby moderovala sama, a ohlasy byly tak dobré, že ji pořadatelé pozvali i na ročník 2026.",
-     "source_url": "https://aol.com/comedian-nikki-glaser-return-host-143642821.html"
-    },
-    {
-     "id": "13d0f6e8-8f72-4755-8708-b34baa04dd04",
-     "category": "movies-music",
-     "question": "Symfonická báseň Vltava je jen jednou částí Smetanova cyklu Má vlast. Z kolika částí se celý cyklus skládá?",
-     "answer": "Šest",
-     "options": [],
-     "explanation": "Vyšehrad, Vltava, Šárka, Z českých luhů a hájů, Tábor a Blaník. Celý cyklus každoročně zahajuje festival Pražské jaro 12. května, v den výročí Smetanovy smrti.",
-     "source_url": "https://en.wikipedia.org/wiki/Má_vlast"
-    },
-    {
-     "id": "7c3c3453-44d5-4a16-b3a9-8b82b7a2facd",
-     "category": "movies-music",
-     "question": "Kolik obrovských pláten tvoří Slovanská epopej Alfonse Muchy?",
-     "answer": "dvacet",
-     "options": [],
-     "explanation": "Mucha na cyklu pracoval skoro dvacet let, největší plátna měří zhruba šest krát osm metrů a roku 1928 celý cyklus daroval Praze.",
-     "source_url": "https://www.kudyznudy.cz/ceska-nej/kulturni/slovanska-epopej-monumentalni-kolekce-obrazu-alfon"
-    },
-    {
-     "id": "c4faa4e9-0dd7-47f8-8183-db276c2c2a71",
-     "category": "general",
-     "question": "Podle staré irské tradice mohla žena sama požádat muže o ruku jen jeden jediný den, a to ne každý rok. Který den to byl?",
-     "answer": "29. února",
-     "options": [],
-     "explanation": "Legenda tvrdí, že tento přestupný den vyjednala pro ženy svatá Brigita u svatého Patrika. Muž, který nabídku odmítl, jí prý musel jako omluvu koupit rukavice nebo hedvábné šaty.",
-     "source_url": "https://en.wikipedia.org/wiki/Leap_year"
-    },
-    {
-     "id": "8f0a53b1-32a6-4a0b-9b97-7d7bc52175c8",
-     "category": "food-everyday",
-     "question": "Svařák se paradoxně nemá vařit, i když to má skoro v názvu. Co by z hrnce při varu unikalo nejrychleji?",
-     "answer": "Alkohol",
-     "options": [],
-     "explanation": "Alkohol se vypařuje už kolem 78 °C, tedy dřív, než se voda vůbec začne vařit. Kdo nechá svařák bublat, prodává vlastně horký ovocný čaj s vínovou příchutí. Ideálně se proto ohřívá jen na zhruba 70 °C.",
-     "source_url": "https://b2b-sk.vwr.com/store/product/33757365/null"
-    },
-    {
-     "id": "9dbfef99-c16c-43de-9286-0227f4cc20e2",
-     "category": "geography-world",
-     "question": "Ve kterém městě na řece Otavě stojí nejstarší dochovaný kamenný most v Česku, starší než pražský Karlův most?",
-     "answer": "Písek",
-     "options": [],
-     "explanation": "Písecký most pochází z konce 13. století a přežil i velkou povodeň v roce 2002, Karlův most začali stavět až v roce 1357.",
-     "source_url": "https://www.cnb.cz/cs/cnb-news/tiskove-zpravy/Pisecky-kamenny-most-na-zlate-minci-CNB"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T13:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-cs-p2-9-answers.jpg"
-   ]
-  },
-  {
-   "key": "sun3-ig_en",
-   "account": "ig_en",
-   "day": "Sun",
-   "time": "18:00",
-   "n": 3,
-   "format": "five",
-   "language": "en",
-   "date": "2026-10-25",
-   "files": [
-    "five-en-b23b6cc5.mp4",
-    "five-en-b23b6cc5.jpg"
-   ],
-   "caption": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #movies #didyouknow",
-   "youtube": {
-    "title": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling…",
-    "description": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #movies #didyouknow"
-   },
-   "voice": "made this week",
-   "questions": [
-    {
-     "id": "b23b6cc5-0951-596a-8859-c2afa3029e64",
-     "category": "movies-music",
-     "question": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?",
-     "answer": "Phil Lord and Christopher Miller",
-     "options": [],
-     "explanation": "The pair brought their trademark fast, cheerful energy to Andy Weir's novel, written by the same author as The Martian, turning a potentially bleak survival story into one of 2026's most crowd-pleasing blockbusters.",
-     "source_url": "https://www.bbc.com/culture/article/20260409-the-best-films-of-2026"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T18:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-b23b6cc5.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-b23b6cc5.jpg"
-   ]
-  },
-  {
-   "key": "sun3-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Sun",
-   "time": "18:00",
-   "n": 3,
-   "format": "five",
-   "language": "sk",
-   "date": "2026-10-25",
-   "files": [
-    "five-sk-f1f90366.mp4",
-    "five-sk-f1f90366.jpg"
-   ],
-   "caption": "Keď v bratislavskej parkovacej zóne zaplatíte cez aplikáciu, za sklo nedávate žiadny lístok. Podľa čoho kontrola zistí, že máte zaplatené?\n\nNapíš odpoveď do komentára skôr, ako ju prezradíme.\n\nTrubbo, kvíz, ktorý hráš hlasom. Čoskoro v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #vedomosti",
-   "youtube": null,
-   "voice": "made this week",
-   "questions": [
-    {
-     "id": "f1f90366-31fb-4c8c-aec7-05936446f1b1",
-     "category": "general",
-     "question": "Keď v bratislavskej parkovacej zóne zaplatíte cez aplikáciu, za sklo nedávate žiadny lístok. Podľa čoho kontrola zistí, že máte zaplatené?",
-     "answer": "podľa evidenčného čísla",
-     "options": [],
-     "explanation": "Platba sa viaže na evidenčné číslo vozidla a ulicami jazdia skenovacie autá s kamerami, ktoré čítajú značky a porovnávajú ich s databázou zaplatených parkovaní. Lístok za sklom by ich vlastne vôbec nezaujímal.",
-     "source_url": "https://paas.sk/wp-content/uploads/2026/07/NOVINY-KVa-FINAL-WEB.pdf"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-25T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-sk-f1f90366.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-sk-f1f90366.jpg"
-   ]
-  },
-  {
    "key": "mon-ig_en",
    "account": "ig_en",
    "day": "Mon",
@@ -616,386 +896,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-1696975f.jpg"
    ],
    "permalink": "https://www.instagram.com/reel/De1jsfPiJT3/"
-  },
-  {
-   "key": "mon-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Mon",
-   "format": "five",
-   "language": "cs",
-   "date": "2026-10-26",
-   "files": [
-    "five-cs-ff61ac0c.mp4",
-    "five-cs-ff61ac0c.jpg"
-   ],
-   "caption": "Čím tradičně krájely české babičky houskový knedlík, aby se při krájení nezmáčkl?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\n#kvíz #kviz #jídlo #vědomosti",
-   "youtube": null,
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
-     "category": "food-everyday",
-     "question": "Čím tradičně krájely české babičky houskový knedlík, aby se při krájení nezmáčkl?",
-     "answer": "Nití",
-     "options": [],
-     "explanation": "Nit knedlíkem projede, aniž by ho stlačila. Nůž by měkké těsto zmáčkl a plátky by byly gumové a slepené. Proto dnes existují i kráječe na knedlíky s napnutými strunami.",
-     "source_url": "https://www.novinky.cz/clanek/zena-styl-neni-knedlik-jako-knedlik-40027615"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-26T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-cs-ff61ac0c.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-cs-ff61ac0c.jpg"
-   ]
-  },
-  {
-   "key": "tue-ig_en",
-   "account": "ig_en",
-   "day": "Tue",
-   "format": "carousel",
-   "language": "en",
-   "date": "2026-10-27",
-   "files": [
-    "carousel-en-p1-0-cover.jpg",
-    "carousel-en-p1-1.jpg",
-    "carousel-en-p1-2.jpg",
-    "carousel-en-p1-3.jpg",
-    "carousel-en-p1-4.jpg",
-    "carousel-en-p1-5.jpg",
-    "carousel-en-p1-6.jpg",
-    "carousel-en-p1-7.jpg",
-    "carousel-en-p1-8-answers.jpg",
-    "carousel-en-p1-9-answers.jpg"
-   ],
-   "caption": "Road trip round, part 1.\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #popculture #movies #roadtrip",
-   "youtube": null,
-   "voice": null,
-   "questions": [
-    {
-     "id": "45a584a4-4f38-48d4-879a-d8c2d39e6eab",
-     "category": "entertainment",
-     "question": "Which 2025 vampire film set an all-time record at the 2026 Oscars with sixteen nominations?",
-     "answer": "Sinners",
-     "options": [],
-     "explanation": "The bloodsoaked thriller out-nominated every film in Academy history and took home four statuettes on the night.",
-     "source_url": "https://en.wikipedia.org/wiki/98th_Academy_Awards"
-    },
-    {
-     "id": "a8290869-57c6-4d6e-bb1d-914828225559",
-     "category": "entertainment",
-     "question": "Which rapper became Spotify's most-streamed artist in a single day of 2026 after dropping three surprise albums at once?",
-     "answer": "Drake",
-     "options": [],
-     "explanation": "Releasing three albums with no warning flooded playlists worldwide and handed him the biggest streaming day of any artist that year.",
-     "source_url": "https://au.rollingstone.com/music/music-news/drake-iceman-spotify-most-streamed-artist-day-record-2026-95075/"
-    },
-    {
-     "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
-     "category": "movies-music",
-     "question": "Which actor was working as a carpenter before being cast as Han Solo in the original Star Wars?",
-     "answer": "Harrison Ford",
-     "options": [],
-     "explanation": "Ford said he was quite surprised to be offered the part. His carpentry skills reportedly helped him land studio work where he was noticed.",
-     "source_url": "https://www.factinate.com/people/42-little-known-facts-famous-people"
-    },
-    {
-     "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
-     "category": "geography-world",
-     "question": "Which continent contains more sovereign countries than any other?",
-     "answer": "Africa",
-     "options": [],
-     "explanation": "Africa has 54 internationally recognised countries, comfortably ahead of Europe and Asia.",
-     "source_url": "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent"
-    },
-    {
-     "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
-     "category": "history",
-     "question": "In 1952, which world-famous physicist was offered the presidency of Israel and politely turned it down?",
-     "answer": "Albert Einstein",
-     "options": [],
-     "explanation": "The offer came from Prime Minister David Ben-Gurion after the first president died, and Einstein replied that he lacked the aptitude for dealing with people and official functions.",
-     "source_url": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
-    },
-    {
-     "id": "035077c2-f271-4f2a-846c-1459ef636270",
-     "category": "food-everyday",
-     "question": "On a standard six-sided die, the numbers on any two opposite faces always add up to what?",
-     "answer": "Seven",
-     "options": [],
-     "explanation": "One sits opposite six, two opposite five and three opposite four, so every pair of opposite faces totals seven.",
-     "source_url": "https://mathworld.wolfram.com/Dice.html"
-    },
-    {
-     "id": "00e29bed-accf-461e-826a-31e0c8520828",
-     "category": "food-everyday",
-     "question": "The world's most famous restaurant star ratings are awarded by a guide that was launched in 1900 to sell which product?",
-     "answer": "Tyres",
-     "options": [],
-     "explanation": "The Michelin brothers gave the guide away free to French motorists, hoping that more driving would wear out more tyres.",
-     "source_url": "https://en.wikipedia.org/wiki/Michelin_Guide"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-27T18:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-en-p1-9-answers.jpg"
-   ]
-  },
-  {
-   "key": "tue-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Tue",
-   "format": "carousel",
-   "language": "sk",
-   "date": "2026-10-27",
-   "files": [
-    "carousel-sk-p1-0-cover.jpg",
-    "carousel-sk-p1-1.jpg",
-    "carousel-sk-p1-2.jpg",
-    "carousel-sk-p1-3.jpg",
-    "carousel-sk-p1-4.jpg",
-    "carousel-sk-p1-5.jpg",
-    "carousel-sk-p1-6.jpg",
-    "carousel-sk-p1-7.jpg",
-    "carousel-sk-p1-8-answers.jpg",
-    "carousel-sk-p1-9-answers.jpg"
-   ],
-   "caption": "Kvíz na cestu, 1. diel.\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #popkultúra #filmy #naceste",
-   "youtube": null,
-   "voice": null,
-   "questions": [
-    {
-     "id": "20f92ef9-546c-4a4a-b97a-363c5ae5dc8d",
-     "category": "entertainment",
-     "question": "Vo filmovom muzikáli Wicked: For Good z novembra 2025 hrá dobrú čarodejnicu Glindu známa popová speváčka. Ktorá?",
-     "answer": "Ariana Grande",
-     "options": [],
-     "explanation": "Ariana Grande si Glindu zopakovala z prvého dielu Wicked, zatiaľ čo Elphabu opäť stvárnila Cynthia Erivo.",
-     "source_url": "https://en.wikipedia.org/wiki/Wicked:_For_Good"
-    },
-    {
-     "id": "c7c4d61d-c518-42ca-afcd-773b6ebd2df3",
-     "category": "entertainment",
-     "question": "Ktorý hollywoodsky herec v roku 2026 opäť prepožičal hlas Mariovi vo filme The Super Mario Galaxy Movie?",
-     "answer": "Chris Pratt",
-     "options": [],
-     "explanation": "Pratt nahovoril Maria už v prvom filme z roku 2023, ktorý celosvetovo zarobil vyše 1,3 miliardy dolárov. Novú postavu Rosalinu v pokračovaní nahovorila Brie Larson.",
-     "source_url": "https://www.capitalxtra.com/news/the-super-mario-galaxy-movie-cast/"
-    },
-    {
-     "id": "a1bc8d74-187e-4f52-8f25-690e2dea9c91",
-     "category": "movies-music",
-     "question": "Slávna slovenská pieseň Hej, Slováci má rovnakú melódiu ako štátna hymna jednej našej susednej krajiny. Ktorej?",
-     "answer": "Poľsko",
-     "options": [],
-     "explanation": "Samo Tomášik napísal svoj text na melódiu poľskej piesne Mazurek Dąbrowského, ktorá sa neskôr stala poľskou hymnou. Ten istý nápev dlhé roky slúžil aj ako hymna Juhoslávie.",
-     "source_url": "https://en.wikipedia.org/wiki/Hej,_Slované"
-    },
-    {
-     "id": "e4b6e7b6-fadc-4102-b483-a50d90c0b103",
-     "category": "movies-music",
-     "question": "Ktorá slovenská speváčka reprezentovala Slovensko na Eurovízii v roku 2010 s piesňou Horehronie?",
-     "answer": "Kristína",
-     "options": [],
-     "explanation": "Pieseň sa doma stala obrovským hitom, no v Osle sa zo semifinále do finálového večera nedostala.",
-     "source_url": "https://en.wikipedia.org/wiki/Slovakia_in_the_Eurovision_Song_Contest_2010"
-    },
-    {
-     "id": "6673cb78-90ee-4628-933c-7f2aa6d4d5dc",
-     "category": "food-everyday",
-     "question": "Ktorý obchodný reťazec má na Slovensku zďaleka najviac predajní, oveľa viac než Lidl, Tesco či Kaufland?",
-     "answer": "COOP Jednota",
-     "options": [],
-     "explanation": "COOP Jednota má na Slovensku vyše dvetisíc predajní, lebo stojí takmer v každej dedine. Veľké zahraničné reťazce majú len zlomok tohto počtu, hoci ich obchody sú oveľa väčšie.",
-     "source_url": "https://sk.wikipedia.org/wiki/COOP_Jednota_Slovensko"
-    },
-    {
-     "id": "086a967e-a379-4b09-ab0a-8ce9faf989c3",
-     "category": "general",
-     "question": "V Jasnej sa dá lanovkami prejsť zo severnej strany Nízkych Tatier až na južnú. Cez ktorý vrch vás vyvezú?",
-     "answer": "Chopok",
-     "options": [],
-     "explanation": "Lanovky vyvezú lyžiarov až pod vrchol Chopka vo výške vyše 2000 metrov. Odtiaľ sa dá zlyžovať na druhú stranu hôr, takže Jasná je najväčším lyžiarskym strediskom na Slovensku.",
-     "source_url": "https://www.jasna.sk/fileadmin/resort_upload/jasna/jasna_presskit_A4_2024__2_.pdf"
-    },
-    {
-     "id": "f93b3c33-936f-4ada-8fd3-a1911209386d",
-     "category": "general",
-     "question": "Ktoré slovenské mesto sa pre svoje bane prezýva „zlaté mesto“ a dodnes sa v ňom razia slovenské euromince?",
-     "answer": "Kremnica",
-     "options": [],
-     "explanation": "Kremnické zlaté dukáty patrili v stredoveku k najcennejším minciam v Európe. Tamojšia mincovňa razí peniaze nepretržite už takmer sedem storočí, takže euro vo vašej peňaženke pochádza z rovnakej dielne ako dukáty kráľov.",
-     "source_url": "https://nbs.sk/_img/documents/_publik_nbs_fsr/biatec/rok2008/biatec_9_2008.pdf"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-27T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/carousel-sk-p1-9-answers.jpg"
-   ]
-  },
-  {
-   "key": "wed-ig_en",
-   "account": "ig_en",
-   "day": "Wed",
-   "format": "abc",
-   "language": "en",
-   "date": "2026-10-28",
-   "files": [
-    "abc-en-5beff181.mp4",
-    "abc-en-5beff181.jpg"
-   ],
-   "caption": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #popculture #didyouknow",
-   "youtube": {
-    "title": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very…",
-    "description": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?\n\nA, B, C or D? Comment before the reveal.\n\n#trivia #quiz #popculture #didyouknow"
-   },
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "5beff181-5929-4604-8ae8-c3ae17222abf",
-     "category": "entertainment",
-     "question": "Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?",
-     "answer": "About 300",
-     "options": [
-      "About 30",
-      "About 300",
-      "About 3,000",
-      "About 30,000"
-     ],
-     "explanation": "About 300 comic fans met in a hotel basement in 1970. The event has since grown to more than 400 times that size and now sells out its badges within minutes.",
-     "source_url": "https://en.wikipedia.org/wiki/San_Diego_Comic-Con"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-28T18:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-en-5beff181.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-en-5beff181.jpg"
-   ]
-  },
-  {
-   "key": "wed-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Wed",
-   "format": "abc",
-   "language": "cs",
-   "date": "2026-10-28",
-   "files": [
-    "abc-cs-3ae58406.mp4",
-    "abc-cs-3ae58406.jpg"
-   ],
-   "caption": "Kolik diváků přibližně přišlo za celý rok 2025 do českých kin?\n\nA, B, C nebo D? Napiš do komentáře dřív, než prozradíme odpověď.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #popkultura #vědomosti",
-   "youtube": null,
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "3ae58406-795b-49e3-8218-8710000d12cd",
-     "category": "entertainment",
-     "question": "Kolik diváků přibližně přišlo za celý rok 2025 do českých kin?",
-     "answer": "zhruba 12 milionů",
-     "options": [
-      "zhruba 1 milion",
-      "zhruba 12 milionů",
-      "zhruba 50 milionů",
-      "zhruba 120 milionů"
-     ],
-     "explanation": "Přesně 12,6 milionu, tedy zhruba jedna návštěva na obyvatele. Oproti roku 2024 jich bylo o něco méně, zato platili za dražší vstupenky.",
-     "source_url": "https://www.mediaguru.cz/do-kin-loni-prislo-o-neco-mene-divaku-filmem-roku-byl-minecraft"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-28T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-cs-3ae58406.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/abc-cs-3ae58406.jpg"
-   ]
-  },
-  {
-   "key": "fri-ig_en",
-   "account": "ig_en",
-   "day": "Fri",
-   "format": "five",
-   "language": "en",
-   "date": "2026-10-30",
-   "files": [
-    "five-en-949d87b6.mp4",
-    "five-en-949d87b6.jpg"
-   ],
-   "caption": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #science #didyouknow",
-   "youtube": {
-    "title": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an…",
-    "description": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #science #didyouknow"
-   },
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "949d87b6-e997-4062-aac9-911ef8525213",
-     "category": "science-nature",
-     "question": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?",
-     "answer": "A rock",
-     "options": [],
-     "explanation": "Otters float on their backs, put the rock on their chest and smash clams and sea urchins against it, and many keep the same favourite rock for a long time.",
-     "source_url": "https://en.wikipedia.org/wiki/Sea_otter"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-30T18:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-949d87b6.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-en-949d87b6.jpg"
-   ]
-  },
-  {
-   "key": "fri-ig_skcz",
-   "account": "ig_skcz",
-   "day": "Fri",
-   "format": "five",
-   "language": "sk",
-   "date": "2026-10-30",
-   "files": [
-    "five-sk-9faf2e1f.mp4",
-    "five-sk-9faf2e1f.jpg"
-   ],
-   "caption": "Ktoré hlavné mesto na svete ako jediné susedí priamo s dvoma inými štátmi?\n\nNapíš odpoveď do komentára skôr, ako ju prezradíme.\n\n#kvíz #kviz #cestovanie #vedomosti",
-   "youtube": null,
-   "voice": "existing app clip",
-   "questions": [
-    {
-     "id": "9faf2e1f-847f-45e6-97df-5eec226c2688",
-     "category": "geography-world",
-     "question": "Ktoré hlavné mesto na svete ako jediné susedí priamo s dvoma inými štátmi?",
-     "answer": "Bratislava",
-     "options": [],
-     "explanation": "Bratislava hraničí s Rakúskom aj s Maďarskom. Z jej južných mestských častí sa dá na bicykli za chvíľu prejsť do dvoch cudzích krajín.",
-     "source_url": "https://en.wikipedia.org/wiki/Bratislava"
-    }
-   ],
-   "status": "approved",
-   "publish_at": "2026-10-30T17:00:00Z",
-   "media_urls": [
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-sk-9faf2e1f.mp4",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W44/five-sk-9faf2e1f.jpg"
-   ]
   }
- ]
+ ],
+ "version": 2
 }

@@ -88,10 +88,12 @@ export const QuestionCard: React.FC<{
 			{q.options.length > 0 ? (
 				<div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 32}}>
 					{q.options.map((opt, i) => {
-						const shown = interpolate(tMs, [optionsAtMs + i * 350, optionsAtMs + i * 350 + 250], [0, 1], {
+						const reached = interpolate(tMs, [optionsAtMs + i * 350, optionsAtMs + i * 350 + 250], [0, 1], {
 							extrapolateLeft: 'clamp',
 							extrapolateRight: 'clamp',
 						});
+						// Readable reels show the options faintly from frame 1 (no empty card); v1 slides them in.
+						const shown = readable ? 0.35 + 0.65 * reached : reached;
 						const right = i === q.correctIndex;
 						const dim = revealed && !right;
 						return (
@@ -105,7 +107,7 @@ export const QuestionCard: React.FC<{
 									borderRadius: 28,
 									background: revealed && right ? OK_BG : '#F1F2F5',
 									opacity: shown * (dim ? 0.38 : 1),
-									transform: `translateX(${(1 - shown) * 30}px)`,
+									transform: `translateX(${(1 - reached) * 30}px)`,
 								}}
 							>
 								<div

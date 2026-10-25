@@ -588,10 +588,10 @@
   "reviewed": "2026-10-25"
  },
  "41000fa4-0993-4214-af48-6a3996b02630": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 5,
-  "fact": "verified",
-  "note": "Well known but fine",
+  "fact": "wrong",
+  "note": "Well known but fine | FACT (wrong, 2nd check): Becherovka recipe came from the English physician Dr. Frobrig (1805), which Josef Becher refined and began selling in 1807 as stomach drops; 'vymyslel' Becher is overstated.",
   "reviewed": "2026-10-25"
  },
  "41b7bf47-dfce-4faa-a72d-4cfc9c80d878": {
@@ -665,10 +665,10 @@
   "reviewed": "2026-10-24"
  },
  "47215cdb-ba7c-4d88-b658-c6eb98e23a15": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 5,
-  "fact": "verified",
-  "note": "Fine",
+  "fact": "unverified",
+  "note": "Fine | FACT (unverified, 2nd check): 26 holes confirmed, but the claim that the holes make the ball fly on the correct path / allow spin is not supported (Wikipedia mentions only aerodynamic/drag reduction); 'falošná rotácia' is unsupported.",
   "reviewed": "2026-10-25"
  },
  "49001c32-bc7e-4c0d-b83b-4168a85ed4cf": {
@@ -812,10 +812,10 @@
   "reviewed": "2026-10-24"
  },
  "5783843b-a7f1-467b-ba54-9eebd650f4d5": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 6,
-  "fact": "verified",
-  "note": "Good",
+  "fact": "wrong",
+  "note": "Good | FACT (wrong, 2nd check): Overstated: Wikipedia/literature say erinacin gives only partial immunity; outcomes of viper bites on hedgehogs vary from no reaction to death; 'v krvi' not confirmed (erinacin was isolated from muscle).",
   "reviewed": "2026-10-25"
  },
  "57da0e17-7f87-432b-833c-b97f590e9557": {
@@ -931,10 +931,10 @@
   "reviewed": "2026-10-24"
  },
  "6584c288-c478-41e2-a955-c830f7c3e04e": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 5,
-  "fact": "verified",
-  "note": "Fine",
+  "fact": "wrong",
+  "note": "Fine | FACT (wrong, 2nd check): Cornell: thermophilic >40 C, pathogens killed at 55 C+, managers avoid exceeding ~65 C; '60 to 70 degrees' overstates the upper range and no weed-seed figure is in the source.",
   "reviewed": "2026-10-25"
  },
  "65d97f23-7e6e-4601-bff9-9f9f3a896b83": {
@@ -2030,10 +2030,10 @@
   "reviewed": "2026-10-25"
  },
  "c28f922e-8af5-444a-92a3-0f4b54ab8ed5": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 6,
-  "fact": "verified",
-  "note": "Relatable folklore",
+  "fact": "unverified",
+  "note": "Relatable folklore | FACT (unverified, 2nd check): Button-grab confirmed (kudyznudy, povery.eu), but the variant of holding your own button until you see another thing (e.g. a blue car) is not found in any source.",
   "reviewed": "2026-10-25"
  },
  "c2fc5499-5596-47d6-9954-92dc30068ee3": {
@@ -2233,10 +2233,10 @@
   "reviewed": "2026-10-25"
  },
  "d3d6c071-44a6-4f5a-a365-845a12a9216b": {
-  "verdict": "keep",
+  "verdict": "hold",
   "stop_power": 5,
-  "fact": "verified",
-  "note": "Subculture topic",
+  "fact": "unverified",
+  "note": "Subculture topic | FACT (unverified, 2nd check): Teknival = portmanteau of 'tekno' and festival (Wikipedia); the claim that the 'k' spelling comes from the free-party scene in France and Britain is not supported by sources.",
   "reviewed": "2026-10-25"
  },
  "d437176e-7a03-4d46-8ef8-e9657e1166b3": {

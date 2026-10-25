@@ -18,8 +18,15 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 
 ## Founder decisions (2026-10-23)
 
-6. **TikTok deferred, not dropped.** TikTok asks for a phone number and the founder's only number is on his personal account; it comes back (EN + SK/CZ) when he has a second number. Channels now: Instagram EN, Instagram SK/CZ, YouTube Shorts.
+6. **TikTok deferred, not dropped.** TikTok asks for a phone number and the founder's only number is on his personal account; it comes back (EN + SK/CZ) when he has a second number. Channels now: Instagram EN, Instagram SK/CZ, YouTube Shorts (EN + SK/CZ since decision 9), Facebook Pages (decision 10).
 7. **Publish directly through the platforms' own APIs, no extra services** ("a Buffer-like scheduler is quick to build, Buffer adds little"). Instagram: own Meta app for both accounts. YouTube: own Data API project; Google locks API uploads to private until the project passes its free compliance audit, so Shorts go through Buffer free (already set up, an audited client) only until the audit passes, then Buffer is dropped.
+
+## Founder decisions (2026-10-25)
+
+8. **YouTube now, via the browser:** until the API audit passes, the agent uploads and schedules approved Shorts in YouTube Studio through Playwright (founder only logs in). Supersedes the Buffer bridge in decision 7; the API project + audit (210.6) still starts now. **2026-10-25:** W44 reels (9 EN + 7 SK/CZ) were uploaded and scheduled, then set to **Private** on the founder's word ("don't upload videos yet, they will be reworked" — rework runs in a separate session). Re-upload only after the reworked videos are approved; delete the 16 private drafts then.
+9. **YouTube SK/CZ channel:** second channel (Brand channel under the same Google account hi@trubbo.app, no new number/email), same SK/CZ reels as @trubboapp.sk. Created 2026-10-25: **Trubbo SK & CZ, @trubboapp_sk** (@trubboapp.sk was rejected by YouTube). EN channel = Trubbo @trubboapp.
+10. **Facebook Pages, EN + SK/CZ:** two Pages under the founder's personal Facebook profile, each gets the reels of its Instagram account, published through the existing Meta app.
+11. **TikTok retry without a second number:** founder tries sign-up in the TikTok iPhone app (Add account → Continue with Google/Apple). Free SMS-receive sites are ruled out (anyone can read the code). Fallback if it still asks for a phone: a ~€5 prepaid SIM as a company number (needs a go). **Outcome 2026-10-25:** the iPhone app still asked for a phone, but web sign-up with "Continue with Google" (hi@trubbo.app) went through without one → TikTok EN **@trubboapp** (name Trubbo, mascot avatar, bio within TikTok's 80-char limit: "Odd, funny questions with a story behind every answer. / Trubbo app: coming soon."). TikTok SK/CZ still open: one Google account = one TikTok account, so it needs a second Google/Apple login.
 
 ## Founder decisions (2026-10-22) — direction after the [growth research](../research/growth-strategy-2026-10-21.md)
 
@@ -44,14 +51,16 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 | Account | Language | Content | Publishing |
 |---|---|---|---|
 | Instagram @trubboapp | EN | Timer reels, carousels, stories | Official Instagram API (own script, own scheduler) |
-| TikTok (handle tbd) | EN | Same reels | **Deferred** (decision 6) |
-| YouTube Shorts (Trubbo channel) | EN | Same reels | YouTube Data API (own script) after the audit; Buffer free until then |
+| TikTok @trubboapp | EN | Same reels | Account created 2026-10-25 (decision 11); publishing TBD |
+| YouTube Shorts (Trubbo channel) | EN | Same reels | YouTube Data API (own script) after the audit; Studio via Playwright until then (decision 8) |
+| YouTube Shorts SK/CZ channel | sk / cs | Same reels | Same as EN (decision 9) |
+| Facebook Page EN + Page SK/CZ | EN / sk+cs | Reels of the matching Instagram | Meta app, Pages API (decision 10) |
 | Instagram SK/CZ (handle TBD) | sk / cs | Same formats + real clips | Official Instagram API (same Meta app) |
 | TikTok SK/CZ | sk / cs | Same reels | **Deferred** (decision 6) |
 | Founder personal IG (new) | EN | Founder plays the quiz and answers, solo-dev story | Manual |
 | Facebook groups, CZ pub-quiz organizers | sk / cs | Permission-first posts, free codes | Manual (see 210.9) |
 
-Publishing = own scripts on the official APIs (decision 7); Buffer free only bridges YouTube until the audit. When TikTok returns: TikTok's Content Posting API keeps unaudited apps' posts private too, so it gets the same audit-or-bridge treatment. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
+Publishing = own scripts on the official APIs (decision 7); YouTube Studio via Playwright bridges YouTube until the audit (decision 8). TikTok (@trubboapp, decision 11): TikTok's Content Posting API keeps unaudited apps' posts private too, so it gets the same audit-or-bridge treatment. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
 
 ## Formats (test designs; keep what wins)
 
@@ -73,11 +82,12 @@ Target cadence per account: 4–5 reels/carousels per week + daily story.
 - [~] **210.3 Content renderer** (2026-10-22 v1: `FiveSeconds`, `ABC`, `CarouselSlide` + `npm run render` CLI; voice = existing app clip only, none → silent reel; captions = local whisper.cpp; open = "How it plays", story frame, correct/wrong monkey) (`apps/social-studio`, Remotion, one README). Compositions: timer reel 9:16, MCQ reel, "How it plays" round (app screens + app voice), carousel slides, story frame; monkey animated from the master SVG (blink, bounce, correct/wrong); word-level captions; brand fonts/colors from the design tokens. Input = one question row (text, answer, explanation, language, category). Voice: reuse the question's existing ElevenLabs audio, generate only if missing.
 - [~] **210.4 Weekly batch job** (2026-10-23 v1: `npm run batch` in apps/social-studio + approval artifact; first batch W44 sent to the founder on https://claude.ai/artifact/TmE5zjEF8kn1yKyFMpzzj5; Thu slot empty until "How it plays" exists). Picks questions (approved, fun-scored, fresh entertainment preferred, mixed categories, ~20–30 % MCQ), never repeats one already posted (posted log), renders EN + sk/cs, writes captions + hashtags, and publishes a review page (claude.ai artifact) where the founder approves or rejects each post.
 - [~] **210.5 Instagram publishing** (both accounts, decision 7). Own Meta app (Instagram API with Instagram Login, Standard Access, no app review), media on R2 (public bucket), long-lived tokens in `.env` with a refresh job; the API has no scheduling, so our own scheduler (GitHub Actions cron) publishes each approved post at its slot; sets the AI-generated flag where appropriate. Check the account's real posting limit first. Built 2026-10-23: `stage_week.py` (R2 + manifest), `publish_due.py` + `social-publish.yml` (hourly), `ig_tokens.py` (refresh + GitHub secrets); W44 EN posts staged. Meta app "Trubbo Social" (Development mode, no business portfolio) set up 2026-10-23; @trubboapp (EN) and @trubboapp.sk (SK/CZ) are Instagram testers with tokens in `.env` + GitHub secrets; `mode=check` passed for both (limit 100 posts / 24 h). Bios set to the founder picks. Open: confirm the first real publish (Mon 10-26 18:00 UTC) works in Development mode; if not, switch the app to Live (privacy URL trubbo.app/privacy).
-- [ ] **210.6 YouTube Shorts publishing** (decision 7). Own Google Cloud project with the YouTube Data API, upload by the same scheduler; submit the YouTube API compliance audit right away (uploads stay private until it passes). Until then approved reels go to Buffer free via its API (1 key, 3,000 requests/30 days, 10 queued posts per channel); drop Buffer once the audit passes. TikTok (deferred) gets the same treatment when it returns.
+- [ ] **210.6 YouTube Shorts publishing** (decision 7). Own Google Cloud project with the YouTube Data API, upload by the same scheduler; submit the YouTube API compliance audit right away (uploads stay private until it passes). Until then the agent uploads + schedules approved reels in YouTube Studio via Playwright (decision 8). Both channels (EN, SK/CZ). TikTok (deferred) gets the same treatment when it returns.
 - [ ] **210.7 Attribution.** App Store Connect campaign link per channel (`ct=ig_en`, `tt_en`, `yt_en`, `ig_skcz`, `tt_skcz`, `personal`, `fb_groups`); link-in-bio page on trubbo.app (apps/website) per language. Weekly numbers: views per post (platform insights) + installs per campaign link (ASC). Founder creates the links in ASC (no API) — steps below.
 - [ ] **210.8 Conversion hooks.** Custom product page per series (road trip / party / family, from PR #148); a topical pack every 3–4 weeks with its own reel (Christmas road trips, ski season, New Year); New Year is the strongest promo window (subscription conversion peaks in January). Pricing/offer changes → founder decides.
 - [ ] **210.9 Manual community channels** (light): Facebook family/camping/road-trip groups SK/CZ (admin permission first, free codes), CZ pub-quiz organizers (Chytrý kvíz etc.: codes + a custom pack for quizmasters), Reddit participation only.
 - [ ] **210.10 4-week review.** One page: views per post per account/format, installs per channel, purchases trend. Decide: keep/split SK/CZ, which formats stay, whether a ~€50–100 Apple Ads test CZ/SK vs IE/CA is worth it (needs founder approval — spend).
+- [ ] **210.11 Facebook Pages** (decision 10). Create Page EN + Page SK/CZ under the founder's profile, add Pages permissions to the Meta app, publish each approved reel to the matching Page from `publish_due.py`.
 
 Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live → 210.6 (start the audit early), 210.7 in parallel → 210.8–210.9 → 210.10.
 
@@ -89,10 +99,10 @@ Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live →
 
 ## Cost
 
-Tools €0 (Remotion is free for companies of ≤3 people, official Instagram and YouTube APIs, Buffer free only as the YouTube bridge). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
+Tools €0 (Remotion is free for companies of ≤3 people, official Instagram and YouTube APIs; YouTube Studio via Playwright until the audit). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
 
 ## Done when
 
-- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram and YouTube posts published automatically (YouTube via Buffer until the audit passes), every link carries a campaign token.
+- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram and YouTube posts published automatically (YouTube via Studio/Playwright until the audit passes), every link carries a campaign token.
 - 4 consecutive weeks posted, then 210.10 review page delivered and the next-step decision made with the founder.
 - Code via PRs on `main` with review; no TestFlight build needed (no app change unless 210.8 adds one).

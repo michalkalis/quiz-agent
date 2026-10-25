@@ -500,5 +500,187 @@
   "language": "sk",
   "chars": 12,
   "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:33:23.148Z",
+  "id": "a22a3ae5-255d-4723-a9af-1f4e797dc8f1",
+  "language": "cs",
+  "chars": 8,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:34:23.266Z",
+  "id": "a9450d1e-fc0c-40fe-af28-b2af439c6f19",
+  "language": "en",
+  "chars": 15,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:37:05.931Z",
+  "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+  "language": "en",
+  "chars": 30,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:37:32.297Z",
+  "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+  "language": "en",
+  "chars": 27,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:37:49.533Z",
+  "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+  "language": "en",
+  "chars": 18,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:39:05.029Z",
+  "id": "b6e8303d-8938-4dd4-819c-d588c2fe5a96",
+  "language": "cs",
+  "chars": 32,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:39:23.940Z",
+  "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+  "language": "cs",
+  "chars": 22,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:39:43.306Z",
+  "id": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+  "language": "cs",
+  "chars": 23,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:41:10.762Z",
+  "id": "6d3e5a61-f775-4667-a04c-042824d46fde",
+  "language": "en",
+  "chars": 19,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:41:53.467Z",
+  "id": "dd84906d-1008-4838-bb11-b226f1e0f7c1",
+  "language": "sk",
+  "chars": 7,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:42:36.422Z",
+  "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+  "language": "en",
+  "chars": 16,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:42:54.877Z",
+  "id": "9e0334f6-496f-419c-9726-18ca2adf9592",
+  "language": "en",
+  "chars": 17,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:43:22.232Z",
+  "id": "47049a19-40af-40ee-8ddf-964df5670c91",
+  "language": "en",
+  "chars": 24,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:43:40.940Z",
+  "id": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+  "language": "en",
+  "chars": 18,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:43:59.350Z",
+  "id": "a20909a9-a454-487c-b3ad-087d9a1be8a9",
+  "language": "en",
+  "chars": 19,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:45:16.719Z",
+  "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
+  "language": "cs",
+  "chars": 24,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:45:35.700Z",
+  "id": "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca",
+  "language": "cs",
+  "chars": 21,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:45:55.027Z",
+  "id": "b3eb4628-c2f8-4762-9cc2-b444f8736689",
+  "language": "cs",
+  "chars": 35,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:46:17.572Z",
+  "id": "682864b3-9356-46db-b496-06605e6df995",
+  "language": "cs",
+  "chars": 27,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:46:36.021Z",
+  "id": "d192e405-c28d-4d82-807f-bd48e943fae2",
+  "language": "cs",
+  "chars": 29,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:49:42.809Z",
+  "id": "5bc4d047-918c-4013-b807-bdc7f8ec6d77",
+  "language": "en",
+  "chars": 27,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:50:03.023Z",
+  "id": "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f",
+  "language": "en",
+  "chars": 22,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:50:23.119Z",
+  "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+  "language": "en",
+  "chars": 25,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:51:19.850Z",
+  "id": "03134bc3-3324-4a3e-9fd7-1ea01d5f0eae",
+  "language": "sk",
+  "chars": 27,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:51:40.308Z",
+  "id": "9e5af35d-c105-42b0-a73d-0eea16e08e2e",
+  "language": "sk",
+  "chars": 26,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T20:51:58.474Z",
+  "id": "6673cb78-90ee-4628-933c-7f2aa6d4d5dc",
+  "language": "sk",
+  "chars": 30,
+  "what": "answer"
  }
 ]

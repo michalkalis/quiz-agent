@@ -1,7 +1,7 @@
 {
  "week": "2026-W44",
  "monday": "2026-10-26",
- "created": "2026-10-25T17:09:14.839Z",
+ "created": "2026-10-25T20:52:40.460Z",
  "posts": [
   {
    "key": "mon-ig_en",
@@ -19,7 +19,7 @@
     "title": "The cappuccino is named after the brown hooded robes worn by which order of monks?",
     "description": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nDid you know it before the reveal?\n\n#trivia #quiz #funfacts #didyouknow"
    },
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: question + answer",
    "questions": [
     {
      "id": "a9450d1e-fc0c-40fe-af28-b2af439c6f19",
@@ -45,7 +45,7 @@
    ],
    "caption": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?\n\nVíš to dřív, než prozradíme odpověď?\n\n#kvíz #kviz #filmy #vědomosti",
    "youtube": null,
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: question + answer",
    "questions": [
     {
      "id": "a22a3ae5-255d-4723-a9af-1f4e797dc8f1",
@@ -343,7 +343,7 @@
     "title": "Which is hotter: the surface of the Sun or a bolt of lightning?",
     "description": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #science #didyouknow"
    },
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: question + answer",
    "questions": [
     {
      "id": "6d3e5a61-f775-4667-a04c-042824d46fde",
@@ -372,7 +372,7 @@
    ],
    "caption": "Ktorá z týchto minerálnych vôd nepochádza zo slovenského prameňa?\n\nKtorá je správna? Odpoveď je na konci.\n\n#kvíz #kviz #jedlo #vedomosti",
    "youtube": null,
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: question + answer",
    "questions": [
     {
      "id": "dd84906d-1008-4838-bb11-b226f1e0f7c1",
@@ -898,5 +898,5 @@
    "permalink": "https://www.instagram.com/reel/De1jsfPiJT3/"
   }
  ],
- "version": 3
+ "version": 4
 }

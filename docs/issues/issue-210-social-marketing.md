@@ -60,7 +60,7 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 | Founder personal IG (new) | EN | Founder plays the quiz and answers, solo-dev story | Manual |
 | Facebook groups, CZ pub-quiz organizers | sk / cs | Permission-first posts, free codes | Manual (see 210.9) |
 
-Publishing = own scripts on the official APIs (decision 7); Buffer free only bridges YouTube until the audit. When TikTok returns: TikTok's Content Posting API keeps unaudited apps' posts private too, so it gets the same audit-or-bridge treatment. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
+Publishing = own scripts on the official APIs (decision 7); YouTube Studio via Playwright bridges YouTube until the audit (decision 8). TikTok (@trubboapp, decision 11): TikTok's Content Posting API keeps unaudited apps' posts private too, so it gets the same audit-or-bridge treatment. Threads cross-post only if it costs nothing extra. X, Bluesky, Pinterest, Discord skipped.
 
 ## Formats (test designs; keep what wins)
 
@@ -99,10 +99,10 @@ Order: 210.1 + 210.2 → 210.3 → 210.4 → 210.5 → first batch goes live →
 
 ## Cost
 
-Tools €0 (Remotion is free for companies of ≤3 people, official Instagram and YouTube APIs, Buffer free only as the YouTube bridge). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
+Tools €0 (Remotion is free for companies of ≤3 people, official Instagram and YouTube APIs; YouTube Studio via Playwright until the audit). Existing ElevenLabs plan covers voice (mostly reused clips). Optional, each needs a go: Gemini image generation for occasional poster art (~$0.03 per image), Apple Ads test (€50–100).
 
 ## Done when
 
-- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram and YouTube posts published automatically (YouTube via Buffer until the audit passes), every link carries a campaign token.
+- 210.1–210.7 done: one weekly batch rendered in EN + sk/cs, approved by the founder on one page, Instagram and YouTube posts published automatically (YouTube via Studio/Playwright until the audit passes), every link carries a campaign token.
 - 4 consecutive weeks posted, then 210.10 review page delivered and the next-step decision made with the founder.
 - Code via PRs on `main` with review; no TestFlight build needed (no app change unless 210.8 adds one).

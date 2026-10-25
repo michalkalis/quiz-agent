@@ -64,6 +64,8 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
     base = os.environ["R2_PUBLIC_URL"].rstrip("/")
 
     for post in manifest["posts"]:
+        if post.get("status") == "published":
+            continue  # already on Instagram (a re-rendered week keeps them)
         post["status"] = status.get(post["key"]) or "pending"
         # A staged post keeps its slot (it may have been moved by hand).
         if not post.get("media_urls"):

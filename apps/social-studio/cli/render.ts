@@ -216,7 +216,8 @@ async function main() {
 		const q = shapeQuestion(raw);
 		const format = values.format ?? (q.options.length ? 'abc' : 'five');
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');
-		const hook = values.hook ? Number(values.hook) : parseInt(q.id.replace(/-/g, '').slice(0, 6), 16);
+		// One fixed hook line (founder 2026-10-25); --hook 1 renders the challenger.
+		const hook = values.hook ? Number(values.hook) : 0;
 		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
 		if (!['intro', 'fused', 'plain'].includes(style.opening) || !['line', 'parts', 'captions'].includes(style.explain))
 			throw new Error('--opening intro|fused|plain, --explain line|parts|captions');

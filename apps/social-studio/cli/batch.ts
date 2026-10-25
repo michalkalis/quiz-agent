@@ -4,8 +4,10 @@
 // posts on both Instagram accounts (EN, SK/CZ), renders them with cli/render.ts,
 // writes captions + hashtags, and saves batches/<week>.json. The manifests are
 // the posted log: a question in any earlier manifest is never picked again.
-// Week per account (founder 2026-10-24: 5 reels + 2 carousels): Mon, Thu, Fri,
-// Sun 5 Seconds · Wed A, B or C · Tue and Sat Road Trip Round (carousel).
+// Week per account (founder 2026-10-24: 5 reels + 2 carousels). During the
+// 3-week format test (founder 2026-10-25): Mon 5 Seconds · Thu A, B or C (one
+// question each) · Wed and Sun a 3-question round · Fri a 5-question round ·
+// Tue and Sat Road Trip Round (carousel).
 // Only questions that passed the content review (batches/content-review.json,
 // verdict "keep") are picked, strongest first.
 // --seed (founder 2026-10-23): six launch posts per account on the weekend
@@ -16,6 +18,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {parseArgs} from 'node:util';
+import {COPY} from '../src/copy';
 import type {Language} from '../src/types';
 import {caption, youtubeTitle, type PostFormat} from './captions';
 import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, voiceCharsLeft} from './paths';
@@ -43,11 +46,14 @@ type Candidate = {
 type Account = 'ig_en' | 'ig_skcz';
 type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 /** Seed slots are the weekend before Monday; weekly slots run Mon..Sun. */
-type Slot = {account: Account; day: Day; format: PostFormat; language: Language; time?: string; n?: number; before?: boolean};
+type Slot = {account: Account; day: Day; format: PostFormat; language: Language; time?: string; n?: number; before?: boolean; size?: number};
 
 const CAROUSEL_SIZE = 7;
-// Founder 2026-10-24: a reel question reads in under ~6 s of voice.
+// Founder 2026-10-24: a reel question reads in under ~6 s of voice. The first
+// question people see stays at 90; a round's later questions may run to 110
+// (founder 2026-10-25).
 const REEL_MAX_CHARS = 90;
+const ROUND_LATER_MAX_CHARS = 110;
 const MCQ_MAX_CHARS = 70;
 const MCQ_MAX_OPTION = 22;
 const CAROUSEL_MAX_CHARS = 120;
@@ -134,15 +140,16 @@ function plan(): Slot[] {
 	const week: [Day, PostFormat, Language, Language][] = [
 		['Mon', 'five', 'en', a],
 		['Tue', 'carousel', 'en', b],
-		['Wed', 'abc', 'en', a],
-		['Thu', 'five', 'en', b],
-		['Fri', 'five', 'en', a],
+		['Wed', 'round', 'en', a],
+		['Thu', 'abc', 'en', b],
+		['Fri', 'round', 'en', a],
 		['Sat', 'carousel', 'en', a],
-		['Sun', 'five', 'en', b],
+		['Sun', 'round', 'en', b],
 	];
+	const size = (day: Day) => (day === 'Fri' ? 5 : 3);
 	return week.flatMap(([day, format, en, skcz]) => [
-		{account: 'ig_en' as const, day, format, language: en},
-		{account: 'ig_skcz' as const, day, format, language: skcz},
+		{account: 'ig_en' as const, day, format, language: en, ...(format === 'round' ? {size: size(day)} : {})},
+		{account: 'ig_skcz' as const, day, format, language: skcz, ...(format === 'round' ? {size: size(day)} : {})},
 	]);
 }
 
@@ -193,6 +200,33 @@ function pick(cands: Candidate[]): Pick[] {
 			picks.push({slot, ids, makeVoice: false});
 			continue;
 		}
+		if (slot.format === 'round') {
+			const n = slot.size ?? 3;
+			// Opener: the strongest short question (it is what people see first).
+			const open = (c: Candidate) => !c.mcq && (reelCategories[slot.account][c.category] ?? 0) < 2;
+			const first = pool.find((c) => open(c) && c.chars <= REEL_MAX_CHARS);
+			const rest: Candidate[] = [];
+			const perCategory: Record<string, number> = first ? {[first.category]: 1} : {};
+			// Longer questions first, so the short ones stay for openers and one-question reels.
+			for (const c of [...pool.filter((c) => c.chars > REEL_MAX_CHARS), ...pool.filter((c) => c.chars <= REEL_MAX_CHARS)]) {
+				if (rest.length === n - 1) break;
+				if (c === first || c.mcq || c.chars > ROUND_LATER_MAX_CHARS || (perCategory[c.category] ?? 0) >= 2) continue;
+				rest.push(c);
+				perCategory[c.category] = (perCategory[c.category] ?? 0) + 1;
+			}
+			// The strongest of the rest closes the round: its explanation is read in full.
+			const ids = first && rest.length === n - 1 ? [first, ...rest.reverse()] : [];
+			const cost = ids.reduce((sum, c, k) => sum + (c.has_clip ? 0 : c.chars) + (k === n - 1 ? (c.explanation?.length ?? 0) : 0), 0);
+			if (!ids.length || cost > voiceChars) {
+				console.warn(`! ${slot.account} ${slot.day} round of ${n} ${slot.language}: ${ids.length ? 'over the weekly voice budget' : 'not enough reviewed questions'}, slot skipped`);
+				continue;
+			}
+			voiceChars -= cost;
+			ids.forEach((c) => taken.add(c.id));
+			reelCategories[slot.account][first!.category] = (reelCategories[slot.account][first!.category] ?? 0) + 1;
+			picks.push({slot, ids: ids.map((c) => c.id), makeVoice: true});
+			continue;
+		}
 		const short = (c: Candidate) =>
 			c.mcq ? c.chars <= MCQ_MAX_CHARS && Object.values(c.options ?? {}).every((o) => o.length <= MCQ_MAX_OPTION) : c.chars <= REEL_MAX_CHARS;
 		// At most two reels of one category a week per account, so the colours vary.
@@ -240,8 +274,12 @@ function main() {
 			files = render(['--carousel', ids.join(','), '--part', String(part), '--out', outDir]);
 			firstLine = {en: `Road trip round, part ${part}.`, sk: `Kvíz na cestu, ${part}. diel.`, cs: `Kvíz na cestu, ${part}. díl.`}[slot.language];
 		} else {
-			files = render([ids[0], '--format', slot.format, '--out', outDir, ...(makeVoice ? ['--make-voice'] : [])]);
-			firstLine = row(ids[0]).question;
+			files =
+				slot.format === 'round'
+					? render(['--round', ids.join(','), '--out', outDir, '--make-voice'])
+					: render([ids[0], '--format', slot.format, '--out', outDir, ...(makeVoice ? ['--make-voice'] : [])]);
+			// A round's caption opens with its hook line; a one-question reel's with the question.
+			firstLine = slot.format === 'round' ? COPY[slot.language].roundHook(ids.length) : row(ids[0]).question;
 		}
 		const rows = ids.map(row);
 		const questions = rows.map((r) => {
@@ -256,13 +294,17 @@ function main() {
 			files,
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
-			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(questions[0].question), description: text} : null,
+			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(slot.format === 'round' ? `${firstLine} ${questions[0].question}` : questions[0].question), description: text} : null,
 			voice: slot.format === 'carousel' ? null : 'app voice: question + explanation',
 			questions,
 		});
 	}
 	mkdirSync(BATCH_DIR, {recursive: true});
-	const manifest = current ? {...current, posts: [...posts, ...current.posts]} : {week: WEEK.id, monday: MONDAY, created: new Date().toISOString(), posts};
+	// A re-run week is a new version: the approval page keys decisions by it.
+	const version = SEED ? (existing as {version?: number} | null)?.version : existing ? ((existing as {version?: number}).version ?? 1) + 1 : undefined;
+	const manifest = current
+		? {...current, ...(version ? {version, created: new Date().toISOString()} : {}), posts: [...posts, ...current.posts]}
+		: {week: WEEK.id, monday: MONDAY, created: new Date().toISOString(), posts};
 	writeFileSync(WEEK_FILE, JSON.stringify(manifest, null, 1));
 	console.log(`✓ ${WEEK_FILE}\n  media in ${outDir}`);
 }

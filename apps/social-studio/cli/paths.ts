@@ -12,10 +12,12 @@ export const BATCH_DIR = path.join(APP_DIR, 'batches');
 export const VOICE_LEDGER = path.join(BATCH_DIR, 'voice-ledger.json');
 /** Characters the app's TTS may speak for social posts per rolling 7 days.
  * Founder 2026-10-24: question + explanation for ~10 reels a week, about
- * 1,000 ElevenLabs credits (~0.4 credit per character, Starter, no top-ups).
+ * 1,000 ElevenLabs credits (~0.4 credit per character, Starter, no top-ups);
+ * raised to 4,000 characters (~1,600 credits) for the 3-week reel format
+ * test (founder 2026-10-25).
  * Clips logged before that date fell under the old 5-clips rule and do not
  * count. EXTRA_VOICE_CHARS raises it for one run when the founder okays more. */
-export const VOICE_CHARS_PER_WEEK = 2500 + Number(process.env.EXTRA_VOICE_CHARS ?? 0);
+export const VOICE_CHARS_PER_WEEK = 4000 + Number(process.env.EXTRA_VOICE_CHARS ?? 0);
 const CHAR_BUDGET_FROM = Date.parse('2026-10-24T00:00:00Z');
 
 /** Characters still allowed in the rolling 7 days, from the voice ledger entries. */

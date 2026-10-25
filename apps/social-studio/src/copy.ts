@@ -24,11 +24,8 @@ const list = (letters: string[], or: string) =>
 
 export const COPY: Record<Language, Copy> = {
 	en: {
-		hooks: [
-			"You've got 5 seconds.",
-			'Answer before the monkey does.',
-			'One question. No googling.',
-		],
+		// One fixed line (founder 2026-10-25); the second is the challenger for the weeks 4 to 6 test.
+		hooks: ['Bet you know this one.', 'Can you get it right?'],
 		answer: 'Answer',
 		tagline: 'Trivia you answer out loud',
 		soon: 'Coming soon to the App Store · trubbo.app',
@@ -40,11 +37,7 @@ export const COPY: Record<Language, Copy> = {
 		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 	},
 	sk: {
-		hooks: [
-			'Máš 5 sekúnd.',
-			'Odpovedz skôr ako opička.',
-			'Jedna otázka, bez googlenia.',
-		],
+		hooks: ['Stavím sa, že toto vieš.', 'Trafíš to?'],
 		answer: 'Odpoveď',
 		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Čoskoro v App Store · trubbo.app',
@@ -56,11 +49,7 @@ export const COPY: Record<Language, Copy> = {
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 	},
 	cs: {
-		hooks: [
-			'Máš 5 vteřin.',
-			'Odpověz dřív než opička.',
-			'Jedna otázka, bez googlení.',
-		],
+		hooks: ['Vsadím se, že tohle víš.', 'Trefíš to?'],
 		answer: 'Odpověď',
 		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Brzy v App Store · trubbo.app',

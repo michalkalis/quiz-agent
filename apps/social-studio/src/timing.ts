@@ -33,7 +33,8 @@ export const eyeOpenAt = (t: number) => {
 /** Round reel (founder 2026-10-25): 3 or 5 questions in a row, each with a
  * short countdown, and every answer only at the end, one after another; then
  * the last (hardest) question's whole explanation read aloud. */
-export const roundCountdownMs = (n: number) => (n >= 5 ? 3000 : 4000);
+// Founder 2026-10-25: five questions get less time to think (70 s was too long).
+export const roundCountdownMs = (n: number) => (n >= 5 ? 2000 : 4000);
 /** Gap between two answers popping in on the answers card. */
 export const ANSWER_STEP_MS = 1500;
 /** The full answers card stays up this long after the last answer. */

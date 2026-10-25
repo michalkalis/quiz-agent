@@ -3,7 +3,7 @@
 // v1 reveal, end card.
 import React from 'react';
 import {AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY, LETTERS} from './copy';
+import {COPY} from './copy';
 import {fitWhy} from './fitWhy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, OK_BG, SURF, tintFor} from './theme';
@@ -44,7 +44,7 @@ export const QuestionCard: React.FC<{
 	words: ReelProps['words'];
 	tMs: number;
 	optionsAtMs: number;
-	/** When the voice starts each option; it is marked while being read. */
+	/** When the voice starts each option, then when it stops; an option is marked while being read. */
 	optionAtMs?: number[];
 	revealed: boolean;
 	appear: number;
@@ -98,8 +98,7 @@ export const QuestionCard: React.FC<{
 							extrapolateLeft: 'clamp',
 							extrapolateRight: 'clamp',
 						});
-						const next = optionAtMs[i + 1] ?? (optionAtMs.length ? Infinity : at + 350);
-						const reading = readable && optionAtMs.length > 0 && tMs >= at && tMs < next && !revealed;
+						const reading = readable && optionAtMs.length > i + 1 && tMs >= at && tMs < optionAtMs[i + 1] && !revealed;
 						// Readable reels show the options faintly from frame 1 (no empty card); v1 slides them in.
 						const shown = readable ? 0.35 + 0.65 * reached : reached;
 						const right = i === q.correctIndex;
@@ -133,7 +132,7 @@ export const QuestionCard: React.FC<{
 										alignItems: 'center',
 									}}
 								>
-									{LETTERS[i]}
+									{q.labels[i]}
 								</div>
 								<div style={{fontSize: 44, fontWeight: 600, color: reading ? markInk : INK}}>{opt}</div>
 							</div>
@@ -210,7 +209,7 @@ export const Reveal: React.FC<{q: ReelProps['q']; appear: number; variant: 'five
 			<div style={{flex: 1}}>
 				<div style={{fontSize: 34, fontWeight: 700, color: OK, textTransform: 'uppercase', letterSpacing: 2}}>
 					{copy.answer}
-					{abc ? ` ${LETTERS[q.correctIndex!]}` : ''}
+					{abc ? ` ${q.labels[q.correctIndex!]}` : ''}
 				</div>
 				{abc ? null : <div style={{fontSize: 80, fontWeight: 800, lineHeight: 1.05, marginTop: 10, letterSpacing: -1}}>{q.answer}</div>}
 				{why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: abc ? 12 : 24, fontWeight: 500}}>{why.text}</div> : null}

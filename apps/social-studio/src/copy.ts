@@ -59,8 +59,6 @@ export const COPY: Record<Language, Copy> = {
 	},
 };
 
-export const LETTERS = ['A', 'B', 'C', 'D', 'E'];
-
 export const hookFor = (language: Language, index: number) => {
 	const hooks = COPY[language].hooks;
 	return hooks[((index % hooks.length) + hooks.length) % hooks.length];

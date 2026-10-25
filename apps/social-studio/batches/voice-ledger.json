@@ -339,5 +339,166 @@
   "language": "sk",
   "chars": 175,
   "what": "explanation"
+ },
+ {
+  "at": "2026-10-25T16:48:01.911Z",
+  "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+  "language": "en",
+  "chars": 18,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T16:48:22.881Z",
+  "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+  "language": "en",
+  "chars": 15,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T16:48:42.395Z",
+  "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+  "language": "en",
+  "chars": 6,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T16:57:14.760Z",
+  "id": "b6e8303d-8938-4dd4-819c-d588c2fe5a96",
+  "language": "cs",
+  "chars": 12,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T16:57:42.060Z",
+  "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+  "language": "cs",
+  "chars": 104,
+  "what": "question"
+ },
+ {
+  "at": "2026-10-25T16:57:42.061Z",
+  "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+  "language": "cs",
+  "chars": 4,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T16:58:01.946Z",
+  "id": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+  "language": "cs",
+  "chars": 5,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:00:02.901Z",
+  "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+  "language": "en",
+  "chars": 4,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:00:24.704Z",
+  "id": "9e0334f6-496f-419c-9726-18ca2adf9592",
+  "language": "en",
+  "chars": 5,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:00:45.939Z",
+  "id": "47049a19-40af-40ee-8ddf-964df5670c91",
+  "language": "en",
+  "chars": 12,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:01:04.521Z",
+  "id": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+  "language": "en",
+  "chars": 6,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:01:26.766Z",
+  "id": "a20909a9-a454-487c-b3ad-087d9a1be8a9",
+  "language": "en",
+  "chars": 7,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:03:00.346Z",
+  "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
+  "language": "cs",
+  "chars": 4,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:03:19.343Z",
+  "id": "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca",
+  "language": "cs",
+  "chars": 3,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:03:37.223Z",
+  "id": "b3eb4628-c2f8-4762-9cc2-b444f8736689",
+  "language": "cs",
+  "chars": 17,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:03:55.902Z",
+  "id": "682864b3-9356-46db-b496-06605e6df995",
+  "language": "cs",
+  "chars": 7,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:04:13.146Z",
+  "id": "d192e405-c28d-4d82-807f-bd48e943fae2",
+  "language": "cs",
+  "chars": 11,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:05:58.838Z",
+  "id": "5bc4d047-918c-4013-b807-bdc7f8ec6d77",
+  "language": "en",
+  "chars": 15,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:06:18.486Z",
+  "id": "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f",
+  "language": "en",
+  "chars": 10,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:06:41.345Z",
+  "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+  "language": "en",
+  "chars": 13,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:07:44.123Z",
+  "id": "03134bc3-3324-4a3e-9fd7-1ea01d5f0eae",
+  "language": "sk",
+  "chars": 7,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:08:01.603Z",
+  "id": "9e5af35d-c105-42b0-a73d-0eea16e08e2e",
+  "language": "sk",
+  "chars": 8,
+  "what": "answer"
+ },
+ {
+  "at": "2026-10-25T17:08:20.122Z",
+  "id": "6673cb78-90ee-4628-933c-7f2aa6d4d5dc",
+  "language": "sk",
+  "chars": 12,
+  "what": "answer"
  }
 ]

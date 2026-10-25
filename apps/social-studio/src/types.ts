@@ -17,6 +17,8 @@ export type ReelQuestion = {
 	options: string[];
 	/** Index into `options` of the right one (MCQ only). */
 	correctIndex: number | null;
+	/** Option labels as the app shows and reads them: 1–4, or A–D when an option is a number. */
+	labels: string[];
 };
 
 /** How the reel opens: a separate hook card before the question (the v1
@@ -49,7 +51,7 @@ export type ReelProps = {
 	questionMs: number;
 	/** When the MCQ options start to appear (the voice reaches them). */
 	optionsAtMs: number;
-	/** When the voice starts reading each MCQ option (empty for open questions). */
+	/** When the voice starts reading each MCQ option, then when it stops (empty for open questions). */
 	optionAtMs: number[];
 	hookIndex: number;
 };

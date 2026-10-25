@@ -173,14 +173,15 @@ async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<Quest
 		const words: TimedWord[] = displayWords.map((text, i) => ({text, startMs: i * WORD_MS}));
 		const optionsAtMs = displayWords.length * WORD_MS + 300;
 		const questionMs = q.options.length ? optionsAtMs + q.options.length * 500 + 900 : Math.max(3500, optionsAtMs + 900);
-		return {audio: null, words, questionMs, optionsAtMs, optionAtMs: q.options.map((_, i) => optionsAtMs + i * 500)};
+		return {audio: null, words, questionMs, optionsAtMs, optionAtMs: [...q.options.keys(), q.options.length].map((i) => optionsAtMs + i * 500)};
 	}
 	const file = path.join(PUBLIC_AUDIO_DIR, path.basename(audio));
 	await ensureWhisper();
 	// MCQ clips also read the options: the stem is only the first part of them.
 	const spoken = raw.spoken_text ?? [q.question, ...q.options].join(' ');
 	const share = q.options.length ? Math.min(1, raw.question.length / spoken.length) : 1;
-	const fracs = q.options.length ? optionFracs(spoken, raw.question.length, q.options) : [];
+	// Plus the end of the clip, so the last option stops being marked when the voice stops.
+	const fracs = q.options.length ? [...optionFracs(spoken, raw.question.length, q.options), 1] : [];
 	const {words, optionsAtMs, extraMs} = await timeWords(file, q.language, displayWords, share, fracs);
 	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, optionAtMs: extraMs};
 }

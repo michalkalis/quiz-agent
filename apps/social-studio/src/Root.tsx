@@ -26,6 +26,7 @@ const FIVE_SAMPLE: ReelProps = {
 		explanation: "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. Our own galaxy kept the image: the Milky Way.",
 		options: [],
 		correctIndex: null,
+		labels: [],
 	},
 	audio: null,
 	words: sampleWords("The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?"),
@@ -56,11 +57,12 @@ const ABC_SAMPLE: ReelProps = {
 		explanation: 'About 300 comic fans met in a hotel basement in 1970.',
 		options: ['About 30', 'About 300', 'About 3,000', 'About 30,000'],
 		correctIndex: 1,
+		labels: ["1", "2", "3"],
 	},
 	words: sampleWords('Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?'),
 	questionMs: 7500,
 	optionsAtMs: 5000,
-	optionAtMs: [5000, 5800, 6600],
+	optionAtMs: [5000, 5800, 6600, 7400],
 };
 
 const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({

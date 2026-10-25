@@ -68,6 +68,13 @@ const splitLong = (sentence: string): string[] => {
 export const explainParts = (text: string): string[] =>
 	text ? text.split(SENTENCE_END).flatMap(splitLong).filter(Boolean) : [];
 
+/** The app's labels (mcq_matcher.option_labels): read from the clip text when there is
+ * one ("… A: 1918."), else its rule: letters when an option is a number, numbers otherwise. */
+const optionLabels = (raw: QuestionInput, options: string[]): string[] => {
+	const letters = raw.spoken_text ? /[?.!] A: /.test(raw.spoken_text) : options.some((o) => /^\s*\d/.test(o));
+	return options.map((_, i) => (letters ? 'ABCD'[i] : String(i + 1)));
+};
+
 export const shapeQuestion = (raw: QuestionInput): ReelQuestion => {
 	const entries = raw.possible_answers ? Object.entries(raw.possible_answers).sort(([a], [b]) => a.localeCompare(b)) : [];
 	const options = raw.options ?? entries.map(([, v]) => v);
@@ -94,5 +101,6 @@ export const shapeQuestion = (raw: QuestionInput): ReelQuestion => {
 		explanation: noDashes((raw.explanation ?? '').replace(/\s+/g, ' ').trim()),
 		options: options.map(noDashes),
 		correctIndex,
+		labels: optionLabels(raw, options),
 	};
 };

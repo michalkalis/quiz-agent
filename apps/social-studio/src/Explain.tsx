@@ -4,7 +4,7 @@
 // big spoken-word captions under the answer.
 import React from 'react';
 import {Audio, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY, LETTERS} from './copy';
+import {COPY} from './copy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, SURF} from './theme';
 import type {ExplainStyle, ExplainTrack, ReelQuestion, TimedWord} from './types';
@@ -32,7 +32,7 @@ export const AnswerCard: React.FC<{q: ReelQuestion; abc: boolean; appear: number
 				</div>
 				<div style={{fontSize: 32, fontWeight: 700, color: OK, textTransform: 'uppercase', letterSpacing: 2, marginTop: 22}}>
 					{copy.answer}
-					{abc && q.correctIndex !== null ? ` ${LETTERS[q.correctIndex]}` : ''}
+					{abc && q.correctIndex !== null ? ` ${q.labels[q.correctIndex]}` : ''}
 				</div>
 				<div style={{fontSize: compact ? 64 : 76, fontWeight: 800, lineHeight: 1.05, marginTop: 8, letterSpacing: -1}}>{q.answer}</div>
 			</div>

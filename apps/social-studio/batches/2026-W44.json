@@ -1,7 +1,7 @@
 {
  "week": "2026-W44",
  "monday": "2026-10-26",
- "created": "2026-10-25T14:32:46.917Z",
+ "created": "2026-10-25T17:09:14.839Z",
  "posts": [
   {
    "key": "mon-ig_en",
@@ -14,10 +14,10 @@
     "five-en-a9450d1e.mp4",
     "five-en-a9450d1e.jpg"
    ],
-   "caption": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #funfacts #didyouknow",
+   "caption": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nDid you know it before the reveal?\n\n#trivia #quiz #funfacts #didyouknow",
    "youtube": {
     "title": "The cappuccino is named after the brown hooded robes worn by which order of monks?",
-    "description": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nYour answer in the comments before the reveal.\n\n#trivia #quiz #funfacts #didyouknow"
+    "description": "The cappuccino is named after the brown hooded robes worn by which order of monks?\n\nDid you know it before the reveal?\n\n#trivia #quiz #funfacts #didyouknow"
    },
    "voice": "app voice: question + explanation",
    "questions": [
@@ -43,7 +43,7 @@
     "five-cs-a22a3ae5.mp4",
     "five-cs-a22a3ae5.jpg"
    ],
-   "caption": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?\n\nNapiš odpověď do komentáře dřív, než ji prozradíme.\n\n#kvíz #kviz #filmy #vědomosti",
+   "caption": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?\n\nVíš to dřív, než prozradíme odpověď?\n\n#kvíz #kviz #filmy #vědomosti",
    "youtube": null,
    "voice": "app voice: question + explanation",
    "questions": [
@@ -77,7 +77,7 @@
     "carousel-en-p1-8-answers.jpg",
     "carousel-en-p1-9-answers.jpg"
    ],
-   "caption": "Road trip round, part 1.\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #funfacts #food #roadtrip",
+   "caption": "Road trip round, part 1.\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #funfacts #food #roadtrip",
    "youtube": null,
    "voice": null,
    "questions": [
@@ -165,7 +165,7 @@
     "carousel-sk-p1-8-answers.jpg",
     "carousel-sk-p1-9-answers.jpg"
    ],
-   "caption": "Kvíz na cestu, 1. diel.\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #zaujímavosti #jedlo #naceste",
+   "caption": "Kvíz na cestu, 1. diel.\n\nKoľko máš správne?\n\n#kvíz #kviz #zaujímavosti #jedlo #naceste",
    "youtube": null,
    "voice": null,
    "questions": [
@@ -246,12 +246,12 @@
     "round-en-0a4fd580.mp4",
     "round-en-0a4fd580.jpg"
    ],
-   "caption": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #food #history",
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #food #history",
    "youtube": {
     "title": "Can you get 3 out of 3? Until New Zealand exporters rebranded it in 1959, the kiwifruit was sold…",
-    "description": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #food #history"
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #food #history"
    },
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
@@ -294,9 +294,9 @@
     "round-cs-b6e8303d.mp4",
     "round-cs-b6e8303d.jpg"
    ],
-   "caption": "Trefíš všechny tři?\n\nKolik máš správně? Napiš do komentáře.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #jídlo",
+   "caption": "Trefíš všechny tři?\n\nKolik máš správně?\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #jídlo",
    "youtube": null,
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "b6e8303d-8938-4dd4-819c-d588c2fe5a96",
@@ -338,10 +338,10 @@
     "abc-en-6d3e5a61.mp4",
     "abc-en-6d3e5a61.jpg"
    ],
-   "caption": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nA or B? Comment before the reveal.\n\n#trivia #quiz #science #didyouknow",
+   "caption": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #science #didyouknow",
    "youtube": {
     "title": "Which is hotter: the surface of the Sun or a bolt of lightning?",
-    "description": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nA or B? Comment before the reveal.\n\n#trivia #quiz #science #didyouknow"
+    "description": "Which is hotter: the surface of the Sun or a bolt of lightning?\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #science #didyouknow"
    },
    "voice": "app voice: question + explanation",
    "questions": [
@@ -370,7 +370,7 @@
     "abc-sk-dd84906d.mp4",
     "abc-sk-dd84906d.jpg"
    ],
-   "caption": "Ktorá z týchto minerálnych vôd nepochádza zo slovenského prameňa?\n\nA, B, C alebo D? Napíš do komentára skôr, ako prezradíme odpoveď.\n\n#kvíz #kviz #jedlo #vedomosti",
+   "caption": "Ktorá z týchto minerálnych vôd nepochádza zo slovenského prameňa?\n\nKtorá je správna? Odpoveď je na konci.\n\n#kvíz #kviz #jedlo #vedomosti",
    "youtube": null,
    "voice": "app voice: question + explanation",
    "questions": [
@@ -402,12 +402,12 @@
     "round-en-003963e3.mp4",
     "round-en-003963e3.jpg"
    ],
-   "caption": "Can you get 5 out of 5?\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts",
+   "caption": "Can you get 5 out of 5?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts",
    "youtube": {
     "title": "Can you get 5 out of 5? The word 'galaxy' comes from an Ancient Greek word for an everyday…",
-    "description": "Can you get 5 out of 5?\n\nHow many did you get right? Comment your score.\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts"
+    "description": "Can you get 5 out of 5?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts"
    },
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
@@ -468,9 +468,9 @@
     "round-cs-ff61ac0c.mp4",
     "round-cs-ff61ac0c.jpg"
    ],
-   "caption": "Trefíš všech pět?\n\nKolik máš správně? Napiš do komentáře.\n\n#kvíz #kviz #jídlo #cestování",
+   "caption": "Trefíš všech pět?\n\nKolik máš správně?\n\n#kvíz #kviz #jídlo #cestování",
    "youtube": null,
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "ff61ac0c-1fef-431f-98d7-d37193d09079",
@@ -538,7 +538,7 @@
     "carousel-en-p2-8-answers.jpg",
     "carousel-en-p2-9-answers.jpg"
    ],
-   "caption": "Road trip round, part 2.\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #movies #popculture #roadtrip",
+   "caption": "Road trip round, part 2.\n\nHow many did you get right?\n\n#trivia #quiz #movies #popculture #roadtrip",
    "youtube": null,
    "voice": null,
    "questions": [
@@ -626,7 +626,7 @@
     "carousel-cs-p1-8-answers.jpg",
     "carousel-cs-p1-9-answers.jpg"
    ],
-   "caption": "Kvíz na cestu, 1. díl.\n\nKolik máš správně? Napiš do komentáře.\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #věda #nacestu",
+   "caption": "Kvíz na cestu, 1. díl.\n\nKolik máš správně?\n\nTrubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.\n\n#kvíz #kviz #zajímavosti #věda #nacestu",
    "youtube": null,
    "voice": null,
    "questions": [
@@ -707,12 +707,12 @@
     "round-en-5bc4d047.mp4",
     "round-en-5bc4d047.jpg"
    ],
-   "caption": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #funfacts #movies",
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #movies",
    "youtube": {
     "title": "Can you get 3 out of 3? The 'lady' in the name ladybird, or ladybug, honours one specific woman.…",
-    "description": "Can you get 3 out of 3?\n\nHow many did you get right? Comment your score.\n\n#trivia #quiz #funfacts #movies"
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #movies"
    },
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "5bc4d047-918c-4013-b807-bdc7f8ec6d77",
@@ -755,9 +755,9 @@
     "round-sk-03134bc3.mp4",
     "round-sk-03134bc3.jpg"
    ],
-   "caption": "Trafíš všetky tri?\n\nKoľko máš správne? Napíš do komentára.\n\n#kvíz #kviz #zaujímavosti #jedlo",
+   "caption": "Trafíš všetky tri?\n\nKoľko máš správne?\n\n#kvíz #kviz #zaujímavosti #jedlo",
    "youtube": null,
-   "voice": "app voice: question + explanation",
+   "voice": "app voice: questions + answers",
    "questions": [
     {
      "id": "03134bc3-3324-4a3e-9fd7-1ea01d5f0eae",
@@ -898,5 +898,5 @@
    "permalink": "https://www.instagram.com/reel/De1jsfPiJT3/"
   }
  ],
- "version": 2
+ "version": 3
 }

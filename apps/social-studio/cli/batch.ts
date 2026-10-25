@@ -1,4 +1,4 @@
-// npm run batch -- [--monday YYYY-MM-DD] [--seed] [--dry-run]
+// npm run batch -- [--monday YYYY-MM-DD] [--seed] [--rerender] [--dry-run]
 //
 // Weekly batch (#210 sub-task 210.4): picks approved questions for next week's
 // posts on both Instagram accounts (EN, SK/CZ), renders them with cli/render.ts,
@@ -13,6 +13,8 @@
 // --seed (founder 2026-10-23): six launch posts per account on the weekend
 // before that Monday, 10:00 / 14:00 / 18:00, added to the week's existing
 // manifest so one approval page shows them all.
+// --rerender: the week's unpublished posts keep their questions and are only
+// rendered (and captioned) again, as a new version for the approval page.
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
@@ -25,7 +27,7 @@ import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, voiceCharsLeft} from './pat
 import {shapeQuestion, type QuestionInput} from './shape';
 
 const {values} = parseArgs({
-	options: {monday: {type: 'string'}, seed: {type: 'boolean', default: false}, 'dry-run': {type: 'boolean', default: false}},
+	options: {monday: {type: 'string'}, seed: {type: 'boolean', default: false}, rerender: {type: 'boolean', default: false}, 'dry-run': {type: 'boolean', default: false}},
 });
 const SEED = values.seed;
 
@@ -214,9 +216,10 @@ function pick(cands: Candidate[]): Pick[] {
 				rest.push(c);
 				perCategory[c.category] = (perCategory[c.category] ?? 0) + 1;
 			}
-			// The strongest of the rest closes the round: its explanation is read in full.
+			// The strongest of the rest closes the round.
 			const ids = first && rest.length === n - 1 ? [first, ...rest.reverse()] : [];
-			const cost = ids.reduce((sum, c, k) => sum + (c.has_clip ? 0 : c.chars) + (k === n - 1 ? (c.explanation?.length ?? 0) : 0), 0);
+			// Voice: every question without a clip, plus every answer read at the end (a clip each, explanations are only shown).
+			const cost = ids.reduce((sum, c) => sum + (c.has_clip ? 0 : c.chars) + c.answer_chars, 0);
 			if (!ids.length || cost > voiceChars) {
 				console.warn(`! ${slot.account} ${slot.day} round of ${n} ${slot.language}: ${ids.length ? 'over the weekly voice budget' : 'not enough reviewed questions'}, slot skipped`);
 				continue;
@@ -256,8 +259,19 @@ function render(args: string[]): string[] {
 	return [...out.matchAll(/^✓ (.+)$/gm)].map((m) => path.basename(m[1]));
 }
 
+/** --rerender: the existing week's unpublished posts, same slots and questions. */
+function samePicks(): Pick[] {
+	if (!existing) throw new Error(`--rerender: no ${WEEK_FILE}`);
+	return existing.posts
+		.filter((p) => p.status !== 'published')
+		.map((p) => {
+			const {account, day, format, language, size, n, before, time} = p as unknown as Slot;
+			return {slot: {account, day, format, language, size, n, before, time} as Slot, ids: p.questions.map((q) => q.id), makeVoice: true};
+		});
+}
+
 function main() {
-	const picks = pick(loadCandidates());
+	const picks = values.rerender ? samePicks() : pick(loadCandidates());
 	console.log(`${WEEK.id} (from ${MONDAY}): ${picks.length} posts, voice budget ${voiceCharsAvailable()} characters left this week`);
 	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}${p.voiceChars ? ` (voice ~${p.voiceChars})` : ''}: ${p.ids.join(',')}`);
 	if (values['dry-run']) return;
@@ -287,7 +301,7 @@ function main() {
 			const q = shapeQuestion(r);
 			return {id: q.id, category: q.category, question: q.question, answer: q.answer, options: q.options, explanation: r.explanation ?? '', source_url: r.source_url ?? null};
 		});
-		const text = caption({language: slot.language, format: slot.format, firstLine, categories: questions.map((q) => q.category), nameApp: ++n % 3 === 0, options: questions[0].options.length});
+		const text = caption({language: slot.language, format: slot.format, firstLine, categories: questions.map((q) => q.category), nameApp: ++n % 3 === 0});
 		posts.push({
 			key: `${slot.day.toLowerCase()}${slot.n ?? ''}-${slot.account}`,
 			...slot,
@@ -296,7 +310,7 @@ function main() {
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
 			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(slot.format === 'round' ? `${firstLine} ${questions[0].question}` : questions[0].question), description: text} : null,
-			voice: slot.format === 'carousel' ? null : 'app voice: question + explanation',
+			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'app voice: questions + answers' : 'app voice: question + explanation',
 			questions,
 		});
 	}

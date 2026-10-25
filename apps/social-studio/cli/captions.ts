@@ -1,37 +1,34 @@
 // Post captions from fixed per-language templates (#210 content plan,
-// "Captions"): line 1 = the question (platform search), line 2 = the prompt,
+// "Captions"): line 1 = the question (platform search), line 2 = an open question,
 // the app named in every 3rd post, 3–5 hashtags. No model writes captions;
 // copy-style rules apply (no dashes as punctuation, gender-neutral sk/cs).
 import type {Language} from '../src/types';
-import {LETTERS} from '../src/copy';
 import {noDashes} from './shape';
 
 /** `round` = 3 or 5 questions in one reel, answers at the end. */
 export type PostFormat = 'five' | 'abc' | 'carousel' | 'round';
 
-// `abc` gets the option letters already joined ("A, B or C", "A, B, C or D").
-const T: Record<Language, {five: string; abc: (letters: string) => string; carousel: string; app: string; or: string; tags: string[]}> = {
+// Open questions, never "comment A or B" or "comment your score": Instagram does not
+// recommend posts that ask for a specific comment (founder 2026-10-25 + research).
+const T: Record<Language, {five: string; abc: string; carousel: string; app: string; tags: string[]}> = {
 	en: {
-		five: 'Your answer in the comments before the reveal.',
-		abc: (l) => `${l}? Comment before the reveal.`,
-		or: 'or',
-		carousel: 'How many did you get right? Comment your score.',
+		five: 'Did you know it before the reveal?',
+		abc: 'Which one is it? The answer comes at the end.',
+		carousel: 'How many did you get right?',
 		app: 'Trubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.',
 		tags: ['#trivia', '#quiz'],
 	},
 	sk: {
-		five: 'Napíš odpoveď do komentára skôr, ako ju prezradíme.',
-		abc: (l) => `${l}? Napíš do komentára skôr, ako prezradíme odpoveď.`,
-		or: 'alebo',
-		carousel: 'Koľko máš správne? Napíš do komentára.',
+		five: 'Vieš to skôr, ako prezradíme odpoveď?',
+		abc: 'Ktorá je správna? Odpoveď je na konci.',
+		carousel: 'Koľko máš správne?',
 		app: 'Trubbo, kvíz, ktorý hráš hlasom. Čoskoro v App Store, odkaz v profile.',
 		tags: ['#kvíz', '#kviz'],
 	},
 	cs: {
-		five: 'Napiš odpověď do komentáře dřív, než ji prozradíme.',
-		abc: (l) => `${l}? Napiš do komentáře dřív, než prozradíme odpověď.`,
-		or: 'nebo',
-		carousel: 'Kolik máš správně? Napiš do komentáře.',
+		five: 'Víš to dřív, než prozradíme odpověď?',
+		abc: 'Která je správná? Odpověď je na konci.',
+		carousel: 'Kolik máš správně?',
 		app: 'Trubbo, kvíz, který hraješ hlasem. Brzy v App Store, odkaz v profilu.',
 		tags: ['#kvíz', '#kviz'],
 	},
@@ -61,12 +58,10 @@ export function hashtags(language: Language, categories: string[], format: PostF
 }
 
 /** `firstLine` = the question (reels), the round title (carousel) or the hook line (round). */
-export function caption(o: {language: Language; format: PostFormat; firstLine: string; categories: string[]; nameApp: boolean; options?: number}): string {
+export function caption(o: {language: Language; format: PostFormat; firstLine: string; categories: string[]; nameApp: boolean}): string {
 	const t = T[o.language];
-	const letters = LETTERS.slice(0, o.options ?? 3);
 	// A round asks for a score, like the carousel.
-	const prompt =
-		o.format === 'abc' ? t.abc(`${letters.slice(0, -1).join(', ')} ${t.or} ${letters[letters.length - 1]}`) : o.format === 'round' ? t.carousel : t[o.format];
+	const prompt = o.format === 'round' ? t.carousel : t[o.format];
 	const parts = [noDashes(o.firstLine), prompt];
 	if (o.nameApp) parts.push(t.app);
 	parts.push(hashtags(o.language, o.categories, o.format).join(' '));

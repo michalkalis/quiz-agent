@@ -49,6 +49,8 @@ export type ReelProps = {
 	questionMs: number;
 	/** When the MCQ options start to appear (the voice reaches them). */
 	optionsAtMs: number;
+	/** When the voice starts reading each MCQ option (empty for open questions). */
+	optionAtMs: number[];
 	hookIndex: number;
 };
 
@@ -61,12 +63,18 @@ export type CarouselSlideProps = {
 	index: number;
 };
 
-/** One question of a round reel, timed like a one-question reel. */
-export type RoundItem = {q: ReelQuestion; audio: string | null; words: TimedWord[]; questionMs: number};
+/** One question of a round reel, timed like a one-question reel, plus its answer read aloud at the end. */
+export type RoundItem = {
+	q: ReelQuestion;
+	audio: string | null;
+	words: TimedWord[];
+	questionMs: number;
+	/** The answer said by the app voice (path under public/), or null = shown only. */
+	answerAudio: string | null;
+	answerMs: number;
+};
 
 export type RoundProps = {
 	items: RoundItem[];
 	hookIndex: number;
-	/** The last question's whole explanation. */
-	explain: ExplainTrack;
 };

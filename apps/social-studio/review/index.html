@@ -113,7 +113,7 @@ function questions(p) {
 function card(p) {
   const s = decisions[p.key] || {};
   const art = el('article', {class: 'post', id: 'post-' + p.key, 'data-status': s.status || 'open'});
-  const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : p.voice === 'existing app clip' ? 'hlas: klip z appky' : 'hlas: otázka + vysvetlenie') : '';
+  const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : p.voice === 'existing app clip' ? 'hlas: klip z appky' : p.voice === 'app voice: questions + answers' ? 'hlas: otázky + odpovede' : 'hlas: otázka + vysvetlenie') : '';
   const meta = el('div', {class: 'meta'}, el('b', {text: `${DAYS[p.day]} ${fmtDate(p.date)}${p.time ? ' o ' + p.time : ''}`}),
     el('span', {class: 'pill', text: FORMATS[p.format] + (p.size ? ` (${p.size})` : '')}), el('span', {text: LANGS[p.language]}), voice && el('span', {text: voice}));
   const body = el('div', {class: 'body'}, meta,

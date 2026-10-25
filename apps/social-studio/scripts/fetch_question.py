@@ -65,10 +65,11 @@ def clip_keys(text, options, lang):
             yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
 
-def explanation_keys(explanation, lang):
-    """The app's "hear it" clip: the bare explanation (iOS splits only past
-    1000 characters, which no approved explanation reaches)."""
-    spoken = normalize_numbers_for_tts(explanation or "", lang)
+def text_keys(text, lang):
+    """A clip of plain text: the app's "hear it" explanation (iOS splits only
+    past 1000 characters, which no approved explanation reaches), or a round
+    reel's answer."""
+    spoken = normalize_numbers_for_tts(text or "", lang)
     for voice in VOICES:
         yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
@@ -153,15 +154,27 @@ async def one(qid, lang):
     if body:
         out.update(audio_b64=base64.b64encode(body).decode(), spoken_text=spoken)
     if out["explanation"] and len(out["explanation"]) <= 1000:
-        spoken, body = first_clip(
-            s3, bucket, explanation_keys(out["explanation"], lang)
-        )
+        spoken, body = first_clip(s3, bucket, text_keys(out["explanation"], lang))
         if body:
             out.update(
                 explanation_audio_b64=base64.b64encode(body).decode(),
                 explanation_spoken=spoken,
             )
+    out["answer_audio_b64"] = None
+    spoken, body = first_clip(s3, bucket, text_keys(display_answer(out), lang))
+    if body:
+        out.update(
+            answer_audio_b64=base64.b64encode(body).decode(), answer_spoken=spoken
+        )
     return out
+
+
+def display_answer(row):
+    """The answer the reel shows (cli/shape.ts): headline, else the first accepted one."""
+    if row.get("headline_answer"):
+        return row["headline_answer"]
+    ca = row["correct_answer"]
+    return ca[0] if isinstance(ca, list) else ca
 
 
 # What the shipped apps (1.0 beta and 1.1) send as X-Client-Capabilities.
@@ -182,10 +195,10 @@ async def elevenlabs_usage():
         return int(sub["character_count"]), int(sub["character_limit"])
 
 
-async def ensure(qid, lang, question_only=False):
+async def ensure(qid, lang, question_only=False, with_answer=False):
     """`one`, plus clips made through the app's own TTS path for what is
     missing: the question as the app reads it, and the explanation as the
-    app's "hear it" button reads it."""
+    app's "hear it" button reads it (or, for a round reel, the answer)."""
     import tempfile
 
     from app.config import get_settings
@@ -215,6 +228,9 @@ async def ensure(qid, lang, question_only=False):
         todo.append(
             ("explanation", "explanation_audio_b64", "explanation_spoken", spoken)
         )
+    if with_answer and not out["answer_audio_b64"]:
+        spoken = normalize_numbers_for_tts(display_answer(out), out["language"])
+        todo.append(("answer", "answer_audio_b64", "answer_spoken", spoken))
     if not todo:
         return out
     chars = sum(len(t[3]) for t in todo)
@@ -341,7 +357,8 @@ async def candidates():
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a not in ("--ensure-audio", "--question-only")]
+    flags = ("--ensure-audio", "--question-only", "--with-answer")
+    args = [a for a in sys.argv[1:] if a not in flags]
     if args[0] == "--coverage":
         result = asyncio.run(coverage())
     elif args[0] == "--candidates":
@@ -349,7 +366,14 @@ if __name__ == "__main__":
     else:
         lang = args[1] if len(args) > 1 else None
         if "--ensure-audio" in sys.argv:
-            result = asyncio.run(ensure(args[0], lang, "--question-only" in sys.argv))
+            result = asyncio.run(
+                ensure(
+                    args[0],
+                    lang,
+                    "--question-only" in sys.argv,
+                    "--with-answer" in sys.argv,
+                )
+            )
         else:
             result = asyncio.run(one(args[0], lang))
     print("@@JSON@@" + json.dumps(result, ensure_ascii=False, default=str))

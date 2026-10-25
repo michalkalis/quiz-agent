@@ -58,15 +58,17 @@ const ROW_CACHE_MS = 6 * 60 * 60 * 1000;
 /** Prod fetch: pipes scripts/fetch_question.py into the API machine. Read-only
  * unless `ensureAudio`, which lets the app's own TTS make a missing clip. */
 /** `questionOnly`: a round's first questions show their explanation as text, so only the question clip is needed. */
-function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questionOnly = false): QuestionInput {
+function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questionOnly = false, withAnswer = false): QuestionInput {
 	const cacheFile = path.join(CACHE_DIR, 'rows', `${id}.${lang ?? 'native'}.json`);
 	if (existsSync(cacheFile) && Date.now() - statSync(cacheFile).mtimeMs < ROW_CACHE_MS) {
 		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
-		if ((cached.audio_b64 && (questionOnly || cached.explanation_audio_b64 || !cached.explanation)) || !ensureAudio) return cached;
+		const done = cached.audio_b64 && (questionOnly || cached.explanation_audio_b64 || !cached.explanation) && (!withAnswer || cached.answer_audio_b64);
+		if (done || !ensureAudio) return cached;
 	}
 	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
 		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
-	const args = `python - ${id}${lang ? ` ${lang}` : ''}${ensureAudio ? ' --ensure-audio' : ''}${ensureAudio && questionOnly ? ' --question-only' : ''}`;
+	const flags = ensureAudio ? ` --ensure-audio${questionOnly ? ' --question-only' : ''}${withAnswer ? ' --with-answer' : ''}` : '';
+	const args = `python - ${id}${lang ? ` ${lang}` : ''}${flags}`;
 	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
 		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
 		maxBuffer: 64 * 1024 * 1024,
@@ -89,9 +91,9 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	return row;
 }
 
-function loadInput(arg: string, questionOnly = false): QuestionInput {
+function loadInput(arg: string, questionOnly = false, withAnswer = false): QuestionInput {
 	if (arg.endsWith('.json')) return JSON.parse(readFileSync(path.resolve(arg), 'utf8'));
-	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly);
+	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly, withAnswer);
 	throw new Error(`expected a question id or a .json file, got "${arg}"`);
 }
 
@@ -145,7 +147,23 @@ async function explainTrack(raw: QuestionInput, q: ReelQuestion): Promise<Explai
 	return {audio, words, parts: indexed, ms: audioDurationMs(file)};
 }
 
-type QuestionTrack = Pick<ReelProps, 'audio' | 'words' | 'questionMs' | 'optionsAtMs'>;
+type QuestionTrack = Pick<ReelProps, 'audio' | 'words' | 'questionMs' | 'optionsAtMs' | 'optionAtMs'>;
+
+/** Where each MCQ option starts in the spoken text ("… Jedna: X. Dva: Y."), as a
+ * fraction of its non-space characters (whisper's characters carry no spaces). */
+function optionFracs(spoken: string, stemChars: number, options: string[]): number[] {
+	const solid = (s: string) => s.replace(/\s+/g, '').length;
+	const total = solid(spoken);
+	let from = stemChars;
+	return options.map((opt, i) => {
+		const hit = spoken.indexOf(opt, from);
+		if (hit < 0) return Math.min(1, (solid(spoken.slice(0, stemChars)) + ((total - solid(spoken.slice(0, stemChars))) * i) / options.length) / total);
+		const colon = spoken.lastIndexOf(':', hit);
+		const labelStart = colon > from - 1 ? spoken.lastIndexOf(' ', colon) + 1 : hit;
+		from = hit + opt.length;
+		return solid(spoken.slice(0, labelStart)) / total;
+	});
+}
 
 /** The question phase: the app clip timed word by word, or reading pace without one. */
 async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<QuestionTrack> {
@@ -155,15 +173,16 @@ async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<Quest
 		const words: TimedWord[] = displayWords.map((text, i) => ({text, startMs: i * WORD_MS}));
 		const optionsAtMs = displayWords.length * WORD_MS + 300;
 		const questionMs = q.options.length ? optionsAtMs + q.options.length * 500 + 900 : Math.max(3500, optionsAtMs + 900);
-		return {audio: null, words, questionMs, optionsAtMs};
+		return {audio: null, words, questionMs, optionsAtMs, optionAtMs: q.options.map((_, i) => optionsAtMs + i * 500)};
 	}
 	const file = path.join(PUBLIC_AUDIO_DIR, path.basename(audio));
 	await ensureWhisper();
 	// MCQ clips also read the options: the stem is only the first part of them.
 	const spoken = raw.spoken_text ?? [q.question, ...q.options].join(' ');
 	const share = q.options.length ? Math.min(1, raw.question.length / spoken.length) : 1;
-	const {words, optionsAtMs} = await timeWords(file, q.language, displayWords, share);
-	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs};
+	const fracs = q.options.length ? optionFracs(spoken, raw.question.length, q.options) : [];
+	const {words, optionsAtMs, extraMs} = await timeWords(file, q.language, displayWords, share, fracs);
+	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, optionAtMs: extraMs};
 }
 
 async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number, style: ReelStyle): Promise<ReelProps> {
@@ -179,20 +198,22 @@ async function main() {
 
 	if (values.round) {
 		const ids = values.round.split(',').map((s) => s.trim());
-		const raws = ids.map((id, k) => loadInput(id, k < ids.length - 1));
+		// Founder 2026-10-25: every answer is read at the end, explanations are only shown.
+		const raws = ids.map((id) => loadInput(id, true, true));
 		const qs = raws.map((r) => ({...shapeQuestion(r), options: [], correctIndex: null}));
 		const items = [];
 		for (const [k, q] of qs.entries()) {
 			const {audio, words, questionMs} = await questionTrack(raws[k], q);
 			if (!audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
-			items.push({q, audio, words, questionMs});
+			const answerAudio = raws[k].answer_audio_b64 ? stageBytes(Buffer.from(raws[k].answer_audio_b64!, 'base64')) : null;
+			if (!answerAudio) console.warn(`! ${q.id}: no answer clip, the answer is only shown (--make-voice makes one)`);
+			const answerMs = answerAudio ? audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(answerAudio))) : 900;
+			items.push({q, audio, words, questionMs, answerAudio, answerMs});
 		}
-		const explain = await explainTrack(raws[raws.length - 1], qs[qs.length - 1]);
-		if (!explain.audio) console.warn(`! ${qs[qs.length - 1].id}: no explanation clip, explanation shown at reading pace`);
-		const props: RoundProps = {items, hookIndex: 0, explain};
+		const props: RoundProps = {items, hookIndex: 0};
 		const timeline = roundTimeline(
 			items.map((it) => it.questionMs),
-			explain.ms,
+			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
 		);
 		let coverMs = timeline.steps[0].cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;

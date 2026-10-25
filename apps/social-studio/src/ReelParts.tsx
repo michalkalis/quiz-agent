@@ -44,15 +44,18 @@ export const QuestionCard: React.FC<{
 	words: ReelProps['words'];
 	tMs: number;
 	optionsAtMs: number;
+	/** When the voice starts each option; it is marked while being read. */
+	optionAtMs?: number[];
 	revealed: boolean;
 	appear: number;
 	/** true: every word readable from frame 1, the word being said marked (v1 dims unsaid words). */
 	readable: boolean;
-	/** Question text size factor (the fused opening starts it small). */
+	/** Size of the whole card (the fused opening starts it small). The card is laid out
+	 * at full size and scaled as one piece, so lines never re-wrap while it grows. */
 	scale?: number;
 	markBg: string;
 	markInk: string;
-}> = ({q, words, tMs, optionsAtMs, revealed, appear, readable, scale = 1, markBg, markInk}) => {
+}> = ({q, words, tMs, optionsAtMs, optionAtMs = [], revealed, appear, readable, scale = 1, markBg, markInk}) => {
 	const long = q.question.length > 110;
 	const mcq = q.options.length > 0;
 	return (
@@ -63,10 +66,11 @@ export const QuestionCard: React.FC<{
 				padding: mcq ? '48px 48px 44px' : '56px 56px 60px',
 				boxShadow: '0 22px 44px rgba(17,18,22,.18)',
 				opacity: appear,
-				transform: `translateY(${(1 - appear) * 60}px)`,
+				transform: `translateY(${(1 - appear) * 60}px) scale(${scale})`,
+				transformOrigin: 'top left',
 			}}
 		>
-			<div style={{fontSize: (long || mcq ? 56 : 66) * scale, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
+			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
 				{words.map((w, i) => {
 					const saying = readable && tMs >= w.startMs && (i === words.length - 1 ? tMs < optionsAtMs : tMs < words[i + 1].startMs);
 					return (
@@ -88,10 +92,14 @@ export const QuestionCard: React.FC<{
 			{q.options.length > 0 ? (
 				<div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 32}}>
 					{q.options.map((opt, i) => {
-						const reached = interpolate(tMs, [optionsAtMs + i * 350, optionsAtMs + i * 350 + 250], [0, 1], {
+						// Each option comes up when the voice starts reading it (founder 2026-10-25), not all at once.
+						const at = optionAtMs[i] ?? optionsAtMs + i * 350;
+						const reached = interpolate(tMs, [at - 120, at + 130], [0, 1], {
 							extrapolateLeft: 'clamp',
 							extrapolateRight: 'clamp',
 						});
+						const next = optionAtMs[i + 1] ?? (optionAtMs.length ? Infinity : at + 350);
+						const reading = readable && optionAtMs.length > 0 && tMs >= at && tMs < next && !revealed;
 						// Readable reels show the options faintly from frame 1 (no empty card); v1 slides them in.
 						const shown = readable ? 0.35 + 0.65 * reached : reached;
 						const right = i === q.correctIndex;
@@ -105,7 +113,7 @@ export const QuestionCard: React.FC<{
 									gap: 24,
 									padding: '16px 24px',
 									borderRadius: 28,
-									background: revealed && right ? OK_BG : '#F1F2F5',
+									background: revealed && right ? OK_BG : reading ? markBg : '#F1F2F5',
 									opacity: shown * (dim ? 0.38 : 1),
 									transform: `translateX(${(1 - reached) * 30}px)`,
 								}}
@@ -127,7 +135,7 @@ export const QuestionCard: React.FC<{
 								>
 									{LETTERS[i]}
 								</div>
-								<div style={{fontSize: 44, fontWeight: 600}}>{opt}</div>
+								<div style={{fontSize: 44, fontWeight: 600, color: reading ? markInk : INK}}>{opt}</div>
 							</div>
 						);
 					})}
@@ -137,27 +145,27 @@ export const QuestionCard: React.FC<{
 	);
 };
 
-export const Countdown: React.FC<{startFrame: number; onBg: string; deep: string; comment: string | null; seconds?: number}> = ({startFrame, onBg, deep, comment, seconds = COUNTDOWN_MS / 1000}) => {
+/** `note`: a line under the countdown (a round says the answers come at the end). */
+export const Countdown: React.FC<{startFrame: number; onBg: string; note?: string; seconds?: number}> = ({startFrame, onBg, note, seconds = COUNTDOWN_MS / 1000}) => {
 	const frame = useCurrentFrame() - startFrame;
 	const {fps} = useVideoConfig();
 	const total = seconds * fps;
 	const left = Math.max(1, Math.ceil(seconds - frame / fps));
 	const progress = Math.min(1, frame / total);
-	const compact = comment !== null;
-	const R = compact ? 64 : 112;
+	const R = 112;
 	const C = 2 * Math.PI * R;
 	const pop = spring({frame: frame % fps, fps, config: {damping: 14, mass: 0.5}});
 	return (
-		<div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-			<div style={{display: 'flex', alignItems: 'center', gap: compact ? 28 : 56}}>
-				<Monkey size={compact ? 150 : 310} mood="thinking" delay={startFrame} />
+		<div style={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 36}}>
+			<div style={{display: 'flex', alignItems: 'center', gap: 56}}>
+				<Monkey size={310} mood="thinking" delay={startFrame} />
 				<svg width={2 * R + 30} height={2 * R + 30} viewBox={`${-R - 15} ${-R - 15} ${2 * R + 30} ${2 * R + 30}`}>
-					<circle r={R} fill="none" stroke={onBg} strokeOpacity={0.22} strokeWidth={compact ? 12 : 16} />
+					<circle r={R} fill="none" stroke={onBg} strokeOpacity={0.22} strokeWidth={16} />
 					<circle
 						r={R}
 						fill="none"
 						stroke={onBg}
-						strokeWidth={compact ? 12 : 16}
+						strokeWidth={16}
 						strokeLinecap="round"
 						strokeDasharray={C}
 						strokeDashoffset={C * progress}
@@ -168,16 +176,14 @@ export const Countdown: React.FC<{startFrame: number; onBg: string; deep: string
 						dominantBaseline="central"
 						fontFamily={FONT}
 						fontWeight={800}
-						fontSize={(compact ? 68 : 116) * (0.85 + 0.15 * pop)}
+						fontSize={116 * (0.85 + 0.15 * pop)}
 						fill={onBg}
 					>
 						{left}
 					</text>
 				</svg>
-				{comment ? (
-					<div style={{fontSize: 40, fontWeight: 700, color: SURF, background: deep, borderRadius: 999, padding: '18px 32px'}}>{comment}</div>
-				) : null}
 			</div>
+			{note ? <div style={{fontSize: 46, fontWeight: 700, color: onBg, opacity: 0.9}}>{note}</div> : null}
 		</div>
 	);
 };

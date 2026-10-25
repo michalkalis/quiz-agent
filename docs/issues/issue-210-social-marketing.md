@@ -46,6 +46,8 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 5. **Question length:** the first question people see ≤ 90 characters, a round's later questions ≤ 110. New short questions wait for #212 (question QA gates); until then only rows from the Instagram content review (`batches/content-review.json`) are posted.
 6. **Voice budget 4,000 characters a week** (~1,600 ElevenLabs credits) during the test.
 7. **QA failures** found by the content review are root-caused in [question-qa-root-cause-2026-10-25.md](../research/question-qa-root-cause-2026-10-25.md); fix + re-check of the approved pool runs as #212 in its own session.
+8. **Evening review of W44 v2** (supersedes 4's ending and 5-question timing): the question card grows as one piece, lines never re-wrap. MCQ options light up one by one as the voice reaches each. No "comment A or B" on screen, and captions ask open questions without "comment …" (Instagram does not recommend posts that ask for a specific comment). Rounds: "Answers at the end" under every countdown; at the end each answer is read aloud and its explanation shown for a few seconds (not read). Five-question rounds get 5 s to think. The "@" sign is spelled out for sk/cs voice (PR #577, app-wide). All W44 questions approved by the founder in chat.
+9. **Open:** a native Czech voice (George reads Czech with an accent; samples sent 2026-10-25); a weekly contest format (answer next day, skill-based winner, published rules); more fresh entertainment questions in a moderate share (research suggests ~30 %), always with the answer shown on Instagram.
 
 ## Hard rules
 

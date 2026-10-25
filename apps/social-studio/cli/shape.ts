@@ -24,6 +24,8 @@ export type QuestionInput = {
 	spoken_text?: string;
 	/** The app's "hear it" clip of the explanation (prod fetch), if any. */
 	explanation_audio_b64?: string | null;
+	/** Round reels: the answer said by the app voice. */
+	answer_audio_b64?: string | null;
 	/** Prod rows: the question's source, shown on the approval page. */
 	source_url?: string | null;
 };

@@ -31,16 +31,17 @@ export const eyeOpenAt = (t: number) => {
 };
 
 /** Round reel (founder 2026-10-25): 3 or 5 questions in a row, each with a
- * short countdown, and every answer only at the end, one after another; then
- * the last (hardest) question's whole explanation read aloud. */
-// Founder 2026-10-25: five questions get less time to think (70 s was too long).
-export const roundCountdownMs = (n: number) => (n >= 5 ? 2000 : 4000);
-/** Gap between two answers popping in on the answers card. */
-export const ANSWER_STEP_MS = 1500;
-/** The full answers card stays up this long after the last answer. */
-export const ANSWERS_HOLD_MS = 2000;
+ * countdown, and every answer only at the end: one by one, the answer read
+ * aloud and its explanation shown for a few seconds (not read). */
+// Founder 2026-10-25: four seconds for three questions; five for five (two felt rushed).
+export const roundCountdownMs = (n: number) => (n >= 5 ? 5000 : 4000);
+/** Answer card on screen before the voice says the answer. */
+export const ANSWER_LEAD_MS = 300;
+/** Reading time for an explanation shown on screen, per character, and its bounds. */
+const WHY_MS_PER_CHAR = 50;
+export const whyHoldMs = (chars: number) => Math.min(5500, Math.max(2800, chars * WHY_MS_PER_CHAR));
 
-export const roundTimeline = (questionMs: number[], explainMs: number) => {
+export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[]) => {
 	const countdownMs = roundCountdownMs(questionMs.length);
 	let start = 0;
 	const steps = questionMs.map((qMs) => {
@@ -51,8 +52,12 @@ export const roundTimeline = (questionMs: number[], explainMs: number) => {
 		return step;
 	});
 	const answersStart = start;
-	const revealStart = answersStart + 600 + questionMs.length * ANSWER_STEP_MS + ANSWERS_HOLD_MS;
-	const whyStart = revealStart + ANSWER_MS;
-	const endStart = whyStart + explainMs + WHY_TAIL_MS;
-	return {steps, countdownMs, answersStart, revealStart, whyStart, endStart, totalMs: endStart + END_MS};
+	const reveals = answers.map(({answerMs, whyChars}) => {
+		const voiceStart = start + ANSWER_LEAD_MS;
+		const whyStart = voiceStart + answerMs;
+		const step = {start, voiceStart, whyStart, end: whyStart + whyHoldMs(whyChars)};
+		start = step.end;
+		return step;
+	});
+	return {steps, countdownMs, answersStart, reveals, endStart: start, totalMs: start + END_MS};
 };

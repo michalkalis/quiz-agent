@@ -4,7 +4,7 @@
 // the explanation (one line, or the whole of it read aloud) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY, LETTERS, hookFor} from './copy';
+import {hookFor} from './copy';
 import {Monkey} from './Monkey';
 import {ExplainPhase} from './Explain';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
@@ -12,11 +12,10 @@ import {FONT, INK, tintFor} from './theme';
 import {LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
 
-export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, hookIndex, variant, style, explain}) => {
+export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, optionAtMs, hookIndex, variant, style, explain}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const tint = tintFor(q.category);
-	const copy = COPY[q.language];
 
 	const intro = style.opening === 'intro';
 	// Without the intro card the question is complete on frame 1 and the voice follows.
@@ -86,6 +85,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 									words={words}
 									tMs={now - qStart - lead}
 									optionsAtMs={optionsAtMs}
+									optionAtMs={optionAtMs}
 									revealed={now >= revealStart}
 									appear={intro ? enter(qStart) : 1}
 									readable={!intro}
@@ -95,12 +95,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 								/>
 							)}
 							{now >= cdStart && now < revealStart ? (
-								<Countdown
-									startFrame={f(cdStart, fps)}
-									onBg={tint.onBg}
-									deep={tint.deep}
-									comment={variant === 'abc' ? copy.comment(LETTERS.slice(0, q.options.length)) : null}
-								/>
+								<Countdown startFrame={f(cdStart, fps)} onBg={tint.onBg} />
 							) : null}
 							{now >= revealStart && style.explain === 'line' ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
 							{now >= revealStart && style.explain !== 'line' ? (

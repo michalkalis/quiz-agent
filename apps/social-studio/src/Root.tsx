@@ -31,6 +31,7 @@ const FIVE_SAMPLE: ReelProps = {
 	words: sampleWords("The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?"),
 	questionMs: 5500,
 	optionsAtMs: 0,
+	optionAtMs: [],
 	hookIndex: 0,
 	style: {opening: 'fused', explain: 'parts'},
 	explain: {
@@ -59,6 +60,7 @@ const ABC_SAMPLE: ReelProps = {
 	words: sampleWords('Today San Diego Comic-Con draws well over 100,000 fans. Roughly how many people came to the very first one in 1970?'),
 	questionMs: 7500,
 	optionsAtMs: 5000,
+	optionAtMs: [5000, 5800, 6600],
 };
 
 const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
@@ -68,16 +70,15 @@ const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
 });
 
 const ROUND_SAMPLE: RoundProps = {
-	items: [FIVE_SAMPLE, FIVE_SAMPLE, FIVE_SAMPLE].map((p) => ({q: p.q, audio: null, words: p.words, questionMs: p.questionMs})),
+	items: [FIVE_SAMPLE, FIVE_SAMPLE, FIVE_SAMPLE].map((p) => ({q: p.q, audio: null, words: p.words, questionMs: p.questionMs, answerAudio: null, answerMs: 900})),
 	hookIndex: 0,
-	explain: FIVE_SAMPLE.explain,
 };
 
 const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
 	durationInFrames: Math.ceil(
 		(roundTimeline(
 			props.items.map((it) => it.questionMs),
-			props.explain.ms,
+			props.items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
 		).totalMs /
 			1000) *
 			FPS,

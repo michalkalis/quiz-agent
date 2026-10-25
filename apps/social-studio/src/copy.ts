@@ -13,14 +13,11 @@ type Copy = {
 	roundSub: (n: number) => string;
 	answersTitle: string;
 	swipe: string;
-	/** "Comment A, B or C" for however many options there are. */
-	comment: (letters: string[]) => string;
+	/** Under a round's countdown: the answers come only at the end (founder 2026-10-25). */
+	answersAtEnd: string;
 	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
 	roundHook: (n: number) => string;
 };
-
-const list = (letters: string[], or: string) =>
-	letters.length < 2 ? letters.join('') : `${letters.slice(0, -1).join(', ')} ${or} ${letters[letters.length - 1]}`;
 
 export const COPY: Record<Language, Copy> = {
 	en: {
@@ -33,7 +30,7 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} questions. Answers on the last slide.`,
 		answersTitle: 'Answers',
 		swipe: 'Swipe',
-		comment: (l) => `Comment ${list(l, 'or')}`,
+		answersAtEnd: 'Answers at the end',
 		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 	},
 	sk: {
@@ -45,7 +42,7 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
 		answersTitle: 'Odpovede',
 		swipe: 'Posuň',
-		comment: (l) => `Napíš do komentára ${list(l, 'alebo')}`,
+		answersAtEnd: 'Odpovede na konci',
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 	},
 	cs: {
@@ -57,7 +54,7 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,
 		answersTitle: 'Odpovědi',
 		swipe: 'Posuň',
-		comment: (l) => `Napiš do komentáře ${list(l, 'nebo')}`,
+		answersAtEnd: 'Odpovědi na konci',
 		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
 	},
 };

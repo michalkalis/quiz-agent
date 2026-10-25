@@ -60,13 +60,33 @@ def _parse_number(token: str) -> float | int | None:
         return None
 
 
+# Symbols the multilingual voice reads in English inside sk/cs text (founder
+# 2026-10-25: "Symbolu @ v e-mailu" was read "at"). Spelled out like digits.
+_SYMBOL_WORDS = {
+    "sk": {"@": "zavináč"},
+    "cs": {"@": "zavináč"},
+}
+_AMPERSAND_RE = re.compile(r"\s&\s")
+_AND_WORD = {"sk": "a", "cs": "a"}
+
+
+def _spell_symbols(text: str, language: str) -> str:
+    for symbol, word in _SYMBOL_WORDS[language].items():
+        text = re.sub(rf"\s*{re.escape(symbol)}\s*", f" {word} ", text).strip()
+    # Only a free-standing "&" ("Tom & Jerry"); "AT&T" stays a name.
+    return _AMPERSAND_RE.sub(f" {_AND_WORD[language]} ", text)
+
+
 def normalize_numbers_for_tts(text: str, language: str) -> str:
-    """Replace digit runs with spelled-out words for `language`.
+    """Replace digit runs (and a few symbols) with spelled-out words for `language`.
 
     Fail-safe: any error (unsupported language, unparsable token) leaves the
     affected token — or the whole text — unchanged.
     """
-    if language not in _PERCENT_WORD or not any(ch.isdigit() for ch in text):
+    if language not in _PERCENT_WORD:
+        return text
+    text = _spell_symbols(text, language)
+    if not any(ch.isdigit() for ch in text):
         return text
     try:
         from num2words import num2words

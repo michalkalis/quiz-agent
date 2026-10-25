@@ -175,3 +175,31 @@ class TestCardinalsStayAsTheyWere:
             == "Přibližně dvěstě tisíc"
         )
         assert normalize_numbers_for_tts("2 miliony", "cs") == "dva miliony"
+
+
+class TestSymbols:
+    """The voice reads "@" as English "at" inside sk/cs text; a question
+    about the Czech word "zavináč" then sounds broken (founder 2026-10-25)."""
+
+    def test_at_sign_spoken_in_czech(self):
+        assert (
+            normalize_numbers_for_tts("Symbolu @ v e-mailu říkáme zavináč.", "cs")
+            == "Symbolu zavináč v e-mailu říkáme zavináč."
+        )
+
+    def test_at_sign_spoken_in_slovak_inside_an_address(self):
+        assert normalize_numbers_for_tts("Píš na hi@trubbo.app", "sk") == (
+            "Píš na hi zavináč trubbo.app"
+        )
+
+    def test_free_standing_ampersand_becomes_and(self):
+        assert normalize_numbers_for_tts("Tom & Jerry", "cs") == "Tom a Jerry"
+
+    def test_ampersand_inside_a_name_is_kept(self):
+        assert normalize_numbers_for_tts("Firma AT&T", "sk") == "Firma AT&T"
+
+    def test_english_is_untouched(self):
+        # English voice reads "@" and "&" natively.
+        assert normalize_numbers_for_tts("Tom & Jerry @ home", "en") == (
+            "Tom & Jerry @ home"
+        )

@@ -163,7 +163,7 @@ class Settings(BaseSettings):
     # voice/recogniser until midnight UTC, so one bad day cannot spend the
     # month. 0 disables.
     elevenlabs_daily_credit_budget: int = 5000
-    elevenlabs_tts_model: str = "eleven_multilingual_v2"
+    elevenlabs_tts_model: str = "eleven_v4_turbo"
     openai_tts_model: str = "tts-1"
     # Answer transcription (#208.1): OpenAI is the only answer recogniser
     # (ElevenLabs Scribe left the answer path after the 2026-10-16 replay).

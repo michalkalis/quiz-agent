@@ -60,6 +60,13 @@ const MCQ_MAX_CHARS = 70;
 const MCQ_MAX_OPTION = 22;
 const CAROUSEL_MAX_CHARS = 120;
 const CAROUSEL_MAX_ANSWER = 30;
+// Fresh entertainment questions in a moderate share (founder 2026-10-25/26):
+// about 30 % per account, and in reels they may be longer (most are 150+ characters).
+const ENT_SHARE = 0.3;
+const ENT_MAX_CHARS = 200;
+const isEnt = (c: Candidate) => c.category === 'entertainment';
+/** Reel length cap: an entertainment question (not MCQ) may run to ENT_MAX_CHARS. */
+const capFor = (c: Candidate, cap: number) => (isEnt(c) && !c.mcq ? Math.max(cap, ENT_MAX_CHARS) : cap);
 
 function nextMonday(): string {
 	const d = new Date();
@@ -180,6 +187,11 @@ function pick(cands: Candidate[]): Pick[] {
 	let voiceChars = voiceCharsAvailable();
 	const picks: Pick[] = [];
 	const reelCategories: Record<Account, Record<string, number>> = {ig_en: {}, ig_skcz: {}};
+	const picked: Record<Account, {all: number; ent: number}> = {ig_en: {all: 0, ent: 0}, ig_skcz: {all: 0, ent: 0}};
+	const count = (acc: Account, cs: Candidate[]) => {
+		picked[acc].all += cs.length;
+		picked[acc].ent += cs.filter(isEnt).length;
+	};
 	// Slots with the fewest existing clips first (MCQ, then cs), so they get
 	// the weekly voice budget and the others use clips the app already made.
 	const clips = (s: Slot) => cands.filter((c) => c.has_clip && c.mcq === (s.format === 'abc') && fitsAccount(c, s)).length;
@@ -187,7 +199,10 @@ function pick(cands: Candidate[]): Pick[] {
 	const rank = (s: Slot) => ({abc: 0, round: 1, five: 2, carousel: 3})[s.format];
 	const order = (SEED ? seedPlan() : plan()).sort((x, y) => rank(x) - rank(y) || clips(x) - clips(y));
 	for (const slot of order) {
-		const pool = byScore.filter((c) => !taken.has(c.id) && fitsAccount(c, slot));
+		const fresh = byScore.filter((c) => !taken.has(c.id) && fitsAccount(c, slot));
+		// Under the entertainment share, entertainment goes first (still strongest first).
+		const p = picked[slot.account];
+		const pool = p.ent < ENT_SHARE * (p.all + 1) ? [...fresh.filter(isEnt), ...fresh.filter((c) => !isEnt(c))] : fresh;
 		if (slot.format === 'carousel') {
 			const ids: string[] = [];
 			const perCategory: Record<string, number> = {};
@@ -201,6 +216,7 @@ function pick(cands: Candidate[]): Pick[] {
 			}
 			if (ids.length < CAROUSEL_SIZE) throw new Error(`${slot.account} ${slot.day}: only ${ids.length} carousel questions left`);
 			ids.forEach((id) => taken.add(id));
+			count(slot.account, pool.filter((c) => ids.includes(c.id)));
 			picks.push({slot, ids, makeVoice: false});
 			continue;
 		}
@@ -214,7 +230,7 @@ function pick(cands: Candidate[]): Pick[] {
 			// Longer questions first, so the short ones stay for openers and one-question reels.
 			for (const c of [...pool.filter((c) => c.chars > REEL_MAX_CHARS), ...pool.filter((c) => c.chars <= REEL_MAX_CHARS)]) {
 				if (rest.length === n - 1) break;
-				if (c === first || c.mcq || c.chars > ROUND_LATER_MAX_CHARS || (perCategory[c.category] ?? 0) >= 2) continue;
+				if (c === first || c.mcq || c.chars > capFor(c, ROUND_LATER_MAX_CHARS) || (perCategory[c.category] ?? 0) >= 2) continue;
 				rest.push(c);
 				perCategory[c.category] = (perCategory[c.category] ?? 0) + 1;
 			}
@@ -228,12 +244,13 @@ function pick(cands: Candidate[]): Pick[] {
 			}
 			voiceChars -= cost;
 			ids.forEach((c) => taken.add(c.id));
+			count(slot.account, ids);
 			reelCategories[slot.account][first!.category] = (reelCategories[slot.account][first!.category] ?? 0) + 1;
 			picks.push({slot, ids: ids.map((c) => c.id), makeVoice: true, voiceChars: cost});
 			continue;
 		}
 		const short = (c: Candidate) =>
-			c.mcq ? c.chars <= MCQ_MAX_CHARS && Object.values(c.options ?? {}).every((o) => o.length <= MCQ_MAX_OPTION) : c.chars <= REEL_MAX_CHARS;
+			c.mcq ? c.chars <= MCQ_MAX_CHARS && Object.values(c.options ?? {}).every((o) => o.length <= MCQ_MAX_OPTION) : c.chars <= capFor(c, REEL_MAX_CHARS);
 		// At most two reels of one category a week per account, so the colours vary.
 		const fits = (c: Candidate) => c.mcq === (slot.format === 'abc') && short(c) && (reelCategories[slot.account][c.category] ?? 0) < 2;
 		// An existing clip first, so the voice budget goes where there is none.
@@ -245,6 +262,7 @@ function pick(cands: Candidate[]): Pick[] {
 		const cost = voiceCost(c);
 		voiceChars -= cost;
 		taken.add(c.id);
+		count(slot.account, [c]);
 		reelCategories[slot.account][c.category] = (reelCategories[slot.account][c.category] ?? 0) + 1;
 		picks.push({slot, ids: [c.id], makeVoice: true, voiceChars: cost});
 	}
@@ -275,6 +293,13 @@ function samePicks(): Pick[] {
 function main() {
 	const picks = values.rerender ? samePicks() : pick(loadCandidates());
 	console.log(`${WEEK.id} (from ${MONDAY}): ${picks.length} posts, voice budget ${voiceCharsAvailable()} characters left this week`);
+	if (!values.rerender) {
+		const ent = new Set(loadCandidates().filter(isEnt).map((c) => c.id));
+		for (const acc of ['ig_en', 'ig_skcz'] as const) {
+			const ids = picks.filter((p) => p.slot.account === acc).flatMap((p) => p.ids);
+			console.log(`  ${acc}: ${ids.filter((id) => ent.has(id)).length} of ${ids.length} questions are entertainment`);
+		}
+	}
 	for (const p of picks) console.log(`  ${p.slot.day} ${p.slot.account} ${p.slot.format} ${p.slot.language}${p.voiceChars ? ` (voice ~${p.voiceChars})` : ''}: ${p.ids.join(',')}`);
 	if (values['dry-run']) return;
 

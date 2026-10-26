@@ -69,6 +69,13 @@
   "note": "Most common SK surname means 'Croat': strong local fakt? moment",
   "reviewed": "2026-10-24"
  },
+ "0315373c-3003-4e9d-81d0-fc0e9b057b4a": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Game publisher recall, niche",
+  "reviewed": "2026-10-26"
+ },
  "035077c2-f271-4f2a-846c-1459ef636270": {
   "verdict": "drop",
   "stop_power": 5,
@@ -89,6 +96,13 @@
   "fact": "unverified",
   "note": "Dry dimension number; weak shop-blog source | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "041eb080-6694-4956-8ddc-37be0c599497": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Kevin's gangster film never existed: great surprise",
+  "reviewed": "2026-10-26"
  },
  "04862026-ac5a-41d1-ab2b-f37d5e87696d": {
   "verdict": "keep",
@@ -111,12 +125,26 @@
   "note": "Dry statistic (5.12 M admissions confirmed), no fakt? moment",
   "reviewed": "2026-10-24"
  },
+ "053d821c-c66a-4fed-a739-29cfa91d6daa": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Reality show casting detail, low interest",
+  "reviewed": "2026-10-26"
+ },
  "05ccc8c8-568e-4f1b-9ea5-16574253baf6": {
   "verdict": "keep",
   "stop_power": 5,
   "fact": "verified",
   "note": "Solid geography",
   "reviewed": "2026-10-25"
+ },
+ "068319e4-1e8d-4074-ae59-a54c041a752e": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Toys vs a tablet: relatable screen-time hook, borderline",
+  "reviewed": "2026-10-26"
  },
  "0731abc4-6bbe-4b02-badc-e4bb1898826c": {
   "verdict": "drop",
@@ -167,12 +195,26 @@
   "note": "Good surprise",
   "reviewed": "2026-10-25"
  },
+ "08917887-68c0-4ebc-88af-2cc36989e176": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Zendaya as MJ: broad recognition; $360M domestic record opening (Jul 31 to Aug 2) verified",
+  "reviewed": "2026-10-26"
+ },
  "0891e411-68b8-472b-bf09-5014542f9a2d": {
   "verdict": "keep",
   "stop_power": 7,
   "fact": "verified",
   "note": "Strong relatable surprise",
   "reviewed": "2026-10-25"
+ },
+ "08bf682a-05b4-43c4-b7d3-3987399883f3": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "wrong",
+  "note": "Explanation wrong: Vice City was also visited in Vice City Stories (2006), not last in 2002",
+  "reviewed": "2026-10-26"
  },
  "0a4fd580-cb14-4cd2-95af-f26af33c12bc": {
   "verdict": "keep",
@@ -272,6 +314,13 @@
   "note": "Good everyday puzzle",
   "reviewed": "2026-10-25"
  },
+ "12548c53-ea95-4b0b-9fcc-9f9138342931": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Rybitví lyrics are a list of real place names: nostalgic surprise",
+  "reviewed": "2026-10-26"
+ },
  "1264b939-b97d-4d92-a1ad-322e7be0c62e": {
   "verdict": "keep",
   "stop_power": 6,
@@ -279,12 +328,26 @@
   "note": "Many guess Russia or Australia, so it's a mild surprise; Arctic islands explanation works",
   "reviewed": "2026-10-24"
  },
+ "13447f39-e4b7-4026-adb3-15f88ad6c8c6": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Voguing named after Vogue magazine; ballroom-to-Madonna story verified",
+  "reviewed": "2026-10-26"
+ },
  "13d0f6e8-8f72-4755-8708-b34baa04dd04": {
   "verdict": "drop",
   "stop_power": 4,
   "fact": "unverified",
   "note": "School knowledge, low stop | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "13d6026d-1283-4e44-ae99-11298ae32066": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Foreign casting name recall",
+  "reviewed": "2026-10-26"
  },
  "15d42b90-c22f-4a64-b94b-d14da80e50eb": {
   "verdict": "keep",
@@ -335,6 +398,20 @@
   "note": "Prague-vs-Brno banter, hantec confirmed",
   "reviewed": "2026-10-24"
  },
+ "1b6914a4-1f6b-474f-b924-771a7c71fd57": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry announcement; 'Lord of Terror' is gamer-niche",
+  "reviewed": "2026-10-26"
+ },
+ "1b88a6b7-8312-4929-8736-1e2a6f1dec58": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Eurovision rep name recall, low stop power",
+  "reviewed": "2026-10-26"
+ },
  "1bb74196-a01e-4247-b57d-096923d3ae67": {
   "verdict": "drop",
   "stop_power": 4,
@@ -355,6 +432,27 @@
   "fact": "verified",
   "note": "A PM winning Literature surprises many people; explanation is thin (just the year and term)",
   "reviewed": "2026-10-24"
+ },
+ "1d1d53cd-ef9f-4830-9642-8dbda67132c6": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Demogorgon: iconic, easy recognition",
+  "reviewed": "2026-10-26"
+ },
+ "1d1dcdb4-af3c-4309-9f48-cdc1a8ae6ac7": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away by 'famous Prague writer'",
+  "reviewed": "2026-10-26"
+ },
+ "2008b006-db2a-4104-b561-26de7f5015e3": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "KPop Demon Hunters is huge; saja = lion and grim reaper pun verified",
+  "reviewed": "2026-10-26"
  },
  "2073ce96-36e4-4f46-8d1f-cd24994c14e4": {
   "verdict": "keep",
@@ -383,6 +481,27 @@
   "fact": "verified",
   "note": "Easy pop-culture opener",
   "reviewed": "2026-10-24"
+ },
+ "237cf4f5-9369-41d2-8ea6-6dea84c3af48": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "16-year-old out-earns Tiger Woods at Fortnite: great hook; $3M vs $2.07M verified",
+  "reviewed": "2026-10-26"
+ },
+ "23f7030c-67e1-4377-ba0b-8ab761a51e56": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Song-title recall, half given away by 'way of travelling'",
+  "reviewed": "2026-10-26"
+ },
+ "24177e03-0613-4cea-abe1-941f21327d50": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Adamantium is iconic and guessable; game released 15 Sep 2026 per PlayStation",
+  "reviewed": "2026-10-26"
  },
  "241d59e8-5b62-424f-8f5d-c4a13ff01b9e": {
   "verdict": "drop",
@@ -440,6 +559,13 @@
   "note": "Relatable etymology",
   "reviewed": "2026-10-25"
  },
+ "2ad7699c-0903-4836-a65d-75a56acf6fbc": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Hall H camping is a fun fan-culture fact; overnight queues verified on Comic-Con site",
+  "reviewed": "2026-10-26"
+ },
  "2b7329d6-2303-4730-a6c3-2937f7abe0f5": {
   "verdict": "drop",
   "stop_power": 3,
@@ -489,12 +615,33 @@
   "note": "Fine | FACT: Premise overstated: sources (Wikipedia 'Earth's inner core') put the inner-core surface at ~5,700 K (5,430 C), 'about the temperature at the surface of the Sun', not hotter. Answer 'Solid' is correct.",
   "reviewed": "2026-10-25"
  },
+ "3222f149-a0d7-4b6f-9e5e-f4fe82d030b9": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry awards result; strangers won't care",
+  "reviewed": "2026-10-26"
+ },
+ "327750d6-0e22-4a97-b6f1-a58752c14f2b": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "No woman won cinematography in ~100 years: 'huh, really?'; Durald Arkapaw verified",
+  "reviewed": "2026-10-26"
+ },
  "35017ad6-7fdb-4968-b285-28188e7d80f2": {
   "verdict": "drop",
   "stop_power": 5,
   "fact": "verified",
   "note": "Most viewers already know honey crystallises; low surprise",
   "reviewed": "2026-10-24"
+ },
+ "35a66df5-be4f-4c88-bd7c-3eda142d6684": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Priciest Pokémon card was a drawing-contest prize: good story",
+  "reviewed": "2026-10-26"
  },
  "35b0ccf3-6423-4123-9fb1-a8f93f95f545": {
   "verdict": "hold",
@@ -503,12 +650,33 @@
   "note": "Case error: \"Cez koľko?\" needs \"štyri\", answer \"štyrmi\" is instrumental",
   "reviewed": "2026-10-25"
  },
+ "37132e63-9a4b-4009-9d42-336a08eb4670": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Liam, not Chris, Hemsworth twist; S4 with Liam premiered 30 Oct 2025, verified",
+  "reviewed": "2026-10-26"
+ },
+ "37c9d7d0-4004-4805-8777-3e0b46ab9dc8": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Historic first Spanish-language Album of the Year; verified (Guinness, 1 Feb 2026)",
+  "reviewed": "2026-10-26"
+ },
  "386a5f52-ffda-4af8-8827-2be7f54149f5": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Everyday drink, surprising bee twist, confirmed",
   "reviewed": "2026-10-24"
+ },
+ "386e367d-5687-4cc1-8a5b-80b5700d9726": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'flying into a rage'",
+  "reviewed": "2026-10-26"
  },
  "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f": {
   "verdict": "keep",
@@ -622,6 +790,20 @@
   "note": "Surprising, playable; hanafuda payoff",
   "reviewed": "2026-10-24"
  },
+ "42ea1d74-ad2a-4552-af0f-110cd36845b8": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Too easy: 'casino city' gives Las Vegas",
+  "reviewed": "2026-10-26"
+ },
+ "43151ab7-0a08-46b0-8584-c3c8109085b1": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Stage name recall",
+  "reviewed": "2026-10-26"
+ },
  "434c3cd4-df70-4756-9071-9a7af2ff3d57": {
   "verdict": "keep",
   "stop_power": 5,
@@ -650,6 +832,13 @@
   "note": "Fun tradition",
   "reviewed": "2026-10-25"
  },
+ "46da9f0f-fa47-400c-8204-17d36d5e95e9": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "First esports prize was a Rolling Stone subscription: surprising; verified",
+  "reviewed": "2026-10-26"
+ },
  "46e0312a-2b61-4c4e-afd0-a6bc2c8361c4": {
   "verdict": "drop",
   "stop_power": 4,
@@ -671,12 +860,26 @@
   "note": "Fine | FACT (unverified, 2nd check): 26 holes confirmed, but the claim that the holes make the ball fly on the correct path / allow spin is not supported (Wikipedia mentions only aerodynamic/drag reduction); 'falošná rotácia' is unsupported.",
   "reviewed": "2026-10-25"
  },
+ "48ee69d1-8e1a-4658-b458-115dd1c95e2e": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away (sequel title)",
+  "reviewed": "2026-10-26"
+ },
  "49001c32-bc7e-4c0d-b83b-4168a85ed4cf": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Kolaches in Texas bonus",
   "reviewed": "2026-10-24"
+ },
+ "49fc3574-2c89-414b-b93d-eac05433f0e1": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry box-office ranking",
+  "reviewed": "2026-10-26"
  },
  "4af0f85c-b11e-4480-99df-5b364fa6ad69": {
   "verdict": "keep",
@@ -706,6 +909,13 @@
   "note": "Question gives the answer away (better broth)",
   "reviewed": "2026-10-24"
  },
+ "4bb6ad9a-2775-4bad-abcf-3bd6ff38f50d": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Foreign festival jury trivia, low relevance",
+  "reviewed": "2026-10-26"
+ },
  "4bb75d5b-1f3b-49de-8815-0728e5a77c90": {
   "verdict": "drop",
   "stop_power": 5,
@@ -719,6 +929,27 @@
   "fact": "verified",
   "note": "Guessable, relatable office humour",
   "reviewed": "2026-10-25"
+ },
+ "4c9f413b-a9f3-4fcc-b1ca-4d9a2c0ece8f": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Duplicate of the Sentimental Value item; dry awards",
+  "reviewed": "2026-10-26"
+ },
+ "4e3e72ec-2b52-4895-9fae-4685de325511": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Julie Andrews as the hidden Whistledown voice surprises people; ~92 to 103M views reported",
+  "reviewed": "2026-10-26"
+ },
+ "4ed73037-185b-42e4-b0e0-8cc4686f8c08": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Endgame retakes the all-time No. 1 from Avatar by ~$2M after Encore re-release; verified",
+  "reviewed": "2026-10-26"
  },
  "500fa8da-ccef-503b-b78f-bee61d06a9af": {
   "verdict": "drop",
@@ -747,6 +978,13 @@
   "fact": "verified",
   "note": "Classic failure-to-success story",
   "reviewed": "2026-10-25"
+ },
+ "52e0d26f-4ba8-415b-aa02-2672ddd7233d": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards/streaming brand recall",
+  "reviewed": "2026-10-26"
  },
  "53201267-b1e1-432b-a2d2-b977ffe38cf0": {
   "verdict": "drop",
@@ -783,12 +1021,33 @@
   "note": "Fine",
   "reviewed": "2026-10-25"
  },
+ "53d61f1e-7ac3-4e01-81d6-211bf98d1499": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away by 'green nut'",
+  "reviewed": "2026-10-26"
+ },
  "53f56df0-a2f5-4477-99ce-4de697f07384": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Vienna 1991 confirmed, near-home hook",
   "reviewed": "2026-10-24"
+ },
+ "54135c1a-7932-4e12-9dab-5bdca901a7b3": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "'67' as Word of the Year: viral and absurd; Dictionary.com and Skrilla verified",
+  "reviewed": "2026-10-26"
+ },
+ "54b1a0dd-ec4e-4f9f-8ac1-c154072eebc4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "UK-centric newspaper trivia",
+  "reviewed": "2026-10-26"
  },
  "551a291c-54d1-4f65-a749-a07ec447749f": {
   "verdict": "keep",
@@ -818,6 +1077,13 @@
   "note": "Good | FACT (wrong, 2nd check): Overstated: Wikipedia/literature say erinacin gives only partial immunity; outcomes of viper bites on hedgehogs vary from no reaction to death; 'v krvi' not confirmed (erinacin was isolated from muscle).",
   "reviewed": "2026-10-25"
  },
+ "57b4b08c-f8ec-4b18-b123-108c544fea93": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Spelling N-U-E-V-A-Y-O-L gives the answer away; awards framing",
+  "reviewed": "2026-10-26"
+ },
  "57da0e17-7f87-432b-833c-b97f590e9557": {
   "verdict": "keep",
   "stop_power": 5,
@@ -838,6 +1104,20 @@
   "fact": "verified",
   "note": "Relatable food surprise",
   "reviewed": "2026-10-24"
+ },
+ "59c1b36b-7e75-4c32-917e-7fe220730c0f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Oscar-winning classic, button shop detail",
+  "reviewed": "2026-10-26"
+ },
+ "5ac96e6d-8cd3-4ac2-ac72-339b7471e70c": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Jožin going viral in Poland: fun local surprise (sold-out claim unconfirmed, core fact checked)",
+  "reviewed": "2026-10-26"
  },
  "5b876950-2cdb-4035-a600-3587cdc9be8f": {
   "verdict": "keep",
@@ -895,12 +1175,47 @@
   "note": "Answer obvious from the question; silica payoff too weak to carry a reel",
   "reviewed": "2026-10-24"
  },
+ "5ff1e733-6fe6-4b0f-bd4b-5936f786d49e": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'silver mines'",
+  "reviewed": "2026-10-26"
+ },
+ "6057c291-a57d-4198-80f8-b6a3331a74c3": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Foreign celebrity cameo recall",
+  "reviewed": "2026-10-26"
+ },
  "60c63d18-cf04-48f4-b4d7-00ab2c4bc89f": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Good word-origin story",
   "reviewed": "2026-10-25"
+ },
+ "6142df39-bd80-4a25-b082-b95c9b2b2d71": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Lex Luthor hook makes Eisenberg guessable; Strong cast, Oct 9 release verified",
+  "reviewed": "2026-10-26"
+ },
+ "61480634-3024-4d54-bf67-ecdc802aa8a4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Celebrity name recall from an honorary award",
+  "reviewed": "2026-10-26"
+ },
+ "6172d7e0-1ac3-4909-ac61-1c83284049b3": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Heisenberg ties a huge show to physics; clean reveal",
+  "reviewed": "2026-10-26"
  },
  "617b562a-a5fa-487a-bb52-6f0c63803cb4": {
   "verdict": "keep",
@@ -915,6 +1230,13 @@
   "fact": "unverified",
   "note": "Funny, international | FACT: Not flushing a public toilet is an offence (Public Cleansing Regs reg 16; max fine on conviction S$1,000, composition fine S$150), so fine and 'up to a thousand' are OK. 'Enforcement officers have even carried out spot checks' is not in the cited source and only weakly supported elsewhere.",
   "reviewed": "2026-10-25"
+ },
+ "633c6cb4-f1f7-4bcc-a210-6c54e37b7c90": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Too easy for those who know Hanuman, meaningless for everyone else",
+  "reviewed": "2026-10-26"
  },
  "6369bab7-47d2-45f8-bbd2-02c85904d7b7": {
   "verdict": "keep",
@@ -951,6 +1273,13 @@
   "note": "Surprising local retail fact",
   "reviewed": "2026-10-24"
  },
+ "668829c0-5c9a-44e5-86b8-16bf9d925f58": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Awards result, and 'ER heartthrob doctor' gives it away",
+  "reviewed": "2026-10-26"
+ },
  "6709c973-546b-40c4-89dd-5410df8e326b": {
   "verdict": "keep",
   "stop_power": 6,
@@ -965,6 +1294,13 @@
   "note": "Mr. Bean padlock: instantly recognisable, fun visual payoff",
   "reviewed": "2026-10-24"
  },
+ "67383641-7239-4d1b-a9b1-7f84ab66935b": {
+  "verdict": "keep",
+  "stop_power": 9,
+  "fact": "verified",
+  "note": "Krtek in space: great local surprise",
+  "reviewed": "2026-10-26"
+ },
  "677760d2-f1f9-4b5a-8220-80a176d5e3bf": {
   "verdict": "keep",
   "stop_power": 6,
@@ -978,6 +1314,13 @@
   "fact": "verified",
   "note": "Name-vs-reality twist",
   "reviewed": "2026-10-24"
+ },
+ "6a3788f6-eba1-4d2e-ba4c-20672978152a": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Attenborough at 100 is a warm, recognisable hook; NTA win 8 Sep 2026 verified",
+  "reviewed": "2026-10-26"
  },
  "6a737928-4c43-4228-9d94-c1635378a1ff": {
   "verdict": "drop",
@@ -1042,6 +1385,20 @@
   "note": "Seasonal (autumn) and relatable; source lacks it but confirmed by search",
   "reviewed": "2026-10-24"
  },
+ "6ef26136-53bc-432d-9576-adff1b717394": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by the hit titles",
+  "reviewed": "2026-10-26"
+ },
+ "6f2adf19-e030-480f-9aef-94a0c24eb269": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'On her birthday'",
+  "reviewed": "2026-10-26"
+ },
  "6f2d36ce-2800-4c09-863a-b0817b627ceb": {
   "verdict": "drop",
   "stop_power": 5,
@@ -1070,12 +1427,26 @@
   "note": "Pop-culture surprise",
   "reviewed": "2026-10-25"
  },
+ "7239cdd5-579c-41d3-9f3a-fca307c6b398": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Awards nominations; niche",
+  "reviewed": "2026-10-26"
+ },
  "73834ff5-0e3c-4349-844a-5867d9d07ba7": {
   "verdict": "keep",
   "stop_power": 5,
   "fact": "verified",
   "note": "Wine-region word origin",
   "reviewed": "2026-10-24"
+ },
+ "743195fe-55af-4699-a58a-ca782e9d74eb": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Three reggaeton stars from one city is a nice link; Karol G Global 200 No. 1 verified",
+  "reviewed": "2026-10-26"
  },
  "74c654c7-8d47-5ae7-ace1-f6d462e59db6": {
   "verdict": "keep",
@@ -1112,6 +1483,13 @@
   "note": "Good, but question wording slip: \"where the cloth was associated\" (missing \"with\")",
   "reviewed": "2026-10-25"
  },
+ "799f80b8-d6ac-41cc-9492-98d8c9a1e601": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards result, and the answer is implied by 'Games Done Quick'",
+  "reviewed": "2026-10-26"
+ },
  "79e58051-51e6-4ca9-97f7-ad3a35625a13": {
   "verdict": "keep",
   "stop_power": 8,
@@ -1147,6 +1525,13 @@
   "note": "Myth-buster",
   "reviewed": "2026-10-25"
  },
+ "7b46fd2b-003d-49d0-8064-f112783a1a6b": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Awards poll, and 'Titanium' gives the answer away",
+  "reviewed": "2026-10-26"
+ },
  "7b908edd-c1b9-4efe-9583-3af6eee14dd7": {
   "verdict": "keep",
   "stop_power": 8,
@@ -1175,12 +1560,47 @@
   "note": "Good name origin; note Walpurga's main feast is 25 Feb, 1 May is her canonisation day",
   "reviewed": "2026-10-24"
  },
+ "7d06f93f-852f-41a0-af68-5b7b9d612bfc": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Labubu craze recognisable worldwide; Pop Mart and Kasing Lung verified",
+  "reviewed": "2026-10-26"
+ },
+ "7d1707e6-f5be-47fa-a9ab-72d1d2bb99df": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Christmas TV staple, easy recall hook",
+  "reviewed": "2026-10-26"
+ },
  "7d309c8f-b018-4c16-9dcc-0da321e23ed5": {
   "verdict": "drop",
   "stop_power": 4,
   "fact": "unverified",
   "note": "Low stop power | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "7d8f5670-87e8-4b6f-b088-736148b704c6": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Deep MCU recall; niche",
+  "reviewed": "2026-10-26"
+ },
+ "7e2211b1-735e-4bd6-8975-8602bdf3b443": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Name recall from Olivia Benson; dry hosting trivia",
+  "reviewed": "2026-10-26"
+ },
+ "7ee0bf16-da88-4f16-8e4d-3cc4a2b9adfd": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Creeper was a botched pig: great surprise",
+  "reviewed": "2026-10-26"
  },
  "7f71aa5f-b310-4564-8f07-ceb0592446bf": {
   "verdict": "keep",
@@ -1224,6 +1644,13 @@
   "note": "Great surprise | FACT: Explanation says Cartier mistook the word for the region's name; Wikipedia calls that a popular misconception (Cartier wrote 'They call a town Canada') though he did extend it to the whole territory.",
   "reviewed": "2026-10-25"
  },
+ "80816463-2e09-43f7-9763-1e6702aadbc6": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Question says zámek, Křivoklát is a hrad",
+  "reviewed": "2026-10-26"
+ },
  "81ab065c-212e-4dfd-a335-491977f869dc": {
   "verdict": "keep",
   "stop_power": 5,
@@ -1238,6 +1665,20 @@
   "note": "Model-railway hobby niche; strangers won't care",
   "reviewed": "2026-10-24"
  },
+ "8232b84e-f94d-462e-874a-47c618670aae": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Wile E. Coyote sues Acme: funny, instantly understood; released 28 Aug 2026",
+  "reviewed": "2026-10-26"
+ },
+ "82785fa8-4c9d-48e8-9c14-8aafec860d47": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Character name recall, foreign",
+  "reviewed": "2026-10-26"
+ },
  "82ff91c1-2c46-44a9-89ff-eaa9e0d5e4e4": {
   "verdict": "keep",
   "stop_power": 5,
@@ -1251,6 +1692,20 @@
   "fact": "verified",
   "note": "Everyday object surprise",
   "reviewed": "2026-10-24"
+ },
+ "83ec1eea-280a-4e27-a214-bf76b07a0e0c": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry contest result",
+  "reviewed": "2026-10-26"
+ },
+ "83faeb43-3816-4b24-819c-9628aba4fd59": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Old Eurovision name recall",
+  "reviewed": "2026-10-26"
  },
  "85cad3c7-59ac-4e56-8718-bb7df65b5901": {
   "verdict": "hold",
@@ -1329,6 +1784,13 @@
   "note": "Low stop power; bogus source URL | fact-check pending",
   "reviewed": "2026-10-25"
  },
+ "89e75de4-58e1-4771-ad96-2541149a5b21": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Swift single to Shakespeare link; opening track verified, Hamlet certain",
+  "reviewed": "2026-10-26"
+ },
  "8a14bdba-6658-448e-8d74-8728cf3f4c06": {
   "verdict": "drop",
   "stop_power": 5,
@@ -1385,6 +1847,13 @@
   "note": "Relatable hangover angle, fun culture fact (not web-checked) | FACT (wrong): Answer (pickle brine) is right but explanation states as fact that brine restores sodium/electrolytes; Healthline says evidence is anecdotal and a small study found 3 oz pickle juice did not significantly change blood electrolytes. Also source URL (munchies.vice.com) is dead. Reword as folk belief. | HOLD until fixed in the app",
   "reviewed": "2026-10-24"
  },
+ "8ea18554-dab3-4950-9902-94a76f157066": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away by 'brother Finneas'",
+  "reviewed": "2026-10-26"
+ },
  "8f0a53b1-32a6-4a0b-9b97-7d7bc52175c8": {
   "verdict": "drop",
   "stop_power": 5,
@@ -1406,6 +1875,13 @@
   "note": "Solid, mildly surprising",
   "reviewed": "2026-10-25"
  },
+ "904928da-79d1-47ea-bd1b-4cafc3b82297": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Sabrina Carpenter is hugely recognisable; sole feature on the title track verified",
+  "reviewed": "2026-10-26"
+ },
  "906a921a-b216-442a-8bfe-15185f2e1a4b": {
   "verdict": "keep",
   "stop_power": 6,
@@ -1419,6 +1895,13 @@
   "fact": "verified",
   "note": "Obvious answer (Finland = sauna) and weak listicle source",
   "reviewed": "2026-10-24"
+ },
+ "91077bb8-1629-4952-96cc-47d519cc07a4": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away by her hit; duplicate SuperStar angle",
+  "reviewed": "2026-10-26"
  },
  "913dd84f-e408-4441-85b4-7f57bd2b08ad": {
   "verdict": "drop",
@@ -1440,6 +1923,13 @@
   "fact": "unverified",
   "note": "Textbook, low stop power | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "92109505-e2c8-48ec-8bdd-91c9aae7f0ee": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Jury name recall",
+  "reviewed": "2026-10-26"
  },
  "927ef72b-f80e-477e-9e63-9d66c0628568": {
   "verdict": "keep",
@@ -1497,6 +1987,13 @@
   "note": "Practical, relatable",
   "reviewed": "2026-10-25"
  },
+ "967f25c3-e0dd-4fd0-81a3-a067d49a1e31": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Shakira plus Burna Boy World Cup anthem topped the Global 200 (chart dated 18 Jul); verified",
+  "reviewed": "2026-10-26"
+ },
  "96826ad1-fa24-40fd-bc9b-73cfc5772f0e": {
   "verdict": "keep",
   "stop_power": 5,
@@ -1504,12 +2001,40 @@
   "note": "Fine",
   "reviewed": "2026-10-25"
  },
+ "97530a8a-486b-4704-a781-f306cebfb73b": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'famous for playing Jon Snow'",
+  "reviewed": "2026-10-26"
+ },
+ "97e27e0c-7a30-43e2-8093-a954fd03dd6f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry chart milestone",
+  "reviewed": "2026-10-26"
+ },
  "98409d6d-e85f-4942-a55b-e8ef4ac4a378": {
   "verdict": "hold",
   "stop_power": 5,
   "fact": "verified",
   "note": "Iconic, but grammar slip \"v švédskom Göteborgu\" (should be \"vo švédskom\")",
   "reviewed": "2026-10-25"
+ },
+ "9871a103-9479-4ac4-8928-fb7870125a61": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards result",
+  "reviewed": "2026-10-26"
+ },
+ "988b4359-7e94-4277-819b-1a7e8e498f21": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Guess a Swiss city: low payoff",
+  "reviewed": "2026-10-26"
  },
  "98a40508-0cb9-4b9c-af78-c82fdafe1267": {
   "verdict": "drop",
@@ -1693,12 +2218,26 @@
   "note": "Strong wait-really",
   "reviewed": "2026-10-25"
  },
+ "a21e46e2-fd9f-4793-9830-0acd3729762b": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry box-office statistic, answer obvious",
+  "reviewed": "2026-10-26"
+ },
  "a22a3ae5-255d-4723-a9af-1f4e797dc8f1": {
   "verdict": "keep",
   "stop_power": 8,
   "fact": "verified",
   "note": "Gott for Austria: strong fakt? moment, confirmed",
   "reviewed": "2026-10-24"
+ },
+ "a27dc2cf-39d0-4f17-9ad1-dd5725690f37": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Foreign film character recall",
+  "reviewed": "2026-10-26"
  },
  "a37a8571-a10d-4256-9f8f-24adef84e072": {
   "verdict": "drop",
@@ -1735,6 +2274,27 @@
   "note": "Strong local-pop link | FACT: Orlok is not 'the first film vampire': vampire films predate Nosferatu (e.g. The Vampire 1913, Drakula halala 1921, Melies 1896). Night tours not in source.",
   "reviewed": "2026-10-25"
  },
+ "a5647c87-bca7-4183-b1a9-cbe990705011": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche event logistics; strangers won't care",
+  "reviewed": "2026-10-26"
+ },
+ "a708a05b-8839-4f41-8f02-2e03be13da98": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Inspector who was the traitor all along: good story from a hit local show",
+  "reviewed": "2026-10-26"
+ },
+ "a7d2a02d-68f5-4302-9fe5-a6374f05aba1": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'Michael Jackson's real-life nephew'",
+  "reviewed": "2026-10-26"
+ },
  "a815396b-db19-4a8d-8ada-80009f0d4bec": {
   "verdict": "keep",
   "stop_power": 6,
@@ -1748,6 +2308,13 @@
   "fact": "verified",
   "note": "'Most-streamed day of 2026' can still be beaten before year end; time-sensitive",
   "reviewed": "2026-10-24"
+ },
+ "a9069ed2-b2b8-4fd0-963a-353cc233878d": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Explanation episode count disputed (26 vs 13)",
+  "reviewed": "2026-10-26"
  },
  "a9450d1e-fc0c-40fe-af28-b2af439c6f19": {
   "verdict": "keep",
@@ -1791,6 +2358,20 @@
   "note": "Low stop power, quiz-about-quizzes feels self-referential",
   "reviewed": "2026-10-24"
  },
+ "ac487086-30a4-44a2-8134-fa714c47d235": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Album-title recall; low stop power",
+  "reviewed": "2026-10-26"
+ },
+ "ac600f2a-b3b3-4156-8e75-4454c9b4ddd4": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Dalgona coffee to Squid Game: fun pop-culture link",
+  "reviewed": "2026-10-26"
+ },
  "acab5d4e-49cd-408e-a04d-d6079d583abb": {
   "verdict": "keep",
   "stop_power": 7,
@@ -1804,6 +2385,13 @@
   "fact": "verified",
   "note": "Petr/petrolej link",
   "reviewed": "2026-10-24"
+ },
+ "ad8825e7-2d44-4275-a20f-ca8fba5fae69": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Answer given away: 'album 25' points straight at Adele",
+  "reviewed": "2026-10-26"
  },
  "adf77782-7fff-4100-94af-0e214a222399": {
   "verdict": "keep",
@@ -1833,12 +2421,33 @@
   "note": "Playable 50/50 with a real surprise; Tetris 1984 vs Super Mario Bros. 1985 holds",
   "reviewed": "2026-10-24"
  },
+ "afe252c2-c05e-4c89-b012-4be1a3a717e7": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Prague arena answer is obvious",
+  "reviewed": "2026-10-26"
+ },
  "afecd933-0fe3-4893-b332-46b046bff230": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Guessable from the title, confirmed",
   "reviewed": "2026-10-24"
+ },
+ "b187f1a6-07d9-459a-ada6-02fac9a960e0": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Big star and big film; $264M Nolan-record opening and Damon as Odysseus verified",
+  "reviewed": "2026-10-26"
+ },
+ "b2455207-1400-4d09-89a3-8ac3122c3a68": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Duplicate of the Toy Story 5 tablet item",
+  "reviewed": "2026-10-26"
  },
  "b28580ef-0d5a-4402-8ef9-d8c78d20699f": {
   "verdict": "keep",
@@ -1853,6 +2462,13 @@
   "fact": "verified",
   "note": "Answer obvious, low stop power",
   "reviewed": "2026-10-24"
+ },
+ "b2e00414-c343-49a6-83c4-6abae8c55d20": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Name recall for a minor summer comedy",
+  "reviewed": "2026-10-26"
  },
  "b388a69e-91a6-4f87-8b09-1bceca1a5fd2": {
   "verdict": "keep",
@@ -1896,6 +2512,13 @@
   "note": "Local legend, strong story; 'hraje' present tense: re-check he is still active before posting",
   "reviewed": "2026-10-24"
  },
+ "b5ca5627-aaa3-40d8-8ab0-085942f260fe": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry Grammy result; the sample detail is niche",
+  "reviewed": "2026-10-26"
+ },
  "b6b5e315-eb80-47ae-bd29-e653881df319": {
   "verdict": "keep",
   "stop_power": 7,
@@ -1930,6 +2553,13 @@
   "fact": "verified",
   "note": "Solid",
   "reviewed": "2026-10-25"
+ },
+ "b8dd5f56-e5b4-4a0a-a44f-0ed6be880cf9": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards result (hall of fame)",
+  "reviewed": "2026-10-26"
  },
  "b9525676-ff87-4f58-bdb4-59f856401200": {
   "verdict": "keep",
@@ -1973,6 +2603,20 @@
   "note": "Good",
   "reviewed": "2026-10-25"
  },
+ "bd087bf8-0956-4ad5-bb55-26652573e0e5": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Umbrella Corporation is iconic; RE (2026) topped UK and Ireland with GBP 4.2M, verified",
+  "reviewed": "2026-10-26"
+ },
+ "bd5e0d88-f829-4450-b36b-603ae1cc195d": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Popelka's castle is in Germany: great local surprise",
+  "reviewed": "2026-10-26"
+ },
  "bd8aa2d7-45e5-4a58-82db-48427f61fc70": {
   "verdict": "drop",
   "stop_power": 5,
@@ -2001,12 +2645,26 @@
   "note": "Classic surprise with luštěnina bonus",
   "reviewed": "2026-10-24"
  },
+ "bfbf580b-1941-4e36-b1d8-392b118053be": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Answer given away by Grohl, Novoselic and the 1994 frontman clue",
+  "reviewed": "2026-10-26"
+ },
  "bfe82d3f-cb95-449f-a8dd-67423bfda5e2": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Guessable etymology with pyžama bonus; source URL irrelevant (eggplant dish) but Persian pā-push confirmed",
   "reviewed": "2026-10-24"
+ },
+ "c05166c7-1bfb-42d7-bdeb-052e277ab2c9": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry Oscar statistic, and the 'passed every actress' claim is shaky",
+  "reviewed": "2026-10-26"
  },
  "c0721e4a-298a-4fe8-ae31-ff8124c351c6": {
   "verdict": "keep",
@@ -2028,6 +2686,20 @@
   "fact": "verified",
   "note": "Practical surprise",
   "reviewed": "2026-10-25"
+ },
+ "c13fd31e-8a23-4bf0-a769-ee7803c069cb": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Berlinale winner shot on a phone: real 'huh, really?' moment",
+  "reviewed": "2026-10-26"
+ },
+ "c19a4ab8-4637-436e-b813-8a75186d5612": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Actor-name recall; low stop power",
+  "reviewed": "2026-10-26"
  },
  "c28f922e-8af5-444a-92a3-0f4b54ab8ed5": {
   "verdict": "hold",
@@ -2056,6 +2728,13 @@
   "fact": "verified",
   "note": "Krtek in space: great local surprise",
   "reviewed": "2026-10-24"
+ },
+ "c5d76c19-233b-454c-b3ac-aa0430f9450b": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Answer given away by the 2015 CDPR game and its expansion names",
+  "reviewed": "2026-10-26"
  },
  "c6beb6fe-cc7d-51fb-910e-1b4adda9d511": {
   "verdict": "drop",
@@ -2099,6 +2778,13 @@
   "note": "Every Slovak knows korbáč = vŕba, no challenge; folk-belief explanation not in source",
   "reviewed": "2026-10-24"
  },
+ "c91184c7-1f28-4221-901b-c6fb684f2e6f": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Niche game geography",
+  "reviewed": "2026-10-26"
+ },
  "c9985c8f-8b27-44dd-84a7-e3d2167a8470": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2112,6 +2798,13 @@
   "fact": "verified",
   "note": "Iconic",
   "reviewed": "2026-10-25"
+ },
+ "cae5ad6c-aa82-4134-ba3f-df5684d962ef": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Name recall of a songwriter; most strangers won't know Randy Newman",
+  "reviewed": "2026-10-26"
  },
  "cb0b2955-edbe-4705-8b74-00207b246159": {
   "verdict": "keep",
@@ -2133,6 +2826,13 @@
   "fact": "verified",
   "note": "Solid",
   "reviewed": "2026-10-25"
+ },
+ "cb491406-0b94-4bc9-8d4e-9a4d8a49f1e7": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Rickroll is universal; M-W added it in Sep 2026, verified",
+  "reviewed": "2026-10-26"
  },
  "cb6137e2-ffcc-4e8e-b8f7-666bd05a9ebc": {
   "verdict": "drop",
@@ -2169,6 +2869,13 @@
   "note": "Dead-animal hunting ritual, niche and unpleasant for a broad audience | fact-check pending",
   "reviewed": "2026-10-25"
  },
+ "cc6c3a6a-007f-4b2f-87f1-b23458ae796f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Character name recall; near-duplicate of Prada 2 item",
+  "reviewed": "2026-10-26"
+ },
  "ccf9c9d4-4ba0-4749-8f63-ad7b1260c2c5": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2189,6 +2896,13 @@
   "fact": "verified",
   "note": "Iconic, guessable, nice two-collections story; source is a geocache page, facts confirmed by search",
   "reviewed": "2026-10-24"
+ },
+ "ce7f2832-5a16-43b6-bd7a-245a20a1de50": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche charity trivia; low stop power",
+  "reviewed": "2026-10-26"
  },
  "ced92706-e39d-4827-8534-0dd0a397d152": {
   "verdict": "drop",
@@ -2232,6 +2946,27 @@
   "note": "Fine",
   "reviewed": "2026-10-25"
  },
+ "d360d634-7904-448c-9a98-c8b71fe8ccc9": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Lizzie Borden and the 'forty whacks' rhyme are widely known; Monster S4 verified",
+  "reviewed": "2026-10-26"
+ },
+ "d397f03e-943a-44ec-8ec5-0ccc89566325": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards result",
+  "reviewed": "2026-10-26"
+ },
+ "d3a71fa4-cf31-4af2-aaf3-fe2196b6111a": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Foreign awards result",
+  "reviewed": "2026-10-26"
+ },
  "d3d6c071-44a6-4f5a-a365-845a12a9216b": {
   "verdict": "hold",
   "stop_power": 5,
@@ -2245,6 +2980,13 @@
   "fact": "unverified",
   "note": "School knowledge, low stop | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "d4683b67-7b03-4575-9b42-934913b727d6": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry awards result, film title recall",
+  "reviewed": "2026-10-26"
  },
  "d4962854-10fc-415a-9416-26ead369f3a8": {
   "verdict": "drop",
@@ -2274,6 +3016,13 @@
   "note": "Too obvious, no surprise | fact-check pending",
   "reviewed": "2026-10-25"
  },
+ "d5ee198f-5fa2-4b18-985d-73e74458756f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Metal-niche, and 'fired from Metallica' gives it away to fans",
+  "reviewed": "2026-10-26"
+ },
  "d60d6853-d3ed-4556-ad1e-7342dae8e68f": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2294,6 +3043,13 @@
   "fact": "unverified",
   "note": "Overused fact | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "d6fae8ca-af1c-440b-8bbc-7d3231c36eba": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer too obvious (Jánošík)",
+  "reviewed": "2026-10-26"
  },
  "d7037adf-0d58-5ddd-aa99-ee46d686b52f": {
   "verdict": "drop",
@@ -2344,6 +3100,13 @@
   "note": "Current slang, broad appeal",
   "reviewed": "2026-10-25"
  },
+ "d907cd15-1ccc-4889-841f-faea1a30c163": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Guess-the-name recall, gamer niche",
+  "reviewed": "2026-10-26"
+ },
  "d9c655e9-01c4-4651-99bb-bf76eb2c7dee": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2372,6 +3135,20 @@
   "note": "Everyday product surprise",
   "reviewed": "2026-10-24"
  },
+ "db96b047-8d5b-4332-95b3-fbfc50914428": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Cockroach milk wins an Ig Nobel: strong surprise; source says >3x the energy of dairy milk",
+  "reviewed": "2026-10-26"
+ },
+ "dbb7072a-3709-4583-b02a-f63d9d1b3706": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Fandom-niche character recall",
+  "reviewed": "2026-10-26"
+ },
  "dbd0a4df-29d0-4804-bcf3-604b3b37646c": {
   "verdict": "drop",
   "stop_power": 5,
@@ -2386,12 +3163,26 @@
   "note": "School literature recall (Országh), dry",
   "reviewed": "2026-10-24"
  },
+ "dc25a7bc-d4c3-4191-8031-285f02e17d15": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local hit everyone knows, Hron link",
+  "reviewed": "2026-10-26"
+ },
  "dd84906d-1008-4838-bb11-b226f1e0f7c1": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Relatable supermarket brands, odd-one-out works in 5 s",
   "reviewed": "2026-10-24"
+ },
+ "de088f81-1ebc-4c95-82b1-b9052aec875e": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry awards hook, answer guessable",
+  "reviewed": "2026-10-26"
  },
  "de548ae5-dac5-435a-95fa-14f67b5ab60b": {
   "verdict": "keep",
@@ -2428,6 +3219,13 @@
   "note": "Beloved local duo, easy nostalgia",
   "reviewed": "2026-10-24"
  },
+ "e03bb006-1542-4924-aabb-fb58b337c136": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Hour-long single takes: strong 'how?' hook",
+  "reviewed": "2026-10-26"
+ },
  "e159eaf3-f943-47dd-8db3-2f3eb9656f45": {
   "verdict": "keep",
   "stop_power": 5,
@@ -2435,12 +3233,33 @@
   "note": "Well known but solid",
   "reviewed": "2026-10-25"
  },
+ "e1998d5d-91c0-4331-b463-d384347f1742": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by 'Pravda víťazí'",
+  "reviewed": "2026-10-26"
+ },
  "e1d3a1f7-bfd8-40bd-9ab1-c75c534ad828": {
   "verdict": "drop",
   "stop_power": 5,
   "fact": "verified",
   "note": "Answer 'maso nezkazí' ungrammatical (missing 'se'); answer obvious",
   "reviewed": "2026-10-24"
+ },
+ "e2e2a494-b15d-4864-b771-a290a84d7129": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "wrong",
+  "note": "Explanation wrong: Brie Larson's Oscar film is 'Room', not 'The Room'",
+  "reviewed": "2026-10-26"
+ },
+ "e33477f5-99c3-403c-9812-e971cb21dba1": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Squid Game chant hides the national flower: good reveal; mugunghwa is Hibiscus syriacus",
+  "reviewed": "2026-10-26"
  },
  "e49c1c8b-2ab9-4fd8-9598-96834d189c23": {
   "verdict": "drop",
@@ -2455,6 +3274,13 @@
   "fact": "unverified",
   "note": "Easy, low surprise | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "e4f1f0a7-7149-4ccd-920e-fb4b1e9022b8": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche; also 'fanzine' was coined in 1940, not the 1930s as the explanation implies",
+  "reviewed": "2026-10-26"
  },
  "e51a6236-527c-4761-8650-3952cc9572d3": {
   "verdict": "keep",
@@ -2498,6 +3324,13 @@
   "note": "Surprising science and place link (not web-checked, well established)",
   "reviewed": "2026-10-24"
  },
+ "e824d9dc-7e26-40ef-903f-b9bc8ff2a2a3": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Show-title recall; fandom-niche",
+  "reviewed": "2026-10-26"
+ },
  "e8905437-f159-4a1a-8e4f-fde3ea49bf5b": {
   "verdict": "keep",
   "stop_power": 7,
@@ -2518,6 +3351,13 @@
   "fact": "verified",
   "note": "Strong national surprise",
   "reviewed": "2026-10-25"
+ },
+ "e8f6fe3a-eabf-48ce-8680-7adea9372618": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Stranger Things is globally known; Hawkins plus the NYE 2025 cinema finale verified",
+  "reviewed": "2026-10-26"
  },
  "e8fdb87f-085d-4bcb-b881-0ea4f872a3b0": {
   "verdict": "drop",
@@ -2540,6 +3380,27 @@
   "note": "Fresh subculture topic, guessable",
   "reviewed": "2026-10-25"
  },
+ "eb1bbd6d-1e20-4eb7-b41d-0ec944fae3eb": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Avada Kedavra/abrakadabra: great 'huh' for HP fans",
+  "reviewed": "2026-10-26"
+ },
+ "eb26e388-3849-4eff-a627-103a7dbdb05b": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Chalamet as a table tennis hustler is a fun guess; Golden Globe win verified",
+  "reviewed": "2026-10-26"
+ },
+ "eb7d79e8-c699-4bc3-807c-20f9cb6ef5e8": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Reality show format tweak, low stop power",
+  "reviewed": "2026-10-26"
+ },
  "ed1c2fb7-db96-468c-9073-1e35517d9927": {
   "verdict": "drop",
   "stop_power": 5,
@@ -2547,12 +3408,26 @@
   "note": "Question gives the answer away (night-singing, chirps) | fact-check pending",
   "reviewed": "2026-10-25"
  },
+ "ee19cc76-0491-404c-a592-1532fec82229": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Drake was 'Wheelchair Jimmy' on Degrassi: fun 'huh, really?'; Solar Eclipse debuted No. 5",
+  "reviewed": "2026-10-26"
+ },
  "ee2de8d2-19d2-4a6c-be6f-cf183560d316": {
   "verdict": "keep",
   "stop_power": 6,
   "fact": "verified",
   "note": "Good etymology link",
   "reviewed": "2026-10-25"
+ },
+ "ee428820-bfd2-4318-a958-89526a17ed12": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Snake in a mammal city is a fun guess; Gary De'Snake is a pit viper, verified",
+  "reviewed": "2026-10-26"
  },
  "ee5a92c7-7017-4f6a-893e-19a7b427f762": {
   "verdict": "drop",
@@ -2588,6 +3463,13 @@
   "fact": "verified",
   "note": "Czech pride, plaque hook, confirmed",
   "reviewed": "2026-10-24"
+ },
+ "f0b77f08-81d3-45d1-9823-9f927f4409c4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry chart statistic",
+  "reviewed": "2026-10-26"
  },
  "f0caa373-5ce1-499d-a23b-7b7927ca5fb5": {
   "verdict": "drop",
@@ -2631,6 +3513,27 @@
   "note": "Neat etymology with a 'nautical' hunch; good payoff",
   "reviewed": "2026-10-24"
  },
+ "f3b16521-2827-4f60-ac3b-00de387e7ff6": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Origin of 'cosplay': nice word story",
+  "reviewed": "2026-10-26"
+ },
+ "f3b8b585-3073-4233-83f5-9282607ddc4f": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Host name recall, dry",
+  "reviewed": "2026-10-26"
+ },
+ "f3d506fa-0e09-4f4d-ab9e-3dea3f7af6bb": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry box-office ranking",
+  "reviewed": "2026-10-26"
+ },
  "f3fbe279-ca2b-4b07-9de2-ce5883a13020": {
   "verdict": "hold",
   "stop_power": 6,
@@ -2638,12 +3541,40 @@
   "note": "Fun dialect item | FACT: Source unreachable (connection refused) and no other source found confirming sumny from German schon.",
   "reviewed": "2026-10-25"
  },
+ "f536223a-a81e-4448-9cc0-eb3a46d9db8e": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Awards result; strangers won't care",
+  "reviewed": "2026-10-26"
+ },
  "f551eca2-6c5e-44f5-b03a-d3147315cadd": {
   "verdict": "drop",
   "stop_power": 4,
   "fact": "verified",
   "note": "US-only geography, and it repeats the Maine answer of the stronger Africa question",
   "reviewed": "2026-10-24"
+ },
+ "f58b5137-b5a0-4390-b233-50941e7c0d0c": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Lavi sequel: local hit everyone half-knows",
+  "reviewed": "2026-10-26"
+ },
+ "f5c21a5b-9d64-4910-8b54-d643787af029": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Eagle not raven: classic books-vs-films surprise",
+  "reviewed": "2026-10-26"
+ },
+ "f600af54-aff6-42fc-acbe-97c4e274a546": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Mario's moustache and cap came from pixel limits: great reveal; verified (Wikipedia)",
+  "reviewed": "2026-10-26"
  },
  "f6104550-837a-4767-a835-460cbe30db1c": {
   "verdict": "keep",
@@ -2659,6 +3590,13 @@
   "note": "Fun origin story; weak listicle source, but the fact is well documented (not web-checked)",
   "reviewed": "2026-10-24"
  },
+ "f6ddbedf-3ef4-4fd1-b319-b45626b19c69": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Foreign awards result; strangers won't care",
+  "reviewed": "2026-10-26"
+ },
  "f6fdf444-79f2-4ea8-a454-d4cc7d5a3815": {
   "verdict": "hold",
   "stop_power": 6,
@@ -2672,6 +3610,27 @@
   "fact": "verified",
   "note": "Good",
   "reviewed": "2026-10-25"
+ },
+ "f85d20c3-823e-4527-9567-4854abfad218": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Farna's Polish home is a mild 'huh'; many already know, borderline",
+  "reviewed": "2026-10-26"
+ },
+ "f885e69f-2d94-4150-9163-5e6ea7df06a6": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Fellini's wife as Perinbaba: great local surprise",
+  "reviewed": "2026-10-26"
+ },
+ "f91fd098-5dc4-4a78-b883-692546bd05bd": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Year shaky (made 1982, premiered 1983); salt line disputed",
+  "reviewed": "2026-10-26"
  },
  "f9300d93-a95f-4b63-b4d6-6d9d37cf9d03": {
   "verdict": "drop",
@@ -2694,6 +3653,13 @@
   "note": "Burning at the stake: unpleasant topic, dry recall",
   "reviewed": "2026-10-24"
  },
+ "fa4dfbc6-754a-4060-bfd0-39b6e3d42fb3": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Niche Indian streaming trivia; dry",
+  "reviewed": "2026-10-26"
+ },
  "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2708,6 +3674,20 @@
   "note": "School-history recall",
   "reviewed": "2026-10-24"
  },
+ "fb5b6355-e2bb-4531-a074-0ef6d7c3521d": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Superstar who was a bus conductor: real story with a payoff; Jailer 2 No. 2 worldwide on 16 to 18 Oct",
+  "reviewed": "2026-10-26"
+ },
+ "fb7b6e01-6649-443d-b76e-b9d715372bb5": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Answer given away by describing the film's premise",
+  "reviewed": "2026-10-26"
+ },
  "fba6833d-9ac2-4727-a169-24ee06493f80": {
   "verdict": "keep",
   "stop_power": 6,
@@ -2721,6 +3701,13 @@
   "fact": "unverified",
   "note": "Textbook biology | fact-check pending",
   "reviewed": "2026-10-25"
+ },
+ "fbfdb7c4-5b6a-41c8-99c0-beafbbd40e91": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "d10 is not a Platonic solid: neat 'aha' for gamers and geeks; verified",
+  "reviewed": "2026-10-26"
  },
  "fdb1ebee-5e24-4b6b-a5a5-a2d070d1ffd4": {
   "verdict": "drop",

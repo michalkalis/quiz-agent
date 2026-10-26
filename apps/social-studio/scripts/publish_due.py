@@ -1,4 +1,4 @@
-"""Publish due Instagram posts (210.5). Run hourly by .github/workflows/social-publish.yml.
+"""Publish due Instagram posts (210.5) and their reels to Facebook Pages (210.11). Run hourly by .github/workflows/social-publish.yml.
 
 The Instagram API has no scheduling, so this is the scheduler: every approved,
 staged post in batches/*.json (scripts/stage_week.py) whose `publish_at` has
@@ -9,6 +9,8 @@ Login (graph.instagram.com). Stdlib only, so the workflow needs no install.
   refreshed weekly by scripts/ig_tokens.py). A due post without a token fails.
 - Idempotent without state: a post whose caption is already on the account's
   latest media counts as published, so a rerun never posts twice.
+- Reels also go to the matching Facebook Page (scripts/fb_pages.py), with
+  the same window and idempotency rules.
 - A post past its 24 h window, or one that fails, fails the run (the workflow
   goes red) instead of silently dropping.
 
@@ -26,6 +28,8 @@ import urllib.parse
 import urllib.request
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+import fb_pages
 
 API = "https://graph.instagram.com/v26.0"
 BATCH_DIR = Path(__file__).resolve().parent.parent / "batches"
@@ -131,50 +135,62 @@ def check() -> None:
         )
 
 
-def main(dry_run: bool) -> int:
-    now = datetime.now(UTC)
-    failures = 0
-    users: dict[str, tuple[str, set[str]]] = {}
-    for post, missed in due_posts(now):
-        token = token_for(post["account"])
-        if not token:
-            print(f"✗ {post['key']}: no token for {post['account']}, not posted")
-            failures += 1
-            continue
-        if post["account"] not in users:
-            me = call("GET", "me", token, fields="user_id")
-            recent = call("GET", "me/media", token, fields="caption", limit=25).get(
-                "data", []
-            )
-            users[post["account"]] = (
-                me["user_id"],
-                {m.get("caption", "").strip() for m in recent},
-            )
-        user_id, captions = users[post["account"]]
-        if post["caption"].strip() in captions:
-            continue  # already on the account
-        if missed:
-            print(
-                f"✗ {post['key']} ({post['publish_at']}): missed its 24 h window, not posted"
-            )
-            failures += 1
-            continue
-        if dry_run:
-            print(
-                f"would publish {post['key']} ({post['format']}, {post['publish_at']})"
-            )
-            continue
-        try:
-            print(f"✓ {post['key']}: {publish(post, user_id, token)}")
-            captions.add(post["caption"].strip())
+def recent_captions(token: str) -> tuple[str, set[str]]:
+    me = call("GET", "me", token, fields="user_id")
+    recent = call("GET", "me/media", token, fields="caption", limit=25)
+    return me["user_id"], {m.get("caption", "").strip() for m in recent.get("data", [])}
+
+
+def publish_to(target: str, post: dict, missed: bool, dry_run: bool, seen: dict) -> int:
+    """Publish one due post to Instagram ("ig") or its Facebook Page ("fb"); 1 = failure."""
+    label = f"{post['key']}{' → Facebook' if target == 'fb' else ''}"
+    token = (fb_pages.token_for if target == "fb" else token_for)(post["account"])
+    if not token:
+        print(f"✗ {label}: no {target} token for {post['account']}, not posted")
+        return 1
+    if post["account"] not in seen:
+        try:  # one broken account must not stop the others
+            seen[post["account"]] = (
+                fb_pages.recent_descriptions if target == "fb" else recent_captions
+            )(token)
         except RuntimeError as e:
-            print(f"✗ {post['key']}: {e}")
-            failures += 1
+            print(f"✗ {label}: {e}")
+            return 1
+    owner, captions = seen[post["account"]]
+    if post["caption"].strip() in captions:
+        return 0  # already on the account
+    if missed:
+        print(f"✗ {label} ({post['publish_at']}): missed its 24 h window, not posted")
+        return 1
+    if dry_run:
+        print(f"would publish {label} ({post['format']}, {post['publish_at']})")
+        return 0
+    try:
+        link = (fb_pages.publish_reel if target == "fb" else publish)(
+            post, owner, token
+        )
+        print(f"✓ {label}: {link}")
+        captions.add(post["caption"].strip())
+        return 0
+    except RuntimeError as e:
+        print(f"✗ {label}: {e}")
+        return 1
+
+
+def main(dry_run: bool) -> int:
+    failures = 0
+    ig_seen: dict[str, tuple[str, set[str]]] = {}
+    fb_seen: dict[str, tuple[str, set[str]]] = {}
+    for post, missed in due_posts(datetime.now(UTC)):
+        failures += publish_to("ig", post, missed, dry_run, ig_seen)
+        if post["format"] != "carousel":  # Pages get the reels only (decision 10)
+            failures += publish_to("fb", post, missed, dry_run, fb_seen)
     return 1 if failures else 0
 
 
 if __name__ == "__main__":
     if "--check" in sys.argv:
         check()
+        fb_pages.check()
     else:
         sys.exit(main("--dry-run" in sys.argv))

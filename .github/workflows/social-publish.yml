@@ -2,7 +2,8 @@ name: social-publish
 
 # #210 (marketing on social networks), 210.5: the Instagram API has no
 # scheduling, so this hourly run publishes the approved posts whose slot has
-# passed (apps/social-studio/scripts/publish_due.py). Red run = a post failed
+# passed (apps/social-studio/scripts/publish_due.py); reels also go to the
+# matching Facebook Page (210.11, scripts/fb_pages.py). Red run = a post failed
 # or missed its window.
 
 on:
@@ -29,10 +30,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Publish due Instagram posts
+      - name: Publish due Instagram posts and Facebook Page reels
         env:
           IG_TOKEN_IG_EN: ${{ secrets.IG_TOKEN_IG_EN }}
           IG_TOKEN_IG_SKCZ: ${{ secrets.IG_TOKEN_IG_SKCZ }}
+          FB_PAGE_TOKEN_EN: ${{ secrets.FB_PAGE_TOKEN_EN }}
+          FB_PAGE_TOKEN_SKCZ: ${{ secrets.FB_PAGE_TOKEN_SKCZ }}
           MODE: ${{ inputs.mode || 'publish' }}
         run: |
           case "$MODE" in

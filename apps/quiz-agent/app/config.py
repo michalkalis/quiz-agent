@@ -142,7 +142,8 @@ class Settings(BaseSettings):
     tts_cache_max_mb: int = 1500
     # #193.13: per-user daily cap on characters sent to the BILLED primary by
     # `POST /tts/synthesize` (ElevenLabs Starter = 30k credits/month, shared with
-    # STT; multilingual_v2 bills ~0.4 credit/char on current plans). Heavy
+    # STT; eleven_v4_turbo bills 0.2 credit/char, measured 2026-10-26 —
+    # multilingual_v2 was 0.4). Heavy
     # legit play: ~100 answer read-backs (~40 chars) + a few recaps is ~5-6k,
     # so 10k never blocks it. Over budget -> OpenAI fallback, not an
     # error. 0 disables the cap.

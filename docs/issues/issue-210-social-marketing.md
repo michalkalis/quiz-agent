@@ -29,6 +29,7 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 11. **TikTok retry without a second number:** founder tries sign-up in the TikTok iPhone app (Add account → Continue with Google/Apple). Free SMS-receive sites are ruled out (anyone can read the code). Fallback if it still asks for a phone: a ~€5 prepaid SIM as a company number (needs a go). **Outcome 2026-10-25:** the iPhone app still asked for a phone, but web sign-up with "Continue with Google" (hi@trubbo.app) went through without one → TikTok EN **@trubboapp** (name Trubbo, mascot avatar, bio within TikTok's 80-char limit: "Odd, funny questions with a story behind every answer. / Trubbo app: coming soon."). TikTok SK/CZ still open: one Google account = one TikTok account, so it needs a second Google/Apple login.
 12. **Instagram auto-publishing paused (2026-10-26)** until the founder approves the new video format; `social-publish.yml` is disabled, re-enable it once the reworked batch is approved. **Resumed 2026-10-26:** founder approved W44 v4; all 14 posts staged from the approval page's files (Mon 10-26 to Sun 11-01, EN 18:00 UTC, SK/CZ 17:00 UTC), workflow re-enabled; reels also go to the Facebook Pages.
 13. **Cover images (2026-10-26):** design B3 (quiz-question bubbles, small happy mascot). EN: mint cover with the cobalt avatar; SK/CZ: purple cover with the mint avatar. YouTube banners uploaded to both channels (SK/CZ channel also got its avatar); Facebook covers uploaded by the founder. Proposals: https://claude.ai/artifact/UD35GEN8sdTfyu9yFiB8ph
+14. **TikTok through Buffer until TikTok's API audit (2026-10-26).** Browser automation on tiktok.com/tiktokstudio got an instant captcha, then the upload page kept flashing its captcha in the founder's own Chrome and Safari too, so TikTok is never automated through a browser (like Facebook). The founder picked: apply for TikTok's Content Posting API (posts stay private until its audit) and meanwhile schedule through Buffer (official TikTok partner; free plan 3 channels, 10 scheduled posts per channel at a time, API key). `scripts/buffer_tiktok.py <week>` schedules a week's approved reels after staging. Founder steps: TikTok → Business account, connect it in Buffer, BUFFER_API_KEY in `.env`. TikTok SK/CZ (alias hi+skcz@trubbo.app, email sign-up) waits a few days until TikTok's extra checks calm down.
 
 ## Founder decisions (2026-10-22) — direction after the [growth research](../research/growth-strategy-2026-10-21.md)
 
@@ -74,7 +75,7 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 | Account | Language | Content | Publishing |
 |---|---|---|---|
 | Instagram @trubboapp | EN | Timer reels, carousels, stories | Official Instagram API (own script, own scheduler) |
-| TikTok @trubboapp | EN | Same reels | Account created 2026-10-25 (decision 11); publishing TBD |
+| TikTok @trubboapp | EN | Same reels | Buffer API until TikTok's API audit (decision 14) |
 | YouTube Shorts (Trubbo channel) | EN | Same reels | YouTube Data API (own script) after the audit; Studio via Playwright until then (decision 8) |
 | YouTube Shorts SK/CZ channel | sk / cs | Same reels | Same as EN (decision 9) |
 | Facebook Page EN + Page SK/CZ | EN / sk+cs | Reels of the matching Instagram | Meta app, Pages API (decision 10) |

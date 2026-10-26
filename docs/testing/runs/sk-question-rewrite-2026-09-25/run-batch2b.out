@@ -1,0 +1,8 @@
+138 flagged sk rows → rewriting 62
+session gateway: no tier mapping for 'google/gemini-2.5-pro' -> session:opus (frontier default; override via LLM_SESSION_MAP)
+44 pending row(s) selected
+  [sk] 10/44 {'approved': 10}
+  [sk] 20/44 {'approved': 20}
+  [sk] 30/44 {'approved': 30}
+  [sk] 40/44 {'approved': 40}
+{"language": "sk", "finished_at": "2026-09-25T10:44:11.405147+00:00", "chosen": 62, "rewritten": 44, "unchanged": 18, "failed": 0, "gate": {"approved": 44}, "rewrite_seconds": 73, "total_seconds": 331}

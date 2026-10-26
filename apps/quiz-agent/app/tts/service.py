@@ -472,7 +472,7 @@ class TTSService:
 
         Called on server startup to ensure instant feedback playback. Skipped
         for phrases already on disk, so the real cost is paid once per provider
-        per cache volume: ~100–250 ElevenLabs credits (0.4–1 credit/char by plan) or ~$0.005 on
+        per cache volume: ~50–125 ElevenLabs credits (0.2 credit/char on v4 Turbo) or ~$0.005 on
         OpenAI. Note that an ephemeral cache dir turns "once" into "every
         deploy" — see `TTS_CACHE_DIR`.
 

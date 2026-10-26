@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(fly status *)",
+      "Bash(fly logs *)",
+      "mcp__pencil__batch_get",
+      "mcp__figma__get_design_context"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -39,14 +47,7 @@
     "claude-md-management@claude-plugins-official": false,
     "figma@claude-plugins-official": false,
     "claude-code-setup@claude-plugins-official": false,
-    "firecrawl@claude-plugins-official": false
-  },
-  "permissions": {
-    "allow": [
-      "Bash(fly status *)",
-      "Bash(fly logs *)",
-      "mcp__pencil__batch_get",
-      "mcp__figma__get_design_context"
-    ]
+    "firecrawl@claude-plugins-official": false,
+    "security-guidance@claude-plugins-official": true
   }
 }

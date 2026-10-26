@@ -101,7 +101,10 @@ def schedule(week: str) -> None:
                     "schedulingType": "automatic",
                     "mode": "customScheduled",
                     "dueAt": post["publish_at"],
+                    "needsApproval": False,
                     "assets": [{"video": {"url": video}}],
+                    # Synthetic voice: disclose it, as on the Instagram reels.
+                    "metadata": {"tiktok": {"isAiGenerated": True}},
                 }
             },
         )["createPost"]

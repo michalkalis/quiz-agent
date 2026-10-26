@@ -6,9 +6,13 @@
 
 - Model `eleven_multilingual_v2`, voice George (won the 2026-07-26 listening test, en + sk). List price **$80 / 1M characters**.
 - ElevenLabs is now TTS only (answer recognition moved to OpenAI in #208.1 — answer transcription).
-- Every clip is cached (disk L1 + R2 L2, #207.20), so we pay once per unique text per language, not per play. ~185 credits per first read of a question (≈ $0.015 at list price).
+- Every clip is cached (disk L1 + R2 L2, task 207.20 — shared TTS cache in R2, #207 — production readiness), so we pay once per unique text per language, not per play. ~185 credits per first read of a question (≈ $0.015 at list price).
 - Plan: Starter; billing period usage 2,766 / 42,725 credits. Over the daily budget, speech falls back to OpenAI `tts-1`.
 - `eleven_flash_v2_5` (half price) was already rejected: weaker non-English pronunciation.
+
+## Outcome (2026-10-26)
+
+Founder dropped Gemini (keep ElevenLabs + George). Blind test Multilingual v2 vs Eleven v4 Turbo, 28 pairs (sk 12, cs 12, en 4): 22 no difference, 4 for v2 (3 of them cs), 2 for v4 Turbo; founder: "practically the same, v4 a bit faster". Switched to v4 Turbo in PR #580 (read questions with Eleven v4 Turbo). Answer key + picks: `docs/testing/runs/tts-blindtest-2026-10-26/`.
 
 ## Executive summary
 

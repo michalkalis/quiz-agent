@@ -9,7 +9,7 @@ import {hookFor} from './copy';
 import {Monkey} from './Monkey';
 import {AnswerReveal} from './AnswerReveal';
 import {ExplainPhase} from './Explain';
-import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
+import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, tintFor} from './theme';
 import {ANSWER_LEAD_MS, LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
@@ -20,6 +20,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 	const tint = tintFor(q.category);
 
 	const intro = style.opening === 'intro';
+	const solo = style.opening === 'solo';
 	// Without the intro card the question is complete on frame 1 and the voice follows.
 	const lead = intro ? 0 : LEAD_MS;
 	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms, answer.ms, q.explanation.length);
@@ -71,6 +72,8 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 						</AbsoluteFill>
 					) : null}
 
+					{solo ? <HookSolo text={hookFor(q.language, hookIndex)} color={tint.onBg} endMs={qStart} /> : null}
+
 					{/* Question card, countdown, reveal */}
 					{now >= qStart ? (
 						<div
@@ -94,7 +97,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 									optionsAtMs={optionsAtMs}
 									optionAtMs={optionAtMs}
 									revealed={now >= revealStart}
-									appear={intro ? enter(qStart) : 1}
+									appear={intro || solo ? enter(qStart) : 1}
 									readable={!intro}
 									scale={style.opening === 'fused' ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
 									markBg={tint.bg}
@@ -125,8 +128,8 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 					) : null}
 
 					{/* The monkey listens while the question is read, then sits in the countdown. */}
-					{now < cdStart ? (
-						<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: enter(200)}}>
+					{now < cdStart && (!solo || now >= qStart) ? (
+						<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: enter(solo ? qStart + 200 : 200)}}>
 							<Monkey size={190} mood="idle" />
 						</div>
 					) : null}

@@ -1,7 +1,7 @@
 // npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR] [--make-voice]
-//                    [--opening intro|fused|plain] [--explain line|parts|captions]
+//                    [--opening solo|fused|intro|plain] [--explain line|parts|captions]
 // npm run render -- --carousel <id,id,id> [--part N] [--lang en|sk|cs] [--out DIR]
-// npm run render -- --round <id,id,id> [--lang en|sk|cs] [--out DIR] [--make-voice]   (easiest first)
+// npm run render -- --round <id,id,id> [--lang en|sk|cs] [--out DIR] [--make-voice] [--opening solo|fused]   (easiest first)
 //
 // Fetches approved rows read-only from prod (or reads a JSON file), reuses the
 // question's existing app voice clip if there is one (--make-voice: has the
@@ -16,8 +16,8 @@ import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
 import {ANSWERS_PER_SLIDE} from '../src/CarouselSlide';
-import {LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
-import type {CarouselSlideProps, ExplainTrack, Language, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
+import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
+import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
@@ -33,7 +33,8 @@ const {values, positionals} = parseArgs({
 		round: {type: 'string'},
 		part: {type: 'string', default: '1'},
 		'make-voice': {type: 'boolean', default: false},
-		opening: {type: 'string', default: 'fused'},
+		// Founder 2026-10-26: the hook alone first, then the question.
+		opening: {type: 'string', default: 'solo'},
 		explain: {type: 'string', default: 'card'},
 	},
 });
@@ -222,10 +223,12 @@ async function main() {
 			if (!answerAudio) console.warn(`! ${q.id}: no answer clip, the answer is only shown (--make-voice makes one)`);
 			items.push({q, audio, words, questionMs, answerAudio, answerMs});
 		}
-		const props: RoundProps = {items, hookIndex: 0};
+		if (!['fused', 'solo'].includes(values.opening)) throw new Error('--opening solo|fused');
+		const props: RoundProps = {items, hookIndex: 0, opening: values.opening as Opening};
 		const timeline = roundTimeline(
 			items.map((it) => it.questionMs),
 			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
+			props.opening === 'solo' ? HOOK_SOLO_MS : 0,
 		);
 		let coverMs = timeline.steps[0].cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;
@@ -246,8 +249,8 @@ async function main() {
 	} else {
 		if (positionals.length !== 1) throw new Error('usage: npm run render -- <question-id | file.json> [--format five|abc]');
 		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
-		if (!['intro', 'fused', 'plain'].includes(style.opening) || !['line', 'parts', 'captions', 'card'].includes(style.explain))
-			throw new Error('--opening intro|fused|plain, --explain line|parts|captions|card');
+		if (!['intro', 'fused', 'plain', 'solo'].includes(style.opening) || !['line', 'parts', 'captions', 'card'].includes(style.explain))
+			throw new Error('--opening solo|fused|intro|plain, --explain line|parts|captions|card');
 		// card (founder 2026-10-25): the answer is read, the explanation only shown.
 		const raw = style.explain === 'card' ? loadInput(positionals[0], true, 0) : loadInput(positionals[0]);
 		const q = shapeQuestion(raw);

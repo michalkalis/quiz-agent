@@ -8,9 +8,9 @@ import {AbsoluteFill, Audio, Sequence, spring, staticFile, useCurrentFrame, useV
 import {COPY} from './copy';
 import {AnswerReveal} from './AnswerReveal';
 import {Monkey} from './Monkey';
-import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, Logo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
+import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, Logo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
-import {roundTimeline} from './timing';
+import {HOOK_SOLO_MS, roundTimeline} from './timing';
 import type {RoundItem, RoundProps} from './types';
 
 const Tally: React.FC<{n: number; of: number; color: string}> = ({n, of, color}) => (
@@ -24,13 +24,15 @@ const Tally: React.FC<{n: number; of: number; color: string}> = ({n, of, color})
 	</div>
 );
 
-export const Round: React.FC<RoundProps> = ({items}) => {
+export const Round: React.FC<RoundProps> = ({items, opening}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const now = ms(frame, fps);
+	const solo = opening === 'solo';
 	const t = roundTimeline(
 		items.map((it) => it.questionMs),
 		items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
+		solo ? HOOK_SOLO_MS : 0,
 	);
 	const last = items[items.length - 1];
 	const enter = (atMs: number, damping = 18) => spring({frame: frame - f(atMs, fps), fps, config: {damping, mass: 0.7}});
@@ -74,32 +76,37 @@ export const Round: React.FC<RoundProps> = ({items}) => {
 	const step = t.steps[i];
 	const item = items[i];
 	const tint = tintFor(item.q.category);
+	const hook = COPY[item.q.language].roundHook(items.length);
 	// The first question opens under the fixed hook line, then grows (as in the one-question reel).
-	const grow = i === 0 ? spring({frame: frame - f(HOOK_HOLD_MS, fps), fps, config: {damping: 20, mass: 0.8}}) : 1;
+	const fused = i === 0 && !solo;
+	const grow = fused ? spring({frame: frame - f(HOOK_HOLD_MS, fps), fps, config: {damping: 20, mass: 0.8}}) : 1;
 	return (
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio}
 			<Logo color={tint.onBg} />
-			<Tally n={i} of={items.length} color={tint.onBg} />
+			{now >= step.start ? <Tally n={i} of={items.length} color={tint.onBg} /> : null}
+			{solo ? <HookSolo text={hook} color={tint.onBg} endMs={step.start} /> : null}
+			{now >= step.start ? (
 			<div style={{position: 'absolute', top: SAFE.top + 140, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 44}}>
-				{i === 0 ? <HookLine text={COPY[item.q.language].roundHook(items.length)} color={tint.onBg} grow={grow} /> : null}
+				{fused ? <HookLine text={hook} color={tint.onBg} grow={grow} /> : null}
 				<QuestionCard
 					q={item.q}
 					words={item.words}
 					tMs={now - step.voiceStart}
 					optionsAtMs={step.cdStart - step.voiceStart}
 					revealed={false}
-					appear={i === 0 ? 1 : enter(step.start)}
+					appear={fused ? 1 : enter(step.start)}
 					number={i + 1}
 					readable
-					scale={i === 0 ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
+					scale={fused ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
 					markBg={tint.bg}
 					markInk={tint.onBg}
 				/>
 				{now >= step.cdStart ? <Countdown startFrame={f(step.cdStart, fps)} onBg={tint.onBg} note={COPY[item.q.language].answersAtEnd} seconds={t.countdownMs / 1000} /> : null}
 			</div>
-			{now < step.cdStart ? (
-				<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: i === 0 ? enter(200) : 1}}>
+			) : null}
+			{now >= step.start && now < step.cdStart ? (
+				<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: i === 0 ? enter(step.start + 200) : 1}}>
 					<Monkey size={190} mood="idle" />
 				</div>
 			) : null}

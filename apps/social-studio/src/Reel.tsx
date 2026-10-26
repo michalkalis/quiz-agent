@@ -1,34 +1,32 @@
 // "5 Seconds" and "A, B or C" reels (9:16). One timeline, two variants:
-// hook → question read by the app voice with word captions → 5 s countdown
-// with the monkey thinking → answer + one line why → end card.
+// question read by the app voice (with a hook card before it, a hook line
+// above it, or alone) → 5 s countdown with the monkey thinking → answer +
+// the explanation (one line, read aloud part by part, or, since 2026-10-25,
+// one card: the answer read aloud and the whole explanation shown) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY, LETTERS, hookFor} from './copy';
-import {fitWhy} from './fitWhy';
+import {hookFor} from './copy';
 import {Monkey} from './Monkey';
-import {FONT, INK, INK2, OK, OK_BG, SURF, tintFor} from './theme';
-import {COUNTDOWN_MS, HOOK_MS, REVEAL_MS} from './timing';
+import {AnswerReveal} from './AnswerReveal';
+import {ExplainPhase} from './Explain';
+import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
+import {FONT, INK, tintFor} from './theme';
+import {ANSWER_LEAD_MS, LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
 
-
-const ms = (frame: number, fps: number) => (frame / fps) * 1000;
-const f = (millis: number, fps: number) => Math.round((millis / 1000) * fps);
-
-// Platform UI (captions, buttons) covers the bottom and right edge of a reel;
-// everything important stays inside this box.
-const SAFE = {top: 170, bottom: 400, left: 80, right: 130};
-
-export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, hookIndex, variant}) => {
+export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, optionAtMs, hookIndex, variant, style, explain, answer}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const tint = tintFor(q.category);
-	const copy = COPY[q.language];
 
-	const qStart = HOOK_MS;
-	const cdStart = qStart + questionMs;
-	const revealStart = cdStart + COUNTDOWN_MS;
-	const endStart = revealStart + REVEAL_MS;
+	const intro = style.opening === 'intro';
+	// Without the intro card the question is complete on frame 1 and the voice follows.
+	const lead = intro ? 0 : LEAD_MS;
+	const {qStart, cdStart, revealStart, whyStart, endStart} = reelTimeline(style, questionMs + lead, explain.ms, answer.ms, q.explanation.length);
 	const now = ms(frame, fps);
+	// Fused opening (founder pick 2026-10-24): big hook line over a small but readable
+	// question; when the line leaves, the question grows to full size.
+	const grow = style.opening === 'fused' ? spring({frame: frame - f(HOOK_HOLD_MS, fps), fps, config: {damping: 20, mass: 0.8}}) : 1;
 
 	const enter = (atMs: number, damping = 18) =>
 		spring({frame: frame - f(atMs, fps), fps, config: {damping, mass: 0.7}});
@@ -39,8 +37,13 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 	return (
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio ? (
-				<Sequence from={f(qStart, fps)}>
+				<Sequence from={f(qStart + lead, fps)}>
 					<Audio src={staticFile(audio)} />
+				</Sequence>
+			) : null}
+			{style.explain === 'card' && answer.audio ? (
+				<Sequence from={f(revealStart + ANSWER_LEAD_MS, fps)}>
+					<Audio src={staticFile(answer.audio)} />
 				</Sequence>
 			) : null}
 
@@ -48,8 +51,8 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 				<>
 					<Logo color={tint.onBg} />
 
-					{/* Hook */}
-					{now < qStart ? (
+					{/* Hook card before the question (v1) */}
+					{intro && now < qStart ? (
 						<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', padding: `0 ${SAFE.right}px 0 ${SAFE.left}px`}}>
 							<div
 								style={{
@@ -82,23 +85,42 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 								gap: 44,
 							}}
 						>
-							<QuestionCard
-								q={q}
-								words={words}
-								tMs={now - qStart}
-								optionsAtMs={optionsAtMs}
-								revealed={now >= revealStart}
-								appear={enter(qStart)}
-							/>
+							{style.opening === 'fused' ? <HookLine text={hookFor(q.language, hookIndex)} color={tint.onBg} grow={grow} /> : null}
+							{style.explain !== 'line' && now >= revealStart ? null : (
+								<QuestionCard
+									q={q}
+									words={words}
+									tMs={now - qStart - lead}
+									optionsAtMs={optionsAtMs}
+									optionAtMs={optionAtMs}
+									revealed={now >= revealStart}
+									appear={intro ? enter(qStart) : 1}
+									readable={!intro}
+									scale={style.opening === 'fused' ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
+									markBg={tint.bg}
+									markInk={tint.onBg}
+								/>
+							)}
 							{now >= cdStart && now < revealStart ? (
-								<Countdown
-									startFrame={f(cdStart, fps)}
-									onBg={tint.onBg}
-									deep={tint.deep}
-									comment={variant === 'abc' ? copy.comment(LETTERS.slice(0, q.options.length)) : null}
+								<Countdown startFrame={f(cdStart, fps)} onBg={tint.onBg} />
+							) : null}
+							{now >= revealStart && style.explain === 'line' ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
+							{now >= revealStart && style.explain === 'card' ? (
+								<AnswerReveal q={q} text={q.explanation} appear={enter(revealStart, 16)} why={enter(whyStart, 20)} startFrame={f(revealStart, fps)} />
+							) : null}
+							{now >= revealStart && style.explain !== 'line' && style.explain !== 'card' ? (
+								<ExplainPhase
+									q={q}
+									abc={variant === 'abc'}
+									style={style.explain}
+									track={explain}
+									revealFrame={f(revealStart, fps)}
+									whyFrame={f(whyStart, fps)}
+									appear={enter(revealStart, 16)}
+									markBg={tint.bg}
+									markInk={tint.onBg}
 								/>
 							) : null}
-							{now >= revealStart ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
 						</div>
 					) : null}
 
@@ -112,199 +134,6 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 			) : (
 				<EndCard q={q} appear={enter(endStart)} startFrame={f(endStart, fps)} />
 			)}
-		</AbsoluteFill>
-	);
-};
-
-const Logo: React.FC<{color: string}> = ({color}) => (
-	<div style={{position: 'absolute', top: SAFE.top, left: SAFE.left, display: 'flex', alignItems: 'center', gap: 18}}>
-		<div style={{width: 76, height: 76, borderRadius: 38, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-			<Monkey size={58} />
-		</div>
-		<div style={{fontSize: 46, fontWeight: 800, color, letterSpacing: -0.5}}>Trubbo</div>
-	</div>
-);
-
-const QuestionCard: React.FC<{
-	q: ReelProps['q'];
-	words: ReelProps['words'];
-	tMs: number;
-	optionsAtMs: number;
-	revealed: boolean;
-	appear: number;
-}> = ({q, words, tMs, optionsAtMs, revealed, appear}) => {
-	const long = q.question.length > 110;
-	const mcq = q.options.length > 0;
-	return (
-		<div
-			style={{
-				background: SURF,
-				borderRadius: 44,
-				padding: mcq ? '48px 48px 44px' : '56px 56px 60px',
-				boxShadow: '0 22px 44px rgba(17,18,22,.18)',
-				opacity: appear,
-				transform: `translateY(${(1 - appear) * 60}px)`,
-			}}
-		>
-			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
-				{words.map((w, i) => (
-					<span key={i} style={{opacity: tMs >= w.startMs ? 1 : 0.18}}>
-						{w.text}
-						{i < words.length - 1 ? ' ' : ''}
-					</span>
-				))}
-			</div>
-			{q.options.length > 0 ? (
-				<div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 32}}>
-					{q.options.map((opt, i) => {
-						const shown = interpolate(tMs, [optionsAtMs + i * 350, optionsAtMs + i * 350 + 250], [0, 1], {
-							extrapolateLeft: 'clamp',
-							extrapolateRight: 'clamp',
-						});
-						const right = i === q.correctIndex;
-						const dim = revealed && !right;
-						return (
-							<div
-								key={i}
-								style={{
-									display: 'flex',
-									alignItems: 'center',
-									gap: 24,
-									padding: '16px 24px',
-									borderRadius: 28,
-									background: revealed && right ? OK_BG : '#F1F2F5',
-									opacity: shown * (dim ? 0.38 : 1),
-									transform: `translateX(${(1 - shown) * 30}px)`,
-								}}
-							>
-								<div
-									style={{
-										width: 58,
-										height: 58,
-										borderRadius: 29,
-										flexShrink: 0,
-										background: revealed && right ? OK : INK,
-										color: SURF,
-										fontSize: 36,
-										fontWeight: 800,
-										display: 'flex',
-										justifyContent: 'center',
-										alignItems: 'center',
-									}}
-								>
-									{LETTERS[i]}
-								</div>
-								<div style={{fontSize: 44, fontWeight: 600}}>{opt}</div>
-							</div>
-						);
-					})}
-				</div>
-			) : null}
-		</div>
-	);
-};
-
-const Countdown: React.FC<{startFrame: number; onBg: string; deep: string; comment: string | null}> = ({startFrame, onBg, deep, comment}) => {
-	const frame = useCurrentFrame() - startFrame;
-	const {fps} = useVideoConfig();
-	const total = (COUNTDOWN_MS / 1000) * fps;
-	const left = Math.max(1, Math.ceil(5 - frame / fps));
-	const progress = Math.min(1, frame / total);
-	const compact = comment !== null;
-	const R = compact ? 64 : 112;
-	const C = 2 * Math.PI * R;
-	const pop = spring({frame: frame % fps, fps, config: {damping: 14, mass: 0.5}});
-	return (
-		<div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-			<div style={{display: 'flex', alignItems: 'center', gap: compact ? 28 : 56}}>
-				<Monkey size={compact ? 150 : 310} mood="thinking" delay={startFrame} />
-				<svg width={2 * R + 30} height={2 * R + 30} viewBox={`${-R - 15} ${-R - 15} ${2 * R + 30} ${2 * R + 30}`}>
-					<circle r={R} fill="none" stroke={onBg} strokeOpacity={0.22} strokeWidth={compact ? 12 : 16} />
-					<circle
-						r={R}
-						fill="none"
-						stroke={onBg}
-						strokeWidth={compact ? 12 : 16}
-						strokeLinecap="round"
-						strokeDasharray={C}
-						strokeDashoffset={C * progress}
-						transform="rotate(-90)"
-					/>
-					<text
-						textAnchor="middle"
-						dominantBaseline="central"
-						fontFamily={FONT}
-						fontWeight={800}
-						fontSize={(compact ? 68 : 116) * (0.85 + 0.15 * pop)}
-						fill={onBg}
-					>
-						{left}
-					</text>
-				</svg>
-				{comment ? (
-					<div style={{fontSize: 40, fontWeight: 700, color: SURF, background: deep, borderRadius: 999, padding: '18px 32px'}}>{comment}</div>
-				) : null}
-			</div>
-		</div>
-	);
-};
-
-const Reveal: React.FC<{q: ReelProps['q']; appear: number; variant: 'five' | 'abc'; startFrame: number}> = ({q, appear, variant, startFrame}) => {
-	const copy = COPY[q.language];
-	const abc = variant === 'abc' && q.correctIndex !== null;
-	// Text column = reel width (920) − card padding − gap − monkey.
-	const why = fitWhy(q.why, abc ? {width: 920 - 96 - 28 - 110, maxLines: 4, size: 38, minSize: 30} : {width: 920 - 112 - 28 - 150, maxLines: 4, size: 40, minSize: 30});
-	return (
-		<div
-			style={{
-				background: SURF,
-				borderRadius: 44,
-				padding: abc ? '36px 48px 40px' : '48px 56px 52px',
-				boxShadow: '0 22px 44px rgba(17,18,22,.18)',
-				opacity: appear,
-				transform: `scale(${0.94 + 0.06 * appear})`,
-				display: 'flex',
-				gap: 28,
-				alignItems: 'flex-start',
-			}}
-		>
-			<div style={{flex: 1}}>
-				<div style={{fontSize: 34, fontWeight: 700, color: OK, textTransform: 'uppercase', letterSpacing: 2}}>
-					{copy.answer}
-					{abc ? ` ${LETTERS[q.correctIndex!]}` : ''}
-				</div>
-				{abc ? null : <div style={{fontSize: 80, fontWeight: 800, lineHeight: 1.05, marginTop: 10, letterSpacing: -1}}>{q.answer}</div>}
-				{why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: abc ? 12 : 24, fontWeight: 500}}>{why.text}</div> : null}
-			</div>
-			<div style={{marginTop: -6}}>
-				<Monkey size={abc ? 110 : 150} mood="happy" delay={startFrame} />
-			</div>
-		</div>
-	);
-};
-
-const EndCard: React.FC<{q: ReelProps['q']; appear: number; startFrame: number}> = ({q, appear, startFrame}) => {
-	const tint = tintFor(q.category);
-	const copy = COPY[q.language];
-	return (
-		<AbsoluteFill
-			style={{
-				justifyContent: 'center',
-				alignItems: 'center',
-				flexDirection: 'column',
-				gap: 56,
-				padding: `${SAFE.top}px ${SAFE.right}px ${SAFE.bottom - 120}px ${SAFE.left}px`,
-				opacity: appear,
-			}}
-		>
-			<div style={{width: 340, height: 340, borderRadius: 170, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-				<Monkey size={260} mood="happy" delay={startFrame} />
-			</div>
-			<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20}}>
-				<div style={{fontSize: 120, fontWeight: 800, color: tint.onBg, letterSpacing: -2}}>Trubbo</div>
-				<div style={{fontSize: 60, fontWeight: 700, lineHeight: 1.1, textAlign: 'center', color: tint.onBg}}>{copy.tagline}</div>
-				<div style={{fontSize: 38, fontWeight: 600, color: tint.onBg, opacity: 0.85, marginTop: 24}}>{copy.soon}</div>
-			</div>
 		</AbsoluteFill>
 	);
 };

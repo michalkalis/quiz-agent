@@ -1,0 +1,2767 @@
+{
+ "001c3e17-e3a2-4b3b-b3b8-ee95b9b37627": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Answer in the question (0,3 l -> třetinka)",
+  "reviewed": "2026-10-24"
+ },
+ "003963e3-d826-46c4-8ee8-4fcad4325532": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Lovely surprise, ties to the Milky Way",
+  "reviewed": "2026-10-24"
+ },
+ "008a8939-4ffe-4f1a-b0da-c60ae5e54325": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "UK-niche sport and question spells out the arithmetic | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "00e29bed-accf-461e-826a-31e0c8520828": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Great twist (tyres); not web-checked, well known",
+  "reviewed": "2026-10-24"
+ },
+ "019753d4-dab2-4bdc-b8bf-4d5cdccb66da": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local beer everyone knows, guessable; 'most exported' confirmed via search",
+  "reviewed": "2026-10-24"
+ },
+ "021292e9-44d9-41eb-b411-58d1eb821629": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Too easy for Slovaks | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "0218eaa6-8e68-4b2d-a32c-9b7044a68780": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local music, guessable",
+  "reviewed": "2026-10-24"
+ },
+ "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Fun",
+  "reviewed": "2026-10-25"
+ },
+ "02a5fe1b-4296-4e3f-9a81-908db85e22fb": {
+  "verdict": "hold",
+  "stop_power": 8,
+  "fact": "wrong",
+  "note": "Great 'wait, really?' (Peugeot pepper mills since 1874, per the Peugeot site; not web-checked) | FACT (wrong): Pepper mills (1874) are made by Peugeot Saveurs, a kitchenware business that predates the cars (steel tools 1810, coffee mills 1840, pepper mills 1874) and is separate from the car maker, so 'French car manufacturer making pepper mills' is a misleading premise; explanation 'began with steel tools and coffee mills in the 1840s' is also wrong (steel mill 1810, coffee mill 1840, per source). | HOLD until fixed in the app",
+  "reviewed": "2026-10-24"
+ },
+ "03134bc3-3324-4a3e-9fd7-1ea01d5f0eae": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Most common SK surname means 'Croat': strong local fakt? moment",
+  "reviewed": "2026-10-24"
+ },
+ "035077c2-f271-4f2a-846c-1459ef636270": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Many viewers know it or can check instantly; explanation only restates the answer",
+  "reviewed": "2026-10-24"
+ },
+ "0405a185-eba9-4bb0-ab1f-2e381389ba06": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "0407fea6-eb3d-4fd0-a8b9-4a41f98c4f05": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry dimension number; weak shop-blog source | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "04862026-ac5a-41d1-ab2b-f37d5e87696d": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Fun 11:11 timing",
+  "reviewed": "2026-10-24"
+ },
+ "04a17a4a-1ff9-40ae-b781-76a2df8555d0": {
+  "verdict": "drop",
+  "stop_power": 2,
+  "fact": "verified",
+  "note": "Dry ticketing news, no trivia value",
+  "reviewed": "2026-10-24"
+ },
+ "0518901b-e498-49a3-a574-20e0305fdc67": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Dry statistic (5.12 M admissions confirmed), no fakt? moment",
+  "reviewed": "2026-10-24"
+ },
+ "05ccc8c8-568e-4f1b-9ea5-16574253baf6": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid geography",
+  "reviewed": "2026-10-25"
+ },
+ "0731abc4-6bbe-4b02-badc-e4bb1898826c": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Dry US awards-host trivia",
+  "reviewed": "2026-10-24"
+ },
+ "0749f72f-0ddb-4eb6-88ab-98424dda713e": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable, testable on your own hand; middle-finger claim verified (the dominant-hand line isn't in the source)",
+  "reviewed": "2026-10-24"
+ },
+ "076fdcd5-ef78-4e28-b8c0-66b7de53ef1f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Dry awards result; strangers won't care",
+  "reviewed": "2026-10-24"
+ },
+ "0783c261-4f5b-450e-b450-f78697e82c48": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "0843fba6-416c-47ec-8a4a-03c1014de63a": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable body fact, good payoff (not web-checked, standard anatomy)",
+  "reviewed": "2026-10-24"
+ },
+ "086a967e-a379-4b09-ab0a-8ce9faf989c3": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Local, easy",
+  "reviewed": "2026-10-24"
+ },
+ "086f9a1c-c0b8-49a8-9585-8ee857bd94fe": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good surprise",
+  "reviewed": "2026-10-25"
+ },
+ "0891e411-68b8-472b-bf09-5014542f9a2d": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Strong relatable surprise",
+  "reviewed": "2026-10-25"
+ },
+ "0a4fd580-cb14-4cd2-95af-f26af33c12bc": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Surprising old name, fun story; the reason in the explanation is simplified but fine",
+  "reviewed": "2026-10-24"
+ },
+ "0b49491a-a0bc-486f-b23a-6941ce36c0b5": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Good | FACT: Year inconsistent: recorded 1975, ZDF premiere 9 Sep 1976, Polydor single 1977 (en.wikipedia); 'nazpíval v roce 1976' not clearly right. Nickname 'goldene Stimme aus Prag' confirmed.",
+  "reviewed": "2026-10-25"
+ },
+ "0c3914e6-2761-43a5-83e4-82813cf8bd50": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good etymology",
+  "reviewed": "2026-10-25"
+ },
+ "0cbfd418-30b7-41d5-93ac-fa0df318188c": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Beer + mountains; source even says highest in Central Europe",
+  "reviewed": "2026-10-24"
+ },
+ "0cde91bd-bc32-40be-97d0-4fadf8a55c2a": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good counting surprise",
+  "reviewed": "2026-10-25"
+ },
+ "0d42a3bc-18ec-4790-8496-528229eb8b7d": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "American caravans irrelevant to SK audience",
+  "reviewed": "2026-10-24"
+ },
+ "0e749807-09b4-4401-a97d-6c6a49b51622": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong 'wait, really?', everyone drew it yellow; clear physics payoff",
+  "reviewed": "2026-10-24"
+ },
+ "0ea3251c-44e7-4b65-becb-6fd6f0f13b94": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good story behind a famous name, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "0ec6c0d0-e6cf-433c-bb91-fa8b8de90031": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid geography fact",
+  "reviewed": "2026-10-25"
+ },
+ "0eff9d96-ca85-45ce-9f36-df400f736ea2": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "0fc222b2-5985-4675-8945-ee627f6a92e5": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Exact-number recall, heavy topic (imprisonment), no surprise",
+  "reviewed": "2026-10-24"
+ },
+ "108c6250-ef96-4b98-b951-1dbbbdcb5404": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Explanation sentence reversed: \"Vlachům se kdysi říkalo Italům\" should be \"Italům se kdysi říkalo Vlaši\"",
+  "reviewed": "2026-10-25"
+ },
+ "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Universal brand, easy hunch; explanation mostly restates, so it's carried by the question",
+  "reviewed": "2026-10-24"
+ },
+ "11a1b23b-150c-465a-8ae4-21082f1970f2": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good everyday puzzle",
+  "reviewed": "2026-10-25"
+ },
+ "1264b939-b97d-4d92-a1ad-322e7be0c62e": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Many guess Russia or Australia, so it's a mild surprise; Arctic islands explanation works",
+  "reviewed": "2026-10-24"
+ },
+ "13d0f6e8-8f72-4755-8708-b34baa04dd04": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "School knowledge, low stop | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "15d42b90-c22f-4a64-b94b-d14da80e50eb": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good idiom twist",
+  "reviewed": "2026-10-25"
+ },
+ "1709ebea-27ee-46b9-b0fd-26ef7f60c882": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Obvious physics, low stop power",
+  "reviewed": "2026-10-24"
+ },
+ "190315b3-4a51-4ae4-bb69-b6cc0415ab98": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Question nearly names it but fine",
+  "reviewed": "2026-10-25"
+ },
+ "1956df50-9771-467a-ba62-c5c3af49c195": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Local slang, playable, nice kilo twist; confirmed by search (source 401)",
+  "reviewed": "2026-10-24"
+ },
+ "1975f9c5-95c8-4bfe-849d-25aa671961a1": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Relatable",
+  "reviewed": "2026-10-25"
+ },
+ "1aa93807-323d-4a9f-a762-38cdc81a3fc4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Too easy, everyone knows | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "1ab52651-86a8-4c1d-9fc1-116e29b19b7f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Prague-vs-Brno banter, hantec confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "1bb74196-a01e-4247-b57d-096923d3ae67": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Easy, low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "1bbc0018-8c78-4dbe-84be-39c509a5d626": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Obvious answer, generic marketing trivia",
+  "reviewed": "2026-10-24"
+ },
+ "1bbc9d29-bc08-4e1f-ac17-79abe8c7ffaf": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "A PM winning Literature surprises many people; explanation is thin (just the year and term)",
+  "reviewed": "2026-10-24"
+ },
+ "2073ce96-36e4-4f46-8d1f-cd24994c14e4": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable, current",
+  "reviewed": "2026-10-25"
+ },
+ "207ba422-848b-486f-8b5b-801e8190705b": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "UK-niche festival logistics",
+  "reviewed": "2026-10-24"
+ },
+ "20af0ab1-47d3-4377-b62f-7eedeca973f0": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Grammar slip \"z zobáka\" (should be \"zo zobáka\")",
+  "reviewed": "2026-10-25"
+ },
+ "20f92ef9-546c-4a4a-b97a-363c5ae5dc8d": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Easy pop-culture opener",
+  "reviewed": "2026-10-24"
+ },
+ "241d59e8-5b62-424f-8f5d-c4a13ff01b9e": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche award winner, low stop power",
+  "reviewed": "2026-10-24"
+ },
+ "26275b3b-c62d-4d75-af22-a2242fe449bf": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Historical trafika story + idiom",
+  "reviewed": "2026-10-24"
+ },
+ "264d2f04-d8e6-4a6b-84f6-98cc7d09f2c7": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Neat cross-language etymology",
+  "reviewed": "2026-10-24"
+ },
+ "274ae4bf-21c4-4877-a71c-877776f6f68e": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Fun jargon",
+  "reviewed": "2026-10-25"
+ },
+ "279b79a0-9bf6-42e1-9f34-dc7dec53e594": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Strong surprise",
+  "reviewed": "2026-10-25"
+ },
+ "27c4174b-6f3f-4fc8-bcb4-1538aae082e8": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Everyday logo surprise",
+  "reviewed": "2026-10-25"
+ },
+ "28359125-fb21-47a7-98a9-1b18f404b4bc": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Relatable",
+  "reviewed": "2026-10-25"
+ },
+ "2944f5ef-f08e-4edb-a019-35d60c36ceb4": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Relatable etymology",
+  "reviewed": "2026-10-25"
+ },
+ "2b7329d6-2303-4730-a6c3-2937f7abe0f5": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Subtitle gives the answer away; not local",
+  "reviewed": "2026-10-24"
+ },
+ "2bcec1dc-e6be-440c-9a7e-3c404ef9c65b": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Dry chemistry answer",
+  "reviewed": "2026-10-24"
+ },
+ "2dba3a9f-2bd9-48b7-9b8f-ffc0984db6a6": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "2e679b47-fbb5-44d9-9484-04558a676c49": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "'Čínske polievky' are Japanese: good twist",
+  "reviewed": "2026-10-24"
+ },
+ "2fac4c7c-92b9-415d-9b79-f701647339c3": {
+  "verdict": "drop",
+  "stop_power": 2,
+  "fact": "verified",
+  "note": "Vague, dry answer; nobody can guess the wording; explanation restates the question",
+  "reviewed": "2026-10-24"
+ },
+ "300aafa6-2493-4286-84dd-dbab078eef29": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Explanation ends with stray fragment 'ďalej MHD' (broken text); source is a dev.bratislava.sk URL",
+  "reviewed": "2026-10-24"
+ },
+ "3054cd79-94c6-4c29-ac6a-84848759b724": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Fine | FACT: Premise overstated: sources (Wikipedia 'Earth's inner core') put the inner-core surface at ~5,700 K (5,430 C), 'about the temperature at the surface of the Sun', not hotter. Answer 'Solid' is correct.",
+  "reviewed": "2026-10-25"
+ },
+ "35017ad6-7fdb-4968-b285-28188e7d80f2": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Most viewers already know honey crystallises; low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "35b0ccf3-6423-4123-9fb1-a8f93f95f545": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Case error: \"Cez koľko?\" needs \"štyri\", answer \"štyrmi\" is instrumental",
+  "reviewed": "2026-10-25"
+ },
+ "386a5f52-ffda-4af8-8827-2be7f54149f5": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday drink, surprising bee twist, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Great twist (Ferrari = Mr. Smith) (not web-checked, standard etymology)",
+  "reviewed": "2026-10-24"
+ },
+ "3943b903-b52e-44a0-b5c2-2731dbda5304": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Obvious answer",
+  "reviewed": "2026-10-24"
+ },
+ "3a733b9b-8ebe-47de-8e72-c4c9a1d28a15": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Basically a brand slogan ad for Hinge; low trivia value",
+  "reviewed": "2026-10-24"
+ },
+ "3ae58406-795b-49e3-8218-8710000d12cd": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Dry statistic (12.6 M confirmed)",
+  "reviewed": "2026-10-24"
+ },
+ "3b05e760-bd95-4cb9-853c-3e59c40f345a": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Sci-fi niche (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "3b139bd6-4848-4ed4-9ded-1f5aef48ae11": {
+  "verdict": "drop",
+  "stop_power": 2,
+  "fact": "verified",
+  "note": "Kids-level easy; no surprise",
+  "reviewed": "2026-10-24"
+ },
+ "3b833c76-724b-4594-a465-1bfcd2b27fc7": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "UK-only awards trivia",
+  "reviewed": "2026-10-24"
+ },
+ "3c1ca1e4-f58b-4f14-9b4f-f9a720cd06c5": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Guessable saying, relatable; Thoreau/Ford attribution is standard",
+  "reviewed": "2026-10-24"
+ },
+ "3c33900c-4c04-4e1c-9c52-0e97fa460cf6": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "50/50 binary guess, low stop power; mirror-domain source | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "3d70648f-acee-48b0-b73a-74ef9402c447": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Clunky Czech pleonasm \"do Česka k nám dorazilo\" | FACT: Date conflict: en.wikipedia says Takahashi coined it in My Anime in June 1983; other accounts tie it to the 1984 Worldcon in Los Angeles. '1984' and LA link not confirmed together.",
+  "reviewed": "2026-10-25"
+ },
+ "402e26bb-f304-4b69-8be0-852f17a3f116": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry numeric answer; pencil comparison is off (~19 cm) | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "41000fa4-0993-4214-af48-6a3996b02630": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Well known but fine | FACT (wrong, 2nd check): Becherovka recipe came from the English physician Dr. Frobrig (1805), which Josef Becher refined and began selling in 1807 as stomach drops; 'vymyslel' Becher is overstated.",
+  "reviewed": "2026-10-25"
+ },
+ "41b7bf47-dfce-4faa-a72d-4cfc9c80d878": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "wrong",
+  "note": "Question misnames the show: real title is 'Star Wars: Maul – Shadow Lord', so the title contains the answer; niche franchise trivia",
+  "reviewed": "2026-10-24"
+ },
+ "426ac016-979c-4f54-91d9-2aa1134fe408": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local hit everyone half-knows",
+  "reviewed": "2026-10-24"
+ },
+ "429f2b3a-1036-4bad-a4ea-d30ee797d24d": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "School-textbook geography; length 403 km vs source 406 km",
+  "reviewed": "2026-10-24"
+ },
+ "42a10e74-2914-44d5-8d35-edc5e8ab759d": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Surprising, playable; hanafuda payoff",
+  "reviewed": "2026-10-24"
+ },
+ "434c3cd4-df70-4756-9071-9a7af2ff3d57": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "45a584a4-4f38-48d4-879a-d8c2d39e6eab": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Record 16 nominations for a vampire film is a decent surprise; stays true",
+  "reviewed": "2026-10-24"
+ },
+ "467b4b0b-80b2-4b59-bd58-bb7fc1271b79": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Brand/advertorial, low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "46cd3c93-466b-4f86-b791-13294bf9ad16": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Fun tradition",
+  "reviewed": "2026-10-25"
+ },
+ "46e0312a-2b61-4c4e-afd0-a6bc2c8361c4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "47049a19-40af-40ee-8ddf-964df5670c91": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong surprise; matches the Bata Shoe Museum curator's account",
+  "reviewed": "2026-10-24"
+ },
+ "47215cdb-ba7c-4d88-b658-c6eb98e23a15": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Fine | FACT (unverified, 2nd check): 26 holes confirmed, but the claim that the holes make the ball fly on the correct path / allow spin is not supported (Wikipedia mentions only aerodynamic/drag reduction); 'falošná rotácia' is unsupported.",
+  "reviewed": "2026-10-25"
+ },
+ "49001c32-bc7e-4c0d-b83b-4168a85ed4cf": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Kolaches in Texas bonus",
+  "reviewed": "2026-10-24"
+ },
+ "4af0f85c-b11e-4480-99df-5b364fa6ad69": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good etymology surprise",
+  "reviewed": "2026-10-24"
+ },
+ "4b346999-aae8-42be-901a-6f3445d8d458": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Universal brand, surprising meaning, ball-bearing backstory (source domain is dead; confirmed via Volvo press materials)",
+  "reviewed": "2026-10-24"
+ },
+ "4b56db5e-f0c3-4005-9970-b690c4935515": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Great specific surprise | FACT: Explanation says the gum pack 'is now on display at the Smithsonian'; the Smithsonian's own collection entry says the scanned pack never entered its collection and stayed with Clyde Dawson of Marsh (at most a facsimile/partial pack shown). Product, 67 cents, Troy Ohio are correct.",
+  "reviewed": "2026-10-25"
+ },
+ "4b68af80-2e3e-441b-b392-a98a3c2c3a2f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Question gives the answer away (better broth)",
+  "reviewed": "2026-10-24"
+ },
+ "4bb75d5b-1f3b-49de-8815-0728e5a77c90": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Low stop power; last sentence 'Ke svému štamgastskému stolu tak patří...' clumsy",
+  "reviewed": "2026-10-24"
+ },
+ "4c5909b5-5999-4261-9680-942c51d84b64": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Guessable, relatable office humour",
+  "reviewed": "2026-10-25"
+ },
+ "500fa8da-ccef-503b-b78f-bee61d06a9af": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche record trivia; weak source | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "50d52b85-75ad-47d1-8b60-d57009360a43": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Most common surname meaning",
+  "reviewed": "2026-10-24"
+ },
+ "50f7966d-4f05-4afd-b8d3-c4fdafdc403c": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Surprising and visual; figures consistent with standard values (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "51db3704-0de3-45dd-8880-f6eb21f20cfd": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Classic failure-to-success story",
+  "reviewed": "2026-10-25"
+ },
+ "53201267-b1e1-432b-a2d2-b977ffe38cf0": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Outlaw biker gangs = crime association, brand risk | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "534619bc-1c4c-4602-9e94-d344087e590f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Everyone knows the idiom, zero challenge; small inaccuracy: the study blamed air hissed through the sinuses, not chewing effort",
+  "reviewed": "2026-10-24"
+ },
+ "53557889-a301-4a26-9459-a96f9f25fccd": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable toast custom with cheeky payoff; superstition widely documented in CE (SK source paywalled)",
+  "reviewed": "2026-10-24"
+ },
+ "535d75ef-1475-4bf3-8caa-6b4cb7e95749": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Popular series + holiday destination for Slovaks",
+  "reviewed": "2026-10-24"
+ },
+ "538398e6-8c84-4ca7-ab3b-26694c95926d": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "53f56df0-a2f5-4477-99ce-4de697f07384": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Vienna 1991 confirmed, near-home hook",
+  "reviewed": "2026-10-24"
+ },
+ "551a291c-54d1-4f65-a749-a07ec447749f": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Zavináč/sleď link is charming",
+  "reviewed": "2026-10-24"
+ },
+ "557cfdbd-7595-493f-8aaf-65285e800915": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "560adff6-69b4-48eb-aa9a-87584f02741a": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Too easy; most viewers know it; flat explanation",
+  "reviewed": "2026-10-24"
+ },
+ "5783843b-a7f1-467b-ba54-9eebd650f4d5": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "wrong",
+  "note": "Good | FACT (wrong, 2nd check): Overstated: Wikipedia/literature say erinacin gives only partial immunity; outcomes of viper bites on hedgehogs vary from no reaction to death; 'v krvi' not confirmed (erinacin was isolated from muscle).",
+  "reviewed": "2026-10-25"
+ },
+ "57da0e17-7f87-432b-833c-b97f590e9557": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "58c69ecf-ae5a-40fe-8435-e7bb22a05ad3": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Textbook; \"stirrup\" hints the answer | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "595683cf-089b-4918-a997-4b464f015e87": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable food surprise",
+  "reviewed": "2026-10-24"
+ },
+ "5b876950-2cdb-4035-a600-3587cdc9be8f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable, practical; verified",
+  "reviewed": "2026-10-24"
+ },
+ "5bc4d047-918c-4013-b807-bdc7f8ec6d77": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Surprising answer, rich payoff (Mary's cloak, Marienkäfer)",
+  "reviewed": "2026-10-24"
+ },
+ "5cd7218e-bebc-404e-9bdb-2ea6bd67e8de": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Fine | FACT: 'Labe keeps its name because it was named earlier' is unsupported: cs.wikipedia only says it continues as Labe contrary to custom (430.2 km, longer and more watery at confluence confirmed).",
+  "reviewed": "2026-10-25"
+ },
+ "5ce4cc43-a4f8-4f86-8188-1f43ec29ec09": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Fine | FACT: Height outdated: sk.wikipedia gives ~22 m after 2016 reconstruction (15 m was the old/pre-repair figure); interval 34-36 h (ok for 'deň a pol'). UNESCO source 403.",
+  "reviewed": "2026-10-25"
+ },
+ "5de176f7-6920-4a5e-becd-bb98bc18eabc": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "US awards-host trivia, low stop power; 'run no modern host has matched' is shaky (Andy Williams hosted 7 in a row 1971-77) and 'has fronted every ceremony' is already stale",
+  "reviewed": "2026-10-24"
+ },
+ "5ef64574-5b54-4a64-8bf3-f8ebb1c74eac": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Common school trivia; low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "5f7ffe67-e8f8-4117-abfb-c2fbf26b1daa": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Easter tradition etymology",
+  "reviewed": "2026-10-24"
+ },
+ "5fc1853e-4565-40b1-9553-9d6127fc9d5d": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Answer obvious from the question; silica payoff too weak to carry a reel",
+  "reviewed": "2026-10-24"
+ },
+ "60c63d18-cf04-48f4-b4d7-00ab2c4bc89f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good word-origin story",
+  "reviewed": "2026-10-25"
+ },
+ "617b562a-a5fa-487a-bb52-6f0c63803cb4": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Shared driving memory",
+  "reviewed": "2026-10-24"
+ },
+ "62899481-c170-4a14-8a33-25da85635bc8": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "unverified",
+  "note": "Funny, international | FACT: Not flushing a public toilet is an offence (Public Cleansing Regs reg 16; max fine on conviction S$1,000, composition fine S$150), so fine and 'up to a thousand' are OK. 'Enforcement officers have even carried out spot checks' is not in the cited source and only weakly supported elsewhere.",
+  "reviewed": "2026-10-25"
+ },
+ "6369bab7-47d2-45f8-bbd2-02c85904d7b7": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong nostalgia, very relatable",
+  "reviewed": "2026-10-24"
+ },
+ "64903dc6-0aa3-4af5-a95d-f88159f57c24": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Forint from Florence is a real surprise",
+  "reviewed": "2026-10-24"
+ },
+ "6584c288-c478-41e2-a955-c830f7c3e04e": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Fine | FACT (wrong, 2nd check): Cornell: thermophilic >40 C, pathogens killed at 55 C+, managers avoid exceeding ~65 C; '60 to 70 degrees' overstates the upper range and no weed-seed figure is in the source.",
+  "reviewed": "2026-10-25"
+ },
+ "65d97f23-7e6e-4601-bff9-9f9f3a896b83": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Pub classic",
+  "reviewed": "2026-10-24"
+ },
+ "6673cb78-90ee-4628-933c-7f2aa6d4d5dc": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Surprising local retail fact",
+  "reviewed": "2026-10-24"
+ },
+ "6709c973-546b-40c4-89dd-5410df8e326b": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable, visual surprise",
+  "reviewed": "2026-10-25"
+ },
+ "67341d30-a8f9-43fb-8f33-9047597663fc": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Mr. Bean padlock: instantly recognisable, fun visual payoff",
+  "reviewed": "2026-10-24"
+ },
+ "677760d2-f1f9-4b5a-8220-80a176d5e3bf": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable surprise",
+  "reviewed": "2026-10-25"
+ },
+ "682864b3-9356-46db-b496-06605e6df995": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Name-vs-reality twist",
+  "reviewed": "2026-10-24"
+ },
+ "6a737928-4c43-4228-9d94-c1635378a1ff": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Explanation claims ancestors estimated it 'takmer presne'; source says +1h20 and 'ne moc přesně'; also too easy",
+  "reviewed": "2026-10-24"
+ },
+ "6a9b3893-a90f-4faf-8efd-48251fa37e04": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche; tripe is off-putting",
+  "reviewed": "2026-10-24"
+ },
+ "6ac73d97-28fe-4841-b20a-1a2114860aef": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Niche; framed around his relationship with Rihanna",
+  "reviewed": "2026-10-24"
+ },
+ "6bb25426-f343-4fae-ac7f-d2d6f456ca99": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good etymology surprise; minor: Duden derives Paradeiser from Paradeis, not shortened Paradiesapfel | HOLD until the question is fixed in the app (QA investigation 2026-10-25)",
+  "reviewed": "2026-10-24"
+ },
+ "6c39f657-65ab-409d-8961-56ed3d32cc0f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Answer sits in the word itself (Linecké -> Linec), no challenge",
+  "reviewed": "2026-10-24"
+ },
+ "6cd4a18a-82b1-4bc0-a463-92a40478ddd9": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Iconic object, guessable; fine filler (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "6d3e5a61-f775-4667-a04c-042824d46fde": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Counterintuitive, clean payoff (NWS: lightning ~5x hotter than the Sun's surface)",
+  "reviewed": "2026-10-24"
+ },
+ "6dcd88eb-11d2-4e99-a75e-6f02e3fcbf39": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Funny French leave mirror",
+  "reviewed": "2026-10-24"
+ },
+ "6e4bca76-20c0-4ca0-a13b-b09953cd8658": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Seasonal (autumn) and relatable; source lacks it but confirmed by search",
+  "reviewed": "2026-10-24"
+ },
+ "6f2d36ce-2800-4c09-863a-b0817b627ceb": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Too well known ('most expensive spice' gives it away); 150,000 blooms/kg roughly right",
+  "reviewed": "2026-10-24"
+ },
+ "6f35c811-aba7-4e1d-8408-9ae5443f8b47": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Fine | FACT: Source gives a different table (15-20 C max 40 min; 10-15 C max 30 min), not 'minutes = degrees'; rule not confirmed anywhere found.",
+  "reviewed": "2026-10-25"
+ },
+ "718f1648-8742-4a96-9ac5-53b3d28c7b4d": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable surprise",
+  "reviewed": "2026-10-25"
+ },
+ "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Pop-culture surprise",
+  "reviewed": "2026-10-25"
+ },
+ "73834ff5-0e3c-4349-844a-5867d9d07ba7": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Wine-region word origin",
+  "reviewed": "2026-10-24"
+ },
+ "74c654c7-8d47-5ae7-ace1-f6d462e59db6": {
+  "verdict": "keep",
+  "stop_power": 9,
+  "fact": "verified",
+  "note": "Top stopper; cube poop is memorable (not web-checked, well established)",
+  "reviewed": "2026-10-24"
+ },
+ "768ff3fe-e78d-4ed2-ae75-0a4b2bc12dcf": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Trick wording: sport (florbal) never named, 'hokejka' suggests hockey",
+  "reviewed": "2026-10-24"
+ },
+ "76f8d853-1a11-4c9f-8166-bc540b257a7b": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Time-sensitive (NP Křivoklátsko still pending) and dry",
+  "reviewed": "2026-10-24"
+ },
+ "7851687b-e510-4f91-956d-96d78a812ce9": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Niche ski-race detail",
+  "reviewed": "2026-10-24"
+ },
+ "7912ba33-fff0-41cd-9fe3-58e9236250e0": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good, but question wording slip: \"where the cloth was associated\" (missing \"with\")",
+  "reviewed": "2026-10-25"
+ },
+ "79e58051-51e6-4ca9-97f7-ad3a35625a13": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Great misconception buster; clean answer",
+  "reviewed": "2026-10-24"
+ },
+ "7a1553d0-0275-4012-b976-cc5e1a5f0115": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Prague-club niche",
+  "reviewed": "2026-10-24"
+ },
+ "7a483f8b-341a-49bb-9317-ac80c3251e52": {
+  "verdict": "hold",
+  "stop_power": 9,
+  "fact": "verified",
+  "note": "Strong surprise; fact confirmed by Wikipedia (~255 Nubian pyramids, >2x Egypt) but source_url is an unrelated Roman-empire page and must be replaced if shown | HOLD until the question is fixed in the app (QA investigation 2026-10-25)",
+  "reviewed": "2026-10-24"
+ },
+ "7aac9be2-3aeb-4192-829b-4f5110d224d9": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Textbook geography",
+  "reviewed": "2026-10-24"
+ },
+ "7ac04474-3a5c-4197-aaff-392666f8271b": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Myth-buster",
+  "reviewed": "2026-10-25"
+ },
+ "7b908edd-c1b9-4efe-9583-3af6eee14dd7": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong surprise (verified Britannica story); 1952 history, though Israel may attract political comments",
+  "reviewed": "2026-10-24"
+ },
+ "7c3c3453-44d5-4a16-b3a9-8b82b7a2facd": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Exact-number recall",
+  "reviewed": "2026-10-24"
+ },
+ "7c63ba2d-f501-4564-bb50-40b37597fb2f": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong 'wait, really?' (lord = loaf-ward); lady = loaf-kneader is a great second payoff",
+  "reviewed": "2026-10-24"
+ },
+ "7cd849f9-50b0-40f1-9452-84316b611697": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good name origin; note Walpurga's main feast is 25 Feb, 1 May is her canonisation day",
+  "reviewed": "2026-10-24"
+ },
+ "7d309c8f-b018-4c16-9dcc-0da321e23ed5": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "7f71aa5f-b310-4564-8f07-ceb0592446bf": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable, counter-intuitive",
+  "reviewed": "2026-10-25"
+ },
+ "7f9638ee-3beb-490a-a931-0c8c9e3bce6f": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Everyone has seen tyre hairs; clear surprising cause",
+  "reviewed": "2026-10-24"
+ },
+ "7fd70645-883a-40c8-92b9-6e64e2bb170d": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "7fe55067-9ad3-4e08-83e7-459de5b8118f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Textbook, low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8026c912-e7d3-4c8c-8f06-77ed8c8b7d73": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Card-player niche, overlaps reel mariáš item",
+  "reviewed": "2026-10-24"
+ },
+ "805dc897-9e9d-4c42-9c7f-246cf3941343": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Great surprise | FACT: Explanation says Cartier mistook the word for the region's name; Wikipedia calls that a popular misconception (Cartier wrote 'They call a town Canada') though he did extend it to the whole territory.",
+  "reviewed": "2026-10-25"
+ },
+ "81ab065c-212e-4dfd-a335-491977f869dc": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Decent science story",
+  "reviewed": "2026-10-25"
+ },
+ "81f6e6c7-fcf7-4b60-aa55-17637efddfd1": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Model-railway hobby niche; strangers won't care",
+  "reviewed": "2026-10-24"
+ },
+ "82ff91c1-2c46-44a9-89ff-eaa9e0d5e4e4": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Relatable local hook",
+  "reviewed": "2026-10-25"
+ },
+ "83149d3b-42e8-4788-a654-8c400379403e": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday object surprise",
+  "reviewed": "2026-10-24"
+ },
+ "85cad3c7-59ac-4e56-8718-bb7df65b5901": {
+  "verdict": "hold",
+  "stop_power": 9,
+  "fact": "verified",
+  "note": "Classic 'wait, really?' everyone thinks Florida; minor: Maine wins by ~1,500 km, not 'several hundred' | HOLD until the question is fixed in the app (QA investigation 2026-10-25)",
+  "reviewed": "2026-10-24"
+ },
+ "85efb889-3c08-4180-add2-3a0f29ee1f92": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "86167653-f7cf-4414-ab89-817711f24321": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Ethnic-minority identity topic, politically sensitive in SK | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8676e3c1-2f90-4694-924b-9b8e7fa1d0aa": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Textbook, every Bratislavan knows Devín; low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "86cae097-a512-4101-b461-ccc3997f4e34": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "86d04348-52d8-4725-bb5c-a7b2a603c9ae": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Too well known | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "86ecd420-c434-4cb7-a12b-e2863dae35b0": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Common knowledge, no local hook (Maharaja Mac was lamb originally, chicken now)",
+  "reviewed": "2026-10-24"
+ },
+ "87945219-e3b1-4b97-afa2-f3fd5ff8d296": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Guessable for brunch fans, neat link (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "88b584e5-d14c-47de-afb8-ae226eed6527": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Name-vs-reality twist",
+  "reviewed": "2026-10-24"
+ },
+ "89c605b8-2f62-4655-8087-40ef3359d1ef": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Seasonal, cultural",
+  "reviewed": "2026-10-25"
+ },
+ "89d7a6dc-b450-4f12-8bf2-2b8f17b953a1": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power; bogus source URL | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8a14bdba-6658-448e-8d74-8728cf3f4c06": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "US trucker/CB niche, low international pull | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8a441eeb-f4c0-41fb-a3cd-0c8ba7f5f9c3": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Source is a forum thread with mixed opinions; claim not confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "8a6d05af-8e00-4b3c-ac02-304e9e0b5f45": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dry/obvious; weak source | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8a79020d-adbd-4051-a97d-eb44f78e441a": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Niche for non-ravers; explanation restates",
+  "reviewed": "2026-10-24"
+ },
+ "8a81f852-cc5c-42ac-a2d3-6c6711612077": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Useful everyday car trick",
+  "reviewed": "2026-10-24"
+ },
+ "8b952350-3127-4166-b62c-0ca52d569502": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Answer nearly given by the word slivovice",
+  "reviewed": "2026-10-24"
+ },
+ "8d1342f7-9efc-5d2b-b50f-629e352581ec": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "School chemistry, no surprise | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "8d997468-40fe-4ef1-8a39-b883e20a1777": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Relatable hangover angle, fun culture fact (not web-checked) | FACT (wrong): Answer (pickle brine) is right but explanation states as fact that brine restores sodium/electrolytes; Healthline says evidence is anecdotal and a small study found 3 oz pickle juice did not significantly change blood electrolytes. Also source URL (munchies.vice.com) is dead. Reword as folk belief. | HOLD until fixed in the app",
+  "reviewed": "2026-10-24"
+ },
+ "8f0a53b1-32a6-4a0b-9b97-7d7bc52175c8": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "'Kdo nechá svařák bublat, prodává vlastně...' wrong verb (prodává); source is a VWR product page",
+  "reviewed": "2026-10-24"
+ },
+ "9015951b-446e-4752-8b33-e22f747a3f12": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Everyday tech origin",
+  "reviewed": "2026-10-25"
+ },
+ "902b92e9-00ff-434d-9c1c-6480a5cef852": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid, mildly surprising",
+  "reviewed": "2026-10-25"
+ },
+ "906a921a-b216-442a-8bfe-15185f2e1a4b": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "90acd238-7a28-4ad3-8163-485485a361dc": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Obvious answer (Finland = sauna) and weak listicle source",
+  "reviewed": "2026-10-24"
+ },
+ "913dd84f-e408-4441-85b4-7f57bd2b08ad": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Low surprise; explanation brings Tibet/China framing into play, a political risk",
+  "reviewed": "2026-10-24"
+ },
+ "914da871-3838-41aa-befd-d2b880f71223": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Niche, overlaps the other Jizerská item",
+  "reviewed": "2026-10-24"
+ },
+ "91834dc9-a2c5-4eaf-874d-b4d4949f7291": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Textbook, low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "927ef72b-f80e-477e-9e63-9d66c0628568": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable surprise; explanation hedges the breathing theory correctly ('one idea')",
+  "reviewed": "2026-10-24"
+ },
+ "932f7686-ee1e-4bfa-aecf-86a1212e5aac": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Explanation names the album 'Occasionally'; the real title is 'Kiss All the Time. Disco, Occasionally'; dry chart trivia",
+  "reviewed": "2026-10-24"
+ },
+ "93643585-6fa8-4996-ae8e-c5d286f1bcbc": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "Foreign pop album, low relevance",
+  "reviewed": "2026-10-24"
+ },
+ "949d87b6-e997-4062-aac9-911ef8525213": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "unverified",
+  "note": "Cute, surprising | FACT: Pouch, rock, floating on back, clams/urchins confirmed (Wikipedia). 'Many keep the same favourite rock for a long time' not in Wikipedia; only anecdotal popular-media support.",
+  "reviewed": "2026-10-25"
+ },
+ "95034bb0-1d3c-4da6-a114-f45ba01959bd": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Surprising name swap, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "957e46a3-1683-4f28-962a-3fb0a9e5c625": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday brand name decode",
+  "reviewed": "2026-10-24"
+ },
+ "9623de07-128e-47a9-82cc-50b0f2b651ba": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Useful everyday car trick",
+  "reviewed": "2026-10-24"
+ },
+ "96359e39-abfb-4226-b4bf-348cb5f5e016": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Practical, relatable",
+  "reviewed": "2026-10-25"
+ },
+ "96826ad1-fa24-40fd-bc9b-73cfc5772f0e": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "98409d6d-e85f-4942-a55b-e8ef4ac4a378": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Iconic, but grammar slip \"v švédskom Göteborgu\" (should be \"vo švédskom\")",
+  "reviewed": "2026-10-25"
+ },
+ "98a40508-0cb9-4b9c-af78-c82fdafe1267": {
+  "verdict": "drop",
+  "stop_power": 1,
+  "fact": "verified",
+  "note": "Nonsense filler question; YouTube 'facts' source",
+  "reviewed": "2026-10-24"
+ },
+ "98e2fc22-954b-498d-b15b-1eed6f2407fe": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Topical local TV, confirmed (source says autumn 2026)",
+  "reviewed": "2026-10-24"
+ },
+ "9969caa3-a747-4289-b8fd-3cbe8c4a6229": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Zavináč/sleď link",
+  "reviewed": "2026-10-24"
+ },
+ "99b44897-59cd-4b88-a5d6-5109b16dc0d3": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong visual surprise",
+  "reviewed": "2026-10-25"
+ },
+ "99e9990e-1fa1-4cce-a1ec-33f6f011c7dc": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good surprise",
+  "reviewed": "2026-10-25"
+ },
+ "9a188120-4c50-4fcf-9343-859f3611ac54": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Good etymology | FACT: 'The stout snout probably inspired the name' not supported by Wiktionary (porcopiscis 'pig fish', no snout rationale); speculation. Rest (pig fish, pork root, German Schweinswal) confirmed.",
+  "reviewed": "2026-10-25"
+ },
+ "9a98eab9-caf2-4946-9d5e-6d154712310c": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Standard textbook trivia; explanation just restates the count",
+  "reviewed": "2026-10-24"
+ },
+ "9afeb55d-7513-4bbc-9441-cb5d6227ec44": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Question hints answer but ok",
+  "reviewed": "2026-10-25"
+ },
+ "9baf6fad-356d-4bed-baa5-3ebf2fa186f6": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Neat everyday etymology",
+  "reviewed": "2026-10-24"
+ },
+ "9bd651a8-7be4-44e1-92a5-6ce6cf9a4609": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Exact founding-year recall; '+10 % capacity in 2026' not confirmed (Wikipedia: 30k cap since 2010)",
+  "reviewed": "2026-10-24"
+ },
+ "9c1a3631-b24a-4d47-a3b4-825f8f274e27": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday swear-word origin",
+  "reviewed": "2026-10-24"
+ },
+ "9cd6e4bf-1375-4660-887a-df04b467bea1": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Quirky tech fact",
+  "reviewed": "2026-10-24"
+ },
+ "9dbfef99-c16c-43de-9286-0227f4cc20e2": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "wrong",
+  "note": "Fine | FACT: cs.wikipedia Kamenný most (Písek): built c. third quarter of 13th c. (not 'konec'); CNB source says only '13th century'. 2002 flood: survived, but sculptures/railings damaged.",
+  "reviewed": "2026-10-25"
+ },
+ "9e0334f6-496f-419c-9726-18ca2adf9592": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Funny, memorable etymology (not web-checked, standard)",
+  "reviewed": "2026-10-24"
+ },
+ "9e5af35d-c105-42b0-a73d-0eea16e08e2e": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Gross-fun animal fact",
+  "reviewed": "2026-10-24"
+ },
+ "9e8ee79e-fcad-433f-958c-c0b8d84b7555": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable chant",
+  "reviewed": "2026-10-25"
+ },
+ "9f73c5dc-35f2-44ce-9778-e0e7ae5c8675": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good etymology",
+  "reviewed": "2026-10-25"
+ },
+ "9f8035ae-65e7-4511-b973-9bc0d020b64b": {
+  "verdict": "keep",
+  "stop_power": 9,
+  "fact": "verified",
+  "note": "Top stopper: everyday object, surprising life-saving reason (Snopes confirms; not web-checked here)",
+  "reviewed": "2026-10-24"
+ },
+ "9faf2e1f-847f-45e6-97df-5eec226c2688": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Local pride fact, clip available; confirmed as the only such capital",
+  "reviewed": "2026-10-24"
+ },
+ "9fb5941a-e4dc-4dcc-922f-e4b112dc8826": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Known local nickname, guessable; archbishop bonus confirmed (1541-1820)",
+  "reviewed": "2026-10-24"
+ },
+ "a02569a9-b250-525e-8598-a72a1817965e": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Duplicate octopus topic; EN55 question states the answer (\"blue blood\") | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "a03d7573-0ca8-45af-a2d5-3f6eb30d2ef5": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Everyday science",
+  "reviewed": "2026-10-25"
+ },
+ "a0a22732-4384-4c03-8ffe-047b784d42e4": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Strong twist",
+  "reviewed": "2026-10-25"
+ },
+ "a0d6af1a-f229-430d-8776-bd518815a566": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "School-level fact; explanation is a stretch",
+  "reviewed": "2026-10-24"
+ },
+ "a1bc8d74-187e-4f52-8f25-690e2dea9c91": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "a20909a9-a454-487c-b3ad-087d9a1be8a9": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong wait-really",
+  "reviewed": "2026-10-25"
+ },
+ "a22a3ae5-255d-4723-a9af-1f4e797dc8f1": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Gott for Austria: strong fakt? moment, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "a37a8571-a10d-4256-9f8f-24adef84e072": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Too easy (question names his famous book) | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "a3d3592c-0688-5ce2-bc48-085a2cc5a641": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Relatable landmark, great physics payoff",
+  "reviewed": "2026-10-24"
+ },
+ "a3e88337-c04d-4525-82cc-f9d05d5ee57e": {
+  "verdict": "hold",
+  "stop_power": 8,
+  "fact": "unverified",
+  "note": "Strong surprise; but '40,000 muscle units' conflicts with the cited source (Wikipedia: up to 150,000 muscle fascicles), so expect correcting comments | HOLD until the question is fixed in the app (QA investigation 2026-10-25)",
+  "reviewed": "2026-10-24"
+ },
+ "a478114b-8659-449c-8785-c4154d4f92be": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local tradition, easy",
+  "reviewed": "2026-10-24"
+ },
+ "a4af55c5-9aec-4ef8-b315-e4c1d4dd3333": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Strong local-pop link | FACT: Orlok is not 'the first film vampire': vampire films predate Nosferatu (e.g. The Vampire 1913, Drakula halala 1921, Melies 1896). Night tours not in source.",
+  "reviewed": "2026-10-25"
+ },
+ "a815396b-db19-4a8d-8ada-80009f0d4bec": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Fun, mildly vulgar",
+  "reviewed": "2026-10-25"
+ },
+ "a8290869-57c6-4d6e-bb1d-914828225559": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "'Most-streamed day of 2026' can still be beaten before year end; time-sensitive",
+  "reviewed": "2026-10-24"
+ },
+ "a9450d1e-fc0c-40fe-af28-b2af439c6f19": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Relatable, guessable, and the capuchin monkey twist is a strong payoff",
+  "reviewed": "2026-10-24"
+ },
+ "a95fa08e-7849-4da7-a67d-af07a4c32dd4": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "RTVS abolition is current politics",
+  "reviewed": "2026-10-24"
+ },
+ "aa1b113e-0cc3-441b-88be-c29daf7ad754": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "US 90s sitcom reference; weaker internationally (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "aaa774b2-09bd-4165-8dc9-fd259526729a": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Local slang decode; Kč origin confirmed (numista also mentions a duck-colour theory, so 'nic společného s kachnou' is slightly strong)",
+  "reviewed": "2026-10-24"
+ },
+ "aaef6548-e3d8-4c99-84b8-c1e7b05181ed": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Huge global hit and KPop crossover appeal; verified",
+  "reviewed": "2026-10-24"
+ },
+ "ac3b20f1-6b5b-4980-83ae-6fc44bd6fc85": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Low stop power, quiz-about-quizzes feels self-referential",
+  "reviewed": "2026-10-24"
+ },
+ "acab5d4e-49cd-408e-a04d-d6079d583abb": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good surprise, clear 50/50; 92.5% silver + 6 g gold and the 1912 detail are standard IOC facts (NPR page timed out)",
+  "reviewed": "2026-10-24"
+ },
+ "ad55e012-114a-4f1f-9277-3aa76e3f374f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Petr/petrolej link",
+  "reviewed": "2026-10-24"
+ },
+ "adf77782-7fff-4100-94af-0e214a222399": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Strong, seasonal",
+  "reviewed": "2026-10-25"
+ },
+ "adfe95be-5b7c-4fda-b26b-d505dccd9093": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Soľnohrad is a fun decode, guessable in 5 s",
+  "reviewed": "2026-10-24"
+ },
+ "aedfcaff-e1cb-4905-9531-2c36f042e4f9": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good etymology",
+  "reviewed": "2026-10-25"
+ },
+ "af574e97-c5b1-4dcc-a36e-466c14363be8": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Playable 50/50 with a real surprise; Tetris 1984 vs Super Mario Bros. 1985 holds",
+  "reviewed": "2026-10-24"
+ },
+ "afecd933-0fe3-4893-b332-46b046bff230": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Guessable from the title, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "b28580ef-0d5a-4402-8ef9-d8c78d20699f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good seasonal surprise",
+  "reviewed": "2026-10-25"
+ },
+ "b292f49a-df72-4cf2-a3ad-4f87ebb3f140": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Answer obvious, low stop power",
+  "reviewed": "2026-10-24"
+ },
+ "b388a69e-91a6-4f87-8b09-1bceca1a5fd2": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Odd, memorable ban (not web-checked; the 1971 US lung ban is well documented)",
+  "reviewed": "2026-10-24"
+ },
+ "b3b6f9a4-2376-416b-ba35-b94f3923df55": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Dry name recall of a theatre founder; 'dodnes píše a hrá' unconfirmed (source lists plays to 2019)",
+  "reviewed": "2026-10-24"
+ },
+ "b3eb4628-c2f8-4762-9cc2-b444f8736689": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Ironic twist",
+  "reviewed": "2026-10-25"
+ },
+ "b47c5372-ac71-42f0-8a78-a41337326a02": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Great story",
+  "reviewed": "2026-10-25"
+ },
+ "b4898637-3ae2-49d0-9e05-8cfd47ab6873": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good 'why' with a strong payoff (sea snails, pricier than gold, Dominica parrot)",
+  "reviewed": "2026-10-24"
+ },
+ "b56022d3-145e-4459-9548-f6bc1a3fb2e4": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Local legend, strong story; 'hraje' present tense: re-check he is still active before posting",
+  "reviewed": "2026-10-24"
+ },
+ "b6b5e315-eb80-47ae-bd29-e653881df319": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable wedding custom with funny ransom payoff; source describes the Czech version (same custom in SK)",
+  "reviewed": "2026-10-24"
+ },
+ "b6e8303d-8938-4dd4-819c-d588c2fe5a96": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "král from Charlemagne is a real fakt? moment",
+  "reviewed": "2026-10-24"
+ },
+ "b705d62d-2312-47c3-814c-b1c4893733fd": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Textbook, question gives Krčín | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "b7ea3f9d-3630-444f-b2e8-f9cf78234787": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local sports hero, guessable; first three in a row confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "b8b1ba33-6aee-4c74-b9e9-3c4099b8792e": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid",
+  "reviewed": "2026-10-25"
+ },
+ "b9525676-ff87-4f58-bdb4-59f856401200": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Good čaj/tea surprise",
+  "reviewed": "2026-10-24"
+ },
+ "ba4c6509-cc4a-4723-8f7d-dd1facb8f35e": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power; grammar slip \"so muzikou\" (should be \"s muzikou\") | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "baa6e241-ad25-42b9-af54-a92dfa810f3e": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable kitchen 'why'; Everest ~70°C is a good payoff; answer phrase is a bit long for the screen",
+  "reviewed": "2026-10-24"
+ },
+ "bafd4f97-1f1d-4c85-afa5-f9f10bc0aaf3": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Christmas tradition with twist",
+  "reviewed": "2026-10-24"
+ },
+ "bbac6ab1-ed2b-4089-aa75-6f46c34e28f9": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "'listy sa vyhadzujú dobrým dôvodom' missing 's' (s dobrým dôvodom)",
+  "reviewed": "2026-10-24"
+ },
+ "bd028c47-d512-469b-9342-a4cfad36f008": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "bd8aa2d7-45e5-4a58-82db-48427f61fc70": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "'znie ako drevená rapkáč' gender error (drevený rapkáč)",
+  "reviewed": "2026-10-24"
+ },
+ "bd8beb8d-0c86-42b8-b13b-2561fdb7062a": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Mace is unknown to most strangers, so the question doesn't land; low relatability",
+  "reviewed": "2026-10-24"
+ },
+ "be005823-636e-4901-8384-b4c09a6ed195": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "be29cc5d-f01c-4227-b9cd-f425478f3218": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Classic surprise with luštěnina bonus",
+  "reviewed": "2026-10-24"
+ },
+ "bfe82d3f-cb95-449f-a8dd-67423bfda5e2": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Guessable etymology with pyžama bonus; source URL irrelevant (eggplant dish) but Persian pā-push confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "c0721e4a-298a-4fe8-ae31-ff8124c351c6": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "c091d8a5-c3e1-4065-8bfb-385bc4e2abd8": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Dry; rib count varies (8/10/16/24), ambiguous | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "c12c3b29-493c-49c6-86ea-a635626bf75d": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Practical surprise",
+  "reviewed": "2026-10-25"
+ },
+ "c28f922e-8af5-444a-92a3-0f4b54ab8ed5": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Relatable folklore | FACT (unverified, 2nd check): Button-grab confirmed (kudyznudy, povery.eu), but the variant of holding your own button until you see another thing (e.g. a blue car) is not found in any source.",
+  "reviewed": "2026-10-25"
+ },
+ "c2fc5499-5596-47d6-9954-92dc30068ee3": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Explanation says 'Oprava fúzov' (repair) instead of 'Úprava'; easy guess anyway",
+  "reviewed": "2026-10-24"
+ },
+ "c4faa4e9-0dd7-47f8-8183-db276c2c2a71": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Fun tradition | FACT: en.wikipedia Leap_year: Patrick/Brigid origin 'dubious', not attested before 19th c.; gloves/rose/kiss penalty attributed to a supposed 1288 Scottish law; silk gown only from popular retellings. Question states 'stará irská tradice' as fact; explanation is hedged ('Legenda tvrdí').",
+  "reviewed": "2026-10-25"
+ },
+ "c5301e56-d6b9-4c41-b46e-e51b4cac33fa": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Krtek in space: great local surprise",
+  "reviewed": "2026-10-24"
+ },
+ "c6beb6fe-cc7d-51fb-910e-1b4adda9d511": {
+  "verdict": "drop",
+  "stop_power": 2,
+  "fact": "unverified",
+  "note": "Niche producer, time-sensitive 2026 news; unguessable | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "c7c4d61d-c518-42ca-afcd-773b6ebd2df3": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Easy pop-culture, recent",
+  "reviewed": "2026-10-24"
+ },
+ "c8c19574-5546-4dbb-be1a-6178385b8439": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Fun shared-meaning reveal",
+  "reviewed": "2026-10-24"
+ },
+ "c8d12190-10ff-4936-8f27-d38fb213d62b": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Fine | FACT: Sources (nulk.cz, cs.wikipedia) derive name from Werbung but say verbuňk was a farewell dance of conscripts before service; 'originally for recruiting' is not the only reading. UNESCO: Masterpiece 2005, Representative List 2008.",
+  "reviewed": "2026-10-25"
+ },
+ "c8ea81f8-406a-4ad3-8daf-da9ff921a519": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday word origin",
+  "reviewed": "2026-10-25"
+ },
+ "c90959f3-224a-477e-ad33-59b1dc7f9da4": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Every Slovak knows korbáč = vŕba, no challenge; folk-belief explanation not in source",
+  "reviewed": "2026-10-24"
+ },
+ "c9985c8f-8b27-44dd-84a7-e3d2167a8470": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good name-vs-reality twist",
+  "reviewed": "2026-10-24"
+ },
+ "ca3ceaac-3255-41ba-b453-187949a848b5": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Iconic",
+  "reviewed": "2026-10-25"
+ },
+ "cb0b2955-edbe-4705-8b74-00207b246159": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid history",
+  "reviewed": "2026-10-25"
+ },
+ "cb1f902d-4359-4bd9-856f-5911d55027de": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday word origin",
+  "reviewed": "2026-10-24"
+ },
+ "cb3e2e61-e7ce-487f-8a0e-7defc4e709df": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Solid",
+  "reviewed": "2026-10-25"
+ },
+ "cb6137e2-ffcc-4e8e-b8f7-666bd05a9ebc": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Reads like an ad for a fuel-station brand | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "cb671820-d1bc-4944-9d97-fb7ca114acd3": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday object, inclusive fact",
+  "reviewed": "2026-10-24"
+ },
+ "cb6885f9-0583-4d5e-854a-20ada5b0ad6d": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Well-known custom, ok",
+  "reviewed": "2026-10-25"
+ },
+ "cb69c667-0b48-428c-a5dc-633b4c5d397b": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Obvious physics answer, low stop power",
+  "reviewed": "2026-10-24"
+ },
+ "cc28b33d-4fc0-46d0-888a-bb61225fb25f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Dead-animal hunting ritual, niche and unpleasant for a broad audience | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "ccf9c9d4-4ba0-4749-8f63-ad7b1260c2c5": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday brand origin, confirmed 1996 catalogue",
+  "reviewed": "2026-10-24"
+ },
+ "cd124130-c9dd-5c66-9a8f-1863cef6be1d": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Trick question (A or B, answer \"neither\"); explanation conflates re-release gross | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "cddde900-b4ea-43c2-86cc-d1303ca651c8": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Iconic, guessable, nice two-collections story; source is a geocache page, facts confirmed by search",
+  "reviewed": "2026-10-24"
+ },
+ "ced92706-e39d-4827-8534-0dd0a397d152": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Ambiguous: most outlets billed Anyma as a fourth headliner, so 'three headliners' invites disputes; US-niche",
+  "reviewed": "2026-10-24"
+ },
+ "cfc6acac-cdbe-48f5-a44f-6f5755f791e0": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Every Slovak knows grule = zemiaky, zero challenge; Grundbirne link plausible but not confirmed by source (paywalled)",
+  "reviewed": "2026-10-24"
+ },
+ "d0c1a81f-ee07-4e5c-a208-680b34e6380f": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Strong brand-origin surprise | FACT: Explanation 'Nokia spent its first century making pulp, rubber boots and cables' is inaccurate: the 1865 company made only paper/pulp; Finnish Rubber Works (1898) and Finnish Cable Works (1912) were separate firms merged into Nokia Corporation in 1967 (~102 years). Answer 'paper pulp' is correct.",
+  "reviewed": "2026-10-25"
+ },
+ "d192e405-c28d-4d82-807f-bd48e943fae2": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Czech song gone global",
+  "reviewed": "2026-10-24"
+ },
+ "d1bf4941-3ce7-486c-b019-67ea3050ce04": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Nostalgic number many remember",
+  "reviewed": "2026-10-24"
+ },
+ "d2174a6d-056d-4cf6-b71d-6d38aa299b5a": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "d3d6c071-44a6-4f5a-a365-845a12a9216b": {
+  "verdict": "hold",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Subculture topic | FACT (unverified, 2nd check): Teknival = portmanteau of 'tekno' and festival (Wikipedia); the claim that the 'k' spelling comes from the free-party scene in France and Britain is not supported by sources.",
+  "reviewed": "2026-10-25"
+ },
+ "d437176e-7a03-4d46-8ef8-e9657e1166b3": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "School knowledge, low stop | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "d4962854-10fc-415a-9416-26ead369f3a8": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "wrong",
+  "note": "Explanation wrong: Linus Yale's family was related to Elihu Yale (common ancestor, per Wikipedia), not 'completely unrelated'",
+  "reviewed": "2026-10-24"
+ },
+ "d4b5806d-a905-493d-b858-671b2082136a": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday product surprise",
+  "reviewed": "2026-10-24"
+ },
+ "d4d813af-a59c-4b0e-9e12-319752c8b258": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Answer form 'sladkými' doesn't match question 'Aké budú?' (should be 'sladké'); source 403, fact is textbook",
+  "reviewed": "2026-10-24"
+ },
+ "d5599dbd-6293-4d10-83ca-08bac1a41784": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Too obvious, no surprise | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "d60d6853-d3ed-4556-ad1e-7342dae8e68f": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Pub card game etymology with clear hláška payoff",
+  "reviewed": "2026-10-24"
+ },
+ "d637a063-26c1-4e79-8ab0-2820be6a7d12": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Strong wait-really",
+  "reviewed": "2026-10-25"
+ },
+ "d6ae2464-80b1-4933-b0c2-daa831429d4c": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Overused fact | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "d7037adf-0d58-5ddd-aa99-ee46d686b52f": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Time-sensitive niche K-pop/Hot Ones claim; source does not support it | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "d743dc60-dc25-4f1c-a1fe-26f20b947510": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Obvious answer, low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "d7612898-70df-42a0-b5a1-fddafe9f52b7": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Stalinov štít is a genuine fakt? moment, guessable (highest peak)",
+  "reviewed": "2026-10-24"
+ },
+ "d7e2f0e2-6b8f-4171-b691-c9ce9af954e9": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Real etymology surprise; clean answer",
+  "reviewed": "2026-10-25"
+ },
+ "d7f4a179-688c-41b9-bdbd-7a83cec5e13a": {
+  "verdict": "hold",
+  "stop_power": 7,
+  "fact": "wrong",
+  "note": "Surprising origin of an everyday thing (Denso Wave, per the official site; not web-checked) | FACT (wrong): 'Denso Wave, a Toyota subsidiary' overstated: source says Denso Wave is a division of DENSO, which is only Toyota-affiliated (Toyota group), not a Toyota subsidiary. Rest (1994, auto parts tracking, more data than barcode, fast reading) confirmed. | HOLD until fixed in the app",
+  "reviewed": "2026-10-24"
+ },
+ "d85c3cf1-f2c1-4a9f-a183-c0b997bd4a82": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Recent local pop, guessable; Nov 2025 ceremony and June 2026 Eden shows confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "d881ea4e-1179-4cdc-a8c9-92427434930f": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Current slang, broad appeal",
+  "reviewed": "2026-10-25"
+ },
+ "d9c655e9-01c4-4651-99bb-bf76eb2c7dee": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Stable fact (first $1B film of 2026), global franchise",
+  "reviewed": "2026-10-24"
+ },
+ "da35b347-9f3f-5a1f-995a-ce01066087fd": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Popular fact with fresh twist (heart stops when swimming)",
+  "reviewed": "2026-10-25"
+ },
+ "dad5cc85-3ab1-43f6-a34b-d49a7ef93a04": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "verified",
+  "note": "US comedian, low relevance for CZ",
+  "reviewed": "2026-10-24"
+ },
+ "db8aa518-1282-47fc-9580-f777b109e342": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Everyday product surprise",
+  "reviewed": "2026-10-24"
+ },
+ "dbd0a4df-29d0-4804-bcf3-604b3b37646c": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Too easy for anyone who drinks tequila; low surprise",
+  "reviewed": "2026-10-24"
+ },
+ "dc095252-35a4-4024-bbea-2ef136663d4e": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "School literature recall (Országh), dry",
+  "reviewed": "2026-10-24"
+ },
+ "dd84906d-1008-4838-bb11-b226f1e0f7c1": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable supermarket brands, odd-one-out works in 5 s",
+  "reviewed": "2026-10-24"
+ },
+ "de548ae5-dac5-435a-95fa-14f67b5ab60b": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Everyday object with clear 'skunk' payoff",
+  "reviewed": "2026-10-24"
+ },
+ "df5d56fd-16e5-460b-8a3d-5f1dc8aa6b33": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "df63f985-b051-4760-a3af-72edad6a24bc": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Pet owners relate",
+  "reviewed": "2026-10-24"
+ },
+ "dfd6295c-2c27-4def-85b4-73b914bd183f": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Textbook, low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "e0084f33-6e6a-49fc-a3bb-dc8ff2e692aa": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Beloved local duo, easy nostalgia",
+  "reviewed": "2026-10-24"
+ },
+ "e159eaf3-f943-47dd-8db3-2f3eb9656f45": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Well known but solid",
+  "reviewed": "2026-10-25"
+ },
+ "e1d3a1f7-bfd8-40bd-9ab1-c75c534ad828": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Answer 'maso nezkazí' ungrammatical (missing 'se'); answer obvious",
+  "reviewed": "2026-10-24"
+ },
+ "e49c1c8b-2ab9-4fd8-9598-96834d189c23": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Answer given away by 'playwright'; dry awards fact",
+  "reviewed": "2026-10-24"
+ },
+ "e4b6e7b6-fadc-4102-b483-a50d90c0b103": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Easy, low surprise | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "e51a6236-527c-4761-8650-3952cc9572d3": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "National pride record, guessable (7.28 ha confirmed)",
+  "reviewed": "2026-10-24"
+ },
+ "e5298d28-1fc7-433e-809d-7d56fb2f8e71": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Dry church-calendar answer, parish PDF source",
+  "reviewed": "2026-10-24"
+ },
+ "e6262a0b-5953-418b-b11a-823ad3eb8da3": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Duplicate of the Slavík 2025 item, too easy, flat explanation",
+  "reviewed": "2026-10-24"
+ },
+ "e73fdb39-96db-57a7-927d-8943185e9cea": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Big global name, guessable (Kendrick/Jay-Z/Drake); source is a weak blog but 27 wins, passing Jay-Z's 25, is confirmed by news coverage",
+  "reviewed": "2026-10-24"
+ },
+ "e7ca74f9-4c9e-43fc-8954-434015c2fe84": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good etymology twist",
+  "reviewed": "2026-10-25"
+ },
+ "e8075361-4551-4821-851d-e7087460d26b": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Surprising science and place link (not web-checked, well established)",
+  "reviewed": "2026-10-24"
+ },
+ "e8905437-f159-4a1a-8e4f-fde3ea49bf5b": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Most people guess carbon or hydrogen; water explanation is satisfying",
+  "reviewed": "2026-10-24"
+ },
+ "e8957122-68c2-442b-a6b3-efd737075336": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "e8d2941c-f4fa-4049-bda7-75203b9ba67f": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Strong national surprise",
+  "reviewed": "2026-10-25"
+ },
+ "e8fdb87f-085d-4bcb-b881-0ea4f872a3b0": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Textbook science | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "e9e34b98-19bc-44dd-93b1-cbbf41f80ca1": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Europe-only interest and dry explanation (host names); the 2026 contest was overshadowed by boycotts over Israel's participation, a political risk in comments",
+  "reviewed": "2026-10-24"
+ },
+ "ea96c7dd-e530-49f2-aa12-e6ac149834cc": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fresh subculture topic, guessable",
+  "reviewed": "2026-10-25"
+ },
+ "ed1c2fb7-db96-468c-9073-1e35517d9927": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Question gives the answer away (night-singing, chirps) | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "ee2de8d2-19d2-4a6c-be6f-cf183560d316": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good etymology link",
+  "reviewed": "2026-10-25"
+ },
+ "ee5a92c7-7017-4f6a-893e-19a7b427f762": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Low stop power | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "ef458c41-a541-42e1-8950-8ccf4aa7b157": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Fine",
+  "reviewed": "2026-10-25"
+ },
+ "efb5b47b-2744-46a4-8c35-fc554aaf519f": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Execution topic: unpleasant; violates the no-tragedies rule",
+  "reviewed": "2026-10-24"
+ },
+ "eff998ec-f106-45c0-a83c-3408861bf667": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable streaming-brand trivia, guessable",
+  "reviewed": "2026-10-24"
+ },
+ "f069f304-b2fb-4447-a690-b69dc00a72e8": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Czech pride, plaque hook, confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "f0caa373-5ce1-499d-a23b-7b7927ca5fb5": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "unverified",
+  "note": "Niche gaming; hidden IX in logo unconfirmed",
+  "reviewed": "2026-10-24"
+ },
+ "f0f21f14-4afe-4b47-84d3-35feeac2d283": {
+  "verdict": "keep",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Familiar but satisfying reveal",
+  "reviewed": "2026-10-25"
+ },
+ "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "unverified",
+  "note": "Obscure exoplanet name; diamond hypothesis later disputed; weak source | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "f1a19fec-7e30-45f8-8023-e3eb505ddbb5": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable sound",
+  "reviewed": "2026-10-25"
+ },
+ "f30607ef-bf42-4deb-9107-8078a4eca141": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Relatable sensory 'why', studio-foam comparison and crust detail add payoff",
+  "reviewed": "2026-10-24"
+ },
+ "f32924aa-366b-482c-be75-d347d594e5ee": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Neat etymology with a 'nautical' hunch; good payoff",
+  "reviewed": "2026-10-24"
+ },
+ "f3fbe279-ca2b-4b07-9de2-ce5883a13020": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Fun dialect item | FACT: Source unreachable (connection refused) and no other source found confirming sumny from German schon.",
+  "reviewed": "2026-10-25"
+ },
+ "f551eca2-6c5e-44f5-b03a-d3147315cadd": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "US-only geography, and it repeats the Maine answer of the stronger Africa question",
+  "reviewed": "2026-10-24"
+ },
+ "f6104550-837a-4767-a835-460cbe30db1c": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Known superstition, guessable",
+  "reviewed": "2026-10-24"
+ },
+ "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Fun origin story; weak listicle source, but the fact is well documented (not web-checked)",
+  "reviewed": "2026-10-24"
+ },
+ "f6fdf444-79f2-4ea8-a454-d4cc7d5a3815": {
+  "verdict": "hold",
+  "stop_power": 6,
+  "fact": "unverified",
+  "note": "Good | FACT: Name from Sinter Klaas confirmed, but claim that Dutch settlers brought the figure to New Amsterdam is disputed (Irving's 1809 satire invented much of that tradition).",
+  "reviewed": "2026-10-25"
+ },
+ "f781d481-d95a-4ceb-b219-864832ce6c11": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Good",
+  "reviewed": "2026-10-25"
+ },
+ "f9300d93-a95f-4b63-b4d6-6d9d37cf9d03": {
+  "verdict": "drop",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Disease topic (tick-borne encephalitis) counts as unpleasant",
+  "reviewed": "2026-10-24"
+ },
+ "f93b3c33-936f-4ada-8fd3-a1911209386d": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local, euro-coin hook",
+  "reviewed": "2026-10-24"
+ },
+ "fa43caf4-a56d-4f31-8677-cb443ee2ec97": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Burning at the stake: unpleasant topic, dry recall",
+  "reviewed": "2026-10-24"
+ },
+ "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Local, guessable",
+  "reviewed": "2026-10-24"
+ },
+ "fac27391-2349-4ca7-9e57-4062fc53cc8f": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "School-history recall",
+  "reviewed": "2026-10-24"
+ },
+ "fba6833d-9ac2-4727-a169-24ee06493f80": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Intuitive scale options, mild surprise; numbers match Wikipedia",
+  "reviewed": "2026-10-24"
+ },
+ "fbb72067-c26c-4ee4-bd53-31f7d44c455d": {
+  "verdict": "drop",
+  "stop_power": 3,
+  "fact": "unverified",
+  "note": "Textbook biology | fact-check pending",
+  "reviewed": "2026-10-25"
+ },
+ "fdb1ebee-5e24-4b6b-a5a5-a2d070d1ffd4": {
+  "verdict": "drop",
+  "stop_power": 4,
+  "fact": "verified",
+  "note": "Duplicate trafika topic; weaker of the two",
+  "reviewed": "2026-10-24"
+ },
+ "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9": {
+  "verdict": "drop",
+  "stop_power": 5,
+  "fact": "verified",
+  "note": "Greenland is a live political issue (US annexation push); comments would turn political",
+  "reviewed": "2026-10-24"
+ },
+ "ff30fdb2-2f8f-4df5-929c-9a837e4c0895": {
+  "verdict": "keep",
+  "stop_power": 6,
+  "fact": "verified",
+  "note": "Relatable, MCQ works, 'každý třetí' confirmed",
+  "reviewed": "2026-10-24"
+ },
+ "ff61ac0c-1fef-431f-98d7-d37193d09079": {
+  "verdict": "keep",
+  "stop_power": 8,
+  "fact": "verified",
+  "note": "Nostalgic, visual, surprising; clip available",
+  "reviewed": "2026-10-24"
+ },
+ "ff69eb09-a0d2-4f5e-b800-50a5368b93dd": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "perník = pepřník surprise",
+  "reviewed": "2026-10-24"
+ },
+ "ffe2b860-714d-4346-aadc-df4a2bca9c9c": {
+  "verdict": "keep",
+  "stop_power": 7,
+  "fact": "verified",
+  "note": "Everyday local brand + 'fakt?' meaning (vinea = vinica)",
+  "reviewed": "2026-10-24"
+ }
+}

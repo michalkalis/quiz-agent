@@ -66,7 +66,9 @@ export async function timeWords(
 	language: Language,
 	displayWords: string[],
 	spokenShare = 1,
-): Promise<{words: TimedWord[]; optionsAtMs: number}> {
+	/** Further points in the clip, as fractions of the spoken characters, to time (MCQ option starts). */
+	extraFracs: number[] = [],
+): Promise<{words: TimedWord[]; optionsAtMs: number; extraMs: number[]}> {
 	const spoken = await spokenWords(audioPath, language);
 	if (spoken.length === 0) throw new Error('whisper found no speech in the clip');
 	const total = spoken.reduce((n, w) => n + w.text.length, 0);
@@ -91,7 +93,7 @@ export async function timeWords(
 		pos += text.length;
 		return {text, startMs};
 	});
-	return {words, optionsAtMs: Math.round(at(spokenShare))};
+	return {words, optionsAtMs: Math.round(at(spokenShare)), extraMs: extraFracs.map((x) => Math.round(at(x)))};
 }
 
 export function audioDurationMs(audioPath: string): number {

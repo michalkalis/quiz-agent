@@ -6,6 +6,8 @@ import type {Language} from './types';
 type Copy = {
 	hooks: string[];
 	answer: string;
+	/** "Question" before a round question's number. */
+	question: string;
 	/** End card line under the logo (founder pick 2026-10-22: no call to action). */
 	tagline: string;
 	soon: string;
@@ -13,62 +15,54 @@ type Copy = {
 	roundSub: (n: number) => string;
 	answersTitle: string;
 	swipe: string;
-	/** "Comment A, B or C" for however many options there are. */
-	comment: (letters: string[]) => string;
+	/** Under a round's countdown: the answers come only at the end (founder 2026-10-25). */
+	answersAtEnd: string;
+	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
+	roundHook: (n: number) => string;
 };
-
-const list = (letters: string[], or: string) =>
-	letters.length < 2 ? letters.join('') : `${letters.slice(0, -1).join(', ')} ${or} ${letters[letters.length - 1]}`;
 
 export const COPY: Record<Language, Copy> = {
 	en: {
-		hooks: [
-			"You've got 5 seconds.",
-			'Answer before the monkey does.',
-			'One question. No googling.',
-		],
+		// One fixed line (founder 2026-10-25); the second is the challenger for the weeks 4 to 6 test.
+		hooks: ['Bet you know this one.', 'Can you get it right?'],
 		answer: 'Answer',
+		question: 'Question',
 		tagline: 'Trivia you answer out loud',
 		soon: 'Coming soon to the App Store · trubbo.app',
 		roundTitle: (p) => `Road trip round, part ${p}.`,
 		roundSub: (n) => `${n} questions. Answers on the last slide.`,
 		answersTitle: 'Answers',
 		swipe: 'Swipe',
-		comment: (l) => `Comment ${list(l, 'or')}`,
+		answersAtEnd: 'Answers at the end',
+		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 	},
 	sk: {
-		hooks: [
-			'Máš 5 sekúnd.',
-			'Odpovedz skôr ako opička.',
-			'Jedna otázka, bez googlenia.',
-		],
+		hooks: ['Stavím sa, že toto vieš.', 'Trafíš to?'],
 		answer: 'Odpoveď',
+		question: 'Otázka',
 		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Čoskoro v App Store · trubbo.app',
 		roundTitle: (p) => `Kvíz na cestu, ${p}. diel.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
 		answersTitle: 'Odpovede',
 		swipe: 'Posuň',
-		comment: (l) => `Napíš do komentára ${list(l, 'alebo')}`,
+		answersAtEnd: 'Odpovede na konci',
+		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 	},
 	cs: {
-		hooks: [
-			'Máš 5 vteřin.',
-			'Odpověz dřív než opička.',
-			'Jedna otázka, bez googlení.',
-		],
+		hooks: ['Vsadím se, že tohle víš.', 'Trefíš to?'],
 		answer: 'Odpověď',
+		question: 'Otázka',
 		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Brzy v App Store · trubbo.app',
 		roundTitle: (p) => `Kvíz na cestu, ${p}. díl.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,
 		answersTitle: 'Odpovědi',
 		swipe: 'Posuň',
-		comment: (l) => `Napiš do komentáře ${list(l, 'nebo')}`,
+		answersAtEnd: 'Odpovědi na konci',
+		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
 	},
 };
-
-export const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
 export const hookFor = (language: Language, index: number) => {
 	const hooks = COPY[language].hooks;

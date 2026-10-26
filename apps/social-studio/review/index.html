@@ -70,9 +70,9 @@ textarea { width: 100%; box-sizing: border-box; font: 14px var(--font); border: 
 
 <script>
 const ACCOUNTS = {ig_en: 'Instagram EN · @trubboapp', ig_skcz: 'Instagram SK/CZ · @trubboapp.sk'};
-const FORMATS = {five: '5 sekúnd', abc: 'A, B alebo C', carousel: 'Kvíz na cestu (karusel)'};
+const FORMATS = {five: '1 otázka', abc: 'A, B alebo C', carousel: 'Kvíz na cestu (karusel)', round: 'Kolo otázok'};
 const LANGS = {en: 'angličtina', sk: 'slovenčina', cs: 'čeština'};
-const DAYS = {Sat: 'Sobota', Sun: 'Nedeľa', Mon: 'Pondelok', Tue: 'Utorok', Wed: 'Streda', Fri: 'Piatok'};
+const DAYS = {Mon: 'Pondelok', Tue: 'Utorok', Wed: 'Streda', Thu: 'Štvrtok', Fri: 'Piatok', Sat: 'Sobota', Sun: 'Nedeľa'};
 let batch = null, db = null;
 const decisions = {};
 
@@ -83,7 +83,9 @@ const el = (tag, attrs = {}, ...kids) => {
   return e;
 };
 const fmtDate = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('sk-SK', {day: 'numeric', month: 'numeric'});
-const docId = (key) => `${batch.week}_${key}`;
+// A re-rendered week (version 2+) gets fresh decisions, so an old approval never carries over.
+const weekId = () => (batch.version > 1 ? `${batch.week}v${batch.version}` : batch.week);
+const docId = (key) => `${weekId()}_${key}`;
 
 function media(p) {
   if (p.format === 'carousel') {
@@ -111,9 +113,9 @@ function questions(p) {
 function card(p) {
   const s = decisions[p.key] || {};
   const art = el('article', {class: 'post', id: 'post-' + p.key, 'data-status': s.status || 'open'});
-  const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : 'hlas: klip z appky') : '';
+  const voice = p.voice ? (p.voice === 'made this week' ? 'hlas: nový klip' : p.voice === 'existing app clip' ? 'hlas: klip z appky' : p.voice === 'app voice: questions + answers' ? 'hlas: otázky + odpovede' : p.voice === 'app voice: question + answer' ? 'hlas: otázka + odpoveď' : 'hlas: otázka + vysvetlenie') : '';
   const meta = el('div', {class: 'meta'}, el('b', {text: `${DAYS[p.day]} ${fmtDate(p.date)}${p.time ? ' o ' + p.time : ''}`}),
-    el('span', {class: 'pill', text: FORMATS[p.format]}), el('span', {text: LANGS[p.language]}), voice && el('span', {text: voice}));
+    el('span', {class: 'pill', text: FORMATS[p.format] + (p.size ? ` (${p.size})` : '')}), el('span', {text: LANGS[p.language]}), voice && el('span', {text: voice}));
   const body = el('div', {class: 'body'}, meta,
     el('div', {}, el('div', {class: 'label', text: 'Popis na Instagram'}), el('div', {class: 'caption', text: p.caption})));
   if (p.youtube) body.append(el('div', {}, el('div', {class: 'label', text: 'Názov na YouTube Shorts'}), el('div', {class: 'caption', text: p.youtube.title})));
@@ -135,7 +137,7 @@ function card(p) {
 
 async function save(p, status, note, saved) {
   if (!db) { document.getElementById('offline').hidden = false; return; }
-  const rec = {week: batch.week, key: p.key, status, note: note.trim(), at: new Date().toISOString()};
+  const rec = {week: weekId(), key: p.key, status, note: note.trim(), at: new Date().toISOString()};
   decisions[p.key] = rec;
   refresh(p.key);
   saved.textContent = 'Ukladám…';
@@ -173,12 +175,16 @@ function render() {
 }
 
 (async () => {
-  try { batch = await (await fetch('batch.json')).json(); }
+  try {
+    batch = await (await fetch('batch.json')).json();
+    // Posts already on Instagram are not up for approval.
+    batch.posts = batch.posts.filter((p) => p.status !== 'published');
+  }
   catch { document.getElementById('range').textContent = 'Dávku sa nepodarilo načítať.'; return; }
   render();
   db = await window.claude?.use('db');
   if (!db) { document.getElementById('offline').hidden = false; return; }
-  db.collection('decisions').where('week', '==', batch.week).onSnapshot((snap) => {
+  db.collection('decisions').where('week', '==', weekId()).onSnapshot((snap) => {
     for (const d of snap.docs) { const v = d.data(); if (v) decisions[v.key] = v; }
     batch.posts.forEach((p) => {
       refresh(p.key);

@@ -38,6 +38,27 @@ More visibility and more pack / Trubbo Plus purchases through short-form social 
 4. **Start posting now**, before the App Store launch: bios say "coming soon" + link to trubbo.app (public beta CTA already there).
 5. **Apple featuring nomination: later**, for the version that is actually launched after real testing (1.1 has only been tested by the founder). 1.1 stays on automatic release after approval (founder, 2026-10-22).
 
+## Founder decisions (2026-10-24) — redo of the reels after a stricter content review
+
+1. **Reel questions ≤ 90 characters** (MCQ: stem ≤ 70, each option ≤ 22): under ~6 s of voice, readable at a glance.
+2. **Voice for the question and the whole explanation** (the app's "hear it" clip, shared with the app through the same R2 key): weekly budget 2,500 characters ≈ 1,000 ElevenLabs credits (`cli/paths.ts`).
+3. **Week per account: 5 reels + 2 carousels**, no single images, Stories only as shared reels ([format research](../research/social-format-mix-2026-10-24.md)).
+4. **The three reels already published stay** (founder: they already have reach). Publishing (`social-publish.yml`) paused 2026-10-24 until the new week is approved; the 17 unpublished W44 posts are replaced.
+5. Opening, hook line and explanation style: chosen from samples on https://claude.ai/artifact/Kbt9ttGGdpMyoQjwi538fq ([hook/captions research](../research/social-reels-hook-text-and-captions-2026-10-24.md), [hook rate](../research/social-reels-hook-rate-2026-10-23.md)).
+
+## Founder decisions (2026-10-25)
+
+1. **Opening:** a big hook line over a small, readable question; the line leaves after 1.4 s and the question grows. The word being read is highlighted.
+2. **Explanation:** the whole explanation read by the app voice, part by part on a card (C2).
+3. **Hook line fixed per format:** one question = "Bet you know this one." (sk "Stavím sa, že toto vieš.", cs "Vsadím se, že tohle víš."), tested against "Can you get it right?" in weeks 4 to 6; rounds = "Can you get 3 out of 3?" ([research](../research/social-reels-question-count-and-hook-lines-2026-10-25.md)).
+4. **Format test, 3 weeks from W44, alternating on real posts:** one question vs a 3-question round vs a 5-question round (2 s to think). In rounds every answer comes only at the end, then the last question's whole explanation.
+5. **Question length:** the first question people see ≤ 90 characters, a round's later questions ≤ 110. New short questions wait for #212 (question QA gates); until then only rows from the Instagram content review (`batches/content-review.json`) are posted.
+6. **Voice budget 4,000 characters a week** (~1,600 ElevenLabs credits) during the test.
+7. **QA failures** found by the content review are root-caused in [question-qa-root-cause-2026-10-25.md](../research/question-qa-root-cause-2026-10-25.md); fix + re-check of the approved pool runs as #212 in its own session.
+8. **Evening review of W44 v2** (supersedes 4's ending and 5-question timing): the question card grows as one piece, lines never re-wrap. MCQ options light up one by one as the voice reaches each. No "comment A or B" on screen, and captions ask open questions without "comment …" (Instagram does not recommend posts that ask for a specific comment). Rounds: "Answers at the end" under every countdown; at the end each answer is read aloud and its explanation shown for a few seconds (not read). Five-question rounds get 5 s to think. The "@" sign is spelled out for sk/cs voice (PR #577, app-wide). All W44 questions approved by the founder in chat.
+9. **Answer card everywhere (later the same evening, supersedes 2 and part of 8):** the one-question reel reads only the answer and shows the whole explanation at once on the answer card (question small, answer big, explanation under it). Rounds number their questions ("Question 1") and the voice says the number with each answer ("Otázka číslo jedna: …"); explanations are shown, never read. The MCQ option being read is marked in neutral grey. MCQ labels are 1–4 (A–D when an option is a number), as the app reads them.
+10. **Czech voice stays George** (founder 2026-10-25, after native-voice samples). **Contest format** (answer next day, skill-based winner, published rules, custom pack as prize): proposal after the 3-week test. Fresh entertainment questions in a moderate share (~30 %), answers always shown on Instagram.
+
 ## Hard rules
 
 - **Driving safety:** no real footage from a moving car. Any driving visual (AI/motion) never shows a driver touching or looking at a phone — one such clip damages the whole brand and gets removed on YouTube/TikTok.

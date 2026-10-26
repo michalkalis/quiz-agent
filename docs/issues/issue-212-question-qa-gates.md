@@ -1,10 +1,10 @@
 # Issue #212 — Brány kvality otázok: celá otázka proti zdroju, jazyk pred schválením, prekontrolovanie fondu
 
-**Triage:** bug · needs-info (čaká na súhlas foundera s plánom)
+**Triage:** enhancement · ready-for-agent
 
 **Review:** /design-soundness 2026-10-25 — 1. kolo UNSOUND 0,55 (hash pri hraní, sťahovanie zdroja, rozklad na tvrdenia bez prior art) → opravené → 2. kolo SOUND 0,8.
 
-**Status:** 2026-10-25 plán napísaný; nič sa nezapisuje do prod, kým ho founder neschváli.
+**Status:** 2026-10-26 founder schválil plán s rozpočtom **do 50 $** na prvú etapu; potom spolu overíme a ďalšie skupiny otázok pôjdu postupne (podľa nového Max kreditu). Výsledky prekontrolovania najprv ako prehľad, stav otázok sa mení až po founderovom súhlase.
 
 **Created:** 2026-10-25 · Súvisí: #210 (kontrola obsahu pre Instagram našla 18 chýb), #166 (fact-check provider), #211 (kontrola prirodzenosti sk/cs), #203 (gates-v1)
 
@@ -95,6 +95,11 @@ Hotové, keď:
 
 Stiahnutie zdrojových stránok je zadarmo (priame HTTP). Prevádzka nových otázok: +1–3 ¢ na otázku oproti dnešku. Čísla sa spresnia po evale; ak by prekročili 250 $, zastavím a pýtam sa.
 
+## Rozpočet po etapách (founder 2026-10-26)
+
+- **Etapa 1 (strop 50 $):** brány F1–F6 v kóde, eval (~15 $), skúšobné prebehnutie bez zápisu na 145 starých EN (~8 $), 96 prepísaných (~6 $) a 316 s nízkou istotou (~20 $). Ak by sa strop blížil, poradie je 145 → 96 → 316 a zastavím pred prekročením.
+- **Ďalšie etapy:** zvyšok fondu a preklady po skupinách, každá s vlastným súhlasom foundera a odhadom.
+
 ## Čo sa stane s otázkou, ktorá neprejde
 
 - Presun `approved → pending_review`, **nikdy zmazanie**. Do metadát sa uloží dôvod (zoznam nálezov, verzia brán, dátum), takže sa dá vrátiť.
@@ -109,14 +114,14 @@ Stiahnutie zdrojových stránok je zadarmo (priame HTTP). Prevádzka nových ot�
 
 Každý krok = vlastné PR podľa `.claude/rules/shared.md`. Nič v prod pred súhlasom foundera s týmto plánom.
 
-1. **Regresný set** — 18 chýb (a 2 vyradené z podkladu ako kontrola falošných poplachov) ako testovacie dáta; testy, ktoré dnes prejdú a majú padnúť.
+1. **Regresný set** — 18 chýb z podkladu + 30 záznamov `hold` z druhého kola ručnej kontroly #210 (`apps/social-studio/batches/content-review.json` na `feat/210-reel-redo`), 2 vyradené z podkladu ako kontrola falošných poplachov ako testovacie dáta; testy, ktoré dnes prejdú a majú padnúť.
 2. **F2 sťahovanie zdroja + overenie výňatku + kvalita zdroja (F3 časť zdroj)** — deterministické, lacné, bez modelu.
 3. **F1 fact-check celej otázky + latka 0,9 (F3)** — nový prompt, eval na regresnom sete + 40 čistých. Brána: ≥ 17/18, falošné poplachy ≤ 10 %.
 4. **F4 jazyková brána všetkých polí pred schválením + hygiena textu.**
 5. **F5 odtlačok textu (zápis + DB trigger) + F6 jediná cesta do approved, `gates-v2`** — appka a API bez zmeny.
 6. **Deploy quiz-pack-api** (brány pre nové otázky) — po kroku 5.
 7. **Prekontrolovanie, len čítanie (dry run)** v poradí rizika: 145 starých EN bez brány → 316 s nízkou istotou → 96 prepísaných po schválení (+9 stále označených) → zvyšok korpusu → 644 prekladov. Výsledok: report počtov a nálezov, žiadny zápis.
-8. **Zápis stavov** po skupinách v rovnakom poradí: `approved → pending_review` s dôvodom; po každej skupine kontrola, že množina otázok, ktoré vyhľadávač vracia, sedí s `approved` v databáze.
+8. **Prehľad founderovi, po súhlase zápis stavov** po skupinách v rovnakom poradí: `approved → pending_review` s dôvodom; po každej skupine kontrola, že množina otázok, ktoré vyhľadávač vracia, sedí s `approved` v databáze.
 9. **Fronta opráv** — bezpečné automatické opravy, znova brány, späť do approved; zvyšok report founderovi.
 10. Uzavretie: TODO, INDEX, pamäť.
 
@@ -127,7 +132,7 @@ Každý krok = vlastné PR podľa `.claude/rules/shared.md`. Nič v prod pred s�
 - **Úbytok otázok v sk/cs** → report podľa jazyka pred zápisom (krok 7).
 - **Cena** nad odhad → strop 250 $, potom stop.
 
-## Rozhodnutia, ktoré potrebujem od foundera
+## Rozhodnutia foundera
 
-1. Súhlas s plánom a rozpočtom ~110–200 $ (strop 250 $).
-2. Vyradené otázky do `pending_review` hneď po dry rune, alebo až po founderovom pohľade na report? (Návrh: zobrazím report, zapíšem po súhlase — jednorazovo pre veľké skupiny.)
+- 2026-10-26: plán schválený, celý odhad (110–200 $) „mega náklad“ → etapa 1 do 50 $, ďalej postupne.
+- 2026-10-26: neprešlé otázky najprv ako prehľad, zápis až po súhlase.

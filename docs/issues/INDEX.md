@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 212 | [Brány kvality otázok + prekontrolovanie fondu](issue-212-question-qa-gates.md) | enhancement · ready-for-agent | `[ ]` #212 | 2026-10-25: 18 chýb v schválených (#210); celá otázka proti stiahnutému zdroju, latka 0,9, jazyk sk/cs všetkých polí pred schválením, schválenie viazané na text; prekontrolovanie 145+316+96 najprv; schválené 10-26, etapa 1 do 50 $ |
 | 211 | [Prirodzené sk/cs otázky](issue-211-natural-sk-cs-questions.md) | enhancement · done | `[x]` #211 | 2026-10-23: štýl domu v2 zapnutý (8,25 vs 7,86); kontrola prirodzenosti opravuje nové sk/cs otázky automaticky; 97 starých prepísaných po 2 slepých kolách |
 | 210 | [Marketing: sociálne siete s AI obsahom](issue-210-social-marketing.md) | enhancement · ready-for-agent | `[ ]` #210 | 2026-10-19: EN hlavný účet + SK/CZ vedľajší, nový osobný účet v EN; reels/karusely z databázy otázok (Remotion), Instagram cez oficiálne API, TikTok/Shorts cez Buffer free, týždenná dávka na schválenie; po 4 týždňoch vyhodnotenie |
 | 209 | [App Store review: verzia bez testerských prvkov, súhlas s AI](issue-209-app-store-review-cleanup.md) | bug · ready-for-human | `[~]` #209 | 2026-10-19: App Store variant buildu (`store: true`), AI súhlas v onboardingu; open = build pre App Review, privacy policy doplniť Amazon |

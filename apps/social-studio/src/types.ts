@@ -22,9 +22,10 @@ export type ReelQuestion = {
 };
 
 /** How the reel opens: a separate hook card before the question (the v1
- * reel), a hook line on screen with the question from frame 1, or the
- * question alone. */
-export type Opening = 'intro' | 'fused' | 'plain';
+ * reel), a hook line on screen with the question from frame 1, the
+ * question alone, or (founder 2026-10-26) the hook alone, big and centred,
+ * then the question readable in full. */
+export type Opening = 'intro' | 'fused' | 'plain' | 'solo';
 /** How the explanation is shown: its first sentence under the answer (v1),
  * the whole explanation read part by part, big spoken-word captions, or
  * (founder 2026-10-25) one card: the answer read aloud, the whole explanation shown under it. */
@@ -82,4 +83,6 @@ export type RoundItem = {
 export type RoundProps = {
 	items: RoundItem[];
 	hookIndex: number;
+	/** `solo`: the hook line alone before the first question; otherwise fused onto it. */
+	opening?: Opening;
 };

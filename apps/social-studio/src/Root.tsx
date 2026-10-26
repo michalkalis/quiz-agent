@@ -3,7 +3,7 @@ import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
 import {CarouselSlide} from './CarouselSlide';
 import {Reel} from './Reel';
 import {Round} from './Round';
-import {LEAD_MS, reelTimeline, roundTimeline} from './timing';
+import {HOOK_SOLO_MS, LEAD_MS, reelTimeline, roundTimeline} from './timing';
 import {loadBrandFonts} from './theme';
 import type {CarouselSlideProps, ReelProps, RoundProps} from './types';
 
@@ -34,7 +34,7 @@ const FIVE_SAMPLE: ReelProps = {
 	optionsAtMs: 0,
 	optionAtMs: [],
 	hookIndex: 0,
-	style: {opening: 'fused', explain: 'card'},
+	style: {opening: 'solo', explain: 'card'},
 	answer: {audio: null, ms: 1200},
 	explain: {
 		audio: null,
@@ -75,6 +75,7 @@ const reelMetadata: CalculateMetadataFunction<ReelProps> = ({props}) => ({
 const ROUND_SAMPLE: RoundProps = {
 	items: [FIVE_SAMPLE, FIVE_SAMPLE, FIVE_SAMPLE].map((p) => ({q: p.q, audio: null, words: p.words, questionMs: p.questionMs, answerAudio: null, answerMs: 900})),
 	hookIndex: 0,
+	opening: 'solo',
 };
 
 const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
@@ -82,6 +83,7 @@ const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
 		(roundTimeline(
 			props.items.map((it) => it.questionMs),
 			props.items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
+			props.opening === 'solo' ? HOOK_SOLO_MS : 0,
 		).totalMs /
 			1000) *
 			FPS,

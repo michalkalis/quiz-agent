@@ -3,6 +3,8 @@
 import type {ReelStyle} from './types';
 
 export const HOOK_MS = 1500;
+/** The hook alone on screen before the question (`solo` opening). */
+export const HOOK_SOLO_MS = 1700;
 /** Question shown before the voice starts, so frame 1 already reads. */
 export const LEAD_MS = 250;
 export const COUNTDOWN_MS = 5000;
@@ -16,7 +18,7 @@ export const END_MS = 2000;
 
 /** `card`: the answer is read (`answerMs`), then the whole explanation (`whyChars`) stays up to be read. */
 export const reelTimeline = (style: ReelStyle, questionMs: number, explainMs: number, answerMs = 0, whyChars = 0) => {
-	const qStart = style.opening === 'intro' ? HOOK_MS : 0;
+	const qStart = style.opening === 'intro' ? HOOK_MS : style.opening === 'solo' ? HOOK_SOLO_MS : 0;
 	const cdStart = qStart + questionMs;
 	const revealStart = cdStart + COUNTDOWN_MS;
 	const card = style.explain === 'card';
@@ -44,9 +46,10 @@ export const ANSWER_LEAD_MS = 300;
 const WHY_MS_PER_CHAR = 50;
 export const whyHoldMs = (chars: number, maxMs = 5500) => Math.min(maxMs, Math.max(2800, chars * WHY_MS_PER_CHAR));
 
-export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[]) => {
+/** `startMs`: when the first question comes up (after a `solo` hook). */
+export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[], startMs = 0) => {
 	const countdownMs = roundCountdownMs(questionMs.length);
-	let start = 0;
+	let start = startMs;
 	const steps = questionMs.map((qMs) => {
 		const voiceStart = start + LEAD_MS;
 		const cdStart = voiceStart + qMs;

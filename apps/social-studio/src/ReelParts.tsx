@@ -42,6 +42,38 @@ export const HookLine: React.FC<{text: string; color: string; grow: number}> = (
 		</div>
 	);
 
+/** The hook alone before the question (founder 2026-10-26: on its own it is
+ * clear what the reel is about), big and centred in the safe area, gone at `endMs`. */
+export const HookSolo: React.FC<{text: string; color: string; endMs: number}> = ({text, color, endMs}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const now = ms(frame, fps);
+	if (now >= endMs) return null;
+	const enter = spring({frame, fps, config: {damping: 16, mass: 0.7}});
+	const out = interpolate(now, [endMs - 250, endMs], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+	return (
+		<div
+			style={{
+				position: 'absolute',
+				left: SAFE.left,
+				right: SAFE.right - 50,
+				top: (SAFE.top + 1920 - SAFE.bottom) / 2,
+				fontSize: 124,
+				fontWeight: 800,
+				lineHeight: 1.04,
+				letterSpacing: -2.5,
+				textAlign: 'center',
+				textWrap: 'balance',
+				color,
+				opacity: enter * out,
+				transform: `translateY(-50%) scale(${0.9 + 0.1 * enter})`,
+			}}
+		>
+			{text}
+		</div>
+	);
+};
+
 export const QuestionCard: React.FC<{
 	q: ReelProps['q'];
 	words: ReelProps['words'];

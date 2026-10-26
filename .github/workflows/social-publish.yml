@@ -4,11 +4,12 @@ name: social-publish
 # scheduling, so this hourly run publishes the approved posts whose slot has
 # passed (apps/social-studio/scripts/publish_due.py); reels also go to the
 # matching Facebook Page (210.11, scripts/fb_pages.py). Red run = a post failed
-# or missed its window.
+# or missed its window. After a disable/enable GitHub may stop firing the
+# schedule until the file changes; then edit the cron line to re-register it.
 
 on:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "13 * * * *"
   workflow_dispatch:
     inputs:
       mode:

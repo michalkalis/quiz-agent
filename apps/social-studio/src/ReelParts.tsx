@@ -13,18 +13,12 @@ import type {ReelProps} from './types';
 export const ms = (frame: number, fps: number) => (frame / fps) * 1000;
 export const f = (millis: number, fps: number) => Math.round((millis / 1000) * fps);
 
-// Platform UI (captions, buttons) covers the bottom and right edge of a reel;
-// everything important stays inside this box.
-export const SAFE = {top: 170, bottom: 400, left: 80, right: 130};
-
-export const Logo: React.FC<{color: string}> = ({color}) => (
-	<div style={{position: 'absolute', top: SAFE.top, left: SAFE.left, display: 'flex', alignItems: 'center', gap: 18}}>
-		<div style={{width: 76, height: 76, borderRadius: 38, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-			<Monkey size={58} />
-		</div>
-		<div style={{fontSize: 46, fontWeight: 800, color, letterSpacing: -0.5}}>Trubbo</div>
-	</div>
-);
+// Platform UI covers a reel's edges: top bar (Reels/For You tabs, camera,
+// search), the account name and caption at the bottom, the like/comment/share
+// column on the lower right (Instagram, TikTok, YouTube Shorts, Facebook).
+// Everything important stays inside this box; nothing small sits right of
+// x 880 below y 800. No logo on screen: the account name is always shown.
+export const SAFE = {top: 260, bottom: 480, left: 80, right: 130};
 
 /** The MCQ option being read: neutral grey (founder 2026-10-25: a colour reads as "the right one"). */
 const READING_BG = '#D9DCE3';
@@ -43,8 +37,9 @@ export const HookLine: React.FC<{text: string; color: string; grow: number}> = (
 	);
 
 /** The hook alone before the question (founder 2026-10-26: on its own it is
- * clear what the reel is about), big and centred in the safe area, gone at `endMs`. */
-export const HookSolo: React.FC<{text: string; color: string; endMs: number}> = ({text, color, endMs}) => {
+ * clear what the reel is about), big and centred in the safe area, gone at
+ * `endMs`. The monkey and the label on top say what it is (founder 2026-10-27). */
+export const HookSolo: React.FC<{line: string; kicker: string; color: string; endMs: number}> = ({line, kicker, color, endMs}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const now = ms(frame, fps);
@@ -58,18 +53,20 @@ export const HookSolo: React.FC<{text: string; color: string; endMs: number}> = 
 				left: SAFE.left,
 				right: SAFE.right - 50,
 				top: (SAFE.top + 1920 - SAFE.bottom) / 2,
-				fontSize: 124,
-				fontWeight: 800,
-				lineHeight: 1.04,
-				letterSpacing: -2.5,
-				textAlign: 'center',
-				textWrap: 'balance',
+				display: 'flex',
+				flexDirection: 'column',
+				alignItems: 'center',
+				gap: 40,
 				color,
 				opacity: enter * out,
 				transform: `translateY(-50%) scale(${0.9 + 0.1 * enter})`,
 			}}
 		>
-			{text}
+			<div style={{width: 280, height: 280, borderRadius: 140, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+				<Monkey size={220} mood="happy" />
+			</div>
+			<div style={{fontSize: 44, fontWeight: 800, letterSpacing: 3, textTransform: 'uppercase', border: `5px solid ${color}`, borderRadius: 999, padding: '12px 32px', textAlign: 'center'}}>{kicker}</div>
+			<div style={{fontSize: 124, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center', textWrap: 'balance'}}>{line}</div>
 		</div>
 	);
 };

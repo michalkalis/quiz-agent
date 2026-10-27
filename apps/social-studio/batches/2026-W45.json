@@ -1,0 +1,794 @@
+{
+ "week": "2026-W45",
+ "monday": "2026-11-02",
+ "created": "2026-10-27T13:48:25.310Z",
+ "posts": [
+  {
+   "key": "mon-ig_en",
+   "account": "ig_en",
+   "day": "Mon",
+   "format": "five",
+   "language": "en",
+   "date": "2026-11-02",
+   "files": [
+    "five-en-e8905437.mp4",
+    "five-en-e8905437.jpg"
+   ],
+   "caption": "By mass, roughly two thirds of your body is a single chemical element. Which one?\n\nDid you know it before the reveal?\n\n#trivia #quiz #science #didyouknow",
+   "youtube": {
+    "title": "By mass, roughly two thirds of your body is a single chemical element. Which one?",
+    "description": "By mass, roughly two thirds of your body is a single chemical element. Which one?\n\nDid you know it before the reveal?\n\n#trivia #quiz #science #didyouknow"
+   },
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "e8905437-f159-4a1a-8e4f-fde3ea49bf5b",
+     "category": "science-nature",
+     "question": "By mass, roughly two thirds of your body is a single chemical element. Which one?",
+     "answer": "Oxygen",
+     "options": [],
+     "explanation": "Your body is mostly water, and oxygen is the heavy part of every water molecule, so oxygen makes up about 65 percent of you by mass.",
+     "source_url": "https://en.wikipedia.org/wiki/Composition_of_the_human_body"
+    }
+   ]
+  },
+  {
+   "key": "mon-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "five",
+   "language": "sk",
+   "date": "2026-11-02",
+   "files": [
+    "five-sk-d7612898.mp4",
+    "five-sk-d7612898.jpg"
+   ],
+   "caption": "Ktorý slovenský vrch sa v rokoch 1949 až 1959 oficiálne volal Stalinov štít?\n\nVieš to skôr, ako prezradíme odpoveď?\n\n#kvíz #kviz #cestovanie #vedomosti",
+   "youtube": null,
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "d7612898-70df-42a0-b5a1-fddafe9f52b7",
+     "category": "geography-world",
+     "question": "Ktorý slovenský vrch sa v rokoch 1949 až 1959 oficiálne volal Stalinov štít?",
+     "answer": "Gerlachovský štít",
+     "options": [],
+     "explanation": "Najvyšší vrch Slovenska dostal meno po sovietskom vodcovi v čase kultu osobnosti a pôvodný názov mu vrátili až po desiatich rokoch.",
+     "source_url": "https://sk.wikipedia.org/wiki/Gerlachovský_štít"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_en",
+   "account": "ig_en",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-11-03",
+   "files": [
+    "carousel-en-p3-0-cover.jpg",
+    "carousel-en-p3-1.jpg",
+    "carousel-en-p3-2.jpg",
+    "carousel-en-p3-3.jpg",
+    "carousel-en-p3-4.jpg",
+    "carousel-en-p3-5.jpg",
+    "carousel-en-p3-6.jpg",
+    "carousel-en-p3-7.jpg",
+    "carousel-en-p3-8-answers.jpg",
+    "carousel-en-p3-9-answers.jpg"
+   ],
+   "caption": "Road trip round, part 3.\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #funfacts #history #roadtrip",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "0891e411-68b8-472b-bf09-5014542f9a2d",
+     "category": "general",
+     "question": "When your cat ignores a slice of cake, it isn't being polite. Which of the basic tastes can cats not detect at all?",
+     "answer": "Sweet",
+     "options": [],
+     "explanation": "Cats carry a broken copy of the gene for the sweet-taste receptor, so sugar tastes of nothing to them. A pure meat-eater never needed that sense.",
+     "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1183522/"
+    },
+    {
+     "id": "a0a22732-4384-4c03-8ffe-047b784d42e4",
+     "category": "general",
+     "question": "Monopoly grew out of an older board game that was invented as a warning. What was it meant to warn players about?",
+     "answer": "Greedy landlords",
+     "options": [],
+     "explanation": "Its creator, Lizzie Magie, wanted players to feel how rent makes landowners rich and leaves everyone else broke. The way every Monopoly game ends was the lesson, not just the fun.",
+     "source_url": "https://en.wikipedia.org/wiki/The_Landlord's_Game"
+    },
+    {
+     "id": "7ac04474-3a5c-4197-aaff-392666f8271b",
+     "category": "history",
+     "question": "Real Viking warriors never wore horned helmets. Which kind of 19th-century stage show gave them their horns?",
+     "answer": "Opera",
+     "options": [],
+     "explanation": "Costumes for Wagner's Ring cycle in 1876 put horns on Norse heroes, and the image stuck. Archaeologists have never found a single horned helmet from the Viking Age.",
+     "source_url": "https://ingebretsens-blog.com/wp-content/uploads/2018/07/51267328-frank-invention-of-horned-helmet.pdf"
+    },
+    {
+     "id": "d9c655e9-01c4-4651-99bb-bf76eb2c7dee",
+     "category": "entertainment",
+     "question": "The first film of 2026 to pass one billion dollars worldwide was based on which video game franchise?",
+     "answer": "Super Mario",
+     "options": [],
+     "explanation": "The Super Mario Galaxy Movie beat every superhero and sequel to the billion-dollar mark that year.",
+     "source_url": "https://en.wikipedia.org/wiki/2026_in_film"
+    },
+    {
+     "id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+     "category": "sports",
+     "question": "Instead of champagne, what drink does the winner of the Indianapolis 500 traditionally down in victory lane?",
+     "answer": "Milk",
+     "options": [],
+     "explanation": "The custom began in 1936 when winner Louis Meyer asked for buttermilk, and today drivers even pre-register whether they want whole, two percent or skimmed.",
+     "source_url": "https://www.indianapolismotorspeedway.com/history/where-tradition-never-stops/milk"
+    },
+    {
+     "id": "7f71aa5f-b310-4564-8f07-ceb0592446bf",
+     "category": "science-nature",
+     "question": "Hikers often wake up two days after a mountain trip with aching thighs. Which part of the hike is usually most to blame?",
+     "answer": "Going downhill",
+     "options": [],
+     "explanation": "On the way down, your thigh muscles brake every step while being stretched. These 'eccentric' contractions cause far more micro-damage, and so more soreness, than the climb itself.",
+     "source_url": "https://www.stylist.co.uk/fitness-health/workouts/doms-after-walking-how-come-hiking-can-make-your-muscles-so-sore/549274"
+    },
+    {
+     "id": "0cde91bd-bc32-40be-97d0-4fadf8a55c2a",
+     "category": "science-nature",
+     "question": "More than half of the 206 bones in an adult human are packed into just two paired body parts. Which two?",
+     "answer": "Hands and feet",
+     "options": [],
+     "explanation": "Each hand has 27 bones and each foot has 26, so together they account for 106 of the 206, more than the rest of the body combined.",
+     "source_url": "https://en.wikipedia.org/wiki/List_of_bones_of_the_human_skeleton"
+    }
+   ]
+  },
+  {
+   "key": "tue-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "cs",
+   "date": "2026-11-03",
+   "files": [
+    "carousel-cs-p2-0-cover.jpg",
+    "carousel-cs-p2-1.jpg",
+    "carousel-cs-p2-2.jpg",
+    "carousel-cs-p2-3.jpg",
+    "carousel-cs-p2-4.jpg",
+    "carousel-cs-p2-5.jpg",
+    "carousel-cs-p2-6.jpg",
+    "carousel-cs-p2-7.jpg",
+    "carousel-cs-p2-8-answers.jpg",
+    "carousel-cs-p2-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 2. díl.\n\nKolik máš správně?\n\n#kvíz #kviz #zajímavosti #cestování #nacestu",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "f6104550-837a-4767-a835-460cbe30db1c",
+     "category": "general",
+     "question": "Když na ulici potkáte kominíka, čeho byste se na jeho oblečení podle staré pověry měli chytit, aby vám přinesl štěstí?",
+     "answer": "knoflíku",
+     "options": [],
+     "explanation": "Kdo se chytí kominíkova knoflíku a něco si přeje, tomu se to prý splní. Kominík byl symbolem štěstí proto, že čistý komín chránil dům před požárem.",
+     "source_url": "https://www.kudyznudy.cz/aktuality/den-kominiku-cesta-za-kominy-ktere-vypraveji-pribe"
+    },
+    {
+     "id": "617b562a-a5fa-487a-bb52-6f0c63803cb4",
+     "category": "general",
+     "question": "Kdo jezdil po staré dálnici D1, pamatuje si pravidelné „ťuk-ťuk, ťuk-ťuk“ pod koly. Co ten rytmus způsobovalo?",
+     "answer": "spáry mezi betonovými deskami",
+     "options": [],
+     "explanation": "Stará D1 byla poskládaná z betonových desek a kola přeskakovala spáry mezi nimi. Jak desky časem sedaly, každá spára byla cítit víc, dokud je modernizace nenahradila.",
+     "source_url": "https://ct24.ceskatelevize.cz/domaci/3355372-na-d1-se-na-rade-mist-olamuji-hrany-dilatacnich-spar-silnicari-budou-zadat-opravu-od"
+    },
+    {
+     "id": "bd028c47-d512-469b-9342-a4cfad36f008",
+     "category": "geography-world",
+     "question": "Slavné americké pivo Budweiser je pojmenované podle německého názvu jednoho českého krajského města. Kterého?",
+     "answer": "České Budějovice",
+     "options": [],
+     "explanation": "Německy se Budějovicím říká Budweis a američtí pivovarníci si to jméno vypůjčili, aby jejich pivo znělo jako pravé české. Od té doby se s Budějovickým Budvarem soudí o značku už přes sto let.",
+     "source_url": "https://en.wikipedia.org/wiki/Budweiser"
+    },
+    {
+     "id": "d4b5806d-a905-493d-b858-671b2082136a",
+     "category": "food-everyday",
+     "question": "Krabí tyčinky z běžného supermarketu většinou neobsahují skoro žádného kraba. Z čeho se hlavně vyrábějí?",
+     "answer": "Z rybího masa",
+     "options": [],
+     "explanation": "Jde o surimi, tedy rozmělněné maso levných bílých ryb, nejčastěji tresky aljašské. Krabí chuť dodává aroma a červený proužek obarvení.",
+     "source_url": "https://energozrouti.cz/clanek/cesi-ji-jedi-ve-velkem-za-nizkou-cenou-teto-ryby-se-skryva-nechutna-pravda"
+    },
+    {
+     "id": "c0721e4a-298a-4fe8-ae31-ff8124c351c6",
+     "category": "sports",
+     "question": "Ve Wimbledonu musí tenisté hrát skoro celí v bílém. Pravidlo vzniklo už v 19. století. Co měla bílá barva skrýt?",
+     "answer": "Pot",
+     "options": [],
+     "explanation": "Propocené skvrny na oblečení se ve viktoriánské Anglii považovaly za neslušné a na bílé látce jsou vidět nejméně. Proto i Kvitová a Vondroušová zvedaly wimbledonskou trofej v bílém.",
+     "source_url": "https://www.si.com/tennis/wimbledon-notoriously-strict-dress-code-players-fascinating-origin"
+    },
+    {
+     "id": "bafd4f97-1f1d-4c85-afa5-f9f10bc0aaf3",
+     "category": "food-everyday",
+     "question": "Proč se podle tradice nechával vánoční kapr pár dní plavat ve vaně v čisté vodě? Čeho se jeho maso mělo zbavit?",
+     "answer": "Pachuti bahna",
+     "options": [],
+     "explanation": "Kapři žijí v rybnících s bahnitým dnem a v čisté vodě se měli „vyčistit“, aby maso nebylo cítit bahnem. Dnešní rybáři ale říkají, že kapr z dobrého rybníka bahnem nepáchne a pobyt ve vaně mu spíš přidá stres.",
+     "source_url": "https://energozrouti.cz/diskuze/muj-deda-udelal-s-kaprem-jedinou-vec-a-zbavil-ho-pachuti-bahna-deti-si-dokonce-pridavaly"
+    },
+    {
+     "id": "f781d481-d95a-4ceb-b219-864832ce6c11",
+     "category": "geography-world",
+     "question": "Které české krajské město má přímo v názvu schované, že kdysi patřilo českým královnám jako jejich věno?",
+     "answer": "Hradec Králové",
+     "options": [],
+     "explanation": "„Králové“ znamená „královny“. Město bylo věnným městem českých královen a nejslavnější z nich, Eliška Rejčka, tam založila kostel, který stojí dodnes.",
+     "source_url": "https://cs.wikipedia.org/wiki/Hradec_Králové"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_en",
+   "account": "ig_en",
+   "day": "Wed",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-04",
+   "files": [
+    "round-en-7c63ba2d.mp4",
+    "round-en-7c63ba2d.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #food #popculture",
+   "youtube": {
+    "title": "Can you get 3 out of 3? The English word 'lord' comes from an old phrase meaning 'keeper of…",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #food #popculture"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "7c63ba2d-f501-4564-bb50-40b37597fb2f",
+     "category": "food-everyday",
+     "question": "The English word 'lord' comes from an old phrase meaning 'keeper of the...' what?",
+     "answer": "Loaf",
+     "options": [],
+     "explanation": "Old English 'hlāford' meant 'loaf-ward', the man who controlled the household's bread. 'Lady' began as 'hlǣfdīge', the 'loaf-kneader'.",
+     "source_url": "https://en.wiktionary.org/wiki/lord"
+    },
+    {
+     "id": "237cf4f5-9369-41d2-8ea6-6dea84c3af48",
+     "category": "entertainment",
+     "question": "In 2019, a 16-year-old American won 3 million dollars, more than Tiger Woods got that year for winning the Masters. Which hugely popular video game was he playing?",
+     "answer": "Fortnite",
+     "options": [],
+     "explanation": "Kyle 'Bugha' Giersdorf won the first solo Fortnite World Cup in a New York tennis stadium. Tiger Woods received about 2 million dollars for his Masters win that spring.",
+     "source_url": "https://www.cbsnews.com/news/fortnite-world-cup-winner-bugha-kyle-giersdorf-age-16-wins-3-million-at-fortnite-world-cup"
+    },
+    {
+     "id": "54135c1a-7932-4e12-9dab-5bdca901a7b3",
+     "category": "entertainment",
+     "question": "Dictionary.com's 2025 Word of the Year was not a word but a number, chanted by schoolkids worldwide and boosted by a track from the rapper Skrilla. Which number?",
+     "answer": "67",
+     "options": [],
+     "explanation": "Said as six-seven, usually with a hand-juggling gesture, the meme has no agreed meaning, which the dictionary admitted was part of its charm.",
+     "source_url": "https://www.dictionary.com/e/word-of-the-year-2025/"
+    }
+   ]
+  },
+  {
+   "key": "wed-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Wed",
+   "format": "round",
+   "language": "sk",
+   "size": 3,
+   "date": "2026-11-04",
+   "files": [
+    "round-sk-67341d30.mp4",
+    "round-sk-67341d30.jpg"
+   ],
+   "caption": "Trafíš všetky tri?\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Čoskoro v App Store, odkaz v profile.\n\n#kvíz #kviz #popkultúra #zaujímavosti",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "67341d30-a8f9-43fb-8f33-9047597663fc",
+     "category": "entertainment",
+     "question": "Mr. Bean svoje malé zelené auto Mini nezamyká kľúčom ako ostatní ľudia. Čím ho zabezpečí?",
+     "answer": "Visiacim zámkom",
+     "options": [],
+     "explanation": "Na dverách má pripevnený obyčajný visiaci zámok. Pre istotu si navyše so sebou berie aj volant.",
+     "source_url": "https://joeduffy.ie/mini/news/mr-beans-mini"
+    },
+    {
+     "id": "64903dc6-0aa3-4af5-a95d-f88159f57c24",
+     "category": "general",
+     "question": "V Maďarsku sa platí forintmi. Názov tejto meny pochádza z mena jedného talianskeho mesta. Ktorého?",
+     "answer": "Florencia",
+     "options": [],
+     "explanation": "Vo Florencii sa v stredoveku razila zlatá minca fiorino, ktorá platila po celej Európe. Uhorsko podľa nej pomenovalo vlastné mince, a tak sa dnes na Balatone platí menou nazvanou po Florencii.",
+     "source_url": "https://en.wikipedia.org/wiki/Hungarian_forint"
+    },
+    {
+     "id": "7ee0bf16-da88-4f16-8e4d-3cc4a2b9adfd",
+     "category": "entertainment",
+     "question": "Creeper, slávne zelené monštrum z Minecraftu, vznikol omylom. Autor hry pri modelovaní jedného zvieraťa zamenil výšku tela s jeho dĺžkou. Ktoré zviera chcel pôvodne vytvoriť?",
+     "answer": "Prasa",
+     "options": [],
+     "explanation": "Namiesto dlhého prasaťa mu vyšla vysoká postavička na štyroch krátkych nožičkách. Notch ju nezahodil, prefarbil ju na zeleno a urobil z nej monštrum, ktoré vybuchuje.",
+     "source_url": "https://minecraft.wiki/w/Creeper"
+    }
+   ]
+  },
+  {
+   "key": "thu-ig_en",
+   "account": "ig_en",
+   "day": "Thu",
+   "format": "abc",
+   "language": "en",
+   "date": "2026-11-05",
+   "files": [
+    "abc-en-42a10e74.mp4",
+    "abc-en-42a10e74.jpg"
+   ],
+   "caption": "The video-game company Nintendo was founded in which decade?\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #history #didyouknow",
+   "youtube": {
+    "title": "The video-game company Nintendo was founded in which decade?",
+    "description": "The video-game company Nintendo was founded in which decade?\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #history #didyouknow"
+   },
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "42a10e74-2914-44d5-8d35-edc5e8ab759d",
+     "category": "history",
+     "question": "The video-game company Nintendo was founded in which decade?",
+     "answer": "1880s",
+     "options": [
+      "1880s",
+      "1920s",
+      "1950s",
+      "1970s"
+     ],
+     "explanation": "Nintendo started in Kyoto in 1889 making hanafuda playing cards, and did not release a video game until roughly eighty years later.",
+     "source_url": "https://en.wikipedia.org/wiki/History_of_Nintendo"
+    }
+   ]
+  },
+  {
+   "key": "thu-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Thu",
+   "format": "abc",
+   "language": "cs",
+   "date": "2026-11-05",
+   "files": [
+    "abc-cs-ff30fdb2.mp4",
+    "abc-cs-ff30fdb2.jpg"
+   ],
+   "caption": "Zhruba jaká část obyvatel Česka dnes bydlí v panelácích?\n\nKterá je správná? Odpověď je na konci.\n\n#kvíz #kviz #zajímavosti #vědomosti",
+   "youtube": null,
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "ff30fdb2-2f8f-4df5-929c-9a837e4c0895",
+     "category": "general",
+     "question": "Zhruba jaká část obyvatel Česka dnes bydlí v panelácích?",
+     "answer": "Asi třetina",
+     "options": [
+      "Asi desetina",
+      "Asi třetina",
+      "Asi polovina",
+      "Asi dvě třetiny"
+     ],
+     "explanation": "V panelových domech žijí asi tři miliony lidí, tedy zhruba každý třetí Čech. Panelák tak není okrajová kulisa. Je to nejběžnější domov v zemi.",
+     "source_url": "https://tn.nova.cz/zpravodajstvi/clanek/353634-tretina-cechu-bydli-v-panelaku-vite-ktere-jsou-ty-nejzajimavejsi"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_en",
+   "account": "ig_en",
+   "day": "Fri",
+   "format": "round",
+   "language": "en",
+   "size": 5,
+   "date": "2026-11-06",
+   "files": [
+    "round-en-0e749807.mp4",
+    "round-en-0e749807.jpg"
+   ],
+   "caption": "Can you get 5 out of 5?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts",
+   "youtube": {
+    "title": "Can you get 5 out of 5? Astronauts looking at the Sun from orbit, above Earth's atmosphere, see…",
+    "description": "Can you get 5 out of 5?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Coming soon to the App Store, link in bio.\n\n#trivia #quiz #science #funfacts"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "0e749807-09b4-4401-a97d-6c6a49b51622",
+     "category": "science-nature",
+     "question": "Astronauts looking at the Sun from orbit, above Earth's atmosphere, see it as what colour?",
+     "answer": "White",
+     "options": [],
+     "explanation": "The Sun radiates all visible wavelengths roughly equally, which our eyes read as white. Down on the ground, the atmosphere scatters away some of the blue light, leaving the yellowish tint we grew up drawing.",
+     "source_url": "https://www.spacecentre.nz/resources/faq/solar-system/sun/colour.html"
+    },
+    {
+     "id": "0843fba6-416c-47ec-8a4a-03c1014de63a",
+     "category": "general",
+     "question": "When you bang your 'funny bone', the tingling shoots down into your hand. Which finger usually feels it most?",
+     "answer": "Little finger",
+     "options": [],
+     "explanation": "The funny bone isn't a bone at all. It's the ulnar nerve, lying almost bare at the elbow, and that nerve supplies your little finger and half of your ring finger.",
+     "source_url": "https://assh.org/handcare/blog/what-is-the-funny-bone"
+    },
+    {
+     "id": "db96b047-8d5b-4332-95b3-fbfc50914428",
+     "category": "entertainment",
+     "question": "The 2026 Ig Nobel Prize in Chemistry honoured a study of a milk whose proteins pack about three times the energy of cow's milk proteins. It isn't produced by a mammal but by an insect. Which kind?",
+     "answer": "A cockroach",
+     "options": [],
+     "explanation": "The Pacific beetle cockroach gives birth to live young and feeds them a crystalline 'milk'. The Ig Nobels reward research that first makes you laugh, then makes you think.",
+     "source_url": "https://www.bio.purdue.edu/news/articles/2026/cockroach-milk-research-earns-2026-ig-nobel-prize-in-chemistry.html"
+    },
+    {
+     "id": "51db3704-0de3-45dd-8880-f6eb21f20cfd",
+     "category": "general",
+     "question": "The sticky notes covering office monitors exist because a chemist at the company 3M failed at making what?",
+     "answer": "A super-strong glue",
+     "options": [],
+     "explanation": "Spencer Silver was trying to make an extra-strong adhesive and ended up with one so weak it could be peeled off and stuck back again. It sat unused for years until a colleague wanted bookmarks that wouldn't fall out of his hymn book.",
+     "source_url": "https://en.wikipedia.org/wiki/Spencer_Silver"
+    },
+    {
+     "id": "f600af54-aff6-42fc-acbe-97c4e274a546",
+     "category": "entertainment",
+     "question": "When Mario first appeared in the 1981 arcade game Donkey Kong, he was given a cap and a big bushy moustache instead of visible hair and a mouth. Why?",
+     "answer": "Too few pixels to draw hair, mouth",
+     "options": [],
+     "explanation": "Early arcade screens showed characters with only a handful of pixels in a few colours. Hair was hard to draw and animate convincingly at that size, so Mario got a cap. A mouth was nearly impossible to show, so a thick moustache covered the face area and made it readable as a nose and face. The same thinking gave him overalls in a contrasting colour, so his arm movements stood out. Technical limits, not fashion, shaped one of the most recognisable faces in entertainment.",
+     "source_url": "https://en.wikipedia.org/wiki/Mario"
+    }
+   ]
+  },
+  {
+   "key": "fri-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Fri",
+   "format": "round",
+   "language": "sk",
+   "size": 5,
+   "date": "2026-11-06",
+   "files": [
+    "round-sk-53557889.mp4",
+    "round-sk-53557889.jpg"
+   ],
+   "caption": "Trafíš všetkých päť?\n\nKoľko máš správne?\n\n#kvíz #kviz #zaujímavosti #jedlo",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "53557889-a301-4a26-9459-a96f9f25fccd",
+     "category": "general",
+     "question": "Keď si na Slovensku pri prípitku štrngáte pohármi, kam sa podľa zvyku musíte pozerať?",
+     "answer": "Do očí",
+     "options": [],
+     "explanation": "Kto pri štrngnutí uhne pohľadom, tomu podľa známej povery hrozí sedem rokov smoly v intímnom živote. Preto sa aj pri veľkej oslave oplatí pozrieť do očí každému zvlášť.",
+     "source_url": "https://spectator.sme.sk/politics-and-society/c/six-useful-tips-for-restaurants-in-slovakia"
+    },
+    {
+     "id": "a478114b-8659-449c-8785-c4154d4f92be",
+     "category": "food-everyday",
+     "question": "Fašiangy sa na Slovensku tradične končia žartovným pohrebom jedného hudobného nástroja. Ktorého?",
+     "answer": "Basa",
+     "options": [],
+     "explanation": "Pochovávanie basy symbolizuje koniec zábavy a hudby, lebo cez pôst sa až do Veľkej noci netancovalo.",
+     "source_url": "https://www.teraz.sk/trenciansky-kraj/top-v-porube-pochovali-basu-na-obrade-ne/308505-clanok.html"
+    },
+    {
+     "id": "e03bb006-1542-4924-aabb-fb58b337c136",
+     "category": "entertainment",
+     "question": "Britská miniséria Adolescence z Netflixu získala v septembri 2025 osem cien Emmy. Každá z jej štyroch približne hodinových epizód bola nakrútená technicky mimoriadne náročným spôsobom. Akým?",
+     "answer": "Na jeden záber",
+     "options": [],
+     "explanation": "Kamera sa počas celej epizódy ani raz nevypla, takže herci hrali hodinu bez prerušenia. Pätnásťročný Owen Cooper sa pri tom stal najmladším hercom, ktorý získal Emmy za herecký výkon.",
+     "source_url": "https://www.panavision.com/highlights/highlights-detail/lighting-the-episode-long-single-takes-of-adolescence"
+    },
+    {
+     "id": "551a291c-54d1-4f65-a749-a07ec447749f",
+     "category": "general",
+     "question": "Znak @ v e-mailovej adrese voláme zavináč, lebo pripomína stočenú marinovanú rybu. Ktorú morskú rybu?",
+     "answer": "sleď",
+     "options": [],
+     "explanation": "Zavináč je zrolovaný filet zo sleďa, často s cibuľkou a uhorkou vnútri. Takže zakaždým, keď píšete e-mail, píšete aj malú rybu.",
+     "source_url": "https://benjamincongdon.me/blog/2020/08/23/Zavin%C3%A1%C4%8D-an-Onomatological-Adventure/"
+    },
+    {
+     "id": "041eb080-6694-4956-8ddc-37be0c599497",
+     "category": "entertainment",
+     "question": "V komédii Sám doma Kevin odplaší doručovateľa pizze aj zlodejov ukážkou zo starého čiernobieleho gangsterského filmu Angels with Filthy Souls. Čo je na tomto filme prekvapivé?",
+     "answer": "V skutočnosti neexistuje",
+     "options": [],
+     "explanation": "Gangsterku natočili len pre Sám doma ako paródiu na staré filmy. Ako celý film nikdy nevznikla.",
+     "source_url": "https://www.snopes.com/fact-check/home-alone-fake-movie/"
+    }
+   ]
+  },
+  {
+   "key": "sat-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-11-07",
+   "files": [
+    "carousel-en-p4-0-cover.jpg",
+    "carousel-en-p4-1.jpg",
+    "carousel-en-p4-2.jpg",
+    "carousel-en-p4-3.jpg",
+    "carousel-en-p4-4.jpg",
+    "carousel-en-p4-5.jpg",
+    "carousel-en-p4-6.jpg",
+    "carousel-en-p4-7.jpg",
+    "carousel-en-p4-8-answers.jpg",
+    "carousel-en-p4-9-answers.jpg"
+   ],
+   "caption": "Road trip round, part 4.\n\nHow many did you get right?\n\n#trivia #quiz #popculture #funfacts #roadtrip",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "eff998ec-f106-45c0-a83c-3408861bf667",
+     "category": "entertainment",
+     "question": "In October 2025 one of the major streaming services dropped the plus sign from its name. Which service was it?",
+     "answer": "Apple TV+",
+     "options": [],
+     "explanation": "Apple TV+ became plain Apple TV, the same name as the company's set-top box and app. Disney+ and Paramount+ kept their plus signs.",
+     "source_url": "https://tech.yahoo.com/streaming/articles/why-apple-tv-changed-name-033858890.html"
+    },
+    {
+     "id": "ee2de8d2-19d2-4a6c-be6f-cf183560d316",
+     "category": "general",
+     "question": "The English word 'plumber' comes from the Latin name of a metal, because Roman water pipes were made of it. Which metal?",
+     "answer": "Lead",
+     "options": [],
+     "explanation": "The Latin word for lead is 'plumbum', which is why lead's chemical symbol is Pb. So a plumber is, quite literally, a 'lead worker', and a 'plumb line' got its name from its lead weight.",
+     "source_url": "https://www.etymonline.com/index.php?term=plumb"
+    },
+    {
+     "id": "b28580ef-0d5a-4402-8ef9-d8c78d20699f",
+     "category": "general",
+     "question": "Long before pumpkins, people in Ireland and Scotland carved Halloween lanterns out of a different vegetable. Which one?",
+     "answer": "Turnip",
+     "options": [],
+     "explanation": "Hollowed-out turnips with scary faces were the first jack-o'-lanterns. Irish and Scottish emigrants in America switched to pumpkins because they were bigger and far easier to carve.",
+     "source_url": "https://en.wikipedia.org/wiki/Jack-o'-lantern"
+    },
+    {
+     "id": "c12c3b29-493c-49c6-86ea-a635626bf75d",
+     "category": "geography-world",
+     "question": "You drive west from Spain across the border into Portugal. What should you do to your watch?",
+     "answer": "Set it back one hour",
+     "options": [],
+     "explanation": "Spain runs on the same clock as Berlin and Paris even though it lies as far west as Portugal and Britain. Spain switched to that time zone in 1940 and never switched back.",
+     "source_url": "https://www.thelocal.es/20260326/when-do-the-clocks-change-next-in-spain-in-2026"
+    },
+    {
+     "id": "87945219-e3b1-4b97-afa2-f3fd5ff8d296",
+     "category": "food-everyday",
+     "question": "If you swap the ham in eggs Benedict for spinach, the dish takes its name from which Italian city?",
+     "answer": "Florence",
+     "options": [],
+     "explanation": "It becomes eggs Florentine. In classic French cooking, 'à la florentine' has long meant 'served with spinach', a nod to Florence.",
+     "source_url": "https://en.wikipedia.org/wiki/Eggs_Benedict"
+    },
+    {
+     "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+     "category": "science-nature",
+     "question": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?",
+     "answer": "Three",
+     "options": [],
+     "explanation": "Two hearts push blood through the gills while a third serves the rest of the body — and that main heart actually stops beating when the octopus swims, which is why it usually prefers to crawl.",
+     "source_url": "https://en.wikipedia.org/wiki/Octopus"
+    },
+    {
+     "id": "5b876950-2cdb-4035-a600-3587cdc9be8f",
+     "category": "food-everyday",
+     "question": "In the office kitchen fridge, which spot is usually the warmest, making it the worst place to keep the shared milk?",
+     "answer": "The door",
+     "options": [],
+     "explanation": "Every time a colleague opens the fridge, the door shelves get a blast of warm room air, so they swing up and down in temperature far more than the back of the fridge. The coldest, most stable spot for milk is usually at the back of a lower shelf.",
+     "source_url": "https://www.tastingtable.com/1929505/warmest-spot-in-fridge-door/"
+    }
+   ]
+  },
+  {
+   "key": "sat-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "sk",
+   "date": "2026-11-07",
+   "files": [
+    "carousel-sk-p2-0-cover.jpg",
+    "carousel-sk-p2-1.jpg",
+    "carousel-sk-p2-2.jpg",
+    "carousel-sk-p2-3.jpg",
+    "carousel-sk-p2-4.jpg",
+    "carousel-sk-p2-5.jpg",
+    "carousel-sk-p2-6.jpg",
+    "carousel-sk-p2-7.jpg",
+    "carousel-sk-p2-8-answers.jpg",
+    "carousel-sk-p2-9-answers.jpg"
+   ],
+   "caption": "Kvíz na cestu, 2. diel.\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Čoskoro v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #jedlo #naceste",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "db8aa518-1282-47fc-9580-f777b109e342",
+     "category": "general",
+     "question": "Krabie tyčinky kúpite takmer v každých potravinách. Z akého morského živočícha sa v skutočnosti vyrábajú?",
+     "answer": "z ryby",
+     "options": [],
+     "explanation": "Vyrábajú sa zo surimi, čo je rozmixované mäso bielej ryby, najčastejšie tresky aljašskej. Krab v nich býva iba v názve a v aróme.",
+     "source_url": "https://en.wikipedia.org/wiki/Surimi"
+    },
+    {
+     "id": "27c4174b-6f3f-4fc8-bcb4-1538aae082e8",
+     "category": "general",
+     "question": "Pod nápisom Amazon na krabiciach je oranžová šípka, ktorá vyzerá ako úsmev. Od ktorého písmena po ktoré v názve vedie?",
+     "answer": "od A po Z",
+     "options": [],
+     "explanation": "Šípka vedie od A po Z, lebo Amazon chce predávať všetko od A po Z. Pritom začínal ako obyčajné internetové kníhkupectvo.",
+     "source_url": "https://turnerduckworth.com/work/amazon"
+    },
+    {
+     "id": "957e46a3-1683-4f28-962a-3fb0a9e5c625",
+     "category": "food-everyday",
+     "question": "Názov čokolády Milka vznikol spojením dvoch nemeckých slov, ktoré označujú jej hlavné suroviny. Ktoré sú to suroviny?",
+     "answer": "Mlieko a kakao",
+     "options": [],
+     "explanation": "Milka vznikla z nemeckých slov „Milch“, čiže mlieko, a „Kakao“. Preto má vo svojom znaku kravičku, a nie kakaovník.",
+     "source_url": "https://en.wikipedia.org/wiki/Milka"
+    },
+    {
+     "id": "595683cf-089b-4918-a997-4b464f015e87",
+     "category": "food-everyday",
+     "question": "Na Slovensku si polievku pho dávame najčastejšie na obed. V ktorej časti dňa ju však tradične jedávajú vo Vietname?",
+     "answer": "Na raňajky",
+     "options": [],
+     "explanation": "Vo Vietname je pho klasické raňajkové jedlo. Pouličné stánky ho začínajú variť za úsvitu a do obeda je vývar často vypredaný.",
+     "source_url": "https://en.wikipedia.org/wiki/Pho"
+    },
+    {
+     "id": "426ac016-979c-4f54-91d9-2aa1134fe408",
+     "category": "entertainment",
+     "question": "Kapela Elán má známy hit o tanečnici zo slávneho slovenského folklórneho súboru. O ktorý súbor ide?",
+     "answer": "Lúčnica",
+     "options": [],
+     "explanation": "Pieseň Tanečnica z Lúčnice patrí medzi najznámejšie hity Elánu. Lúčnica je zas najslávnejší slovenský folklórny súbor, ktorý vystupoval po celom svete.",
+     "source_url": "https://lyricstranslate.com/en/el%C3%A1n-tane%C4%8Dnice-z-l%C3%BA%C4%8Dnice-lyrics.html"
+    },
+    {
+     "id": "535d75ef-1475-4bf3-8caa-6b4cb7e95749",
+     "category": "entertainment",
+     "question": "Ktoré chorvátske prímorské mesto hralo v seriáli Hra o tróny hlavné mesto Siedmich kráľovstiev?",
+     "answer": "Dubrovník",
+     "options": [],
+     "explanation": "Dubrovnícke hradby a schody sa stali Kráľovským prístavom. Vďaka seriálu sa toto mesto zaplnilo fanúšikmi až do takej miery, že muselo obmedziť počet turistov.",
+     "source_url": "https://gameofthrones.fandom.com/wiki/Filming_locations_(Game_of_Thrones)"
+    },
+    {
+     "id": "9e8ee79e-fcad-433f-958c-c0b8d84b7555",
+     "category": "sports",
+     "question": "Čo musí podľa známeho pokriku slovenských hokejových fanúšikov robiť každý, kto chce dokázať, že je Slovák?",
+     "answer": "Skákať",
+     "options": [],
+     "explanation": "Pokrik znie „Kto neskáče, nie je Slovák!“, a preto pri ňom poskakujú celé tribúny aj fanzóny, od štadióna až po námestia.",
+     "source_url": "https://forum.wordreference.com/threads/all-slavic-languages-he-who-isnt-jumping-isnt-supporter-of-a-team-nation.1831749/"
+    }
+   ]
+  },
+  {
+   "key": "sun-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-08",
+   "files": [
+    "round-en-4b346999.mp4",
+    "round-en-4b346999.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #popculture",
+   "youtube": {
+    "title": "Can you get 3 out of 3? The car brand Volvo is a real word in Latin. What does it mean?",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #popculture"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "4b346999-aae8-42be-901a-6f3445d8d458",
+     "category": "general",
+     "question": "The car brand Volvo is a real word in Latin. What does it mean?",
+     "answer": "I roll",
+     "options": [],
+     "explanation": "Volvo is Latin for 'I roll'. It's the same root as 'revolve', and the name first belonged to a ball-bearing company before it ended up on cars.",
+     "source_url": "https://www2020.theautochannel.com/news/2005/06/24/134657.html"
+    },
+    {
+     "id": "8232b84e-f94d-462e-874a-47c618670aae",
+     "category": "entertainment",
+     "question": "In the 2026 film Coyote vs. Acme, Wile E. Coyote finally stops blaming himself for decades of exploding gadgets and failed traps. What does he do to the company that sold them to him?",
+     "answer": "Sues it",
+     "options": [],
+     "explanation": "He hires a human lawyer and takes Acme to court for product liability. The finished film was shelved by its own studio, then rescued and released by another distributor.",
+     "source_url": "https://nerdtropolis.com/wile-e-coyote-acme-movie-trailer/"
+    },
+    {
+     "id": "e8075361-4551-4821-851d-e7087460d26b",
+     "category": "food-everyday",
+     "question": "The bacterium that gives sourdough bread its sour tang is officially named after which city?",
+     "answer": "San Francisco",
+     "options": [],
+     "explanation": "Scientists first identified it in San Francisco's famous sourdough and named it 'sanfranciscensis'. It turns up in sourdough starters all around the world.",
+     "source_url": "https://en.wikipedia.org/wiki/Fructilactobacillus_sanfranciscensis"
+    }
+   ]
+  },
+  {
+   "key": "sun-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "format": "round",
+   "language": "cs",
+   "size": 3,
+   "date": "2026-11-08",
+   "files": [
+    "round-cs-b56022d3.mp4",
+    "round-cs-b56022d3.jpg"
+   ],
+   "caption": "Trefíš všechny tři?\n\nKolik máš správně?\n\n#kvíz #kviz #sport #popkultura",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "b56022d3-145e-4459-9548-f6bc1a3fb2e4",
+     "category": "sports",
+     "question": "Jaromír Jágr hraje celou kariéru s číslem 68. Na kterou historickou událost tím odkazuje?",
+     "answer": "Okupace v roce 1968",
+     "options": [],
+     "explanation": "Číslo připomíná srpnovou invazi vojsk Varšavské smlouvy. Jágrův dědeček v témže roce zemřel ve vězení, kam se dostal jako sedlák odmítající kolektivizaci.",
+     "source_url": "https://en.wikipedia.org/wiki/Jaromír_Jágr"
+    },
+    {
+     "id": "5ac96e6d-8cd3-4ac2-ac72-339b7471e70c",
+     "category": "entertainment",
+     "question": "Písnička Jožin z bažin od Ivana Mládka vznikla v 70. letech, ale v roce 2008 se nečekaně stala virálním hitem v jedné sousední zemi, kde ji pak zpívaly davy na koncertech. Ve které?",
+     "answer": "Polsko",
+     "options": [],
+     "explanation": "Video se bleskově šířilo polským internetem a Mládek pak v Polsku vyprodával koncerty. Jožin tam dodnes patří k nejznámějším českým písničkám.",
+     "source_url": "https://en.wikipedia.org/wiki/Jo%C5%BEin_z_ba%C5%BEin"
+    },
+    {
+     "id": "67383641-7239-4d1b-a9b1-7f84ab66935b",
+     "category": "entertainment",
+     "question": "Plyšový Krteček se v roce 2011 vydal na šestnáctidenní výlet, na jaký se dostane jen málokterá hračka, a to stovky kilometrů nad Zemí. Kam se podíval?",
+     "answer": "Do vesmíru",
+     "options": [],
+     "explanation": "Vzal ho s sebou astronaut Andrew Feustel na raketoplánu Endeavour až na Mezinárodní vesmírnou stanici.",
+     "source_url": "https://iol.co.za/news/2011-03-23-space-the-final-frontier-for-little-mole/"
+    }
+   ]
+  }
+ ]
+}

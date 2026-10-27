@@ -9,6 +9,8 @@ Runs locally after the founder approved the batch on the approval page:
 - Each approved post's media is uploaded to the public `quiz-images` R2 bucket
   under `social/<week>/` (Instagram fetches media from a public URL), with the
   root `.env` R2_* credentials (run from the main checkout), the same as the image-question scripts.
+  `--wrangler` uploads with the Cloudflare CLI's own login instead (`wrangler login`,
+  CLOUDFLARE_ACCOUNT_ID set), for a machine whose `.env` R2 keys are stale.
 - The manifest `batches/<week>.json` gets per post: `status`, `publish_at`
   (UTC slot) and `media_urls`. Commit it through a PR; the scheduler
   (scripts/publish_due.py, GitHub Actions) publishes only `approved` posts.
@@ -16,6 +18,7 @@ Runs locally after the founder approved the batch on the approval page:
 
 import json
 import os
+import subprocess
 import sys
 from datetime import UTC, date, datetime, time
 from pathlib import Path
@@ -34,6 +37,47 @@ SLOTS = {
     "ig_skcz": (time(18, 0), ZoneInfo("Europe/Bratislava")),
 }
 TYPES = {".mp4": "video/mp4", ".jpg": "image/jpeg"}
+# The company account's public bucket (the W44 posts' media_urls); `--wrangler` only.
+WRANGLER_BUCKET = "quiz-images"
+WRANGLER_PUBLIC_URL = "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev"
+
+
+def boto3_uploader():
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=os.environ["R2_ENDPOINT"],
+        aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+        config=Config(signature_version="s3v4"),
+        region_name="auto",
+    )
+    bucket = os.environ["R2_BUCKET"]
+
+    def put(path: Path, key: str) -> None:
+        s3.upload_file(
+            str(path), bucket, key, ExtraArgs={"ContentType": TYPES[path.suffix]}
+        )
+
+    return put, os.environ["R2_PUBLIC_URL"].rstrip("/")
+
+
+def wrangler_put(path: Path, key: str) -> None:
+    subprocess.run(
+        [
+            "wrangler",
+            "r2",
+            "object",
+            "put",
+            f"{WRANGLER_BUCKET}/{key}",
+            "--file",
+            str(path),
+            "--content-type",
+            TYPES[path.suffix],
+            "--remote",
+        ],
+        check=True,
+        capture_output=True,
+    )
 
 
 def publish_at(post: dict) -> str:
@@ -44,7 +88,9 @@ def publish_at(post: dict) -> str:
     return local.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-def main(week: str, decisions_file: str, media_dir: Path) -> None:
+def main(
+    week: str, decisions_file: str, media_dir: Path, wrangler: bool = False
+) -> None:
     load_dotenv(find_dotenv(usecwd=True))  # root .env of the checkout you run it from
     manifest_file = APP_DIR / "batches" / f"{week}.json"
     manifest = json.loads(manifest_file.read_text())
@@ -52,16 +98,7 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
         d["key"]: d.get("status") for d in json.loads(Path(decisions_file).read_text())
     }
 
-    s3 = boto3.client(
-        "s3",
-        endpoint_url=os.environ["R2_ENDPOINT"],
-        aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
-        config=Config(signature_version="s3v4"),
-        region_name="auto",
-    )
-    bucket = os.environ["R2_BUCKET"]
-    base = os.environ["R2_PUBLIC_URL"].rstrip("/")
+    put, base = (wrangler_put, WRANGLER_PUBLIC_URL) if wrangler else boto3_uploader()
 
     for post in manifest["posts"]:
         if post.get("status") == "published":
@@ -77,12 +114,7 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
         urls = []
         for name in post["files"]:
             key = f"social/{week}/{name}"
-            s3.upload_file(
-                str(media_dir / name),
-                bucket,
-                key,
-                ExtraArgs={"ContentType": TYPES[Path(name).suffix]},
-            )
+            put(media_dir / name, key)
             urls.append(f"{base}/{key}")
         post["media_urls"] = urls
         print(f"✓ {post['key']}: {len(urls)} files, publishes {post['publish_at']}")
@@ -91,10 +123,12 @@ def main(week: str, decisions_file: str, media_dir: Path) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    use_wrangler = "--wrangler" in sys.argv
+    args = [a for a in sys.argv[1:] if a != "--wrangler"]
+    if len(args) < 2:
         sys.exit(
-            "usage: stage_week.py <week> <decisions.json> [media dir, default out/<week>]"
+            "usage: stage_week.py <week> <decisions.json> [media dir, default out/<week>] [--wrangler]"
         )
-    week = sys.argv[1]
-    media = Path(sys.argv[3]) if len(sys.argv) > 3 else APP_DIR / "out" / week
-    main(week, sys.argv[2], media)
+    week = args[0]
+    media = Path(args[2]) if len(args) > 2 else APP_DIR / "out" / week
+    main(week, args[1], media, use_wrangler)

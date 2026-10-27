@@ -50,7 +50,7 @@ The Instagram API (with Instagram Login, own Meta app, Standard Access) has no s
 
 ```sh
 # after the founder approved the week (decisions read with ArtifactData into a JSON list), from the main checkout:
-uv run --no-sync python apps/social-studio/scripts/stage_week.py 2026-W44 decisions.json [media dir]
+uv run --no-sync python apps/social-studio/scripts/stage_week.py 2026-W44 decisions.json [media dir]   # add --wrangler where .env R2 keys are stale (uses `wrangler login`)
 uv run --no-sync python apps/social-studio/scripts/ig_tokens.py   # refresh tokens, copy to GitHub secrets
 # commit batches/<week>.json through a PR before Monday
 ```

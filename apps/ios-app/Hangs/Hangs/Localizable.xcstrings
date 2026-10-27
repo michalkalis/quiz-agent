@@ -9289,7 +9289,7 @@
         }
       }
     },
-    "Your subscription just synced — please try again." : {
+    "Your subscription just synced. Please try again." : {
       "comment" : "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action",
       "localizations" : {
         "cs" : {

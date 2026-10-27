@@ -5,16 +5,15 @@
 // viewer is.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY} from './copy';
+import {COPY, opener} from './copy';
 import {AnswerReveal} from './AnswerReveal';
-import {Monkey} from './Monkey';
-import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, Logo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
+import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
 import {HOOK_SOLO_MS, roundTimeline} from './timing';
 import type {RoundItem, RoundProps} from './types';
 
 const Tally: React.FC<{n: number; of: number; color: string}> = ({n, of, color}) => (
-	<div style={{position: 'absolute', top: SAFE.top + 8, right: SAFE.right, display: 'flex', gap: 10, alignItems: 'center'}}>
+	<div style={{position: 'absolute', top: SAFE.top, left: SAFE.left, display: 'flex', gap: 10, alignItems: 'center'}}>
 		{Array.from({length: of}, (_, i) => (
 			<div key={i} style={{width: i === n ? 46 : 18, height: 18, borderRadius: 9, background: color, opacity: i <= n ? 1 : 0.35}} />
 		))}
@@ -64,9 +63,8 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 		return (
 			<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 				{audio}
-				<Logo color={tint.onBg} />
 				<Tally n={k} of={items.length} color={tint.onBg} />
-				<div style={{position: 'absolute', top: SAFE.top + 140, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom}}>
+				<div style={{position: 'absolute', top: SAFE.top + 90, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom}}>
 					<AnswerReveal key={k} q={it.q} number={k + 1} text={it.q.why} appear={enter(r.start, 16)} why={enter(r.whyStart, 20)} startFrame={f(r.start, fps)} />
 				</div>
 			</AbsoluteFill>
@@ -83,11 +81,10 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 	return (
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio}
-			<Logo color={tint.onBg} />
 			{now >= step.start ? <Tally n={i} of={items.length} color={tint.onBg} /> : null}
-			{solo ? <HookSolo text={hook} color={tint.onBg} endMs={step.start} /> : null}
+			{solo ? <HookSolo {...opener(item.q.language, items.length, 0)} color={tint.onBg} endMs={step.start} /> : null}
 			{now >= step.start ? (
-			<div style={{position: 'absolute', top: SAFE.top + 140, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 44}}>
+			<div style={{position: 'absolute', top: SAFE.top + 90, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 44}}>
 				{fused ? <HookLine text={hook} color={tint.onBg} grow={grow} /> : null}
 				<QuestionCard
 					q={item.q}
@@ -104,11 +101,6 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 				/>
 				{now >= step.cdStart ? <Countdown startFrame={f(step.cdStart, fps)} onBg={tint.onBg} note={COPY[item.q.language].answersAtEnd} seconds={t.countdownMs / 1000} /> : null}
 			</div>
-			) : null}
-			{now >= step.start && now < step.cdStart ? (
-				<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: i === 0 ? enter(step.start + 200) : 1}}>
-					<Monkey size={190} mood="idle" />
-				</div>
 			) : null}
 		</AbsoluteFill>
 	);

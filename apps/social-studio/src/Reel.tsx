@@ -5,11 +5,10 @@
 // one card: the answer read aloud and the whole explanation shown) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {hookFor} from './copy';
-import {Monkey} from './Monkey';
+import {hookFor, opener} from './copy';
 import {AnswerReveal} from './AnswerReveal';
 import {ExplainPhase} from './Explain';
-import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, Logo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
+import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, tintFor} from './theme';
 import {ANSWER_LEAD_MS, LEAD_MS, reelTimeline} from './timing';
 import type {ReelProps} from './types';
@@ -50,8 +49,6 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 
 			{!inEnd ? (
 				<>
-					<Logo color={tint.onBg} />
-
 					{/* Hook card before the question (v1) */}
 					{intro && now < qStart ? (
 						<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', padding: `0 ${SAFE.right}px 0 ${SAFE.left}px`}}>
@@ -72,14 +69,14 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 						</AbsoluteFill>
 					) : null}
 
-					{solo ? <HookSolo text={hookFor(q.language, hookIndex)} color={tint.onBg} endMs={qStart} /> : null}
+					{solo ? <HookSolo {...opener(q.language, null, hookIndex)} color={tint.onBg} endMs={qStart} /> : null}
 
 					{/* Question card, countdown, reveal */}
 					{now >= qStart ? (
 						<div
 							style={{
 								position: 'absolute',
-								top: SAFE.top + 140,
+								top: SAFE.top + 40,
 								left: SAFE.left,
 								right: SAFE.right - 50,
 								bottom: SAFE.bottom,
@@ -127,12 +124,6 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 						</div>
 					) : null}
 
-					{/* The monkey listens while the question is read, then sits in the countdown. */}
-					{now < cdStart && (!solo || now >= qStart) ? (
-						<div style={{position: 'absolute', right: SAFE.right + 10, bottom: SAFE.bottom - 40, opacity: enter(solo ? qStart + 200 : 200)}}>
-							<Monkey size={190} mood="idle" />
-						</div>
-					) : null}
 				</>
 			) : (
 				<EndCard q={q} appear={enter(endStart)} startFrame={f(endStart, fps)} />

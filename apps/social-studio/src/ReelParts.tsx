@@ -38,9 +38,9 @@ export const HookLine: React.FC<{text: string; color: string; grow: number}> = (
 
 /** The hook alone before the question (founder 2026-10-26: on its own it is
  * clear what the reel is about), big and centred in the safe area, gone at
- * `endMs`. The monkey and the label on top say what it is (founder 2026-10-27).
+ * `endMs`. The monkey and a line that names the quiz say what it is (founder 2026-10-27).
  * Fully drawn from frame 0: the first frame and the cover show it, not an empty fade. */
-export const HookSolo: React.FC<{line: string; kicker: string; color: string; endMs: number}> = ({line, kicker, color, endMs}) => {
+export const HookSolo: React.FC<{line: string; color: string; endMs: number}> = ({line, color, endMs}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const now = ms(frame, fps);
@@ -65,7 +65,6 @@ export const HookSolo: React.FC<{line: string; kicker: string; color: string; en
 			<div style={{width: 280, height: 280, borderRadius: 140, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 				<Monkey size={220} mood="happy" />
 			</div>
-			<div style={{fontSize: 44, fontWeight: 800, letterSpacing: 3, textTransform: 'uppercase', border: `5px solid ${color}`, borderRadius: 999, padding: '12px 32px', textAlign: 'center'}}>{kicker}</div>
 			<div style={{fontSize: 124, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center', textWrap: 'balance'}}>{line}</div>
 		</div>
 	);

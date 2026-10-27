@@ -19,10 +19,8 @@ type Copy = {
 	answersAtEnd: string;
 	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
 	roundHook: (n: number) => string;
-	/** Label above the opening line (founder 2026-10-27: the hook alone does not say what the reel is). */
-	quizLabel: (n: number) => string;
-	/** A round's opening line under that label. */
-	roundLine: string;
+	/** Opening line that says on its own what the reel is (founder 2026-10-27, variant A): `n` questions in a round, null = one question. */
+	openLine: (n: number | null) => string;
 };
 
 export const COPY: Record<Language, Copy> = {
@@ -39,8 +37,7 @@ export const COPY: Record<Language, Copy> = {
 		swipe: 'Swipe',
 		answersAtEnd: 'Answers at the end',
 		roundHook: (n) => `Can you get ${n} out of ${n}?`,
-		quizLabel: (n) => `Quiz · ${n} ${n === 1 ? 'question' : 'questions'}`,
-		roundLine: 'Can you get them all?',
+		openLine: (n) => (n === null ? 'One trivia question. Can you get it?' : `${n}\u00a0trivia questions. Can you get all ${n}?`),
 	},
 	sk: {
 		hooks: ['Stavím sa, že toto vieš.', 'Trafíš to?'],
@@ -54,8 +51,7 @@ export const COPY: Record<Language, Copy> = {
 		swipe: 'Posuň',
 		answersAtEnd: 'Odpovede na konci',
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
-		quizLabel: (n) => `Kvíz · ${n} ${n === 1 ? 'otázka' : n < 5 ? 'otázky' : 'otázok'}`,
-		roundLine: 'Trafíš všetky?',
+		openLine: (n) => (n === null ? 'Kvízová otázka. Trafíš ju?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázok'}. Trafíš všetky?`),
 	},
 	cs: {
 		hooks: ['Vsadím se, že tohle víš.', 'Trefíš to?'],
@@ -69,8 +65,7 @@ export const COPY: Record<Language, Copy> = {
 		swipe: 'Posuň',
 		answersAtEnd: 'Odpovědi na konci',
 		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
-		quizLabel: (n) => `Kvíz · ${n} ${n === 1 ? 'otázka' : n < 5 ? 'otázky' : 'otázek'}`,
-		roundLine: 'Trefíš všechny?',
+		openLine: (n) => (n === null ? 'Kvízová otázka. Trefíš ji?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázek'}. Trefíš všechny?`),
 	},
 };
 
@@ -79,9 +74,3 @@ export const hookFor = (language: Language, index: number) => {
 	return hooks[((index % hooks.length) + hooks.length) % hooks.length];
 };
 
-
-/** Opening screen: label + line; `n` = questions in a round, null = a one-question reel. */
-export const opener = (language: Language, n: number | null, hookIndex: number) => ({
-	kicker: COPY[language].quizLabel(n ?? 1),
-	line: n === null ? hookFor(language, hookIndex) : COPY[language].roundLine,
-});

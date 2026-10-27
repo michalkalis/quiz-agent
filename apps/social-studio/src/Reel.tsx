@@ -5,7 +5,7 @@
 // one card: the answer read aloud and the whole explanation shown) → end card.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {hookFor, opener} from './copy';
+import {COPY, hookFor} from './copy';
 import {AnswerReveal} from './AnswerReveal';
 import {ExplainPhase} from './Explain';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
@@ -69,7 +69,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 						</AbsoluteFill>
 					) : null}
 
-					{solo ? <HookSolo {...opener(q.language, null, hookIndex)} color={tint.onBg} endMs={qStart} /> : null}
+					{solo ? <HookSolo line={COPY[q.language].openLine(null)} color={tint.onBg} endMs={qStart} /> : null}
 
 					{/* Question card, countdown, reveal */}
 					{now >= qStart ? (

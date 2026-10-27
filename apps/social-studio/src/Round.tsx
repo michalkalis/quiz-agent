@@ -5,7 +5,7 @@
 // viewer is.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {COPY, opener} from './copy';
+import {COPY} from './copy';
 import {AnswerReveal} from './AnswerReveal';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
@@ -82,7 +82,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio}
 			{now >= step.start ? <Tally n={i} of={items.length} color={tint.onBg} /> : null}
-			{solo ? <HookSolo {...opener(item.q.language, items.length, 0)} color={tint.onBg} endMs={step.start} /> : null}
+			{solo ? <HookSolo line={COPY[item.q.language].openLine(items.length)} color={tint.onBg} endMs={step.start} /> : null}
 			{now >= step.start ? (
 			<div style={{position: 'absolute', top: SAFE.top + 90, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 44}}>
 				{fused ? <HookLine text={hook} color={tint.onBg} grow={grow} /> : null}

@@ -38,13 +38,13 @@ export const HookLine: React.FC<{text: string; color: string; grow: number}> = (
 
 /** The hook alone before the question (founder 2026-10-26: on its own it is
  * clear what the reel is about), big and centred in the safe area, gone at
- * `endMs`. The monkey and the label on top say what it is (founder 2026-10-27). */
+ * `endMs`. The monkey and the label on top say what it is (founder 2026-10-27).
+ * Fully drawn from frame 0: the first frame and the cover show it, not an empty fade. */
 export const HookSolo: React.FC<{line: string; kicker: string; color: string; endMs: number}> = ({line, kicker, color, endMs}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const now = ms(frame, fps);
 	if (now >= endMs) return null;
-	const enter = spring({frame, fps, config: {damping: 16, mass: 0.7}});
 	const out = interpolate(now, [endMs - 250, endMs], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
 	return (
 		<div
@@ -58,8 +58,8 @@ export const HookSolo: React.FC<{line: string; kicker: string; color: string; en
 				alignItems: 'center',
 				gap: 40,
 				color,
-				opacity: enter * out,
-				transform: `translateY(-50%) scale(${0.9 + 0.1 * enter})`,
+				opacity: out,
+				transform: 'translateY(-50%)',
 			}}
 		>
 			<div style={{width: 280, height: 280, borderRadius: 140, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>

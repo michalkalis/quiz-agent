@@ -39,7 +39,7 @@ const CATEGORY_TAG: Record<string, Record<Language, string>> = {
 	entertainment: {en: '#popculture', sk: '#popkultúra', cs: '#popkultura'},
 	'movies-music': {en: '#movies', sk: '#filmy', cs: '#filmy'},
 	'science-nature': {en: '#science', sk: '#veda', cs: '#věda'},
-	'geography-world': {en: '#geography', sk: '#cestovanie', cs: '#cestování'},
+	'geography-world': {en: '#geography', sk: '#zemepis', cs: '#zeměpis'},
 	history: {en: '#history', sk: '#história', cs: '#historie'},
 	sports: {en: '#sports', sk: '#šport', cs: '#sport'},
 	'food-everyday': {en: '#food', sk: '#jedlo', cs: '#jídlo'},
@@ -52,8 +52,8 @@ export function hashtags(language: Language, categories: string[], format: PostF
 		const t = CATEGORY_TAG[c]?.[language];
 		if (t && !tags.includes(t) && tags.length < 4) tags.push(t);
 	}
-	if (format === 'carousel') tags.push(language === 'en' ? '#roadtrip' : language === 'sk' ? '#naceste' : '#nacestu');
-	else if (tags.length < 4) tags.push(language === 'en' ? '#didyouknow' : language === 'sk' ? '#vedomosti' : '#vědomosti');
+	const generic = language === 'en' ? '#didyouknow' : language === 'sk' ? '#vedomosti' : '#vědomosti';
+	if (!tags.includes(generic) && (format === 'carousel' || tags.length < 4)) tags.push(generic);
 	return tags.slice(0, 5);
 }
 

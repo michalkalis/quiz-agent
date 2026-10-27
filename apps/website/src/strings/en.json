@@ -1,5 +1,5 @@
 {
-  "meta.title": "Trubbo: the quiz that hosts itself",
+  "meta.title": "Trubbo: the quiz that reads aloud and hears your answers",
   "meta.description": "Trubbo is a trivia quiz for iPhone. It reads every question aloud and you answer out loud. In English, Slovak and Czech.",
   "meta.locale": "en_US",
   "nav.lang": "Language",
@@ -9,8 +9,8 @@
   "cta.short": "Join the beta",
   "cta.beta": "Join the public beta",
   "cta.note": "Free on iPhone, through TestFlight",
-  "hero.title": "A quiz where nobody has to be the host.",
-  "hero.lead": "Trubbo reads the questions aloud and listens for your answers. Here is how a quiz goes.",
+  "hero.title": "A quiz that reads you the questions and listens to your answers.",
+  "hero.lead": "You answer in your own words. Here is how a quiz goes.",
   "s0.n": "Before you start",
   "s0.title": "Pick categories and a language.",
   "s0.body": "History, sports, science, food and more. Play in English, Slovak or Czech, and set an age level so kids can play along.",

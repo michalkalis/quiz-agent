@@ -1,5 +1,5 @@
 {
-  "meta.title": "Trubbo: kvíz, který moderuje sám",
+  "meta.title": "Trubbo: kvíz, který ti čte otázky a poslouchá odpovědi",
   "meta.description": "Trubbo je vědomostní kvíz pro iPhone. Otázky ti přečte nahlas a ty odpovídáš hlasem. Česky, slovensky i anglicky.",
   "meta.locale": "cs_CZ",
   "nav.lang": "Jazyk",
@@ -9,8 +9,8 @@
   "cta.short": "Vyzkoušej betu",
   "cta.beta": "Přidej se k veřejné betě",
   "cta.note": "Zdarma na iPhonu přes TestFlight",
-  "hero.title": "Kvíz, u kterého nikdo nemusí dělat moderátora.",
-  "hero.lead": "Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Takhle probíhá kvíz.",
+  "hero.title": "Kvíz, který ti čte otázky a poslouchá tvoje odpovědi.",
+  "hero.lead": "Odpovídáš vlastními slovy. Takhle probíhá kvíz.",
   "s0.n": "Před začátkem",
   "s0.title": "Vyber kategorie a jazyk.",
   "s0.body": "Historie, sport, věda, jídlo a další. Hraj česky, slovensky nebo anglicky a nastav věk hráčů, aby se mohly zapojit i děti.",

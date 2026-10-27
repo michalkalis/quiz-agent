@@ -29,7 +29,7 @@ from dotenv import find_dotenv, load_dotenv
 API = "https://api.buffer.com"
 BATCH_DIR = Path(__file__).resolve().parent.parent / "batches"
 # TikTok handle connected in Buffer, per Instagram account of the manifest.
-CHANNELS = {"ig_en": "trubboapp"}
+CHANNELS = {"ig_en": "trubboapp", "ig_skcz": "trubboskcz"}
 
 
 def gql(query: str, variables: dict | None = None) -> dict:

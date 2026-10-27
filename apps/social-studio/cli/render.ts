@@ -38,6 +38,8 @@ const {values, positionals} = parseArgs({
 		explain: {type: 'string', default: 'card'},
 	},
 });
+/** Cover = the opening screen (monkey, label, line; founder 2026-10-27), the profile grid's thumbnail. */
+const SOLO_COVER_MS = 900;
 const OUT = path.resolve(values.out ?? path.join(APP_DIR, 'out'));
 const LANG = values.lang as Language | undefined;
 
@@ -230,7 +232,7 @@ async function main() {
 			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
 			props.opening === 'solo' ? HOOK_SOLO_MS : 0,
 		);
-		let coverMs = timeline.steps[0].cdStart - 200;
+		let coverMs = props.opening === 'solo' ? SOLO_COVER_MS : timeline.steps[0].cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;
 		jobs.push({composition: 'Round', props, name: `round-${qs[0].language}-${slug(qs[0].id)}`, coverMs});
 		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, ${items.length} questions`);
@@ -266,7 +268,7 @@ async function main() {
 		const timeline = reelTimeline(style, props.questionMs + lead, props.explain.ms, props.answer.ms, props.q.explanation.length);
 		// Cover = the question fully on screen, just before the countdown,
 		// nudged back if the monkey happens to blink on that frame.
-		let coverMs = timeline.cdStart - 200;
+		let coverMs = style.opening === 'solo' ? SOLO_COVER_MS : timeline.cdStart - 200;
 		while (eyeOpenAt(coverMs / 1000) < 1) coverMs -= 100;
 		jobs.push({
 			composition: format === 'abc' ? 'ABC' : 'FiveSeconds',

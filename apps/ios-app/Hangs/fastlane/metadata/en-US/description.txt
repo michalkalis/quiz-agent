@@ -1,4 +1,4 @@
-Trubbo is a trivia quiz you play with your voice. It reads each question aloud, you answer out loud in your own words, and you hear right away whether you got it. Questions are read aloud, so everyone around hears them and anyone can answer, for example at home with friends, with the kids or on a road trip.
+Trubbo is a trivia quiz you play with your voice. It reads each question aloud, you answer out loud in your own words, and you hear right away whether you got it. Everyone around hears the questions, so anyone can answer, for example at home with friends, with the kids or on a road trip.
 
 HOW IT WORKS
 • A natural voice reads every question

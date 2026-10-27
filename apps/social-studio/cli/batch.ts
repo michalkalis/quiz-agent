@@ -17,7 +17,7 @@
 // rendered (and captioned) again, as a new version for the approval page.
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {COPY} from '../src/copy';
@@ -271,7 +271,15 @@ function pick(cands: Candidate[]): Pick[] {
 	);
 }
 
-const row = (id: string): QuestionInput => JSON.parse(readFileSync(path.join(CACHE_DIR, 'rows', `${id}.native.json`), 'utf8'));
+/** The row render.ts cached for this question: plain, or with its answer clip (`.a<N>`); the question fields are the same. */
+const row = (id: string): QuestionInput => {
+	const dir = path.join(CACHE_DIR, 'rows');
+	const [file] = readdirSync(dir)
+		.filter((f) => f === `${id}.native.json` || (f.startsWith(`${id}.native.a`) && f.endsWith('.json')))
+		.sort((x, y) => statSync(path.join(dir, y)).mtimeMs - statSync(path.join(dir, x)).mtimeMs);
+	if (!file) throw new Error(`${id}: no cached row (render.ts writes one)`);
+	return JSON.parse(readFileSync(path.join(dir, file), 'utf8'));
+};
 
 function render(args: string[]): string[] {
 	const out = execFileSync('npx', ['tsx', path.join(APP_DIR, 'cli', 'render.ts'), ...args], {cwd: APP_DIR, stdio: ['ignore', 'pipe', 'inherit']}).toString();

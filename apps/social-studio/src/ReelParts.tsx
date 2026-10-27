@@ -65,7 +65,14 @@ export const HookSolo: React.FC<{line: string; color: string; endMs: number}> = 
 			<div style={{width: 280, height: 280, borderRadius: 140, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 				<Monkey size={220} mood="happy" />
 			</div>
-			<div style={{fontSize: 124, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center', textWrap: 'balance'}}>{line}</div>
+			{/* Each sentence starts its own line, so balancing never splits the question across them. */}
+			<div style={{fontSize: 124, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center'}}>
+				{line.split(/(?<=[.?!])\s+/).map((part) => (
+					<div key={part} style={{textWrap: 'balance'}}>
+						{part}
+					</div>
+				))}
+			</div>
 		</div>
 	);
 };

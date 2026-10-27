@@ -46,6 +46,10 @@ export const HookSolo: React.FC<{line: string; color: string; endMs: number}> = 
 	const now = ms(frame, fps);
 	if (now >= endMs) return null;
 	const out = interpolate(now, [endMs - 250, endMs], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+	// Each sentence on its own line, so balancing never splits the question; one
+	// size for all, shrunk (not below 100) until the longest sentence fits one line.
+	const sentences = line.split(/(?<=[.?!])\s+/);
+	const size = Math.min(...sentences.map((s) => fitWhy(s, {width: 1080 - SAFE.left - (SAFE.right - 50), maxLines: 1, size: 124, minSize: 100, weight: 800}).size));
 	return (
 		<div
 			style={{
@@ -65,9 +69,8 @@ export const HookSolo: React.FC<{line: string; color: string; endMs: number}> = 
 			<div style={{width: 280, height: 280, borderRadius: 140, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 				<Monkey size={220} mood="happy" />
 			</div>
-			{/* Each sentence starts its own line, so balancing never splits the question across them. */}
-			<div style={{fontSize: 124, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center'}}>
-				{line.split(/(?<=[.?!])\s+/).map((part) => (
+			<div style={{fontSize: size, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2.5, textAlign: 'center'}}>
+				{sentences.map((part) => (
 					<div key={part} style={{textWrap: 'balance'}}>
 						{part}
 					</div>

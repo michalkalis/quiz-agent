@@ -138,4 +138,4 @@ async def test_a_finished_challenge_comes_back_as_its_result(client, app):
     assert body["session"] is None
     assert body["state"]["status"] == "played"
     assert body["state"]["summary"]["score"] == 5
-    assert body["state"]["summary"]["comparison"] == "You're first today."
+    assert body["state"]["summary"]["comparison"] == "Nobody played before you today."

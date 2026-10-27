@@ -40,7 +40,7 @@ class DailySummary(BaseModel):
     players: int = Field(description="Players who finished today, the player included")
     comparison: Optional[str] = Field(
         default=None,
-        description="'Dnes si prvý.', the rank (top half only) or 'Ťažká výzva.'",
+        description="'Dnes nikto nehral pred tebou.', the rank (top half only) or 'Ťažká výzva.'",
     )
     rank: Optional[str] = Field(
         default=None, description="The rank line, only in the top half (for sharing)"

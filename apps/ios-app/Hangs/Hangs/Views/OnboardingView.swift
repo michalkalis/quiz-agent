@@ -70,7 +70,7 @@ struct OnboardingView: View {
 
     private var featuresPage: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-            textBlock(title: "HANDS-FREE", text: "Perfect for driving, cooking, or walking.")
+            textBlock(title: "VOICE CONTROL")
                 .padding(.top, Theme.Hangs.Spacing.md)
 
             featuresCard
@@ -84,7 +84,7 @@ struct OnboardingView: View {
     private var permissionPage: some View {
         illustratedPage(
             title: "MIC ACCESS",
-            text: "Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback."
+            text: "Trubbo needs microphone access to hear your answers. You can also type them."
         ) {
             illustrationCard(categoryId: "movies-music") { style in
                 glyphDisc(systemName: "mic.fill", glyph: style.fill, disc: Theme.Hangs.Category.chipFill)
@@ -165,17 +165,19 @@ struct OnboardingView: View {
         }
     }
 
-    private func textBlock(title: LocalizedStringKey, text: LocalizedStringKey) -> some View {
+    private func textBlock(title: LocalizedStringKey, text: LocalizedStringKey? = nil) -> some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
             Text(title)
                 .font(.hangsDisplaySM)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
-            Text(text)
-                .font(.hangsBodyLG)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
-                .fixedSize(horizontal: false, vertical: true)
+            if let text {
+                Text(text)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -342,9 +344,9 @@ private struct OnboardingFeature {
     // grammar — the founder's discoverability gap. Buttons remain the fallback.
     static let all: [OnboardingFeature] = [
         .init(icon: "mic.fill", categoryId: "geography-world", title: #"Say "start""#, description: #"Say "start" after a question, or tap Answer, to begin answering."#),
-        .init(icon: "checklist", categoryId: "science-nature", title: "Five simple words", description: "start · ok · next · repeat · skip. That's the whole command set."),
+        .init(icon: "checklist", categoryId: "science-nature", title: "Five simple words", description: "start · ok · next · repeat · skip. That's all you need."),
         .init(icon: "globe", categoryId: "sports", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
-        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work", description: "Every command also has an on-screen button. Voice is optional."),
+        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work", description: "Every command also has an on-screen button. You don't have to use your voice."),
     ]
 }
 

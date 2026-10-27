@@ -1,4 +1,4 @@
-Trubbo je vedomostný kvíz, ktorý hráš hlasom. Otázku ti prečíta, odpovieš nahlas vlastnými slovami a hneď vieš, či máš pravdu. Netreba ťukať ani čítať, takže ho môžeš hrať s priateľmi, s deťmi, pri varení aj na cestách.
+Trubbo je vedomostný kvíz, ktorý hráš hlasom. Otázku ti prečíta, odpovieš nahlas vlastnými slovami a hneď vieš, či máš pravdu. Netreba ťukať ani čítať.
 
 AKO TO FUNGUJE
 • Každú otázku číta prirodzený hlas

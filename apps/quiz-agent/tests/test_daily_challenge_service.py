@@ -141,7 +141,7 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     )
 
     alone = await svc.state("p1", "en", DAY)
-    assert alone.summary.comparison == "You're first today."
+    assert alone.summary.comparison == "Nobody played before you today."
     assert alone.summary.best_hit is None  # no crowd yet, nothing to compare
     assert alone.summary.marks == [True, True, False, True, True]
 

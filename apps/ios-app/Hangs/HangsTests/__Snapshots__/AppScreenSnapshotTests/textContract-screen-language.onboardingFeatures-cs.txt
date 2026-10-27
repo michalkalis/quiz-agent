@@ -1,25 +1,23 @@
 # texts
 trubbo
-BEZ RUKOU
-Ideální do auta, do kuchyně i na procházku.
+OVLÁDEJ HLASEM
 Řekni „start“
 Po otázce řekni „start“ nebo klepni na tlačítko Odpověz a začni odpovídat.
 Pět jednoduchých slov
-start · ok · next · repeat · skip. To je celá sada příkazů.
+start · ok · next · repeat · skip. Víc příkazů nepotřebuješ.
 Výchozí je angličtina
-Příkazy se ve výchozím nastavení říkají anglicky. Když v Nastavení změníš jazyk kvízu na češtinu, říkáš je česky.
+Příkazy říkáš ve výchozím nastavení anglicky. Když v Nastavení přepneš jazyk kvízu na češtinu, říkáš je česky.
 Tlačítka fungují vždy
-Každý příkaz má i tlačítko na obrazovce. Hlas je jen možnost.
-BEZ RUKOU
-Ideální do auta, do kuchyně i na procházku.
+Každý příkaz má i tlačítko na obrazovce. Hlas používat nemusíš.
+OVLÁDEJ HLASEM
 Řekni „start“
 Po otázce řekni „start“ nebo klepni na tlačítko Odpověz a začni odpovídat.
 Pět jednoduchých slov
-start · ok · next · repeat · skip. To je celá sada příkazů.
+start · ok · next · repeat · skip. Víc příkazů nepotřebuješ.
 Výchozí je angličtina
-Příkazy se ve výchozím nastavení říkají anglicky. Když v Nastavení změníš jazyk kvízu na češtinu, říkáš je česky.
+Příkazy říkáš ve výchozím nastavení anglicky. Když v Nastavení přepneš jazyk kvízu na češtinu, říkáš je česky.
 Tlačítka fungují vždy
-Každý příkaz má i tlačítko na obrazovce. Hlas je jen možnost.
+Každý příkaz má i tlačítko na obrazovce. Hlas používat nemusíš.
 Pokračuj
 Přeskoč
 # identifiers

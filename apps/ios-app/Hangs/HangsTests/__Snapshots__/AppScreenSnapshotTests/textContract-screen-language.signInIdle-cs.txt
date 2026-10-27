@@ -1,8 +1,8 @@
 # texts
-ZACHOVEJ SI NÁKUP
+ULOŽ SI NÁKUP
 Přihlášením se Trubbo Plus naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování.
 Možná později
-Zachová tvé nákupy a pokrok na všech zařízeních. Nic jiného se nesdílí.
+Nákupy a postup ti zůstanou na každém zařízení. Nic jiného se nesdílí.
 # identifiers
 signInPrompt.root
 signInPrompt.badge

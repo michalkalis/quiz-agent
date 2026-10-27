@@ -58,7 +58,7 @@
 //  #185 track F, variant F2 "Lišta dýcha" (founder pick 2026-09-25): while the
 //  driver answers, the bar has to answer "does the mic hear me?" from the corner
 //  of the eye. In the answer and in-flight states it grows to 58pt and says its
-//  state in large text — "Listening…" → "Capturing…" (speech heard) →
+//  state in large text — "Listening…" → "Hearing you…" (speech heard) →
 //  "Processing…" — with the instruction as a small caption under it, and the
 //  whole capsule glows with the live mic level (`inputLevel`). Command states
 //  and the slim size keep the layout above.
@@ -190,7 +190,7 @@ struct ListenBar: View {
     /// ignores it (the mic is already live, there is nothing left to count down).
     var thinkCountdown: ThinkCountdown? = nil
 
-    /// #185 track F: the answer recording has heard speech — "Capturing…"
+    /// #185 track F: the answer recording has heard speech — "Hearing you…"
     /// instead of "Listening…". Answer mode only.
     var speechHeard: Bool = false
 
@@ -442,7 +442,7 @@ struct ListenBar: View {
         // #185 track F: the state, not the instruction — the instruction
         // moved to `answerInstruction` (the sub-line).
         case .answer:
-            return speechHeard ? Text("Capturing…") : Text("Listening…")
+            return speechHeard ? Text("Hearing you…") : Text("Listening…")
         }
     }
 

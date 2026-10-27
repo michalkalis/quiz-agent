@@ -1,9 +1,9 @@
 # texts
 trubbo
 MIC ACCESS
-Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.
+Trubbo needs microphone access to hear your answers. You can also type them.
 MIC ACCESS
-Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback.
+Trubbo needs microphone access to hear your answers. You can also type them.
 Allow Microphone
 Maybe later
 # identifiers

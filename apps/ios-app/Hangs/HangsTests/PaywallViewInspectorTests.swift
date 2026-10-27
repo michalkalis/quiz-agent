@@ -210,7 +210,7 @@ struct PaywallViewPlanPickerTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "100 Question Pack") }
             #expect(throws: Never.self) { try tree.find(text: "One-time purchase · never expires") }
-            #expect(throws: Never.self) { try tree.find(text: "or top up without subscribing") }
+            #expect(throws: Never.self) { try tree.find(text: "or buy questions without subscribing") }
         }
     }
 
@@ -261,7 +261,7 @@ struct PaywallViewAllowanceSpentTests {
                 try tree.find(viewWithAccessibilityIdentifier: "paywall.legal")
             }
             #expect(throws: (any Error).self, "'without subscribing' makes no sense to a subscriber") {
-                try tree.find(text: "or top up without subscribing")
+                try tree.find(text: "or buy questions without subscribing")
             }
             #expect(try !ctaButton(tree).isDisabled())
         }

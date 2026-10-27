@@ -291,7 +291,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// #185 track F: the answer recording has heard the driver speak — the
-    /// listen bar says "Capturing…" instead of "Listening…" from here on.
+    /// listen bar says "Hearing you…" instead of "Listening…" from here on.
     var isHearingAnswer: Bool {
         quizState == .recording && recordingCoordinator.speechDetectedDuringAutoRecord
     }

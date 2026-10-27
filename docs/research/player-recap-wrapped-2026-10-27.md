@@ -71,11 +71,12 @@ Prahy prepočítať, keď bude viac hráčov. Dnešné čísla stoja na dvoch ľ
 3. **Jeden hráč naprieč zariadeniami**: bez prihlásenia má každé zariadenie vlastnú históriu. Prehľad je teda „na tomto zariadení“, kým sa hráč neprihlási.
 4. **Výpočet na serveri**, raz za deň alebo pri otvorení prehľadu. Bez AI, len počty, takže lacné a rýchle.
 
-## Otvorené rozhodnutia pre foundera
+## Rozhodnutia foundera (2026-10-27)
 
-1. Rytmus: mesačný prehľad aj ročný v decembri, alebo len jeden z nich?
-2. Prehľad zadarmo pre všetkých, alebo časť (napr. ročný typ hráča) v predplatnom?
-3. Zdieľateľná karta na Instagram a TikTok hneď v prvej verzii?
+1. Rytmus: **mesačne aj ročne**, a štatistiky si hráč môže kedykoľvek pozrieť v appke.
+2. Prehľad je **celý zadarmo**.
+3. Zdieľateľná karta na Instagram a TikTok **hneď v prvej verzii**.
+4. Nápad: dolná lišta so záložkami, posledná záložka **Profil** s údajmi o hráčovi a štatistikami. Ďalší krok: varianty návrhu na výber.
 
 ## Zdroje
 

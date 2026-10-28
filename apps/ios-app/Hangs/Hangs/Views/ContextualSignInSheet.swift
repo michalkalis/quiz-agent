@@ -95,7 +95,7 @@ struct ContextualSignInSheet: View {
 
     private var heroBlock: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            Text("KEEP YOUR PURCHASE")
+            Text("SAVE YOUR PURCHASE")
                 .font(.hangsTitle)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()

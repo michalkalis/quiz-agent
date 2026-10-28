@@ -135,7 +135,7 @@ struct QuestionListenBar: View {
     var size: ListenBar.Size = .full
     var language: CommandLanguage = .english
 
-    /// #185 track F: the recording has heard the driver ("Capturing…").
+    /// #185 track F: the recording has heard the driver ("Hearing you…").
     var speechHeard: Bool = false
 
     /// #185 track F: the live mic level the bar breathes with while listening.

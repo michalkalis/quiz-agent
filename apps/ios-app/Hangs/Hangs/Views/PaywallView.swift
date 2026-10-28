@@ -291,7 +291,7 @@ struct PaywallView: View {
 
             if let pack = storeManager.offerings?.pack {
                 if subscriptionOffered {
-                    Text("or top up without subscribing")
+                    Text("or buy questions without subscribing")
                         .font(.hangsCaption)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                         .multilineTextAlignment(.center)

@@ -99,7 +99,7 @@ struct ResultViewInspectorTests {
 
     // MARK: - Incorrect variant
 
-    /// Incorrect: the band says "MISSED IT." once (xmark badge, no "not quite"
+    /// Incorrect: the band says "MISSED IT." once (xmark badge, no "incorrect"
     /// chip), the card labels the revealed answer "the answer", and what the
     /// driver said drops to the muted meta row under the card.
     @Test("Incorrect evaluation renders MISSED word, 'the answer' panel and 'you said' line")
@@ -114,7 +114,7 @@ struct ResultViewInspectorTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
             #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
-                try tree.find(text: "not quite")
+                try tree.find(text: "incorrect")
             }
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "xmark" })
@@ -132,7 +132,7 @@ struct ResultViewInspectorTests {
 
     // MARK: - Skipped variant (#131 Track D)
 
-    /// A skip must never render "MISSED IT. / not quite" over an answer the
+    /// A skip must never render "MISSED IT. / incorrect" over an answer the
     /// driver never gave — it gets its own neutral verdict: a "SKIPPED."
     /// headline over a neutral dash badge, and no MISSED/NAILED word at all.
     @Test("Skipped evaluation renders neutral SKIPPED verdict, not MISSED IT")
@@ -151,7 +151,7 @@ struct ResultViewInspectorTests {
             }
             // The wrong verdicts must NOT appear.
             #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: (any Error).self) { try tree.find(text: "not quite") }
+            #expect(throws: (any Error).self) { try tree.find(text: "incorrect") }
             #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
         }
     }

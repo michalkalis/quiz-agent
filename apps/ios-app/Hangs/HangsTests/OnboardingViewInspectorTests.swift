@@ -58,14 +58,14 @@ struct OnboardingViewStructureTests {
         }
     }
 
-    @Test("Features page renders 'HANDS-FREE' headline and 4 feature titles")
+    @Test("Features page renders 'VOICE CONTROL' headline and 4 feature titles")
     func featuresPageRendersCardRows() async throws {
         let vm = makeVM()
         vm.advance() // welcome → features
         let view = OnboardingView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "HANDS-FREE") }
+            #expect(throws: Never.self) { try tree.find(text: "VOICE CONTROL") }
             // #96 P2: the features card now teaches the command grammar (adopted
             // from pen `hTdkE`) — the founder's discoverability fix.
             #expect(throws: Never.self) { try tree.find(text: "Five simple words") }

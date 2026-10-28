@@ -121,7 +121,7 @@ struct DailyRoundEndInspectorTests {
             let hero = try #require(order.firstIndex(of: "COMPLETE"))
             let score = try #require(order.firstIndex(of: "final score"))
             let comparison = try #require(order.firstIndex(of: "Lepšie skóre ako 2 z 3 hráčov."))
-            let hitLabel = try #require(order.firstIndex(of: "your rarest hit"))
+            let hitLabel = try #require(order.firstIndex(of: "few knew this one"))
             let hitText = try #require(order.firstIndex(of: "Vedel to len 1 z 3."))
             #expect(hero < score && score < comparison && comparison < hitLabel && hitLabel < hitText, "\(order)")
             #expect(order.contains("4"))
@@ -129,14 +129,14 @@ struct DailyRoundEndInspectorTests {
         }
     }
 
-    @Test("a weak round: 'Ťažká výzva.' and 'your best hit', never 'worse than'")
+    @Test("a weak round: 'Ťažká výzva.' and 'your best answer', never 'worse than'")
     func weakRound() async throws {
         let view = makeView(marks: DailyChallengeFixtures.weakMarks)
         try await ViewHosting.host(view) {
             let order = try texts(view.inspect())
             #expect(order.contains("Ťažká výzva."))
-            #expect(order.contains("your best hit"))
-            #expect(!order.contains("your rarest hit"))
+            #expect(order.contains("your best answer"))
+            #expect(!order.contains("few knew this one"))
             #expect(!order.contains { $0.localizedStandardContains("horší") || $0.localizedStandardContains("worse") })
         }
     }

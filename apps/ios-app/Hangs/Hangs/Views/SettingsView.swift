@@ -196,7 +196,7 @@ struct SettingsView: View {
             // #174 five-quiz expiry is gone — it hid them from the one person who
             // still needed them). The row reads the effective state.
             HangsToggleRow(
-                label: "Voice hints",
+                label: "Command hints",
                 subtitle: "Show the voice commands you can say",
                 isOn: Binding(
                     get: { viewModel.showsVoiceHints },
@@ -353,7 +353,7 @@ struct SettingsView: View {
                 }
             } label: {
                 HangsConfigRow(
-                    label: "Answer reveal",
+                    label: "When to show answers",
                     value: viewModel.settings.answerRevealMode.displayName,
                     action: {}
                 )

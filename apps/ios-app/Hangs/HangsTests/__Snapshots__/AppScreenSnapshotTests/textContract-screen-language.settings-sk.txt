@@ -4,7 +4,7 @@ hlas
 Hlasové príkazy
 Ovládaj kvíz hlasom, bez klepania
 
-Hlasové nápovedy
+Nápoveda príkazov
 Zobrazovať hlasové príkazy, ktoré môžeš povedať
 
 Rozpoznávanie reči
@@ -68,9 +68,9 @@ Automatický posun
 Pauza na výsledku pred ďalšou otázkou
 After each question
 At the end of the quiz
-Odhalenie odpovedí
+Kedy ukázať odpoveď
 After each question
-Odhalenie odpovedí
+Kedy ukázať odpoveď
 After each question
 zvuková odozva
 Čítať nahlas

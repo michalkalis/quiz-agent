@@ -291,7 +291,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// #185 track F: the answer recording has heard the driver speak — the
-    /// listen bar says "Capturing…" instead of "Listening…" from here on.
+    /// listen bar says "Hearing you…" instead of "Listening…" from here on.
     var isHearingAnswer: Bool {
         quizState == .recording && recordingCoordinator.speechDetectedDuringAutoRecord
     }
@@ -1602,7 +1602,7 @@ final class QuizViewModel: ObservableObject {
                 // confirmed the user is entitled — ask them to retry instead.
                 // (setError transitions to .error directly from the in-flight state.)
                 setError(
-                    message: String(localized: "Your subscription just synced — please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
+                    message: String(localized: "Your subscription just synced. Please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
                     context: context
                 )
             } else {

@@ -137,7 +137,7 @@ struct DailyRoundEndView: View {
     private func bestHitCard(_ hit: DailyBestHit) -> some View {
         HangsCard(padding: Self.cardPadding) {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                HangsSectionLabel(text: hit.rare ? "your rarest hit" : "your best hit")
+                HangsSectionLabel(text: hit.rare ? "few knew this one" : "your best answer")
                 Text(verbatim: hit.answer)
                     .font(.hangsTitle)
                     .foregroundStyle(Theme.Hangs.Colors.ink)

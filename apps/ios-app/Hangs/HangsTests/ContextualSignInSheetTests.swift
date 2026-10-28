@@ -86,7 +86,7 @@ struct ContextualSignInSheetStateTests {
     @Test("Idle: value pitch + SIWA + Maybe later + privacy note, no error banner")
     func idleStructure() throws {
         let tree = try makeSheet(phase: .idle).inspect()
-        #expect(throws: Never.self) { try tree.find(text: "KEEP YOUR PURCHASE") }
+        #expect(throws: Never.self) { try tree.find(text: "SAVE YOUR PURCHASE") }
         #expect(throws: Never.self) {
             try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.appleButton")
         }

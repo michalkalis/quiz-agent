@@ -1,25 +1,23 @@
 # texts
 trubbo
-BEZ RÚK
-Ideálne do auta, do kuchyne aj na prechádzku.
-Povedz „start“
-Po otázke povedz „start“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
+OVLÁDAJ HLASOM
+Povedz „štart“
+Po otázke povedz „štart“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
 Päť jednoduchých slov
-start · ok · next · repeat · skip. To je celá sada príkazov.
+start · ok · next · repeat · skip. Viac príkazov nepotrebuješ.
 Predvolene po anglicky
-Príkazy sa predvolene hovoria po anglicky. Keď v Nastaveniach zmeníš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
+Príkazy hovoríš predvolene po anglicky. Keď v Nastaveniach prepneš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
 Tlačidlá fungujú vždy
-Každý príkaz má aj tlačidlo na obrazovke. Hlas je len možnosť.
-BEZ RÚK
-Ideálne do auta, do kuchyne aj na prechádzku.
-Povedz „start“
-Po otázke povedz „start“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
+Každý príkaz má aj tlačidlo na obrazovke. Hlas používať nemusíš.
+OVLÁDAJ HLASOM
+Povedz „štart“
+Po otázke povedz „štart“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
 Päť jednoduchých slov
-start · ok · next · repeat · skip. To je celá sada príkazov.
+start · ok · next · repeat · skip. Viac príkazov nepotrebuješ.
 Predvolene po anglicky
-Príkazy sa predvolene hovoria po anglicky. Keď v Nastaveniach zmeníš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
+Príkazy hovoríš predvolene po anglicky. Keď v Nastaveniach prepneš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
 Tlačidlá fungujú vždy
-Každý príkaz má aj tlačidlo na obrazovke. Hlas je len možnosť.
+Každý príkaz má aj tlačidlo na obrazovke. Hlas používať nemusíš.
 Pokračuj
 Preskoč
 # identifiers

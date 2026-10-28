@@ -74,6 +74,8 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
 | RS-24 | `RSPackTests.testRS24…` (+ unit `PackProgressTests`) | alert buttons matched by label (system alert) |
 | RS-25 | `RSDailyChallengeTests.testRS25…` (+ unit `QuizViewModelDailyChallengeTests`) | scripted mock challenge (`DailyChallengeFixtures`), questions skipped |
+| RS-26 | `RSAppConfigTests.testRS26…` (+ unit `AppConfigStoreTests`) | DEBUG seed, no backend |
+| RS-27 | `RSAppConfigTests.testRS27…` (+ unit `AppConfigStoreTests`) | DEBUG seed; the store link itself is not opened |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -689,6 +691,33 @@ the five questions and continue from each result; tap `daily.home`.
 `daily.end`, `daily.tiles` and `daily.share` present, `completion.playAgain`
 absent; back Home `home.daily.open` present and `home.daily.play` gone. App
 alive.
+
+---
+
+## RS-26: Maintenance covers the app
+
+**Type:** XCUITest (`RSAppConfigTests`). #214.
+
+**Hypothesis:** With the server's maintenance switch on, the player sees the
+maintenance message over the whole app instead of starting a quiz that fails.
+
+**Steps:** launch with `--app-config-maintenance` (DEBUG seed, no backend).
+
+**Asserts:** `maintenance.message` present; `home.startQuiz` not hittable. App alive.
+
+---
+
+## RS-27: Update card on Home offers the store and dismisses
+
+**Type:** XCUITest (`RSAppConfigTests`). #214.
+
+**Hypothesis:** Below the recommended version the update stays optional: the
+card offers the store, closes, and Home stays playable.
+
+**Steps:** launch with `--app-config-update-recommended`; tap `home.update.dismiss`.
+
+**Asserts:** `home.update.open`, `home.update.dismiss` and `home.startQuiz`
+present; card gone after dismiss. App alive.
 
 ---
 

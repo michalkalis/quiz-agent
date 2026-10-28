@@ -1,8 +1,9 @@
 """Remote app switches for shipped iOS builds (#193 task 193.9 — beta hardening).
 
 ``GET /app-config`` lets a public build be steered without an app release:
-force builds below a minimum version to update, pause custom-pack ordering,
-or show a short notice. Each switch has an env default (``app.config.Settings``)
+force builds below a minimum version to update, nudge builds below a
+recommended version (#214), pause custom-pack ordering, show a short notice,
+or put the app into maintenance (#214). Each switch has an env default (``app.config.Settings``)
 and a DB override (``app.app_switches``, #207 task 207.18) that the founder or
 agent changes with ``PUT /admin/app-switches`` without restarting the machine.
 The voice-settings test (#204.9) lives in the DB too, for its weekly job.
@@ -53,6 +54,9 @@ class AppConfigResponse(BaseModel):
 
     min_version_app_store: Optional[str] = None
     min_version_testflight: Optional[str] = None
+    # #214: builds below this get a dismissible "new version" card on Home.
+    recommended_version_app_store: Optional[str] = None
+    recommended_version_testflight: Optional[str] = None
     orders_enabled: bool = True
     # #205: show the daily challenge card on Home.
     daily_challenge_enabled: bool = False
@@ -62,6 +66,10 @@ class AppConfigResponse(BaseModel):
     # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
     # there is no DB or the read fails; the app then uses its manual switches.
     voice_experiment: Optional[dict[str, dict[str, VoiceExperimentArmConfig]]] = None
+    # #214: a full-screen maintenance message blocks the app while true. The
+    # message is optional; without it the app shows its own default text.
+    maintenance_enabled: bool = False
+    maintenance_message: Optional[AppNotice] = None
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
@@ -72,21 +80,32 @@ async def get_app_config(
     switches = app_switches.effective(
         settings, await app_switches.cached_overrides(sessionmaker)
     )
-    notice = AppNotice(
-        sk=switches["notice_sk"],
-        cs=switches["notice_cs"],
-        en=switches["notice_en"],
-    )
+    notice = _localized(switches, "notice")
+    maintenance_message = _localized(switches, "maintenance")
     response.headers["Cache-Control"] = CACHE_CONTROL
     return AppConfigResponse(
         min_version_app_store=switches["min_version_app_store"],
         min_version_testflight=switches["min_version_testflight"],
+        recommended_version_app_store=switches["recommended_version_app_store"],
+        recommended_version_testflight=switches["recommended_version_testflight"],
         orders_enabled=switches["orders_enabled"],
         daily_challenge_enabled=settings.daily_challenge_enabled,
         multiplayer_enabled=settings.multiplayer_enabled,
-        notice=notice if (notice.sk or notice.cs or notice.en) else None,
+        notice=notice,
         voice_experiment=await voice_experiment_config(sessionmaker),
+        maintenance_enabled=switches["maintenance_enabled"],
+        maintenance_message=maintenance_message,
     )
+
+
+def _localized(switches: dict[str, Any], prefix: str) -> Optional[AppNotice]:
+    """``<prefix>_sk/cs/en`` as one ``AppNotice``; ``None`` when all are blank."""
+    text = AppNotice(
+        sk=switches[f"{prefix}_sk"],
+        cs=switches[f"{prefix}_cs"],
+        en=switches[f"{prefix}_en"],
+    )
+    return text if (text.sk or text.cs or text.en) else None
 
 
 class AppSwitchesUpdate(BaseModel):

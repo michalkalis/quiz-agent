@@ -57,6 +57,7 @@ struct HomeView: View {
                     }
 
                     if let appConfig {
+                        UpdateAvailableCard(store: appConfig)
                         AppNoticeBanner(store: appConfig)
                     }
 

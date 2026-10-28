@@ -33,9 +33,22 @@ CACHE_SECONDS = 60.0
 READ_TIMEOUT_SECONDS = 1.0
 NOTICE_MAX_CHARS = 300
 
-VERSION_KEYS = ("min_version_app_store", "min_version_testflight")
-NOTICE_KEYS = ("notice_sk", "notice_cs", "notice_en")
-KEYS = (*VERSION_KEYS, "orders_enabled", *NOTICE_KEYS)
+VERSION_KEYS = (
+    "min_version_app_store",
+    "min_version_testflight",
+    "recommended_version_app_store",
+    "recommended_version_testflight",
+)
+NOTICE_KEYS = (
+    "notice_sk",
+    "notice_cs",
+    "notice_en",
+    "maintenance_sk",
+    "maintenance_cs",
+    "maintenance_en",
+)
+BOOL_KEYS = ("orders_enabled", "maintenance_enabled")
+KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
 _cache: tuple[float, dict[str, str | None]] | None = None
 _lock = asyncio.Lock()
@@ -56,9 +69,9 @@ def encode(key: str, value: Any) -> str | None:
     """
     if key not in KEYS:
         raise ValueError(f"unknown switch {key!r}")
-    if key == "orders_enabled":
+    if key in BOOL_KEYS:
         if not isinstance(value, bool):
-            raise ValueError("orders_enabled must be true or false")
+            raise ValueError(f"{key} must be true or false")
         return "true" if value else "false"
     if value is None:
         return None
@@ -82,6 +95,14 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "notice_sk": settings.app_notice_sk,
         "notice_cs": settings.app_notice_cs,
         "notice_en": settings.app_notice_en,
+        # #214: DB-only switches (flipped live during a release or an
+        # incident, never through a restarting env change); off by default.
+        "recommended_version_app_store": None,
+        "recommended_version_testflight": None,
+        "maintenance_enabled": False,
+        "maintenance_sk": None,
+        "maintenance_cs": None,
+        "maintenance_en": None,
     }
 
 
@@ -91,6 +112,8 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     for key, raw in overrides.items():
         if key == "orders_enabled":
             out[key] = raw != "false"
+        elif key == "maintenance_enabled":
+            out[key] = raw == "true"
         elif key in out:
             out[key] = raw
     return out

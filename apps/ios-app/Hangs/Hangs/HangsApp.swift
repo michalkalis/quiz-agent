@@ -22,6 +22,9 @@ struct HangsApp: App {
         #if CARPLAY
             CarPlaySceneDelegate.appState = appState
         #endif
+        #if DEBUG
+            UITestSupport.roomInvites = appState.roomInvites
+        #endif
 
         // Skip Sentry on simulator — only real-device debug + release builds report.
         // Simulator runs are noisy (hot reloads, repeated launches) and would burn through quota.

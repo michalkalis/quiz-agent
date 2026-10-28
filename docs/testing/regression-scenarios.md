@@ -76,6 +76,8 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-25 | `RSDailyChallengeTests.testRS25…` (+ unit `QuizViewModelDailyChallengeTests`) | scripted mock challenge (`DailyChallengeFixtures`), questions skipped |
 | RS-26 | `RSAppConfigTests.testRS26…` (+ unit `AppConfigStoreTests`) | DEBUG seed, no backend |
 | RS-27 | `RSAppConfigTests.testRS27…` (+ unit `AppConfigStoreTests`) | DEBUG seed; the store link itself is not opened |
+| RS-28 | `RSRoomTests.testRS28…` (+ unit `RoomViewModelTests`) | scripted mock room (`MockRoomService`), DEBUG seed |
+| RS-29 | `RSRoomTests.testRS29…` (+ unit `RoomViewModelTests`) | scripted mock room; host driven over the test listener |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -718,6 +720,40 @@ card offers the store, closes, and Home stays playable.
 
 **Asserts:** `home.update.open`, `home.update.dismiss` and `home.startQuiz`
 present; card gone after dismiss. App alive.
+
+---
+
+## RS-28: The host plays a whole game together
+
+**Type:** XCUITest (`RSRoomTests`). #212 (game together in one room).
+
+**Hypothesis:** The host's phone drives the game for everyone (read, open,
+next); a stalled step would leave every phone on one question.
+
+**Steps:** launch with `--app-config-multiplayer`; tap `home.together`,
+`room.host`; give a name if asked; `room.start`; tap option B; `room.next`;
+type "Canberra" and send; `room.next`; `room.done`.
+
+**Asserts:** `room.qr` and `room.player.p_other` in the lobby; `room.reveal.answer`
+after each question; `room.final.winner` is the host; `room.final.away`
+present; back on Home. App alive.
+
+---
+
+## RS-29: A guest joins by link and follows the host
+
+**Type:** XCUITest (`RSRoomTests`). #212.
+
+**Hypothesis:** A join link opens the game from Home; a guest answers, sees
+each reveal, waits for the host and never sees host-only controls.
+
+**Steps:** launch with `--app-config-multiplayer`; POST `/room/join?text=mock-token`
+to the test listener; `/room/start`; tap option B; `/room/next`; type
+"Sydney" and send; `/room/next`.
+
+**Asserts:** `room.lobby.rename` after the link; `room.reveal.answer` and
+`room.waitingForHost` after question 1, `room.next` absent; `room.final.winner`
+present, `room.final.away` absent. App alive.
 
 ---
 

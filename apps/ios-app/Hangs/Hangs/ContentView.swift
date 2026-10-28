@@ -278,7 +278,9 @@ struct ContentView: View {
         // #212: a join link opens the game once Home is on screen (never over
         // a solo quiz in progress).
         .onReceive(appState.roomInvites.$token) { token in
-            if token != nil { openPendingInvite() }
+            // @Published delivers before the new value is stored: take it on
+            // the next main-actor turn.
+            if token != nil { Task { openPendingInvite() } }
         }
         .onChange(of: viewModel.quizScreen) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.

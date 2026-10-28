@@ -26,6 +26,8 @@
         /// the end of speech, and the "server" hears the injected transcript.
         private static var mockNetwork: MockNetworkService?
         private static var mockRooms: MockRoomService?
+        /// #212: where a test's join link lands, as if the player opened it.
+        static weak var roomInvites: RoomInviteInbox?
         private static var mockSilence: MockSilenceDetectionService?
         /// `/recording/interrupt` drives a phone call through it, along the
         /// same routing the real `AudioService` uses.
@@ -271,6 +273,7 @@
         /// - `hangs-test://stt/connected`          → readiness ping, no effect
         /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
         ///   call) hits the recording
+        /// - `hangs-test://room/join?text=<token>` → the join link opens (#212)
         /// - `hangs-test://room/start`, `hangs-test://room/next` → a guest's host
         ///   starts the scripted game / moves on (#212)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
@@ -302,6 +305,9 @@
                 return true
             case ("command", "/send"):
                 return await handleCommand(text)
+            case ("room", "/join"):
+                guard let roomInvites, let link = URL(string: "https://trubbo.app/join?t=\(text)") else { return false }
+                return roomInvites.receive(link)
             case ("room", "/start"):
                 guard let mockRooms else { return false }
                 mockRooms.hostStarts()

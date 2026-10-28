@@ -1,7 +1,7 @@
 # Same-room multiplayer ("Hra spolu") — research, 2026-10-23
 
 Design canvas with all screen proposals + this research in Slovak: https://claude.ai/artifact/9FH1tX3o5TRtBnnyFzcUV7
-Status: proposals waiting for founder decisions (entry point, monetization variant, MCQ-only rule). No issue file yet.
+Status: founder decided 2026-10-28 (several recommendations below overturned: no App Clip, not MCQ-only, same-Wi-Fi discovery wanted) → plan [issue-212](../issues/issue-212-multiplayer-same-room.md).
 
 ## Founder brief (2026-10-23)
 One phone hosts, others join with their own phones; host answers too; answers revealed to everyone after each question/round; final scoreboard for all. Joining must be as automatic as possible (no typed codes). Offline not required (app needs internet anyway). Consider: button next to Start, tab bar, monetization, voice on guest phones.

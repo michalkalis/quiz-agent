@@ -35,12 +35,16 @@ PAGES = {"ig_en": ("Trubbo", "EN"), "ig_skcz": ("Trubbo SK & CZ", "SKCZ")}
 
 
 def call(method: str, path: str, token: str, **params) -> dict:
-    data = urllib.parse.urlencode({**params, "access_token": token})
+    # Token in the Authorization header, never in the URL (URLs end up in logs).
+    data = urllib.parse.urlencode(params)
     url = f"{API}/{path}"
+    auth = {"Authorization": f"Bearer {token}"}
     req = (
-        urllib.request.Request(f"{url}?{data}")
+        urllib.request.Request(f"{url}?{data}", headers=auth)
         if method == "GET"
-        else urllib.request.Request(url, data=data.encode(), method="POST")
+        else urllib.request.Request(
+            url, data=data.encode(), method="POST", headers=auth
+        )
     )
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:

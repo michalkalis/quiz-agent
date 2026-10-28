@@ -381,6 +381,10 @@ async def delete_account(
         if session_manager is not None:
             for subject_id in erased_ids:
                 await session_manager.forget_user(subject_id, db=session)
+        rooms = getattr(request.app.state, "rooms", None)
+        if rooms is not None:
+            for subject_id in erased_ids:
+                await rooms.store.forget_host(subject_id, db=session)
         await session.commit()
 
     if user_id is None:

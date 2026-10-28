@@ -49,6 +49,20 @@ def scrub_user(value, user_id: str):
     return value
 
 
+def forget_in_session(data: dict, user_id: str) -> tuple[dict, bool]:
+    """Scrub ``user_id`` out of one stored session; True = keep it active.
+
+    A guest in someone else's multiplayer room (#212) only leaves that room:
+    deactivating the session would end the host's game. Every other session
+    the user appears in is deactivated, as before."""
+    if data.get("mode") == "multiplayer" and data.get("user_id") != user_id:
+        data["participants"] = [
+            p for p in data.get("participants", []) if p.get("user_id") != user_id
+        ]
+        return scrub_user(data, user_id), True
+    return scrub_user(data, user_id), False
+
+
 @dataclass
 class StoredSession:
     data_json: str
@@ -122,9 +136,10 @@ class MemorySessionStore:
         n = 0
         for row in self._rows.values():
             if user_id in row[0]:
-                row[0] = json.dumps(scrub_user(json.loads(row[0]), user_id))
+                data, keep = forget_in_session(json.loads(row[0]), user_id)
+                row[0] = json.dumps(data)
                 row[1] += 1
-                row[2] = False
+                row[2] = row[2] and keep
                 n += 1
         return n, 0
 
@@ -238,16 +253,18 @@ class PostgresSessionStore:
             )
         ).all()
         for row in rows:
+            data, keep = forget_in_session(json.loads(row.data_json), user_id)
+            values = {}
+            if not keep:
+                # Never serve it again: an ownerless live session would skip
+                # every quota gate (they key on the session's user_id).
+                values["is_active"] = False
             await db.execute(
                 update(QuizSessionRow)
                 .where(QuizSessionRow.session_id == row.session_id)
                 .values(
-                    data_json=json.dumps(
-                        scrub_user(json.loads(row.data_json), user_id)
-                    ),
-                    # Never serve it again: an ownerless live session would skip
-                    # every quota gate (they key on the session's user_id).
-                    is_active=False,
+                    data_json=json.dumps(data),
+                    **values,
                     version=QuizSessionRow.version + 1,
                     updated_at=func.now(),
                 )

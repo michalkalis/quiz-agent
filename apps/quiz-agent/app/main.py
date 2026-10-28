@@ -372,6 +372,20 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.daily_challenge = daily_challenge
+    # #212: same-room multiplayer rooms; tickets are signed with the auth
+    # secret, so rooms exist only where sign-in does.
+    rooms = None
+    if token_service is not None and settings.auth_jwt_secret:
+        from .rooms.network import NetTickets
+        from .rooms.service import RoomService
+        from .rooms.store import PostgresRoomStore
+
+        rooms = RoomService(
+            session_manager,
+            PostgresRoomStore(shared_sm),
+            NetTickets(settings.auth_jwt_secret),
+        )
+    app.state.rooms = rooms
     app.state.quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,

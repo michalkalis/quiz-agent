@@ -724,6 +724,11 @@ def get_daily_challenge(request: Request):
     return getattr(request.app.state, "daily_challenge", None)
 
 
+def get_rooms(request: Request):
+    """#212 RoomService (None when auth is not configured)."""
+    return getattr(request.app.state, "rooms", None)
+
+
 def get_auth_sessionmaker(request: Request):
     """Sessionmaker dedicated to the auth tables (None when auth is disabled)."""
     return getattr(request.app.state, "auth_sessionmaker", None)

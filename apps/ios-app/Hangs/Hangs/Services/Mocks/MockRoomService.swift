@@ -137,6 +137,8 @@
         }
 
         func nextQuestion(roomId _: String) async throws -> RoomState {
+            // Like URLSession: a cancelled task's request never arrives.
+            try Task.checkCancellation()
             guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Players are still answering") }
             advance()
             return state(full: true)

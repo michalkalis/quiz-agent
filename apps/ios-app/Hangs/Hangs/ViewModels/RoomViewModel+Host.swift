@@ -114,15 +114,24 @@ extension RoomViewModel {
 
     /// The next question for everyone, or the final ranking.
     func next() async {
-        guard isHost, let roomId = created?.roomId else { return }
+        guard isHost, !isWorking else { return }
         advanceTask?.cancel()
         autoAdvanceLeft = nil
+        await moveOn()
+    }
+
+    /// The request itself. The auto-advance calls it from its own task, so it
+    /// must not cancel that task (a cancelled request never reaches the server).
+    private func moveOn() async {
+        guard let roomId = created?.roomId else { return }
         isWorking = true
         defer { isWorking = false }
         do {
             try apply(await rooms.nextQuestion(roomId: roomId))
         } catch NetworkError.serverError(statusCode: 409, _) {
             await refresh()
+        } catch is CancellationError {
+        } catch let error as URLError where error.code == .cancelled {
         } catch {
             errorMessage = Self.genericMessage
         }
@@ -181,7 +190,8 @@ extension RoomViewModel {
                 do { try await clock.sleep(for: .seconds(1)) } catch { return }
             }
             autoAdvanceLeft = nil
-            await next()
+            guard !isWorking else { return }
+            await moveOn()
         }
     }
 }

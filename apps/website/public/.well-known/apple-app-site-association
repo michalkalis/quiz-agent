@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["KAGWHPZZFQ.com.missinghue.hangs"],
+        "components": [
+          { "/": "/join", "?": { "t": "?*" }, "comment": "Hra spolu invite (#212): QR code and shared link" }
+        ]
+      }
+    ]
+  }
+}

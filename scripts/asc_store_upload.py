@@ -64,9 +64,26 @@ def upsert(kind: str, existing: list[dict], locale: str, attrs: dict, rel: tuple
                                            "relationships": {rel_name: {"data": {"type": rel_type, "id": rel_id}}}}})
 
 
+EDITABLE = "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED"
+# Promotional text may change at any time, also on a version in review or on sale; nothing else may.
+PROMO_ANYTIME = "WAITING_FOR_REVIEW,IN_REVIEW,PENDING_DEVELOPER_RELEASE,READY_FOR_SALE"
+
+
 def editable_version(app_id: str) -> dict:
-    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED"})
+    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})
     return versions["data"][0]
+
+
+def promo_text_only(app_id: str) -> None:
+    """No editable version (e.g. one waits for App Review): update only promotionalText, never touch the review."""
+    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": PROMO_ANYTIME})["data"]
+    for ver in versions:
+        print(f"  version {ver['attributes']['versionString']} is {ver['attributes']['appStoreState']}: promotional text only")
+        existing = get(f"/appStoreVersions/{ver['id']}/appStoreVersionLocalizations").get("data", [])
+        for loc in LOCALES:
+            upsert("appStoreVersionLocalizations", existing, loc, {"promotionalText": txt(MD / loc / "promotional_text.txt")},
+                   ("appStoreVersion", "appStoreVersions", ver["id"]))
+    print("  description, keywords and URLs wait for the next editable version")
 
 
 def step_listing(app_id: str) -> None:
@@ -77,12 +94,18 @@ def step_listing(app_id: str) -> None:
     if cat and cur_cat != cat:
         send("PATCH", f"/appInfos/{info['id']}", {"data": {"type": "appInfos", "id": info["id"],
                                                          "relationships": {"primaryCategory": {"data": {"type": "appCategories", "id": cat}}}}})
-    existing = get(f"/appInfos/{info['id']}/appInfoLocalizations").get("data", [])
-    for loc in LOCALES:
-        d = MD / loc
-        upsert("appInfoLocalizations", existing, loc,
-               {"name": txt(d / "name.txt"), "subtitle": txt(d / "subtitle.txt"), "privacyPolicyUrl": txt(d / "privacy_url.txt")},
-               ("appInfo", "appInfos", info["id"]))
+    if info["attributes"].get("state") in EDITABLE.split(","):
+        existing = get(f"/appInfos/{info['id']}/appInfoLocalizations").get("data", [])
+        for loc in LOCALES:
+            d = MD / loc
+            upsert("appInfoLocalizations", existing, loc,
+                   {"name": txt(d / "name.txt"), "subtitle": txt(d / "subtitle.txt"), "privacyPolicyUrl": txt(d / "privacy_url.txt")},
+                   ("appInfo", "appInfos", info["id"]))
+    else:
+        print(f"  app info is {info['attributes'].get('state')}: name and subtitle wait for the next editable version")
+    if not get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})["data"]:
+        promo_text_only(app_id)
+        return
     ver = editable_version(app_id)
     copyright_ = txt(MD / "copyright.txt")
     if copyright_ and ver["attributes"].get("copyright") != copyright_:

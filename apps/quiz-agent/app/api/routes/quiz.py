@@ -44,6 +44,7 @@ from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...quiz.resubmission import reanswers_finished_session
 from ...tts.spoken_text import spoken_question_text
 from ...rate_limit import limiter
+from ...rooms.rounds import open_round
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.submit import AudioInfo
 
@@ -257,6 +258,7 @@ async def start_quiz(
             )
             session.current_question_text = translated_question_dict["question"]
             session.current_question_translation = translation_record
+            open_round(session, translated_question_dict)  # #212.2: rooms only
             session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
             await session_manager.update_session(session)
             analytics.emit(

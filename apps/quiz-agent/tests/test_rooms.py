@@ -304,12 +304,6 @@ async def test_state_is_members_only_and_cheap_when_nothing_changed(ctx):
         "room_id": room["room_id"],
         "version": first["version"],
         "changed": False,
-        "status": None,
-        "you": None,
-        "is_host": None,
-        "question_number": None,
-        "max_questions": None,
-        "players": None,
     }
     await client.post(
         "/api/v1/rooms/join",

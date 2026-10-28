@@ -55,6 +55,26 @@ Otázka sa uzavrie, keď odpovedia všetci alebo uplynie čas. Server nemá vlas
 
 **Odchod z appky.** Appka hosťa (aj hostiteľa) pošle serveru udalosť, keď počas otvorenej otázky prejde do pozadia. Neposiela ju, keď práve prebieha hovor (`CXCallObserver`, bez povolenia). Server ich zbiera k hráčovi a otázke. Na konci hry ich vidí len hostiteľ („Peťo odišiel z Trubba počas 2 otázok“). Body sa nemenia.
 
+## API pre appku (dohodnuté, 212.1 + 212.2)
+
+Všetko pod `/api/v1`, s prihlásením (anonymný `subject_id` stačí), mimo prepínača 404. Odpovede miestnosti vynechávajú prázdne polia.
+
+| Kto | Volanie | Načo |
+|---|---|---|
+| hostiteľ, hosť | `GET /rooms/net-probe` na hostname len IPv4 a len IPv6 | lístky siete pre `net_tickets` (kým DNS mená nie sú, appka posiela prázdny zoznam, funguje podľa adresy dopytu) |
+| hostiteľ | `POST /rooms` {session_id, host_name, net_tickets, reveal_mode `question`/`round`, thinking_seconds 3–60} | z jeho čakajúcej session spraví miestnosť → room_id, join_token (do QR a odkazu) |
+| hosť | `POST /rooms/nearby` {net_tickets} | hry v tej istej wifi (meno hostiteľa, farba, počet) |
+| hosť | `POST /rooms/join` {display_name, join_token alebo room_id, net_tickets} | pripojenie → stav |
+| hostiteľ, hosť | `DELETE /rooms/{id}/players/{pid}` | hostiteľ vyhodí hosťa, hosť odíde |
+| hostiteľ | `POST /sessions/{session_id}/start` (`?audio=true`) | štart ako solo, otázka a zvuk z `/sessions/{id}/question/audio` |
+| hostiteľ | `POST /rooms/{id}/open` {question_id} | dočítal nahlas → štart času (opakované nič nemení; bez neho čas začne sám po 45 s) |
+| všetci | `POST /rooms/{id}/answer` {question_id, answer} | kľúč možnosti (a–d) alebo napísaný text; raz, konečné; 409 = už odpovedal / čas vypršal |
+| všetci | `POST /rooms/{id}/away` {question_id} | appka išla do pozadia počas otázky, nie počas hovoru (212.4) |
+| hostiteľ | `POST /rooms/{id}/next` | ďalšia otázka pre všetkých alebo koniec; 409 kým sa odpovedá |
+| všetci | `GET /rooms/{id}/state?since=<version>` cca raz za sekundu | `changed:false` = bez zmeny; inak status lobby/playing/finished, players, question (tvar ako solo), round, na konci ranking, rounds, away (len hostiteľ) |
+
+`round.phase`: reading (hostiteľ číta, `remaining_ms` chýba) → answering (odpočet od `remaining_ms`, nie od hodín mobilu) → grading → revealed (`correct_answer`, `explanation`, `results`). `answered` = kto už odpovedal, čo odpovedal je skryté do odhalenia. Pri `reveal_mode=round` appka výsledky otázok ukáže až na konci z `rounds`. `finished_reason`: max_questions / usage_limit (hostiteľovi došiel limit, ponuka ako solo) / no_more_questions. Čas: A až D = thinking + 5 s, voľná = thinking + 18 s, 2 s tolerancia na doručenie.
+
 ## Nastavenia v hre spolu
 
 Umiestnenie (Profil + rýchle nastavenia z Home a z kvízu) rieši #213. Tento plán určuje, čo platí:
@@ -87,9 +107,9 @@ Solo nastavenia sa hrou spolu nemenia (samostatná sada hodnôt).
 Poradie: 212.1 → 212.2 a 212.3 súbežne (dohodnuté API) → 212.4 → 212.5. 212.6 až po meraní.
 
 - [x] **212.1 Miestnosť na serveri** (kód 2026-10-28, za prepínačom; spoločný čas otázky presunutý do 212.2, lebo patrí k toku otázky; open pred 212.3: DNS mená pre sondy, len A záznam na zdieľanú IPv4 Fly 66.241.124.50 a len AAAA na IPv6 appky, + `flyctl certs add`) — založenie miestnosti z hostiteľovej session, token, pripojenie cez token, zoznam čakajúcich miestností z rovnakej IP (len wifi, expirácia), vyhodenie hosťa, stav miestnosti s verziou, spoločný čas otázky. Autorizácia: hosť smie len svoje odpovede a čítať stav, riadiť smie len hostiteľ (#144 — session route authorization). Testy: pripojenie, cudzia IP, IPv6 s rovnakým /64 a iným rozhraním, hostiteľ na IPv4 a hosť na IPv6, expirácia, hosť nemôže posunúť otázku. Sondy IPv4/IPv6 = dva ďalšie hostnamy (len A záznam na zdieľanú IPv4 Fly, len AAAA na IPv6 appky), každý s certifikátom Fly (zdieľaná IPv4 sa smeruje podľa mena). Sieť len s IPv6 hľadá len podľa /64. Dopyt na stav miestnosti nikdy nečaká na zámok session (vráti posledný stav), aby ho nebrzdilo vyhodnocovanie. Zmazanie účtu hosťa ho z miestnosti len odoberie (dnes `forget_user` deaktivuje každú session, kde je jeho id, čo by ukončilo hostiteľovu hru).
-- [ ] **212.2 Odpovede a vyhodnotenie** — odpoveď účastníka (A až D aj text), uzavretie otázky (všetci / čas), vyhodnotenie existujúcim hodnotiteľom, rovnaké odpovede raz, súbežne, body, remíza podľa rýchlosti, odhalenie po otázke a po kole, poradie. Udalosti `answer_evaluated` pod hráčom + `multiplayer`, `room_id`. Test: limit sa ráta raz na otázku u hostiteľa, nikdy u hosťa; rovnaké odpovede = jedno volanie modelu; uzavretie po termíne dvakrát = jedno vyhodnotenie.
+- [x] **212.2 Odpovede a vyhodnotenie** (kód 2026-10-28, za prepínačom; časy ako nastavenia servera, appka dostáva len zostávajúce ms, preto nie v `/app-config`) — odpoveď účastníka (A až D aj text), uzavretie otázky (všetci / čas), vyhodnotenie existujúcim hodnotiteľom, rovnaké odpovede raz, súbežne, body, remíza podľa rýchlosti, odhalenie po otázke a po kole, poradie. Udalosti `answer_evaluated` pod hráčom + `multiplayer`, `room_id`. Test: limit sa ráta raz na otázku u hostiteľa, nikdy u hosťa; rovnaké odpovede = jedno volanie modelu; uzavretie po termíne dvakrát = jedno vyhodnotenie.
 - [ ] **212.3 Appka: hostiteľ a hosť** — tlačidlo Spolu (variant A), miestnosť hostiteľa s QR a zoznamom hráčov, hosť: zoznam hier z tej istej wifi + otvorenie univerzálneho odkazu, otázka, písanie voľnej odpovede, zamknutá odpoveď, odhalenie, poradie. Nastavenia hry spolu podľa tabuľky. Obrazovky z plátna, texty sk/cs/en cez copy review. Identifikátory, snímky, RS scenár s dvomi simulátormi.
-- [ ] **212.4 Odchod z appky** — appka: prechod do pozadia počas otvorenej otázky, okrem hovoru; server: záznam k hráčovi a otázke; hostiteľ na konci hry vidí súhrn. Test: hovor sa nepočíta, zamknutie mobilu áno.
+- [ ] **212.4 Odchod z appky** (serverová časť hotová s 212.2: `POST /rooms/{id}/away` + súhrn pre hostiteľa) — appka: prechod do pozadia počas otvorenej otázky, okrem hovoru; server: záznam k hráčovi a otázke; hostiteľ na konci hry vidí súhrn. Test: hovor sa nepočíta, zamknutie mobilu áno.
 - [ ] **212.5 Meranie** — udalosti: miestnosť založená, hosť pripojený (cesta: wifi / QR / odkaz), hra dohraná, hosť nový hráč (prvé spustenie appky do 24 h od pripojenia cez odkaz alebo wifi), neskoršia solo hra hosťa. Vyhodnotenie po 4 týždňoch od zapnutia.
 - [ ] **212.6 Bluetooth a priblíženie mobilov** — len ak 212.5 ukáže, že hostia sa nevedia pripojiť (veľa hier bez hostí, veľa pripojení cez odkaz). SharePlay cez priblíženie (iOS 17+) alebo Bluetooth hľadanie, s povolením.
 

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from .participant import Participant
 from .phase import InvalidPhaseTransition, SessionPhase, is_valid_transition
+from .room import RoomGame
 from .submit import Evaluation
 
 logger = logging.getLogger(__name__)
@@ -103,6 +104,8 @@ class QuizSession(BaseModel):
     # Multiplayer support (future)
     mode: str = Field("single", description="Mode: single | multiplayer")
     room_code: Optional[str] = Field(None, description="Room code for multiplayer")
+    # #212.2: answers, closes and results of a multiplayer room (None = solo).
+    room_game: Optional[RoomGame] = None
     participants: List[Participant] = Field(
         default_factory=list,
         description="Participants in session (1 for single, N for multiplayer)",

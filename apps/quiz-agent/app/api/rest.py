@@ -27,6 +27,7 @@ from .routes import (
     daily_challenge,
     room_play,
     rooms,
+    me_stats,
 )
 
 # Main router with /api/v1 prefix
@@ -51,4 +52,5 @@ router.include_router(voice_experiment.router)
 router.include_router(daily_challenge.router)
 router.include_router(rooms.router)
 router.include_router(room_play.router)
+router.include_router(me_stats.router)
 router.include_router(pack_watch.router)  # #207: pack worker's minute ping

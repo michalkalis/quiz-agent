@@ -35,6 +35,8 @@ extension AppScreen {
             await makePacksLoadFailed()
         case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed:
             await makeDaily()
+        case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomReveal, .roomFinal:
+            await makeRoom()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

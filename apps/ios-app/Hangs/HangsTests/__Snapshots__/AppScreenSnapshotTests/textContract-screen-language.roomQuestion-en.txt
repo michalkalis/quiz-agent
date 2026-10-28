@@ -1,0 +1,29 @@
+# texts
+Play together
+1/2
+P
+Peťo
+· Points: 0
+SCIENCE & NATURE
+Which planet has the most known moons?
+20 s
+A
+Jupiter
+B
+Saturn
+C
+Uranus
+D
+Neptune
+The others see your answer after the question.
+# identifiers
+room.close
+question.progress
+question.counter
+question.category
+question.text
+room.question.timer
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d

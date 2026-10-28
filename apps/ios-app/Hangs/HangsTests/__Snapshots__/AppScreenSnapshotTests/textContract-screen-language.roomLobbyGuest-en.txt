@@ -1,0 +1,15 @@
+# texts
+Play together
+You're in
+Peťo
+Tap your name to change it.
+In the room
+M
+Michal
+P
+Peťo
+Waiting for the host to start the game
+# identifiers
+room.close
+room.lobby.rename
+room.lobby.waiting

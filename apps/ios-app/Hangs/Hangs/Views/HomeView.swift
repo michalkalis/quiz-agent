@@ -30,6 +30,8 @@ struct HomeView: View {
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
+    /// #212: opens a game together. Nil in inspector tests and previews.
+    var onTogether: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -106,7 +108,12 @@ struct HomeView: View {
                 .transition(.opacity)
             }
 
-            startQuizButton
+            HStack(spacing: Theme.Hangs.Spacing.sm) {
+                startQuizButton
+                if let appConfig, let onTogether, viewModel.quizState != .startingQuiz {
+                    HomeTogetherButton(store: appConfig, action: onTogether)
+                }
+            }
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
                 .padding(.top, Theme.Hangs.Spacing.sm)
                 .padding(.bottom, Theme.Hangs.Spacing.sm)

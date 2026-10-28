@@ -48,6 +48,10 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// the server says on; the message is optional (default copy otherwise).
     let maintenanceEnabled: Bool
     let maintenanceMessage: Notice?
+    /// #212: the Together button on Home (same-room multiplayer). Off unless
+    /// the server says on, also in `permissive`: the room endpoints answer 404
+    /// while the server switch is off.
+    let multiplayerEnabled: Bool
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -68,6 +72,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case recommendedVersionTestflight = "recommended_version_testflight"
         case maintenanceEnabled = "maintenance_enabled"
         case maintenanceMessage = "maintenance_message"
+        case multiplayerEnabled = "multiplayer_enabled"
     }
 
     init(
@@ -80,7 +85,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         recommendedVersionAppStore: String? = nil,
         recommendedVersionTestflight: String? = nil,
         maintenanceEnabled: Bool = false,
-        maintenanceMessage: Notice? = nil
+        maintenanceMessage: Notice? = nil,
+        multiplayerEnabled: Bool = false
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -92,6 +98,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.recommendedVersionTestflight = recommendedVersionTestflight
         self.maintenanceEnabled = maintenanceEnabled
         self.maintenanceMessage = maintenanceMessage
+        self.multiplayerEnabled = multiplayerEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -107,5 +114,6 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         recommendedVersionTestflight = try? container.decodeIfPresent(String.self, forKey: .recommendedVersionTestflight)
         maintenanceEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .maintenanceEnabled)) ?? false
         maintenanceMessage = try? container.decodeIfPresent(Notice.self, forKey: .maintenanceMessage)
+        multiplayerEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabled)) ?? false
     }
 }

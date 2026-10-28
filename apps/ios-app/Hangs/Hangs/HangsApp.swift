@@ -83,6 +83,8 @@ struct HangsApp: App {
                 .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .onOpenURL { url in
                     Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
+                    // #212: a game invite (QR code or shared link).
+                    if appState.roomInvites.receive(url) { return }
                     #if DEBUG
                     Task { @MainActor in
                         await UITestSupport.handleTestURL(url)

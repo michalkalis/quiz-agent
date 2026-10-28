@@ -218,6 +218,22 @@ extension Theme.Hangs {
             }
         }
 
+        /// #212: a player's colour in a game together. The server deals out
+        /// the category palette (`rooms/service.py` COLORS) as hex; anything
+        /// else gets the cobalt fallback.
+        static func player(_ hex: String?) -> Style {
+            switch hex?.lowercased() {
+            case "#ff6b2c": style(for: "history")
+            case "#7a5cff": style(for: "food-everyday")
+            case "#a3e635": style(for: "entertainment")
+            case "#3fe0ae": style(for: "science-nature")
+            case "#e8317f": style(for: "movies-music")
+            case "#ffc53d": style(for: "sports")
+            case "#16b386": Style(fill: Color(hex: Palette.liveFill), text: inkText)
+            default: style(for: "geography-world")
+            }
+        }
+
         /// #198.4: a custom pack takes one colour of the category palette,
         /// picked from its id so the same pack is the same colour on every
         /// screen and every launch (no backend field). nil → the fallback.

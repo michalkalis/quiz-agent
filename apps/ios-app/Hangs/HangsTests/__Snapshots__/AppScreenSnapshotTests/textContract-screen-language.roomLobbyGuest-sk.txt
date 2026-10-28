@@ -1,0 +1,15 @@
+# texts
+Hra spolu
+Si v hre
+Peťo
+Ťukni na meno a zmeň si ho.
+V miestnosti
+M
+Michal
+P
+Peťo
+Čaká sa, kým hostiteľ spustí hru
+# identifiers
+room.close
+room.lobby.rename
+room.lobby.waiting

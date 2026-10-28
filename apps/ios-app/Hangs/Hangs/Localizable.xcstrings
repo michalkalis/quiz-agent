@@ -20,6 +20,23 @@
         }
       }
     },
+    "%@ (you)" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (ty)"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (ty)"
+          }
+        }
+      }
+    },
     "%@ of %@ left · %@" : {
       "comment" : "Home plan card meta for a Trubbo Plus subscriber: questions left of the monthly allowance, then the reset countdown",
       "localizations" : {
@@ -194,6 +211,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld mesačne zadarmo"
+          }
+        }
+      }
+    },
+    "%lld of %lld correct" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld correct"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správne %1$lld z %2$lld"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správně %1$lld z %2$lld"
           }
         }
       }
@@ -406,6 +446,89 @@
         }
       }
     },
+    "%lld players" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld player"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld players"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráč"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráči"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráča"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráčov"
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráč"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráči"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráče"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hráčů"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld questions" : {
       "comment" : "Questions-per-session value in session settings",
       "localizations" : {
@@ -485,6 +608,23 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld s" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
           }
         }
       }
@@ -968,6 +1108,63 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpovedz"
+          }
+        }
+      }
+    },
+    "Answer locked" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpoveď je zamknutá"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověď je zamčená"
+          }
+        }
+      }
+    },
+    "Answered: %lld/%lld" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answered: %1$lld/%2$lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovede: %1$lld/%2$lld"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovědi: %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "Answers" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovede"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovědi"
           }
         }
       }
@@ -1811,6 +2008,23 @@
         }
       }
     },
+    "Connection is slow…" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomalé pripojenie…"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomalé připojení…"
+          }
+        }
+      }
+    },
     "Continue" : {
       "comment" : "A button that confirms a language selection.",
       "isCommentAutoGenerated" : true,
@@ -1913,6 +2127,23 @@
         }
       }
     },
+    "Correct answer" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správna odpoveď"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správná odpověď"
+          }
+        }
+      }
+    },
     "Correct. %@." : {
       "comment" : "Recap narration verdict for a correct answer, then the answer",
       "localizations" : {
@@ -1932,6 +2163,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Správne. %@."
+          }
+        }
+      }
+    },
+    "Correct: %lld/%lld" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correct: %1$lld/%2$lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správne: %1$lld/%2$lld"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správně: %1$lld/%2$lld"
           }
         }
       }
@@ -2544,6 +2798,23 @@
         }
       }
     },
+    "End game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukonči hru"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukonči hru"
+          }
+        }
+      }
+    },
     "End quiz" : {
       "comment" : "Accessibility label for the end-quiz button in the minimized widget",
       "localizations" : {
@@ -2557,6 +2828,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ukonči kvíz"
+          }
+        }
+      }
+    },
+    "End the game for everyone?" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukončiť hru pre všetkých?"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukončit hru pro všechny?"
           }
         }
       }
@@ -2679,6 +2967,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Každý príkaz má aj tlačidlo na obrazovke. Hlas používať nemusíš."
+          }
+        }
+      }
+    },
+    "Everyone answers on their own phone." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každý odpovedá na svojom mobile."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každý odpovídá na svém mobilu."
+          }
+        }
+      }
+    },
+    "Everyone sees the answers at the end of the game." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovede uvidia všetci na konci hry."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovědi uvidí všichni na konci hry."
           }
         }
       }
@@ -3270,6 +3592,23 @@
         }
       }
     },
+    "Games on this Wi-Fi" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hry v tejto wifi"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hry v této wifi"
+          }
+        }
+      }
+    },
     "Geography & World" : {
       "comment" : "Quiz category option",
       "localizations" : {
@@ -3542,6 +3881,23 @@
         }
       }
     },
+    "Host a game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Založ hru"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Založ hru"
+          }
+        }
+      }
+    },
     "Hungarian" : {
       "comment" : "Language name (exonym)",
       "localizations" : {
@@ -3673,6 +4029,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Obrázkové otázky"
+          }
+        }
+      }
+    },
+    "In the room" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V miestnosti"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V místnosti"
           }
         }
       }
@@ -3819,6 +4192,57 @@
         }
       }
     },
+    "Join" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pridaj sa"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidej se"
+          }
+        }
+      }
+    },
+    "Join my game in Trubbo" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pridaj sa k mojej hre v Trubbe"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidej se k mé hře v Trubbu"
+          }
+        }
+      }
+    },
+    "Join the host's Wi-Fi and the game shows up here. Or scan the QR code on the host's phone with your camera." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pripoj sa na tú istú wifi ako hostiteľ a hra sa tu ukáže. Alebo naskenuj QR kód z mobilu hostiteľa fotoaparátom."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připoj se ke stejné wifi jako hostitel a hra se tu ukáže. Nebo naskenuj QR kód z mobilu hostitele fotoaparátem."
+          }
+        }
+      }
+    },
     "Keeps your purchases and progress across devices. Nothing else is shared." : {
       "comment" : "Sign-in sheet privacy note under the Sign in with Apple button",
       "localizations" : {
@@ -3872,6 +4296,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Later, I'll sign in from Settings"
+          }
+        }
+      }
+    },
+    "Leave" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odíď"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odejdi"
+          }
+        }
+      }
+    },
+    "Leave the game?" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odísť z hry?"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odejít ze hry?"
           }
         }
       }
@@ -4039,6 +4497,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Logy"
+          }
+        }
+      }
+    },
+    "Looking for games on this Wi-Fi…" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hľadám hry v tejto wifi…"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hledám hry v této wifi…"
           }
         }
       }
@@ -4566,6 +5041,23 @@
         }
       }
     },
+    "No answer in time." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpoveď neprišla včas."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověď nepřišla včas."
+          }
+        }
+      }
+    },
     "No entries in the selected window." : {
       "localizations" : {
         "cs" : {
@@ -4596,6 +5088,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nenašli sa žiadne externé mikrofóny. Pripoj Bluetooth alebo káblové zariadenie a zobrazí sa tu."
+          }
+        }
+      }
+    },
+    "No free questions left" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Došli otázky zadarmo"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Došly otázky zdarma"
+          }
+        }
+      }
+    },
+    "No game on this Wi-Fi yet. A game started here shows up by itself. Or scan the QR code on the host's phone with your camera." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V tejto wifi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z mobilu hostiteľa fotoaparátom."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V této wifi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z mobilu hostitele fotoaparátem."
           }
         }
       }
@@ -4968,6 +5494,23 @@
         }
       }
     },
+    "Only you see this." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vidíš to len ty."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vidíš to jen ty."
+          }
+        }
+      }
+    },
     "Open App Store" : {
       "comment" : "Forced-update screen button for App Store builds (#193 task 193.9)",
       "localizations" : {
@@ -5319,6 +5862,23 @@
         }
       }
     },
+    "Play together" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra spolu"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra spolu"
+          }
+        }
+      }
+    },
     "Playback failed" : {
       "comment" : "Audio error: audio could not be played back",
       "localizations" : {
@@ -5365,6 +5925,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zahrané otázky sa neopakujú. Po vynulovaní sa vrátia."
+          }
+        }
+      }
+    },
+    "Players" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráči"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráči"
+          }
+        }
+      }
+    },
+    "Players on the same Wi-Fi also find the game in Trubbo under Together." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráči v tej istej wifi nájdu hru aj v Trubbe pod tlačidlom Spolu."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráči ve stejné wifi najdou hru i v Trubbu pod tlačítkem Spolu."
           }
         }
       }
@@ -5553,6 +6147,23 @@
         }
       }
     },
+    "QR code to join the game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR kód na pripojenie do hry"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR kód pro připojení ke hře"
+          }
+        }
+      }
+    },
     "Question %lld of %lld" : {
       "comment" : "Accessibility label for the progress badge: current question number out of total",
       "localizations" : {
@@ -5669,6 +6280,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázka %lld."
+          }
+        }
+      }
+    },
+    "Question closed" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka je uzavretá"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka je uzavřená"
           }
         }
       }
@@ -5912,6 +6540,23 @@
         }
       }
     },
+    "Read again" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prečítaj znova"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přečti znovu"
+          }
+        }
+      }
+    },
     "Read aloud" : {
       "comment" : "Settings toggle: the app's voice reads questions, results and scores aloud (the global mute).",
       "localizations" : {
@@ -5925,6 +6570,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Čítať nahlas"
+          }
+        }
+      }
+    },
+    "Reading aloud" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čítam nahlas"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čtu nahlas"
           }
         }
       }
@@ -6096,6 +6758,40 @@
         }
       }
     },
+    "Remove" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odober"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odeber"
+          }
+        }
+      }
+    },
+    "Remove %@" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odober %@"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odeber %@"
+          }
+        }
+      }
+    },
     "Remove screenshot" : {
       "localizations" : {
         "cs" : {
@@ -6108,6 +6804,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odstráň snímku obrazovky"
+          }
+        }
+      }
+    },
+    "Remove this player from the game?" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odobrať hráča z hry?"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrat hráče ze hry?"
           }
         }
       }
@@ -6650,6 +7363,23 @@
         }
       }
     },
+    "Scan to join" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naskenuj a pridaj sa"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naskenuj a přidej se"
+          }
+        }
+      }
+    },
     "Science & Nature" : {
       "comment" : "Quiz category option",
       "localizations" : {
@@ -6679,6 +7409,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hľadať v správach"
+          }
+        }
+      }
+    },
+    "Send answer" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli odpoveď"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli odpověď"
           }
         }
       }
@@ -6713,6 +7460,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odošli spätnú väzbu"
+          }
+        }
+      }
+    },
+    "Send the link" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli odkaz"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli odkaz"
           }
         }
       }
@@ -7316,6 +8080,23 @@
         }
       }
     },
+    "Something went wrong. Try again." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niečo sa pokazilo. Skús to znova."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Něco se pokazilo. Zkus to znovu."
+          }
+        }
+      }
+    },
     "Source" : {
       "comment" : "A label for the title of a source article.",
       "isCommentAutoGenerated" : true,
@@ -7448,6 +8229,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spusti kvíz"
+          }
+        }
+      }
+    },
+    "Start the game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Začni hru"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Začni hru"
           }
         }
       }
@@ -7715,6 +8513,23 @@
         }
       }
     },
+    "Tap your name to change it." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ťukni na meno a zmeň si ho."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ťukni na jméno a změň si ho."
+          }
+        }
+      }
+    },
     "Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough." : {
       "comment" : "Helper text under the custom-pack topic field",
       "localizations" : {
@@ -7783,6 +8598,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aplikácia pri každom kvíze sama nastaví potlačenie ozveny, predný mikrofón a neurónové rozpoznanie reči a meria, čo funguje lepšie. Po vypnutí ich nastavíš ručne"
+          }
+        }
+      }
+    },
+    "The game is over, or you're no longer in the room." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra už nebeží, alebo už nie si v miestnosti."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra už neběží, nebo už nejsi v místnosti."
+          }
+        }
+      }
+    },
+    "The host is reading aloud" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostiteľ číta nahlas"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostitel čte nahlas"
+          }
+        }
+      }
+    },
+    "The host moves on to the next question." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostiteľ prejde na ďalšiu otázku."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostitel přejde na další otázku."
+          }
+        }
+      }
+    },
+    "The other players see this name." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toto meno uvidia ostatní hráči."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toto jméno uvidí ostatní hráči."
+          }
+        }
+      }
+    },
+    "The others see it after the question." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatní ju uvidia po otázke."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatní ji uvidí po otázce."
+          }
+        }
+      }
+    },
+    "The others see your answer after the question." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatní uvidia tvoju odpoveď až po otázke."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatní uvidí tvou odpověď až po otázce."
           }
         }
       }
@@ -7969,6 +8886,57 @@
         }
       }
     },
+    "This game has ended" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra sa skončila"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hra skončila"
+          }
+        }
+      }
+    },
+    "This game is full or already over." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto hra je plná alebo už skončila."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahle hra je plná nebo už skončila."
+          }
+        }
+      }
+    },
+    "This game is no longer open." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto hra už nie je otvorená."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahle hra už není otevřená."
+          }
+        }
+      }
+    },
     "This order was refunded." : {
       "comment" : "Shown when a custom-pack order ended refunded — there is nothing left to retry",
       "localizations" : {
@@ -8057,6 +9025,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Znova uvidíš všetky otázky. Nedá sa to vrátiť."
+          }
+        }
+      }
+    },
+    "Time's up" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas vypršal"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas vypršel"
+          }
+        }
+      }
+    },
+    "Together" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spolu"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spolu"
           }
         }
       }
@@ -8428,6 +9430,23 @@
         }
       }
     },
+    "Type your answer" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napíš odpoveď"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napiš odpověď"
+          }
+        }
+      }
+    },
     "Type your answer…" : {
       "comment" : "A placeholder for a text field.",
       "isCommentAutoGenerated" : true,
@@ -8717,6 +9736,23 @@
         }
       }
     },
+    "Waiting for the host to start the game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čaká sa, kým hostiteľ spustí hru"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čeká se, až hostitel spustí hru"
+          }
+        }
+      }
+    },
     "We couldn't load the upgrade right now. Check your connection and try again." : {
       "localizations" : {
         "cs" : {
@@ -8799,6 +9835,23 @@
         }
       }
     },
+    "Why" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prečo"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proč"
+          }
+        }
+      }
+    },
     "Why is this correct?" : {
       "comment" : "Button title that opens a web view explaining why the current question is correct.",
       "isCommentAutoGenerated" : true,
@@ -8830,6 +9883,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prečo toto hodnotenie? Povedz to alebo napíš."
+          }
+        }
+      }
+    },
+    "Winner" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhráva"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhrává"
           }
         }
       }
@@ -8956,6 +10026,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can close the app. Your finished pack will be waiting in My packs."
+          }
+        }
+      }
+    },
+    "You're in" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si v hre"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jsi ve hře"
           }
         }
       }
@@ -9093,6 +10180,23 @@
         }
       }
     },
+    "You: %@" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ty: %@"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ty: %@"
+          }
+        }
+      }
+    },
     "Your answer is sent automatically after %lld seconds unless you change it" : {
       "comment" : "Subtitle of the Auto-confirm answers settings toggle; the number is the countdown length (Config.autoConfirmDelaySecs).",
       "localizations" : {
@@ -9172,6 +10276,108 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Your answer: %@" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoja odpoveď: %@"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje odpověď: %@"
+          }
+        }
+      }
+    },
+    "Your free questions for this month are used up, so the game ended early." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zadarmo na tento mesiac sa minuli, preto hra skončila skôr."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zdarma na tento měsíc došly, proto hra skončila dřív."
+          }
+        }
+      }
+    },
+    "Your free questions for this month are used up. A game together uses your questions." : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zadarmo na tento mesiac sa minuli. Hra spolu sa ráta do tvojich otázok."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zdarma na tento měsíc došly. Hra spolu se počítá do tvých otázek."
+          }
+        }
+      }
+    },
+    "Your name" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje meno"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje jméno"
+          }
+        }
+      }
+    },
+    "Your name for the other players" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje meno pre ostatných hráčov"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje jméno pro ostatní hráče"
+          }
+        }
+      }
+    },
+    "Your name in the game" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje meno v hre"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje jméno ve hře"
           }
         }
       }
@@ -9751,6 +10957,89 @@
         }
       }
     },
+    "left Trubbo during %lld questions" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "left Trubbo during %lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "left Trubbo during %lld questions"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubba počas %lld otázky"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubba počas %lld otázok"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubba počas %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubba počas %lld otázok"
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubbo během %lld otázky"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubbo během %lld otázek"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubbo během %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "mimo Trubbo během %lld otázek"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "my packs" : {
       "comment" : "Label for the Home section listing the account's custom packs",
       "localizations" : {
@@ -9764,6 +11053,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "moje balíky"
+          }
+        }
+      }
+    },
+    "no answer" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bez odpovede"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bez odpovědi"
           }
         }
       }
@@ -10316,6 +11622,23 @@
         }
       }
     },
+    "you · host" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ty · hostiteľ"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ty · hostitel"
+          }
+        }
+      }
+    },
     "your answer" : {
       "localizations" : {
         "cs" : {
@@ -10399,6 +11722,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tvoje hodnotenie"
+          }
+        }
+      }
+    },
+    "· Points: %@" : {
+      "comment" : "Hra spolu (#212)",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· Body: %@"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· Body: %@"
           }
         }
       }

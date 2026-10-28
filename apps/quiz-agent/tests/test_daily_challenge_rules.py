@@ -154,6 +154,9 @@ def test_rank_uses_percent_from_twenty_players_and_best_of_when_beating_all():
 
 
 def test_first_player_and_perfect_tie():
-    assert copy.comparison_text(Standing(0, 0, 3, 5), "sk") == "Dnes nikto nehral pred tebou."
+    assert (
+        copy.comparison_text(Standing(0, 0, 3, 5), "sk")
+        == "Dnes nikto nehral pred tebou."
+    )
     # A perfect score tied with everyone is not a "tough challenge".
     assert copy.comparison_text(Standing(4, 0, 5, 5), "sk") is None

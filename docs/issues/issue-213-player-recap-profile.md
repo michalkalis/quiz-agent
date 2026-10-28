@@ -57,8 +57,8 @@ Hráč vidí zábavné štatistiky o tom, ako hrá (silná kategória, kde a ked
 Poradie: 213.1 hneď (dáta sa musia zbierať pred spustením), potom 213.2 → 213.3, súbežne 213.4.
 
 - [x] **213.1 Chýbajúce merania** (PR #615, nasadené) — časové pásmo hráča pri štarte hry (`quiz_context`), čas do začiatku odpovede (`answer_submitted.latency_ms`). Allowlist v `taxonomy.py` + iOS + `docs/product/analytics-events.md`. Malé, ide samostatne.
-- [ ] **213.2 Výpočet štatistík (server)** — služba nad udalosťami hráča: karty, stav zamknutia a postup („ešte 2 hry“). Endpoint pre appku. Porovnanie zlepšenia pri rovnakej obťažnosti. Testy na prahy a hranice (prázdny hráč, presne na prahu, jedna kategória).
-- [ ] **213.3 Prehľady (server)** — prvý, mesačný (1. deň mesiaca za predošlý), ročný (december). Uložená snímka prehľadu, aby sa po čase nemenil. Typ hráča podľa pevných pravidiel. Mazanie spolu s účtom.
+- [x] **213.2 Výpočet štatistík (server)** (PR #618) — služba nad udalosťami hráča: karty, stav zamknutia a postup („ešte 2 hry“). Endpoint pre appku. Porovnanie zlepšenia pri rovnakej obťažnosti. Testy na prahy a hranice (prázdny hráč, presne na prahu, jedna kategória).
+- [x] **213.3 Prehľady (server)** (PR #620) — prvý, mesačný (1. deň mesiaca za predošlý), ročný (december). Uložená snímka prehľadu, aby sa po čase nemenil. Typ hráča podľa pevných pravidiel. Mazanie spolu s účtom.
 - [ ] **213.4 Lišta a Profil (appka)** — natívna dolná lišta (Hrať, Profil), skrytá počas kvízu. Home bez ozubeného kolieska. Profil: účet, prehľad navrchu, mriežka kariet, Moje balíčky, nastavenia. Rýchle nastavenia hry z Home aj z kvízu (koordinovať s hrou spolu: ktoré platia v hre spolu a predvolené hodnoty, napr. hlasové povely vypnuté, definuje multiplayer plán). Identifikátory, snímky obrazoviek, RS scenár.
 - [ ] **213.5 Príbeh a zdieľanie (appka)** — prehrávanie snímok, posledná snímka ako obrázok 9:16 na zdieľanie. Texty sk/cs/en cez copy review, veľké nadpisy na jeden riadok.
 - [ ] **213.6 Meranie** — udalosti: otvorenie Profilu, prehľad videný (koľko snímok), zdieľaný. Vyhodnotenie po prvom mesačnom prehľade.

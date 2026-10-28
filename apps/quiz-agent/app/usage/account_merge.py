@@ -28,6 +28,9 @@ from ..db.models import (
     Subscription,
     User,
 )
+
+# player_recaps (#213.3) are deliberately not re-keyed here: /me/recaps reads the
+# account's and its linked anon ids' snapshots together, so sign-in needs no merge.
 from .subscription_state import SubscriptionState, merge_subscription_rows
 
 

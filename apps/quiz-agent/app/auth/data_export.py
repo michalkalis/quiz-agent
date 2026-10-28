@@ -23,6 +23,7 @@ from ..db.models import (
     DailyChallengeAnswer,
     DailyChallengePlay,
     Feedback,
+    PlayerRecap,
     VoiceSample,
 )
 
@@ -34,7 +35,34 @@ async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
         "pack_orders": await _pack_orders(session, subject_ids),
         "voice_samples": await _voice_samples(session, subject_ids),
         "daily_challenges": await _daily_challenges(session, subject_ids),
+        "player_recaps": await _player_recaps(session, subject_ids),
     }
+
+
+async def _player_recaps(session: AsyncSession, subject_ids: list[str]) -> list[dict]:
+    """#213.3 stored recap snapshots (their payload is derived from the events)."""
+    rows = (
+        (
+            await session.execute(
+                select(PlayerRecap)
+                .where(PlayerRecap.subject_id.in_(subject_ids))
+                .order_by(PlayerRecap.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        {
+            "kind": r.kind,
+            "period_start": r.period_start,
+            "created_at": r.created_at,
+            "seen_at": r.seen_at,
+            "schema_version": r.schema_version,
+            "payload": r.payload,
+        }
+        for r in rows
+    ]
 
 
 async def _daily_challenges(

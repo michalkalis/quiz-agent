@@ -30,6 +30,9 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
             "parse_ms",
             "judge_ms",
             "feedback_tts_ms",
+            # #212.2: graded in a multiplayer room
+            "multiplayer",
+            "room_id",
         }
     ),
     "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),

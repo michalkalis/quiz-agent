@@ -235,6 +235,13 @@ class Settings(BaseSettings):
     # #212 same-room multiplayer: on in dev/tests, off in prod until the
     # founder flips it (fly.toml [env] MULTIPLAYER_ENABLED).
     multiplayer_enabled: bool = True
+    # #212.2 room answer time on top of the host's thinking time: A to D gets
+    # the voice speech-start window (5 s); a typed answer also gets the voice
+    # answer time (8 s) + 5 s to type. The clock starts when the host's phone
+    # finished reading aloud, or after the fallback if it never says so.
+    room_mcq_extra_seconds: int = 5
+    room_open_extra_seconds: int = 18
+    room_read_fallback_seconds: int = 45
     app_notice_sk: Optional[str] = None
     app_notice_cs: Optional[str] = None
     app_notice_en: Optional[str] = None

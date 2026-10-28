@@ -23,6 +23,7 @@ from ..evaluation.spelling import collapse_spelling
 from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
+from ..rooms.rounds import open_round
 from ..session.manager import SessionManager
 from ..tts.number_normalization import normalize_numbers_for_tts
 from ..tts.spoken_text import spoken_question_text
@@ -493,6 +494,7 @@ class QuizFlowService:
         )
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record
+        open_round(session, translated_q_dict)  # #212.2: no-op outside a room
         await self.session_manager.update_session(session)
 
         result.next_question_dict = translated_q_dict

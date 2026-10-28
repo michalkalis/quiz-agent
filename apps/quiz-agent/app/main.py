@@ -386,7 +386,7 @@ async def lifespan(app: FastAPI):
             NetTickets(settings.auth_jwt_secret),
         )
     app.state.rooms = rooms
-    app.state.quiz_flow = QuizFlowService(
+    app.state.quiz_flow = quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,
         question_retriever=question_retriever,
@@ -397,6 +397,10 @@ async def lifespan(app: FastAPI):
         analytics=analytics,
         daily_challenge=daily_challenge,
     )
+    if rooms is not None:
+        from .rooms.play import RoomPlay
+
+        rooms.play = RoomPlay(session_manager, rooms.store, quiz_flow)
     logger.info("API dependencies configured")
 
     # Start background tasks

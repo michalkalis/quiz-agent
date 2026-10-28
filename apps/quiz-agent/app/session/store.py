@@ -56,9 +56,20 @@ def forget_in_session(data: dict, user_id: str) -> tuple[dict, bool]:
     deactivating the session would end the host's game. Every other session
     the user appears in is deactivated, as before."""
     if data.get("mode") == "multiplayer" and data.get("user_id") != user_id:
+        gone = {
+            p.get("participant_id")
+            for p in data.get("participants", [])
+            if p.get("user_id") == user_id
+        }
         data["participants"] = [
             p for p in data.get("participants", []) if p.get("user_id") != user_id
         ]
+        # Their answers go with them (#212.2).
+        for rnd in (data.get("room_game") or {}).get("rounds", []):
+            rnd["answers"] = {
+                k: v for k, v in rnd.get("answers", {}).items() if k not in gone
+            }
+            rnd["away"] = [k for k in rnd.get("away", []) if k not in gone]
         return scrub_user(data, user_id), True
     return scrub_user(data, user_id), False
 

@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 from quiz_shared.models.participant import Participant
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.models.room import RoomGame
 from quiz_shared.models.session import QuizSession
 
 from ..session.manager import SessionManager
@@ -78,9 +79,16 @@ class RoomService:
         self.sessions = sessions
         self.store = store
         self.tickets = tickets
+        # #212.2 answer flow (rooms.play.RoomPlay), wired once the quiz flow exists.
+        self.play = None
 
     async def create(
-        self, session_id: str, subject_id: str, host_name: str, keys: dict[str, str]
+        self,
+        session_id: str,
+        subject_id: str,
+        host_name: str,
+        keys: dict[str, str],
+        game: RoomGame | None = None,
     ) -> tuple[Room, QuizSession]:
         """Make the host's idle session a room. Calling it again for the same
         session returns the same room (a retried request must not fork it)."""
@@ -121,6 +129,9 @@ class RoomService:
             host.color = host.color or COLORS[0]
             session.mode = "multiplayer"
             session.room_code = room.room_id
+            session.room_game = game or RoomGame()
+            # One picture on several phones is not in the first version.
+            session.include_images = False
             await self.sessions.update_session(session)
             return room, session
 

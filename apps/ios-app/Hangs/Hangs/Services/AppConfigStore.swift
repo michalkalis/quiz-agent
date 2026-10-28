@@ -5,7 +5,8 @@
 //  Server-side switches for shipped builds (#193 task 193.9 — beta hardening):
 //  a forced update below a minimum version, pausing custom-pack orders, and a
 //  short notice on Home, all changed with a backend env update instead of an
-//  app release.
+//  app release. #214 adds an optional update nudge on Home and a full-screen
+//  maintenance message.
 //
 //  Fails open by design: until a fetch succeeds the app runs on
 //  `RemoteAppConfig.permissive`, and a failed fetch keeps whatever was last
@@ -22,8 +23,10 @@ final class AppConfigStore: ObservableObject {
 
     @Published private(set) var config: RemoteAppConfig = .permissive
     @Published private var dismissedNotice: String?
+    @Published private var dismissedRecommendedVersion: String?
 
     private static let dismissedNoticeKey = "dismissedAppNotice"
+    private static let dismissedRecommendedVersionKey = "dismissedRecommendedVersion"
 
     private let fetch: Fetch
     private let defaults: UserDefaults
@@ -38,6 +41,20 @@ final class AppConfigStore: ObservableObject {
         guard let minimum else { return false }
         return AppVersion.isOlder(appVersion, than: minimum)
     }
+
+    /// #214: a newer version is recommended and the player has not dismissed
+    /// the card for that version. Never alongside the forced update.
+    var updateRecommended: Bool {
+        guard !updateRequired, let recommended = recommendedVersion else { return false }
+        return recommended != dismissedRecommendedVersion && AppVersion.isOlder(appVersion, than: recommended)
+    }
+
+    /// #214: the full-screen maintenance message is up. The forced update wins,
+    /// it is the only way out for a build the server no longer supports.
+    var maintenance: Bool { config.maintenanceEnabled && !updateRequired }
+
+    /// The server's maintenance text in the UI language; nil = default copy.
+    var maintenanceMessage: String? { config.maintenanceMessage?.text(for: languageCode) }
 
     var ordersEnabled: Bool { config.ordersEnabled }
 
@@ -66,9 +83,13 @@ final class AppConfigStore: ObservableObject {
         #if DEBUG
             // UI tests run on a long-lived simulator: a notice dismissed in one
             // run must not hide it from the next.
-            if UITestSupport.isUITesting { defaults.removeObject(forKey: Self.dismissedNoticeKey) }
+            if UITestSupport.isUITesting {
+                defaults.removeObject(forKey: Self.dismissedNoticeKey)
+                defaults.removeObject(forKey: Self.dismissedRecommendedVersionKey)
+            }
         #endif
         dismissedNotice = defaults.string(forKey: Self.dismissedNoticeKey)
+        dismissedRecommendedVersion = defaults.string(forKey: Self.dismissedRecommendedVersionKey)
     }
 
     /// Best-effort fetch at launch and on every return to the foreground.
@@ -80,10 +101,32 @@ final class AppConfigStore: ObservableObject {
         }
     }
 
+    /// #214: while the maintenance screen is up, check the server again every
+    /// `interval` so the app continues on its own (the player may be driving
+    /// and cannot tap). Returns once maintenance is off or the caller cancels.
+    func recheckUntilMaintenanceEnds(every interval: Duration = .seconds(30)) async {
+        while maintenance, !Task.isCancelled {
+            try? await Task.sleep(for: interval)
+            guard !Task.isCancelled else { return }
+            await refresh()
+        }
+    }
+
     func dismissNotice() {
         guard let text = config.notice?.text(for: languageCode) else { return }
         dismissedNotice = text
         defaults.set(text, forKey: Self.dismissedNoticeKey)
+    }
+
+    /// Hides the update card until the server recommends a newer version.
+    func dismissUpdate() {
+        guard let recommended = recommendedVersion else { return }
+        dismissedRecommendedVersion = recommended
+        defaults.set(recommended, forKey: Self.dismissedRecommendedVersionKey)
+    }
+
+    private var recommendedVersion: String? {
+        isTestFlight ? config.recommendedVersionTestflight : config.recommendedVersionAppStore
     }
 
     /// Short timeout: this runs at launch and must never hold anything up.
@@ -107,14 +150,17 @@ final class AppConfigStore: ObservableObject {
     #if DEBUG
         /// Launch arguments that show each state on the simulator without a
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
-        /// `--app-config-notice`; any `--ui-test-daily-*` flag turns the #205
-        /// daily challenge on.
+        /// `--app-config-notice`, `--app-config-update-recommended`,
+        /// `--app-config-maintenance` (#214); any `--ui-test-daily-*` flag
+        /// turns the #205 daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
             let ordersOff = arguments.contains("--app-config-orders-off")
             let notice = arguments.contains("--app-config-notice")
+            let recommended = arguments.contains("--app-config-update-recommended")
+            let maintenance = arguments.contains("--app-config-maintenance")
             let daily = DailyChallengeFixtures.isActive(arguments)
-            guard update || ordersOff || notice || daily else { return nil }
+            guard update || ordersOff || notice || recommended || maintenance || daily else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -124,7 +170,10 @@ final class AppConfigStore: ObservableObject {
                     cs: "Dnes od 22:00 probíhá údržba. Kvíz může být krátce nedostupný.",
                     en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable."
                 ) : nil,
-                dailyChallengeEnabled: daily
+                dailyChallengeEnabled: daily,
+                recommendedVersionAppStore: recommended ? "999" : nil,
+                recommendedVersionTestflight: recommended ? "999" : nil,
+                maintenanceEnabled: maintenance
             )
         }
     #endif

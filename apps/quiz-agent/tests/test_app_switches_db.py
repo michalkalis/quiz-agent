@@ -142,6 +142,9 @@ async def test_override_beats_env_and_reset_returns_to_env(
         {"min_version_testflight": "1.2-beta"},
         {"orders_enabled": "false"},  # a string, not a bool
         {"notice_en": "x" * 301},
+        {"recommended_version_app_store": "latest"},
+        {"maintenance_enabled": "true"},  # a string, not a bool
+        {"maintenance_sk": "x" * 301},
         {"daily_challenge_enabled": True},  # not a DB switch
     ],
 )
@@ -151,6 +154,34 @@ async def test_bad_values_are_refused_and_nothing_is_written(db_sessionmaker, ch
     assert resp.status_code == 422
     # All or nothing: the valid orders change in the same request did not land.
     assert (await _config(db_sessionmaker))["orders_enabled"] is True
+
+
+async def test_maintenance_and_nudge_switch_on_and_off_live(db_sessionmaker):
+    """#214: maintenance blocks every current build, so turning it off must be
+    as immediate as turning it on, and a blank message falls back to the app's
+    own text instead of an empty screen."""
+    await _put(
+        db_sessionmaker,
+        {"set": {"maintenance_enabled": True, "maintenance_en": " Back at 10:00. ",
+                 "recommended_version_app_store": "1.2"}},
+    )  # fmt: skip
+    body = await _config(db_sessionmaker)
+    assert body["maintenance_enabled"] is True
+    assert body["maintenance_message"] == {
+        "sk": None,
+        "cs": None,
+        "en": "Back at 10:00.",
+    }
+    assert body["recommended_version_app_store"] == "1.2"
+    # The nudge must never turn into a forced update.
+    assert body["min_version_app_store"] is None
+
+    await _put(
+        db_sessionmaker,
+        {"set": {"maintenance_enabled": False}, "reset": ["maintenance_en"]},
+    )
+    body = await _config(db_sessionmaker)
+    assert (body["maintenance_enabled"], body["maintenance_message"]) == (False, None)
 
 
 async def test_admin_key_is_required(db_sessionmaker):

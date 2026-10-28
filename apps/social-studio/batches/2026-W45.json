@@ -69,7 +69,8 @@
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/five-sk-d7612898.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/five-sk-d7612898.jpg"
-   ]
+   ],
+   "tiktok_buffer": "6ae1d62da445010a009d60b0"
   },
   {
    "key": "tue-ig_en",
@@ -379,7 +380,8 @@
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-sk-67341d30.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-sk-67341d30.jpg"
-   ]
+   ],
+   "tiktok_buffer": "6ae1d62ef2d8122c07cbd779"
   },
   {
    "key": "thu-ig_en",
@@ -457,7 +459,8 @@
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/abc-cs-ff30fdb2.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/abc-cs-ff30fdb2.jpg"
-   ]
+   ],
+   "tiktok_buffer": "6ae1d62f715fd2293487944e"
   },
   {
    "key": "fri-ig_en",
@@ -599,7 +602,8 @@
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-sk-53557889.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-sk-53557889.jpg"
-   ]
+   ],
+   "tiktok_buffer": "6ae1d630f2d8122c07cbd85b"
   },
   {
    "key": "sat-ig_en",
@@ -909,7 +913,8 @@
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-cs-b56022d3.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-cs-b56022d3.jpg"
-   ]
+   ],
+   "tiktok_buffer": "6ae1d642846bc483e5392174"
   }
  ]
 }

@@ -34,7 +34,11 @@ from app.analytics.recorder import (  # noqa: E402
     app_version_var,
     drain_pending,
 )
-from app.analytics.taxonomy import MAX_STRING_LEN, clean_properties  # noqa: E402
+from app.analytics.taxonomy import (  # noqa: E402
+    CLIENT_EVENTS,
+    MAX_STRING_LEN,
+    clean_properties,
+)
 from app.api import deps  # noqa: E402
 from app.api.routes import analytics as analytics_routes  # noqa: E402
 from app.auth.identity import AuthSubject  # noqa: E402
@@ -89,6 +93,20 @@ async def test_only_allowlisted_scalar_properties_survive():
         },
     )
     assert cleaned == {"source": "x" * MAX_STRING_LEN, "count": 3, "flag": True}
+
+
+async def test_recap_telemetry_keys_are_kept_and_unlisted_ones_still_dropped():
+    # #213.1: the recap needs the player's local time of day and answer speed;
+    # without these keys the server would silently drop them.
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"],
+        {"timezone": "Europe/Bratislava", "city": "Bratislava"},
+    )
+    assert ctx == {"timezone": "Europe/Bratislava"}
+    sub = clean_properties(
+        CLIENT_EVENTS["answer_submitted"], {"latency_ms": 4200, "transcript": "x"}
+    )
+    assert sub == {"latency_ms": 4200}
 
 
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():

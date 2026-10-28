@@ -378,7 +378,10 @@ final class QuizViewModel: ObservableObject {
     /// `QuizTimersController.isPaused`.
     var isPaused: Bool {
         get { quizTimersController.isPaused }
-        set { quizTimersController.isPaused = newValue }
+        set {
+            attemptLedger.latency.setPaused(newValue)
+            quizTimersController.isPaused = newValue
+        }
     }
 
     // MARK: - Voice Commands — forwarded to VoiceCommandCoordinator (#113 T3)
@@ -868,7 +871,7 @@ final class QuizViewModel: ObservableObject {
         self.clock = clock
         // The app keeps one black box; the #186 sequence harness gives each run
         // its own so a failing seed prints only its own input trail.
-        attemptLedger = AttemptLedger(recorder: flightRecorder)
+        attemptLedger = AttemptLedger(recorder: flightRecorder, clock: clock)
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
@@ -980,6 +983,7 @@ final class QuizViewModel: ObservableObject {
                 // #208.7: a skip said over the read stops it; its tail must not
                 // start the think window under the pending skip.
                 guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
+                self.attemptLedger.latency.openWindow(questionId: self.currentQuestion?.id)
                 self.quizTimersController.startThinkingTimeCountdown(
                     readingPause: afterSilentRead ? self.silentReadingPause : .zero
                 )
@@ -2278,6 +2282,7 @@ final class QuizViewModel: ObservableObject {
     /// waits a silent reading pause first (`silentReadingPause`).
     func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
+        attemptLedger.latency.openWindow(questionId: currentQuestion?.id)
         quizTimersController.startThinkingTimeCountdown(
             resumingAt: heldSeconds,
             readingPause: afterSilentRead ? silentReadingPause : .zero

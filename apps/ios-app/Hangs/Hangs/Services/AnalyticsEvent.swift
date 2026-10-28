@@ -16,9 +16,12 @@ import Foundation
 enum AnalyticsEvent: Equatable {
     case appOpened(launch: AppLaunchKind)
     case onboardingFinished(outcome: OnboardingOutcome, step: String)
-    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint)
+    /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
+    /// time of day a player plays at needs it (#213.1).
+    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String)
     case quizAbandoned(questionsAnswered: Int, phase: String)
-    case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool)
+    /// `latencyMs` (#213.1): time to start answering; nil = unknown, key left out.
+    case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool, latencyMs: Int? = nil)
     case voiceCaptureFailed(reason: VoiceCaptureFailure, questionId: String?)
     /// #204.9: one recorded answer and the voice settings it ran with.
     case answerCaptured(AnswerCapturedReport)
@@ -53,19 +56,21 @@ enum AnalyticsEvent: Equatable {
             [("launch", .string(launch.rawValue))]
         case let .onboardingFinished(outcome, step):
             [("outcome", .string(outcome.rawValue)), ("step", .string(step))]
-        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint):
+        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone):
             [
                 ("audio_route", .string(audioRoute.rawValue)),
                 ("voice_commands_enabled", .bool(voiceCommandsEnabled)),
                 ("entry_point", .string(entryPoint.rawValue)),
+                ("timezone", .string(timezone)),
             ]
         case let .quizAbandoned(questionsAnswered, phase):
             [("questions_answered", .int(questionsAnswered)), ("phase", .string(phase))]
-        case let .answerSubmitted(inputMode, questionId, isRetry):
+        case let .answerSubmitted(inputMode, questionId, isRetry, latencyMs):
             [
                 ("input_mode", .string(inputMode.rawValue)),
                 ("question_id", questionId.map { .string($0) }),
                 ("is_retry", .bool(isRetry)),
+                ("latency_ms", latencyMs.map { .int($0) }),
             ]
         case let .voiceCaptureFailed(reason, questionId):
             [("reason", .string(reason.rawValue)), ("question_id", questionId.map { .string($0) })]

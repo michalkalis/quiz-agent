@@ -44,9 +44,13 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
 CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "app_opened": frozenset({"launch"}),
     "onboarding_finished": frozenset({"outcome", "step"}),
-    "quiz_context": frozenset({"audio_route", "voice_commands_enabled", "entry_point"}),
+    "quiz_context": frozenset(
+        {"audio_route", "voice_commands_enabled", "entry_point", "timezone"}
+    ),
     "quiz_abandoned": frozenset({"questions_answered", "phase"}),
-    "answer_submitted": frozenset({"input_mode", "question_id", "is_retry"}),
+    "answer_submitted": frozenset(
+        {"input_mode", "question_id", "is_retry", "latency_ms"}
+    ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
     "paywall_viewed": frozenset({"source"}),

@@ -7,6 +7,8 @@
 //  server's own quiz events (`quiz_started`, `answer_evaluated`, …).
 //
 
+import Foundation
+
 extension QuizViewModel {
     /// The child coordinators reach this through their injected closure.
     func trackAnalytics(_ event: AnalyticsEvent) {
@@ -18,12 +20,18 @@ extension QuizViewModel {
         trackAnalytics(.quizContext(
             audioRoute: .current,
             voiceCommandsEnabled: settings.voiceCommandsEnabled,
-            entryPoint: entryPoint
+            entryPoint: entryPoint,
+            timezone: TimeZone.current.identifier
         ))
     }
 
     func trackAnswerSubmitted(_ inputMode: AnswerInputMode, questionId: String?) {
         let isRetry = attemptLedger.noteAnswerAttempt(questionId: questionId)
-        trackAnalytics(.answerSubmitted(inputMode: inputMode, questionId: questionId, isRetry: isRetry))
+        let latencyMs = attemptLedger.latency.consumeLatencyMs(
+            questionId: questionId, isRetry: isRetry, voice: inputMode == .voice
+        )
+        trackAnalytics(.answerSubmitted(
+            inputMode: inputMode, questionId: questionId, isRetry: isRetry, latencyMs: latencyMs
+        ))
     }
 }

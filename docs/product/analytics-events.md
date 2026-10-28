@@ -23,9 +23,9 @@
 |---|---|---|
 | `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
 | `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (mic_granted / mic_denied / mic_later / skipped), `step` |
-| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point` |
+| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`) |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
-| `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry` |
+| `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry`, `latency_ms` (ms from when the player could answer to speech onset or tap/submit, pauses excluded; left out on retries or when unknown) |
 | `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
 | `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
 | `paywall_viewed` | paywall shown | `source` (quota / home / settings / completion) |

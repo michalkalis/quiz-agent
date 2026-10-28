@@ -14,7 +14,8 @@ import Foundation
 extension RecordingCoordinator {
     func trackVoiceAnswerSubmitted(questionId: String?) {
         let isRetry = attemptLedger.noteAnswerAttempt(questionId: questionId)
-        trackAnalytics(.answerSubmitted(inputMode: .voice, questionId: questionId, isRetry: isRetry))
+        let latencyMs = attemptLedger.latency.consumeLatencyMs(questionId: questionId, isRetry: isRetry, voice: true)
+        trackAnalytics(.answerSubmitted(inputMode: .voice, questionId: questionId, isRetry: isRetry, latencyMs: latencyMs))
     }
 
     func trackCaptureFailure(_ reason: VoiceCaptureFailure) {
@@ -38,6 +39,7 @@ extension RecordingCoordinator {
         experiment: VoiceExperimentStore = .shared
     ) {
         let questionId = currentQuestion()?.id
+        attemptLedger.latency.noteSpeechOnset(durationMs: durationMs, firstSpeechMs: detection.firstSpeechMs)
         let flags = Dictionary(uniqueKeysWithValues: VoiceExperimentFlag.allCases.map { ($0, experiment.flag($0)) })
         let report = AnswerCapturedReport(
             questionId: questionId,

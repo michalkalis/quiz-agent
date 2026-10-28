@@ -24,9 +24,9 @@ import Testing
 private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
-    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point"],
+    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone"],
     "quiz_abandoned": ["questions_answered", "phase"],
-    "answer_submitted": ["input_mode", "question_id", "is_retry"],
+    "answer_submitted": ["input_mode", "question_id", "is_retry", "latency_ms"],
     "voice_capture_failed": ["reason", "question_id"],
     "answer_captured": [
         "question_id", "is_retry", "auto_test", "src_neural_vad", "src_aec", "src_front_mic",
@@ -46,9 +46,9 @@ private let backendClientEvents: [String: Set<String>] = [
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
     .onboardingFinished(outcome: .micGranted, step: "permission"),
-    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home),
+    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava"),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
-    .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false),
+    .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
     .answerCaptured(AnswerCapturedReport(
         questionId: "q_001", isRetry: false, autoTest: true,
@@ -163,11 +163,12 @@ struct QuizAnalyticsTests {
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }
         #expect(context.count == 1)
-        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint) = context.first?.event else {
+        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone) = context.first?.event else {
             Issue.record("no quiz_context")
             return
         }
         #expect(entryPoint == .pack)
+        #expect(timezone == TimeZone.current.identifier, "analytics occurred_at is UTC; local time of day needs the zone (#213.1)")
         #expect(voiceCommandsEnabled == false)
         #expect(context.first?.sessionId == vm.currentSession?.id, "joins the server's quiz_started")
     }
@@ -465,5 +466,91 @@ struct LiveAnalyticsClientTests {
         client.flush()
         for _ in 0 ..< 20 { await Task.yield() }
         #expect(network.postedAnalyticsBatches.count == LiveAnalyticsClient.maxAttempts, "a dropped batch is not re-queued")
+    }
+}
+
+@Suite("#213.1 answer latency")
+@MainActor
+struct AnswerLatencyTests {
+    private func makeTracker() -> (AnswerLatencyTracker, TestClock<Duration>) {
+        let clock = TestClock()
+        return (AnswerLatencyTracker(clock: AnyClock(clock)), clock)
+    }
+
+    @Test("event properties carry latency_ms only when known")
+    func eventCarriesLatency() {
+        let known = AnalyticsEvent.answerSubmitted(inputMode: .tap, questionId: "q", isRetry: false, latencyMs: 2300)
+        #expect(known.properties["latency_ms"] == .int(2300))
+        let unknown = AnalyticsEvent.answerSubmitted(inputMode: .tap, questionId: "q", isRetry: true)
+        #expect(unknown.properties["latency_ms"] == nil, "unknown start is omitted, never sent as 0")
+    }
+
+    @Test("quiz_context carries the IANA timezone")
+    func contextCarriesTimezone() {
+        let event = AnalyticsEvent.quizContext(
+            audioRoute: .speaker, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava"
+        )
+        #expect(event.properties["timezone"] == .string("Europe/Bratislava"))
+    }
+
+    @Test("a tap is measured from the window opening to the submit moment")
+    func tapLatency() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(3200))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 3200)
+    }
+
+    @Test("a voice answer ends at speech onset, not at submit")
+    func voiceLatencyUsesOnset() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000)) // recording runs 1000..6000 ms
+        await clock.advance(by: .milliseconds(5000))
+        tracker.noteSpeechOnset(durationMs: 5000, firstSpeechMs: 1500)
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: true) == 2500)
+    }
+
+    @Test("a voice answer without a measured onset falls back to the submit moment")
+    func voiceWithoutOnset() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(4000))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: true) == 4000)
+    }
+
+    @Test("paused time is excluded")
+    func pausedTimeExcluded() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        tracker.setPaused(true)
+        await clock.advance(by: .milliseconds(30000))
+        tracker.setPaused(false)
+        await clock.advance(by: .milliseconds(500))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 1500)
+    }
+
+    @Test("a retry, an unopened window and another question's window report nothing")
+    func unknownStartIsOmitted() async {
+        let (tracker, clock) = makeTracker()
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == nil, "tap mid-read")
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(100))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: true, voice: false) == nil, "retry")
+        tracker.openWindow(questionId: "q1")
+        tracker.openWindow(questionId: "q2")
+        await clock.advance(by: .milliseconds(100))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == nil, "wrong question")
+    }
+
+    @Test("re-arming the think timer does not restart the window")
+    func openIsIdempotent() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 2000)
     }
 }

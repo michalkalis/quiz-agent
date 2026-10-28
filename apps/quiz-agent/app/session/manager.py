@@ -240,7 +240,8 @@ class SessionManager:
         """Unlink an erased account from its quiz sessions and ratings (GDPR).
 
         Rows are kept so answers and ratings still count in statistics but no
-        longer point at the person; touched sessions are deactivated and their
+        longer point at the person; touched sessions are deactivated (a guest
+        in someone else's multiplayer room only leaves it, #212) and their
         version bumped, so an in-flight request holding an old copy cannot
         write the id back. ``db`` = the erasure route's transaction (Postgres
         store). Raises on failure so the caller can abort the erasure.

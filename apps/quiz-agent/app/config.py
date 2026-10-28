@@ -232,6 +232,9 @@ class Settings(BaseSettings):
     # #205 daily challenge: on in dev/tests, off in prod until the founder
     # flips it (fly.toml [env] DAILY_CHALLENGE_ENABLED).
     daily_challenge_enabled: bool = True
+    # #212 same-room multiplayer: on in dev/tests, off in prod until the
+    # founder flips it (fly.toml [env] MULTIPLAYER_ENABLED).
+    multiplayer_enabled: bool = True
     app_notice_sk: Optional[str] = None
     app_notice_cs: Optional[str] = None
     app_notice_en: Optional[str] = None

@@ -53,6 +53,8 @@ async def test_defaults_never_block_or_hide_anything():
         "orders_enabled": True,
         # #205: on in dev; prod's fly.toml turns it off until the founder flips it.
         "daily_challenge_enabled": True,
+        # #212: same; off in prod until the founder flips it.
+        "multiplayer_enabled": True,
         "notice": None,
         # No DB in this test app: the voice test block is null (fail open).
         "voice_experiment": None,

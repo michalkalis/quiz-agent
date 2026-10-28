@@ -567,6 +567,31 @@ class QuizSessionRow(Base):
     )
 
 
+class MultiplayerRoom(Base):
+    """A same-room game (#212 — multiplayer): how guests find the host's quiz
+    session. The game itself (participants, scores) lives in the session.
+
+    ``join_token`` is the secret in the QR code / shared link. ``net_v4`` and
+    ``net_v6`` are the host's network keys (exact IPv4, IPv6 /64 prefix) that
+    ``nearby`` matches so a guest on the same Wi-Fi finds the game without
+    typing anything."""
+
+    __tablename__ = "multiplayer_rooms"
+
+    room_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False)
+    host_subject_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    join_token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    net_v4: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    net_v6: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
 class CoordinationLease(Base):
     """A short, expiring claim on a name, shared by all machines.
 

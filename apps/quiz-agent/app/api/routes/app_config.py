@@ -56,6 +56,8 @@ class AppConfigResponse(BaseModel):
     orders_enabled: bool = True
     # #205: show the daily challenge card on Home.
     daily_challenge_enabled: bool = False
+    # #212: show the Spolu (play together) button.
+    multiplayer_enabled: bool = False
     notice: Optional[AppNotice] = None
     # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
     # there is no DB or the read fails; the app then uses its manual switches.
@@ -81,6 +83,7 @@ async def get_app_config(
         min_version_testflight=switches["min_version_testflight"],
         orders_enabled=switches["orders_enabled"],
         daily_challenge_enabled=settings.daily_challenge_enabled,
+        multiplayer_enabled=settings.multiplayer_enabled,
         notice=notice if (notice.sk or notice.cs or notice.en) else None,
         voice_experiment=await voice_experiment_config(sessionmaker),
     )

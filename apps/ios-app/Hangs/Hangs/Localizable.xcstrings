@@ -2977,13 +2977,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Každý odpovedá na svojom mobile."
+            "value" : "Každý odpovedá na svojom telefóne."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Každý odpovídá na svém mobilu."
+            "value" : "Každý odpovídá na svém telefonu."
           }
         }
       }
@@ -3598,13 +3598,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hry v tejto wifi"
+            "value" : "Hry v tejto Wi-Fi"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hry v této wifi"
+            "value" : "Hry v této Wi-Fi"
           }
         }
       }
@@ -4232,13 +4232,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pripoj sa na tú istú wifi ako hostiteľ a hra sa tu ukáže. Alebo naskenuj QR kód z mobilu hostiteľa fotoaparátom."
+            "value" : "Pripoj sa na tú istú Wi-Fi ako hostiteľ a hra sa tu ukáže. Alebo naskenuj QR kód z telefónu hostiteľa fotoaparátom."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Připoj se ke stejné wifi jako hostitel a hra se tu ukáže. Nebo naskenuj QR kód z mobilu hostitele fotoaparátem."
+            "value" : "Připoj se ke stejné Wi-Fi jako hostitel a hra se tu ukáže. Nebo naskenuj QR kód z telefonu hostitele fotoaparátem."
           }
         }
       }
@@ -4507,13 +4507,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hľadám hry v tejto wifi…"
+            "value" : "Hľadám hry v tejto Wi-Fi…"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hledám hry v této wifi…"
+            "value" : "Hledám hry v této Wi-Fi…"
           }
         }
       }
@@ -5115,13 +5115,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "V tejto wifi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z mobilu hostiteľa fotoaparátom."
+            "value" : "V tejto Wi-Fi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z telefónu hostiteľa fotoaparátom."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "V této wifi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z mobilu hostitele fotoaparátem."
+            "value" : "V této Wi-Fi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z telefonu hostitele fotoaparátem."
           }
         }
       }
@@ -5952,13 +5952,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hráči v tej istej wifi nájdu hru aj v Trubbe pod tlačidlom Spolu."
+            "value" : "Hráči v tej istej Wi-Fi nájdu hru aj v Trubbe pod tlačidlom Spolu."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hráči ve stejné wifi najdou hru i v Trubbu pod tlačítkem Spolu."
+            "value" : "Hráči ve stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu."
           }
         }
       }

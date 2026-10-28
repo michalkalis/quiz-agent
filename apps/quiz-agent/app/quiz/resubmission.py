@@ -170,6 +170,7 @@ async def process_resubmission(
     participant_id: Optional[str],
     include_audio: bool,
     result: "FlowResult",
+    route: Optional[str] = None,
 ) -> "FlowResult":
     """Handle a submit for the question this session already graded (#133 1a).
 
@@ -247,6 +248,23 @@ async def process_resubmission(
     )
     if result.crowd is not None:
         session.last_evaluation.crowd = result.crowd.model_dump()
+    # #213: the corrected verdict supersedes the first ``answer_evaluated`` row;
+    # player stats keep the latest row per (session, question).
+    flow.analytics.emit(
+        "answer_evaluated",
+        subject_id=session.user_id,
+        session_id=session.session_id,
+        properties={
+            "question_id": previous.question_id,
+            "result": result.evaluation.result,
+            "category": question.category,
+            "question_type": question.type,
+            "difficulty": question.difficulty,
+            "route": route,
+            "is_regrade": True,
+            "question_index": len(session.asked_question_ids),
+        },
+    )
     # #205: an edited transcript is the same attempt, corrected.
     await flow._daily_record(
         session, previous.question_id, result.evaluation.result, regrade=True

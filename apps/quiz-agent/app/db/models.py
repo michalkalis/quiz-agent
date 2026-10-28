@@ -351,6 +351,7 @@ class AnalyticsEvent(Base):
     __tablename__ = "analytics_events"
     __table_args__ = (
         Index("ix_analytics_events_name_occurred", "name", "occurred_at"),
+        Index("ix_analytics_events_subject_occurred", "subject_id", "occurred_at"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -363,7 +364,7 @@ class AnalyticsEvent(Base):
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
-    subject_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    subject_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     # "server" (emitted by this API) or "ios" (posted by the app).
     source: Mapped[str] = mapped_column(Text, nullable=False)

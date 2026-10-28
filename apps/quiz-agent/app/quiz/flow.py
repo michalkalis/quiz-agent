@@ -235,6 +235,7 @@ class QuizFlowService:
                 participant_id=participant_id,
                 include_audio=include_audio,
                 result=FlowResult(),
+                route=route,
             )
 
         result = FlowResult()

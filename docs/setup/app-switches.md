@@ -7,15 +7,15 @@ Vynútená aktualizácia (minimálna verzia), odporúčaná aktualizácia, reži
 | `min_version_app_store`, `min_version_testflight` | `"1.2"` / `"1.2.3"`, `null` = bez minima | buildy pod verziou musia aktualizovať |
 | `orders_enabled` | `true` / `false` | `false` skryje objednávanie v appke a quiz-pack-api odmietne nové objednávky (existujúce bežia ďalej) |
 | `notice_sk`, `notice_cs`, `notice_en` | text do 300 znakov, `null` = bez oznamu | pruh s oznamom; chýbajúci jazyk padne na `en` |
-| `recommended_version_app_store`, `recommended_version_testflight` (#214) | ako minimum, `null` = vypnuté | buildy pod verziou dostanú na Home kartu „Nová verzia Trubbo je pripravená“ s tlačidlom do obchodu; hráč ju zavrie a pri tej istej verzii sa už neukáže |
-| `maintenance_enabled` (#214) | `true` / `false` | celá obrazovka „Hneď sme späť“ cez celú appku; appka sa každých 30 s pýta znova a po vypnutí pokračuje sama |
-| `maintenance_sk`, `maintenance_cs`, `maintenance_en` (#214) | text do 300 znakov, `null` = predvolený text | text na obrazovke údržby (napr. „Späť o 10:00.“) |
+| `recommended_version_app_store`, `recommended_version_testflight` (#214 — odporúčaná aktualizácia a údržba) | ako minimum, `null` = vypnuté | buildy pod verziou dostanú na Home kartu „Nová verzia Trubbo je pripravená“ s tlačidlom do obchodu; hráč ju zavrie a pri tej istej verzii sa už neukáže |
+| `maintenance_enabled` | `true` / `false` | celá obrazovka „Hneď sme späť“ cez celú appku; appka sa každých 30 s pýta znova a po vypnutí pokračuje sama |
+| `maintenance_sk`, `maintenance_cs`, `maintenance_en` | text do 300 znakov, `null` = predvolený text | text na obrazovke údržby (napr. „Späť o 10:00.“) |
 
-Bez zmeny cez endpoint platí hodnota z env / Fly secretu (`MIN_APP_VERSION_*`, `PACK_ORDERS_ENABLED`, `APP_NOTICE_*`), presne ako predtým. Zmena cez endpoint má prednosť. Odporúčaná verzia a údržba (#214) nemajú env hodnotu, sú len v DB (predvolene vypnuté).
+Bez zmeny cez endpoint platí hodnota z env / Fly secretu (`MIN_APP_VERSION_*`, `PACK_ORDERS_ENABLED`, `APP_NOTICE_*`), presne ako predtým. Zmena cez endpoint má prednosť. Odporúčaná verzia a údržba nemajú env hodnotu, sú len v DB (predvolene vypnuté).
 
-**Pozor pri #214:**
+**Pozor pri odporúčanej verzii a údržbe:**
 - Odporúčanú ani minimálnu verziu nezvyšuj, kým nový build nie je v App Store naozaj dostupný (pri postupnom vydaní ho hráč vie stiahnuť ručne, takže odporúčaná verzia je v poriadku od prvého dňa, minimum radšej až po dokončení).
-- Údržbu poznajú len buildy s #214. Staršie (1.1) uvidia len oznam, preto pri údržbe zapni aj `notice_*`.
+- Údržbu poznajú len buildy, ktoré ju už majú (od verzie po 1.1). Staršie (1.1) uvidia len oznam, preto pri údržbe zapni aj `notice_*`.
 - Údržba ide cez tento server. Keď server úplne spadne, appka, ktorá sa práve spúšťa, údržbu nezistí a ukáže bežnú chybu; zapni ju preto **pred** plánovaným odstavením.
 
 Admin kľúč je v GitHub secrete `QUIZ_AGENT_ADMIN_API_KEY` (na laptope v `.env` ako `ADMIN_API_KEY` alebo cez `fly secrets`, ak ho máš).

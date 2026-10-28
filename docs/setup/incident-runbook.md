@@ -34,8 +34,8 @@ Všetko cez `PUT /api/v1/admin/app-switches`, príkazy a hodnoty v [app-switches
 - **Oznam** (`notice_sk` / `notice_cs` / `notice_en`): pri každom výpadku, ktorý používateľ cíti dlhšie ako ~10 min.
 - **Objednávky stop** (`orders_enabled: false`): keď nebeží generovanie balíčkov, DB alebo platby. Existujúce objednávky bežia ďalej.
 - **Minimálna verzia** (`min_version_app_store` / `min_version_testflight`): keď je chyba v konkrétnom builde a oprava je už v App Store / TestFlight.
-- **Odporúčaná verzia** (`recommended_version_*`, #214): nová verzia je vonku a chceme hráčov jemne posunúť, bez blokovania.
-- **Údržba** (`maintenance_enabled` + `maintenance_*`, #214): kvíz by aj tak zlyhal (migrácia, výpadok providera, rozbité otázky); spolu s oznamom pre staršie buildy.
+- **Odporúčaná verzia** (`recommended_version_*`, #214 — odporúčaná aktualizácia a údržba): nová verzia je vonku a chceme hráčov jemne posunúť, bez blokovania.
+- **Údržba** (`maintenance_enabled` + `maintenance_*`): kvíz by aj tak zlyhal (migrácia, výpadok providera, rozbité otázky); spolu s oznamom pre staršie buildy.
 - Automatické poistky, ktoré netreba prepínať: záložný hlas pri dennom strope ElevenLabs, záložný hodnotiteľ odpovedí na priamom OpenAI, prepnutie embeddingov z OpenRouter na OpenAI pri kritickom kredite (príde v maile).
 - Celé AI na kanonických providerov: Fly secret `LLM_GATEWAY=direct` na oboch appkách (reštartuje stroj, preto až keď prepínače nestačia), pozri `.claude/rules/backend.md`.
 

@@ -7,27 +7,27 @@ All shared state, models, and helpers live in deps.py.
 from fastapi import APIRouter
 
 from ..monitoring import pack_watch
-
 from .routes import (
-    sessions,
-    quiz,
-    voice,
-    dictation,
-    tts,
-    misc,
+    analytics,
+    app_config,
     auth,
+    daily_challenge,
+    dictation,
     entitlements,
     feedback,
-    analytics,
+    me_recaps,
+    me_stats,
+    misc,
     provider_balances,
     question_stock,
-    app_config,
-    voice_samples,
-    voice_experiment,
-    daily_challenge,
+    quiz,
     room_play,
     rooms,
-    me_stats,
+    sessions,
+    tts,
+    voice,
+    voice_experiment,
+    voice_samples,
 )
 
 # Main router with /api/v1 prefix
@@ -52,5 +52,6 @@ router.include_router(voice_experiment.router)
 router.include_router(daily_challenge.router)
 router.include_router(rooms.router)
 router.include_router(room_play.router)
+router.include_router(me_recaps.router)
 router.include_router(me_stats.router)
 router.include_router(pack_watch.router)  # #207: pack worker's minute ping

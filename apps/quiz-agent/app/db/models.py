@@ -21,6 +21,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -667,3 +668,36 @@ class OpsHeartbeat(Base):
 
     name: Mapped[str] = mapped_column(Text, primary_key=True)
     seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PlayerRecap(Base):
+    """A stored recap snapshot (#213.3): created lazily once, never recomputed.
+
+    ``period_start`` is a local calendar date (first: the day the threshold was
+    met, month: ``YYYY-MM-01``, year: ``YYYY-01-01``), not an instant, so
+    travelling across timezones cannot create a second row for one period.
+    ``kind`` is plain text so a new recap kind needs no migration.
+    """
+
+    __tablename__ = "player_recaps"
+    __table_args__ = (
+        UniqueConstraint(
+            "subject_id", "kind", "period_start", name="uq_player_recaps_period"
+        ),
+        Index("ix_player_recaps_subject_id", "subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    period_start: Mapped[date] = mapped_column(Date, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

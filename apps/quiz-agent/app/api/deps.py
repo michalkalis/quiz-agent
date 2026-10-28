@@ -2,44 +2,43 @@
 
 import logging
 import uuid
-
-from typing import Literal, Optional, List, Any
-from pydantic import BaseModel, Field, field_validator
-from datetime import datetime, date
-from fastapi import Depends, Request
+from datetime import date, datetime
+from typing import Any, List, Literal, Optional
 
 import sentry_sdk
-
+from fastapi import Depends, Request
+from pydantic import BaseModel, Field, field_validator
+from quiz_shared.database.question_store import QuestionStore
 from quiz_shared.languages import QUIZ_LANGUAGES, servable_quiz_languages
-
-from quiz_shared.models.session import QuizSession
 from quiz_shared.models.participant import Participant
 from quiz_shared.models.question import PublicQuestion
+from quiz_shared.models.session import QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
-from quiz_shared.database.question_store import QuestionStore
 
-from ..session.manager import SessionManager
-from ..retrieval.question_retriever import QuestionRetriever
 from ..analytics.recorder import AnalyticsRecorder
-from ..daily_challenge.schemas import CrowdStrip
-from ..rating.feedback import FeedbackService
-from ..voice.transcriber import VoiceTranscriber
-from ..tts.service import TTSService
-from ..usage.caps import UsageCaps
-from ..usage.tracker import UsageTracker
-from ..auth.tokens import TokenService
-from ..auth.refresh import RefreshTokenStore
-from ..auth.attest_challenge import ChallengeStore
 from ..auth.app_attest import AppAttestService
 from ..auth.apple import AppleIdentityVerifier
 from ..auth.apple_oauth import AppleOAuthClient
 from ..auth.apple_secrets import AppleTokenCipher
+from ..auth.attest_challenge import ChallengeStore
 from ..auth.identity import AuthSubject, require_bearer_or_grace
-from ..quiz.flow import QuizFlowService, FlowResult
+from ..auth.refresh import RefreshTokenStore
+from ..auth.tokens import TokenService
+from ..daily_challenge.schemas import CrowdStrip
+from ..quiz.flow import FlowResult, QuizFlowService
+from ..rating.feedback import FeedbackService
+from ..retrieval.question_retriever import QuestionRetriever
 from ..serializers import (
     question_to_dict as question_to_dict,
+)
+from ..serializers import (
     question_to_dict_translated as question_to_dict_translated,
 )
+from ..session.manager import SessionManager
+from ..tts.service import TTSService
+from ..usage.caps import UsageCaps
+from ..usage.tracker import UsageTracker
+from ..voice.transcriber import VoiceTranscriber
 
 logger = logging.getLogger(__name__)
 
@@ -606,6 +605,17 @@ class AccountDailyChallengeRecord(BaseModel):
     answers: List[AccountDailyChallengeAnswer]
 
 
+class AccountPlayerRecapRecord(BaseModel):
+    """One stored recap snapshot (#213.3)."""
+
+    kind: str
+    period_start: date
+    created_at: datetime
+    seen_at: Optional[datetime]
+    schema_version: int
+    payload: dict
+
+
 class AccountExportResponse(BaseModel):
     """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
     or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
@@ -641,6 +651,9 @@ class AccountExportResponse(BaseModel):
     )
     daily_challenges: List[AccountDailyChallengeRecord] = Field(
         default_factory=list, description="Daily challenges played, oldest first"
+    )
+    player_recaps: List[AccountPlayerRecapRecord] = Field(
+        default_factory=list, description="Stored recap snapshots, oldest first"
     )
 
 

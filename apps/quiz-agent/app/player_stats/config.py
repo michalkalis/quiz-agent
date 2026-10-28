@@ -31,6 +31,11 @@ THRESHOLDS: dict[str, int] = {
     # the first recap unlocks at this much play
     "first_recap_answers": 60,
     "first_recap_days": 3,
+    # monthly recap: the previous closed local month needs this much play
+    "month_recap_answers": 30,
+    "month_recap_days": 2,
+    # yearly recap (local Dec 1 onward, data Jan 1 - Nov 30)
+    "year_recap_answers": 150,
     # a game left open (paused, forgotten) must not inflate play time
     "max_game_minutes": 120,
 }
@@ -53,3 +58,12 @@ AUDIO_ROUTE_GROUPS: dict[str, str] = {
 # question_type of a multiple-choice question; every other type is "open".
 MCQ_TYPE = "text_multichoice"
 HARD_DIFFICULTY = "hard"
+
+# Player type of a recap: fixed rules, the first match wins (see player_type.py).
+PLAYER_TYPE_RULES: dict[str, int] = {
+    "night_owl_share": 40,  # % of games at night
+    "road_tripper_share": 50,  # % of games in the car
+    "speedster_median_ms": 3000,  # median time to answer must be below this
+    "speedster_min_measured": 20,
+}
+RECAP_SCHEMA_VERSION = 1

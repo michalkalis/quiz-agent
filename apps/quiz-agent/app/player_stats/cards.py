@@ -168,6 +168,7 @@ def when_card(games: list[Game]) -> dict:
             "part_of_day": max(parts.items(), key=lambda kv: (kv[1], kv[0]))[0],
             "weekday": WEEKDAYS[max(wd.items(), key=lambda kv: (kv[1], -kv[0]))[0]],
             "games": len(ctx),
+            "breakdown": dict(parts),
         }
     return make_card(
         "when",

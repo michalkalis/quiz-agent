@@ -179,3 +179,25 @@ WHERE ans.category IS NOT NULL GROUP BY ans.category
 """
     )
     return [SpeedRow(*r) for r in await _run(session, sql, ids, start, end)]
+
+
+async def fetch_latency_overall(session, ids, start, end) -> tuple[int, float]:
+    """(measured answers, median time-to-answer in ms) over all categories,
+    first attempts only; ``(0, 0.0)`` when nothing was measured."""
+    sql = f"""
+SELECT count(*), coalesce(percentile_cont(0.5) WITHIN GROUP (ORDER BY ms), 0)
+FROM (
+  SELECT DISTINCT ON (session_id, {_P}->>'question_id')
+         ({_P}->>'latency_ms')::float AS ms
+  FROM analytics_events
+  WHERE name = 'answer_submitted' AND subject_id = ANY(:ids)
+    AND session_id IS NOT NULL AND {_P}->>'question_id' IS NOT NULL
+    AND jsonb_typeof({_P}->'latency_ms') = 'number'
+    AND coalesce(({_P}->>'is_retry')::boolean, false) = false
+    {"AND occurred_at >= :start" if start is not None else ""}
+    {"AND occurred_at < :end" if end is not None else ""}
+  ORDER BY session_id, {_P}->>'question_id', occurred_at
+) t
+"""
+    n, med = (await _run(session, sql, ids, start, end))[0]
+    return int(n), float(med)

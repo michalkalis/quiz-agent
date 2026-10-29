@@ -1,4 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(fly status *)",
+      "Bash(fly logs *)",
+      "mcp__pencil__batch_get",
+      "mcp__figma__get_design_context",
+      "Edit(.claude/hooks/session-start.sh)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -22,14 +31,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(fly status *)",
-      "Bash(fly logs *)",
-      "mcp__pencil__batch_get",
-      "mcp__figma__get_design_context"
     ]
   }
 }

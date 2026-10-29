@@ -194,6 +194,8 @@ Druhý malý pilot: 15 otázok v štyroch mechanikách (čo spája obrázky, čo
 - Treba rovnaký proces ako pri textových otázkach: dôkladne vyladené zadanie pre AI, zdroje, hodnotenie podľa rubriky a kontrolu foundera.
 - Obrázok má byť stopa k dobrej otázke, nie jej náhrada.
 
+## Zdroje
+
 
 - Pub kvíz, typy kôl: https://en.wikipedia.org/wiki/Pub_quiz
 - Worldle, počet hráčov: https://digital-release.nbc4i.com/news/worldle-a-new-country-guessing-game-offers-frustrating-fun-for-geography-buffs

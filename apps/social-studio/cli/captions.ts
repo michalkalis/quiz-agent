@@ -5,7 +5,7 @@
 import type {Language} from '../src/types';
 import {noDashes} from './shape';
 
-/** `round` = 3 or 5 questions in one reel, answers at the end. */
+/** `round` = 3 or 5 questions in one reel, each answer right after its question. */
 export type PostFormat = 'five' | 'abc' | 'carousel' | 'round';
 
 // Open questions, never "comment A or B" or "comment your score": Instagram does not

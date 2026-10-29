@@ -36,8 +36,9 @@ export const eyeOpenAt = (t: number) => {
 };
 
 /** Round reel (founder 2026-10-25): 3 or 5 questions in a row, each with a
- * countdown, and every answer only at the end: one by one, the answer read
- * aloud and its explanation shown for a few seconds (not read). */
+ * countdown, then its answer right away (founder 2026-10-29: no longer all at
+ * the end): the answer read aloud and its explanation shown for a few seconds
+ * (not read). */
 // Founder 2026-10-25: four seconds for three questions; five for five (two felt rushed).
 export const roundCountdownMs = (n: number) => (n >= 5 ? 5000 : 4000);
 /** Answer card on screen before the voice says the answer. */
@@ -50,20 +51,17 @@ export const whyHoldMs = (chars: number, maxMs = 5500) => Math.min(maxMs, Math.m
 export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[], startMs = 0) => {
 	const countdownMs = roundCountdownMs(questionMs.length);
 	let start = startMs;
-	const steps = questionMs.map((qMs) => {
+	const steps = [];
+	const reveals = [];
+	for (const [k, qMs] of questionMs.entries()) {
 		const voiceStart = start + LEAD_MS;
 		const cdStart = voiceStart + qMs;
-		const step = {start, voiceStart, cdStart, end: cdStart + countdownMs};
-		start = step.end;
-		return step;
-	});
-	const answersStart = start;
-	const reveals = answers.map(({answerMs, whyChars}) => {
-		const voiceStart = start + ANSWER_LEAD_MS;
-		const whyStart = voiceStart + answerMs;
-		const step = {start, voiceStart, whyStart, end: whyStart + whyHoldMs(whyChars)};
-		start = step.end;
-		return step;
-	});
-	return {steps, countdownMs, answersStart, reveals, endStart: start, totalMs: start + END_MS};
+		steps.push({start, voiceStart, cdStart, end: cdStart + countdownMs});
+		start = cdStart + countdownMs;
+		const answerStart = start + ANSWER_LEAD_MS;
+		const whyStart = answerStart + answers[k].answerMs;
+		reveals.push({start, voiceStart: answerStart, whyStart, end: whyStart + whyHoldMs(answers[k].whyChars)});
+		start = reveals[k].end;
+	}
+	return {steps, countdownMs, reveals, endStart: start, totalMs: start + END_MS};
 };

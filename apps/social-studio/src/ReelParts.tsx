@@ -190,8 +190,7 @@ export const QuestionCard: React.FC<{
 	);
 };
 
-/** `note`: a line under the countdown (a round says the answers come at the end). */
-export const Countdown: React.FC<{startFrame: number; onBg: string; note?: string; seconds?: number}> = ({startFrame, onBg, note, seconds = COUNTDOWN_MS / 1000}) => {
+export const Countdown: React.FC<{startFrame: number; onBg: string; seconds?: number}> = ({startFrame, onBg, seconds = COUNTDOWN_MS / 1000}) => {
 	const frame = useCurrentFrame() - startFrame;
 	const {fps} = useVideoConfig();
 	const total = seconds * fps;
@@ -228,7 +227,6 @@ export const Countdown: React.FC<{startFrame: number; onBg: string; note?: strin
 					</text>
 				</svg>
 			</div>
-			{note ? <div style={{fontSize: 46, fontWeight: 700, color: onBg, opacity: 0.9}}>{note}</div> : null}
 		</div>
 	);
 };

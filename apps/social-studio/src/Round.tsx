@@ -1,8 +1,7 @@
 // Round reel (9:16): 3 or 5 open questions in a row, easiest first, each read
-// by the app voice with a countdown that says the answers come at the end
-// (founder 2026-10-25). Then the answers one by one: each read aloud, its
-// explanation shown for a few seconds. A tally (2/5) shows how far in the
-// viewer is.
+// by the app voice with a countdown, then its answer right away (founder
+// 2026-10-29): read aloud, its explanation shown for a few seconds. A tally
+// (2/5) shows how far in the viewer is.
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COPY} from './copy';
@@ -54,9 +53,9 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 		);
 	}
 
-	// Answers one by one, each in its question's colour.
-	if (now >= t.answersStart) {
-		const k = Math.max(0, t.reveals.findIndex((r) => now < r.end));
+	// Each question, then its answer, in the question's colour.
+	const k = Math.max(0, t.reveals.findIndex((r) => now < r.end));
+	if (now >= t.steps[k].end) {
 		const r = t.reveals[k];
 		const it = items[k];
 		const tint = tintFor(it.q.category);
@@ -70,7 +69,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 			</AbsoluteFill>
 		);
 	}
-	const i = Math.max(0, t.steps.findIndex((s) => now < s.end));
+	const i = k;
 	const step = t.steps[i];
 	const item = items[i];
 	const tint = tintFor(item.q.category);
@@ -99,7 +98,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 					markBg={tint.bg}
 					markInk={tint.onBg}
 				/>
-				{now >= step.cdStart ? <Countdown startFrame={f(step.cdStart, fps)} onBg={tint.onBg} note={COPY[item.q.language].answersAtEnd} seconds={t.countdownMs / 1000} /> : null}
+				{now >= step.cdStart ? <Countdown startFrame={f(step.cdStart, fps)} onBg={tint.onBg} seconds={t.countdownMs / 1000} /> : null}
 			</div>
 			) : null}
 		</AbsoluteFill>

@@ -181,6 +181,8 @@ Koľko: pub kvízy dávajú jedno obrázkové kolo s 8 až 12 obrázkami na cel�
 
 Druhý malý pilot: 15 otázok v štyroch mechanikách (čo spája obrázky, čo sem nepatrí, postupné odhaľovanie s témou, čo chýba alebo je zle), poskladaných ako krátke obrázkové kolá. Bez API kreditov: otázky navrhnem sám, obrázky z voľných zdrojov. Alternatíva: tému obrázkov zatiaľ odložiť.
 
+**Rozhodnutie foundera (2026-10-29):** druhý malý pilot áno. Kontextový obrázok neskôr, spolu s obrázkovými otázkami: len pri otázkach o vzhľade, malý pod textom otázky.
+
 ## Zdroje
 
 - Pub kvíz, typy kôl: https://en.wikipedia.org/wiki/Pub_quiz

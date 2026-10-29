@@ -58,7 +58,7 @@ struct RoomLobbyHostView: View {
                 Text("Scan to join")
                     .font(.hangsHeading)
                     .foregroundStyle(Theme.Hangs.Colors.ink)
-                if let url = viewModel.created?.inviteURL, let image = QRCodeImage.make(url.absoluteString) {
+                if let created = viewModel.created, let image = QRCodeImage.make(created.qrURL.absoluteString) {
                     Image(uiImage: image)
                         .interpolation(.none)
                         .resizable()
@@ -67,7 +67,7 @@ struct RoomLobbyHostView: View {
                         .accessibilityLabel(Text("QR code to join the game"))
                         .accessibilityIdentifier("room.qr")
                     // a11y-id: call-site — ShareLink takes its identifier below
-                    ShareLink(item: url, message: Text("Join my game in Trubbo")) {
+                    ShareLink(item: created.inviteURL, message: Text("Join my game in Trubbo")) {
                         Label("Send the link", systemImage: "square.and.arrow.up")
                             .font(.hangsButton)
                             .foregroundStyle(Theme.Hangs.Colors.ink)

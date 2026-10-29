@@ -21,6 +21,15 @@ nonisolated struct RoomCreated: Decodable, Sendable, Equatable {
         return components?.url ?? URL(fileURLWithPath: "/")
     }
 
+    /// The same link in the QR code, marked so the server can count scans
+    /// apart from shared links (#212.5). The mark is a fragment: universal
+    /// link matching and the join page only look at the path and `t`.
+    var qrURL: URL {
+        var components = URLComponents(url: inviteURL, resolvingAgainstBaseURL: false)
+        components?.fragment = RoomInvite.qrFragment
+        return components?.url ?? inviteURL
+    }
+
     enum CodingKeys: String, CodingKey {
         case roomId = "room_id"
         case joinToken = "join_token"
@@ -45,13 +54,22 @@ nonisolated struct NearbyRoom: Decodable, Sendable, Equatable, Identifiable {
     }
 }
 
-/// Where a guest joins from: a game in the nearby list, or the QR/link token.
+/// Where a guest joins from: a game in the nearby list, a shared link or the
+/// scanned QR code (both carry the same token).
 nonisolated enum RoomInvite: Equatable, Sendable {
     case nearby(NearbyRoom)
     case token(String)
+    case qr(String)
 
     static let joinPageURL = "https://trubbo.app/join"
     static let tokenQueryItem = "t"
+    static let qrFragment = "qr"
+
+    /// A join link as an invite: `.qr` when it came from the QR code.
+    static func invite(from url: URL) -> RoomInvite? {
+        guard let token = token(from: url) else { return nil }
+        return url.fragment == qrFragment ? .qr(token) : .token(token)
+    }
 
     /// The join token in a `https://trubbo.app/join?t=…` link, nil for any
     /// other URL.

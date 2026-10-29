@@ -183,7 +183,17 @@ Druhý malý pilot: 15 otázok v štyroch mechanikách (čo spája obrázky, čo
 
 **Rozhodnutie foundera (2026-10-29):** druhý malý pilot áno. Kontextový obrázok neskôr, spolu s obrázkovými otázkami: len pri otázkach o vzhľade, malý pod textom otázky.
 
-## Zdroje
+## Kolo 3: odložené (2026-10-29)
+
+**Verdikt foundera k pilotu 2** (16 hádaniek, https://claude.ai/artifact/5F52Ki4juj4ob8v36CcpBE): „celkovo slabé“. Často chýba kontext, súvis sa nedá uhádnuť len z obrázkov. Otázky pôsobia, akoby boli vymyslené bez úsilia. Obstála nanajvýš slepá mapa, ale ani pri nej nie je isté, či sa oplatí.
+
+**Rozhodnutie:** obrázkové otázky aj kontextové obrázky sú odložené na neskôr.
+
+**Poučenie pre návrat k téme:**
+- Ručne skladané otázky bez výskumu témy a bez kontroly kvality nestačia.
+- Treba rovnaký proces ako pri textových otázkach: dôkladne vyladené zadanie pre AI, zdroje, hodnotenie podľa rubriky a kontrolu foundera.
+- Obrázok má byť stopa k dobrej otázke, nie jej náhrada.
+
 
 - Pub kvíz, typy kôl: https://en.wikipedia.org/wiki/Pub_quiz
 - Worldle, počet hráčov: https://digital-release.nbc4i.com/news/worldle-a-new-country-guessing-game-offers-frustrating-fun-for-geography-buffs

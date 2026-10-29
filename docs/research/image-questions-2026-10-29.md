@@ -13,6 +13,14 @@ Nadväzuje na #98 — geografické otázky kreslené priamo v appke a #68 — pr
 - **Odložiť:** logá (ochranné známky) a tváre žijúcich ľudí (osobnostné práva podľa slovenského Občianskeho zákonníka §12).
 - **Navrhovaný ďalší krok:** bezplatný pilot 30 až 50 obrázkových otázok zo šablón, na posúdenie v artefakte. Nič sa nepublikuje, kým ich neschváliš.
 
+## Rozhodnutia foundera (2026-10-29)
+
+- **Obrázok k textovej otázke sa zobrazuje počas otázky ako kontext**, nie pri odhalení („po odhalení mi to moc nedáva zmysel“). Tým padá odporúčanie v časti o odhalení; kontrola prezradenia ostáva potrebná.
+- **Pilot: všetky štyri typy** (čo je na obrázku, priblížený detail, historická fotka a rok, obrysy a slepé mapy). Rozhodne testovanie, nudné typy vypadnú.
+- **Predvolene zapnuté, v malom pomere k textovým otázkam**, s ohľadom na náklady.
+- **AI karikatúry osobností** (známa osobnosť ako kreslená postavička, hráč háda) vyskúšať, rozpočet pilotu max 2 $.
+- Pilot hotový: 45 otázok v artefakte https://claude.ai/artifact/DbjgViwqVmBK957ZkvSMvM; AI karikatúry stáli asi 0,38 $ (6 obrázkov novým modelom OpenAI, 6 lacným). V pilote len historické osobnosti; žijúce osobnosti čakajú na právny názor.
+
 ## Čo appka dnes vie
 
 | Oblasť | Stav |

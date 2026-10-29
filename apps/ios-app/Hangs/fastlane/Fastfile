@@ -213,6 +213,45 @@ platform :ios do
   end
 
   # ---------------------------------------------------------------------------
+  # A new App ID capability (entitlement): turns it on for the App ID and
+  # regenerates the App Store profile so release builds carry it (CI's match
+  # is readonly and cannot do this itself). Reuses the existing distribution
+  # certificate: builds already uploaded or in review are unaffected. Touches
+  # shared signing, so run it only with the founder's OK. Never nukes.
+  #
+  # Usage:
+  #   cd apps/ios-app/Hangs
+  #   fastlane ios refresh_appstore_profile capability:ASSOCIATED_DOMAINS
+  # ---------------------------------------------------------------------------
+  desc "Enable an App ID capability and regenerate the App Store profile."
+  lane :refresh_appstore_profile do |options|
+    ensure_env_vars(
+      env_vars: %w[ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_CONTENT MATCH_GIT_URL MATCH_PASSWORD]
+    )
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"],
+      issuer_id: ENV["ASC_API_ISSUER_ID"],
+      key_content: ENV["ASC_API_KEY_CONTENT"],
+      is_key_content_base64: ENV["ASC_API_KEY_CONTENT_IS_BASE64"] == "true"
+    )
+
+    if (capability = options[:capability])
+      Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: api_key)
+      bundle_id = Spaceship::ConnectAPI::BundleId.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+      if bundle_id.get_capabilities.any? { |c| c.capability_type == capability }
+        UI.message("#{capability} is already on for #{bundle_id.identifier}.")
+      else
+        bundle_id.create_capability(capability)
+        UI.success("#{capability} turned on for #{bundle_id.identifier}.")
+      end
+    end
+
+    match(type: "appstore", api_key: api_key, readonly: false, force: true)
+    UI.success("App Store profile regenerated and pushed to the certs repo.")
+  end
+
+  # ---------------------------------------------------------------------------
   # One-time bootstrap lane — run LOCALLY (not on CI) to create the initial
   # distribution certificate and App Store provisioning profile and push them
   # encrypted into the certs repo. Requires ADMIN or APP MANAGER API key role.

@@ -15,6 +15,9 @@
 | `quiz_completed` | session → finished | `reason` (max_questions / usage_limit / no_more_questions), `questions_asked`, `score`, `is_pack` |
 | `quota_hit` | the monthly limit (free 30 or Trubbo Plus 1,000) blocks a start or the next question | `stage` (start / mid_quiz), `questions_used`, `questions_limit`, `plan` (plus / free) |
 | `transcription_failed` | server rejects a voice upload as no speech | `reason`, `question_id` |
+| `room_created` | a host turns an idle session into a game together (#212.5); not on a retried create | `room_id` |
+| `room_joined` | a guest joins a game for the first time (#212.5), under the guest; a rejoin (name change) is not counted | `room_id`, `via` (nearby = the Wi-Fi list / qr = scanned code / link = shared link, also builds that do not send it) |
+| `room_finished` | a game together ends (#212.5), under the host, next to its `quiz_completed` | `room_id`, `reason`, `players` (incl. host), `questions_asked` |
 | `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 
 ## App events (posted to `POST /api/v1/analytics/events` — only what the server cannot see)
@@ -58,6 +61,7 @@
 | Quota pressure | `quota_hit` per subject per month; share followed by `paywall_viewed` / purchase |
 | Usage context | `quiz_context.audio_route` mix (car vs. home vs. party) |
 | Voice command usage | `voice_command` counts by `command` |
+| Game together (#212.5, verdict 4 weeks after the switch goes on) | games = `room_created`; played = `room_finished` with `players` ≥ 2; joins by `room_joined.via` (many games without guests or mostly link joins = guests cannot find the game, see 212.6); new player = a `room_joined` guest whose first `app_opened` is at most 24 h before the join; later solo game = a `quiz_started` by that guest after the join (a guest never starts a session inside a game) |
 | Voice-settings test (#204.9) | per setting × `route_group`, answers where the coin decided it: bad capture = `stop_reason` = cap OR `heard_speech` = false OR rejected (a later `answer_captured` of the same session + question has a higher `rejected_count`); compare the rate between the ON and OFF arms. The weekly job (`POST /api/v1/admin/voice-experiment/evaluate`) does this; SQL below for ad-hoc checks |
 
 Bad-capture rate per arm, here neural VAD on the car / Bluetooth route, generation 1. For `aec` / `front_mic` swap the flag keys and add `AND (c.p->>'aec_applicable')::boolean` (or `front_mic_applicable`):

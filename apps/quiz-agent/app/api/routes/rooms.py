@@ -69,6 +69,8 @@ class JoinRoomRequest(BaseModel):
     join_token: Optional[str] = Field(None, max_length=64)
     room_id: Optional[str] = Field(None, max_length=64)
     net_tickets: List[str] = _TICKETS
+    # #212.5: how a token reached the guest; older builds send nothing.
+    via: Literal["qr", "link"] = "link"
 
 
 class RoomPlayer(BaseModel):
@@ -197,7 +199,8 @@ async def join_room(
             join_token=body.join_token,
             room_id=body.room_id,
         )
-        await service.join(room, subject_id, body.display_name)
+        via = body.via if body.join_token else "nearby"
+        await service.join(room, subject_id, body.display_name, via)
     except RoomError as e:
         raise_http(e)
     return await state_reply(service, room.room_id, subject_id, since=None)

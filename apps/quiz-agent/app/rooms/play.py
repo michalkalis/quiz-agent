@@ -183,6 +183,17 @@ class RoomPlay:
         session.room_game.finished_reason = reason
         await self.sessions.update_session(session)
         self.flow._emit_completed(session, reason)
+        self.flow.analytics.emit(
+            "room_finished",
+            subject_id=session.user_id,
+            session_id=session.session_id,
+            properties={
+                "room_id": session.room_code,
+                "reason": reason,
+                "players": len(session.participants),
+                "questions_asked": len(session.asked_question_ids),
+            },
+        )
 
     def close_if_due(self, session: QuizSession) -> None:
         """Called by the state poll, which never waits on the session lock:

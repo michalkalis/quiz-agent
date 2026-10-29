@@ -147,6 +147,40 @@ Odhad podľa relatívnej náročnosti.
 4. **#98 — geografické otázky kreslené v appke** (obrysy a slepé mapy) podľa existujúceho plánu.
 5. **Neskôr:** Hra spolu, AI karikatúry a rébusy podľa výsledku pilotu.
 
+## Kolo 2: verdikt pilotu a hlbšia rešerš (2026-10-29)
+
+**Verdikt foundera:** „celkovo nič moc, nie je to zábavné ani prínosné“. Baví 2 zo 45 (pomalé oddiaľovanie ananásu, obrys Nového Zélandu). Historická fotka a rok: 5 z 5 nudné. Rozpoznávanie a obrysy: takmer všetko „ujde“. AI karikatúry: 4 ujde, 2 nudné. Poznámky: slepá mapa bez hraníc (s nimi je príliš ľahká), oddiaľovanie pomalšie, kontextový obrázok často zbytočný.
+
+### Prečo pilot nebavil
+
+Pilot bol takmer celý **holé rozpoznávanie** („čo je to“, „kto to namaľoval“). Autori pub kvízov presne toto považujú za vatu: ľahký blok na rozbeh, nie hlavné jedlo. Bez témy a bez zvratu sa z toho stáva test zraku. Zábava prichádza z **hádanky s „aha“ momentom**: hráč z obrázkov niečo vyvodí, nielen rozpozná. Obe otázky, ktoré ťa bavili, majú tento prvok (postupné odhaľovanie, nečakaný tvar).
+
+### Mechaniky, ktoré v kvízoch fungujú a dajú sa hrať hlasom
+
+| Mechanika | Čo hráč robí | Prečo baví | Výroba u nás |
+|---|---|---|---|
+| **Čo spája tieto obrázky** | vidí 4 obrázky, povie spojitosť | žiadny obrázok sám nie je odpoveď, rozlúštenie celku | <span class="badge info">stredná</span> sady z Wikidata + AI návrh spojitosti + ručná kontrola |
+| **Čo sem nepatrí** | 4 obrázky, jeden nepatrí | „prečo“ po odhalení je najzapamätateľnejšia chvíľa | <span class="badge info">stredná</span> ako vyššie |
+| **Postupné odhaľovanie s témou** | obrázok sa pomaly oddiaľuje, téma je daná | každá sekunda pridá stopu, skorá odpoveď = viac bodov | <span class="badge ok">ľahká</span> efekt v appke; témy („raňajky“, „v kuchyni“) |
+| **Čo chýba / čo je zle** | vlajka s inou farbou, mapa bez riek, obrázok s vymazaným prvkom | treba si všimnúť rozdiel, nie len pomenovať | <span class="badge ok">ľahká</span> pri vlajkách a mapách (upravíme programom, zadarmo) |
+| **Dva obrázky = jedno slovo** (rébus) | slnko + kvet = slnečnica | „aha“ z premýšľania, nie z pamäti | <span class="badge warn">ťažká</span> každý jazyk zvlášť; AI obrázky tu dávajú zmysel |
+| **Vtedy a dnes, domáce miesta** | stará fotka slovenského alebo českého miesta | „to poznám!“, nedá sa vygoogliť | <span class="badge info">stredná</span> staré fotky z voľných archívov (napr. Fortepan, licenciu overím) |
+| **Spojené tváre** | dve osobnosti zliate do jednej | vtipné, dve odpovede | <span class="badge bad">odložiť</span> žijúce osobnosti majú právne riziko |
+
+Koľko: pub kvízy dávajú jedno obrázkové kolo s 8 až 12 obrázkami na celý večer. Viac ako 20 sa neodporúča a ten istý trik nanajvýš dvakrát za kvíz. To podporuje tvoje „v malom pomere“: skôr **krátke obrázkové kolo s témou** (napr. 5 otázok jednej mechaniky) ako obrázky roztrúsené medzi textovými otázkami.
+
+### Kontextový obrázok pri textovej otázke
+
+- **Výskum:** obrázok pomáha len vtedy, keď ukazuje to, na čo sa otázka pýta (vzhľad, tvar, farba, vzor). Čisto ilustračná fotka niečoho, čo otázka len spomína, nepomáha a pri časovom tlaku môže mierne rozptyľovať (meta-analýzy „zvodných detailov“).
+- To sedí s tvojím hodnotením: Čičmany (otázka o vzoroch) áno, Oravský hrad (otázka o filme) zbytočné.
+- **Odhad podielu:** z 45 náhodných otázok našej sady by obrázok naozaj pomohol asi 5 (Čičmany, čokoláda so zbelením, káva dalgona, pizza Margherita, Čumil), teda zhruba každej desiatej.
+- **Umiestnenie, ak áno:** pod text otázky, malý, ťuknutím sa zväčší. Výskum radí mať obrázok hneď pri texte, ku ktorému patrí. Zdroje k rozloženiu v appkách som nenašiel, toto je úsudok.
+- **Odporúčanie:** zatiaľ nestavať ako samostatnú funkciu. Ak budú obrázkové otázky, rovnaké zobrazenie potom zapneme aj pre textové otázky, ktoré pri generovaní dostanú značku „obrázok pomáha“ (len vzhľad, tvar, farba, vzor).
+
+### Návrh ďalšieho kroku
+
+Druhý malý pilot: 15 otázok v štyroch mechanikách (čo spája obrázky, čo sem nepatrí, postupné odhaľovanie s témou, čo chýba alebo je zle), poskladaných ako krátke obrázkové kolá. Bez API kreditov: otázky navrhnem sám, obrázky z voľných zdrojov. Alternatíva: tému obrázkov zatiaľ odložiť.
+
 ## Zdroje
 
 - Pub kvíz, typy kôl: https://en.wikipedia.org/wiki/Pub_quiz
@@ -166,3 +200,8 @@ Odhad podľa relatívnej náročnosti.
 - Osobnostné práva SR: https://ficek.sk/vybrane-pravne-aspekty-vyhotovovania-fotografii-inych-osob-69
 - Efekt prevahy obrázka: https://en.wikipedia.org/wiki/Picture_superiority_effect
 - Efekt modality (počuť je lepšie ako čítať): https://journal.psych.ac.cn/adps/EN/Y2016/V24/I3/335
+- Autori pub kvízov o obrázkových kolách: https://quizado.com/pub-quiz-picture-round · https://pubquizzes.org/pub-quiz-picture-round-ideas/ · https://quizquiz.co/blog/picture-round-ideas
+- Framed (postupné odhaľovanie): https://www.nme.com/news/wordle-spin-off-framed-asks-cinema-fans-to-guess-films-from-still-images-3189472
+- Zvodné detaily, meta-analýza: https://www.learningscientists.org/blog/2019/6/20-1 · https://news.wsu.edu/2020/03/19/seductive-details-inhibit-learning/
+- Funkcie obrázkov pri texte (Carney a Levin 2002): https://link.springer.com/article/10.1007/BF02769434
+- Kahoot, obrázky pri otázkach: https://support.kahoot.com/hc/en-us/articles/360037705733-How-to-add-or-edit-images-and-videos-in-mobile-app

@@ -17,11 +17,11 @@ Hotovo, keď:
 ## Koho hľadáme
 
 Rozhoduje správanie, nie sľuby (rešerš: Superhuman, The Mom Test). Dobrý tester:
-- za posledný mesiac hral kvíz s ľuďmi (hospodský kvíz, chata, auto, párty, s deťmi),
+- kvízy hráva, napríklad hospodský kvíz, na chate, v aute, na párty alebo s deťmi,
 - má iPhone s iOS 26 alebo novším,
-- súhlasí s 2 hrami týždenne a s krátkou odpoveďou v skupine raz týždenne.
+- občas napíše, ako sa hralo.
 
-Kto chce len appku zadarmo, na tieto otázky odpovie vágne alebo vôbec. Zodpovedanie 4 otázok je malý záväzok a už samo o sebe filtruje.
+Požiadavky sú v príspevku ako zoznam, nie ako otázky. Uchádzač napíše len pár slov o tom, kedy a s kým kvízy hráva. Kto chce len appku zadarmo, napíše vágne alebo vôbec, takže aj taká krátka správa filtruje.
 
 ## Dve rôzne role
 

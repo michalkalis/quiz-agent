@@ -37,6 +37,8 @@ extension AppScreen {
             await makeDaily()
         case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomReveal, .roomFinal:
             await makeRoom()
+        case .recapIntro, .recapCard, .recapPlayerType:
+            makeRecapStory()
         case .profile, .profileNewPlayer, .profileLoadFailed:
             await makeProfile()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")

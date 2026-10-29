@@ -33,6 +33,10 @@ enum AnalyticsEvent: Equatable {
     case restoreResult(outcome: RestoreOutcome)
     /// #213.4: the Profile tab came on screen.
     case profileOpened(hasAccount: Bool)
+    /// #213.5: a recap story closed; how far the player got.
+    case recapViewed(kind: String, slidesSeen: Int, slidesTotal: Int)
+    /// #213.5: the share sheet opened on the recap's last slide.
+    case recapShared(kind: String)
 
     var name: String {
         switch self {
@@ -49,6 +53,8 @@ enum AnalyticsEvent: Equatable {
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
         case .profileOpened: "profile_opened"
+        case .recapViewed: "recap_viewed"
+        case .recapShared: "recap_shared"
         }
     }
 
@@ -101,6 +107,10 @@ enum AnalyticsEvent: Equatable {
             [("outcome", .string(outcome.rawValue))]
         case let .profileOpened(hasAccount):
             [("has_account", .bool(hasAccount))]
+        case let .recapViewed(kind, slidesSeen, slidesTotal):
+            [("kind", .string(kind)), ("slides_seen", .int(slidesSeen)), ("slides_total", .int(slidesTotal))]
+        case let .recapShared(kind):
+            [("kind", .string(kind))]
         }
         return pairs.reduce(into: [:]) { result, pair in
             if let value = pair.1 { result[pair.0] = value }

@@ -1,5 +1,7 @@
 # texts
 PROFILE
+New recap
+Your M10
 your stats
 In total
 312 questions
@@ -36,6 +38,7 @@ custom packs
 # identifiers
 profile.settings
 profile.account
+profile.recap
 profile.card.totals
 profile.card.best_category
 profile.card.weakest_category

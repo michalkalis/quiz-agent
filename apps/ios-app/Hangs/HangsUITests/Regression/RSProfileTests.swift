@@ -2,8 +2,9 @@
 //  RSProfileTests.swift
 //  HangsUITests
 //
-//  RS-30 — the tab bar and the Profile tab (#213.4). The stat cards come
-//  from the mock graph (`UITestSupport.makeMockPlayerStats`), no backend.
+//  RS-30 — the tab bar and the Profile tab (#213.4). RS-31 — the recap story
+//  (#213.5). Cards and recaps come from the mock graph
+//  (`UITestSupport.makeMockPlayerStats`), no backend.
 //
 
 import XCTest
@@ -42,5 +43,31 @@ final nonisolated class RSProfileTests: XCTestCase {
         let tab = profile.profileTab
         XCTAssertFalse(tab.exists && tab.isHittable, "RS-30: the tab bar is still on screen during a quiz")
         RSFlow.assertAlive(app, "RS-30")
+    }
+
+    // MARK: RS-31 — the recap banner plays the story to the shareable last slide
+
+    // Regression guarded: the recap is the reason to come back each month; the
+    // banner must open the story, tapping must reach the last slide, Share
+    // must be there (the image renders), and Close must return to the Profile.
+    @MainActor
+    func testRS31RecapStoryReachesShare() {
+        let app = RSFlow.launch()
+        let profile = ProfilePage(app: app)
+
+        profile.open()
+        XCTAssertTrue(profile.recapBanner.waitForExistence(timeout: 5), "RS-31: recap banner missing")
+        profile.recapBanner.tap()
+        XCTAssertTrue(profile.story.waitForExistence(timeout: 5), "RS-31: the story did not open")
+
+        for _ in 0 ..< 10 where !profile.storyShare.exists {
+            profile.storyNext.tap()
+        }
+        XCTAssertTrue(profile.storyShare.waitForExistence(timeout: 5), "RS-31: Share missing on the last slide")
+
+        profile.storyClose.tap()
+        XCTAssertTrue(profile.settingsButton.waitForExistence(timeout: 5), "RS-31: Close did not return to the Profile")
+        XCTAssertFalse(profile.story.exists, "RS-31: the story is still on screen after Close")
+        RSFlow.assertAlive(app, "RS-31")
     }
 }

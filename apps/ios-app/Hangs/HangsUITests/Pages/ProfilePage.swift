@@ -3,7 +3,8 @@
 //  HangsUITests
 //
 //  #213.4: the tab bar (Play, Profile) and the Profile tab: the stat cards,
-//  the gear to Settings and the row to My packs.
+//  the gear to Settings and the row to My packs. #213.5: the recap banner
+//  and its story.
 //
 
 import XCTest
@@ -26,6 +27,26 @@ struct ProfilePage {
 
     var myPacksButton: XCUIElement {
         app.buttons["profile.myPacks"]
+    }
+
+    var recapBanner: XCUIElement {
+        app.buttons["profile.recap"]
+    }
+
+    var story: XCUIElement {
+        app.descendants(matching: .any)["recap.story"]
+    }
+
+    var storyNext: XCUIElement {
+        app.buttons["recap.next"]
+    }
+
+    var storyClose: XCUIElement {
+        app.buttons["recap.close"]
+    }
+
+    var storyShare: XCUIElement {
+        app.descendants(matching: .any)["recap.share"]
     }
 
     func card(_ kind: String) -> XCUIElement {

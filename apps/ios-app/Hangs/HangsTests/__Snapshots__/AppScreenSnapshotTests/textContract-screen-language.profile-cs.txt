@@ -1,5 +1,7 @@
 # texts
 PROFIL
+Nový přehled
+Tvůj M10
 tvoje statistiky
 Celkem
 312 otázek
@@ -36,6 +38,7 @@ vlastní balíčky
 # identifiers
 profile.settings
 profile.account
+profile.recap
 profile.card.totals
 profile.card.best_category
 profile.card.weakest_category

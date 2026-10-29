@@ -41,6 +41,8 @@ private let backendClientEvents: [String: Set<String>] = [
     "purchase_result": ["product_id", "kind", "outcome"],
     "restore_result": ["outcome"],
     "profile_opened": ["has_account"],
+    "recap_viewed": ["kind", "slides_seen", "slides_total"],
+    "recap_shared": ["kind"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -67,6 +69,8 @@ private let everyEvent: [AnalyticsEvent] = [
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),
     .restoreResult(outcome: .nothingToRestore),
     .profileOpened(hasAccount: true),
+    .recapViewed(kind: "month", slidesSeen: 3, slidesTotal: 7),
+    .recapShared(kind: "month"),
 ]
 
 @MainActor

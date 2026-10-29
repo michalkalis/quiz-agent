@@ -1,0 +1,11 @@
+# texts
+Your player type
+Road tripper
+The quiz keeps you company on the road.
+trubbo
+# identifiers
+recap.story
+recap.slide.6
+recap.previous
+recap.next
+recap.close

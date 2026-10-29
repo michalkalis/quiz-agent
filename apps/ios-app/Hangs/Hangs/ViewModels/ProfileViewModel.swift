@@ -5,7 +5,8 @@
 //  #213.4: the Profile tab — who is playing and the stat cards. Owned by
 //  AppState like the packs list, so the cards stay on screen while a quiz runs
 //  and while they refresh. A failed fetch keeps the last cards; with none, the
-//  Profile offers Retry.
+//  Profile offers Retry. #213.5: the newest recap sits on top as a banner and
+//  plays as a story.
 //
 
 import Combine
@@ -27,6 +28,10 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var stats: PlayerStats?
     @Published private(set) var loadState: LoadState = .loading
     @Published private(set) var account = Account(name: nil, isSignedIn: false)
+    /// Newest first, only kinds this build knows.
+    @Published private(set) var recaps: [PlayerRecap] = []
+    /// The recap playing as a story.
+    @Published var playingRecap: PlayerRecap?
 
     private let service: PlayerStatsServiceProtocol
     private let tokenStore: any TokenStore
@@ -64,6 +69,11 @@ final class ProfileViewModel: ObservableObject {
         return progress
     }
 
+    /// The banner on top of the Profile.
+    var latestRecap: PlayerRecap? {
+        recaps.first
+    }
+
     /// The player switched to the Profile tab.
     func tabOpened() {
         reloadAccount()
@@ -81,6 +91,7 @@ final class ProfileViewModel: ObservableObject {
         loadTask?.cancel()
         if stats == nil { loadState = .loading }
         let task = Task {
+            async let freshRecaps = try? service.fetchRecaps()
             do {
                 let fresh = try await service.fetchPlayerStats()
                 guard !Task.isCancelled else { return }
@@ -90,9 +101,35 @@ final class ProfileViewModel: ObservableObject {
                 guard !Task.isCancelled else { return }
                 loadState = stats == nil ? .failed : .loaded
             }
+            // A failed recap fetch keeps the banner the player already saw.
+            if let fetched = await freshRecaps, !Task.isCancelled {
+                recaps = fetched.filter { $0.kind != nil }
+            }
         }
         loadTask = task
         return task
+    }
+
+    /// Play the recap; the server and the banner learn it was seen.
+    func play(_ recap: PlayerRecap) {
+        playingRecap = recap
+        guard !recap.seen else { return }
+        if let index = recaps.firstIndex(where: { $0.id == recap.id }) {
+            recaps[index].seen = true
+        }
+        let service = service
+        Task { try? await service.markRecapSeen(id: recap.id) }
+    }
+
+    /// The story closed after `slidesSeen` of `slidesTotal` slides.
+    func storyClosed(_ recap: PlayerRecap, slidesSeen: Int, slidesTotal: Int) {
+        playingRecap = nil
+        analytics.track(.recapViewed(kind: recap.kind?.rawValue ?? "", slidesSeen: slidesSeen, slidesTotal: slidesTotal))
+    }
+
+    /// The share sheet opened on the last slide.
+    func shareOpened(_ recap: PlayerRecap) {
+        analytics.track(.recapShared(kind: recap.kind?.rawValue ?? ""))
     }
 
     /// The account changed (sign-in, sign-out, deletion): the old cards
@@ -100,6 +137,8 @@ final class ProfileViewModel: ObservableObject {
     func reset() {
         loadTask?.cancel()
         stats = nil
+        recaps = []
+        playingRecap = nil
         loadState = .loading
         reloadAccount()
     }

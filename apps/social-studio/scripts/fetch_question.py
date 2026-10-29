@@ -172,7 +172,8 @@ async def one(qid, lang, answer_number=None):
     return out
 
 
-# A round reel says which question an answer belongs to (founder 2026-10-25);
+# A round reel said which question an answer belongs to (founder 2026-10-25);
+# since 2026-10-29 the reel cuts the number off (cli/trim.ts), the clip keeps it;
 # digits are spelled out for sk/cs by the TTS normalization.
 ANSWER_PREFIX = {
     "en": "Question {n}: ",

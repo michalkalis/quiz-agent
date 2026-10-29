@@ -19,6 +19,8 @@ Hráč vidí zábavné štatistiky o tom, ako hrá (silná kategória, kde a ked
 | 10-28 | Dolná lišta **B**: dve záložky „Hrať“ a „Profil“. Balíčky a nastavenia idú do Profilu. Počas kvízu lišta skrytá. |
 | 10-28 | Profil **variant 1**: prehľad navrchu, mriežka kariet, zamknuté karty s postupom, nastavenia pod ozubeným kolieskom. Príbehové snímky schválené („super“). |
 | 10-28 | Nastavenia treba premyslieť: dostupné z Home aj z obrazovky kvízu, iné pre solo a hru spolu. |
+| 10-29 | Sekcia „Moje balíky“ ostáva na Home (rýchle spustenie), Profil dostane riadok „Moje balíky“. |
+| 10-29 | Nastavenia hry spolu = samostatný krok 213.8: najprv HTML návrhy (napr. v lobby hostiteľa), predvolené hodnoty majú vyhovovať väčšine. Ku každej novej funkcii hneď aj meranie. |
 
 ## Prahy (z rešerše)
 
@@ -59,10 +61,11 @@ Poradie: 213.1 hneď (dáta sa musia zbierať pred spustením), potom 213.2 → 
 - [x] **213.1 Chýbajúce merania** (PR #615, nasadené) — časové pásmo hráča pri štarte hry (`quiz_context`), čas do začiatku odpovede (`answer_submitted.latency_ms`). Allowlist v `taxonomy.py` + iOS + `docs/product/analytics-events.md`. Malé, ide samostatne.
 - [x] **213.2 Výpočet štatistík (server)** (PR #618) — služba nad udalosťami hráča: karty, stav zamknutia a postup („ešte 2 hry“). Endpoint pre appku. Porovnanie zlepšenia pri rovnakej obťažnosti. Testy na prahy a hranice (prázdny hráč, presne na prahu, jedna kategória).
 - [x] **213.3 Prehľady (server)** (PR #620) — prvý, mesačný (1. deň mesiaca za predošlý), ročný (december). Uložená snímka prehľadu, aby sa po čase nemenil. Typ hráča podľa pevných pravidiel. Mazanie spolu s účtom.
-- [ ] **213.4 Lišta a Profil (appka)** — natívna dolná lišta (Hrať, Profil), skrytá počas kvízu. Home bez ozubeného kolieska. Profil: účet, prehľad navrchu, mriežka kariet, Moje balíčky, nastavenia. Rýchle nastavenia hry z Home aj z kvízu (koordinovať s hrou spolu: ktoré platia v hre spolu a predvolené hodnoty, napr. hlasové povely vypnuté, definuje multiplayer plán). Identifikátory, snímky obrazoviek, RS scenár.
+- [~] **213.4 Lišta a Profil (appka)** — lišta Hrať/Profil (skrytá počas kvízu), Profil: účet, krúžok k prvému prehľadu, mriežka kariet (zamknuté s postupom), Moje balíky, nastavenia pod kolieskom; Home bez kolieska; udalosť `profile_opened`; snímky obrazoviek, RS-30. Rýchle nastavenia z kvízu už existujú (hárok Nastavení na obrazovke otázky). Banner prehľadu príde s 213.5.
 - [ ] **213.5 Príbeh a zdieľanie (appka)** — prehrávanie snímok, posledná snímka ako obrázok 9:16 na zdieľanie. Texty sk/cs/en cez copy review, veľké nadpisy na jeden riadok.
 - [ ] **213.6 Meranie** — udalosti: otvorenie Profilu, prehľad videný (koľko snímok), zdieľaný. Vyhodnotenie po prvom mesačnom prehľade.
 - [ ] **213.7 Zásady ochrany súkromia** — veta o štatistikách z herných dát a o časovom pásme.
+- [ ] **213.8 Nastavenia hry spolu (appka)** — odhalenie odpovedí, čas na odpoveď a hlas hostiteľa: HTML návrhy → výber foundera → kód. Predvolené pre väčšinu, meranie zmien.
 
 ## Otvorené
 

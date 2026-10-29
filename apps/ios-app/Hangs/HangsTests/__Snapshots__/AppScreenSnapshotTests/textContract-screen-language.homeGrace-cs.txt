@@ -33,7 +33,6 @@ Aktualizuj způsob platby
 Aktualizuj způsob platby
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

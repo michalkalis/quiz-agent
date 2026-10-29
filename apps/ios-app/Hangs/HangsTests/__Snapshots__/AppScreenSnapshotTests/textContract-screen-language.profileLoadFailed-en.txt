@@ -1,0 +1,9 @@
+# texts
+PROFILE
+your stats
+custom packs
+# identifiers
+profile.settings
+profile.account
+profile.statsLoading
+profile.myPacks

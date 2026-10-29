@@ -1,0 +1,31 @@
+# texts
+PROFIL
+37
+z 60
+Tvůj první přehled
+Ještě 23 otázek
+Ještě 1 den hraní
+tvoje statistiky
+Celkem
+37 otázek
+25 min
+Nejdelší série
+5 v řadě
+správných odpovědí
+Silná stránka
+Ještě 2 kategorií
+Kde hraješ
+Ještě 3 kvízů
+Kdy hraješ
+Ještě 2 dní hraní
+vlastní balíčky
+# identifiers
+profile.settings
+profile.account
+profile.firstRecap
+profile.card.totals
+profile.card.best_streak
+profile.card.best_category
+profile.card.where
+profile.card.when
+profile.myPacks

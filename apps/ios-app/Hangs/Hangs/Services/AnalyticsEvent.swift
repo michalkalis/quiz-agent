@@ -31,6 +31,8 @@ enum AnalyticsEvent: Equatable {
     case paywallViewed(source: PaywallSource)
     case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome)
     case restoreResult(outcome: RestoreOutcome)
+    /// #213.4: the Profile tab came on screen.
+    case profileOpened(hasAccount: Bool)
 
     var name: String {
         switch self {
@@ -46,6 +48,7 @@ enum AnalyticsEvent: Equatable {
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
+        case .profileOpened: "profile_opened"
         }
     }
 
@@ -96,6 +99,8 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .restoreResult(outcome):
             [("outcome", .string(outcome.rawValue))]
+        case let .profileOpened(hasAccount):
+            [("has_account", .bool(hasAccount))]
         }
         return pairs.reduce(into: [:]) { result, pair in
             if let value = pair.1 { result[pair.0] = value }

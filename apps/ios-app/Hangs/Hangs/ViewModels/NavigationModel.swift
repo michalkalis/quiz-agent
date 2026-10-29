@@ -26,6 +26,13 @@ enum AppRoute: Hashable {
     #endif
 }
 
+/// #213.4: the two tabs of the root tab bar. The quiz runs on Play; the tab
+/// bar hides while it does.
+enum AppTab: Hashable {
+    case play
+    case profile
+}
+
 /// Owns the navigation surface for ContentView's root stack: the pushed
 /// route path and the presented-ness of the custom-pack order sheet (#138).
 /// Both are cleared atomically the moment `quizState` enters `.startingQuiz`,
@@ -38,6 +45,12 @@ final class NavigationModel: ObservableObject {
     /// mounted.
     @Published var path: [AppRoute] = []
 
+    /// #213.4: the Profile tab's own pushed stack (Settings, My packs).
+    @Published var profilePath: [AppRoute] = []
+
+    /// #213.4: the tab on screen.
+    @Published var selectedTab: AppTab = .play
+
     /// The #138 create-pack modal. It lives here rather than in SettingsView's
     /// `@State` for the same reason the old OrderProgress flag did: quiz-start
     /// teardown has to be able to collapse it in the SAME step that empties the
@@ -45,11 +58,19 @@ final class NavigationModel: ObservableObject {
     /// covering the fresh QuestionView.
     @Published var orderFlowPresented = false
 
-    /// Resets the whole nav surface — pushed path + the order sheet — in one
-    /// step, so no in-between state is ever observable.
+    /// Resets the whole nav surface — both pushed paths + the order sheet —
+    /// in one step, so no in-between state is ever observable. A quiz started
+    /// from the Profile (a pack in My packs, a spoken "start") plays on Play.
     func clearAll() {
         path = []
+        profilePath = []
         orderFlowPresented = false
+        selectedTab = .play
+    }
+
+    /// Home is on screen: the Play tab with nothing pushed.
+    var isHomeOnTop: Bool {
+        selectedTab == .play && path.isEmpty
     }
 
     /// Reactive teardown seam: called from ContentView's

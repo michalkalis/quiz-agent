@@ -34,7 +34,6 @@ Ještě 870 z 1 000 · resets in 13 days
 Ještě 870 z 1 000 · resets in 13 days
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

@@ -33,7 +33,6 @@ resets in 13 days
 resets in 13 days
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

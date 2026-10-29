@@ -37,6 +37,23 @@
         }
       }
     },
+    "%@ min" : {
+      "comment" : "Profile stat card (#213.4): typical quiz length in minutes",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ min"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ min"
+          }
+        }
+      }
+    },
     "%@ of %@ left · %@" : {
       "comment" : "Home plan card meta for a Trubbo Plus subscriber: questions left of the monthly allowance, then the reset countdown",
       "localizations" : {
@@ -56,6 +73,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ešte %1$@ z %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ s to answer" : {
+      "comment" : "Profile stat card (#213.4): median seconds before the player starts answering in the fastest category",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s na odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s na odpoveď"
           }
         }
       }
@@ -199,6 +233,89 @@
         }
       }
     },
+    "%lld in a row" : {
+      "comment" : "Profile stat card (#213.4): longest run of correct answers",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld v řadě"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld v řadě"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld v řadě"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld v řadě"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld in a row"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld in a row"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld za sebou"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld za sebou"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld za sebou"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld za sebou"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld monthly free" : {
       "localizations" : {
         "cs" : {
@@ -211,6 +328,338 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld mesačne zadarmo"
+          }
+        }
+      }
+    },
+    "%lld more categories" : {
+      "comment" : "Profile stat card (#213.4): locked card, categories still to play",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kategorie"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kategorie"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kategorie"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kategorií"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more category"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more categories"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kategória"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kategórie"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kategórie"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kategórií"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more days of play" : {
+      "comment" : "Profile stat card (#213.4): locked card or first recap, separate days with a quiz still needed",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld den hraní"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld dny hraní"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld dne hraní"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld dní hraní"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more day of play"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more days of play"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld deň hrania"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld dni hrania"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld dňa hrania"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld dní hrania"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more questions" : {
+      "comment" : "Profile stat card (#213.4): locked card or first recap, answers still needed",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld otázka"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld otázek"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more questions"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld otázka"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld otázok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more quizzes" : {
+      "comment" : "Profile stat card (#213.4): locked card, quizzes still needed",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kvíz"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kvízy"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kvízu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ještě %lld kvízů"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more quiz"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more quizzes"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kvíz"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kvízy"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kvízu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ešte %lld kvízov"
+                }
+              }
+            }
           }
         }
       }
@@ -729,6 +1178,40 @@
         }
       }
     },
+    "%lld%% correct" : {
+      "comment" : "Profile stat card (#213.4): share of correct answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %% správně"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %% správne"
+          }
+        }
+      }
+    },
+    "%lld%% of quizzes" : {
+      "comment" : "Profile stat card (#213.4): share of quizzes played in that place",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %% kvízů"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld %% kvízov"
+          }
+        }
+      }
+    },
     "%lldd %lldh" : {
       "comment" : "Compact time remaining: days and hours (e.g. 12d 4h)",
       "localizations" : {
@@ -805,6 +1288,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%llds"
+          }
+        }
+      }
+    },
+    "+%lld points" : {
+      "comment" : "Profile stat card (#213.4): accuracy went up by these percentage points",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bod"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld body"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bodu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bodů"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld point"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld points"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bod"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld body"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bodu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld bodov"
+                }
+              }
+            }
           }
         }
       }
@@ -1218,6 +1784,23 @@
         }
       }
     },
+    "At night" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays at night",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V noci"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V noci"
+          }
+        }
+      }
+    },
     "At the end of the set" : {
       "comment" : "Answer reveal setting: deferred reveal, one recap after the last question",
       "localizations" : {
@@ -1420,6 +2003,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hneď sme späť"
+          }
+        }
+      }
+    },
+    "Best streak" : {
+      "comment" : "Profile stat card (#213.4) caption",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejdelší série"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najdlhšia séria"
+          }
+        }
+      }
+    },
+    "Better in own words" : {
+      "comment" : "Profile stat card (#213.4): open answers score better than multiple choice",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Líp vlastními slovy"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lepšie vlastnými slovami"
+          }
+        }
+      }
+    },
+    "Better with options" : {
+      "comment" : "Profile stat card (#213.4): multiple choice scores better than open answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Líp s možnostmi"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lepšie s možnosťami"
           }
         }
       }
@@ -2256,6 +2890,23 @@
         }
       }
     },
+    "Couldn't load your stats" : {
+      "comment" : "Profile: the stat cards failed to load (tap to retry)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistiky se nepodařilo načíst"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Štatistiky sa nepodarilo načítať"
+          }
+        }
+      }
+    },
     "Couldn't restart the pack" : {
       "comment" : "Alert title shown when Try again on a failed custom-pack order in My packs did not go through",
       "localizations" : {
@@ -2745,6 +3396,23 @@
         }
       }
     },
+    "Elsewhere" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays on another audio route",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jinde"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inde"
+          }
+        }
+      }
+    },
     "End & See Results" : {
       "comment" : "Alert button that ends the quiz early and shows the results screen.",
       "localizations" : {
@@ -2895,6 +3563,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zábava"
+          }
+        }
+      }
+    },
+    "Equally good" : {
+      "comment" : "Profile stat card (#213.4): multiple choice and open answers score the same",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stejně dobře"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rovnako dobre"
           }
         }
       }
@@ -3258,6 +3943,23 @@
         }
       }
     },
+    "Fastest category" : {
+      "comment" : "Profile stat card (#213.4) caption",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejrychlejší kategorie"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najrýchlejšia kategória"
+          }
+        }
+      }
+    },
     "Final score: %@ out of %lld" : {
       "comment" : "Accessibility label for the final-score card",
       "localizations" : {
@@ -3415,6 +4117,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bezplatný limit vyčerpaný"
+          }
+        }
+      }
+    },
+    "Free plan" : {
+      "comment" : "Profile account row: the player has no subscription",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plán zdarma"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plán zadarmo"
           }
         }
       }
@@ -3746,6 +4465,23 @@
         }
       }
     },
+    "Hard questions" : {
+      "comment" : "Profile stat card (#213.4) caption",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Těžké otázky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ťažké otázky"
+          }
+        }
+      }
+    },
     "Hearing you…" : {
       "comment" : "Question-screen listen bar, large status once the driver's speech is heard (#185 F2)",
       "localizations" : {
@@ -3859,6 +4595,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "História"
+          }
+        }
+      }
+    },
+    "Holding steady" : {
+      "comment" : "Profile stat card (#213.4): accuracy stayed about the same",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Držíš formu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Držíš formu"
           }
         }
       }
@@ -4033,6 +4786,91 @@
         }
       }
     },
+    "In headphones" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays with headphones",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se sluchátky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So slúchadlami"
+          }
+        }
+      }
+    },
+    "In the afternoon" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays in the afternoon",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpoledne"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poobede"
+          }
+        }
+      }
+    },
+    "In the car" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays in the car (CarPlay)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V autě"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V aute"
+          }
+        }
+      }
+    },
+    "In the evening" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays in the evening",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Večer"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Večer"
+          }
+        }
+      }
+    },
+    "In the morning" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays in the morning",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ráno"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ráno"
+          }
+        }
+      }
+    },
     "In the room" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -4046,6 +4884,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "V místnosti"
+          }
+        }
+      }
+    },
+    "In total" : {
+      "comment" : "Profile stat card (#213.4) caption: all questions answered so far",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Celkem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spolu"
           }
         }
       }
@@ -4239,6 +5094,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Připoj se ke stejné Wi-Fi jako hostitel a hra se tu ukáže. Nebo naskenuj QR kód z telefonu hostitele fotoaparátem."
+          }
+        }
+      }
+    },
+    "Keep playing" : {
+      "comment" : "Profile stat card (#213.4): locked card with an unknown requirement",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj dál"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hraj ďalej"
           }
         }
       }
@@ -5357,6 +6229,23 @@
         }
       }
     },
+    "On the speaker" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays on the phone speaker",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přes reproduktor"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cez reproduktor"
+          }
+        }
+      }
+    },
     "Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately." : {
       "comment" : "No-cancellation notice on the custom-pack payment step",
       "localizations" : {
@@ -5603,6 +6492,23 @@
         }
       }
     },
+    "Options or own words" : {
+      "comment" : "Profile stat card (#213.4) caption: multiple choice versus open answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Možnosti, nebo vlastní slova"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Možnosti alebo vlastné slová"
+          }
+        }
+      }
+    },
     "Ordering is paused for now." : {
       "comment" : "Settings: under 'Create a pack' while custom-pack orders are switched off on the server (#193 task 193.9)",
       "localizations" : {
@@ -5616,6 +6522,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objednávanie je zatiaľ pozastavené."
+          }
+        }
+      }
+    },
+    "Over Bluetooth" : {
+      "comment" : "Profile stat card (#213.4): the player mostly plays over Bluetooth",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přes Bluetooth"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cez Bluetooth"
           }
         }
       }
@@ -5667,6 +6590,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SPRACOVANIE"
+          }
+        }
+      }
+    },
+    "PROFILE" : {
+      "comment" : "Profile tab title",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PROFIL"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PROFIL"
           }
         }
       }
@@ -5785,6 +6725,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Plán"
+          }
+        }
+      }
+    },
+    "Play" : {
+      "comment" : "Tab bar: the tab with the quiz (Home)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hrát"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hrať"
           }
         }
       }
@@ -5925,6 +6882,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zahrané otázky sa neopakujú. Po vynulovaní sa vrátia."
+          }
+        }
+      }
+    },
+    "Player" : {
+      "comment" : "Profile account row: name when the player has none",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráč"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hráč"
           }
         }
       }
@@ -6093,6 +7067,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spracúvam…"
+          }
+        }
+      }
+    },
+    "Profile" : {
+      "comment" : "Tab bar: the Profile tab",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil"
           }
         }
       }
@@ -7063,6 +8054,23 @@
         }
       }
     },
+    "Room to grow" : {
+      "comment" : "Profile stat card (#213.4) caption: the weakest category",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prostor ke zlepšení"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Priestor na zlepšenie"
+          }
+        }
+      }
+    },
     "Running low on free questions" : {
       "localizations" : {
         "cs" : {
@@ -7782,6 +8790,23 @@
         }
       }
     },
+    "Sign in to keep your stats" : {
+      "comment" : "Profile account row: the player is not signed in",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přihlas se a statistiky ti zůstanou"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prihlás sa a štatistiky ti ostanú"
+          }
+        }
+      }
+    },
     "Sign in to see your packs" : {
       "localizations" : {
         "cs" : {
@@ -8403,6 +9428,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zastav súhrn"
+          }
+        }
+      }
+    },
+    "Strong suit" : {
+      "comment" : "Profile stat card (#213.4) caption: the best category",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silná stránka"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silná stránka"
           }
         }
       }
@@ -9465,6 +10507,23 @@
         }
       }
     },
+    "Typical quiz" : {
+      "comment" : "Profile stat card (#213.4) caption: median quiz length",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Běžný kvíz"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bežný kvíz"
+          }
+        }
+      }
+    },
     "USB" : {
       "comment" : "Audio device subtitle: a USB audio device",
       "localizations" : {
@@ -9819,6 +10878,23 @@
         }
       }
     },
+    "When you play" : {
+      "comment" : "Profile stat card (#213.4) caption",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kdy hraješ"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kedy hráš"
+          }
+        }
+      }
+    },
     "When you record an answer again, transcription looks for a different result than the one you rejected" : {
       "localizations" : {
         "cs" : {
@@ -9831,6 +10907,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keď odpoveď nahráš znova, prepis hľadá iný výsledok ako ten zamietnutý"
+          }
+        }
+      }
+    },
+    "Where you play" : {
+      "comment" : "Profile stat card (#213.4) caption",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kde hraješ"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kde hráš"
           }
         }
       }
@@ -10297,6 +11390,23 @@
         }
       }
     },
+    "Your first recap" : {
+      "comment" : "Profile: progress card toward the first recap",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvůj první přehled"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoj prvý prehľad"
+          }
+        }
+      }
+    },
     "Your free questions for this month are used up, so the game ended early." : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -10458,6 +11568,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Balík sa ešte dopisuje. Kvíz bude pokračovať sám, hneď ako otázka dorazí."
+          }
+        }
+      }
+    },
+    "Your progress" : {
+      "comment" : "Profile stat card (#213.4) caption: accuracy change over time",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvůj pokrok"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoj pokrok"
           }
         }
       }
@@ -10711,6 +11838,23 @@
         }
       }
     },
+    "at the same difficulty" : {
+      "comment" : "Profile stat card (#213.4): the progress compares answers of the same difficulty",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "při stejné obtížnosti"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pri rovnakej náročnosti"
+          }
+        }
+      }
+    },
     "audio feedback" : {
       "comment" : "Title of a group of settings related to audio feedback.",
       "isCommentAutoGenerated" : true,
@@ -10760,6 +11904,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "správne"
+          }
+        }
+      }
+    },
+    "correct answers" : {
+      "comment" : "Profile stat card (#213.4): under the best streak number",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "správných odpovědí"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "správnych odpovedí"
           }
         }
       }
@@ -11040,6 +12201,125 @@
         }
       }
     },
+    "mostly on Fridays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji v pátek"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v piatok"
+          }
+        }
+      }
+    },
+    "mostly on Mondays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji v pondělí"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v pondelok"
+          }
+        }
+      }
+    },
+    "mostly on Saturdays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji v sobotu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v sobotu"
+          }
+        }
+      }
+    },
+    "mostly on Sundays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji v neděli"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v nedeľu"
+          }
+        }
+      }
+    },
+    "mostly on Thursdays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji ve čtvrtek"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie vo štvrtok"
+          }
+        }
+      }
+    },
+    "mostly on Tuesdays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji v úterý"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v utorok"
+          }
+        }
+      }
+    },
+    "mostly on Wednesdays" : {
+      "comment" : "Profile stat card (#213.4): weekday the player plays most",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nejčastěji ve středu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "najčastejšie v stredu"
+          }
+        }
+      }
+    },
     "my packs" : {
       "comment" : "Label for the Home section listing the account's custom packs",
       "localizations" : {
@@ -11097,6 +12377,23 @@
         }
       }
     },
+    "of %lld" : {
+      "comment" : "Profile first recap ring: answers so far out of the target",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z %lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z %lld"
+          }
+        }
+      }
+    },
     "of %lld free questions left" : {
       "localizations" : {
         "cs" : {
@@ -11109,6 +12406,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "z %lld otázok zadarmo"
+          }
+        }
+      }
+    },
+    "options %lld%%, own words %lld%%" : {
+      "comment" : "Profile stat card (#213.4): accuracy with multiple choice and with open answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "možnosti %1$lld %%, vlastní slova %2$lld %%"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "možnosti %1$lld %%, vlastné slová %2$lld %%"
           }
         }
       }
@@ -11726,6 +13040,23 @@
         }
       }
     },
+    "your stats" : {
+      "comment" : "Profile: section label above the stat cards",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoje statistiky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoje štatistiky"
+          }
+        }
+      }
+    },
     "· Points: %@" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -11739,6 +13070,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "· Body: %@"
+          }
+        }
+      }
+    },
+    "−%lld points" : {
+      "comment" : "Profile stat card (#213.4): accuracy went down by these percentage points",
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bod"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld body"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bodu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bodů"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld point"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld points"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bod"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld body"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bodu"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld bodov"
+                }
+              }
+            }
           }
         }
       }

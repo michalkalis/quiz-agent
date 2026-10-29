@@ -35,7 +35,6 @@ resets in 13 days · credits never expire
 resets in 13 days · credits never expire
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

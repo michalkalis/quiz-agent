@@ -40,6 +40,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome"],
     "restore_result": ["outcome"],
+    "profile_opened": ["has_account"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -65,6 +66,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .paywallViewed(source: .quota),
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),
     .restoreResult(outcome: .nothingToRestore),
+    .profileOpened(hasAccount: true),
 ]
 
 @MainActor

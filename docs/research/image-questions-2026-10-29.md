@@ -7,15 +7,15 @@ Nadväzuje na #98 — geografické otázky kreslené priamo v appke a #68 — pr
 
 - **Základy už máme.** Appka vie zobraziť obrázkovú otázku a odpoveď sa dáva hlasom. Server ju pošle len hráčovi, ktorý si ju zapne, ale prepínač je v appke skrytý, takže ich dnes nikto nedostane. V produkcii je asi 25 starých obrázkových otázok.
 - **Najlepší pomer zábava a náklady: skutočné fotky z Wikimedie.** Sú zadarmo a dajú sa zbierať automaticky. Pri štruktúrovaných typoch (vlajka, obraz a jeho autor, pamiatka a jej mesto) sa otázka dá zostaviť zo šablóny, bez AI a bez kreditov.
-- **Obrázok k textovej otázke patrí hlavne k odhaleniu odpovede.** Po odpovedi nič neprezradí a pomáha zapamätať si fakt. Pred odpoveďou len vtedy, ak prejde kontrolou, že neprezrádza odpoveď.
+- **Obrázok k textovej otázke sa zobrazuje počas otázky ako kontext** (rozhodnutie foundera nižšie). Každý taký obrázok musí prejsť kontrolou, že neprezrádza odpoveď.
 - **Obrázok zadarmo má takmer každá otázka z Wikipédie.** Hlavný obrázok článku, z ktorého otázka vznikla, vieme stiahnuť bez poplatku (len voľné licencie).
-- **AI generované obrázky len ako ilustrácia** (rébusy, štylizované obrázky). Nikdy pre skutočné miesta, ľudí, vlajky ani umelecké diela, lebo si vymýšľajú detaily a v kvíze je to faktická chyba.
+- **AI generované obrázky len ako ilustrácia** (rébusy, štylizované obrázky). Nikdy pre skutočné miesta, vlajky ani umelecké diela, lebo si vymýšľajú detaily a v kvíze je to faktická chyba. Výnimka: karikatúry historických osobností (rozhodnutie foundera); žijúce osobnosti čakajú na právny názor.
 - **Odložiť:** logá (ochranné známky) a tváre žijúcich ľudí (osobnostné práva podľa slovenského Občianskeho zákonníka §12).
 - **Navrhovaný ďalší krok:** bezplatný pilot 30 až 50 obrázkových otázok zo šablón, na posúdenie v artefakte. Nič sa nepublikuje, kým ich neschváliš.
 
 ## Rozhodnutia foundera (2026-10-29)
 
-- **Obrázok k textovej otázke sa zobrazuje počas otázky ako kontext**, nie pri odhalení („po odhalení mi to moc nedáva zmysel“). Tým padá odporúčanie v časti o odhalení; kontrola prezradenia ostáva potrebná.
+- **Obrázok k textovej otázke sa zobrazuje počas otázky ako kontext**, nie pri odhalení („po odhalení mi to moc nedáva zmysel“). Tým padá pôvodné odporúčanie obrázka pri odhalení; kontrola prezradenia je potrebná od začiatku.
 - **Pilot: všetky štyri typy** (čo je na obrázku, priblížený detail, historická fotka a rok, obrysy a slepé mapy). Rozhodne testovanie, nudné typy vypadnú.
 - **Predvolene zapnuté, v malom pomere k textovým otázkam**, s ohľadom na náklady.
 - **AI karikatúry osobností** (známa osobnosť ako kreslená postavička, hráč háda) vyskúšať, rozpočet pilotu max 2 $.
@@ -47,7 +47,7 @@ Zábava je odhad z herných vzorov (Worldle mal v prvý deň 577 tisíc hráčov
 | **Čo je na obrázku** (pamiatka, zviera, rastlina, jedlo, predmet) | hlas, krátka odpoveď | Wikidata + Commons, iNaturalist | <span class="badge ok">vysoká</span> šablóna | vysoká |
 | **Priblížený detail, ktorý sa postupne oddiaľuje** | hlas; skorá odpoveď môže dať viac bodov | ten istý obrázok, efekt robí appka | <span class="badge ok">vysoká</span> bez nového obsahu | veľmi vysoká, buduje napätie |
 | **Rozmazaný obrázok, ktorý sa vyjasňuje** | hlas | ten istý obrázok, efekt v appke | <span class="badge ok">vysoká</span> | vysoká |
-| **Obrys krajiny, slepá mapa** (#98) | hlas | Natural Earth (voľné dielo), kreslí appka | <span class="badge ok">vysoká</span> už navrhnuté | vysoká, overené hrou Worldle |
+| **Obrys krajiny, slepá mapa** (#98 — geografické otázky kreslené v appke) | hlas | Natural Earth (voľné dielo), kreslí appka | <span class="badge ok">vysoká</span> už navrhnuté | vysoká, overené hrou Worldle |
 | **Kto namaľoval tento obraz** | hlas | Met Museum, Art Institute Chicago (CC0) | <span class="badge ok">vysoká</span> | stredná až vysoká |
 | **Historická fotka: ktorý rok?** | hlas, body podľa toho, ako blízko | Commons, voľné diela | <span class="badge info">stredná</span> treba bodovanie „najbližšie vyhráva“ | vysoká |
 | **Vlajky a erby** | hlas alebo výber | Wikidata | <span class="badge ok">vysoká</span> | stredná; známe vlajky sú klišé, erby slovenských a českých miest sú zaujímavejšie |
@@ -72,8 +72,8 @@ Zábava je odhad z herných vzorov (Worldle mal v prvý deň 577 tisíc hráčov
 
 Tri miesta, kde sa môže zobraziť:
 
-1. **Pri odhalení odpovede** <span class="badge ok">odporúčam</span> Nič neprezradí. Výskum zapamätania (efekt prevahy obrázka nad slovom) ukazuje, že obrázok spolu s textom sa pamätá lepšie ako samotný text. Zároveň to dáva odhaleniu „odmenu“.
-2. **Pred odpoveďou ako kontext** <span class="badge warn">s kontrolou</span> Pomôže pri otázkach, kde slovný opis nestačí. Riziko: fotka Sagrady Família pri otázke „V ktorom meste…“ prezradí odpoveď. Každý taký obrázok musí prejsť kontrolou prezradenia.
+1. **Pri odhalení odpovede** <span class="badge bad">founder zamietol</span> Nič neprezradí. Výskum zapamätania (efekt prevahy obrázka nad slovom) ukazuje, že obrázok spolu s textom sa pamätá lepšie ako samotný text. Zároveň to dáva odhaleniu „odmenu“.
+2. **Počas otázky ako kontext** <span class="badge ok">rozhodnuté</span> Pomôže pri otázkach, kde slovný opis nestačí. Riziko: fotka Sagrady Família pri otázke „V ktorom meste…“ prezradí odpoveď. Každý taký obrázok musí prejsť kontrolou prezradenia.
 3. **Vôbec** pri otázkach, kde obrázok nemá zmysel (abstraktné pojmy, čísla). Čisto dekoratívne obrázky podľa výskumu takmer nepomáhajú (neoverené presne), takže obrázok musí súvisieť s faktom.
 
 Zdroj zadarmo: hlavný obrázok článku Wikipédie, ktorý je už zdrojom otázky. Vyberáme len voľné licencie. Obrázok sa stiahne raz do nášho úložiska, appka ho nikdy neťahá priamo z Wikimedie.
@@ -84,7 +84,7 @@ Zdroj zadarmo: hlavný obrázok článku Wikipédie, ktorý je už zdrojom otáz
 |---|---|---|---|---|
 | Wikimedia Commons + Wikidata | fotky, vlajky, erby, mapy, obrazy | každý súbor iná; CC0 a voľné diela bez uvedenia, CC BY-SA s uvedením autora | zadarmo | názvy súborov často obsahujú odpoveď, treba ich premenovať |
 | Wikipédia, hlavný obrázok článku | jeden obrázok k článku | len voľné (predvolené nastavenie) | zadarmo | najjednoduchší zdroj pre obrázky k textovým otázkam |
-| Natural Earth | hranice krajín | voľné dielo | zadarmo | základ pre #98 |
+| Natural Earth | hranice krajín | voľné dielo | zadarmo | základ pre #98 — geografické otázky kreslené priamo v appke |
 | Metropolitan Museum | umenie | CC0 | zadarmo, bez kľúča | len diela označené ako voľné |
 | Art Institute of Chicago | umenie | CC0 (neoverené) | zadarmo | |
 | iNaturalist | zvieratá, rastliny, huby | podľa fotky; brať len CC0 a CC BY | zadarmo | licencia fotky sa môže líšiť od pozorovania |
@@ -103,7 +103,7 @@ Zdroj zadarmo: hlavný obrázok článku Wikipédie, ktorý je už zdrojom otáz
 | Google Nano Banana Pro | 0,134 $ | Google cenník 2026-10-29 |
 | Flux 1.1 pro | 0,04 $ | BFL cenník |
 
-Tisíc obrázkov by stálo približne 10 až 50 $. Skutočným nákladom je ich kontrola. Hodia sa na rébusy, štylizované ilustrácie a vymyslené predmety. Nehodia sa na nič skutočné, čo má hráč rozpoznať.
+Tisíc obrázkov by stálo približne 10 až 50 $. Skutočným nákladom je ich kontrola. Hodia sa na rébusy, štylizované ilustrácie a vymyslené predmety. Nehodia sa na nič skutočné, čo má hráč rozpoznať, okrem karikatúr historických osobností, kde hráča vedú rekvizity a oblečenie.
 
 ## Riziká a pravidlá
 
@@ -121,13 +121,13 @@ Odhad podľa relatívnej náročnosti.
 | Časť | Náročnosť |
 |---|---|
 | Server: údaje o autorovi a licencii obrázka, obrázok aj pri textovej otázke | malá |
-| Appka: obrázok pri odhalení, pri textovej otázke, tlačidlo „i“ | malá až stredná |
+| Appka: obrázok počas textovej otázky, tlačidlo „i“ | malá až stredná |
 | Appka: efekty priblíženia a rozmazania | stredná |
 | Prepínač zo servera namiesto napevno v appke + analytika (koľko hráčov ich zapne, ako často odpovedajú správne) | malá |
 | Zber obrázkov z Wikidata a Commons do nášho úložiska, premenovanie, kontrola licencie | stredná |
 | Kontrola prezradenia (pre obrázky pred odpoveďou) | malá; jedno lacné AI volanie na obrázok, cenu overím pred spustením |
 | Hra spolu: obrázok na každom telefóne | malá |
-| #98 obrysy a slepé mapy | podľa plánu #98 |
+| #98 — geografické otázky kreslené v appke (obrysy a slepé mapy) | podľa plánu v issue |
 
 ## Náklady a kredity
 
@@ -135,17 +135,17 @@ Odhad podľa relatívnej náročnosti.
 |---|---|
 | Táto rešerš | 0 $ |
 | Pilot zo šablón (vlajky, erby, obrazy, pamiatky, zvieratá) | 0 $ — len sťahovanie z Wikimedie |
-| Doplnenie obrázkov k existujúcim otázkam pre odhalenie | 0 $ za stiahnutie; prípadná kontrola zhody obrázka s otázkou cez AI zlomok centu na otázku, overím vopred |
+| Doplnenie obrázkov ako kontextu k existujúcim otázkam | 0 $ za stiahnutie; kontrola prezradenia a zhody obrázka s otázkou cez AI zlomok centu na otázku, overím vopred |
 | Nové obrázkové otázky, ktorých text píše AI | rovnako ako dnešné textové otázky |
 | AI ilustrácie | 0,01 až 0,05 $ za obrázok, len po schválení |
 
 ## Odporúčaný postup
 
 1. **Pilot zadarmo.** 30 až 50 ukážkových otázok zo šablón, každá s obrázkom, zdrojom a licenciou. Posúdiš ich v artefakte.
-2. **Obrázok pri odhalení** k existujúcim otázkam z Wikipédie. Najväčší dosah pri najmenšom riziku.
+2. **Obrázok počas otázky ako kontext** k existujúcim otázkam z Wikipédie, s kontrolou prezradenia od začiatku.
 3. **Obrázkové otázky s efektom priblíženia**, zapínané zo servera, najprv pre testerov.
-4. **#98 obrysy a slepé mapy** podľa existujúceho plánu.
-5. **Neskôr:** obrázok pred odpoveďou s kontrolou prezradenia, Hra spolu, AI ilustrácie a rébusy.
+4. **#98 — geografické otázky kreslené v appke** (obrysy a slepé mapy) podľa existujúceho plánu.
+5. **Neskôr:** Hra spolu, AI karikatúry a rébusy podľa výsledku pilotu.
 
 ## Zdroje
 

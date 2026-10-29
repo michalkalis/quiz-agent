@@ -214,7 +214,7 @@ async function main() {
 
 	if (values.round) {
 		const ids = values.round.split(',').map((s) => s.trim());
-		// Founder 2026-10-25: every answer is read at the end, explanations are only shown.
+		// Founder 2026-10-25: every answer is read (right after its question since 2026-10-29), explanations are only shown.
 		const raws = ids.map((id, k) => loadInput(id, true, k + 1));
 		const qs = raws.map((r) => ({...shapeQuestion(r), options: [], correctIndex: null}));
 		const items = [];

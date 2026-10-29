@@ -15,8 +15,6 @@ type Copy = {
 	roundSub: (n: number) => string;
 	answersTitle: string;
 	swipe: string;
-	/** Under a round's countdown: the answers come only at the end (founder 2026-10-25). */
-	answersAtEnd: string;
 	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
 	roundHook: (n: number) => string;
 	/** Opening line that says on its own what the reel is (founder 2026-10-27, variant A): `n` questions in a round, null = one question. */
@@ -35,7 +33,6 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} questions. Answers on the last slide.`,
 		answersTitle: 'Answers',
 		swipe: 'Swipe',
-		answersAtEnd: 'Answers at the end',
 		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 		openLine: (n) => (n === null ? 'One trivia question. Can you get it?' : `${n}\u00a0trivia questions. Can you get all ${n}?`),
 	},
@@ -49,7 +46,6 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
 		answersTitle: 'Odpovede',
 		swipe: 'Potiahni',
-		answersAtEnd: 'Odpovede na konci',
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 		openLine: (n) => (n === null ? 'Kvízová otázka. Trafíš ju?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázok'}. Trafíš všetky?`),
 	},
@@ -63,7 +59,6 @@ export const COPY: Record<Language, Copy> = {
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,
 		answersTitle: 'Odpovědi',
 		swipe: 'Přejeď',
-		answersAtEnd: 'Odpovědi na konci',
 		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
 		openLine: (n) => (n === null ? 'Kvízová otázka. Trefíš ji?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázek'}. Trefíš všechny?`),
 	},

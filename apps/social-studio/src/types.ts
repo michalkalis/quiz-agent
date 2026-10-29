@@ -69,7 +69,7 @@ export type CarouselSlideProps = {
 	index: number;
 };
 
-/** One question of a round reel, timed like a one-question reel, plus its answer read aloud at the end. */
+/** One question of a round reel, timed like a one-question reel, plus its answer read aloud right after it. */
 export type RoundItem = {
 	q: ReelQuestion;
 	audio: string | null;

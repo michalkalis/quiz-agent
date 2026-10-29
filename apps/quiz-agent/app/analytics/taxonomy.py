@@ -61,6 +61,10 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "restore_result": frozenset({"outcome"}),
     # #213.4: the Profile tab came on screen.
     "profile_opened": frozenset({"has_account"}),
+    # #213.5: a recap story closed (how far the player got) and its share
+    # sheet opened.
+    "recap_viewed": frozenset({"kind", "slides_seen", "slides_total"}),
+    "recap_shared": frozenset({"kind"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
         {

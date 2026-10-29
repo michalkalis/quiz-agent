@@ -4,8 +4,8 @@
 //
 //  #213.4 Profile tab (founder 2026-10-28, canvas "Lišta a Profil", Profil 1):
 //  the account, the first-recap progress, a grid of stat cards (locked ones
-//  show what is missing), My packs, and Settings under the gear. The recap
-//  banner and the story player arrive with 213.5.
+//  show what is missing), My packs, and Settings under the gear. #213.5: the
+//  newest recap as a banner on top, played as a full-screen story.
 //
 
 import SwiftUI
@@ -26,6 +26,10 @@ struct ProfileView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("profile.account")
 
+                if let recap = viewModel.latestRecap {
+                    ProfileRecapBanner(recap: recap) { viewModel.play(recap) }
+                }
+
                 if let progress = viewModel.firstRecapProgress {
                     ProfileFirstRecapCard(progress: progress)
                 }
@@ -40,6 +44,11 @@ struct ProfileView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         // Also on the way back from Settings: a sign-in there renames the row.
         .onAppear(perform: viewModel.appeared)
+        .fullScreenCover(item: $viewModel.playingRecap) { recap in
+            RecapStoryView(recap: recap, onShareOpened: { viewModel.shareOpened(recap) }) { seen, total in
+                viewModel.storyClosed(recap, slidesSeen: seen, slidesTotal: total)
+            }
+        }
     }
 
     private var header: some View {

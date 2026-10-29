@@ -4,6 +4,7 @@
 //
 //  #213.4: the Profile tab — a signed-in subscriber with most cards open, a
 //  new anonymous player on the way to the first recap, and a failed load.
+//  #213.5: the subscriber has a new October recap; its story slides.
 //
 
 import Foundation
@@ -24,7 +25,7 @@ extension AppScreen {
         let names = UserDefaults(suiteName: "AppScreen.profile") ?? .standard
         names.removePersistentDomain(forName: "AppScreen.profile")
         let model = ProfileViewModel(
-            service: MockPlayerStatsService(results: results),
+            service: MockPlayerStatsService(results: results, recaps: [.success(self == .profile ? [.mockOctober] : [])]),
             tokenStore: SnapshotTokenStore(tokens),
             nameStore: PlayerNameStore(defaults: names)
         )
@@ -33,6 +34,19 @@ extension AppScreen {
         // No NavigationStack: its bar height differs per device and would tie
         // the baseline to the simulator model.
         return AnyView(ProfileView(viewModel: model, isPlus: self == .profile))
+    }
+}
+
+extension AppScreen {
+    /// The first slide, a card slide (cobalt) and the last one with Share.
+    func makeRecapStory() -> AnyView {
+        let last = RecapSlide.story(for: .mockOctober).count - 1
+        let start = switch self {
+        case .recapCard: 1
+        case .recapPlayerType: last
+        default: 0
+        }
+        return AnyView(RecapStoryView(recap: .mockOctober, startAt: start) { _, _ in })
     }
 }
 

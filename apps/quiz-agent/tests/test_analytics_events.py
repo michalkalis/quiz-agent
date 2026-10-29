@@ -118,6 +118,20 @@ async def test_profile_opened_keeps_only_the_account_flag():
     assert cleaned == {"has_account": True}
 
 
+async def test_recap_events_keep_only_progress_and_kind():
+    # #213.5: tells whether players watch their recap to the end and share
+    # it; the recap's contents (cards, player type) must not leak into events.
+    viewed = clean_properties(
+        CLIENT_EVENTS["recap_viewed"],
+        {"kind": "month", "slides_seen": 4, "slides_total": 7, "player_type": "x"},
+    )
+    assert viewed == {"kind": "month", "slides_seen": 4, "slides_total": 7}
+    shared = clean_properties(
+        CLIENT_EVENTS["recap_shared"], {"kind": "first", "cards": "x"}
+    )
+    assert shared == {"kind": "first"}
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

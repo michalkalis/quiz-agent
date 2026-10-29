@@ -1,0 +1,11 @@
+# texts
+Tvůj typ hráče
+Cestovatel
+Kvíz ti dělá společnost na cestách.
+trubbo
+# identifiers
+recap.story
+recap.slide.6
+recap.previous
+recap.next
+recap.close

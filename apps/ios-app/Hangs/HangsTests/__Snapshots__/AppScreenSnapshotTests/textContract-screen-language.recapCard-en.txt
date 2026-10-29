@@ -1,0 +1,11 @@
+# texts
+Strong suit
+Geography & World
+82% correct
+trubbo
+# identifiers
+recap.story
+recap.slide.1
+recap.previous
+recap.next
+recap.close

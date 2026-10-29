@@ -46,6 +46,7 @@ enum AppScreen: String, CaseIterable {
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
     case roomLobbyHost, roomLobbyGuest, roomQuestion, roomReveal, roomFinal
     case profile, profileNewPlayer, profileLoadFailed
+    case recapIntro, recapCard, recapPlayerType
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

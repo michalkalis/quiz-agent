@@ -62,8 +62,8 @@ Poradie: 213.1 hneď (dáta sa musia zbierať pred spustením), potom 213.2 → 
 - [x] **213.2 Výpočet štatistík (server)** (PR #618) — služba nad udalosťami hráča: karty, stav zamknutia a postup („ešte 2 hry“). Endpoint pre appku. Porovnanie zlepšenia pri rovnakej obťažnosti. Testy na prahy a hranice (prázdny hráč, presne na prahu, jedna kategória).
 - [x] **213.3 Prehľady (server)** (PR #620) — prvý, mesačný (1. deň mesiaca za predošlý), ročný (december). Uložená snímka prehľadu, aby sa po čase nemenil. Typ hráča podľa pevných pravidiel. Mazanie spolu s účtom.
 - [x] **213.4 Lišta a Profil (appka)** (PR #628) — lišta Hrať/Profil (skrytá počas kvízu), Profil: účet, krúžok k prvému prehľadu, mriežka kariet (zamknuté s postupom), Moje balíky, nastavenia pod kolieskom; Home bez kolieska; udalosť `profile_opened`; snímky obrazoviek, RS-30. Rýchle nastavenia z kvízu už existujú (hárok Nastavení na obrazovke otázky). Banner prehľadu príde s 213.5.
-- [ ] **213.5 Príbeh a zdieľanie (appka)** — prehrávanie snímok, posledná snímka ako obrázok 9:16 na zdieľanie. Texty sk/cs/en cez copy review, veľké nadpisy na jeden riadok.
-- [ ] **213.6 Meranie** — udalosti: otvorenie Profilu, prehľad videný (koľko snímok), zdieľaný. Vyhodnotenie po prvom mesačnom prehľade.
+- [~] **213.5 Príbeh a zdieľanie (appka)** — banner najnovšieho prehľadu navrchu Profilu („Nový prehľad · Tvoj október“), príbeh na celú obrazovku: súčty, najviac 5 kariet (len dobré správy), typ hráča; snímky idú samé po 6 s, ťuk vpravo/vľavo; posledná snímka ako obrázok 1080×1920 na zdieľanie. Otvorenie označí prehľad ako videný. Snímky obrazoviek, RS-31.
+- [~] **213.6 Meranie** — udalosti hotové: `profile_opened` (213.4), `recap_viewed` (koľko snímok z koľkých) a `recap_shared` (otvorené zdieľanie) s 213.5. Ostáva vyhodnotenie po prvom mesačnom prehľade (december).
 - [ ] **213.7 Zásady ochrany súkromia** — veta o štatistikách z herných dát a o časovom pásme.
 - [ ] **213.8 Nastavenia hry spolu (appka)** — odhalenie odpovedí, čas na odpoveď a hlas hostiteľa: HTML návrhy → výber foundera → kód. Predvolené pre väčšinu, meranie zmien.
 

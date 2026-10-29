@@ -1,0 +1,11 @@
+# texts
+Tvoj M10
+312 otázok
+3 h 20 min
+trubbo
+# identifiers
+recap.story
+recap.slide.0
+recap.previous
+recap.next
+recap.close

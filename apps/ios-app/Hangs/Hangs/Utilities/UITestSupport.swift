@@ -218,8 +218,11 @@
         /// #213.4: the Profile's stat cards: a seasoned player, or with
         /// `--ui-test-profile-new` one on the way to the first recap.
         static func makeMockPlayerStats() -> PlayerStatsServiceProtocol {
-            let stats: PlayerStats = CommandLine.arguments.contains("--ui-test-profile-new") ? .mockNewPlayer : .mockSeasoned
-            return MockPlayerStatsService(results: [.success(stats)])
+            let isNew = CommandLine.arguments.contains("--ui-test-profile-new")
+            return MockPlayerStatsService(
+                results: [.success(isNew ? .mockNewPlayer : .mockSeasoned)],
+                recaps: [.success(isNew ? [] : [.mockOctober])]
+            )
         }
 
         /// The player says `text` into the open answer recording (#208.8). The

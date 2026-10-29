@@ -776,6 +776,23 @@ and so also covers a quiz started from the Profile landing on Play.
 
 ---
 
+## RS-31: The recap banner plays the story to the shareable last slide
+
+**Type:** XCUITest (`RSProfileTests`). #213.5 (recap story and sharing).
+
+**Hypothesis:** the monthly recap is the reason to come back; the banner opens
+the story, tapping reaches the last slide where Share is ready (the image
+rendered), and Close returns to the Profile.
+
+**Steps:** launch (mock: a seasoned player with an unseen October recap); tap
+`tab.profile`; tap `profile.recap`; tap `recap.next` until Share; tap
+`recap.close`.
+
+**Asserts:** `recap.story` after the banner; `recap.share` on the last slide;
+`profile.settings` after Close and `recap.story` gone. App alive.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

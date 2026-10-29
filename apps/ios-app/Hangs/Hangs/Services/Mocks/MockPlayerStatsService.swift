@@ -2,7 +2,7 @@
 //  MockPlayerStatsService.swift
 //  Hangs
 //
-//  #213: stat cards for tests, previews and the UI-test mock graph.
+//  #213: stat cards and recaps for tests, previews and the UI-test mock graph.
 //
 
 import Foundation
@@ -11,16 +11,33 @@ import Foundation
     final class MockPlayerStatsService: PlayerStatsServiceProtocol, @unchecked Sendable {
         /// Answered in order; the last one repeats.
         var results: [Result<PlayerStats, NetworkError>]
+        var recapResults: [Result<[PlayerRecap], NetworkError>]
         private(set) var fetchCount = 0
+        private(set) var recapFetchCount = 0
+        private(set) var seenIDs: [String] = []
 
-        init(results: [Result<PlayerStats, NetworkError>] = [.success(.mockSeasoned)]) {
+        init(
+            results: [Result<PlayerStats, NetworkError>] = [.success(.mockSeasoned)],
+            recaps: [Result<[PlayerRecap], NetworkError>] = [.success([])]
+        ) {
             self.results = results
+            recapResults = recaps
         }
 
         func fetchPlayerStats() async throws -> PlayerStats {
             let result = results[min(fetchCount, results.count - 1)]
             fetchCount += 1
             return try result.get()
+        }
+
+        func fetchRecaps() async throws -> [PlayerRecap] {
+            let result = recapResults[min(recapFetchCount, recapResults.count - 1)]
+            recapFetchCount += 1
+            return try result.get()
+        }
+
+        func markRecapSeen(id: String) async throws {
+            seenIDs.append(id)
         }
     }
 
@@ -53,6 +70,19 @@ import Foundation
                 StatCard(kind: "best_streak", progress: .init(current: 1, target: 1, unit: "games"), content: .bestStreak(length: 5)),
             ],
             firstRecapProgress: FirstRecapProgress(answers: 37, answersTarget: 60, days: 2, daysTarget: 3)
+        )
+    }
+
+    extension PlayerRecap {
+        /// An October recap the player has not opened yet: the seasoned
+        /// player's open cards, a road tripper.
+        static let mockOctober = PlayerRecap(
+            id: "6f1c2a7e-0000-4000-8000-000000000010",
+            kind: .month,
+            periodStart: "2026-10-01",
+            seen: false,
+            cards: PlayerStats.mockSeasoned.cards.filter { !$0.isLocked },
+            playerType: "road_tripper"
         )
     }
 #endif

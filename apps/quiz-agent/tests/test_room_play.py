@@ -469,6 +469,7 @@ async def test_answer_time_changes_from_the_next_question_and_reveal_stays(game)
     await game.post("open", question_id="q_open")
     assert (await game.state())["round"]["remaining_ms"] == 48_000  # 30 s + 18 s
 
+
 async def test_measurement_counts_each_guest_once_with_how_they_found_the_game(game):
     # #212.5: the 4-week verdict on game together (does it bring new players,
     # do guests find the game on the Wi-Fi or need the QR/link) rests on

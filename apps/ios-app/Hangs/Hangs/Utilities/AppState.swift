@@ -263,7 +263,8 @@ final class AppState: ObservableObject {
         Logger.quiz.info("🔇 Silence detection: available")
     }
 
-    // For testing
+    #if DEBUG
+    // For testing (its default room and stats services are Debug-only mocks)
     init(
         networkService: NetworkServiceProtocol,
         audioService: AudioServiceProtocol,
@@ -291,6 +292,7 @@ final class AppState: ObservableObject {
         self.questionRatingService = questionRatingService
         self.analytics = analytics
     }
+    #endif
 
     /// The account changed (sign-out, deletion): the packs and the stats on
     /// screen belonged to the previous one.

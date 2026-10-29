@@ -24,6 +24,7 @@ struct RoomLobbyHostView: View {
                             .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
                     }
                     playerList
+                    RoomRulesCard(viewModel: viewModel)
                     gameSummary
                         .font(.hangsBody)
                         .foregroundStyle(Theme.Hangs.Colors.muted)

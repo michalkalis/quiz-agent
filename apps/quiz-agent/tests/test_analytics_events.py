@@ -132,6 +132,25 @@ async def test_recap_events_keep_only_progress_and_kind():
     assert shared == {"kind": "first"}
 
 
+async def test_room_settings_changed_keeps_only_which_rule_and_where():
+    # #213.8: shows which game-together rules hosts change and whether from the
+    # lobby or mid-game; the room and its players must not ride along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["room_settings_changed"],
+        {
+            "setting": "thinking_seconds",
+            "value": "45",
+            "surface": "in_game",
+            "room_id": "r_1",
+        },
+    )
+    assert cleaned == {
+        "setting": "thinking_seconds",
+        "value": "45",
+        "surface": "in_game",
+    }
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

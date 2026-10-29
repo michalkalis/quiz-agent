@@ -10,7 +10,13 @@ import Foundation
 
 protocol RoomServiceProtocol: Sendable {
     /// Makes the host's idle session a room. `thinkingSeconds` 3–60.
-    func createRoom(sessionId: String, hostName: String, revealMode: RoomState.RevealMode, thinkingSeconds: Int) async throws -> RoomCreated
+    func createRoom(
+        sessionId: String,
+        hostName: String,
+        revealMode: RoomState.RevealMode,
+        thinkingSeconds: Int,
+        readsAloud: Bool
+    ) async throws -> RoomCreated
     /// Games waiting to start on the caller's Wi-Fi.
     func nearbyRooms() async throws -> [NearbyRoom]
     /// Joins (or, already in, renames in the lobby) and returns the full state.
@@ -25,6 +31,10 @@ protocol RoomServiceProtocol: Sendable {
     func answer(roomId: String, questionId: String, answer: String) async throws -> RoomState
     /// The app went to the background during the question (never during a call).
     func reportAway(roomId: String, questionId: String) async throws
+    /// Host (#213.8): changes the given rules (nil = unchanged) and returns
+    /// the full state. The reveal only in the lobby (409 after the start);
+    /// a new answer time counts from the next question.
+    func updateSettings(roomId: String, revealMode: RoomState.RevealMode?, thinkingSeconds: Int?, readsAloud: Bool?) async throws -> RoomState
     /// Host: the next question for everyone, or the final ranking.
     func nextQuestion(roomId: String) async throws -> RoomState
 }

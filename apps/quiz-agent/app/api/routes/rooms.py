@@ -40,6 +40,7 @@ class CreateRoomRequest(BaseModel):
     # #212.2: the host's choices, the same for every player.
     reveal_mode: Literal["question", "round"] = "question"
     thinking_seconds: int = Field(10, ge=3, le=60)
+    reads_aloud: bool = True
 
 
 class RoomResponse(BaseModel):
@@ -147,7 +148,9 @@ async def create_room(
             body.host_name,
             keys,
             RoomGame(
-                reveal_mode=body.reveal_mode, thinking_seconds=body.thinking_seconds
+                reveal_mode=body.reveal_mode,
+                thinking_seconds=body.thinking_seconds,
+                reads_aloud=body.reads_aloud,
             ),
         )
     except RoomError as e:

@@ -1,0 +1,21 @@
+# texts
+Game rules
+Done
+Answer time
+15 s
+30 s
+45 s
+60 s
+Answer time
+Read questions aloud
+
+When to show answers
+At the end of the quiz
+When to show answers
+At the end of the quiz
+Changes apply from the next question. When to show answers can only be changed before the game.
+# identifiers
+room.rules.done
+room.rules.sheet.time
+room.rules.sheet.readsAloud
+room.rules.sheet.reveal

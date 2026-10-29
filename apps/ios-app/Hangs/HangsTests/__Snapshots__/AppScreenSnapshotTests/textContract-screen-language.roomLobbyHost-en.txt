@@ -11,6 +11,24 @@ Michal
 you · host
 J
 Jana
+Game rules
+After each question
+At the end of the quiz
+When to show answers
+At the end of the quiz
+When to show answers
+At the end of the quiz
+15 s
+30 s
+45 s
+60 s
+Answer time
+30 s
+Answer time
+30 s
+Read questions aloud
+
+Applies to all players. Your solo settings stay as they are.
 10 questions · Medium
 Start the game
 # identifiers
@@ -20,5 +38,14 @@ room.share
 room.player.p_you
 room.player.p_other
 room.player.remove.p_other
+room.rules.reveal
+room.rules.reveal.question
+room.rules.reveal.round
+room.rules.time
+room.rules.time.15
+room.rules.time.30
+room.rules.time.45
+room.rules.time.60
+room.rules.readsAloud
 room.lobby.summary
 room.start

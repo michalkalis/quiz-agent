@@ -66,7 +66,7 @@ Poradie: 213.1 hneď (dáta sa musia zbierať pred spustením), potom 213.2 → 
 - [x] **213.5 Príbeh a zdieľanie (appka)** (PR #635) — banner najnovšieho prehľadu navrchu Profilu („Nový prehľad · Tvoj október“), príbeh na celú obrazovku: súčty, najviac 5 kariet (len dobré správy), typ hráča; snímky idú samé po 6 s, ťuk vpravo/vľavo; posledná snímka ako obrázok 1080×1920 na zdieľanie. Otvorenie označí prehľad ako videný. Snímky obrazoviek, RS-31.
 - [~] **213.6 Meranie** — udalosti hotové: `profile_opened` (213.4), `recap_viewed` (koľko snímok z koľkých) a `recap_shared` (otvorené zdieľanie) s 213.5. Ostáva vyhodnotenie po prvom mesačnom prehľade (december).
 - [x] **213.7 Zásady ochrany súkromia** (PR #636) — veta o štatistikách z herných dát a o časovom pásme.
-- [~] **213.8 Nastavenia hry spolu (appka)** (návrh https://claude.ai/artifact/5VQ1VUyHf1nNjeR9UcQSfK, variant A) — odhalenie odpovedí, čas na odpoveď a hlas hostiteľa: HTML návrhy → výber foundera → kód. Predvolené pre väčšinu, meranie zmien.
+- [x] **213.8 Nastavenia hry spolu (appka)** (PR #638, návrh https://claude.ai/artifact/5VQ1VUyHf1nNjeR9UcQSfK, variant A) — karta „Pravidlá hry“ v lobby hostiteľa (kedy ukázať odpoveď, čas 15/30/45/60 s, čítať nahlas), koliesko hostiteľa počas hry (čas a hlas od ďalšej otázky, odhalenie len pred hrou), hostia pravidlá len vidia. Vlastné hodnoty na zariadení, nie sólo. Server `POST /rooms/{id}/settings`, čas uložený pri každej otázke. Udalosť `room_settings_changed`, RS-32. Prepínač „odpovedám hlasom“ nie je: hostiteľ v hre spolu hlasom neodpovedá.
 
 ## Otvorené
 

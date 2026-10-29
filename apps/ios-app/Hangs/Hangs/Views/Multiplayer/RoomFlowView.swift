@@ -12,6 +12,7 @@ struct RoomFlowView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var viewModel: RoomViewModel
     @State private var confirmingLeave = false
+    @State private var showingRules = false
     let onShowPlans: () -> Void
     let onClose: () -> Void
 
@@ -58,6 +59,9 @@ struct RoomFlowView: View {
         ) {
             Button(viewModel.isHost ? "End game" : "Leave", role: .destructive, action: close)
         }
+        .sheet(isPresented: $showingRules) {
+            RoomRulesSheet(viewModel: viewModel)
+        }
         .sheet(isPresented: $viewModel.isAskingHostName) {
             RoomNameSheet(title: "Your name for the other players", initialName: "") { name in
                 Task { await viewModel.confirmHostName(name) }
@@ -76,7 +80,12 @@ struct RoomFlowView: View {
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
             Spacer()
-            Color.clear.frame(width: Metrics.chipSide, height: Metrics.chipSide)
+            if showsRulesButton {
+                HangsNavChip(icon: "gearshape", label: "Game rules", action: openRules)
+                    .accessibilityIdentifier("room.rules.open")
+            } else {
+                Color.clear.frame(width: Metrics.chipSide, height: Metrics.chipSide)
+            }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.vertical, Theme.Hangs.Spacing.xs)
@@ -126,6 +135,19 @@ struct RoomFlowView: View {
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)
         .accessibilityIdentifier("room.ended")
+    }
+
+    /// #213.8: the host changes the rules mid-game; guests have no gear.
+    private var showsRulesButton: Bool {
+        guard viewModel.isHost else { return false }
+        return switch viewModel.screen {
+        case .question, .reveal, .roundWait: true
+        default: false
+        }
+    }
+
+    private func openRules() {
+        showingRules = true
     }
 
     /// Nothing to lose before anyone joined or once it is over: close at once.

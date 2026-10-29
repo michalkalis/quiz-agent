@@ -37,6 +37,9 @@ enum AnalyticsEvent: Equatable {
     case recapViewed(kind: String, slidesSeen: Int, slidesTotal: Int)
     /// #213.5: the share sheet opened on the recap's last slide.
     case recapShared(kind: String)
+    /// #213.8: the host changed a rule of a game together; `value` as sent
+    /// ("round", "45", "true").
+    case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
         switch self {
@@ -55,6 +58,7 @@ enum AnalyticsEvent: Equatable {
         case .profileOpened: "profile_opened"
         case .recapViewed: "recap_viewed"
         case .recapShared: "recap_shared"
+        case .roomSettingsChanged: "room_settings_changed"
         }
     }
 
@@ -111,6 +115,8 @@ enum AnalyticsEvent: Equatable {
             [("kind", .string(kind)), ("slides_seen", .int(slidesSeen)), ("slides_total", .int(slidesTotal))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
+        case let .roomSettingsChanged(setting, value, surface):
+            [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }
         return pairs.reduce(into: [:]) { result, pair in
             if let value = pair.1 { result[pair.0] = value }
@@ -236,4 +242,17 @@ enum RestoreOutcome: String {
     case success
     case nothingToRestore = "nothing_to_restore"
     case failed
+}
+
+/// #213.8: which rule of a game together changed.
+enum RoomSettingKind: String {
+    case revealMode = "reveal_mode"
+    case thinkingSeconds = "thinking_seconds"
+    case readsAloud = "reads_aloud"
+}
+
+/// #213.8: where the host changed it: before the start or during the game.
+enum RoomSettingsSurface: String {
+    case lobby
+    case inGame = "in_game"
 }

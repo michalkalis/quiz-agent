@@ -39,11 +39,16 @@ class RoomRound(BaseModel):
     explanation: Optional[str] = None
     # #212.4: participants whose app went to the background while it was open.
     away: List[str] = Field(default_factory=list)
+    # #213.8: the answer time fixed when served, so a change during the game
+    # applies from the next question. None: served before it was stored.
+    thinking_seconds: Optional[int] = None
 
 
 class RoomGame(BaseModel):
     reveal_mode: Literal["question", "round"] = "question"
     thinking_seconds: int = 10
+    # #213.8: the host's phone reads the questions aloud (shown to guests).
+    reads_aloud: bool = True
     finished_reason: Optional[str] = None
     rounds: List[RoomRound] = Field(default_factory=list)
 

@@ -60,7 +60,14 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
-    let settings: MultiplayerSettings
+    /// The host's rules (#213.8), kept on the device; changed only through
+    /// the `set…` methods in RoomViewModel+Settings, which keep the room in step.
+    @Published var settings: MultiplayerSettings
+    /// Host: a rules change is on its way to the server.
+    @Published var isSavingSettings = false
+
+    let settingsStore: MultiplayerSettingsStore
+    let analytics: AnalyticsClient
     let rooms: RoomServiceProtocol
     let network: NetworkServiceProtocol
     let audio: AudioServiceProtocol
@@ -104,6 +111,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
         accountName: String? = nil,
         excludedQuestionIds: @escaping () -> [String] = { [] },
         names: PlayerNameStore = PlayerNameStore(),
+        settingsStore: MultiplayerSettingsStore = MultiplayerSettingsStore(),
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
         calls: CallStatusProviding? = nil,
         clock: AnyClock<Duration> = .continuous,
         languageCode: String? = Locale.current.language.languageCode?.identifier,
@@ -114,7 +123,9 @@ final class RoomViewModel: ObservableObject, Identifiable {
         self.audio = audio
         self.audioMode = audioMode
         self.solo = solo
-        settings = MultiplayerSettings(solo: solo)
+        self.settingsStore = settingsStore
+        settings = settingsStore.load()
+        self.analytics = analytics
         self.deviceId = deviceId
         self.accountName = accountName.flatMap { $0.split(separator: " ").first.map(String.init) }
         self.excludedQuestionIds = excludedQuestionIds
@@ -141,6 +152,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     }
 
     var isHost: Bool { role == .host }
+    /// After a reveal the host's phone moves on by itself after this long (solo's pause).
+    var autoAdvanceSeconds: Int { solo.autoAdvanceDelay }
     var players: [RoomState.Player] { state?.players ?? [] }
     var me: RoomState.Player? { players.first { $0.participantId == state?.you } }
     var host: RoomState.Player? { players.first(where: \.isHost) }

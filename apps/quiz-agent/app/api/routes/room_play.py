@@ -8,7 +8,7 @@ phone follows the game through ``GET /rooms/{id}/state``.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
@@ -36,6 +36,33 @@ class AnswerRequest(QuestionRef):
     answer: str = Field(
         min_length=1, max_length=200, description="Option key (a–d) or typed text"
     )
+
+
+class SettingsRequest(BaseModel):
+    """Only the fields sent change."""
+
+    reveal_mode: Optional[Literal["question", "round"]] = None
+    thinking_seconds: Optional[int] = Field(None, ge=3, le=60)
+    reads_aloud: Optional[bool] = None
+
+
+@router.post(
+    "/rooms/{room_id}/settings",
+    response_model=RoomStateResponse,
+    response_model_exclude_none=True,
+)
+@limiter.limit("30/minute")
+async def change_settings(
+    request: Request,
+    room_id: str,
+    body: SettingsRequest,
+    rooms: Optional[RoomService] = Depends(get_rooms),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """Host: the game's rules (#213.8), in the lobby or between questions."""
+    subject_id, service = subject_or_401(subject), service_or_404(rooms)
+    await _run(service.play.settings(room_id, subject_id, **body.model_dump()))
+    return await state_reply(service, room_id, subject_id, since=None)
 
 
 @router.post(

@@ -8,8 +8,25 @@ M
 Michal
 P
 Peťo
+Rules from the host
+When to show answers
+After each question
+When to show answers
+After each question
+Answer time
+30 s
+Answer time
+30 s
+Questions read by
+the host's phone
+Questions read by
+the host's phone
 Waiting for the host to start the game
 # identifiers
 room.close
 room.lobby.rename
+room.rules.guest
+room.rules.guest.reveal
+room.rules.guest.time
+room.rules.guest.readsAloud
 room.lobby.waiting

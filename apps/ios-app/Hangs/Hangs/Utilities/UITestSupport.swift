@@ -28,6 +28,15 @@
         private static var mockRooms: MockRoomService?
         /// #212: where a test's join link lands, as if the player opened it.
         static weak var roomInvites: RoomInviteInbox?
+        /// #213.8: the host's game-together rules, emptied once per launch so
+        /// every RS run starts from the defaults (a test's change never leaks).
+        static let roomSettingsDefaults: UserDefaults = {
+            let name = "ui-test-room-settings"
+            let defaults = UserDefaults(suiteName: name) ?? .standard
+            defaults.removePersistentDomain(forName: name)
+            return defaults
+        }()
+
         private static var mockSilence: MockSilenceDetectionService?
         /// `/recording/interrupt` drives a phone call through it, along the
         /// same routing the real `AudioService` uses.

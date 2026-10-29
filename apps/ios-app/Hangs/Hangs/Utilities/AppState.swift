@@ -363,8 +363,18 @@ final class AppState: ObservableObject {
             solo: quiz.settings,
             deviceId: persistenceStore.deviceId,
             accountName: KeychainTokenStore().load()?.accountName,
-            excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() }
+            excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() },
+            settingsStore: roomSettingsStore,
+            analytics: analytics
         )
+    }
+
+    /// #213.8: the host's rules; a UI test starts from the defaults every launch.
+    private var roomSettingsStore: MultiplayerSettingsStore {
+        #if DEBUG
+            if UITestSupport.isUITesting { return MultiplayerSettingsStore(defaults: UITestSupport.roomSettingsDefaults) }
+        #endif
+        return MultiplayerSettingsStore()
     }
 
     /// The app's QuizViewModel, created with injected dependencies on first use.

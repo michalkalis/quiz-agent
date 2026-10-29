@@ -20,6 +20,9 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
     let maxQuestions: Int?
     let players: [Player]?
     let revealMode: RevealMode?
+    /// #213.8: the room's rules, in the lobby too; nil from an older server.
+    let thinkingSeconds: Int?
+    let readsAloud: Bool?
     let question: Question?
     let round: Round?
     let finishedReason: String?
@@ -31,7 +34,7 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         case lobby, playing, finished
     }
 
-    enum RevealMode: String, Decodable, Sendable {
+    enum RevealMode: String, Codable, CaseIterable, Sendable {
         case question, round
     }
 
@@ -128,6 +131,8 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         case maxQuestions = "max_questions"
         case players
         case revealMode = "reveal_mode"
+        case thinkingSeconds = "thinking_seconds"
+        case readsAloud = "reads_aloud"
         case question, round
         case finishedReason = "finished_reason"
         case ranking, rounds, away

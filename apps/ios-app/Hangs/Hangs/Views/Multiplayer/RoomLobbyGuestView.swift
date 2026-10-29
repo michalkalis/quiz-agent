@@ -13,10 +13,19 @@ struct RoomLobbyGuestView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
-            youCard
-            HangsSectionLabel(text: "In the room")
-            FlowChips(players: viewModel.players)
-            Spacer(minLength: 0)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
+                    youCard
+                    HangsSectionLabel(text: "In the room")
+                    FlowChips(players: viewModel.players)
+                    RoomGuestRulesCard(
+                        revealMode: viewModel.state?.revealMode,
+                        thinkingSeconds: viewModel.state?.thinkingSeconds,
+                        readsAloud: viewModel.state?.readsAloud
+                    )
+                }
+            }
+            .scrollBounceBehavior(.basedOnSize)
             HStack(spacing: Theme.Hangs.Spacing.xs) {
                 Circle()
                     .fill(Theme.Hangs.Colors.live)

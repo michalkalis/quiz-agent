@@ -51,6 +51,12 @@ class GameView(BaseModel):
     """The game part of the room state (all optional: lobby has none)."""
 
     reveal_mode: Optional[str] = Field(None, description="question | round")
+    thinking_seconds: Optional[int] = Field(
+        None, description="Answer time the host chose (from the next question)"
+    )
+    reads_aloud: Optional[bool] = Field(
+        None, description="The host's phone reads the questions aloud"
+    )
     question: Optional[Dict[str, Any]] = Field(
         None, description="Current question, same shape as solo current_question"
     )
@@ -100,6 +106,8 @@ def game_view(session: QuizSession, you) -> GameView:
     rnd = game.current
     view = GameView(
         reveal_mode=game.reveal_mode,
+        thinking_seconds=game.thinking_seconds,
+        reads_aloud=game.reads_aloud,
         question=rnd.question if rnd else None,
         round=round_out(session, rnd, you, at) if rnd else None,
         finished_reason=game.finished_reason,

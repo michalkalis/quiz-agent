@@ -14,6 +14,12 @@
 
     @MainActor
     final class MockRoomService: RoomServiceProtocol {
+        struct SettingsCall: Equatable {
+            var revealMode: RoomState.RevealMode?
+            var thinkingSeconds: Int?
+            var readsAloud: Bool?
+        }
+
         struct Script {
             var question: Question
             var correctKey: String
@@ -27,6 +33,12 @@
         /// When set, every poll fails with it (connection loss, a removed player's 404).
         var stateError: Error?
         var revealMode: RoomState.RevealMode = .question
+        var thinkingSeconds = 30
+        var readsAloud = true
+        /// When set, `updateSettings` fails with it (the host's change is undone).
+        var settingsError: Error?
+        /// Every `updateSettings` call, for asserting what the host sent.
+        private(set) var settingsCalls: [SettingsCall] = []
         private(set) var awayReports: [String] = []
         private(set) var answers: [String] = []
         private(set) var removed: [String] = []
@@ -69,10 +81,18 @@
 
         // MARK: - RoomServiceProtocol
 
-        func createRoom(sessionId: String, hostName: String, revealMode: RoomState.RevealMode, thinkingSeconds _: Int) async throws -> RoomCreated {
+        func createRoom(
+            sessionId: String,
+            hostName: String,
+            revealMode: RoomState.RevealMode,
+            thinkingSeconds: Int,
+            readsAloud: Bool
+        ) async throws -> RoomCreated {
             if let createError { throw createError }
             role = .host
             self.revealMode = revealMode
+            self.thinkingSeconds = thinkingSeconds
+            self.readsAloud = readsAloud
             players = [
                 .init(participantId: Self.youId, displayName: hostName, color: "#ff6b2c", isHost: true, score: 0),
                 .init(participantId: Self.otherId, displayName: "Jana", color: "#7a5cff", isHost: false, score: 0),
@@ -117,6 +137,24 @@
                 phase = .answering
                 bump()
             }
+            return state(full: true)
+        }
+
+        func updateSettings(
+            roomId _: String,
+            revealMode: RoomState.RevealMode?,
+            thinkingSeconds: Int?,
+            readsAloud: Bool?
+        ) async throws -> RoomState {
+            settingsCalls.append(SettingsCall(revealMode: revealMode, thinkingSeconds: thinkingSeconds, readsAloud: readsAloud))
+            if let settingsError { throw settingsError }
+            if revealMode != nil, status != .lobby {
+                throw NetworkError.serverError(statusCode: 409, message: "The game has started")
+            }
+            if let revealMode { self.revealMode = revealMode }
+            if let thinkingSeconds { self.thinkingSeconds = thinkingSeconds }
+            if let readsAloud { self.readsAloud = readsAloud }
+            bump()
             return state(full: true)
         }
 
@@ -220,7 +258,8 @@
             guard full else {
                 return RoomState(
                     roomId: Self.roomId, version: version, changed: false, status: nil, you: nil, isHost: nil,
-                    questionNumber: nil, maxQuestions: nil, players: nil, revealMode: nil, question: nil, round: nil,
+                    questionNumber: nil, maxQuestions: nil, players: nil, revealMode: nil, thinkingSeconds: nil,
+                    readsAloud: nil, question: nil, round: nil,
                     finishedReason: nil, ranking: nil, rounds: nil, away: nil
                 )
             }
@@ -237,6 +276,8 @@
                 maxQuestions: script.count,
                 players: players,
                 revealMode: revealMode,
+                thinkingSeconds: thinkingSeconds,
+                readsAloud: readsAloud,
                 question: index >= 0 ? script[index].question : nil,
                 round: index >= 0 ? currentRound(revealed: phase == .revealed) : nil,
                 finishedReason: finishedReason,

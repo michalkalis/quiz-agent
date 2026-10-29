@@ -351,6 +351,17 @@ struct RoomSupportTests {
         #expect(RoomInvite.token(from: URL(string: "https://trubbo.app/other?t=abc")!) == nil)
     }
 
+    @Test("A scanned QR code and a shared link reach the same game but are counted apart")
+    func qrAndLinkAreToldApart() throws {
+        // #212.5: the verdict on game together asks whether guests scan or need
+        // the link, so the QR code carries its own mark on the same token.
+        let created = RoomCreated(roomId: "r", joinToken: "abc", sessionId: "s")
+        #expect(created.qrURL.absoluteString == "https://trubbo.app/join?t=abc#qr")
+        #expect(RoomInvite.invite(from: created.qrURL) == .qr("abc"))
+        #expect(RoomInvite.invite(from: created.inviteURL) == .token("abc"))
+        #expect(RoomInvite.invite(from: try #require(URL(string: "https://trubbo.app/x#qr"))) == nil)
+    }
+
     @Test("Names are trimmed and capped so they fit the lists on every phone")
     func nameCleaning() {
         #expect(PlayerNameStore.cleaned("  Jana ") == "Jana")

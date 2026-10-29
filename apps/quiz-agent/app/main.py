@@ -384,6 +384,7 @@ async def lifespan(app: FastAPI):
             session_manager,
             PostgresRoomStore(shared_sm),
             NetTickets(settings.auth_jwt_secret),
+            analytics,
         )
     app.state.rooms = rooms
     app.state.quiz_flow = quiz_flow = QuizFlowService(

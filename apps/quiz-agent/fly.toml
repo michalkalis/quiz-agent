@@ -45,8 +45,9 @@ kill_timeout = 30
   QUESTION_STOCK_CHECK_ENABLED = "true"
   # #205: daily challenge. Off until the founder turns it on ("true").
   DAILY_CHALLENGE_ENABLED = "false"
-  # #212 same-room multiplayer: off until the founder flips it.
-  MULTIPLAYER_ENABLED = "false"
+  # #212 same-room multiplayer: on since 2026-10-29 for the founder's first
+  # TestFlight build with it; older builds have no Spolu code at all.
+  MULTIPLAYER_ENABLED = "true"
   # #207.20: no volume. The TTS disk cache (./data/tts_cache on the machine's
   # own disk) is only a per-machine L1; every clip lives in the private R2
   # bucket (TTS_R2_* secrets), so a new machine re-downloads, never re-buys.

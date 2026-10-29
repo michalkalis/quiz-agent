@@ -76,6 +76,7 @@ Trunk-based (`shared.md`): krátke vetvy → PR → nezávislý Claude review �
 | **Prod** | TestFlight aj App Store | `quiz-agent-api.fly.dev`, `quiz-pack-api.fly.dev` | všetci používatelia vrátane testerov |
 
 - Backend sa nasadzuje len z `main` a musí udržať funkčné všetky živé verzie appky (verzia v obchode + TestFlight buildy u testerov): žiadne lámajúce zmeny API.
+- **Founder dostane novú funkciu prvý (founder 2026-10-29).** Funkcia za serverovým prepínačom (`/app-config`, napr. `multiplayer_enabled`) sa zapne v prode spolu s prvým TestFlight buildom, ktorý ju obsahuje. Ten build ide automaticky len skupine Founder; testeri na starších buildoch kód funkcie nemajú, prepínač ich nezasiahne, a serverové zmeny musia ich buildy udržať funkčné (CI kontrola API). Blízki a beta funkciu dostanú až s buildom na povel foundera. Pozor: zapnutý prepínač platí aj pre App Store build z toho istého kódu, pred podaním verzie skontrolovať, ktoré prepínače sú zapnuté.
 - Staré buildy sa vypínajú v `/app-config`: `min_version_app_store` pre obchod, `min_version_testflight` pre TestFlight. Kým je verzia v review, `min_version_*` nad ňu nikdy nedvíhať.
 - Nákupy z TestFlightu a od App Review sú „sandbox“ a backend v prod ich prijíma; peniaze idú len z App Store nákupov.
 - Tester obsah (neschválené otázky, štítky) server posiela len buildom s hlavičkou TestFlight kanála, ktorú App Store variant nikdy neposiela.

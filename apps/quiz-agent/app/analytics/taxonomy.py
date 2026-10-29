@@ -38,6 +38,11 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
     "transcription_failed": frozenset({"reason", "question_id"}),
+    # #212.5: game together. Under the host (created, finished) or the
+    # guest (joined; via = nearby | qr | link).
+    "room_created": frozenset({"room_id"}),
+    "room_joined": frozenset({"room_id", "via"}),
+    "room_finished": frozenset({"room_id", "reason", "players", "questions_asked"}),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}
     ),

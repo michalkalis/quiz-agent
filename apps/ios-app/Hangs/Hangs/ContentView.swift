@@ -121,8 +121,8 @@ struct ContentView: View {
     }
 
     private func openPendingInvite() {
-        guard room == nil, viewModel.quizScreen == .home, let token = appState.roomInvites.take() else { return }
-        openRoom(invite: .token(token))
+        guard room == nil, viewModel.quizScreen == .home, let invite = appState.roomInvites.take() else { return }
+        openRoom(invite: invite)
     }
 
     /// The pushed screens, the same on both tabs' stacks.
@@ -297,10 +297,10 @@ struct ContentView: View {
         }
         // #212: a join link opens the game once Home is on screen (never over
         // a solo quiz in progress).
-        .onReceive(appState.roomInvites.$token) { token in
+        .onReceive(appState.roomInvites.$invite) { invite in
             // @Published delivers before the new value is stored: take it on
             // the next main-actor turn.
-            if token != nil { Task { openPendingInvite() } }
+            if invite != nil { Task { openPendingInvite() } }
         }
         .onChange(of: viewModel.quizScreen) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.

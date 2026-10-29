@@ -74,11 +74,17 @@ def _free_color(session: QuizSession) -> str:
 
 class RoomService:
     def __init__(
-        self, sessions: SessionManager, store: RoomStore, tickets: NetTickets
+        self,
+        sessions: SessionManager,
+        store: RoomStore,
+        tickets: NetTickets,
+        analytics=None,
     ) -> None:
         self.sessions = sessions
         self.store = store
         self.tickets = tickets
+        # #212.5: room_created / room_joined (app.analytics.AnalyticsRecorder).
+        self.analytics = analytics
         # #212.2 answer flow (rooms.play.RoomPlay), wired once the quiz flow exists.
         self.play = None
 
@@ -133,6 +139,7 @@ class RoomService:
             # One picture on several phones is not in the first version.
             session.include_images = False
             await self.sessions.update_session(session)
+            self._emit("room_created", subject_id, session_id, room.room_id)
             return room, session
 
     async def nearby(self, subject_id: str, keys: dict[str, str]) -> list[NearbyRoom]:
@@ -179,8 +186,9 @@ class RoomService:
         return room
 
     async def join(
-        self, room: Room, subject_id: str, display_name: str
+        self, room: Room, subject_id: str, display_name: str, via: str = "link"
     ) -> tuple[Participant, QuizSession]:
+        """``via``: how the guest found the game (nearby list, QR or link)."""
         async with self.sessions.session_lock(room.session_id):
             session = await self.sessions.get_session(room.session_id)
             if session is None or session.room_code != room.room_id:
@@ -207,7 +215,19 @@ class RoomService:
             )
             session.participants.append(guest)
             await self.sessions.update_session(session)
+            self._emit(
+                "room_joined", subject_id, room.session_id, room.room_id, via=via
+            )
             return guest, session
+
+    def _emit(self, name, subject_id, session_id, room_id, **properties) -> None:
+        if self.analytics is not None:
+            self.analytics.emit(
+                name,
+                subject_id=subject_id,
+                session_id=session_id,
+                properties={"room_id": room_id, **properties},
+            )
 
     async def remove(self, room_id: str, subject_id: str, participant_id: str) -> None:
         """The host removes a guest, or a guest leaves. The host cannot be removed."""

@@ -41,7 +41,8 @@ extension NetworkService: RoomServiceProtocol {
         var body: [String: Any] = ["display_name": displayName, "net_tickets": [String]()]
         switch invite {
         case let .nearby(room): body["room_id"] = room.roomId
-        case let .token(token): body["join_token"] = token
+        case let .token(token): body["join_token"] = token; body["via"] = "link"
+        case let .qr(token): body["join_token"] = token; body["via"] = "qr"
         }
         let data = try await roomRequest("POST", "/api/v1/rooms/join", endpoint: "/api/v1/rooms/join", body: body)
         return try JSONDecoder().decode(RoomState.self, from: data)

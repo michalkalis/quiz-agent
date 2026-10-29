@@ -163,7 +163,7 @@ async def game(monkeypatch):
         translation_service=None,
         analytics=events,
     )
-    service = RoomService(sessions, store, NetTickets(_SECRET))
+    service = RoomService(sessions, store, NetTickets(_SECRET), events)
     service.play = RoomPlay(sessions, store, flow)
     app = FastAPI()
     app.state.limiter = limiter
@@ -468,3 +468,55 @@ async def test_answer_time_changes_from_the_next_question_and_reveal_stays(game)
     await game.post("next")
     await game.post("open", question_id="q_open")
     assert (await game.state())["round"]["remaining_ms"] == 48_000  # 30 s + 18 s
+
+
+async def test_measurement_counts_each_guest_once_with_how_they_found_the_game(game):
+    # #212.5: the 4-week verdict on game together (does it bring new players,
+    # do guests find the game on the Wi-Fi or need the QR/link) rests on
+    # exactly one room_joined per guest and one room_finished per game.
+    await game.setup(guests=("jana",), max_questions=1)  # token, no `via` = link
+    rejoin = await game.c.post(
+        "/api/v1/rooms/join",
+        json={"display_name": "Jana", "room_id": game.room_id},
+        headers=_h("jana"),
+    )
+    assert rejoin.status_code == 200, rejoin.text
+    for who in ("host", "jana"):
+        await game.answer(who, "q_mcq", "b")
+    await game.post("next")
+
+    rows = [(n, s, p) for n, s, p in game.events.rows if n.startswith("room_")]
+    assert rows == [
+        ("room_created", "host", {"room_id": game.room_id}),
+        ("room_joined", "jana", {"room_id": game.room_id, "via": "link"}),
+        (
+            "room_finished",
+            "host",
+            {
+                "room_id": game.room_id,
+                "reason": "max_questions",
+                "players": 2,
+                "questions_asked": 1,
+            },
+        ),
+    ]
+
+
+async def test_a_guest_from_the_nearby_list_or_a_scanned_qr_is_told_apart(game):
+    session = await game.sessions.create_session(user_id="host")
+    r = await game.c.post(
+        "/api/v1/rooms",
+        json={"session_id": session.session_id, "host_name": "Michal"},
+        headers=_h("host"),
+    )
+    room_id, token = r.json()["room_id"], r.json()["join_token"]
+    for who, body in (
+        ("jana", {"room_id": room_id}),
+        ("peto", {"join_token": token, "via": "qr"}),
+    ):
+        j = await game.c.post(
+            "/api/v1/rooms/join", json={"display_name": who, **body}, headers=_h(who)
+        )
+        assert j.status_code == 200, j.text
+    joined = {s: p["via"] for n, s, p in game.events.rows if n == "room_joined"}
+    assert joined == {"jana": "nearby", "peto": "qr"}

@@ -1,0 +1,23 @@
+# texts
+Play together
+Winner
+Michal
+2 of 2 correct
+1.
+M
+Michal (you)
+2
+2.
+J
+Jana
+1
+Jana: left Trubbo during 1 question
+Only you see this.
+Done
+# identifiers
+room.close
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.away
+room.done

@@ -11,6 +11,8 @@ import os
 #if DEBUG
     @MainActor
     final class MockNetworkService: NetworkServiceProtocol {
+        /// #212: a game together starts with the host's session start.
+        var onStartQuiz: (() -> Void)?
         var mockSession: QuizSession?
         var mockResponse: QuizResponse?
         /// Optional override for `submitTextInput` so UI tests can return a
@@ -251,6 +253,7 @@ import os
 
         func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
+            onStartQuiz?()
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }

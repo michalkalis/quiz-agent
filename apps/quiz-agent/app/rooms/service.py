@@ -187,6 +187,13 @@ class RoomService:
                 raise RoomError(404, "Game not found")
             existing = member(session, subject_id)
             if existing is not None:
+                # Joining again in the lobby is how a guest changes their name.
+                if (
+                    existing.display_name != display_name
+                    and session.phase == SessionPhase.IDLE
+                ):
+                    existing.display_name = display_name
+                    await self.sessions.update_session(session)
                 return existing, session
             if session.phase == SessionPhase.FINISHED:
                 raise RoomError(409, "The game has ended")

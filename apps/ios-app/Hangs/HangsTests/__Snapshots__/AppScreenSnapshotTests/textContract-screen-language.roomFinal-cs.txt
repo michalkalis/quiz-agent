@@ -1,0 +1,23 @@
+# texts
+Hra spolu
+Vyhrává
+Michal
+Správně 2 z 2
+1.
+M
+Michal (ty)
+2
+2.
+J
+Jana
+1
+Jana: mimo Trubbo během 1 otázky
+Vidíš to jen ty.
+Hotovo
+# identifiers
+room.close
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.away
+room.done

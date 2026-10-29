@@ -58,6 +58,9 @@ final class AppConfigStore: ObservableObject {
 
     var ordersEnabled: Bool { config.ordersEnabled }
 
+    /// #212: the Together button on Home.
+    var multiplayerEnabled: Bool { config.multiplayerEnabled }
+
     /// #204.9: the voice-settings experiment, read when a quiz round starts.
     var voiceExperiment: VoiceExperimentConfig? { config.voiceExperiment }
 
@@ -151,7 +154,7 @@ final class AppConfigStore: ObservableObject {
         /// Launch arguments that show each state on the simulator without a
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
         /// `--app-config-notice`, `--app-config-update-recommended`,
-        /// `--app-config-maintenance` (#214); any `--ui-test-daily-*` flag
+        /// `--app-config-maintenance` (#214), `--app-config-multiplayer` (#212); any `--ui-test-daily-*` flag
         /// turns the #205 daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
@@ -160,7 +163,8 @@ final class AppConfigStore: ObservableObject {
             let recommended = arguments.contains("--app-config-update-recommended")
             let maintenance = arguments.contains("--app-config-maintenance")
             let daily = DailyChallengeFixtures.isActive(arguments)
-            guard update || ordersOff || notice || recommended || maintenance || daily else { return nil }
+            let multiplayer = arguments.contains("--app-config-multiplayer")
+            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -173,7 +177,8 @@ final class AppConfigStore: ObservableObject {
                 dailyChallengeEnabled: daily,
                 recommendedVersionAppStore: recommended ? "999" : nil,
                 recommendedVersionTestflight: recommended ? "999" : nil,
-                maintenanceEnabled: maintenance
+                maintenanceEnabled: maintenance,
+                multiplayerEnabled: multiplayer
             )
         }
     #endif

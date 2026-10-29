@@ -1,0 +1,26 @@
+# texts
+Hra spolu
+1/2
+SCIENCE & NATURE
+Which planet has the most known moons?
+Správna odpoveď
+Saturn
+Správne: 2/2
+M
+Michal
+Saturn
+J
+Jana
+Saturn
+Prečo
+Mock explanation.
+Ďalej
+# identifiers
+room.close
+question.progress
+question.counter
+room.reveal.answer
+room.reveal.count
+room.reveal.row.p_you
+room.reveal.row.p_other
+room.next

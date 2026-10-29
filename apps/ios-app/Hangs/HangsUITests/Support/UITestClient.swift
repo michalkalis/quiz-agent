@@ -29,6 +29,21 @@ struct UITestClient {
         try await post(path: "/recording/interrupt", text: nil)
     }
 
+    /// #212: the join link of the scripted room opens on this phone.
+    func openRoomLink(token: String) async throws {
+        try await post(path: "/room/join", text: token)
+    }
+
+    /// #212: the scripted room's host (another phone) starts the game.
+    func roomHostStarts() async throws {
+        try await post(path: "/room/start", text: nil)
+    }
+
+    /// #212: the scripted room's host moves on after a reveal.
+    func roomHostMovesOn() async throws {
+        try await post(path: "/room/next", text: nil)
+    }
+
     private func post(path: String, text: String?) async throws {
         var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if let text {

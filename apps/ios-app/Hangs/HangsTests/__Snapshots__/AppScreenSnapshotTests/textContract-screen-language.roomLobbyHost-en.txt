@@ -1,0 +1,24 @@
+# texts
+Play together
+Scan to join
+Send the link
+Join my game in Trubbo
+Players on the same Wi-Fi also find the game in Trubbo under Together.
+Players
+2
+M
+Michal
+you · host
+J
+Jana
+10 questions · Medium
+Start the game
+# identifiers
+room.close
+room.qr
+room.share
+room.player.p_you
+room.player.p_other
+room.player.remove.p_other
+room.lobby.summary
+room.start

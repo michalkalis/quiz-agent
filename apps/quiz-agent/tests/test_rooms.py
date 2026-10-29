@@ -254,6 +254,22 @@ async def test_joining_again_does_not_add_a_second_player(ctx):
 
 
 @pytest.mark.asyncio
+async def test_joining_again_in_the_lobby_renames_the_guest(ctx):
+    """The guest's "tap your name to change it" goes through join: the name
+    the others see changes, the player does not double."""
+    client, sessions, _ = ctx
+    room = await _host_room(client, sessions)
+    for name in ("Rýchly gepard", "Peťo"):
+        resp = await client.post(
+            "/api/v1/rooms/join",
+            json={"display_name": name, "join_token": room["join_token"]},
+            headers=_h("g", OTHER_V4),
+        )
+    names = [p["display_name"] for p in resp.json()["players"] if not p["is_host"]]
+    assert names == ["Peťo"]
+
+
+@pytest.mark.asyncio
 async def test_room_is_full_at_the_player_cap(ctx):
     client, sessions, _ = ctx
     room = await _host_room(client, sessions)

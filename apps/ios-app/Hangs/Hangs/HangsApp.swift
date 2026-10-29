@@ -22,6 +22,9 @@ struct HangsApp: App {
         #if CARPLAY
             CarPlaySceneDelegate.appState = appState
         #endif
+        #if DEBUG
+            UITestSupport.roomInvites = appState.roomInvites
+        #endif
 
         // Skip Sentry on simulator — only real-device debug + release builds report.
         // Simulator runs are noisy (hot reloads, repeated launches) and would burn through quota.
@@ -83,6 +86,8 @@ struct HangsApp: App {
                 .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .onOpenURL { url in
                     Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
+                    // #212: a game invite (QR code or shared link).
+                    if appState.roomInvites.receive(url) { return }
                     #if DEBUG
                     Task { @MainActor in
                         await UITestSupport.handleTestURL(url)

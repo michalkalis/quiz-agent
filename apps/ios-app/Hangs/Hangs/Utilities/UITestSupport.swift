@@ -25,6 +25,9 @@
         /// injected through them (#208.8): the "mic" delivers a short clip and
         /// the end of speech, and the "server" hears the injected transcript.
         private static var mockNetwork: MockNetworkService?
+        private static var mockRooms: MockRoomService?
+        /// #212: where a test's join link lands, as if the player opened it.
+        static weak var roomInvites: RoomInviteInbox?
         private static var mockSilence: MockSilenceDetectionService?
         /// `/recording/interrupt` drives a phone call through it, along the
         /// same routing the real `AudioService` uses.
@@ -47,7 +50,8 @@
             network: NetworkServiceProtocol,
             audio: AudioServiceProtocol,
             persistence: PersistenceStoreProtocol,
-            silence: SilenceDetectionServiceProtocol
+            silence: SilenceDetectionServiceProtocol,
+            rooms: RoomServiceProtocol
         ) {
             let network = MockNetworkService()
             network.mockSession = QuizResponse.previewStartQuiz.session
@@ -191,12 +195,24 @@
                 silence.commandAvailability = .unavailable(reason: "UI-test mock")
             }
 
+            // #212: a scripted room. The host's start goes through the mock
+            // network; a guest's host is driven by `hangs-test://room/...`.
+            let rooms = MockRoomService()
+            network.onStartQuiz = { [rooms] in rooms.beginGame() }
+            if CommandLine.arguments.contains("--ui-test-room-nearby") {
+                rooms.nearby = [NearbyRoom(roomId: MockRoomService.roomId, hostName: "Michal", hostColor: "#ff6b2c", playerCount: 1)]
+            }
+            if CommandLine.arguments.contains("--ui-test-room-round") {
+                rooms.revealMode = .round
+            }
+
             mockNetwork = network
             mockSilence = silence
             mockAudio = audio
+            mockRooms = rooms
 
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
-            return (network, audio, persistence, silence)
+            return (network, audio, persistence, silence, rooms)
         }
 
         /// The player says `text` into the open answer recording (#208.8). The
@@ -257,6 +273,9 @@
         /// - `hangs-test://stt/connected`          → readiness ping, no effect
         /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
         ///   call) hits the recording
+        /// - `hangs-test://room/join?text=<token>` → the join link opens (#212)
+        /// - `hangs-test://room/start`, `hangs-test://room/next` → a guest's host
+        ///   starts the scripted game / moves on (#212)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
@@ -286,6 +305,17 @@
                 return true
             case ("command", "/send"):
                 return await handleCommand(text)
+            case ("room", "/join"):
+                guard let roomInvites, let link = URL(string: "https://trubbo.app/join?t=\(text)") else { return false }
+                return roomInvites.receive(link)
+            case ("room", "/start"):
+                guard let mockRooms else { return false }
+                mockRooms.hostStarts()
+                return true
+            case ("room", "/next"):
+                guard let mockRooms else { return false }
+                mockRooms.hostMovesOn()
+                return true
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")
                 return false

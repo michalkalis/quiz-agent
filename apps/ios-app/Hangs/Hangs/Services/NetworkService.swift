@@ -99,7 +99,7 @@ actor NetworkService: NetworkServiceProtocol {
         return "\(version) (\(build))"
     }()
 
-    private let baseURL: URL
+    let baseURL: URL
     private let session: URLSession
     /// Server-trusted anonymous identity (#60). When present, every request
     /// carries `Authorization: Bearer <access>` and a 401 triggers a
@@ -200,7 +200,7 @@ actor NetworkService: NetworkServiceProtocol {
     // submitTextInput; plain decode for getUsage/transcribeDictation) so this
     // stays off the main actor and no decode is dragged onto it implicitly.
 
-    private func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
+    func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
         breadcrumbRequest(method: request.httpMethod ?? "?", endpoint: endpointPath)
 
         let (data, response) = try await sendAuthorized(request)

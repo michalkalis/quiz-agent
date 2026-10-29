@@ -6,6 +6,10 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:trubbo.app</string>
+	</array>
 	<key>com.apple.developer.carplay-voice-based-conversation</key>
 	<true/>
 </dict>

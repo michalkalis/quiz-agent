@@ -1,0 +1,24 @@
+# texts
+Hra spolu
+Naskenuj a pridaj sa
+Pošli odkaz
+Pridaj sa k mojej hre v Trubbe
+Hráči v tej istej Wi-Fi nájdu hru aj v Trubbe pod tlačidlom Spolu.
+Hráči
+2
+M
+Michal
+ty · hostiteľ
+J
+Jana
+10 otázok · Medium
+Začni hru
+# identifiers
+room.close
+room.qr
+room.share
+room.player.p_you
+room.player.p_other
+room.player.remove.p_other
+room.lobby.summary
+room.start

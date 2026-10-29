@@ -29,6 +29,8 @@ struct ContentView: View {
     // #109: in-app feedback. Built at tap time with a screenshot of the
     // current screen + a snapshot of the quiz state; drives the feedback sheet.
     @State private var feedbackPresentation: FeedbackPresentation?
+    /// #212: the game together on screen, nil when none.
+    @State private var room: RoomViewModel?
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
@@ -111,6 +113,18 @@ struct ContentView: View {
         navModel.orderFlowPresented = true
     }
 
+    private func openRoom(invite: RoomInvite?) {
+        guard room == nil else { return }
+        let game = appState.makeRoomViewModel(for: viewModel)
+        room = game
+        if let invite { Task { await game.join(invite) } }
+    }
+
+    private func openPendingInvite() {
+        guard room == nil, viewModel.quizScreen == .home, let token = appState.roomInvites.take() else { return }
+        openRoom(invite: .token(token))
+    }
+
     @ViewBuilder
     private var mainContent: some View {
         ZStack {
@@ -124,7 +138,8 @@ struct ContentView: View {
                             myPacks: appState.myPacksViewModel,
                             appConfig: appState.appConfig,
                             dailyChallenge: dailyChallenge,
-                            onCreatePack: presentOrderFlow
+                            onCreatePack: presentOrderFlow,
+                            onTogether: { openRoom(invite: nil) }
                         )
                     case .question:
                         QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
@@ -250,6 +265,24 @@ struct ContentView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
+        .fullScreenCover(item: $room) { room in
+            RoomFlowView(
+                viewModel: room,
+                onShowPlans: {
+                    self.room = nil
+                    viewModel.showPaywall = true
+                },
+                onClose: { self.room = nil }
+            )
+        }
+        // #212: a join link opens the game once Home is on screen (never over
+        // a solo quiz in progress).
+        .onReceive(appState.roomInvites.$token) { token in
+            // @Published delivers before the new value is stored: take it on
+            // the next main-actor turn.
+            if token != nil { Task { openPendingInvite() } }
+        }
+        .onChange(of: viewModel.quizScreen) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
         // Mounted here, on the root, because `startNewQuiz` has 9 call sites
         // (Home, voice "start", Play Again, error-retry…) and all of them must

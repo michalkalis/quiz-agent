@@ -30,6 +30,10 @@ final class AppState: ObservableObject {
     let analytics: AnalyticsClient
     /// Server-side switches: forced update, orders on/off, Home notice (#193 task 193.9).
     let appConfig = AppConfigStore()
+    /// #212: the same-room multiplayer endpoints (the live NetworkService).
+    let roomService: RoomServiceProtocol
+    /// #212: a join link that arrived, held until Home opens the game.
+    let roomInvites = RoomInviteInbox()
     /// #197: car answer recordings → backend (production only; nil in UI tests).
     private var answerRecordingUploader: AnswerRecordingUploader?
 
@@ -71,6 +75,7 @@ final class AppState: ObservableObject {
             if UITestSupport.isUITesting {
                 let mocks = UITestSupport.makeMockServices()
                 self.networkService = mocks.network
+                roomService = mocks.rooms
                 audioService = mocks.audio
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
@@ -139,6 +144,7 @@ final class AppState: ObservableObject {
         self.authService = authService
         let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.networkService = networkService
+        roomService = networkService
         // #197: recordings a previous run could not send go out now.
         let uploader = AnswerRecordingUploader(transport: networkService)
         answerRecordingUploader = uploader
@@ -260,9 +266,11 @@ final class AppState: ObservableObject {
         packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
         packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
         questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
-        analytics: AnalyticsClient = NoopAnalyticsClient()
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
+        roomService: RoomServiceProtocol = MockRoomService()
     ) {
         self.networkService = networkService
+        self.roomService = roomService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
@@ -327,6 +335,20 @@ final class AppState: ObservableObject {
             }
         }
     #endif
+
+    /// #212: a game together, with the host's solo settings and services.
+    func makeRoomViewModel(for quiz: QuizViewModel) -> RoomViewModel {
+        RoomViewModel(
+            rooms: roomService,
+            network: networkService,
+            audio: audioService,
+            audioMode: quiz.selectedAudioMode,
+            solo: quiz.settings,
+            deviceId: persistenceStore.deviceId,
+            accountName: KeychainTokenStore().load()?.accountName,
+            excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() }
+        )
+    }
 
     /// The app's QuizViewModel, created with injected dependencies on first use.
     func sharedQuizViewModel() -> QuizViewModel {

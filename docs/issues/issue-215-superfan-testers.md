@@ -34,7 +34,7 @@ Organizátori nie sú bežní hráči: chcú ťažké a overené otázky. Preto 
 
 ## Kanály prvej vlny (mix)
 
-1. **E-mail organizátorom** (agent z hello@missinghue.com): Hospodský kvíz, Chytrý kvíz / Pubquiz Brno, ESN Bratislava (Erasmus kvízy), IT pub kvíz Košice. Prosba o 1–2 tipy na pravidelných hráčov a ponuka pozrieť si otázky.
+1. **E-mail organizátorom** (agent z hi@trubbo.app): Hospodský kvíz (e-mail), Chytrý kvíz (formulár na webe), Košice IT Valley / IT Pub Quiz (e-mail). PubQuiz.cz (len telefón) a ESN Bratislava (bez kontaktu, posledný kvíz 2023) vynechané. Aktívneho slovenského organizátora so zverejneným kontaktom okrem Košíc sme nenašli, Slovákov hľadáme hlavne cez FB. Prosba o 1–2 tipy na pravidelných hráčov a ponuka pozrieť si otázky.
 2. **1–2 FB skupiny** (príspevok pošle founder, agent Facebook neovláda): stolové hry alebo cestovanie s deťmi / chata. Najprv správa adminovi, až potom príspevok.
 3. Anglické komunity (r/PubQuiz, r/quiz) až v ďalšej vlne.
 
@@ -48,11 +48,11 @@ Organizátori nie sú bežní hráči: chcú ťažké a overené otázky. Preto 
 
 - **WhatsApp skupina „Trubbo testeri“** založí a vedie ju founder z telefónu. Agent WhatsApp nevidí, preto mu founder raz týždenne pošle export chatu (WhatsApp: Export chat, bez médií) a agent z neho spraví súhrn.
 - Všetky správy (e-maily, FB príspevok, uvítanie v skupine, týždenné otázky) agent pripraví po slovensky alebo česky, founder ich vidí v artefakte a schváli **pred** odoslaním.
-- Odpovede na e-maily číta agent z hello@ a vedie prehľad v tomto pláne (tabuľka nižšie, bez e-mailov, repo je verejné).
+- E-maily odchádzajú z hi@trubbo.app s kópiou na founderov Gmail, odpovede prichádzajú do schránky hello@missinghue.com, ktorú agent číta (len na mba). Agent vedie prehľad v tomto pláne (tabuľka nižšie, bez e-mailov, repo je verejné).
 
 ## Kroky
 
-- [ ] **215.1** Agent: texty (e-mail organizátorom cs/sk, FB príspevok a správa adminovi, 4 výberové otázky, uvítanie v skupine, týždenná otázka) + zoznam kontaktov → artefakt na schválenie.
+- [~] **215.1** Agent: texty (e-mail organizátorom cs/sk, FB príspevok a správa adminovi, 4 výberové otázky, uvítanie v skupine, týždenná otázka) + zoznam kontaktov → artefakt na schválenie. 2026-10-29 hotové: https://claude.ai/artifact/9TMMNNpifxSEUK12HCu1Bh, čaká na founderovo schválenie.
 - [ ] **215.2** Founder: schváli alebo upraví texty, založí WhatsApp skupinu, vyberie 1–2 FB skupiny.
 - [ ] **215.3** Agent pošle schválené e-maily, founder pošle FB príspevok. Odpovede zbiera agent.
 - [ ] **215.4** Agent navrhne 5 testerov podľa odpovedí, founder potvrdí. Pozvánky cez `/add-tester` do Public bety, founder dá povel na build do bety.
@@ -63,7 +63,9 @@ Organizátori nie sú bežní hráči: chcú ťažké a overené otázky. Preto 
 
 | Kontakt | Rola | Oslovené | Odpoveď | Stav |
 |---------|------|----------|---------|------|
-| — | — | — | — | — |
+| Hospodský kvíz | poradca + tipy na hráčov | — | — | text čaká na schválenie |
+| Chytrý kvíz | poradca + tipy na hráčov | — | — | text čaká na schválenie |
+| Košice IT Valley | tipy na hráčov | — | — | text čaká na schválenie |
 
 ## Mimo rozsahu
 

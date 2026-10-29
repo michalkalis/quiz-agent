@@ -59,6 +59,8 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "paywall_viewed": frozenset({"source"}),
     "purchase_result": frozenset({"product_id", "kind", "outcome"}),
     "restore_result": frozenset({"outcome"}),
+    # #213.4: the Profile tab came on screen.
+    "profile_opened": frozenset({"has_account"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
         {

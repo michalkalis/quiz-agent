@@ -35,14 +35,8 @@ struct HomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HangsBrandRow {
-                NavigationLink(value: AppRoute.settings) {
-                    navChipVisual(icon: "gearshape")
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "Settings", comment: "Accessibility label for the settings navigation button"))
-                .accessibilityIdentifier("home.moreSettings")
-            }
+            // #213.4: Settings moved under the Profile tab's gear.
+            HangsBrandRow()
 
             ScrollView {
                 VStack(spacing: Theme.Hangs.Spacing.xl) {
@@ -464,17 +458,6 @@ struct HomeView: View {
             isOn: $viewModel.settings.includeImageQuestions
         )
         .accessibilityIdentifier("home-image-questions-toggle")
-    }
-
-    // MARK: - Nav chip visual (used inside NavigationLink label)
-
-    private func navChipVisual(icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(Theme.Hangs.Colors.ink)
-            .frame(width: 44, height: 44)
-            // #194 B2: same glass circle as `HangsNavChip`.
-            .glassEffect(.regular.interactive(), in: Circle())
     }
 }
 

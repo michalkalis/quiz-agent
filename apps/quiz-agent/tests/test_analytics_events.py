@@ -109,6 +109,15 @@ async def test_recap_telemetry_keys_are_kept_and_unlisted_ones_still_dropped():
     assert sub == {"latency_ms": 4200}
 
 
+async def test_profile_opened_keeps_only_the_account_flag():
+    # #213.4: measures whether players open the new Profile tab, split by
+    # signed in or not; nothing else about the player may ride along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["profile_opened"], {"has_account": True, "name": "Michal"}
+    )
+    assert cleaned == {"has_account": True}
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

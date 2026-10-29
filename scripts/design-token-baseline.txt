@@ -77,7 +77,6 @@ apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	color	Color.black	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	font	.system(size: 26	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	spacing	.padding(.horizontal, 5)	1
 apps/ios-app/Hangs/Hangs/Views/Feedback/FeedbackView.swift	spacing	.padding(.vertical, 10)	1
-apps/ios-app/Hangs/Hangs/Views/HomeView.swift	font	.system(size: 16	1
 apps/ios-app/Hangs/Hangs/Views/ImageQuestionView.swift	font	.system(size: 40	1
 apps/ios-app/Hangs/Hangs/Views/MyPacksView.swift	spacing	.padding(.top, 40)	2
 apps/ios-app/Hangs/Hangs/Views/OrderPack/OrderPackFlowView.swift	font	.system(size: 15	1

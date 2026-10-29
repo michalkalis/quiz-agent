@@ -757,6 +757,25 @@ present, `room.final.away` absent. App alive.
 
 ---
 
+## RS-30: Profile shows the cards, Settings sits under its gear, a quiz hides the tab bar
+
+**Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile).
+
+**Hypothesis:** Settings left Home for the Profile tab, so its gear is the only
+way in; the stat cards render open and locked; a quiz keeps the full screen
+with no tab bar to wander off to.
+
+**Steps:** launch (mock stats: a seasoned player); tap `tab.profile`; tap
+`profile.settings`; tap `tab.play`; start a quiz.
+
+**Asserts:** `home.moreSettings` absent; `profile.card.totals`,
+`profile.card.hard_questions` (locked) and `profile.myPacks` present;
+`settings.voiceCommands` after the gear; `tab.profile` not hittable on the
+question screen. App alive. RS-pack-nav-start now opens Settings the same way
+and so also covers a quiz started from the Profile landing on Play.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

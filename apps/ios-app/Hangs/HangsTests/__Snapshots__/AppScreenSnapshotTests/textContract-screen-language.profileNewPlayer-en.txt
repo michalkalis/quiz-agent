@@ -1,0 +1,31 @@
+# texts
+PROFILE
+37
+of 60
+Your first recap
+23 more questions
+1 more day of play
+your stats
+In total
+37 questions
+25 min
+Best streak
+5 in a row
+correct answers
+Strong suit
+2 more categories
+Where you play
+3 more quizzes
+When you play
+2 more days of play
+custom packs
+# identifiers
+profile.settings
+profile.account
+profile.firstRecap
+profile.card.totals
+profile.card.best_streak
+profile.card.best_category
+profile.card.where
+profile.card.when
+profile.myPacks

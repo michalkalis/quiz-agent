@@ -34,7 +34,6 @@ Manage
 870 of 1,000 left · resets in 13 days
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

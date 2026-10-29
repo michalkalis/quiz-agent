@@ -125,60 +125,80 @@ struct ContentView: View {
         openRoom(invite: .token(token))
     }
 
+    /// The pushed screens, the same on both tabs' stacks.
+    @ViewBuilder
+    private func routeDestination(_ route: AppRoute) -> some View {
+        switch route {
+        case .settings:
+            SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
+        case .myPacks:
+            MyPacksView(
+                viewModel: appState.myPacksViewModel,
+                onPlayPack: playPack,
+                createPack: MyPacksCreatePack(
+                    orderViewModel: appState.orderPackViewModel,
+                    appConfig: appState.appConfig,
+                    defaultLanguage: viewModel.settings.language
+                )
+            )
+        #if DEBUG
+            case .debugLog:
+                DebugLogView()
+        #endif
+        }
+    }
+
     @ViewBuilder
     private var mainContent: some View {
-        ZStack {
-            // Main navigation content
-            NavigationStack(path: $navModel.path) {
-                Group {
-                    switch viewModel.quizScreen {
-                    case .home:
-                        HomeView(
-                            viewModel: viewModel,
-                            myPacks: appState.myPacksViewModel,
-                            appConfig: appState.appConfig,
-                            dailyChallenge: dailyChallenge,
-                            onCreatePack: presentOrderFlow,
-                            onTogether: { openRoom(invite: nil) }
-                        )
-                    case .question:
-                        QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
-                    case .result:
-                        ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
-                    case .setRecap:
-                        SetRecapView(viewModel: viewModel)
-                    case .completion:
-                        CompletionView(viewModel: viewModel)
-                    case .dailyEnd:
-                        DailyRoundEndView(viewModel: viewModel)
-                    case let .error(model):
-                        ErrorView(viewModel: viewModel, model: model)
-                    }
-                }
-                .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
-                // #111: single route table for the root stack's push chain —
-                // replaces the 4 imperative NavigationLink destinations.
-                .navigationDestination(for: AppRoute.self) { route in
-                    switch route {
-                    case .settings:
-                        SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
-                    case .myPacks:
-                        MyPacksView(
-                            viewModel: appState.myPacksViewModel,
-                            onPlayPack: playPack,
-                            createPack: MyPacksCreatePack(
-                                orderViewModel: appState.orderPackViewModel,
+        // #213.4 (founder 2026-10-28, bar B): two tabs, Play and Profile. The
+        // quiz runs on Play and hides the tab bar, so it keeps the full screen.
+        TabView(selection: $navModel.selectedTab) {
+            Tab("Play", systemImage: "play.circle", value: AppTab.play) {
+                NavigationStack(path: $navModel.path) {
+                    Group {
+                        switch viewModel.quizScreen {
+                        case .home:
+                            HomeView(
+                                viewModel: viewModel,
+                                myPacks: appState.myPacksViewModel,
                                 appConfig: appState.appConfig,
-                                defaultLanguage: viewModel.settings.language
+                                dailyChallenge: dailyChallenge,
+                                onCreatePack: presentOrderFlow,
+                                onTogether: { openRoom(invite: nil) }
                             )
-                        )
-                    #if DEBUG
-                        case .debugLog:
-                            DebugLogView()
-                    #endif
+                        case .question:
+                            QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .result:
+                            ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .setRecap:
+                            SetRecapView(viewModel: viewModel)
+                        case .completion:
+                            CompletionView(viewModel: viewModel)
+                        case .dailyEnd:
+                            DailyRoundEndView(viewModel: viewModel)
+                        case let .error(model):
+                            ErrorView(viewModel: viewModel, model: model)
+                        }
                     }
+                    .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
+                    .toolbar(viewModel.quizScreen == .home ? .visible : .hidden, for: .tabBar)
+                    // #111: single route table for the root stack's push chain —
+                    // replaces the 4 imperative NavigationLink destinations.
+                    .navigationDestination(for: AppRoute.self, destination: routeDestination)
                 }
             }
+            .accessibilityIdentifier("tab.play")
+
+            Tab("Profile", systemImage: "person.crop.circle", value: AppTab.profile) {
+                NavigationStack(path: $navModel.profilePath) {
+                    ProfileView(viewModel: appState.profileViewModel, isPlus: viewModel.usageInfo?.isPlus)
+                        .navigationDestination(for: AppRoute.self, destination: routeDestination)
+                }
+            }
+            .accessibilityIdentifier("tab.profile")
+        }
+        .onChange(of: navModel.selectedTab) { _, tab in
+            if tab == .profile { appState.profileViewModel.tabOpened() }
         }
         // #108C: keep the screen awake for the duration of an active quiz —
         // state and (#185 finding 7) recap narration all
@@ -333,7 +353,7 @@ struct ContentView: View {
             Text("You've played every question in this pack.")
         }
         // #197: the one-time beta question about sending answer recordings.
-        .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.path.isEmpty))
+        .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.isHomeOnTop))
         .environmentObject(navModel)
     }
 }

@@ -33,7 +33,6 @@ Update your payment method
 Update your payment method
 Start
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

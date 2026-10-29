@@ -1,0 +1,9 @@
+# texts
+PROFIL
+tvoje štatistiky
+vlastné balíky
+# identifiers
+profile.settings
+profile.account
+profile.statsLoading
+profile.myPacks

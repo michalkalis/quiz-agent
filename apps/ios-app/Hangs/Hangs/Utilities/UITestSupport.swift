@@ -215,6 +215,13 @@
             return (network, audio, persistence, silence, rooms)
         }
 
+        /// #213.4: the Profile's stat cards: a seasoned player, or with
+        /// `--ui-test-profile-new` one on the way to the first recap.
+        static func makeMockPlayerStats() -> PlayerStatsServiceProtocol {
+            let stats: PlayerStats = CommandLine.arguments.contains("--ui-test-profile-new") ? .mockNewPlayer : .mockSeasoned
+            return MockPlayerStatsService(results: [.success(stats)])
+        }
+
         /// The player says `text` into the open answer recording (#208.8). The
         /// real batch path runs: the capture receives half a second of audio,
         /// the VAD reports the end of speech, the coordinator uploads the WAV,

@@ -33,7 +33,6 @@ Aktualizuj spôsob platby
 Aktualizuj spôsob platby
 Štart
 # identifiers
-home.moreSettings
 home-language-menu
 home.language.en
 home.language.sk

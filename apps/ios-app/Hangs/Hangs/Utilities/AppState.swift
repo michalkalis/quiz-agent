@@ -34,6 +34,8 @@ final class AppState: ObservableObject {
     let roomService: RoomServiceProtocol
     /// #212: a join link that arrived, held until Home opens the game.
     let roomInvites = RoomInviteInbox()
+    /// #213: the player's stat cards (the live NetworkService).
+    let playerStatsService: PlayerStatsServiceProtocol
     /// #197: car answer recordings → backend (production only; nil in UI tests).
     private var answerRecordingUploader: AnswerRecordingUploader?
 
@@ -62,6 +64,10 @@ final class AppState: ObservableObject {
         playedCount: { [weak self] in self?.quizViewModel?.playedQuestionCount(inPack: $0) ?? 0 }
     )
 
+    /// #213.4: the Profile tab, long-lived like the packs list so its cards
+    /// stay while a quiz runs and while they refresh.
+    private(set) lazy var profileViewModel = ProfileViewModel(service: playerStatsService, analytics: analytics)
+
     /// The app's one QuizViewModel, created by `sharedQuizViewModel()` and
     /// owned here for the app's lifetime (#97 — CarPlay support): the phone
     /// window and the CarPlay scene drive the same quiz, and CarPlay can connect
@@ -76,6 +82,7 @@ final class AppState: ObservableObject {
                 let mocks = UITestSupport.makeMockServices()
                 self.networkService = mocks.network
                 roomService = mocks.rooms
+                playerStatsService = UITestSupport.makeMockPlayerStats()
                 audioService = mocks.audio
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
@@ -145,6 +152,7 @@ final class AppState: ObservableObject {
         let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.networkService = networkService
         roomService = networkService
+        playerStatsService = networkService
         // #197: recordings a previous run could not send go out now.
         let uploader = AnswerRecordingUploader(transport: networkService)
         answerRecordingUploader = uploader
@@ -267,10 +275,12 @@ final class AppState: ObservableObject {
         packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
         questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
         analytics: AnalyticsClient = NoopAnalyticsClient(),
-        roomService: RoomServiceProtocol = MockRoomService()
+        roomService: RoomServiceProtocol = MockRoomService(),
+        playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService()
     ) {
         self.networkService = networkService
         self.roomService = roomService
+        self.playerStatsService = playerStatsService
         self.audioService = audioService
         self.persistenceStore = persistenceStore
         self.silenceDetectionService = silenceDetectionService
@@ -280,6 +290,13 @@ final class AppState: ObservableObject {
         self.packPurchaseService = packPurchaseService
         self.questionRatingService = questionRatingService
         self.analytics = analytics
+    }
+
+    /// The account changed (sign-out, deletion): the packs and the stats on
+    /// screen belonged to the previous one.
+    func identityChanged() {
+        myPacksViewModel.reset()
+        profileViewModel.reset()
     }
 
     /// #51: `app_opened` on the first activation and on every return from the

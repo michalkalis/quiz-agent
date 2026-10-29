@@ -138,7 +138,7 @@ struct SettingsView: View {
         .alert("Delete account?", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
-                account.deleteAccount(auth: appState.authService, onIdentityChanged: appState.myPacksViewModel.reset)
+                account.deleteAccount(auth: appState.authService, onIdentityChanged: appState.identityChanged)
             }
         } message: {
             Text("This permanently removes your data, history, and Trubbo Plus access. This can't be undone.")
@@ -518,7 +518,7 @@ struct SettingsView: View {
                     showsChevron: false,
                     labelColor: Theme.Hangs.Colors.error
                 ) {
-                    account.signOut(auth: appState.authService, onIdentityChanged: appState.myPacksViewModel.reset)
+                    account.signOut(auth: appState.authService, onIdentityChanged: appState.identityChanged)
                 }
                 .accessibilityIdentifier("account.signOut")
 

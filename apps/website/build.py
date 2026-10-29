@@ -21,7 +21,7 @@ SITE = "https://trubbo.app"
 LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}  # en is the default at the root
 LEGAL = ["privacy", "terms", "support"]  # served at /<page> (en), /sk/<page>, /cs/<page>
 STEPS = 6  # story steps; each has a static copy of the screen for the stacked fallback
-STATIC = ["rethink-sans-latin.woff2", "rethink-sans-latin-ext.woff2", "rethink-sans-OFL.txt", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME"]
+STATIC = ["rethink-sans-latin.woff2", "rethink-sans-latin-ext.woff2", "rethink-sans-OFL.txt", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", ".well-known/apple-app-site-association"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")
@@ -157,6 +157,7 @@ def main() -> int:
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
     for name in STATIC:
+        (OUT / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / name, OUT / name)
     return 0
 

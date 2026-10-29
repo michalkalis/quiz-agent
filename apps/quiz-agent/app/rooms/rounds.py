@@ -34,6 +34,7 @@ def open_round(session: QuizSession, payload: Dict[str, Any]) -> None:
             question=payload,
             is_open=not payload.get("possible_answers"),
             served_at=now(),
+            thinking_seconds=game.thinking_seconds,
         )
     )
 
@@ -52,7 +53,12 @@ def deadline(game: RoomGame, rnd: RoomRound) -> datetime:
         if rnd.is_open
         else settings.room_mcq_extra_seconds
     )
-    return clock_start(rnd) + timedelta(seconds=game.thinking_seconds + extra)
+    thinking = (
+        rnd.thinking_seconds
+        if rnd.thinking_seconds is not None
+        else game.thinking_seconds
+    )
+    return clock_start(rnd) + timedelta(seconds=thinking + extra)
 
 
 def all_answered(session: QuizSession, rnd: RoomRound) -> bool:

@@ -140,7 +140,7 @@ struct RoomNextFooter: View {
                 trailingIcon: "arrow.right",
                 isLoading: viewModel.isWorking,
                 countdownSecondsRemaining: viewModel.autoAdvanceLeft,
-                countdownTotal: viewModel.settings.autoAdvanceSeconds
+                countdownTotal: viewModel.autoAdvanceSeconds
             ) {
                 Task { await viewModel.next() }
             }

@@ -43,6 +43,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "profile_opened": ["has_account"],
     "recap_viewed": ["kind", "slides_seen", "slides_total"],
     "recap_shared": ["kind"],
+    "room_settings_changed": ["setting", "value", "surface"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -71,6 +72,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .profileOpened(hasAccount: true),
     .recapViewed(kind: "month", slidesSeen: 3, slidesTotal: 7),
     .recapShared(kind: "month"),
+    .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
 ]
 
 @MainActor

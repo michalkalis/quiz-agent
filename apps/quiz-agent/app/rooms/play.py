@@ -73,6 +73,33 @@ class RoomPlay:
                 rnd.opened_at = rounds.now()
                 await self.sessions.update_session(session)
 
+    async def settings(
+        self,
+        room_id: str,
+        subject_id: str,
+        *,
+        reveal_mode: str | None = None,
+        thinking_seconds: int | None = None,
+        reads_aloud: bool | None = None,
+    ) -> None:
+        """Host: change the game's rules (#213.8). The answer time applies from
+        the next question; when answers show only before the first one."""
+        session_id = await self._session_id(room_id)
+        async with self.sessions.session_lock(session_id):
+            session, you = await self._load(session_id, subject_id)
+            if not you.is_host:
+                raise RoomError(403, "Only the host can change the rules")
+            game = session.room_game
+            if reveal_mode is not None and reveal_mode != game.reveal_mode:
+                if session.phase != SessionPhase.IDLE:
+                    raise RoomError(409, "Answers can change only before the game")
+                game.reveal_mode = reveal_mode
+            if thinking_seconds is not None:
+                game.thinking_seconds = thinking_seconds
+            if reads_aloud is not None:
+                game.reads_aloud = reads_aloud
+            await self.sessions.update_session(session)
+
     async def answer(
         self, room_id: str, subject_id: str, question_id: str, text: str
     ) -> None:

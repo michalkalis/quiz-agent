@@ -1712,6 +1712,22 @@
         }
       }
     },
+    "Answer time" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas na odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas na odpoveď"
+          }
+        }
+      }
+    },
     "Answered: %lld/%lld" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -1797,6 +1813,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Potlačenie ozveny, šumu a vyrovnanie hlasitosti mikrofónu od Apple, keď zvuk hrá z iPhonu alebo v režime hovoru"
+          }
+        }
+      }
+    },
+    "Applies to all players. Your solo settings stay as they are." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platí pro všechny hráče. Tvoje sólo nastavení zůstává."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platí pre všetkých hráčov. Tvoje sólo nastavenia ostávajú."
           }
         }
       }
@@ -2225,6 +2257,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OBCHOD\nNEDOSTUPNÝ"
+          }
+        }
+      }
+    },
+    "Changes apply from the next question. When to show answers can only be changed before the game." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Změny platí od další otázky. Kdy ukázat odpověď jde změnit jen před hrou."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmeny platia od ďalšej otázky. Kedy ukázať odpoveď sa dá zmeniť len pred hrou."
           }
         }
       }
@@ -4341,6 +4389,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Predný mikrofón, smerový"
+          }
+        }
+      }
+    },
+    "Game rules" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pravidla hry"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pravidlá hry"
           }
         }
       }
@@ -7432,6 +7496,22 @@
         }
       }
     },
+    "Questions read by" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky čte"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky číta"
+          }
+        }
+      }
+    },
     "Questions reset in %@" : {
       "comment" : "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets",
       "localizations" : {
@@ -7562,6 +7642,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Téma kvízu"
+          }
+        }
+      }
+    },
+    "Read questions aloud" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Číst otázky nahlas"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čítať otázky nahlas"
           }
         }
       }
@@ -8186,6 +8282,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Priestor na zlepšenie"
+          }
+        }
+      }
+    },
+    "Rules from the host" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pravidla od hostitele"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pravidlá od hostiteľa"
           }
         }
       }
@@ -9647,6 +9759,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zhrnutie"
+          }
+        }
+      }
+    },
+    "the host's phone" : {
+      "comment" : "Hra spolu: who reads the questions aloud (Questions read by: the host's phone)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "telefon hostitele"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "telefón hostiteľa"
           }
         }
       }

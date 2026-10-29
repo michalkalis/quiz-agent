@@ -11,6 +11,24 @@ Michal
 ty · hostiteľ
 J
 Jana
+Pravidlá hry
+After each question
+At the end of the quiz
+Kedy ukázať odpoveď
+At the end of the quiz
+Kedy ukázať odpoveď
+At the end of the quiz
+15 s
+30 s
+45 s
+60 s
+Čas na odpoveď
+30 s
+Čas na odpoveď
+30 s
+Čítať otázky nahlas
+
+Platí pre všetkých hráčov. Tvoje sólo nastavenia ostávajú.
 10 otázok · Medium
 Začni hru
 # identifiers
@@ -20,5 +38,14 @@ room.share
 room.player.p_you
 room.player.p_other
 room.player.remove.p_other
+room.rules.reveal
+room.rules.reveal.question
+room.rules.reveal.round
+room.rules.time
+room.rules.time.15
+room.rules.time.30
+room.rules.time.45
+room.rules.time.60
+room.rules.readsAloud
 room.lobby.summary
 room.start

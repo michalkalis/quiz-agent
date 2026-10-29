@@ -9,7 +9,13 @@
 import Foundation
 
 extension NetworkService: RoomServiceProtocol {
-    func createRoom(sessionId: String, hostName: String, revealMode: RoomState.RevealMode, thinkingSeconds: Int) async throws -> RoomCreated {
+    func createRoom(
+        sessionId: String,
+        hostName: String,
+        revealMode: RoomState.RevealMode,
+        thinkingSeconds: Int,
+        readsAloud: Bool
+    ) async throws -> RoomCreated {
         // `net_tickets` stays empty until the IPv4/IPv6 probe hostnames exist:
         // the server matches the Wi-Fi on the request's own address.
         let body: [String: Any] = [
@@ -18,6 +24,7 @@ extension NetworkService: RoomServiceProtocol {
             "net_tickets": [String](),
             "reveal_mode": revealMode.rawValue,
             "thinking_seconds": thinkingSeconds,
+            "reads_aloud": readsAloud,
         ]
         let data = try await roomRequest("POST", "/api/v1/rooms", endpoint: "/api/v1/rooms", body: body)
         return try JSONDecoder().decode(RoomCreated.self, from: data)
@@ -67,6 +74,20 @@ extension NetworkService: RoomServiceProtocol {
             "/api/v1/rooms/\(roomId)/open",
             endpoint: "/api/v1/rooms/{id}/open",
             body: ["question_id": questionId]
+        )
+        return try JSONDecoder().decode(RoomState.self, from: data)
+    }
+
+    func updateSettings(roomId: String, revealMode: RoomState.RevealMode?, thinkingSeconds: Int?, readsAloud: Bool?) async throws -> RoomState {
+        var body: [String: Any] = [:]
+        if let revealMode { body["reveal_mode"] = revealMode.rawValue }
+        if let thinkingSeconds { body["thinking_seconds"] = thinkingSeconds }
+        if let readsAloud { body["reads_aloud"] = readsAloud }
+        let data = try await roomRequest(
+            "POST",
+            "/api/v1/rooms/\(roomId)/settings",
+            endpoint: "/api/v1/rooms/{id}/settings",
+            body: body
         )
         return try JSONDecoder().decode(RoomState.self, from: data)
     }

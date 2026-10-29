@@ -8,8 +8,25 @@ M
 Michal
 P
 Peťo
+Pravidlá od hostiteľa
+Kedy ukázať odpoveď
+After each question
+Kedy ukázať odpoveď
+After each question
+Čas na odpoveď
+30 s
+Čas na odpoveď
+30 s
+Otázky číta
+the host's phone
+Otázky číta
+the host's phone
 Čaká sa, kým hostiteľ spustí hru
 # identifiers
 room.close
 room.lobby.rename
+room.rules.guest
+room.rules.guest.reveal
+room.rules.guest.time
+room.rules.guest.readsAloud
 room.lobby.waiting

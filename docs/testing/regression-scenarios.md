@@ -78,6 +78,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-27 | `RSAppConfigTests.testRS27…` (+ unit `AppConfigStoreTests`) | DEBUG seed; the store link itself is not opened |
 | RS-28 | `RSRoomTests.testRS28…` (+ unit `RoomViewModelTests`) | scripted mock room (`MockRoomService`), DEBUG seed |
 | RS-29 | `RSRoomTests.testRS29…` (+ unit `RoomViewModelTests`) | scripted mock room; host driven over the test listener |
+| RS-32 | `RSRoomTests.testRS32…` (+ unit `RoomViewModelSettingsTests`) | scripted mock room; rules start from the defaults every launch (`UITestSupport.roomSettingsDefaults`); the in-game sheet is covered by unit tests and the `roomRules` snapshot only |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -731,7 +732,9 @@ present; card gone after dismiss. App alive.
 next); a stalled step would leave every phone on one question.
 
 **Steps:** launch with `--app-config-multiplayer`; tap `home.together`,
-`room.host`; give a name if asked; `room.start`; tap option B; `room.next`;
+`room.host`; give a name if asked; pick `room.rules.reveal` →
+`room.rules.reveal.question` (#213.8: the default reveals at the end);
+`room.start`; tap option B; `room.next`;
 type "Canberra" and send; `room.next`; `room.done`.
 
 **Asserts:** `room.qr` and `room.player.p_other` in the lobby; `room.reveal.answer`
@@ -790,6 +793,27 @@ rendered), and Close returns to the Profile.
 
 **Asserts:** `recap.story` after the banner; `recap.share` on the last slide;
 `profile.settings` after Close and `recap.story` gone. App alive.
+
+---
+
+## RS-32: The host sets the rules in the lobby; a guest only reads them
+
+**Type:** XCUITest (`RSRoomTests`). #213.8 (rules for a game together).
+
+**Hypothesis:** the rules hold for every phone, so a first game starts from
+the group defaults (not the host's solo choices), a change shows at once,
+and a guest sees the host's rules without any control to change them.
+
+**Steps:** launch with `--app-config-multiplayer`; tap `home.together`,
+`room.host`; give a name if asked; tap `room.rules.time` →
+`room.rules.time.45`. Relaunch; POST `/room/join?text=mock-token` to the
+test listener.
+
+**Asserts:** `room.rules.reveal` reads "At the end of the quiz",
+`room.rules.time` "30 s", `room.rules.readsAloud` present; after the pick
+`room.rules.time` reads "45 s". Guest: `room.rules.guest` present;
+`room.rules.reveal`, `room.rules.time`, `room.rules.readsAloud` absent. App
+alive (both launches).
 
 ---
 

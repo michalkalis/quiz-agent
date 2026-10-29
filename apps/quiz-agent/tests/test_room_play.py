@@ -193,7 +193,9 @@ class Game:
         self.judge, self.usage, self.events, self.clock = judge, usage, events, clock
         self.room_id = self.session_id = None
 
-    async def setup(self, guests=("jana", "peto"), max_questions=2, **create):
+    async def setup(
+        self, guests=("jana", "peto"), max_questions=2, start=True, **create
+    ):
         session = await self.sessions.create_session(
             user_id="host", max_questions=max_questions
         )
@@ -212,6 +214,8 @@ class Game:
                 headers=_h(g),
             )
             assert j.status_code == 200, j.text
+        if not start:
+            return None
         start = await self.c.post(
             f"/api/v1/sessions/{session.session_id}/start", json={}, headers=_h("host")
         )
@@ -428,3 +432,39 @@ async def test_picture_questions_are_off_in_a_room(game):
     await game.setup()
     session = await game.sessions.get_session(game.session_id)
     assert session.include_images is False
+
+
+async def test_rules_set_in_the_lobby_reach_every_phone_and_only_the_host_sets_them(
+    game,
+):
+    # #213.8: guests see the host's rules before the game; nobody else may
+    # change them, or a guest could cut everyone's answer time.
+    await game.setup(start=False)
+    r = await game.post(
+        "settings", reveal_mode="round", thinking_seconds=30, reads_aloud=False
+    )
+    assert r.status_code == 200, r.text
+    jana = await game.state("jana")
+    assert (jana["reveal_mode"], jana["thinking_seconds"], jana["reads_aloud"]) == (
+        "round",
+        30,
+        False,
+    )
+    assert (await game.post("settings", "jana", thinking_seconds=3)).status_code == 403
+    assert (await game.post("settings", thinking_seconds=90)).status_code == 422
+
+
+async def test_answer_time_changes_from_the_next_question_and_reveal_stays(game):
+    # #213.8: a change mid-question must not cut or stretch the clock players
+    # already see; how answers show cannot flip halfway through a game.
+    await game.setup(thinking_seconds=10)
+    await game.post("open", question_id="q_mcq")
+    assert (await game.post("settings", thinking_seconds=30)).status_code == 200
+    assert (await game.state())["round"]["remaining_ms"] == 15_000  # 10 s + 5 s
+    assert (await game.post("settings", reveal_mode="round")).status_code == 409
+    assert (await game.post("settings", reveal_mode="question")).status_code == 200
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_mcq", "b")
+    await game.post("next")
+    await game.post("open", question_id="q_open")
+    assert (await game.state())["round"]["remaining_ms"] == 48_000  # 30 s + 18 s

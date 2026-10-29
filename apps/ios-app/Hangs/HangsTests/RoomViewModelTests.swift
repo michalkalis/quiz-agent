@@ -28,21 +28,30 @@ struct RoomViewModelTests {
     private let calls = FakeCalls()
     private let clock = TestClock<Duration>()
     private let names = PlayerNameStore(defaults: UserDefaults(suiteName: "room-tests-\(UUID().uuidString)")!)
+    private let settingsStore = MultiplayerSettingsStore(defaults: UserDefaults(suiteName: "room-rules-\(UUID().uuidString)")!)
 
-    private func makeModel(accountName: String? = "Michal Kalis", solo: QuizSettings = .default) -> RoomViewModel {
+    /// Most of these follow a per-question reveal; the round mode has its own test.
+    private static let perQuestion = MultiplayerSettings(revealMode: .question)
+
+    private func makeModel(
+        accountName: String? = "Michal Kalis",
+        solo: QuizSettings = .default,
+        settings: MultiplayerSettings = Self.perQuestion
+    ) -> RoomViewModel {
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = .previewStartQuiz
         network.onStartQuiz = { [rooms] in rooms.beginGame() }
+        settingsStore.save(settings)
         return RoomViewModel(
             rooms: rooms, network: network, audio: audio, solo: solo, deviceId: "device",
-            accountName: accountName, names: names, calls: calls, clock: AnyClock(clock),
-            languageCode: "sk", isOffCellular: { true }
+            accountName: accountName, names: names, settingsStore: settingsStore, calls: calls,
+            clock: AnyClock(clock), languageCode: "sk", isOffCellular: { true }
         )
     }
 
     /// A host whose first question is open for answers.
-    private func hostAtFirstQuestion(solo: QuizSettings = .default) async -> RoomViewModel {
-        let model = makeModel(solo: solo)
+    private func hostAtFirstQuestion(settings: MultiplayerSettings = Self.perQuestion) async -> RoomViewModel {
+        let model = makeModel(settings: settings)
         await model.beginHosting()
         await model.startGame()
         await model.readTask?.value
@@ -90,11 +99,9 @@ struct RoomViewModelTests {
         #expect(model.canAnswer)
     }
 
-    @Test("A muted host opens the answer time at once, without reading aloud")
-    func mutedHostOpensAtOnce() async {
-        var solo = QuizSettings.default
-        solo.isMuted = true
-        let model = await hostAtFirstQuestion(solo: solo)
+    @Test("A host who turned reading aloud off opens the answer time at once")
+    func silentHostOpensAtOnce() async {
+        let model = await hostAtFirstQuestion(settings: MultiplayerSettings(revealMode: .question, readsAloud: false))
         defer { model.stopAll() }
 
         #expect(audio.playOpusCallCount == 0)
@@ -139,9 +146,7 @@ struct RoomViewModelTests {
 
     @Test("In round mode results wait for the end, where option keys show as their text")
     func roundMode() async {
-        var solo = QuizSettings.default
-        solo.answerRevealMode = .endOfSet
-        let model = await hostAtFirstQuestion(solo: solo)
+        let model = await hostAtFirstQuestion(settings: MultiplayerSettings(revealMode: .round))
         defer { model.stopAll() }
 
         await model.submitOption(key: "b")
@@ -198,8 +203,8 @@ struct RoomViewModelTests {
 
         model.apply(RoomState(
             roomId: shown.roomId, version: shown.version - 1, changed: true, status: .lobby, you: nil, isHost: nil,
-            questionNumber: nil, maxQuestions: nil, players: [], revealMode: nil, question: nil, round: nil,
-            finishedReason: nil, ranking: nil, rounds: nil, away: nil
+            questionNumber: nil, maxQuestions: nil, players: [], revealMode: nil, thinkingSeconds: nil,
+            readsAloud: nil, question: nil, round: nil, finishedReason: nil, ranking: nil, rounds: nil, away: nil
         ))
         #expect(model.state == shown)
 
@@ -355,22 +360,12 @@ struct RoomSupportTests {
         #expect(PlayerNameStore.automaticName(languageCode: "en", pick: { _ in 0 }) == "Swift Cheetah")
     }
 
-    @Test("A game together keeps solo's choices but never voice or picture questions")
-    func settingsFromSolo() {
-        var solo = QuizSettings.default
-        solo.answerRevealMode = .endOfSet
-        solo.thinkingTime = 0
-        solo.isMuted = true
-        let settings = MultiplayerSettings(solo: solo)
-
-        #expect(settings.revealMode == .round)
-        #expect(settings.thinkingSeconds == MultiplayerSettings.defaultThinkingSeconds, "0 would leave no time to type")
-        #expect(!settings.readsAloud)
-        #expect(!settings.voiceCommandsEnabled)
-        #expect(!settings.hostAnswersByVoice)
-        #expect(!settings.includeImageQuestions)
-
-        solo.thinkingTime = 120
-        #expect(MultiplayerSettings(solo: solo).thinkingSeconds == 60)
+    @Test("A game together never has voice or picture questions")
+    func neverVoiceOrPictures() {
+        // Guests have no voice and the host taps like everyone else; pictures
+        // are not in the first version. A switch here would split the room.
+        #expect(!MultiplayerSettings.voiceCommandsEnabled)
+        #expect(!MultiplayerSettings.hostAnswersByVoice)
+        #expect(!MultiplayerSettings.includeImageQuestions)
     }
 }

@@ -17,6 +17,7 @@ Mock explanation.
 Ďalej
 # identifiers
 room.close
+room.rules.open
 question.progress
 question.counter
 room.reveal.answer

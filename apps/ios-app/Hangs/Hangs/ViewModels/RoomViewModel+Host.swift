@@ -57,7 +57,7 @@ extension RoomViewModel {
                 language: Language.selectable(solo.language).id,
                 categories: solo.categories,
                 userId: deviceId,
-                includeImages: settings.includeImageQuestions,
+                includeImages: MultiplayerSettings.includeImageQuestions,
                 skipLocalQuestions: !solo.includeLocalQuestions,
                 packId: nil
             )
@@ -65,7 +65,8 @@ extension RoomViewModel {
                 sessionId: session.id,
                 hostName: name,
                 revealMode: settings.revealMode,
-                thinkingSeconds: settings.thinkingSeconds
+                thinkingSeconds: settings.thinkingSeconds,
+                readsAloud: settings.readsAloud
             )
             await refresh()
             startPolling()
@@ -93,11 +94,7 @@ extension RoomViewModel {
         guard isHost, let created else { return }
         isWorking = true
         defer { isWorking = false }
-        if settings.readsAloud {
-            do { try audio.setupAudioSession(mode: audioMode) } catch {
-                Logger.audio.warning("Room audio session setup failed: \(error, privacy: .public)")
-            }
-        }
+        if settings.readsAloud { prepareReadAloudAudio() }
         do {
             let response = try await network.startQuiz(
                 sessionId: created.sessionId,
@@ -109,6 +106,12 @@ extension RoomViewModel {
             quotaReached = true
         } catch {
             errorMessage = Self.genericMessage
+        }
+    }
+
+    func prepareReadAloudAudio() {
+        do { try audio.setupAudioSession(mode: audioMode) } catch {
+            Logger.audio.warning("Room audio session setup failed: \(error, privacy: .public)")
         }
     }
 
@@ -152,7 +155,7 @@ extension RoomViewModel {
         }
         if round.phase == .revealed, advanceQuestionId != round.questionId {
             advanceQuestionId = round.questionId
-            let seconds = state.revealMode == .round ? Self.roundModePauseSeconds : settings.autoAdvanceSeconds
+            let seconds = state.revealMode == .round ? Self.roundModePauseSeconds : autoAdvanceSeconds
             scheduleAutoAdvance(after: seconds)
         }
     }

@@ -20,6 +20,7 @@ import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../
 import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
+import {cutAnswerNumber} from './trim';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
 
 const {values, positionals} = parseArgs({
@@ -198,6 +199,18 @@ function clipTrack(b64: string | null | undefined): {audio: string | null; ms: n
 	return {audio, ms: audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
 }
 
+/** A round's answer clip without its "Question two:" (`cli/trim.ts`); the whole clip if no cut point is found. */
+function roundAnswerTrack(b64: string | null | undefined, id: string): {audio: string | null; ms: number} {
+	const whole = clipTrack(b64);
+	if (!whole.audio) return whole;
+	const audio = whole.audio.replace(/\.mp3$/, '.answer.wav');
+	if (cutAnswerNumber(path.join(PUBLIC_AUDIO_DIR, path.basename(whole.audio)), path.join(PUBLIC_AUDIO_DIR, path.basename(audio))) === null) {
+		console.warn(`! ${id}: no pause after the question number found, the answer clip keeps it`);
+		return whole;
+	}
+	return {audio, ms: audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
+}
+
 const NO_EXPLAIN: ExplainTrack = {audio: null, words: [], parts: [], ms: 0};
 
 async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number, style: ReelStyle): Promise<ReelProps> {
@@ -221,7 +234,7 @@ async function main() {
 		for (const [k, q] of qs.entries()) {
 			const {audio, words, questionMs} = await questionTrack(raws[k], q);
 			if (!audio) console.warn(`! ${q.id}: no existing app clip, rendering without voice (--make-voice makes one)`);
-			const {audio: answerAudio, ms: answerMs} = clipTrack(raws[k].answer_audio_b64);
+			const {audio: answerAudio, ms: answerMs} = roundAnswerTrack(raws[k].answer_audio_b64, q.id);
 			if (!answerAudio) console.warn(`! ${q.id}: no answer clip, the answer is only shown (--make-voice makes one)`);
 			items.push({q, audio, words, questionMs, answerAudio, answerMs});
 		}

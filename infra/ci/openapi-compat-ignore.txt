@@ -6,3 +6,17 @@
 GET /legal/privacy api path removed without deprecation
 GET /legal/support api path removed without deprecation
 GET /legal/terms api path removed without deprecation
+
+# Input hardening (2026-10-30): server caps on free-text and id fields that had none.
+# Far above what any build sends (ids are short, iOS sends no rating display_name,
+# reasons/feedback are a sentence or two); they only stop scripted oversized bodies.
+POST /api/v1/sessions/{session_id}/input the `participant_id/anyOf[subschema #1]/` request property's maxLength was set to `128`
+POST /api/v1/sessions/{session_id}/input the `question_id/anyOf[subschema #1]/` request property's maxLength was set to `128`
+POST /api/v1/sessions/{session_id}/rate the `feedback_text/anyOf[subschema #1]/` request property's maxLength was set to `2000`
+POST /api/v1/sessions/{session_id}/rate the `participant_id/anyOf[subschema #1]/` request property's maxLength was set to `128`
+POST /v1/ratings the `display_name/anyOf[subschema #1]/` request property's maxLength was set to `64`
+POST /v1/ratings the `question_id` request property's maxLength was set to `128`
+POST /v1/ratings the `reason/anyOf[subschema #1]/` request property's maxLength was set to `2000`
+PUT /v1/ratings/batches/{batch_id}/ratings the `qid` request property's maxLength was set to `128`
+PUT /v1/ratings/batches/{batch_id}/ratings the `rater` request property's maxLength was set to `128`
+PUT /v1/ratings/batches/{batch_id}/ratings the `reason/anyOf[subschema #1]/` request property's maxLength was set to `2000`

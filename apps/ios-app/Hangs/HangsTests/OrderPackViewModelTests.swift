@@ -132,6 +132,15 @@ struct OrderPackViewModelTests {
         #expect(!vm.isValid)
     }
 
+    @Test("emoji count as the server counts them — no paid order refused for length")
+    func promptCountsScalars() {
+        let vm = makeOrderPackViewModel()
+        // 600 flags look like 600 characters but are 1200 scalars to the server.
+        vm.prompt = String(repeating: "🇸🇰", count: 600)
+        #expect(vm.trimmedPromptCount == 1200)
+        #expect(!vm.isValid)
+    }
+
     // MARK: - Pre-purchase state machine
 
     @Test("an invalid prompt cannot reach the payment summary — nothing to pay for")

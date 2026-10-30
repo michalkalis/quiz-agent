@@ -32,7 +32,7 @@ struct PlayerNameStore {
     /// The trimmed name within the server's 1–24 characters, nil when empty.
     static func cleaned(_ name: String) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : String(trimmed.prefix(maxLength))
+        return trimmed.isEmpty ? nil : trimmed.prefix(scalars: maxLength)
     }
 
     /// An automatic guest name in the UI language, e.g. "Rýchly gepard".

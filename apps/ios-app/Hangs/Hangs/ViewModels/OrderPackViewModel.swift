@@ -54,6 +54,11 @@ final class OrderPackViewModel: ObservableObject {
     /// good one-word topics ("Bratislava").
     static let maxPromptLength = 1000
 
+    /// Hard cap on what the field holds. Above `maxPromptLength` so a paste
+    /// that runs a little long stays editable (red counter, Order disabled)
+    /// instead of being cut silently; a huge paste can't bloat the field.
+    static let maxPromptInputLength = 2 * maxPromptLength
+
     /// Consecutive `getOrder` failures tolerated before the poll gives up with
     /// `.failed`. A transient network/timeout blip on cellular must NOT dead-end a
     /// paid order that is still generating server-side — a false failure strands
@@ -166,9 +171,11 @@ final class OrderPackViewModel: ObservableObject {
         (1...Self.maxPromptLength).contains(trimmedPromptCount)
     }
 
-    /// Live character count of the trimmed prompt (for the counter UI).
+    /// Live character count of the trimmed prompt (for the counter UI), in
+    /// Unicode scalars like the server's check: counted as characters, a
+    /// prompt with emoji could pass here and be refused after the purchase.
     var trimmedPromptCount: Int {
-        prompt.trimmingCharacters(in: .whitespacesAndNewlines).count
+        prompt.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count
     }
 
     /// #182: the snapshot to offer "Start quiz" for. A pack becomes playable at

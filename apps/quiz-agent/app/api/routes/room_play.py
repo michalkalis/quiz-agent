@@ -8,10 +8,11 @@ phone follows the game through ``GET /rooms/{id}/state``.
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
+from quiz_shared.utils.user_text import clean_user_text
 
 from ...auth.identity import AuthSubject
 from ...rate_limit import limiter
@@ -33,7 +34,11 @@ class QuestionRef(BaseModel):
 
 
 class AnswerRequest(QuestionRef):
-    answer: str = Field(
+    # Shown to every player on the reveal screen: invisible characters out,
+    # and a blank answer is a 422, not an empty row.
+    answer: Annotated[str, BeforeValidator(
+        lambda v: clean_user_text(v).strip() if isinstance(v, str) else v
+    )] = Field(
         min_length=1, max_length=200, description="Option key (a–d) or typed text"
     )
 

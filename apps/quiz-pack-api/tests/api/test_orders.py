@@ -454,6 +454,30 @@ async def test_create_order_prompt_too_long_422(
 
 
 @pytest.mark.asyncio
+async def test_create_order_stores_prompt_without_invisible_characters(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A bidi override makes the order list show a prompt that reads differently
+    from what generation gets; the stored prompt must be what the player sees."""
+    tx_id = "tx-prompt-invisible"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "prompt": "Slovak \u202ecastles\x00\n90s"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202
+    order = (
+        await test_session.execute(
+            select(GenerationOrder).where(GenerationOrder.transaction_id == tx_id)
+        )
+    ).scalar_one()
+    assert order.prompt == "Slovak castles\n90s"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("field", ["category", "theme"])
 async def test_create_order_category_theme_over_column_width_422(
     client: httpx.AsyncClient,

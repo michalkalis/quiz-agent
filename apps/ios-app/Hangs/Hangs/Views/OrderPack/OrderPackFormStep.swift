@@ -51,6 +51,7 @@ struct OrderPackFormStep: View {
                     .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
+                    .limitLength($viewModel.prompt, to: OrderPackViewModel.maxPromptInputLength)
 
                     if dictation.isTranscribing {
                         Text("Transcribing…")

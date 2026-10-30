@@ -30,6 +30,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MESSAGE_MAX_CHARS = 5000
+# The app sends a handful of short fields (version, device, locale, session).
+METADATA_MAX_CHARS = 16_000
+APP_VERSION_MAX_CHARS = 64
 SCREENSHOT_MAX_BYTES = 5 * 1024 * 1024
 AUDIO_MAX_BYTES = 10 * 1024 * 1024
 LOGS_MAX_BYTES = 1 * 1024 * 1024
@@ -124,6 +127,16 @@ async def submit_feedback(
             status_code=413,
             detail=f"message exceeds the {MESSAGE_MAX_CHARS} character limit",
         )
+
+    for value, limit, field in (
+        (metadata, METADATA_MAX_CHARS, "metadata"),
+        (app_version, APP_VERSION_MAX_CHARS, "app_version"),
+    ):
+        if value is not None and len(value) > limit:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{field} exceeds the {limit} character limit",
+            )
 
     metadata_dict = None
     if metadata:

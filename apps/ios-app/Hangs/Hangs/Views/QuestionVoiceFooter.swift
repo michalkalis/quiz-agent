@@ -232,6 +232,7 @@ struct QuestionVoiceFooter: View {
                 .accessibilityIdentifier("question.textField")
                 .submitLabel(.send)
                 .onSubmit(submitTypedAnswer)
+                .limitLength($textAnswer, to: TextInputLimit.answer)
                 .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .frame(maxWidth: .infinity, minHeight: rowHeight)
                 .background(Capsule().fill(Theme.Hangs.Colors.bgCard))

@@ -389,6 +389,7 @@ struct AnswerConfirmationView: View {
                 .focused($editFocused)
                 .submitLabel(.done)
                 .onSubmit { editFocused = false }
+                .limitLength($transcribedAnswer, to: TextInputLimit.answer)
                 .toolbar {
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()

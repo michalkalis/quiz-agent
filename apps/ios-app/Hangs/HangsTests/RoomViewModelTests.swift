@@ -155,13 +155,15 @@ struct RoomViewModelTests {
 
         await model.next()
         await model.readTask?.value
-        model.typedAnswer = "Sydney"
+        // A typed answer used to go through the 24-character name cleaner.
+        model.typedAnswer = "  The Sydney Harbour Bridge in 1932 "
         await model.submitTypedAnswer()
+        #expect(rooms.answers.last == "The Sydney Harbour Bridge in 1932", "a long typed answer reaches the server whole")
         await model.next()
 
         #expect(model.screen == .finished)
         let summaries = model.roundSummaries
-        #expect(summaries.map(\.yourAnswer) == ["Saturn", "Sydney"])
+        #expect(summaries.map(\.yourAnswer) == ["Saturn", "The Sydney Harbour Bridge in 1932"])
         #expect(summaries.map(\.youWereRight) == [true, false])
     }
 

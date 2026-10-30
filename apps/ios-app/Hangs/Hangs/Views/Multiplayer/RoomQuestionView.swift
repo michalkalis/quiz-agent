@@ -121,6 +121,7 @@ struct RoomQuestionView: View {
                 .submitLabel(.send)
                 .focused($typing)
                 .onSubmit { Task { await viewModel.submitTypedAnswer() } }
+                .limitLength($viewModel.typedAnswer, to: RoomViewModel.maxAnswerLength)
                 .padding(Theme.Hangs.Spacing.md)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
@@ -137,7 +138,7 @@ struct RoomQuestionView: View {
                     .background(Circle().fill(Theme.Hangs.Colors.action))
             }
             .buttonStyle(.plain)
-            .disabled(PlayerNameStore.cleaned(viewModel.typedAnswer) == nil)
+            .disabled(viewModel.typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .accessibilityLabel(Text("Send answer"))
             .accessibilityIdentifier("room.answer.send")
         }

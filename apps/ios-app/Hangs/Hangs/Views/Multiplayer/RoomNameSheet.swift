@@ -49,9 +49,7 @@ struct RoomNameSheet: View {
         .padding(Theme.Hangs.Spacing.lg)
         .background(Theme.Hangs.Colors.bgSheet)
         .onAppear { focused = true }
-        .onChange(of: name) { _, new in
-            if new.count > PlayerNameStore.maxLength { name = String(new.prefix(PlayerNameStore.maxLength)) }
-        }
+        .limitLength($name, to: PlayerNameStore.maxLength)
     }
 
     private func save() {

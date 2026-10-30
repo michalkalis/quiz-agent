@@ -31,7 +31,6 @@ Fix payment
 Update your payment method
 Update your payment method
 trubbo
-trubbo
 Start
 # identifiers
 home-language-menu

@@ -31,7 +31,6 @@ Oprav platbu
 Aktualizuj spôsob platby
 Aktualizuj spôsob platby
 trubbo
-trubbo
 Štart
 # identifiers
 home-language-menu

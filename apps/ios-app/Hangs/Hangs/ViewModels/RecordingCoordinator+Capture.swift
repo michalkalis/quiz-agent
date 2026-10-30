@@ -242,7 +242,7 @@ extension RecordingCoordinator {
             setIsAutoRecording(false)
             speechDetectedDuringAutoRecord = false
             transition(to: .askingQuestion)
-            setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
+            setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when audio recording fails; placeholder is the underlying error"))
 
             Logger.audio.error("❌ Recording failed to start: \(error, privacy: .public)")
         }
@@ -387,7 +387,7 @@ extension RecordingCoordinator {
         setIsAutoRecording(false)
         speechDetectedDuringAutoRecord = false
         transition(to: .askingQuestion)
-        setErrorMessage(String(localized: "Recording interrupted. Tap the mic to try again.", comment: "Shown when a phone call or other audio interruption stops recording"))
+        setErrorMessage(String(localized: "Recording interrupted. Tap the mic to try again.", bundle: .interface, locale: .interface, comment: "Shown when a phone call or other audio interruption stops recording"))
         Logger.audio.warning("⚠️ Recording interrupted by audio session — reset to ready state")
     }
 }

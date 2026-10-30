@@ -1534,19 +1534,19 @@ enum AudioError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noActiveRecording:
-            return String(localized: "No active recording", comment: "Audio error: stop was requested with no recording in progress")
+            return String(localized: "No active recording", bundle: .interface, locale: .interface, comment: "Audio error: stop was requested with no recording in progress")
         case .recordingFailed:
-            return String(localized: "Recording failed", comment: "Audio error: recording could not be completed")
+            return String(localized: "Recording failed", bundle: .interface, locale: .interface, comment: "Audio error: recording could not be completed")
         case .recordingTooShort:
-            return String(localized: "Recording too short or empty", comment: "Audio error: the captured audio was unusable")
+            return String(localized: "Recording too short or empty", bundle: .interface, locale: .interface, comment: "Audio error: the captured audio was unusable")
         case .playbackFailed:
-            return String(localized: "Playback failed", comment: "Audio error: audio could not be played back")
+            return String(localized: "Playback failed", bundle: .interface, locale: .interface, comment: "Audio error: audio could not be played back")
         case .permissionDenied:
-            return String(localized: "Microphone permission denied", comment: "Audio error: the user denied microphone access")
+            return String(localized: "Microphone permission denied", bundle: .interface, locale: .interface, comment: "Audio error: the user denied microphone access")
         case .invalidBase64:
-            return String(localized: "Invalid base64 audio data", comment: "Audio error: the audio payload could not be decoded")
+            return String(localized: "Invalid base64 audio data", bundle: .interface, locale: .interface, comment: "Audio error: the audio payload could not be decoded")
         case .deviceNotFound:
-            return String(localized: "Audio device not available", comment: "Audio error: the selected input/output device is gone")
+            return String(localized: "Audio device not available", bundle: .interface, locale: .interface, comment: "Audio error: the selected input/output device is gone")
         }
     }
 }

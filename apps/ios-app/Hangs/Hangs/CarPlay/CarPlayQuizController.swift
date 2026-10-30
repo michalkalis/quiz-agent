@@ -132,7 +132,7 @@
             let template = CPVoiceControlTemplate(voiceControlStates: states)
             template.leadingNavigationBarButtons = [
                 CPBarButton(
-                    title: String(localized: "End quiz", comment: "CarPlay: ends the running quiz round early"),
+                    title: String(localized: "End quiz", bundle: .interface, locale: .interface, comment: "CarPlay: ends the running quiz round early"),
                     handler: Self.onMain { [weak self] in
                         guard let self else { return }
                         Task { await self.viewModel.endQuizWithResults() }
@@ -147,9 +147,9 @@
             case .ready:
                 [button(Self.startTitle, "play.fill") { $0.startRound() }, topicsButton()]
             case .finished:
-                [button(String(localized: "Play Again", comment: "CarPlay: starts another round after one ended"), "arrow.clockwise") { $0.viewModel.playAgain() }, topicsButton()]
+                [button(String(localized: "Play Again", bundle: .interface, locale: .interface, comment: "CarPlay: starts another round after one ended"), "arrow.clockwise") { $0.viewModel.playAgain() }, topicsButton()]
             case .failed:
-                [button(String(localized: "Try again", comment: "CarPlay: retries after an error"), "arrow.clockwise") { $0.viewModel.retryFromErrorScreen() }, topicsButton()]
+                [button(String(localized: "Try again", bundle: .interface, locale: .interface, comment: "CarPlay: retries after an error"), "arrow.clockwise") { $0.viewModel.retryFromErrorScreen() }, topicsButton()]
             case .limitReached:
                 []
             }
@@ -158,20 +158,20 @@
         private func buttons(for state: CarPlayScreen.Quiz) -> [CPButton] {
             switch state {
             case .speaking, .listening:
-                [button(String(localized: "Pause", comment: "CarPlay: pauses the quiz"), "pause.fill") { $0.pause() },
-                 button(String(localized: "Skip", comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
+                [button(String(localized: "Pause", bundle: .interface, locale: .interface, comment: "CarPlay: pauses the quiz"), "pause.fill") { $0.pause() },
+                 button(String(localized: "Skip", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
             case .thinking:
                 []
             case .confirming:
-                [button(String(localized: "Again", comment: "CarPlay: records the answer again"), "arrow.counterclockwise") { $0.viewModel.rerecordAnswer() },
-                 button(String(localized: "Skip", comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
+                [button(String(localized: "Again", bundle: .interface, locale: .interface, comment: "CarPlay: records the answer again"), "arrow.counterclockwise") { $0.viewModel.rerecordAnswer() },
+                 button(String(localized: "Skip", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
             case .paused:
-                [button(String(localized: "Continue", comment: "CarPlay: continues a paused quiz"), "play.fill") { $0.resume() }]
+                [button(String(localized: "Continue", bundle: .interface, locale: .interface, comment: "CarPlay: continues a paused quiz"), "play.fill") { $0.resume() }]
             }
         }
 
         private func topicsButton() -> CPButton {
-            button(String(localized: "Categories", comment: "CarPlay: opens the list of quiz categories and packs"), "list.bullet") { $0.showTopics() }
+            button(String(localized: "Categories", bundle: .interface, locale: .interface, comment: "CarPlay: opens the list of quiz categories and packs"), "list.bullet") { $0.showTopics() }
         }
 
         private func button(_ title: String, _ symbol: String, action: @escaping @MainActor @Sendable (CarPlayQuizController) -> Void) -> CPButton {
@@ -248,7 +248,7 @@
                 return item
             }
             let list = CPListTemplate(
-                title: String(localized: "Categories", comment: "CarPlay: opens the list of quiz categories and packs"),
+                title: String(localized: "Categories", bundle: .interface, locale: .interface, comment: "CarPlay: opens the list of quiz categories and packs"),
                 sections: [CPListSection(items: Array(categories.prefix(Int(CPListTemplate.maximumItemCount))))]
             )
             interfaceController.pushTemplate(list, animated: true, completion: nil)
@@ -273,7 +273,7 @@
                 CPListSection(items: categories),
                 CPListSection(
                     items: Array(packs.prefix(packRoom)),
-                    header: String(localized: "My packs", comment: "CarPlay: section header above the user's own quiz packs"),
+                    header: String(localized: "My packs", bundle: .interface, locale: .interface, comment: "CarPlay: section header above the user's own quiz packs"),
                     sectionIndexTitle: nil
                 ),
             ])
@@ -300,24 +300,26 @@
 
         // MARK: - Copy
 
-        static let startTitle = String(localized: "Start", comment: "CarPlay: starts a quiz round")
+        static var startTitle: String {
+            String(localized: "Start", bundle: .interface, locale: .interface, comment: "CarPlay: starts a quiz round")
+        }
 
         static func title(for state: CarPlayScreen.Home) -> String {
             switch state {
-            case .ready: String(localized: "Say \"start\"", comment: "CarPlay: home screen hint, the spoken command that starts a round")
-            case .finished: String(localized: "Quiz finished", comment: "CarPlay: a quiz has ended")
-            case .failed: String(localized: "Something went wrong", comment: "CarPlay: generic error state")
-            case .limitReached: String(localized: "Continue on your phone", comment: "CarPlay: free questions used up, the upgrade screen is on the phone")
+            case .ready: String(localized: "Say \"start\"", bundle: .interface, locale: .interface, comment: "CarPlay: home screen hint, the spoken command that starts a round")
+            case .finished: String(localized: "Quiz finished", bundle: .interface, locale: .interface, comment: "CarPlay: a quiz has ended")
+            case .failed: String(localized: "Something went wrong", bundle: .interface, locale: .interface, comment: "CarPlay: generic error state")
+            case .limitReached: String(localized: "Continue on your phone", bundle: .interface, locale: .interface, comment: "CarPlay: free questions used up, the upgrade screen is on the phone")
             }
         }
 
         static func title(for state: CarPlayScreen.Quiz) -> String {
             switch state {
-            case .speaking: String(localized: "Trubbo is speaking", comment: "CarPlay: Trubbo is reading the question or result aloud")
-            case .listening: String(localized: "Listening…", comment: "CarPlay: the microphone is open for the spoken answer")
-            case .thinking: String(localized: "One moment", comment: "CarPlay: Trubbo is checking the answer or loading")
-            case .confirming: String(localized: "Again or skip?", comment: "CarPlay: answer sheet, the driver can re-record or skip")
-            case .paused: String(localized: "Paused", comment: "CarPlay: the quiz is paused")
+            case .speaking: String(localized: "Trubbo is speaking", bundle: .interface, locale: .interface, comment: "CarPlay: Trubbo is reading the question or result aloud")
+            case .listening: String(localized: "Listening…", bundle: .interface, locale: .interface, comment: "CarPlay: the microphone is open for the spoken answer")
+            case .thinking: String(localized: "One moment", bundle: .interface, locale: .interface, comment: "CarPlay: Trubbo is checking the answer or loading")
+            case .confirming: String(localized: "Again or skip?", bundle: .interface, locale: .interface, comment: "CarPlay: answer sheet, the driver can re-record or skip")
+            case .paused: String(localized: "Paused", bundle: .interface, locale: .interface, comment: "CarPlay: the quiz is paused")
             }
         }
 

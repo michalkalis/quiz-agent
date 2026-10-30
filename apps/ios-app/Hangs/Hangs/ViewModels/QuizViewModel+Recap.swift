@@ -96,6 +96,7 @@ extension QuizViewModel {
         let correct = recapEntries.filter(\.isCorrect).count
         pieces.append(String(
             localized: "Set finished. You got \(correct) out of \(recapEntries.count) right.",
+            bundle: .interface, locale: .interface,
             comment: "Recap narration intro: correct count out of total"
         ))
         // The question number is its own clip: the server caches clips by
@@ -104,22 +105,26 @@ extension QuizViewModel {
         for entry in recapEntries {
             pieces.append(String(
                 localized: "Question \(entry.id).",
+                bundle: .interface, locale: .interface,
                 comment: "Recap narration: the question number, spoken right before its verdict"
             ))
             switch entry.result {
             case .correct:
                 pieces.append(String(
                     localized: "Correct. \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a correct answer, then the answer"
                 ))
             case .skipped:
                 pieces.append(String(
                     localized: "Skipped. The answer: \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a skipped question, then the revealed answer"
                 ))
             default:
                 pieces.append(String(
                     localized: "Missed. The answer: \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a wrong answer, then the revealed answer"
                 ))
             }

@@ -103,13 +103,13 @@ struct OrderPackFormStep: View {
     /// Explains a denied mic or the cap stop so the button never feels dead.
     private var micHint: String? {
         if dictation.micState == .denied {
-            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", comment: "Order form: mic disabled because permission was denied")
+            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", bundle: .interface, locale: .interface, comment: "Order form: mic disabled because permission was denied")
         }
         if dictation.didFailTranscription {
-            return String(localized: "Couldn't transcribe that. Try again or type it.", comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
+            return String(localized: "Couldn't transcribe that. Try again or type it.", bundle: .interface, locale: .interface, comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
         }
         if dictation.didHitDictationCap {
-            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", comment: "Order form: dictation auto-stopped at the 120-second cap")
+            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", bundle: .interface, locale: .interface, comment: "Order form: dictation auto-stopped at the 120-second cap")
         }
         return nil
     }

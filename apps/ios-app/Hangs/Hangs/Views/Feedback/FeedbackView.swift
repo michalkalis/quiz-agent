@@ -188,16 +188,16 @@ struct FeedbackView: View {
     /// Explains a disabled/denied mic so the tester isn't left tapping a dead button.
     private var micHint: String? {
         if viewModel.isBlockedByQuizRecording {
-            return String(localized: "Finish the quiz recording to dictate feedback.", comment: "Feedback sheet: mic disabled because the quiz is currently recording")
+            return String(localized: "Finish the quiz recording to dictate feedback.", bundle: .interface, locale: .interface, comment: "Feedback sheet: mic disabled because the quiz is currently recording")
         }
         if viewModel.micState == .denied {
-            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", comment: "Feedback sheet: mic disabled because permission was denied")
+            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", bundle: .interface, locale: .interface, comment: "Feedback sheet: mic disabled because permission was denied")
         }
         if viewModel.didFailTranscription {
-            return String(localized: "Couldn't transcribe that. Try again or type it.", comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
+            return String(localized: "Couldn't transcribe that. Try again or type it.", bundle: .interface, locale: .interface, comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
         }
         if viewModel.didHitDictationCap {
-            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", comment: "Feedback sheet: dictation auto-stopped at the 120-second cap")
+            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", bundle: .interface, locale: .interface, comment: "Feedback sheet: dictation auto-stopped at the 120-second cap")
         }
         return nil
     }

@@ -113,7 +113,7 @@ struct DailyRoundEndView: View {
                 }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "Final score: \(String(content.score)) out of \(content.total)", comment: "Accessibility label for the final-score card"))
+            .accessibilityLabel(String(localized: "Final score: \(String(content.score)) out of \(content.total)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
             .accessibilityIdentifier("daily.score")
         }
     }

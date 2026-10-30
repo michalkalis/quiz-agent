@@ -40,9 +40,9 @@ struct DailyMarkTiles: View {
         marks.enumerated().map { index, mark in
             let number = index + 1
             return switch mark {
-            case true?: String(localized: "Question \(number), correct", comment: "VoiceOver: one question of the finished round, answered right")
-            case false?: String(localized: "Question \(number), incorrect", comment: "VoiceOver: one question of the finished round, answered wrong or partly right")
-            case nil: String(localized: "Question \(number), not answered", comment: "VoiceOver: one question of the daily challenge, not answered yet")
+            case true?: String(localized: "Question \(number), correct", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the finished round, answered right")
+            case false?: String(localized: "Question \(number), incorrect", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the finished round, answered wrong or partly right")
+            case nil: String(localized: "Question \(number), not answered", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the daily challenge, not answered yet")
             }
         }
         .joined(separator: ". ")

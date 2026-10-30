@@ -1803,6 +1803,7 @@
       }
     },
     "App language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -2225,6 +2226,7 @@
       }
     },
     "Buttons, labels and settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -7547,6 +7549,7 @@
       }
     },
     "Questions, answers and voice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -7558,6 +7561,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otázky, odpovede a hlas"
+          }
+        }
+      }
+    },
+    "Questions, voice and the whole app" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky, hlas i celá aplikace"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky, hlas aj celá aplikácia"
           }
         }
       }

@@ -48,6 +48,6 @@ extension RoomState.RevealMode {
 extension MultiplayerSettings {
     /// "30 s" for the answer time rows and chips.
     static func secondsDisplay(_ seconds: Int) -> String {
-        String(localized: "\(seconds) s", comment: "Hra spolu (#212)")
+        String(localized: "\(seconds) s", bundle: .interface, locale: .interface, comment: "Hra spolu (#212)")
     }
 }

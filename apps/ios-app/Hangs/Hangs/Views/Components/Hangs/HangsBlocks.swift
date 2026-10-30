@@ -152,7 +152,7 @@ enum HangsResultKind {
     case correct
     case incorrect
 
-    var label: String { self == .correct ? String(localized: "correct", comment: "Result banner label when the answer is correct") : String(localized: "incorrect", comment: "Result banner label when the answer is incorrect") }
+    var label: String { self == .correct ? String(localized: "correct", bundle: .interface, locale: .interface, comment: "Result banner label when the answer is correct") : String(localized: "incorrect", bundle: .interface, locale: .interface, comment: "Result banner label when the answer is incorrect") }
     var icon: String { self == .correct ? "checkmark" : "xmark" }
     var color: Color {
         self == .correct ? Theme.Hangs.Colors.greenCorrect : Theme.Hangs.Colors.action

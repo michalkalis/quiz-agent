@@ -85,7 +85,7 @@ struct DeckIdentity {
     init(category: String?, packId: String?) {
         if let packId {
             paletteId = Theme.Hangs.Category.paletteId(forPack: packId)
-            chipName = String(localized: "Custom pack", comment: "Chip on a question card dealt from the player's own pack")
+            chipName = String(localized: "Custom pack", bundle: .interface, locale: .interface, comment: "Chip on a question card dealt from the player's own pack")
         } else {
             paletteId = category.flatMap { Theme.Hangs.Category.taxonomy.contains($0) ? $0 : nil }
             chipName = category.flatMap(Config.categoryDisplayName(for:))

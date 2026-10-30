@@ -124,7 +124,7 @@ struct RoundCompleteView: View {
                 }
                 .frame(minWidth: Metrics.scoreColumn, alignment: .leading)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", comment: "Accessibility label for the final-score card"))
+                .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
                 .accessibilityIdentifier(route == .score ? "completion.score" : "recap.hero")
 
                 Rectangle()

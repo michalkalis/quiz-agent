@@ -80,6 +80,7 @@ struct HangsApp: App {
                 ContentView(appState: appState)
                     .environmentObject(appState)
             }
+                .environment(\.locale, appState.interfaceLocale)
                 // #188 G9: past accessibility3 a single word ("Slovenčina",
                 // "Automaticky") no longer fits a row even stacked and breaks
                 // mid-word. A screen may set a lower cap of its own.

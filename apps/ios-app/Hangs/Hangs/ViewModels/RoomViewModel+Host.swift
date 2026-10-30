@@ -10,14 +10,16 @@ import Foundation
 import os
 
 extension RoomViewModel {
-    static let genericMessage = String(localized: "Something went wrong. Try again.", comment: "Hra spolu: an action failed, e.g. creating or answering")
+    static var genericMessage: String {
+        String(localized: "Something went wrong. Try again.", bundle: .interface, locale: .interface, comment: "Hra spolu: an action failed, e.g. creating or answering")
+    }
 
     static func joinMessage(for error: Error) -> String {
         switch error {
         case NetworkError.serverError(statusCode: 404, _):
-            String(localized: "This game is no longer open.", comment: "Hra spolu: joining failed, the game ended or the link is old")
+            String(localized: "This game is no longer open.", bundle: .interface, locale: .interface, comment: "Hra spolu: joining failed, the game ended or the link is old")
         case NetworkError.serverError(statusCode: 409, _):
-            String(localized: "This game is full or already over.", comment: "Hra spolu: joining failed, 8 players or finished")
+            String(localized: "This game is full or already over.", bundle: .interface, locale: .interface, comment: "Hra spolu: joining failed, 8 players or finished")
         default:
             genericMessage
         }

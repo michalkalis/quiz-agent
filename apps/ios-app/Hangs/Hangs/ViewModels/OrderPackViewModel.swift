@@ -510,7 +510,7 @@ final class OrderPackViewModel: ObservableObject {
             // and never resolve the "Building your pack…" spinner. Stop and hand the
             // user off to My packs; any generation still runs server-side.
             if clock.now >= deadline {
-                state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
+                state = .failed(String(localized: "Still working — check My packs later.", bundle: .interface, locale: .interface, comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
                 return
             }
 
@@ -549,8 +549,8 @@ final class OrderPackViewModel: ObservableObject {
                 if !snapshot.isRetryable { clearRetainedOrderCredentials() }
                 state = .failed(
                     snapshot.isRetryable
-                        ? String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in the failed state and can be retried")
-                        : String(localized: "This order was refunded.", comment: "Shown when a custom-pack order ended refunded — there is nothing left to retry"),
+                        ? String(localized: "Pack generation failed. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when a custom-pack order ends in the failed state and can be retried")
+                        : String(localized: "This order was refunded.", bundle: .interface, locale: .interface, comment: "Shown when a custom-pack order ended refunded — there is nothing left to retry"),
                     retryable: snapshot.isRetryable
                 )
                 return
@@ -567,6 +567,6 @@ final class OrderPackViewModel: ObservableObject {
 
     private static func message(for error: Error) -> String {
         (error as? LocalizedError)?.errorDescription
-            ?? String(localized: "Something went wrong. Please try again.", comment: "Generic custom-pack order error fallback")
+            ?? String(localized: "Something went wrong. Please try again.", bundle: .interface, locale: .interface, comment: "Generic custom-pack order error fallback")
     }
 }

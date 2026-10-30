@@ -20,9 +20,9 @@ enum AnswerRevealMode: String, Codable, CaseIterable, Identifiable, Sendable {
     var displayName: String {
         switch self {
         case .perQuestion:
-            return String(localized: "After each question", comment: "Answer reveal setting: today's per-question result screen")
+            return String(localized: "After each question", bundle: .interface, locale: .interface, comment: "Answer reveal setting: today's per-question result screen")
         case .endOfSet:
-            return String(localized: "At the end of the set", comment: "Answer reveal setting: deferred reveal, one recap after the last question")
+            return String(localized: "At the end of the set", bundle: .interface, locale: .interface, comment: "Answer reveal setting: deferred reveal, one recap after the last question")
         }
     }
 }
@@ -163,6 +163,17 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     // MARK: - Default Configuration
 
+    /// Nothing saved yet: the quiz — and with it the whole app (founder
+    /// 2026-10-30, `InterfaceLanguage`) — starts in the phone's language when
+    /// it is offered. Otherwise a Slovak phone would open an English app.
+    static func firstLaunch(phoneLanguage: String?) -> QuizSettings {
+        var settings = QuizSettings.default
+        if let phoneLanguage {
+            settings.language = Language.selectable(phoneLanguage).id
+        }
+        return settings
+    }
+
     /// Default settings matching app defaults
     static let `default` = QuizSettings(
         language: "en",
@@ -263,9 +274,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         case 0:
             return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
         case 1:
-            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", comment: "Fallback category display name when the category id is unrecognized")
+            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
         default:
-            return String(localized: "\(categories.count) selected", comment: "Home category picker value when several categories are selected; placeholder is the count")
+            return String(localized: "\(categories.count) selected", bundle: .interface, locale: .interface, comment: "Home category picker value when several categories are selected; placeholder is the count")
         }
     }
 

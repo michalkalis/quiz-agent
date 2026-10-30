@@ -70,19 +70,19 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
     /// Display subtitle describing the device type
     var subtitle: String {
         if isOutputOnly {
-            return String(localized: "Bluetooth, plays the quiz sound", comment: "Microphone picker row note for connected Bluetooth headphones (information only, not selectable as a microphone)")
+            return String(localized: "Bluetooth, plays the quiz sound", bundle: .interface, locale: .interface, comment: "Microphone picker row note for connected Bluetooth headphones (information only, not selectable as a microphone)")
         } else if isBuiltIn {
-            return String(localized: "Built-in", comment: "Audio device subtitle: the device's built-in microphone")
+            return String(localized: "Built-in", bundle: .interface, locale: .interface, comment: "Audio device subtitle: the device's built-in microphone")
         } else if isHFP {
-            return String(localized: "Bluetooth (Call Mode)", comment: "Audio device subtitle: a Bluetooth mic in hands-free call mode")
+            return String(localized: "Bluetooth (Call Mode)", bundle: .interface, locale: .interface, comment: "Audio device subtitle: a Bluetooth mic in hands-free call mode")
         } else if isBluetooth {
-            return String(localized: "Bluetooth", comment: "Audio device subtitle: a Bluetooth audio device")
+            return String(localized: "Bluetooth", bundle: .interface, locale: .interface, comment: "Audio device subtitle: a Bluetooth audio device")
         } else if portType == AVAudioSession.Port.headphones.rawValue {
-            return String(localized: "Wired", comment: "Audio device subtitle: a wired headset/headphones")
+            return String(localized: "Wired", bundle: .interface, locale: .interface, comment: "Audio device subtitle: a wired headset/headphones")
         } else if portType == AVAudioSession.Port.usbAudio.rawValue {
-            return String(localized: "USB", comment: "Audio device subtitle: a USB audio device")
+            return String(localized: "USB", bundle: .interface, locale: .interface, comment: "Audio device subtitle: a USB audio device")
         } else {
-            return String(localized: "External", comment: "Audio device subtitle: a generic external audio device")
+            return String(localized: "External", bundle: .interface, locale: .interface, comment: "Audio device subtitle: a generic external audio device")
         }
     }
 
@@ -131,11 +131,13 @@ struct AudioDevice: Identifiable, Codable, Sendable, Hashable {
     // MARK: - Special Devices
 
     /// "Automatic" device - lets iOS choose the best available input
-    static let automatic = AudioDevice(
-        id: "automatic",
-        name: String(localized: "Automatic", comment: "Name of the automatic audio input device (iOS picks the best mic)"),
-        portType: "automatic"
-    )
+    static var automatic: AudioDevice {
+        AudioDevice(
+            id: "automatic",
+            name: String(localized: "Automatic", bundle: .interface, locale: .interface, comment: "Name of the automatic audio input device (iOS picks the best mic)"),
+            portType: "automatic"
+        )
+    }
 
     /// Check if this is the automatic device
     var isAutomatic: Bool {

@@ -228,16 +228,16 @@ struct HomeView: View {
         guard let reset = usage.resetDate else { return nil }
         let seconds = reset.timeIntervalSince(now)
         guard seconds > 3600 else {
-            return String(localized: "resets soon", comment: "Home quota card: free questions reset in under an hour")
+            return String(localized: "resets soon", bundle: .interface, locale: .interface, comment: "Home quota card: free questions reset in under an hour")
         }
         if seconds >= 86400 {
             let days = Int((seconds / 86400).rounded(.up))
             return days == 1
-                ? String(localized: "resets in 1 day", comment: "Home quota card: one day until the free-question reset")
-                : String(localized: "resets in \(days) days", comment: "Home quota card: days until the free-question reset")
+                ? String(localized: "resets in 1 day", bundle: .interface, locale: .interface, comment: "Home quota card: one day until the free-question reset")
+                : String(localized: "resets in \(days) days", bundle: .interface, locale: .interface, comment: "Home quota card: days until the free-question reset")
         }
         let hours = Int((seconds / 3600).rounded(.up))
-        return String(localized: "resets in \(hours) hours", comment: "Home quota card: hours until the free-question reset")
+        return String(localized: "resets in \(hours) hours", bundle: .interface, locale: .interface, comment: "Home quota card: hours until the free-question reset")
     }
 
     // MARK: - Setting pills (#194 C1, was the config card)

@@ -118,8 +118,13 @@ final class PersistenceStore: PersistenceStoreProtocol {
     /// fine, while a full list must never stop a quiz from starting.
     static let historyWindow = 5000
 
-    init(userDefaults: UserDefaults = .standard) {
+    /// The phone's language among the app's own (en/sk/cs): what a first
+    /// launch starts the quiz in.
+    private let phoneLanguage: String?
+
+    init(userDefaults: UserDefaults = .standard, phoneLanguage: String? = Bundle.main.preferredLocalizations.first) {
         self.userDefaults = userDefaults
+        self.phoneLanguage = phoneLanguage
     }
 
     // MARK: - Device Identity
@@ -190,7 +195,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
-            return QuizSettings.default
+            return QuizSettings.firstLaunch(phoneLanguage: phoneLanguage)
         }
 
         do {

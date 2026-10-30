@@ -16,13 +16,13 @@ struct ImageQuestionView: View {
     private var imageAccessibilityLabel: String {
         switch question.imageSubtype {
         case "silhouette":
-            return String(localized: "Silhouette image for question", comment: "Accessibility label for a silhouette image question")
+            return String(localized: "Silhouette image for question", bundle: .interface, locale: .interface, comment: "Accessibility label for a silhouette image question")
         case "blind_map":
-            return String(localized: "Map image for question", comment: "Accessibility label for a blind-map image question")
+            return String(localized: "Map image for question", bundle: .interface, locale: .interface, comment: "Accessibility label for a blind-map image question")
         case "hint_image":
-            return String(localized: "Hint image for question", comment: "Accessibility label for a hint image question")
+            return String(localized: "Hint image for question", bundle: .interface, locale: .interface, comment: "Accessibility label for a hint image question")
         default:
-            return String(localized: "Image for question", comment: "Accessibility label for a generic image question")
+            return String(localized: "Image for question", bundle: .interface, locale: .interface, comment: "Accessibility label for a generic image question")
         }
     }
 
@@ -44,13 +44,13 @@ struct ImageQuestionView: View {
                             .font(.system(size: 40))
                             .foregroundColor(Theme.Hangs.Colors.muted.opacity(0.4))
                     }
-                    .accessibilityLabel(String(localized: "Image failed to load", comment: "Accessibility label shown when a question image fails to load"))
+                    .accessibilityLabel(String(localized: "Image failed to load", bundle: .interface, locale: .interface, comment: "Accessibility label shown when a question image fails to load"))
                 case .empty:
                     placeholder {
                         ProgressView()
                             .tint(Theme.Hangs.Colors.action)
                     }
-                    .accessibilityLabel(String(localized: "Loading image", comment: "Accessibility label shown while a question image is loading"))
+                    .accessibilityLabel(String(localized: "Loading image", bundle: .interface, locale: .interface, comment: "Accessibility label shown while a question image is loading"))
                 @unknown default:
                     EmptyView()
                 }

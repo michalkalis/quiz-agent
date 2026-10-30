@@ -230,13 +230,13 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         // Queued and generating read the same to the player (#188 G14): one
         // word on Home and in the pack list.
         case "pending", "in_progress":
-            String(localized: "Preparing", comment: "Custom-pack order status: queued or being generated, not playable yet")
+            String(localized: "Preparing", bundle: .interface, locale: .interface, comment: "Custom-pack order status: queued or being generated, not playable yet")
         case "delivered":
-            String(localized: "Delivered", comment: "Custom-pack order status: pack generated and playable")
+            String(localized: "Delivered", bundle: .interface, locale: .interface, comment: "Custom-pack order status: pack generated and playable")
         case "failed":
-            String(localized: "Failed", comment: "Custom-pack order status: generation failed")
+            String(localized: "Failed", bundle: .interface, locale: .interface, comment: "Custom-pack order status: generation failed")
         case "refunded":
-            String(localized: "Refunded", comment: "Custom-pack order status: the order was refunded")
+            String(localized: "Refunded", bundle: .interface, locale: .interface, comment: "Custom-pack order status: the order was refunded")
         default:
             status
         }

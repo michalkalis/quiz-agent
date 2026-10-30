@@ -343,7 +343,7 @@ struct QuestionView: View {
                     .strokeBorder(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
             )
             .padding(.horizontal, Metrics.gutter)
-            .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
+            .accessibilityLabel(String(localized: "Error: \(error)", bundle: .interface, locale: .interface, comment: "Accessibility label for the in-quiz error banner"))
             .accessibilityIdentifier("question.errorBanner")
     }
 

@@ -39,7 +39,7 @@ struct RoomGuestRulesCard: View {
     }
 
     private var hostPhone: String {
-        String(localized: "the host's phone", comment: "Hra spolu: who reads the questions aloud (Questions read by: the host's phone)")
+        String(localized: "the host's phone", bundle: .interface, locale: .interface, comment: "Hra spolu: who reads the questions aloud (Questions read by: the host's phone)")
     }
 
     private func row(_ label: LocalizedStringKey, value: String, id: String) -> some View {

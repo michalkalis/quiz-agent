@@ -29,12 +29,7 @@ Quiz language
 English
 Quiz language
 English
-Questions, answers and voice
-App language
-English
-App language
-English
-Buttons, labels and settings
+Questions, voice and the whole app
 quiz
 0s
 10s
@@ -139,7 +134,6 @@ settings-language-menu
 settings.language.en
 settings.language.sk
 settings.language.cs
-settings-app-language-row
 settings-thinking-time-menu
 settings.thinkingTime.0
 settings.thinkingTime.10

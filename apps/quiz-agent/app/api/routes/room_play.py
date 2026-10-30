@@ -36,9 +36,12 @@ class QuestionRef(BaseModel):
 class AnswerRequest(QuestionRef):
     # Shown to every player on the reveal screen: invisible characters out,
     # and a blank answer is a 422, not an empty row.
-    answer: Annotated[str, BeforeValidator(
-        lambda v: clean_user_text(v).strip() if isinstance(v, str) else v
-    )] = Field(
+    answer: Annotated[
+        str,
+        BeforeValidator(
+            lambda v: clean_user_text(v).strip() if isinstance(v, str) else v
+        ),
+    ] = Field(
         min_length=1, max_length=200, description="Option key (a–d) or typed text"
     )
 

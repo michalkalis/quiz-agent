@@ -1427,7 +1427,7 @@ final class QuizViewModel: ObservableObject {
                 return
             }
 
-            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", comment: "Quiz could not be started; error detail is appended"))
+            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", bundle: .interface, locale: .interface, comment: "Quiz could not be started; error detail is appended"))
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
@@ -1610,7 +1610,7 @@ final class QuizViewModel: ObservableObject {
                 // confirmed the user is entitled — ask them to retry instead.
                 // (setError transitions to .error directly from the in-flight state.)
                 setError(
-                    message: String(localized: "Your subscription just synced. Please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
+                    message: String(localized: "Your subscription just synced. Please try again.", bundle: .interface, locale: .interface, comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
                     context: context
                 )
             } else {
@@ -1867,7 +1867,7 @@ final class QuizViewModel: ObservableObject {
         voiceCommandCoordinator.abortSkipUndoWindow()
 
         guard let sessionId = currentSession?.id else {
-            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
+            errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -1943,7 +1943,7 @@ final class QuizViewModel: ObservableObject {
                 "error": String(describing: error),
             ])
             guard attemptLedger.owns(attempt, "mcqSubmit.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }
     }
 
@@ -1957,7 +1957,7 @@ final class QuizViewModel: ObservableObject {
         defer { isSubmittingAnswer = false }
 
         guard let sessionId = currentSession?.id else {
-            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
+            errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -2039,7 +2039,7 @@ final class QuizViewModel: ObservableObject {
             )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", bundle: .interface, locale: .interface, comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
 
             Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
         }
@@ -2107,7 +2107,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response, owner: attempt)
         } catch {
             guard attemptLedger.owns(attempt, "skip.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", comment: "Error prefix when skipping a question fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", bundle: .interface, locale: .interface, comment: "Error prefix when skipping a question fails; error detail is appended"))
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
@@ -2145,7 +2145,7 @@ final class QuizViewModel: ObservableObject {
             // Errors here mean the session may still be live on the backend (e.g. a timeout).
             // Surface a banner so the user knows server-side cleanup may not have happened and
             // can retry; do not silently drop a possibly-live session.
-            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
+            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
@@ -2188,7 +2188,7 @@ final class QuizViewModel: ObservableObject {
     /// Resume a saved session
     func resumeSession() async {
         guard persistenceStore.currentSessionId != nil else {
-            errorMessage = String(localized: "No saved session found", comment: "Inline error: no previously saved quiz session exists to resume")
+            errorMessage = String(localized: "No saved session found", bundle: .interface, locale: .interface, comment: "Inline error: no previously saved quiz session exists to resume")
             return
         }
 
@@ -2343,7 +2343,7 @@ final class QuizViewModel: ObservableObject {
         guard let evaluation = response.evaluation else {
             Logger.quiz.error("❌ No evaluation in response, cannot show result")
             setError(
-                message: String(localized: "Could not evaluate your answer. Please try again.", comment: "Shown when the server response contained no evaluation"),
+                message: String(localized: "Could not evaluate your answer. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when the server response contained no evaluation"),
                 context: .submission
             )
             return
@@ -2361,7 +2361,7 @@ final class QuizViewModel: ObservableObject {
         // The associated value bundles question + evaluation together,
         // making it impossible to show stale/mismatched data
         guard let question = currentQuestion else {
-            setError(message: String(localized: "No question to evaluate", comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
+            setError(message: String(localized: "No question to evaluate", bundle: .interface, locale: .interface, comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
             return
         }
 
@@ -2645,7 +2645,7 @@ final class QuizViewModel: ObservableObject {
                     await handleError(
                         error,
                         context: .submission,
-                        fallbackMessage: String(localized: "Couldn't load the next question", comment: "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended")
+                        fallbackMessage: String(localized: "Couldn't load the next question", bundle: .interface, locale: .interface, comment: "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended")
                     )
                     return
                 }

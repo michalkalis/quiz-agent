@@ -163,7 +163,7 @@ final class StoreManager: ObservableObject {
                     // activate (RC product↔entitlement mapping or store-side
                     // failure). Silent success here was the founder's
                     // re-prompt loop — fail loud instead (#96 P1).
-                    let message = String(localized: "The purchase went through but didn't activate. Try Restore purchases — if that doesn't help, contact support.", comment: "Paywall error when a subscription purchase completes without activating the entitlement")
+                    let message = String(localized: "The purchase went through but didn't activate. Try Restore purchases — if that doesn't help, contact support.", bundle: .interface, locale: .interface, comment: "Paywall error when a subscription purchase completes without activating the entitlement")
                     purchaseError = message
                     purchaseState = .failed(message: message)
                     SentryLog.error("purchase success without entitlement", category: .quiz, attributes: ["product": productID])
@@ -255,7 +255,7 @@ final class StoreManager: ObservableObject {
                 purchaseState = .nothingToRestore
             }
         } catch {
-            let message = String(localized: "Failed to restore purchases", comment: "Paywall error shown when restoring previous purchases failed")
+            let message = String(localized: "Failed to restore purchases", bundle: .interface, locale: .interface, comment: "Paywall error shown when restoring previous purchases failed")
             purchaseError = message
             purchaseState = .failed(message: message)
         }

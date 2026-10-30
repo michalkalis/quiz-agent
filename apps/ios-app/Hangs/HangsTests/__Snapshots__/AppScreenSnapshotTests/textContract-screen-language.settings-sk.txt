@@ -29,12 +29,7 @@ Jazyk kvízu
 English
 Jazyk kvízu
 English
-Otázky, odpovede a hlas
-Jazyk aplikácie
-English
-Jazyk aplikácie
-English
-Tlačidlá, popisy a nastavenia
+Otázky, hlas aj celá aplikácia
 kvíz
 0s
 10s
@@ -139,7 +134,6 @@ settings-language-menu
 settings.language.en
 settings.language.sk
 settings.language.cs
-settings-app-language-row
 settings-thinking-time-menu
 settings.thinkingTime.0
 settings.thinkingTime.10

@@ -51,11 +51,11 @@ struct RoundCardRow: View {
             let number = index + 1
             switch outcome {
             case .correct:
-                return String(localized: "Question \(number), correct", comment: "VoiceOver: one question of the finished round, answered right")
+                return String(localized: "Question \(number), correct", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the finished round, answered right")
             case .incorrect:
-                return String(localized: "Question \(number), incorrect", comment: "VoiceOver: one question of the finished round, answered wrong or partly right")
+                return String(localized: "Question \(number), incorrect", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the finished round, answered wrong or partly right")
             case .skipped:
-                return String(localized: "Question \(number), skipped", comment: "VoiceOver: one question of the finished round, skipped")
+                return String(localized: "Question \(number), skipped", bundle: .interface, locale: .interface, comment: "VoiceOver: one question of the finished round, skipped")
             }
         }
         .joined(separator: ". ")

@@ -680,7 +680,7 @@ struct ListenBar: View {
             .buttonStyle(.plain)
             // Sits in the trailing padding this bar reserves for it (40–44pt).
             .padding(.trailing, Theme.Hangs.Spacing.xxs)
-            .accessibilityLabel(String(localized: "Hide the listening bar", comment: "Accessibility label for the button that hides the in-quiz listening bar for the current question"))
+            .accessibilityLabel(String(localized: "Hide the listening bar", bundle: .interface, locale: .interface, comment: "Accessibility label for the button that hides the in-quiz listening bar for the current question"))
             .accessibilityIdentifier("listen-bar.dismiss")
         }
     }

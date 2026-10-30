@@ -31,7 +31,8 @@ final class AppConfigStore: ObservableObject {
     private let fetch: Fetch
     private let defaults: UserDefaults
     private let appVersion: String
-    private let languageCode: String
+    private let interfaceLanguage: () -> String
+    private var languageCode: String { interfaceLanguage() }
 
     /// The channel decides which minimum applies and where "update" leads.
     let isTestFlight: Bool
@@ -76,13 +77,13 @@ final class AppConfigStore: ObservableObject {
         defaults: UserDefaults = .standard,
         appVersion: String = AppVersion.current,
         isTestFlight: Bool = BuildChannel.isTestFlight(),
-        languageCode: String = Bundle.main.preferredLocalizations.first ?? "en"
+        languageCode: @autoclosure @escaping () -> String = InterfaceLanguage.code
     ) {
         self.fetch = fetch
         self.defaults = defaults
         self.appVersion = appVersion
         self.isTestFlight = isTestFlight
-        self.languageCode = languageCode
+        interfaceLanguage = languageCode
         #if DEBUG
             // UI tests run on a long-lived simulator: a notice dismissed in one
             // run must not hide it from the next.

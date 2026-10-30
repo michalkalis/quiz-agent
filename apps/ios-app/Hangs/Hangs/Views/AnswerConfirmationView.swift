@@ -198,7 +198,7 @@ struct AnswerConfirmationView: View {
                             .frame(width: Metrics.chip, height: Metrics.chip)
                             .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
-                    .accessibilityLabel(String(localized: "Cancel editing", comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
+                    .accessibilityLabel(String(localized: "Cancel editing", bundle: .interface, locale: .interface, comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.editCancel")
                 } else {
                     Button {
@@ -210,7 +210,7 @@ struct AnswerConfirmationView: View {
                             .frame(width: Metrics.chip, height: Metrics.chip)
                             .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
-                    .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
+                    .accessibilityLabel(String(localized: "Edit answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.edit")
                     .disabled(isEvaluating)
                     .opacity(isEvaluating ? 0.45 : 1)
@@ -235,7 +235,7 @@ struct AnswerConfirmationView: View {
                     // muted tone marks it as the app's report, not the driver's
                     // words. Confirm here submits "no answer".
                     HangsQuestionPrompt(
-                        text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
+                        text: String(localized: "Nothing heard", bundle: .interface, locale: .interface, comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
                         barColor: Theme.Hangs.Colors.track,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.muted,
@@ -250,7 +250,7 @@ struct AnswerConfirmationView: View {
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
                     )
-                    .accessibilityLabel(String(localized: "Your transcribed answer: \(displayedAnswer)", comment: "Accessibility label reading back the user's transcribed answer"))
+                    .accessibilityLabel(String(localized: "Your transcribed answer: \(displayedAnswer)", bundle: .interface, locale: .interface, comment: "Accessibility label reading back the user's transcribed answer"))
                     .accessibilityIdentifier("confirmation.answer")
                 }
             }
@@ -316,10 +316,10 @@ struct AnswerConfirmationView: View {
                     // "no answer" and submits as such. Disabling it was what left an
                     // empty recording with no way off the sheet but a re-record.
                     .accessibilityLabel(isEmptyAnswer
-                        ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
+                        ? String(localized: "Confirm without an answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
                         : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
-                        ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
-                        : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
+                        ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm button while auto-confirm counts down")
+                        : String(localized: "Confirm answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm-answer button"))
                     .accessibilityIdentifier("confirmation.confirm")
                 }
                 .padding(.top, 14)
@@ -437,7 +437,7 @@ struct AnswerConfirmationView: View {
                         .tracking(-1)
                         .foregroundColor(Theme.Hangs.Colors.ink)
                 }
-                .accessibilityLabel(String(localized: "Processing your answer", comment: "Accessibility label for the processing state on the answer confirmation sheet"))
+                .accessibilityLabel(String(localized: "Processing your answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the processing state on the answer confirmation sheet"))
             }
 
             Spacer(minLength: 0)
@@ -446,7 +446,7 @@ struct AnswerConfirmationView: View {
                 HangsSecondaryButton(title: "voice.cancel", icon: "xmark") {
                     onCancel()
                 }
-                .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))
+                .accessibilityLabel(String(localized: "Cancel processing", bundle: .interface, locale: .interface, comment: "Accessibility label for the cancel-processing button"))
                 .accessibilityIdentifier("confirmation.cancel")
             }
         }

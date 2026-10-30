@@ -68,7 +68,7 @@ struct ProfileView: View {
                     .glassEffect(.regular.interactive(), in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: "Settings", comment: "Accessibility label for the settings navigation button"))
+            .accessibilityLabel(String(localized: "Settings", bundle: .interface, locale: .interface, comment: "Accessibility label for the settings navigation button"))
             .accessibilityIdentifier("profile.settings")
         }
         .padding(.leading, Theme.Hangs.Spacing.xxs)

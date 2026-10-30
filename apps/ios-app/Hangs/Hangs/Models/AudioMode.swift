@@ -15,23 +15,25 @@ struct AudioMode: Identifiable, Hashable, Sendable {
     let icon: String  // SF Symbol name for UI
 
     /// All supported audio modes
-    static let supportedModes: [AudioMode] = [
-        AudioMode(
-            id: "call",
-            name: String(localized: "Call Mode", comment: "Audio mode name: uses the Bluetooth call channel"),
-            description: String(localized: "Uses Bluetooth microphone (may show as phone call in car)", comment: "Audio mode explanation for Call Mode"),
-            icon: "phone.fill"
-        ),
-        AudioMode(
-            id: "media",
-            name: String(localized: "Media Mode", comment: "Audio mode name: car-friendly media channel"),
-            description: String(localized: "Car-friendly audio (built-in mic only, no call UI)", comment: "Audio mode explanation for Media Mode"),
-            icon: "car.fill"
-        )
-    ]
+    static var supportedModes: [AudioMode] {
+        [
+            AudioMode(
+                id: "call",
+                name: String(localized: "Call Mode", bundle: .interface, locale: .interface, comment: "Audio mode name: uses the Bluetooth call channel"),
+                description: String(localized: "Uses Bluetooth microphone (may show as phone call in car)", bundle: .interface, locale: .interface, comment: "Audio mode explanation for Call Mode"),
+                icon: "phone.fill"
+            ),
+            AudioMode(
+                id: "media",
+                name: String(localized: "Media Mode", bundle: .interface, locale: .interface, comment: "Audio mode name: car-friendly media channel"),
+                description: String(localized: "Car-friendly audio (built-in mic only, no call UI)", bundle: .interface, locale: .interface, comment: "Audio mode explanation for Media Mode"),
+                icon: "car.fill"
+            )
+        ]
+    }
 
     /// Default mode (Media Mode - car-friendly, no call UI)
-    static let `default` = supportedModes[1]
+    static var `default`: AudioMode { supportedModes[1] }
 
     /// Find mode by ID
     /// - Parameter id: Mode identifier ("call" or "media")

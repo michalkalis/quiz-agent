@@ -1011,26 +1011,26 @@ enum NetworkError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return String(localized: "Invalid server response", comment: "Network error: server returned a malformed response")
+            return String(localized: "Invalid server response", bundle: .interface, locale: .interface, comment: "Network error: server returned a malformed response")
         case .invalidURL:
-            return String(localized: "Invalid URL", comment: "Network error: the request URL could not be built")
+            return String(localized: "Invalid URL", bundle: .interface, locale: .interface, comment: "Network error: the request URL could not be built")
         case let .decodingError(error):
-            return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Network error: response body could not be decoded; placeholder is the underlying error")
+            return String(localized: "Failed to decode response: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Network error: response body could not be decoded; placeholder is the underlying error")
         case let .serverError(_, message):
             // Server-provided message, already localized by the backend — do not wrap.
             return message
         case .quotaLimitReached:
-            return String(localized: "Free question limit reached", comment: "Network error: user hit the free monthly question quota")
+            return String(localized: "Free question limit reached", bundle: .interface, locale: .interface, comment: "Network error: user hit the free monthly question quota")
         case .sessionNotFound:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:
-            return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
+            return String(localized: "The quiz moved on to another question", bundle: .interface, locale: .interface, comment: "Network error: the answer was submitted for a question the session is no longer on")
         case .answerNotCaptured:
-            return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
+            return String(localized: "I didn't catch your answer, please try again.", bundle: .interface, locale: .interface, comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
         case .sessionFinished:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .packExhausted:
-            return String(localized: "You've played every question in this pack.", comment: "A custom pack has nothing left this phone has not played")
+            return String(localized: "You've played every question in this pack.", bundle: .interface, locale: .interface, comment: "A custom pack has nothing left this phone has not played")
         }
     }
 }

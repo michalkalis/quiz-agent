@@ -864,9 +864,9 @@ enum AuthError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .notSignedIn:
-            return String(localized: "Not signed in", comment: "Auth error: no active session")
+            return String(localized: "Not signed in", bundle: .interface, locale: .interface, comment: "Auth error: no active session")
         case let .serverError(code):
-            return String(localized: "Server error (\(code))", comment: "Auth error: server returned non-2xx; placeholder is the HTTP status code")
+            return String(localized: "Server error (\(code))", bundle: .interface, locale: .interface, comment: "Auth error: server returned non-2xx; placeholder is the HTTP status code")
         }
     }
 }

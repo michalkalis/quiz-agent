@@ -93,7 +93,7 @@ struct ErrorView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Theme.Hangs.Spacing.sm)
-                .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
+                .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", bundle: .interface, locale: .interface, comment: "Accessibility label for the error screen: error title and description"))
                 .accessibilityIdentifier("error.description")
         }
     }

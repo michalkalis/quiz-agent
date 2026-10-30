@@ -39,6 +39,12 @@ final class AppState: ObservableObject {
     /// #197: car answer recordings → backend (production only; nil in UI tests).
     private var answerRecordingUploader: AnswerRecordingUploader?
 
+    /// The interface language's locale, set on the app root (founder
+    /// 2026-10-30: the whole app speaks the quiz language).
+    @Published private(set) var interfaceLocale = InterfaceLanguage.locale
+    private var quizLanguageSubscription: AnyCancellable?
+    private var followQuizLanguage: (String) -> Void = InterfaceLanguage.follow
+
     /// The `app_opened` launch kind still to report: cold until the first
     /// activation, then foreground after every trip to the background.
     private var pendingAppOpen: AppLaunchKind? = .cold
@@ -258,6 +264,10 @@ final class AppState: ObservableObject {
             }
         }
 
+        // Before the first frame, so the app never opens in the phone's language.
+        followQuizLanguage(persistenceStore.loadSettings().language)
+        interfaceLocale = InterfaceLanguage.locale
+
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
         Logger.quiz.info("🔇 Silence detection: available")
@@ -277,8 +287,10 @@ final class AppState: ObservableObject {
         questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
         analytics: AnalyticsClient = NoopAnalyticsClient(),
         roomService: RoomServiceProtocol = MockRoomService(),
-        playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService()
+        playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService(),
+        followQuizLanguage: @escaping (String) -> Void = { _ in }
     ) {
+        self.followQuizLanguage = followQuizLanguage
         self.networkService = networkService
         self.roomService = roomService
         self.playerStatsService = playerStatsService
@@ -570,6 +582,16 @@ final class AppState: ObservableObject {
             }
         #endif
 
+        quizLanguageSubscription = viewModel.$settings
+            .map(\.language)
+            .removeDuplicates()
+            .sink { [weak self] language in
+                self?.followQuizLanguage(language)
+                // The first value arrives while the root view is being built:
+                // publish only a real change.
+                let locale = InterfaceLanguage.locale
+                if self?.interfaceLocale != locale { self?.interfaceLocale = locale }
+            }
         quizViewModel = viewModel
 
         #if DEBUG

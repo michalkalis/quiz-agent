@@ -51,8 +51,8 @@ struct HomePackRow: View {
             .buttonStyle(.plain)
             .disabled(isPlayDisabled)
             .accessibilityHint(isStarting
-                ? String(localized: "Loading", comment: "Accessibility label: the custom pack's quiz is starting")
-                : String(localized: "Start quiz", comment: "Accessibility label: play this custom pack from Home"))
+                ? String(localized: "Loading", bundle: .interface, locale: .interface, comment: "Accessibility label: the custom pack's quiz is starting")
+                : String(localized: "Start quiz", bundle: .interface, locale: .interface, comment: "Accessibility label: play this custom pack from Home"))
             .accessibilityIdentifier("home.myPacks.play")
         } else {
             rowContent(showsPlay: false)

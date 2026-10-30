@@ -176,10 +176,11 @@ struct HomePlanCard: View {
     /// expire with the monthly reset.
     private func freeMetaText(hasCredits: Bool) -> String {
         let base = HomeView.resetCountdown(usage)
-            ?? String(localized: "resets soon", comment: "Home plan card: free questions reset in under an hour")
+            ?? String(localized: "resets soon", bundle: .interface, locale: .interface, comment: "Home plan card: free questions reset in under an hour")
         guard hasCredits else { return base }
         return String(
             localized: "\(base) · credits never expire",
+            bundle: .interface, locale: .interface,
             comment: "Home plan card meta when a free user also holds pack credits: reset countdown plus that credits don't expire"
         )
     }
@@ -282,7 +283,7 @@ struct HomePlanCard: View {
     /// groups: "1000").
     private func allowanceMeta(remaining: Int, limit: Int) -> Text {
         let reset = HomeView.resetCountdown(usage)
-            ?? String(localized: "resets soon", comment: "Home plan card: free questions reset in under an hour")
+            ?? String(localized: "resets soon", bundle: .interface, locale: .interface, comment: "Home plan card: free questions reset in under an hour")
         return Text("\(remaining, format: .number) of \(limit, format: .number) left · \(reset)")
     }
 

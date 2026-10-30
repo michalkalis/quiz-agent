@@ -208,6 +208,6 @@ enum StoreError: LocalizedError {
     case failedVerification
 
     var errorDescription: String? {
-        String(localized: "Purchase verification failed", comment: "Purchase error: the store receipt could not be verified")
+        String(localized: "Purchase verification failed", bundle: .interface, locale: .interface, comment: "Purchase error: the store receipt could not be verified")
     }
 }

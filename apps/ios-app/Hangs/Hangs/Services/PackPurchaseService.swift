@@ -65,13 +65,13 @@ enum PackPurchaseError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .productUnavailable:
-            return String(localized: "The pack product isn't available right now. Please try again later.", comment: "Pack purchase error: App Store returned no product for the custom-pack id")
+            return String(localized: "The pack product isn't available right now. Please try again later.", bundle: .interface, locale: .interface, comment: "Pack purchase error: App Store returned no product for the custom-pack id")
         case .cancelled:
-            return String(localized: "Purchase cancelled. You have not been charged.", comment: "Pack purchase error: user dismissed the App Store payment sheet")
+            return String(localized: "Purchase cancelled. You have not been charged.", bundle: .interface, locale: .interface, comment: "Pack purchase error: user dismissed the App Store payment sheet")
         case .pending:
-            return String(localized: "Your purchase is awaiting approval. Once it's approved, come back and try again.", comment: "Pack purchase error: Ask to Buy / pending authorization")
+            return String(localized: "Your purchase is awaiting approval. Once it's approved, come back and try again.", bundle: .interface, locale: .interface, comment: "Pack purchase error: Ask to Buy / pending authorization")
         case .unverified:
-            return String(localized: "The App Store receipt could not be verified. Please try again.", comment: "Pack purchase error: StoreKit verification of the transaction failed")
+            return String(localized: "The App Store receipt could not be verified. Please try again.", bundle: .interface, locale: .interface, comment: "Pack purchase error: StoreKit verification of the transaction failed")
         }
     }
 }

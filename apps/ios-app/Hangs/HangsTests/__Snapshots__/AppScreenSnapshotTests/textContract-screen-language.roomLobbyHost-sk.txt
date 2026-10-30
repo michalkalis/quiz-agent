@@ -29,7 +29,7 @@ At the end of the quiz
 Čítať otázky nahlas
 
 Platí pre všetkých hráčov. Tvoje sólo nastavenia ostávajú.
-10 otázok · Medium
+10 otázok · Random
 Začni hru
 # identifiers
 room.close

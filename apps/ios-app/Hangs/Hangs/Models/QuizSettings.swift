@@ -169,7 +169,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         audioMode: "media",
         numberOfQuestions: 10,
         categories: [],
-        difficulty: "medium",
+        difficulty: Config.defaultDifficulty,
         autoAdvanceDelay: 8,
         thinkingTime: 10,
         preferredInputDeviceId: nil,

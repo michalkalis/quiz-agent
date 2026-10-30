@@ -107,6 +107,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
     private let legacyMuteClearedKey = "mute_preference_cleared_173"
+    private let difficultyDefaultMovedKey = "difficulty_default_random_216"
     private let historyKey = "asked_question_history"
     private let packProgressKey = "pack_played_question_ids"
     private let statsKey = "quiz_stats"
@@ -182,6 +183,9 @@ final class PersistenceStore: PersistenceStoreProtocol {
         // mute would be wiped as "legacy" on the next launch.
         let legacyMutePending = !userDefaults.bool(forKey: legacyMuteClearedKey)
         userDefaults.set(true, forKey: legacyMuteClearedKey)
+        // #216: spent on the first load like the #173 marker, for the same reason.
+        let difficultyMovePending = !userDefaults.bool(forKey: difficultyDefaultMovedKey)
+        userDefaults.set(true, forKey: difficultyDefaultMovedKey)
 
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
@@ -195,11 +199,23 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
             Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
-            return legacyMutePending ? clearingLegacyMute(settings) : settings
+            let cleaned = legacyMutePending ? clearingLegacyMute(settings) : settings
+            return difficultyMovePending ? movingOffOldDefaultDifficulty(cleaned) : cleaned
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
+    }
+
+    /// #216 (founder 2026-10-30): the default moved from Medium to Random. A
+    /// saved Medium is almost always the old default written back by the
+    /// auto-persist sink, and nothing on disk tells it apart from a deliberate
+    /// pick, so it moves to the new default exactly once.
+    private func movingOffOldDefaultDifficulty(_ settings: QuizSettings) -> QuizSettings {
+        guard settings.difficulty == "medium" else { return settings }
+        var moved = settings
+        moved.difficulty = Config.defaultDifficulty
+        return moved
     }
 
     /// One-time cleanup of a persisted mute that was never a preference (#173).

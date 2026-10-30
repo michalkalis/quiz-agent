@@ -74,8 +74,9 @@ nonisolated enum Config {
     /// Default number of questions per quiz
     static let defaultQuestions = 10
 
-    /// Default quiz difficulty
-    static let defaultDifficulty = "medium"
+    /// Default quiz difficulty: a mix, each question's level picked by the
+    /// server (#216, founder 2026-10-30).
+    static let defaultDifficulty = "random"
 
     /// Session expiry time in minutes (should match backend TTL)
     static let sessionTTLMinutes = 30

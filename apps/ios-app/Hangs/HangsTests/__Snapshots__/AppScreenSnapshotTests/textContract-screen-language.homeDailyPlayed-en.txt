@@ -19,7 +19,7 @@ Medium
 Hard
 Random
 Difficulty
-Medium
+Random
 Categories
 All Categories
 your plan

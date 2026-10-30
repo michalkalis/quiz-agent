@@ -180,6 +180,46 @@ struct PersistenceStoreSessionTests {
         #expect(store.loadSettings().isMuted == true)
     }
 
+    // MARK: - #216: default difficulty moved from Medium to Random
+
+    /// The founder's TestFlight phone still started on Medium after the default
+    /// changed: the old default was saved back to disk and reads like a pick.
+    /// A fresh install must start mixed without any saved blob.
+    @Test("a fresh install starts on the mixed difficulty")
+    func freshInstallStartsRandom() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        #expect(store.loadSettings().difficulty == "random")
+    }
+
+    @Test("a saved Medium moves to Random once; a later Medium pick sticks")
+    func savedMediumMovesOnce() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        var medium = QuizSettings.default
+        medium.difficulty = "medium"
+        store.saveSettings(medium)
+
+        #expect(store.loadSettings().difficulty == "random", "the old default must not survive the update")
+
+        store.saveSettings(medium)
+        #expect(store.loadSettings().difficulty == "medium", "Medium picked after the update is a real choice")
+    }
+
+    @Test("a saved Hard or Easy is a real choice and is never moved")
+    func otherDifficultiesStay() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        var hard = QuizSettings.default
+        hard.difficulty = "hard"
+        store.saveSettings(hard)
+
+        #expect(store.loadSettings().difficulty == "hard")
+    }
+
     // MARK: - Legacy Keys Ignored
 
     @Test("loadSettings ignores stale legacy individual keys")

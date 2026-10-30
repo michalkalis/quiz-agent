@@ -29,7 +29,7 @@ Answer time
 Read questions aloud
 
 Applies to all players. Your solo settings stay as they are.
-10 questions · Medium
+10 questions · Random
 Start the game
 # identifiers
 room.close

@@ -215,6 +215,10 @@ final class PersistenceStore: PersistenceStoreProtocol {
         guard settings.difficulty == "medium" else { return settings }
         var moved = settings
         moved.difficulty = Config.defaultDifficulty
+        // Written back like the #173 mute cleanup: the marker is spent on this
+        // read, and launch reads settings twice (AppState for the speech
+        // recognizer's language, then the quiz view model).
+        saveSettings(moved)
         return moved
     }
 

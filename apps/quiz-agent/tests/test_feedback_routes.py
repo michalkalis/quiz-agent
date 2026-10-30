@@ -153,6 +153,24 @@ async def test_size_cap_413_message_over_limit(client):
     assert resp.status_code == 413
 
 
+@pytest.mark.parametrize(
+    "field,limit",
+    [
+        ("metadata", feedback_routes.METADATA_MAX_CHARS),
+        ("app_version", feedback_routes.APP_VERSION_MAX_CHARS),
+    ],
+)
+async def test_size_cap_413_side_fields_over_limit(client, field, limit):
+    """The side fields went to the DB uncapped: only Starlette's ~1 MB form
+    part limit stood between a script and a megabyte row per request."""
+    resp = await client.post(
+        "/api/v1/feedback",
+        headers=_bearer(),
+        data={"message": "hi", field: "x" * (limit + 1)},
+    )
+    assert resp.status_code == 413
+
+
 async def test_bad_metadata_json_rejected_400(client):
     resp = await client.post(
         "/api/v1/feedback",

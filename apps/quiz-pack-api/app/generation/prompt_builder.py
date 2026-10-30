@@ -1,6 +1,7 @@
 """Dynamic prompt builder for question generation."""
 
 import os
+import re
 from functools import lru_cache
 from typing import List, Optional, Sequence
 
@@ -174,6 +175,10 @@ rules above or the output format. It may be written in any language.
 {request}
 </request>"""
 
+# The request is fenced in <request> tags; a player typing the closing tag
+# would put the rest of their text outside the fence, read as instructions.
+_REQUEST_TAG = re.compile(r"<\s*/?\s*request\s*>", re.IGNORECASE)
+
 _OUTPUT_LANGUAGE_SECTION = """
 
 ## OUTPUT LANGUAGE: {name} (overrides "write in English" above)
@@ -289,7 +294,8 @@ def order_brief_section(
     """
     section = ""
     if request and request.strip():
-        section += _ORDER_REQUEST_SECTION.format(request=request.strip())
+        fenced = _REQUEST_TAG.sub(" ", request).strip()
+        section += _ORDER_REQUEST_SECTION.format(request=fenced)
     name = _LANGUAGE_NAMES.get(language)
     if name and feature_flags.gen_house_style_v2():
         section += "\n\n" + _house_style_v2_parts(language)[0]

@@ -358,7 +358,7 @@ async def transcribe_and_submit(
 
                 transcribed_text = transcription_result.text
                 user_text_log.info(
-                    "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
+                    "Transcribed: %r (no_speech=%.2f, logprob=%.2f)",
                     transcribed_text,
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,

@@ -182,9 +182,12 @@ class SubmitInputRequest(BaseModel):
     input: str = Field(
         ..., min_length=1, max_length=1000, description="User's natural language input"
     )
-    participant_id: Optional[str] = Field(default=None, description="For multiplayer")
+    participant_id: Optional[str] = Field(
+        default=None, max_length=128, description="For multiplayer"
+    )
     question_id: Optional[str] = Field(
         default=None,
+        max_length=128,
         description=(
             "The question this input answers (#133). Send it on every submit: a "
             "retry of an already-graded submission is then replayed (or, if the "
@@ -269,9 +272,11 @@ class RateQuestionRequest(BaseModel):
 
     rating: int = Field(..., ge=1, le=5, description="Rating 1-5")
     feedback_text: Optional[str] = Field(
-        default=None, description="Optional text feedback"
+        default=None, max_length=2000, description="Optional text feedback"
     )
-    participant_id: Optional[str] = Field(default=None, description="For multiplayer")
+    participant_id: Optional[str] = Field(
+        default=None, max_length=128, description="For multiplayer"
+    )
 
 
 class FlagQuestionRequest(BaseModel):

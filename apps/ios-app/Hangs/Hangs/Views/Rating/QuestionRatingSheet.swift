@@ -133,6 +133,7 @@ struct QuestionRatingSheet: View {
                     .scrollContentBackground(.hidden)
                     .disabled(viewModel.isSubmitting)
                     .accessibilityIdentifier("rating.justification")
+                    .limitLength($viewModel.justification, to: TextInputLimit.ratingReason)
                     .overlay(alignment: .topLeading) {
                         if viewModel.justification.isEmpty {
                             Text("Why this score? Say it or type it.")

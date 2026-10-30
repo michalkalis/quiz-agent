@@ -245,8 +245,9 @@ final class RoomViewModel: ObservableObject, Identifiable {
     }
 
     func submitTypedAnswer() async {
-        guard let text = PlayerNameStore.cleaned(typedAnswer) else { return }
-        await submit(String(text.prefix(Self.maxAnswerLength)))
+        let text = typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        await submit(text.prefix(scalars: Self.maxAnswerLength))
     }
 
     static let maxAnswerLength = 200

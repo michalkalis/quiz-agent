@@ -18,19 +18,6 @@ Náročnosť
 Random
 Kategórie
 All Categories
-tvoj plán
-Trubbo Plus
-aktívne
-Spravuj
-Trubbo Plus
-aktívne
-Spravuj
-Trubbo Plus
-aktívne
-Spravuj
-100 kreditov z balíka v zálohe
-Ešte 870 z 1 000 · resets in 13 days
-Ešte 870 z 1 000 · resets in 13 days
 trubbo
 Štart
 # identifiers
@@ -44,19 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.planManageButton
-home.freePlanCard
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planCreditChip
-home.planMeta
-home.planMeta
 home.startQuiz

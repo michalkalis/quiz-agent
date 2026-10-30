@@ -14,12 +14,12 @@ logo v lište; prechod pri rolovaní robí systém (Apple docs ToolbarItemPlacem
 
 ## Úlohy
 
-- [ ] **216.1 Náročnosť predvolene Náhodná** — `QuizSettings.default` + `Config.defaultDifficulty`
+- [x] **216.1 Náročnosť predvolene Náhodná** (PR #645) — `QuizSettings.default` + `Config.defaultDifficulty`
   → `random` (server vyberá náročnosť pre každú otázku zvlášť, `question_retriever._determine_difficulty`).
   Jednorazový prechod: uložené `medium` → `random` raz na zariadení (predpoklad: nikto si Strednú
   vedome nevybral; dnes sa to rozlíšiť nedá). Test: nové nastavenia = random; staré medium sa
   prepne raz, iná voľba ostane.
-- [ ] **216.2 Karta Spolu + obrazovka Hraj**
+- [x] **216.2 Karta Spolu + obrazovka Hraj** (PR #646; v lište po rolovaní nápis „Hraj“, nie malé logo — natívny slot pre malé logo sa na iOS 27 zobrazoval aj v pokoji)
   - Tretia karta „Spolu“ (`person.2`) medzi Hraj a Profil, len keď je serverový prepínač
     `multiplayer_enabled` zapnutý (obchodná verzia bez neho kartu nemá).
   - Obsah karty = dnešná úvodná obrazovka hry spolu (hry v tejto Wi‑Fi, Založ hru, QR rada).
@@ -31,7 +31,7 @@ logo v lište; prechod pri rolovaní robí systém (Apple docs ToolbarItemPlacem
     presvitá so systémovým efektom okraja.
   - Lišta s kartami sa pri rolovaní dole zmenší (`tabBarMinimizeBehavior(.onScrollDown)`).
   - Meranie: udalosť `together_opened` pri otvorení karty (taxonómia + iOS v tom istom PR).
-- [ ] **216.3 Profil S1 + plán**
+- [x] **216.3 Profil S1 + plán** (PR po #646)
   - Karta „tvoj plán“ z Hraj do Profilu (pod účet), rovnaké stavy a ťuky ako dnes.
   - Riadok „Moje balíky“ z Profilu preč (balíky ostávajú na Hraj a v Nastaveniach).
   - Najnovší prehľad (prvý / mesiac / rok) ako jedna karta s tromi číslami: celkom otázok,

@@ -18,20 +18,6 @@ Náročnosť
 Random
 Kategórie
 All Categories
-tvoj plán
-118
-otázok k dispozícii
-Viac
-118
-otázok k dispozícii
-Viac
-118
-otázok k dispozícii
-Viac
-18 mesačne zadarmo
-100 kreditov z balíka
-resets in 13 days · credits never expire
-resets in 13 days · credits never expire
 trubbo
 Štart
 # identifiers
@@ -45,19 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planLegend
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

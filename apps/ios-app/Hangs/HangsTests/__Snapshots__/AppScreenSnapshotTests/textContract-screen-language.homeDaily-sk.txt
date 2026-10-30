@@ -21,18 +21,6 @@ Náročnosť
 Random
 Kategórie
 All Categories
-tvoj plán
-18
-z 30 otázok zadarmo
-Získaj Plus
-18
-z 30 otázok zadarmo
-Získaj Plus
-18
-z 30 otázok zadarmo
-Získaj Plus
-resets in 13 days
-resets in 13 days
 trubbo
 Štart
 # identifiers
@@ -48,18 +36,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

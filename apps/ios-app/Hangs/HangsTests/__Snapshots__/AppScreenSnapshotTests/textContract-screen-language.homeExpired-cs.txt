@@ -18,21 +18,6 @@ Obtížnost
 Random
 Kategorie
 All Categories
-tvůj plán
-30
-z 30 otázek zdarma
-skončilo
-Obnov předplatné
-30
-z 30 otázek zdarma
-skončilo
-Obnov předplatné
-30
-z 30 otázek zdarma
-skončilo
-Obnov předplatné
-resets in 13 days
-resets in 13 days
 trubbo
 Start
 # identifiers
@@ -46,21 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.planStatusPill
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.planStatusPill
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.planStatusPill
-home.freePlanUpgrade
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

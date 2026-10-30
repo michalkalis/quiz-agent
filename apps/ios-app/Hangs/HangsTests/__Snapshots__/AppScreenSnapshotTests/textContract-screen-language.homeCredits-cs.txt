@@ -18,20 +18,6 @@ Obtížnost
 Random
 Kategorie
 All Categories
-tvůj plán
-118
-otázek k dispozici
-Více
-118
-otázek k dispozici
-Více
-118
-otázek k dispozici
-Více
-18 měsíčně zdarma
-100 kreditů z balíčku
-resets in 13 days · credits never expire
-resets in 13 days · credits never expire
 trubbo
 Start
 # identifiers
@@ -45,19 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planLegend
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

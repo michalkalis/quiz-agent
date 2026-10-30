@@ -1,6 +1,6 @@
 // The answer card (founder 2026-10-25): the answer big (read aloud by the
 // app voice), then the explanation shown under it, not read. No repeat of the
-// question: the card comes right after it (founder 2026-10-30). Rounds show the explanation's first sentence; the one-question reel
+// question or its number: the card comes right after it (founder 2026-10-30). Rounds show the explanation's first sentence; the one-question reel
 // shows all of it.
 import React from 'react';
 import {COPY} from './copy';
@@ -13,17 +13,17 @@ const LABEL = {fontSize: 32, fontWeight: 700, textTransform: 'uppercase', letter
 
 export const AnswerReveal: React.FC<{
 	q: ReelQuestion;
-	/** The question's number in a round; none in a one-question reel. */
-	number?: number;
+	/** In a round: the shorter explanation fit. */
+	round?: boolean;
 	/** The explanation text to show: the first sentence (round) or the whole explanation. */
 	text: string;
 	appear: number;
 	/** 0 → 1 as the explanation comes in, after the answer is said. */
 	why: number;
 	startFrame: number;
-}> = ({q, number, text, appear, why, startFrame}) => {
+}> = ({q, round, text, appear, why, startFrame}) => {
 	const copy = COPY[q.language];
-	const whole = number === undefined;
+	const whole = !round;
 	// Text column = reel width (920) − card padding (104).
 	const fit = fitWhy(text, whole ? {width: 920 - 104, maxLines: 9, size: 42, minSize: 32} : {width: 920 - 104, maxLines: 5, size: 44, minSize: 36});
 	const label = q.correctIndex !== null ? ` ${q.labels[q.correctIndex]}` : '';
@@ -31,7 +31,6 @@ export const AnswerReveal: React.FC<{
 		<div style={{background: SURF, borderRadius: 44, padding: '44px 52px 48px', boxShadow: '0 22px 44px rgba(17,18,22,.18)', opacity: appear, transform: `scale(${0.94 + 0.06 * appear})`}}>
 			<div style={{display: 'flex', gap: 24, alignItems: 'center'}}>
 				<div style={{flex: 1, minWidth: 0}}>
-					{number !== undefined ? <div style={{...LABEL, fontSize: 28, color: INK2, marginBottom: 8}}>{`${copy.question} ${number}`}</div> : null}
 					<div style={{...LABEL, color: OK}}>
 						{copy.answer}
 						{label}

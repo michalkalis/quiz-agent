@@ -64,7 +64,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 				{audio}
 				<Tally n={k} of={items.length} color={tint.onBg} />
 				<div style={{position: 'absolute', top: SAFE.top + 90, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom}}>
-					<AnswerReveal key={k} q={it.q} number={k + 1} text={it.q.why} appear={enter(r.start, 16)} why={enter(r.whyStart, 20)} startFrame={f(r.start, fps)} />
+					<AnswerReveal key={k} q={it.q} round text={it.q.why} appear={enter(r.start, 16)} why={enter(r.whyStart, 20)} startFrame={f(r.start, fps)} />
 				</div>
 			</AbsoluteFill>
 		);

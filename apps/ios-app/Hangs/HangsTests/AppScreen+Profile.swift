@@ -2,9 +2,9 @@
 //  AppScreen+Profile.swift
 //  HangsTests
 //
-//  #213.4: the Profile tab — a signed-in subscriber with most cards open, a
-//  new anonymous player on the way to the first recap, and a failed load.
-//  #213.5: the subscriber has a new October recap; its story slides.
+//  #213.4 / #216.3: the Profile tab — a signed-in subscriber with the October
+//  recap card, a new anonymous player on the way to the first recap; All stats
+//  with most cards open and after a failed load; the picture Share sends.
 //
 
 import Foundation
@@ -33,20 +33,21 @@ extension AppScreen {
         await model.refresh().value
         // No NavigationStack: its bar height differs per device and would tie
         // the baseline to the simulator model.
-        return AnyView(ProfileView(viewModel: model, isPlus: self == .profile))
+        switch self {
+        case .allStats, .profileLoadFailed:
+            return AnyView(ProfileStatsView(viewModel: model))
+        default:
+            return AnyView(ProfileView(viewModel: model, isPlus: self == .profile))
+        }
     }
 }
 
 extension AppScreen {
-    /// The first slide, a card slide (cobalt) and the last one with Share.
-    func makeRecapStory() -> AnyView {
-        let last = RecapSlide.story(for: .mockOctober).count - 1
-        let start = switch self {
-        case .recapCard: 1
-        case .recapPlayerType: last
-        default: 0
-        }
-        return AnyView(RecapStoryView(recap: .mockOctober, startAt: start) { _, _ in })
+    /// The October card at story size, as Share sends it.
+    func makeRecapShareImage() -> AnyView {
+        let recap = PlayerRecap.mockOctober
+        let rows = ProfileViewModel(service: MockPlayerStatsService()).highlights(of: recap)
+        return AnyView(RecapShareImage(recap: recap, rows: rows, style: Theme.Hangs.Recap.cards[0]))
     }
 }
 

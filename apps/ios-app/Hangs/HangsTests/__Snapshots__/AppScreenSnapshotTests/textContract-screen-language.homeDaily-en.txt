@@ -21,18 +21,6 @@ Difficulty
 Random
 Categories
 All Categories
-your plan
-18
-of 30 free questions left
-Get Plus
-18
-of 30 free questions left
-Get Plus
-18
-of 30 free questions left
-Get Plus
-resets in 13 days
-resets in 13 days
 trubbo
 Start
 # identifiers
@@ -48,18 +36,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

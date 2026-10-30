@@ -15,7 +15,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
 | 215 | [Prví kvalitní testeri mimo rodiny](issue-215-superfan-testers.md) | enhancement · ready-for-agent | `[ ]` #215 | 2026-10-29: 5 testerov (mix), e-mail pozvánky do Public bety, WhatsApp s každým zvlášť, správy schvaľuje founder |
-| 216 | [Karty Hraj · Spolu · Profil po teste buildu 81](issue-216-tabs-play-profile-after-b81.md) | enhancement · ready-for-agent | `[~]` #216 | 2026-10-30: founder vybral B (karta Spolu), P2 (natívne logo v lište), S1 (karta mesiaca); balíky vizuálne bez zmeny |
+| 216 | [Karty Hraj · Spolu · Profil po teste buildu 81](issue-216-tabs-play-profile-after-b81.md) | enhancement · ready-for-agent | `[x]` #216 | 2026-10-30: founder vybral B (karta Spolu), P2 (natívne logo v lište), S1 (karta mesiaca); balíky vizuálne bez zmeny |
 | 214 | [Odporúčaná aktualizácia a režim údržby](issue-214-update-nudge-maintenance.md) | enhancement · done | `[x]` #214 | 2026-10-28: DB prepínače `recommended_version_*`, `maintenance_*`; karta na Home + obrazovka údržby; ide s najbližším buildom |
 | 213 | [Prehľad hráča (Wrapped) a záložka Profil](issue-213-player-recap-profile.md) | enhancement · ready-for-agent | `[ ]` #213 | 2026-10-28: lišta Hrať + Profil, Profil s kartami štatistík, mesačný a ročný prehľad na zdieľanie, zadarmo; najprv merania (časové pásmo, rýchlosť odpovede) |
 | 212 | [Hra spolu (multiplayer v jednej miestnosti)](issue-212-multiplayer-same-room.md) | enhancement · ready-for-agent | `[ ]` #212 | 2026-10-28: tlačidlo Spolu, hľadanie hry v tej istej wifi bez povolení + QR/odkaz, A až D aj voľné odpovede, platí hostiteľ, odchod z appky vidí hostiteľ na konci; za prepínačom |

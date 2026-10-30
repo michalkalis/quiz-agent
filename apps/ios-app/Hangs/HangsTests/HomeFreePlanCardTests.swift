@@ -79,7 +79,7 @@ struct HomeFreePlanCardTests {
     func freeStateShowsCounterAndCountdown() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage()
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -109,7 +109,7 @@ struct HomeFreePlanCardTests {
     func premiumStateShowsPlanAndAllowance() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -147,7 +147,7 @@ struct HomeFreePlanCardTests {
             resetsAt: ISO8601DateFormatter().string(from: Date().addingTimeInterval(12 * 86400)),
             subscriptionStatus: "active", creditBalance: 0
         )
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -175,7 +175,7 @@ struct HomeFreePlanCardTests {
         #expect(vm.usageLoadState == .loading)
         #expect(vm.usageInfo == nil)
 
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             // This is the assertion that failed on pre-#123 code: the card
@@ -232,7 +232,7 @@ struct HomeFreePlanCardTests {
         await pumpUntil({ vm.usageLoadState == .failed }, "usage load never surfaced as failed")
         #expect(vm.usageInfo == nil)
 
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
@@ -263,7 +263,7 @@ struct HomeFreePlanCardTests {
             resetsAt: "2099-01-01T08:00:00.000Z",
             upgradeAvailable: true
         )
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -282,7 +282,7 @@ struct HomeFreePlanCardTests {
     func premiumCardShowsManageEntry() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true)
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -309,7 +309,7 @@ struct HomeFreePlanCardTests {
         let vm = makeViewModel()
         // 12 monthly free + 100 pack credits must read as one spendable "112".
         vm.usageInfo = usage(remaining: 12, limit: 30, credits: 100)
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -335,7 +335,7 @@ struct HomeFreePlanCardTests {
     func freeWithZeroMonthlyHidesLegend() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(remaining: 0, limit: 30, credits: 50)
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -353,7 +353,7 @@ struct HomeFreePlanCardTests {
     func subscriberWithCreditsShowsCreditChip() async throws {
         let vm = makeViewModel()
         vm.usageInfo = usage(premium: true, credits: 100)
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -377,7 +377,7 @@ struct HomeFreePlanCardTests {
         // A grace-period subscriber can still read isPremium == true — the
         // status field, not isPremium, must drive the grace visual.
         vm.usageInfo = usage(premium: true, status: "grace")
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -399,7 +399,7 @@ struct HomeFreePlanCardTests {
         // Expired has already dropped back to the free tier server-side, so the
         // free quota fields are populated again.
         vm.usageInfo = usage(remaining: 30, limit: 30, status: "expired")
-        let view = HomeView(viewModel: vm)
+        let view = PlanSection(viewModel: vm)
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()

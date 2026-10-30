@@ -33,9 +33,7 @@ enum AnalyticsEvent: Equatable {
     case restoreResult(outcome: RestoreOutcome)
     /// #213.4: the Profile tab came on screen.
     case profileOpened(hasAccount: Bool)
-    /// #213.5: a recap story closed; how far the player got.
-    case recapViewed(kind: String, slidesSeen: Int, slidesTotal: Int)
-    /// #213.5: the share sheet opened on the recap's last slide.
+    /// #213.5: the share sheet opened on the recap (#216.3: on its Profile card).
     case recapShared(kind: String)
     /// #216.2: the Together tab came on screen.
     case togetherOpened
@@ -58,7 +56,6 @@ enum AnalyticsEvent: Equatable {
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
         case .profileOpened: "profile_opened"
-        case .recapViewed: "recap_viewed"
         case .recapShared: "recap_shared"
         case .togetherOpened: "together_opened"
         case .roomSettingsChanged: "room_settings_changed"
@@ -114,8 +111,6 @@ enum AnalyticsEvent: Equatable {
             [("outcome", .string(outcome.rawValue))]
         case let .profileOpened(hasAccount):
             [("has_account", .bool(hasAccount))]
-        case let .recapViewed(kind, slidesSeen, slidesTotal):
-            [("kind", .string(kind)), ("slides_seen", .int(slidesSeen)), ("slides_total", .int(slidesTotal))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
         case .togetherOpened:
@@ -226,6 +221,8 @@ enum VoiceCaptureFailure: String {
 enum PaywallSource: String {
     case quota
     case home
+    /// #216.3: the plan card on the Profile tab.
+    case profile
     case settings
     case completion
 }

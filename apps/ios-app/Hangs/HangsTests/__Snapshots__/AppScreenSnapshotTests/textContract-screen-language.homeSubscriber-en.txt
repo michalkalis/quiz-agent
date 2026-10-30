@@ -18,19 +18,6 @@ Difficulty
 Random
 Categories
 All Categories
-your plan
-Trubbo Plus
-active
-Manage
-Trubbo Plus
-active
-Manage
-Trubbo Plus
-active
-Manage
-100 pack credits kept for later
-870 of 1,000 left · resets in 13 days
-870 of 1,000 left · resets in 13 days
 trubbo
 Start
 # identifiers
@@ -44,19 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.planManageButton
-home.freePlanCard
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planCreditChip
-home.planMeta
-home.planMeta
 home.startQuiz

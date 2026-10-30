@@ -760,39 +760,41 @@ present, `room.final.away` absent. App alive.
 
 ---
 
-## RS-30: Profile shows the cards, Settings sits under its gear, a quiz hides the tab bar
+## RS-30: Profile: plan, All stats, Settings under the gear; a quiz hides the tab bar
 
-**Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile).
+**Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile), #216.3
+(plan moved to Profile, stat cards behind All stats).
 
 **Hypothesis:** Settings left Home for the Profile tab, so its gear is the only
-way in; the stat cards render open and locked; a quiz keeps the full screen
-with no tab bar to wander off to.
+way in; the plan now lives on the Profile, the stat cards behind "All stats"
+(open and locked, without the retired ones); a quiz keeps the full screen with
+no tab bar to wander off to.
 
 **Steps:** launch (mock stats: a seasoned player); tap `tab.profile`; tap
-`profile.settings`; tap `tab.play`; start a quiz.
+`profile.allStats`, then back; tap `profile.settings`; tap `tab.play`; start a
+quiz.
 
-**Asserts:** `home.moreSettings` absent; `profile.card.totals`,
-`profile.card.hard_questions` (locked) and `profile.myPacks` present;
+**Asserts:** `home.moreSettings` and `home.planLabel` absent on Home;
+`home.planLabel` on the Profile; `profile.myPacks` absent;
+`profile.card.totals` in All stats, `profile.card.hard_questions` absent;
 `settings.voiceCommands` after the gear; `tab.profile` not hittable on the
 question screen. App alive. RS-pack-nav-start now opens Settings the same way
 and so also covers a quiz started from the Profile landing on Play.
 
 ---
 
-## RS-31: The recap banner plays the story to the shareable last slide
+## RS-31: The recap card shows on the Profile with Share
 
-**Type:** XCUITest (`RSProfileTests`). #213.5 (recap story and sharing).
+**Type:** XCUITest (`RSProfileTests`). #213.5 (recap and sharing), #216.3
+(one card instead of the story).
 
-**Hypothesis:** the monthly recap is the reason to come back; the banner opens
-the story, tapping reaches the last slide where Share is ready (the image
-rendered), and Close returns to the Profile.
+**Hypothesis:** the monthly recap is the reason to come back; it is one card on
+the Profile with Share ready (the picture rendered).
 
 **Steps:** launch (mock: a seasoned player with an unseen October recap); tap
-`tab.profile`; tap `profile.recap`; tap `recap.next` until Share; tap
-`recap.close`.
+`tab.profile`.
 
-**Asserts:** `recap.story` after the banner; `recap.share` on the last slide;
-`profile.settings` after Close and `recap.story` gone. App alive.
+**Asserts:** `profile.recap` and `recap.share` present. App alive.
 
 ---
 

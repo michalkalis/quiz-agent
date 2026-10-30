@@ -2,19 +2,18 @@
 //  RecapStoryTests.swift
 //  HangsTests
 //
-//  #213.5 — the recap story. Why it matters: the recap is a saved snapshot the
-//  server never recomputes, so this build must read its real shape and skip
-//  what it does not know instead of losing the whole recap. The story only
-//  tells good news and always ends on the shareable player type. Opening a
-//  recap must clear its "new" banner, and the two events are how we learn
-//  whether players watch to the end and share.
+//  #213.5 / #216.3 — the recap card. Why it matters: the recap is a saved
+//  snapshot the server never recomputes, so this build must read its real
+//  shape and skip what it does not know instead of losing the whole recap.
+//  The card shows only the three numbers the founder picked; the server must
+//  learn it was seen, and Share is how we learn whether players pass it on.
 //
 
 import Foundation
 @testable import Hangs
 import Testing
 
-@Suite("Recap story (#213.5)")
+@Suite("Recap card (#213.5, #216.3)")
 @MainActor
 struct RecapStoryTests {
     /// `GET /me/recaps` as `app/api/routes/me_recaps.py` sends it: a month
@@ -56,44 +55,29 @@ struct RecapStoryTests {
         #expect(recaps[1].kind == nil)
     }
 
-    @Test("story: totals first, highlights in story order, the player type last")
-    func storyOrder() {
-        let slides = RecapSlide.story(for: recap([
+    @Test("the card shows total, strong suit and when you play, in that order, whatever order the server sends")
+    func highlightsOrder() {
+        let model = ProfileViewModel(service: MockPlayerStatsService(), tokenStore: RecapStubTokenStore())
+        let rows = model.highlights(of: recap([
             card("best_streak", .bestStreak(length: 9)),
+            card("when", .whenYouPlay(partOfDay: "evening", weekday: "sunday")),
             card("totals", .totals(answers: 312, minutes: 200)),
             card("where", .whereYouPlay(place: "car", share: 64)),
             card("best_category", .bestCategory(category: "history", accuracy: 82)),
         ]))
-        #expect(slides == [
-            .intro(answers: 312, minutes: 200),
-            .card(kind: "best_category", content: .bestCategory(category: "history", accuracy: 82)),
-            .card(kind: "where", content: .whereYouPlay(place: "car", share: 64)),
-            .card(kind: "best_streak", content: .bestStreak(length: 9)),
-            .playerType("speedster"),
-        ])
+        // Founder 2026-10-30: only these three are interesting enough for the card.
+        #expect(rows.map(\.kind) == ["totals", "best_category", "when"])
     }
 
-    @Test("story only tells good news and never shows a raw id or more than five cards")
-    func storySkipsWhatItCannotTell() {
-        let slides = RecapSlide.story(for: recap([
+    @Test("the card never shows a raw id: an unknown or off-taxonomy number is left out")
+    func highlightsSkipWhatTheyCannotTell() {
+        let model = ProfileViewModel(service: MockPlayerStatsService(), tokenStore: RecapStubTokenStore())
+        let rows = model.highlights(of: recap([
             card("totals", .totals(answers: 50, minutes: 30)),
             card("best_category", .bestCategory(category: "astrology", accuracy: 90)),
-            card("improvement", .improvement(deltaPoints: 5, direction: "down")),
-            card("where", .unknown),
-            card("weakest_category", .weakestCategory(category: "sports", accuracy: 20)),
+            card("when", .unknown),
         ]))
-        #expect(slides == [.intro(answers: 50, minutes: 30), .playerType("speedster")])
-
-        let full = RecapSlide.story(for: recap([
-            card("best_category", .bestCategory(category: "history", accuracy: 82)),
-            card("where", .whereYouPlay(place: "car", share: 64)),
-            card("when", .whenYouPlay(partOfDay: "evening", weekday: "sunday")),
-            card("improvement", .improvement(deltaPoints: 12, direction: "up")),
-            card("best_streak", .bestStreak(length: 9)),
-            card("fastest_slowest", .fastestCategory(category: "sports", medianMs: 2100)),
-        ]))
-        #expect(full.count == 6) // five cards + player type
-        #expect(full.last == .playerType("speedster"))
+        #expect(rows.map(\.kind) == ["totals"])
     }
 
     @Test("the month reads as a title says it in each language")
@@ -104,24 +88,22 @@ struct RecapStoryTests {
         #expect(october.monthName(locale: Locale(identifier: "en")) == "October")
     }
 
-    @Test("the newest known recap becomes the banner; opening it clears 'new' and tells the server once")
-    func bannerAndSeen() async throws {
+    @Test("the newest known recap becomes the card; showing it tells the server once")
+    func cardAndSeen() async throws {
         let service = MockPlayerStatsService(recaps: [.success([recap([], seen: false), recap([], kind: nil)])])
         let model = ProfileViewModel(service: service, tokenStore: RecapStubTokenStore())
         await model.refresh().value
         #expect(model.recaps.count == 1)
-        let banner = try #require(model.latestRecap)
+        let shown = try #require(model.latestRecap)
 
-        model.play(banner)
-        #expect(model.playingRecap == banner)
+        model.recapShown(shown)
         #expect(model.latestRecap?.seen == true)
-        await Task.yield()
-        model.play(model.latestRecap!)
+        model.recapShown(model.latestRecap!)
         try? await Task.sleep(for: .milliseconds(50))
         #expect(service.seenIDs == ["r"])
     }
 
-    @Test("a failed recap fetch keeps the banner the player already has")
+    @Test("a failed recap fetch keeps the card the player already has")
     func failedRecapFetchKeepsBanner() async {
         let service = MockPlayerStatsService(recaps: [.success([recap([])]), .failure(.invalidResponse)])
         let model = ProfileViewModel(service: service, tokenStore: RecapStubTokenStore())
@@ -130,21 +112,14 @@ struct RecapStoryTests {
         #expect(model.latestRecap?.id == "r")
     }
 
-    @Test("closing the story measures how far the player got; Share is measured on open")
-    func storyAnalytics() {
+    @Test("Share is measured when the share sheet opens")
+    func shareAnalytics() {
         let analytics = MockAnalyticsClient()
         let model = ProfileViewModel(service: MockPlayerStatsService(), tokenStore: RecapStubTokenStore(), analytics: analytics)
-        let october = recap([])
-        model.play(october)
 
-        model.shareOpened(october)
-        model.storyClosed(october, slidesSeen: 3, slidesTotal: 6)
+        model.shareOpened(recap([]))
 
-        #expect(model.playingRecap == nil)
-        #expect(analytics.events == [
-            .recapShared(kind: "month"),
-            .recapViewed(kind: "month", slidesSeen: 3, slidesTotal: 6),
-        ])
+        #expect(analytics.events == [.recapShared(kind: "month")])
     }
 
     @Test("an account change drops the previous player's recaps")

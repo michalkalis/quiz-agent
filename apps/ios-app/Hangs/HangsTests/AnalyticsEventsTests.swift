@@ -71,7 +71,6 @@ private let everyEvent: [AnalyticsEvent] = [
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),
     .restoreResult(outcome: .nothingToRestore),
     .profileOpened(hasAccount: true),
-    .recapViewed(kind: "month", slidesSeen: 3, slidesTotal: 7),
     .recapShared(kind: "month"),
     .togetherOpened,
     .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),

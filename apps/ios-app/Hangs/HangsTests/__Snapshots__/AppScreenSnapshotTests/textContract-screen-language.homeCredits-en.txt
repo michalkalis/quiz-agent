@@ -18,20 +18,6 @@ Difficulty
 Random
 Categories
 All Categories
-your plan
-118
-questions available
-More
-118
-questions available
-More
-118
-questions available
-More
-18 monthly free
-100 pack credits
-resets in 13 days · credits never expire
-resets in 13 days · credits never expire
 trubbo
 Start
 # identifiers
@@ -45,19 +31,4 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planLegend
-home.freePlanReset
-home.freePlanReset
 home.startQuiz

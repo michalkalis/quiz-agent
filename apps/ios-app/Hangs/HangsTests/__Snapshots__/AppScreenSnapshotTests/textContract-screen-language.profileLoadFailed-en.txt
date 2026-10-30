@@ -1,9 +1,5 @@
 # texts
-PROFILE
-your stats
-custom packs
+Couldn't load your stats
+Retry
 # identifiers
-profile.settings
-profile.account
-profile.statsLoading
-profile.myPacks
+profile.statsRetry

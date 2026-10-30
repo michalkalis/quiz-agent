@@ -85,36 +85,3 @@ nonisolated struct PlayerRecap: Decodable, Sendable, Equatable, Identifiable {
 nonisolated struct PlayerRecaps: Decodable, Sendable {
     let recaps: [PlayerRecap]
 }
-
-/// One slide of the recap story (canvas "Lišta a Profil", section 3).
-nonisolated enum RecapSlide: Sendable, Equatable {
-    case intro(answers: Int, minutes: Int)
-    case card(kind: String, content: StatCardContent)
-    case playerType(String)
-
-    /// Cards worth a slide, in story order; the rest stay in the Profile.
-    private static let highlights = ["best_category", "where", "when", "improvement", "best_streak", "fastest_slowest"]
-    private static let maxCardSlides = 5
-
-    /// Totals first, then up to five highlights, the player type last.
-    /// Unknown kinds, categories outside the taxonomy and a falling score are
-    /// left out: a recap only tells good news.
-    static func story(for recap: PlayerRecap) -> [RecapSlide] {
-        var slides: [RecapSlide] = []
-        for card in recap.cards {
-            if case let .totals(answers, minutes) = card.content {
-                slides.append(.intro(answers: answers, minutes: minutes))
-            }
-        }
-        let byKind = Dictionary(recap.cards.map { ($0.kind, $0) }, uniquingKeysWith: { first, _ in first })
-        let cards: [RecapSlide] = highlights.compactMap { kind in
-            guard let content = byKind[kind]?.content, content != .unknown else { return nil }
-            if let category = content.category, Config.categoryDisplayName(for: category) == nil { return nil }
-            if case let .improvement(_, direction) = content, direction != "up" { return nil }
-            return .card(kind: kind, content: content)
-        }
-        slides += cards.prefix(maxCardSlides)
-        slides.append(.playerType(recap.playerType))
-        return slides
-    }
-}

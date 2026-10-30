@@ -7,16 +7,17 @@ host keeps driving it through the existing ``/sessions/{id}`` routes.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
 
 from ...auth.identity import AuthSubject
 from ...config import get_settings
 from ...rate_limit import fly_client_ip, limiter
 from ...rooms.network import collect_keys, network_key
 from quiz_shared.models.room import RoomGame
+from quiz_shared.utils.user_text import clean_user_text
 
 from ...rooms.service import NearbyRoom, RoomError, RoomService
 from ..deps import get_rooms, require_auth_or_grace
@@ -24,7 +25,15 @@ from .room_view import GameView, game_view, stable
 
 router = APIRouter()
 
-_NAME = Field(min_length=1, max_length=24)
+# Other players see this name (lobby, results, the nearby list), so it is one
+# line of visible text: no bidi tricks, no line breaks, not blank.
+_PlayerName = Annotated[
+    str,
+    BeforeValidator(
+        lambda v: " ".join(clean_user_text(v).split()) if isinstance(v, str) else v
+    ),
+    Field(min_length=1, max_length=24),
+]
 _TICKETS = Field(default_factory=list, max_length=4)
 
 
@@ -35,7 +44,7 @@ class NetProbeResponse(BaseModel):
 
 class CreateRoomRequest(BaseModel):
     session_id: str
-    host_name: str = _NAME
+    host_name: _PlayerName
     net_tickets: List[str] = _TICKETS
     # #212.2: the host's choices, the same for every player.
     reveal_mode: Literal["question", "round"] = "question"
@@ -65,7 +74,7 @@ class NearbyResponse(BaseModel):
 
 
 class JoinRoomRequest(BaseModel):
-    display_name: str = _NAME
+    display_name: _PlayerName
     join_token: Optional[str] = Field(None, max_length=64)
     room_id: Optional[str] = Field(None, max_length=64)
     net_tickets: List[str] = _TICKETS

@@ -46,7 +46,7 @@ from typing import Annotated, Literal, Optional
 import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -56,6 +56,7 @@ from sse_starlette.sse import EventSourceResponse
 from arq.connections import ArqRedis
 
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
+from quiz_shared.utils.user_text import clean_user_text
 
 from ... import app_switches, order_budget, pack_reuse
 from ...config import Settings, get_settings
@@ -127,6 +128,13 @@ class CreateOrderRequest(BaseModel):
     # packs came out too easy). Optional so builds shipped before the picker
     # keep working (NULL = mixed batch, today's behaviour).
     difficulty: Optional[Literal["easy", "medium", "hard"]] = None
+
+    # Before the length guard, so a paste padded with invisible characters is
+    # judged (and stored, and shown back) by what the player actually sees.
+    @field_validator("prompt")
+    @classmethod
+    def _drop_invisible_characters(cls, value: str) -> str:
+        return clean_user_text(value)
 
 
 class OrderCreatedResponse(BaseModel):

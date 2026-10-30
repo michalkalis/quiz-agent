@@ -1059,6 +1059,10 @@ final class QuizViewModel: ObservableObject {
                 return ([question.question] + (question.possibleAnswers.map { Array($0.values) } ?? []))
                     .joined(separator: " ")
             },
+            answerReadBack: { [weak self] in
+                guard let recording = self?.recordingCoordinator, recording.showAnswerConfirmation else { return nil }
+                return recording.readBackText
+            },
             stopQuestionRead: { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
         )
     }

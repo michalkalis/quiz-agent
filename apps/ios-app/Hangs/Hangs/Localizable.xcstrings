@@ -1611,6 +1611,23 @@
         }
       }
     },
+    "All stats" : {
+      "comment" : "Profile row and screen title: every stat card (#216.3)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všechny statistiky"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všetky štatistiky"
+          }
+        }
+      }
+    },
     "All-rounder" : {
       "comment" : "Recap player type (#213.5), shown big on the last story slide: does well in every category",
       "localizations" : {
@@ -4998,7 +5015,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Spolu"
+            "value" : "Celkom"
           }
         }
       }

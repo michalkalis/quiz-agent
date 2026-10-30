@@ -5,27 +5,8 @@ z 60
 Tvoj prvý prehľad
 Ešte 23 otázok
 Ešte 1 deň hrania
-tvoje štatistiky
-Spolu
-37 otázok
-25 min
-Najdlhšia séria
-5 za sebou
-správnych odpovedí
-Silná stránka
-Ešte 2 kategórií
-Kde hráš
-Ešte 3 kvízov
-Kedy hráš
-Ešte 2 dní hrania
-vlastné balíky
 # identifiers
 profile.settings
 profile.account
 profile.firstRecap
-profile.card.totals
-profile.card.best_streak
-profile.card.best_category
-profile.card.where
-profile.card.when
-profile.myPacks
+profile.allStats

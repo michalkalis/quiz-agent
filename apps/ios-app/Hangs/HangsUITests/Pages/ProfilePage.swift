@@ -25,28 +25,23 @@ struct ProfilePage {
         app.buttons["profile.settings"]
     }
 
-    var myPacksButton: XCUIElement {
-        app.buttons["profile.myPacks"]
+    /// #216.3: every stat card sits behind this row.
+    var allStatsButton: XCUIElement {
+        app.buttons["profile.allStats"]
     }
 
-    var recapBanner: XCUIElement {
-        app.buttons["profile.recap"]
+    /// #216.3: the newest recap, one card with Share.
+    var recapCard: XCUIElement {
+        app.descendants(matching: .any)["profile.recap"]
     }
 
-    var story: XCUIElement {
-        app.descendants(matching: .any)["recap.story"]
-    }
-
-    var storyNext: XCUIElement {
-        app.buttons["recap.next"]
-    }
-
-    var storyClose: XCUIElement {
-        app.buttons["recap.close"]
-    }
-
-    var storyShare: XCUIElement {
+    var recapShare: XCUIElement {
         app.descendants(matching: .any)["recap.share"]
+    }
+
+    /// #216.3: "your plan" moved here from Home.
+    var planLabel: XCUIElement {
+        app.descendants(matching: .any)["home.planLabel"]
     }
 
     func card(_ kind: String) -> XCUIElement {

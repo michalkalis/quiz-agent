@@ -5,8 +5,9 @@
 //  #213.4: the Profile tab — who is playing and the stat cards. Owned by
 //  AppState like the packs list, so the cards stay on screen while a quiz runs
 //  and while they refresh. A failed fetch keeps the last cards; with none, the
-//  Profile offers Retry. #213.5: the newest recap sits on top as a banner and
-//  plays as a story.
+//  Profile offers Retry. #216.3 (founder 2026-10-30, S1): the newest recap is
+//  one card with three numbers and Share; every other card waits behind
+//  "All stats". The story and the player type are gone.
 //
 
 import Combine
@@ -30,8 +31,6 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var account = Account(name: nil, isSignedIn: false)
     /// Newest first, only kinds this build knows.
     @Published private(set) var recaps: [PlayerRecap] = []
-    /// The recap playing as a story.
-    @Published var playingRecap: PlayerRecap?
 
     private let service: PlayerStatsServiceProtocol
     private let tokenStore: any TokenStore
@@ -51,16 +50,36 @@ final class ProfileViewModel: ObservableObject {
         self.analytics = analytics
     }
 
-    /// Unlocked cards first, then the locked ones, each in the server's order.
+    /// The three numbers the founder finds worth a look (2026-10-30), in the
+    /// order the recap card shows them.
+    static let highlightKinds = ["totals", "best_category", "when"]
+    /// What "All stats" lists: the highlights and the cards still worth
+    /// reading. Hard questions, options vs own words and the fastest category
+    /// are no longer shown (the server still sends them for older builds).
+    static let shownKinds: Set<String> = [
+        "totals", "best_category", "when", "where", "typical_game", "improvement", "best_streak", "weakest_category",
+    ]
+
+    /// "All stats": unlocked cards first, then the locked ones, each in the
+    /// server's order.
+    var cards: [StatCard] {
+        let shown = (stats?.cards ?? []).filter { Self.shownKinds.contains($0.kind) && Self.isReadable($0) }
+        return shown.filter { !$0.isLocked } + shown.filter(\.isLocked)
+    }
+
+    /// The recap card's rows; a kind the recap lacks is left out.
+    func highlights(of recap: PlayerRecap) -> [StatCard] {
+        Self.highlightKinds.compactMap { kind in
+            recap.cards.first { $0.kind == kind && $0.content != nil && Self.isReadable($0) }
+        }
+    }
+
     /// Kinds this build does not know and categories outside the taxonomy are
     /// left out: the Profile never shows a raw id.
-    var cards: [StatCard] {
-        let shown = (stats?.cards ?? []).filter { card in
-            guard let content = card.content else { return true }
-            if content == .unknown { return false }
-            return content.category.map { Config.categoryDisplayName(for: $0) != nil } ?? true
-        }
-        return shown.filter { !$0.isLocked } + shown.filter(\.isLocked)
+    private static func isReadable(_ card: StatCard) -> Bool {
+        guard let content = card.content else { return true }
+        if content == .unknown { return false }
+        return content.category.map { Config.categoryDisplayName(for: $0) != nil } ?? true
     }
 
     /// The first-recap card shows until the server says it is reached.
@@ -69,7 +88,7 @@ final class ProfileViewModel: ObservableObject {
         return progress
     }
 
-    /// The banner on top of the Profile.
+    /// The recap card on the Profile.
     var latestRecap: PlayerRecap? {
         recaps.first
     }
@@ -110,24 +129,15 @@ final class ProfileViewModel: ObservableObject {
         return task
     }
 
-    /// Play the recap; the server and the banner learn it was seen.
-    func play(_ recap: PlayerRecap) {
-        playingRecap = recap
-        guard !recap.seen else { return }
-        if let index = recaps.firstIndex(where: { $0.id == recap.id }) {
-            recaps[index].seen = true
-        }
+    /// The recap card came on screen: the server learns it was seen, once.
+    func recapShown(_ recap: PlayerRecap) {
+        guard !recap.seen, let index = recaps.firstIndex(where: { $0.id == recap.id }) else { return }
+        recaps[index].seen = true
         let service = service
         Task { try? await service.markRecapSeen(id: recap.id) }
     }
 
-    /// The story closed after `slidesSeen` of `slidesTotal` slides.
-    func storyClosed(_ recap: PlayerRecap, slidesSeen: Int, slidesTotal: Int) {
-        playingRecap = nil
-        analytics.track(.recapViewed(kind: recap.kind?.rawValue ?? "", slidesSeen: slidesSeen, slidesTotal: slidesTotal))
-    }
-
-    /// The share sheet opened on the last slide.
+    /// The share sheet opened on the recap card.
     func shareOpened(_ recap: PlayerRecap) {
         analytics.track(.recapShared(kind: recap.kind?.rawValue ?? ""))
     }
@@ -138,7 +148,6 @@ final class ProfileViewModel: ObservableObject {
         loadTask?.cancel()
         stats = nil
         recaps = []
-        playingRecap = nil
         loadState = .loading
         reloadAccount()
     }

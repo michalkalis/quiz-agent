@@ -1,9 +1,5 @@
 # texts
-PROFIL
-tvoje štatistiky
-vlastné balíky
+Štatistiky sa nepodarilo načítať
+Skús znova
 # identifiers
-profile.settings
-profile.account
-profile.statsLoading
-profile.myPacks
+profile.statsRetry

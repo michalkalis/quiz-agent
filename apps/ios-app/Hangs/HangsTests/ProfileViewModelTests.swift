@@ -72,7 +72,7 @@ struct ProfileViewModelTests {
         #expect(stats.cards.first?.content == .unknown)
     }
 
-    @Test("shows unlocked cards first, drops unknown kinds and categories outside the taxonomy")
+    @Test("All stats: unlocked first; drops unknown kinds, categories outside the taxonomy and the retired cards")
     func cardOrderAndFiltering() async {
         let stats = PlayerStats(
             cards: [
@@ -81,6 +81,8 @@ struct ProfileViewModelTests {
                 card("moon_phase", content: .unknown),
                 card("best_category", content: .bestCategory(category: "adults", accuracy: 90)),
                 card("fastest_slowest", content: .fastestCategory(category: "history", medianMs: 2100)),
+                card("best_streak", content: .bestStreak(length: 9)),
+                card("hard_questions", content: .hardQuestions(answers: 12, accuracy: 40)),
             ],
             firstRecapProgress: FirstRecapProgress(answers: 5, answersTarget: 60, days: 1, daysTarget: 3)
         )
@@ -88,7 +90,9 @@ struct ProfileViewModelTests {
 
         await model.refresh().value
 
-        #expect(model.cards.map(\.kind) == ["totals", "fastest_slowest", "where"])
+        // #216.3 (founder 2026-10-30): fastest category and hard questions
+        // were not worth a look; they are no longer shown anywhere.
+        #expect(model.cards.map(\.kind) == ["totals", "best_streak", "where"])
         #expect(model.loadState == .loaded)
     }
 

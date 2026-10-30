@@ -1,53 +1,17 @@
 # texts
 PROFIL
-Nový prehľad
 Tvoj M10
-tvoje štatistiky
-Spolu
+Celkom
 312 otázok
 3 h 20 min
 Silná stránka
 Geography & World
 82 % správne
-Priestor na zlepšenie
-Sports
-41 % správne
-Kde hráš
-V aute
-64 % kvízov
 Kedy hráš
 Večer
 najčastejšie v nedeľu
-Bežný kvíz
-6,5 min
-10 otázok
-Tvoj pokrok
-+12 bodov
-pri rovnakej náročnosti
-Najdlhšia séria
-9 za sebou
-správnych odpovedí
-Možnosti alebo vlastné slová
-Lepšie s možnosťami
-možnosti 78 %, vlastné slová 64 %
-Ťažké otázky
-Ešte 4 otázok
-Najrýchlejšia kategória
-Ešte 1 kategória
-vlastné balíky
 # identifiers
 profile.settings
 profile.account
 profile.recap
-profile.card.totals
-profile.card.best_category
-profile.card.weakest_category
-profile.card.where
-profile.card.when
-profile.card.typical_game
-profile.card.improvement
-profile.card.best_streak
-profile.card.mcq_vs_open
-profile.card.hard_questions
-profile.card.fastest_slowest
-profile.myPacks
+profile.allStats

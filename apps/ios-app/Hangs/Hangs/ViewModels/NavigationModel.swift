@@ -21,6 +21,8 @@ import SwiftUI
 enum AppRoute: Hashable {
     case settings
     case myPacks
+    /// #216.3: every stat card, behind the Profile's "All stats" row.
+    case allStats
     #if DEBUG
         case debugLog
     #endif

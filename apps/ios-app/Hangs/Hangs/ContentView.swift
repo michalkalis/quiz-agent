@@ -166,6 +166,8 @@ struct ContentView: View {
                     defaultLanguage: viewModel.settings.language
                 )
             )
+        case .allStats:
+            ProfileStatsView(viewModel: appState.profileViewModel)
         #if DEBUG
             case .debugLog:
                 DebugLogView()
@@ -229,8 +231,10 @@ struct ContentView: View {
 
             Tab("Profile", systemImage: "person.crop.circle", value: AppTab.profile) {
                 NavigationStack(path: $navModel.profilePath) {
-                    ProfileView(viewModel: appState.profileViewModel, isPlus: viewModel.usageInfo?.isPlus)
-                        .navigationDestination(for: AppRoute.self, destination: routeDestination)
+                    ProfileView(viewModel: appState.profileViewModel, isPlus: viewModel.usageInfo?.isPlus) {
+                        PlanSection(viewModel: viewModel)
+                    }
+                    .navigationDestination(for: AppRoute.self, destination: routeDestination)
                 }
             }
             .accessibilityIdentifier("tab.profile")

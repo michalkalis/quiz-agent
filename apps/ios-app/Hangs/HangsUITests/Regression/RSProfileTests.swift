@@ -15,22 +15,29 @@ final nonisolated class RSProfileTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    // MARK: RS-30 — Profile shows the cards, Settings sits under its gear, a quiz hides the tab bar
+    // MARK: RS-30 — Profile: plan, All stats, Settings under the gear; a quiz hides the tab bar
 
     // Regression guarded: Settings left Home for the Profile tab, so the gear
-    // there is the only way in; the cards must render (open and locked); and a
-    // quiz must keep the full screen, with no tab bar to wander off to.
+    // there is the only way in; #216.3 moved the plan here and the stat cards
+    // behind "All stats" (open and locked ones, without the retired cards);
+    // and a quiz must keep the full screen, with no tab bar to wander off to.
     @MainActor
     func testRS30ProfileTabAndQuizHidesTabBar() {
         let app = RSFlow.launch()
         let profile = ProfilePage(app: app)
 
         XCTAssertFalse(app.buttons["home.moreSettings"].exists, "RS-30: Home still carries the old settings gear")
+        XCTAssertFalse(profile.planLabel.exists, "RS-30: the plan is still on Home")
         profile.open()
-        XCTAssertTrue(profile.card("totals").waitForExistence(timeout: 5), "RS-30: totals card missing")
-        XCTAssertTrue(profile.card("hard_questions").exists, "RS-30: locked hard-questions card missing")
-        XCTAssertTrue(profile.myPacksButton.exists, "RS-30: profile.myPacks row missing")
+        XCTAssertTrue(profile.planLabel.waitForExistence(timeout: 5), "RS-30: the plan is missing on the Profile")
+        XCTAssertFalse(app.buttons["profile.myPacks"].exists, "RS-30: My packs is still on the Profile")
 
+        profile.allStatsButton.tap()
+        XCTAssertTrue(profile.card("totals").waitForExistence(timeout: 5), "RS-30: totals card missing in All stats")
+        XCTAssertFalse(profile.card("hard_questions").exists, "RS-30: a retired card is still shown")
+        app.navigationBars.buttons.element(boundBy: 0).tap() // a11y-id: system back button
+
+        XCTAssertTrue(profile.settingsButton.waitForExistence(timeout: 5), "RS-30: did not return to the Profile")
         profile.settingsButton.tap()
         XCTAssertTrue(
             app.descendants(matching: .any)["settings.voiceCommands"].waitForExistence(timeout: 5),
@@ -45,29 +52,19 @@ final nonisolated class RSProfileTests: XCTestCase {
         RSFlow.assertAlive(app, "RS-30")
     }
 
-    // MARK: RS-31 — the recap banner plays the story to the shareable last slide
+    // MARK: RS-31 — the recap card shows on the Profile with Share
 
-    // Regression guarded: the recap is the reason to come back each month; the
-    // banner must open the story, tapping must reach the last slide, Share
-    // must be there (the image renders), and Close must return to the Profile.
+    // Regression guarded: the recap is the reason to come back each month;
+    // #216.3 made it one card on the Profile, and Share must be there (the
+    // picture renders).
     @MainActor
-    func testRS31RecapStoryReachesShare() {
+    func testRS31RecapCardHasShare() {
         let app = RSFlow.launch()
         let profile = ProfilePage(app: app)
 
         profile.open()
-        XCTAssertTrue(profile.recapBanner.waitForExistence(timeout: 5), "RS-31: recap banner missing")
-        profile.recapBanner.tap()
-        XCTAssertTrue(profile.story.waitForExistence(timeout: 5), "RS-31: the story did not open")
-
-        for _ in 0 ..< 10 where !profile.storyShare.exists {
-            profile.storyNext.tap()
-        }
-        XCTAssertTrue(profile.storyShare.waitForExistence(timeout: 5), "RS-31: Share missing on the last slide")
-
-        profile.storyClose.tap()
-        XCTAssertTrue(profile.settingsButton.waitForExistence(timeout: 5), "RS-31: Close did not return to the Profile")
-        XCTAssertFalse(profile.story.exists, "RS-31: the story is still on screen after Close")
+        XCTAssertTrue(profile.recapCard.waitForExistence(timeout: 5), "RS-31: recap card missing")
+        XCTAssertTrue(profile.recapShare.waitForExistence(timeout: 5), "RS-31: Share missing on the recap card")
         RSFlow.assertAlive(app, "RS-31")
     }
 }

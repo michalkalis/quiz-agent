@@ -1,6 +1,6 @@
-// The answer card (founder 2026-10-25): the question small, the answer big
-// (read aloud by the app voice), then the explanation shown under it, not
-// read. Rounds show the explanation's first sentence; the one-question reel
+// The answer card (founder 2026-10-25): the answer big (read aloud by the
+// app voice), then the explanation shown under it, not read. No repeat of the
+// question: the card comes right after it (founder 2026-10-30). Rounds show the explanation's first sentence; the one-question reel
 // shows all of it.
 import React from 'react';
 import {COPY} from './copy';
@@ -32,8 +32,7 @@ export const AnswerReveal: React.FC<{
 			<div style={{display: 'flex', gap: 24, alignItems: 'center'}}>
 				<div style={{flex: 1, minWidth: 0}}>
 					{number !== undefined ? <div style={{...LABEL, fontSize: 28, color: INK2, marginBottom: 8}}>{`${copy.question} ${number}`}</div> : null}
-					<div style={{fontSize: 32, fontWeight: 600, lineHeight: 1.25, color: INK2, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>{q.question}</div>
-					<div style={{...LABEL, color: OK, marginTop: 22}}>
+					<div style={{...LABEL, color: OK}}>
 						{copy.answer}
 						{label}
 					</div>

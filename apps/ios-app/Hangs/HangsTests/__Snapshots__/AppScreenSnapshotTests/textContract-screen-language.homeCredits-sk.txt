@@ -1,5 +1,4 @@
 # texts
-trubbo
 Kvíz
 History
 Science & Nature
@@ -33,6 +32,8 @@ Viac
 100 kreditov z balíka
 resets in 13 days · credits never expire
 resets in 13 days · credits never expire
+trubbo
+trubbo
 Štart
 # identifiers
 home-language-menu

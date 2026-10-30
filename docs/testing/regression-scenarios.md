@@ -731,7 +731,7 @@ present; card gone after dismiss. App alive.
 **Hypothesis:** The host's phone drives the game for everyone (read, open,
 next); a stalled step would leave every phone on one question.
 
-**Steps:** launch with `--app-config-multiplayer`; tap `home.together`,
+**Steps:** launch with `--app-config-multiplayer`; tap the Together tab (`tab.together`),
 `room.host`; give a name if asked; pick `room.rules.reveal` →
 `room.rules.reveal.question` (#213.8: the default reveals at the end);
 `room.start`; tap option B; `room.next`;
@@ -804,7 +804,7 @@ rendered), and Close returns to the Profile.
 the group defaults (not the host's solo choices), a change shows at once,
 and a guest sees the host's rules without any control to change them.
 
-**Steps:** launch with `--app-config-multiplayer`; tap `home.together`,
+**Steps:** launch with `--app-config-multiplayer`; tap the Together tab (`tab.together`),
 `room.host`; give a name if asked; tap `room.rules.time` →
 `room.rules.time.45`. Relaunch; POST `/room/join?text=mock-token` to the
 test listener.

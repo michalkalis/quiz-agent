@@ -1,5 +1,4 @@
 # texts
-trubbo
 daily challenge · Oct 15
 4/5
 Lepšie skóre ako 2 z 3 hráčov.
@@ -34,6 +33,8 @@ of 30 free questions left
 Get Plus
 resets in 13 days
 resets in 13 days
+trubbo
+trubbo
 Start
 # identifiers
 home.daily.open

@@ -1,5 +1,4 @@
 # texts
-trubbo
 Kvíz
 History
 Science & Nature
@@ -31,6 +30,8 @@ z 30 otázok zadarmo
 Získaj Plus
 resets in 13 days
 resets in 13 days
+trubbo
+trubbo
 Štart
 # identifiers
 home-language-menu

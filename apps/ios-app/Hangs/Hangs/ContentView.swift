@@ -31,9 +31,14 @@ struct ContentView: View {
     @State private var feedbackPresentation: FeedbackPresentation?
     /// #212: the game together on screen, nil when none.
     @State private var room: RoomViewModel?
+    /// #216.2: the Together tab's room until the player hosts or joins.
+    @State private var togetherRoom: RoomViewModel?
+    /// Shows the Together tab while the server switch is on.
+    @ObservedObject private var appConfig: AppConfigStore
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
+        _appConfig = ObservedObject(wrappedValue: appState.appConfig)
         _dailyChallenge = StateObject(wrappedValue: DailyChallengeViewModel(network: appState.networkService))
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
@@ -117,7 +122,27 @@ struct ContentView: View {
         guard room == nil else { return }
         let game = appState.makeRoomViewModel(for: viewModel)
         room = game
+        // A join link over the Together tab: its search stops under the game.
+        togetherRoom = nil
         if let invite { Task { await game.join(invite) } }
+    }
+
+    /// #216.2: the player hosted or joined on the Together tab; the game takes
+    /// the full screen and the tab starts over when it closes.
+    private func openTogetherGame(_ game: RoomViewModel) {
+        guard room == nil else { return }
+        room = game
+        togetherRoom = nil
+    }
+
+    /// A fresh room each time the Together tab shows, so a game always uses
+    /// the solo settings of that moment.
+    private func freshTogetherRoom() {
+        togetherRoom = appState.makeRoomViewModel(for: viewModel)
+    }
+
+    private func roomClosed() {
+        if navModel.selectedTab == .together { freshTogetherRoom() }
     }
 
     private func openPendingInvite() {
@@ -150,8 +175,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var mainContent: some View {
-        // #213.4 (founder 2026-10-28, bar B): two tabs, Play and Profile. The
-        // quiz runs on Play and hides the tab bar, so it keeps the full screen.
+        // #213.4 (founder 2026-10-28, bar B): Play and Profile; #216.2 (founder
+        // 2026-10-30, variant B) Together between them. The quiz runs on Play
+        // and hides the tab bar, so it keeps the full screen.
         TabView(selection: $navModel.selectedTab) {
             Tab("Play", systemImage: "play.circle", value: AppTab.play) {
                 NavigationStack(path: $navModel.path) {
@@ -163,8 +189,7 @@ struct ContentView: View {
                                 myPacks: appState.myPacksViewModel,
                                 appConfig: appState.appConfig,
                                 dailyChallenge: dailyChallenge,
-                                onCreatePack: presentOrderFlow,
-                                onTogether: { openRoom(invite: nil) }
+                                onCreatePack: presentOrderFlow
                             )
                         case .question:
                             QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
@@ -189,6 +214,19 @@ struct ContentView: View {
             }
             .accessibilityIdentifier("tab.play")
 
+            if appConfig.multiplayerEnabled {
+                Tab("Together", systemImage: "person.2", value: AppTab.together) {
+                    ZStack {
+                        Theme.Hangs.Colors.bg.ignoresSafeArea()
+                        if let togetherRoom {
+                            TogetherTabView(viewModel: togetherRoom, onGameOpened: openTogetherGame)
+                                .id(togetherRoom.id)
+                        }
+                    }
+                }
+                .accessibilityIdentifier("tab.together")
+            }
+
             Tab("Profile", systemImage: "person.crop.circle", value: AppTab.profile) {
                 NavigationStack(path: $navModel.profilePath) {
                     ProfileView(viewModel: appState.profileViewModel, isPlus: viewModel.usageInfo?.isPlus)
@@ -197,8 +235,14 @@ struct ContentView: View {
             }
             .accessibilityIdentifier("tab.profile")
         }
+        // #216 (founder 2026-10-30): the bar shrinks while content scrolls down.
+        .tabBarMinimizeBehavior(.onScrollDown)
         .onChange(of: navModel.selectedTab) { _, tab in
             if tab == .profile { appState.profileViewModel.tabOpened() }
+            if tab == .together, room == nil {
+                freshTogetherRoom()
+                togetherRoom?.tabOpened()
+            }
         }
         // #108C: keep the screen awake for the duration of an active quiz —
         // state and (#185 finding 7) recap narration all
@@ -285,7 +329,7 @@ struct ContentView: View {
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
-        .fullScreenCover(item: $room) { room in
+        .fullScreenCover(item: $room, onDismiss: roomClosed) { room in
             RoomFlowView(
                 viewModel: room,
                 onShowPlans: {

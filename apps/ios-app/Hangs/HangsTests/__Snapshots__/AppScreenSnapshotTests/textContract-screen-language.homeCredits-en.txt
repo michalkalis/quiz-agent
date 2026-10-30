@@ -1,5 +1,4 @@
 # texts
-trubbo
 Quiz
 History
 Science & Nature
@@ -33,6 +32,8 @@ More
 100 pack credits
 resets in 13 days · credits never expire
 resets in 13 days · credits never expire
+trubbo
+trubbo
 Start
 # identifiers
 home-language-menu

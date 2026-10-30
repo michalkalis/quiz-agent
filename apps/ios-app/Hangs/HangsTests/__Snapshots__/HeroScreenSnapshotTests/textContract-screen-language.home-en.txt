@@ -1,5 +1,4 @@
 # texts
-trubbo
 Quiz
 History
 Science & Nature
@@ -31,6 +30,8 @@ of 30 free questions left
 Get Plus
 resets in 13 days
 resets in 13 days
+trubbo
+trubbo
 Start
 # identifiers
 home-language-menu

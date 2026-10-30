@@ -1,5 +1,4 @@
 # texts
-trubbo
 Quiz
 History
 Science & Nature
@@ -31,6 +30,8 @@ renewal failed
 Fix payment
 Update your payment method
 Update your payment method
+trubbo
+trubbo
 Start
 # identifiers
 home-language-menu

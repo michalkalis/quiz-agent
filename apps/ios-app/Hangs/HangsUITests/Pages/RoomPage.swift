@@ -11,7 +11,8 @@ import XCTest
 struct RoomPage {
     let app: XCUIApplication
 
-    var togetherButton: XCUIElement { app.buttons["home.together"] }
+    /// #216.2: the Together tab (it replaced the Together button on Home).
+    var togetherButton: XCUIElement { app.tabBars.buttons["tab.together"] }
     var hostButton: XCUIElement { app.buttons["room.host"] }
     var nameField: XCUIElement { app.textFields["room.name.field"] }
     var nameSave: XCUIElement { app.buttons["room.name.save"] }

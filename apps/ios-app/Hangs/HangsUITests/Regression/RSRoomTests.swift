@@ -27,7 +27,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         let app = RSFlow.launch(["--app-config-multiplayer"])
         let room = RoomPage(app: app)
 
-        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-28: Together button missing on Home")
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-28: Together tab missing")
         room.togetherButton.tap()
         XCTAssertTrue(room.hostButton.waitForExistence(timeout: 5), "RS-28: Host a game missing")
         room.hostButton.tap()
@@ -63,7 +63,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         XCTAssertEqual(room.winner.label, "Michal", "RS-28: wrong winner")
         XCTAssertTrue(room.awayNote.exists, "RS-28: the host's leave-app line missing")
         room.doneButton.tap()
-        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 5), "RS-28: not back on Home")
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 5), "RS-28: the tab bar did not come back")
         RSFlow.assertAlive(app, "RS-28")
     }
 
@@ -78,7 +78,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         let app = RSFlow.launch(["--app-config-multiplayer"])
         let room = RoomPage(app: app)
 
-        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-32: Together button missing on Home")
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-32: Together tab missing")
         room.togetherButton.tap()
         XCTAssertTrue(room.hostButton.waitForExistence(timeout: 5), "RS-32: Host a game missing")
         room.hostButton.tap()
@@ -104,7 +104,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         app.terminate()
         let guestApp = RSFlow.launch(["--app-config-multiplayer"])
         let guest = RoomPage(app: guestApp)
-        XCTAssertTrue(guest.togetherButton.waitForExistence(timeout: 10), "RS-32: Home not ready for the guest")
+        XCTAssertTrue(guest.togetherButton.waitForExistence(timeout: 10), "RS-32: Together tab not ready for the guest")
         try await UITestClient().openRoomLink(token: "mock-token")
         XCTAssertTrue(guest.renameCard.waitForExistence(timeout: 10), "RS-32: guest lobby missing after the link")
         XCTAssertTrue(guest.guestRules.waitForExistence(timeout: 5), "RS-32: the host's rules missing for the guest")
@@ -125,7 +125,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         let room = RoomPage(app: app)
         let client = UITestClient()
 
-        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-29: Home not ready")
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-29: Together tab not ready")
         try await client.openRoomLink(token: "mock-token")
         XCTAssertTrue(room.renameCard.waitForExistence(timeout: 10), "RS-29: guest lobby missing after the link")
 

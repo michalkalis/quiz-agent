@@ -177,6 +177,11 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     // MARK: - Guest
 
+    /// #216.2: the Together tab came on screen; each visit gets a fresh room.
+    func tabOpened() {
+        analytics.track(.togetherOpened)
+    }
+
     /// Keeps the "games on this Wi-Fi" list fresh while the start screen is up.
     func startNearbySearch() {
         nearbyTask?.cancel()

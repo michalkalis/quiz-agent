@@ -54,6 +54,16 @@ struct RoomViewModelSettingsTests {
         return model
     }
 
+    /// #216.2: the tab replaced a small button nobody noticed; comparing tab
+    /// visits with games created and joined is how its pull gets measured.
+    @Test("Opening the Together tab is logged once, with nothing about the player")
+    func tabOpenedIsLogged() {
+        let model = makeModel()
+        model.tabOpened()
+
+        #expect(analytics.events == [.togetherOpened])
+    }
+
     @Test("A first game together uses the defaults for most players, not the host's solo choices")
     func defaultsIgnoreSolo() async {
         // Founder 2026-10-29: results at the end, 30 s, read aloud. A host who

@@ -26,10 +26,12 @@ enum AppRoute: Hashable {
     #endif
 }
 
-/// #213.4: the two tabs of the root tab bar. The quiz runs on Play; the tab
-/// bar hides while it does.
+/// #213.4: the tabs of the root tab bar (#216.2 added Together). The quiz
+/// runs on Play; the tab bar hides while it does.
 enum AppTab: Hashable {
     case play
+    /// #216.2: games together; only while the server switch is on.
+    case together
     case profile
 }
 

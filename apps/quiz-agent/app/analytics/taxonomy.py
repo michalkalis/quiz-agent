@@ -70,6 +70,8 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     # sheet opened.
     "recap_viewed": frozenset({"kind", "slides_seen", "slides_total"}),
     "recap_shared": frozenset({"kind"}),
+    # #216.2: the Together tab came on screen.
+    "together_opened": frozenset(),
     # #213.8: the host changed a rule of a game together (lobby or in game).
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.

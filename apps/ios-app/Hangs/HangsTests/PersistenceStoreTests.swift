@@ -208,6 +208,23 @@ struct PersistenceStoreSessionTests {
         #expect(store.loadSettings().difficulty == "medium", "Medium picked after the update is a real choice")
     }
 
+    /// The launch reads settings twice: AppState for the speech recognizer's
+    /// language, then the quiz view model. The first read spent the one-time
+    /// marker and threw the moved value away, so the phone kept Medium after
+    /// the update that was meant to move it.
+    @Test("the move to Random survives the launch's second read of the settings")
+    func moveSurvivesASecondRead() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+
+        var medium = QuizSettings.default
+        medium.difficulty = "medium"
+        store.saveSettings(medium)
+
+        _ = store.loadSettings() // AppState: the recognizer's language
+        #expect(store.loadSettings().difficulty == "random", "QuizViewModel's read got the old Medium back")
+    }
+
     @Test("a saved Hard or Easy is a real choice and is never moved")
     func otherDifficultiesStay() {
         let (store, isolated) = makeStore()

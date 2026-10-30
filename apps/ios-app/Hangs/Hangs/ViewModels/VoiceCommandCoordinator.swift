@@ -313,6 +313,9 @@ final class VoiceCommandCoordinator: ObservableObject {
     let isReadingQuestionAloud: @MainActor () -> Bool
     /// #208.7: what the read says (question + options), for the echo guard.
     let textBeingRead: @MainActor () -> String?
+    /// Car test 2026-10-30: the answer the open sheet read back aloud, for the
+    /// sheet's echo guard (`echoGuardText`).
+    let answerReadBack: @MainActor () -> String?
     /// #208.7: a skip said during the read stops the read — the driver hears
     /// that it worked, and the undo window is not spent under the question.
     let stopQuestionRead: @MainActor () async -> Void
@@ -359,6 +362,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         isReadingQuestionAloud: @escaping @MainActor () -> Bool = { false },
         textBeingRead: @escaping @MainActor () -> String? = { nil },
+        answerReadBack: @escaping @MainActor () -> String? = { nil },
         stopQuestionRead: @escaping @MainActor () async -> Void = {}
     ) {
         self.silenceDetectionService = silenceDetectionService
@@ -395,6 +399,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.trackAnalytics = trackAnalytics
         self.isReadingQuestionAloud = isReadingQuestionAloud
         self.textBeingRead = textBeingRead
+        self.answerReadBack = answerReadBack
         self.stopQuestionRead = stopQuestionRead
 
         // Seed + observe recognizer availability (see `commandAvailability`).

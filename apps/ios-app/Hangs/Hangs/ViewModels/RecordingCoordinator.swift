@@ -7,8 +7,8 @@
 //  +Submission / +Confirmation (decision-7 ≤300-line split).
 //
 
-import Combine
 import Clocks
+import Combine
 import Foundation
 import os
 
@@ -154,6 +154,12 @@ final class RecordingCoordinator: ObservableObject {
     var spokenReplacement: SpokenReplacement? {
         get { confirmationState.spokenReplacement }
         set { confirmationState.spokenReplacement = newValue }
+    }
+
+    /// See `ConfirmationState.readBackText` (car test 2026-10-30).
+    var readBackText: String? {
+        get { confirmationState.readBackText }
+        set { confirmationState.readBackText = newValue }
     }
 
     // MARK: - Dependencies (service handles + the façade's shared task owner)

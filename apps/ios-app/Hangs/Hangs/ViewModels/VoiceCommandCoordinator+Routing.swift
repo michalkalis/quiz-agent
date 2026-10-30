@@ -97,14 +97,18 @@ extension VoiceCommandCoordinator {
         // #208.7 echo guard (+Reading): the read's words are stripped before
         // matching. Nothing left = the app heard itself; drop it silently.
         let underEchoGuard = isUnderEchoGuard
+        let echoText = echoGuardText(on: screen)
         var matchText = transcript.text
         var guardedNormalized = normalized
-        if underEchoGuard, let stripped = strippingReadWords(normalized) {
+        if let stripped = strippingReadWords(normalized, read: echoText) {
             let keepsCancelWord = stripped.split(separator: " ")
                 .contains { VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
             guard keepsCancelWord || VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
                 utteranceLog.echoDrops += 1
                 utteranceOutcome = "echo"
+                // The sheet keeps the listener's audio per utterance: the
+                // echo's audio must not open the driver's next answer.
+                if screen == .confirmation, transcript.isFinal { noteConfirmationUtteranceEnded(.noise) }
                 return
             }
             matchText = stripped
@@ -123,7 +127,7 @@ extension VoiceCommandCoordinator {
         // out to be. Declared after the `endUtterance` defer, so it runs BEFORE
         // the latch is cleared.
         let onAnswerSheet = screen == .confirmation
-        let hasContent = VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage)
+        let hasContent = VoiceCommandMatcher.hasContentTokens(guardedNormalized, language: commandLanguage)
         var spokenAnswer: String?
         defer {
             if onAnswerSheet, transcript.isFinal {
@@ -164,9 +168,9 @@ extension VoiceCommandCoordinator {
         )
         var viaAlternative = false
         if matched == nil, transcript.isFinal {
-            let alternatives = underEchoGuard
+            let alternatives = echoText != nil
                 ? transcript.alternatives.compactMap { alternative in
-                    strippingReadWords(VoiceCommandMatcher.normalize(alternative, language: commandLanguage))
+                    strippingReadWords(VoiceCommandMatcher.normalize(alternative, language: commandLanguage), read: echoText)
                 } : transcript.alternatives
             for alternative in alternatives {
                 if let fromAlternative = VoiceCommandMatcher.match(

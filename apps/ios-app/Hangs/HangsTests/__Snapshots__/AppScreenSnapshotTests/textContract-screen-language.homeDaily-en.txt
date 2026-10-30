@@ -1,5 +1,4 @@
 # texts
-trubbo
 daily challenge · Oct 15
 Five questions. The same for everyone.
 Play today
@@ -34,6 +33,7 @@ of 30 free questions left
 Get Plus
 resets in 13 days
 resets in 13 days
+trubbo
 Start
 # identifiers
 home.daily

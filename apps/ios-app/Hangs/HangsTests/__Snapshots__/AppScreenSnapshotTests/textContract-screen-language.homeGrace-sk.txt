@@ -1,5 +1,4 @@
 # texts
-trubbo
 Kvíz
 History
 Science & Nature
@@ -31,6 +30,7 @@ obnova zlyhala
 Oprav platbu
 Aktualizuj spôsob platby
 Aktualizuj spôsob platby
+trubbo
 Štart
 # identifiers
 home-language-menu

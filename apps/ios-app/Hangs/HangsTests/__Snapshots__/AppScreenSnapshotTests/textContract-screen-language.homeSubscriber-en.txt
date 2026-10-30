@@ -1,5 +1,4 @@
 # texts
-trubbo
 Quiz
 History
 Science & Nature
@@ -32,6 +31,7 @@ Manage
 100 pack credits kept for later
 870 of 1,000 left · resets in 13 days
 870 of 1,000 left · resets in 13 days
+trubbo
 Start
 # identifiers
 home-language-menu

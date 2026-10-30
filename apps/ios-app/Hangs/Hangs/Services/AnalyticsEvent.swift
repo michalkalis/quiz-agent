@@ -37,6 +37,8 @@ enum AnalyticsEvent: Equatable {
     case recapViewed(kind: String, slidesSeen: Int, slidesTotal: Int)
     /// #213.5: the share sheet opened on the recap's last slide.
     case recapShared(kind: String)
+    /// #216.2: the Together tab came on screen.
+    case togetherOpened
     /// #213.8: the host changed a rule of a game together; `value` as sent
     /// ("round", "45", "true").
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
@@ -58,6 +60,7 @@ enum AnalyticsEvent: Equatable {
         case .profileOpened: "profile_opened"
         case .recapViewed: "recap_viewed"
         case .recapShared: "recap_shared"
+        case .togetherOpened: "together_opened"
         case .roomSettingsChanged: "room_settings_changed"
         }
     }
@@ -115,6 +118,8 @@ enum AnalyticsEvent: Equatable {
             [("kind", .string(kind)), ("slides_seen", .int(slidesSeen)), ("slides_total", .int(slidesTotal))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
+        case .togetherOpened:
+            []
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

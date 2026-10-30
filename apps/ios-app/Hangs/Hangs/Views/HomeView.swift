@@ -6,7 +6,10 @@
 //  the founder on 2026-10-13 (canvas "Home: poradie a plán", A + C + P1):
 //  the quiz (category deck and its three setting pills), my packs, your plan,
 //  each under the same section label; the slim command bar and Start stay
-//  pinned at the bottom.
+//  pinned at the bottom. #216.2 (founder 2026-10-30, P2): the logo is the
+//  navigation bar's large title; on scroll the system swaps it for the
+//  inline title "Play" (a `.title` logo item showed at rest too, so none).
+//  Start is a bar over the content, which scrolls under it.
 //
 
 import SwiftUI
@@ -30,88 +33,62 @@ struct HomeView: View {
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
-    /// #212: opens a game together. Nil in inspector tests and previews.
-    var onTogether: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 0) {
-            // #213.4: Settings moved under the Profile tab's gear.
-            HangsBrandRow()
-
-            ScrollView {
-                VStack(spacing: Theme.Hangs.Spacing.xl) {
-                    // #205.4: the daily challenge opens the page, above the quiz.
-                    if let appConfig, let dailyChallenge {
-                        HomeDailyChallengeSection(
-                            appConfig: appConfig,
-                            viewModel: dailyChallenge,
-                            language: Language.selectable(viewModel.settings.language).id,
-                            isStarting: viewModel.isStartingDailyChallenge,
-                            isStartDisabled: viewModel.quizState == .startingQuiz,
-                            onPlay: startDailyChallenge
-                        )
-                    }
-
-                    if let appConfig {
-                        UpdateAvailableCard(store: appConfig)
-                        AppNoticeBanner(store: appConfig)
-                    }
-
-                    quizSection
-
-                    // #141: pick-and-play entry for owned custom packs, plus
-                    // the always-on "Create your own pack" row.
-                    if let myPacks {
-                        HomePacksSection(
-                            viewModel: myPacks,
-                            createPack: createPackEntry,
-                            quizStart: packQuizStart,
-                            onPlayPack: startPack
-                        )
-                    }
-
-                    planSection
-
-                    // #96 P3: the "Image questions" toggle is hidden until
-                    // image content ships (founder, 2026-07-12). Wiring
-                    // stays; only the UI is gated behind a Config flag.
-                    if Config.imageQuestionsToggleVisible {
-                        HangsCard { imageQuestionsRow }
-                    }
+        ScrollView {
+            VStack(spacing: Theme.Hangs.Spacing.xl) {
+                // #205.4: the daily challenge opens the page, above the quiz.
+                if let appConfig, let dailyChallenge {
+                    HomeDailyChallengeSection(
+                        appConfig: appConfig,
+                        viewModel: dailyChallenge,
+                        language: Language.selectable(viewModel.settings.language).id,
+                        isStarting: viewModel.isStartingDailyChallenge,
+                        isStartDisabled: viewModel.quizState == .startingQuiz,
+                        onPlay: startDailyChallenge
+                    )
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.vertical, Theme.Hangs.Spacing.sm)
-            }
-            .scrollBounceBehavior(.basedOnSize)
 
-            // #77/#96 P2: listening indicator above the primary action — visible
-            // only while the Home command window is armed. #131 Track F: the one
-            // shared `ListenBar`, slim here — Home's command never changes and
-            // the screen has content to show.
-            if viewModel.commandListenerHint != nil {
-                ListenBar(
-                    mode: .command,
-                    feedback: viewModel.voiceFeedbackPhase,
-                    recognizingWord: viewModel.recognizingWord,
-                    commandHint: viewModel.voiceHintWords,
-                    size: .slim,
-                    language: viewModel.commandLanguage
-                )
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.top, Theme.Hangs.Spacing.xxs)
-                .transition(.opacity)
-            }
+                if let appConfig {
+                    UpdateAvailableCard(store: appConfig)
+                    AppNoticeBanner(store: appConfig)
+                }
 
-            HStack(spacing: Theme.Hangs.Spacing.sm) {
-                startQuizButton
-                if let appConfig, let onTogether, viewModel.quizState != .startingQuiz {
-                    HomeTogetherButton(store: appConfig, action: onTogether)
+                quizSection
+
+                // #141: pick-and-play entry for owned custom packs, plus
+                // the always-on "Create your own pack" row.
+                if let myPacks {
+                    HomePacksSection(
+                        viewModel: myPacks,
+                        createPack: createPackEntry,
+                        quizStart: packQuizStart,
+                        onPlayPack: startPack
+                    )
+                }
+
+                planSection
+
+                // #96 P3: the "Image questions" toggle is hidden until
+                // image content ships (founder, 2026-07-12). Wiring
+                // stays; only the UI is gated behind a Config flag.
+                if Config.imageQuestionsToggleVisible {
+                    HangsCard { imageQuestionsRow }
                 }
             }
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.top, Theme.Hangs.Spacing.sm)
-                .padding(.bottom, Theme.Hangs.Spacing.sm)
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
         }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaBar(edge: .bottom) { bottomBar }
+        .toolbar {
+            ToolbarItem(placement: .largeTitle) {
+                HangsBrandMark()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .navigationTitle("Play")
+        .navigationBarTitleDisplayMode(.large)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
             viewModel.refreshAudioDevices()
@@ -132,6 +109,28 @@ struct HomeView: View {
                 includeLocalQuestions: $viewModel.settings.includeLocalQuestions
             )
         }
+    }
+
+    /// Start, with the listening indicator above it while Home's command
+    /// window is armed (#77/#96 P2; #131 Track F: the one shared `ListenBar`,
+    /// slim here — Home's command never changes and the screen has content).
+    private var bottomBar: some View {
+        VStack(spacing: Theme.Hangs.Spacing.xxs) {
+            if viewModel.commandListenerHint != nil {
+                ListenBar(
+                    mode: .command,
+                    feedback: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
+                    commandHint: viewModel.voiceHintWords,
+                    size: .slim,
+                    language: viewModel.commandLanguage
+                )
+                .transition(.opacity)
+            }
+            startQuizButton
+        }
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
     }
 
     /// The pack whose start is running spins: the start request names it

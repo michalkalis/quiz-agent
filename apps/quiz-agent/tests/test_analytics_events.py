@@ -118,6 +118,16 @@ async def test_profile_opened_keeps_only_the_account_flag():
     assert cleaned == {"has_account": True}
 
 
+async def test_together_opened_is_accepted_and_carries_nothing():
+    # #216.2: counts how many open the Together tab, to compare with the
+    # games created and joined; an unknown name would be dropped silently.
+    assert "together_opened" in CLIENT_EVENTS
+    cleaned = clean_properties(
+        CLIENT_EVENTS["together_opened"], {"name": "Michal", "wifi": "home"}
+    )
+    assert cleaned == {}
+
+
 async def test_recap_events_keep_only_progress_and_kind():
     # #213.5: tells whether players watch their recap to the end and share
     # it; the recap's contents (cards, player type) must not leak into events.

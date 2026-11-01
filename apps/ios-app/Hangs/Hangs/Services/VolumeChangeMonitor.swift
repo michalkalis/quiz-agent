@@ -104,7 +104,7 @@ final class VolumeChangeMonitor {
 
         let crumb = Breadcrumb(level: .info, category: "audio.volume_change")
         crumb.message = "System output volume changed"
-        crumb.data = data
+        crumb.setData(data)
         SentryBreadcrumb.add(crumb)
 
         guard VolumeRiseDetector.isRise(old: old, new: new), rateLimiter.allow() else { return }

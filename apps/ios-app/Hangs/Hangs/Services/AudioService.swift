@@ -423,7 +423,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Logger.audio.error("❌ Failed to deactivate audio session: \(error.localizedDescription, privacy: .public)")
             let crumb = Breadcrumb(level: .error, category: "audio.session_deactivate")
             crumb.message = "setActive(false) failed"
-            crumb.data = ["error": error.localizedDescription]
+            crumb.setData(["error": error.localizedDescription])
             SentryBreadcrumb.add(crumb)
         }
     }
@@ -499,7 +499,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // candidate mechanisms for the founder's volume-drift report.
         let routeCrumb = Breadcrumb(level: .info, category: "audio.route_change")
         routeCrumb.message = "Audio route changed"
-        routeCrumb.data = ["reason": String(describing: reason)]
+        routeCrumb.setData(["reason": String(describing: reason)])
         SentryBreadcrumb.add(routeCrumb)
 
         switch reason {
@@ -637,7 +637,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         Logger.audio.error("❌ Failed to reactivate audio session after interruption: \(error.localizedDescription, privacy: .public)")
                         let crumb = Breadcrumb(level: .error, category: "audio.session_reactivate")
                         crumb.message = "setActive(true) failed after interruption ended"
-                        crumb.data = ["error": error.localizedDescription]
+                        crumb.setData(["error": error.localizedDescription])
                         SentryBreadcrumb.add(crumb)
                     }
                 } else {
@@ -817,7 +817,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Batch M4A recording started"
-        crumb.data = ["format": "m4a", "sample_rate": 16000]
+        crumb.setData(["format": "m4a", "sample_rate": 16000])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -858,10 +858,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         recordingStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Batch M4A recording stopped"
-        crumb.data = [
+        crumb.setData([
             "duration_ms": Int(duration * 1000),
             "bytes": data.count,
-        ]
+        ])
         SentryBreadcrumb.add(crumb)
 
         return data
@@ -978,7 +978,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Logger.audio.info("🎤 Streaming: hardware format settled after \(attempts, privacy: .public) attempts (\(elapsedMs, privacy: .public)ms)")
             let settleCrumb = Breadcrumb(level: .info, category: "audio.record_start")
             settleCrumb.message = "input format settled after \(elapsedMs)ms"
-            settleCrumb.data = ["attempts": attempts, "elapsed_ms": elapsedMs]
+            settleCrumb.setData(["attempts": attempts, "elapsed_ms": elapsedMs])
             SentryBreadcrumb.add(settleCrumb)
         case .success:
             break
@@ -1081,7 +1081,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Streaming PCM recording started"
-        crumb.data = ["format": "pcm_s16le", "sample_rate": 16000]
+        crumb.setData(["format": "pcm_s16le", "sample_rate": 16000])
         SentryBreadcrumb.add(crumb)
         // #184 track A: queryable (structured) — the car test needs to slice
         // recordings by input route and voice-processing state, which the
@@ -1116,7 +1116,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         recordingStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Streaming PCM recording stopped"
-        crumb.data = ["duration_ms": Int(duration * 1000)]
+        crumb.setData(["duration_ms": Int(duration * 1000)])
         SentryLog.info("answer recording stopped", category: .audio, attributes: [
             "path": "realtime",
             "durationMs": Int(duration * 1000),
@@ -1366,10 +1366,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let startCrumb = Breadcrumb(level: .info, category: "audio.playback_start")
         startCrumb.message = "AVPlayer playback started"
-        startCrumb.data = [
+        startCrumb.setData([
             "bytes": data.count,
             "duration_s": Int(durationSeconds),
-        ]
+        ])
         SentryBreadcrumb.add(startCrumb)
 
         return try await withTaskCancellationHandler {
@@ -1495,10 +1495,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         playbackStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.playback_end")
         crumb.message = "AVPlayer playback \(reason)"
-        crumb.data = [
+        crumb.setData([
             "duration_ms": Int(duration * 1000),
             "reason": reason,
-        ]
+        ])
         SentryBreadcrumb.add(crumb)
     }
 }

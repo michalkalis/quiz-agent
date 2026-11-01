@@ -6,8 +6,6 @@ import type {Language} from './types';
 type Copy = {
 	hooks: string[];
 	answer: string;
-	/** "Question" before a round question's number. */
-	question: string;
 	/** End card line under the logo (founder pick 2026-10-22: no call to action). */
 	tagline: string;
 	soon: string;
@@ -26,7 +24,6 @@ export const COPY: Record<Language, Copy> = {
 		// One fixed line (founder 2026-10-25); the second is the challenger for the weeks 4 to 6 test.
 		hooks: ['Bet you know this one.', 'Can you get it right?'],
 		answer: 'Answer',
-		question: 'Question',
 		tagline: 'Trivia you answer out loud',
 		soon: 'Coming soon to the App Store · trubbo.app',
 		roundTitle: (p) => `Quiz round, part ${p}.`,
@@ -39,7 +36,6 @@ export const COPY: Record<Language, Copy> = {
 	sk: {
 		hooks: ['Stavím sa, že toto vieš.', 'Trafíš to?'],
 		answer: 'Odpoveď',
-		question: 'Otázka',
 		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Čoskoro v App Store · trubbo.app',
 		roundTitle: (p) => `Kvízové kolo, ${p}. diel.`,
@@ -52,7 +48,6 @@ export const COPY: Record<Language, Copy> = {
 	cs: {
 		hooks: ['Vsadím se, že tohle víš.', 'Trefíš to?'],
 		answer: 'Odpověď',
-		question: 'Otázka',
 		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Brzy v App Store · trubbo.app',
 		roundTitle: (p) => `Kvízové kolo, ${p}. díl.`,

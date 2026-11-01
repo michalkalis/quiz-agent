@@ -47,7 +47,7 @@ NOTICE_KEYS = (
     "maintenance_cs",
     "maintenance_en",
 )
-BOOL_KEYS = ("orders_enabled", "maintenance_enabled")
+BOOL_KEYS = ("orders_enabled", "maintenance_enabled", "multiplayer_enabled_app_store")
 KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
 _cache: tuple[float, dict[str, str | None]] | None = None
@@ -100,6 +100,8 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "recommended_version_app_store": None,
         "recommended_version_testflight": None,
         "maintenance_enabled": False,
+        # #217: Together stays hidden in the App Store build until switched on.
+        "multiplayer_enabled_app_store": False,
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,
@@ -112,7 +114,7 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     for key, raw in overrides.items():
         if key == "orders_enabled":
             out[key] = raw != "false"
-        elif key == "maintenance_enabled":
+        elif key in ("maintenance_enabled", "multiplayer_enabled_app_store"):
             out[key] = raw == "true"
         elif key in out:
             out[key] = raw

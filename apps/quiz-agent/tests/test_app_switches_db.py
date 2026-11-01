@@ -204,3 +204,24 @@ async def test_a_broken_read_keeps_the_last_good_switches(db_sessionmaker, monke
 
     monkeypatch.setattr(app_switches, "read_overrides", _broken)
     assert (await _config(db_sessionmaker))["orders_enabled"] is False
+
+
+async def test_together_for_the_app_store_is_off_until_switched_on(db_sessionmaker):
+    """#217: the public store build must not get Together before the founder
+    and friends have tested it, and flipping it on (or back off) must need no
+    restart or app release. TestFlight keeps its own ``multiplayer_enabled``."""
+    body = await _config(db_sessionmaker)
+    assert body["multiplayer_enabled_app_store"] is False
+
+    await _put(db_sessionmaker, {"set": {"multiplayer_enabled_app_store": True}})
+    body = await _config(db_sessionmaker)
+    assert body["multiplayer_enabled_app_store"] is True
+    assert body["multiplayer_enabled"] is True  # untouched TestFlight switch
+
+    await _put(db_sessionmaker, {"reset": ["multiplayer_enabled_app_store"]})
+    assert (await _config(db_sessionmaker))["multiplayer_enabled_app_store"] is False
+
+    bad = await _put(
+        db_sessionmaker, {"set": {"multiplayer_enabled_app_store": "true"}}
+    )
+    assert bad.status_code == 422

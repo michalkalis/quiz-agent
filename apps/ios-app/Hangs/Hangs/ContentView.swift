@@ -146,6 +146,11 @@ struct ContentView: View {
     }
 
     private func openPendingInvite() {
+        // #217: Together is hidden in the App Store build: drop the link.
+        if appConfig.multiplayerHiddenByChannel {
+            _ = appState.roomInvites.take()
+            return
+        }
         guard room == nil, viewModel.quizScreen == .home, let invite = appState.roomInvites.take() else { return }
         openRoom(invite: invite)
     }

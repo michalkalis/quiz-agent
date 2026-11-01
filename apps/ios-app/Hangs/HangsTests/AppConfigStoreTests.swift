@@ -235,9 +235,45 @@ struct AppConfigStoreTests {
         #expect(store.maintenance)
     }
 
+    // MARK: Together hidden in the App Store build (#217)
+
+    @Test("Together reaches the public only when its App Store switch is on; TestFlight keeps the old switch")
+    func togetherGatedPerChannel() async {
+        // Why: the founder and close friends test Together on TestFlight first;
+        // the store build must not show it (or open join links) until the
+        // server switch says so, with no new app version.
+        func config(_ together: Bool, _ appStore: Bool) -> RemoteAppConfig {
+            RemoteAppConfig(
+                minVersionAppStore: nil, minVersionTestflight: nil, ordersEnabled: true, notice: nil,
+                multiplayerEnabled: together, multiplayerEnabledAppStore: appStore
+            )
+        }
+        let cases: [(together: Bool, appStore: Bool, storeBuild: Bool, shown: Bool)] = [
+            (true, false, true, false),
+            (true, true, true, true),
+            (false, true, true, false),
+            (true, false, false, true),
+            (false, false, false, false),
+        ]
+        for c in cases {
+            let store = makeStore(version: "1.0", isAppStoreBuild: c.storeBuild) { config(c.together, c.appStore) }
+            await store.refresh()
+            #expect(store.multiplayerEnabled == c.shown)
+            #expect(store.multiplayerHiddenByChannel == (c.storeBuild && !c.appStore))
+        }
+    }
+
+    @Test("An older server without the App Store field keeps Together hidden in the store build")
+    func togetherFieldMissingDecodesOff() throws {
+        let config = try JSONDecoder().decode(RemoteAppConfig.self, from: Data(#"{"multiplayer_enabled": true}"#.utf8))
+        #expect(config.multiplayerEnabled)
+        #expect(!config.multiplayerEnabledAppStore)
+    }
+
     private func makeStore(
         version: String,
         isTestFlight: Bool = false,
+        isAppStoreBuild: Bool = false,
         language: String = "en",
         defaults: UserDefaults? = nil,
         fetch: @escaping AppConfigStore.Fetch
@@ -247,6 +283,7 @@ struct AppConfigStoreTests {
             defaults: defaults ?? UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)")!,
             appVersion: version,
             isTestFlight: isTestFlight,
+            isAppStoreBuild: isAppStoreBuild,
             languageCode: language
         )
     }

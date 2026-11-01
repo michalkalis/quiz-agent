@@ -55,6 +55,8 @@ async def test_defaults_never_block_or_hide_anything():
         "daily_challenge_enabled": True,
         # #212: same; off in prod until the founder flips it.
         "multiplayer_enabled": True,
+        # #217: hidden in the App Store build unless switched on in the DB.
+        "multiplayer_enabled_app_store": False,
         "notice": None,
         # No DB in this test app: the voice test block is null (fail open).
         "voice_experiment": None,

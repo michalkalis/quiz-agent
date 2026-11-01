@@ -36,6 +36,7 @@ final class AppConfigStore: ObservableObject {
 
     /// The channel decides which minimum applies and where "update" leads.
     let isTestFlight: Bool
+    private let isAppStoreBuild: Bool
 
     var updateRequired: Bool {
         let minimum = isTestFlight ? config.minVersionTestflight : config.minVersionAppStore
@@ -59,8 +60,14 @@ final class AppConfigStore: ObservableObject {
 
     var ordersEnabled: Bool { config.ordersEnabled }
 
-    /// #212: the Together button on Home.
-    var multiplayerEnabled: Bool { config.multiplayerEnabled }
+    /// #212: the Together button on Home. #217: in the App Store build it also
+    /// needs its own switch, so the feature can stay hidden from the public
+    /// until the founder and close friends have tested it.
+    var multiplayerEnabled: Bool { config.multiplayerEnabled && !multiplayerHiddenByChannel }
+
+    /// #217: this is the App Store build and Together is not switched on for
+    /// it. Join links are dropped too, so a link cannot open the hidden feature.
+    var multiplayerHiddenByChannel: Bool { isAppStoreBuild && !config.multiplayerEnabledAppStore }
 
     /// #204.9: the voice-settings experiment, read when a quiz round starts.
     var voiceExperiment: VoiceExperimentConfig? { config.voiceExperiment }
@@ -77,12 +84,14 @@ final class AppConfigStore: ObservableObject {
         defaults: UserDefaults = .standard,
         appVersion: String = AppVersion.current,
         isTestFlight: Bool = BuildChannel.isTestFlight(),
+        isAppStoreBuild: Bool = BuildChannel.isAppStoreBuild,
         languageCode: @autoclosure @escaping () -> String = InterfaceLanguage.code
     ) {
         self.fetch = fetch
         self.defaults = defaults
         self.appVersion = appVersion
         self.isTestFlight = isTestFlight
+        self.isAppStoreBuild = isAppStoreBuild
         interfaceLanguage = languageCode
         #if DEBUG
             // UI tests run on a long-lived simulator: a notice dismissed in one

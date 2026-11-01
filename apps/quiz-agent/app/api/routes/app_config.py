@@ -62,6 +62,9 @@ class AppConfigResponse(BaseModel):
     daily_challenge_enabled: bool = False
     # #212: show the Spolu (play together) button.
     multiplayer_enabled: bool = False
+    # #217: the App Store build shows Spolu only when this is also true
+    # (TestFlight builds only read ``multiplayer_enabled``). DB switch, off.
+    multiplayer_enabled_app_store: bool = False
     notice: Optional[AppNotice] = None
     # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
     # there is no DB or the read fails; the app then uses its manual switches.
@@ -91,6 +94,7 @@ async def get_app_config(
         orders_enabled=switches["orders_enabled"],
         daily_challenge_enabled=settings.daily_challenge_enabled,
         multiplayer_enabled=settings.multiplayer_enabled,
+        multiplayer_enabled_app_store=switches["multiplayer_enabled_app_store"],
         notice=notice,
         voice_experiment=await voice_experiment_config(sessionmaker),
         maintenance_enabled=switches["maintenance_enabled"],

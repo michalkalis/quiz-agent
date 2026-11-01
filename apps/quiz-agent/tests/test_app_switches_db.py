@@ -221,5 +221,7 @@ async def test_together_for_the_app_store_is_off_until_switched_on(db_sessionmak
     await _put(db_sessionmaker, {"reset": ["multiplayer_enabled_app_store"]})
     assert (await _config(db_sessionmaker))["multiplayer_enabled_app_store"] is False
 
-    bad = await _put(db_sessionmaker, {"set": {"multiplayer_enabled_app_store": "true"}})
+    bad = await _put(
+        db_sessionmaker, {"set": {"multiplayer_enabled_app_store": "true"}}
+    )
     assert bad.status_code == 422

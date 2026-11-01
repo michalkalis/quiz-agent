@@ -157,6 +157,10 @@ async def _seed_ids(session: AsyncSession) -> list[str]:
         )
         .order_by(GenerationOrder.created_at.desc())
     )
+    # One seed per user_id. Known limitation (#217.2): sign-in re-keys orders
+    # from anon ids onto the account, so an account whose orders came from more
+    # than one Apple ID (e.g. two phones with different App Store accounts)
+    # gets only the newest order's purchase history reconciled.
     seeds: list[str] = []
     seen_users: set[str] = set()
     for user_id, tx_id in rows:

@@ -14,6 +14,11 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 221 | [Technická modernizácia](issue-221-tech-modernization.md) | chore · ready-for-agent | `[~]` #221 | 2026-11-01: audit verzií; 221.1 nepoužitá knižnica Google preč + spodné hranice (PR #659) |
+| 220 | [App Store marketing (ASO)](issue-220-app-store-marketing.md) | enhancement · ready-for-agent | `[ ]` #220 | 2026-11-01: kľúčové slová sk/cs/en, názov s popisom (schválené), CPP a eventy až po vydaní |
+| 219 | [Live Activity (Siri vynechaná)](issue-219-siri-live-activity.md) | enhancement · ready-for-agent | `[ ]` #219 | 2026-11-01: founder vynechal Siri; Live Activity áno, najprv HTML varianty |
+| 218 | [Pády a spätná väzba automaticky do issues](issue-218-crash-feedback-automation.md) | enhancement · ready-for-agent | `[ ]` #218 | 2026-11-01: súkromné `trubbo-triage`, mail len pri dopade, strop AI len na hráča |
+| 217 | [Verejné vydanie v App Store](issue-217-app-store-launch.md) | enhancement · ready-for-agent | `[ ]` #217 | 2026-11-01: 1.1 vyjde sama, štart s 1.2; nahrádza zvyšok #62; Hra spolu v store skrytá |
 | 215 | [Prví kvalitní testeri mimo rodiny](issue-215-superfan-testers.md) | enhancement · ready-for-agent | `[ ]` #215 | 2026-10-29: 5 testerov (mix), e-mail pozvánky do Public bety, WhatsApp s každým zvlášť, správy schvaľuje founder |
 | 216 | [Karty Hraj · Spolu · Profil po teste buildu 81](issue-216-tabs-play-profile-after-b81.md) | enhancement · ready-for-agent | `[x]` #216 | 2026-10-30: founder vybral B (karta Spolu), P2 (natívne logo v lište), S1 (karta mesiaca); balíky vizuálne bez zmeny |
 | 214 | [Odporúčaná aktualizácia a režim údržby](issue-214-update-nudge-maintenance.md) | enhancement · done | `[x]` #214 | 2026-10-28: DB prepínače `recommended_version_*`, `maintenance_*`; karta na Home + obrazovka údržby; ide s najbližším buildom |
@@ -156,7 +161,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | 67 | [Audio interruption + barge-in](issue-67-audio-interruption-and-barge-in.md) | bug · A done via #77 · B deferred | `[ ]` #67 | Part A shipped (77.2). Part B barge-in deferred by founder. Open: `[HUMAN]` on-device interruption-recovery check |
 | 64 | [Full-project review — findings ledger](issue-64-full-project-review.md) | review · umbrella | `[ ]` #64 | Spin-offs #65–#71 carry the work (#65/#69 done). Report `docs/artifacts/full-project-review-2026-06-21.html` |
 | 63 | [Question-quality review: gen audit + corpus verification](issue-63-question-quality-review.md) | enhancement · ready-for-human | `[~]` #63 | The parked "whole generation process review"; owns MCQ yield validation (ex-#42). Founder-in-the-loop |
-| 62 | [Auth Phase 3 — cross-device + purchase binding](issue-62-auth-phase3-cross-device-purchase-binding.md) | enhancement · ready-for-human (post-MVP) | `[ ]` #62 | Depends #61 + #50 |
+| 62 | [Auth Phase 3 — cross-device + purchase binding](issue-62-auth-phase3-cross-device-purchase-binding.md) | enhancement · wontfix (zlúčené do #217) | | 2026-11-01: zvyšok rieši #217 — verejné vydanie v App Store (217.2) |
 | 61 | [Auth Phase 2 — Sign in with Apple](issue-61-auth-phase2-sign-in-with-apple.md) | enhancement · code done — remaining `[HUMAN]` | `[~]` #61 | Sessions A–D shipped + deployed (Fly v53/v54); security remediation done 2026-07-03. Remaining: on-device SK sign-in verify, privacy nutrition label, human security review |
 | 59 | [Quiz-flow bug cluster](issue-59-quiz-flow-bug-cluster.md) | bug · mostly done | `[~]` #59 | All 8 bugs fixed 2026-06-17. Remaining: RS sim legs (RS-11..17 subset) via `/regression` + `[HUMAN]` 59.1 device TTS confirm |
 | 56 | [iOS text localization — String Catalog](issue-56-ios-localization.md) | enhancement · in progress | `[~]` #56 | 56.1–56.4 done. Remaining: 56.5 full-suite confirm + 56.6 `[HUMAN]` Xcode catalog populate. NB: #86 UI work will add new strings after |

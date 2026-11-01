@@ -85,7 +85,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
     potom to isté s `--execute --yes`.
   - Prečo: dnes po prihlásení (aj na tom istom telefóne) balík za €8,99 zmizne.
   - Hotovo: PR zlúčený, nasadené `backend-deploy.yml`, backfill spustený a výsledok zapísaný. Funguje aj pre 1.1.
-- [ ] **217.3 Skryť náklady generovania** — agent
+- [~] **217.3 Skryť náklady generovania** — agent (PR #664)
   - Čo: bez admin kľúča vracať `llm_cost_usd = null`, `search_cost_cents = 0`, `total_cost_cents = 0`
     (polia ostávajú, CI kontrola API prejde; iOS ich neukazuje).
   - Prečo: zákazník by v odpovedi videl našu cenu generovania.

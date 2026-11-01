@@ -96,9 +96,7 @@ export const QuestionCard: React.FC<{
 	scale?: number;
 	markBg: string;
 	markInk: string;
-	/** A round question's number, shown above it. */
-	number?: number;
-}> = ({q, words, tMs, optionsAtMs, optionAtMs = [], revealed, appear, readable, scale = 1, markBg, markInk, number}) => {
+}> = ({q, words, tMs, optionsAtMs, optionAtMs = [], revealed, appear, readable, scale = 1, markBg, markInk}) => {
 	const long = q.question.length > 110;
 	const mcq = q.options.length > 0;
 	return (
@@ -113,9 +111,6 @@ export const QuestionCard: React.FC<{
 				transformOrigin: 'top left',
 			}}
 		>
-			{number !== undefined ? (
-				<div style={{fontSize: 30, fontWeight: 700, color: INK2, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14}}>{`${COPY[q.language].question} ${number}`}</div>
-			) : null}
 			<div style={{fontSize: long || mcq ? 56 : 66, fontWeight: 700, lineHeight: 1.18, letterSpacing: -0.6}}>
 				{words.map((w, i) => {
 					const saying = readable && tMs >= w.startMs && (i === words.length - 1 ? tMs < optionsAtMs : tMs < words[i + 1].startMs);

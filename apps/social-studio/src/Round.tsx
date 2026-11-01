@@ -92,7 +92,6 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 					optionsAtMs={step.cdStart - step.voiceStart}
 					revealed={false}
 					appear={fused ? 1 : enter(step.start)}
-					number={i + 1}
 					readable
 					scale={fused ? SMALL_Q + (1 - SMALL_Q) * grow : 1}
 					markBg={tint.bg}

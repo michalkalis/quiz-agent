@@ -194,6 +194,21 @@ def admin_key_presented(request: Request) -> bool:
     return _extract_admin_key(request) is not None
 
 
+def admin_key_valid(request: Request, settings: Settings) -> bool:
+    """True only when a configured admin key was presented and matches.
+
+    Never raises: for routes where the admin key is an optional extra (it
+    unlocks admin-only fields like generation cost) rather than the credential
+    that authorises the call."""
+    configured = settings.admin_api_key
+    presented = _extract_admin_key(request)
+    # Compare as bytes: compare_digest raises TypeError on non-ASCII str, and a
+    # header (or decoded Basic auth) can carry any character → would be a 500.
+    return bool(configured) and presented is not None and secrets.compare_digest(
+        presented.encode(), configured.encode()
+    )
+
+
 def check_admin_key(request: Request, settings: Settings) -> None:
     """Validate a *presented* admin key or raise (same semantics as
     `require_admin`, callable imperatively where the auth scheme is decided
@@ -204,12 +219,7 @@ def check_admin_key(request: Request, settings: Settings) -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Admin API not configured",
         )
-    presented = _extract_admin_key(request)
-    # Compare as bytes: compare_digest raises TypeError on non-ASCII str, and a
-    # header (or decoded Basic auth) can carry any character → would be a 500.
-    if presented is None or not secrets.compare_digest(
-        presented.encode(), configured.encode()
-    ):
+    if not admin_key_valid(request, settings):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing admin credentials",

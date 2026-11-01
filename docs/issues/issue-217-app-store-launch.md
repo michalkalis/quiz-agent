@@ -37,13 +37,21 @@ transakcii zlúči anonymného hráča do účtu (zlúčenie, nie náhrada; sú�
 `upgraded_to_user_id`, 409 len keď anon už patrí inému účtu). Plus ide cez RevenueCat `logIn(users.id)`
 + webhook (vrátane TRANSFER), kredit otázok je serverový ledger na účte. Chýba len:
 
-1. **Vlastné balíky sa pri zlúčení prekľúčujú na účet.** V `merge_anonymous_identity` dve `UPDATE`
-   (`question_packs`, `generation_orders`: `user_id` anon → účet), rovnako ako dnešné `_unlink_pack_orders`
-   pri zmazaní účtu (ten istý Postgres, `text()`, quiz-agent neimportuje modely pack-api). quiz-pack-api
-   sa nemení. Jednorazový backfill pre už zlúčené anon id (dnes len founder). Zvolené prekľúčovanie, nie
+1. **Vlastné balíky sa pri prihlásení prekľúčujú na účet** (opravené po `/design-soundness` 11-01).
+   `rekey_purchases` v `usage/account_merge.py` presunie `generation_orders`, `question_packs` aj
+   `credit_ledger` z anon id prihlasujúceho sa zariadenia na `users.id` **pri každom prihlásení**, nielen
+   pri prvom zlúčení (po odhlásení je zariadenie znova na tom istom, už prepojenom anon id a môže kúpiť
+   ďalší balík alebo kredit). Beží až po kontrole 409, takže balíky cudzieho účtu sa nikdy nepresunú;
+   idempotentné. Ten istý Postgres, `text()` ako `_unlink_pack_orders`. Súbeh s prvou dávkou balíka:
+   `PersistStage` zamkne riadok objednávky (`FOR UPDATE`) a prekľúčovanie ide objednávky → balíky, takže
+   balík nikdy neostane na anon id. Backfill pre už prepojené anon id: `scripts/rekey_linked_purchases.py`
+   (dry run, potom `--execute --yes`). Zvolené prekľúčovanie, nie
    čítanie cez prepojené id ako pri prehľadoch: pack-api by inak čítal tabuľku quiz-agentu a vlastnícka
    kontrola hry by sa musela meniť na dvoch miestach. Druhý vzor (čítanie cez linked ids) ostáva pre
-   štatistiky; tam dáta len čítame, nevlastníme.
+   štatistiky; tam dáta len čítame, nevlastníme. Známe obmedzenia: reconcile (`storekit/reconcile.py`)
+   berie jeden seed na `user_id`, takže účet s objednávkami z viacerých Apple ID zrekonciliuje len jednu
+   históriu; objednávka odoslaná ešte so starým anon tokenom, ktorá dorazí až po prihlásení, sa presunie
+   až pri ďalšom prihlásení (217.4: výzvu ukázať až po prijatí objednávky).
 2. **Výzva na prihlásenie po každom nákupe** (Plus, kredit, vlastný balík), rovnaký sheet a strop ako dnes,
    a jedna ponuka „obnov nákupy prihlásením“ na novej inštalácii (otázka 2).
 3. **Odmietnuté:** Keychain synchronizovaný cez iCloud (anon by žil na dvoch telefónoch naraz a detekcia
@@ -68,9 +76,13 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
      (presné názvy polí doplní pri otvorení).
   2. Founder sa prihlási (ak treba) svojím Apple ID.
   3. Prečíta text, klikne **Submit** / **Send**.
-- [ ] **217.2 Vlastné balíky idú s Apple účtom** — agent (po `/design-soundness`)
-  - Čo: prekľúčovanie v zlúčení + backfill (návrh bod 1); pytest: anon kúpi balík → prihlásenie → balík je
-    v `GET /v1/orders` aj hrateľný; opakované prihlásenie nič nezdvojí; 409 bez zmeny.
+- [ ] **217.2 Vlastné balíky idú s Apple účtom** — agent (`/design-soundness` hotový 11-01, opravy zapracované)
+  - Čo: prekľúčovanie objednávok, balíkov aj kreditu pri každom prihlásení, po kontrole 409; zámok
+    objednávky v `PersistStage`; backfill (návrh bod 1). pytest: anon kúpi balík → prihlásenie → balík je
+    v `GET /v1/orders` aj hrateľný; prihlásenie → odhlásenie → kúpa → prihlásenie presunie aj nový balík a
+    kredit; opakované prihlásenie nič nezdvojí; 409 nič nepresunie; súbeh s prvou dávkou; backfill.
+  - Backfill (po nasadení, najprv dry run): `fly ssh console -a quiz-agent-api -C "python /app/scripts/rekey_linked_purchases.py"`,
+    potom to isté s `--execute --yes`.
   - Prečo: dnes po prihlásení (aj na tom istom telefóne) balík za €8,99 zmizne.
   - Hotovo: PR zlúčený, nasadené `backend-deploy.yml`, backfill spustený a výsledok zapísaný. Funguje aj pre 1.1.
 - [ ] **217.3 Skryť náklady generovania** — agent
@@ -85,11 +97,15 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   - Prečo: kredit a balíky Apple neobnoví (consumable); bez prihlásenia sú na novom telefóne preč.
   - Hotovo: unit testy brány (kto, kedy, strop), snímky, PR zlúčený.
 - [ ] **217.5 Oznámenia Apple o refundoch aj pre vlastné balíky** — agent cez Playwright (founder sa len prihlási)
-  - Čo: overiť URL v ASC (App Information → App Store Server Notifications). Ak ukazuje na RevenueCat,
-    nastaviť v RevenueCat preposielanie na `https://quiz-pack-api.fly.dev/v1/appstore/notifications`
-    (funkcia preposielania v RevenueCat je neoverená; ak neexistuje, rozhodnúť v PR, nie meniť URL naslepo).
+  - Čo: URL v ASC (App Information → App Store Server Notifications) ostáva na RevenueCat (potrebuje ich
+    pre Plus). V RevenueCat (app → App Store settings) nastaviť **Apple Server Notification Forwarding URL**
+    na `https://quiz-pack-api.fly.dev/v1/appstore/notifications`; funkcia existuje
+    ([docs](https://www.revenuecat.com/docs/platform-resources/server-notifications/apple-server-notifications)).
+    Overiť end-to-end, že preposlaný payload stále prejde našou kontrolou Apple JWS
+    (`quiz-pack-api/app/storekit/notifications.py`), aj pre Sandbox.
   - Prečo: refund vlastného balíka dnes nič neodoberie; RevenueCat oznámenia potrebuje pre Plus.
-  - Hotovo: testovacie oznámenie (App Store Server API, vyžaduje 217.6) dorazí do `quiz-pack-api`.
+  - Hotovo: testovacie oznámenie (App Store Server API, vyžaduje 217.6) prejde cez RevenueCat do
+    `quiz-pack-api` a overí sa (Production aj Sandbox).
 - [ ] **217.6 In-App Purchase kľúč pre server** — founder (kľúč vytvára founder, hodnoty nikdy do chatu)
   1. Otvor https://appstoreconnect.apple.com → **Users and Access**.
   2. Hore karta **Integrations** → vľavo **In-App Purchase**.
@@ -149,7 +165,7 @@ potrebuje 217.6) → 217.9 → TF build na požiadanie → 217.10 → 217.11 →
 - 1.1 môže vyjsť sama skôr než 217.2 (dnes `AFTER_APPROVAL`) → 217.1 a 217.2 idú prvé.
 - Kým je 1.1 schválená a nevydaná, 1.2 sa podať nedá: treba 1.1 vydať alebo ju zrušiť (
   developer reject, presný názov tlačidla overiť v ASC); schválené nákupy ostávajú schválené.
-- Prekľúčovanie balíkov je presun vlastníctva platených dát: v jednej transakcii so zlúčením, test na
+- Prekľúčovanie balíkov je presun vlastníctva platených dát: v jednej transakcii s prihlásením, test na
   idempotenciu, backfill najprv dry run.
 
 ## Otázky pre foundera

@@ -43,10 +43,10 @@ Už v poriadku: modely Claude 5.5, min. iOS 26, Swift 6 so striktnou súbežnos�
 ### 221.4 — Sentry v appke 8 → 9
 - Čo: prečítať oficiálny migračný návod, aktualizovať SPM, prispôsobiť nastavenie. Zachovať `beforeSend` cenzor reči hráča a zbierku spätnej väzby (shake-to-report). Zapnúť MetricKit diagnostiku a prílohy pri zamrznutí, ak sú v 9 nové.
 - Prečo: lepšie hlásenia pádov a zamrznutí; predpoklad pre #218.
-- Hotové: build + cielené testy zelené; testovací crash z Debug buildu dorazí do Sentry so zachovaným cenzorom.
+- Hotové: build + cielené testy zelené; testovací crash z Debug buildu dorazí do Sentry so zachovaným cenzorom. (PR #662; 9.32.0, MetricKit/hang prílohy sú len experimental → nezapnuté)
 
 ### 221.5 — RevenueCat menšia aktualizácia
-- Hotové: build zelený, nákupné testy (StoreKit config) zelené. Ide spolu s 221.4 v jednom iOS PR, ak migrácia Sentry nie je veľká.
+- Hotové: build zelený, nákupné testy (StoreKit config) zelené (PR #662; 5.100.0). Ide spolu s 221.4 v jednom iOS PR, ak migrácia Sentry nie je veľká.
 
 ### 221.6 — iOS CI na stabilný Xcode
 - Čo: keď GitHub vydá GA obraz s Xcode 27.x, prepnúť `runs-on` a `xcode-select`; inak skontrolovať, či `macos-26` obraz už nemá Xcode 27.1.

@@ -161,3 +161,5 @@ potrebuje 217.6) → 217.9 → TF build na požiadanie → 217.10 → 217.11 →
    „Prihlás sa a obnov nákupy“ pri prvom spustení na novom telefóne? Odporúčam áno, vždy s možnosťou zavrieť.
 3. **Hra spolu pri verejnom spustení:** prepínač je v prode zapnutý pre všetkých, takže ju App Store 1.2 ukáže
    každému. Nechať zapnutú, alebo do vydania vypnúť a zapnúť neskôr?
+   **Rozhodnuté 2026-11-01:** v App Store builde skrytá, kým ju founder s blízkymi neotestuje; v TestFlighte viditeľná;
+   zapnutie prepínačom `multiplayer_enabled_app_store` bez novej verzie (PR #661, [app-switches.md](../setup/app-switches.md)).

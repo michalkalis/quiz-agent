@@ -13,7 +13,6 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
-from app.config import get_settings
 from app.usage import ai_grading_cap
 from app.usage.ai_grading_cap import ai_grading_stats, bind_ai_grading
 from app.usage.caps import UsageCaps
@@ -39,7 +38,7 @@ def _question() -> Question:
 
 @pytest.fixture
 def setup(db_sessionmaker, monkeypatch):
-    monkeypatch.setattr(get_settings(), "daily_cap_ai_gradings", 2)
+    monkeypatch.setenv("DAILY_CAP_AI_GRADINGS", "2")
     mails: list[str] = []
 
     async def fake_mail(subject, body):

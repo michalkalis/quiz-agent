@@ -37,6 +37,7 @@ from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
+from ...usage.ai_grading_cap import bind_ai_grading
 from ...usage.caps import UsageCaps, answer_attempts
 from ...config import get_settings
 from ...tts.service import TTSService
@@ -349,6 +350,7 @@ async def submit_input(
                 1,
                 get_settings().daily_cap_answer_attempts,
             )
+            bind_ai_grading(usage_caps, subject.subject_id or session.user_id)
             flow_result = await quiz_flow.process_answer(
                 session=session,
                 answer_text=body.input,

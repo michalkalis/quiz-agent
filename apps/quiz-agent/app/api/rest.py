@@ -15,6 +15,7 @@ from .routes import (
     dictation,
     entitlements,
     feedback,
+    hooks,
     me_recaps,
     me_stats,
     misc,
@@ -43,6 +44,7 @@ router.include_router(tts.router)
 router.include_router(misc.router)
 router.include_router(entitlements.router)
 router.include_router(feedback.router)
+router.include_router(hooks.router)
 router.include_router(analytics.router)
 router.include_router(provider_balances.router)
 router.include_router(question_stock.router)

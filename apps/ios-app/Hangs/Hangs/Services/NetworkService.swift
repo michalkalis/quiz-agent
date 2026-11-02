@@ -161,7 +161,7 @@ actor NetworkService: NetworkServiceProtocol {
     private nonisolated func breadcrumbRequest(method: String, endpoint: String) {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
-        crumb.data = ["method": method, "endpoint": endpoint]
+        crumb.setData(["method": method, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -169,7 +169,7 @@ actor NetworkService: NetworkServiceProtocol {
         let level: SentryLevel = (200 ... 299).contains(status) ? .info : .warning
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
-        crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
+        crumb.setData(["status": status, "bytes": bytes, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 

@@ -46,8 +46,8 @@ struct HangsApp: App {
             options.sendDefaultPii = false
             options.beforeSend = Self.scrubEvent
 
-            // Structured Logs (experimental in sentry-cocoa 8.x; moves to options.enableLogs in 9.0)
-            options.experimental.enableLogs = true
+            // Structured Logs (top-level option since sentry-cocoa 9.0)
+            options.enableLogs = true
 
             // #109: our own in-app feedback UI (feedback chip + Settings row →
             // FeedbackView) replaces Sentry's shake widget so there is exactly one
@@ -166,7 +166,7 @@ struct HangsApp: App {
                     data[key] = "[REDACTED]"
                     mutated = true
                 }
-                if mutated { crumb.data = data }
+                if mutated { crumb.setData(data) }
             }
         }
 

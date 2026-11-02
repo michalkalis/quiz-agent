@@ -306,7 +306,7 @@ final class FeedbackViewModel: ObservableObject {
     private func addSentBreadcrumb() {
         let crumb = Breadcrumb(level: .info, category: "feedback.sent")
         crumb.message = "feedback.sent"
-        crumb.data = ["quiz_state": context.quizState, "has_screenshot": screenshot != nil]
+        crumb.setData(["quiz_state": context.quizState, "has_screenshot": screenshot != nil])
         SentryBreadcrumb.add(crumb)
     }
 

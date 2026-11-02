@@ -20,6 +20,7 @@ from .routes import (
     me_stats,
     misc,
     provider_balances,
+    public_questions,
     question_stock,
     quiz,
     room_play,
@@ -48,6 +49,7 @@ router.include_router(hooks.router)
 router.include_router(analytics.router)
 router.include_router(provider_balances.router)
 router.include_router(question_stock.router)
+router.include_router(public_questions.router)
 router.include_router(app_config.router)
 router.include_router(voice_samples.router)
 router.include_router(voice_experiment.router)

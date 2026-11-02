@@ -17,6 +17,13 @@ for, generated (LLM cost spent), and then permanently unplayable/unlistable.
 Requires the admin key or a bearer JWT matching the order's `user_id` — the
 Phase-1 unauthenticated read is closed (#95).
 
+Both reads show what generation cost us (`llm_cost_usd`, `search_cost_cents`,
+`job.total_cost_cents`, and `job.error`, whose budget cut-off text quotes the
+cents spent) only to a valid admin key (#217 task 217.3). A pack owner gets
+null / 0 instead: the fields stay in the schema because shipped iOS builds
+decode them (non-optional ints), but our cost of goods is not the buyer's
+business.
+
 `POST /v1/orders/{order_id}/retry` accepts the same bearer identity as the
 read above, in addition to the StoreKit JWS and the admin key (#146 Option B):
 a consumable's proof cannot be re-read once finished, so proof-only
@@ -67,6 +74,7 @@ from ...storekit.jws_cache import verify_jws_cached
 from ...storekit.revocation import assert_not_revoked
 from ..deps import (
     admin_key_presented,
+    admin_key_valid,
     check_admin_key,
     get_arq_pool,
     get_jws_verifier,
@@ -164,8 +172,8 @@ class OrderSnapshotResponse(BaseModel):
     # already-playable pack (pack_id set, status still in_progress);
     # `complete` / `failed` once it stops. None without a pack.
     pack_generation_status: Optional[str] = None
-    # Measured spend (#95 decision 5); fine to expose while prod is
-    # founder-only — hide behind the admin key before real users.
+    # Measured spend (#95 decision 5). Admin key only (#217 task 217.3):
+    # everyone else gets None / 0, see `_order_snapshot`.
     llm_cost_usd: Optional[Decimal]
     search_cost_cents: int
     # #103 F4c: set on terminal failure (_handle_failure / the sweep) so a
@@ -499,7 +507,9 @@ async def create_order(
     return OrderCreatedResponse(order_id=order.id, status=order.status, created_at=order.created_at)
 
 
-def _job_snapshot(job: Optional[GenerationJob]) -> Optional[JobSnapshotResponse]:
+def _job_snapshot(
+    job: Optional[GenerationJob], show_costs: bool
+) -> Optional[JobSnapshotResponse]:
     if job is None:
         return None
     return JobSnapshotResponse(
@@ -507,8 +517,10 @@ def _job_snapshot(job: Optional[GenerationJob]) -> Optional[JobSnapshotResponse]
         status=job.status,
         progress=job.progress,
         retry_count=job.retry_count,
-        total_cost_cents=job.total_cost_cents,
-        error=job.error,
+        total_cost_cents=job.total_cost_cents if show_costs else 0,
+        # Admin-only too: the budget cut-off message quotes the cents spent,
+        # and other errors are raw exception reprs. No client reads it.
+        error=job.error if show_costs else None,
         updated_at=job.updated_at,
     )
 
@@ -518,7 +530,10 @@ def _order_snapshot(
     job: Optional[GenerationJob],
     actual_count: Optional[int] = None,
     pack_generation_status: Optional[str] = None,
+    *,
+    show_costs: bool,
 ) -> OrderSnapshotResponse:
+    """Serialize an order. `show_costs` is True only for a valid admin key."""
     return OrderSnapshotResponse(
         order_id=order.id,
         status=order.status,
@@ -533,16 +548,18 @@ def _order_snapshot(
         pack_id=order.pack_id,
         actual_count=actual_count,
         pack_generation_status=pack_generation_status,
-        llm_cost_usd=order.llm_cost_usd,
-        search_cost_cents=order.search_cost_cents,
+        llm_cost_usd=order.llm_cost_usd if show_costs else None,
+        search_cost_cents=order.search_cost_cents if show_costs else 0,
         refund_eligible=order.refund_eligible,
-        job=_job_snapshot(job),
+        job=_job_snapshot(job, show_costs),
     )
 
 
 @router.get("", response_model=OrderListResponse)
 async def list_orders(
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
     subject: Annotated[str, Depends(require_user)],
 ) -> OrderListResponse:
     """List the caller's own orders, newest first (#95 "My packs").
@@ -578,12 +595,16 @@ async def list_orders(
             for row in (await session.execute(pack_stmt)).all()
         }
 
+    # The bearer authorises the list; an admin key is only an optional extra
+    # that unlocks the cost fields, so a wrong one is ignored, not a 401.
+    show_costs = admin_key_valid(request, settings)
     return OrderListResponse(
         orders=[
             _order_snapshot(
                 o,
                 jobs_by_id.get(o.job_id),
                 *packs_by_id.get(o.pack_id, (None, None)),
+                show_costs=show_costs,
             )
             for o in orders
         ]
@@ -638,7 +659,9 @@ async def get_order(
         if pack_row is not None:
             actual_count, pack_generation_status = pack_row
 
-    return _order_snapshot(order, job, actual_count, pack_generation_status)
+    return _order_snapshot(
+        order, job, actual_count, pack_generation_status, show_costs=is_admin
+    )
 
 
 @router.post("/{order_id}/retry", status_code=202, response_model=OrderCreatedResponse)

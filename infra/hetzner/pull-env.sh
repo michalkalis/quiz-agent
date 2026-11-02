@@ -16,7 +16,7 @@ FLY=(env -u FLY_API_TOKEN fly)
 
 # Names only, never values. Fly-internal vars (FLY_*, PRIMARY_REGION, ...) are dropped.
 secret_names() { "${FLY[@]}" secrets list -a "$1" --json | jq -r '.[].name' | grep -v '^FLY_' ; }
-toml_env() { sed -n '/^\[env\]/,/^\[/p' "$1" | grep -E '^\s*[A-Z_]+\s*=' | sed -E 's/^\s*([A-Z_]+)\s*=\s*"?([^"]*)"?.*/\1=\2/'; }
+toml_env() { sed -n '/^\[env\]/,/^\[/p' "$1" | grep -E '^[[:space:]]*[A-Z_]+[[:space:]]*=' | sed -E 's/^[[:space:]]*([A-Z_]+)[[:space:]]*=[[:space:]]*"?([^"]*)"?.*/\1=\2/'; }
 
 # Server side: create DB/Redis/forwarder secrets once, then rewrite the
 # connection URLs in an app env file to point at the Compose services.

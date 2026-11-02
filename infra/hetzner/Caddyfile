@@ -18,6 +18,7 @@
 	handle {
 		reverse_proxy {args[0]} {
 			header_up Fly-Client-IP {remote_host}
+			header_up -X-Trubbo-Forwarder
 		}
 	}
 }

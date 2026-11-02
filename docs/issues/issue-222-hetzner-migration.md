@@ -17,6 +17,10 @@ Celý backend (quiz-agent, quiz-pack web + worker, Postgres/pgvector, Redis) be�
 - **Na deň vyúčtovania Fly netreba čakať:** Fly účtuje za skutočné využitie po sekundách (stroje) a hodinách (disky), bez záväzku, faktúra mesačne. Čo zmažeme, prestane stáť hneď.
 - **Fly sa nedá zrušiť celé hneď po review:** build 1.1 v review má natvrdo `quiz-agent-api.fly.dev` / `quiz-pack-api.fly.dev`. Tie adresy musia odpovedať, kým hráči neprejdú na build s vlastnou doménou (222.5) a min-verzia v `/app-config` staré buildy nevypne.
 
+## Stav
+
+- 2026-11-02: **222.1 hotové** — CX23 nedostupný všade, vytvorený **CAX11** (Arm, 4 GB, fsn1, €5,99 bez DPH); **222.2 skúška beží** — prod kópia DB obnovená, obe API zelené na testovacích adresách, ochrana IP overená ([infra/hetzner](../../infra/hetzner/README.md)). Ostáva v 222.2: skript na spätné kopírovanie zápisov.
+
 ## Kroky
 
 | # | Krok | Dotýka sa produ? |

@@ -35,8 +35,11 @@ const Shot: React.FC<{src: string}> = ({src}) => {
 	// Slow push in, so a still screenshot does not read as a frozen video.
 	const scale = interpolate(frame, [0, fps * PINNED_SHOT_S], [1, 1.04]);
 	return (
-		<AbsoluteFill style={{background: SHOT_BG, alignItems: 'center', paddingTop: 120}}>
-			<Img src={staticFile(src)} style={{height: 1640, transform: `scale(${scale})`, transformOrigin: 'top center'}} />
+		// The listing screenshots cut the phone off at the bottom by design: sit them on the
+		// video's bottom edge so the phone runs out of frame instead of ending mid-screen
+		// (founder 2026-11-02). Top 200 keeps the headline clear of the Reels header.
+		<AbsoluteFill style={{background: SHOT_BG, alignItems: 'center', justifyContent: 'flex-end'}}>
+			<Img src={staticFile(src)} style={{height: 1720, display: 'block', transform: `scale(${scale})`, transformOrigin: 'bottom center'}} />
 		</AbsoluteFill>
 	);
 };

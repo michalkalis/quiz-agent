@@ -14,7 +14,10 @@ import urllib.request
 from datetime import date
 from pathlib import Path
 
-API = "https://api.trubbo.app/api/v1/public/fresh-questions"
+# api.trubbo.app is the long-term host (#222); until the Hetzner cutover it still serves an older build,
+# so the Fly host (kept as a forwarder after the move) is the second try.
+APIS = ["https://api.trubbo.app", "https://quiz-agent-api.fly.dev"]
+PATH = "/api/v1/public/fresh-questions"
 SLUG = "cerstve"
 LIMIT = 12
 MIN = 3
@@ -52,19 +55,25 @@ def snapshot(src: Path, lang: str) -> dict:
     return json.loads((src / "topics" / f"fresh.{lang}.json").read_text("utf-8"))
 
 
-def live(lang: str) -> dict | None:
-    """Current fresh questions from the API, or None (the build keeps the fallback)."""
+def fetch(base: str, lang: str) -> list[dict]:
+    """Publishable fresh questions from one API host; empty when the host fails."""
     try:
-        with urllib.request.urlopen(f"{API}?language={lang}&limit={LIMIT}", timeout=20) as response:
+        with urllib.request.urlopen(f"{base}{PATH}?language={lang}&limit={LIMIT}", timeout=20) as response:
             rows = json.load(response)["questions"]
     except (OSError, ValueError, KeyError) as error:  # network, HTTP or JSON: never fail the deploy over this page
-        print(f"fresh/{lang}: API unavailable ({error}), keeping the snapshot")
-        return None
-    items = [i for r in rows if (i := item(r["id"], r["question"], r["answer"], r["explanation"], r["source_url"]))]
-    if len(items) < MIN:
-        print(f"fresh/{lang}: only {len(items)} questions from the API, keeping the snapshot")
-        return None
-    return {"updated": date.today().isoformat(), "questions": items}
+        print(f"fresh/{lang}: {base} unavailable ({error})")
+        return []
+    return [i for r in rows if (i := item(r["id"], r["question"], r["answer"], r["explanation"], r["source_url"]))]
+
+
+def live(lang: str) -> dict | None:
+    """Current fresh questions from the first API host that has enough, or None (the build keeps the snapshot)."""
+    for base in APIS:
+        items = fetch(base, lang)
+        if len(items) >= MIN:
+            return {"updated": date.today().isoformat(), "questions": items}
+    print(f"fresh/{lang}: no API host returned {MIN}+ questions, keeping the snapshot")
+    return None
 
 
 def updated(texts: dict, iso: str) -> str:

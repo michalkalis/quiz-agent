@@ -10,7 +10,7 @@ stale or repeated pack.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import httpx
@@ -42,6 +42,8 @@ async def _seed_source(
     order_status: str = "delivered",
     pack_status: str = "complete",
     questions: int = COUNT,
+    environment: str | None = "Sandbox",  # the test JWS is Sandbox
+    expires_at: datetime | None = None,
 ) -> tuple[GenerationOrder, QuestionPack]:
     order = GenerationOrder(
         user_id=owner,
@@ -53,6 +55,7 @@ async def _seed_source(
         target_count=COUNT,
         language=language,
         status=order_status,
+        storekit_environment=environment,
         delivered_at=datetime.now(timezone.utc),
     )
     session.add(order)
@@ -81,6 +84,7 @@ async def _seed_source(
                 language=language,
                 review_status="pending_review",
                 pack_id=pack.id,
+                expires_at=expires_at,
             )
         )
     await session.commit()
@@ -93,10 +97,22 @@ async def _ratings_table(test_session: AsyncSession) -> None:
     await test_session.execute(
         text(
             "CREATE TABLE IF NOT EXISTS question_ratings ("
-            " id text PRIMARY KEY, question_id text NOT NULL, rating integer NOT NULL)"
+            " id text PRIMARY KEY, question_id text NOT NULL, rating integer NOT NULL,"
+            " created_at timestamptz NOT NULL DEFAULT now())"
+        )
+    )
+    await test_session.execute(
+        text(
+            "CREATE TABLE IF NOT EXISTS anonymous_identities ("
+            " anon_id text PRIMARY KEY, upgraded_to_user_id text,"
+            " created_at timestamptz NOT NULL DEFAULT now(),"
+            " last_seen_at timestamptz NOT NULL DEFAULT now())"
         )
     )
     await test_session.execute(text("DELETE FROM question_ratings"))
+    await test_session.execute(
+        text("DELETE FROM anonymous_identities WHERE anon_id LIKE 'reuse-test-%'")
+    )
     await test_session.commit()
 
 
@@ -214,6 +230,11 @@ async def test_no_copy_when_the_order_differs(
         {"pack_status": "generating"},
         {"pack_status": "failed"},
         {"questions": COUNT - 5},  # partial pack
+        # Expired questions are skipped in the game: the copy would be short.
+        {"expires_at": datetime.now(timezone.utc) - timedelta(days=1)},
+        # Admin test order / other StoreKit environment never feeds a purchase.
+        {"environment": None},
+        {"environment": "Production"},
     ],
 )
 async def test_unfinished_or_refunded_packs_are_not_copied(
@@ -246,12 +267,66 @@ async def test_low_rated_pack_is_not_copied(
         )
     ).scalar_one()
     await test_session.execute(
-        text("INSERT INTO question_ratings (id, question_id, rating) VALUES ('r1', :q, 2)"),
+        text("INSERT INTO question_ratings (id, question_id, rating, created_at)"
+             " VALUES ('r1', :q, 2, now())"),
         {"q": str(qid)},
     )
     await test_session.commit()
 
     await _order(client, make_jws)
+
+    arq_mock.enqueue_job.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_low_rating_on_a_copy_stops_further_copies(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """Buyers of copies rate the copied question ids; their verdict must reach
+    the original, or a bad pack keeps spreading."""
+    await _seed_source(test_session)
+    copy_order = await _load(test_session, await _order(client, make_jws, user="player-b"))
+    qid = (
+        await test_session.execute(
+            select(QuestionRow.id).where(QuestionRow.pack_id == copy_order.pack_id).limit(1)
+        )
+    ).scalar_one()
+    await test_session.execute(
+        text("INSERT INTO question_ratings (id, question_id, rating, created_at)"
+             " VALUES ('r2', :q, 1, now())"),
+        {"q": str(qid)},
+    )
+    await test_session.commit()
+
+    await _order(client, make_jws, user="player-c")
+
+    arq_mock.enqueue_job.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_same_person_signed_out_still_gets_new_questions(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """Signed out, the device orders under its anon id, which is linked to the
+    account that owns the source pack: still the same player."""
+    await test_session.execute(
+        text(
+            "INSERT INTO anonymous_identities"
+            " (anon_id, upgraded_to_user_id, created_at, last_seen_at)"
+            " VALUES ('reuse-test-anon', :acct, now(), now())"
+        ),
+        {"acct": SOURCE_OWNER},
+    )
+    await test_session.commit()
+    await _seed_source(test_session)
+
+    await _order(client, make_jws, user="reuse-test-anon")
 
     arq_mock.enqueue_job.assert_called_once()
 

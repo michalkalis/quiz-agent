@@ -22,7 +22,7 @@ import logging
 import unicodedata
 from datetime import datetime, timezone
 
-from sqlalchemy import func, insert, literal, select, text
+from sqlalchemy import func, insert, literal, or_, select, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -69,8 +69,36 @@ async def reuse_enabled(session: AsyncSession, settings: Settings) -> bool:
     return raw != "false"
 
 
+_IDENTITY_QUERY = text(
+    "SELECT anon_id, upgraded_to_user_id FROM anonymous_identities"
+    " WHERE anon_id = :uid OR upgraded_to_user_id = :uid"
+    " OR upgraded_to_user_id = ("
+    "   SELECT upgraded_to_user_id FROM anonymous_identities WHERE anon_id = :uid)"
+)
+
+
 def _same(column, value):
     return column.is_(None) if value is None else column == value
+
+
+async def _identity_ids(session: AsyncSession, user_id: str) -> set[str]:
+    """All ids of one person: the account plus every anon id linked to it.
+
+    A signed-out device falls back to its linked anon id, so comparing raw ids
+    would treat the same person as a new player. quiz-agent owns the table;
+    a failed read keeps just the given id."""
+    ids = {user_id}
+    try:
+        async with session.begin_nested():
+            rows = (await session.execute(_IDENTITY_QUERY, {"uid": user_id})).all()
+    except Exception as e:  # noqa: BLE001
+        logger.warning("identity lookup failed, using the raw id: %r", e)
+        return ids
+    for anon_id, account_id in rows:
+        ids.add(anon_id)
+        if account_id:
+            ids.add(account_id)
+    return ids
 
 
 async def _find_source(
@@ -86,18 +114,25 @@ async def _find_source(
     )
 
     # Same player, same prompt again → new questions (founder 2026-11-02).
+    buyer_ids = await _identity_ids(session, order.user_id)
     prior_own = await session.scalar(
         select(func.count())
         .select_from(o)
-        .where(*same_key, o.user_id == order.user_id, o.id != order.id)
+        .where(*same_key, o.user_id.in_(buyer_ids), o.id != order.id)
     )
     if prior_own:
         return None
 
+    # Low ratings count on the original and on every copy of it (copies get
+    # new question ids, so ratings land there).
     not_low_rated = text(
-        "NOT EXISTS (SELECT 1 FROM questions q JOIN question_ratings r"
-        " ON r.question_id = q.id::text"
-        " WHERE q.pack_id = question_packs.id AND r.rating <= :low)"
+        "NOT EXISTS (SELECT 1 FROM questions q"
+        " JOIN question_packs p ON p.id = q.pack_id"
+        " JOIN generation_orders go ON go.id = p.order_id"
+        " JOIN question_ratings r ON r.question_id = q.id::text"
+        " WHERE (go.id = generation_orders.id"
+        "        OR go.reused_from_order_id = generation_orders.id)"
+        " AND r.rating <= :low)"
     ).bindparams(low=LOW_RATING_MAX)
 
     stmt = (
@@ -107,8 +142,13 @@ async def _find_source(
             *same_key,
             o.id != order.id,
             o.user_id.is_not(None),
-            o.user_id != order.user_id,
+            o.user_id.not_in(buyer_ids),
             o.status == "delivered",
+            # Only packs made for a real purchase of the same kind: Sandbox
+            # (TestFlight, may run on the Claude-subscription backup) never
+            # feeds Production, admin test orders (NULL) feed nothing.
+            o.storekit_environment.is_not(None),
+            o.storekit_environment == order.storekit_environment,
             # Copy from originals only, never from a copy.
             o.reused_from_order_id.is_(None),
             QuestionPack.generation_status == "complete",
@@ -152,6 +192,8 @@ async def _copy_pack(
         .where(
             table.c.pack_id == source_pack.id,
             table.c.review_status.not_in(("rejected", "archived")),
+            # The game skips expired questions; don't sell them as playable.
+            or_(table.c.expires_at.is_(None), table.c.expires_at > func.now()),
         )
         .order_by(table.c.created_at, table.c.id)
         .limit(order.target_count)
@@ -191,6 +233,13 @@ async def try_reuse(
     try:
         if not await reuse_enabled(session, settings):
             return False
+        # Lock + reload the order like `PersistStage.persist_batch`: a sign-in
+        # (`rekey_purchases`) moving it to the account either already committed
+        # (we read the account id) or waits for our commit and then moves the
+        # copied pack too.
+        await session.get(
+            GenerationOrder, order.id, with_for_update=True, populate_existing=True
+        )
         found = await _find_source(session, order)
         if found is None:
             return False

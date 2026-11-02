@@ -14,27 +14,10 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from fresh import answer, story  # same public-text rules as the fresh page
+
 SRC = Path(__file__).resolve().parent.parent / "src" / "topics"
-DASH = re.compile(r"\s+[–—]\s+|\s+-\s+")
-
-
-def answer(row: dict) -> str:
-    value = row["headline"] or row["answer"]
-    try:
-        value = json.loads(value)
-    except (TypeError, ValueError):
-        pass
-    if isinstance(value, list):
-        value = value[0]
-    value = str(value).strip().strip('"')
-    return value[:1].upper() + value[1:]  # shown on its own line, so it starts like a sentence
-
-
-def story(text: str) -> str:
-    text = DASH.sub(", ", text.strip())
-    return re.sub(r"(?<=\d)[–—](?=\d)", "-", text)  # number ranges keep a plain hyphen
-
-
 def main(export: str, picks: str, lang: str) -> int:
     rows = {}
     for r in json.loads(Path(export).read_text("utf-8")):
@@ -48,7 +31,7 @@ def main(export: str, picks: str, lang: str) -> int:
             r = rows[qid]
             if r["type"] != "text" or not (r["source_url"] or "").startswith("https://") or not r["explanation"]:
                 raise SystemExit(f"{qid}: not publishable (type, source or story missing)")
-            q, a = r["question"].strip(), answer(r)
+            q, a = r["question"].strip(), answer(r["headline"] or r["answer"])
             if re.search(r"[–—]", q + a):
                 raise SystemExit(f"{qid}: dash in question or answer")
             items.append({"id": r["id"], "q": q, "a": a, "story": story(r["explanation"]), "source": r["source_url"]})

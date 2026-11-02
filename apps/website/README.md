@@ -86,3 +86,5 @@ Records from GitHub's docs: "Managing a custom domain for your GitHub Pages site
 
 Refresh the questions: run `tools/export_questions.py` read-only on the `quiz-agent-api` machine, pick ids per topic, then `python3 tools/topic_snapshot.py <export.json> <picks.json> <lang>` (steps in the script header). The build refuses dashes as punctuation, a question on two pages, a topic under 10 questions or a question without an https source.
 
+Fresh entertainment page (`/sk/otazky/cerstve/`, `/cs/otazky/cerstve/`, `fresh.py`): the committed page comes from `src/topics/fresh.<lang>.json` (fallback); the deploy workflow then runs `build.py --fresh-live`, which loads the newest boosted entertainment questions from `https://api.trubbo.app/api/v1/public/fresh-questions` and rewrites only those pages. It runs on every deploy and daily at 06:40 UTC; if the API fails, the fallback stays. sk and cs home pages link to it above the headline.
+

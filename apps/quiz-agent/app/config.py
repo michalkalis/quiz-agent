@@ -159,6 +159,9 @@ class Settings(BaseSettings):
     daily_cap_stt_seconds: int = 7200  # audio sent to /voice/submit (~1.25 h heavy)
     daily_cap_answer_attempts: int = 30  # submits for ONE question (normal ≤ 6)
     daily_cap_entitlement_syncs: int = 100  # RevenueCat REST syncs (~10-30 normal)
+    # #218.7: AI (LLM) answer gradings per player per UTC day. Not a 429: past it
+    # that player's answers are graded by the fast deterministic path only.
+    daily_cap_ai_gradings: int = 300
     # #207 (207.13): service-wide ElevenLabs credits per UTC day (Starter = 30k
     # a month, ~420/day average so far). Past it, new speech uses the OpenAI
     # voice/recogniser until midnight UTC, so one bad day cannot spend the

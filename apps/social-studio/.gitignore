@@ -7,3 +7,5 @@ public/audio/
 # copied/generated from apps/website/src by scripts/sync-brand.mjs (npm install)
 public/brand/
 src/brand/
+# App Store screenshots + badge for the Pinned reel, copied by scripts/sync-brand.mjs (npm install)
+public/store/

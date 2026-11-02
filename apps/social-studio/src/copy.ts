@@ -9,6 +9,8 @@ type Copy = {
 	/** End card line under the logo (founder pick 2026-10-22: no call to action). */
 	tagline: string;
 	soon: string;
+	/** Pinned launch reel, opening line (founder 2026-11-02: one pinned reel per account once 1.1 is live). */
+	live: string;
 	roundTitle: (part: number) => string;
 	roundSub: (n: number) => string;
 	answersTitle: string;
@@ -25,7 +27,8 @@ export const COPY: Record<Language, Copy> = {
 		hooks: ['Bet you know this one.', 'Can you get it right?'],
 		answer: 'Answer',
 		tagline: 'Trivia you answer out loud',
-		soon: 'Coming soon to the App Store · trubbo.app',
+		soon: 'Free on the App Store',
+		live: 'Trubbo is now on the App Store.',
 		roundTitle: (p) => `Quiz round, part ${p}.`,
 		roundSub: (n) => `${n} questions. Answers on the last slide.`,
 		answersTitle: 'Answers',
@@ -37,7 +40,8 @@ export const COPY: Record<Language, Copy> = {
 		hooks: ['Stavím sa, že toto vieš.', 'Trafíš to?'],
 		answer: 'Odpoveď',
 		tagline: 'Kvíz, ktorý hráš hlasom',
-		soon: 'Čoskoro v App Store · trubbo.app',
+		soon: 'Zadarmo v App Store',
+		live: 'Trubbo je už v App Store.',
 		roundTitle: (p) => `Kvízové kolo, ${p}. diel.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
 		answersTitle: 'Odpovede',
@@ -49,7 +53,8 @@ export const COPY: Record<Language, Copy> = {
 		hooks: ['Vsadím se, že tohle víš.', 'Trefíš to?'],
 		answer: 'Odpověď',
 		tagline: 'Kvíz, který hraješ hlasem',
-		soon: 'Brzy v App Store · trubbo.app',
+		soon: 'Zdarma v App Store',
+		live: 'Trubbo je už v App Store.',
 		roundTitle: (p) => `Kvízové kolo, ${p}. díl.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,
 		answersTitle: 'Odpovědi',

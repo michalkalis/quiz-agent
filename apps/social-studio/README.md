@@ -11,6 +11,7 @@ Spec: [content plan](../../docs/issues/issue-210-content-plan.md) · [issue](../
 | `FiveSeconds` | 1080×1920, ~17–21 s | hook (1.5 s) · question read by the app voice with word captions · 5 s countdown, monkey thinking · answer + one line why · end card |
 | `ABC` | 1080×1920 | same, with the options on the card and "Comment A, B or C" during the countdown; the right option lights up |
 | `CarouselSlide` | 1080×1350 still | `cover` · `question` (one per slide) · `answers` |
+| `Pinned` | 1080×1920, ~14 s, silent | pinned launch reel: "now on the App Store" line · the App Store screenshots (`public/store/`, copied on `npm install` from `apps/ios-app/Hangs/fastlane/screenshots` + the website's badge) · end card |
 
 Background colour follows the category (`src/theme.ts`) so a series does not look identical. Copy (hooks, end card, carousel) is per language in `src/copy.ts` (en / sk / cs). No music is baked in; no dashes as punctuation in on-screen text (`cli/shape.ts` strips them).
 

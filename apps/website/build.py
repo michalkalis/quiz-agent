@@ -20,6 +20,19 @@ OUT = ROOT / "public"
 SITE = "https://trubbo.app"
 LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}  # en is the default at the root
 LEGAL = ["privacy", "terms", "support"]  # served at /<page> (en), /sk/<page>, /cs/<page>
+# Official social accounts: the English ones on /, the shared Slovak and Czech ones on /sk/ and /cs/.
+SOCIAL_EN = {
+    "Instagram": "https://www.instagram.com/trubboapp/",
+    "YouTube": "https://www.youtube.com/@trubboapp",
+    "TikTok": "https://www.tiktok.com/@trubboapp",
+    "Facebook": "https://www.facebook.com/1454787731043491",
+}
+SOCIAL_SKCZ = {
+    "Instagram": "https://www.instagram.com/trubboapp.sk/",
+    "YouTube": "https://www.youtube.com/@trubboapp_sk",
+    "Facebook": "https://www.facebook.com/1447421928452448",
+}
+SOCIAL = {"en": SOCIAL_EN, "sk": SOCIAL_SKCZ, "cs": SOCIAL_SKCZ}
 STEPS = 6  # story steps; each has a static copy of the screen for the stacked fallback
 STATIC = ["rethink-sans-latin.woff2", "rethink-sans-latin-ext.woff2", "rethink-sans-OFL.txt", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", ".well-known/apple-app-site-association"]
 
@@ -66,8 +79,70 @@ def switcher(lang: str, page: str = "") -> str:
 
 
 def footer(lang: str) -> str:
-    """Footer partial with links to the legal pages in the same language; its text keys stay for pass 2."""
-    return (SRC / "footer.html").read_text("utf-8").strip().replace("{{gen.home}}", LANGS[lang])
+    """Footer partial with links to the legal pages and social accounts in the same language; its text keys stay for pass 2."""
+    social = "".join(f'<a href="{url}" rel="me noopener">{name}</a>' for name, url in SOCIAL[lang].items())
+    part = (SRC / "footer.html").read_text("utf-8").strip()
+    return part.replace("{{gen.home}}", LANGS[lang]).replace("{{gen.social}}", social)
+
+
+def jsonld(lang: str, strings: dict) -> str:
+    """Structured data for search engines and AI answers: the publisher, the site and the app itself."""
+    accounts = sorted({url for links in SOCIAL.values() for url in links.values()})
+    org = {"@type": "Organization", "@id": SITE + "/#org", "name": "missinghue s.r.o.", "url": SITE + "/",
+           "email": "hi@trubbo.app", "sameAs": accounts}
+    site = {"@type": "WebSite", "@id": SITE + "/#site", "name": "Trubbo", "url": SITE + "/",
+            "inLanguage": list(LANGS), "publisher": {"@id": SITE + "/#org"}}
+    app = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "Trubbo", "url": SITE + LANGS[lang],
+           "description": strings["meta.description"], "operatingSystem": "iOS",
+           "applicationCategory": "GameApplication", "inLanguage": list(LANGS), "image": SITE + "/og.png",
+           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+           "publisher": {"@id": SITE + "/#org"}, "sameAs": accounts}
+    data = {"@context": "https://schema.org", "@graph": [org, site, app]}
+    return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+
+
+def sitemap() -> str:
+    """Every indexable page with its language alternates, so all three languages get crawled."""
+    pages = [""] + LEGAL
+    urls = []
+    for page in pages:
+        links = "".join(f'<xhtml:link rel="alternate" hreflang="{c}" href="{SITE + p + page}"/>' for c, p in LANGS.items())
+        urls += [f"<url><loc>{SITE + path + page}</loc>{links}</url>" for path in LANGS.values()]
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+            + "\n".join(urls) + "\n</urlset>\n")
+
+
+def llms(strings: dict) -> str:
+    """/llms.txt: a plain summary for AI assistants, built from the English page so it never drifts from it."""
+    s = strings["en"]
+    social = "\n".join(f"- {name}: {url}" for name, url in SOCIAL_EN.items())
+    social += "\n" + "\n".join(f"- {name} (Slovak and Czech): {url}" for name, url in SOCIAL_SKCZ.items())
+    return f"""# Trubbo
+
+> {s["meta.description"]}
+
+Trubbo reads each question aloud and the player answers in their own words; the app checks the answer and tells the story behind it. People play it alone or together: on road trips, at parties, at the cabin, with family.
+
+## Pricing
+
+- {s["price.free"]}: {s["price.free.d"]}
+- {s["price.sub"]}: {s["price.sub.d"]}
+- {s["price.packs"]}: {s["price.packs.d"]}
+
+## Pages
+
+- [English]({SITE}/)
+- [Slovenčina]({SITE}/sk/)
+- [Čeština]({SITE}/cs/)
+- [Privacy]({SITE}/privacy), [Terms]({SITE}/terms), [Support]({SITE}/support)
+
+## Social media
+
+{social}
+
+Publisher: missinghue s.r.o., Prague. Contact: hi@trubbo.app
+"""
 
 
 def strings_pass(page: str, lang: str, strings: dict, used: set) -> str:
@@ -119,6 +194,7 @@ def render(template: str, lang: str, strings: dict) -> str:
         "gen.alternates": alternates(),
         "gen.switcher": switcher(lang),
         "gen.footer": footer(lang),
+        "gen.jsonld": jsonld(lang, strings),
         "gen.suggest": json.dumps(suggest, ensure_ascii=False).replace("</", "<\\/"),
         "gen.screen": screen(0, live=True),
         **{f"gen.mini.{n}": screen(n, live=False) for n in range(STEPS)},
@@ -156,6 +232,8 @@ def main() -> int:
             target = OUT / path.strip("/") / f"{page}.html"
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
+    (OUT / "sitemap.xml").write_text(sitemap(), "utf-8")
+    (OUT / "llms.txt").write_text(llms(strings), "utf-8")
     for name in STATIC:
         (OUT / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / name, OUT / name)

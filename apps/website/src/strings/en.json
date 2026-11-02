@@ -69,5 +69,6 @@
   "close.body_html": "The beta is public. Install TestFlight on your iPhone, then join with the button below. Questions or feedback: <a href=\"mailto:hi@trubbo.app\">hi@trubbo.app</a>",
   "footer.privacy": "Privacy",
   "footer.terms": "Terms",
-  "footer.support": "Support"
+  "footer.support": "Support",
+  "nav.social": "Trubbo on social media"
 }

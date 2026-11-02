@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the static trubbo.app site from src/ into public/ (what GitHub Pages serves).
 
-Inputs: src/template.html, src/screen.html (the phone screen partial), src/footer.html,
+Inputs: src/template.html, src/footer.html, src/mascot.svg (inlined so the mascot can blink),
 src/strings/<lang>.json, and the legal pages src/legal.html + src/legal/<page>.<lang>.html.
 Stdlib only. Run from anywhere: python3 apps/website/build.py
 Fails loudly on a missing, unused or untranslated key and on a dash used as punctuation.
@@ -33,8 +33,16 @@ SOCIAL_SKCZ = {
     "Facebook": "https://www.facebook.com/1447421928452448",
 }
 SOCIAL = {"en": SOCIAL_EN, "sk": SOCIAL_SKCZ, "cs": SOCIAL_SKCZ}
-STEPS = 6  # story steps; each has a static copy of the screen for the stacked fallback
-STATIC = ["rethink-sans-latin.woff2", "rethink-sans-latin-ext.woff2", "rethink-sans-OFL.txt", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", ".well-known/apple-app-site-association"]
+# Trubbo on the App Store: the local storefront for Slovak and Czech, Apple's own redirect for everyone else.
+APP_STORE_ID = "6762482437"
+STORE = {
+    "en": f"https://apps.apple.com/app/id{APP_STORE_ID}",
+    "sk": f"https://apps.apple.com/sk/app/trubbo/id{APP_STORE_ID}",
+    "cs": f"https://apps.apple.com/cz/app/trubbo/id{APP_STORE_ID}",
+}
+BETA = "https://testflight.apple.com/join/qvbqMh1k"
+FONT_FILES = ["funnel-display-latin.woff2", "funnel-display-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2"]
+STATIC = [*FONT_FILES, "funnel-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", ".well-known/apple-app-site-association"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")
@@ -55,12 +63,25 @@ def lint(lang: str, strings: dict, base: set) -> list:
     return errors
 
 
-def screen(step: int, live: bool) -> str:
-    """The phone screen at a given story step. The live one is sticky and switched by JS."""
-    part = (SRC / "screen.html").read_text("utf-8")
-    attrs = 'id="screen" ' if live else ""
-    cls = "screen" if live else "screen mini-screen"
-    return part.replace("{{gen.screen.attrs}}", f'{attrs}class="{cls}" data-step="{step}"')
+# Funnel Display (headings) and Funnel Sans (text), SIL OFL, self-hosted; Latin + Latin Extended split like Google Fonts.
+LATIN_EXT = "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF"
+LATIN = "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+FONTS = "\n".join(
+    f'@font-face{{font-family:"{family}";font-style:normal;font-weight:300 800;font-display:swap;'
+    f'src:url(/{slug}-{subset}.woff2) format("woff2");unicode-range:{rng}}}'
+    for family, slug in (("Funnel Display", "funnel-display"), ("Funnel Sans", "funnel-sans"))
+    for subset, rng in (("latin-ext", LATIN_EXT), ("latin", LATIN))
+)
+EYES = re.compile(r'<circle cx="81" [^>]*/><circle cx="84\.3" [^>]*/><circle cx="123" [^>]*/><circle cx="126\.3" [^>]*/>')
+
+
+def mascot() -> str:
+    """The mascot inline, eyes wrapped in groups the page animates (blink, glance aside)."""
+    svg = (SRC / "mascot.svg").read_text("utf-8").strip()
+    if len(EYES.findall(svg)) != 1:
+        raise ValueError("mascot.svg: eye circles not found; update EYES in build.py to the new drawing")
+    svg = EYES.sub(lambda m: f'<g class="mk-look"><g class="mk-blink">{m.group(0)}</g></g>', svg)
+    return svg.replace("<svg ", '<svg focusable="false" ', 1)
 
 
 def alternates(page: str = "") -> str:
@@ -95,7 +116,7 @@ def jsonld(lang: str, strings: dict) -> str:
     app = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "Trubbo", "url": SITE + LANGS[lang],
            "description": strings["meta.description"], "operatingSystem": "iOS",
            "applicationCategory": "GameApplication", "inLanguage": list(LANGS), "image": SITE + "/og.png",
-           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "downloadUrl": STORE[lang],
            "publisher": {"@id": SITE + "/#org"}, "sameAs": accounts}
     data = {"@context": "https://schema.org", "@graph": [org, site, app]}
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
@@ -123,6 +144,8 @@ def llms(strings: dict) -> str:
 > {s["meta.description"]}
 
 Trubbo reads each question aloud and the player answers in their own words; the app checks the answer and tells the story behind it. People play it alone or together: on road trips, at parties, at the cabin, with family.
+
+App Store: {STORE["en"]}
 
 ## Pricing
 
@@ -176,6 +199,7 @@ def render_legal(template: str, page: str, lang: str, strings: dict) -> str:
         "gen.alternates": alternates(page),
         "gen.switcher": switcher(lang, page),
         "gen.footer": footer(lang),
+        "gen.fonts": FONTS,
         "gen.body": body,
     }
     out = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
@@ -196,8 +220,11 @@ def render(template: str, lang: str, strings: dict) -> str:
         "gen.footer": footer(lang),
         "gen.jsonld": jsonld(lang, strings),
         "gen.suggest": json.dumps(suggest, ensure_ascii=False).replace("</", "<\\/"),
-        "gen.screen": screen(0, live=True),
-        **{f"gen.mini.{n}": screen(n, live=False) for n in range(STEPS)},
+        "gen.fonts": FONTS,
+        "gen.mascot": mascot(),
+        "gen.store": STORE[lang],
+        "gen.store.id": APP_STORE_ID,
+        "gen.beta": BETA,
     }
     page = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
 
@@ -237,6 +264,10 @@ def main() -> int:
     for name in STATIC:
         (OUT / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / name, OUT / name)
+    # "Hear the question" recordings, one per language (src/audio/question-<lang>.mp3); the page falls back to
+    # the browser's voice while one is missing.
+    if (SRC / "audio").is_dir():
+        shutil.copytree(SRC / "audio", OUT / "audio")
     return 0
 
 

@@ -4,6 +4,8 @@
 
 Trubbo reads each question aloud and the player answers in their own words; the app checks the answer and tells the story behind it. People play it alone or together: on road trips, at parties, at the cabin, with family.
 
+App Store: https://apps.apple.com/app/id6762482437
+
 ## Pricing
 
 - Free: 30 questions a month

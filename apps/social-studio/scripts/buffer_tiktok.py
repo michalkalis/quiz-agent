@@ -104,7 +104,9 @@ def schedule(week: str) -> None:
                     "needsApproval": False,
                     "assets": [{"video": {"url": video}}],
                     # Synthetic voice: disclose it, as on the Instagram reels.
-                    "metadata": {"tiktok": {"isAiGenerated": True}},
+                    "metadata": {
+                        "tiktok": {"isAiGenerated": post.get("ai_generated", True)}
+                    },
                 }
             },
         )["createPost"]

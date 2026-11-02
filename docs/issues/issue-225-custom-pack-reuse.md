@@ -1,7 +1,7 @@
 # #225 — Vlastný balík: rovnaké zadanie = hotové otázky
 
 **Triage:** enhancement · blocked-on-#224 (224.3 — obťažnosť v objednávke)
-**Status:** plán 2026-11-02; implementácia po zlúčení 224.3
+**Status:** 225.1 kód hotový na vetve `feat/225-pack-reuse` (lokálne, 13 nových testov + celá sada zelená spolu s rozpracovaným 224.3); push po zlúčení 224.3
 **Založené:** 2026-11-02 (founder)
 **Súvisí:** #224 — TF test 2026-11-02 (224.3 povinná obťažnosť), #143 — Custom-pack COGS reduction, #182 — Custom pack: hrať hneď po prvej otázke, #93 — vlastné balíky
 
@@ -34,7 +34,7 @@ Ak zhodný balík ešte len vzniká, B dostane normálne generovanie (jednoduch�
 1. **Databáza:** nový stĺpec `prompt_key` (upravený text) na objednávke + index na (prompt_key, language, difficulty, category, theme, target_count); stĺpec `reused_from_order_id`. Migrácia nadväzuje na migráciu z 224.3. Doplniť `prompt_key` aj starým objednávkam (spätne, v migrácii).
 2. **Objednávka:** v `create_order` po všetkých dnešných kontrolách (StoreKit, idempotencia, pauza objednávok) a vložení objednávky: hľadanie zdroja. Pri zhode sa v jednej transakcii vytvorí nový balík pre B, skopírujú sa otázky (nový `pack_id`, ostatné polia rovnaké vrátane zdrojov a obťažnosti), objednávka = `delivered`, náklady 0, žiadne zaradenie do fronty. Bez zhody = dnešný tok.
 3. **Poistka:** prepínač v DB (`app_switches`), predvolene zapnutý; vypnutie = vždy generovať.
-4. **Analytika (v tom istom PR):** pri každej objednávke záznam, či bola z hotového balíka (+ zdroj), aby sa dala vyčísliť úspora; súčet v admin prehľade nákladov.
+4. **Analytika (v tom istom PR):** pri každej objednávke záznam, či bola z hotového balíka (`reused_from_order_id`) + log `pack_reused`; úspora = počet takých objednávok × priemerná cena generovania.
 5. **iOS:** bez zmeny API. Overiť, že appka zvládne objednávku, ktorá je hotová hneď pri prvom zistení stavu (sledovanie stavu, SSE, „pripravujem ďalšiu otázku“).
 
 ## Testy (prečo, nielen čo)
@@ -52,6 +52,6 @@ Ak zhodný balík ešte len vzniká, B dostane normálne generovanie (jednoduch�
 
 ## Stav
 
-- [ ] 225.1 backend (DB, objednávka, poistka, analytika, testy) — po 224.3
+- [~] 225.1 backend (DB, objednávka, poistka, záznam zdroja, testy) — hotové lokálne; po zlúčení 224.3: rebase, overiť `down_revision` = migrácia 224.3, v `tests/db/test_smoke.py` hlava = `e5a2c7f1b938`, PR
 - [ ] 225.2 overenie iOS toku s okamžite hotovou objednávkou (simulátor)
 - [ ] 225.3 nasadenie + overenie na prode (druhá objednávka rovnakého zadania)

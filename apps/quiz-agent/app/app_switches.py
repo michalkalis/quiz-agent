@@ -47,7 +47,12 @@ NOTICE_KEYS = (
     "maintenance_cs",
     "maintenance_en",
 )
-BOOL_KEYS = ("orders_enabled", "maintenance_enabled", "multiplayer_enabled_app_store")
+BOOL_KEYS = (
+    "orders_enabled",
+    "maintenance_enabled",
+    "multiplayer_enabled_app_store",
+    "triage_bridge_enabled",
+)
 KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
 _cache: tuple[float, dict[str, str | None]] | None = None
@@ -102,6 +107,8 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "maintenance_enabled": False,
         # #217: Together stays hidden in the App Store build until switched on.
         "multiplayer_enabled_app_store": False,
+        # #218: events to the private triage repo; on unless switched off.
+        "triage_bridge_enabled": True,
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,
@@ -112,7 +119,7 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     """Env values with every DB override applied on top."""
     out = env_values(settings)
     for key, raw in overrides.items():
-        if key == "orders_enabled":
+        if key in ("orders_enabled", "triage_bridge_enabled"):
             out[key] = raw != "false"
         elif key in ("maintenance_enabled", "multiplayer_enabled_app_store"):
             out[key] = raw == "true"

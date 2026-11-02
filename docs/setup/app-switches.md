@@ -11,8 +11,9 @@ Vynútená aktualizácia (minimálna verzia), odporúčaná aktualizácia, reži
 | `maintenance_enabled` | `true` / `false` | celá obrazovka „Hneď sme späť“ cez celú appku; appka sa každých 30 s pýta znova a po vypnutí pokračuje sama |
 | `multiplayer_enabled_app_store` (#217 — Together v App Store buildi) | `true` / `false` | App Store build ukáže záložku Spolu a otvorí pozvánky len pri `true` (predvolene `false`); TestFlight buildy ju ignorujú a riadi ich `multiplayer_enabled`. Starší server pole nepošle = skryté |
 | `maintenance_sk`, `maintenance_cs`, `maintenance_en` | text do 300 znakov, `null` = predvolený text | text na obrazovke údržby (napr. „Späť o 10:00.“) |
+| `triage_bridge_enabled` (#218 — automatizácia pádov a spätnej väzby) | `true` / `false` | most do súkromného repa `trubbo-triage`: nové problémy zo Sentry, hlásenia z TestFlightu (webhook App Store Connect) a spätná väzba z appky. `false` = nič neposiela (napr. pri lavíne pádov); predvolene zapnutý. Bez `GITHUB_TRIAGE_DISPATCH_TOKEN` most nič neposiela ani so zapnutým prepínačom |
 
-Bez zmeny cez endpoint platí hodnota z env / Fly secretu (`MIN_APP_VERSION_*`, `PACK_ORDERS_ENABLED`, `APP_NOTICE_*`), presne ako predtým. Zmena cez endpoint má prednosť. Odporúčaná verzia, údržba a `multiplayer_enabled_app_store` nemajú env hodnotu, sú len v DB (predvolene vypnuté).
+Bez zmeny cez endpoint platí hodnota z env / Fly secretu (`MIN_APP_VERSION_*`, `PACK_ORDERS_ENABLED`, `APP_NOTICE_*`), presne ako predtým. Zmena cez endpoint má prednosť. Odporúčaná verzia, údržba, `multiplayer_enabled_app_store` a `triage_bridge_enabled` nemajú env hodnotu, sú len v DB (predvolene vypnuté, `triage_bridge_enabled` predvolene zapnutý).
 
 **Pozor pri odporúčanej verzii a údržbe:**
 - Odporúčanú ani minimálnu verziu nezvyšuj, kým nový build nie je v App Store naozaj dostupný (pri postupnom vydaní ho hráč vie stiahnuť ručne, takže odporúčaná verzia je v poriadku od prvého dňa, minimum radšej až po dokončení).
@@ -44,6 +45,14 @@ curl -s -X PUT -H "X-Admin-Key: $KEY" -H 'Content-Type: application/json' \
   https://quiz-agent-api.fly.dev/api/v1/admin/app-switches
 curl -s -X PUT -H "X-Admin-Key: $KEY" -H 'Content-Type: application/json' \
   -d '{"reset": ["multiplayer_enabled_app_store"]}' \
+  https://quiz-agent-api.fly.dev/api/v1/admin/app-switches
+
+# vypnúť most do triáže (#218) / zapnúť späť
+curl -s -X PUT -H "X-Admin-Key: $KEY" -H 'Content-Type: application/json' \
+  -d '{"set": {"triage_bridge_enabled": false}}' \
+  https://quiz-agent-api.fly.dev/api/v1/admin/app-switches
+curl -s -X PUT -H "X-Admin-Key: $KEY" -H 'Content-Type: application/json' \
+  -d '{"reset": ["triage_bridge_enabled"]}' \
   https://quiz-agent-api.fly.dev/api/v1/admin/app-switches
 
 # vrátiť na hodnoty z env

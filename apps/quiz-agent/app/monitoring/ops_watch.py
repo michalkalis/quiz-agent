@@ -340,3 +340,12 @@ async def run_ops_watch(
                     await check_wal_archive(get_engine(), book)
                 except Exception:
                     logger.exception("WAL archive watch crashed")
+                # #218.3: new Sentry problems → the private triage repo.
+                try:
+                    from ..triage.sentry_poll import STATE_SOURCE, poll
+                    from .shared_state import PostgresAlertState
+
+                    store = PostgresAlertState(sessionmaker, STATE_SOURCE)
+                    await poll(store, sessionmaker, client)
+                except Exception as e:  # noqa: BLE001 — a warning, never an issue
+                    logger.warning("Triage Sentry poll crashed: %r", e)

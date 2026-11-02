@@ -53,7 +53,7 @@ push_app() { # <fly app> <machine or ''> <toml> <env file> <redis db>
     toml_env "$toml"
     if [ "$MODE" = rehearsal ]; then
       printf '%s\n' ENVIRONMENT=staging OPS_WATCH_ENABLED=false PROVIDER_BALANCE_CHECK_ENABLED=false \
-        QUESTION_STOCK_CHECK_ENABLED=false ALERT_EMAIL_TO=
+        QUESTION_STOCK_CHECK_ENABLED=false ALERT_EMAIL_TO= GITHUB_TRIAGE_DISPATCH_TOKEN=
     fi
   } | ssh "$HOST" "cd $DIR && umask 077 && . ./postgres.env && . ./redis.env &&
       { tac | awk -F= '!seen[\$1]++' | tac;  # last value of a name wins (overrides below)

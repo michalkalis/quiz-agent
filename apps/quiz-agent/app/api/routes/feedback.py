@@ -14,7 +14,16 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
@@ -25,6 +34,7 @@ from ..deps import get_auth_sessionmaker, require_auth_or_grace
 from ...auth.identity import AuthSubject
 from ...db.models import Feedback
 from ...rate_limit import limiter
+from ...triage.dispatch import dispatch_feedback
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -104,6 +114,7 @@ async def _read_capped(upload: UploadFile, *, max_bytes: int, field: str) -> byt
 @limiter.limit("5/minute")
 async def submit_feedback(
     request: Request,
+    background: BackgroundTasks,
     message: str = Form(...),
     metadata: str | None = Form(default=None),
     app_version: str | None = Form(default=None),
@@ -181,6 +192,8 @@ async def submit_feedback(
             level="info",
         )
 
+    # #218.3: to the private triage repo after the response, never in its way.
+    background.add_task(dispatch_feedback, row, sessionmaker)
     return FeedbackSubmitResponse(id=str(row.id))
 
 

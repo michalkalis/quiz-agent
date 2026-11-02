@@ -1,6 +1,7 @@
 import React from 'react';
 import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
 import {CarouselSlide} from './CarouselSlide';
+import {Pinned, pinnedSeconds, type PinnedProps} from './Pinned';
 import {Reel} from './Reel';
 import {Round} from './Round';
 import {HOOK_SOLO_MS, LEAD_MS, reelTimeline, roundTimeline} from './timing';
@@ -124,6 +125,16 @@ export const RemotionRoot: React.FC = () => (
 			durationInFrames={1500}
 			defaultProps={ROUND_SAMPLE}
 			calculateMetadata={roundMetadata}
+		/>
+		<Composition
+			id="Pinned"
+			component={Pinned}
+			width={1080}
+			height={1920}
+			fps={FPS}
+			durationInFrames={Math.round(pinnedSeconds(4) * FPS)}
+			defaultProps={{language: 'en', shots: ['store/en/01-listening.jpg', 'store/en/02-confirm.jpg', 'store/en/03-result.jpg', 'store/en/04-mcq.jpg']} as PinnedProps}
+			calculateMetadata={({props}) => ({durationInFrames: Math.round(pinnedSeconds(props.shots.length) * FPS)})}
 		/>
 		<Still
 			id="CarouselSlide"

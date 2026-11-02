@@ -1,1 +1,1 @@
-otázky,auto,cesta,rodina,deti,párty,zábava,hra,vedomosti,trivia,hlas,mozog,fakty
+vedomostný,všeobecný,otázky,rodina,deti,hra,pre,slovenský,odpovede,párty,dvoch,páry,filmy

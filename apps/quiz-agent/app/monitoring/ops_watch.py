@@ -52,6 +52,7 @@ _MEMORY_QUERY = (
     f"1 - fly_instance_memory_mem_available{{{_PROD_APPS}}}"
     f" / fly_instance_memory_mem_total{{{_PROD_APPS}}}"
 )
+_MEMINFO = "/proc/meminfo"
 BLIND_AFTER_RUNS = 3
 LATENCY_SUSTAINED_RUNS = 3
 
@@ -127,6 +128,21 @@ async def _prometheus(
     return out
 
 
+def _local_used_fraction(s: Settings, kind: str) -> float:
+    """Used fraction of this host's memory or disk (``OPS_METRICS_SOURCE=local``).
+
+    Inside a container /proc/meminfo is the host's, which is what we watch."""
+    if kind == "memory":
+        info: dict[str, int] = {}
+        with open(_MEMINFO) as f:
+            for line in f:
+                key, _, rest = line.partition(":")
+                info[key] = int(rest.split()[0])
+        return 1 - info["MemAvailable"] / info["MemTotal"]
+    st = os.statvfs(s.ops_local_disk_path)
+    return 1 - st.f_bavail / st.f_blocks
+
+
 async def collect(
     s: Settings, sessionmaker, client: httpx.AsyncClient
 ) -> tuple[list[Reading], list[str]]:
@@ -134,7 +150,25 @@ async def collect(
     readings: list[Reading] = []
     blind: list[str] = []
     token = (os.getenv("FLY_METRICS_TOKEN") or "").strip()
-    if token:
+    if s.ops_metrics_source == "local":
+        for kind, limit in (
+            ("disk", s.ops_disk_alarm_pct),
+            ("memory", s.ops_memory_alarm_pct),
+        ):
+            try:
+                pct = round(_local_used_fraction(s, kind) * 100, 1)
+                readings.append(
+                    Reading(
+                        kind=kind,
+                        target=s.ops_local_target,
+                        value=pct,
+                        threshold=limit,
+                        alarm=pct >= limit,
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 — reported as blind below
+                blind.append(f"local {kind} ({type(exc).__name__})")
+    elif token:
         for kind, query, limit in (
             ("disk", _DISK_QUERY, s.ops_disk_alarm_pct),
             ("memory", _MEMORY_QUERY, s.ops_memory_alarm_pct),

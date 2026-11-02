@@ -206,6 +206,11 @@ class Settings(BaseSettings):
     # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
     # so a deploy does not re-send ongoing problems. Empty = memory only.
     ops_watch_interval_s: float = 300.0
+    # "fly" (Fly Prometheus, needs FLY_METRICS_TOKEN) or "local" (this host's
+    # /proc/meminfo + statvfs; for the Hetzner VPS, #222).
+    ops_metrics_source: str = "fly"
+    ops_local_disk_path: str = "/"
+    ops_local_target: str = "hetzner-host"
     ops_disk_alarm_pct: float = 70.0
     ops_db_connections_alarm_pct: float = 70.0
     ops_memory_alarm_pct: float = 90.0

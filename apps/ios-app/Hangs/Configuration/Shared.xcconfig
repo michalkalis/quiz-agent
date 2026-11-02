@@ -58,7 +58,7 @@ LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 
 // MARK: - Versioning
 CURRENT_PROJECT_VERSION = 1
-MARKETING_VERSION = 1.1
+MARKETING_VERSION = 1.2
 
 // MARK: - Assets
 // App Store validation requires CFBundleIconName, which xcodebuild only injects

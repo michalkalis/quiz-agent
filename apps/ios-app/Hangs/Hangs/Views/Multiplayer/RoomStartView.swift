@@ -23,12 +23,15 @@ struct RoomStartView: View {
             HangsPrimaryButton(
                 title: "Host a game",
                 icon: "person.2.fill",
-                isLoading: viewModel.isWorking && viewModel.role == .host
+                isLoading: viewModel.isWorking && viewModel.role == .host,
+                fillsWidth: false,
+                contentInset: Theme.Hangs.Spacing.xxl * 2
             ) {
                 Task { await viewModel.beginHosting() }
             }
             .disabled(viewModel.isWorking)
             .accessibilityIdentifier("room.host")
+            .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)

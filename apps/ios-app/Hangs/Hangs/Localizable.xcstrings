@@ -3125,6 +3125,22 @@
         }
       }
     },
+    "Custom" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastní"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastný"
+          }
+        }
+      }
+    },
     "Custom pack" : {
       "comment" : "Label on the order form's preview card of the pack being ordered (shown in caps)",
       "localizations" : {
@@ -3155,6 +3171,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vlastný balík · 30 otázok"
+          }
+        }
+      }
+    },
+    "Custom time" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastní čas"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vlastný čas"
           }
         }
       }

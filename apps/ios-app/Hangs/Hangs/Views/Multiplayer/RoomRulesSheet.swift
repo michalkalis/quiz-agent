@@ -12,6 +12,8 @@ import SwiftUI
 struct RoomRulesSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: RoomViewModel
+    /// #224: the host opened the custom time; also true for any non-preset value.
+    @State private var showsCustomTime = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
@@ -31,9 +33,16 @@ struct RoomRulesSheet: View {
                     ForEach(MultiplayerSettings.thinkingChoices, id: \.self) { seconds in
                         Text(verbatim: MultiplayerSettings.secondsDisplay(seconds)).tag(seconds)
                     }
+                    Text("Custom").tag(Self.customTag)
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("room.rules.sheet.time")
+                if isCustomTime {
+                    HangsCard {
+                        RoomCustomTimeRow(viewModel: viewModel, identifier: "room.rules.sheet.time.stepper")
+                    }
+                    .disabled(viewModel.isSavingSettings)
+                }
             }
             HangsCard {
                 VStack(spacing: 0) {
@@ -61,8 +70,21 @@ struct RoomRulesSheet: View {
         .presentationDetents([.medium])
     }
 
+    /// Outside the server's range, so it never collides with a real value.
+    private static let customTag = 0
+
+    private var isCustomTime: Bool {
+        showsCustomTime || !MultiplayerSettings.isPreset(viewModel.settings.thinkingSeconds)
+    }
+
     private var thinkingSeconds: Binding<Int> {
-        Binding(get: { viewModel.settings.thinkingSeconds }, set: setTime)
+        Binding(
+            get: { isCustomTime ? Self.customTag : viewModel.settings.thinkingSeconds },
+            set: { picked in
+                showsCustomTime = picked == Self.customTag
+                if picked != Self.customTag { setTime(picked) }
+            }
+        )
     }
 
     private var readsAloud: Binding<Bool> {

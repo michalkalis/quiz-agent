@@ -25,6 +25,8 @@ nonisolated struct MultiplayerSettings: Codable, Equatable, Sendable {
     /// What the host picks from; the server accepts 3–60 s.
     static let thinkingChoices = [15, 30, 45, 60]
     static let thinkingRange = 3 ... 60
+    /// #224: any other value in the range is "custom".
+    static func isPreset(_ seconds: Int) -> Bool { thinkingChoices.contains(seconds) }
     /// Guests never have voice; the host taps or types like everyone else.
     static let voiceCommandsEnabled = false
     static let hostAnswersByVoice = false

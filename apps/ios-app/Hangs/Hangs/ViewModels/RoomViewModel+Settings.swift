@@ -38,6 +38,8 @@ extension RoomViewModel {
         new.readsAloud = on
         // The game may have started silent, without the audio session.
         if on, state?.status == .playing { prepareReadAloudAudio() }
+        // Off mid-question: the clip stops now and the question opens as if it had ended (#224).
+        if !on, isReadingAloud { await audio.stopPlayback() }
         await change(to: new, setting: .readsAloud, value: String(on)) { roomId in
             try await self.rooms.updateSettings(roomId: roomId, revealMode: nil, thinkingSeconds: nil, readsAloud: on)
         }

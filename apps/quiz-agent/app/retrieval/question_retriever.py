@@ -87,6 +87,10 @@ class QuestionRetriever:
         """
         return await self._store.get(question_id)
 
+    async def fresh_public_entertainment(self, language: str, limit: int) -> list[dict]:
+        """#223 — fresh entertainment rows for the public website (read-only)."""
+        return await self._store.fresh_public_entertainment(language, limit)
+
     async def count(self, filters: Optional[dict] = None) -> int:
         """Count questions, optionally filtered by metadata."""
         return await self._store.count(filters=filters)

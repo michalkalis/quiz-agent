@@ -14,7 +14,7 @@ Prihlásenie ostáva dobrovoľné (žiadna povinná registrácia, žiadny hard p
 
 | Bod | Stav | Dôkaz |
 |---|---|---|
-| 1.1 v App Store review | **otvorené**: build 80 (`ios/1.1-b80-store`) čaká od 10-19; 10-28 stále `WAITING_FOR_REVIEW`; `releaseType = AFTER_APPROVAL` (vyjde sama hneď po schválení, phased 7 dní) | asc-audit 10-22, asc-store-upload 10-28 |
+| 1.1 v App Store review | **zatvorené**: build 80 (`ios/1.1-b80-store`) schválený, 2026-11-02 `READY_FOR_SALE` (phased 7 dní); `main` ide na 1.2 | asc-audit 11-02 |
 | TEMP `generatedBy` odznak v QuestionView | **zatvorené**: riadok `TEMP (Bedrock gen test)` už neexistuje; nahradil ho `QuestionProvenanceRow` (#176), viditeľný len pri `debugSurfaces` | `QuestionView.swift:25`, `ReviewBadge.swift:119` |
 | Panel hodnotenia otázok (#155) | **zatvorené pre obchod**: `BuildChannel.debugSurfacesEnabled()` vracia v App Store variante vždy false (#209, compile-time `APP_STORE`). Mazanie kódu netreba, TestFlight ho používa | `BuildChannel.swift:40`, `QuestionRatingEntry.swift:46` |
 | `STOREKIT_ENVIRONMENT` Sandbox → Production | **zatvorené**: prod `Production,Sandbox` od 10-08 (#193.1; App Review a TF kupujú v Sandboxe). Živé čítanie hodnoty agentovi zablokovala poistka, overí 217.8 | `quiz-pack-api/app/config.py:54-61` |

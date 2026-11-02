@@ -16,6 +16,7 @@ The main call to action is the App Store listing (id 6762482437, local storefron
 | `src/footer.html` | Footer partial shared by the landing page and the legal pages. |
 | `src/strings/en.json`, `sk.json`, `cs.json` | All visible text, one file per language, same keys. |
 | `src/legal.html`, `src/legal/<page>.<lang>.html` | Legal page shell and the legal texts (privacy, terms, support), one file per page and language. Written as plain HTML; the `<h1>` becomes the page title. Built to `public/<page>.html`, which GitHub Pages serves at `/<page>`. |
+| `src/rethink-sans-*` | Rethink Sans, the app's font. Not used by the site; kept here because the website is the brand source for `apps/social-studio` (`sync-brand.mjs`) and `scripts/brand/mascot_assets.py`. |
 | `src/*.png`, `src/*.woff2`, `src/favicon.svg`, `src/robots.txt` | Static files copied as is. |
 | `build.py` | Generator (Python stdlib only). |
 | `build.py` → `sitemap.xml`, `llms.txt`, JSON-LD | Generated for search engines and AI assistants: the sitemap lists every page with its language alternates, `llms.txt` is a plain summary built from the English strings, the landing page carries schema.org data (publisher, site, app with links to the social accounts). Social accounts live in `SOCIAL_EN` / `SOCIAL_SKCZ` and also render in the footer. |

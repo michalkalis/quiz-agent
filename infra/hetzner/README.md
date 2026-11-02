@@ -44,7 +44,7 @@ Verified 2026-11-02: a spoofed header and a wrong secret are both overwritten; t
 
 Founder-set items (agents never create these):
 
-1. Generate a deploy key pair; put the public key on the server in `~trubbo/.ssh/authorized_keys` as one line: `command="/home/trubbo/trubbo/repo/infra/hetzner/deploy-ssh.sh",restrict ssh-ed25519 AAAA... trubbo-ci-deploy`.
+1. Generate a deploy key pair; put the public key on the server in `~trubbo/.ssh/authorized_keys` as one line: `command="/home/trubbo/trubbo/bin/deploy-ssh.sh",restrict ssh-ed25519 AAAA... trubbo-ci-deploy`.
 2. GitHub secret `HETZNER_DEPLOY_SSH_KEY` = the private key.
 3. GitHub variable `HETZNER_KNOWN_HOSTS` = output of `ssh-keyscan -t ed25519 2.31.163.95`.
 4. At cutover, GitHub variable `BACKEND_HOST` = `hetzner`. From then on CI no longer deploys app code to Fly.
@@ -54,3 +54,6 @@ Founder-set items (agents never create these):
 - Prod DB copy restored (3 507 questions, alembic heads match prod).
 - Worker not started; mails and background checks off (`ENVIRONMENT=staging`).
 - Test URLs (not used by the app): `agent.2-31-163-95.sslip.io`, `pack.2-31-163-95.sslip.io`. Both pass `infra/deploy/smoke.sh`.
+
+**Forced-command scripts live outside the checkout** (`~/trubbo/bin/`), because a deploy checks out another commit and must not rewrite the script that is running it. After a change to `deploy-ssh.sh` or `backup-ssh.sh` lands, install it by hand: `install -m 755 infra/hetzner/{deploy,backup}-ssh.sh ~/trubbo/bin/`.
+Verified 2026-11-02: a real deploy of `main` through the CI key took 28 s, and bad input was rejected.

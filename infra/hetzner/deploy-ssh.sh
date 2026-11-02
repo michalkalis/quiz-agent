@@ -3,7 +3,7 @@
 # command: the deploy key can do nothing but this script.
 #
 # Install on the server (~trubbo/.ssh/authorized_keys), one line:
-#   command="/home/trubbo/trubbo/repo/infra/hetzner/deploy-ssh.sh",restrict ssh-ed25519 AAAA... trubbo-ci-deploy
+#   command="/home/trubbo/trubbo/bin/deploy-ssh.sh",restrict ssh-ed25519 AAAA... trubbo-ci-deploy
 #
 # Accepted SSH_ORIGINAL_COMMAND:
 #   deploy <40-hex sha> <services>   services: comma list of quiz-agent,pack

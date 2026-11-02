@@ -139,6 +139,7 @@ class PackGenerator:
             target_count=order.target_count,
             category=order.category,
             theme=order.theme,
+            difficulty=getattr(order, "difficulty", None),
             # Deterministic marker check, not LLM-side gating — #42 task
             # 42.20 blocker (root cause D): `ctx.prompt` never reaches the
             # generation LLM, so MCQ emphasis must travel as an explicit

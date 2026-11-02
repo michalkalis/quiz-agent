@@ -42,6 +42,9 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     theme: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # #224 224.3: buyer-chosen difficulty (easy|medium|hard). NULL = mixed
+    # batch (orders from before the picker / older app builds).
+    difficulty: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(16), nullable=False)
     # #157 (D4): server-side generation-mode switch. Set only by internal
@@ -124,6 +127,10 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
         CheckConstraint(
             "generation_mode IS NULL OR generation_mode IN ('grounded','direct')",
             name="ck_orders_generation_mode",
+        ),
+        CheckConstraint(
+            "difficulty IS NULL OR difficulty IN ('easy','medium','hard')",
+            name="ck_orders_difficulty",
         ),
         CheckConstraint(
             "storekit_environment IS NULL OR storekit_environment IN ('Sandbox','Production')",

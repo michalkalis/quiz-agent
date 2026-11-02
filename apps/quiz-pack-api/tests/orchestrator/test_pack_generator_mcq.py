@@ -136,3 +136,21 @@ async def test_true_false_pattern_surfaces_as_text_multichoice() -> None:
     # `correct_answer` to the full option text so the stored answer is
     # self-contained (TTS reveal, review renders, evaluator value-match).
     assert q.correct_answer in ("True", "False")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("difficulty", ["hard", None])
+async def test_order_difficulty_reaches_order_context(difficulty: str | None) -> None:
+    """The buyer's level must travel from the order into OrderContext, the
+    only thing GenerationStage hands to the prompt builder (#224)."""
+    pack_generator = PackGenerator(
+        stages=[_StubSourcingStage(), GenerationStage(_StubMCQGenerator())],  # type: ignore[arg-type]
+        sink_factory=lambda _oid: _NoopSink(),  # type: ignore[arg-type,return-value]
+    )
+    order = _make_order()
+    order.difficulty = difficulty
+
+    await pack_generator.run(order)
+
+    assert pack_generator.last_ctx is not None
+    assert pack_generator.last_ctx.difficulty == difficulty

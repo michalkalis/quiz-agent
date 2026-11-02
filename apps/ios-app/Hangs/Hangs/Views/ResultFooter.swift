@@ -51,11 +51,12 @@ struct ResultFooter: View {
     }
 
     /// Pause glyph + STAY while the countdown runs (tap pauses); play glyph +
-    /// RESUME once paused (tap resumes). Same 76pt slot — never a stacked button.
+    /// RESUME once paused (tap resumes). Sizes to its label — never a stacked button.
     private enum Metrics {
-        /// R-Result: the pause pill beside the 56pt CTA.
-        static let stayWidth: CGFloat = 76
-        static let height: CGFloat = 56
+        /// R-Result: the pause pill beside the 56pt CTA. A floor, not a width:
+        /// "POKRAČUJ" is wider than 76pt, so the pill grows to its label.
+        static let minWidth: CGFloat = 76
+        static let minHeight: CGFloat = 56
         static let glyph: CGFloat = 16
     }
 
@@ -67,10 +68,11 @@ struct ResultFooter: View {
                 Text(isPaused ? "RESUME" : "STAY")
                     .font(.hangsCaption.weight(.semibold))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(width: Metrics.stayWidth, height: Metrics.height)
+            .padding(.horizontal, Theme.Hangs.Spacing.sm)
+            .frame(minWidth: Metrics.minWidth, minHeight: Metrics.minHeight)
             // #194 R-Result: the second control is Liquid Glass beside the ink CTA.
             .glassEffect(.regular.interactive(), in: Capsule())
         }

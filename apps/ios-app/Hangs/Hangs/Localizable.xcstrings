@@ -4,18 +4,18 @@
     "" : {
 
     },
-    "\"Repeat\" and \"skip\" work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume" : {
+    "\"Repeat\" and \"next\" work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Zopakuj“ a „přeskoč“ fungují i během čtení otázky, na reproduktoru iPhonu nebo při hands-free hovoru. Otázka pak hraje hlasitostí hovoru"
+            "value" : "„Zopakuj“ a „další“ fungují i během čtení otázky, na reproduktoru iPhonu nebo při hands-free hovoru. Otázka pak hraje hlasitostí hovoru"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Zopakuj“ a „preskoč“ fungujú aj počas čítania otázky, na reproduktore iPhonu alebo pri hands-free hovore. Otázka potom hrá hlasitosťou hovoru"
+            "value" : "„Zopakuj“ a „ďalšia“ fungujú aj počas čítania otázky, na reproduktore iPhonu alebo pri hands-free hovore. Otázka potom hrá hlasitosťou hovoru"
           }
         }
       }
@@ -1577,19 +1577,19 @@
         }
       }
     },
-    "Again or skip?" : {
-      "comment" : "CarPlay: answer sheet, the driver can re-record or skip",
+    "Again or next?" : {
+      "comment" : "CarPlay: answer sheet, the driver can re-record or skip to the next question",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znovu, nebo přeskoč?"
+            "value" : "Znovu, nebo další?"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znova, alebo preskoč?"
+            "value" : "Znova, alebo ďalšia?"
           }
         }
       }
@@ -5918,6 +5918,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nový prehľad"
+          }
+        }
+      }
+    },
+    "Next (skip question)" : {
+      "comment" : "The quiz skip button and the CarPlay skip button: skips the current question; doubles as its voice command. Separate from the onboarding Skip and from the result screen's Next.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Další"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ďalšia"
           }
         }
       }
@@ -13251,18 +13274,18 @@
         }
       }
     },
-    "start · ok · next · repeat · skip. That's all you need." : {
+    "start · ok · again · repeat · next. That's all you need." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "start · ok · next · repeat · skip. Víc příkazů nepotřebuješ."
+            "value" : "start · ok · again · repeat · next. Víc příkazů nepotřebuješ."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "start · ok · next · repeat · skip. Viac príkazov nepotrebuješ."
+            "value" : "start · ok · again · repeat · next. Viac príkazov nepotrebuješ."
           }
         }
       }

@@ -55,26 +55,24 @@ struct VoiceCommandObservabilityTests {
     /// no-answer sheet names ITS buttons (Again / Skip), not Confirm.
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
-        #expect(VoiceCommandLexicon.hint(on: .home) == #"Say "start""#)
-        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "skip""#)
+        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "next""#)
         #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or a new answer"#)
-        #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "skip""#)
-        #expect(VoiceCommandLexicon.hint(on: .result) == #"Say "next""#)
+        #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "next""#)
     }
 
     @Test("commandListenerHint is nil until listening, then names the screen's words")
     func hintTracksListeningWindow() async {
         let (vm, _, _) = makeVM()
-        vm.quizState = .idle
+        vm.quizState = .askingQuestion
         #expect(vm.commandListenerHint == nil, "not listening yet → no indicator")
 
         await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer → .listening
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
-        #expect(vm.commandListenerHint == #"Say "start""#)
+        #expect(vm.commandListenerHint == #"Say "start" or "next""#)
 
-        // Moving to the result screen swaps the words shown.
-        vm.quizState = makeResultState()
-        #expect(vm.commandListenerHint == #"Say "next""#)
+        // Moving to the confirmation sheet swaps the words shown.
+        vm.quizState = .processing
+        #expect(vm.commandListenerHint == #"Say "confirm", "again" or a new answer"#)
 
         // Tearing the listener down hides the indicator.
         vm.audioDeviceState.stopSilenceDetectionListening()
@@ -111,7 +109,7 @@ struct VoiceCommandObservabilityTests {
         await pumpUntil({ vm.commandAvailability == .unavailable(reason: "assets missing") },
                         "availability mirror did not pick up the unavailable state")
 
-        vm.quizState = .idle
+        vm.quizState = .askingQuestion
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "the consumer still arms")
         #expect(vm.commandListenerHint == nil, "but the cue must not claim to be listening")
@@ -135,7 +133,7 @@ struct VoiceCommandObservabilityTests {
         await pumpUntil({ vm.commandAvailability == .installingAssets },
                         "mirror did not observe the installing state")
 
-        vm.quizState = .idle
+        vm.quizState = .askingQuestion
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
         #expect(vm.commandListenerHint == nil, "installing → the cue must not claim to be listening yet")
@@ -144,7 +142,7 @@ struct VoiceCommandObservabilityTests {
         mock.commandAvailability = .ready
         await pumpUntil({ vm.commandAvailability == .ready },
                         "the observable mirror did not pick up the .ready flip")
-        #expect(vm.commandListenerHint == #"Say "start""#, "ready → the Home hint must now appear")
+        #expect(vm.commandListenerHint == #"Say "start" or "next""#, "ready → the hint must now appear")
     }
 
     // MARK: - Master toggle
@@ -159,8 +157,21 @@ struct VoiceCommandObservabilityTests {
         }
         // Re-enabling restores the normal mapping.
         vm.settings.voiceCommandsEnabled = true
-        vm.quizState = .idle
-        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
+        vm.quizState = .askingQuestion
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
+    }
+
+    /// WHY (#224, founder TF 2026-11-02): Home starts with its button and the
+    /// result advances with its button / countdown. A listener there only
+    /// confused (and held the mic open); it must never arm with voice commands ON.
+    @Test("Home and the single-player result never open a command window")
+    func homeAndResultNeverListen() {
+        let (vm, _, _) = makeVM()
+        vm.settings.voiceCommandsEnabled = true
+        for state in [QuizState.idle, makeResultState()] {
+            vm.quizState = state
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "\(state) must not listen")
+        }
     }
 
     @Test("disabling the toggle tears down an already-armed listener")
@@ -180,7 +191,7 @@ struct VoiceCommandObservabilityTests {
     @Test("master toggle off suppresses the indicator even mid-listen")
     func toggleOffSuppressesHint() async {
         let (vm, _, _) = makeVM()
-        vm.quizState = .idle
+        vm.quizState = .askingQuestion
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.commandListenerHint != nil)
 
@@ -197,7 +208,7 @@ struct VoiceCommandObservabilityTests {
             let mock = silence
             #expect(vm.lastRecognizedCommand == nil)
 
-            vm.quizState = .idle // Home — spoken "start" is valid
+            vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
             mock.simulateCommandTranscript("start")
             await pumpUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")

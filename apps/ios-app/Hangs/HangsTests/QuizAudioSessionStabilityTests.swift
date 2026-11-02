@@ -72,9 +72,10 @@ struct QuizAudioSessionStabilityTests {
 
         // Home is listening for "start" when the quiz begins — exactly the state
         // the founder's first question started from.
-        vm.quizState = .idle
+        vm.quizState = .finished
+        vm.quizEndCommandsArmed = true
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
-        #expect(silence.isListening, "precondition: the Home command listener is live")
+        #expect(silence.isListening, "precondition: the set-end command listener is live")
 
         audio.onSetupAudioSession = { recorder.listenerLiveAtSessionSetup = silence.isListening }
         audio.onPlaybackStarted = {

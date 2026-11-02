@@ -259,7 +259,7 @@ struct QuizEndCommandWordTests {
             #expect(match(word, .error, language) == nil, "\(word) must not act on the error screen")
         }
         let home = VoiceCommandLexicon.spokenWord(.home, language: language)
-        for screen in [VoiceCommandScreen.home, .question, .confirmation, .result, .error] {
+        for screen in [VoiceCommandScreen.question, .confirmation, .noAnswer, .error] {
             #expect(match(home, screen, language) == nil, "\(home) must not act on \(screen)")
         }
     }

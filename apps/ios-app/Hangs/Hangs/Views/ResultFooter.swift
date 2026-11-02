@@ -3,25 +3,15 @@
 //  Hangs
 //
 //  The result screen's fixed footer (issue #127, unchanged by the #131 Track D
-//  pick): docked GlowSweepLine (rule V1) + the listening bar + ONE row with the
-//  "Next question" CTA primary-left and the STAY/RESUME pill to its right.
-//  #131 Track F: the bar is the shared `ListenBar` (full size — this is a quiz
-//  screen); `CmdListenBar` is retired.
+//  pick): ONE row with the "Next question" CTA primary-left and the
+//  STAY/RESUME pill to its right. #224 (founder, TF 2026-11-02): no voice
+//  commands here, so no listening bar and no glow line — the buttons and the
+//  auto-advance countdown are the whole interaction.
 //
 
 import SwiftUI
 
 struct ResultFooter: View {
-    let feedbackPhase: VoiceFeedbackPhase
-    var recognizingWord: String? = nil
-    /// False = the command window is not armed (or the recognizer is not ready)
-    /// — the bar must not claim to be listening, so it is not rendered at all.
-    var isListeningForCommands: Bool = false
-    /// #174: the words to say under the bar, nil once the driver has outgrown
-    /// them (`QuizSettings.voiceHintsVisible`) — the bar stays, the words go.
-    let commandHint: String?
-    /// #175: the command language (= quiz language) for the bar's caption.
-    var commandLanguage: CommandLanguage = .english
     /// True while auto-advance is counting down (drives the CTA countdown + STAY).
     let autoAdvanceActive: Bool
     let isPaused: Bool
@@ -34,16 +24,6 @@ struct ResultFooter: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // #122/rule V1: light sweep strip, docked above the bar — reserves its
-            // 4 pt in every phase so the bar never shifts.
-            GlowSweepLine(phase: feedbackPhase)
-                .padding(.horizontal, Theme.Hangs.Spacing.xxs)
-
-            if isListeningForCommands {
-                ListenBar(mode: .command, feedback: feedbackPhase, recognizingWord: recognizingWord, commandHint: commandHint, language: commandLanguage)
-                    .transition(.opacity)
-            }
-
             HStack(spacing: 10) {
                 // #131 Track D: primary CTA sits LEFT, STAY/RESUME to its right
                 // (founder spec, swapped from the #127 layout).

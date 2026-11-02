@@ -91,10 +91,8 @@ extension VoiceCommandCoordinator {
         guard mayCaptureAudio else { return nil }
 
         switch quizState() {
-        case .idle: return .home
         case .askingQuestion: return .question
         case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
-        case .showingResult: return .result
         case .error: return .error
         case .finished: return .setEnd
         default: return nil // startingQuiz / skipping / recording
@@ -151,14 +149,14 @@ extension VoiceCommandCoordinator {
         // down with it (#173).
         if isRecordingActive, !isQuizPaused() { return }
         if let screen = currentCommandScreen {
-            // #136 (founder decision B): Home listening runs under the QUIET
+            // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app
-            // waits for "start". In-quiz windows keep whatever session
+            // waits for "again" / "home". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
-            if screen == .home || screen == .setEnd {
+            if screen == .setEnd {
                 configureQuietListeningSession()
                 // #208.5: a quiz engine still up here would keep `.voiceChat`
-                // (call volume) on Home; the restart below comes up without it.
+                // (call volume) there; the restart below comes up without it.
                 if silenceDetectionService.voiceProcessingStatus?.armed == true {
                     stopSilenceDetectionListening()
                 }

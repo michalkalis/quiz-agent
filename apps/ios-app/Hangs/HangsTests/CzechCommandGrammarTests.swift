@@ -54,14 +54,16 @@ struct CzechCommandGrammarTests {
 
     @Test("recall: each Czech command word routes on its screen, ř/ě/ů diacritics included")
     func czechCommandsRoute() {
-        #expect(VoiceCommandMatcher.match(transcript: "Start", on: .home, language: .czech) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Start", on: .question, language: .czech) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Další", on: .question, language: .czech) == .skip)
+        // The old words stay as hidden synonyms (muscle memory, #224).
         #expect(VoiceCommandMatcher.match(transcript: "Přeskoč", on: .question, language: .czech) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "vynech", on: .question, language: .czech) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "Zopakuj", on: .question, language: .czech) == .repeatQuestion)
         #expect(VoiceCommandMatcher.match(transcript: "opakuj", on: .question, language: .czech) == .repeatQuestion)
-        #expect(VoiceCommandMatcher.match(transcript: "Dál", on: .result, language: .czech) == .next)
-        #expect(VoiceCommandMatcher.match(transcript: "dále", on: .result, language: .czech) == .next)
-        #expect(VoiceCommandMatcher.match(transcript: "Pokračuj", on: .result, language: .czech) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "Dál", on: .noAnswer, language: .czech) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "dále", on: .noAnswer, language: .czech) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "Pokračuj", on: .noAnswer, language: .czech) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "Znovu", on: .confirmation, language: .czech) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "potvrď", on: .confirmation, language: .czech) == .ok)
         #expect(VoiceCommandMatcher.match(transcript: "ok", on: .confirmation, language: .czech) == .ok)
@@ -75,6 +77,9 @@ struct CzechCommandGrammarTests {
     func czechScreenScoping() {
         #expect(VoiceCommandMatcher.match(transcript: "přeskoč", on: .confirmation, language: .czech) == nil)
         #expect(VoiceCommandMatcher.match(transcript: "dál", on: .question, language: .czech) == nil)
+        // "dále" / "dal" open "další" but are everyday words, not a skip (#224).
+        #expect(VoiceCommandMatcher.match(transcript: "dále", on: .question, language: .czech) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "dal", on: .question, language: .czech) == nil)
         #expect(VoiceCommandMatcher.match(transcript: "pauza", on: .question, language: .czech) == nil)
     }
 
@@ -85,7 +90,7 @@ struct CzechCommandGrammarTests {
         // confirm (founder) — covered in VoiceCommandLexiconParityTests; every
         // other screen keeps them inert.
         for phrase in ["jo", "ano", "dobře", "jasně", "no", "tak", "no tak", "jo jo", "ano ano", "tedy"] {
-            for screen: VoiceCommandScreen in [.home, .question, .result] {
+            for screen: VoiceCommandScreen in [.question, .noAnswer] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .czech) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -97,7 +102,7 @@ struct CzechCommandGrammarTests {
     @Test("precision: ordinary Czech sentences are rejected by the content-token cap")
     func czechSentencesAreInert() {
         for phrase in ["to bylo dobrý", "pojď dál jedeme", "no tak to přeskočíme později", "dal jsem to tam"] {
-            for screen: VoiceCommandScreen in [.question, .confirmation, .result] {
+            for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .czech) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -116,7 +121,7 @@ struct CzechCommandGrammarTests {
 
     @Test("ambiguity margin: no two Czech commands on one screen collide")
     func czechVariantsAreDisjointPerScreen() {
-        for screen: VoiceCommandScreen in [.home, .question, .confirmation, .result] {
+        for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer] {
             for command in VoiceCommandLexicon.commands(on: screen) {
                 for variant in VoiceCommandLexicon.variants(for: command, language: .czech) {
                     #expect(
@@ -147,11 +152,9 @@ struct CzechCommandGrammarTests {
 
     @Test("driver-facing strings are Czech and quote the button words (#174)")
     func czechDisplayStrings() {
-        #expect(VoiceCommandLexicon.hint(on: .home, language: .czech) == "Řekni „start“")
-        #expect(VoiceCommandLexicon.hint(on: .question, language: .czech).contains("přeskoč"))
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .czech) == "Řekni „start“ nebo „další“")
         #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .czech).contains("znovu"))
-        #expect(VoiceCommandLexicon.hint(on: .result, language: .czech).contains("dál"))
-        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .czech) == "přeskoč")
+        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .czech) == "další")
         #expect(VoiceCommandLexicon.spokenWord(.next, language: .czech) == "dál")
         #expect(VoiceCommandLexicon.listeningCaption(language: .czech) == "POSLOUCHÁM PŘÍKAZY")
         #expect(VoiceCommandLexicon.listeningCaption(language: .czech, short: true) == "POSLOUCHÁM")

@@ -68,8 +68,9 @@ struct CommandListenerTests {
     func windowMapping() {
         let (vm, _, _) = makeCommandVM()
 
+        // #224: Home and the result have buttons only — no window, no listener.
         vm.quizState = .idle
-        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
 
         vm.quizState = .askingQuestion
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
@@ -78,7 +79,7 @@ struct CommandListenerTests {
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .confirmation)
 
         vm.quizState = makeResultState()
-        #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result)
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
 
         // Non-listening states → nil (never armed).
         vm.quizState = .recording
@@ -126,8 +127,8 @@ struct CommandListenerTests {
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == false)
 
-        // Result → armed again.
-        vm.quizState = makeResultState()
+        // Question → armed again.
+        vm.quizState = .askingQuestion
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(mock.isListening == true)
     }
@@ -186,7 +187,7 @@ struct CommandListenerTests {
         }
     }
 
-    @Test("screen scoping: 'next' is inert on the question screen, valid on result")
+    @Test("screen scoping: 'ok' is inert on the question screen, valid on the sheet")
     func consumerScreenScoping() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
@@ -195,21 +196,21 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
-            // "next" is NOT a question-screen command → dropped.
+            // "ok" is NOT a question-screen command → dropped.
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
-            mock.simulateCommandTranscript("next")
+            mock.simulateCommandTranscript("ok")
             // Give the consumer a chance to (not) fire.
             for _ in 0 ..< 20 {
                 await Task.yield()
             }
-            #expect(recognized.isEmpty, "‘next’ must not match on the question screen")
+            #expect(recognized.isEmpty, "‘ok’ must not match on the question screen")
 
-            // On the result screen, "next" matches.
-            vm.quizState = makeResultState()
-            mock.simulateCommandTranscript("next")
-            await pumpUntil({ !recognized.isEmpty }, "‘next’ never matched on result")
-            #expect(recognized == [.next])
+            // On the confirmation sheet, "ok" matches.
+            vm.quizState = .processing
+            mock.simulateCommandTranscript("ok")
+            await pumpUntil({ !recognized.isEmpty }, "‘ok’ never matched on the sheet")
+            #expect(recognized == [.ok])
         }
     }
 
@@ -310,18 +311,18 @@ struct CommandListenerTests {
             let coordinator = vm.voiceCommandCoordinator
             // Isolate the REPEAT signal (see volatileFiresOncePerUtterance); the
             // settle fallback's own supersede path is
-            // `okayPrefixOnResultCancelsPendingSettle`.
+            // `startPrefixCancelsPendingSettle`.
             coordinator.volatileSettleDelay = 3600
-            vm.quizState = makeResultState()
+            vm.quizState = .askingQuestion
 
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            for hypothesis in ["okay", "okay tak", "okay tak to", "okay tak to bolo dobre"] {
+            for hypothesis in ["start", "start tak", "start tak to", "start tak to bolo dobre"] {
                 await coordinator.handleCommandTranscript(CommandTranscript(text: hypothesis, isFinal: false))
             }
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "okay tak to bolo dobre", isFinal: true)
+                CommandTranscript(text: "start tak to bolo dobre", isFinal: true)
             )
 
             #expect(recognized.isEmpty, "conversational speech must not advance the quiz, got \(recognized)")
@@ -423,9 +424,9 @@ struct CommandListenerTests {
     /// revisable hypothesis removes the escape before the founder can use it.
     /// "okay" is the highest-frequency backchannel in conversation, and `again`
     /// (the escape) waits for a final, so ambient speech would otherwise race
-    /// the correction and win. On the RESULT screen `ok` stays benign: advancing
-    /// is the default outcome there anyway.
-    @Test("'ok' requires a final on the confirmation sheet, but not on the result")
+    /// the correction and win. A benign command such as `start` stays on
+    /// the low-latency volatile path.
+    @Test("'ok' requires a final on the confirmation sheet, but 'start' does not on the question")
     func okRequiresFinalOnConfirmationOnly() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
@@ -443,16 +444,17 @@ struct CommandListenerTests {
             await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: true))
             #expect(recognized == [.ok], "the final still confirms")
 
-            // The result screen keeps the low-latency volatile path.
-            let (resultVM, _, _) = makeCommandVM()
-            let resultCoordinator = resultVM.voiceCommandCoordinator
-            resultVM.quizState = makeResultState()
-            var advanced: [VoiceCommand] = []
-            resultCoordinator.onCommandRecognized = { advanced.append($0) }
+            // A benign command (start on the question screen) keeps the
+            // low-latency volatile path.
+            let (questionVM, _, _) = makeCommandVM()
+            let questionCoordinator = questionVM.voiceCommandCoordinator
+            questionVM.quizState = .askingQuestion
+            var started: [VoiceCommand] = []
+            questionCoordinator.onCommandRecognized = { started.append($0) }
 
-            await resultCoordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
-            await resultCoordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
-            #expect(advanced == [.ok], "advancing early is the default outcome — no reason to wait")
+            await questionCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            await questionCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(started == [.start], "opening the mic early is harmless — no reason to wait")
         }
     }
 
@@ -601,26 +603,25 @@ struct CommandListenerTests {
         }
     }
 
-    /// WHY: on the result screen `ok` fires from a volatile (advancing is the
-    /// default outcome), which is exactly what makes the passenger's "Okay, tak
-    /// to bolo dobré" dangerous — it arrives as the volatile "okay" and would
-    /// advance past the answer the founder is still listening to.
-    @Test("a volatile 'okay' superseded by 'okay tak to bolo dobre' does not advance the result")
-    func okayPrefixOnResultCancelsPendingSettle() async {
+    /// WHY: a benign command fires from a volatile, which is exactly what makes
+    /// a passenger's "Start tak to bolo dobré" dangerous — it arrives as the
+    /// volatile "start" and would open the mic mid-conversation.
+    @Test("a volatile 'start' superseded by 'start tak to bolo dobre' does not fire")
+    func startPrefixCancelsPendingSettle() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
-            vm.quizState = makeResultState()
+            vm.quizState = .askingQuestion
 
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .ok,
-                    "the low-latency path IS live for 'okay' here — which is why it needs superseding")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .start,
+                    "the low-latency path IS live for 'start' here — which is why it needs superseding")
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "okay tak to bolo dobre", isFinal: false)
+                CommandTranscript(text: "start tak to bolo dobre", isFinal: false)
             )
             #expect(coordinator.pendingVolatileSettle == nil)
 
@@ -665,21 +666,21 @@ struct CommandListenerTests {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
             coordinator.volatileSettleDelay = 3600
-            vm.quizState = makeResultState()
+            vm.quizState = .askingQuestion
 
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .ok)
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .start)
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: true))
-            #expect(recognized == [.ok], "the final decides")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
+            #expect(recognized == [.start], "the final decides")
             #expect(coordinator.pendingVolatileSettle == nil)
             #expect(coordinator.taskBag.contains(.volatileSettle) == false)
 
             coordinator.fireSettledVolatile()
-            #expect(recognized == [.ok], "one utterance = at most one command, got \(recognized)")
+            #expect(recognized == [.start], "one utterance = at most one command, got \(recognized)")
         }
     }
 
@@ -781,8 +782,8 @@ struct CommandListenerTests {
     func windowClosedDuringFeedbackTTS() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
-            vm.quizState = makeResultState()
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result)
+            vm.quizState = .askingQuestion
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question)
 
             var recognized: [VoiceCommand] = []
             vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
@@ -790,11 +791,11 @@ struct CommandListenerTests {
             vm.isPlayingFeedbackTTS = true
             #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "feedback TTS must close the window too")
 
-            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
             #expect(recognized.isEmpty, "a transcript arriving during feedback must be dropped, not routed")
 
             vm.isPlayingFeedbackTTS = false
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result, "and reopen when the app stops talking")
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .question, "and reopen when the app stops talking")
         }
     }
 
@@ -804,7 +805,7 @@ struct CommandListenerTests {
     @Test("playing result feedback tears the listener down and re-arms it after")
     func feedbackPlaybackTearsListenerDown() async {
         let (vm, silence, _) = makeCommandVM()
-        vm.quizState = makeResultState()
+        vm.quizState = .askingQuestion
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(silence.isListening)
         let stopsBefore = silence.stopListeningCallCount
@@ -830,8 +831,8 @@ struct CommandListenerTests {
     func parkedRearmMustNotOutliveTheFeedbackStop() async {
         await withMainSerialExecutor {
             let (vm, silence, audio) = makeCommandVM()
-            vm.quizState = makeResultState()
-            #expect(silence.isListening == false, "MCQ-voice path: the engine is DOWN at .showingResult")
+            vm.quizState = .askingQuestion
+            #expect(silence.isListening == false, "MCQ-voice path: the engine is DOWN at the answer")
 
             var release: CheckedContinuation<Void, Never>?
             silence.onStartListeningSuspend = { await withCheckedContinuation { release = $0 } }

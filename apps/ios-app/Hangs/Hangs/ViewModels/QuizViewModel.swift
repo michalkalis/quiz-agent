@@ -402,10 +402,6 @@ final class QuizViewModel: ObservableObject {
     /// (SettingsView diagnostics row).
     var lastRecognizedCommand: VoiceCommand? { voiceCommandCoordinator.lastRecognizedCommand }
 
-    /// Home voice-start flag — see `VoiceCommandCoordinator.voiceStartOnHomeEnabled`
-    /// (HomeView.onAppear).
-    var voiceStartOnHomeEnabled: Bool { voiceCommandCoordinator.voiceStartOnHomeEnabled }
-
     /// "LISTENING FOR COMMANDS" indicator hint — see
     /// `VoiceCommandCoordinator.commandListenerHint` (ListenBar call sites).
     var commandListenerHint: String? { voiceCommandCoordinator.commandListenerHint }
@@ -1967,6 +1963,15 @@ final class QuizViewModel: ObservableObject {
         attemptLedger.markAnswerSent() // #186: a sent answer is final
         recordingCoordinator.cancelRetryPrompt()
 
+        // A pause HOLDS the question read (#200). An answer ends the pause
+        // without play, so the held clip must end with it — else the advance
+        // that started that read stays suspended and "Next" is ignored on the
+        // result (found by the sequence harness once the result stopped
+        // listening, #224).
+        if audioDeviceState.heldQuestionReadOut != nil {
+            await audioDeviceState.stopAnyPlayingAudio()
+        }
+
         // #79: a voice answer may be in flight with the confirmation sheet about
         // to appear. Dismiss the sheet + auto-confirm up front so the typed
         // answer wins and no stale voice sheet resurfaces.
@@ -2436,8 +2441,8 @@ final class QuizViewModel: ObservableObject {
         // IMPORTANT: Show result screen BEFORE playing audio
         // This ensures ResultView is visible when audio starts playing
         transition(to: .showingResult(question: question, evaluation: evaluation))
-        // #77 (77.5): result window — re-arm the command listener for "next"/"ok"
-        // (Session 4 routes them) on top of auto-advance.
+        // #224: the result screen has no command window (buttons + auto-advance
+        // only); this refresh tears the previous question's listener down.
         refreshCommandWindow()
 
         // 59.7 Bug B: start the auto-advance countdown immediately so the countdown bar is

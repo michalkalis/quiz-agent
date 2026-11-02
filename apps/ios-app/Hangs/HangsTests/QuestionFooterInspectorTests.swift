@@ -181,7 +181,7 @@ struct QuestionFooterInspectorTests {
             let tree = try view.inspect()
             let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
             #expect(visible.contains("Answer"), "the primary button says it opens the mic to answer")
-            #expect(visible.contains("Skip"), "Skip is a voice command — the word is the hint")
+            #expect(visible.contains("Next"), "Next is the skip voice command — the word is the hint")
             #expect(!visible.contains("Record"), "'Record' is not a word the driver can say")
             #expect(!visible.contains("Type"), "Type is a tap, not a command — icon-only")
 

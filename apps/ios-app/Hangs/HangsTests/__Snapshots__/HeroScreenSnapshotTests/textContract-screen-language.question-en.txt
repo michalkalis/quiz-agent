@@ -4,7 +4,7 @@ GEOGRAPHY & WORLD
 What is the capital of France?
 Reading the question
 Answer
-Skip
+Next
 askingQuestion
 Settings
 # identifiers

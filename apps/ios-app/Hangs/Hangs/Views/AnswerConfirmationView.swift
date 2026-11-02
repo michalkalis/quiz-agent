@@ -349,7 +349,7 @@ struct AnswerConfirmationView: View {
             }
             .accessibilityIdentifier("confirmation.reRecord")
 
-            HangsSecondaryButton(title: "Skip", icon: "chevron.right.2", singleLineTitle: true) {
+            HangsSecondaryButton(title: "Next (skip question)", icon: "chevron.right.2", singleLineTitle: true) {
                 editFocused = false
                 onConfirm()
             }

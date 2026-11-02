@@ -159,12 +159,12 @@
             switch state {
             case .speaking, .listening:
                 [button(String(localized: "Pause", bundle: .interface, locale: .interface, comment: "CarPlay: pauses the quiz"), "pause.fill") { $0.pause() },
-                 button(String(localized: "Skip", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
+                 button(String(localized: "Next (skip question)", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
             case .thinking:
                 []
             case .confirming:
                 [button(String(localized: "Again", bundle: .interface, locale: .interface, comment: "CarPlay: records the answer again"), "arrow.counterclockwise") { $0.viewModel.rerecordAnswer() },
-                 button(String(localized: "Skip", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
+                 button(String(localized: "Next (skip question)", bundle: .interface, locale: .interface, comment: "CarPlay: skips the current question"), "forward.fill") { $0.skip() }]
             case .paused:
                 [button(String(localized: "Continue", bundle: .interface, locale: .interface, comment: "CarPlay: continues a paused quiz"), "play.fill") { $0.resume() }]
             }
@@ -318,7 +318,7 @@
             case .speaking: String(localized: "Trubbo is speaking", bundle: .interface, locale: .interface, comment: "CarPlay: Trubbo is reading the question or result aloud")
             case .listening: String(localized: "Listening…", bundle: .interface, locale: .interface, comment: "CarPlay: the microphone is open for the spoken answer")
             case .thinking: String(localized: "One moment", bundle: .interface, locale: .interface, comment: "CarPlay: Trubbo is checking the answer or loading")
-            case .confirming: String(localized: "Again or skip?", bundle: .interface, locale: .interface, comment: "CarPlay: answer sheet, the driver can re-record or skip")
+            case .confirming: String(localized: "Again or next?", bundle: .interface, locale: .interface, comment: "CarPlay: answer sheet, the driver can re-record or skip to the next question")
             case .paused: String(localized: "Paused", bundle: .interface, locale: .interface, comment: "CarPlay: the quiz is paused")
             }
         }

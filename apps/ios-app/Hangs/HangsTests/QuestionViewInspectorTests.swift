@@ -691,7 +691,7 @@ struct QuestionViewReplayProcessingInspectorTests {
             }
             // #179 D3: one imperative word on both screens now — "Skip".
             #expect(throws: Never.self, "the label must survive so the chip keeps its width") {
-                try skip.find(text: "Skip")
+                try skip.find(text: "Next")
             }
         }
     }

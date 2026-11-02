@@ -48,7 +48,7 @@ struct QuestionSkipControlTests {
             let tree = try button.inspect()
             let glyphs = tree.findAll(ViewType.Image.self).compactMap { try? $0.actualImage().name() }
             #expect(glyphs == ["chevron.right.2"], "the skip glyph drifted: \(glyphs)")
-            #expect(throws: Never.self) { try tree.find(text: "Skip") }
+            #expect(throws: Never.self) { try tree.find(text: "Next") }
         }
     }
 
@@ -65,7 +65,7 @@ struct QuestionSkipControlTests {
             #expect(glyphs.contains("chevron.right.2"),
                     "\(question.isMultipleChoice ? "MCQ" : "voice") skip lost the chevron: \(glyphs)")
             #expect(throws: Never.self, "the imperative word must be on screen — it is the voice command") {
-                try skip.find(text: "Skip")
+                try skip.find(text: "Next")
             }
             #expect(throws: (any Error).self, "the old infinitive label must be gone") {
                 _ = try skip.find(text: "Skip question")
@@ -85,7 +85,7 @@ struct QuestionSkipControlTests {
                 try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
             }
             #expect(throws: Never.self, "the label must survive so the capsule keeps its width") {
-                try skip.find(text: "Skip")
+                try skip.find(text: "Next")
             }
         }
     }
@@ -105,7 +105,7 @@ struct QuestionSkipControlTests {
             })
             #expect(row.count == 3, "the action row must stay Start · Type · Skip on one line, got \(row.count)")
 
-            let label = try tree.find(viewWithAccessibilityIdentifier: "question.skip").find(text: "Skip")
+            let label = try tree.find(viewWithAccessibilityIdentifier: "question.skip").find(text: "Next")
             #expect(try label.lineLimit() == 1, "the skip word must shrink, never wrap")
         }
     }
@@ -123,7 +123,7 @@ struct QuestionSkipControlTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
-            let label = try skip.find(text: "Skip")
+            let label = try skip.find(text: "Next")
             #expect(try label.lineLimit() == 1,
                     "a wrapped label is what pushed the chip off the screen in the first place")
             let fixed = try label.fixedSize()

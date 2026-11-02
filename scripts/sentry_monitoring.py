@@ -20,8 +20,10 @@ alerts allowed, no paid overage. So:
   (apps/quiz-pack-api/app/worker/checkin.py); re-run this script once it
   exists so the alert rule is connected to it;
 - one metric alert catches an error spike across all issues;
-- one alert rule e-mails the founder for every new or returning problem that
-  matters (errors, backend warnings, outages, metric alerts).
+- one alert rule e-mails the founder for every new or returning backend
+  problem, outage or metric alert. iOS crashes do not e-mail: they become
+  issues in the private triage repo (#218 — crash and feedback automation),
+  so one crash is not reported twice.
 Issues auto-resolve after 72 h of silence, so a problem that comes back later
 is a "regression" and e-mails again, while a daily repeat of a still-open one
 (e.g. a low balance) stays a single e-mail.
@@ -99,32 +101,30 @@ ALERT = {
     },
     "actionFilters": [
         {
-            # Any one is enough: an error or worse (app crash, backend
-            # exception, uptime/cron outage), any backend event (server_name
-            # is set only by the Python SDK; backend warnings are our own
-            # monitoring signals: low balance, low question stock, slow
-            # responses, DB near its limits), or a high-priority issue
-            # (metric alerts). iOS warnings (diagnostics) stay quiet.
+            # Any one is enough: any backend event (server_name is set only
+            # by the Python SDK; backend warnings are our own monitoring
+            # signals: low balance, low question stock, slow responses, DB
+            # near its limits), an outage (uptime or cron monitor) or a
+            # metric alert (error spike). iOS crashes and diagnostics stay
+            # quiet here and go to the triage repo instead (#218).
+            # Categories: sentry/issues/grouptype.py GroupCategory
+            # (OUTAGE = 10 replaces UPTIME/CRON, METRIC = 11 replaces
+            # METRIC_ALERT).
             "logicType": "any-short",
             "conditions": [
-                {
-                    "type": "level",
-                    "comparison": {"level": 40, "match": "gte"},
-                    "conditionResult": True,
-                },
                 {
                     "type": "tagged_event",
                     "comparison": {"key": "server_name", "match": "is"},
                     "conditionResult": True,
                 },
                 {
-                    "type": "issue_priority_greater_or_equal",
-                    "comparison": 75,
+                    "type": "issue_category",
+                    "comparison": {"value": 10},
                     "conditionResult": True,
                 },
                 {
                     "type": "issue_category",
-                    "comparison": {"value": 10},
+                    "comparison": {"value": 11},
                     "conditionResult": True,
                 },
             ],

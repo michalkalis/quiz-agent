@@ -146,6 +146,10 @@ struct ContentView: View {
     }
 
     private func openPendingInvite() {
+        // #217: Together is hidden in the App Store build: keep the link
+        // unopened. The config is still the permissive default on a cold
+        // launch, so it opens once the fetch turns the switch on.
+        if appConfig.multiplayerHiddenByChannel { return }
         guard room == nil, viewModel.quizScreen == .home, let invite = appState.roomInvites.take() else { return }
         openRoom(invite: invite)
     }
@@ -351,6 +355,7 @@ struct ContentView: View {
             if invite != nil { Task { openPendingInvite() } }
         }
         .onChange(of: viewModel.quizScreen) { _, _ in openPendingInvite() }
+        .onChange(of: appConfig.multiplayerHiddenByChannel) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
         // Mounted here, on the root, because `startNewQuiz` has 9 call sites
         // (Home, voice "start", Play Again, error-retry…) and all of them must

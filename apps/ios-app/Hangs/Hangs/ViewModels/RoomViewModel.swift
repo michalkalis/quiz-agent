@@ -331,13 +331,13 @@ final class RoomViewModel: ObservableObject, Identifiable {
         } catch is CancellationError {
         } catch {
             pollFailures += 1
-            connectionTrouble = pollFailures >= Self.toleratedPollFailures
+            setConnectionTrouble(pollFailures >= Self.toleratedPollFailures)
         }
     }
 
     func apply(_ new: RoomState) {
         pollFailures = 0
-        connectionTrouble = false
+        setConnectionTrouble(false)
         guard new.changed else { return }
         if let old = state, new.version < old.version { return }
         let previousQuestionId = round?.questionId
@@ -357,6 +357,13 @@ final class RoomViewModel: ObservableObject, Identifiable {
         }
         if role == .host { hostReact(to: new) }
         if new.finishedReason == "usage_limit" { quotaReached = true }
+    }
+
+    /// Assigns only a real change: every write to a published value redraws the
+    /// room, and a redraw each poll rebuilds an open rules menu under the
+    /// host's finger, so the pick is lost.
+    private func setConnectionTrouble(_ trouble: Bool) {
+        if connectionTrouble != trouble { connectionTrouble = trouble }
     }
 
     private func end() {

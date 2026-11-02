@@ -178,8 +178,10 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     are unlinked by the route in the same transaction
     (``SessionManager.forget_user``). The caller commits.
 
-    Sign-in does not re-key feedback, analytics, orders or sessions, so what the
-    person produced *before* signing in still sits under the linked anon ids.
+    Sign-in does not re-key feedback, analytics or sessions (pack orders it does,
+    #217.2, but one bought while signed out may still wait for the next sign-in),
+    so what the person produced *before* signing in still sits under the linked
+    anon ids.
     Those trails are erased the same way, or de-linking would leave them behind.
     Returns every subject id erased (account + linked anons) for the route's
     ratings-store unlink."""

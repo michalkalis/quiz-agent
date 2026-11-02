@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,7 +106,8 @@ async def merge_anonymous_identity(
     """Fold an anonymous identity's usage into the account, exactly once (F3).
 
     Guarded by ``anonymous_identities.upgraded_to_user_id``: already this user →
-    idempotent no-op; a different user → 409 (the anon belongs elsewhere). The
+    only ``rekey_purchases`` runs again; a different user → 409 (the anon belongs
+    elsewhere, nothing moves). The
     anon's ``daily_usage`` rows (keyed on ``subject_id``) are **summed** into the
     account's rows (``is_premium`` OR-ed) — sum, not max, so signing in cannot
     reset the freemium limit. The anon's own rows are **kept** (frozen — nothing
@@ -127,12 +128,15 @@ async def merge_anonymous_identity(
     if anon is None:
         return  # bearer named a subject with no identity row — nothing to merge
     if anon.upgraded_to_user_id is not None:
-        if anon.upgraded_to_user_id == user_id:
-            return  # already folded into this account — idempotent
-        raise HTTPException(
-            status_code=409,
-            detail="This anonymous identity already belongs to another account",
-        )
+        if anon.upgraded_to_user_id != user_id:
+            raise HTTPException(
+                status_code=409,
+                detail="This anonymous identity already belongs to another account",
+            )
+        # Usage is already folded (once per anon), but a device that signed out
+        # returns to this same anon and can buy again before signing back in.
+        await rekey_purchases(session, anon_id, user_id)
+        return
 
     anon_rows = (
         (
@@ -168,7 +172,6 @@ async def merge_anonymous_identity(
             existing.is_premium = existing.is_premium or row.is_premium  # OR (F3)
 
     await _fold_subscription(session, anon_id, user_id)
-    await _fold_credit_ledger(session, anon_id, user_id)
     await _fold_daily_challenges(session, anon_id, user_id)
 
     await session.execute(
@@ -178,6 +181,7 @@ async def merge_anonymous_identity(
     )
 
     anon.upgraded_to_user_id = user_id
+    await rekey_purchases(session, anon_id, user_id)
 
 
 async def _fold_daily_challenges(
@@ -255,16 +259,32 @@ async def _fold_subscription(session: AsyncSession, anon_id: str, user_id: str) 
     await session.delete(anon_row)
 
 
-async def _fold_credit_ledger(
-    session: AsyncSession, anon_id: str, user_id: str
-) -> None:
-    """Bare re-key of the anon's ``credit_ledger`` rows onto the user account (#93).
+async def rekey_purchases(session: AsyncSession, anon_id: str, user_id: str) -> None:
+    """Move what this linked anon bought onto the account (#217.2).
 
-    Collision-free by construction: the grant/clawback unique indexes are
-    **global** on the store/event ids (not per-account) and the ledger is
-    append-only, so rewriting ``account_id`` can never violate a uniqueness
-    constraint — and a post-sign-in webhook for the same txn still no-ops on the
-    global grant index (no double-grant)."""
+    Runs on every sign-in, not once per anon: sign-out returns the device to the
+    same, already linked anon, which can buy again before signing back in. Always
+    after the 409 guard, so an anon that belongs to another account never gets
+    here and its purchases never move. Idempotent: a second run finds nothing
+    left on the anon id. Only the signing-in device's anon moves, so a different,
+    signed-out device of the same person keeps what it bought until it signs in
+    itself. Also the one-off backfill (``scripts/rekey_linked_purchases.py``).
+
+    Credit: bare re-key of ``credit_ledger`` (#93). Collision-free by
+    construction: the grant/clawback unique indexes are **global** on the
+    store/event ids (not per-account) and the ledger is append-only, so
+    rewriting ``account_id`` can never violate a uniqueness constraint, and a
+    post-sign-in webhook for the same txn still no-ops on the global grant index
+    (no double-grant).
+
+    Custom packs: quiz-pack-api's ``generation_orders`` (``GET /v1/orders``
+    filters on ``user_id``) and ``question_packs`` (the play-time ownership check
+    in ``sessions._require_pack_ownership``). Same Postgres, Core ``text()`` like
+    ``account_service._unlink_pack_orders``, so quiz-agent never imports
+    pack-api models. Orders first, then packs: pack-api's first-batch persist
+    locks the order row before creating the pack (``PersistStage.persist_batch``),
+    so a pack committed while this runs is either created with the account id
+    already, or committed before the packs statement below and moved by it."""
     await session.execute(
         update(CreditLedger)
         .where(CreditLedger.account_id == anon_id)
@@ -274,3 +294,12 @@ async def _fold_credit_ledger(
     # durable user id. Deferred: no RC client wrapper exists on the backend
     # (only the REST GET fetch_rc_subscriber), and adding a live RC call on the
     # sign-in hot path needs a clear existing pattern.
+    params = {"uid": user_id, "anon": anon_id}
+    await session.execute(
+        text("UPDATE generation_orders SET user_id = :uid WHERE user_id = :anon"),
+        params,
+    )
+    await session.execute(
+        text("UPDATE question_packs SET user_id = :uid WHERE user_id = :anon"),
+        params,
+    )

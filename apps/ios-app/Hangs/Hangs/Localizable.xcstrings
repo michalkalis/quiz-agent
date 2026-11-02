@@ -9922,29 +9922,6 @@
         }
       }
     },
-    "Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough." : {
-      "comment" : "Helper text under the custom-pack topic field",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napiš, o čem má kvíz být: téma, obtížnost, pro koho. Stačí pár slov."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napíš, o čom má kvíz byť: téma, náročnosť, pre koho. Stačí pár slov."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tell us what the quiz should be about: topic, difficulty, audience. A few words are enough."
-          }
-        }
-      }
-    },
     "Terms of Use" : {
       "localizations" : {
         "cs" : {
@@ -13656,6 +13633,52 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Tell us what the quiz should be about. A few words are enough." : {
+      "comment" : "Helper text under the custom-pack topic field",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napiš, o čem má kvíz být. Stačí pár slov."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napíš, o čom má kvíz byť. Stačí pár slov."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell us what the quiz should be about. A few words are enough."
+          }
+        }
+      }
+    },
+    "Choose a difficulty to continue." : {
+      "comment" : "Order form hint while no difficulty is picked",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyber obtížnost a pokračuj."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyber náročnosť a pokračuj."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a difficulty to continue."
           }
         }
       }

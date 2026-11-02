@@ -369,6 +369,7 @@ struct PurchaseAnalyticsTests {
             analytics: analytics
         )
         vm.prompt = "Dinosaurs"
+        vm.selectDifficulty(.medium)
         vm.advanceToSummary()
 
         await vm.submit()

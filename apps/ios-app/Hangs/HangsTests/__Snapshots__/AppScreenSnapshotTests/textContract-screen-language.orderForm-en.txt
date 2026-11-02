@@ -5,7 +5,12 @@ Famous bridges of the world and the engineers who built them
 Quiz topic
 E.g. space for kids, tough questions on Slovak history, 90s music…
 60 / 1000
-Tell us what the quiz should be about: topic, difficulty, audience. A few words are enough.
+Tell us what the quiz should be about. A few words are enough.
+Difficulty
+Easy
+Medium
+Hard
+Choose a difficulty to continue.
 English
 Slovenčina
 Čeština
@@ -17,6 +22,10 @@ Preselected from your quiz language in Settings.
 Continue
 # identifiers
 orderPack.prompt
+orderPack.difficulty.easy
+orderPack.difficulty.medium
+orderPack.difficulty.hard
+orderPack.difficulty.hint
 orderPack.language
 orderPack.language.en
 orderPack.language.sk

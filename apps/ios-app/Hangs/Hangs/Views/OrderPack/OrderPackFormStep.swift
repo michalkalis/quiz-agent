@@ -21,12 +21,16 @@ struct OrderPackFormStep: View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
             PackPreviewCard(topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
             topicGroup
+            OrderPackDifficultyPicker(
+                selection: viewModel.difficulty,
+                onSelect: viewModel.selectDifficulty
+            )
             languageGroup
 
             HangsPrimaryButton(title: "Continue", trailingIcon: "arrow.right", action: continueToSummary)
-            // #188 G14 (M9): the button draws its own legible disabled state.
-            .disabled(!viewModel.isValid)
-            .accessibilityIdentifier("orderPack.submit")
+                // #188 G14 (M9): the button draws its own legible disabled state.
+                .disabled(!viewModel.isValid)
+                .accessibilityIdentifier("orderPack.submit")
         }
     }
 
@@ -62,11 +66,11 @@ struct OrderPackFormStep: View {
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
                         .font(.hangsCaption.monospacedDigit())
-                        .foregroundStyle(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
+                        .foregroundStyle(viewModel.isPromptValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-            Text("Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough.")
+            Text("Tell us what the quiz should be about. A few words are enough.")
                 .font(.hangsCaption)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -225,7 +229,7 @@ private struct PackPreviewCard: View {
             viewModel: OrderPackViewModel(service: MockPackOrderService()),
             dictation: TextDictation(voice: nil, networkService: nil)
         )
-            .padding(20)
-            .background(Theme.Hangs.Colors.bg)
+        .padding(20)
+        .background(Theme.Hangs.Colors.bg)
     }
 #endif

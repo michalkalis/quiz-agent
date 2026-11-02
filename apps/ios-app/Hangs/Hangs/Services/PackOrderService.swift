@@ -111,7 +111,8 @@ actor PackOrderService: PackOrderServiceProtocol {
             language: intent.language,
             targetCount: Self.targetCount,
             category: intent.category,
-            theme: intent.theme
+            theme: intent.theme,
+            difficulty: intent.difficulty
         )
         request.httpBody = try JSONEncoder().encode(payload)
 

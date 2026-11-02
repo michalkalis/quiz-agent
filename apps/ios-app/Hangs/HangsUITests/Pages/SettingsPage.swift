@@ -61,6 +61,12 @@ struct SettingsPage {
         app.buttons["orderPack.submit"]
     }
 
+    /// Required difficulty choice on the form (#224); Continue stays disabled
+    /// until one is picked.
+    var mediumDifficultyButton: XCUIElement {
+        app.buttons["orderPack.difficulty.medium"]
+    }
+
     /// Summary step primary CTA ("Pay & create pack") — the point of no return.
     var payButton: XCUIElement {
         app.buttons["orderPack.pay"]
@@ -74,6 +80,12 @@ struct SettingsPage {
             promptField.waitForExistence(timeout: timeout),
             "SettingsPage: orderPack.prompt not found"
         )
+        // Pick the level first, while the keyboard is still down (#224).
+        XCTAssertTrue(
+            mediumDifficultyButton.waitForExistence(timeout: timeout),
+            "SettingsPage: orderPack.difficulty.medium not found"
+        )
+        mediumDifficultyButton.tap()
         promptField.tap()
         promptField.typeText(prompt)
         XCTAssertTrue(

@@ -5,7 +5,12 @@ Famous bridges of the world and the engineers who built them
 Téma kvízu
 Napr. vesmír pre deti, ťažké otázky z dejín Slovenska, hudba 90. rokov…
 60 / 1000
-Napíš, o čom má kvíz byť: téma, náročnosť, pre koho. Stačí pár slov.
+Napíš, o čom má kvíz byť. Stačí pár slov.
+Náročnosť
+Ľahká
+Stredná
+Ťažká
+Vyber náročnosť a pokračuj.
 English
 Slovenčina
 Čeština
@@ -17,6 +22,10 @@ Predvolený podľa jazyka kvízu v Nastaveniach.
 Pokračuj
 # identifiers
 orderPack.prompt
+orderPack.difficulty.easy
+orderPack.difficulty.medium
+orderPack.difficulty.hard
+orderPack.difficulty.hint
 orderPack.language
 orderPack.language.en
 orderPack.language.sk

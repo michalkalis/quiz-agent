@@ -39,6 +39,19 @@ struct OrderPackSummaryStep: View {
                             .foregroundStyle(Theme.Hangs.Colors.ink)
                     }
 
+                    if let level = viewModel.difficulty {
+                        HStack(spacing: Theme.Hangs.Spacing.xs) {
+                            Text("Difficulty")
+                                .font(.hangsBody)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                            Text(level.label)
+                                .font(.hangsBody.weight(.semibold))
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("orderPack.summaryDifficulty")
+                    }
+
                     if let price = viewModel.packPrice {
                         HStack(spacing: Theme.Hangs.Spacing.xs) {
                             Text("Price")
@@ -88,6 +101,7 @@ struct OrderPackSummaryStep: View {
     #Preview {
         let vm = OrderPackViewModel(service: MockPackOrderService())
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.hard)
         vm.advanceToSummary()
         return OrderPackSummaryStep(viewModel: vm)
             .padding(20)

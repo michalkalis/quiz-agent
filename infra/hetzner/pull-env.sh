@@ -51,6 +51,9 @@ push_app() { # <fly app> <machine or ''> <toml> <env file> <redis db>
       -C "python3 -c 'import base64;exec(base64.b64decode(\"$DUMP_PY\"))' '$names'" 2>/dev/null \
       | tr -d '\r' | grep -vE '^(DATABASE_URL|REDIS_URL)='
     toml_env "$toml"
+    # Same on rehearsal and prod: watchers talk to the Compose services and read host metrics.
+    printf '%s\n' OPS_METRICS_SOURCE=local PACK_API_HEALTH_URL=http://pack-web:8003/health \
+      QUIZ_AGENT_URL=http://quiz-agent:8002
     if [ "$MODE" = rehearsal ]; then
       printf '%s\n' ENVIRONMENT=staging OPS_WATCH_ENABLED=false PROVIDER_BALANCE_CHECK_ENABLED=false \
         QUESTION_STOCK_CHECK_ENABLED=false ALERT_EMAIL_TO= GITHUB_TRIAGE_DISPATCH_TOKEN=

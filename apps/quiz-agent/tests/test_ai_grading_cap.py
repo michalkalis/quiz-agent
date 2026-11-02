@@ -95,7 +95,10 @@ async def test_one_mail_per_day_however_many_players_hit_it(setup):
         for _ in range(4):
             await evaluator.evaluate("nope", _question())
     assert len(mails) == 1
-    assert await ai_grading_stats(caps) == (2, 4)  # 2 capped players, 4 gradings
+    assert await ai_grading_stats(caps) == (
+        2,
+        8,
+    )  # 2 capped players; 8 attempts (refused ones count too)
 
     now[0] = _T0 + timedelta(hours=2)
     bind_ai_grading(caps, "a")

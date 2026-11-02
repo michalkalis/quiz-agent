@@ -38,7 +38,7 @@ async def ops_health(
     limit = float(get_settings().daily_cap_ai_gradings)
     return readings + [
         Reading(
-            kind="ai_gradings_today",
+            kind="ai_grading_attempts_today",
             target="all players",
             value=total,
             threshold=limit,

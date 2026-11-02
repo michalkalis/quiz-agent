@@ -14,7 +14,6 @@ App Store: https://apps.apple.com/app/id6762482437
 
 ## Pages
 
-- [Trubbo on the App Store](https://apps.apple.com/app/id6762482437)
 - [English](https://trubbo.app/)
 - [Slovenčina](https://trubbo.app/sk/)
 - [Čeština](https://trubbo.app/cs/)

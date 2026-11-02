@@ -156,7 +156,6 @@ App Store: {STORE["en"]}
 
 ## Pages
 
-- [Trubbo on the App Store]({STORE['en']})
 - [English]({SITE}/)
 - [Slovenčina]({SITE}/sk/)
 - [Čeština]({SITE}/cs/)

@@ -41,7 +41,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -123,6 +123,10 @@ class CreateOrderRequest(BaseModel):
     # comes near the cap.
     category: Optional[str] = Field(default=None, max_length=64)
     theme: Optional[str] = Field(default=None, max_length=64)
+    # #224 224.3: difficulty the buyer picked (the app requires it; generated
+    # packs came out too easy). Optional so builds shipped before the picker
+    # keep working (NULL = mixed batch, today's behaviour).
+    difficulty: Optional[Literal["easy", "medium", "hard"]] = None
 
 
 class OrderCreatedResponse(BaseModel):
@@ -160,6 +164,9 @@ class OrderSnapshotResponse(BaseModel):
     # Additive and nullable so older clients keep decoding. Only ever served
     # to the order's owner (or the admin key), like the rest of the snapshot.
     prompt: Optional[str] = None
+    # #224 224.3: plain string (not an enum) so the response contract stays
+    # expand-only. None = mixed batch.
+    difficulty: Optional[str] = None
     created_at: datetime
     delivered_at: Optional[datetime]
     pack_id: Optional[uuid.UUID]
@@ -421,6 +428,7 @@ async def create_order(
         target_count=target_count,
         category=body.category,
         theme=body.theme,
+        difficulty=body.difficulty,
         # From the verified JWS only, never the request body: it decides
         # whether the mba backup (Claude subscription) may generate this order.
         storekit_environment=verified_tx.environment if verified_tx else None,
@@ -543,6 +551,7 @@ def _order_snapshot(
         category=order.category,
         theme=order.theme,
         prompt=order.prompt,
+        difficulty=order.difficulty,
         created_at=order.created_at,
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,

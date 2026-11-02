@@ -106,12 +106,15 @@ extension AppScreen {
         vm.prompt = "Famous bridges of the world and the engineers who built them"
         switch self {
         case .orderForm:
+            // The required-choice state: nothing picked, Continue disabled (#224).
             break
         case .orderSummary:
+            vm.selectDifficulty(.medium)
             vm.advanceToSummary()
             // Loaded up front: the summary's own `.task` load isn't awaited by a snapshot.
             await vm.loadPrice()
         default:
+            vm.selectDifficulty(.medium)
             vm.advanceToSummary()
             // Fire-and-forget: `submit()` only returns once the order is terminal,
             // and the parked poll never gets there. Retained by the VM's `pollTask`.

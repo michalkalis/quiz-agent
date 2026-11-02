@@ -86,6 +86,7 @@ struct PackOrderOwnershipTests {
 
         let owned = appState.orderPackViewModel
         owned.prompt = "History of Rome"
+        owned.selectDifficulty(.medium)
 
         // Exactly what ContentView runs on every quizState change.
         navModel.handleQuizStateChange(.startingQuiz)

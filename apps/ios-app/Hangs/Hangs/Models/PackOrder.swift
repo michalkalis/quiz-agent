@@ -9,6 +9,29 @@
 //
 
 @preconcurrency import Foundation
+import SwiftUI
+
+// MARK: - Difficulty
+
+/// The level a buyer picks for a custom pack (#224, 224.3). Raw values are the
+/// wire values of quiz-pack-api `CreateOrderRequest.difficulty`.
+nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
+    case easy
+    case medium
+    case hard
+
+    var id: String { rawValue }
+
+    /// Label key for `Text`, so it follows the view's locale like every other
+    /// string on the order screens.
+    var label: LocalizedStringKey {
+        switch self {
+        case .easy: "Easy"
+        case .medium: "Medium"
+        case .hard: "Hard"
+        }
+    }
+}
 
 // MARK: - Create order request
 
@@ -22,6 +45,9 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
     let targetCount: Int
     let category: String?
     let theme: String?
+    /// Optional on the wire (older servers/clients omit it); the order form
+    /// always sends one.
+    var difficulty: PackDifficulty? = nil
 
     enum CodingKeys: String, CodingKey {
         case transactionId = "transaction_id"
@@ -31,6 +57,7 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         case targetCount = "target_count"
         case category
         case theme
+        case difficulty
     }
 
     func encode(to encoder: Encoder) throws {
@@ -42,6 +69,7 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         try container.encode(targetCount, forKey: .targetCount)
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(theme, forKey: .theme)
+        try container.encodeIfPresent(difficulty?.rawValue, forKey: .difficulty)
     }
 }
 
@@ -63,6 +91,8 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
     let language: String
     let category: String?
     let theme: String?
+    /// Buyer-chosen level (#224); nil only for callers that predate the picker.
+    let difficulty: PackDifficulty?
     /// StoreKit proof authorising this order; nil = Debug admin path.
     let paymentProof: PackPaymentProof?
 
@@ -71,6 +101,7 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
         language: String,
         category: String?,
         theme: String?,
+        difficulty: PackDifficulty? = nil,
         paymentProof: PackPaymentProof? = nil,
         idempotencyKey: String = "admin-\(UUID().uuidString)"
     ) {
@@ -79,6 +110,7 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
         self.language = language
         self.category = category
         self.theme = theme
+        self.difficulty = difficulty
         self.paymentProof = paymentProof
     }
 }

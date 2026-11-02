@@ -77,6 +77,7 @@ private func payingViewModel(
         clock: clock
     )
     vm.prompt = prompt
+    vm.selectDifficulty(.medium)
     vm.advanceToSummary()
     return vm
 }
@@ -97,10 +98,54 @@ struct OrderPackViewModelTests {
 
     // MARK: - Validation bounds
 
+    // MARK: - Required difficulty (#224)
+
+    // WHY: generated packs came out too easy when the level was left to the
+    // model, so the buyer must choose one. A default would silently reintroduce
+    // that; the order must be blocked until a deliberate pick.
+    @Test("a valid topic alone is not enough: no difficulty, no order (#224)")
+    func difficultyIsRequired() {
+        let vm = makeOrderPackViewModel()
+        vm.prompt = "Space for kids"
+        #expect(vm.difficulty == nil, "no preselected difficulty")
+        #expect(!vm.isValid)
+        #expect(vm.isPromptValid)
+
+        vm.advanceToSummary()
+        #expect(vm.state == .editing, "the summary stays unreachable without a difficulty")
+
+        vm.selectDifficulty(.hard)
+        #expect(vm.isValid)
+        vm.advanceToSummary()
+        #expect(vm.state == .confirming)
+    }
+
+    @Test("the chosen difficulty travels in the order request (#224)")
+    func difficultyReachesTheRequest() async {
+        let service = MockPackOrderService()
+        let vm = makeOrderPackViewModel(service: service)
+        vm.prompt = "Space for kids"
+        vm.selectDifficulty(.hard)
+        vm.advanceToSummary()
+
+        await vm.submit()
+
+        #expect(service.capturedIntents.first?.difficulty == .hard)
+    }
+
+    @Test("a new order starts with no difficulty picked (#224)")
+    func newOrderForgetsDifficulty() async {
+        let vm = payingViewModel()
+        await vm.submit()
+        vm.prepareForPresentation(defaultLanguage: "sk")
+        #expect(vm.difficulty == nil)
+    }
+
     @Test("a one-character prompt is valid — the 10-char floor is gone (#138)")
     func shortPromptIsValid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "a"
+        vm.selectDifficulty(.medium)
         #expect(vm.isValid)
     }
 
@@ -108,6 +153,7 @@ struct OrderPackViewModelTests {
     func emptyPromptIsInvalid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = ""
+        vm.selectDifficulty(.medium)
         #expect(!vm.isValid)
     }
 
@@ -115,6 +161,7 @@ struct OrderPackViewModelTests {
     func whitespacePromptIsInvalid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "   \n  "
+        vm.selectDifficulty(.medium)
         #expect(!vm.isValid)
     }
 
@@ -122,6 +169,7 @@ struct OrderPackViewModelTests {
     func promptAtCeiling() {
         let vm = makeOrderPackViewModel()
         vm.prompt = String(repeating: "a", count: 1000)
+        vm.selectDifficulty(.medium)
         #expect(vm.isValid)
     }
 
@@ -129,6 +177,7 @@ struct OrderPackViewModelTests {
     func promptTooLong() {
         let vm = makeOrderPackViewModel()
         vm.prompt = String(repeating: "a", count: 1001)
+        vm.selectDifficulty(.medium)
         #expect(!vm.isValid)
     }
 
@@ -138,6 +187,7 @@ struct OrderPackViewModelTests {
     func summaryRequiresValidPrompt() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "  "
+        vm.selectDifficulty(.medium)
 
         vm.advanceToSummary()
 
@@ -148,6 +198,7 @@ struct OrderPackViewModelTests {
     func summaryAndBackBeforePurchase() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.medium)
 
         vm.advanceToSummary()
         #expect(vm.state == .confirming)
@@ -164,6 +215,7 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService()
         let vm = makeOrderPackViewModel(service: service)
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.medium)
 
         await vm.submit() // still .editing
 

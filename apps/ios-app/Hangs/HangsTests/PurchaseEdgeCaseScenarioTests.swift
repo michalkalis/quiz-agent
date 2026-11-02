@@ -198,6 +198,7 @@ struct PurchaseEdgeCaseScenarioTests {
             clock: AnyClock(ImmediateClock())
         )
         vm.prompt = "Ten questions about the Roman Empire"
+        vm.selectDifficulty(.medium)
         vm.advanceToSummary()
 
         await vm.submit()
@@ -230,6 +231,7 @@ struct PurchaseEdgeCaseScenarioTests {
             clock: AnyClock(ImmediateClock())
         )
         relaunched.prompt = "Ten questions about the Roman Empire"
+        relaunched.selectDifficulty(.medium)
         relaunched.advanceToSummary()
         await relaunched.submit()
 

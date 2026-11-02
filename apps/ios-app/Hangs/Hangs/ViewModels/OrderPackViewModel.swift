@@ -23,8 +23,8 @@
 //  was charged, so it returns to the summary rather than a dead-end error.
 //
 
-import Combine
 import Clocks
+import Combine
 import Foundation
 import os
 
@@ -76,6 +76,11 @@ final class OrderPackViewModel: ObservableObject {
     // MARK: Form fields
 
     @Published var prompt: String = ""
+
+    /// Required level for the pack (#224, 224.3). Deliberately nil until the
+    /// buyer picks one — generated packs came out too easy, so there is no
+    /// default; `isValid` stays false while this is nil.
+    @Published private(set) var difficulty: PackDifficulty?
 
     /// Wire language of the ordered pack. Written only through
     /// `selectLanguage(_:)` so the view model can tell an explicit user choice
@@ -162,8 +167,13 @@ final class OrderPackViewModel: ObservableObject {
     }
 
     /// True when the trimmed prompt is non-empty and within the server ceiling.
+    var isPromptValid: Bool {
+        (1 ... Self.maxPromptLength).contains(trimmedPromptCount)
+    }
+
+    /// The order can proceed: a valid topic AND a chosen difficulty (#224).
     var isValid: Bool {
-        (1...Self.maxPromptLength).contains(trimmedPromptCount)
+        isPromptValid && difficulty != nil
     }
 
     /// Live character count of the trimmed prompt (for the counter UI).
@@ -266,6 +276,11 @@ final class OrderPackViewModel: ObservableObject {
         hasChosenLanguage = true
     }
 
+    /// Explicit difficulty pick (form buttons).
+    func selectDifficulty(_ level: PackDifficulty) {
+        difficulty = level
+    }
+
     /// Form → payment summary. Guarded on `.editing` so it can never re-enter
     /// the pre-purchase flow from a submitted order.
     func advanceToSummary() {
@@ -347,6 +362,8 @@ final class OrderPackViewModel: ObservableObject {
         orderPaymentProof = nil
         pendingIntent = nil
         hasChosenLanguage = false
+        // The level is chosen per order, never carried over (#224).
+        difficulty = nil
         language = supportedLanguage(defaultLanguage)
         // The prompt text is deliberately kept — reordering a variation of the
         // last topic is the common case, and retyping it is pure friction.
@@ -391,7 +408,9 @@ final class OrderPackViewModel: ObservableObject {
         if let pending = pendingIntent,
            pending.prompt == trimmedPrompt,
            pending.language == language,
-           pending.paymentProof == proof {
+           pending.difficulty == difficulty,
+           pending.paymentProof == proof
+        {
             intent = pending
         } else {
             // #138 dropped the category/theme inputs (meaningless even to the
@@ -402,6 +421,7 @@ final class OrderPackViewModel: ObservableObject {
                 language: language,
                 category: nil,
                 theme: nil,
+                difficulty: difficulty,
                 paymentProof: proof
             )
         }

@@ -135,6 +135,13 @@ class UsageCaps:
         self._now = now or (lambda: datetime.now(timezone.utc))
         self._purged_before: date | None = None
 
+    @property
+    def sessionmaker(self) -> async_sessionmaker[AsyncSession] | None:
+        return self._sessionmaker
+
+    def now(self) -> datetime:
+        return self._now()
+
     async def consume(
         self, subject_id: str | None, metric: str, amount: int, limit: int
     ) -> None:

@@ -13,6 +13,7 @@ from quiz_shared.utils.text_normalization import normalize_text
 
 from .. import hot_path_llm
 from ..config import get_settings
+from ..usage.ai_grading_cap import ai_grading_allowed
 from .mcq_matcher import match_option
 from .phonetic_match import phonetic_matches
 from .voice_match import sounds_like_any
@@ -124,6 +125,10 @@ class AnswerEvaluator:
         ):
             logger.info("Phonetic key accepted without LLM")
             return "correct", 1.0
+
+        # #218.7: a player past the daily AI cap is graded by the fast path only.
+        if not await ai_grading_allowed():
+            return "incorrect", 0.0
 
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(

@@ -24,4 +24,4 @@
 - Snapshot zastará len pri archivácii otázky; obnoviť pri ďalšom behu exportu.
 
 ## Poznámky
-- `api.trubbo.app` do prepnutia #222 vedie na skúšobný Hetzner bez endpointu; web skúša aj Fly (PR #690). Po prepnutí overiť, že `api.trubbo.app` vracia otázky.
+- `api.trubbo.app` do prepnutia #222 (presun backendu na Hetzner) vedie na skúšobný Hetzner bez endpointu; web skúša aj Fly (PR #690). Po prepnutí overiť, že `api.trubbo.app` vracia otázky.

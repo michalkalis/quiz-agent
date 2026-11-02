@@ -19,7 +19,7 @@ Celý backend (quiz-agent, quiz-pack web + worker, Postgres/pgvector, Redis) be�
 
 ## Stav
 
-- 2026-11-02: **222.1 hotové** — CX23 nedostupný všade, vytvorený **CAX11** (Arm, 4 GB, fsn1, €5,99 bez DPH); **222.2 skúška beží** — prod kópia DB obnovená, obe API zelené na testovacích adresách, ochrana IP overená ([infra/hetzner](../../infra/hetzner/README.md)). Ostáva v 222.2: skript na spätné kopírovanie zápisov.
+- 2026-11-02: **222.1 hotové** (CAX11 Arm, fsn1; CX23 nedostupný). **222.2 hotové** — skúšobný stack na kópii prod DB, smoke zelené, ochrana IP overená. **222.3 monitoring** hotové (PR #672). **222.4** zálohy zo servera (PR #680, backups repo PR #1), nasadzovanie z CI rozpracované. **222.5** DNS `api`/`pack.trubbo.app` s certifikátmi. Presmerovač na Fly pripravený (PR #681). Postup prepnutia: [hetzner-cutover.md](../setup/hetzner-cutover.md). Founder 2026-11-02: beta schválená, netreba čakať na review.
 
 ## Kroky
 
@@ -43,7 +43,7 @@ Limity (vytváranie identít, auth, miestnosti) idú podľa IP. Dnes `quiz_share
 
 ## Návrat späť (222.6)
 
-- Rozhodnutie go/no-go do ~2 h po prepnutí (smoke, Sentry, objednávky). Návrat v tom okne = presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; zápisy z Hetzneru skopíruje skript pripravený a **zelene odskúšaný** v 222.2 (bez toho 222.6 nezačne) (tabuľky objednávok, nákupov a kreditu, upsert podľa ID), potom `reconcile` nákupov s Apple.
+- Rozhodnutie go/no-go do ~2 h po prepnutí (smoke, Sentry, objednávky). Návrat v tom okne = presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; celá DB sa skopíruje z Hetzneru späť na Fly rovnakou cestou ako pri prepnutí (aj všetky nové zápisy), potom `reconcile` nákupov s Apple.
 - Po tom okne len opravy dopredu; Fly DB ostáva 7 dní len ako záloha. Neskôr len obnova zo zálohy.
 
 ## Riziká

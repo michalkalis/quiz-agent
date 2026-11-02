@@ -57,7 +57,7 @@ from arq.connections import ArqRedis
 
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
 
-from ... import app_switches, order_budget
+from ... import app_switches, order_budget, pack_reuse
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
@@ -429,6 +429,7 @@ async def create_order(
         category=body.category,
         theme=body.theme,
         difficulty=body.difficulty,
+        prompt_key=pack_reuse.prompt_key(body.prompt),
         # From the verified JWS only, never the request body: it decides
         # whether the mba backup (Claude subscription) may generate this order.
         storekit_environment=verified_tx.environment if verified_tx else None,
@@ -479,6 +480,14 @@ async def create_order(
             # swallow it into a fake 200.
             raise
         return _idempotent_replay_response(existing)  # type: ignore[return-value]
+
+    # 6b. #225: another player's finished pack for the same prompt, language
+    # and difficulty → deliver a copy now, no generation run. Falls through to
+    # the enqueue on no match or any failure.
+    if await pack_reuse.try_reuse(session, order, job, settings):
+        return OrderCreatedResponse(
+            order_id=order.id, status=order.status, created_at=order.created_at
+        )
 
     # 7. Enqueue ARQ — after commit so the worker can read the row.
     # #103 F4a: a Redis blip here used to leave the order 'pending' forever

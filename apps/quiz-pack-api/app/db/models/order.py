@@ -17,6 +17,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -118,6 +119,15 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     search_cost_cents: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
+    # #225: match key for reusing a finished pack (hash of the normalized
+    # prompt, `app.pack_reuse.prompt_key`) and the original order a reused
+    # pack was copied from (NULL = generated for this order).
+    prompt_key: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    reused_from_order_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("generation_orders.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -136,4 +146,5 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
             "storekit_environment IS NULL OR storekit_environment IN ('Sandbox','Production')",
             name="ck_orders_storekit_environment",
         ),
+        Index("ix_orders_prompt_key", "prompt_key", "language"),
     )

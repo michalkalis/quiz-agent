@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     # Off refuses only order creation: status, stream, retry and the
     # idempotent replay of an existing (already paid) order keep working.
     pack_orders_enabled: bool = True
+    # #225: answer an order with a copy of another player's finished pack for
+    # the same prompt/language/difficulty instead of generating. Live override:
+    # quiz-agent's `app_switches` row `pack_reuse_enabled`.
+    pack_reuse_enabled: bool = True
 
     # Sentry (backend arch review 2026-07-18). Per-deploy Fly secret; unset →
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate

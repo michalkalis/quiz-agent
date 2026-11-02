@@ -52,6 +52,7 @@ BOOL_KEYS = (
     "maintenance_enabled",
     "multiplayer_enabled_app_store",
     "triage_bridge_enabled",
+    "pack_reuse_enabled",
 )
 KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
@@ -109,6 +110,9 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "multiplayer_enabled_app_store": False,
         # #218: events to the private triage repo; on unless switched off.
         "triage_bridge_enabled": True,
+        # #225: quiz-pack-api copies a finished pack for an identical order;
+        # on unless switched off (its env `PACK_REUSE_ENABLED` is the default).
+        "pack_reuse_enabled": True,
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,
@@ -119,7 +123,7 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     """Env values with every DB override applied on top."""
     out = env_values(settings)
     for key, raw in overrides.items():
-        if key in ("orders_enabled", "triage_bridge_enabled"):
+        if key in ("orders_enabled", "triage_bridge_enabled", "pack_reuse_enabled"):
             out[key] = raw != "false"
         elif key in ("maintenance_enabled", "multiplayer_enabled_app_store"):
             out[key] = raw == "true"

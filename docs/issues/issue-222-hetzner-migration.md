@@ -34,11 +34,12 @@ Celý backend (quiz-agent, quiz-pack web + worker, Postgres/pgvector, Redis) be�
 Limity (vytváranie identít, auth, miestnosti) idú podľa IP. Dnes `quiz_shared/net/util.py` verí `Fly-Client-IP` od kohokoľvek — za Caddy na verejnom internete by sa dala podvrhnúť.
 - **Priama prevádzka (doména):** Caddy prepíše `Fly-Client-IP`/`X-Forwarded-For` na `{remote_host}`; čo pošle klient, zahodí.
 - **Cez Fly presmerovač (build 1.1):** presmerovač pošle `Fly-Client-IP` od Fly + tajnú hlavičku (zdieľané tajomstvo v secrets); Caddy hlavičku IP od presmerovača ponechá **len** s platným tajomstvom, inak ju prepíše na `{remote_host}`. Bez toho by všetci hráči 1.1 zdieľali jeden limit.
+- uvicorn `--forwarded-allow-ips` len adresa Caddy kontajnera.
 - Testy: podvrhnutá hlavička bez tajomstva sa ignoruje; s tajomstvom sa použije.
 
 ## Návrat späť (222.6)
 
-- Rozhodnutie go/no-go do ~2 h po prepnutí (smoke, Sentry, objednávky). Návrat v tom okne = presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; zápisy z Hetzneru skopíruje skript pripravený v 222.2 (tabuľky objednávok, nákupov a kreditu, upsert podľa ID), potom `reconcile` nákupov s Apple.
+- Rozhodnutie go/no-go do ~2 h po prepnutí (smoke, Sentry, objednávky). Návrat v tom okne = presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; zápisy z Hetzneru skopíruje skript pripravený a **zelene odskúšaný** v 222.2 (bez toho 222.6 nezačne) (tabuľky objednávok, nákupov a kreditu, upsert podľa ID), potom `reconcile` nákupov s Apple.
 - Po tom okne len opravy dopredu; Fly DB ostáva 7 dní len ako záloha. Neskôr len obnova zo zálohy.
 
 ## Riziká

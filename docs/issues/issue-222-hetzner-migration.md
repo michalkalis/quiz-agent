@@ -23,15 +23,23 @@ Celý backend (quiz-agent, quiz-pack web + worker, Postgres/pgvector, Redis) be�
 |---|---|---|
 | 222.1 | **Server:** Hetzner API token od foundera do `.env` (`HCLOUD_TOKEN`), agent vytvorí CX23 (Nuremberg/Falkenstein, Ubuntu 24.04, kľúč `~/.ssh/trubbo_hetzner`); Hetzner firewall (22 len kľúč, 80/443), unattended-upgrades, fail2ban, Docker, Caddy. Ak CX23 nedostupný: iná lokalita → CX33 → plán B z analýzy | nie |
 | 222.2 | **Stack + skúška:** Compose (agent, pack web, pack worker, `pgvector/pgvector:pg17`, Redis 8), obnova z poslednej šifrovanej zálohy, testovacia adresa mimo appky; smoke testy oboch API | nie |
-| 222.3 | **Kód nezávislý od Fly (spätne kompatibilný):** IP klienta pre limity aj z hlavičky od Caddy (inak všetci hráči zdieľajú jeden limit), uvicorn proxy hlavičky, ops_watch/provider_costs bez Fly metrík, URL v monitoringu/skriptoch z konfigurácie; funguje na Fly aj Hetzneri | nasadenie bez zmeny správania |
-| 222.4 | **Prevádzka:** nasadzovanie z CI (obrazy do GHCR + SSH `compose pull/up`, migrácie samostatný krok, smoke), nočná šifrovaná záloha priamo zo servera + WAL do R2, týždenná skúšobná obnova, upozornenie na disk/pamäť/výpadok; tunel pre mba worker cez SSH | nie |
-| 222.5 | **Vlastná doména:** `api.trubbo.app` + `pack.trubbo.app` (DNS u GoDaddy) do `Prod.xcconfig` → ide s najbližším buildom po 1.1; zatiaľ ukazuje na Fly, po 222.6 na Hetzner | nie (len DNS) |
-| 222.6 | **Prepnutie (po schválení 1.1):** údržbový režim zap → finálny dump/restore (~15–30 min) → Fly appky nahradí presmerovač (Caddy 256 MB) na Hetzner → doména na Hetzner → App Store Server Notifications URL v ASC → smoke → údržba vyp. Fly DB a Redis ostanú zastavené 7 dní ako návrat späť | **áno** |
+| 222.3 | **Kód nezávislý od Fly (spätne kompatibilný):** reťaz dôvery pre IP klienta (nižšie), uvicorn proxy hlavičky, ops_watch/provider_costs bez Fly metrík, URL v monitoringu/skriptoch z konfigurácie; funguje na Fly aj Hetzneri | nasadenie bez zmeny správania |
+| 222.4 | **Prevádzka:** nasadzovanie z CI (obrazy do GHCR + SSH `compose pull/up`, migrácie samostatný krok, smoke), nočná šifrovaná záloha priamo zo servera + WAL do R2 (vlastný obraz pgvector + barman-cloud, **nový prefix** v R2, aby sa nebil s Fly archívom počas 7 dní návratu; PITR overenie presmerovať naň), týždenná skúšobná obnova, `mem_limit` pre každú službu a Postgres chránený pred OOM killerom, upozornenie na disk/pamäť/výpadok; tunel pre mba worker cez SSH | nie |
+| 222.5 | **Vlastná doména:** `api.trubbo.app` + `pack.trubbo.app` (DNS u GoDaddy, TTL vopred znížiť na 300 s; Caddy získa certifikát hneď po prepnutí DNS, krátka medzera v TLS je očakávaná) do `Prod.xcconfig` → ide s najbližším buildom po 1.1; zatiaľ ukazuje na Fly, po 222.6 na Hetzner | nie (len DNS) |
+| 222.6 | **Prepnutie (po schválení 1.1):** údržbový režim zap → finálny dump/restore (~15–30 min) → Fly appky nahradí presmerovač (Caddy `reverse_proxy`, 256 MB — nie HTTP redirect, URLSession by z POST spravil GET) na Hetzner → doména na Hetzner → App Store Server Notifications URL v ASC → smoke → údržba vyp. Fly DB a Redis ostanú zastavené 7 dní ako návrat späť | **áno** |
 | 222.7 | **Upratanie Fly:** po 7 dňoch zmazať DB, Redis, worker, staging (staging brána presunutá na Hetzner v 222.4); presmerovač zrušiť, keď min-verzia vypne buildy s fly.dev | áno (len mazanie) |
+
+## IP klienta cez proxy (222.3, podmienka pre 222.6)
+
+Limity (vytváranie identít, auth, miestnosti) idú podľa IP. Dnes `quiz_shared/net/util.py` verí `Fly-Client-IP` od kohokoľvek — za Caddy na verejnom internete by sa dala podvrhnúť.
+- **Priama prevádzka (doména):** Caddy prepíše `Fly-Client-IP`/`X-Forwarded-For` na `{remote_host}`; čo pošle klient, zahodí.
+- **Cez Fly presmerovač (build 1.1):** presmerovač pošle `Fly-Client-IP` od Fly + tajnú hlavičku (zdieľané tajomstvo v secrets); Caddy hlavičku IP od presmerovača ponechá **len** s platným tajomstvom, inak ju prepíše na `{remote_host}`. Bez toho by všetci hráči 1.1 zdieľali jeden limit.
+- Testy: podvrhnutá hlavička bez tajomstva sa ignoruje; s tajomstvom sa použije.
 
 ## Návrat späť (222.6)
 
-Do 7 dní: presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; dáta zapísané na Hetzneri medzitým exportovať späť (objednávky, nákupy). Po 7 dňoch len obnova zo zálohy.
+- Rozhodnutie go/no-go do ~2 h po prepnutí (smoke, Sentry, objednávky). Návrat v tom okne = presmerovač aj doména späť na Fly stroje, Fly DB naštartovať; zápisy z Hetzneru skopíruje skript pripravený v 222.2 (tabuľky objednávok, nákupov a kreditu, upsert podľa ID), potom `reconcile` nákupov s Apple.
+- Po tom okne len opravy dopredu; Fly DB ostáva 7 dní len ako záloha. Neskôr len obnova zo zálohy.
 
 ## Riziká
 

@@ -221,6 +221,14 @@ import os
             }
             isPlaying = true
             onPlaybackStarted?()
+            if holdsPlaybackUntilStopped {
+                // A clip that never ends by itself: only `stopPlayback()` ends it
+                // (CancellationError, as from the real service). No real-time wait.
+                let continued = await withCheckedContinuation { stoppableClip = $0 }
+                isPlaying = false
+                guard continued else { throw CancellationError() }
+                return 3.0
+            }
             try await Task.sleep(nanoseconds: playbackDurationNs)
             if isPlaybackPaused {
                 let continued = await withCheckedContinuation { heldClip = $0 }
@@ -233,6 +241,11 @@ import os
         /// #200: a clip a pause is holding. `playOpusAudio` stays suspended in
         /// it until `resumePlayback()` continues it, or `stopPlayback()` ends
         /// it — its caller then gets `CancellationError`, as from the real service.
+        /// A test that needs a clip still playing when the user acts: it stays
+        /// in flight until `stopPlayback()`, with no timer to race.
+        var holdsPlaybackUntilStopped = false
+        private var stoppableClip: CheckedContinuation<Bool, Never>?
+
         private(set) var isPlaybackPaused = false
         private var heldClip: CheckedContinuation<Bool, Never>?
 
@@ -264,6 +277,8 @@ import os
         func stopPlayback() async {
             stopPlaybackCallCount += 1
             isPlaying = false
+            stoppableClip?.resume(returning: false)
+            stoppableClip = nil
             if isPlaybackPaused { releaseHeldClip(continuing: false) }
         }
 

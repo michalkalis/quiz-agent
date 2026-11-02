@@ -129,6 +129,29 @@ struct RoomViewModelSettingsTests {
         ])
     }
 
+    @Test("Turning reading aloud off mid-question stops the clip and opens the answer time once")
+    func readsAloudOffStopsReading() async {
+        // Founder 2026-11-02: the host switched it off and still had to listen
+        // to the whole question. The question must still open (the guests wait
+        // for it) and exactly once, and the reading state must not stick.
+        audio.holdsPlaybackUntilStopped = true
+        let model = await hostInLobby()
+        defer { model.stopAll() }
+        await model.startGame()
+        await pumpUntil({ audio.isPlaying }, "the question was never read")
+        #expect(model.isReadingAloud)
+        #expect(rooms.openCalls == 0, "the answer time waits for the reading")
+
+        await model.setReadsAloud(false)
+        await model.readTask?.value
+
+        #expect(audio.stopPlaybackCallCount >= 1)
+        #expect(!model.isReadingAloud)
+        #expect(rooms.openCalls == 1)
+        #expect(model.round?.phase == .answering)
+        #expect(!model.settings.readsAloud)
+    }
+
     @Test("Once the game started the reveal is fixed: not offered and not sent")
     func revealFixedInGame() async {
         // Switching mid-game would leave guests waiting for a reveal that

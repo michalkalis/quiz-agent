@@ -9,6 +9,8 @@ import SwiftUI
 
 struct RoomRulesCard: View {
     @ObservedObject var viewModel: RoomViewModel
+    /// #224: the host opened the custom time; also true for any non-preset value.
+    @State private var showsCustomTime = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
@@ -18,6 +20,10 @@ struct RoomRulesCard: View {
                     revealMenu
                     HangsDivider()
                     timeMenu
+                    if isCustomTime {
+                        HangsDivider()
+                        RoomCustomTimeRow(viewModel: viewModel, identifier: "room.rules.time.stepper")
+                    }
                     HangsDivider()
                     HangsToggleRow(label: "Read questions aloud", isOn: readsAloud)
                         .accessibilityIdentifier("room.rules.readsAloud")
@@ -46,13 +52,22 @@ struct RoomRulesCard: View {
     private var timeMenu: some View {
         Menu {
             ForEach(MultiplayerSettings.thinkingChoices, id: \.self) { seconds in
-                Button(MultiplayerSettings.secondsDisplay(seconds)) { setTime(seconds) }
-                    .accessibilityIdentifier("room.rules.time.\(seconds)")
+                Button(MultiplayerSettings.secondsDisplay(seconds)) {
+                    showsCustomTime = false
+                    setTime(seconds)
+                }
+                .accessibilityIdentifier("room.rules.time.\(seconds)")
             }
+            Button("Custom") { showsCustomTime = true }
+                .accessibilityIdentifier("room.rules.time.custom")
         } label: {
             HangsConfigRowLabel(label: "Answer time", value: MultiplayerSettings.secondsDisplay(viewModel.settings.thinkingSeconds))
         }
         .accessibilityIdentifier("room.rules.time")
+    }
+
+    private var isCustomTime: Bool {
+        showsCustomTime || !MultiplayerSettings.isPreset(viewModel.settings.thinkingSeconds)
     }
 
     private var readsAloud: Binding<Bool> {

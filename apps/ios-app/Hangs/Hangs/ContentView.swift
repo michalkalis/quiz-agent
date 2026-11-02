@@ -243,8 +243,9 @@ struct ContentView: View {
             }
             .accessibilityIdentifier("tab.profile")
         }
-        // #216 (founder 2026-10-30): the bar shrinks while content scrolls down.
-        .tabBarMinimizeBehavior(.onScrollDown)
+        // #216 (founder 2026-10-30) had the bar shrink to the Play button on scroll;
+        // #224 (founder 2026-11-02): it stays full. iOS has no "shrink a bit" mode.
+        .tabBarMinimizeBehavior(.never)
         .onChange(of: navModel.selectedTab) { _, tab in
             if tab == .profile { appState.profileViewModel.tabOpened() }
             if tab == .together, room == nil {

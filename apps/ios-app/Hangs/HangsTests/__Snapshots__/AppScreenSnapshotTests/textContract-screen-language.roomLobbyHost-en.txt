@@ -22,6 +22,7 @@ At the end of the quiz
 30 s
 45 s
 60 s
+Custom
 Answer time
 30 s
 Answer time
@@ -46,6 +47,7 @@ room.rules.time.15
 room.rules.time.30
 room.rules.time.45
 room.rules.time.60
+room.rules.time.custom
 room.rules.readsAloud
 room.lobby.summary
 room.start

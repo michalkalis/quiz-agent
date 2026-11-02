@@ -180,6 +180,8 @@ extension RoomViewModel {
         defer { isReadingAloud = false }
         do {
             let data = try await network.downloadAudio(from: path)
+            // Switched off while the audio was downloading (#224).
+            guard settings.readsAloud else { return }
             _ = try await audio.playOpusAudio(data)
         } catch {
             Logger.audio.warning("Room read-aloud failed: \(error, privacy: .public)")

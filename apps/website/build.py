@@ -42,7 +42,7 @@ STORE = {
 }
 BETA = "https://testflight.apple.com/join/qvbqMh1k"
 FONT_FILES = ["funnel-display-latin.woff2", "funnel-display-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2"]
-STATIC = [*FONT_FILES, "funnel-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", ".well-known/apple-app-site-association"]
+STATIC = [*FONT_FILES, "funnel-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")
@@ -116,7 +116,8 @@ def jsonld(lang: str, strings: dict) -> str:
     app = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "Trubbo", "url": SITE + LANGS[lang],
            "description": strings["meta.description"], "operatingSystem": "iOS",
            "applicationCategory": "GameApplication", "inLanguage": list(LANGS), "image": SITE + "/og.png",
-           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "downloadUrl": STORE[lang],
+           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+           "installUrl": STORE[lang], "downloadUrl": STORE[lang], "downloadUrl": STORE[lang],
            "publisher": {"@id": SITE + "/#org"}, "sameAs": accounts}
     data = {"@context": "https://schema.org", "@graph": [org, site, app]}
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
@@ -155,6 +156,7 @@ App Store: {STORE["en"]}
 
 ## Pages
 
+- [Trubbo on the App Store]({STORE['en']})
 - [English]({SITE}/)
 - [Slovenčina]({SITE}/sk/)
 - [Čeština]({SITE}/cs/)

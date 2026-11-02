@@ -93,7 +93,9 @@ def publish(post: dict, user_id: str, token: str) -> str:
         if cover:
             params["cover_url"] = cover
         # Reels carry the app's synthetic voice: label them (Meta AI disclosure).
-        params["is_ai_generated"] = "true"
+        # A silent reel (the pinned launch reel) sets "ai_generated": false.
+        if post.get("ai_generated", True):
+            params["is_ai_generated"] = "true"
     container = call(
         "POST", f"{user_id}/media", token, caption=post["caption"], **params
     )["id"]

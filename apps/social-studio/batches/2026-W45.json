@@ -915,6 +915,52 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/round-cs-b56022d3.jpg"
    ],
    "tiktok_buffer": "6ae8b20bf1669be3eabefb33"
+  },
+  {
+   "key": "pinned-ig_en",
+   "account": "ig_en",
+   "day": "Mon",
+   "format": "pinned",
+   "language": "en",
+   "date": "2026-11-02",
+   "files": [
+    "pinned-en.mp4",
+    "pinned-en.jpg"
+   ],
+   "caption": "Trubbo is now on the App Store. The quiz that reads you the questions and listens to your answers. Free on iPhone, link in bio.\n\n#trivia #quiz #iphone",
+   "voice": "none (silent launch reel, pinned on the profile)",
+   "ai_generated": false,
+   "questions": [],
+   "status": "approved",
+   "publish_at": "2026-11-02T20:40:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/pinned-en.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/pinned-en.jpg"
+   ],
+   "tiktok_buffer": "6ae8eee402371b91fa526f89"
+  },
+  {
+   "key": "pinned-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "pinned",
+   "language": "sk",
+   "date": "2026-11-02",
+   "files": [
+    "pinned-sk.mp4",
+    "pinned-sk.jpg"
+   ],
+   "caption": "Trubbo je už v App Store. Kvíz, ktorý ti číta otázky a počúva tvoje odpovede. Zadarmo na iPhone, odkaz v profile.\n\n#kvíz #kviz #iphone",
+   "voice": "none (silent launch reel, pinned on the profile)",
+   "ai_generated": false,
+   "questions": [],
+   "status": "approved",
+   "publish_at": "2026-11-02T20:40:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/pinned-sk.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/pinned-sk.jpg"
+   ],
+   "tiktok_buffer": "6ae8eee5fb05897d9d3aa810"
   }
  ]
 }

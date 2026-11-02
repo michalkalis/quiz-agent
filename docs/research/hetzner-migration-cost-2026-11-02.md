@@ -15,7 +15,10 @@ These are live machines. Prices are Fly list prices, with Paris (cdg) about 15% 
 | quiz-pack-db (Postgres + pgvector) | 1 GB + 3 GB volume | 24/7 | ~8 |
 | quiz-pack-redis | 256 MB + 1 GB | 24/7 | ~2.5 |
 | staging apps (CI deploy gate) | stopped, 1 GB volume | minutes per deploy | <1 |
-| **Total** | | | **~$18 ≈ €15.5** (matches the invoice) |
+| **Sum of list-price estimates** | | | ~$20–24 |
+| **Actual invoice (founder)** | | | **~$18 ≈ €15.5** |
+
+The line items are rough list-price estimates, not invoice lines: we have no invoice breakdown, and the dashboard needs a login. The gap suggests pack web sleeps more than it seems and/or cdg is cheaper than estimated. All savings below start from the real ~$18.
 
 - The 50 GB remote builder volume is **not billed** ("There's currently no charge for builders"), so deleting it is cleanup only.
 - No paid IPv4 and no paid add-ons. The Upstash staging Redis is pay-as-you-go and costs $0 when idle.
@@ -89,3 +92,11 @@ In total this is about **one bigger issue (5 PRs, several sessions)**. Phases 2 
   2. Then phases 1–4.
   3. Cutover in a quiet window.
 - **Do not start before the 1.1 launch (#217 — launch).** The migration touches payments and data, and the launch is the riskier moment.
+
+## 7. Why not a Mac server
+
+The founder asked whether the server could be a Mac, so it can run iOS builds and Claude Code. Rented cloud Macs start at about **€149/mo** (Scaleway Mac mini M4-S, 24 h minimum; [scaleway.com/en/pricing/apple-silicon](https://scaleway.com/en/pricing/apple-silicon)), about 10× the Fly bill. Hetzner offers no Macs.
+
+The split we already have covers both needs for €0 extra:
+- **iOS builds** run in GitHub Actions (`ios-release.yml`) and on `mba`, the agent Mac.
+- **Claude Code** runs fine on Linux, so it can run on the Hetzner box for server-side tasks if ever useful.

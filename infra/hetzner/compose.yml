@@ -1,0 +1,106 @@
+# Trubbo backend on one Hetzner VPS (#222 — moving the backend to Hetzner).
+# Run from this directory on the server: docker compose up -d --build
+# Secrets live in ./env/*.env on the server only (never in git); see README.md.
+
+name: trubbo
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    env_file: env/caddy.env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 128m
+    logging: *logging
+    depends_on: [quiz-agent, pack-web]
+
+  postgres:
+    image: pgvector/pgvector:0.8.2-pg17
+    restart: unless-stopped
+    env_file: env/postgres.env
+    environment:
+      POSTGRES_DB: quiz_pack
+      POSTGRES_USER: postgres
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - max_connections=60
+    shm_size: 256m
+    volumes: [pg_data:/var/lib/postgresql/data]
+    # 127.0.0.1 only: reachable from the server itself / SSH tunnels (mba worker), never the internet.
+    ports: ["127.0.0.1:5432:5432"]
+    mem_limit: 1g
+    oom_score_adj: -900 # under memory pressure the kernel kills an app container, not the database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d quiz_pack"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    logging: *logging
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    env_file: env/redis.env
+    command: ["sh", "-c", "exec redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction --requirepass \"$$REDIS_PASSWORD\""]
+    volumes: [redis_data:/data]
+    ports: ["127.0.0.1:6379:6379"]
+    mem_limit: 192m
+    oom_score_adj: -500
+    logging: *logging
+
+  quiz-agent:
+    build: { context: ../.., dockerfile: apps/quiz-agent/Dockerfile }
+    image: trubbo/quiz-agent:local
+    restart: unless-stopped
+    env_file: env/quiz-agent.env
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: 640m
+    logging: *logging
+
+  pack-web:
+    build: { context: ../.., dockerfile: apps/quiz-pack-api/Dockerfile }
+    image: trubbo/quiz-pack-api:local
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    env_file: env/quiz-pack-api.env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    mem_limit: 640m
+    logging: *logging
+
+  # Processes paid generation orders. Behind a profile so a rehearsal stack on a
+  # copied prod DB never re-runs real orders on paid keys: start with --profile worker.
+  pack-worker:
+    image: trubbo/quiz-pack-api:local
+    profiles: ["worker"]
+    restart: unless-stopped
+    command: ["arq", "app.worker.WorkerSettings"]
+    env_file: env/quiz-pack-api.env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    mem_limit: 640m
+    logging: *logging
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pg_data:
+  redis_data:

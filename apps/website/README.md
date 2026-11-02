@@ -79,3 +79,10 @@ Deploy = merge to `main`. The `website` workflow runs on every push to `main` th
 4. Run the workflow once (or merge), then **Settings → Pages → Custom domain:** `trubbo.app` → Save. When the DNS check passes, tick **Enforce HTTPS** (the certificate can take a while to be issued).
 
 Records from GitHub's docs: "Managing a custom domain for your GitHub Pages site".
+
+## Question topic pages (#223)
+
+`/sk/otazky/`, `/cs/otazky/` and one page per topic (`/sk/otazky/do-auta/` …): 20 approved questions each, answer in `<details>` (no script), story and source, App Store link with campaign `ct=web_<lang>_<slug>` (App Store Connect → App Analytics → Campaigns). Built by `topics.py` from `src/topics.html`, texts in `src/topics/<lang>.json` (topics pair across languages by `key`), questions in `src/topics/questions.<lang>.json`.
+
+Refresh the questions: run `tools/export_questions.py` read-only on the `quiz-agent-api` machine, pick ids per topic, then `python3 tools/topic_snapshot.py <export.json> <picks.json> <lang>` (steps in the script header). The build refuses dashes as punctuation, a question on two pages, a topic under 10 questions or a question without an https source.
+

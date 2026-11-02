@@ -14,6 +14,7 @@ No framework, no external requests. One self-hosted web font: Rethink Sans (cont
 | `src/legal.html`, `src/legal/<page>.<lang>.html` | Legal page shell and the legal texts (privacy, terms, support), one file per page and language. Written as plain HTML; the `<h1>` becomes the page title. Built to `public/<page>.html`, which GitHub Pages serves at `/<page>`. |
 | `src/*.png`, `src/favicon.svg`, `src/robots.txt` | Static files copied as is. |
 | `build.py` | Generator (Python stdlib only). |
+| `build.py` → `sitemap.xml`, `llms.txt`, JSON-LD | Generated for search engines and AI assistants: the sitemap lists every page with its language alternates, `llms.txt` is a plain summary built from the English strings, the landing page carries schema.org data (publisher, site, app with links to the social accounts). Social accounts live in `SOCIAL_EN` / `SOCIAL_SKCZ` and also render in the footer. |
 | `public/` | Generated output. This is what GitHub Pages serves. Committed, never edited by hand. |
 | `src/404.html`, `src/CNAME` | Not-found page and the custom domain (`trubbo.app`) for GitHub Pages. |
 | `.github/workflows/website.yml` | Builds and deploys `public/` to GitHub Pages. |

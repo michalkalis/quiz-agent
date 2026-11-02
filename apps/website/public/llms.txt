@@ -1,0 +1,30 @@
+# Trubbo
+
+> Trubbo is a trivia quiz for iPhone. It reads every question aloud and you answer out loud. In English, Slovak and Czech.
+
+Trubbo reads each question aloud and the player answers in their own words; the app checks the answer and tells the story behind it. People play it alone or together: on road trips, at parties, at the cabin, with family.
+
+## Pricing
+
+- Free: 30 questions a month
+- €4.99 a month: Trubbo Plus, 1,000 questions a month
+- €8.99: custom pack of 30 questions, paid once
+
+## Pages
+
+- [English](https://trubbo.app/)
+- [Slovenčina](https://trubbo.app/sk/)
+- [Čeština](https://trubbo.app/cs/)
+- [Privacy](https://trubbo.app/privacy), [Terms](https://trubbo.app/terms), [Support](https://trubbo.app/support)
+
+## Social media
+
+- Instagram: https://www.instagram.com/trubboapp/
+- YouTube: https://www.youtube.com/@trubboapp
+- TikTok: https://www.tiktok.com/@trubboapp
+- Facebook: https://www.facebook.com/1454787731043491
+- Instagram (Slovak and Czech): https://www.instagram.com/trubboapp.sk/
+- YouTube (Slovak and Czech): https://www.youtube.com/@trubboapp_sk
+- Facebook (Slovak and Czech): https://www.facebook.com/1447421928452448
+
+Publisher: missinghue s.r.o., Prague. Contact: hi@trubbo.app

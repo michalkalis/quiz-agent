@@ -13279,13 +13279,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "start · ok · again · repeat · next. Víc příkazů nepotřebuješ."
+            "value" : "start · ok · znovu · zopakuj · další. Víc příkazů nepotřebuješ."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "start · ok · again · repeat · next. Viac príkazov nepotrebuješ."
+            "value" : "štart · ok · znova · zopakuj · ďalšia. Viac príkazov nepotrebuješ."
           }
         }
       }

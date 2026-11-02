@@ -1,0 +1,22 @@
+# Fly forwarder (#222 — moving the backend to Hetzner).
+# Builds that hardcode *.fly.dev keep working: this tiny Caddy on Fly
+# reverse-proxies every request to the Hetzner server. It is a proxy, not an
+# HTTP redirect: URLSession would turn a redirected POST into a GET.
+# Fly's edge sets Fly-Client-IP (clients cannot spoof it); it passes through,
+# and the shared secret tells the Hetzner Caddy to trust it.
+# Env: UPSTREAM_HOST (api.trubbo.app | pack.trubbo.app), FORWARDER_SECRET (Fly secret).
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	reverse_proxy https://{$UPSTREAM_HOST} {
+		header_up Host {$UPSTREAM_HOST}
+		header_up X-Trubbo-Forwarder {$FORWARDER_SECRET}
+		flush_interval -1 # stream order progress (SSE) without buffering
+		transport http {
+			read_timeout 10m
+		}
+	}
+}

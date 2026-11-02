@@ -1,0 +1,36 @@
+# Fly forwarder for quiz-pack-api (#222 — moving the backend to Hetzner). Deploy from this dir:
+#   fly deploy -c fly.quiz-pack-api.toml   (needs: fly secrets set FORWARDER_SECRET=… -a quiz-pack-api)
+app = "quiz-pack-api"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  UPSTREAM_HOST = "pack.trubbo.app"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    grace_period = "15s"
+    interval = "30s"
+    timeout = "10s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

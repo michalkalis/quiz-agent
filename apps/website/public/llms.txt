@@ -18,6 +18,7 @@ App Store: https://apps.apple.com/app/id6762482437
 - [Slovenčina](https://trubbo.app/sk/)
 - [Čeština](https://trubbo.app/cs/)
 - [Privacy](https://trubbo.app/privacy), [Terms](https://trubbo.app/terms), [Support](https://trubbo.app/support)
+- Quiz questions with answers and sources, by topic: [Slovak](https://trubbo.app/sk/otazky/), [Czech](https://trubbo.app/cs/otazky/)
 
 ## Social media
 

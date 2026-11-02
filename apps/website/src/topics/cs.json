@@ -1,0 +1,29 @@
+{
+  "hub.lead": "Ověřené otázky z Trubba, každá se zdrojem a krátkým příběhem. Vyberte téma a hrajte nahlas.",
+  "hub.description": "Kvízové otázky s odpověďmi česky: do auta, pro celou rodinu, o Česku, o hudbě, filmech, sportu a další. Každá se zdrojem.",
+  "title.prefix": "Kvízové otázky",
+  "title.suffix": "s odpověďmi",
+  "description": "{n} kvízových otázek {about} s odpověďmi, krátkým příběhem a zdrojem. Hrajte nahlas, nebo si je nechte přečíst v aplikaci Trubbo.",
+  "count": "{n} otázek",
+  "how": "Jeden čte, ostatní hádají. Odpověď se ukáže po klepnutí.",
+  "reveal": "Ukaž odpověď",
+  "source": "Zdroj",
+  "more": "Další témata",
+  "cta.title": "Nechce se vám číst?",
+  "cta.body": "Trubbo vám otázky přečte nahlas a poslechne si odpovědi. Stačí odpověď říct, aplikace ji vyhodnotí a poví příběh, který se za ní skrývá.",
+  "cta.short": "Stáhni Trubbo",
+  "cta.store": "Stáhnout v App Store",
+  "cta.note": "Zdarma na iPhone",
+  "topics": [
+    {"key": "car", "slug": "do-auta", "about": "do auta", "lead": "Otázky na dlouhou cestu, na které stačí odpovídat nahlas. Oči zůstávají na silnici."},
+    {"key": "family", "slug": "pro-celou-rodinu", "about": "pro celou rodinu", "lead": "Otázky, na které si troufnou děti i prarodiče. Na oslavu, chatu i nedělní oběd."},
+    {"key": "country", "slug": "o-cesku", "about": "o Česku", "lead": "Jazyk, místa, lidé a zvyky. I domácí se u nich zapotí."},
+    {"key": "film", "slug": "filmy-a-serialy", "about": "o filmech a seriálech", "lead": "Herci, postavy, pohádky a zákulisí natáčení."},
+    {"key": "music", "slug": "hudba", "about": "o hudbě", "lead": "Písně, kapely, festivaly a příběhy hitů, které zná každý."},
+    {"key": "sport", "slug": "sport", "about": "o sportu", "lead": "Olympiády, rekordy a kuriozity ze stadionů i z hor."},
+    {"key": "food", "slug": "jidlo", "about": "o jídle", "lead": "Odkud jídla pocházejí, jak vznikla a co o nich netušíte."},
+    {"key": "nature", "slug": "priroda-zvirata-vesmir", "about": "o přírodě, zvířatech a vesmíru", "lead": "Zvířata, rostliny, lidské tělo a planety. Příroda překvapí častěji, než byste čekali."},
+    {"key": "history", "slug": "historie", "about": "z historie", "lead": "Panovníci, vynálezy a každodenní život v minulých stoletích."},
+    {"key": "geo", "slug": "zemepis-a-cestovani", "about": "ze zeměpisu a cestování", "lead": "Země, města, památky a místa, kam se vyplatí vyrazit."}
+  ]
+}

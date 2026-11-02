@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 223 | [Stránky s kvízovými otázkami na webe](issue-223-question-topic-pages.md) | enhancement · ready-for-agent | `[~]` #223 | 2026-11-02: 10 tém sk + cs, 20 otázok na stránku, čerstvá zábava týždenne |
 | 222 | [Presun backendu na Hetzner](issue-222-hetzner-migration.md) | chore · ready-for-agent | `[~]` #222 | 2026-11-02: plán; server vytvára agent, prepnutie po review 1.1 |
 | 221 | [Technická modernizácia](issue-221-tech-modernization.md) | chore · ready-for-agent | `[~]` #221 | 2026-11-01: audit verzií; 221.1 nepoužitá knižnica Google preč + spodné hranice (PR #659) |
 | 220 | [App Store marketing (ASO)](issue-220-app-store-marketing.md) | enhancement · ready-for-agent | `[ ]` #220 | 2026-11-01: kľúčové slová sk/cs/en, názov s popisom (schválené), CPP a eventy až po vydaní |

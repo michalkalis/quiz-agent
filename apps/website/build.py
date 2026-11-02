@@ -14,6 +14,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import topics
+
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 OUT = ROOT / "public"
@@ -103,7 +105,11 @@ def footer(lang: str) -> str:
     """Footer partial with links to the legal pages and social accounts in the same language; its text keys stay for pass 2."""
     social = "".join(f'<a href="{url}" rel="me noopener">{name}</a>' for name, url in SOCIAL[lang].items())
     part = (SRC / "footer.html").read_text("utf-8").strip()
-    return part.replace("{{gen.home}}", LANGS[lang]).replace("{{gen.social}}", social)
+    hub = ""
+    if lang in topics.LANGS:  # #223: question pages exist in sk and cs only
+        label = html.escape(topics.load(SRC, lang)[0]["title.prefix"])
+        hub = f'<a href="{topics.LANGS[lang]}{topics.DIR}/">{label}</a>\n        '
+    return part.replace("{{gen.home}}", LANGS[lang]).replace("{{gen.social}}", social).replace("{{gen.topics}}", hub)
 
 
 def jsonld(lang: str, strings: dict) -> str:
@@ -117,7 +123,7 @@ def jsonld(lang: str, strings: dict) -> str:
            "description": strings["meta.description"], "operatingSystem": "iOS",
            "applicationCategory": "GameApplication", "inLanguage": list(LANGS), "image": SITE + "/og.png",
            "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
-           "installUrl": STORE[lang], "downloadUrl": STORE[lang], "downloadUrl": STORE[lang],
+           "installUrl": STORE[lang], "downloadUrl": STORE[lang],
            "publisher": {"@id": SITE + "/#org"}, "sameAs": accounts}
     data = {"@context": "https://schema.org", "@graph": [org, site, app]}
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
@@ -130,6 +136,9 @@ def sitemap() -> str:
     for page in pages:
         links = "".join(f'<xhtml:link rel="alternate" hreflang="{c}" href="{SITE + p + page}"/>' for c, p in LANGS.items())
         urls += [f"<url><loc>{SITE + path + page}</loc>{links}</url>" for path in LANGS.values()]
+    for p in topics.pages(SRC, SITE, STORE):
+        links = "".join(f'<xhtml:link rel="alternate" hreflang="{c}" href="{SITE + u}"/>' for c, u in p["alternates"].items())
+        urls.append(f"<url><loc>{SITE + p['path']}</loc>{links}</url>")
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
             + "\n".join(urls) + "\n</urlset>\n")
@@ -160,6 +169,7 @@ App Store: {STORE["en"]}
 - [Slovenčina]({SITE}/sk/)
 - [Čeština]({SITE}/cs/)
 - [Privacy]({SITE}/privacy), [Terms]({SITE}/terms), [Support]({SITE}/support)
+- Quiz questions with answers and sources, by topic: [Slovak]({SITE}/sk/otazky/), [Czech]({SITE}/cs/otazky/)
 
 ## Social media
 
@@ -207,6 +217,32 @@ def render_legal(template: str, page: str, lang: str, strings: dict) -> str:
     return strings_pass(out, lang, strings, set())
 
 
+def render_topic(template: str, p: dict, strings: dict) -> str:
+    """A question topic page or the topic hub (#223), content from topics.py."""
+    lang = p["lang"]
+    links = {**p["alternates"], "en": "/"}
+    generated = {
+        "gen.lang": lang,
+        "gen.title": html.escape(p["title"]),
+        "gen.description": html.escape(p["description"], quote=True),
+        "gen.canonical": SITE + p["path"],
+        "gen.alternates": "\n".join(f'<link rel="alternate" hreflang="{c}" href="{SITE + u}">' for c, u in p["alternates"].items()),
+        "gen.switcher": "".join(
+            f'<a href="{links[c]}" hreflang="{c}" lang="{c}"' + (' aria-current="page"' if c == lang else "") + f">{c.upper()}</a>"
+            for c in LANGS),
+        "gen.jsonld": f'<script type="application/ld+json">{p["jsonld"]}</script>' if p["jsonld"] else "",
+        "gen.home": LANGS[lang],
+        "gen.store": html.escape(p["link"], quote=True),
+        "gen.store.id": APP_STORE_ID,
+        "gen.cta": html.escape(p["texts"]["cta.short"]),
+        "gen.footer": footer(lang),
+        "gen.fonts": FONTS,
+        "gen.main": p["main"],
+    }
+    out = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
+    return strings_pass(out, lang, strings, set())
+
+
 def render(template: str, lang: str, strings: dict) -> str:
     # Offer (never force) the browser's language: every page carries the three one-line prompts.
     suggest = {code: {"text": load(code)["suggest.text"], "go": load(code)["suggest.go"], "url": path}
@@ -242,6 +278,7 @@ def main() -> int:
     strings = {lang: load(lang) for lang in LANGS}
     base = set(strings["en"])
     errors = [e for lang in LANGS for e in lint(lang, strings[lang], base)]
+    errors += topics.lint(SRC, DASH, TAG)
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
@@ -260,6 +297,12 @@ def main() -> int:
             target = OUT / path.strip("/") / f"{page}.html"
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
+    shell = (SRC / "topics.html").read_text("utf-8")
+    for p in topics.pages(SRC, SITE, STORE):
+        target = OUT / p["path"].strip("/") / "index.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(render_topic(shell, p, strings[p["lang"]]), "utf-8")
+    print("wrote question topic pages (sk, cs)")
     (OUT / "sitemap.xml").write_text(sitemap(), "utf-8")
     (OUT / "llms.txt").write_text(llms(strings), "utf-8")
     for name in STATIC:

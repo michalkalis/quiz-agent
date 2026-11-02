@@ -1,0 +1,29 @@
+{
+  "hub.lead": "Overené otázky z Trubba, každá so zdrojom a krátkym príbehom. Vyberte tému a hrajte nahlas.",
+  "hub.description": "Kvízové otázky s odpoveďami po slovensky: do auta, pre celú rodinu, o Slovensku, o hudbe, filmoch, športe a ďalšie. Každá so zdrojom.",
+  "title.prefix": "Kvízové otázky",
+  "title.suffix": "s odpoveďami",
+  "description": "{n} kvízových otázok {about} s odpoveďami, krátkym príbehom a zdrojom. Hrajte nahlas, alebo si ich nechajte prečítať v appke Trubbo.",
+  "count": "{n} otázok",
+  "how": "Jeden číta, ostatní hádajú. Odpoveď sa ukáže po ťuknutí.",
+  "reveal": "Ukáž odpoveď",
+  "source": "Zdroj",
+  "more": "Ďalšie témy",
+  "cta.title": "Nechce sa vám čítať?",
+  "cta.body": "Trubbo vám otázky prečíta nahlas a vypočuje odpovede. Stačí odpoveď povedať, appka ju vyhodnotí a porozpráva príbeh za ňou.",
+  "cta.short": "Stiahni Trubbo",
+  "cta.store": "Stiahnuť v App Store",
+  "cta.note": "Zadarmo na iPhone",
+  "topics": [
+    {"key": "car", "slug": "do-auta", "about": "do auta", "lead": "Otázky na dlhú cestu, na ktoré stačí odpovedať nahlas. Oči ostávajú na ceste."},
+    {"key": "family", "slug": "pre-celu-rodinu", "about": "pre celú rodinu", "lead": "Otázky, na ktoré si trúfnu deti aj starí rodičia. Na oslavu, chatu aj nedeľný obed."},
+    {"key": "country", "slug": "o-slovensku", "about": "o Slovensku", "lead": "Jazyk, miesta, ľudia a zvyky. Aj domáci sa pri nich zapotia."},
+    {"key": "film", "slug": "filmy-a-serialy", "about": "o filmoch a seriáloch", "lead": "Herci, postavy, rozprávky a zákulisie natáčania."},
+    {"key": "music", "slug": "hudba", "about": "o hudbe", "lead": "Piesne, kapely, festivaly a príbehy hitov, ktoré pozná každý."},
+    {"key": "sport", "slug": "sport", "about": "o športe", "lead": "Olympiády, rekordy a kuriozity zo štadiónov aj z hôr."},
+    {"key": "food", "slug": "jedlo", "about": "o jedle", "lead": "Odkiaľ jedlá pochádzajú, ako vznikli a čo o nich netušíte."},
+    {"key": "nature", "slug": "priroda-zvierata-vesmir", "about": "o prírode, zvieratách a vesmíre", "lead": "Zvieratá, rastliny, ľudské telo a planéty. Príroda prekvapí častejšie, než by ste čakali."},
+    {"key": "history", "slug": "historia", "about": "z histórie", "lead": "Panovníci, vynálezy a každodenný život v minulých storočiach."},
+    {"key": "geo", "slug": "zemepis-a-cestovanie", "about": "zo zemepisu a cestovania", "lead": "Krajiny, mestá, pamiatky a miesta, kam sa oplatí vybrať."}
+  ]
+}

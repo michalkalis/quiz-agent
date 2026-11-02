@@ -14,16 +14,74 @@
   "cta.short": "Stáhni Trubbo",
   "cta.store": "Stáhnout v App Store",
   "cta.note": "Zdarma na iPhone",
+  "fresh.title": "Čerstvé kvízové otázky ze světa zábavy",
+  "fresh.lead": "Nové otázky o filmech, seriálech, hudbě a hvězdách, o kterých se právě mluví. Přibývají každý týden.",
+  "fresh.description": "Čerstvé kvízové otázky s odpověďmi ze světa filmu, hudby a seriálů. Nové každý týden, se zdrojem a krátkým příběhem.",
+  "fresh.updated": "Aktualizováno {date}",
+  "fresh.card": "Čerstvé otázky ze zábavy",
+  "fresh.card.d": "Filmy, seriály, hudba a hvězdy. Přibývají každý týden.",
+  "fresh.badge": "Nové každý týden",
+  "fresh.home": "Nové otázky z tohoto týdne",
   "topics": [
-    {"key": "car", "slug": "do-auta", "about": "do auta", "lead": "Otázky na dlouhou cestu, na které stačí odpovídat nahlas. Oči zůstávají na silnici."},
-    {"key": "family", "slug": "pro-celou-rodinu", "about": "pro celou rodinu", "lead": "Otázky, na které si troufnou děti i prarodiče. Na oslavu, chatu i nedělní oběd."},
-    {"key": "country", "slug": "o-cesku", "about": "o Česku", "lead": "Jazyk, místa, lidé a zvyky. I domácí se u nich zapotí."},
-    {"key": "film", "slug": "filmy-a-serialy", "about": "o filmech a seriálech", "lead": "Herci, postavy, pohádky a zákulisí natáčení."},
-    {"key": "music", "slug": "hudba", "about": "o hudbě", "lead": "Písně, kapely, festivaly a příběhy hitů, které zná každý."},
-    {"key": "sport", "slug": "sport", "about": "o sportu", "lead": "Olympiády, rekordy a kuriozity ze stadionů i z hor."},
-    {"key": "food", "slug": "jidlo", "about": "o jídle", "lead": "Odkud jídla pocházejí, jak vznikla a co o nich netušíte."},
-    {"key": "nature", "slug": "priroda-zvirata-vesmir", "about": "o přírodě, zvířatech a vesmíru", "lead": "Zvířata, rostliny, lidské tělo a planety. Příroda překvapí častěji, než byste čekali."},
-    {"key": "history", "slug": "historie", "about": "z historie", "lead": "Panovníci, vynálezy a každodenní život v minulých stoletích."},
-    {"key": "geo", "slug": "zemepis-a-cestovani", "about": "ze zeměpisu a cestování", "lead": "Země, města, památky a místa, kam se vyplatí vyrazit."}
+    {
+      "key": "car",
+      "slug": "do-auta",
+      "about": "do auta",
+      "lead": "Otázky na dlouhou cestu, na které stačí odpovídat nahlas. Oči zůstávají na silnici."
+    },
+    {
+      "key": "family",
+      "slug": "pro-celou-rodinu",
+      "about": "pro celou rodinu",
+      "lead": "Otázky, na které si troufnou děti i prarodiče. Na oslavu, chatu i nedělní oběd."
+    },
+    {
+      "key": "country",
+      "slug": "o-cesku",
+      "about": "o Česku",
+      "lead": "Jazyk, místa, lidé a zvyky. I domácí se u nich zapotí."
+    },
+    {
+      "key": "film",
+      "slug": "filmy-a-serialy",
+      "about": "o filmech a seriálech",
+      "lead": "Herci, postavy, pohádky a zákulisí natáčení."
+    },
+    {
+      "key": "music",
+      "slug": "hudba",
+      "about": "o hudbě",
+      "lead": "Písně, kapely, festivaly a příběhy hitů, které zná každý."
+    },
+    {
+      "key": "sport",
+      "slug": "sport",
+      "about": "o sportu",
+      "lead": "Olympiády, rekordy a kuriozity ze stadionů i z hor."
+    },
+    {
+      "key": "food",
+      "slug": "jidlo",
+      "about": "o jídle",
+      "lead": "Odkud jídla pocházejí, jak vznikla a co o nich netušíte."
+    },
+    {
+      "key": "nature",
+      "slug": "priroda-zvirata-vesmir",
+      "about": "o přírodě, zvířatech a vesmíru",
+      "lead": "Zvířata, rostliny, lidské tělo a planety. Příroda překvapí častěji, než byste čekali."
+    },
+    {
+      "key": "history",
+      "slug": "historie",
+      "about": "z historie",
+      "lead": "Panovníci, vynálezy a každodenní život v minulých stoletích."
+    },
+    {
+      "key": "geo",
+      "slug": "zemepis-a-cestovani",
+      "about": "ze zeměpisu a cestování",
+      "lead": "Země, města, památky a místa, kam se vyplatí vyrazit."
+    }
   ]
 }

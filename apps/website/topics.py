@@ -13,6 +13,8 @@ import json
 import re
 from pathlib import Path
 
+import fresh
+
 LANGS = {"sk": "/sk/", "cs": "/cs/"}
 DIR = "otazky"
 COLORS = ["blue", "orange", "green", "purple", "yellow", "rose"]
@@ -42,6 +44,7 @@ def lint(src: Path, dash: re.Pattern, tag: re.Pattern) -> list[str]:
             if any(not q["source"].startswith("https://") for q in items):
                 errors.append(f"topics/{lang}: {t['slug']} has a question without an https source")
         errors += [f"topics/{lang}: dash used as punctuation: {v[:80]!r}" for v in values if dash.search(tag.sub("", v))]
+        values += [q[f] for q in fresh.snapshot(src, lang)["questions"] for f in ("q", "a", "story")]
         ids = [q["id"] for items in questions.values() for q in items]
         if len(ids) != len(set(ids)):
             errors.append(f"topics/{lang}: a question appears on more than one page")
@@ -73,6 +76,12 @@ def source_label(url: str) -> str:
 
 def cards(lang: str, texts: dict, questions: dict, skip: str = "") -> str:
     out = []
+    if skip != fresh.SLUG:  # the weekly page leads every list of topics
+        out.append(
+            f'<li><a class="topic fresh" href="{LANGS[lang]}{DIR}/{fresh.SLUG}/">'
+            f'<span class="t">{esc(texts["fresh.card"])}</span><span class="n">{esc(texts["fresh.badge"])}</span>'
+            f'<span class="ex">{esc(texts["fresh.card.d"])}</span></a></li>'
+        )
     for i, t in enumerate(texts["topics"]):
         if t["slug"] == skip:
             continue
@@ -95,10 +104,7 @@ def cta(lang: str, texts: dict, link: str) -> str:
     )
 
 
-def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str) -> str:
-    t = texts["topics"][i]
-    items = questions[t["slug"]]
-    color = COLORS[i % len(COLORS)]
+def question_list(texts: dict, items: list, color: str) -> str:
     qs = "".join(
         f'<li class="qa"><p class="q">{esc(q["q"])}</p><details><summary>{esc(texts["reveal"])}</summary>'
         f'<p class="a">{esc(q["a"])}</p><p class="story">{esc(q["story"])}</p>'
@@ -106,14 +112,33 @@ def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str) -> st
         f"</details></li>"
         for q in items
     )
+    return f'<ol class="qs c-{color}">{qs}</ol>'
+
+
+def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str) -> str:
+    t = texts["topics"][i]
+    items = questions[t["slug"]]
+    color = COLORS[i % len(COLORS)]
     return (
         f'<nav class="crumb"><a href="{LANGS[lang]}{DIR}/">{esc(texts["title.prefix"])}</a></nav>'
         f'<section class="head c-{color}"><h1 class="disp">{esc(heading(texts, t["about"]))}</h1>'
         f'<p class="lead">{esc(t["lead"])}</p>'
         f'<p class="how">{esc(texts["count"].format(n=len(items)))}. {esc(texts["how"])}</p></section>'
-        f'<ol class="qs c-{color}">{qs}</ol>'
+        + question_list(texts, items, color)
         + cta(lang, texts, link)
         + f'<section class="more"><h2 class="disp">{esc(texts["more"])}</h2>{cards(lang, texts, questions, t["slug"])}</section>'
+    )
+
+
+def fresh_main(lang: str, texts: dict, questions: dict, data: dict, link: str) -> str:
+    return (
+        f'<nav class="crumb"><a href="{LANGS[lang]}{DIR}/">{esc(texts["title.prefix"])}</a></nav>'
+        f'<section class="head"><h1 class="disp">{esc(texts["fresh.title"])}</h1>'
+        f'<p class="lead">{esc(texts["fresh.lead"])}</p>'
+        f'<p class="how">{esc(fresh.updated(texts, data["updated"]))}. {esc(texts["how"])}</p></section>'
+        + question_list(texts, data["questions"], "rose")
+        + cta(lang, texts, link)
+        + f'<section class="more"><h2 class="disp">{esc(texts["more"])}</h2>{cards(lang, texts, questions, fresh.SLUG)}</section>'
     )
 
 
@@ -139,8 +164,10 @@ def quiz_ld(lang: str, url: str, name: str, items: list) -> str:
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 
 
-def pages(src: Path, site: str, store_urls: dict) -> list[dict]:
-    """Every topic and hub page as {lang, path, title, description, main, jsonld, alternates, short_link}."""
+def pages(src: Path, site: str, store_urls: dict, live: dict | None = None) -> list[dict]:
+    """Every topic, hub and fresh page as {lang, path, title, description, main, jsonld, alternates, link, fresh}.
+
+    `live` maps a language to fresh questions from the API; languages without it use the snapshot."""
     data = {lang: load(src, lang) for lang in LANGS}
     out = []
     for lang, (texts, questions) in data.items():
@@ -152,6 +179,16 @@ def pages(src: Path, site: str, store_urls: dict) -> list[dict]:
             "title": f"{texts['title.prefix']} {texts['title.suffix']} | Trubbo",
             "description": texts["hub.description"], "main": hub_main(lang, texts, questions, link),
             "jsonld": "", "link": link,
+        })
+        current = (live or {}).get(lang) or fresh.snapshot(src, lang)
+        path = f"{hub_path}{fresh.SLUG}/"
+        link = store(lang, store_urls[lang], fresh.SLUG)
+        out.append({
+            "lang": lang, "path": path, "texts": texts, "fresh": True,
+            "alternates": {other: f"{LANGS[other]}{DIR}/{fresh.SLUG}/" for other in LANGS},
+            "title": f"{texts['fresh.title']} | Trubbo", "description": texts["fresh.description"],
+            "main": fresh_main(lang, texts, questions, current, link),
+            "jsonld": quiz_ld(lang, site + path, texts["fresh.title"], current["questions"]), "link": link,
         })
         for i, t in enumerate(texts["topics"]):
             path = f"{hub_path}{t['slug']}/"
@@ -169,3 +206,34 @@ def pages(src: Path, site: str, store_urls: dict) -> list[dict]:
                 "jsonld": quiz_ld(lang, site + path, heading(texts, t["about"]), items), "link": link,
             })
     return out
+
+
+def fresh_link(src: Path, lang: str) -> str:
+    """Home page pill to this week's fresh questions; empty where there are no topic pages (en)."""
+    if lang not in LANGS:
+        return ""
+    label = esc(load(src, lang)[0]["fresh.home"])
+    return f'<a class="fresh" href="{LANGS[lang]}{DIR}/{fresh.SLUG}/">{label}</a>'
+
+
+def render(shell: str, p: dict, base: dict, key: re.Pattern) -> str:
+    """Pass 1 for a topics page: generated values into src/topics.html (strings come in pass 2)."""
+    lang, site, langs = p["lang"], base["gen.site"], base["gen.langs"]
+    links = {**{c: "/" for c in langs}, **p["alternates"]}
+    generated = {
+        "gen.lang": lang,
+        "gen.title": esc(p["title"]),
+        "gen.description": esc(p["description"]),
+        "gen.canonical": site + p["path"],
+        "gen.alternates": "\n".join(f'<link rel="alternate" hreflang="{c}" href="{site + u}">' for c, u in p["alternates"].items()),
+        "gen.switcher": "".join(
+            f'<a href="{links[c]}" hreflang="{c}" lang="{c}"' + (' aria-current="page"' if c == lang else "") + f">{c.upper()}</a>"
+            for c in langs),
+        "gen.jsonld": f'<script type="application/ld+json">{p["jsonld"]}</script>' if p["jsonld"] else "",
+        "gen.home": langs[lang],
+        "gen.store": esc(p["link"]),
+        "gen.cta": esc(p["texts"]["cta.short"]),
+        "gen.main": p["main"],
+        **{k: v for k, v in base.items() if k in ("gen.fonts", "gen.store.id", "gen.footer")},
+    }
+    return key.sub(lambda m: generated.get(m.group(1), m.group(0)), shell)

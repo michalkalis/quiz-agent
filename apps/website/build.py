@@ -14,6 +14,7 @@ import shutil
 import sys
 from pathlib import Path
 
+import fresh
 import topics
 
 ROOT = Path(__file__).resolve().parent
@@ -217,30 +218,19 @@ def render_legal(template: str, page: str, lang: str, strings: dict) -> str:
     return strings_pass(out, lang, strings, set())
 
 
-def render_topic(template: str, p: dict, strings: dict) -> str:
-    """A question topic page or the topic hub (#223), content from topics.py."""
-    lang = p["lang"]
-    links = {**p["alternates"], "en": "/"}
-    generated = {
-        "gen.lang": lang,
-        "gen.title": html.escape(p["title"]),
-        "gen.description": html.escape(p["description"], quote=True),
-        "gen.canonical": SITE + p["path"],
-        "gen.alternates": "\n".join(f'<link rel="alternate" hreflang="{c}" href="{SITE + u}">' for c, u in p["alternates"].items()),
-        "gen.switcher": "".join(
-            f'<a href="{links[c]}" hreflang="{c}" lang="{c}"' + (' aria-current="page"' if c == lang else "") + f">{c.upper()}</a>"
-            for c in LANGS),
-        "gen.jsonld": f'<script type="application/ld+json">{p["jsonld"]}</script>' if p["jsonld"] else "",
-        "gen.home": LANGS[lang],
-        "gen.store": html.escape(p["link"], quote=True),
-        "gen.store.id": APP_STORE_ID,
-        "gen.cta": html.escape(p["texts"]["cta.short"]),
-        "gen.footer": footer(lang),
-        "gen.fonts": FONTS,
-        "gen.main": p["main"],
-    }
-    out = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
-    return strings_pass(out, lang, strings, set())
+def write_topics(strings: dict, live: dict | None = None, only_fresh: bool = False) -> None:
+    """Question topic pages, hubs and fresh pages (#223); `only_fresh` for the deploy-time refresh."""
+    shell = (SRC / "topics.html").read_text("utf-8")
+    for p in topics.pages(SRC, SITE, STORE, live):
+        if only_fresh and not p.get("fresh"):
+            continue
+        lang = p["lang"]
+        base = {"gen.fonts": FONTS, "gen.store.id": APP_STORE_ID, "gen.footer": footer(lang), "gen.site": SITE,
+                "gen.langs": LANGS}
+        page = topics.render(shell, p, base, KEY)
+        target = OUT / p["path"].strip("/") / "index.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(strings_pass(page, lang, strings[lang], set()), "utf-8")
 
 
 def render(template: str, lang: str, strings: dict) -> str:
@@ -262,6 +252,7 @@ def render(template: str, lang: str, strings: dict) -> str:
         "gen.store": STORE[lang],
         "gen.store.id": APP_STORE_ID,
         "gen.beta": BETA,
+        "gen.fresh": topics.fresh_link(SRC, lang),
     }
     page = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
 
@@ -276,6 +267,10 @@ def render(template: str, lang: str, strings: dict) -> str:
 def main() -> int:
     template = (SRC / "template.html").read_text("utf-8")
     strings = {lang: load(lang) for lang in LANGS}
+    if "--fresh-live" in sys.argv:  # deploy only: this week's fresh questions from the API, after the committed build
+        write_topics(strings, {lang: fresh.live(lang) for lang in topics.LANGS}, only_fresh=True)
+        print("rewrote the fresh question pages")
+        return 0
     base = set(strings["en"])
     errors = [e for lang in LANGS for e in lint(lang, strings[lang], base)]
     errors += topics.lint(SRC, DASH, TAG)
@@ -297,11 +292,7 @@ def main() -> int:
             target = OUT / path.strip("/") / f"{page}.html"
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
-    shell = (SRC / "topics.html").read_text("utf-8")
-    for p in topics.pages(SRC, SITE, STORE):
-        target = OUT / p["path"].strip("/") / "index.html"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(render_topic(shell, p, strings[p["lang"]]), "utf-8")
+    write_topics(strings)
     print("wrote question topic pages (sk, cs)")
     (OUT / "sitemap.xml").write_text(sitemap(), "utf-8")
     (OUT / "llms.txt").write_text(llms(strings), "utf-8")

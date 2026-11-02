@@ -6,6 +6,7 @@ Answer time
 30 s
 45 s
 60 s
+Custom
 Answer time
 Read questions aloud
 

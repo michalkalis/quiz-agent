@@ -11,6 +11,7 @@
 //
 
 import Clocks
+import Combine
 import Foundation
 @testable import Hangs
 import Testing
@@ -313,6 +314,32 @@ struct RoomViewModelTests {
         rooms.stateError = nil
         await model.refresh()
         #expect(!model.connectionTrouble)
+    }
+
+    // The lobby polls every second while the host picks the rules from a menu.
+    // A poll that redraws the lobby rebuilds that open menu under the finger
+    // and the pick is lost (RS-28, RS-32 failed on CI this way).
+    @Test("A poll that brings nothing new does not redraw the room, also while the connection stays slow")
+    func quietPollsDoNotRedraw() async {
+        let model = makeModel()
+        await model.beginHosting()
+        model.stopAll()
+        var redraws = 0
+        let watch = model.objectWillChange.sink { redraws += 1 }
+        defer { watch.cancel() }
+
+        await model.refresh()
+        await model.refresh()
+        #expect(redraws == 0, "an unchanged poll must not redraw the lobby")
+
+        rooms.stateError = URLError(.timedOut)
+        for _ in 0 ..< 3 {
+            await model.refresh()
+        }
+        #expect(model.connectionTrouble)
+        redraws = 0
+        await model.refresh()
+        #expect(redraws == 0, "a further failed poll changes nothing on screen")
     }
 
     @Test("A room that is gone (removed, or the host ended it) ends the game on this phone")

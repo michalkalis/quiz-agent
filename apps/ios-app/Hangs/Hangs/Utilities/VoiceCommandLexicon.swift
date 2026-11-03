@@ -53,13 +53,11 @@ enum VoiceCommand: String, Sendable, CaseIterable, Equatable {
 /// utterance is only matched against that screen's 1–2 valid commands, never the
 /// whole grammar — this is the confusion mitigation for the tiny accented vocab.
 enum VoiceCommandScreen: Sendable, Equatable {
-    case home // idle — pre-quiz
     case question // askingQuestion, after TTS
     case confirmation // processing — the answer-confirmation sheet
     /// #185 track B: the same sheet after a second empty recording — Again /
     /// Skip, no countdown. Its own screen so "potvrď" can never skip there.
     case noAnswer
-    case result // showingResult
     /// #188 G1 (founder 2026-10-06): the error screen — "znova" retries,
     /// "stop" goes Home, so a failure no longer needs a tap.
     case error
@@ -70,23 +68,20 @@ enum VoiceCommandScreen: Sendable, Equatable {
 
 enum VoiceCommandLexicon {
     /// Commands that may be spoken on a given screen. Anything else on that
-    /// screen resolves to `nil` (screen scoping). "ok" is valid on BOTH the
-    /// confirmation sheet (→ confirm) and the result (→ advance); the differing
-    /// action is the caller's job (Session 4), the matcher only returns `.ok`.
+    /// screen resolves to `nil` (screen scoping). Home and the result
+    /// screen have no command window at all (#224: the buttons are enough).
     /// Language-independent — the grammar's SHAPE is fixed, only its words vary.
     static func commands(on screen: VoiceCommandScreen) -> [VoiceCommand] {
         switch screen {
-        case .home: return [.start]
         case .question: return [.start, .repeatQuestion, .skip]
         // #171 Track D: `.pause` is confirmation-only by founder decision —
         // the sheet is the universal "after answer" point, so it is the one
         // place a pause cannot lose an in-flight question or recording.
         case .confirmation: return [.ok, .again, .stop, .pause]
-        // #185 (founder 2026-09-24): "znova" retries, "preskoč" / "ďalej"
+        // #185 (founder 2026-09-24): "znova" retries, "ďalšia" / "ďalej"
         // skip. No `.ok` — confirming an empty field IS a skip, and the old
         // sheet let a "potvrď" do that.
         case .noAnswer: return [.again, .skip, .next]
-        case .result: return [.next, .ok]
         case .error: return [.again, .stop]
         case .setEnd: return [.again, .home]
         }
@@ -119,7 +114,12 @@ enum VoiceCommandLexicon {
         // final only (`finalOnlyVariants`).
         case (.english, .again): return ["again", "retry", "no", "wrong", "onemoretime", "oncemore", "tryagain", "playagain"]
         case (.english, .repeatQuestion): return ["repeat"]
-        case (.english, .skip): return ["skip", "pass"]
+        // #224 (founder, TF 2026-11-02): the button reads "Next" — easier to
+        // say than "skip" — so "next" skips on the question. The old words stay
+        // as hidden synonyms (muscle memory). On the no-answer sheet "next" is
+        // BOTH `.skip` and `.next`; the strict skip check runs first, and both
+        // do the same thing there.
+        case (.english, .skip): return ["next", "skip", "pass"]
         // #185 5.3: "stop" only HOLDS the auto-confirm countdown — the voice
         // cancel of an answer ("cancel"/"zruš") is gone by founder decision.
         // "cancel" still aborts a pending skip (`undoCancelVariants`).
@@ -131,23 +131,21 @@ enum VoiceCommandLexicon {
         case (.slovak, .start): return ["start"]
         // ⚠️ FLAGGED HAZARD (#120): "ok"/"okej" occur in normal Slovak
         // conversation. Kept because (a) on the confirmation sheet `.ok` is
-        // final-only + one-content-token capped, (b) on the result screen the
-        // action is benign (advance = the default outcome anyway), and
-        // (c) dropping the founder's habitual "ok" would cost real recall.
+        // final-only + one-content-token capped, (b) dropping the founder's habitual "ok" would cost real recall.
         // "potvrď" is the recommended disjoint form. "áno"/"hej" confirm on
         // the sheet only (#185, `confirmationOnlyVariants`); elsewhere they
         // are filler, like "dobre".
         case (.slovak, .ok): return ["ok", "okej", "oukej", "potvrd"]
         // ⚠️ FLAGGED HAZARD (#120): a lone conversational "ďalej?" ("go on")
-        // can fire `.next` — accepted because it is result-screen-only and
-        // benign (auto-advance was coming anyway).
+        // can fire `.next` — accepted because it is no-answer-sheet-only and
+        // benign (it skips an unanswered question, which is the sheet's point).
         case (.slovak, .next): return ["dalej", "pokracuj"]
         // #185 5.3: "nie", "zle", "ešte raz", "znova" = record the answer again.
         // Founder 2026-10-13: the "Skús znova" / "Hraj znova" buttons
         // (`VoiceCommandLexicon+Buttons.swift`).
         case (.slovak, .again): return ["znova", "znovu", "nie", "zle", "esteraz", "skusznova", "hrajznova"]
         case (.slovak, .repeatQuestion): return ["zopakuj", "opakuj"]
-        case (.slovak, .skip): return ["preskoc", "vynechaj"]
+        case (.slovak, .skip): return ["dalsia", "preskoc", "vynechaj"]
         // ⚠️ FLAGGED (minor): "stoj" scores 0.75 vs "stop" — above the final
         // floor. Harmless since #185: `.stop` only holds the countdown.
         case (.slovak, .stop): return ["stop", "pockaj"]
@@ -165,12 +163,11 @@ enum VoiceCommandLexicon {
         case (.czech, .ok): return ["ok", "okej", "oukej", "potvrd"]
         // ⚠️ FLAGGED HAZARD (#175): "dal" is also the Czech past tense of "dát"
         // ("he gave"), a frequent conversational word. Accepted for the same
-        // reason as Slovak "ďalej": result-screen-only and benign (advance was
-        // coming anyway). "dále" is the formal form, "dál" the spoken one.
+        // reason as Slovak "ďalej": no-answer-sheet-only and benign. "dále" is the formal form, "dál" the spoken one.
         case (.czech, .next): return ["dal", "dale", "pokracuj"]
         case (.czech, .again): return ["znovu", "znova", "ne", "spatne", "jestejednou", "zkusznovu", "hrajznovu"]
         case (.czech, .repeatQuestion): return ["zopakuj", "opakuj"]
-        case (.czech, .skip): return ["preskoc", "vynech"]
+        case (.czech, .skip): return ["dalsi", "preskoc", "vynech"]
         case (.czech, .stop): return ["stop", "pockej"]
         case (.czech, .pause): return ["pauza"]
         case (.czech, .home): return ["domu"]
@@ -268,13 +265,13 @@ enum VoiceCommandLexicon {
         case .slovak:
             return [
                 "štart", "ok", "okej", "potvrď", "áno", "hej", "ďalej", "pokračuj",
-                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "preskoč", "vynechaj",
+                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "ďalšia", "preskoč", "vynechaj",
                 "stop", "počkaj", "zruš", "pauza", "domov",
             ]
         case .czech:
             return [
                 "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
-                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "přeskoč", "vynech",
+                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "další", "přeskoč", "vynech",
                 "stop", "počkej", "zruš", "pauza", "domů",
             ]
         }

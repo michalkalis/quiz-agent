@@ -329,10 +329,6 @@ extension VoiceCommandCoordinator {
             return
         }
         switch (screen, command) {
-        // Home — spoken "start" begins the quiz.
-        case (.home, .start):
-            Task { [weak self] in await self?.startNewQuiz() }
-
         // Question — hands-free START recovery (P4a, founder-overridable flag).
         case (.question, .start):
             guard voiceStartOnQuestionEnabled else { return }
@@ -376,10 +372,6 @@ extension VoiceCommandCoordinator {
         // toolbar's play button is the way back.
         case (.question, .pause), (.confirmation, .pause):
             pauseQuiz()
-
-        // Result — advance (on top of auto-advance + button).
-        case (.result, .next), (.result, .ok):
-            continueToNext()
 
         // #188 G1: the error screen — retry like its primary button, or leave.
         case (.error, .again):

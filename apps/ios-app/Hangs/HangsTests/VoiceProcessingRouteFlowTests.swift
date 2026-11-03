@@ -167,18 +167,20 @@ struct VoiceProcessingRouteFlowTests {
 
 // MARK: - #208.5 Home listens without voice processing
 
-/// WHY (TF 2026-10-16): arming voice processing for the Home command listener
-/// switched iOS to `.voiceChat` right at launch, and with it to the call
-/// volume, so the volume the player raised snapped back. Home must listen on
-/// the raw mic (commands still recognised); the quiz keeps voice processing.
-@Suite("Home command listener without voice processing (#208.5)")
+/// WHY (TF 2026-10-16): arming voice processing for a listener outside the quiz
+/// switched iOS to `.voiceChat`, and with it to the call volume, so the volume
+/// the player raised snapped back. Since #224 Home no longer listens; the
+/// set-end screen is the one non-quiz window left, and it must listen on the
+/// raw mic (commands still recognised); the quiz keeps voice processing.
+@Suite("Set-end command listener without voice processing (#208.5, #224)")
 @MainActor
 struct HomeListenerVoiceProcessingTests {
     private func makeHomeVM() -> (QuizViewModel, MockSilenceDetectionService, MockAudioService) {
         let (vm, silence, audio) = makeRouteVM()
         vm.currentSession = nil
         vm.currentQuestion = nil
-        vm.quizState = .idle
+        vm.quizState = .finished
+        vm.quizEndCommandsArmed = true
         silence.voiceProcessingOnStart = speakerArmed
         return (vm, silence, audio)
     }
@@ -202,7 +204,8 @@ struct HomeListenerVoiceProcessingTests {
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
         #expect(silence.voiceProcessingStatus == speakerArmed)
 
-        vm.quizState = .idle
+        vm.quizState = .finished
+        vm.quizEndCommandsArmed = true
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
 
         #expect(silence.stopListeningCallCount == 1)

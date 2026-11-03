@@ -90,12 +90,6 @@ struct HomeView: View {
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
-            // #77: arm the on-device English command listener on Home (idle) so
-            // spoken "start" begins the quiz. Founder-overridable (default ON);
-            // nothing leaves the device.
-            if viewModel.voiceStartOnHomeEnabled {
-                viewModel.refreshCommandWindow()
-            }
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
@@ -108,24 +102,9 @@ struct HomeView: View {
         }
     }
 
-    /// Start, with the listening indicator above it while Home's command
-    /// window is armed (#77/#96 P2; #131 Track F: the one shared `ListenBar`,
-    /// slim here — Home's command never changes and the screen has content).
+    /// The Start button; Home has no voice commands (#224).
     private var bottomBar: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xxs) {
-            if viewModel.commandListenerHint != nil {
-                ListenBar(
-                    mode: .command,
-                    feedback: viewModel.voiceFeedbackPhase,
-                    recognizingWord: viewModel.recognizingWord,
-                    commandHint: viewModel.voiceHintWords,
-                    size: .slim,
-                    language: viewModel.commandLanguage
-                )
-                .transition(.opacity)
-            }
-            startQuizButton
-        }
+        startQuizButton
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.vertical, Theme.Hangs.Spacing.sm)
     }

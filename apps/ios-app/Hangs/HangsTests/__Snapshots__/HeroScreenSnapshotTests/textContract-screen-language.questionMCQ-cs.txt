@@ -12,7 +12,7 @@ Children grow measurably faster in spring than they do in any other season of th
 D
 Toenails grow about four times faster than fingernails, mostly while you are asleep
 askingQuestion
-Přeskoč
+Další
 Nastavení
 # identifiers
 question.progress

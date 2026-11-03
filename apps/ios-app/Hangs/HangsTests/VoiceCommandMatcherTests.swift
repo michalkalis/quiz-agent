@@ -25,9 +25,8 @@ struct VoiceCommandMatcherTests {
 
     @Test("Each command routes on the screen that owns it")
     func routesPerScreen() {
-        #expect(VoiceCommandMatcher.match(transcript: "start", on: .home) == .start)
         #expect(VoiceCommandMatcher.match(transcript: "start", on: .question) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "next", on: .result) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "next", on: .question) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "again", on: .confirmation) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "repeat", on: .question) == .repeatQuestion)
     }
@@ -42,21 +41,37 @@ struct VoiceCommandMatcherTests {
 
     @Test("A command inert on a screen resolves to nil (scoping)")
     func inertOffScreen() {
-        // "next" belongs to the result, not the question screen.
-        #expect(VoiceCommandMatcher.match(transcript: "next", on: .question) == nil)
-        // "start" belongs to home/question, not the confirmation sheet.
+        // "next" skips on the question screen, but means nothing on the sheet.
+        #expect(VoiceCommandMatcher.match(transcript: "next", on: .confirmation) == nil)
+        // "start" belongs to the question screen, not the confirmation sheet.
         #expect(VoiceCommandMatcher.match(transcript: "start", on: .confirmation) == nil)
-        // "skip" belongs to the question screen, not the result.
-        #expect(VoiceCommandMatcher.match(transcript: "skip", on: .result) == nil)
+        // "skip" belongs to the question and no-answer screens, not the sheet.
+        #expect(VoiceCommandMatcher.match(transcript: "skip", on: .confirmation) == nil)
     }
 
-    @Test("'ok' is confirm on the sheet and advance on the result (same command, screen-scoped)")
-    func okScopedToBothConfirmationAndResult() {
-        // Both screens accept "ok"; the differing ACTION is the caller's job.
+    /// WHY (#224): the button word IS the command — "Next" skips the question —
+    /// and the old words keep working so a driver's habit does not break.
+    @Test("'next' skips the question; 'skip' and 'pass' still do too")
+    func nextIsTheSkipWord() {
+        for word in ["next", "skip", "pass"] {
+            #expect(VoiceCommandMatcher.match(transcript: word, on: .question) == .skip, "\(word)")
+        }
+    }
+
+    /// WHY (#224): on the no-answer sheet both `.skip` and `.next` are valid and
+    /// both skip. "next" is a variant of each; the strict skip check runs first,
+    /// so the answer is deterministic instead of an ambiguity that drops the word.
+    @Test("'next' on the no-answer sheet resolves to skip, never to nil")
+    func nextOnNoAnswerIsDeterministic() {
+        #expect(VoiceCommandMatcher.match(transcript: "next", on: .noAnswer) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "next", on: .noAnswer, isFinal: false) == .skip)
+    }
+
+    @Test("'ok' confirms on the sheet only")
+    func okScopedToConfirmation() {
         #expect(VoiceCommandMatcher.match(transcript: "ok", on: .confirmation) == .ok)
-        #expect(VoiceCommandMatcher.match(transcript: "okay", on: .result) == .ok)
-        // But "ok" is inert on the question screen (not in its command set).
         #expect(VoiceCommandMatcher.match(transcript: "ok", on: .question) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "okay", on: .noAnswer) == nil)
     }
 
     // MARK: - Accent tolerance
@@ -67,12 +82,12 @@ struct VoiceCommandMatcherTests {
         // literal entries); the edit-distance floor is what carries these now,
         // which is a ONE-edit tolerance and no more.
         #expect(VoiceCommandMatcher.match(transcript: "stat", on: .question) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "Staat.", on: .home) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Staat.", on: .question) == .start)
         // Two edits on a 5-letter word (0.60) is no longer a command: the
         // speculative "nekst" entry is exactly what made radio words "nek" and
         // "nekst" advance the quiz, and the field data shows a real command word
         // transcribes perfectly, so the tolerance bought nothing.
-        #expect(VoiceCommandMatcher.match(transcript: "nekst", on: .result) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "nekst", on: .noAnswer) == nil)
     }
 
     /// WHY: a volatile hypothesis is revisable and arrives with the mic open to
@@ -82,17 +97,17 @@ struct VoiceCommandMatcherTests {
     /// a genuine command word at 1.00 and the unmatched conversation at ~0.50.
     @Test("A one-edit near-miss matches on a FINAL but not on a volatile hypothesis")
     func volatileFloorIsStricter() {
-        #expect(VoiceCommandMatcher.match(transcript: "stat", on: .home, isFinal: true) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "stat", on: .home, isFinal: false) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "stat", on: .question, isFinal: true) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "stat", on: .question, isFinal: false) == nil)
         // The real word still fires immediately on a volatile — that IS the
         // build-33 latency fix, and it must not be collateral damage.
-        #expect(VoiceCommandMatcher.match(transcript: "start", on: .home, isFinal: false) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "start", on: .question, isFinal: false) == .start)
     }
 
     @Test("Case and diacritics are folded")
     func caseAndDiacriticsFolded() {
-        #expect(VoiceCommandMatcher.match(transcript: "  START ", on: .home) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "Ňext!", on: .result) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "  START ", on: .question) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Ňext!", on: .question) == .skip)
     }
 
     @Test("Filler words around a command are tolerated")
@@ -106,9 +121,9 @@ struct VoiceCommandMatcherTests {
     @Test("Noise / non-command resolves to nil")
     func noiseRejected() {
         #expect(VoiceCommandMatcher.match(transcript: "hello there", on: .question) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "the weather is nice", on: .result) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "", on: .home) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "...", on: .home) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "the weather is nice", on: .noAnswer) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "", on: .question) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "...", on: .question) == nil)
     }
 
     // MARK: - Strict skip
@@ -149,8 +164,8 @@ struct VoiceCommandMatcherTests {
     /// most common shape of a REAL command.
     @Test("A repeated command word still matches (consecutive duplicates collapse)")
     func repeatedCommandWordStillMatches() {
-        #expect(VoiceCommandMatcher.match(transcript: "start start start start start", on: .home) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "start start start start start start start", on: .home) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "start start start start start", on: .question) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "start start start start start start start", on: .question) == .start)
     }
 
     /// WHY: verbatim unmatched transcripts from the same field sessions —
@@ -161,7 +176,7 @@ struct VoiceCommandMatcherTests {
     @Test("Conversational speech is rejected wholesale by the content-token cap")
     func conversationalSpeechRejected() {
         #expect(VoiceCommandMatcher.match(transcript: "what about guys come in", on: .question) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "he is proud of you", on: .result) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "he is proud of you", on: .noAnswer) == nil)
         #expect(VoiceCommandMatcher.match(transcript: "you know i m going to talk about asking yes", on: .confirmation) == nil)
     }
 
@@ -170,11 +185,11 @@ struct VoiceCommandMatcherTests {
     /// and that tolerance must survive the new gate.
     @Test("Filler around a command does not count against the cap")
     func fillerDoesNotCountAgainstCap() {
-        #expect(VoiceCommandMatcher.match(transcript: "um start please", on: .home) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "well next then", on: .result) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "um start please", on: .question) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "well next then", on: .question) == .skip)
         // Duplicates collapse by IDENTITY, not adjacency — filler between two
         // repeats of one command word must not push the utterance over the cap.
-        #expect(VoiceCommandMatcher.match(transcript: "start um start", on: .home) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "start um start", on: .question) == .start)
     }
 
     /// WHY: the cap is ONE content token because every word in this grammar is
@@ -187,8 +202,8 @@ struct VoiceCommandMatcherTests {
     @Test("A two-content-token fragment containing a command word is rejected")
     func twoContentTokensRejected() {
         #expect(VoiceCommandMatcher.match(transcript: "no okej", on: .confirmation) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "okay tak", on: .result) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "stat chee", on: .home) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "okay tak", on: .confirmation) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "stat chee", on: .question) == nil)
     }
 
     /// WHY (#185 5.3, founder 2026-09-24): on the confirmation sheet "no" asks

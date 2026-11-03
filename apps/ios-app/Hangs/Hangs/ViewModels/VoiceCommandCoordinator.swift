@@ -122,10 +122,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// (and Home "start") stays intact.
     var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
 
-    /// Founder-overridable flag: arm the command listener on the idle Home
-    /// screen so spoken "start" begins the quiz. Read by `HomeView.onAppear`.
-    var voiceStartOnHomeEnabled: Bool = Config.voiceHomeStartEnabled
-
     /// Observation hook / test seam (77.5): fired when a screen-scoped command
     /// is recognized, BEFORE it is routed to an action.
     var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?

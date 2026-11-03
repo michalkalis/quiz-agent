@@ -199,7 +199,6 @@ struct QuizSequenceGenerator {
             case .question: [.start, .repeatQuestion, .skip, .pause]
             case .confirmation: [.ok, .again, .stop, .pause]
             case .noAnswer: [.again, .skip, .next] // #185: the Again/Skip sheet's own screen
-            case .result: [.next, .ok]
             default: []
             }
             for command in onScreen {

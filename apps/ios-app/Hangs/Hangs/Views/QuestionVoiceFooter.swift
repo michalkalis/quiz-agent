@@ -188,10 +188,10 @@ struct QuestionVoiceFooter: View {
         .accessibilityIdentifier("question.textInputToggle")
     }
 
-    /// #174 (founder 2026-09-09): the word is back — "Skip" IS the voice command,
+    /// #174 (founder 2026-09-09): the word is back — the skip word IS the voice command,
     /// and a driver learns it by reading the button. #171 had made this icon-only
     /// because "Preskočiť" beside "Nahrávať" left the Record button no room; the
-    /// imperative pair ("Preskoč" beside "Štart") is short enough to share the row.
+    /// short pair ("Ďalšia" beside "Štart") is short enough to share the row.
     ///
     /// #179 D3: and it is the SAME capsule the MCQ screen draws now — one shape
     /// and one word for the escape hatch, at the 48pt height that keeps this row

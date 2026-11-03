@@ -30,15 +30,13 @@ private struct ButtonTitle {
 }
 
 private let buttonTitles: [ButtonTitle] = [
-    ButtonTitle(button: "Start", screen: .home, expected: .start, sk: "Štart", cs: "Start", en: "Start"),
     ButtonTitle(button: "Answer", screen: .question, expected: .start, sk: "Odpovedz", cs: "Odpověz", en: "Answer"),
-    ButtonTitle(button: "Skip", screen: .question, expected: .skip, sk: "Preskoč", cs: "Přeskoč", en: "Skip"),
+    ButtonTitle(button: "Next (skip)", screen: .question, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next"),
     ButtonTitle(button: "Confirm", screen: .confirmation, expected: .ok, sk: "Potvrď", cs: "Potvrď", en: "Confirm"),
     ButtonTitle(button: "Again", screen: .confirmation, expected: .again, sk: "Znova", cs: "Znovu", en: "Again"),
     ButtonTitle(button: "Pause", screen: .confirmation, expected: .pause, sk: "Pauza", cs: "Pauza", en: "Pause"),
     ButtonTitle(button: "Again", screen: .noAnswer, expected: .again, sk: "Znova", cs: "Znovu", en: "Again"),
-    ButtonTitle(button: "Skip", screen: .noAnswer, expected: .skip, sk: "Preskoč", cs: "Přeskoč", en: "Skip"),
-    ButtonTitle(button: "Next", screen: .result, expected: .next, sk: "Ďalej", cs: "Dál", en: "Next"),
+    ButtonTitle(button: "Next (skip)", screen: .noAnswer, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next"),
     ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again"),
     ButtonTitle(button: "Go Home", screen: .error, expected: .stop, sk: "Na úvod", cs: "Na úvod", en: "Go Home"),
     ButtonTitle(button: "Dismiss", screen: .error, expected: .stop, sk: "Zavri", cs: "Zavři", en: "Dismiss"),
@@ -78,13 +76,13 @@ struct VoiceCommandButtonWordTests {
         }
     }
 
-    /// WHY: button words are screen-scoped — "odpovedz" on Home must not start
-    /// a quiz, and "úvod" mid-question must not leave it.
+    /// WHY: button words are screen-scoped — "odpovedz" on the sheet must not
+    /// start an answer, and "úvod" mid-question must not leave it.
     @Test("a button word does nothing off its screen", arguments: CommandLanguage.allCases)
     func scopedToItsScreen(_ language: CommandLanguage) {
-        let answer = buttonTitles[1].title(language)
-        let home = buttonTitles[13].title(language)
-        #expect(VoiceCommandMatcher.match(transcript: answer, on: .home, language: language) == nil)
+        let answer = buttonTitles[0].title(language)
+        let home = buttonTitles[11].title(language)
+        #expect(VoiceCommandMatcher.match(transcript: answer, on: .confirmation, language: language) == nil)
         #expect(VoiceCommandMatcher.match(transcript: home, on: .question, language: language) == nil)
         #expect(VoiceCommandMatcher.match(transcript: home, on: .confirmation, language: language) == nil)
     }
@@ -93,7 +91,7 @@ struct VoiceCommandButtonWordTests {
     /// "znova" — the retry titles mean "record again" there too.
     @Test("retry titles re-record on the sheet", arguments: CommandLanguage.allCases)
     func retryTitlesOnSheet(_ language: CommandLanguage) {
-        let tryAgain = buttonTitles[9].title(language)
+        let tryAgain = buttonTitles[7].title(language)
         #expect(VoiceCommandMatcher.match(transcript: tryAgain, on: .confirmation, isFinal: true, language: language) == .again)
     }
 
@@ -107,6 +105,32 @@ struct VoiceCommandButtonWordTests {
             for screen in [VoiceCommandScreen.error, .setEnd] {
                 #expect(VoiceCommandMatcher.match(transcript: head, on: screen, isFinal: true, language: language) == nil, "\(language) '\(head)' on \(screen)")
             }
+        }
+    }
+
+    /// WHY (#224): the skip button was renamed "Preskoč" → "Ďalšia" / "Next", but
+    /// a driver with the old word in muscle memory must not find it dead.
+    @Test("the old skip words still skip, as hidden synonyms", arguments: CommandLanguage.allCases)
+    func oldSkipWordsStillWork(_ language: CommandLanguage) {
+        let old: [String] = switch language {
+        case .slovak: ["Preskoč", "vynechaj"]
+        case .czech: ["Přeskoč", "vynech"]
+        case .english: ["Skip", "pass"]
+        }
+        for word in old {
+            #expect(VoiceCommandMatcher.match(transcript: word, on: .question, language: language) == .skip, "\(language) '\(word)'")
+            #expect(VoiceCommandMatcher.match(transcript: word, on: .noAnswer, language: language) == .skip, "\(language) '\(word)'")
+        }
+    }
+
+    /// WHY (#224): hints and the recognizer bias list advertise the NEW word, and
+    /// never the retired one (it would teach the driver the wrong habit).
+    @Test("hints and spoken word carry the new skip word", arguments: CommandLanguage.allCases)
+    func hintsUseTheNewWord(_ language: CommandLanguage) {
+        let word = VoiceCommandLexicon.spokenWord(.skip, language: language)
+        #expect(word == buttonTitles[1].title(language).lowercased())
+        for screen in [VoiceCommandScreen.question, .noAnswer] {
+            #expect(VoiceCommandLexicon.hint(on: screen, language: language).contains(word))
         }
     }
 }

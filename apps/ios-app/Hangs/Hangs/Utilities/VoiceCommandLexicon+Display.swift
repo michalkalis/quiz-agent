@@ -25,7 +25,7 @@ extension VoiceCommandLexicon {
         case (.english, .next): return "next"
         case (.english, .again): return "again"
         case (.english, .repeatQuestion): return "repeat"
-        case (.english, .skip): return "skip"
+        case (.english, .skip): return "next"
         case (.english, .stop): return "stop"
         case (.english, .pause): return "pause"
         case (.english, .home): return "home"
@@ -34,7 +34,7 @@ extension VoiceCommandLexicon {
         case (.slovak, .next): return "ďalej"
         case (.slovak, .again): return "znova"
         case (.slovak, .repeatQuestion): return "zopakuj"
-        case (.slovak, .skip): return "preskoč"
+        case (.slovak, .skip): return "ďalšia"
         // #185 5.3: "stop" only holds the countdown now; "zruš" is no longer
         // a voice command (the Cancel button stays a button).
         case (.slovak, .stop): return "stop"
@@ -45,7 +45,7 @@ extension VoiceCommandLexicon {
         case (.czech, .next): return "dál"
         case (.czech, .again): return "znovu"
         case (.czech, .repeatQuestion): return "zopakuj"
-        case (.czech, .skip): return "přeskoč"
+        case (.czech, .skip): return "další"
         case (.czech, .stop): return "stop"
         case (.czech, .pause): return "pauza"
         case (.czech, .home): return "domů"
@@ -62,31 +62,25 @@ extension VoiceCommandLexicon {
         language: CommandLanguage = .english
     ) -> String {
         switch (language, screen) {
-        case (.english, .home): return #"Say "start""#
-        case (.english, .question): return #"Say "start" or "skip""#
+        case (.english, .question): return #"Say "start" or "next""#
         // #174: names the words printed on the sheet's buttons (Confirm / Again).
         // #189 founder feedback (2026-09-29): the previous wording ("say the
         // answer again") never actually said the word "again" — quote both
         // button words, then name the fallback (a new answer covers anything
         // else spoken on the sheet, per #185 5.1 D1 2026-09-25).
         case (.english, .confirmation): return #"Say "confirm", "again" or a new answer"#
-        // #185: the no-answer sheet's buttons are Again / Skip.
-        case (.english, .noAnswer): return #"Say "again" or "skip""#
-        case (.english, .result): return #"Say "next""#
+        // #185: the no-answer sheet's buttons are Again / Next.
+        case (.english, .noAnswer): return #"Say "again" or "next""#
         case (.english, .error): return #"Say "again" or "stop""#
         case (.english, .setEnd): return #"Say "again" or "home""#
-        case (.slovak, .home): return "Povedz „štart“"
-        case (.slovak, .question): return "Povedz „štart“ alebo „preskoč“"
+        case (.slovak, .question): return "Povedz „štart“ alebo „ďalšia“"
         case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo novú odpoveď"
-        case (.slovak, .noAnswer): return "Povedz „znova“ alebo „preskoč“"
-        case (.slovak, .result): return "Povedz „ďalej“"
+        case (.slovak, .noAnswer): return "Povedz „znova“ alebo „ďalšia“"
         case (.slovak, .error): return "Povedz „znova“ alebo „stop“"
         case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
-        case (.czech, .home): return "Řekni „start“"
-        case (.czech, .question): return "Řekni „start“ nebo „přeskoč“"
+        case (.czech, .question): return "Řekni „start“ nebo „další“"
         case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo novou odpověď"
-        case (.czech, .noAnswer): return "Řekni „znovu“ nebo „přeskoč“"
-        case (.czech, .result): return "Řekni „dál“"
+        case (.czech, .noAnswer): return "Řekni „znovu“ nebo „další“"
         case (.czech, .error): return "Řekni „znovu“ nebo „stop“"
         case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
         }

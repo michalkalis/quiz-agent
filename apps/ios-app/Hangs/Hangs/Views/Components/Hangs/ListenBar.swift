@@ -143,7 +143,7 @@ struct ListenBar: View {
     /// states, same component; only the height and the row layout differ.
     enum Size {
         case full // quiz screens: caption row over the words to say
-        case slim // Home: short caption + the words on a single ~40pt row
+        case slim // compact question screens: short caption + the words on a single ~40pt row
     }
 
     /// #132 Track B — the think-phase window this bar is counting down. The fill
@@ -841,34 +841,34 @@ struct ListenBarLevelGlow: View {
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#,
+            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#)
+            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#,
                       thinkCountdown: .init(remaining: 32, total: 45))
-            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "skip""#)
-            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "skip""#)
-            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "start" or "skip""#)
+            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "next""#)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "next""#)
+            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "start" or "next""#)
             ListenBar(mode: .command, feedback: .recognizing,
                       recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip),
-                      commandHint: #"Say "start" or "skip""#)
+                      commandHint: #"Say "start" or "next""#)
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
             ListenBar(mode: .answer(.open), speechHeard: true)
             // #179 D1 — the question screen's four states, MCQ column.
             ListenBar(mode: .readingQuestion,
-                      commandWords: ["„zopakuj“", "„preskoč“"], language: .slovak)
+                      commandWords: ["„zopakuj“", "„ďalšia“"], language: .slovak)
             // #189 — the confirmation sheet right after it opens.
             ListenBar(mode: .readingAnswerBack,
                       commandHint: "Povedz „potvrď“, „znova“ alebo novú odpoveď",
                       shortCaption: true, language: .slovak)
             ListenBar(mode: .command,
-                      commandWords: ["„štart“", "„zopakuj“", "„preskoč“"],
+                      commandWords: ["„štart“", "„zopakuj“", "„ďalšia“"],
                       language: .slovak,
                       thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .evaluating)
             ListenBar(mode: .skipping)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "skip""#, onDismiss: {})
-            ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „preskoč""#, language: .slovak)
+            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#, onDismiss: {})
+            ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „ďalšia""#, language: .slovak)
             ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)
             ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „štart""#,
                       size: .slim, language: .slovak)

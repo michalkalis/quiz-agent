@@ -73,11 +73,6 @@ struct ResultView: View {
                     .frame(maxHeight: .infinity)
 
                 ResultFooter(
-                    feedbackPhase: viewModel.voiceFeedbackPhase,
-                    recognizingWord: viewModel.recognizingWord,
-                    isListeningForCommands: viewModel.commandListenerHint != nil,
-                    commandHint: viewModel.voiceHintWords,
-                    commandLanguage: viewModel.commandLanguage,
                     autoAdvanceActive: autoAdvanceActive,
                     isPaused: viewModel.isPaused,
                     countdownRemaining: viewModel.autoAdvanceCountdown,

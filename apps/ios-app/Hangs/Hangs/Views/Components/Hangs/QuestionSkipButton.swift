@@ -13,8 +13,9 @@
 //  filled controls, and it already owns the place where an in-flight skip spins
 //  (#174).
 //
-//  The word is IMPERATIVE in every language (founder: "Preskoč", never
-//  "Preskočiť") — the button IS the voice command, so reading it teaches it.
+//  #224 (founder, TF 2026-11-02): the word is "Ďalšia" / "Další" / "Next" —
+//  easier to say than "Preskoč". The button IS the voice command, so reading
+//  it teaches it; the old words stay as hidden synonyms (VoiceCommandLexicon).
 //
 
 import SwiftUI
@@ -53,7 +54,7 @@ struct QuestionSkipButton: View {
                         .font(.system(size: 12, weight: .semibold))
                 }
 
-                Text("Skip")
+                Text("Next (skip question)")
                     .font(.hangsBody(15, weight: .semibold))
                     // The founder's one-line rule for the bottom row: the word
                     // never wraps. #188 G9 (D10): and it is never cut either —

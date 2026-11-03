@@ -226,12 +226,6 @@ nonisolated enum Config {
     /// (so tests can flip it without a global).
     static let voiceStartCommandEnabled: Bool = true
 
-    /// Founder-overridable build/settings flag: arm the command listener on the idle
-    /// Home screen so spoken "start" begins the quiz. Default ON. On-device English
-    /// command recognition only — nothing leaves the device. Copied into
-    /// `VoiceCommandCoordinator.voiceStartOnHomeEnabled` per instance.
-    static let voiceHomeStartEnabled: Bool = true
-
     // MARK: - Freemium
 
     /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by

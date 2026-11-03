@@ -8,10 +8,14 @@
 # Accepted SSH_ORIGINAL_COMMAND:
 #   deploy <40-hex sha> <services>   services: comma list of quiz-agent,pack
 #   status                           current sha + docker compose ps
+#   topup <langs> <count> <max_usd> <dry|write|cron>
+#                                    weekly fresh-question top-up (fresh-topup.yml)
 #
 # Deploy: sha must be an ancestor of origin/main -> checkout -> build ->
 # migrate (like Fly's release_command, before the swap) -> up -> wait healthy.
-# On failure the previous sha is rebuilt and restarted, exit code non-zero.
+# On failure the previous sha is rebuilt and restarted WITHOUT migrating: the
+# migrations are expand-only and the apps accept a DB ahead of their code, while
+# the older alembic would fail on a revision it does not know. Exit non-zero.
 set -euo pipefail
 
 REPO="${TRUBBO_REPO:-/home/trubbo/trubbo/repo}"
@@ -23,8 +27,8 @@ log() { echo "[deploy] $*"; }
 die() { echo "[deploy] ERROR: $*" >&2; exit 2; }
 
 cmd="${SSH_ORIGINAL_COMMAND:-}"
-verb="" sha="" services="" extra=""
-read -r verb sha services extra <<<"$cmd" || true
+verb="" sha="" services="" arg3="" arg4="" extra=""
+read -r verb sha services arg3 arg4 extra <<<"$cmd" || true
 
 cd "$COMPOSE_DIR"
 
@@ -35,12 +39,32 @@ case "$verb" in
     docker compose ps
     exit 0
     ;;
+  topup)
+    # Runs the deployed pack image (no checkout, no lock: a deploy during the
+    # ~1 h run swaps the web container, not this one). Spend is capped here
+    # too, so a leaked CI key cannot start a costlier run than the workflow.
+    langs="$sha" count="$services" max_usd="$arg3" mode="$arg4"
+    [ -z "$extra" ] || die "too many arguments"
+    [[ "$langs" =~ ^(en|sk|cs)(,(en|sk|cs))*$ ]] || die "bad languages"
+    [[ "$count" =~ ^[0-9]{1,2}$ ]] || die "count must be 0-99"
+    [[ "$max_usd" =~ ^[0-9]{1,2}(\.[0-9]{1,2})?$ ]] || die "bad max_usd"
+    awk -v m="$max_usd" 'BEGIN { exit !(m <= 15) }' || die "max_usd above the \$15 cap"
+    args=(--languages "$langs" --count "$count" --max-usd "$max_usd")
+    case "$mode" in
+      dry) args+=(--dry-run) ;;
+      write) ;;
+      cron) args+=(--cron-checkin) ;;
+      *) die "mode must be dry, write or cron" ;;
+    esac
+    log "topup: ${args[*]}"
+    exec docker compose --profile topup run --rm -T pack-topup python -m app.corpus.run_fresh_topup "${args[@]}"
+    ;;
   deploy) ;;
-  *) die "usage: deploy <40-hex sha> <quiz-agent,pack> | status" ;;
+  *) die "usage: deploy <40-hex sha> <quiz-agent,pack> | status | topup <langs> <count> <max_usd> <dry|write|cron>" ;;
 esac
 
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || die "sha must be 40 lowercase hex chars"
-[ -z "$extra" ] || die "too many arguments"
+[ -z "$arg3$arg4$extra" ] || die "too many arguments"
 [[ "$services" =~ ^(quiz-agent|pack)(,(quiz-agent|pack))*$ ]] || die "services must be a comma list of quiz-agent,pack"
 
 want_pack=0
@@ -106,16 +130,18 @@ wait_healthy() {
   fi
 }
 
-# apply <label>: build, migrate, swap, wait healthy. Called inside `if`, where
-# set -e is off, so every step ends in an explicit `|| return 1`.
+# apply <label> <migrate 0|1>: build, migrate, swap, wait healthy. Called
+# inside `if`, where set -e is off, so every step ends in an explicit `|| return 1`.
 apply() {
   local s
   log "$1: build ${build_svcs[*]}"
   docker compose build "${build_svcs[@]}" || return 1
-  for s in "${migrate_svcs[@]}"; do
-    log "$1: migrate $s"
-    docker compose run --rm "$s" alembic upgrade head || return 1
-  done
+  if [ "$2" = 1 ]; then
+    for s in "${migrate_svcs[@]}"; do
+      log "$1: migrate $s"
+      docker compose run --rm "$s" alembic upgrade head || return 1
+    done
+  fi
   log "$1: up ${up_svcs[*]}"
   docker compose up -d "${up_svcs[@]}" || return 1
   if [ "$worker_running" = 1 ]; then
@@ -132,14 +158,14 @@ git -C "$REPO" cat-file -e "$sha^{commit}" 2>/dev/null || die "commit $sha not f
 git -C "$REPO" merge-base --is-ancestor "$sha" origin/main || die "$sha is not an ancestor of origin/main; refusing"
 
 git -C "$REPO" checkout -q --detach "$sha"
-if apply deploy; then
+if apply deploy 1; then
   log "OK: ${sha:0:8} live"
   exit 0
 fi
 
 echo "[deploy] FAILED, rolling back to ${prev:0:8}" >&2
 git -C "$REPO" checkout -q --detach "$prev"
-if apply rollback; then
+if apply rollback 0; then
   echo "[deploy] rolled back to ${prev:0:8} (${sha:0:8} was NOT deployed)" >&2
 else
   echo "[deploy] ROLLBACK ALSO FAILED: inspect the server" >&2

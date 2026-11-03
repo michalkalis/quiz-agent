@@ -152,7 +152,7 @@ struct HomeView: View {
                     selectedCategories: viewModel.settings.categories,
                     title: viewModel.settings.categoryDisplayName(),
                     questionCount: viewModel.settings.numberOfQuestions,
-                    onStep: viewModel.stepCategory
+                    onStep: { viewModel.stepCategory($0, input: $1) }
                 )
                 .frame(height: Metrics.deckHeight)
                 // The fanned back cards turn on their bottom edge, so one
@@ -164,6 +164,7 @@ struct HomeView: View {
 
     private var chooseSeveralButton: some View {
         HangsGhostButton(title: "Choose several", icon: "checklist") {
+            viewModel.categoryPickerOpened(from: .deckButton)
             showingCategoryPicker = true
         }
         .fixedSize()
@@ -306,6 +307,7 @@ struct HomeView: View {
 
     private var categoriesButton: some View {
         Button {
+            viewModel.categoryPickerOpened(from: .pill)
             showingCategoryPicker = true
         } label: {
             HomeSettingPill(

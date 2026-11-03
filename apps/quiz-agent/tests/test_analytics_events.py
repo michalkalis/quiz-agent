@@ -161,6 +161,21 @@ async def test_room_settings_changed_keeps_only_which_rule_and_where():
     }
 
 
+async def test_home_category_events_keep_only_the_step_and_the_entry_point():
+    # #224.6: shows whether players flip through categories on the deck or open
+    # the picker instead, and from where; nothing about the player rides along.
+    stepped = clean_properties(
+        CLIENT_EVENTS["home_category_stepped"],
+        {"direction": "next", "input": "tap", "to": "history", "name": "Michal"},
+    )
+    assert stepped == {"direction": "next", "input": "tap", "to": "history"}
+    opened = clean_properties(
+        CLIENT_EVENTS["home_category_picker_opened"],
+        {"source": "deck_button", "selection": ["a", "b"]},
+    )
+    assert opened == {"source": "deck_button"}
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

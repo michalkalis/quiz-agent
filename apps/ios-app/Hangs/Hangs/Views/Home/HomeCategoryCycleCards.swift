@@ -82,6 +82,12 @@ struct HomeCategoryCycleCards: View {
 
     // MARK: - Card
 
+    /// The two top labels swap places: the outgoing one fades out fast and the
+    /// incoming one fades in after it, so they never show over each other.
+    private static func labelFade(visible: Bool) -> Animation {
+        visible ? .easeIn(duration: 0.15).delay(0.12) : .easeOut(duration: 0.1)
+    }
+
     /// The front card names the round (title, question count, colour strip for
     /// All); the cards behind carry the category as an overline only.
     private func card(id: String, name: String, isFront: Bool) -> some View {
@@ -95,11 +101,13 @@ struct HomeCategoryCycleCards: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .opacity(isFront ? 0 : 1)
+                    .animation(Self.labelFade(visible: !isFront), value: isFront)
                 Text("\(questionCount) questions")
                     .font(.hangsCaption.weight(.semibold))
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .opacity(isFront ? 1 : 0)
+                    .animation(Self.labelFade(visible: isFront), value: isFront)
             }
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             Text(verbatim: name)

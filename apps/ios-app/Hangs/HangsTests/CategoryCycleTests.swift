@@ -16,12 +16,13 @@ import Testing
 struct CategoryCycleTests {
     private let ids = Config.categoryOptions.compactMap(\.id)
 
-    private func makeViewModel(categories: [String]) -> QuizViewModel {
+    private func makeViewModel(categories: [String], analytics: AnalyticsClient = NoopAnalyticsClient()) -> QuizViewModel {
         let vm = QuizViewModel(
             networkService: Fixtures.makeFullMockNetwork(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService()
+            silenceDetectionService: MockSilenceDetectionService(),
+            analytics: analytics
         )
         vm.settings.categories = categories
         return vm
@@ -67,5 +68,26 @@ struct CategoryCycleTests {
         vm.stepCategory(.previous)
         vm.stepCategory(.previous)
         #expect(vm.settings.categories == [ids.last!], "a tap must change what the next quiz is drawn from")
+    }
+
+    @Test("A step reports its direction, how it was made and the category it landed on")
+    func stepIsLogged() {
+        let analytics = MockAnalyticsClient()
+        let vm = makeViewModel(categories: [], analytics: analytics)
+        vm.stepCategory(.next)
+        vm.stepCategory(.previous, input: .voiceover)
+        #expect(analytics.events == [
+            .homeCategoryStepped(direction: .next, input: .tap, to: ids[0]),
+            .homeCategoryStepped(direction: .previous, input: .voiceover, to: "all"),
+        ], "the metric splits deck use from the picker and tap from VoiceOver")
+    }
+
+    @Test("Opening the picker reports where from")
+    func pickerOpenIsLogged() {
+        let analytics = MockAnalyticsClient()
+        let vm = makeViewModel(categories: [], analytics: analytics)
+        vm.categoryPickerOpened(from: .deckButton)
+        vm.categoryPickerOpened(from: .pill)
+        #expect(analytics.events == [.homeCategoryPickerOpened(source: .deckButton), .homeCategoryPickerOpened(source: .pill)])
     }
 }

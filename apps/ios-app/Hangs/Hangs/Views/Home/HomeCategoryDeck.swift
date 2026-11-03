@@ -24,7 +24,7 @@ struct HomeCategoryDeck: View {
     let title: String
     let questionCount: Int
     /// A tap on the left / right half (or VoiceOver decrement / increment).
-    let onStep: (CategoryCycle.Direction) -> Void
+    let onStep: (CategoryCycle.Direction, CategoryStepInput) -> Void
 
     @State private var lift: HomeCategoryCycleCards.Lift?
     @State private var liftTask: Task<Void, Never>?
@@ -55,8 +55,8 @@ struct HomeCategoryDeck: View {
         .accessibilityValue(Text(verbatim: title))
         .accessibilityAdjustableAction { direction in
             switch direction {
-            case .increment: step(.next)
-            case .decrement: step(.previous)
+            case .increment: step(.next, input: .voiceover)
+            case .decrement: step(.previous, input: .voiceover)
             @unknown default: break
             }
         }
@@ -81,12 +81,12 @@ struct HomeCategoryDeck: View {
     /// Animate one step. The card that leaves (next) or arrives (previous)
     /// travels out to the side first and takes its place in the fan second —
     /// the C1 "card goes to the back" motion. Reduce Motion: a crossfade only.
-    private func step(_ direction: CategoryCycle.Direction) {
+    private func step(_ direction: CategoryCycle.Direction, input: CategoryStepInput = .tap) {
         liftTask?.cancel()
         if reduceMotion || isMultiSelection {
             withAnimation(.easeInOut(duration: Metrics.fadeDuration)) {
                 lift = nil
-                onStep(direction)
+                onStep(direction, input)
             }
             return
         }
@@ -96,7 +96,7 @@ struct HomeCategoryDeck: View {
         let moving = direction == .next ? current : target
         withAnimation(.timingCurve(0.3, 0.7, 0.2, 1, duration: Metrics.outDuration)) {
             lift = .init(id: moving ?? HomeCategoryCycleCards.allID, direction: direction)
-            onStep(direction)
+            onStep(direction, input)
         }
         liftTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(Metrics.outDuration))
@@ -223,8 +223,8 @@ extension View {
 #if DEBUG
     #Preview {
         VStack {
-            HomeCategoryDeck(selectedCategories: [], title: "All Categories", questionCount: 10, onStep: { _ in })
-            HomeCategoryDeck(selectedCategories: ["movies-music", "entertainment"], title: "2 selected", questionCount: 10, onStep: { _ in })
+            HomeCategoryDeck(selectedCategories: [], title: "All Categories", questionCount: 10, onStep: { _, _ in })
+            HomeCategoryDeck(selectedCategories: ["movies-music", "entertainment"], title: "2 selected", questionCount: 10, onStep: { _, _ in })
         }
         .padding(16)
         .background(Theme.Hangs.Colors.bg)

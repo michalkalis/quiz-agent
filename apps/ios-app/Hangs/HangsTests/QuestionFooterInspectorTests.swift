@@ -173,7 +173,7 @@ struct QuestionFooterInspectorTests {
     /// #194 (founder 2026-10-08) changes the primary title to "Answer" with a
     /// mic: the button says what it does, while the "start" command keeps being
     /// taught by the listen bar's chips.
-    @Test("Answer and Skip show their words; Type stays icon-only")
+    @Test("Answer and Type show their words; Skip is icon-only with its word as label")
     func commandButtonsShowTheirWords() async throws {
         let vm = makeVoiceViewModel()
         let view = QuestionView(viewModel: vm)
@@ -181,13 +181,13 @@ struct QuestionFooterInspectorTests {
             let tree = try view.inspect()
             let visible = tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
             #expect(visible.contains("Answer"), "the primary button says it opens the mic to answer")
-            #expect(visible.contains("Next"), "Next is the skip voice command — the word is the hint")
             #expect(!visible.contains("Record"), "'Record' is not a word the driver can say")
-            #expect(!visible.contains("Type"), "Type is a tap, not a command — icon-only")
+            // #224 (canvas E1): Answer and Type are equally prominent, both with words.
+            #expect(visible.contains("Type"), "typing is a first-class answer, not a hidden icon")
 
-            let type = try tree.find(viewWithAccessibilityIdentifier: "question.textInputToggle")
-            #expect(try type.accessibilityLabel().string() == "Type",
-                    "Type must still announce its word to VoiceOver")
+            let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
+            #expect(try skip.accessibilityLabel().string() == "Next",
+                    "Skip is icon-only and must still announce its word to VoiceOver")
         }
     }
 

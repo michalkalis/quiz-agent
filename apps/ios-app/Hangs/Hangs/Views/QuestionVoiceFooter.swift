@@ -17,6 +17,9 @@
 //     blank, so nothing the driver does — tapping Record, saying "start",
 //     replaying, a state wobble — makes the number disappear.
 //
+//   - #224 (canvas E1): Answer and Type are equal labelled buttons side by side,
+//     Skip is an icon-only round control at the end.
+//
 //   - Track C — the footer row reads Record · Type · Skip. "Type answer instead"
 //     lost its floating slot in the audio strip and became a compact secondary
 //     button next to the other two.
@@ -55,7 +58,7 @@ struct QuestionVoiceFooter: View {
 
     /// #194 canvas: the footer shares the screen's 16pt edge.
     private static let gutter = Theme.Hangs.Spacing.md
-    /// Glyph size of the icon-only controls (keyboard, send).
+    /// Glyph size of the send control.
     private static let glyphSize: CGFloat = 17
     /// Bg-Typed: the typed answer reads larger than body text.
     private static let typedAnswerSize: CGFloat = 20
@@ -148,7 +151,8 @@ struct QuestionVoiceFooter: View {
             height: rowHeight,
             // #198 (canvas Bg-Question): Stop is pink while the mic is open,
             // matching the answer bar; "Answer" stays the ink action.
-            tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil
+            tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil,
+            singleLineTitle: true
         ) {
             Task { await viewModel.toggleRecording() }
         }
@@ -168,34 +172,33 @@ struct QuestionVoiceFooter: View {
         .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
     }
 
-    /// Typed-answer fallback (#54 task 54.18). #171 Track C1: icon-only. The words
-    /// "Type" / "Skip" sized these two buttons off the localized string, and in
-    /// Slovak ("Písať" / "Preskočiť" beside "Nahrávať") nothing was left for the
-    /// Record button — its seconds pill was what got clipped. A square glyph is the
-    /// same width in every language; the word survives as the accessibility label,
-    /// so VoiceOver still says "Type".
+    /// Typed-answer fallback (#54 task 54.18). #224 (canvas E1): the same weight as
+    /// the Answer button beside it, a labelled glass button, so typing is a
+    /// first-class way to answer and not a hidden icon.
     private var typeButton: some View {
         Button {
             showTextInput = true
             isTextFieldFocused.wrappedValue = true
         } label: {
-            iconChip("keyboard")
+            Label("Type", systemImage: "keyboard")
+                .font(.hangsButton)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .frame(maxWidth: .infinity)
+                .frame(height: rowHeight)
+                // #194 B2: secondary controls are Liquid Glass.
+                .glassEffect(.regular.interactive(), in: Capsule())
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!canInteract || showTextInput)
         .opacity((canInteract && !showTextInput) ? 1 : 0.45)
-        .accessibilityLabel("Type")
         .accessibilityIdentifier("question.textInputToggle")
     }
 
-    /// #174 (founder 2026-09-09): the word is back — the skip word IS the voice command,
-    /// and a driver learns it by reading the button. #171 had made this icon-only
-    /// because "Preskočiť" beside "Nahrávať" left the Record button no room; the
-    /// short pair ("Ďalšia" beside "Štart") is short enough to share the row.
-    ///
-    /// #179 D3: and it is the SAME capsule the MCQ screen draws now — one shape
-    /// and one word for the escape hatch, at the 48pt height that keeps this row
-    /// reading as one strip.
+    /// #224 (canvas E1): icon only, its word is the accessibility label and the
+    /// voice command (#174). The same round control the MCQ screen draws (#179 D3).
     private var skipButton: some View {
         QuestionSkipButton(
             isSkipping: isSkipping,
@@ -204,19 +207,6 @@ struct QuestionVoiceFooter: View {
         ) {
             Task { await viewModel.skipQuestion() }
         }
-    }
-
-    /// The surface of the icon-only Type control: a circle as tall as the Record
-    /// button beside it, so the row still reads as one strip. (#179 D3 moved the
-    /// skip capsule out to `QuestionSkipButton`, which now owns its own chrome.)
-    private func iconChip(_ systemName: String) -> some View {
-        Image(systemName: systemName)
-            .font(.hangsBody(Self.glyphSize, weight: .semibold))
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .tint(Theme.Hangs.Colors.ink)
-            .frame(width: rowHeight, height: rowHeight)
-            // #194 B2: secondary controls are Liquid Glass.
-            .glassEffect(.regular.interactive(), in: Capsule())
     }
 
     // MARK: - Typed answer

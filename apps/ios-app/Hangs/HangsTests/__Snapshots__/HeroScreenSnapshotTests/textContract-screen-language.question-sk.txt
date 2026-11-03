@@ -4,7 +4,7 @@ GEOGRAPHY & WORLD
 What is the capital of France?
 Čítam otázku
 Odpovedz
-Ďalšia
+Napísať
 askingQuestion
 Nastavenia
 # identifiers

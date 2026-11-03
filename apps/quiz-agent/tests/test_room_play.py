@@ -520,3 +520,24 @@ async def test_a_guest_from_the_nearby_list_or_a_scanned_qr_is_told_apart(game):
         assert j.status_code == 200, j.text
     joined = {s: p["via"] for n, s, p in game.events.rows if n == "room_joined"}
     assert joined == {"jana": "nearby", "peto": "qr"}
+
+
+async def test_host_pause_is_seen_by_guests_and_clears_with_the_next_question(game):
+    # #224.4: the host phone owns auto-advance, so guests can only learn that
+    # the host stayed on the reveal from the server; a pause must never leak
+    # into the next question or be settable by a guest.
+    await game.setup()
+    await game.post("open", question_id="q_mcq")
+    assert (await game.post("pause", paused=True)).status_code == 409  # still open
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_mcq", "b")
+    assert "paused" not in (await game.state("jana"))["round"]
+    assert (await game.post("pause", "jana", paused=True)).status_code == 403
+    assert (await game.post("pause", paused=True)).status_code == 200
+    assert (await game.state("jana"))["round"]["paused"] is True
+    assert (await game.post("pause", paused=False)).status_code == 200
+    assert "paused" not in (await game.state("jana"))["round"]
+    await game.post("pause", paused=True)
+    await game.post("next")
+    assert "paused" not in (await game.state("jana"))["round"]
+    assert (await game.post("pause", paused=True)).status_code == 409  # new, open

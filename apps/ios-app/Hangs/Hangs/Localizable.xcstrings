@@ -2302,13 +2302,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vybrať viac"
+            "value" : "Vyber viac"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vybrat více"
+            "value" : "Vyber více"
           }
         }
       }

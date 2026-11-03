@@ -83,3 +83,10 @@ async def test_payload_is_anonymous_bounded_and_without_bytes():
     dumped = json.dumps(payload)
     assert "acct-123" not in dumped and "a@b.c" not in dumped and "PNG" not in dumped
     assert payload["attachments"] == {"screenshot": True, "audio": False, "logs": True}
+
+
+async def test_local_test_run_never_reaches_the_real_triage_repo():
+    """A developer's .env holds the real dispatch token; without the conftest
+    guard every local run that saves feedback opened fake issues in the
+    private triage repo (10 of them on 2026-11-02)."""
+    assert dispatch_mod._token() == ""

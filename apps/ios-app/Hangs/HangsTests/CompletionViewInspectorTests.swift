@@ -97,9 +97,8 @@ struct CompletionViewBreakdownTests {
         let view = CompletionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
-                try tree.find(text: "Skipped")
-            }
+            let breakdown = try tree.find(viewWithAccessibilityIdentifier: "completion.breakdown").text().string()
+            #expect(breakdown.contains("Skipped"))
             #expect(throws: (any Error).self) {
                 try tree.find(text: "Accuracy")
             }

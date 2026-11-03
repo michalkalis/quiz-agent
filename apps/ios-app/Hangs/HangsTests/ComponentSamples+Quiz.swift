@@ -48,6 +48,13 @@ nonisolated extension ComponentSample {
                 }
                 .frame(height: 180)
             },
+            // #224: the calm card the solo result sits on (neutral surface, category dot).
+            ComponentSample("deckCard.calmResult") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "sports"), categoryName: "Šport", isCalm: true) {
+                    Text(verbatim: "Jedenásť").font(.hangsDisplay(34))
+                }
+                .frame(height: 180)
+            },
             ComponentSample("deckCard.customPack") {
                 let pack = DeckIdentity(category: "general", packId: "pack-slovak-castles")
                 HangsDeckCard(style: pack.style, categoryName: pack.chipName) {

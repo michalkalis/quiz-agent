@@ -200,18 +200,18 @@ struct ResultViewStateContractTests {
     ///
     /// One verdict word, and the way onward. `result.continue` is the control the
     /// whole hands-free loop depends on — nothing else asserted its presence.
-    @Test("Correct result states NAILED IT once and offers the continue CTA")
+    @Test("Correct result states Nailed it once and offers the continue CTA")
     func correctVerdictContract() async throws {
         let view = ResultView(viewModel: makeViewModel(.previewCorrect))
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.verdict") }
-            #expect(throws: Never.self) { try tree.find(text: "NAILED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "Nailed it") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
             // No competing verdict may appear on the same screen.
-            #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: (any Error).self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
     }
 
@@ -219,19 +219,19 @@ struct ResultViewStateContractTests {
     ///
     /// A wrong answer must reveal the right one and footnote what the driver
     /// said — the two things they need before the next question.
-    @Test("Incorrect result states MISSED IT, reveals the answer and keeps the you-said row")
+    @Test("Incorrect result states Missed, reveals the answer and keeps the you-said row")
     func incorrectVerdictContract() async throws {
         let view = ResultView(viewModel: makeViewModel(.previewIncorrect))
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.verdict") }
-            #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "Missed") }
             #expect(throws: Never.self) { try tree.find(text: "the answer") }
-            #expect(throws: Never.self) { try tree.find(text: "you said") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
-            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
-            #expect(throws: (any Error).self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
     }
 
@@ -239,7 +239,7 @@ struct ResultViewStateContractTests {
     ///
     /// A skip is not a failure: neutral verdict, and no "you said" row over an
     /// answer the driver never gave. Continue must still be there.
-    @Test("Skipped result states SKIPPED neutrally with no you-said row")
+    @Test("Skipped result states Skipped neutrally with no you-said row")
     func skippedVerdictContract() async throws {
         let evaluation = Evaluation(
             userAnswer: "", result: .skipped, points: 0.0,
@@ -250,11 +250,11 @@ struct ResultViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.verdict") }
-            #expect(throws: Never.self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: Never.self) { try tree.find(text: "Skipped") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
-            #expect(throws: (any Error).self) { try tree.find(text: "you said") }
-            #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
         }
     }
 }

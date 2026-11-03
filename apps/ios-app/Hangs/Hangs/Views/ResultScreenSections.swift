@@ -2,15 +2,13 @@
 //  ResultScreenSections.swift
 //  Hangs
 //
-//  Result-screen zones — the verdict state, its badge and word, and the small
+//  Result-screen zones — the verdict state, its label, and the small
 //  meta row. The answer block lives in ResultAnswerPanel.swift, the footer in
 //  ResultFooter.swift.
 //
-//  #131 Track D, Variant A "Verdikt vládne": the verdict is the first and only
-//  thing a driver reads at a glance, and the state is said EXACTLY ONCE.
-//  #194 R-Result / R-Wrong ("Sklo nad kartami"): the verdict, the answer and
-//  the explanation are printed on ONE card in the question's category colour;
-//  the badge sits in the card's top-right corner where the replay glyph was.
+//  #224 (founder, TF 2026-11-02, canvas B1b): the result is calm. One neutral
+//  card, the verdict said once in its header (green only when right), the
+//  answer big, the rest quiet.
 //
 //  The #127 zero-scroll rule still holds: card and footer are fixed zones;
 //  only the explanation scrolls, inside the card.
@@ -18,29 +16,28 @@
 
 import SwiftUI
 
-/// Verdict state driving the badge and the word. `.neutral` is the defensive
-/// nil-evaluation rendering — no word and no badge (never a blank screen, never
-/// a confident verdict over an answer we lack).
+/// Verdict state driving the label. `.neutral` is the defensive
+/// nil-evaluation rendering, no label (never a blank screen, never a confident
+/// verdict over an answer we lack).
 enum ResultVerdict {
     case correct
     case incorrect
     case neutral
-    /// #131 Track D: a skip is not a failure — distinct from `.incorrect` so it
-    /// never renders "MISSED IT." over an answer the driver never gave. Neutral
-    /// badge, own headline ("SKIPPED."), no "you said" entry.
+    /// #131 Track D: a skip is not a failure, distinct from `.incorrect` so it
+    /// never reads "Missed" over an answer the driver never gave.
     case skipped
 
     /// The verdict word (nil = neutral, no word).
     var word: LocalizedStringKey? {
         switch self {
-        case .correct: return "NAILED IT."
-        case .incorrect: return "MISSED IT."
-        case .skipped: return "SKIPPED."
+        case .correct: return "Nailed it"
+        case .incorrect: return "Missed"
+        case .skipped: return "Skipped"
         case .neutral: return nil
         }
     }
 
-    /// The badge glyph (nil = neutral, no badge).
+    /// The label glyph (nil = neutral, no label).
     var symbol: String? {
         switch self {
         case .correct: return "checkmark"
@@ -51,64 +48,43 @@ enum ResultVerdict {
     }
 }
 
-// MARK: - Verdict badge + word (#194)
+// MARK: - Verdict label (#224, B1b)
 
-/// The verdict badge in the card corner. Correct is a solid plate in the
-/// card's text colour (the one celebratory mark); wrong and skipped are a soft
-/// plate — a wrong answer reads neutral, never red (#194 B1).
-struct ResultVerdictBadge: View {
+/// The verdict, said once and quietly in the card's header: a glyph and a word.
+/// Green only for a right answer; a miss and a skip stay in the muted text
+/// colour (a wrong answer reads neutral, never red).
+struct ResultVerdictLabel: View {
     let verdict: ResultVerdict
-    let style: Theme.Hangs.Category.Style
-
-    private enum Metrics {
-        static let size: CGFloat = 32
-        static let glyph: CGFloat = 15
-        static let softPlate = 0.2
-    }
 
     var body: some View {
-        if let symbol = verdict.symbol {
-            Image(systemName: symbol)
-                .font(.hangsBody(Metrics.glyph, weight: .bold))
-                .foregroundStyle(verdict == .correct ? style.fill : style.text)
-                .frame(width: Metrics.size, height: Metrics.size)
-                .background(
-                    Circle().fill(verdict == .correct ? style.text : style.text.opacity(Metrics.softPlate))
-                )
-                .accessibilityHidden(true)
-                .accessibilityIdentifier("result.heroBanner")
-        }
-    }
-}
-
-/// The verdict word — display size, one line, scaled down to fit (critical
-/// spot: the verdict dominates and never wraps).
-struct ResultVerdictWord: View {
-    let word: LocalizedStringKey
-
-    var body: some View {
-        Text(word)
-            .font(.hangsDisplaySM)
-            .tracking(-1)
+        if let word = verdict.word, let symbol = verdict.symbol {
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
+                Image(systemName: symbol)
+                    .accessibilityHidden(true)
+                Text(word)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("result.verdict")
+            }
+            .font(.hangsBody.weight(.semibold))
+            .foregroundStyle(verdict == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
             .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityIdentifier("result.verdict")
+        }
     }
 }
 
 // MARK: - Meta row
 
-/// The small last row of the card: the TestFlight review badge/note on the
-/// left, the source link on the right. "You said" moved up into the card as
-/// its own block (#194 R-Wrong: your answer AND the right one are both shown).
+/// The small last row of the card: the TestFlight review badge and (daily
+/// challenge) how the others did on the left, the source link on the right.
 struct ResultMetaRow: View {
     let sourceDomain: String?
+    /// #205: how the other players did, daily challenge only.
+    var crowd: CrowdStrip? = nil
     var reviewBadge: String? = nil
     /// #155 TestFlight-only: the reviewer's note, under the row.
     var reviewNote: String? = nil
     /// The card's text colour, so the link reads on any category fill.
-    var tint: Color = Theme.Hangs.Colors.mutedFaint
+    var tint: Color = Theme.Hangs.Colors.muted
     let onOpenSource: () -> Void
 
     var body: some View {
@@ -118,6 +94,9 @@ struct ResultMetaRow: View {
                     ReviewBadge(badge: reviewBadge, filled: true)
                         .fixedSize()
                         .accessibilityIdentifier("result.reviewBadge")
+                }
+                if let crowd {
+                    CrowdStripRow(strip: crowd)
                 }
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
                 if let sourceDomain {
@@ -134,6 +113,9 @@ struct ResultMetaRow: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: Theme.Hangs.Spacing.xxl, alignment: .leading)
+        // .contain: the row is its own element and the crowd line, source link and
+        // badge inside keep their own identifiers (a bare container id replaces them).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("result.metaRow")
     }
 }

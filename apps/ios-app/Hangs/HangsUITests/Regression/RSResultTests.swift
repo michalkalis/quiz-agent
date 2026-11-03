@@ -86,7 +86,7 @@ final nonisolated class RSResultTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 8)
-        result.assertVerdictContains("NAILED IT.")
+        result.assertVerdictContains("Nailed it")
         RSFlow.assertAlive(app, "RS-15")
     }
 

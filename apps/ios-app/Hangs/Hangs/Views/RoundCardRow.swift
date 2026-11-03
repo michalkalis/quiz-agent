@@ -2,19 +2,18 @@
 //  RoundCardRow.swift
 //  Hangs
 //
-//  #198 (canvas Bg-Complete): the round as a row of cards under "COMPLETE",
-//  one per question — a right answer in its card's colour with a check, a miss
-//  as a white card with a pink edge and ✕, a skip blank with a dash. Laid flat
-//  in rows of up to ten, not fanned: the fan is kept for Home, Onboarding,
-//  Paywall and Sign-in (founder 2026-10-10). VoiceOver hears it as one element
-//  naming each question's outcome in order; the score card only has the counts.
+//  #224 (canvas B4a): the round as a row of ten small cells under the score, one
+//  per question, ONE colour: a right answer is a solid cell with a check, a miss
+//  an outlined cell with a cross, a skip a dashed outline with a dash. Laid flat
+//  in rows of up to ten. VoiceOver hears it as one element naming each
+//  question's outcome in order; the score only has the counts.
 //
 
 import SwiftUI
 
 struct RoundCardRow: View {
     enum Outcome {
-        case correct(Theme.Hangs.Category.Style)
+        case correct
         case incorrect
         case skipped
     }
@@ -23,13 +22,13 @@ struct RoundCardRow: View {
 
     private enum Metrics {
         static let perRow = 10
-        static let cardHeight: CGFloat = 48
-        static let gap: CGFloat = 6
+        static let cardHeight: CGFloat = 36
+        static let gap: CGFloat = 5
         static let corner: CGFloat = 8
-        static let edge: CGFloat = 2
+        static let edge: CGFloat = 1.5
         static let glyph: CGFloat = 13
+        static let dash: [CGFloat] = [3, 3]
     }
-
     /// Always ten slots, so a short round keeps card-shaped cards (leading).
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: Metrics.gap), count: Metrics.perRow)
@@ -64,18 +63,15 @@ struct RoundCardRow: View {
     @ViewBuilder private func card(_ outcome: Outcome) -> some View {
         let shape = RoundedRectangle(cornerRadius: Metrics.corner, style: .continuous)
         switch outcome {
-        case let .correct(style):
-            shape.fill(style.fill)
-                .hangsShadow(Theme.Hangs.Shadow.card)
-                .overlay { glyph("checkmark", color: style.text) }
+        case .correct:
+            shape.fill(Theme.Hangs.Colors.action)
+                .overlay { glyph("checkmark", color: Theme.Hangs.Colors.textOnAction) }
         case .incorrect:
-            shape.fill(Theme.Hangs.Colors.bgCard)
-                .overlay(shape.strokeBorder(Theme.Hangs.Colors.missText, lineWidth: Metrics.edge))
-                .overlay { glyph("xmark", color: Theme.Hangs.Colors.missText) }
+            shape.strokeBorder(Theme.Hangs.Colors.mutedFaint, lineWidth: Metrics.edge)
+                .overlay { glyph("xmark", color: Theme.Hangs.Colors.muted) }
         case .skipped:
-            shape.fill(Theme.Hangs.Colors.bgCard)
-                .overlay(shape.strokeBorder(Theme.Hangs.Colors.track, lineWidth: Metrics.edge))
-                .overlay { glyph("minus", color: Theme.Hangs.Colors.muted) }
+            shape.strokeBorder(Theme.Hangs.Colors.mutedFaint, style: StrokeStyle(lineWidth: Metrics.edge, dash: Metrics.dash))
+                .overlay { glyph("minus", color: Theme.Hangs.Colors.mutedFaint) }
         }
     }
 
@@ -88,12 +84,11 @@ struct RoundCardRow: View {
 
 #if DEBUG
     #Preview {
-        let ids = Theme.Hangs.Category.taxonomy
         RoundCardRow(outcomes: (0 ..< 10).map { index in
             switch index {
             case 2, 6: .incorrect
             case 8: .skipped
-            default: .correct(Theme.Hangs.Category.style(for: ids[index % ids.count]))
+            default: .correct
             }
         })
         .padding(16)

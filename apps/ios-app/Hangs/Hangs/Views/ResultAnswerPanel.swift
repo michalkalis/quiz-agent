@@ -2,83 +2,80 @@
 //  ResultAnswerPanel.swift
 //  Hangs
 //
-//  The result screen's second-rank zone (issue #127, re-cut for #131 Track D
-//  Variant A): the answer and why. Byte-identical structure for every verdict —
-//  only the label changes. The explanation scrolls INSIDE it (founder
-//  modification); the screen chrome never scrolls.
-//
-//  #194 R-Result / R-Wrong: it is printed on the category card under the
-//  verdict word. The answer sits on its white sticker; on a miss the driver's
-//  own answer follows it, struck through (founder 2026-10-08: show BOTH).
+//  The result card's body (issue #127, re-cut for #131 Track D and again for
+//  #224, canvas B1b): the question in quiet text, the answer big, on a miss what
+//  the driver said (struck through, one line), then "why" with its listen chip.
+//  Byte-identical structure for every verdict, only the label changes. The
+//  explanation scrolls INSIDE it; the screen chrome never scrolls.
 //
 
 import SwiftUI
 
 struct ResultAnswerPanel: View {
+    /// The question, quiet, above the answer. Ignored in recap mode (the stem IS the answer text).
+    let questionStem: String?
     /// "your answer" (correct) / "the answer" (otherwise) / "the question" (recap).
     let answerLabel: LocalizedStringKey
-    /// The answer — or, in recap mode, the question stem.
+    /// The answer, or in recap mode the question stem.
     let answerText: String
     /// Recap fallback (nil evaluation or empty answer): the stem is the dominant
     /// text and reads neutral, since it is not an answer.
     let isRecap: Bool
+    /// A right answer is the one thing on the screen that turns green.
+    let isCorrect: Bool
     /// Explanation text; nil omits the whole "why" block.
     let explanation: String?
     /// What the driver said, when it is not the answer above (a miss).
     var userAnswer: String? = nil
-    /// The card the panel is printed on: its text colour, and the fill the
-    /// explanation fades into.
-    var style = Theme.Hangs.Category.Style(fill: Theme.Hangs.Colors.bgCard, text: Theme.Hangs.Colors.ink)
-    /// #205: how the other players did (daily challenge only). Under the
-    /// sticker on every verdict (founder decision 2), never in recap mode.
-    var crowd: CrowdStrip? = nil
 
     let onHearIt: () -> Void
 
     private enum Metrics {
         static let blockGap = Theme.Hangs.Spacing.sm
         static let labelGap = Theme.Hangs.Spacing.xxs
-        static let ruleOpacity = 0.25
         static let fadeHeight: CGFloat = 18
+        /// Canvas B1b: the answer is the biggest thing on the card.
+        static let answerSize: CGFloat = 34
         static let hearItHeight: CGFloat = 32
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: Metrics.labelGap) {
-                HangsSectionLabel(text: answerLabel, color: style.text)
-                if isRecap {
-                    Text(answerText)
-                        .font(.hangsHeading)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.5)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    HangsAnswerSticker(text: answerText)
-                }
+            if let questionStem, !isRecap {
+                Text(questionStem)
+                    .font(.hangsBody)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, Metrics.blockGap)
+                    .accessibilityIdentifier("result.question")
             }
 
-            if let crowd, !isRecap {
-                CrowdStripRow(strip: crowd)
-                    .padding(.top, Metrics.labelGap)
+            VStack(alignment: .leading, spacing: Metrics.labelGap) {
+                HangsSectionLabel(text: answerLabel)
+                Text(answerText)
+                    .font(isRecap ? .hangsHeading : .hangsDisplay(Metrics.answerSize))
+                    .foregroundStyle(isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.5)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("result.answer")
             }
 
             if let userAnswer {
-                saidBlock(userAnswer)
-                    .padding(.top, Metrics.blockGap)
+                saidLine(userAnswer)
+                    .padding(.top, Metrics.labelGap)
             }
 
             if let explanation {
-                Rectangle()
-                    .fill(style.text.opacity(Metrics.ruleOpacity))
-                    .frame(height: 1)
-                    .padding(.top, Metrics.blockGap)
+                HangsDivider()
+                    .padding(.vertical, Metrics.blockGap)
                 HStack {
-                    HangsSectionLabel(text: "why", color: style.text)
+                    HangsSectionLabel(text: "why")
                     Spacer()
                     hearItControl
                 }
-                .padding(.top, Theme.Hangs.Spacing.xs)
                 explanationScroll(explanation)
                     .padding(.top, Metrics.labelGap)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -86,27 +83,22 @@ struct ResultAnswerPanel: View {
                 Spacer(minLength: 0)
             }
         }
-        .foregroundStyle(style.text)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// R-Wrong "your answer": the label, then the driver's words struck through.
-    private func saidBlock(_ answer: String) -> some View {
-        VStack(alignment: .leading, spacing: Metrics.labelGap) {
-            HangsSectionLabel(text: "you said", color: style.text)
-            // Answer text is content: a content preset (R-Wrong t-heading).
-            Text(verbatim: answer)
-                .font(.hangsHeading)
-                .strikethrough(pattern: .solid)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-                .fixedSize(horizontal: false, vertical: true)
-        }
+    /// "Your answer: ~~X~~", one quiet line (it was wrong, so it is struck through).
+    private func saidLine(_ answer: String) -> some View {
+        (Text("you said") + Text(verbatim: ": ") + Text(verbatim: answer).strikethrough(pattern: .solid))
+            .font(.hangsBody)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("result.said")
     }
 
     // MARK: Explanation (internal scroll, never clips the screen)
 
-    /// The explanation scrolls WITHIN the card when it overflows — the visible
+    /// The explanation scrolls WITHIN the card when it overflows: the visible
     /// affordance is the scroll indicator plus a bottom fade into the card.
     private func explanationScroll(_ text: String) -> some View {
         ScrollView(.vertical, showsIndicators: true) {
@@ -116,7 +108,7 @@ struct ResultAnswerPanel: View {
         }
         .overlay(alignment: .bottom) {
             LinearGradient(
-                colors: [style.fill.opacity(0), style.fill],
+                colors: [Theme.Hangs.Colors.bgCard.opacity(0), Theme.Hangs.Colors.bgCard],
                 startPoint: .top, endPoint: .bottom
             )
             .frame(height: Metrics.fadeHeight)
@@ -125,7 +117,7 @@ struct ResultAnswerPanel: View {
         .accessibilityIdentifier("result.explanation")
     }
 
-    /// R-Result: "hear it" is a white chip on the card, like the category chip.
+    /// "Hear it": a neutral chip on the card.
     private var hearItControl: some View {
         Button(action: onHearIt) {
             Label {
@@ -134,10 +126,10 @@ struct ResultAnswerPanel: View {
                 Image(systemName: "speaker.wave.2")
             }
             .font(.hangsCaption.weight(.semibold))
-            .foregroundStyle(Theme.Hangs.Category.chipText)
+            .foregroundStyle(Theme.Hangs.Colors.ink)
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
             .frame(minHeight: Metrics.hearItHeight)
-            .background(Capsule().fill(Theme.Hangs.Category.chipFill))
+            .background(Capsule().fill(Theme.Hangs.Colors.bgInset))
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)

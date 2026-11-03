@@ -72,9 +72,9 @@ struct ResultViewInspectorTests {
     // MARK: - Correct variant
 
     /// #131 Track D Variant A: the band states the outcome ONCE — the big
-    /// "NAILED IT." word plus the check badge. The old "correct" status chip is
+    /// "Nailed it" word plus the check badge. The old "correct" status chip is
     /// gone; the screen must never say the same state twice.
-    @Test("Correct evaluation renders the verdict band, NAILED word and 'your answer' panel")
+    @Test("Correct evaluation renders the verdict label, Nailed it word and 'your answer' panel")
     func correctVariantRendersVerdictAndAnswerPanel() async throws {
         let evaluation = Evaluation(
             userAnswer: "Uranus", result: .correct, points: 1.0,
@@ -84,7 +84,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "NAILED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "Nailed it") }
             #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
                 try tree.find(text: "correct")
             }
@@ -99,10 +99,10 @@ struct ResultViewInspectorTests {
 
     // MARK: - Incorrect variant
 
-    /// Incorrect: the band says "MISSED IT." once (xmark badge, no "incorrect"
+    /// Incorrect: the band says "Missed" once (xmark badge, no "incorrect"
     /// chip), the card labels the revealed answer "the answer", and what the
     /// driver said drops to the muted meta row under the card.
-    @Test("Incorrect evaluation renders MISSED word, 'the answer' panel and 'you said' line")
+    @Test("Incorrect evaluation renders Missed word, 'the answer' panel and 'you said' line")
     func incorrectVariantRendersAnswerPanel() async throws {
         let evaluation = Evaluation(
             userAnswer: "Saturn", result: .incorrect, points: 0.0,
@@ -112,7 +112,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "Missed") }
             #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
                 try tree.find(text: "incorrect")
             }
@@ -122,18 +122,18 @@ struct ResultViewInspectorTests {
             // The revealed correct answer is the dominant text under "the answer".
             #expect(throws: Never.self) { try tree.find(text: "the answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
-            // The wrong answer is footnoted in the meta row's "you said" entry.
-            #expect(throws: Never.self) { try tree.find(text: "you said") }
+            // The wrong answer is the quiet struck-through "you said" line.
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.metaRow") }
             // NAILED must NOT appear.
-            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
         }
     }
 
     // MARK: - Skipped variant (#131 Track D)
 
     /// A skip must never render "MISSED IT. / incorrect" over an answer the
-    /// driver never gave — it gets its own neutral verdict: a "SKIPPED."
+    /// driver never gave — it gets its own neutral verdict: a "Skipped"
     /// headline over a neutral dash badge, and no MISSED/NAILED word at all.
     @Test("Skipped evaluation renders neutral SKIPPED verdict, not MISSED IT")
     func skippedVariantRendersNeutralVerdict() async throws {
@@ -145,14 +145,14 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: Never.self) { try tree.find(text: "Skipped") }
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "minus" })
             }
             // The wrong verdicts must NOT appear.
-            #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
             #expect(throws: (any Error).self) { try tree.find(text: "incorrect") }
-            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
         }
     }
 
@@ -168,7 +168,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) { try tree.find(text: "you said") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
         }
     }
 
@@ -188,7 +188,7 @@ struct ResultViewInspectorTests {
         }
     }
 
-    /// A genuine wrong answer must still show "MISSED IT." — the new `.skipped`
+    /// A genuine wrong answer must still show "Missed" — the new `.skipped`
     /// branch must not swallow the existing incorrect path.
     @Test("Wrong answer still renders MISSED IT after the skipped verdict was added")
     func incorrectVariantStillRendersMissedIt() async throws {
@@ -200,9 +200,9 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
-            #expect(throws: Never.self) { try tree.find(text: "you said") }
-            #expect(throws: (any Error).self) { try tree.find(text: "SKIPPED.") }
+            #expect(throws: Never.self) { try tree.find(text: "Missed") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
     }
 
@@ -221,7 +221,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: Never.self) { try tree.find(text: "Missed") }
             #expect(vm.resultEvaluation?.result == .partiallyCorrect)
             #expect(vm.resultEvaluation?.points == 0.5)
         }
@@ -406,8 +406,8 @@ struct ResultViewInspectorTests {
             // Footer still works.
             #expect(throws: Never.self) { try tree.find(button: "Next") }
             // Neutral: neither verdict word appears.
-            #expect(throws: (any Error).self) { try tree.find(text: "NAILED IT.") }
-            #expect(throws: (any Error).self) { try tree.find(text: "MISSED IT.") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
             #expect(vm.resultEvaluation == nil)
         }
     }
@@ -577,7 +577,7 @@ struct ResultViewInspectorTests {
             }
             // #194 R-Wrong: "you said" moved from the meta row up under the
             // answer on the card — the driver sees both answers together.
-            #expect(throws: Never.self) { try tree.find(text: "you said") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
         }
     }
 

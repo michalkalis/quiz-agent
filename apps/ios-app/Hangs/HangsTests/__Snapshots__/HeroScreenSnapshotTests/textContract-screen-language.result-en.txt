@@ -1,7 +1,8 @@
 # texts
 0/10
-GEOGRAPHY & WORLD
-NAILED IT.
+Geography & World
+Nailed it
+What is the capital of France?
 your answer
 Paris
 why
@@ -15,8 +16,9 @@ Settings
 question.progress
 question.counter
 question.category
-result.heroBanner
 result.verdict
+result.question
+result.answer
 result.hearIt
 result.explanation
 result.metaRow

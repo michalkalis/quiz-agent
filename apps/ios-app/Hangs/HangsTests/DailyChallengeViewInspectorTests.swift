@@ -4,8 +4,8 @@
 //
 //  #205 — the daily challenge screens at the element level (#57 altitude:
 //  presence and order, not pixels). Why: founder decision 2 puts the crowd
-//  strip in ONE place on every verdict (under the answer sticker, above what
-//  the player said); the round end is peak-end ordered (score, comparison,
+//  strip in ONE place on every verdict (#224: the card's bottom row, left of
+//  the source link); the round end is peak-end ordered (score, comparison,
 //  best hit last) and must never offer a second attempt; the Home card must
 //  stay hidden while the server switch is off.
 //
@@ -23,7 +23,7 @@ private func texts<V>(_ tree: InspectableView<V>) -> [String] {
 }
 
 @MainActor
-private func resultViewModel(result: Evaluation.EvaluationResult, said: String, crowd: CrowdStrip?) -> QuizViewModel {
+private func resultViewModel(result: Evaluation.EvaluationResult, said: String, crowd: CrowdStrip?, answer: String = "Libanon") -> QuizViewModel {
     let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
     let question = Fixtures.makeQuestion(id: "q_daily")
     var round = DailyRound(day: DailyChallengeDay(year: 2026, month: 10, day: 15), language: "sk")
@@ -34,7 +34,7 @@ private func resultViewModel(result: Evaluation.EvaluationResult, said: String, 
         question: question,
         evaluation: Evaluation(
             userAnswer: said, result: result, points: result == .correct ? 1 : 0,
-            correctAnswer: "Libanon", questionId: "q_daily", explanation: nil
+            correctAnswer: answer, questionId: "q_daily", explanation: nil
         )
     )
     return vm
@@ -74,26 +74,23 @@ struct DailyCrowdStripInspectorTests {
         }
     }
 
-    @Test("the strip sits under the answer sticker and above 'you said'")
+    @Test("the strip sits in the card's bottom row, after the answer and what was said")
     func stripPosition() async throws {
         let view = ResultView(viewModel: resultViewModel(result: .incorrect, said: "Sýria", crowd: DailyChallengeFixtures.hard))
         try await ViewHosting.host(view) {
             let order = try texts(view.inspect())
             let answer = try #require(order.firstIndex(of: "Libanon"))
             let strip = try #require(order.firstIndex(of: DailyChallengeFixtures.hard.text))
-            let said = try #require(order.firstIndex(of: "you said"))
-            #expect(answer < strip && strip < said, "founder decision 2: sticker, strip, then what was said — got \(order)")
+            let said = try #require(order.firstIndex(where: { $0.contains("Sýria") }))
+            #expect(answer < said && said < strip, "#224 calm result: answer, what was said, then the strip in the bottom row — got \(order)")
         }
     }
 
-    @Test("recap mode has no strip")
+    @Test("recap mode (nothing to show as an answer) has no strip")
     func noStripInRecap() async throws {
-        let panel = ResultAnswerPanel(
-            answerLabel: "the question", answerText: "Ktorá krajina?", isRecap: true,
-            explanation: nil, crowd: DailyChallengeFixtures.rare, onHearIt: {}
-        )
-        try await ViewHosting.host(panel) {
-            #expect(throws: (any Error).self) { try panel.inspect().find(viewWithAccessibilityIdentifier: "result.crowd") }
+        let view = ResultView(viewModel: resultViewModel(result: .incorrect, said: "Sýria", crowd: DailyChallengeFixtures.rare, answer: ""))
+        try await ViewHosting.host(view) {
+            #expect(throws: (any Error).self) { try view.inspect().find(viewWithAccessibilityIdentifier: "result.crowd") }
         }
     }
 }

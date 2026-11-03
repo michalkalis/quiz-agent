@@ -1,11 +1,11 @@
 # texts
 0/10
-GEOGRAPHY & WORLD
-VEDĽA.
+Geography & World
+Vedľa
+What is the capital of France?
 správna odpoveď
 Paris
-tvoja odpoveď
-Somewhere on the Rhône, I think Lyon or maybe Marseille
+tvoja odpoveď: Somewhere on the Rhône, I think Lyon or maybe Marseille
 prečo
 vypočuj si
 Paris has been the capital of France since the 10th century.
@@ -17,8 +17,10 @@ Nastavenia
 question.progress
 question.counter
 question.category
-result.heroBanner
 result.verdict
+result.question
+result.answer
+result.said
 result.hearIt
 result.explanation
 result.metaRow

@@ -10,19 +10,19 @@ stale or repeated pack.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import httpx
 import pytest
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.db.models.job import GenerationJob
 from app.db.models.order import GenerationOrder
 from app.db.models.pack import QuestionPack
 from app.db.models.question import QuestionRow
 from app.pack_reuse import prompt_key
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from tests.api.conftest import _bearer
 from tests.storekit._chain_fixtures import JWSFactory
 
@@ -56,7 +56,7 @@ async def _seed_source(
         language=language,
         status=order_status,
         storekit_environment=environment,
-        delivered_at=datetime.now(timezone.utc),
+        delivered_at=datetime.now(UTC),
     )
     session.add(order)
     await session.flush()
@@ -231,7 +231,7 @@ async def test_no_copy_when_the_order_differs(
         {"pack_status": "failed"},
         {"questions": COUNT - 5},  # partial pack
         # Expired questions are skipped in the game: the copy would be short.
-        {"expires_at": datetime.now(timezone.utc) - timedelta(days=1)},
+        {"expires_at": datetime.now(UTC) - timedelta(days=1)},
         # Admin test order / other StoreKit environment never feeds a purchase.
         {"environment": None},
         {"environment": "Production"},

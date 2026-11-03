@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import unicodedata
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, insert, literal, or_, select, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -167,7 +167,7 @@ async def _copy_pack(
     order: GenerationOrder,
     source_pack: QuestionPack,
 ) -> tuple[QuestionPack, int]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     pack = QuestionPack(
         order_id=order.id,
         user_id=order.user_id,
@@ -249,7 +249,7 @@ async def try_reuse(
             raise _TooFew(count)
         order.pack_id = pack.id
         order.status = "delivered"
-        order.delivered_at = datetime.now(timezone.utc)
+        order.delivered_at = datetime.now(UTC)
         order.reused_from_order_id = source_order.id
         order.llm_cost_usd = 0
         order.search_cost_cents = 0
@@ -261,7 +261,7 @@ async def try_reuse(
             session, job.id, "done", info={"reused_from_order_id": str(source_order.id)}
         )
         await session.commit()
-    except Exception as exc:  # noqa: BLE001 — reuse saves money, never blocks an order
+    except Exception as exc:
         if isinstance(exc, _TooFew):
             logger.info("pack reuse skipped for order %s: %s", order.id, exc)
         else:

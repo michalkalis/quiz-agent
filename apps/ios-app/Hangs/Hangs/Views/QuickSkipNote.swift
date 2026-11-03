@@ -2,7 +2,7 @@
 //  QuickSkipNote.swift
 //  Hangs
 //
-//  #224.8 (canvas D4): the note a quick game shows on the next question after
+//  #224.8 (canvas D4): the note a quick quiz shows on the next question after
 //  a skip, "Skipped, correct: 1989". Brief and non-blocking: it sits over the
 //  top of the question, takes no touches and leaves by itself
 //  (`QuizViewModel.quickSkipNote`).

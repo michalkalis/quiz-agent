@@ -45,9 +45,9 @@ enum AnalyticsEvent: Equatable {
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
     case homeCategoryPickerOpened(source: CategoryPickerSource)
-    /// #224.8: the Home "Quick game" switch was flipped.
+    /// #224.8: the Home "Quick quiz" switch was flipped.
     case quickGameChanged(enabled: Bool)
-    /// #224.8: a question was skipped (button or voice); `quick` = the quick game was on.
+    /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
     case questionSkipped(quick: Bool)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 

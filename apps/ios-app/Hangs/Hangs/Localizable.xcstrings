@@ -7655,19 +7655,19 @@
         }
       }
     },
-    "Quick game" : {
+    "Quick quiz" : {
       "comment" : "Home: toggle row under the quiz pickers",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rýchla hra"
+            "value" : "Rýchly kvíz"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rychlá hra"
+            "value" : "Rychlý kvíz"
           }
         }
       }

@@ -58,7 +58,7 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "voice_commands_enabled",
             "entry_point",
             "timezone",
-            # #224.8: the quick game was on when the quiz started
+            # #224.8: the quick quiz was on when the quiz started
             "quick_game",
         }
     ),

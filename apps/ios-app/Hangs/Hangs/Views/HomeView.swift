@@ -163,11 +163,11 @@ struct HomeView: View {
         }
     }
 
-    /// #224.8 (canvas D2): "Quick game" under the pickers. Off = today's flow.
+    /// #224.8 (canvas D2): "Quick quiz" under the pickers. Off = today's flow.
     private var quickGameRow: some View {
         HangsCard {
             HangsToggleRow(
-                label: "Quick game",
+                label: "Quick quiz",
                 subtitle: "After \"Next\" the next question comes at once, with no explanation",
                 isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
             )

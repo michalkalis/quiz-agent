@@ -135,7 +135,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     @Published var currentSession: QuizSession?
-    /// #224.8: the right answer of the question a quick game just skipped,
+    /// #224.8: the right answer of the question a quick quiz just skipped,
     /// shown briefly on the next one (`QuizViewModel+QuickGame`).
     @Published var quickSkipNote: String?
     /// #200: the custom pack the latest start asked for, nil for the shared
@@ -2434,7 +2434,7 @@ final class QuizViewModel: ObservableObject {
         // isProcessingResponse through the next question's TTS would drop a
         // fast tap-answer on that question.
         let resultOwner = currentAttempt
-        // #224.8: a quick game's skip has no interstitial either: the same
+        // #224.8: a quick quiz's skip has no interstitial either: the same
         // immediate advance, plus a brief note of the right answer.
         let quickSkip = quickGameSkips(evaluation)
         if answerRevealMode == .endOfSet || quickSkip {

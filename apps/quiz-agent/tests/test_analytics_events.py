@@ -177,7 +177,7 @@ async def test_home_category_events_keep_only_the_step_and_the_entry_point():
 
 
 async def test_quick_game_events_keep_only_the_mode():
-    # #224.8: compares skipping and finishing in the quick game with the
+    # #224.8: compares skipping and finishing in the quick quiz with the
     # normal flow, and whether the switch gets used; nothing else rides along.
     skipped = clean_properties(
         CLIENT_EVENTS["question_skipped"], {"quick": True, "question_id": "q1"}

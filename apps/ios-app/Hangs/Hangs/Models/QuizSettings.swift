@@ -113,7 +113,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// they stay visible until the driver turns them off.
     var voiceHintsEnabled: Bool?
 
-    /// #224.8 "Quick game" (canvas D2, founder 2026-11-03). OFF = today's flow.
+    /// #224.8 "Quick quiz" (canvas D2, founder 2026-11-03). OFF = today's flow.
     /// ON: skipping a question goes straight to the next one, with a brief
     /// note of the right answer instead of a result screen.
     var quickGame: Bool

@@ -2,7 +2,7 @@
 //  QuickGameTests.swift
 //  HangsTests
 //
-//  #224.8 — "Quick game". The founder wants a faster mode for people who skip
+//  #224.8 — "Quick quiz". The founder wants a faster mode for people who skip
 //  a lot: after "Next" the next question comes at once, with only a brief note
 //  of the right answer. The skip request itself must still go out, or the free
 //  quota, stats and analytics would drift from what the player did; answered
@@ -80,7 +80,7 @@ private struct Rig {
     }
 }
 
-@Suite("Quick game (#224.8)")
+@Suite("Quick quiz (#224.8)")
 @MainActor
 struct QuickGameTests {
     @Test("a skip goes straight to the next question and never enters a result state")
@@ -124,7 +124,7 @@ struct QuickGameTests {
         #expect(rig.vm.quickSkipNote == nil)
     }
 
-    @Test("an answered question still shows its result in the quick game")
+    @Test("an answered question still shows its result in the quick quiz")
     func answersStillShowResults() async {
         let rig = Rig(quick: true, result: .incorrect)
         await rig.vm.submitSkip() // any submit path lands in handleQuizResponse

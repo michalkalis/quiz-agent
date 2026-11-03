@@ -41,6 +41,9 @@ Náročnosť
 Random
 Kategórie
 All Categories
+Rýchla hra
+Po „Ďalšia“ hneď ďalšia otázka, bez vysvetlenia
+
 trubbo
 Štart
 # identifiers
@@ -61,4 +64,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
+home.quickGame
 home.startQuiz

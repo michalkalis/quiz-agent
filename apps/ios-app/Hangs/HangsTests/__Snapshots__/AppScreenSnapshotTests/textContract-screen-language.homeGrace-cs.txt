@@ -38,6 +38,9 @@ Obtížnost
 Random
 Kategorie
 All Categories
+Rychlá hra
+Po „Další“ hned další otázka, bez vysvětlení
+
 trubbo
 Start
 # identifiers
@@ -55,4 +58,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
+home.quickGame
 home.startQuiz

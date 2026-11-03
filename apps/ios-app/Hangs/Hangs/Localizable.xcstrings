@@ -13706,6 +13706,159 @@
           }
         }
       }
+    },
+    "to answer" : {
+      "comment" : "Hra spolu (#224.4): under the seconds left on the question screen",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "na odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "na odpoveď"
+          }
+        }
+      }
+    },
+    "after reading" : {
+      "comment" : "Hra spolu (#224.4): under the answer time before the host finished reading",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "po přečtení"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "po prečítaní"
+          }
+        }
+      }
+    },
+    "Stay" : {
+      "comment" : "Hra spolu (#224.4): host button next to Next, keeps the game on this reveal",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zůstaň"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zostaň"
+          }
+        }
+      }
+    },
+    "Resume" : {
+      "comment" : "Hra spolu (#224.4): host button that ends the pause",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokračuj"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokračuj"
+          }
+        }
+      }
+    },
+    "The host paused" : {
+      "comment" : "Hra spolu (#224.4): guests see it while the host stays on a reveal",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostitel dal pauzu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostiteľ dal pauzu"
+          }
+        }
+      }
+    },
+    "nobody" : {
+      "comment" : "Hra spolu (#224.4): an answer option no player picked",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nikdo"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nikto"
+          }
+        }
+      }
+    },
+    "(you)" : {
+      "comment" : "Hra spolu (#224.4): marks the player's own row",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(ty)"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(ty)"
+          }
+        }
+      }
+    },
+    "answered" : {
+      "comment" : "Hra spolu (#224.4): VoiceOver value of a player who answered (gender-neutral)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "má odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "má odpoveď"
+          }
+        }
+      }
+    },
+    "No answer: %@" : {
+      "comment" : "Hra spolu (#224.4): players who did not answer, names joined",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez odpovědi: %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez odpovede: %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

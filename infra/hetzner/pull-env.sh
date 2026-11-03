@@ -7,7 +7,8 @@
 #   rehearsal: background jobs and alert mails off, ENVIRONMENT=staging (copied prod
 #              data must not send mails, check providers or run paid generation).
 #   prod:      same settings as the Fly prod apps.
-# Needs: founder `fly auth login` (runs with FLY_API_TOKEN unset), ssh alias.
+# Needs: founder `fly auth login` (runs with FLY_API_TOKEN unset), ssh alias, and
+# running Fly machines (wake the pack web machine first: curl its /health).
 set -euo pipefail
 MODE="${1:?rehearsal|prod}"
 HOST="${2:-trubbo-prod}"
@@ -44,12 +45,16 @@ PY
 )"
 
 push_app() { # <fly app> <machine or ''> <toml> <env file> <redis db>
-  local app="$1" machine="$2" toml="$3" out="$4" redis_db="$5" names
+  local app="$1" machine="$2" toml="$3" out="$4" redis_db="$5" names dump
   names="$(secret_names "$app" | paste -sd'|' -)"
-  {
-    "${FLY[@]}" ssh console -a "$app" ${machine:+--machine "$machine"} \
+  # Read first (memory only), write after: a failed read (stopped machine,
+  # network) must never replace a good env file on the server with a partial one.
+  dump="$("${FLY[@]}" ssh console -a "$app" ${machine:+--machine "$machine"} \
       -C "python3 -c 'import base64;exec(base64.b64decode(\"$DUMP_PY\"))' '$names'" 2>/dev/null \
-      | tr -d '\r' | grep -vE '^(DATABASE_URL|REDIS_URL)='
+      | tr -d '\r' | grep -vE '^(DATABASE_URL|REDIS_URL)=')" \
+    || { echo "reading the secrets of $app failed (machine stopped?): nothing written" >&2; exit 1; }
+  {
+    printf '%s\n' "$dump"
     toml_env "$toml"
     # Same on rehearsal and prod: watchers talk to the Compose services and read host metrics.
     printf '%s\n' OPS_METRICS_SOURCE=local PACK_API_HEALTH_URL=http://pack-web:8003/health \
@@ -64,6 +69,25 @@ push_app() { # <fly app> <machine or ''> <toml> <env file> <redis db>
         echo REDIS_URL=redis://:\$REDIS_PASSWORD@redis:6379/$redis_db; } > $out.tmp && mv $out.tmp $out &&
       echo \"$out: \$(wc -l < $out) vars\""
 }
+
+# PITR (WAL to R2): the Fly DB's own R2 write token (secret S3_ARCHIVE_CONFIG on
+# quiz-pack-db, scoped to the WAL bucket) under a new barman server name, so the
+# Hetzner archive never mixes with Fly's during the rollback week.
+WAL_PY="$(base64 <<'PY' | tr -d '\n'
+import os, urllib.parse as u
+c = u.urlparse(os.environ["S3_ARCHIVE_CONFIG"])
+bucket = c.path.strip("/").split("/")[0]
+for k, v in [("AWS_ACCESS_KEY_ID", u.unquote(c.username)), ("AWS_SECRET_ACCESS_KEY", u.unquote(c.password)),
+             ("AWS_DEFAULT_REGION", "auto"), ("WAL_S3_ENDPOINT", "https://" + c.hostname),
+             ("WAL_S3_ARCHIVE", "s3://" + bucket), ("WAL_SERVER_NAME", "trubbo-prod")]:
+    assert v and "'" not in v, k
+    print(k + "='" + v + "'")
+PY
+)"
+wal="$("${FLY[@]}" ssh console -a quiz-pack-db --pty=false \
+  -C "python3 -c 'import base64;exec(base64.b64decode(\"$WAL_PY\"))'" 2>/dev/null | tr -d '\r')" \
+  || { echo "reading the R2 archive config from quiz-pack-db failed: nothing written" >&2; exit 1; }
+printf '%s\n' "$wal" | ssh "$HOST" "cd $DIR && umask 077 && cat > wal.env.tmp && [ \$(wc -l < wal.env.tmp) = 6 ] && mv wal.env.tmp wal.env && echo 'wal.env: 6 vars'"
 
 push_app quiz-agent-api "" apps/quiz-agent/fly.toml quiz-agent.env 0
 push_app quiz-pack-api "$("${FLY[@]}" machine list -a quiz-pack-api --json | jq -r '[.[] | select(.config.metadata.fly_process_group=="web")][0].id')" \

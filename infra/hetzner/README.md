@@ -9,7 +9,8 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 | Access | `ssh trubbo-prod` (user `trubbo`, key `~/.ssh/trubbo_hetzner`; password and root login off) |
 | Firewall | Hetzner firewall `trubbo-web`: 22, 80, 443, ICMP. Postgres/Redis bind to 127.0.0.1 only (use an SSH tunnel) |
 | OS updates | unattended-upgrades, auto reboot 04:30 UTC when needed; fail2ban on SSH |
-| Hetzner API | `HCLOUD_TOKEN` in root `.env` (founder-created) → `hcloud server list` |
+| Hetzner API | `HCLOUD_TOKEN` in root `.env` (founder-created) → `hcloud server list`. Delete + rebuild protection on (2026-11-03) |
+| Backups | nightly encrypted dump (backups repo `backup.yml`) + WAL to R2 every ≤ 5 min with a nightly base backup, 7-day point-in-time window ([`postgres/`](postgres/), [db-backup.md](../../docs/setup/db-backup.md)) |
 
 ## Layout on the server
 
@@ -17,6 +18,7 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 - `infra/hetzner/env/*.env` (mode 600, server only, never in git):
   - `postgres.env`, `redis.env`, `forwarder.env`: generated once on the server.
   - `quiz-agent.env`, `quiz-pack-api.env`: copied from the Fly apps by `pull-env.sh`.
+  - `wal.env`: R2 access for the WAL archive, from the Fly DB's `S3_ARCHIVE_CONFIG` by `pull-env.sh` (barman server name `trubbo-prod`).
   - `caddy.env`: `AGENT_HOSTS`, `PACK_HOSTS`, `FORWARDER_SECRET`.
 - Caddy refuses to start when `FORWARDER_SECRET` is empty (fails closed).
 
@@ -32,6 +34,10 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 | psql | `docker compose exec postgres psql -U postgres -d quiz_pack` |
 | Reload Caddy | `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile` |
 | Refresh secrets (from a laptop) | `infra/hetzner/pull-env.sh rehearsal\|prod` |
+| WAL archive status | `docker compose exec postgres psql -U postgres -c 'select * from pg_stat_archiver'` |
+| Base backup now | `SSH_ORIGINAL_COMMAND=basebackup ~/trubbo/bin/backup-ssh.sh` |
+| Copy the DB Fly ↔ Hetzner (laptop) | `infra/hetzner/db-copy.sh compare\|fly-to-hetzner\|hetzner-to-fly` |
+| Prod tunnel for mba tools (laptop) | `infra/hetzner/local-prod-env.sh hetzner\|fly` |
 
 ## Client IP
 
@@ -40,7 +46,7 @@ Verified 2026-11-02: a spoofed header and a wrong secret are both overwritten; t
 
 ## Deploy
 
-`backend-deploy.yml` deploys to this server over SSH when the repo variable `BACKEND_HOST` is `hetzner` (unset = the Fly flow). After the tests it runs `ssh hetzner deploy <sha> <quiz-agent,pack>`; the deploy key is locked to [`deploy-ssh.sh`](deploy-ssh.sh) (forced command, `restrict`). The script takes a lock, refuses a sha that is not on `origin/main`, builds the touched images, runs `alembic upgrade head` before the swap, restarts the services (the worker only if it already runs), waits up to 120 s for health, and on failure rebuilds the previous sha and exits non-zero. `ssh hetzner status` prints the live sha and `docker compose ps`. CI then smoke-tests `api.trubbo.app` and `pack.trubbo.app`.
+`backend-deploy.yml` deploys to this server over SSH when the repo variable `BACKEND_HOST` is `hetzner` (unset = the Fly flow). After the tests it runs `ssh hetzner deploy <sha> <quiz-agent,pack>`; the deploy key is locked to [`deploy-ssh.sh`](deploy-ssh.sh) (forced command, `restrict`). The script takes a lock, refuses a sha that is not on `origin/main`, builds the touched images, runs `alembic upgrade head` before the swap, restarts the services (the worker only if it already runs), waits up to 120 s for health, and on failure rebuilds the previous sha without migrating (expand-only migrations; the older alembic would reject the newer revision) and exits non-zero. Containers stop with a 30 s grace period and Caddy holds requests (bodies up to 1 MB) for up to 30 s while one restarts, so a deploy is a pause, not a burst of errors. `ssh hetzner status` prints the live sha and `docker compose ps`. `ssh hetzner topup <langs> <count> <max_usd> <dry|write|cron>` runs the weekly fresh-question top-up (`fresh-topup.yml`) in a one-off 1 GB container, capped at $15. CI then smoke-tests `api.trubbo.app` and `pack.trubbo.app`.
 
 Founder-set items (agents never create these):
 

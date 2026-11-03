@@ -22,25 +22,21 @@ services:
     logging: *logging
     depends_on: [quiz-agent, pack-web]
 
+  # pgvector + barman-cloud: WAL to R2 for point-in-time recovery (postgres/).
+  # Settings in postgres/trubbo.conf, R2 access in env/wal.env (pull-env.sh).
   postgres:
-    image: pgvector/pgvector:0.8.2-pg17
+    build: { context: postgres }
+    image: trubbo/postgres:local
     restart: unless-stopped
-    env_file: env/postgres.env
+    env_file: [env/postgres.env, env/wal.env]
     environment:
       POSTGRES_DB: quiz_pack
       POSTGRES_USER: postgres
-    command:
-      - postgres
-      - -c
-      - shared_buffers=256MB
-      - -c
-      - effective_cache_size=768MB
-      - -c
-      - work_mem=8MB
-      - -c
-      - max_connections=60
+    command: ["postgres", "-c", "config_file=/etc/postgresql/trubbo.conf"]
     shm_size: 256m
-    volumes: [pg_data:/var/lib/postgresql/data]
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/trubbo.conf:/etc/postgresql/trubbo.conf:ro
     # 127.0.0.1 only: reachable from the server itself / SSH tunnels (mba worker), never the internet.
     ports: ["127.0.0.1:5432:5432"]
     mem_limit: 1g
@@ -71,6 +67,9 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
     mem_limit: 640m
+    # Like Fly's kill_timeout = 30 (#207.20): an in-flight answer (STT + judge)
+    # finishes on deploy instead of being killed after Compose's default 10 s.
+    stop_grace_period: 30s
     logging: *logging
 
   pack-web:
@@ -83,6 +82,7 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_started }
     mem_limit: 640m
+    stop_grace_period: 30s
     logging: *logging
 
   # Processes paid generation orders. Behind a profile so a rehearsal stack on a
@@ -97,6 +97,21 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_started }
     mem_limit: 640m
+    stop_grace_period: 30s
+    logging: *logging
+
+  # Weekly fresh-question top-up (fresh-topup.yml -> deploy-ssh.sh topup), a
+  # one-off container like Fly's `machine run --vm-memory 1024`. First in line
+  # for the OOM killer, so a runaway run can never take down gameplay.
+  pack-topup:
+    image: trubbo/quiz-pack-api:local
+    profiles: ["topup"]
+    restart: "no"
+    env_file: env/quiz-pack-api.env
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: 1g
+    oom_score_adj: 500
     logging: *logging
 
 volumes:

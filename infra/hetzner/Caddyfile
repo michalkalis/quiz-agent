@@ -7,18 +7,30 @@
 # - Traffic from the Fly forwarder (old builds that call *.fly.dev): Fly's edge
 #   sets Fly-Client-IP; it is kept only when the request carries the shared
 #   forwarder secret, otherwise it is overwritten like direct traffic.
+#
+# Deploys: while a container restarts, Caddy holds a request and retries the
+# connection for up to 30 s instead of answering 502. Only requests that never
+# reached the app are retried, so a POST is never sent twice. A POST body can
+# only be re-sent from a buffer: bodies up to 1 MB (JSON calls) are buffered;
+# larger uploads (dictation, feedback) are not retried, as before.
 
 (app) {
 	@forwarder header X-Trubbo-Forwarder {$FORWARDER_SECRET}
 	handle @forwarder {
 		reverse_proxy {args[0]} {
 			header_up -X-Trubbo-Forwarder
+			request_buffers 1MB
+			lb_try_duration 30s
+			lb_try_interval 250ms
 		}
 	}
 	handle {
 		reverse_proxy {args[0]} {
 			header_up Fly-Client-IP {remote_host}
 			header_up -X-Trubbo-Forwarder
+			request_buffers 1MB
+			lb_try_duration 30s
+			lb_try_interval 250ms
 		}
 	}
 }

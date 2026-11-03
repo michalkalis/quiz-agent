@@ -1,6 +1,8 @@
 import React from 'react';
 import {Composition, Still, type CalculateMetadataFunction} from 'remotion';
+import {AppDemo, appDemoFrames} from './AppDemo';
 import {CarouselSlide} from './CarouselSlide';
+import type {AppDemoProps} from './demoTypes';
 import {Pinned, pinnedSeconds, type PinnedProps} from './Pinned';
 import {Reel} from './Reel';
 import {Round} from './Round';
@@ -91,6 +93,16 @@ const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
 	),
 });
 
+// Preview data for `npm run studio` only; renders pass a script with --props (demo/example-en.json).
+const DEMO_SAMPLE: AppDemoProps = {
+	language: 'en',
+	recording: 'demo/placeholder.mp4',
+	recordingSize: {w: 660, h: 1434},
+	segments: [{from: 0, to: 6}],
+	captions: [{from: 0.5, to: 3, text: 'Answer out loud.', kind: 'voice'}],
+	endCard: true,
+};
+
 const FiveSeconds: React.FC<ReelProps> = (p) => <Reel {...p} variant="five" />;
 const ABC: React.FC<ReelProps> = (p) => <Reel {...p} variant="abc" />;
 
@@ -135,6 +147,16 @@ export const RemotionRoot: React.FC = () => (
 			durationInFrames={Math.round(pinnedSeconds(4) * FPS)}
 			defaultProps={{language: 'en', shots: ['store/en/01-listening.jpg', 'store/en/02-confirm.jpg', 'store/en/03-result.jpg', 'store/en/04-mcq.jpg']} as PinnedProps}
 			calculateMetadata={({props}) => ({durationInFrames: Math.round(pinnedSeconds(props.shots.length) * FPS)})}
+		/>
+		<Composition
+			id="AppDemo"
+			component={AppDemo}
+			width={1080}
+			height={1920}
+			fps={FPS}
+			durationInFrames={300}
+			defaultProps={DEMO_SAMPLE}
+			calculateMetadata={({props}) => ({durationInFrames: Math.max(1, appDemoFrames(props, FPS))})}
 		/>
 		<Still
 			id="CarouselSlide"

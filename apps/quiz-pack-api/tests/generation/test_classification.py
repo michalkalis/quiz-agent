@@ -13,10 +13,16 @@ Why these scenarios:
 - An explicit order category (themed/custom pack) must always win — the
   customer named it, and those packs play by `pack_id`, so the model gets
   no classification freedom there.
+- #224 (TF test 2026-11-02): a customer-chosen level (custom pack) must be
+  enforced on every question, since "hard" packs came out too easy. The mixed
+  path (no level, every corpus run) must not change by a single byte.
 """
 
 from __future__ import annotations
 
+import os
+
+import pytest
 from app.generation.classification import (
     CATEGORIES,
     FALLBACK_CATEGORY,
@@ -115,6 +121,85 @@ def test_explicit_order_difficulty_keeps_target_but_still_assesses() -> None:
     prompt = _build(difficulty="hard")
     assert "**Difficulty:** hard" in prompt
     assert "your honest assessment of THIS question" in prompt
+
+
+# --- #224: fixed level enforced, mixed path frozen ---------------------------
+
+_PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "prompts")
+# The default builder template and the prod generic path (`direct_v1`).
+_TEMPLATES = [
+    None,
+    os.path.join(_PROMPTS_DIR, "question_generation_direct.md"),
+]
+
+# The exact text the mixed path rendered before #224. Every corpus run takes
+# this path, and its 30/50/20 spread + honest-assessment wording are what the
+# corpus difficulty filter is calibrated on, so a fixed-level change must not
+# leak into it.
+_MIXED_HEADER_BEFORE_224 = (
+    "**Difficulty:** mixed — aim for roughly 30% easy / 50% medium / 20% hard "
+    "across the batch\n"
+)
+_MIXED_GUIDANCE_BEFORE_224 = """\
+## DIFFICULTY & CATEGORY (per question)
+
+**`difficulty` — assess each question honestly** (never copy one value onto the
+whole batch). Calibrate for a non-native-English adult player:
+- `easy` — most players answer instantly (widely known fact, obvious deduction).
+- `medium` — takes real thought or partial knowledge; a motivated player gets there.
+- `hard` — only players with genuine knowledge of the area get it; still fair, never arcane.
+
+**`category` — classify each question**"""
+_MIXED_FIELD_BEFORE_224 = (
+    '"difficulty": "easy | medium | hard — your honest assessment of THIS '
+    'question (see DIFFICULTY & CATEGORY)"'
+)
+
+
+def _build_with(template, difficulty=None) -> str:
+    builder = PromptBuilder(template_path=template) if template else PromptBuilder()
+    return builder.build_prompt(count=3, difficulty=difficulty)
+
+
+@pytest.mark.parametrize("template", _TEMPLATES)
+def test_mixed_path_difficulty_text_is_byte_identical_to_before_224(
+    template,
+) -> None:
+    prompt = _build_with(template)
+    assert _MIXED_HEADER_BEFORE_224 in prompt
+    assert _MIXED_GUIDANCE_BEFORE_224 in prompt
+    assert _MIXED_FIELD_BEFORE_224 in prompt
+    assert "must be" not in prompt.split("## DIFFICULTY & CATEGORY")[1].split(
+        "**`category`"
+    )[0]
+
+
+@pytest.mark.parametrize("template", _TEMPLATES)
+@pytest.mark.parametrize("level", ["easy", "medium", "hard"])
+def test_fixed_level_is_enforced_on_every_question(template, level) -> None:
+    """A chosen level is a requirement, not a hint: the header, the guidance and
+    the schema line all demand it, and nothing tells the model to spread."""
+    prompt = _build_with(template, difficulty=level)
+    assert (
+        f"**Difficulty:** {level} — every question in this batch must be {level}"
+        in prompt
+    )
+    assert f"every question must be\n`{level}`." in prompt
+    assert f"this order needs {level}" in prompt
+    # The contradicting mixed-batch instructions are gone.
+    assert "never copy one value onto the whole batch" not in prompt
+    assert "30% easy / 50% medium / 20% hard" not in prompt
+
+
+@pytest.mark.parametrize("level", ["easy", "medium", "hard"])
+def test_fixed_level_uses_the_shared_rubric(level) -> None:
+    """The level definitions are the same rubric the mixed path (and the
+    corpus difficulty labels) use, so "hard" means the same thing in a custom
+    pack as in the corpus filter."""
+    fixed = _build(difficulty=level)
+    for line in _MIXED_GUIDANCE_BEFORE_224.splitlines():
+        if line.startswith("- `"):
+            assert line in fixed
 
 
 def test_no_order_category_instructs_taxonomy_classification() -> None:

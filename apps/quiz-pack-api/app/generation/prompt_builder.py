@@ -24,12 +24,40 @@ _DIFFICULTY_FIELD = (
     "(see DIFFICULTY & CATEGORY)"
 )
 
-_DIFFICULTY_GUIDANCE = """\
-**`difficulty` — assess each question honestly** (never copy one value onto the
-whole batch). Calibrate for a non-native-English adult player:
+# The one difficulty rubric; both guidance variants below render it.
+_DIFFICULTY_RUBRIC = """\
 - `easy` — most players answer instantly (widely known fact, obvious deduction).
 - `medium` — takes real thought or partial knowledge; a motivated player gets there.
 - `hard` — only players with genuine knowledge of the area get it; still fair, never arcane."""
+
+_DIFFICULTY_GUIDANCE = f"""\
+**`difficulty` — assess each question honestly** (never copy one value onto the
+whole batch). Calibrate for a non-native-English adult player:
+{_DIFFICULTY_RUBRIC}"""
+
+# #224 — a customer who picks a level must get that level on every question
+# (TF test 2026-11-02: "hard" packs came out too easy). The mixed guidance's
+# "never copy one value onto the whole batch" contradicts a fixed level, so
+# this variant replaces it; the self-report stays honest, so an off-level
+# question is visible in the data instead of relabelled.
+_FIXED_DIFFICULTY_HEADER = (
+    "{level} — every question in this batch must be {level} "
+    "(see DIFFICULTY & CATEGORY)"
+)
+
+_FIXED_DIFFICULTY_FIELD = (
+    "easy | medium | hard — your honest assessment of THIS question; "
+    "this order needs {level} (see DIFFICULTY & CATEGORY)"
+)
+
+_FIXED_DIFFICULTY_GUIDANCE = """\
+**`difficulty` — this order is for `{level}` questions: every question must be
+`{level}`.** Calibrate for a non-native-English adult player:
+{rubric}
+A question you would honestly rate easier or harder than `{level}` is off
+target: make it `{level}` or replace it with another fact before you emit it.
+Report your honest assessment in `difficulty`; never label a question `{level}`
+that is not."""
 
 _CATEGORY_CLASSIFY_GUIDANCE = """\
 **`category` — classify each question** into exactly one player-facing filter id:
@@ -434,9 +462,19 @@ class PromptBuilder:
             category_guidance = _CATEGORY_CLASSIFY_GUIDANCE.format(
                 category_ids=", ".join(f"`{c}`" for c in CATEGORIES)
             )
+        if difficulty:
+            difficulty_header = _FIXED_DIFFICULTY_HEADER.format(level=difficulty)
+            difficulty_field = _FIXED_DIFFICULTY_FIELD.format(level=difficulty)
+            difficulty_guidance = _FIXED_DIFFICULTY_GUIDANCE.format(
+                level=difficulty, rubric=_DIFFICULTY_RUBRIC
+            )
+        else:
+            difficulty_header = _MIXED_DIFFICULTY_HEADER
+            difficulty_field = _DIFFICULTY_FIELD
+            difficulty_guidance = _DIFFICULTY_GUIDANCE
         classification_section = (
             "## DIFFICULTY & CATEGORY (per question)\n\n"
-            f"{_DIFFICULTY_GUIDANCE}\n\n{category_guidance}"
+            f"{difficulty_guidance}\n\n{category_guidance}"
         )
 
         # Build format variables dict
@@ -445,8 +483,8 @@ class PromptBuilder:
             "ok_examples": ok_examples or "",
             "bad_examples_section": bad_examples_section,
             "count": count,
-            "difficulty": difficulty or _MIXED_DIFFICULTY_HEADER,
-            "difficulty_field": _DIFFICULTY_FIELD,
+            "difficulty": difficulty_header,
+            "difficulty_field": difficulty_field,
             "category_field": category_field,
             "classification_section": classification_section,
             "topics": ", ".join(topics) if topics else "any",
@@ -475,7 +513,7 @@ class PromptBuilder:
                 generation_model or llm_factory.GEN
             ),
             "response_format_section": prose_response_format(
-                question_type, category_field, _DIFFICULTY_FIELD
+                question_type, category_field, difficulty_field
             ),
         }
 

@@ -69,7 +69,10 @@ header.top{display:flex;align-items:center;gap:12px;padding:20px 0}
 .lang{margin-left:auto;display:flex;gap:2px;font-size:15px;font-weight:600}
 .lang a{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:20px;color:var(--ink2);text-decoration:none}
 .lang a[aria-current]{color:var(--ink);background:var(--soft)}
-@media (max-width:459px){header.top .btn-s{display:none}}
+@media (max-width:519px){header.top .btn-s{display:none}}
+.qnav{margin-left:auto;display:inline-flex;align-items:center;height:40px;padding:0 12px;border-radius:20px;color:var(--ink);font-size:15px;font-weight:600;text-decoration:none}
+.qnav:hover{background:var(--soft)}
+.qnav+.lang{margin-left:0}
 
 /* hero: headline left, the playable question card right (below on phones) */
 .hero{display:grid;gap:40px 56px;align-items:center;padding:24px 0 40px}
@@ -135,6 +138,16 @@ header.top{display:flex;align-items:center;gap:12px;padding:20px 0}
 .ends h3{font-size:22px;line-height:1.25;margin-top:4px}
 .ends p{margin-top:6px;color:var(--ink2)}
 
+.qs{padding-top:64px}
+.qs h2{font-size:clamp(34px,4vw,44px);line-height:1.05}
+.qs .lead{margin-top:12px;color:var(--ink2)}
+.chips{list-style:none;margin:24px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:22px;background:var(--soft);color:var(--ink);font-size:16px;font-weight:600;text-decoration:none}
+.chip:hover{background:var(--line)}
+.chip.new{background:var(--btn);color:var(--btn-ink)}
+.chip.new::before{content:"";width:8px;height:8px;border-radius:4px;background:var(--rose)}
+.qs .all{display:inline-block;margin-top:18px;font-size:16px;font-weight:600}
+
 .price{padding-top:64px}
 .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .tiers div{padding:28px 0}
@@ -173,6 +186,7 @@ footer address{font-style:normal;margin-top:12px}
       <img src="/mascot.svg" width="29" height="33" alt="">
       <span>trubbo</span>
     </a>
+    {{gen.qnav}}
     <nav class="lang" aria-label="{{nav.lang}}">{{gen.switcher}}</nav>
     <a class="btn btn-s" href="{{gen.store}}">{{cta.short}}</a>
   </header>
@@ -225,6 +239,8 @@ footer address{font-style:normal;margin-top:12px}
       <div><span>{{s5.n}}</span><h3>{{s5.title}}</h3><p>{{s5.body}}</p></div>
     </div>
   </section>
+
+  {{gen.qsection}}
 
   <section class="price">
     <h2 class="disp">{{price.title}}</h2>

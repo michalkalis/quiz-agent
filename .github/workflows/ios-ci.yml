@@ -105,8 +105,6 @@ jobs:
           python3 -m scripts.design_catalog.build --out "$RUNNER_TEMP/design-catalog" --check
 
       - name: Build and test
-        env:
-          TEST_RUNNER_SNAPSHOT_TESTING_RECORD: failed
         run: |
           set -o pipefail
           cd apps/ios-app/Hangs
@@ -133,14 +131,6 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             | xcpretty
-
-      - name: TEMP snapshot upload
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: tmp-snapshots
-          path: apps/ios-app/Hangs/HangsTests/__Snapshots__
-          retention-days: 3
 
       - name: Archive test results
         if: always()

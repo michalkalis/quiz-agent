@@ -74,6 +74,8 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "together_opened": frozenset(),
     # #213.8: the host changed a rule of a game together (lobby or in game).
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
+    # #224.4: the host stayed on a reveal (paused) or let the game go on.
+    "room_pause_changed": frozenset({"paused", "question"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
         {

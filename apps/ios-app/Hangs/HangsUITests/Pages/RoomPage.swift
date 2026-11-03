@@ -22,7 +22,8 @@ struct RoomPage {
     var questionText: XCUIElement { app.descendants(matching: .any)["question.text"] }
     var answerField: XCUIElement { app.textFields["room.answer.field"] }
     var sendButton: XCUIElement { app.buttons["room.answer.send"] }
-    var revealAnswer: XCUIElement { app.descendants(matching: .any)["room.reveal.answer"] }
+    /// The reveal's "Correct: n/m" line: on every reveal, A–D and typed (#224.4).
+    var revealAnswer: XCUIElement { app.descendants(matching: .any)["room.reveal.count"] }
     var waitingForHost: XCUIElement { app.descendants(matching: .any)["room.waitingForHost"] }
     var nextButton: XCUIElement { app.buttons["room.next"] }
     var winner: XCUIElement { app.descendants(matching: .any)["room.final.winner"] }

@@ -112,6 +112,16 @@ extension NetworkService: RoomServiceProtocol {
         )
     }
 
+    func setPaused(roomId: String, paused: Bool) async throws -> RoomState {
+        let data = try await roomRequest(
+            "POST",
+            "/api/v1/rooms/\(roomId)/pause",
+            endpoint: "/api/v1/rooms/{id}/pause",
+            body: ["paused": paused]
+        )
+        return try JSONDecoder().decode(RoomState.self, from: data)
+    }
+
     func nextQuestion(roomId: String) async throws -> RoomState {
         let data = try await roomRequest("POST", "/api/v1/rooms/\(roomId)/next", endpoint: "/api/v1/rooms/{id}/next")
         return try JSONDecoder().decode(RoomState.self, from: data)

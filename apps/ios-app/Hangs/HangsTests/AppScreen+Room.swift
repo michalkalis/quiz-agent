@@ -2,7 +2,7 @@
 //  AppScreen+Room.swift
 //  HangsTests
 //
-//  #212.3 — a game together: the host's lobby (QR code, players), a guest's
+//  #212.3 — a game together (#224.4: host question, typed reveal, guest on a pause): the host's lobby (QR code, players), a guest's
 //  lobby, an open A–D question on a guest's phone, the host's reveal and the
 //  host's final ranking with the leave-app line, and the host's in-game rules
 //  sheet (#213.8). The host lobby shows the rules card with the defaults, the
@@ -20,8 +20,8 @@ extension AppScreen {
         let rooms = MockRoomService()
         // The reveal and final screens show the per-question reveal; the
         // lobbies and the rules sheet show the defaults.
-        let settings = self == .roomReveal || self == .roomFinal ? MultiplayerSettings(revealMode: .question) : MultiplayerSettings()
-        let model = Self.roomModel(rooms, guestName: self == .roomLobbyGuest || self == .roomQuestion ? "Peťo" : nil, settings: settings)
+        let settings = [.roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal].contains(self) ? MultiplayerSettings(revealMode: .question) : MultiplayerSettings()
+        let model = Self.roomModel(rooms, guestName: [.roomLobbyGuest, .roomQuestion, .roomRevealPaused].contains(self) ? "Peťo" : nil, settings: settings)
         switch self {
         case .roomLobbyHost:
             await model.beginHosting()
@@ -31,6 +31,26 @@ extension AppScreen {
             await model.join(.token(MockRoomService.token))
             rooms.hostStarts()
             await model.refresh()
+        case .roomQuestionHost:
+            await model.beginHosting()
+            await model.startGame()
+            await model.readTask?.value
+        case .roomRevealPaused:
+            await model.join(.token(MockRoomService.token))
+            rooms.hostStarts()
+            await model.refresh()
+            await model.submitOption(key: "a")
+            rooms.hostPauses(true)
+            await model.refresh()
+        case .roomRevealTyped:
+            await model.beginHosting()
+            await model.startGame()
+            await model.readTask?.value
+            await model.submitOption(key: "b")
+            await model.next()
+            await model.readTask?.value
+            model.typedAnswer = "Canberra"
+            await model.submitTypedAnswer()
         case .roomReveal:
             await model.beginHosting()
             await model.startGame()

@@ -65,6 +65,29 @@ async def change_settings(
     return await state_reply(service, room_id, subject_id, since=None)
 
 
+class PauseRequest(BaseModel):
+    paused: bool
+
+
+@router.post(
+    "/rooms/{room_id}/pause",
+    response_model=RoomStateResponse,
+    response_model_exclude_none=True,
+)
+@limiter.limit("30/minute")
+async def pause_reveal(
+    request: Request,
+    room_id: str,
+    body: PauseRequest,
+    rooms: Optional[RoomService] = Depends(get_rooms),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """Host: stay on the revealed question (guests see the pause) or resume."""
+    subject_id, service = subject_or_401(subject), service_or_404(rooms)
+    await _run(service.play.pause(room_id, subject_id, body.paused))
+    return await state_reply(service, room_id, subject_id, since=None)
+
+
 @router.post(
     "/rooms/{room_id}/open",
     response_model=RoomStateResponse,

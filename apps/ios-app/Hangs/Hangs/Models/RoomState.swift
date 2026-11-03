@@ -71,6 +71,10 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         let correctAnswer: String?
         let explanation: String?
         let results: [Result]?
+        /// #224.4: the host stays on this reveal; the server leaves it out otherwise.
+        let paused: Bool?
+
+        var isPaused: Bool { paused == true }
 
         enum CodingKeys: String, CodingKey {
             case questionId = "question_id"
@@ -83,6 +87,7 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
             case correctAnswer = "correct_answer"
             case explanation
             case results
+            case paused
         }
     }
 

@@ -45,6 +45,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "recap_shared": ["kind"],
     "together_opened": [],
     "room_settings_changed": ["setting", "value", "surface"],
+    "room_pause_changed": ["paused", "question"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -74,6 +75,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .recapShared(kind: "month"),
     .togetherOpened,
     .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
+    .roomPauseChanged(paused: true, question: 3),
 ]
 
 @MainActor

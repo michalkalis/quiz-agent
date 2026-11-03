@@ -1,0 +1,30 @@
+# texts
+Hra spolu
+1/2
+SCIENCE & NATURE
+Which planet has the most known moons?
+Správně: 1/2
+A
+Jupiter
+P
+Saturn
+M
+C
+Uranus
+nikdo
+D
+Neptune
+nikdo
+Proč
+Mock explanation.
+Hostitel dal pauzu
+# identifiers
+room.close
+question.progress
+question.counter
+room.reveal.count
+room.reveal.option.a
+room.reveal.option.b
+room.reveal.option.c
+room.reveal.option.d
+room.paused

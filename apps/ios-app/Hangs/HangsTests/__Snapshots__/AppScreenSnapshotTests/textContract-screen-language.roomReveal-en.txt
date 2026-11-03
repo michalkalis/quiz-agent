@@ -3,25 +3,32 @@ Play together
 1/2
 SCIENCE & NATURE
 Which planet has the most known moons?
-Correct answer
-Saturn
 Correct: 2/2
+A
+Jupiter
+nobody
+Saturn
 M
-Michal
-Saturn
 J
-Jana
-Saturn
+C
+Uranus
+nobody
+D
+Neptune
+nobody
 Why
 Mock explanation.
 Next
+Stay
 # identifiers
 room.close
 room.rules.open
 question.progress
 question.counter
-room.reveal.answer
 room.reveal.count
-room.reveal.row.p_you
-room.reveal.row.p_other
+room.reveal.option.a
+room.reveal.option.b
+room.reveal.option.c
+room.reveal.option.d
 room.next
+room.pause

@@ -33,6 +33,8 @@ class RoundOut(BaseModel):
     correct_answer: Optional[str] = None
     explanation: Optional[str] = None
     results: Optional[List[RoundResult]] = None
+    # #224.4: set (true) only while the host holds the reveal; absent otherwise.
+    paused: Optional[bool] = None
 
 
 class RankOut(BaseModel):
@@ -89,6 +91,7 @@ def round_out(session: QuizSession, rnd, you, at: datetime) -> RoundOut:
     if rnd.closed:
         out.correct_answer = rnd.correct_answer
         out.explanation = rnd.explanation
+        out.paused = True if rnd.paused else None
         out.results = [
             RoundResult(
                 participant_id=pid, answer=a.answer, result=a.result, points=a.points

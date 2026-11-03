@@ -130,6 +130,21 @@ class RoomPlay:
                 rnd.away.append(you.participant_id)
                 await self.sessions.update_session(session)
 
+    async def pause(self, room_id: str, subject_id: str, paused: bool) -> None:
+        """#224.4: the host stays on the revealed question (guests see it) or
+        resumes. Only a closed question can be held; moving on clears it."""
+        session_id = await self._session_id(room_id)
+        async with self.sessions.session_lock(session_id):
+            session, you = await self._load(session_id, subject_id)
+            if not you.is_host:
+                raise RoomError(403, "Only the host can pause")
+            rnd = session.room_game.current
+            if session.phase != SessionPhase.ASKING or rnd is None or not rnd.closed:
+                raise RoomError(409, "Nothing to pause")
+            if rnd.paused != paused:
+                rnd.paused = paused
+                await self.sessions.update_session(session)
+
     async def next(self, room_id: str, subject_id: str) -> None:
         """The host moves on: the next question for everyone, or the end."""
         session_id = await self._session_id(room_id)

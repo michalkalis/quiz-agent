@@ -3,6 +3,8 @@
 //  Hangs
 //
 //  #212: everyone's question screen: tap A–D or type, then the answer locks.
+//  #224.4: faces and time on top, a calm drifting question card, no audio
+//  controls for guests.
 //
 
 import SwiftUI
@@ -17,13 +19,22 @@ struct RoomQuestionView: View {
             VStack(spacing: Theme.Hangs.Spacing.sm) {
                 if let round = viewModel.round {
                     HangsQuizProgressHeader(current: round.number, total: viewModel.state?.maxQuestions ?? round.number)
-                    statusRow(round)
+                    RoomPlayersStrip(
+                        players: viewModel.players,
+                        answered: Set(round.answered),
+                        secondsLeft: viewModel.secondsLeft(),
+                        fullSeconds: viewModel.state?.thinkingSeconds
+                    )
                     if let question = viewModel.question {
-                        questionCard(question)
-                        countdown
+                        RoomQuestionCard(
+                            question: question,
+                            isHost: viewModel.isHost,
+                            canReplay: viewModel.settings.readsAloud && !viewModel.isReadingAloud,
+                            hostIsReading: round.phase == .reading,
+                            replay: viewModel.readAgain
+                        )
                         answerArea(question, round: round)
                     }
-                    Spacer(minLength: 0)
                     footer(round)
                 }
             }
@@ -36,65 +47,6 @@ struct RoomQuestionView: View {
     }
 
     // MARK: - Sections
-
-    private func statusRow(_ round: RoomState.Round) -> some View {
-        HStack(spacing: Theme.Hangs.Spacing.xs) {
-            if viewModel.isHost {
-                Text("Answered: \(round.answered.count)/\(viewModel.players.count)")
-                    .accessibilityIdentifier("room.question.answered")
-            } else if let me = viewModel.me {
-                RoomPlayerAvatar(name: me.displayName, color: me.color, size: 24)
-                Text(verbatim: me.displayName)
-                Text("· Points: \(Self.points(me.score))")
-            }
-            Spacer(minLength: Theme.Hangs.Spacing.xs)
-            if round.phase == .reading {
-                Label(viewModel.isHost ? "Reading aloud" : "The host is reading aloud", systemImage: "speaker.wave.2")
-                    .font(.hangsCaption)
-                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                    .accessibilityIdentifier("room.question.reading")
-            }
-        }
-        .font(.hangsLabel)
-        .foregroundStyle(Theme.Hangs.Colors.ink)
-    }
-
-    private func questionCard(_ question: Question) -> some View {
-        let identity = DeckIdentity(category: question.category, packId: nil)
-        return HangsDeckCard(
-            style: identity.style,
-            categoryName: identity.chipName,
-            categoryIdentifier: "question.category"
-        ) {
-            ScrollView {
-                Text(question.question)
-                    .font(.hangsTitle)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .bottomLeading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("question.text")
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            .defaultScrollAnchor(.bottom)
-        }
-        .frame(maxHeight: Metrics.cardMaxHeight)
-    }
-
-    @ViewBuilder
-    private var countdown: some View {
-        if let left = viewModel.secondsLeft() {
-            HStack(spacing: Theme.Hangs.Spacing.sm) {
-                ProgressView(value: Double(left), total: Double(viewModel.answerWindowSeconds ?? max(left, 1)))
-                    .tint(left <= Metrics.hurrySeconds ? Theme.Hangs.Colors.warning : Theme.Hangs.Colors.live)
-                Text("\(left) s")
-                    .font(.hangsMonoValue)
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                    .accessibilityIdentifier("room.question.timer")
-            }
-            .frame(minHeight: Metrics.countdownHeight)
-        }
-    }
 
     @ViewBuilder
     private func answerArea(_ question: Question, round: RoomState.Round) -> some View {
@@ -166,13 +118,7 @@ struct RoomQuestionView: View {
 
     @ViewBuilder
     private func footer(_ round: RoomState.Round) -> some View {
-        if viewModel.isHost, viewModel.settings.readsAloud {
-            HangsSecondaryButton(title: "Read again", icon: "arrow.counterclockwise") {
-                viewModel.readAgain()
-            }
-            .disabled(viewModel.isReadingAloud)
-            .accessibilityIdentifier("room.readAgain")
-        } else if round.yourAnswer == nil, viewModel.secondsLeft() == 0 {
+        if round.yourAnswer == nil, viewModel.secondsLeft() == 0 {
             Text("Time's up")
                 .font(.hangsLabel)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
@@ -184,17 +130,8 @@ struct RoomQuestionView: View {
         }
     }
 
-    static func points(_ score: Double) -> String {
-        score.formatted(.number.precision(.fractionLength(0 ... 1)))
-    }
-
     private enum Metrics {
-        /// The options stay in view under a long question.
-        static let cardMaxHeight: CGFloat = 260
-        static let countdownHeight: CGFloat = 32
         static let sendSide: CGFloat = 52
         static let sendIcon: CGFloat = 18
-        /// The bar turns amber for the last seconds.
-        static let hurrySeconds = 5
     }
 }

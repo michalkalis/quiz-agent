@@ -42,6 +42,9 @@ class RoomRound(BaseModel):
     # #213.8: the answer time fixed when served, so a change during the game
     # applies from the next question. None: served before it was stored.
     thinking_seconds: Optional[int] = None
+    # #224.4: the host stays on this reveal; guests are told. Lives on the
+    # round, so the next question starts unpaused without any reset code.
+    paused: bool = False
 
 
 class RoomGame(BaseModel):

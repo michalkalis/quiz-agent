@@ -1,12 +1,14 @@
 # texts
 Play together
 1/2
+M
+Michal
 P
 Peťo
-· Points: 0
+20 s
+to answer
 SCIENCE & NATURE
 Which planet has the most known moons?
-20 s
 A
 Jupiter
 B
@@ -20,9 +22,10 @@ The others see your answer after the question.
 room.close
 question.progress
 question.counter
+room.question.players
+room.question.timer
 question.category
 question.text
-room.question.timer
 mcq.option.a
 mcq.option.b
 mcq.option.c

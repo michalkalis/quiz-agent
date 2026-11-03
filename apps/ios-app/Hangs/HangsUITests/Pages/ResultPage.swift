@@ -26,8 +26,8 @@ struct ResultPage {
         app.buttons["result.stayHere"]
     }
 
-    /// The Anton verdict word in the result band ("NAILED IT." / "MISSED IT." /
-    /// "SKIPPED.") — the one surface that tells the driver what happened.
+    /// The verdict label in the result card header ("Nailed it" / "Missed" /
+    /// "Skipped") — the one surface that tells the driver what happened.
     var verdict: XCUIElement {
         app.staticTexts["result.verdict"]
     }

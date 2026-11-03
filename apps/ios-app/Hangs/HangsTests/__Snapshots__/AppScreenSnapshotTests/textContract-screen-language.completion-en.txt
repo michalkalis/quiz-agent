@@ -1,15 +1,9 @@
 # texts
-COMPLETE
-final score
+Geography & World
 7.5
 out of 10
-Correct
-7
-Incorrect
-3
-Skipped
-0
-QUIZ RESULT · Geography & World
+Correct 7 · Missed 3 · Skipped 0
+Questions
 Question 1 of the round?
 Answer 1
 Question 2 of the round?
@@ -36,9 +30,9 @@ Play Again
 Home
 # identifiers
 completion.close
-completion.cards
 completion.score
 completion.breakdown
+completion.cards
 recap.row.1
 recap.row.2
 recap.row.3

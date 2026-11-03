@@ -6,11 +6,10 @@
 //  2026-07-28): FIXED zones and no screen-level ScrollView, so the header can
 //  never clip — only the explanation scrolls, inside the answer card.
 //
-//  #131 Track D, Variant A "Verdikt vládne" (founder pick 2026-07-29) re-ranks
-//  those zones: a dominant full-bleed verdict band first, the answer card
-//  second, and ONE muted mono meta row (you said · source) third. Zone views
-//  live in ResultScreenSections / ResultAnswerPanel / ResultFooter.
-//  SourceWebView sheet preserved.
+//  #224 (founder, TF 2026-11-02, canvas B1b) makes it calm: one neutral card,
+//  the verdict a quiet label in its header (green only when right), the answer
+//  big, the rest demoted. Zone views live in ResultScreenSections /
+//  ResultAnswerPanel / ResultFooter. SourceWebView sheet preserved.
 //
 //  #132 (founder, 2026-07-29): the band's replay-question speaker and the meta
 //  row's score/streak stats are gone — one replay affordance ("hear it" on the
@@ -146,43 +145,35 @@ struct ResultView: View {
         )
     }
 
-    /// #198 (canvas Bg-Result / R-Result): a correct answer turns the whole
-    /// card mint; a miss or a skip keeps the question's own colour — never mint
-    /// (a science miss takes the canvas' yellow, #198 round 2).
-    private var cardStyle: Theme.Hangs.Category.Style {
-        verdict == .correct ? Theme.Hangs.Category.correct : deckIdentity.notCorrectStyle
-    }
-
+    /// #224 (canvas B1b): a neutral card for every verdict. The category is a
+    /// dot and a name; the verdict is a quiet label in the header and the only
+    /// green is a right answer.
     private var resultCard: some View {
         HangsDeckCard(
-            style: cardStyle,
+            // The dot never takes the correct-answer mint: green means "right" here.
+            style: deckIdentity.notCorrectStyle,
             categoryName: deckIdentity.chipName,
-            categoryIdentifier: "question.category"
+            categoryIdentifier: "question.category",
+            isCalm: true
         ) {
-            ResultVerdictBadge(verdict: verdict, style: cardStyle)
+            ResultVerdictLabel(verdict: verdict)
         } content: {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                // Rank 1 — the verdict, one line.
-                if let word = verdict.word {
-                    ResultVerdictWord(word: word)
-                }
-                // Rank 2 — the answer (and on a miss, what was said) + why.
                 ResultAnswerPanel(
+                    questionStem: questionStem,
                     answerLabel: answerLabel,
                     answerText: answerText,
                     isRecap: isRecap,
+                    isCorrect: verdict == .correct,
                     explanation: explanationText,
                     userAnswer: metaUserAnswer,
-                    style: cardStyle,
-                    crowd: viewModel.resultCrowd,
                     onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
-                // Rank 3 — the source, small, last.
                 ResultMetaRow(
                     sourceDomain: sourceDomain,
+                    crowd: isRecap ? nil : viewModel.resultCrowd,
                     reviewBadge: reviewBadge,
                     reviewNote: reviewNote,
-                    tint: cardStyle.text,
                     onOpenSource: { showSourceWebView = true }
                 )
             }

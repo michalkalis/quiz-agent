@@ -7,6 +7,10 @@
 //  after per-question reveal, `SetRecapView` after an end-of-set reveal); both
 //  routes stay (the view model still picks one), and both now draw this.
 //
+//  #224 (founder, TF 2026-11-02, canvas B4a): calmer. The score is one big
+//  figure ("7 of 10") with a one-line breakdown, the round a single-colour row
+//  of cells, the list plain rows: green stays on the right answers only.
+//
 //  Critical spots kept: the hero is one line with no sentence under it, the
 //  breakdown counts the whole round, the list groups each answer under its
 //  question and a row expands to the full question + source. The voice
@@ -39,10 +43,8 @@ struct RoundCompleteView: View {
     @State private var sourceSheet: RecapSource?
 
     private enum Metrics {
-        /// R-Complete: the score figure (52 display) and its column.
-        static let scoreColumn: CGFloat = 112
-        static let figure: CGFloat = 52
-        static let breakdownRow: CGFloat = 24
+        /// Canvas B4a: the score figure (64 display).
+        static let figure: CGFloat = 64
         /// R-Complete: Home beside the main action.
         static let homeWidth: CGFloat = 124
     }
@@ -57,15 +59,13 @@ struct RoundCompleteView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                    HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
+                    scoreBlock
 
-                    // #198 (canvas Bg-Complete): the round's cards, one per question.
                     if !viewModel.recapEntries.isEmpty {
                         RoundCardRow(outcomes: cardOutcomes)
+                            .padding(.top, Theme.Hangs.Spacing.xs)
                             .accessibilityIdentifier("\(route.idPrefix).cards")
                     }
-
-                    scoreCard
 
                     if let upsellRemaining {
                         upsellCard(remaining: upsellRemaining)
@@ -97,51 +97,39 @@ struct RoundCompleteView: View {
 
     // MARK: - Score
 
-    /// R-Complete: the final score on the left, the round's breakdown on the
-    /// right, in one white card.
-    private var scoreCard: some View {
-        HangsCard(padding: EdgeInsets(
-            top: Theme.Hangs.Spacing.sm, leading: Theme.Hangs.Spacing.md,
-            bottom: Theme.Hangs.Spacing.sm, trailing: Theme.Hangs.Spacing.md
-        )) {
-            HStack(spacing: Theme.Hangs.Spacing.md) {
-                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                    HangsSectionLabel(text: "final score")
-                    HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xxs) {
-                        Text(verbatim: summary.displayScore)
-                            .font(.hangsDisplay(Metrics.figure))
-                            // #198: the screen's cobalt accent (link blue keeps
-                            // its contrast on the dark card, cobalt would not).
-                            .foregroundStyle(Theme.Hangs.Colors.blue)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                        Text("out of \(summary.totalQuestions)")
-                            .font(.hangsLabel)
-                            .foregroundStyle(Theme.Hangs.Colors.muted)
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                }
-                .frame(minWidth: Metrics.scoreColumn, alignment: .leading)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
-                .accessibilityIdentifier(route == .score ? "completion.score" : "recap.hero")
-
-                Rectangle()
-                    .fill(Theme.Hangs.Colors.hairline)
-                    .frame(width: 1)
-
-                VStack(spacing: Theme.Hangs.Spacing.xxs) {
-                    breakdownRow("Correct", value: "\(correctCount)",
-                                 color: correctCount > 0 ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
-                    breakdownRow("Incorrect", value: "\(incorrectCount)",
-                                 color: incorrectCount > 0 ? Theme.Hangs.Colors.missText : Theme.Hangs.Colors.muted)
-                    breakdownRow("Skipped", value: "\(skippedCount)", color: Theme.Hangs.Colors.muted)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("completion.breakdown")
+    /// Canvas B4a: the category as a quiet label, the score as one big figure
+    /// with "out of N" beside it, and the breakdown as a single line.
+    private var scoreBlock: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+            if let categoryName {
+                Text(verbatim: categoryName)
+                    .textCase(.uppercase)
+                    .font(.hangsOverline)
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
+                    .lineLimit(1)
             }
-            .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
+                Text(verbatim: summary.displayScore)
+                    .font(.hangsDisplay(Metrics.figure))
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("out of \(summary.totalQuestions)")
+                    .font(.hangsSubHero)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
+            .accessibilityIdentifier(route == .score ? "completion.score" : "recap.hero")
+
+            Text("Correct \(correctCount) · Missed \(incorrectCount) · Skipped \(skippedCount)")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("completion.breakdown")
         }
     }
 
@@ -150,20 +138,6 @@ struct RoundCompleteView: View {
     /// Every question that is neither right nor skipped, a partly right answer
     /// included: the beta's recap counted it the same way.
     private var incorrectCount: Int { viewModel.recapEntries.count - correctCount - skippedCount }
-
-    private func breakdownRow(_ label: LocalizedStringKey, value: String, color: Color) -> some View {
-        HStack {
-            Text(label)
-                .font(.hangsCaption.weight(.semibold))
-                .foregroundStyle(Theme.Hangs.Colors.ink)
-            Spacer(minLength: Theme.Hangs.Spacing.xs)
-            Text(verbatim: value)
-                .font(.hangsLabel)
-                .monospacedDigit()
-                .foregroundStyle(color)
-        }
-        .frame(minHeight: Metrics.breakdownRow)
-    }
 
     // MARK: - Upsell (score route, free plan running low)
 
@@ -202,14 +176,7 @@ struct RoundCompleteView: View {
 
     private var listHeader: some View {
         HStack(alignment: .center, spacing: Theme.Hangs.Spacing.xs) {
-            Group {
-                if let categoryName {
-                    HangsSectionLabel(text: "SET RESULT · \(categoryName)")
-                } else {
-                    HangsSectionLabel(text: "SET RESULT")
-                }
-            }
-            .lineLimit(2)
+            HangsSectionLabel(text: "Questions")
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             if route == .recap {
                 summaryControl
@@ -217,12 +184,10 @@ struct RoundCompleteView: View {
         }
     }
 
-    /// #198: one small card per answered question, a right one in its card's colour.
     private var cardOutcomes: [RoundCardRow.Outcome] {
         viewModel.recapEntries.map { entry in
             if entry.wasSkipped { return .skipped }
-            guard entry.isCorrect else { return .incorrect }
-            return .correct(DeckIdentity(category: entry.category, packId: viewModel.activePackId).style)
+            return entry.isCorrect ? .correct : .incorrect
         }
     }
 
@@ -238,8 +203,7 @@ struct RoundCompleteView: View {
         } label: {
             Label(summaryTitle, systemImage: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2")
             .font(.hangsCaption.weight(.semibold))
-            // #198: the cobalt accent of the round summary (canvas Bg-Recap).
-            .foregroundStyle(Theme.Hangs.Colors.blue)
+            .foregroundStyle(Theme.Hangs.Colors.ink)
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
             .frame(minHeight: Theme.Hangs.Spacing.xxl)
             .glassEffect(.regular.interactive(), in: Capsule())

@@ -111,9 +111,6 @@ struct SetRecapViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "completion.breakdown")
             }
-            for label in ["final score", "Correct", "Incorrect", "Skipped"] {
-                #expect(throws: Never.self, "\(label) missing") { try tree.find(text: label) }
-            }
             #expect(throws: (any Error).self, "accuracy is no longer on the screen") {
                 _ = try tree.find(text: "Accuracy")
             }
@@ -132,8 +129,8 @@ struct SetRecapViewInspectorTests {
         let view = SetRecapView(viewModel: vm)
         try await ViewHosting.host(view) {
             let breakdown = try view.inspect().find(viewWithAccessibilityIdentifier: "completion.breakdown")
-            let texts = try breakdown.findAll(ViewType.Text.self).map { try $0.string() }
-            #expect(texts == ["Correct", "1", "Incorrect", "3", "Skipped", "2"])
+            let line = try breakdown.text().string()
+            #expect(line == "Correct 1 · Missed 3 · Skipped 2")
         }
     }
 

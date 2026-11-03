@@ -1,11 +1,11 @@
 # texts
 0/10
-GEOGRAPHY & WORLD
-MISSED IT.
+Geography & World
+Missed
+What is the capital of France?
 the answer
 Paris
-you said
-Somewhere on the Rhône, I think Lyon or maybe Marseille
+you said: Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
 hear it
 Paris has been the capital of France since the 10th century.
@@ -17,8 +17,10 @@ Settings
 question.progress
 question.counter
 question.category
-result.heroBanner
 result.verdict
+result.question
+result.answer
+result.said
 result.hearIt
 result.explanation
 result.metaRow

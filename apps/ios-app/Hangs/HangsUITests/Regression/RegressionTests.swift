@@ -85,7 +85,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
     //
     // Scenario: from askingQuestion state, record and say the correct answer, confirm via the confirmation sheet, and assert the result
-    // screen shows the CORRECT verdict ("NAILED IT.") plus the continue button.
+    // screen shows the CORRECT verdict ("Nailed it") plus the continue button.
     //
     // Regression guarded: STT→processAnswer→showingResult pipeline for correct
     // answers, verdict included. Asserting only `result.continue` (as this
@@ -129,7 +129,7 @@ final nonisolated class RegressionTests: XCTestCase {
         // verdict band says the answer was right.
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertVerdictContains("NAILED IT.")
+        result.assertVerdictContains("Nailed it")
     }
 
     // MARK: - RS-incorrect

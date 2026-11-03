@@ -18,6 +18,10 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
     let categoryName: String?
     /// The screen's identifier for the category chip (`question.category`).
     var categoryIdentifier: String?
+    /// #224 (calm results): a neutral surface instead of the category colour. The
+    /// category shrinks to a dot in its colour plus its name, so a screen that is
+    /// read (a result) is not also a colour field.
+    var isCalm = false
     @ViewBuilder var accessory: () -> Accessory
     @ViewBuilder var content: () -> Content
 
@@ -25,7 +29,11 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
         VStack(alignment: .leading, spacing: DeckCardMetrics.headerGap) {
             HStack(alignment: .center) {
                 if let categoryName {
-                    HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+                    if isCalm {
+                        HangsCategoryDotLabel(name: categoryName, dot: style.fill, identifier: categoryIdentifier)
+                    } else {
+                        HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+                    }
                 }
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
                 accessory()
@@ -34,20 +42,27 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
             .frame(minHeight: DeckCardMetrics.chipHeight)
             content()
         }
-        .foregroundStyle(style.text)
+        .foregroundStyle(isCalm ? Theme.Hangs.Colors.ink : style.text)
         .padding(DeckCardMetrics.padding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
+        .background(plate)
+    }
+
+    @ViewBuilder private var plate: some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+        if isCalm {
+            shape.fill(Theme.Hangs.Colors.bgCard)
+                .overlay(shape.strokeBorder(Theme.Hangs.Colors.hairline, lineWidth: 1))
+        } else {
             // Shadow on the plate only — on the whole view it blurs the text too.
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
-                .fill(style.fill)
-                .hangsShadow(Theme.Hangs.Shadow.raised)
-        )
+            shape.fill(style.fill).hangsShadow(Theme.Hangs.Shadow.raised)
+        }
     }
 }
 
 private enum DeckCardMetrics {
     static let chipHeight: CGFloat = 28
+    static let dot: CGFloat = 8
     /// Canvas `card-in`: 28pt from the trailing side over 420 ms.
     static let arrivalOffset: CGFloat = 28
     static let arrivalDuration = 0.42
@@ -60,12 +75,14 @@ extension HangsDeckCard where Accessory == EmptyView {
         style: Theme.Hangs.Category.Style,
         categoryName: String?,
         categoryIdentifier: String? = nil,
+        isCalm: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.init(
             style: style,
             categoryName: categoryName,
             categoryIdentifier: categoryIdentifier,
+            isCalm: isCalm,
             accessory: { EmptyView() },
             content: content
         )
@@ -157,6 +174,26 @@ struct HangsCategoryChip: View {
             .padding(.horizontal, Theme.Hangs.Spacing.sm)
             .frame(minHeight: DeckCardMetrics.chipHeight)
             .background(Capsule().fill(Theme.Hangs.Category.chipFill))
+    }
+}
+
+/// The calm card's category mark: a dot in the category colour and the name in
+/// the quiet text colour (#224, B1b).
+struct HangsCategoryDotLabel: View {
+    let name: String
+    let dot: Color
+    var identifier: String?
+
+    var body: some View {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
+            Circle().fill(dot).frame(width: DeckCardMetrics.dot, height: DeckCardMetrics.dot)
+            Text(name)
+                .font(.hangsCaption.weight(.semibold))
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(identifier ?? "deck.category")
     }
 }
 

@@ -1,15 +1,9 @@
 # texts
-HOTOVO
-konečné skóre
+Geography & World
 0
 z 10
-Správne
-1
-Nesprávne
-1
-Preskočené
-1
-VÝSLEDOK KVÍZU · Geography & World
+Správne 1 · Vedľa 1 · Preskočené 1
+Otázky
 Prehraj súhrn
 What is the capital of France?
 Paris
@@ -23,9 +17,9 @@ Hraj znova
 Úvod
 # identifiers
 recap.close
-recap.cards
 recap.hero
 completion.breakdown
+recap.cards
 recap.playSummary
 recap.row.1
 recap.row.2

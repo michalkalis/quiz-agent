@@ -61,7 +61,7 @@ struct SetRecapRow: View {
     /// so a test can build a row without caring about the sheet.
     var onOpenSource: (String) -> Void = { _ in }
 
-    /// Badge diameter = the grid's badge column width (#189).
+    /// Badge box = the grid's badge column width (#189).
     fileprivate static let badgeSize: CGFloat = 24
     /// Gap between the badge column and the text column.
     fileprivate static let columnGap: CGFloat = 12
@@ -119,16 +119,15 @@ struct SetRecapRow: View {
         }
     }
 
-    /// ✓ teal-green / ✗ pink / – neutral dash (a skip is not a failure, #131 D).
+    /// #224 (canvas B4a): a bare glyph, no plate. A check in the success green is
+    /// the only colour; a miss is a quiet cross and a skip the quietest dash
+    /// (a skip is not a failure, #131 D).
     private var badge: some View {
-        ZStack {
-            Circle().fill(badgeFill)
-            Image(systemName: badgeSymbol)
-                .font(.hangsCaption.weight(.bold))
-                .foregroundColor(badgeColor)
-        }
-        .frame(width: Self.badgeSize, height: Self.badgeSize)
-        .accessibilityHidden(true)
+        Image(systemName: badgeSymbol)
+            .font(.hangsCaption.weight(.bold))
+            .foregroundStyle(badgeColor)
+            .frame(width: Self.badgeSize, height: Self.badgeSize)
+            .accessibilityHidden(true)
     }
 
     private var badgeSymbol: String {
@@ -136,16 +135,9 @@ struct SetRecapRow: View {
         return entry.isCorrect ? "checkmark" : "xmark"
     }
 
-    /// #194 R-Complete: a solid green plate for a right answer; #198 (canvas
-    /// Bg-Recap): a miss is a pink glyph on its pink wash; a skip is the quietest.
     private var badgeColor: Color {
-        if entry.wasSkipped { return Theme.Hangs.Colors.muted }
-        return entry.isCorrect ? Theme.Hangs.Colors.textOnAccent : Theme.Hangs.Colors.missText
-    }
-
-    private var badgeFill: Color {
-        if entry.wasSkipped { return Theme.Hangs.Colors.track }
-        return entry.isCorrect ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.missSoft
+        if entry.wasSkipped { return Theme.Hangs.Colors.mutedFaint }
+        return entry.isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted
     }
 
     private var expandedSection: some View {

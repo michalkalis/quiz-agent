@@ -230,28 +230,33 @@ struct PackOrderServiceTests {
 
     // MARK: Difficulty on the wire (#224)
 
-    @Test("the chosen difficulty is sent as the wire string the backend validates")
-    func difficultyIsSentOnTheWire() async throws {
+    @Test("the chosen difficulty is sent as the wire string the backend validates; Mix sends none",
+          arguments: [(PackDifficulty.hard, "hard" as String?), (.easy, "easy"), (.mixed, nil)])
+    func difficultyIsSentOnTheWire(level: PackDifficulty, expected: String?) async throws {
         let service = makeService()
-        let sent = OSAllocatedUnfairLock<String?>(initialState: nil)
+        let sent = OSAllocatedUnfairLock<[String: Bool]>(initialState: [:])
+        let value = OSAllocatedUnfairLock<String?>(initialState: nil)
 
         PackOrderStubURLProtocol.handler = { req in
             if let data = readRequestBody(req),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                let value = json["difficulty"] as? String
-                sent.withLock { $0 = value }
+                let v = json["difficulty"] as? String
+                let present = json["difficulty"] != nil
+                value.withLock { $0 = v }
+                sent.withLock { $0["present"] = present }
             }
             return (.make(status: 202), Data(Stubs.createdJSON.utf8))
         }
         defer { PackOrderStubURLProtocol.handler = nil }
 
         _ = try await service.createOrder(
-            intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, difficulty: .hard)
+            intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, difficulty: level)
         )
 
-        // The backend accepts only easy|medium|hard; a localized or capitalised
-        // value would 422 the paid order.
-        #expect(sent.withLock { $0 } == "hard")
+        // The backend accepts only easy|medium|hard (a localized value would 422
+        // the paid order); a mixed batch is an ABSENT field, never "mixed".
+        #expect(value.withLock { $0 } == expected)
+        #expect(sent.withLock { $0["present"] } == (expected != nil))
     }
 
     // MARK: 2. A new intent gets a new key

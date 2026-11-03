@@ -133,6 +133,36 @@ struct OrderPackViewModelTests {
         #expect(service.capturedIntents.first?.difficulty == .hard)
     }
 
+    // WHY: "Mix" is a deliberate choice, not the absence of one. It must unlock
+    // the order like any level, yet send nothing: the backend reads an absent
+    // difficulty as the mixed batch.
+    @Test("every one of the four choices unlocks the order; none is preselected (#224)",
+          arguments: PackDifficulty.allCases)
+    func anyChoiceUnlocksTheOrder(_ level: PackDifficulty) {
+        let vm = makeOrderPackViewModel()
+        vm.prompt = "Space for kids"
+        #expect(!vm.isValid)
+
+        vm.selectDifficulty(level)
+
+        #expect(vm.isValid)
+    }
+
+    @Test("Mix is chosen explicitly and the order carries it as a mixed batch (#224)")
+    func mixedIsAnExplicitChoice() async {
+        let service = MockPackOrderService()
+        let vm = makeOrderPackViewModel(service: service)
+        vm.prompt = "Space for kids"
+        vm.selectDifficulty(.mixed)
+        vm.advanceToSummary()
+        #expect(vm.state == .confirming)
+        #expect(vm.difficulty == .mixed, "the summary shows Mix, not a blank row")
+
+        await vm.submit()
+
+        #expect(service.capturedIntents.first?.difficulty == .mixed)
+    }
+
     @Test("a new order starts with no difficulty picked (#224)")
     func newOrderForgetsDifficulty() async {
         let vm = payingViewModel()

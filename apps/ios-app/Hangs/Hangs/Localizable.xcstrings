@@ -13705,6 +13705,29 @@
           }
         }
       }
+    },
+    "Mixed" : {
+      "comment" : "Pack order: difficulty option meaning a blend of easy, medium and hard questions",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mix"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

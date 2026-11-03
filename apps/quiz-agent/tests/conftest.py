@@ -27,7 +27,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 os.environ["ANTHROPIC_API_KEY"] = ""
 # #218: the same for the triage bridge, or a local test run sends real
 # repository_dispatch events and fills the private triage repo with fake issues.
-for _var in ("GITHUB_TRIAGE_DISPATCH_TOKEN", "SENTRY_TRIAGE_TOKEN", "ASC_WEBHOOK_SECRET"):
+for _var in (
+    "GITHUB_TRIAGE_DISPATCH_TOKEN",
+    "SENTRY_TRIAGE_TOKEN",
+    "ASC_WEBHOOK_SECRET",
+):
     os.environ[_var] = ""
 
 try:

@@ -135,7 +135,15 @@ struct HomeView: View {
 
     private var quizSection: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-            sectionLabel("Quiz")
+            HStack(alignment: .firstTextBaseline) {
+                sectionLabel("Quiz")
+                Spacer(minLength: Theme.Hangs.Spacing.sm)
+                // #224.6 (canvas C4): the deck steps one category per tap, so
+                // the multi-select picker gets its own entry beside the label.
+                if !dynamicTypeSize.isAccessibilitySize {
+                    chooseSeveralButton
+                }
+            }
             // The deck now opens the page, so it gets a fixed height instead
             // of whatever the content left: it overlapped the pills and lost
             // its bottom under Start once packs filled the screen.
@@ -143,7 +151,8 @@ struct HomeView: View {
                 HomeCategoryDeck(
                     selectedCategories: viewModel.settings.categories,
                     title: viewModel.settings.categoryDisplayName(),
-                    questionCount: viewModel.settings.numberOfQuestions
+                    questionCount: viewModel.settings.numberOfQuestions,
+                    onStep: viewModel.stepCategory
                 )
                 .frame(height: Metrics.deckHeight)
                 // The fanned back cards turn on their bottom edge, so one
@@ -154,14 +163,23 @@ struct HomeView: View {
         }
     }
 
+    private var chooseSeveralButton: some View {
+        HangsGhostButton(title: "Choose several", icon: "checklist") {
+            showingCategoryPicker = true
+        }
+        .fixedSize()
+        .accessibilityIdentifier("home.categories.chooseSeveral")
+    }
+
     private func sectionLabel(_ text: LocalizedStringKey) -> some View {
         HangsSectionLabel(text: text)
             .padding(.horizontal, Theme.Hangs.Spacing.xxs)
     }
 
     private enum Metrics {
-        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256).
-        static let deckHeight: CGFloat = 256
+        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256) plus
+        /// the page dots under it.
+        static let deckHeight: CGFloat = 256 + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)

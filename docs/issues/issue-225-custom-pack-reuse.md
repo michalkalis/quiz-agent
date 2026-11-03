@@ -1,7 +1,7 @@
 # #225 — Vlastný balík: rovnaké zadanie = hotové otázky
 
-**Triage:** enhancement · blocked-on-#224 (224.3 — obťažnosť v objednávke)
-**Status:** 225.1 kód hotový na vetve `feat/225-pack-reuse` (lokálne, 13 nových testov + celá sada zelená spolu s rozpracovaným 224.3); push po zlúčení 224.3
+**Triage:** enhancement · done
+**Status:** NASADENÉ 2026-11-03 (PR #699, quiz-pack-api v119); čaká prvá reálna zhoda v prode
 **Založené:** 2026-11-02 (founder)
 **Súvisí:** #224 — TF test 2026-11-02 (224.3 povinná obťažnosť), #143 — Custom-pack COGS reduction, #182 — Custom pack: hrať hneď po prvej otázke, #93 — vlastné balíky
 
@@ -25,7 +25,7 @@ Keď si hráč B objedná vlastný balík s rovnakým zadaním, jazykom a obťa�
 
 ## Kedy sa hotový balík použije (zdroj)
 
-Zdroj musí byť: objednávka iného hráča, stav `delivered`, balík `complete` s plným počtom otázok, objednávka nevrátená (refund), v balíku žiadna nahlásená chyba v otázke. Z viacerých vhodných sa berie najnovší. Ak B už vlastní kópiu z toho istého zdroja, zdroj sa preskočí.
+Zdroj musí byť: objednávka iného hráča (vrátane jeho prepojených anonymných id), rovnaké StoreKit prostredie (nie admin), bez expirovaných otázok, bez hodnotenia ≤ 2 ani na kópiách, stav `delivered`, balík `complete` s plným počtom otázok, objednávka nevrátená (refund), v balíku žiadna nahlásená chyba v otázke. Z viacerých vhodných sa berie najnovší. Ak B už vlastní kópiu z toho istého zdroja, zdroj sa preskočí.
 
 Ak zhodný balík ešte len vzniká, B dostane normálne generovanie (jednoduchšie; čakanie na cudzí beh by viazalo B na zlyhanie A).
 
@@ -52,6 +52,6 @@ Ak zhodný balík ešte len vzniká, B dostane normálne generovanie (jednoduch�
 
 ## Stav
 
-- [~] 225.1 backend (DB, objednávka, poistka, záznam zdroja, testy) — hotové lokálne; po zlúčení 224.3: rebase, overiť `down_revision` = migrácia 224.3, v `tests/db/test_smoke.py` hlava = `e5a2c7f1b938`, PR
-- [ ] 225.2 overenie iOS toku s okamžite hotovou objednávkou (simulátor)
-- [ ] 225.3 nasadenie + overenie na prode (druhá objednávka rovnakého zadania)
+- [x] 225.1 backend — PR #699 (+ 5 opráv z nezávislej kontroly: expirované otázky, prihlásenie počas kopírovania, StoreKit prostredie, prepojené anonymné id, hodnotenia na kópiách)
+- [x] 225.2 iOS bez zmeny: po vytvorení objednávky appka sleduje stav a dostane `delivered`; SSE dostane koncový krok `done` (overené v kóde a testoch, nie na simulátore)
+- [~] 225.3 nasadené; overenie = prvá objednávka s `reused_from_order_id` v prode (reálny nákup, nedá sa vyvolať automaticky)

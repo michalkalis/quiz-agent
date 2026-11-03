@@ -34,6 +34,7 @@ struct RoundCompleteView: View {
 
     @ObservedObject var viewModel: QuizViewModel
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let route: Route
     let summary: QuizCompleteSummary
     /// Free questions left when the upsell applies (score route only).
@@ -268,14 +269,21 @@ struct RoundCompleteView: View {
                 .transition(.opacity)
             }
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Theme.Hangs.Spacing.sm) {
-                    playAgainButton
-                    homeButton.frame(width: Metrics.homeWidth)
-                }
-                VStack(spacing: Theme.Hangs.Spacing.xs) {
-                    playAgainButton
-                    homeButton
+            // From the size where button titles wrap, the two stack: a 124pt Home
+            // beside Play Again would break "Home" mid-word.
+            let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
+                playAgainButton
+                homeButton
+            }
+            if HangsButtonTitle.wraps(at: dynamicTypeSize) {
+                stacked
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Hangs.Spacing.sm) {
+                        playAgainButton
+                        homeButton.frame(width: Metrics.homeWidth)
+                    }
+                    stacked
                 }
             }
         }

@@ -190,7 +190,9 @@ struct HangsCategoryDotLabel: View {
             Text(name)
                 .font(.hangsCaption.weight(.semibold))
                 .foregroundStyle(Theme.Hangs.Colors.muted)
-                .lineLimit(1)
+                // Wraps to a second line beside the verdict at large text, never "Geogra…".
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(identifier ?? "deck.category")

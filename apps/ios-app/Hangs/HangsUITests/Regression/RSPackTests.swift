@@ -28,11 +28,12 @@ final nonisolated class RSPackTests: XCTestCase {
         home.assertVisible()
 
         XCTAssertTrue(home.packProgress.waitForExistence(timeout: 10), "RS-24: the pack card shows no played count")
-        // The deck pushes the pack card toward the Start bar on a small phone;
-        // scroll it clear of the bar like a player would.
+        // Home grew (deck, quick-game row): on a phone the pack card can sit
+        // under the Start bar, and a tap there starts a plain quiz instead.
+        // Scroll until the whole card is above the bar, as a player would.
         var swipes = 0
-        while !home.packPlayButton.isHittable, swipes < 4 {
-            app.swipeUp()
+        while home.packPlayButton.frame.maxY > home.startQuizButton.frame.minY - 8, swipes < 6 {
+            app.scrollViews.firstMatch.swipeUp()
             swipes += 1
         }
         home.packPlayButton.tap()

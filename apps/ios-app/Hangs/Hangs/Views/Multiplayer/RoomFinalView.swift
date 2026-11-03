@@ -12,6 +12,15 @@ struct RoomFinalView: View {
     @ObservedObject var viewModel: RoomViewModel
     let onShowPlans: () -> Void
     let onClose: () -> Void
+    /// Question numbers whose rows are open (#224.5); a snapshot starts some open.
+    @State private var expanded: Set<Int>
+
+    init(viewModel: RoomViewModel, expanded: Set<Int> = [], onShowPlans: @escaping () -> Void, onClose: @escaping () -> Void) {
+        self.viewModel = viewModel
+        _expanded = State(initialValue: expanded)
+        self.onShowPlans = onShowPlans
+        self.onClose = onClose
+    }
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.md) {
@@ -24,7 +33,7 @@ struct RoomFinalView: View {
                     if viewModel.isHost, !viewModel.awayRows.isEmpty {
                         awayNote
                     }
-                    if viewModel.state?.revealMode == .round, !viewModel.roundSummaries.isEmpty {
+                    if !viewModel.roundSummaries.isEmpty {
                         roundSummaries
                     }
                     if viewModel.isHost, viewModel.quotaReached {
@@ -111,38 +120,96 @@ struct RoomFinalView: View {
         .accessibilityIdentifier("room.final.away")
     }
 
+    /// #224.5: every question with the right answer and one dot per player;
+    /// a tap opens what each of them said.
     private var roundSummaries: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            HangsSectionLabel(text: "Answers")
+            HangsSectionLabel(text: "Questions")
             HangsCard {
                 VStack(spacing: 0) {
                     let rows = viewModel.roundSummaries
                     ForEach(rows) { row in
-                        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                            Text(verbatim: "\(row.number). \(row.questionText)")
-                                .font(.hangsBody)
-                                .foregroundStyle(Theme.Hangs.Colors.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(verbatim: row.correctAnswer ?? "")
-                                .font(.hangsLabel)
-                                .foregroundStyle(Theme.Hangs.Colors.ink)
-                            if let yours = row.yourAnswer {
-                                Label {
-                                    Text("You: \(yours)")
-                                } icon: {
-                                    Image(systemName: row.youWereRight ? "checkmark" : "xmark")
-                                }
-                                .font(.hangsCaption)
-                                .foregroundStyle(row.youWereRight ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.muted)
-                            }
-                        }
-                        .padding(Theme.Hangs.Spacing.md)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("room.final.round.\(row.number)")
+                        summaryRow(row)
                         if row.id != rows.last?.id { HangsDivider() }
                     }
                 }
+            }
+        }
+    }
+
+    private func summaryRow(_ row: RoomViewModel.RoundSummary) -> some View {
+        let isOpen = expanded.contains(row.number)
+        return VStack(spacing: 0) {
+            Button {
+                withAnimation(.snappy) {
+                    if isOpen { expanded.remove(row.number) } else { expanded.insert(row.number) }
+                }
+            } label: {
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    Text(verbatim: "\(row.number)")
+                        .font(.hangsMonoValue)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+                        Text(verbatim: row.questionText)
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: row.correctAnswer ?? "")
+                            .font(.hangsLabel)
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    HStack(spacing: Metrics.dotGap) {
+                        ForEach(row.rows) { player in
+                            Circle()
+                                .fill(player.isCorrect ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.track)
+                                .frame(width: Metrics.dot, height: Metrics.dot)
+                        }
+                    }
+                    .accessibilityHidden(true)
+                    Image(systemName: "chevron.down")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .rotationEffect(.degrees(isOpen ? 180 : 0))
+                }
+                .padding(Theme.Hangs.Spacing.md)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? Text("expanded") : Text("collapsed"))
+            .accessibilityIdentifier("room.final.round.\(row.number)")
+            if isOpen {
+                VStack(spacing: Theme.Hangs.Spacing.xs) {
+                    ForEach(row.rows) { player in
+                        HStack(spacing: Theme.Hangs.Spacing.sm) {
+                            RoomPlayerAvatar(name: player.name, color: player.color, size: Metrics.face)
+                            Text(verbatim: player.name)
+                                .font(.hangsLabel)
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                            Group {
+                                if let answer = player.answer {
+                                    Text(verbatim: answer)
+                                } else {
+                                    Text("no answer")
+                                }
+                            }
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            if player.isCorrect {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(Theme.Hangs.Colors.greenCheck)
+                                    .accessibilityLabel(Text("correct"))
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.bottom, Theme.Hangs.Spacing.md)
+                .accessibilityIdentifier("room.final.round.\(row.number).answers")
             }
         }
     }
@@ -164,5 +231,8 @@ struct RoomFinalView: View {
 
     private enum Metrics {
         static let rowHeight: CGFloat = 52
+        static let dot: CGFloat = 8
+        static let dotGap: CGFloat = 3
+        static let face: CGFloat = 24
     }
 }

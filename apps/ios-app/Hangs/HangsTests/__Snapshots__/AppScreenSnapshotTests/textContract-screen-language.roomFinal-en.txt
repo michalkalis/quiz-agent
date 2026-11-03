@@ -13,6 +13,13 @@ Jana
 1
 Jana: left Trubbo during 1 question
 Only you see this.
+Questions
+1
+Which planet has the most known moons?
+Saturn
+2
+What is the capital of Australia?
+Canberra
 Done
 # identifiers
 room.close
@@ -20,4 +27,6 @@ room.final.winner
 room.final.rank.1
 room.final.rank.2
 room.final.away
+room.final.round.1
+room.final.round.2
 room.done

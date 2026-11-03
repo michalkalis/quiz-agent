@@ -13876,6 +13876,40 @@
           }
         }
       }
+    },
+    "expanded" : {
+      "comment" : "Hra spolu (#224.5): VoiceOver state of an opened question row on the final screen",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozbalené"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozbalené"
+          }
+        }
+      }
+    },
+    "collapsed" : {
+      "comment" : "Hra spolu (#224.5): VoiceOver state of a closed question row on the final screen",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sbalené"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zbalené"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

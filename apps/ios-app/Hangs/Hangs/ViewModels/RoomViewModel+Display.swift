@@ -55,6 +55,8 @@ extension RoomViewModel {
         let yourAnswer: String?
         let youWereRight: Bool
         let correctCount: Int
+        /// #224.5: every player's answer to this question, in player order.
+        let rows: [RevealRow]
     }
 
     func name(of participantId: String) -> String {
@@ -136,7 +138,8 @@ extension RoomViewModel {
                 correctAnswer: round.correctAnswer,
                 yourAnswer: (mine?.answer ?? round.yourAnswer).map { answerText($0, questionId: round.questionId) },
                 youWereRight: mine?.isCorrect ?? false,
-                correctCount: correctCount(in: round)
+                correctCount: correctCount(in: round),
+                rows: revealRows(for: round)
             )
         }
     }

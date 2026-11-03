@@ -156,8 +156,7 @@ struct HomeView: View {
                 )
                 .frame(height: Metrics.deckHeight)
                 // The fanned back cards turn on their bottom edge, so one
-                // corner dips below the frame.
-                .padding(.bottom, Theme.Hangs.Spacing.lg)
+                // corner dips below the cards: the page dots' gap holds it.
             }
             settingPills
         }

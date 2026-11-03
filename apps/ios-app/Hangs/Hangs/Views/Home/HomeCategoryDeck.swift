@@ -186,7 +186,7 @@ struct HomeCategoryDeck: View {
 }
 
 enum DeckMetrics {
-    static let dotsGap: CGFloat = 22
+    static let dotsGap: CGFloat = 18
     static let dotsHeight: CGFloat = 8
     /// First half of a step: the moving card travels out to the side.
     static let outDuration = 0.27

@@ -21,7 +21,8 @@ extension QuizViewModel {
             audioRoute: .current,
             voiceCommandsEnabled: settings.voiceCommandsEnabled,
             entryPoint: entryPoint,
-            timezone: TimeZone.current.identifier
+            timezone: TimeZone.current.identifier,
+            quickGame: settings.quickGame
         ))
     }
 

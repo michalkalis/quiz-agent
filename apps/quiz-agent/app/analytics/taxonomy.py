@@ -53,7 +53,14 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "app_opened": frozenset({"launch"}),
     "onboarding_finished": frozenset({"outcome", "step"}),
     "quiz_context": frozenset(
-        {"audio_route", "voice_commands_enabled", "entry_point", "timezone"}
+        {
+            "audio_route",
+            "voice_commands_enabled",
+            "entry_point",
+            "timezone",
+            # #224.8: the quick game was on when the quiz started
+            "quick_game",
+        }
     ),
     "quiz_abandoned": frozenset({"questions_answered", "phase"}),
     "answer_submitted": frozenset(
@@ -80,6 +87,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),
     "home_category_picker_opened": frozenset({"source"}),
+    # #224.8: the quick-game switch on Home, and every skip with its mode.
+    "quick_game_changed": frozenset({"enabled"}),
+    "question_skipped": frozenset({"quick"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
         {

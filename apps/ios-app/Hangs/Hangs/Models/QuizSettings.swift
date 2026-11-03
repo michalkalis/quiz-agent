@@ -113,6 +113,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// they stay visible until the driver turns them off.
     var voiceHintsEnabled: Bool?
 
+    /// #224.8 "Quick game" (canvas D2, founder 2026-11-03). OFF = today's flow.
+    /// ON: skipping a question goes straight to the next one, with a brief
+    /// note of the right answer instead of a result screen.
+    var quickGame: Bool
+
     /// The one rule for whether the command words are shown: an explicit Settings
     /// choice wins, otherwise they are shown.
     static func voiceHintsVisible(override: Bool?) -> Bool {
@@ -139,7 +144,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         includeLocalQuestions: Bool = true,
         voiceCommandsEnabled: Bool = true,
         answerRevealMode reveal: AnswerRevealMode = .perQuestion,
-        voiceHintsEnabled: Bool? = nil
+        voiceHintsEnabled: Bool? = nil,
+        quickGame: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -159,6 +165,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.voiceCommandsEnabled = voiceCommandsEnabled
         answerRevealMode = reveal
         self.voiceHintsEnabled = voiceHintsEnabled
+        self.quickGame = quickGame
     }
 
     // MARK: - Default Configuration
@@ -240,6 +247,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerRevealMode = (try? container.decodeIfPresent(AnswerRevealMode.self, forKey: .answerRevealMode)).flatMap { $0 } ?? .perQuestion
         // #174: absent = automatic (first quizzes only) — never a persisted "on".
         voiceHintsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceHintsEnabled)
+        // #224.8: absent = off, today's flow.
+        quickGame = try container.decodeIfPresent(Bool.self, forKey: .quickGame) ?? false
     }
 
     // MARK: - Validation Helpers

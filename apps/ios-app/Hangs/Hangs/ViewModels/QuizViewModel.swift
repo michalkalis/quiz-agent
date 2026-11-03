@@ -135,6 +135,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     @Published var currentSession: QuizSession?
+    /// #224.8: the right answer of the question a quick game just skipped,
+    /// shown briefly on the next one (`QuizViewModel+QuickGame`).
+    @Published var quickSkipNote: String?
     /// #200: the custom pack the latest start asked for, nil for the shared
     /// library. Kept from the start request, not the created session, so a
     /// start that failed before its session existed still retries the same
@@ -2084,6 +2087,7 @@ final class QuizViewModel: ObservableObject {
         // on (the state is the single-flight token, as in submitMCQAnswer).
         guard transition(to: .skipping) else { return }
         errorMessage = nil
+        trackAnalytics(.questionSkipped(quick: settings.quickGame))
 
         // Stop any playing question audio immediately
         await audioDeviceState.stopAnyPlayingAudio()
@@ -2430,7 +2434,11 @@ final class QuizViewModel: ObservableObject {
         // isProcessingResponse through the next question's TTS would drop a
         // fast tap-answer on that question.
         let resultOwner = currentAttempt
-        if answerRevealMode == .endOfSet {
+        // #224.8: a quick game's skip has no interstitial either: the same
+        // immediate advance, plus a brief note of the right answer.
+        let quickSkip = quickGameSkips(evaluation)
+        if answerRevealMode == .endOfSet || quickSkip {
+            if quickSkip { showQuickSkipNote(evaluation.correctAnswer) }
             taskBag.add(Task { [weak self] in
                 guard let self, self.attemptLedger.ownsQuestion(resultOwner, "deferredAdvance") else { return }
                 await self.advanceToNextQuestionOrFinish()
@@ -2731,6 +2739,7 @@ final class QuizViewModel: ObservableObject {
         // Release audio session so Spotify/podcasts resume full volume after
         // the quiz is torn down (resetToHome / endQuiz / paywall reset).
         audioService.deactivateSession()
+        quickSkipNote = nil
         currentQuestion = nil
         currentSession = nil // also zeroes the derived score/questionsAnswered (T7)
         sessionCorrectCount = 0

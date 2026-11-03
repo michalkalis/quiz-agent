@@ -136,11 +136,11 @@ final nonisolated class RegressionTests: XCTestCase {
 
     //
     // Scenario: same flow as RS-correct but launched with "--ui-test-incorrect"
-    // so the mock returns an incorrect evaluation. Assert the hero text contains
-    // "MISSED" (the incorrect-branch headline).
+    // so the mock returns an incorrect evaluation. Assert the verdict label says
+    // "Missed" (the incorrect-branch verdict).
     //
     // Regression guarded: incorrect-answer branch of showingResult renders the
-    // "MISSED\nIT." hero.
+    // "Missed" verdict label.
 
     @MainActor
     func testRSIncorrect() async throws {
@@ -171,7 +171,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertHeroContains("MISSED")
+        result.assertVerdictContains("Missed")
     }
 
     // MARK: - RS-long

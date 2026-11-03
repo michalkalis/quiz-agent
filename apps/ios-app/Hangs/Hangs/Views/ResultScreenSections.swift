@@ -113,6 +113,9 @@ struct ResultMetaRow: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: Theme.Hangs.Spacing.xxl, alignment: .leading)
+        // .contain: the row is its own element and the crowd line, source link and
+        // badge inside keep their own identifiers (a bare container id replaces them).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("result.metaRow")
     }
 }

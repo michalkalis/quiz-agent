@@ -1,7 +1,7 @@
 # #224 — TF test 2026-11-02: Hra spolu, Home, výsledky, vlastné balíky
 
 **Triage:** enhancement · ready-for-agent (rýchle opravy) · ready-for-human (návrhy na výber, 2 rozhodnutia)
-**Status:** všetko okrem 224.8 zlúčené (2026-11-03); backend nasadený; 224.8 rýchla hra v práci; 224.11 čaká; 224.7 odložené; v TF builde až na požiadanie
+**Status:** všetko okrem 224.8 (rýchla hra) zlúčené (2026-11-03); backend nasadený; 224.8 (rýchla hra) v práci; 224.11 (prísnejšie pixelové testy) čaká; 224.7 (platený hlas v Hre spolu) odložené; v TF builde až na požiadanie
 **Založené:** 2026-11-02 (founder testuje TF build, sk/cs)
 **Súvisí:** #212 — Hra spolu (multiplayer v jednej miestnosti), #216 — záložky Hrať + Profil, #208 — hlasové povely z TF testu, #93 — vlastné balíky
 
@@ -60,4 +60,4 @@
 | 224.10 | 16 | Päta sólo otázky E1 | iOS ✓ PR #717 |
 | 224.11 | — | Pixelové snímky v testoch tolerujú 1 % rozdielu, takže zmena jedného slova prejde; sprísniť na 0.9995 a pretočiť ~140 zastaraných snímok z CI (samostatný PR po 224.8) | iOS testy |
 
-Poradie: hotové všetko okrem 224.8; po ňom 224.11.
+Poradie: hotové všetko okrem 224.8 (rýchla hra); po nej 224.11 (prísnejšie pixelové testy).

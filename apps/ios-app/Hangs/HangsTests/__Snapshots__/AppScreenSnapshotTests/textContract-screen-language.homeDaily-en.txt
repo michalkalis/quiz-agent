@@ -42,7 +42,7 @@ Random
 Categories
 All Categories
 Quick quiz
-After "Next" the next question comes at once, with no explanation
+After "Next": next question, no explanation
 
 trubbo
 Start

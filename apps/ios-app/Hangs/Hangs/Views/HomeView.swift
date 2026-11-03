@@ -168,7 +168,7 @@ struct HomeView: View {
         HangsCard {
             HangsToggleRow(
                 label: "Quick quiz",
-                subtitle: "After \"Next\" the next question comes at once, with no explanation",
+                subtitle: "After \"Next\": next question, no explanation",
                 isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
             )
         }

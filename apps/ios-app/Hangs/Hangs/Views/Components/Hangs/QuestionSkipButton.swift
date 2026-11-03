@@ -17,12 +17,14 @@
 //  easier to say than "Preskoč". The button IS the voice command, so reading
 //  it teaches it; the old words stay as hidden synonyms (VoiceCommandLexicon).
 //
+//  #224 (founder, TF 2026-11-02, canvas E1): icon only, round, the word is the
+//  accessibility label. The listen bar's chips still name the command.
+//
 
 import SwiftUI
 
 struct QuestionSkipButton: View {
-    /// A skip in flight spins IN this capsule (#174). The label stays put so the
-    /// capsule cannot change width under the driver's thumb.
+    /// A skip in flight spins IN this control (#174), in the glyph's place.
     let isSkipping: Bool
     /// The caller owns the rule: MCQ dies on an answer in flight, the voice
     /// footer also while the mic is live.
@@ -41,7 +43,7 @@ struct QuestionSkipButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            Group {
                 if isSkipping {
                     ProgressView()
                         .controlSize(.small)
@@ -51,29 +53,26 @@ struct QuestionSkipButton: View {
                     // Founder pick (#171, 2026-09-06): two chevrons read as
                     // "skip"; the play+bar glyph read as media transport.
                     Image(systemName: "chevron.right.2")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.hangsButton)
                 }
-
-                Text("Next (skip question)")
-                    .font(.hangsBody(15, weight: .semibold))
-                    // The founder's one-line rule for the bottom row: the word
-                    // never wraps. #188 G9 (D10): and it is never cut either —
-                    // at large text it truncated to "Pres…". It keeps its full
-                    // width; the flexible Start button beside it gives way.
-                    .lineLimit(1)
-                    .fixedSize()
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
-            .frame(height: height)
-            .padding(.horizontal, Theme.Hangs.Spacing.md)
-            // #194 B2: secondary controls are Liquid Glass.
-            .glassEffect(.regular.interactive(), in: Capsule())
+            // Icon only (#224, E1): a round control as tall as the row, so the
+            // width is the same in every language and the two labelled buttons
+            // beside it get the room.
+            .frame(width: height, height: height)
+            // Canvas E1: the same visible pill as the Type button beside it.
+            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Capsule().strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
-        // Busy is not unavailable: a skipping capsule keeps full contrast so its
+        // Busy is not unavailable: a skipping control keeps full contrast so its
         // spinner reads, while one disabled by an answer in flight dims.
         .opacity(isDisabled && !isSkipping ? 0.45 : 1)
+        // The word lives here now; it is still the voice command (#174).
+        .accessibilityLabel(Text("Next (skip question)"))
         .accessibilityIdentifier("question.skip")
     }
 }

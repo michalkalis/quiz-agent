@@ -48,7 +48,9 @@ struct QuestionSkipControlTests {
             let tree = try button.inspect()
             let glyphs = tree.findAll(ViewType.Image.self).compactMap { try? $0.actualImage().name() }
             #expect(glyphs == ["chevron.right.2"], "the skip glyph drifted: \(glyphs)")
-            #expect(throws: Never.self) { try tree.find(text: "Next") }
+            #expect(throws: (any Error).self, "icon only (#224): no visible word") { _ = try tree.find(text: "Next") }
+            #expect(try button.inspect().find(ViewType.Button.self).accessibilityLabel().string() == "Next",
+                    "the word is the accessibility label, so VoiceOver still says it")
         }
     }
 
@@ -64,9 +66,8 @@ struct QuestionSkipControlTests {
             let glyphs = skip.findAll(ViewType.Image.self).compactMap { try? $0.actualImage().name() }
             #expect(glyphs.contains("chevron.right.2"),
                     "\(question.isMultipleChoice ? "MCQ" : "voice") skip lost the chevron: \(glyphs)")
-            #expect(throws: Never.self, "the imperative word must be on screen — it is the voice command") {
-                try skip.find(text: "Next")
-            }
+            #expect(try skip.accessibilityLabel().string() == "Next",
+                    "the word is the accessibility label and the voice command")
             #expect(throws: (any Error).self, "the old infinitive label must be gone") {
                 _ = try skip.find(text: "Skip question")
             }
@@ -84,16 +85,13 @@ struct QuestionSkipControlTests {
             #expect(throws: Never.self) {
                 try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
             }
-            #expect(throws: Never.self, "the label must survive so the capsule keeps its width") {
-                try skip.find(text: "Next")
-            }
         }
     }
 
     /// Founder's condition on D1–D3 alike: the open question's bottom row stays
     /// ONE line. A wider skip capsule must not push Type or Start onto a second
     /// row — so the row is asserted as a single HStack of exactly three
-    /// controls, and the word is pinned to one line that scales instead.
+    /// controls, (the skip word is the accessibility label since #224).
     @Test("the open question's action row stays one line of three controls")
     func actionRowStaysOneLine() async throws {
         let view = QuestionView(viewModel: makeViewModel(question: Question.preview))
@@ -105,8 +103,6 @@ struct QuestionSkipControlTests {
             })
             #expect(row.count == 3, "the action row must stay Start · Type · Skip on one line, got \(row.count)")
 
-            let label = try tree.find(viewWithAccessibilityIdentifier: "question.skip").find(text: "Next")
-            #expect(try label.lineLimit() == 1, "the skip word must shrink, never wrap")
         }
     }
 
@@ -123,11 +119,7 @@ struct QuestionSkipControlTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let skip = try tree.find(viewWithAccessibilityIdentifier: "question.skip")
-            let label = try skip.find(text: "Next")
-            #expect(try label.lineLimit() == 1,
-                    "a wrapped label is what pushed the chip off the screen in the first place")
-            let fixed = try label.fixedSize()
-            #expect(fixed.horizontal && fixed.vertical, "the word keeps its full width; it is never truncated")
+            #expect(throws: (any Error).self, "icon only (#224): no word to wrap or cut") { _ = try skip.find(text: "Next") }
             let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")
                 .find(ViewType.ScrollView.self, relation: .parent)
             #expect(throws: (any Error).self, "the chip must not share the options' scroll") {

@@ -679,7 +679,7 @@ struct QuestionViewReplayProcessingInspectorTests {
     /// Same contract on the MCQ side — one evaluating state, not two. The chip
     /// stays put instead of vanishing, and it keeps its label while spinning so
     /// the capsule cannot change width under the driver's thumb.
-    @Test("skipping spins in the MCQ skip chip and keeps its label")
+    @Test("skipping spins in the MCQ skip control and keeps its label")
     func skippingSpinsInMCQSkipChip() async throws {
         let vm = makeMCQEvaluatingViewModel(state: .skipping)
         let view = QuestionView(viewModel: vm)
@@ -689,10 +689,8 @@ struct QuestionViewReplayProcessingInspectorTests {
             #expect(throws: Never.self) {
                 try skip.find(viewWithAccessibilityIdentifier: "question.processingIndicator")
             }
-            // #179 D3: one imperative word on both screens now — "Skip".
-            #expect(throws: Never.self, "the label must survive so the chip keeps its width") {
-                try skip.find(text: "Next")
-            }
+            // #224: icon only; the word lives in the accessibility label.
+            #expect(try skip.accessibilityLabel().string() == "Next")
         }
     }
 

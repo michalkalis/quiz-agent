@@ -82,7 +82,7 @@ Poradie: 218.1 hneď (nezávislé). 218.2 → 218.3 → 218.4 → 218.5 → 218.
 - **Beží:** most v quiz-agente (PR #678), triáž a oprava v `trubbo-triage`, strop AI na hráča (PR #676: nad stropom bez 429, voľné odpovede sa hodnotia ako nesprávne), pravidlo Sentry (PR #675, aplikované 11-03). Prvé ostré issue zo Sentry s rozborom: `trubbo-triage#11`.
 - **ASC webhook** vytvorený ručne v App Store Connect (Users and Access → Integrations → Webhooks, `trubbo-triage`), lebo kľúč triáže má rolu Developer: hlásenia číta, webhooky spravovať nesmie (403). Ping overil podpis (server ho prijal). Tajný kód: `ASC_WEBHOOK_SECRET` vo Fly aj v `trubbo-triage`; pri zmene treba nový kód vložiť aj do ASC.
 - **Uptime monitor Sentry** stále meria `http://quiz-agent-api.fly.dev` (koreň, 200), nie `/api/v1/health`: úpravu automaticky vytvoreného monitora Sentry API odmieta chybou 500. Skript to hlási a pokračuje.
-- **Odchýlky od plánu:** názvy polí v payloade sú `id` (nie `issue_id`), regresia = `sentry_new` na zatvorenom issue. Screenshoty z appky sa neposielajú (ostávajú v Postgres za admin kľúčom). Upozornenie na expiráciu tokenov nie je postavené (tokeny platia do 2027-11-01).
+- **Odchýlky od plánu:** názvy polí v payloade sú `id` (nie `issue_id`), regresia = `sentry_new` na zatvorenom issue. Screenshoty z appky sa neposielajú (ostávajú v Postgres za admin kľúčom). Tokeny platia do 2027-10-31 / 11-01; pripomienka 30 dní vopred: `key-expiry.yml` v `trubbo-triage` (každý pondelok, issue so zmienkou foundera; dátumy kľúčov, ktoré nevidí, v `expiries.txt`).
 - **Lokálne testy** posielali skutočné dispatche (token v `.env`), 10 falošných issues zatvorených; zapchaté v PR #702.
 - **Overené naostro 2026-11-03:** spätná väzba z TestFlightu aj z appky → issue s rozborom a screenshotom (~1 min). Skúšobná oprava `trubbo-triage#11` cez štítok `oprav` → PR #707 (review a CI zelené, zlúčené, nasadené). Prvý beh opravy padol na chýbajúcej git identite v checkoute, doplnené. Issue sa zavrie samo do hodiny po zlúčení opravy (`close-fixed.yml`, verejné PR nevie zavrieť súkromné issue cez „Closes“).
 
@@ -90,7 +90,7 @@ Poradie: 218.1 hneď (nezávislé). 218.2 → 218.3 → 218.4 → 218.5 → 218.
 
 - Apple príjem spätnej väzby môže viaznuť (fórum) → 218.5 overí; pády aj tak chytí Sentry.
 - Predplatné Max má limity používania: pri lavíne pádov (napr. zlý build) analyzuje Claude len nové problémy, bumpy idú bez AI; strop ~10 analýz za hodinu, zvyšok čaká.
-- Tokeny GitHubu expirujú 2027-11-01 (upozornenie zatiaľ nie je postavené).
+- Tokeny expirujú 2027-10-31 / 11-01 → `key-expiry.yml` v `trubbo-triage` otvorí issue 30 dní vopred.
 
 ## Otázky pre foundera
 

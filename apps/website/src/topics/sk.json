@@ -23,8 +23,8 @@
   "fresh.badge": "Nové každý týždeň",
   "fresh.home": "Nové otázky z tohto týždňa",
   "nav": "Otázky",
-  "home.title": "Kvízové otázky podľa tém",
-  "home.all": "Všetky témy",
+  "home.title": "Vyskúšaj pár otázok",
+  "home.all": "Všetky otázky",
   "topics": [
     {
       "key": "car",
@@ -54,13 +54,15 @@
       "key": "music",
       "slug": "hudba",
       "about": "o hudbe",
-      "lead": "Piesne, kapely, festivaly a príbehy hitov, ktoré pozná každý."
+      "lead": "Piesne, kapely, festivaly a príbehy hitov, ktoré pozná každý.",
+      "home": true
     },
     {
       "key": "sport",
       "slug": "sport",
       "about": "o športe",
-      "lead": "Olympiády, rekordy a kuriozity zo štadiónov aj z hôr."
+      "lead": "Olympiády, rekordy a kuriozity zo štadiónov aj z hôr.",
+      "home": true
     },
     {
       "key": "food",
@@ -72,7 +74,8 @@
       "key": "nature",
       "slug": "priroda-zvierata-vesmir",
       "about": "o prírode, zvieratách a vesmíre",
-      "lead": "Zvieratá, rastliny, ľudské telo a planéty. Príroda prekvapí častejšie, než by ste čakali."
+      "lead": "Zvieratá, rastliny, ľudské telo a planéty. Príroda prekvapí častejšie, než by ste čakali.",
+      "home": true
     },
     {
       "key": "history",

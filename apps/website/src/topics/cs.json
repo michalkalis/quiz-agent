@@ -23,8 +23,8 @@
   "fresh.badge": "Nové každý týden",
   "fresh.home": "Nové otázky z tohoto týdne",
   "nav": "Otázky",
-  "home.title": "Kvízové otázky podle témat",
-  "home.all": "Všechna témata",
+  "home.title": "Vyzkoušej pár otázek",
+  "home.all": "Všechny otázky",
   "topics": [
     {
       "key": "car",
@@ -36,7 +36,8 @@
       "key": "family",
       "slug": "pro-celou-rodinu",
       "about": "pro celou rodinu",
-      "lead": "Otázky, na které si troufnou děti i prarodiče. Na oslavu, chatu i nedělní oběd."
+      "lead": "Otázky, na které si troufnou děti i prarodiče. Na oslavu, chatu i nedělní oběd.",
+      "home": true
     },
     {
       "key": "country",
@@ -72,13 +73,15 @@
       "key": "nature",
       "slug": "priroda-zvirata-vesmir",
       "about": "o přírodě, zvířatech a vesmíru",
-      "lead": "Zvířata, rostliny, lidské tělo a planety. Příroda překvapí častěji, než byste čekali."
+      "lead": "Zvířata, rostliny, lidské tělo a planety. Příroda překvapí častěji, než byste čekali.",
+      "home": true
     },
     {
       "key": "history",
       "slug": "historie",
       "about": "z historie",
-      "lead": "Panovníci, vynálezy a každodenní život v minulých stoletích."
+      "lead": "Panovníci, vynálezy a každodenní život v minulých stoletích.",
+      "home": true
     },
     {
       "key": "geo",

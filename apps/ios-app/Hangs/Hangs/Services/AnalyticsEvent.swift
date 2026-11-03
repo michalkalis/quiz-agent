@@ -41,6 +41,10 @@ enum AnalyticsEvent: Equatable {
     /// ("round", "45", "true").
     /// #224.4: the host stayed on a reveal (paused) or let the game go on.
     case roomPauseChanged(paused: Bool, question: Int)
+    /// #224.6: a step on the Home category deck; `to` is the category id or "all".
+    case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
+    /// #224.6: the multi-category picker opened, from the deck's button or the pill.
+    case homeCategoryPickerOpened(source: CategoryPickerSource)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -62,6 +66,8 @@ enum AnalyticsEvent: Equatable {
         case .togetherOpened: "together_opened"
         case .roomSettingsChanged: "room_settings_changed"
         case .roomPauseChanged: "room_pause_changed"
+        case .homeCategoryStepped: "home_category_stepped"
+        case .homeCategoryPickerOpened: "home_category_picker_opened"
         }
     }
 
@@ -120,6 +126,10 @@ enum AnalyticsEvent: Equatable {
             []
         case let .roomPauseChanged(paused, question):
             [("paused", .bool(paused)), ("question", .int(question))]
+        case let .homeCategoryStepped(direction, input, to):
+            [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
+        case let .homeCategoryPickerOpened(source):
+            [("source", .string(source.rawValue))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }
@@ -146,6 +156,18 @@ nonisolated enum AnalyticsValue: Encodable, Equatable, Sendable {
 }
 
 // MARK: - Property values
+
+/// How a Home category deck step was made.
+enum CategoryStepInput: String {
+    case tap
+    case voiceover
+}
+
+/// Where the multi-category picker was opened from on Home.
+enum CategoryPickerSource: String {
+    case deckButton = "deck_button"
+    case pill
+}
 
 enum AppLaunchKind: String {
     case cold

@@ -1,10 +1,30 @@
 # texts
 Quiz
-History
-Science & Nature
-Geography & World
+Choose several
+All Categories
 10 questions
 All Categories
+Science & Nature
+10 questions
+Science & Nature
+History
+10 questions
+History
+Geography & World
+10 questions
+Geography & World
+Movies & Music
+10 questions
+Movies & Music
+Sports
+10 questions
+Sports
+Food & Everyday Life
+10 questions
+Food & Everyday Life
+Entertainment
+10 questions
+Entertainment
 English
 Slovenčina
 Čeština
@@ -21,6 +41,10 @@ All Categories
 trubbo
 Start
 # identifiers
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk

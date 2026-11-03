@@ -46,6 +46,8 @@ private let backendClientEvents: [String: Set<String>] = [
     "together_opened": [],
     "room_settings_changed": ["setting", "value", "surface"],
     "room_pause_changed": ["paused", "question"],
+    "home_category_stepped": ["direction", "input", "to"],
+    "home_category_picker_opened": ["source"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -76,6 +78,8 @@ private let everyEvent: [AnalyticsEvent] = [
     .togetherOpened,
     .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
     .roomPauseChanged(paused: true, question: 3),
+    .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
+    .homeCategoryPickerOpened(source: .deckButton),
 ]
 
 @MainActor

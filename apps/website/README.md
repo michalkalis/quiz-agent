@@ -1,7 +1,7 @@
 # trubbo.app website
 
 Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`. Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…` variants; the iOS app and the App Store listing link to these URLs.
-No framework, no external requests. Two self-hosted web fonts, both SIL OFL (license in `funnel-OFL.txt`): Funnel Display for headings and the demo question, Funnel Sans for everything else. Each page is one self-contained HTML file.
+No framework, no external requests. Three self-hosted web fonts, all SIL OFL (licenses in `calistoga-OFL.txt`, `funnel-OFL.txt`, `rethink-sans-OFL.txt`): Calistoga for headings and the demo question (founder 2026-11-03), Rethink Sans ExtraBold for the "trubbo" logo like the app's wordmark, Funnel Sans for everything else. Each page is one self-contained HTML file.
 
 The main call to action is the App Store listing (id 6762482437, local storefront on `/sk/` and `/cs/`, Smart App Banner in Safari); the public TestFlight beta is the secondary link. Both URLs live in `build.py` (`STORE`, `BETA`).
 
@@ -88,5 +88,5 @@ Refresh the questions: run `tools/export_questions.py` read-only on the `quiz-ag
 
 Fresh entertainment page (`/sk/otazky/cerstve/`, `/cs/otazky/cerstve/`, `fresh.py`): the committed page comes from `src/topics/fresh.<lang>.json` (fallback); the deploy workflow then runs `build.py --fresh-live`, which loads the newest boosted entertainment questions from `/api/v1/public/fresh-questions` (`api.trubbo.app`, then the Fly host) and rewrites only those pages. It runs on every deploy and daily at 06:40 UTC; if the API fails, the fallback stays. sk and cs home pages link to it above the headline.
 
-Home entry points (sk, cs; `topics.home`): an "Otázky" link in the header and a section with every topic between how it works and the price. en has no topic pages, so neither shows there.
+Home entry points (sk, cs; `topics.home`): an "Otázky" link in the header and, between how it works and the price, the first question of each topic marked `"home": true` in `src/topics/<lang>.json` (answer behind a tap) with a link to all questions. en has no topic pages, so neither shows there.
 

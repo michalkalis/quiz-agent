@@ -217,21 +217,24 @@ def fresh_link(src: Path, lang: str) -> str:
 
 
 def home(src: Path, lang: str) -> tuple[str, str]:
-    """Home page entry points: a header link to the hub and a section with every topic; empty for en."""
+    """Home page entry points: a header link to the hub and the first question of each topic marked
+    `"home": true`, answer behind a tap, then a link to all questions; empty for en."""
     if lang not in LANGS:
         return "", ""
-    texts, _ = load(src, lang)
+    texts, questions = load(src, lang)
     hub = f"{LANGS[lang]}{DIR}/"
     nav = f'<a class="qnav" href="{hub}">{esc(texts["nav"])}</a>'
-    chips = [f'<li><a class="chip new" href="{hub}{fresh.SLUG}/">{esc(texts["fresh.card"])}</a></li>']
-    chips += [
-        f'<li><a class="chip" href="{hub}{t["slug"]}/">{esc(t["about"][:1].upper() + t["about"][1:])}</a></li>'
-        for t in texts["topics"]
-    ]
+    cards = "".join(
+        f'<li><a class="topic" href="{hub}{t["slug"]}/">{esc(t["about"][:1].upper() + t["about"][1:])}</a>'
+        f'<p class="hq">{esc(q["q"])}</p><details><summary>{esc(texts["reveal"])}</summary>'
+        f'<p class="ha">{esc(q["a"])}</p><p class="hs">{esc(q["story"])}</p></details></li>'
+        for t in texts["topics"] if t.get("home")
+        for q in questions[t["slug"]][:1]
+    )
     section = (
         f'<section class="qs"><h2 class="disp">{esc(texts["home.title"])}</h2>'
-        f'<p class="lead">{esc(texts["how"])}</p><ul class="chips">{"".join(chips)}</ul>'
-        f'<a class="all" href="{hub}">{esc(texts["home.all"])}</a></section>'
+        f'<p class="lead">{esc(texts["how"])}</p><ul class="hqs">{cards}</ul>'
+        f'<a class="btn" href="{hub}">{esc(texts["home.all"])}</a></section>'
     )
     return nav, section
 

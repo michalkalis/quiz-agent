@@ -1,7 +1,7 @@
 # #224 — TF test 2026-11-02: Hra spolu, Home, výsledky, vlastné balíky
 
 **Triage:** enhancement · ready-for-agent (rýchle opravy) · ready-for-human (návrhy na výber, 2 rozhodnutia)
-**Status:** 224.1–224.3 zlúčené (PR #694 #697 #698, quiz-pack-api nasadené); 224.3b zadanie AI čaká na skúšku (PR #701); návrhy vybrané 2026-11-03 → 224.4–224.6, 224.8, 224.9 v práci; 224.7 odložené
+**Status:** všetko okrem 224.8 (rýchla hra) zlúčené (2026-11-03); backend nasadený; 224.8 (rýchla hra) v práci; 224.11 (prísnejšie pixelové testy) čaká; 224.7 (platený hlas v Hre spolu) odložené; v TF builde až na požiadanie
 **Založené:** 2026-11-02 (founder testuje TF build, sk/cs)
 **Súvisí:** #212 — Hra spolu (multiplayer v jednej miestnosti), #216 — záložky Hrať + Profil, #208 — hlasové povely z TF testu, #93 — vlastné balíky
 
@@ -50,13 +50,14 @@
 | 224.1 | 5, 10, 13 | Home a sólový výsledok bez počúvania povelov a bez panelu; „Preskoč“ → „Ďalšia“ / „Další“ / „Next“ na tlačidle, v nápovedách aj ako povel, staré slovo ostáva skrytým synonymom | iOS |
 | 224.2 | 2, 3 (zastavenie), 4 | Vypnutie čítania zastaví prehrávanie hneď a otvorí otázku; čas na odpoveď aj ručne (predvoľby + vlastná hodnota 3–60 s); „Založ hru“ v šírke lišty; lišta sa pri skrolovaní neschová | iOS |
 | 224.3 | 12 | Povinná obťažnosť vlastného balíka: výber vo formulári, pole v objednávke (voliteľné kvôli starším buildom), stĺpec v databáze, odovzdanie generátoru | iOS + quiz-pack-api |
-| 224.3b | 12 | Zadanie pre AI vynúti zvolenú úroveň; skúšobné otázky v artefakte | quiz-pack-api (PR #701) |
-| 224.4 | 1, 3, 7 | Hra spolu: otázka B, pauza medzi otázkami P1 (stav pauzy na serveri, hostia ju vidia), odhalenie B2b/B2a | iOS + backend |
-| 224.5 | 8 | Hra spolu: koniec hry B3a s odpoveďami všetkých | iOS |
-| 224.6 | 6 | Kategórie na Home ťukom vľavo/vpravo, animácia C1, pri obmedzení pohybu len prelínanie | iOS |
+| 224.3b | 12 | Zadanie pre AI vynúti zvolenú úroveň; skúšobné otázky v artefakte | quiz-pack-api (PR #701) ✓ PR #701 nasadené; Mix (4. voľba) PR #711 |
+| 224.4 | 1, 3, 7 | Hra spolu: otázka B, pauza medzi otázkami P1 (stav pauzy na serveri, hostia ju vidia), odhalenie B2b/B2a | iOS + backend ✓ PR #709, quiz-agent nasadené |
+| 224.5 | 8 | Hra spolu: koniec hry B3a s odpoveďami všetkých | iOS ✓ PR #719 |
+| 224.6 | 6 | Kategórie na Home ťukom vľavo/vpravo, animácia C1, pri obmedzení pohybu len prelínanie | iOS ✓ PR #705 (+ analytika `home_category_stepped`, `home_category_picker_opened`), quiz-agent nasadené |
 | 224.7 | 9 | Platené hlasové odpovede v Hre spolu | odložené (founder) |
 | 224.8 | 15 | Rýchla hra (D2) + analytika | iOS |
-| 224.9 | 11 | Sólo výsledok B1b a koniec kola B4a | iOS |
-| 224.10 | 16 | Päta sólo otázky E1 | iOS |
+| 224.9 | 11 | Sólo výsledok B1b a koniec kola B4a | iOS ✓ PR #706; veľké písmo PR #718 |
+| 224.10 | 16 | Päta sólo otázky E1 | iOS ✓ PR #717 |
+| 224.11 | — | Pixelové snímky v testoch tolerujú 1 % rozdielu, takže zmena jedného slova prejde; sprísniť na 0.9995 a pretočiť ~140 zastaraných snímok z CI (samostatný PR po 224.8) | iOS testy |
 
-Poradie: 224.1–224.3 hotové. Ďalej tri prúdy naraz, v každom PR po jednom: Hra spolu (224.4 → 224.5), Home (224.6 → 224.8), sólo (224.9 → 224.10).
+Poradie: hotové všetko okrem 224.8 (rýchla hra); po nej 224.11 (prísnejšie pixelové testy).

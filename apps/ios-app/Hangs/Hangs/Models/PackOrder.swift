@@ -13,14 +13,23 @@ import SwiftUI
 
 // MARK: - Difficulty
 
-/// The level a buyer picks for a custom pack (#224, 224.3). Raw values are the
-/// wire values of quiz-pack-api `CreateOrderRequest.difficulty`.
+/// The level a buyer picks for a custom pack (#224, 224.3). `mixed` is the
+/// fourth, equally explicit choice: no fixed level, the generator's own
+/// easy/medium/hard spread. It sends no `difficulty`, which is exactly what the
+/// backend treats as a mixed batch (NULL), so no backend change is needed.
 nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
     case easy
     case medium
     case hard
+    case mixed
 
     var id: String { rawValue }
+
+    /// Value for `CreateOrderRequest.difficulty` (`easy|medium|hard`); nil for
+    /// `mixed`, which is sent as an absent field.
+    var wireValue: String? {
+        self == .mixed ? nil : rawValue
+    }
 
     /// Label key for `Text`, so it follows the view's locale like every other
     /// string on the order screens.
@@ -29,6 +38,7 @@ nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
         case .easy: "Easy"
         case .medium: "Medium"
         case .hard: "Hard"
+        case .mixed: "Mixed"
         }
     }
 }
@@ -69,7 +79,7 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         try container.encode(targetCount, forKey: .targetCount)
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(theme, forKey: .theme)
-        try container.encodeIfPresent(difficulty?.rawValue, forKey: .difficulty)
+        try container.encodeIfPresent(difficulty?.wireValue, forKey: .difficulty)
     }
 }
 

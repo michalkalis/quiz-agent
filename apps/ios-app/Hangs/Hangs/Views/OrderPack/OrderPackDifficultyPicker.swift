@@ -2,7 +2,7 @@
 //  OrderPackDifficultyPicker.swift
 //  Hangs
 //
-//  #224 (224.3): the required difficulty choice on the order form. Three equal
+//  #224 (224.3): the required difficulty choice on the order form. Four equal
 //  buttons and NO preselection — generated packs came out too easy when the
 //  level was left to the model, so the buyer must pick one before the order
 //  can continue. Selected state matches `AnswerOption.selected` (action fill,
@@ -19,7 +19,12 @@ struct OrderPackDifficultyPicker: View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
             HangsSectionLabel(text: "Difficulty")
                 .padding(.leading, Theme.Hangs.Spacing.md)
-            HStack(spacing: Theme.Hangs.Spacing.xs) {
+            // Two columns: four choices in one row get too tight for "Stredná" at
+            // larger text sizes.
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.xs), count: 2),
+                spacing: Theme.Hangs.Spacing.xs
+            ) {
                 ForEach(PackDifficulty.allCases) { level in
                     option(level)
                 }

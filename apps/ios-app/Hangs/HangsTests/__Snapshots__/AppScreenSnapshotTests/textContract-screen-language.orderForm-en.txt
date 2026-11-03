@@ -10,6 +10,7 @@ Difficulty
 Easy
 Medium
 Hard
+Mixed
 Choose a difficulty to continue.
 English
 Slovenčina
@@ -25,6 +26,7 @@ orderPack.prompt
 orderPack.difficulty.easy
 orderPack.difficulty.medium
 orderPack.difficulty.hard
+orderPack.difficulty.mixed
 orderPack.difficulty.hint
 orderPack.language
 orderPack.language.en

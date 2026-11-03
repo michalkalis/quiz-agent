@@ -55,7 +55,7 @@ export const KineticText: React.FC<{text: string; frames: number; lift: number}>
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const words = text.split(/\s+/).filter(Boolean);
-	const size = fitBand(text, [88, 80, 72, 64, 58, 52]);
+	const size = fitBand(text, [88, 80, 72, 66, 60]);
 	const per = frames / words.length;
 	return (
 		<div style={{...bandStyle(), opacity: fadeOut(frame, frames, fps)}}>
@@ -79,7 +79,7 @@ export const KineticText: React.FC<{text: string; frames: number; lift: number}>
 export const HookText: React.FC<{text: string; frames: number; lift: number}> = ({text, frames, lift}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const size = fitBand(text, [88, 80, 72, 64, 58, 52]);
+	const size = fitBand(text, [88, 80, 72, 66, 60]);
 	const p = spring({frame, fps, config: {damping: 22, stiffness: 100}});
 	return (
 		<div style={{...bandStyle(), opacity: Math.min(p, fadeOut(frame, frames, fps)), transform: `translateY(${(1 - p) * 16}px)`}}>
@@ -97,7 +97,7 @@ export const PlayerBubble: React.FC<{text: string; frames: number; tint: Tint}> 
 	const pad = 44;
 	let size = 50;
 	if (typeof document !== 'undefined') {
-		while (size > 34 && lineCount(text, size, TEXT_W - 2 * pad - 10, 700) > 1) size -= 2;
+		while (size > 44 && lineCount(text, size, TEXT_W - 2 * pad - 10, 700) > 1) size -= 2;
 	}
 	const p = spring({frame, fps, config: {damping: 13, stiffness: 150}});
 	return (
@@ -143,7 +143,7 @@ export const LabelChip: React.FC<{text: string; frames: number; tint: Tint}> = (
 	const {fps} = useVideoConfig();
 	const inP = spring({frame, fps, config: {damping: 20, stiffness: 110}});
 	const outP = interpolate(frame, [frames - fps * 0.3, frames], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-	const size = 40;
+	const size = 44;
 	return (
 		<div style={{position: 'absolute', left: 0, width: W, top: LABEL_CY - 34, height: 68, display: 'flex', justifyContent: 'center', fontFamily: FONT}}>
 			<div

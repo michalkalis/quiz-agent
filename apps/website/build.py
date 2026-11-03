@@ -239,6 +239,7 @@ def render(template: str, lang: str, strings: dict) -> str:
                for code, path in LANGS.items()}
 
     # Pass 1: structure (partials and generated values), which may contain string keys.
+    nav, section = topics.home(SRC, lang)
     generated = {
         "gen.lang": lang,
         "gen.canonical": SITE + LANGS[lang],
@@ -253,6 +254,8 @@ def render(template: str, lang: str, strings: dict) -> str:
         "gen.store.id": APP_STORE_ID,
         "gen.beta": BETA,
         "gen.fresh": topics.fresh_link(SRC, lang),
+        "gen.qnav": nav,
+        "gen.qsection": section,
     }
     page = KEY.sub(lambda m: generated.get(m.group(1), m.group(0)), template)
 

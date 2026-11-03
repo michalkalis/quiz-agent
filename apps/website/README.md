@@ -88,3 +88,5 @@ Refresh the questions: run `tools/export_questions.py` read-only on the `quiz-ag
 
 Fresh entertainment page (`/sk/otazky/cerstve/`, `/cs/otazky/cerstve/`, `fresh.py`): the committed page comes from `src/topics/fresh.<lang>.json` (fallback); the deploy workflow then runs `build.py --fresh-live`, which loads the newest boosted entertainment questions from `/api/v1/public/fresh-questions` (`api.trubbo.app`, then the Fly host) and rewrites only those pages. It runs on every deploy and daily at 06:40 UTC; if the API fails, the fallback stays. sk and cs home pages link to it above the headline.
 
+Home entry points (sk, cs; `topics.home`): an "Otázky" link in the header and a section with every topic between how it works and the price. en has no topic pages, so neither shows there.
+

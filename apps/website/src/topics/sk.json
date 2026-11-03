@@ -22,6 +22,9 @@
   "fresh.card.d": "Filmy, seriály, hudba a hviezdy. Pribúdajú každý týždeň.",
   "fresh.badge": "Nové každý týždeň",
   "fresh.home": "Nové otázky z tohto týždňa",
+  "nav": "Otázky",
+  "home.title": "Kvízové otázky podľa tém",
+  "home.all": "Všetky témy",
   "topics": [
     {
       "key": "car",

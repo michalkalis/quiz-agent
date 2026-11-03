@@ -66,9 +66,6 @@ apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	spacing	.padding
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	spacing	.padding(.vertical, 1)	1
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	spacing	spacing: 2	2
 apps/ios-app/Hangs/Hangs/Views/Components/Hangs/ListenBar.swift	spacing	spacing: 6	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/QuestionSkipButton.swift	font	.hangsBody(15	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/QuestionSkipButton.swift	font	.system(size: 12	1
-apps/ios-app/Hangs/Hangs/Views/Components/Hangs/QuestionSkipButton.swift	spacing	spacing: 6	1
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	font	.hangsMono(10	1
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	font	.system(size: 11	1
 apps/ios-app/Hangs/Hangs/Views/Components/ReviewBadge.swift	spacing	spacing: 5	1

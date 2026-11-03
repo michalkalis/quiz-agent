@@ -66,6 +66,7 @@ struct RoomPauseTests {
         #expect(model.round?.number == 1, "a paused reveal must not move on by itself")
 
         await model.togglePause()
+        for _ in 0 ..< 5 { await Task.yield() }
         #expect(rooms.pauseCalls == [true, false])
         #expect(!model.isPaused)
         #expect(model.autoAdvanceLeft == delay, "resuming gives the full reading time again")

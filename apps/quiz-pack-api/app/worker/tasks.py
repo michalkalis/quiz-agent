@@ -350,7 +350,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             tracker, usage_before, generator, fetch_usage=False
         )
         await _handle_failure(
-            ctx, order_uuid, order_id, sink, exc, attempt_cost_cents=attempt_cost
+            ctx, order_uuid, order_id, sink, exc,
+            attempt_cost_cents=attempt_cost, cancelled=True,
         )
         raise
     except Exception as exc:
@@ -410,6 +411,7 @@ async def _handle_failure(
     sink: DBProgressSink | None,
     exc: Exception,
     attempt_cost_cents: int = 0,
+    cancelled: bool = False,
 ) -> None:
     """Mark job (and order on final retry) failed; publish failure event.
 
@@ -504,7 +506,12 @@ async def _handle_failure(
                 },
             )
             scope.set_context("step_log_tail", {"steps": step_log_tail})
-            sentry_sdk.capture_exception(exc)
+            # A cancel (worker shutdown on deploy/machine restart, or ARQ
+            # job_timeout) on a non-final attempt is retried by ARQ or the
+            # sweep, so the order is not lost: warn. The final attempt still
+            # reports as an error — that one ends refund-eligible.
+            level = "warning" if cancelled and not is_final else "error"
+            sentry_sdk.capture_exception(exc, level=level)
 
         if sink is not None:
             await sink.publish(

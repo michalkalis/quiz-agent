@@ -35,7 +35,7 @@ extension AppScreen {
             await makePacksLoadFailed()
         case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed:
             await makeDaily()
-        case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomQuestionHost, .roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomRules:
+        case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomQuestionHost, .roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomFinalExpanded, .roomRules:
             await makeRoom()
         case .recapShareImage:
             makeRecapShareImage()

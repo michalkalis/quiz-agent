@@ -20,7 +20,7 @@ extension AppScreen {
         let rooms = MockRoomService()
         // The reveal and final screens show the per-question reveal; the
         // lobbies and the rules sheet show the defaults.
-        let settings = [.roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal].contains(self) ? MultiplayerSettings(revealMode: .question) : MultiplayerSettings()
+        let settings = [.roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomFinalExpanded].contains(self) ? MultiplayerSettings(revealMode: .question) : MultiplayerSettings()
         let model = Self.roomModel(rooms, guestName: [.roomLobbyGuest, .roomQuestion, .roomRevealPaused].contains(self) ? "Peťo" : nil, settings: settings)
         switch self {
         case .roomLobbyHost:
@@ -62,7 +62,7 @@ extension AppScreen {
             await model.readTask?.value
             model.stopAll()
             return AnyView(RoomRulesSheet(viewModel: model).background(Theme.Hangs.Colors.bg))
-        case .roomFinal:
+        case .roomFinal, .roomFinalExpanded:
             await model.beginHosting()
             await model.startGame()
             await model.readTask?.value
@@ -75,6 +75,10 @@ extension AppScreen {
         default: preconditionFailure("\(self) is not a game-together screen")
         }
         model.stopAll()
+        if self == .roomFinalExpanded {
+            // Both questions open: the host's answer, the others' and the marks.
+            return AnyView(RoomFinalView(viewModel: model, expanded: [1, 2], onShowPlans: {}, onClose: {}).background(Theme.Hangs.Colors.bg))
+        }
         return AnyView(RoomFlowView(viewModel: model, onShowPlans: {}, onClose: {}))
     }
 

@@ -201,13 +201,19 @@ def main() -> int:
     if uptimes:  # plan allows one; re-point the auto-created one
         u = uptimes[0]
         if any(u.get(k) != v for k, v in UPTIME.items()):
-            step(
-                apply,
-                "uptime monitor",
-                "PUT",
-                f"/projects/{ORG}/{PROJECT}/uptime/{u['id']}/",
-                UPTIME,
-            )
+            # Sentry answers 500 to any edit of the auto-detected monitor
+            # (2026-11-03); it still checks the root URL every minute, so
+            # warn and set up the alerts anyway.
+            try:
+                step(
+                    apply,
+                    "uptime monitor",
+                    "PUT",
+                    f"/projects/{ORG}/{PROJECT}/uptime/{u['id']}/",
+                    UPTIME,
+                )
+            except SystemExit as exc:
+                print(f"WARN  uptime monitor not updated, keeps {u.get('url')}: {exc}")
     else:
         step(
             apply,

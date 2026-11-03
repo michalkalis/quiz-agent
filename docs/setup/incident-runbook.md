@@ -13,6 +13,8 @@ Jedna stránka na prvých 15 minút výpadku. Podrobnosti sú v odkazovaných n�
 | GitHub e-mail o zlyhanom behu `prod-monitor` | zdravie oboch API, visiace objednávky, heartbeat workera, aj keď **padol celý región cdg** (vtedy nemá kto poslať `[Trubbo ALERT]`) | ~30 min až 4 h |
 | GitHub issue `deploy-failed` (e-mail) | `backend-deploy.yml` zastal na stagingu alebo prode | hneď |
 | Sentry (org `missinghue`, projekt `carquiz`) | pády appky, chyby a varovania backendu (Sentry Logs 30 dní) | bonus, nie alarm |
+| Sentry e-mail „Production problem“ | nový alebo vrátený problém backendu, výpadok (uptime koreňa quiz-agent-api každú minútu, cron monitory) alebo skok chýb > 25 za 5 min; pády iOS nie | ~3 min |
+| Issue v súkromnom `trubbo-triage` (#218 — pády a spätná väzba automaticky) | nový problém zo Sentry, hlásenie z TestFlightu a spätná väzba z appky, s rozborom od Claude. Opravu spustí founder štítkom `oprav` (alebo komentárom `/oprav`), výsledok je PR v `quiz-agent`. Lavína hlásení: prepínač `triage_bridge_enabled` na `false` ([app-switches](app-switches.md)) | do 15 min |
 
 Mechanika alarmov: `packages/shared/quiz_shared/ops_alerts.py`, `.github/workflows/prod-monitor.yml`. Gmail filter na `[Trubbo ALERT]` = dôležité (founder krok v #207).
 

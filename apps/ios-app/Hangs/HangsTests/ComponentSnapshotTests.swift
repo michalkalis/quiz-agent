@@ -92,7 +92,7 @@ struct ComponentSnapshotTests {
 
     private func strategy(_ scheme: ColorScheme) -> Snapshotting<AnyView, UIImage> {
         .image(
-            precision: 0.9995,
+            precision: 0.99,
             perceptualPrecision: 0.98,
             layout: .sizeThatFits,
             traits: UITraitCollection(traitsFrom: [

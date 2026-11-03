@@ -10,6 +10,8 @@ model: sonnet
 
 One-stop Sentry query command. Covers crashes, structured logs (experimental), and user-feedback submissions (shake-to-report) from Trubbo iOS.
 
+First look at the private triage repo (`gh issue list -R michalkalis/trubbo-triage`, #218): every new Sentry problem, TestFlight report and in-app feedback already lands there with a root-cause analysis. Use this command for deeper digging.
+
 ## Prerequisites
 
 `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` must be set (they live in `.env`).

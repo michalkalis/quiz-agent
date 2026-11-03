@@ -53,7 +53,7 @@ struct QuestionSkipButton: View {
                     // Founder pick (#171, 2026-09-06): two chevrons read as
                     // "skip"; the play+bar glyph read as media transport.
                     Image(systemName: "chevron.right.2")
-                        .font(.hangsBody(17, weight: .semibold))
+                        .font(.hangsButton)
                 }
             }
             .foregroundColor(Theme.Hangs.Colors.ink)

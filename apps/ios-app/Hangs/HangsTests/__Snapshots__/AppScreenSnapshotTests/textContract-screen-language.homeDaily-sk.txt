@@ -3,11 +3,31 @@ denná výzva · Oct 15
 Päť otázok. Rovnaké pre všetkých.
 Hraj dnešnú výzvu
 Kvíz
-History
-Science & Nature
-Geography & World
+Vyber viac
+All Categories
 10 otázok
 All Categories
+Science & Nature
+10 otázok
+Science & Nature
+History
+10 otázok
+History
+Geography & World
+10 otázok
+Geography & World
+Movies & Music
+10 otázok
+Movies & Music
+Sports
+10 otázok
+Sports
+Food & Everyday Life
+10 otázok
+Food & Everyday Life
+Entertainment
+10 otázok
+Entertainment
 English
 Slovenčina
 Čeština
@@ -26,6 +46,10 @@ trubbo
 # identifiers
 home.daily
 home.daily.play
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk

@@ -43,6 +43,8 @@
         private(set) var answers: [String] = []
         private(set) var removed: [String] = []
         private(set) var openCalls = 0
+        private(set) var pauseCalls: [Bool] = []
+        private var holding = false
         private(set) var joinNames: [String] = []
 
         private var role: RoomViewModel.Role?
@@ -174,6 +176,14 @@
             awayReports.append(questionId)
         }
 
+        func setPaused(roomId _: String, paused: Bool) async throws -> RoomState {
+            guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Nothing to pause") }
+            pauseCalls.append(paused)
+            holding = paused
+            bump()
+            return state(full: true)
+        }
+
         func nextQuestion(roomId _: String) async throws -> RoomState {
             // Like URLSession: a cancelled task's request never arrives.
             try Task.checkCancellation()
@@ -206,6 +216,13 @@
             bump()
         }
 
+        /// A guest's host stays on the reveal (or resumes).
+        func hostPauses(_ paused: Bool) {
+            guard phase == .revealed else { return }
+            holding = paused
+            bump()
+        }
+
         private func advance() {
             if index + 1 >= script.count {
                 status = .finished
@@ -215,6 +232,7 @@
                 phase = .reading
                 roundAnswers = [:]
             }
+            holding = false
             bump()
         }
 
@@ -250,7 +268,8 @@
                 results: revealed ? roundAnswers.sorted { $0.key < $1.key }.map { pid, answer in
                     let right = answer.lowercased() == item.correctKey
                     return RoomState.Result(participantId: pid, answer: answer, result: right ? "correct" : "incorrect", points: right ? 1 : 0)
-                } : nil
+                } : nil,
+                paused: holding && phase == .revealed ? true : nil
             )
         }
 

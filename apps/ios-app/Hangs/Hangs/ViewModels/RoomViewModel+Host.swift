@@ -157,8 +157,35 @@ extension RoomViewModel {
         }
         if round.phase == .revealed, advanceQuestionId != round.questionId {
             advanceQuestionId = round.questionId
-            let seconds = state.revealMode == .round ? Self.roundModePauseSeconds : autoAdvanceSeconds
-            scheduleAutoAdvance(after: seconds)
+            scheduleAutoAdvance(after: revealSeconds(for: state))
+        }
+    }
+
+    private func revealSeconds(for state: RoomState?) -> Int {
+        state?.revealMode == .round ? Self.roundModePauseSeconds : autoAdvanceSeconds
+    }
+
+    /// #224.4: stay on this reveal (the countdown stops, guests are told) or
+    /// let the game go on (the countdown starts over). "Next" still moves on.
+    func togglePause() async {
+        guard isHost, !isChangingPause, !isWorking, let roomId = created?.roomId,
+              let round, round.phase == .revealed
+        else { return }
+        let pause = !round.isPaused
+        isChangingPause = true
+        defer { isChangingPause = false }
+        if pause {
+            advanceTask?.cancel()
+            autoAdvanceLeft = nil
+        }
+        do {
+            try apply(await rooms.setPaused(roomId: roomId, paused: pause))
+            if !pause { scheduleAutoAdvance(after: revealSeconds(for: state)) }
+            analytics.track(.roomPauseChanged(paused: pause, question: round.number))
+        } catch {
+            if pause { scheduleAutoAdvance(after: revealSeconds(for: state)) }
+            await refresh()
+            errorMessage = Self.genericMessage
         }
     }
 

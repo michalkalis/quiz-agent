@@ -17,6 +17,17 @@ extension RoomViewModel {
         let isCorrect: Bool
         let points: Double
         let isYou: Bool
+        /// The option key they tapped (A–D questions); nil for typed or none.
+        var pickedKey: String?
+    }
+
+    /// #224.4: one option of an A–D reveal with the players who picked it.
+    struct OptionRow: Identifiable, Equatable {
+        let id: String
+        let letter: String
+        let text: String
+        let isCorrect: Bool
+        let pickers: [RevealRow]
     }
 
     struct RankRow: Identifiable, Equatable {
@@ -67,7 +78,24 @@ extension RoomViewModel {
                 answer: result.map { answerText($0.answer, questionId: round.questionId) },
                 isCorrect: result?.isCorrect ?? false,
                 points: result?.points ?? 0,
-                isYou: player.participantId == state?.you
+                isYou: player.participantId == state?.you,
+                pickedKey: result?.answer.lowercased()
+            )
+        }
+    }
+
+    /// A–D reveal: every option with who picked it; nil for a typed question.
+    func optionRows(for round: RoomState.Round) -> [OptionRow]? {
+        guard let question = questionsById[round.questionId], question.isMultipleChoice else { return nil }
+        let rows = revealRows(for: round)
+        let right = round.correctAnswer?.lowercased()
+        return question.sortedAnswerOptions.map { option in
+            OptionRow(
+                id: option.key,
+                letter: option.key.uppercased(),
+                text: option.value,
+                isCorrect: right == option.key.lowercased() || right == option.value.lowercased(),
+                pickers: rows.filter { $0.pickedKey == option.key.lowercased() }
             )
         }
     }

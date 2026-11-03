@@ -35,6 +35,8 @@ protocol RoomServiceProtocol: Sendable {
     /// the full state. The reveal only in the lobby (409 after the start);
     /// a new answer time counts from the next question.
     func updateSettings(roomId: String, revealMode: RoomState.RevealMode?, thinkingSeconds: Int?, readsAloud: Bool?) async throws -> RoomState
+    /// Host (#224.4): stay on the revealed question (guests see it) or resume.
+    func setPaused(roomId: String, paused: Bool) async throws -> RoomState
     /// Host: the next question for everyone, or the final ranking.
     func nextQuestion(roomId: String) async throws -> RoomState
 }

@@ -17,14 +17,13 @@ struct RoomRevealView: View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             if let round = viewModel.round {
                 HangsQuizProgressHeader(current: round.number, total: viewModel.state?.maxQuestions ?? round.number)
-                // Outside the scroll view, so its shadow is not cut off.
-                if !holdsResults { answerCard(round).fixedSize(horizontal: false, vertical: true) }
                 ScrollView {
                     VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
                         if holdsResults {
                             heldCard
                         } else {
-                            resultsList(round)
+                            answerCard(round)
+                            results(round)
                             if let explanation = round.explanation, !explanation.isEmpty {
                                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
                                     HangsSectionLabel(text: "Why")
@@ -38,6 +37,8 @@ struct RoomRevealView: View {
                     }
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+                .scrollClipDisabled()
                 RoomNextFooter(viewModel: viewModel)
             }
         }
@@ -45,59 +46,48 @@ struct RoomRevealView: View {
         .padding(.bottom, Theme.Hangs.Spacing.md)
     }
 
+    /// A–D: the options with who picked what. Typed: a line per player.
+    @ViewBuilder
+    private func results(_ round: RoomState.Round) -> some View {
+        if let options = viewModel.optionRows(for: round) {
+            RoomOptionRows(options: options)
+            let silent = viewModel.revealRows(for: round).filter { $0.answer == nil }
+            if !silent.isEmpty {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
+                    ForEach(silent) { RoomPlayerAvatar(name: $0.name, color: $0.color, size: 24) }
+                    Text("No answer: \(silent.map(\.name).formatted(.list(type: .and, width: .narrow)))")
+                }
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("room.reveal.silent")
+            }
+        } else {
+            RoomAnswerRows(rows: viewModel.revealRows(for: round))
+        }
+    }
+
     private func answerCard(_ round: RoomState.Round) -> some View {
         let identity = DeckIdentity(category: viewModel.question?.category, packId: nil)
+        let typed = viewModel.optionRows(for: round) == nil
         return HangsDeckCard(style: identity.style, categoryName: identity.chipName) {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 Text(verbatim: round.questionText)
                     .font(.hangsBody)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Correct answer")
-                    .font(.hangsMonoLabel)
-                    .textCase(.uppercase)
-                HangsAnswerSticker(text: round.correctAnswer ?? "")
-                    .accessibilityIdentifier("room.reveal.answer")
+                if typed {
+                    Text("Correct answer")
+                        .font(.hangsMonoLabel)
+                        .textCase(.uppercase)
+                    HangsAnswerSticker(text: round.correctAnswer ?? "")
+                        .accessibilityIdentifier("room.reveal.answer")
+                }
                 Text("Correct: \(viewModel.correctCount(in: round))/\(viewModel.players.count)")
                     .font(.hangsLabel)
                     .accessibilityIdentifier("room.reveal.count")
             }
         }
-    }
-
-    private func resultsList(_ round: RoomState.Round) -> some View {
-        HangsCard {
-            VStack(spacing: 0) {
-                let rows = viewModel.revealRows(for: round)
-                ForEach(rows) { row in
-                    HStack(spacing: Theme.Hangs.Spacing.sm) {
-                        RoomPlayerAvatar(name: row.name, color: row.color, size: 28)
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(verbatim: row.name)
-                                .font(.hangsLabel)
-                                .foregroundStyle(Theme.Hangs.Colors.ink)
-                            if let answer = row.answer {
-                                Text(verbatim: answer)
-                                    .font(.hangsCaption)
-                                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                            } else {
-                                Text("no answer")
-                                    .font(.hangsCaption)
-                                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        Image(systemName: row.isCorrect ? "checkmark.circle.fill" : "xmark.circle")
-                            .foregroundStyle(row.isCorrect ? Theme.Hangs.Colors.greenCheck : Theme.Hangs.Colors.muted)
-                            .accessibilityLabel(row.isCorrect ? Text("correct") : Text("incorrect"))
-                    }
-                    .padding(.horizontal, Theme.Hangs.Spacing.md)
-                    .frame(minHeight: Metrics.rowHeight)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("room.reveal.row.\(row.id)")
-                    if row.id != rows.last?.id { HangsDivider() }
-                }
-            }
-        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var heldCard: some View {
@@ -123,29 +113,48 @@ struct RoomRevealView: View {
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("room.reveal.held")
     }
-
-    private enum Metrics {
-        static let rowHeight: CGFloat = 52
-    }
 }
 
-/// The host moves on (by itself after a countdown); a guest waits for it.
+/// The host moves on (by itself after a countdown, unless it stays); a guest
+/// waits for it and sees when the host paused (#224.4).
 struct RoomNextFooter: View {
     @ObservedObject var viewModel: RoomViewModel
 
     var body: some View {
         if viewModel.isHost {
-            HangsPrimaryButton(
-                title: "Next",
-                trailingIcon: "arrow.right",
-                isLoading: viewModel.isWorking,
-                countdownSecondsRemaining: viewModel.autoAdvanceLeft,
-                countdownTotal: viewModel.autoAdvanceSeconds
-            ) {
-                Task { await viewModel.next() }
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
+                HangsPrimaryButton(
+                    title: "Next",
+                    trailingIcon: "arrow.right",
+                    isLoading: viewModel.isWorking,
+                    countdownSecondsRemaining: viewModel.autoAdvanceLeft,
+                    countdownTotal: viewModel.autoAdvanceSeconds
+                ) {
+                    Task { await viewModel.next() }
+                }
+                .disabled(viewModel.isWorking)
+                .accessibilityIdentifier("room.next")
+                .layoutPriority(1)
+                if viewModel.isPaused {
+                    HangsSecondaryButton(title: "Resume", icon: "play.fill", singleLineTitle: true) {
+                        Task { await viewModel.togglePause() }
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                    .accessibilityIdentifier("room.resume")
+                } else {
+                    HangsSecondaryButton(title: "Stay", icon: "pause.fill", singleLineTitle: true) {
+                        Task { await viewModel.togglePause() }
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                    .accessibilityIdentifier("room.pause")
+                }
             }
-            .disabled(viewModel.isWorking)
-            .accessibilityIdentifier("room.next")
+        } else if viewModel.isPaused {
+            Label("The host paused", systemImage: "pause.circle.fill")
+                .font(.hangsLabel)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityIdentifier("room.paused")
         } else {
             Text("The host moves on to the next question.")
                 .font(.hangsCaption)

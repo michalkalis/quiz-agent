@@ -39,6 +39,8 @@ enum AnalyticsEvent: Equatable {
     case togetherOpened
     /// #213.8: the host changed a rule of a game together; `value` as sent
     /// ("round", "45", "true").
+    /// #224.4: the host stayed on a reveal (paused) or let the game go on.
+    case roomPauseChanged(paused: Bool, question: Int)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -59,6 +61,7 @@ enum AnalyticsEvent: Equatable {
         case .recapShared: "recap_shared"
         case .togetherOpened: "together_opened"
         case .roomSettingsChanged: "room_settings_changed"
+        case .roomPauseChanged: "room_pause_changed"
         }
     }
 
@@ -115,6 +118,8 @@ enum AnalyticsEvent: Equatable {
             [("kind", .string(kind))]
         case .togetherOpened:
             []
+        case let .roomPauseChanged(paused, question):
+            [("paused", .bool(paused)), ("question", .int(question))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

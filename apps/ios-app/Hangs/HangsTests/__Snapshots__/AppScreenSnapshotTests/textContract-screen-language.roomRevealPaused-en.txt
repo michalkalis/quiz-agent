@@ -1,0 +1,30 @@
+# texts
+Play together
+1/2
+SCIENCE & NATURE
+Which planet has the most known moons?
+Correct: 1/2
+A
+Jupiter
+P
+Saturn
+M
+C
+Uranus
+nobody
+D
+Neptune
+nobody
+Why
+Mock explanation.
+The host paused
+# identifiers
+room.close
+question.progress
+question.counter
+room.reveal.count
+room.reveal.option.a
+room.reveal.option.b
+room.reveal.option.c
+room.reveal.option.d
+room.paused

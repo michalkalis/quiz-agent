@@ -1,0 +1,32 @@
+# texts
+Play together
+2/2
+SCIENCE & NATURE
+What is the capital of Australia?
+Correct answer
+Canberra
+Correct: 1/2
+M
+Michal
+(you)
+Canberra
++1
+J
+Jana
+Sydney
+0
+Why
+Mock explanation.
+Next
+Stay
+# identifiers
+room.close
+room.rules.open
+question.progress
+question.counter
+room.reveal.answer
+room.reveal.count
+room.reveal.row.p_you
+room.reveal.row.p_other
+room.next
+room.pause

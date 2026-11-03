@@ -3,25 +3,32 @@ Hra spolu
 1/2
 SCIENCE & NATURE
 Which planet has the most known moons?
-Správná odpověď
-Saturn
 Správně: 2/2
+A
+Jupiter
+nikdo
+Saturn
 M
-Michal
-Saturn
 J
-Jana
-Saturn
+C
+Uranus
+nikdo
+D
+Neptune
+nikdo
 Proč
 Mock explanation.
 Dál
+Zůstaň
 # identifiers
 room.close
 room.rules.open
 question.progress
 question.counter
-room.reveal.answer
 room.reveal.count
-room.reveal.row.p_you
-room.reveal.row.p_other
+room.reveal.option.a
+room.reveal.option.b
+room.reveal.option.c
+room.reveal.option.d
 room.next
+room.pause

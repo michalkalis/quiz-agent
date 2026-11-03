@@ -57,6 +57,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var isReadingAloud = false
     /// Host: seconds until the phone moves on by itself after a reveal.
     @Published var autoAdvanceLeft: Int?
+    /// Host: a pause or resume is on its way to the server (#224.4).
+    @Published var isChangingPause = false
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
@@ -152,6 +154,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     }
 
     var isHost: Bool { role == .host }
+    /// #224.4: the host stays on this reveal; every phone says so.
+    var isPaused: Bool { round?.isPaused == true }
     /// After a reveal the host's phone moves on by itself after this long (solo's pause).
     var autoAdvanceSeconds: Int { solo.autoAdvanceDelay }
     var players: [RoomState.Player] { state?.players ?? [] }

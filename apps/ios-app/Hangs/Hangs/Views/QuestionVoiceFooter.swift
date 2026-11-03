@@ -58,6 +58,7 @@ struct QuestionVoiceFooter: View {
 
     /// #194 canvas: the footer shares the screen's 16pt edge.
     private static let gutter = Theme.Hangs.Spacing.md
+    private static let pairTypeCap = DynamicTypeSize.xLarge
     /// Glyph size of the send control.
     private static let glyphSize: CGFloat = 17
     /// Bg-Typed: the typed answer reads larger than body text.
@@ -125,6 +126,9 @@ struct QuestionVoiceFooter: View {
             typeButton
             skipButton
         }
+        // Answer and Type read as a pair, so both labels scale together: capped at
+        // the size where "Odpovedz" still fits beside "Napíš" without shrinking.
+        .dynamicTypeSize(...Self.pairTypeCap)
     }
 
     /// Manual override (54.3): `toggleRecording` starts recording immediately from
@@ -183,12 +187,13 @@ struct QuestionVoiceFooter: View {
             Label("Type", systemImage: "keyboard")
                 .font(.hangsButton)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(HangsButtonTitle.singleLineMinimumScale)
                 .foregroundColor(Theme.Hangs.Colors.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: rowHeight)
-                // #194 B2: secondary controls are Liquid Glass.
-                .glassEffect(.regular.interactive(), in: Capsule())
+                // Canvas E1: a visible pill, same height and width as Answer.
+                .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+                .overlay(Capsule().strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)

@@ -61,8 +61,10 @@ struct QuestionSkipButton: View {
             // width is the same in every language and the two labelled buttons
             // beside it get the room.
             .frame(width: height, height: height)
-            // #194 B2: secondary controls are Liquid Glass.
-            .glassEffect(.regular.interactive(), in: Capsule())
+            // Canvas E1: the same visible pill as the Type button beside it.
+            .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+            .overlay(Capsule().strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)

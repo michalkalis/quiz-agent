@@ -21,6 +21,7 @@ Celý backend (quiz-agent, quiz-pack web + worker, Postgres/pgvector, Redis) be�
 
 - 2026-11-02: **222.1 hotové** (CAX11 Arm, fsn1; CX23 nedostupný). **222.2 hotové** — skúšobný stack na kópii prod DB, smoke zelené, ochrana IP overená. **222.3 monitoring** hotové (PR #672). **222.4** zálohy zo servera (PR #680, backups repo PR #1), nasadzovanie z CI rozpracované. **222.5** DNS `api`/`pack.trubbo.app` s certifikátmi. Presmerovač na Fly pripravený (PR #681). Postup prepnutia: [hetzner-cutover.md](../setup/hetzner-cutover.md). Founder 2026-11-02: beta schválená, netreba čakať na review.
 - 2026-11-03: **nezávislé review prepnutia** → opravy: zmrazenie = nasadenie presmerovača (zastavený Fly stroj sa sám prebudí), `db-copy.sh` (kontrola zapisovačov, jedna transakcia, počty všetkých tabuliek, oba smery), návrat CI bez migrácií, WAL do R2 na Hetzneri (`trubbo-prod`, overené lokálne vrátane obnovy k času T), týždenné dopĺňanie a mba worker cez Hetzner, presmerovač vyskúšaný na dočasnej Fly appke, ochrana servera proti zmazaniu zapnutá. Na serveri treba ešte nainštalovať (krok 0 postupu).
+- 2026-11-03 večer: **krok 0 hotový na serveri** — skripty nainštalované, WAL do R2 beží (archived > 0, failed 0), prvá základná záloha cez `basebackup` prešla, Caddy s novým nastavením, smoke oboch domén OK, `FORWARDER_SECRET` na oboch Fly appkách zhodný so serverom (odtlačok). Ostáva: termín prepnutia (kroky 1–6).
 
 ## Kroky
 

@@ -10,7 +10,7 @@ Moves production from Fly to `trubbo-prod-1` (2.31.163.95, see [`infra/hetzner/R
 
 - [ ] `api.trubbo.app` and `pack.trubbo.app` resolve to 2.31.163.95 and pass `infra/deploy/smoke.sh`.
 - [ ] GitHub, set by the founder: backups repo `HETZNER_BACKUP_SSH_KEY` + `HETZNER_KNOWN_HOSTS`, monorepo `HETZNER_DEPLOY_SSH_KEY` + `HETZNER_KNOWN_HOSTS`.
-- [ ] Server on current `main`: `git pull`, then `install -m 755 deploy-ssh.sh backup-ssh.sh ~/trubbo/bin/`.
+- [ ] Server on current `main`: `git fetch origin main && git checkout --detach origin/main` (deploys leave the checkout detached, so `git pull` fails), then `install -m 755 deploy-ssh.sh backup-ssh.sh ~/trubbo/bin/`.
 - [ ] PITR on (rehearsal data is fine): `infra/hetzner/pull-env.sh rehearsal` writes `env/wal.env`; then `docker compose build postgres && docker compose up -d postgres`. `select archived_count, failed_count from pg_stat_archiver` must show archived > 0, failed 0 after ~5 min.
 - [ ] Forwarder rehearsal green: `infra/fly-forwarder/rehearse.sh` (throwaway Fly app, cents; passed 2026-11-03).
 - [ ] Fly secret `FORWARDER_SECRET` staged on both apps, value straight from the server: `ssh trubbo-prod 'cat trubbo/repo/infra/hetzner/env/forwarder.env' | env -u FLY_API_TOKEN fly secrets import -a <app> --stage`.

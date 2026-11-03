@@ -28,11 +28,11 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 |---|---|
 | Status / memory | `docker compose ps` · `docker stats --no-stream` |
 | Logs | `docker compose logs -f --since 10m quiz-agent` |
-| Update code | `git pull && docker compose build quiz-agent pack-web && docker compose up -d` |
+| Update code | `git fetch origin main && git checkout --detach origin/main && docker compose build quiz-agent pack-web && docker compose up -d` (deploys leave the checkout detached) |
 | Migrations | `docker compose run --rm quiz-agent alembic upgrade head` (and `pack-web`) |
 | Start the order worker | `docker compose --profile worker up -d pack-worker` (prod only: a copied DB would re-run real orders on paid keys) |
 | psql | `docker compose exec postgres psql -U postgres -d quiz_pack` |
-| Reload Caddy | `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile` |
+| Reload Caddy | `docker compose up -d --force-recreate caddy` (a checkout replaces the Caddyfile and the running container keeps seeing the old one, so `caddy reload` is not enough) |
 | Refresh secrets (from a laptop) | `infra/hetzner/pull-env.sh rehearsal\|prod` |
 | WAL archive status | `docker compose exec postgres psql -U postgres -c 'select * from pg_stat_archiver'` |
 | Base backup now | `SSH_ORIGINAL_COMMAND=basebackup ~/trubbo/bin/backup-ssh.sh` |

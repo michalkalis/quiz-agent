@@ -1,13 +1,14 @@
 // AppDemo (#210): an iOS simulator recording of Trubbo as a 9:16 promo reel. The recording sits in a
 // drawn phone on a soft tint; cuts, tap ripples, a calm zooming camera, the app's voice clips and
-// three kinds of captions are laid on top. The script (demoTypes.ts) is in RECORDING time throughout.
+// captions (the app's voice, the player's answer, feature chips, big title words) are laid on top.
+// The script (demoTypes.ts) is in RECORDING time throughout.
 import React from 'react';
-import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {DemoPhone, RIPPLE_S, type Ripple} from './DemoPhone';
-import {HookText, KineticText, LabelChip, PlayerBubble} from './DemoCaptions';
-import {phoneBox, PHONE_CX, PHONE_CY} from './demoLayout';
-import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam} from './demoTimeline';
-import type {AppDemoProps, DemoCaption} from './demoTypes';
+import {fitTitle, HookText, KineticText, LabelChip, PlayerBubble, TitleWord} from './DemoCaptions';
+import {phoneBox, PHONE_CX, PHONE_CY, PHONE_TOP, TOP_BAND} from './demoLayout';
+import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam, runEnd} from './demoTimeline';
+import type {AppDemoProps, DemoCaption, DemoCaptionKind} from './demoTypes';
 import {END_CARD_S, EndCard} from './EndCard';
 import {FONT, INK, tintFor} from './theme';
 
@@ -15,13 +16,14 @@ export const appDemoFrames = (props: AppDemoProps, fps: number) => buildTimeline
 
 type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number};
 
-/** Camera at this component's frame (+ `offset` to reach the root frame from inside a Sequence). */
-const useCamera = (rig: Rig, offset = 0) => {
+const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom - 4}px, #000 ${PHONE_TOP - 2}px)`;
+
+/** Camera at this component's frame. */
+const useCamera = (rig: Rig) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const cam = cameraAt(rig.keys, Math.min(frame + offset, rig.frames), fps, restCam(rig.rec));
-	const t = cameraTransform(cam, rig.rec, rig.box);
-	return {...t, lift: Math.min(1, Math.max(0, (t.scale - 1.04) / 0.12))};
+	const cam = cameraAt(rig.keys, Math.min(frame, rig.frames), fps, restCam(rig.rec));
+	return cameraTransform(cam, rig.rec, rig.box);
 };
 
 // Own components, so only these re-render every frame, not the video layers.
@@ -36,14 +38,22 @@ const mapCaption = (tl: ReturnType<typeof buildTimeline>, c: DemoCaption, fps: n
 	return r ? [{...c, startFrame: Math.round(r[0] * fps), frames: Math.max(1, Math.round((r[1] - r[0]) * fps))}] : [];
 };
 
-const CaptionLayer: React.FC<{c: Layer; rig: Rig; tint: ReturnType<typeof tintFor>}> = ({c, rig, tint}) => {
-	const {lift} = useCamera(rig, c.startFrame);
-	if (c.kind === 'voice') return <KineticText text={c.text} frames={c.frames} lift={lift} />;
+/** Captions that share a place on screen: one may only start once the previous one there has gone. */
+const SLOT: Record<DemoCaptionKind, string> = {voice: 'band', title: 'band', label: 'chip', player: 'bubble'};
+const oneAtATime = (layers: Layer[]): Layer[] => {
+	const sorted = [...layers].sort((a, b) => a.startFrame - b.startFrame);
+	return sorted.map((c) => {
+		const next = sorted.find((o) => o !== c && SLOT[o.kind] === SLOT[c.kind] && o.startFrame > c.startFrame);
+		return next ? {...c, frames: Math.max(1, Math.min(c.frames, next.startFrame - c.startFrame))} : c;
+	});
+};
+
+const CaptionLayer: React.FC<{c: Layer; tint: ReturnType<typeof tintFor>; titleSize: number}> = ({c, tint, titleSize}) => {
+	if (c.kind === 'voice') return <KineticText text={c.text} frames={c.frames} />;
+	if (c.kind === 'title') return <TitleWord text={c.text} frames={c.frames} size={titleSize} />;
 	if (c.kind === 'player') return <PlayerBubble text={c.text} frames={c.frames} tint={tint} />;
 	return <LabelChip text={c.text} frames={c.frames} tint={tint} />;
 };
-
-const Hook: React.FC<{rig: Rig; text: string; frames: number}> = ({rig, text, frames}) => <HookText text={text} frames={frames} lift={useCamera(rig).lift} />;
 
 export const AppDemo: React.FC<AppDemoProps> = (props) => {
 	const {fps} = useVideoConfig();
@@ -60,42 +70,50 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 		if (at !== null) ripples.push({frame: Math.round(at * fps), x: t.x, y: t.y});
 	}
 
-	const captions = (props.captions ?? []).flatMap((c) => mapCaption(tl, c, fps));
-	// The hook gives way to the first spoken caption instead of drawing under it.
-	const firstVoice = Math.min(Infinity, ...captions.filter((c) => c.kind === 'voice').map((c) => c.startFrame));
+	const captions = oneAtATime((props.captions ?? []).flatMap((c) => mapCaption(tl, c, fps)));
+	// All title words share one size (the largest at which the longest still fits one line).
+	const titleSize = fitTitle([...captions.filter((c) => c.kind === 'title').map((c) => c.text), ...(props.endWord ? [props.endWord] : [])]);
+	// The hook gives way to the first caption in its band instead of drawing under it.
+	const firstVoice = Math.min(Infinity, ...captions.filter((c) => SLOT[c.kind] === 'band').map((c) => c.startFrame));
 	const hookFrames = props.hook ? Math.min(Math.round(props.hook.seconds * fps), firstVoice, tl.frames) : 0;
 
 	return (
 		<AbsoluteFill style={{fontFamily: FONT, color: INK, background: '#F3F4F8'}}>
 			<AbsoluteFill style={{background: `radial-gradient(1300px 1000px at 50% 34%, ${tint.bg}38, transparent 72%), radial-gradient(1100px 800px at 50% 100%, ${tint.deep}20, transparent 70%)`}} />
 			<Sequence durationInFrames={Math.max(1, tl.frames)} layout="none">
-				<Camera rig={rig}>
-					<DemoPhone src={props.recording} rec={rec} box={box} timeline={tl} ripples={ripples} fps={fps} />
-				</Camera>
+				{/* The phone is cut off (soft edge) just under the caption band: zoomed in, it slides up behind it, never under a text. */}
+				<AbsoluteFill style={{maskImage: PHONE_MASK, WebkitMaskImage: PHONE_MASK}}>
+					<Camera rig={rig}>
+						<DemoPhone src={props.recording} rec={rec} box={box} timeline={tl} ripples={ripples} fps={fps} />
+					</Camera>
+				</AbsoluteFill>
 				{hookFrames > 0 && props.hook ? (
 					<Sequence durationInFrames={hookFrames} layout="none">
-						<Hook rig={rig} text={props.hook.text} frames={hookFrames} />
+						<HookText text={props.hook.text} frames={hookFrames} />
 					</Sequence>
 				) : null}
 				{captions.map((c, i) => (
 					<Sequence key={i} from={c.startFrame} durationInFrames={c.frames} layout="none">
-						<CaptionLayer c={c} rig={rig} tint={tint} />
+						<CaptionLayer c={c} tint={tint} titleSize={titleSize} />
 					</Sequence>
 				))}
 				{(props.audio ?? []).map((a, i) => {
 					const at = mapTime(tl, a.t);
 					if (at === null) return null;
+					// A clip stops where its stretch of recording is cut (short fade), never runs over the next shot.
 					const from = Math.round(at * fps);
+					const frames = Math.max(1, Math.round((runEnd(tl, a.t) ?? tl.seconds) * fps) - from);
+					const vol = a.volume ?? 1;
 					return (
-						<Sequence key={i} from={from} durationInFrames={Math.max(1, tl.frames - from)} layout="none">
-							<Audio src={staticFile(a.src)} volume={a.volume ?? 1} />
+						<Sequence key={i} from={from} durationInFrames={frames} layout="none">
+							<Audio src={staticFile(a.src)} volume={(f) => vol * interpolate(f, [frames - 6, frames], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})} />
 						</Sequence>
 					);
 				})}
 			</Sequence>
 			{props.endCard ? (
 				<Sequence from={tl.frames} durationInFrames={Math.round(END_CARD_S * fps)}>
-					<EndCard language={props.language} frames={Math.round(END_CARD_S * fps)} />
+					<EndCard language={props.language} frames={Math.round(END_CARD_S * fps)} word={props.endWord} wordSize={titleSize} />
 				</Sequence>
 			) : null}
 		</AbsoluteFill>

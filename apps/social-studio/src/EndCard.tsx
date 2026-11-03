@@ -1,8 +1,9 @@
 // End card shared by the Pinned launch reel and the AppDemo reel: monkey, "Trubbo",
 // tagline, App Store badge (English only; sk/cs show the line) and `copy.soon`.
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COPY} from './copy';
+import {TitleText} from './DemoCaptions';
 import {Monkey} from './Monkey';
 import {SAFE} from './ReelParts';
 import {INK, SURF, tintFor} from './theme';
@@ -19,12 +20,25 @@ export const Fade: React.FC<{frames: number; children: React.ReactNode; bg: stri
 	return <AbsoluteFill style={{background: bg, opacity: Math.min(fadeIn, fadeOut)}}>{children}</AbsoluteFill>;
 };
 
+/** The optional big word (AppDemo `endWord`), popping in just after the card. */
+const EndWord: React.FC<{text: string; size: number}> = ({text, size}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const p = spring({frame: frame - Math.round(fps * 0.2), fps, config: {damping: 11, stiffness: 160}});
+	return (
+		<div style={{opacity: Math.min(1, p * 1.5), color: INK}}>
+			<TitleText text={text} size={size} scale={0.6 + 0.4 * p} />
+		</div>
+	);
+};
+
 /** Fades in over whatever is underneath; place it in a Sequence of `frames` frames. */
-export const EndCard: React.FC<{language: Language; frames: number}> = ({language, frames}) => {
+export const EndCard: React.FC<{language: Language; frames: number; word?: string; wordSize?: number}> = ({language, frames, word, wordSize = 160}) => {
 	const copy = COPY[language];
 	return (
 		<Fade frames={frames} bg={END_TINT.bg} out={false}>
-			<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 56, padding: `${SAFE.top}px ${SAFE.right}px ${SAFE.bottom - 120}px ${SAFE.left}px`}}>
+			<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: word ? 40 : 56, padding: `${SAFE.top}px ${SAFE.right}px ${SAFE.bottom - 120}px ${SAFE.left}px`}}>
+				{word ? <EndWord text={word} size={wordSize} /> : null}
 				<div style={{width: 340, height: 340, borderRadius: 170, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 					<Monkey size={260} mood="happy" />
 				</div>

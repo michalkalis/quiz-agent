@@ -1,6 +1,6 @@
 // Recording time -> output time (the cuts), and the camera that follows the zooms.
 import {spring} from 'remotion';
-import {H, PHONE_CX, PHONE_CY, W, type PhoneBox} from './demoLayout';
+import {FOCUS_CY, PHONE_CX, PHONE_CY, PHONE_TOP, SAFE_BOTTOM, W, type PhoneBox} from './demoLayout';
 import type {AppDemoProps, DemoSegment} from './demoTypes';
 
 export type TimelineSegment = {from: number; to: number; speed: number; outStart: number; outEnd: number; startFrame: number; endFrame: number};
@@ -35,6 +35,14 @@ export const mapRange = (tl: Timeline, from: number, to: number): [number, numbe
 		hi = Math.max(hi, s.outStart + (b - s.from) / s.speed);
 	}
 	return hi > lo ? [lo, hi] : null;
+};
+
+/** Output seconds at which the stretch of recording that `t` falls in is cut (adjoining segments at the same speed count as one). */
+export const runEnd = (tl: Timeline, t: number): number | null => {
+	let i = tl.segments.findIndex((s) => t >= s.from && t < s.to);
+	if (i < 0) return null;
+	while (i + 1 < tl.segments.length && Math.abs(tl.segments[i + 1].from - tl.segments[i].to) < 1e-6 && tl.segments[i + 1].speed === tl.segments[i].speed) i++;
+	return tl.segments[i].outEnd;
 };
 
 type Cam = {s: number; x: number; y: number};
@@ -82,7 +90,7 @@ export const cameraAt = (keys: Key[], frame: number, fps: number, rest: Cam): Ca
 	return cur;
 };
 
-/** Shift that keeps the zoomed phone sensible: it never floats loose, and once larger than the frame it still covers it. */
+/** Horizontal shift that keeps the zoomed phone sensible: it never floats loose, and once wider than the frame it still covers it. */
 const clampShift = (t: number, centre: number, size: number, scale: number, dim: number): number => {
 	const lo = centre - (scale * size) / 2;
 	const hi = centre + (scale * size) / 2;
@@ -92,12 +100,25 @@ const clampShift = (t: number, centre: number, size: number, scale: number, dim:
 	return Math.min(Math.max(t, Math.min(a, b)), Math.max(a, b));
 };
 
-/** CSS transform (origin = phone centre) that puts camera.x/y at its spot and scales by camera.s. */
+/** How far (0..1) a camera of this scale pulls its point up to FOCUS_CY: fully from 1.2x, a little on a tap nudge. */
+const FOCUS_FULL_AT = 1.2;
+
+/**
+ * CSS transform (origin = phone centre) for camera.s.
+ * Horizontally the camera zooms about its point; vertically it brings the point up to FOCUS_CY,
+ * the free space under the caption band, so the zoomed content never sits under a text (AppDemo clips the phone below the band). The
+ * phone never opens a gap above its resting top, and its bottom always reaches the safe bottom.
+ */
 export const cameraTransform = (cam: Cam, rec: {w: number; h: number}, box: PhoneBox) => {
 	const px = PHONE_CX - box.screenW / 2 + (cam.x / rec.w) * box.screenW;
 	const py = PHONE_CY - box.screenH / 2 + (cam.y / rec.h) * box.screenH;
 	const tx = clampShift((1 - cam.s) * (px - PHONE_CX), PHONE_CX, box.outerW, cam.s, W);
-	const ty = clampShift((1 - cam.s) * (py - PHONE_CY), PHONE_CY, box.outerH, cam.s, H);
+	const pull = Math.min(1, Math.max(0, (cam.s - 1) / (FOCUS_FULL_AT - 1)));
+	const target = py + (FOCUS_CY - py) * pull;
+	const half = (cam.s * box.outerH) / 2;
+	const tyMax = PHONE_TOP - (PHONE_CY - half);
+	const tyMin = SAFE_BOTTOM - (PHONE_CY + half);
+	const ty = Math.min(tyMax, Math.max(tyMin, target - PHONE_CY - cam.s * (py - PHONE_CY)));
 	return {tx, ty, scale: cam.s};
 };
 

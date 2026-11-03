@@ -1,10 +1,24 @@
-// Fixed geometry of the AppDemo frame (1080 x 1920). The phone is smaller than the
-// "78% of the height" first asked for: the top and bottom caption bands have to fit
-// outside it, and 78% (1498 px) leaves only ~210 px above and below.
+// Fixed geometry of the AppDemo frame (1080 x 1920). Every text sits inside the platform safe
+// area (SAFE, ReelParts): the feature chip and the big caption band on top, above the phone; the
+// player bubble at the bottom of the safe area. The phone itself runs on into the unsafe bottom
+// strip, so whatever matters on screen is brought up to FOCUS_CY by a zoom (demoTimeline.ts).
+import {SAFE} from './ReelParts';
+
 export const W = 1080;
 export const H = 1920;
-export const PHONE_H = 1344;
-export const PHONE_TOP = 372;
+/** Lowest y the platform UI leaves free. */
+export const SAFE_BOTTOM = H - SAFE.bottom;
+
+/** Feature chip row, at the top of the safe area. */
+export const CHIP_TOP = SAFE.top;
+export const CHIP_H = 68;
+/** Hook, the app's voice and the big title words, under the chip row. */
+export const TOP_BAND = {top: CHIP_TOP + CHIP_H + 14, bottom: 560};
+/** Where the player bubble ends: just inside the safe area. */
+export const BUBBLE_BOTTOM = SAFE_BOTTOM - 16;
+
+export const PHONE_H = 1300;
+export const PHONE_TOP = TOP_BAND.bottom + 14;
 /** Dark frame around the screen. */
 export const BEZEL = 14;
 /** Widest screen we draw (keeps a wide recording from running off the frame). */
@@ -13,13 +27,11 @@ const MAX_SCREEN_W = W - 2 * 150;
 /** Centre of the phone's outer box when the camera rests. */
 export const PHONE_CX = W / 2;
 export const PHONE_CY = PHONE_TOP + PHONE_H / 2;
+/** A zoom brings its point here: the middle of the free space between the caption band and the safe bottom. */
+export const FOCUS_CY = Math.round((TOP_BAND.bottom + SAFE_BOTTOM) / 2);
 
-/** Voice captions / hook live above the phone, label chip + player bubble below it. */
-export const TOP_BAND = {top: 205, bottom: PHONE_TOP - 14};
-export const LABEL_CY = PHONE_TOP + PHONE_H + 44;
-export const BUBBLE_BOTTOM = H - 24;
-/** Text column, symmetric inside SAFE.left / SAFE.right (ReelParts). */
-export const TEXT_W = W - 2 * 130;
+/** Text column, symmetric inside SAFE.left / SAFE.right. */
+export const TEXT_W = W - 2 * SAFE.right;
 
 export type PhoneBox = {screenW: number; screenH: number; outerW: number; outerH: number; radius: number};
 

@@ -9,8 +9,8 @@ export type DemoTap = {t: number; x: number; y: number};
 export type DemoZoom = {from: number; to: number; x: number; y: number; scale: number};
 export type DemoAudio = {t: number; src: string; volume?: number};
 
-/** voice = what the app says · player = what the player answers (no audio) · label = feature chip. */
-export type DemoCaptionKind = 'voice' | 'player' | 'label';
+/** voice = what the app says · player = what the player answers (no audio) · label = feature chip · title = one big word (same band as voice). */
+export type DemoCaptionKind = 'voice' | 'player' | 'label' | 'title';
 export type DemoCaption = {from: number; to: number; text: string; kind: DemoCaptionKind};
 
 export type AppDemoProps = {
@@ -26,6 +26,8 @@ export type AppDemoProps = {
 	/** Title over the first seconds, above the phone (the app is visible from frame 1). */
 	hook?: {text: string; seconds: number};
 	endCard?: boolean;
+	/** A big title word on the end card, styled like the `title` captions. */
+	endWord?: string;
 	/** Background tint, a category name from theme.ts (default: general = cobalt). */
 	category?: string;
 };

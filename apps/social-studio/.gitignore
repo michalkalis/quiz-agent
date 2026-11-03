@@ -4,6 +4,8 @@ node_modules/
 # render output (mp4/jpg) and staged voice clips
 out/
 public/audio/
+# AppDemo footage: trimmed simulator recordings + the app's voice clips (never committed)
+public/demo/rec/
 # copied/generated from apps/website/src by scripts/sync-brand.mjs (npm install)
 public/brand/
 src/brand/

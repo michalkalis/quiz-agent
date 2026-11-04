@@ -176,6 +176,23 @@ async def test_home_category_events_keep_only_the_step_and_the_entry_point():
     assert opened == {"source": "deck_button"}
 
 
+async def test_quick_game_events_keep_only_the_mode():
+    # #224.8: compares skipping and finishing in the quick quiz with the
+    # normal flow, and whether the switch gets used; nothing else rides along.
+    skipped = clean_properties(
+        CLIENT_EVENTS["question_skipped"], {"quick": True, "question_id": "q1"}
+    )
+    assert skipped == {"quick": True}
+    changed = clean_properties(
+        CLIENT_EVENTS["quick_game_changed"], {"enabled": False, "name": "x"}
+    )
+    assert changed == {"enabled": False}
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"], {"quick_game": True, "city": "Bratislava"}
+    )
+    assert ctx == {"quick_game": True}
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

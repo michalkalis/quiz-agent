@@ -105,6 +105,18 @@ struct QuestionView: View {
                 let compact = geo.size.height <= 700
                 VStack(spacing: 0) {
                     topChrome
+                    // #224.8: over the question, not in its layout, so it never
+                    // moves the stem or the answers.
+                    Color.clear.frame(height: 0)
+                        .overlay(alignment: .top) {
+                            if let note = viewModel.quickSkipNote {
+                                QuickSkipNote(correctAnswer: note)
+                                    .padding(.top, Theme.Hangs.Spacing.xs)
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+                        .zIndex(1)
+                        .animation(.easeInOut(duration: 0.25), value: viewModel.quickSkipNote)
 
                     if viewModel.quizState == .awaitingQuestion {
                         awaitingQuestionBody

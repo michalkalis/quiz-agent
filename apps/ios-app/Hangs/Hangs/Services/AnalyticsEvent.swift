@@ -18,7 +18,7 @@ enum AnalyticsEvent: Equatable {
     case onboardingFinished(outcome: OnboardingOutcome, step: String)
     /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
     /// time of day a player plays at needs it (#213.1).
-    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String)
+    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false)
     case quizAbandoned(questionsAnswered: Int, phase: String)
     /// `latencyMs` (#213.1): time to start answering; nil = unknown, key left out.
     case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool, latencyMs: Int? = nil)
@@ -45,6 +45,10 @@ enum AnalyticsEvent: Equatable {
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
     case homeCategoryPickerOpened(source: CategoryPickerSource)
+    /// #224.8: the Home "Quick quiz" switch was flipped.
+    case quickGameChanged(enabled: Bool)
+    /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
+    case questionSkipped(quick: Bool)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -68,6 +72,8 @@ enum AnalyticsEvent: Equatable {
         case .roomPauseChanged: "room_pause_changed"
         case .homeCategoryStepped: "home_category_stepped"
         case .homeCategoryPickerOpened: "home_category_picker_opened"
+        case .quickGameChanged: "quick_game_changed"
+        case .questionSkipped: "question_skipped"
         }
     }
 
@@ -78,12 +84,13 @@ enum AnalyticsEvent: Equatable {
             [("launch", .string(launch.rawValue))]
         case let .onboardingFinished(outcome, step):
             [("outcome", .string(outcome.rawValue)), ("step", .string(step))]
-        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone):
+        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame):
             [
                 ("audio_route", .string(audioRoute.rawValue)),
                 ("voice_commands_enabled", .bool(voiceCommandsEnabled)),
                 ("entry_point", .string(entryPoint.rawValue)),
                 ("timezone", .string(timezone)),
+                ("quick_game", .bool(quickGame)),
             ]
         case let .quizAbandoned(questionsAnswered, phase):
             [("questions_answered", .int(questionsAnswered)), ("phase", .string(phase))]
@@ -130,6 +137,10 @@ enum AnalyticsEvent: Equatable {
             [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
         case let .homeCategoryPickerOpened(source):
             [("source", .string(source.rawValue))]
+        case let .quickGameChanged(enabled):
+            [("enabled", .bool(enabled))]
+        case let .questionSkipped(quick):
+            [("quick", .bool(quick))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

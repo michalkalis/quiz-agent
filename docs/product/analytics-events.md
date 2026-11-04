@@ -26,7 +26,7 @@
 |---|---|---|
 | `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
 | `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (mic_granted / mic_denied / mic_later / skipped), `step` |
-| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`) |
+| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`), `quick_game` (the Home quick-game switch was on, #224.8; absent on older builds) |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
 | `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry`, `latency_ms` (ms from when the player could answer to speech onset or tap/submit, pauses excluded; left out on retries or when unknown) |
 | `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
@@ -42,6 +42,8 @@
 | `room_pause_changed` | the host of a game together stayed on a reveal or resumed (#224.4); the server accepted it | `paused` (true / false), `question` (number) |
 | `home_category_stepped` | a step on the Home category deck (#224.6): one per tap or VoiceOver adjust | `direction` (next / previous), `input` (tap / voiceover), `to` (category id, or `all`) |
 | `home_category_picker_opened` | the multi-category picker opened on Home (#224.6) | `source` (deck_button / pill) |
+| `quick_game_changed` | the Home "Quick quiz" switch flipped (#224.8) | `enabled` |
+| `question_skipped` | a question skipped by button or voice, the skip request accepted for sending (#224.8) | `quick` (the quick quiz was on) |
 | `answer_captured` | every recorded voice answer (#204.9 voice-settings test) | `question_id`, `is_retry`; test: `auto_test`, `src_neural_vad` / `src_aec` / `src_front_mic` (auto = set by the server's coin, manual = the player's switch), effective `neural_vad` / `aec` / `front_mic`, `exp_gen_neural_vad` / `exp_gen_aec` / `exp_gen_front_mic` (test generation, auto only); route: `route_group` (bt_car / other), `output_route`, `input_route`; capture: `stop_reason` (vad / noSpeechWindow / cap / manual), `detector`, `heard_speech`, `speech_ms`, `end_delay_ms`, `duration_ms`; mic: `voice_processing`, `ec_enabled`, `aec_applicable`, `front_mic_applicable`, `mic_data_source`, `mic_polar_pattern`; `rejected_count` (transcripts already rejected for this question) |
 | `voice_experiment_guard` | the app switched echo cancellation off mid-round because the sound left the car (#204.9) | `flag` (aec), `reason` (output_route_changed), `from_route`, `to_route`, `exp_gen` |
 

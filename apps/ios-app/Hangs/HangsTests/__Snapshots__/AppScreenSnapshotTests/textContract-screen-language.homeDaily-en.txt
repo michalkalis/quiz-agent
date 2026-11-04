@@ -41,6 +41,9 @@ Difficulty
 Random
 Categories
 All Categories
+Quick quiz
+After "Next": next question, no explanation
+
 trubbo
 Start
 # identifiers
@@ -60,4 +63,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
+home.quickGame
 home.startQuiz

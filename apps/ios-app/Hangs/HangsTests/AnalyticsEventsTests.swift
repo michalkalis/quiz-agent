@@ -24,7 +24,7 @@ import Testing
 private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
-    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone"],
+    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game"],
     "quiz_abandoned": ["questions_answered", "phase"],
     "answer_submitted": ["input_mode", "question_id", "is_retry", "latency_ms"],
     "voice_capture_failed": ["reason", "question_id"],
@@ -48,13 +48,15 @@ private let backendClientEvents: [String: Set<String>] = [
     "room_pause_changed": ["paused", "question"],
     "home_category_stepped": ["direction", "input", "to"],
     "home_category_picker_opened": ["source"],
+    "quick_game_changed": ["enabled"],
+    "question_skipped": ["quick"],
 ]
 
 /// One instance of every case, with every optional property present.
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
     .onboardingFinished(outcome: .micGranted, step: "permission"),
-    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava"),
+    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
@@ -80,6 +82,8 @@ private let everyEvent: [AnalyticsEvent] = [
     .roomPauseChanged(paused: true, question: 3),
     .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
     .homeCategoryPickerOpened(source: .deckButton),
+    .quickGameChanged(enabled: true),
+    .questionSkipped(quick: true),
 ]
 
 @MainActor
@@ -178,7 +182,7 @@ struct QuizAnalyticsTests {
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }
         #expect(context.count == 1)
-        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone) = context.first?.event else {
+        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _) = context.first?.event else {
             Issue.record("no quiz_context")
             return
         }

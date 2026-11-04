@@ -159,7 +159,20 @@ struct HomeView: View {
                 // corner dips below the cards: the page dots' gap holds it.
             }
             settingPills
+            quickGameRow
         }
+    }
+
+    /// #224.8 (canvas D2): "Quick quiz" under the pickers. Off = today's flow.
+    private var quickGameRow: some View {
+        HangsCard {
+            HangsToggleRow(
+                label: "Quick quiz",
+                subtitle: "After \"Next\": next question, no explanation",
+                isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
+            )
+        }
+        .accessibilityIdentifier("home.quickGame")
     }
 
     private var chooseSeveralButton: some View {

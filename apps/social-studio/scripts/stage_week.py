@@ -13,7 +13,8 @@ Runs locally after the founder approved the batch on the approval page:
   CLOUDFLARE_ACCOUNT_ID set), for a machine whose `.env` R2 keys are stale.
 - The manifest `batches/<week>.json` gets per post: `status`, `publish_at`
   (UTC slot) and `media_urls`. Commit it through a PR; the scheduler
-  (scripts/publish_due.py, GitHub Actions) publishes only `approved` posts.
+  (scripts/publish_due.py, GitHub Actions) publishes only `approved` posts;
+  carousels become `manual` (the founder posts them with music, export_manual.py).
 """
 
 import json
@@ -117,6 +118,14 @@ def main(
             put(media_dir / name, key)
             urls.append(f"{base}/{key}")
         post["media_urls"] = urls
+        if post["format"] == "carousel":
+            # Founder 2026-11-04: carousels get music, which only the Instagram
+            # app can add, so the founder posts them (scripts/export_manual.py).
+            post["status"] = "manual"
+            print(
+                f"✓ {post['key']}: {len(urls)} files, manual post (music) at {post['publish_at']}"
+            )
+            continue
         print(f"✓ {post['key']}: {len(urls)} files, publishes {post['publish_at']}")
 
     manifest_file.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n")

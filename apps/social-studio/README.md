@@ -57,6 +57,7 @@ uv run --no-sync python apps/social-studio/scripts/ig_tokens.py   # refresh toke
 ```
 
 - **Stage**: approved posts' media go to the public `quiz-images` R2 bucket under `social/<week>/`; the manifest gets `status`, `publish_at` (18:00 London for EN, 18:00 Bratislava for SK/CZ, stored in UTC) and `media_urls`.
+- **Carousels are posted by hand** (founder 2026-11-04): they get music, which only the Instagram app can add (the API's audio is for reels only, and only with Facebook Login). `stage_week.py` marks them `manual`; `python3 apps/social-studio/scripts/export_manual.py <week>` puts each one into iCloud Drive/Trubbo Instagram/<week>/ (slides 01.jpg… + popis.txt with caption and time). The accounts are business accounts, so the app offers Meta's royalty-free Sound Collection.
 - **Publish**: `.github/workflows/social-publish.yml` runs `scripts/publish_due.py` hourly. Reels (cover = the jpg, shared to feed, labelled AI-generated because of the synthetic voice) and carousels; a post already on the account (same caption) is skipped, so reruns never double-post. A failure or a post that missed its 24 h window turns the run red. Manual run: `gh workflow run social-publish.yml -f mode=check` (tokens + quota) or `-f mode=dry-run`.
 - **Tokens**: `IG_TOKEN_IG_EN`, `IG_TOKEN_IG_SKCZ` in the root `.env` (from the Meta dashboard, 60 days), refreshed and copied to GitHub secrets by `ig_tokens.py` with every weekly batch. An expired token cannot be refreshed: generate a new one in the dashboard.
 

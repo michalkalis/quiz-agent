@@ -1,7 +1,7 @@
 # #224 — TF test 2026-11-02: Hra spolu, Home, výsledky, vlastné balíky
 
 **Triage:** enhancement · ready-for-agent (rýchle opravy) · ready-for-human (návrhy na výber, 2 rozhodnutia)
-**Status:** všetko okrem 224.8 (rýchla hra) zlúčené (2026-11-03); backend nasadený; 224.8 (rýchla hra) v práci; 224.11 (prísnejšie pixelové testy) čaká; 224.7 (platený hlas v Hre spolu) odložené; v TF builde až na požiadanie
+**Status:** hotové 2026-11-04: všetko zlúčené a backend nasadený; 224.7 (platený hlas v Hre spolu) odložené; v appke od najbližšieho TF buildu (na požiadanie)
 **Založené:** 2026-11-02 (founder testuje TF build, sk/cs)
 **Súvisí:** #212 — Hra spolu (multiplayer v jednej miestnosti), #216 — záložky Hrať + Profil, #208 — hlasové povely z TF testu, #93 — vlastné balíky
 
@@ -55,9 +55,9 @@
 | 224.5 | 8 | Hra spolu: koniec hry B3a s odpoveďami všetkých | iOS ✓ PR #719 |
 | 224.6 | 6 | Kategórie na Home ťukom vľavo/vpravo, animácia C1, pri obmedzení pohybu len prelínanie | iOS ✓ PR #705 (+ analytika `home_category_stepped`, `home_category_picker_opened`), quiz-agent nasadené |
 | 224.7 | 9 | Platené hlasové odpovede v Hre spolu | odložené (founder) |
-| 224.8 | 15 | Rýchla hra (D2) + analytika | iOS |
+| 224.8 | 15 | Rýchly kvíz (D2) + analytika; názov „Rýchly kvíz“ / „Rychlý kvíz“ / „Quick quiz“ (founder 2026-11-04) | iOS ✓ PR #721, quiz-agent nasadené |
 | 224.9 | 11 | Sólo výsledok B1b a koniec kola B4a | iOS ✓ PR #706; veľké písmo PR #718 |
 | 224.10 | 16 | Päta sólo otázky E1 | iOS ✓ PR #717 |
-| 224.11 | — | Pixelové snímky v testoch tolerujú 1 % rozdielu, takže zmena jedného slova prejde; sprísniť na 0.9995 a pretočiť ~140 zastaraných snímok z CI (samostatný PR po 224.8) | iOS testy |
+| 224.11 | — | Pixelové snímky v testoch tolerujú 1 % rozdielu, takže zmena jedného slova prejde; sprísniť na 0.9995 a pretočiť ~140 zastaraných snímok z CI (samostatný PR po 224.8) | iOS testy ✓ PR #723; denná výzva veľké písmo PR #724 |
 
-Poradie: hotové všetko okrem 224.8 (rýchla hra); po nej 224.11 (prísnejšie pixelové testy).
+Poradie: všetko hotové.

@@ -80,6 +80,7 @@ header.top{display:flex;align-items:center;gap:12px;padding:20px 0}
 .qnav{margin-left:auto;display:inline-flex;align-items:center;height:40px;padding:0 12px;border-radius:20px;color:var(--ink);font-size:15px;font-weight:600;text-decoration:none}
 .qnav:hover{background:var(--soft)}
 .qnav+.lang{margin-left:0}
+@media (max-width:429px){header.top{gap:6px}.lang{gap:0}.lang a{min-width:34px}.qnav{padding:0 8px}}
 
 /* hero: headline left, the playable question card right (below on phones) */
 .hero{display:grid;gap:40px 56px;align-items:center;padding:24px 0 40px}
@@ -197,14 +198,14 @@ footer address{font-style:normal;margin-top:12px}
       <img src="/mascot.svg" width="29" height="33" alt="">
       <span>trubbo</span>
     </a>
-    
+    <a class="qnav" href="/questions/">Questions</a>
     <nav class="lang" aria-label="Language"><a href="/" hreflang="en" lang="en" aria-current="page">EN</a><a href="/sk/" hreflang="sk" lang="sk">SK</a><a href="/cs/" hreflang="cs" lang="cs">CS</a></nav>
     <a class="btn btn-s" href="https://apps.apple.com/app/id6762482437">Get Trubbo</a>
   </header>
 
   <section class="hero">
     <div>
-      
+      <a class="fresh" href="/questions/fresh/">New questions this week</a>
       <h1 class="disp">A quiz that reads you the questions and listens to your answers.</h1>
       <p class="lead">You answer in your own words. Try the first question right here.</p>
       <div class="ctas">
@@ -251,7 +252,7 @@ footer address{font-style:normal;margin-top:12px}
     </div>
   </section>
 
-  
+  <section class="qs"><h2 class="disp">Try a few questions</h2><p class="lead">One person reads, the others guess. Tap to see the answer.</p><ul class="hqs"><li><a class="topic" href="/questions/music/">Music</a><p class="hq">Paul McCartney had the tune for &#x27;Yesterday&#x27; long before the words. Until the real lyrics came, he sang it under a placeholder title named after a breakfast dish. What was that title?</p><details><summary>Show answer</summary><p class="ha">Scrambled Eggs</p><p class="hs">McCartney dreamed the melody and, fearing he&#x27;d stolen it, sang &#x27;Scrambled eggs, oh my baby how I love your legs&#x27; for months until &#x27;Yesterday&#x27; finally arrived.</p></details></li><li><a class="topic" href="/questions/nature-animals-space/">Nature, animals and space</a><p class="hq">Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?</p><details><summary>Show answer</summary><p class="ha">Wombat</p><p class="hs">The cubes form thanks to uneven elasticity in the wombat&#x27;s intestines, and the flat-sided pellets don&#x27;t roll away, handy for marking territory on rocks and logs.</p></details></li><li><a class="topic" href="/questions/history/">History</a><p class="hq">Which future Roman leader, kidnapped by pirates as a young man, reportedly complained that his ransom was set too low, then had his captors crucified once he was freed?</p><details><summary>Show answer</summary><p class="ha">Julius Caesar</p><p class="hs">Plutarch says the pirates asked for twenty talents and Caesar insisted on fifty, then raised ships after his release, captured the pirates and had them executed as he had promised.</p></details></li></ul><a class="btn" href="/questions/">All questions</a></section>
 
   <section class="price">
     <h2 class="disp">Pricing</h2>
@@ -277,6 +278,7 @@ footer address{font-style:normal;margin-top:12px}
     <div class="row">
       <span>© missinghue s.r.o.</span>
       <nav aria-label="Legal">
+        <a href="/questions/">Quiz questions</a>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
         <a href="/support">Support</a>

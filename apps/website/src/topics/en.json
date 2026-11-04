@@ -1,0 +1,95 @@
+{
+  "hub.lead": "Checked questions from Trubbo, each with a source and a short story. Pick a topic and play out loud.",
+  "hub.description": "Quiz questions with answers: for a road trip, for the whole family, general knowledge, movies, music, sports and more. Each one with a source.",
+  "title.prefix": "Quiz questions",
+  "title.pattern": "{about} quiz questions",
+  "title.suffix": "with answers",
+  "description": "{n} {about} quiz questions with answers, a short story and a source. Play them out loud, or let the Trubbo app read them to you.",
+  "count": "{n} questions",
+  "how": "One person reads, the others guess. Tap to see the answer.",
+  "reveal": "Show answer",
+  "source": "Source",
+  "more": "More topics",
+  "cta.title": "Rather not read?",
+  "cta.body": "Trubbo reads the questions out loud and listens to your answers. Just say the answer, the app checks it and tells you the story behind it.",
+  "cta.short": "Get Trubbo",
+  "cta.store": "Download on the App Store",
+  "cta.note": "Free on iPhone",
+  "fresh.title": "Fresh entertainment quiz questions",
+  "fresh.lead": "New questions about the movies, shows, music and stars people are talking about right now. New ones every week.",
+  "fresh.description": "Fresh quiz questions with answers from movies, music and TV. New every week, each with a source and a short story.",
+  "fresh.updated": "Updated {date}",
+  "date": "{name} {day}, {year}",
+  "fresh.card": "Fresh entertainment questions",
+  "fresh.card.d": "Movies, shows, music and stars. New ones every week.",
+  "fresh.badge": "New every week",
+  "fresh.home": "New questions this week",
+  "nav": "Questions",
+  "home.title": "Try a few questions",
+  "home.all": "All questions",
+  "topics": [
+    {
+      "key": "car",
+      "slug": "road-trip",
+      "about": "road trip",
+      "lead": "Questions for a long drive that you answer out loud. Eyes stay on the road."
+    },
+    {
+      "key": "family",
+      "slug": "for-the-whole-family",
+      "about": "family",
+      "lead": "Questions that kids and grandparents can both have a go at. For birthdays, holidays and Sunday lunch."
+    },
+    {
+      "key": "general",
+      "slug": "general-knowledge",
+      "about": "general knowledge",
+      "lead": "A bit of everything, like a good pub quiz round."
+    },
+    {
+      "key": "film",
+      "slug": "movies-and-tv",
+      "about": "movie and TV",
+      "lead": "Actors, characters, cartoons and what happened behind the camera."
+    },
+    {
+      "key": "music",
+      "slug": "music",
+      "about": "music",
+      "lead": "Songs, bands, instruments and the stories behind the hits.",
+      "home": true
+    },
+    {
+      "key": "sport",
+      "slug": "sports",
+      "about": "sports",
+      "lead": "Olympics, records and odd moments from stadiums and slopes."
+    },
+    {
+      "key": "food",
+      "slug": "food",
+      "about": "food",
+      "lead": "Where dishes come from, how they were invented and what you never knew about them."
+    },
+    {
+      "key": "nature",
+      "slug": "nature-animals-space",
+      "about": "nature, animals and space",
+      "lead": "Animals, plants, the human body and the planets. Nature surprises more often than you would think.",
+      "home": true
+    },
+    {
+      "key": "history",
+      "slug": "history",
+      "about": "history",
+      "lead": "Rulers, inventions and everyday life in centuries past.",
+      "home": true
+    },
+    {
+      "key": "geo",
+      "slug": "geography-and-travel",
+      "about": "geography and travel",
+      "lead": "Countries, cities, landmarks and places worth the trip."
+    }
+  ]
+}

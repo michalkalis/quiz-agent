@@ -17,7 +17,7 @@
 - **223.1** ✅ PR #687 (2026-11-02). Snapshot schválených sk/cs otázok z produ (len čítanie: approved, bez balíkov, neexpirované, text, so zdrojom a vysvetlením, bez `adults`). Výber 20 na tému, bez opakovania v jazyku, len nadčasové otázky (žiadne „v roku 2026“), bez aktuálnej politiky a vojen, bez pomlčiek v texte.
 - **223.2** ✅ PR #687. Generátor stránok v `apps/website/build.py`: `/sk/otazky/<téma>/`, `/cs/otazky/<téma>/`, rozcestník `/sk/otazky/`; vzhľad F, schema.org `Quiz`, hreflang sk↔cs, sitemap, odkaz z hlavnej stránky a päty.
 - **223.3** ✅ PR #688 #689 #690 (2026-11-02, backend nasadený). Čerstvá zábava: `/sk/otazky/cerstve/` + cs s najnovšími otázkami s aktívnym zvýhodnením (`boost_until`); verejné API `GET /api/v1/public/fresh-questions` (quiz-agent), web si ich načíta pri každom nasadení a denne o 06:40 UTC (`website.yml`), pri výpadku ostáva uložená verzia; na hlavnej sk/cs stránke odkaz „Nové otázky z tohto týždňa“. EN čerstvé až s 223.4.
-- **223.4** EN témy neskôr; vyhodnotenie po ~6 mesiacoch podľa stiahnutí z kampaní `web_*` v App Store Connect, bez výsledku ďalej nerozširovať.
+- **223.4** EN témy (2026-11-04, founder: „sprav angličtinu“): `/questions/` s 10 témami (namiesto „o Slovensku“ všeobecný prehľad), čerstvá zábava `/questions/fresh/`, 3 otázky na hlavnej EN stránke. Ostáva vyhodnotenie po ~6 mesiacoch podľa stiahnutí z kampaní `web_*` v App Store Connect, bez výsledku ďalej nerozširovať.
 
 ## Riziká
 - Otázky na webe ostávajú aj v appke: hráč, ktorý ich čítal, ich môže dostať znova. Pri ~200 z ~750 na jazyk prijateľné, sledovať.

@@ -1,6 +1,6 @@
 # texts
 ULOŽ SI NÁKUP
-Přihlášením se Trubbo Plus naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování.
+Přihlášením se Trubbo Plus naváže na tvůj Apple účet. Zůstane ti i na novém telefonu nebo po přeinstalování.
 Přihlášení se nepodařilo. Zkontroluj připojení a zkus to znovu, tvůj nákup zůstává uložený v tomto zařízení.
 Později, přihlásím se v Nastavení
 Nákupy a postup ti zůstanou na každém zařízení. Nic jiného se nesdílí.

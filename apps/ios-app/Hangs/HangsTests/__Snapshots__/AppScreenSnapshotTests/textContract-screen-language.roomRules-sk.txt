@@ -10,11 +10,11 @@ Vlastný
 Čas na odpoveď
 Čítať otázky nahlas
 
-Kedy ukázať odpoveď
+Kedy ukázať odpovede
 At the end of the quiz
-Kedy ukázať odpoveď
+Kedy ukázať odpovede
 At the end of the quiz
-Zmeny platia od ďalšej otázky. Kedy ukázať odpoveď sa dá zmeniť len pred hrou.
+Zmeny platia od ďalšej otázky. Kedy ukázať odpovede sa dá zmeniť len pred hrou.
 # identifiers
 room.rules.done
 room.rules.sheet.time

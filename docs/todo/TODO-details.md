@@ -34,7 +34,7 @@ hotové položky sú v `docs/archive/todo/TODO-done-archive-2026-08-26.md`.
 
 ### Remove TEMP `generatedBy` provenance badge
 
-- [x] (zatvorené 2026-11-04, #217 — App Store launch, 217.9: badge z `QuestionView.swift` je preč, `generatedBy` sa nezobrazuje v žiadnom view; TF/store oddeľuje `BuildChannel` z #209) Remove TEMP `generatedBy` provenance badge from `QuestionView.swift` (both MCQ + voice bodies + helper, grep `TEMP (Bedrock gen test)`) before any App Store release build — added 2026-08-01 for the founder's Bedrock generation field test (shows `generation_metadata.model` under the question text).
+- [x] (zatvorené 2026-11-04, #217 — App Store launch, 217.9: TEMP badge je dnes súčasť `QuestionProvenanceRow` a zobrazí sa len pri `BuildChannel.debugSurfacesEnabled()`, ktoré je v APP_STORE variante vždy `false` — kompilačné vypnutie z #209, takže kód odstraňovať netreba) Remove TEMP `generatedBy` provenance badge from `QuestionView.swift` (both MCQ + voice bodies + helper, grep `TEMP (Bedrock gen test)`) before any App Store release build — added 2026-08-01 for the founder's Bedrock generation field test (shows `generation_metadata.model` under the question text).
 
 ### [HUMAN] #140 — Pack purchase on real StoreKit, founder leg 2 (sandbox e2e)
 

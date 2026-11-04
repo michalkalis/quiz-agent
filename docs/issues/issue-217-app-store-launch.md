@@ -92,7 +92,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   - Hotovo: test vlastník vs. admin, nasadené.
 - [ ] **217.4 Výzva na prihlásenie po každom nákupe** — agent
   - **Founder 2026-11-04** (plátno https://claude.ai/artifact/Pk9BoVyYpa2nGuMG77cTr9, riadok „Výber“): nízke okno, ktoré ukáže, čo presne si kúpil (Plus, +N otázok, karta balíka), po kúpe Plus, kreditu aj vlastného balíka. **Žiadna** ponuka na novej inštalácii: noví hráči sa neotravujú, prihlásiť sa dá kedykoľvek v Profile (riadok účtu).
-  - Čo: `SignInPromptCoordinator` aj pre kredit a vlastný balík; jednorazová ponuka na čerstvej inštalácii.
+  - Čo: `SignInPromptCoordinator` aj pre kredit a vlastný balík.
     Texty sk/cs/en podľa `copy-style.md`, `xcstringstool sync`, udalosť analytiky v tom istom PR.
     Po prihlásení sa Hraj a Profil načítajú nanovo (balíky, kredit, štatistiky).
   - Prečo: kredit a balíky Apple neobnoví (consumable); bez prihlásenia sú na novom telefóne preč.
@@ -176,6 +176,7 @@ potrebuje 217.6) → 217.9 → TF build na požiadanie → 217.10 → 217.11 →
    Odporúčam (b) a hneď prepnúť vydanie na ručné, rozhodnutie ostane na tebe pri schválení.
 2. **Výzva na prihlásenie:** okrem Plus aj po kúpe kreditu a vlastného balíka, plus jedna ponuka
    „Prihlás sa a obnov nákupy“ pri prvom spustení na novom telefóne? Odporúčam áno, vždy s možnosťou zavrieť.
+   **Rozhodnuté 2026-11-04:** po každom nákupe áno (nízke okno s tým, čo si kúpil); ponuka na novej inštalácii nie, prihlásenie ostáva v Profile.
 3. **Hra spolu pri verejnom spustení:** prepínač je v prode zapnutý pre všetkých, takže ju App Store 1.2 ukáže
    každému. Nechať zapnutú, alebo do vydania vypnúť a zapnúť neskôr?
    **Rozhodnuté 2026-11-01:** v App Store builde skrytá, kým ju founder s blízkymi neotestuje; v TestFlighte viditeľná;

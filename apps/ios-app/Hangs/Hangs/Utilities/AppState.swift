@@ -274,36 +274,36 @@ final class AppState: ObservableObject {
     }
 
     #if DEBUG
-    // For testing (its default room and stats services are Debug-only mocks)
-    init(
-        networkService: NetworkServiceProtocol,
-        audioService: AudioServiceProtocol,
-        persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
-        storeManager: StoreManager? = nil,
-        authService: AuthService? = nil,
-        packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
-        packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
-        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
-        analytics: AnalyticsClient = NoopAnalyticsClient(),
-        roomService: RoomServiceProtocol = MockRoomService(),
-        playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService(),
-        followQuizLanguage: @escaping (String) -> Void = { _ in }
-    ) {
-        self.followQuizLanguage = followQuizLanguage
-        self.networkService = networkService
-        self.roomService = roomService
-        self.playerStatsService = playerStatsService
-        self.audioService = audioService
-        self.persistenceStore = persistenceStore
-        self.silenceDetectionService = silenceDetectionService
-        self.storeManager = storeManager ?? StoreManager()
-        self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
-        self.packOrderService = packOrderService
-        self.packPurchaseService = packPurchaseService
-        self.questionRatingService = questionRatingService
-        self.analytics = analytics
-    }
+        // For testing (its default room and stats services are Debug-only mocks)
+        init(
+            networkService: NetworkServiceProtocol,
+            audioService: AudioServiceProtocol,
+            persistenceStore: PersistenceStoreProtocol,
+            silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
+            storeManager: StoreManager? = nil,
+            authService: AuthService? = nil,
+            packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
+            packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
+            questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
+            analytics: AnalyticsClient = NoopAnalyticsClient(),
+            roomService: RoomServiceProtocol = MockRoomService(),
+            playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService(),
+            followQuizLanguage: @escaping (String) -> Void = { _ in }
+        ) {
+            self.followQuizLanguage = followQuizLanguage
+            self.networkService = networkService
+            self.roomService = roomService
+            self.playerStatsService = playerStatsService
+            self.audioService = audioService
+            self.persistenceStore = persistenceStore
+            self.silenceDetectionService = silenceDetectionService
+            self.storeManager = storeManager ?? StoreManager()
+            self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
+            self.packOrderService = packOrderService
+            self.packPurchaseService = packPurchaseService
+            self.questionRatingService = questionRatingService
+            self.analytics = analytics
+        }
     #endif
 
     /// The account changed (sign-out, deletion): the packs and the stats on
@@ -311,6 +311,16 @@ final class AppState: ObservableObject {
     func identityChanged() {
         myPacksViewModel.reset()
         profileViewModel.reset()
+    }
+
+    /// #217.4: signing in from the purchase prompt moved this phone's packs,
+    /// question credit and stats onto the account. Play and Profile are
+    /// already on screen behind the sheet, so they load them again now.
+    func reloadAfterSignIn() async {
+        profileViewModel.reset()
+        await profileViewModel.refresh().value
+        await myPacksViewModel.refresh()
+        await quizViewModel?.refreshUsage()
     }
 
     /// #51: `app_opened` on the first activation and on every return from the

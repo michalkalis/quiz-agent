@@ -6,8 +6,9 @@
 //
 //  Why these tests matter:
 //  - The gate encodes the founder-approved frequency contract: the sheet may
-//    appear only after Premium is on, only for signed-out users, and at most
-//    twice ever (once at purchase + one reminder on a later open). Breaking
+//    appear only after a purchase (#217.4: Plus, credit or a custom pack),
+//    only for signed-out users, and at most twice ever across all kinds
+//    (once at purchase + one reminder on a later open). Breaking
 //    it either nags paying users or silently kills the account-linking
 //    funnel — both are product regressions, not cosmetics.
 //  - The sheet's three phases carry distinct driving-safe affordances:
@@ -27,30 +28,25 @@ import ViewInspector
 @Suite("SignInPromptGate — decision 10 frequency contract")
 @MainActor
 struct SignInPromptGateTests {
-    @Test("Never prompts before Premium is on — Variant B forbids pre-purchase friction")
-    func noPromptWithoutPurchase() {
-        #expect(!SignInPromptGate.shouldPrompt(isPurchased: false, isSignedIn: false, shownCount: 0))
-    }
-
     @Test("Never prompts a signed-in user — nothing left to link")
     func noPromptWhenSignedIn() {
-        #expect(!SignInPromptGate.shouldPrompt(isPurchased: true, isSignedIn: true, shownCount: 0))
+        #expect(!SignInPromptGate.shouldPrompt(isSignedIn: true, shownCount: 0))
     }
 
-    @Test("Prompts at the purchase moment (first presentation)")
+    @Test("Prompts a signed-out buyer at the purchase moment (first presentation)")
     func promptsFirstTime() {
-        #expect(SignInPromptGate.shouldPrompt(isPurchased: true, isSignedIn: false, shownCount: 0))
+        #expect(SignInPromptGate.shouldPrompt(isSignedIn: false, shownCount: 0))
     }
 
     @Test("Allows exactly one reminder on a later app open")
     func allowsSingleReminder() {
-        #expect(SignInPromptGate.shouldPrompt(isPurchased: true, isSignedIn: false, shownCount: 1))
+        #expect(SignInPromptGate.shouldPrompt(isSignedIn: false, shownCount: 1))
     }
 
-    @Test("Never self-presents after the reminder — Settings keeps the permanent entry")
+    @Test("Never self-presents after the reminder — Profile keeps the permanent entry")
     func stopsAfterReminder() {
-        #expect(!SignInPromptGate.shouldPrompt(isPurchased: true, isSignedIn: false, shownCount: 2))
-        #expect(!SignInPromptGate.shouldPrompt(isPurchased: true, isSignedIn: false, shownCount: 5))
+        #expect(!SignInPromptGate.shouldPrompt(isSignedIn: false, shownCount: 2))
+        #expect(!SignInPromptGate.shouldPrompt(isSignedIn: false, shownCount: 5))
     }
 }
 
@@ -73,27 +69,29 @@ struct SignInPromptPersistenceTests {
 // MARK: - Sheet structure per phase
 
 @MainActor
-private func makeSheet(phase: ContextualSignInSheet.Phase) -> ContextualSignInSheet {
+private func makeSheet(
+    phase: ContextualSignInSheet.Phase,
+    purchase: SignInPromptPurchase = .plus
+) -> ContextualSignInSheet {
     ContextualSignInSheet(
+        purchase: purchase,
         authService: AuthService(baseURL: Config.apiBaseURL),
         initialPhase: phase
-    ) {}
+    ) { _ in }
 }
 
 @Suite("ContextualSignInSheet — decision 10 states")
 @MainActor
 struct ContextualSignInSheetStateTests {
-    @Test("Idle: value pitch + SIWA + Maybe later + privacy note, no error banner")
+    @Test("Idle: purchase, value pitch, SIWA and Maybe later, no error banner")
     func idleStructure() throws {
         let tree = try makeSheet(phase: .idle).inspect()
-        #expect(throws: Never.self) { try tree.find(text: "SAVE YOUR PURCHASE") }
+        #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.hero") }
+        #expect(throws: Never.self) { try tree.find(text: "Save your Plus") }
         #expect(throws: Never.self) {
             try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.appleButton")
         }
         #expect(throws: Never.self) { try tree.find(text: "Maybe later") }
-        #expect(throws: Never.self) {
-            try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.privacyNote")
-        }
         #expect(throws: (any Error).self) {
             try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.errorBanner")
         }
@@ -121,5 +119,69 @@ struct ContextualSignInSheetStateTests {
             try tree.find(viewWithAccessibilityIdentifier: "signInPrompt.appleButton")
         }
         #expect(throws: Never.self) { try tree.find(text: "Later, I'll sign in from Settings") }
+    }
+}
+
+// MARK: - What was bought (#217.4)
+
+/// #217.4 (founder 2026-11-04): the prompt names exactly what the player just
+/// bought. A credit or pack buyer told "Trubbo Plus stays with you" would be
+/// promised the wrong thing, and a pack shown in another colour or with a
+/// made-up count would not read as the pack they ordered.
+@Suite("ContextualSignInSheet — shows what was bought")
+@MainActor
+struct ContextualSignInSheetPurchaseTests {
+    @Test("Plus: Plus title and the Plus promise")
+    func plus() throws {
+        let tree = try makeSheet(phase: .idle, purchase: .plus).inspect()
+        #expect(throws: Never.self) { try tree.find(text: "Save your Plus") }
+        #expect(throws: Never.self) {
+            try tree.find(text: "Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling.")
+        }
+        #expect(throws: Never.self) { try tree.find(text: "Trubbo Plus") }
+    }
+
+    @Test("Credit: the purchased count on the card, the credit promise")
+    func credit() throws {
+        let tree = try makeSheet(phase: .idle, purchase: .credit(questionCount: 100)).inspect()
+        #expect(throws: Never.self) { try tree.find(text: "Save your credit") }
+        #expect(throws: Never.self) { try tree.find(text: "+100") }
+        #expect(throws: Never.self) {
+            try tree.find(text: "Your credit is only on this phone for now. Sign in with Apple and it stays with you on a new phone or after reinstalling.")
+        }
+        #expect(throws: (any Error).self) { try tree.find(text: "Trubbo Plus") }
+    }
+
+    @Test("Custom pack: its name and real count, the pack promise")
+    func customPack() throws {
+        let purchase = SignInPromptPurchase.customPack(name: "Harry Potter", questionCount: 30, colorKey: "order-1")
+        let tree = try makeSheet(phase: .idle, purchase: purchase).inspect()
+        #expect(throws: Never.self) { try tree.find(text: "Save your pack") }
+        #expect(throws: Never.self) { try tree.find(text: "Harry Potter") }
+        #expect(throws: Never.self) {
+            try tree.find(text: "Your pack is only on this phone for now. Sign in with Apple and it stays with you on a new phone or after reinstalling.")
+        }
+    }
+
+    @Test("Analytics kind per purchase — the prompt funnel is sliced by it")
+    func analyticsKind() {
+        #expect(SignInPromptPurchase.plus.analyticsKind == .plus)
+        #expect(SignInPromptPurchase.credit(questionCount: 100).analyticsKind == .credit)
+        #expect(SignInPromptPurchase.customPack(name: "x", questionCount: 30, colorKey: "k").analyticsKind == .customPack)
+    }
+
+    /// The credit pack never flips `isPurchased`, so its purchase outcome is
+    /// the only signal. `.activating` is a real purchase (money moved), a
+    /// restore (nil product) or a Plus purchase is not a credit purchase.
+    @Test("Only a finished credit purchase maps to the credit prompt")
+    func creditFromPurchaseState() {
+        let credit = SignInPromptPurchase.credit(questionCount: StoreProduct.packQuestionCount)
+        #expect(SignInPromptPurchase.credit(after: .success(productID: StoreProduct.packId)) == credit)
+        #expect(SignInPromptPurchase.credit(after: .activating(productID: StoreProduct.packId)) == credit)
+        #expect(SignInPromptPurchase.credit(after: .success(productID: StoreProduct.monthlySubId)) == nil)
+        #expect(SignInPromptPurchase.credit(after: .success(productID: nil)) == nil)
+        #expect(SignInPromptPurchase.credit(after: .purchasing(productID: StoreProduct.packId)) == nil)
+        #expect(SignInPromptPurchase.credit(after: .cancelled) == nil)
+        #expect(SignInPromptPurchase.credit(after: .failed(message: "x")) == nil)
     }
 }

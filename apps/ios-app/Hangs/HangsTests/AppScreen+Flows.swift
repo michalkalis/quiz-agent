@@ -23,6 +23,8 @@ extension AppScreen {
         case .signInIdle: Self.signIn(.idle)
         case .signInSigningIn: Self.signIn(.signingIn)
         case .signInFailed: Self.signIn(.failed)
+        case .signInCredit: Self.signIn(.idle, purchase: .credit(questionCount: 100))
+        case .signInPack: Self.signIn(.idle, purchase: .customPack(name: "Harry Potter", questionCount: 30, colorKey: "order-1"))
         case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed:
             await makeOrder()
         case .paywallPack, .paywallAllowanceSpent, .paywallOffline:
@@ -77,11 +79,12 @@ extension AppScreen {
 
     // MARK: Contextual sign-in
 
-    private static func signIn(_ phase: ContextualSignInSheet.Phase) -> AnyView {
+    private static func signIn(_ phase: ContextualSignInSheet.Phase, purchase: SignInPromptPurchase = .plus) -> AnyView {
         AnyView(ContextualSignInSheet(
+            purchase: purchase,
             authService: AuthService(baseURL: Config.apiBaseURL),
             initialPhase: phase,
-            onDismiss: {}
+            onFinish: { _ in }
         ))
     }
 

@@ -27,7 +27,7 @@ struct ProfileAccountRow: View {
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                 }
                 if !account.isSignedIn {
-                    Text("Sign in to keep your stats")
+                    Text("Sign in to keep your purchases and stats")
                         .font(.hangsCaption)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                 }

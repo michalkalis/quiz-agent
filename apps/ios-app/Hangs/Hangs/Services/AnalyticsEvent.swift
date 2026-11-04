@@ -31,6 +31,9 @@ enum AnalyticsEvent: Equatable {
     case paywallViewed(source: PaywallSource)
     case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome)
     case restoreResult(outcome: RestoreOutcome)
+    /// #217.4: the sign-in prompt after a purchase came on screen, and how it closed.
+    case signInPromptShown(kind: SignInPromptKind)
+    case signInPromptResult(kind: SignInPromptKind, outcome: SignInPromptOutcome)
     /// #213.4: the Profile tab came on screen.
     case profileOpened(hasAccount: Bool)
     /// #213.5: the share sheet opened on the recap (#216.3: on its Profile card).
@@ -65,6 +68,8 @@ enum AnalyticsEvent: Equatable {
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
+        case .signInPromptShown: "sign_in_prompt_shown"
+        case .signInPromptResult: "sign_in_prompt_result"
         case .profileOpened: "profile_opened"
         case .recapShared: "recap_shared"
         case .togetherOpened: "together_opened"
@@ -125,6 +130,10 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .restoreResult(outcome):
             [("outcome", .string(outcome.rawValue))]
+        case let .signInPromptShown(kind):
+            [("kind", .string(kind.rawValue))]
+        case let .signInPromptResult(kind, outcome):
+            [("kind", .string(kind.rawValue)), ("outcome", .string(outcome.rawValue))]
         case let .profileOpened(hasAccount):
             [("has_account", .bool(hasAccount))]
         case let .recapShared(kind):
@@ -282,6 +291,19 @@ enum RestoreOutcome: String {
     case success
     case nothingToRestore = "nothing_to_restore"
     case failed
+}
+
+/// #217.4: what the sign-in prompt was shown for.
+enum SignInPromptKind: String {
+    case plus
+    case credit
+    case customPack = "custom_pack"
+}
+
+/// #217.4: how the sign-in prompt closed. A swipe down counts as dismissed.
+enum SignInPromptOutcome: String {
+    case signedIn = "signed_in"
+    case dismissed
 }
 
 /// #213.8: which rule of a game together changed.

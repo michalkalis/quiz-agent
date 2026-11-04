@@ -1086,3 +1086,87 @@ struct OrderPackViewModelTests {
         await task.value
     }
 }
+
+/// #217.4: the sign-in prompt after a custom pack. It may appear only once the
+/// server accepted the paid order: only then does the order sit on this
+/// phone's identity, which a sign-in moves to the account. Before that (a
+/// cancelled sheet, a failed create) there is nothing to keep, and an admin
+/// test order was never bought.
+@Suite("OrderPackViewModel — sign-in prompt after a pack (#217.4)")
+@MainActor
+struct OrderPackSignInPromptTests {
+    @Test("a paid, accepted order is offered once, as the pack the app shows")
+    func acceptedPaidOrder() async {
+        let vm = payingViewModel(adminKeyAvailable: false)
+
+        await vm.submit()
+
+        let delivered = OrderSnapshot.mockDelivered
+        #expect(vm.takeAcceptedPaidOrder() == .customPack(
+            name: delivered.displayTitle,
+            questionCount: delivered.targetCount,
+            colorKey: delivered.colorKey
+        ))
+        #expect(vm.takeAcceptedPaidOrder() == nil, "one prompt per order")
+    }
+
+    @Test("nothing is offered when the order never reached the server")
+    func createFailed() async {
+        let service = MockPackOrderService(createResult: .failure(.init()))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("nothing is offered when the payment sheet was cancelled")
+    func paymentCancelled() async {
+        let purchase = MockPackPurchaseService(purchaseResult: .failure(.cancelled))
+        let vm = payingViewModel(purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("a Debug admin order was never bought and is not offered")
+    func adminOrder() async {
+        let vm = payingViewModel(adminKeyAvailable: true)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("a refunded order is not offered: there is nothing left to keep")
+    func refundedOrder() async {
+        let service = MockPackOrderService(getResult: .success(.mockRefunded))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    /// Closed while still generating: the snapshot's own title, count and
+    /// colour key (the order id until the pack exists), as Home shows it.
+    @Test("an order closed while generating is offered with its live snapshot")
+    func stillGenerating() async {
+        let clock = TestClock<Duration>()
+        let service = MockPackOrderService(getResult: .success(.mockPending))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false, clock: AnyClock(clock))
+
+        let task = Task { await vm.submit() }
+        await pumpUntil({ if case .polling(.some) = vm.state { true } else { false } }, "create never handed over to the poll")
+
+        let pending = OrderSnapshot.mockPending
+        #expect(vm.takeAcceptedPaidOrder() == .customPack(
+            name: pending.displayTitle,
+            questionCount: pending.targetCount,
+            colorKey: pending.colorKey
+        ))
+        vm.stop()
+        await task.value
+    }
+}

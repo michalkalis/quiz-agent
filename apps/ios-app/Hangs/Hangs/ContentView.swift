@@ -21,7 +21,7 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
-    // #58 §9: contextual sign-in sheet after purchase/restore (decision 10).
+    // #58 §9 / #217.4: contextual sign-in sheet after every purchase (decision 10).
     @StateObject private var signInPrompt: SignInPromptCoordinator
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
@@ -46,16 +46,17 @@ struct ContentView: View {
             analytics: appState.analytics
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
-        var showsSignInPromptAtLaunch = false
+        var signInPromptAtLaunch: SignInPromptPurchase?
         #if DEBUG
             // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
             // sheet directly — it is otherwise reachable only through a real
             // StoreKit purchase, which the sim can't perform.
-            showsSignInPromptAtLaunch = CommandLine.arguments.contains("--ui-test-signin-prompt")
+            if CommandLine.arguments.contains("--ui-test-signin-prompt") { signInPromptAtLaunch = .plus }
         #endif
         _signInPrompt = StateObject(wrappedValue: SignInPromptCoordinator(
             persistenceStore: appState.persistenceStore,
-            isPresented: showsSignInPromptAtLaunch
+            analytics: appState.analytics,
+            presented: signInPromptAtLaunch
         ))
     }
 
@@ -143,6 +144,41 @@ struct ContentView: View {
 
     private func roomClosed() {
         if navModel.selectedTab == .together { freshTogetherRoom() }
+        offerPendingSignInPrompt()
+    }
+
+    /// #217.4: the sign-in prompt never covers another screen; it shows once
+    /// no paywall, order flow, game together or quiz is up. `quizState` is
+    /// passed by the state observer, which runs before the new value is stored.
+    private func isAtRestForSignInPrompt(quizState: QuizState) -> Bool {
+        !viewModel.showPaywall && !navModel.orderFlowPresented && room == nil && quizState == .idle
+    }
+
+    private func signInPromptPurchaseCompleted(_ purchase: SignInPromptPurchase) {
+        signInPrompt.purchaseCompleted(purchase, canPresentNow: isAtRestForSignInPrompt(quizState: viewModel.quizState))
+    }
+
+    private func offerPendingSignInPrompt(quizState: QuizState? = nil) {
+        guard isAtRestForSignInPrompt(quizState: quizState ?? viewModel.quizState) else { return }
+        signInPrompt.presentPendingIfAny()
+    }
+
+    /// #217.4: the order sheet closed. A custom pack the server accepted (so
+    /// it already sits on this phone's identity, and a sign-in moves it to
+    /// the account) is offered for saving now, or after the quiz the sheet
+    /// may have just started.
+    private func orderFlowDismissed() {
+        if let purchase = appState.orderPackViewModel.takeAcceptedPaidOrder() {
+            signInPrompt.purchaseCompleted(purchase, canPresentNow: false)
+        }
+        offerPendingSignInPrompt()
+    }
+
+    private func signInPromptFinished(_ outcome: SignInPromptOutcome) {
+        signInPrompt.finish(outcome)
+        if outcome == .signedIn {
+            Task { await appState.reloadAfterSignIn() }
+        }
     }
 
     private func openPendingInvite() {
@@ -278,7 +314,7 @@ struct ContentView: View {
                     if complete { showOnboardingReplay = false }
                 }
         }
-        .sheet(isPresented: $viewModel.showPaywall, onDismiss: signInPrompt.paywallDismissed) {
+        .sheet(isPresented: $viewModel.showPaywall, onDismiss: { offerPendingSignInPrompt() }) {
             PaywallView(
                 storeManager: appState.storeManager,
                 limitError: viewModel.quotaLimitError,
@@ -288,7 +324,7 @@ struct ContentView: View {
         // #138 create-pack sheet, opened from Home or Settings. Presented here at
         // the root (not inside a pushed screen) so both entries share one
         // presentation; quiz-start teardown clears the flag via `navModel`.
-        .sheet(isPresented: $navModel.orderFlowPresented) {
+        .sheet(isPresented: $navModel.orderFlowPresented, onDismiss: orderFlowDismissed) {
             OrderPackFlowView(
                 viewModel: appState.orderPackViewModel,
                 voice: appState.makeFeedbackVoice(for: viewModel),
@@ -299,11 +335,12 @@ struct ContentView: View {
                 onClose: { navModel.orderFlowPresented = false }
             )
         }
-        .sheet(isPresented: $signInPrompt.isPresented) {
-            ContextualSignInSheet(authService: appState.authService) {
-                signInPrompt.isPresented = false
-            }
-            .presentationDetents([.height(520)])
+        .sheet(item: $signInPrompt.presented, onDismiss: signInPrompt.sheetDismissed) { purchase in
+            ContextualSignInSheet(
+                purchase: purchase,
+                authService: appState.authService,
+                onFinish: signInPromptFinished
+            )
             .presentationDragIndicator(.visible)
         }
         // `.onReceive` subscribes to the publisher directly — the old
@@ -316,7 +353,13 @@ struct ContentView: View {
         // contextual sign-in prompt when Premium turns on.
         .onReceive(appState.storeManager.$isPurchased.removeDuplicates()) { isPurchased in
             guard isPurchased else { return }
-            signInPrompt.premiumActivated(whilePaywallShown: viewModel.showPaywall)
+            signInPromptPurchaseCompleted(.plus)
+        }
+        // #217.4: question credit never flips `isPurchased`; its purchase
+        // outcome is the signal.
+        .onReceive(appState.storeManager.$purchaseState.removeDuplicates()) { state in
+            guard let purchase = SignInPromptPurchase.credit(after: state) else { return }
+            signInPromptPurchaseCompleted(purchase)
         }
         // #111: the sole teardown path — entering `.startingQuiz` (from
         // `.idle`, or `.error` once #110's retry transition lands) clears the
@@ -334,6 +377,7 @@ struct ContentView: View {
         // (found via RS-pack-nav-start, #111 T4).
         .onReceive(viewModel.$quizState) { newState in
             navModel.handleQuizStateChange(newState)
+            offerPendingSignInPrompt(quizState: newState)
         }
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)

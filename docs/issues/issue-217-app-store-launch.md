@@ -121,7 +121,9 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
 - [ ] **217.7 RevenueCat: obnova nákupov na novom telefóne** — agent cez Playwright, len čítanie
   - Čo: Project settings → **Restore Behavior** má byť „Transfer to new App User ID“ (server spracuje TRANSFER).
   - Hotovo: nastavenie zapísané tu; ak je iné, návrh zmeny foundrovi.
-- [ ] **217.8 Cena vlastného balíka a živé prepínače** — agent
+- [x] **217.8 Cena vlastného balíka a živé prepínače** — agent (2026-11-04, len čítanie prodov)
+  - **Výsledok:** v prode len 5 doručených objednávok, z toho 1 súčasnou cestou (Fly worker, 30 otázok, 2026-11-02): **$1,65** (`generation_jobs.total_cost_cents`; `llm_cost_usd` meria len OpenRouter, nepoužiteľné). Čistý príjem €8,99 / 1,23 DPH × 0,85 Apple = €6,21 ≈ $6,71 → zisk ≈ $5 na balík (~75 %). n = 1, spresní 217.10 a ďalšie objednávky.
+  - **Prepínače:** `orders_enabled` true, `multiplayer_enabled_app_store` false, údržba vypnutá, min/odporúčané verzie prázdne; `STOREKIT_ENVIRONMENT` (pack-api) = `Production,Sandbox`, `RC_ALLOWED_ENVIRONMENT` (quiz-agent) = `PRODUCTION,SANDBOX`. Nič neblokuje vydanie.
   - Čo: z prod DB `llm_cost_usd` posledných objednávok z Fly workera (API režim) vs. čistý príjem ~€6,20;
     `/app-config` a Fly env: `orders_enabled`, `multiplayer_enabled`, `STOREKIT_ENVIRONMENT`, `RC_ALLOWED_ENVIRONMENT`.
   - Prečo: po #182 nikto nemeral; zapnuté prepínače platia aj pre App Store build (release-flow).

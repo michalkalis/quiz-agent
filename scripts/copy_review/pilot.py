@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[2]
 ENV = dotenv_values(ROOT / ".env" if (ROOT / ".env").exists() else Path.home() / "code/quiz-agent/.env")
 STYLE = (ROOT / "docs/design/copy-style.md").read_text(encoding="utf-8").split("## Review procedure")[0]
 REVIEWERS = {"gemini": "gemini-3.1-pro-preview", "gpt": "gpt-5.5"}
+# USD per 1M tokens (input, output incl. thinking); GPT-5.5 list price unverified.
+PRICES = {"gemini-3.1-pro-preview": (2.0, 12.0), "gpt-5.5": (5.0, 30.0)}
 CONTROL = 25
 FIELDS = ("id", "en", "sk", "cs", "comment", "files")
 
@@ -125,16 +127,28 @@ def main(run_dir: str) -> None:
     if "--dry-run" in sys.argv:
         return
 
+    budget = float(next((a.split("=")[1] for a in sys.argv if a.startswith("--budget=")), "1.0"))
+    only = next((a.split("=")[1] for a in sys.argv if a.startswith("--only=")), None)
     for name, ask in (("gemini", ask_gemini), ("gpt", ask_gpt)):
-        findings, tin, tout = [], 0, 0
+        if only and name != only:
+            continue
+        price_in, price_out = PRICES[REVIEWERS[name]]
+        findings, tin, tout, done = [], 0, 0, 0
         with ThreadPoolExecutor(4) as pool:
-            for text, i, o in pool.map(ask, jobs):
-                findings += [f for f in json.loads(text)["findings"] if f.get("id") in targets]
-                tin, tout = tin + i, tout + o
+            for start in range(0, len(jobs), 4):
+                cost = (tin * price_in + tout * price_out) / 1e6
+                per_call = cost / done if done else 0
+                if cost + 4 * per_call > budget:  # founder cap: stop before the next batch would cross it
+                    print(f"{name}: budget ${budget} reached after {done}/{len(jobs)} calls", file=sys.stderr)
+                    break
+                for text, i, o in pool.map(ask, jobs[start : start + 4]):
+                    findings += [f for f in json.loads(text)["findings"] if f.get("id") in targets]
+                    tin, tout, done = tin + i, tout + o, done + 1
         with open(run / f"pilot-{name}.jsonl", "w", encoding="utf-8") as fh:
             fh.writelines(json.dumps(f, ensure_ascii=False) + "\n" for f in findings)
-        print(f"{name} ({REVIEWERS[name]}): {len(findings)} findings, tokens in {tin} out {tout}")
+        cost = (tin * price_in + tout * price_out) / 1e6
+        print(f"{name} ({REVIEWERS[name]}): {done}/{len(jobs)} calls, {len(findings)} findings, ~${cost:.2f}")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])  # add --dry-run to print the size only
+    main(sys.argv[1])  # flags: --dry-run, --only=gemini|gpt, --budget=USD (default 1.0)

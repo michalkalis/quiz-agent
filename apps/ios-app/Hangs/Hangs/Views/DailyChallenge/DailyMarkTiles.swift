@@ -2,8 +2,8 @@
 //  DailyMarkTiles.swift
 //  Hangs
 //
-//  #205: the daily challenge's questions as a row of tiles — knew it (mint,
-//  ✓), missed it (pink edge, ✕), or not answered yet (empty). On the Home
+//  #205: the daily challenge's questions as a row of tiles — knew it (soft mint,
+//  ✓), missed it (faint pink edge, ✕), or not answered yet (empty). On the Home
 //  card before the day is played every tile is empty; after it, and on the
 //  daily round end, they show the outcome. Never the answers themselves.
 //
@@ -22,6 +22,10 @@ struct DailyMarkTiles: View {
         static let corner: CGFloat = 8
         static let edge: CGFloat = 2
         static let glyph: CGFloat = 14
+        /// #224 (founder 2026-11-04): quieter marks. A miss keeps its pink at reduced
+        /// strength; the glyph stays stronger than the edge so the x still reads.
+        static let missEdgeStrength = 0.45
+        static let missGlyphStrength = 0.7
     }
 
     var body: some View {
@@ -52,12 +56,12 @@ struct DailyMarkTiles: View {
         let shape = RoundedRectangle(cornerRadius: Metrics.corner, style: .continuous)
         switch mark {
         case true?:
-            shape.fill(Theme.Hangs.Category.correct.fill)
-                .overlay { glyph("checkmark", color: Theme.Hangs.Category.correct.text) }
+            shape.fill(Theme.Hangs.Colors.correctSoft)
+                .overlay { glyph("checkmark", color: Theme.Hangs.Colors.successText) }
         case false?:
             shape.fill(Theme.Hangs.Colors.bgCard)
-                .overlay(shape.strokeBorder(Theme.Hangs.Colors.missText, lineWidth: Metrics.edge))
-                .overlay { glyph("xmark", color: Theme.Hangs.Colors.missText) }
+                .overlay(shape.strokeBorder(Theme.Hangs.Colors.missText.opacity(Metrics.missEdgeStrength), lineWidth: Metrics.edge))
+                .overlay { glyph("xmark", color: Theme.Hangs.Colors.missText.opacity(Metrics.missGlyphStrength)) }
         case nil:
             shape.fill(Theme.Hangs.Colors.bgInset)
                 .overlay(shape.strokeBorder(Theme.Hangs.Colors.track, lineWidth: Metrics.edge))

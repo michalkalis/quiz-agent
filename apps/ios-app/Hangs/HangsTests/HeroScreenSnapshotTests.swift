@@ -227,7 +227,7 @@ struct HeroScreenSnapshotTests {
             .environment(\.colorScheme, .dark)
             .preferredColorScheme(.dark)
         let strategy: Snapshotting<AnyView, UIImage> = .image(
-            precision: 0.99,
+            precision: 0.9995,
             perceptualPrecision: 0.98,
             layout: .fixed(width: SnapshotBaseline.width, height: SnapshotBaseline.height),
             traits: UITraitCollection(traitsFrom: [
@@ -257,7 +257,7 @@ struct HeroScreenSnapshotTests {
         assertSnapshot(
             of: AnyView(light.dynamicTypeSize(.large)),
             as: .image(
-                precision: 0.99,
+                precision: 0.9995,
                 perceptualPrecision: 0.98,
                 layout: .fixed(width: SnapshotBaseline.width, height: SnapshotBaseline.height),
                 traits: UITraitCollection(traitsFrom: [

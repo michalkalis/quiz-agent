@@ -1,6 +1,6 @@
 # #219 — Live Activity (zamknutá obrazovka, Dynamic Island, CarPlay); Siri vynechaná
 
-**Triage:** enhancement · ready-for-agent (len Live Activity; Siri vynechaná, founder 2026-11-01)
+**Triage:** enhancement · deferred (founder 2026-11-04: zatiaľ netreba. Počas hry je appka otvorená a po zamknutí telefónu kvíz stojí, lebo mikrofón sa vypne, takže Live Activity by ukazovala väčšinou stojaci kvíz. Vrátiť sa po vydaní, ak bude dôvod.)
 **Status:** 2026-11-01 founder: pridať spúšťanie cez Siri/Skratky („Hey Siri, start a Trubbo quiz“, bez rúk) a Live Activity s aktuálnou otázkou, skóre a časom. Dnes v appke nič z toho nie je (žiadny súbor neimportuje AppIntents ani ActivityKit).
 **Súvisí:** #97 — CarPlay (rovnaký zdieľaný QuizViewModel, vzor ovládača), #214 — odporúčaná aktualizácia a údržba (DB prepínače v `/app-config`), #209 — App Store review cleanup (obchodná varianta `APP_STORE`), #51 — analytika
 

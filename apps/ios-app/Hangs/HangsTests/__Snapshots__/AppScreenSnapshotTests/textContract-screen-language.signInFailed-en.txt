@@ -1,15 +1,14 @@
 # texts
-SAVE YOUR PURCHASE
+Trubbo Plus
+Save your Plus
 Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling.
 Sign-in didn't work. Check your connection and try again. Your purchase is still saved on this device.
 Later, I'll sign in from Settings
-Keeps your purchases and progress across devices. Nothing else is shared.
 # identifiers
 signInPrompt.root
-signInPrompt.badge
+signInPrompt.hero
 signInPrompt.title
 signInPrompt.subtitle
 signInPrompt.errorBanner
 signInPrompt.appleButton
 signInPrompt.later
-signInPrompt.privacyNote

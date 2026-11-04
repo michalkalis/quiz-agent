@@ -1,0 +1,13 @@
+# texts
++100
+otázok
+Ulož si kredit
+Kredit je zatiaľ len v tomto telefóne. Po prihlásení cez Apple ti zostane aj na novom telefóne či po preinštalovaní.
+Možno neskôr
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

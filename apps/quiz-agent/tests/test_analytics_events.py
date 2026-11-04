@@ -193,6 +193,20 @@ async def test_quick_game_events_keep_only_the_mode():
     assert ctx == {"quick_game": True}
 
 
+async def test_sign_in_prompt_events_keep_only_kind_and_outcome():
+    # #217.4: how many buyers of each kind (Plus, credit, custom pack) save their
+    # purchase by signing in; nothing about the purchase or the account rides along.
+    shown = clean_properties(
+        CLIENT_EVENTS["sign_in_prompt_shown"], {"kind": "custom_pack", "pack": "x"}
+    )
+    assert shown == {"kind": "custom_pack"}
+    result = clean_properties(
+        CLIENT_EVENTS["sign_in_prompt_result"],
+        {"kind": "credit", "outcome": "signed_in", "email": "a@b.c"},
+    )
+    assert result == {"kind": "credit", "outcome": "signed_in"}
+
+
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():
     recorder = AnalyticsRecorder(None)
     recorder.emit("quiz_started", subject_id="u", properties={"language": "sk"})

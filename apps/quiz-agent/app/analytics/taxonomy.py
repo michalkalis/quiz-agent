@@ -71,6 +71,10 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "paywall_viewed": frozenset({"source"}),
     "purchase_result": frozenset({"product_id", "kind", "outcome"}),
     "restore_result": frozenset({"outcome"}),
+    # #217.4: the sign-in prompt after a purchase came on screen (kind = plus |
+    # credit | custom_pack), and how it closed (signed_in | dismissed).
+    "sign_in_prompt_shown": frozenset({"kind"}),
+    "sign_in_prompt_result": frozenset({"kind", "outcome"}),
     # #213.4: the Profile tab came on screen.
     "profile_opened": frozenset({"has_account"}),
     # #213.5: a recap story closed (how far the player got) and its share

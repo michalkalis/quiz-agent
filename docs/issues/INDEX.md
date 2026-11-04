@@ -20,7 +20,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | 222 | [Presun backendu na Hetzner](issue-222-hetzner-migration.md) | chore · ready-for-agent | `[~]` #222 | 2026-11-02: plán; server vytvára agent, prepnutie po review 1.1 |
 | 221 | [Technická modernizácia](issue-221-tech-modernization.md) | chore · ready-for-agent | `[~]` #221 | 2026-11-01: audit verzií; 221.1 nepoužitá knižnica Google preč + spodné hranice (PR #659) |
 | 220 | [App Store marketing (ASO)](issue-220-app-store-marketing.md) | enhancement · ready-for-agent | `[ ]` #220 | 2026-11-01: kľúčové slová sk/cs/en, názov s popisom (schválené), CPP a eventy až po vydaní |
-| 219 | [Live Activity (Siri vynechaná)](issue-219-siri-live-activity.md) | enhancement · ready-for-agent | `[ ]` #219 | 2026-11-01: founder vynechal Siri; Live Activity áno, najprv HTML varianty |
+| 219 | [Live Activity (Siri vynechaná)](issue-219-siri-live-activity.md) | enhancement · deferred | `[ ]` #219 | 2026-11-04: zatiaľ netreba (kvíz po zamknutí stojí); po vydaní, ak bude dôvod |
 | 218 | [Pády a spätná väzba automaticky do issues](issue-218-crash-feedback-automation.md) | enhancement · done | `[x]` #218 | 2026-11-03: beží celé, overené naostro (TF hlásenie → issue, oprava cez `oprav` → PR #707) |
 | 217 | [Verejné vydanie v App Store](issue-217-app-store-launch.md) | enhancement · ready-for-agent | `[ ]` #217 | 2026-11-01: 1.1 vyjde sama, štart s 1.2; nahrádza zvyšok #62; Hra spolu v store skrytá |
 | 215 | [Prví kvalitní testeri mimo rodiny](issue-215-superfan-testers.md) | enhancement · ready-for-agent | `[ ]` #215 | 2026-10-29: 5 testerov (mix), e-mail pozvánky do Public bety, WhatsApp s každým zvlášť, správy schvaľuje founder |

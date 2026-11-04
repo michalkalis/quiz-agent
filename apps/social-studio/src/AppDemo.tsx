@@ -123,6 +123,11 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 			{props.endCard ? (
 				<Sequence from={tl.frames} durationInFrames={Math.round(END_CARD_S * fps)}>
 					<EndCard language={props.language} frames={Math.round(END_CARD_S * fps)} word={props.endWord} wordSize={titleSize} />
+					{props.endAudio ? (
+						<Sequence from={Math.round(0.35 * fps)} layout="none">
+							<Audio src={staticFile(props.endAudio)} />
+						</Sequence>
+					) : null}
 				</Sequence>
 			) : null}
 		</AbsoluteFill>

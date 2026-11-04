@@ -5,38 +5,36 @@ import {AbsoluteFill, OffthreadVideo, Sequence, interpolate, spring, staticFile,
 import {BEZEL, PHONE_CX, PHONE_CY, type PhoneBox} from './demoLayout';
 import type {Timeline} from './demoTimeline';
 
-export const RIPPLE_S = 0.7;
+export const RIPPLE_S = 0.6;
 export type Ripple = {frame: number; x: number; y: number};
-/** One accent for "look here": the spotlight ring and the tap ring. */
-const MARK = '#FFD23F';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 
-/** A tap: a fingertip dot that presses in and lifts, and an accent ring that spreads from it. */
+/** A tap, like iOS "show touches": a soft grey fingertip that presses in and lifts, and a thin ring that spreads from it. */
 const RippleDot: React.FC<{x: number; y: number}> = ({x, y}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const press = interpolate(t, [0, 0.08, 0.2, RIPPLE_S], [0.6, 1.08, 1, 0.9], clamp);
-	const dotO = interpolate(t, [0, 0.06, RIPPLE_S - 0.2, RIPPLE_S], [0, 1, 1, 0], clamp);
-	const p = interpolate(t, [0.04, RIPPLE_S], [0, 1], clamp);
-	const ring = 60 + (1 - (1 - p) ** 3) * 150;
-	const dot = 62 * press;
+	const press = interpolate(t, [0, 0.1, 0.22, RIPPLE_S], [0.75, 1.04, 1, 0.94], clamp);
+	const dotO = interpolate(t, [0, 0.08, RIPPLE_S - 0.25, RIPPLE_S], [0, 1, 1, 0], clamp);
+	const p = interpolate(t, [0.08, RIPPLE_S], [0, 1], clamp);
+	const ring = 52 + (1 - (1 - p) ** 2) * 70;
+	const dot = 50 * press;
 	return (
 		<>
-			<div style={{position: 'absolute', left: x - ring / 2, top: y - ring / 2, width: ring, height: ring, borderRadius: ring / 2, border: `${7 - 4 * p}px solid ${MARK}`, opacity: 1 - p, boxShadow: '0 0 0 2px rgba(17,18,22,.25)'}} />
-			<div style={{position: 'absolute', left: x - dot / 2, top: y - dot / 2, width: dot, height: dot, borderRadius: dot / 2, background: 'rgba(17,18,22,.38)', border: '5px solid #fff', boxShadow: '0 4px 16px rgba(17,18,22,.35)', opacity: dotO}} />
+			<div style={{position: 'absolute', left: x - ring / 2, top: y - ring / 2, width: ring, height: ring, borderRadius: ring / 2, border: '2px solid rgba(255,255,255,.9)', boxShadow: '0 0 0 1px rgba(17,18,22,.12), 0 2px 10px rgba(17,18,22,.18)', opacity: 0.9 * (1 - p)}} />
+			<div style={{position: 'absolute', left: x - dot / 2, top: y - dot / 2, width: dot, height: dot, borderRadius: dot / 2, background: 'rgba(60,63,72,.32)', boxShadow: 'inset 0 0 0 2px rgba(255,255,255,.75), 0 3px 12px rgba(17,18,22,.22)', opacity: dotO}} />
 		</>
 	);
 };
 
 /** Highlights in output frames and screen pixels. */
 export type Spot = {start: number; end: number; x: number; y: number; w: number; h: number; glide?: boolean};
-const DIM = 0.45;
+const DIM = 0.24;
 const PAD = 8;
 
 /**
- * The element in focus: the rest of the screen dims, a rounded accent ring marks it. A highlight with
- * `glide` moves over from the one before; back-to-back ones keep the dim on; a lone one fades in and out.
+ * The element in focus: the rest of the screen dims a little, with a soft edge (no outline). A highlight
+ * with `glide` moves over from the one before; back-to-back ones keep the dim on; a lone one fades in and out.
  */
 const Spotlight: React.FC<{spots: Spot[]}> = ({spots}) => {
 	const frame = useCurrentFrame();
@@ -49,27 +47,19 @@ const Spotlight: React.FC<{spots: Spot[]}> = ({spots}) => {
 	const next = i + 1 < spots.length && spots[i + 1].start - s.end <= 1;
 	const p = prev ? spring({frame: frame - s.start, fps, config: {damping: 22, stiffness: 90}}) : 1;
 	const r = prev ? {x: prev.x + (s.x - prev.x) * p, y: prev.y + (s.y - prev.y) * p, w: prev.w + (s.w - prev.w) * p, h: prev.h + (s.h - prev.h) * p} : s;
-	const o = Math.min(before ? 1 : interpolate(frame, [s.start, s.start + 8], [0, 1], clamp), next ? 1 : interpolate(frame, [s.end - 6, s.end], [1, 0], clamp));
-	// A lone highlight lands with a small settle of the ring.
-	const grow = prev ? 0 : (1 - spring({frame: frame - s.start, fps, config: {damping: 14, stiffness: 140}})) * 18;
-	const radius = Math.min(26, r.h / 2 + PAD);
+	const o = Math.min(before ? 1 : interpolate(frame, [s.start, s.start + 10], [0, 1], clamp), next ? 1 : interpolate(frame, [s.end - 8, s.end], [1, 0], clamp));
 	return (
-		<>
-			<div style={{position: 'absolute', left: r.x - PAD, top: r.y - PAD, width: r.w + 2 * PAD, height: r.h + 2 * PAD, borderRadius: radius, boxShadow: `0 0 0 3000px rgba(12,14,22,${DIM * o})`}} />
-			<div
-				style={{
-					position: 'absolute',
-					left: r.x - PAD - 6 - grow,
-					top: r.y - PAD - 6 - grow,
-					width: r.w + 2 * PAD + 12 + 2 * grow,
-					height: r.h + 2 * PAD + 12 + 2 * grow,
-					borderRadius: radius + 6 + grow,
-					border: `6px solid ${MARK}`,
-					boxShadow: '0 0 0 1.5px rgba(17,18,22,.35), 0 0 22px rgba(255,210,63,.55)',
-					opacity: o,
-				}}
-			/>
-		</>
+		<div
+			style={{
+				position: 'absolute',
+				left: r.x - PAD,
+				top: r.y - PAD,
+				width: r.w + 2 * PAD,
+				height: r.h + 2 * PAD,
+				borderRadius: Math.min(22, r.h / 2 + PAD),
+				boxShadow: `0 0 26px 3000px rgba(12,14,22,${DIM * o})`,
+			}}
+		/>
 	);
 };
 

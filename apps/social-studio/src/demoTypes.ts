@@ -31,6 +31,8 @@ export type AppDemoProps = {
 	endCard?: boolean;
 	/** A big title word on the end card, styled like the `title` captions. */
 	endWord?: string;
+	/** A voice clip over the end card (staticFile path), from its start. */
+	endAudio?: string;
 	/** Background tint, a category name from theme.ts (default: general = cobalt). */
 	category?: string;
 };

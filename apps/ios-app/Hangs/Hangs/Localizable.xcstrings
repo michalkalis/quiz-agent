@@ -8593,6 +8593,22 @@
         }
       }
     },
+    "Say \"start\" to answer" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Řekni „start“ a odpovídej"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Povedz „štart“ a odpovedaj"
+          }
+        }
+      }
+    },
     "Say 1–4 or the answer" : {
       "comment" : "Recording prompt for multiple-choice questions whose options are labelled 1–4",
       "localizations" : {
@@ -9824,6 +9840,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zhrnutie"
+          }
+        }
+      }
+    },
+    "Your answers and pack topics are processed by third-party AI services. By continuing, you agree." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje odpovědi a témata balíčků zpracovávají externí AI služby. Pokračováním s tím souhlasíš."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoje odpovede a témy balíkov spracúvajú externé AI služby. Pokračovaním s tým súhlasíš."
+          }
+        }
+      }
+    },
+    "start · ok · again · repeat · next" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "start · ok · znovu · zopakuj · další"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "štart · ok · znova · zopakuj · ďalšia"
           }
         }
       }

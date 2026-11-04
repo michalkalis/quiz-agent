@@ -54,7 +54,7 @@ struct OnboardingView: View {
     private var welcomePage: some View {
         illustratedPage(
             title: "ANSWER BY VOICE",
-            text: "Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz."
+            text: nil
         ) {
             illustrationCard(categoryId: "geography-world") { style in
                 VStack(spacing: Theme.Hangs.Spacing.xl) {
@@ -109,7 +109,7 @@ struct OnboardingView: View {
 
     private func illustratedPage(
         title: LocalizedStringKey,
-        text: LocalizedStringKey,
+        text: LocalizedStringKey?,
         @ViewBuilder illustration: () -> some View,
         @ViewBuilder footer: () -> some View = { EmptyView() }
     ) -> some View {
@@ -184,7 +184,7 @@ struct OnboardingView: View {
 
     // MARK: - Features card
 
-    /// #194 C7 (canvas Bg-Features): the four command tips as cards in
+    /// #194 C7 (canvas Bg-Features): the command tips as one-line cards in
     /// category colours, the last one plain — the buttons that always work.
     private var featuresCard: some View {
         VStack(spacing: Theme.Hangs.Spacing.xs) {
@@ -197,7 +197,7 @@ struct OnboardingView: View {
     private func featureRow(_ feature: OnboardingFeature) -> some View {
         let style = feature.categoryId.map { Theme.Hangs.Category.style(for: $0) }
         let text = style?.text ?? Theme.Hangs.Colors.ink
-        return HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
+        return HStack(alignment: .center, spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: feature.icon)
                 .font(.hangsLabel)
                 .frame(width: Metrics.featureIcon, height: Metrics.featureIcon)
@@ -210,9 +210,6 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
                 Text(feature.title)
                     .font(.hangsLabel)
-                Text(feature.description)
-                    .font(.hangsBody)
-                    .opacity(0.9)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -260,12 +257,12 @@ struct OnboardingView: View {
 
     /// #209 (App Review guideline 5.1.2(i)): before first use, name the AI
     /// services that process the player's spoken answers and typed pack topics.
-    /// It sits on the welcome page above both of its buttons, so Continue and
-    /// Skip are the consent (`OnboardingViewModel` records it). The list must
-    /// match the backend.
+    /// Kept to one short line; the provider list lives in the linked privacy
+    /// policy and in the full notice in Settings. It sits on the welcome page above both of its buttons, so Continue and
+    /// Skip are the consent (`OnboardingViewModel` records it).
     private var aiDisclosure: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-            Text("Your spoken answers and the topics you type for packs are processed by AI services from OpenAI, Anthropic, ElevenLabs, Amazon and OpenRouter. By continuing, you agree.")
+            Text("Your answers and pack topics are processed by third-party AI services. By continuing, you agree.")
                 .font(.hangsCaption)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -337,16 +334,15 @@ private struct OnboardingFeature {
     /// Card colour (#194 C7); nil = the plain white card.
     let categoryId: String?
     let title: LocalizedStringKey
-    let description: LocalizedStringKey
 
     // Command-education card (#96 P2, adopted from pen `hTdkE`): the post-diagnosis
     // onboarding-2 content that teaches the English-only, screen-scoped command
     // grammar — the founder's discoverability gap. Buttons remain the fallback.
+    // One line each: commands follow the quiz language, so no language card.
     static let all: [OnboardingFeature] = [
-        .init(icon: "mic.fill", categoryId: "geography-world", title: #"Say "start""#, description: #"Say "start" after a question, or tap Answer, to begin answering."#),
-        .init(icon: "checklist", categoryId: "science-nature", title: "Five simple words", description: "start · ok · again · repeat · next. That's all you need."),
-        .init(icon: "globe", categoryId: "sports", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
-        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work", description: "Every command also has an on-screen button. You don't have to use your voice."),
+        .init(icon: "mic.fill", categoryId: "geography-world", title: #"Say "start" to answer"#),
+        .init(icon: "checklist", categoryId: "science-nature", title: "start · ok · again · repeat · next"),
+        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work"),
     ]
 }
 

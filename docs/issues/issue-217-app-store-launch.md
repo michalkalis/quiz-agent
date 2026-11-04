@@ -126,7 +126,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
     `/app-config` a Fly env: `orders_enabled`, `multiplayer_enabled`, `STOREKIT_ENVIRONMENT`, `RC_ALLOWED_ENVIRONMENT`.
   - Prečo: po #182 nikto nemeral; zapnuté prepínače platia aj pre App Store build (release-flow).
   - Hotovo: čísla zapísané tu; ak balík vychádza v strate, otázka foundrovi (cena / dočasne vypnúť objednávky).
-- [ ] **217.9 Upratať zastarané pripomienky** — agent (docs PR)
+- [x] **217.9 Upratať zastarané pripomienky** — agent (docs PR) — hotové 2026-11-04: #155 a TEMP `generatedBy` zatvorené (overené v kóde), #140 leg 2 presunutý do 217.10, #62 už zatvorené, #48 a #50 zatvorené
   - Čo: v `TODO.md` a `TODO-details.md` uzavrieť riadky „Pre-App-Store removal (#155)“, „Remove TEMP
     `generatedBy`“ (platí compile-time vypnutie z #209, novší a otestovaný vzor), `#140 leg 2` presunúť sem,
     „pred GA prepnúť STOREKIT_ENVIRONMENT“ zrušiť; #62 označiť „nahradené #217“; #48 a #50 zrevidovať.
@@ -141,7 +141,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   7. Na ponuke prihlásenia (alebo **Profile** → **Sign in with Apple**) sa prihlás.
   8. Over: v Profile je tvoje meno, kredit a Plus sedia, balík je v Moje balíky a hrá sa, štatistiky sú rovnaké.
   9. Napíš agentovi „OK“ alebo pošli snímku toho, čo nesedí (Feedback v appke stačí).
-  - Hotovo: všetkých 8 bodov sedí → zaškrtnúť aj #61 akceptáciu, #78 a #140 leg 2.
+  - Hotovo: všetkých 8 bodov sedí → zaškrtnúť aj #61 akceptáciu, #78 a #140 leg 2 (v TODO riadok presunutý sem).
 - [ ] **217.11 Verzia na vydanie a podanie** — agent; podanie na povel foundera
   - Čo: podľa otázky 1. Ak ide 1.2: po vydaní alebo stiahnutí 1.1 PR so zvýšením `MARKETING_VERSION`;
     lokálne skompilovať Release-Prod; skontrolovať prepínače (217.8); App Store build

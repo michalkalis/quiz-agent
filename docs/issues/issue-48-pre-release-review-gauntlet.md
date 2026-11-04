@@ -1,6 +1,6 @@
 # Issue #48 — Pre-release review gauntlet (App Store)
 
-**Triage:** interactive (review phase) → ready-for-agent (remediation phase)
+**Triage:** wontfix (2026-11-04, zatvorené v #217 — App Store launch): nikdy nespustené, 1.1 vyšla bez neho; kontrolu pred vydaním robí PR review + CI a kroky 217.x
 
 **Founder decision 2026-06-09:** **Defer — not yet.** Run this gauntlet later, once the MCQ + design
 blockers are closer to done. Parked for now; no stages started.

@@ -1,12 +1,10 @@
 # texts
 trubbo
 ODPOVĚZ HLASEM
-Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Během kvízu nemusíš na nic klepat.
-Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračováním s tím souhlasíš.
+Tvoje odpovědi a témata balíčků zpracovávají externí AI služby. Pokračováním s tím souhlasíš.
 Zásady ochrany soukromí
 ODPOVĚZ HLASEM
-Trubbo čte otázky nahlas a poslouchá tvoje odpovědi. Během kvízu nemusíš na nic klepat.
-Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter. Pokračováním s tím souhlasíš.
+Tvoje odpovědi a témata balíčků zpracovávají externí AI služby. Pokračováním s tím souhlasíš.
 Zásady ochrany soukromí
 Pokračuj
 Přeskoč

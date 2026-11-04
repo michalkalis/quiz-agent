@@ -1,23 +1,13 @@
 # texts
 trubbo
 OVLÁDAJ HLASOM
-Povedz „štart“
-Po otázke povedz „štart“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
-Päť jednoduchých slov
-štart · ok · znova · zopakuj · ďalšia. Viac príkazov nepotrebuješ.
-Predvolene po anglicky
-Príkazy hovoríš predvolene po anglicky. Keď v Nastaveniach prepneš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
+Povedz „štart“ a odpovedaj
+štart · ok · znova · zopakuj · ďalšia
 Tlačidlá fungujú vždy
-Každý príkaz má aj tlačidlo na obrazovke. Hlas používať nemusíš.
 OVLÁDAJ HLASOM
-Povedz „štart“
-Po otázke povedz „štart“ alebo klepni na tlačidlo Odpovedz a začni odpovedať.
-Päť jednoduchých slov
-štart · ok · znova · zopakuj · ďalšia. Viac príkazov nepotrebuješ.
-Predvolene po anglicky
-Príkazy hovoríš predvolene po anglicky. Keď v Nastaveniach prepneš jazyk kvízu na slovenčinu, hovoríš ich po slovensky.
+Povedz „štart“ a odpovedaj
+štart · ok · znova · zopakuj · ďalšia
 Tlačidlá fungujú vždy
-Každý príkaz má aj tlačidlo na obrazovke. Hlas používať nemusíš.
 Pokračuj
 Preskoč
 # identifiers

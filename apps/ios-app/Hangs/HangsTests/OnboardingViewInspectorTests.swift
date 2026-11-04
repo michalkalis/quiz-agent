@@ -55,10 +55,14 @@ struct OnboardingViewStructureTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "ANSWER BY VOICE") }
             #expect(throws: Never.self) { try tree.find(text: "Continue") }
+            // Guideline 5.1.2(i): the shortened AI notice and its privacy link
+            // must stay above Continue/Skip, which record the consent.
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "onboarding.aiDisclosure") }
+            #expect(throws: Never.self) { try tree.find(button: "Privacy Policy") }
         }
     }
 
-    @Test("Features page renders 'VOICE CONTROL' headline and 4 feature titles")
+    @Test("Features page renders 'VOICE CONTROL' headline and 3 one-line tips")
     func featuresPageRendersCardRows() async throws {
         let vm = makeVM()
         vm.advance() // welcome → features
@@ -68,11 +72,11 @@ struct OnboardingViewStructureTests {
             #expect(throws: Never.self) { try tree.find(text: "VOICE CONTROL") }
             // #96 P2: the features card now teaches the command grammar (adopted
             // from pen `hTdkE`) — the founder's discoverability fix.
-            #expect(throws: Never.self) { try tree.find(text: "Five simple words") }
-            // #120: commands are English by DEFAULT (Slovak selectable in
-            // Settings) — the "always" copy became wrong when Slovak shipped.
-            #expect(throws: Never.self) { try tree.find(text: "English by default") }
+            #expect(throws: Never.self) { try tree.find(text: "start · ok · again · repeat · next") }
             #expect(throws: Never.self) { try tree.find(text: "Buttons always work") }
+            // Founder 2026-11-04: the page was too wordy. Commands follow the
+            // quiz language, so the old "English by default" card is gone.
+            #expect(throws: (any Error).self) { try tree.find(text: "English by default") }
         }
     }
 

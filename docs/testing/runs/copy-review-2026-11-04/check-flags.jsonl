@@ -1,0 +1,67 @@
+{"id": "Localizable:", "lang": "sk", "rule": 8, "note": "missing translation", "source": "check"}
+{"id": "Localizable:", "lang": "cs", "rule": 8, "note": "missing translation", "source": "check"}
+{"id": "Localizable:%lld CORRECT", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld CORRECT", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld MISSED", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld MISSED", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld monthly free", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld monthly free", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld s", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld s", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld selected", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld selected", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld%% correct", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld%% correct", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld%% of quizzes", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lld%% of quizzes", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lldm", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%lldm", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:%llds", "lang": "sk", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:%llds", "lang": "cs", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:All stats", "lang": "sk", "rule": 9, "note": "much longer than en (17 vs 9 chars)", "source": "check"}
+{"id": "Localizable:All stats", "lang": "cs", "rule": 9, "note": "much longer than en (18 vs 9 chars)", "source": "check"}
+{"id": "Localizable:Bluetooth", "lang": "sk", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:Bluetooth", "lang": "cs", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:Changes apply from the next question. When to show answers can only be changed before the game.", "lang": "en", "rule": 7, "note": "term: 'game'", "source": "check"}
+{"id": "Localizable:EN fallback", "lang": "sk", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:EN fallback", "lang": "cs", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:For example, a city's bus routes or a local card game", "lang": "en", "rule": 7, "note": "term: 'game'", "source": "check"}
+{"id": "Localizable:Game rules", "lang": "en", "rule": 7, "note": "term: 'Game'", "source": "check"}
+{"id": "Localizable:No active session", "lang": "sk", "rule": 9, "note": "much longer than en (24 vs 14 chars)", "source": "check"}
+{"id": "Localizable:No packs yet", "lang": "sk", "rule": 9, "note": "much longer than en (20 vs 12 chars)", "source": "check"}
+{"id": "Localizable:Play today", "lang": "sk", "rule": 9, "note": "much longer than en (17 vs 10 chars)", "source": "check"}
+{"id": "Localizable:Play today", "lang": "cs", "rule": 9, "note": "much longer than en (17 vs 10 chars)", "source": "check"}
+{"id": "Localizable:Played %lld / %lld", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Played %lld / %lld", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Previous", "lang": "sk", "rule": 9, "note": "much longer than en (21 vs 8 chars)", "source": "check"}
+{"id": "Localizable:Privacy Policy", "lang": "sk", "rule": 9, "note": "much longer than en (23 vs 14 chars)", "source": "check"}
+{"id": "Localizable:Privacy Policy", "lang": "cs", "rule": 9, "note": "much longer than en (23 vs 14 chars)", "source": "check"}
+{"id": "Localizable:Question %lld, correct", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, correct", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, incorrect", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, incorrect", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, not answered", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, not answered", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, skipped", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld, skipped", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld.", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Question %lld.", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Quiz out of sync", "lang": "sk", "rule": 9, "note": "much longer than en (29 vs 16 chars)", "source": "check"}
+{"id": "Localizable:Room to grow", "lang": "sk", "rule": 9, "note": "much longer than en (21 vs 12 chars)", "source": "check"}
+{"id": "Localizable:Scan to join", "lang": "sk", "rule": 9, "note": "much longer than en (20 vs 12 chars)", "source": "check"}
+{"id": "Localizable:Scan to join", "lang": "cs", "rule": 9, "note": "much longer than en (20 vs 12 chars)", "source": "check"}
+{"id": "Localizable:Server error (%lld)", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Server error (%lld)", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Start", "lang": "cs", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:THINK — LISTENING IN %lld S", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:THINK — LISTENING IN %lld S", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:Terms of Use", "lang": "sk", "rule": 9, "note": "much longer than en (20 vs 12 chars)", "source": "check"}
+{"id": "Localizable:Your session expired. Please sign in again to continue.", "lang": "en", "rule": 7, "note": "term: 'session'", "source": "check"}
+{"id": "Localizable:hangs-logs.txt", "lang": "sk", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:hangs-logs.txt", "lang": "cs", "rule": 8, "note": "identical to English (untranslated?)", "source": "check"}
+{"id": "Localizable:of %lld", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:of %lld", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:of %lld free questions left", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:of %lld free questions left", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:out of %lld", "lang": "sk", "rule": 6, "note": "count without plural variants", "source": "check"}
+{"id": "Localizable:out of %lld", "lang": "cs", "rule": 6, "note": "count without plural variants", "source": "check"}

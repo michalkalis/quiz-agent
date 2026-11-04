@@ -15,7 +15,6 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
-import {ANSWERS_PER_SLIDE} from '../src/CarouselSlide';
 import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
 import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
@@ -256,11 +255,12 @@ async function main() {
 		const part = Number(values.part);
 		const base = {language, part, questions: qs, index: 0};
 		jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'cover'}, name: `carousel-${language}-p${part}-0-cover`, still: true});
-		qs.forEach((_, i) =>
-			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'question', index: i}, name: `carousel-${language}-p${part}-${i + 1}`, still: true}),
-		);
-		for (let i = 0; i * ANSWERS_PER_SLIDE < qs.length; i++)
-			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'answers', index: i}, name: `carousel-${language}-p${part}-${qs.length + 1 + i}-answers`, still: true});
+		// Each answer right after its question (founder 2026-11-04): 1 + 2n slides, Instagram allows 10.
+		if (1 + 2 * qs.length > 10) throw new Error(`a carousel holds at most 4 questions, got ${qs.length}`);
+		qs.forEach((_, i) => {
+			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'question', index: i}, name: `carousel-${language}-p${part}-${2 * i + 1}-q`, still: true});
+			jobs.push({composition: 'CarouselSlide', props: {...base, kind: 'answer', index: i}, name: `carousel-${language}-p${part}-${2 * i + 2}-a`, still: true});
+		});
 	} else {
 		if (positionals.length !== 1) throw new Error('usage: npm run render -- <question-id | file.json> [--format five|abc]');
 		const style = {opening: values.opening, explain: values.explain} as ReelStyle;

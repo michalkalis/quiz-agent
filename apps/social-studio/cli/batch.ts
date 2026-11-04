@@ -50,7 +50,7 @@ type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 /** Seed slots are the weekend before Monday; weekly slots run Mon..Sun. */
 type Slot = {account: Account; day: Day; format: PostFormat; language: Language; time?: string; n?: number; before?: boolean; size?: number};
 
-const CAROUSEL_SIZE = 7;
+const CAROUSEL_SIZE = 4;
 // Founder 2026-10-24: a reel question reads in under ~6 s of voice. The first
 // question people see stays at 90; a round's later questions may run to 110
 // (founder 2026-10-25).

@@ -10,7 +10,7 @@ Spec: [content plan](../../docs/issues/issue-210-content-plan.md) · [issue](../
 |---|---|---|
 | `FiveSeconds` | 1080×1920, ~17–21 s | hook (1.5 s) · question read by the app voice with word captions · 5 s countdown, monkey thinking · answer + one line why · end card |
 | `ABC` | 1080×1920 | same, with the options on the card and "Comment A, B or C" during the countdown; the right option lights up |
-| `CarouselSlide` | 1080×1350 still | `cover` · `question` (one per slide) · `answers` |
+| `CarouselSlide` | 1080×1350 still | `cover` · then `question` and its `answer` right after it (founder 2026-11-04; max 4 questions, Instagram takes 10 slides) |
 | `Pinned` | 1080×1920, ~14 s, silent | pinned launch reel: "now on the App Store" line · the App Store screenshots (`public/store/`, copied on `npm install` from `apps/ios-app/Hangs/fastlane/screenshots` + the website's badge) · end card |
 
 Background colour follows the category (`src/theme.ts`) so a series does not look identical. Copy (hooks, end card, carousel) is per language in `src/copy.ts` (en / sk / cs). No music is baked in; no dashes as punctuation in on-screen text (`cli/shape.ts` strips them).
@@ -39,7 +39,7 @@ npm run batch -- --monday 2026-11-02
 EXTRA_VOICES=3 npm run batch -- --seed   # launch posts: 6 per account on the weekend before, added to that week's manifest
 ```
 
-- **Week per account** (content plan): Mon 5 Seconds · Tue Road Trip Round (7-question carousel) · Wed A, B or C · Fri 5 Seconds, for Instagram EN and Instagram SK/CZ (one language per post, sk/cs alternating, flipped weekly). Thu "How it plays" is not built yet. EN reels also go to YouTube Shorts.
+- **Week per account** (content plan): Mon 5 Seconds · Tue Road Trip Round (4-question carousel, each answer on the next slide) · Wed A, B or C · Fri 5 Seconds, for Instagram EN and Instagram SK/CZ (one language per post, sk/cs alternating, flipped weekly). Thu "How it plays" is not built yet. EN reels also go to YouTube Shorts.
 - **Picks**: approved native rows (`--candidates` in `scripts/fetch_question.py`, read-only), founder/rater score first, then fresh pop culture; the EN account skips local questions, SK/CZ keeps sk/cz ones. Reels need a voice clip: existing ones are used first, the slots with the fewest clips (MCQ, cs) get the weekly voice budget.
 - **Never repeat**: `batches/*.json` are committed and are the posted log; a question in any earlier manifest is never picked again. `batches/voice-ledger.json` (committed) holds the 5-clips-per-7-days cap.
 - **Captions**: fixed per-language templates in `cli/captions.ts` (question first, prompt, app named every 3rd post, 3–5 hashtags), no model.

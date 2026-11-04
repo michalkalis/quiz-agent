@@ -13,8 +13,11 @@ type Copy = {
 	live: string;
 	roundTitle: (part: number) => string;
 	roundSub: (n: number) => string;
-	answersTitle: string;
 	swipe: string;
+	/** Answer slide, quiet hint that another question follows. */
+	next: string;
+	/** Last answer slide, instead of the hint. */
+	score: string;
 	/** Fixed hook line of a round reel (research 2026-10-25: true by construction). */
 	roundHook: (n: number) => string;
 	/** Opening line that says on its own what the reel is (founder 2026-10-27, variant A): `n` questions in a round, null = one question. */
@@ -30,9 +33,10 @@ export const COPY: Record<Language, Copy> = {
 		soon: 'Free on the App Store',
 		live: 'Trubbo is now on the App Store.',
 		roundTitle: (p) => `Quiz round, part ${p}.`,
-		roundSub: (n) => `${n} questions. Answers on the last slide.`,
-		answersTitle: 'Answers',
+		roundSub: (n) => `${n} questions. Each answer on the next slide.`,
 		swipe: 'Swipe',
+		next: 'Next question',
+		score: 'How many did you get?',
 		roundHook: (n) => `Can you get ${n} out of ${n}?`,
 		openLine: (n) => (n === null ? 'One trivia question. Can you get it?' : `${n}\u00a0trivia questions. Can you get all ${n}?`),
 	},
@@ -42,10 +46,11 @@ export const COPY: Record<Language, Copy> = {
 		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Zadarmo v App Store',
 		live: 'Trubbo je už v App Store.',
-		roundTitle: (p) => `Kvízové kolo, ${p}. diel.`,
-		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpovede nájdeš na konci.`,
-		answersTitle: 'Odpovede',
-		swipe: 'Potiahni',
+		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0diel.`,
+		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpoveď hneď na ďalšej strane.`,
+		swipe: 'Listuj',
+		next: 'Ďalšia otázka',
+		score: 'Koľko máš správne?',
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
 		openLine: (n) => (n === null ? 'Kvízová otázka. Trafíš ju?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázok'}. Trafíš všetky?`),
 	},
@@ -55,10 +60,11 @@ export const COPY: Record<Language, Copy> = {
 		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Zdarma v App Store',
 		live: 'Trubbo je už v App Store.',
-		roundTitle: (p) => `Kvízové kolo, ${p}. díl.`,
-		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpovědi najdeš na konci.`,
-		answersTitle: 'Odpovědi',
-		swipe: 'Přejeď',
+		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0díl.`,
+		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpověď hned na další straně.`,
+		swipe: 'Listuj',
+		next: 'Další otázka',
+		score: 'Kolik máš správně?',
 		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),
 		openLine: (n) => (n === null ? 'Kvízová otázka. Trefíš ji?' : `${n}\u00a0${n < 5 ? 'kvízové otázky' : 'kvízových otázek'}. Trefíš všechny?`),
 	},

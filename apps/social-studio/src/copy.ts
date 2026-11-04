@@ -13,6 +13,7 @@ type Copy = {
 	live: string;
 	roundTitle: (part: number) => string;
 	roundSub: (n: number) => string;
+	/** Cover line before the arrow (founder 2026-11-04: sk/cs name the next slide, "Listuj" was not right either). */
 	swipe: string;
 	/** Answer slide, quiet hint that another question follows. */
 	next: string;
@@ -48,7 +49,7 @@ export const COPY: Record<Language, Copy> = {
 		live: 'Trubbo je už v App Store.',
 		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0diel.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpoveď hneď na ďalšej strane.`,
-		swipe: 'Listuj',
+		swipe: 'Prvá otázka',
 		next: 'Ďalšia otázka',
 		score: 'Koľko máš správne?',
 		roundHook: (n) => (n === 3 ? 'Trafíš všetky tri?' : n === 5 ? 'Trafíš všetkých päť?' : `Trafíš všetkých ${n}?`),
@@ -62,7 +63,7 @@ export const COPY: Record<Language, Copy> = {
 		live: 'Trubbo je už v App Store.',
 		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0díl.`,
 		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpověď hned na další straně.`,
-		swipe: 'Listuj',
+		swipe: 'První otázka',
 		next: 'Další otázka',
 		score: 'Kolik máš správně?',
 		roundHook: (n) => (n === 3 ? 'Trefíš všechny tři?' : n === 5 ? 'Trefíš všech pět?' : `Trefíš všech ${n}?`),

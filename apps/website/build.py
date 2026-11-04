@@ -111,10 +111,8 @@ def footer(lang: str) -> str:
     """Footer partial with links to the legal pages and social accounts in the same language; its text keys stay for pass 2."""
     social = "".join(f'<a href="{url}" rel="me noopener">{name}</a>' for name, url in SOCIAL[lang].items())
     part = (SRC / "footer.html").read_text("utf-8").strip()
-    hub = ""
-    if lang in topics.LANGS:  # #223: question pages exist in sk and cs only
-        label = html.escape(topics.load(SRC, lang)[0]["title.prefix"])
-        hub = f'<a href="{topics.LANGS[lang]}{topics.DIR}/">{label}</a>\n        '
+    label = html.escape(topics.load(SRC, lang)[0]["title.prefix"])  # #223: question pages
+    hub = f'<a href="{topics.hub(lang)}">{label}</a>\n        '
     return part.replace("{{gen.home}}", LANGS[lang]).replace("{{gen.social}}", social).replace("{{gen.topics}}", hub)
 
 
@@ -175,7 +173,7 @@ App Store: {STORE["en"]}
 - [Slovenčina]({SITE}/sk/)
 - [Čeština]({SITE}/cs/)
 - [Privacy]({SITE}/privacy), [Terms]({SITE}/terms), [Support]({SITE}/support)
-- Quiz questions with answers and sources, by topic: [Slovak]({SITE}/sk/otazky/), [Czech]({SITE}/cs/otazky/)
+- Quiz questions with answers and sources, by topic: [English]({SITE}/questions/), [Slovak]({SITE}/sk/otazky/), [Czech]({SITE}/cs/otazky/)
 
 ## Social media
 
@@ -301,7 +299,7 @@ def main() -> int:
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
     write_topics(strings)
-    print("wrote question topic pages (sk, cs)")
+    print("wrote question topic pages (en, sk, cs)")
     (OUT / "sitemap.xml").write_text(sitemap(), "utf-8")
     (OUT / "llms.txt").write_text(llms(strings), "utf-8")
     for name in STATIC:

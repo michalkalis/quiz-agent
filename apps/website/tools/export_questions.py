@@ -1,4 +1,4 @@
-# Read-only export of servable sk/cs questions for the topic pages (#223). Runs on the quiz-agent-api machine inside a READ ONLY transaction; see tools/topic_snapshot.py.
+# Read-only export of servable sk/cs/en questions for the topic pages (#223). Runs on the quiz-agent-api machine inside a READ ONLY transaction; see tools/topic_snapshot.py.
 import asyncio
 import base64
 import gzip
@@ -13,7 +13,7 @@ SERVABLE = "q.review_status='approved' AND q.pack_id IS NULL AND (q.expires_at I
 async def main():
   c = await asyncpg.connect(url)
   async with c.transaction(readonly=True):
-    a = await c.fetch(f"SELECT q.language, q.question, q.correct_answer::text, q.alternative_answers::text, q.possible_answers::text, q.explanation, q.headline_answer, 'native', {COMMON} FROM questions q WHERE {SERVABLE} AND q.language IN ('sk','cs')")
+    a = await c.fetch(f"SELECT COALESCE(q.language,'en'), q.question, q.correct_answer::text, q.alternative_answers::text, q.possible_answers::text, q.explanation, q.headline_answer, 'native', {COMMON} FROM questions q WHERE {SERVABLE} AND COALESCE(q.language,'en') IN ('sk','cs','en')")
     b = await c.fetch(f"SELECT t.language, t.question, t.correct_answer, t.alternative_answers::text, t.possible_answers::text, t.explanation, t.headline_answer, 'translation', {COMMON} FROM question_translations t JOIN questions q ON q.id=t.question_id WHERE {SERVABLE} AND t.status='approved' AND t.language IN ('sk','cs') AND (q.language IS NULL OR q.language='en') AND t.language = ANY(q.approved_languages)")
   await c.close()
   return [tuple(r) for r in a] + [tuple(r) for r in b]

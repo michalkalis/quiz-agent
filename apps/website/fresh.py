@@ -1,4 +1,4 @@
-"""Fresh entertainment questions (#223.3): /sk/otazky/cerstve/ and /cs/otazky/cerstve/.
+"""Fresh entertainment questions (#223.3): /questions/fresh/, /sk/otazky/cerstve/ and /cs/otazky/cerstve/.
 
 The weekly job (#202) adds new entertainment questions that the app favours for two weeks. This page shows
 the newest of them. The committed page is built from src/topics/fresh.<lang>.json (a fallback snapshot);
@@ -18,9 +18,10 @@ from pathlib import Path
 # so the Fly host (kept as a forwarder after the move) is the second try.
 APIS = ["https://api.trubbo.app", "https://quiz-agent-api.fly.dev"]
 PATH = "/api/v1/public/fresh-questions"
-SLUG = "cerstve"
+SLUGS = {"en": "fresh", "sk": "cerstve", "cs": "cerstve"}
 LIMIT = 12
 MIN = 3
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]  # en dates
 DASH = re.compile(r"\s+[–—]\s+|\s+-\s+")
 
 
@@ -78,4 +79,5 @@ def live(lang: str) -> dict | None:
 
 def updated(texts: dict, iso: str) -> str:
     d = date.fromisoformat(iso)
-    return texts["fresh.updated"].format(date=f"{d.day}. {d.month}. {d.year}")
+    day = texts.get("date", "{day}. {month}. {year}").format(day=d.day, month=d.month, year=d.year, name=MONTHS[d.month - 1])
+    return texts["fresh.updated"].format(date=day)

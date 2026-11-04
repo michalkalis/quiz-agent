@@ -15,6 +15,7 @@ import SwiftUI
 
 struct DailyRoundEndView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var viewModel: QuizViewModel
     @StateObject private var daily: DailyChallengeViewModel
     private let round: DailyRound
@@ -162,14 +163,23 @@ struct DailyRoundEndView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Hangs.Spacing.sm) {
-                shareButton
-                homeButton.frame(width: Metrics.homeWidth)
-            }
-            VStack(spacing: Theme.Hangs.Spacing.xs) {
-                shareButton
-                homeButton
+        // From the size where button titles wrap, the two stack: a 124pt Home
+        // beside Share would break "Home" mid-word (same rule as RoundCompleteView).
+        let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
+            shareButton
+            homeButton
+        }
+        return Group {
+            if HangsButtonTitle.wraps(at: dynamicTypeSize) {
+                stacked
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Hangs.Spacing.sm) {
+                        shareButton
+                        homeButton.frame(width: Metrics.homeWidth)
+                    }
+                    stacked
+                }
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)

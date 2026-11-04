@@ -8,9 +8,11 @@ export type DemoSegment = {from: number; to: number; speed?: number};
 export type DemoTap = {t: number; x: number; y: number};
 export type DemoZoom = {from: number; to: number; x: number; y: number; scale: number};
 export type DemoAudio = {t: number; src: string; volume?: number};
+/** The UI element in focus from `from` to `to`: the rest of the screen dims, a ring marks it (recording pixels). */
+export type DemoHighlight = {from: number; to: number; x: number; y: number; w: number; h: number};
 
-/** voice = what the app says · player = what the player answers (no audio) · label = feature chip · title = one big word (same band as voice). */
-export type DemoCaptionKind = 'voice' | 'player' | 'label' | 'title';
+/** voice = what the app says · player = what the player answers (no audio) · label = feature chip · title = one big word · step = a short line saying what happens on screen (voice, title and step share the band). */
+export type DemoCaptionKind = 'voice' | 'player' | 'label' | 'title' | 'step';
 export type DemoCaption = {from: number; to: number; text: string; kind: DemoCaptionKind};
 
 export type AppDemoProps = {
@@ -22,6 +24,7 @@ export type AppDemoProps = {
 	taps?: DemoTap[];
 	zooms?: DemoZoom[];
 	audio?: DemoAudio[];
+	highlights?: DemoHighlight[];
 	captions?: DemoCaption[];
 	/** Title over the first seconds, above the phone (the app is visible from frame 1). */
 	hook?: {text: string; seconds: number};

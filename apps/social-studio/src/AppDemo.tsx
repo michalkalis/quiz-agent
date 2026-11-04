@@ -1,13 +1,13 @@
 // AppDemo (#210): an iOS simulator recording of Trubbo as a 9:16 promo reel. The recording sits in a
-// drawn phone on a soft tint; cuts, tap ripples, a calm zooming camera, the app's voice clips and
+// drawn phone on a soft tint; cuts, tap marks, a spotlight on the element in focus, a calm zooming camera, the app's voice clips and
 // captions (the app's voice, the player's answer, feature chips, big title words) are laid on top.
 // The script (demoTypes.ts) is in RECORDING time throughout.
 import React from 'react';
 import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {DemoPhone, RIPPLE_S, type Ripple} from './DemoPhone';
-import {fitTitle, HookText, KineticText, LabelChip, PlayerBubble, TitleWord} from './DemoCaptions';
+import {DemoPhone, type Ripple, type Spot} from './DemoPhone';
+import {fitTitle, HookText, KineticText, LabelChip, PlayerBubble, StepText, TitleWord} from './DemoCaptions';
 import {phoneBox, PHONE_CX, PHONE_CY, PHONE_TOP, TOP_BAND} from './demoLayout';
-import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam, runEnd} from './demoTimeline';
+import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam, runEnd, startsSegment} from './demoTimeline';
 import type {AppDemoProps, DemoCaption, DemoCaptionKind} from './demoTypes';
 import {END_CARD_S, EndCard} from './EndCard';
 import {FONT, INK, tintFor} from './theme';
@@ -16,7 +16,8 @@ export const appDemoFrames = (props: AppDemoProps, fps: number) => buildTimeline
 
 type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number};
 
-const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom - 4}px, #000 ${PHONE_TOP - 2}px)`;
+// Zoomed content stops well under the texts: fully hidden down to 30 px under the band, fully shown from the phone's resting top.
+const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom + 30}px, #000 ${PHONE_TOP}px)`;
 
 /** Camera at this component's frame. */
 const useCamera = (rig: Rig) => {
@@ -39,7 +40,7 @@ const mapCaption = (tl: ReturnType<typeof buildTimeline>, c: DemoCaption, fps: n
 };
 
 /** Captions that share a place on screen: one may only start once the previous one there has gone. */
-const SLOT: Record<DemoCaptionKind, string> = {voice: 'band', title: 'band', label: 'chip', player: 'bubble'};
+const SLOT: Record<DemoCaptionKind, string> = {voice: 'band', title: 'band', step: 'band', label: 'band', player: 'bubble'};
 const oneAtATime = (layers: Layer[]): Layer[] => {
 	const sorted = [...layers].sort((a, b) => a.startFrame - b.startFrame);
 	return sorted.map((c) => {
@@ -50,6 +51,7 @@ const oneAtATime = (layers: Layer[]): Layer[] => {
 
 const CaptionLayer: React.FC<{c: Layer; tint: ReturnType<typeof tintFor>; titleSize: number}> = ({c, tint, titleSize}) => {
 	if (c.kind === 'voice') return <KineticText text={c.text} frames={c.frames} />;
+	if (c.kind === 'step') return <StepText text={c.text} frames={c.frames} />;
 	if (c.kind === 'title') return <TitleWord text={c.text} frames={c.frames} size={titleSize} />;
 	if (c.kind === 'player') return <PlayerBubble text={c.text} frames={c.frames} tint={tint} />;
 	return <LabelChip text={c.text} frames={c.frames} tint={tint} />;
@@ -70,6 +72,13 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 		if (at !== null) ripples.push({frame: Math.round(at * fps), x: t.x, y: t.y});
 	}
 
+	// The spotlight glides to the next element on the same shot; on a cut it lands on the new one at once.
+	const spots: Spot[] = (props.highlights ?? []).flatMap((h, i, all) => {
+		const r = mapRange(tl, h.from, h.to);
+		const glide = i > 0 && Math.abs(all[i - 1].to - h.from) < 1e-3 && !startsSegment(tl, h.from);
+		return r ? [{start: Math.round(r[0] * fps), end: Math.round(r[1] * fps), x: h.x, y: h.y, w: h.w, h: h.h, glide}] : [];
+	});
+
 	const captions = oneAtATime((props.captions ?? []).flatMap((c) => mapCaption(tl, c, fps)));
 	// All title words share one size (the largest at which the longest still fits one line).
 	const titleSize = fitTitle([...captions.filter((c) => c.kind === 'title').map((c) => c.text), ...(props.endWord ? [props.endWord] : [])]);
@@ -84,7 +93,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 				{/* The phone is cut off (soft edge) just under the caption band: zoomed in, it slides up behind it, never under a text. */}
 				<AbsoluteFill style={{maskImage: PHONE_MASK, WebkitMaskImage: PHONE_MASK}}>
 					<Camera rig={rig}>
-						<DemoPhone src={props.recording} rec={rec} box={box} timeline={tl} ripples={ripples} fps={fps} />
+						<DemoPhone src={props.recording} rec={rec} box={box} timeline={tl} ripples={ripples} spots={spots} fps={fps} />
 					</Camera>
 				</AbsoluteFill>
 				{hookFrames > 0 && props.hook ? (

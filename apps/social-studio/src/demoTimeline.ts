@@ -46,13 +46,16 @@ export const runEnd = (tl: Timeline, t: number): number | null => {
 };
 
 type Cam = {s: number; x: number; y: number};
-type Key = {frame: number; to: Cam};
+type Key = {frame: number; to: Cam; cut?: boolean};
 
 const TAP_NUDGE = 1.05;
 const TAP_HOLD_S = 0.9;
 const MARGIN = 30;
 
-/** Camera keys in output frames: explicit zooms in/out, plus a small nudge on taps outside any zoom. */
+/** True when recording time `t` is where a segment starts, i.e. the video cuts to it. */
+export const startsSegment = (tl: Timeline, t: number) => tl.segments.some((s) => Math.abs(s.from - t) < 1e-3);
+
+/** Camera keys in output frames: explicit zooms in/out, plus a small nudge on taps outside any zoom. A zoom that starts with a cut starts there at once, like the cut. */
 export const cameraKeys = (props: AppDemoProps, tl: Timeline, fps: number): Key[] => {
 	const rest: Cam = {s: 1, x: props.recordingSize.w / 2, y: props.recordingSize.h / 2};
 	const keys: Key[] = [];
@@ -60,7 +63,7 @@ export const cameraKeys = (props: AppDemoProps, tl: Timeline, fps: number): Key[
 	for (const z of props.zooms ?? []) {
 		const r = mapRange(tl, z.from, z.to);
 		if (!r) continue;
-		keys.push({frame: Math.round(r[0] * fps), to: {s: z.scale, x: z.x, y: z.y}}, {frame: Math.round(r[1] * fps), to: rest});
+		keys.push({frame: Math.round(r[0] * fps), to: {s: z.scale, x: z.x, y: z.y}, cut: startsSegment(tl, z.from)}, {frame: Math.round(r[1] * fps), to: rest});
 		zoomSpans.push([r[0] - 0.4, r[1] + 0.6]);
 	}
 	for (const tap of props.taps ?? []) {
@@ -83,9 +86,10 @@ export const cameraAt = (keys: Key[], frame: number, fps: number, rest: Cam): Ca
 	for (let i = 0; i < keys.length; i++) {
 		const k = keys[i];
 		if (frame < k.frame) break;
-		cur = lerp(from, k.to, ease(frame - k.frame, fps));
+		const p = (f: number) => (k.cut ? 1 : ease(f, fps));
+		cur = lerp(from, k.to, p(frame - k.frame));
 		const next = keys[i + 1];
-		if (next) from = lerp(from, k.to, ease(next.frame - k.frame, fps));
+		if (next) from = lerp(from, k.to, p(next.frame - k.frame));
 	}
 	return cur;
 };

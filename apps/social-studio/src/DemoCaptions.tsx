@@ -75,6 +75,26 @@ export const HookText: React.FC<{text: string; frames: number}> = ({text, frames
 	);
 };
 
+/** Largest size at which `text` fits at most two lines of the band. */
+const fitStep = (text: string): number => {
+	const sizes = [100, 94, 88, 82, 76, 70];
+	if (typeof document === 'undefined') return sizes[2];
+	return sizes.find((s) => lineCount(text, s, INNER_W * 0.97, 800) <= 2) ?? sizes[sizes.length - 1];
+};
+
+/** What happens on screen right now, in a few words: in as one block (quick rise), out with a fade. */
+export const StepText: React.FC<{text: string; frames: number}> = ({text, frames}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const size = fitStep(text);
+	const p = spring({frame, fps, config: {damping: 20, stiffness: 150}});
+	return (
+		<div style={{...bandStyle(), opacity: Math.min(1, p * 1.4) * fadeOut(frame, frames, fps), transform: `translateY(${(1 - p) * 26}px)`}}>
+			<div style={{fontSize: size, fontWeight: 800, lineHeight: LINE, textAlign: 'center', letterSpacing: -1.5, maxWidth: INNER_W, textWrap: 'balance'}}>{text}</div>
+		</div>
+	);
+};
+
 const TITLE_SIZES = [190, 176, 160, 144, 128, 112];
 const TITLE_LINE = 1.0;
 

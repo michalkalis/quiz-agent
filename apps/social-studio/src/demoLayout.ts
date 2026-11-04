@@ -1,5 +1,5 @@
 // Fixed geometry of the AppDemo frame (1080 x 1920). Every text sits inside the platform safe
-// area (SAFE, ReelParts): the feature chip and the big caption band on top, above the phone; the
+// area (SAFE, ReelParts): the caption band (and the feature chip) on top, above the phone; the
 // player bubble at the bottom of the safe area. The phone itself runs on into the unsafe bottom
 // strip, so whatever matters on screen is brought up to FOCUS_CY by a zoom (demoTimeline.ts).
 import {SAFE} from './ReelParts';
@@ -9,16 +9,18 @@ export const H = 1920;
 /** Lowest y the platform UI leaves free. */
 export const SAFE_BOTTOM = H - SAFE.bottom;
 
-/** Feature chip row, at the top of the safe area. */
+/** Feature chip, at the top of the safe area (it takes turns with the band texts). */
 export const CHIP_TOP = SAFE.top;
 export const CHIP_H = 68;
-/** Hook, the app's voice and the big title words, under the chip row. */
-export const TOP_BAND = {top: CHIP_TOP + CHIP_H + 14, bottom: 560};
+/** Hook, the app's voice, the big title words and the step lines: the top of the safe area, well clear of the phone. */
+export const TOP_BAND = {top: SAFE.top, bottom: 520};
+/** Free space between the band and the phone, so a text never seems to sit on the screen. */
+const BAND_GAP = 70;
 /** Where the player bubble ends: just inside the safe area. */
 export const BUBBLE_BOTTOM = SAFE_BOTTOM - 16;
 
 export const PHONE_H = 1300;
-export const PHONE_TOP = TOP_BAND.bottom + 14;
+export const PHONE_TOP = TOP_BAND.bottom + BAND_GAP;
 /** Dark frame around the screen. */
 export const BEZEL = 14;
 /** Widest screen we draw (keeps a wide recording from running off the frame). */

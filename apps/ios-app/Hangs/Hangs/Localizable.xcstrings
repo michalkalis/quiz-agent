@@ -1464,13 +1464,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nová verze Trubbo je připravená."
+            "value" : "Nová verze Trubba je připravená."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nová verzia Trubbo je pripravená."
+            "value" : "Nová verzia Trubba je pripravená."
           }
         }
       }
@@ -1600,13 +1600,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znovu, nebo další?"
+            "value" : "Znovu nebo další?"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Znova, alebo ďalšia?"
+            "value" : "Znova alebo ďalšia?"
           }
         }
       }
@@ -2302,13 +2302,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Změny platí od další otázky. Kdy ukázat odpověď jde změnit jen před hrou."
+            "value" : "Změny platí od další otázky. Kdy ukázat odpovědi jde změnit jen před hrou."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zmeny platia od ďalšej otázky. Kedy ukázať odpoveď sa dá zmeniť len pred hrou."
+            "value" : "Zmeny platia od ďalšej otázky. Kedy ukázať odpovede sa dá zmeniť len pred hrou."
           }
         }
       }
@@ -2508,13 +2508,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyčistit odesílané odpovědi"
+            "value" : "Vyčisti odesílané odpovědi"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vyčistiť odosielané odpovede"
+            "value" : "Vyčisti odosielané odpovede"
           }
         }
       }
@@ -3902,7 +3902,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Externé"
+            "value" : "Externý"
           }
         }
       }
@@ -4260,13 +4260,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Třeba pražská MHD nebo karetní hra prší"
+            "value" : "Třeba linky MHD ve tvém městě nebo místní karetní hra"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Napríklad bratislavská MHD alebo kartová hra prší"
+            "value" : "Napríklad linky MHD v tvojom meste alebo miestna kartová hra"
           }
         }
       }
@@ -4500,13 +4500,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hry v tejto Wi-Fi"
+            "value" : "Hry na tejto Wi-Fi"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hry v této Wi-Fi"
+            "value" : "Hry na této Wi-Fi"
           }
         }
       }
@@ -5270,13 +5270,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pripoj sa na tú istú Wi-Fi ako hostiteľ a hra sa tu ukáže. Alebo naskenuj QR kód z telefónu hostiteľa fotoaparátom."
+            "value" : "Pripoj sa na Wi-Fi hostiteľa a hra sa tu ukáže. Alebo naskenuj QR kód z jeho telefónu."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Připoj se ke stejné Wi-Fi jako hostitel a hra se tu ukáže. Nebo naskenuj QR kód z telefonu hostitele fotoaparátem."
+            "value" : "Připoj se k Wi-Fi hostitele a hra se tu ukáže. Nebo naskenuj QR kód z jeho telefonu."
           }
         }
       }
@@ -5562,13 +5562,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hľadám hry v tejto Wi-Fi…"
+            "value" : "Hľadám hry na tejto Wi-Fi…"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hledám hry v této Wi-Fi…"
+            "value" : "Hledám hry na této Wi-Fi…"
           }
         }
       }
@@ -6003,25 +6003,25 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ďalšia otázka, automatický posun o %lld sekundu"
+                  "value" : "Ďalšia otázka, automatický posun za %lld sekundu"
                 }
               },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ďalšia otázka, automatický posun o %lld sekundy"
+                  "value" : "Ďalšia otázka, automatický posun za %lld sekundy"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ďalšia otázka, automatický posun o %lld sekúnd"
+                  "value" : "Ďalšia otázka, automatický posun za %lld sekúnd"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ďalšia otázka, automatický posun o %lld sekúnd"
+                  "value" : "Ďalšia otázka, automatický posun za %lld sekúnd"
                 }
               }
             }
@@ -6195,13 +6195,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "V tejto Wi-Fi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z telefónu hostiteľa fotoaparátom."
+            "value" : "Na tejto Wi-Fi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z telefónu hostiteľa."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "V této Wi-Fi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z telefonu hostitele fotoaparátem."
+            "value" : "Na této Wi-Fi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z telefonu hostitele."
           }
         }
       }
@@ -6527,22 +6527,66 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázky Trubbo Plus do konce měsíce: %1$lld. Požadovaný počet: %2$lld."
+            "value" : "Do konce měsíce ti %#@available@ Trubbo Plus (chceš %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývají už jen %lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázek"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Only %1$lld Trubbo Plus question left this month (you asked for %2$lld)."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Only %1$lld Trubbo Plus questions left this month (you asked for %2$lld)."
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %#@available@ left this month (you asked for %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld Trubbo Plus question"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld Trubbo Plus questions"
+                    }
+                  }
                 }
               }
             }
@@ -6551,7 +6595,41 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázky Trubbo Plus do konca mesiaca: %1$lld. Požadovaný počet: %2$lld."
+            "value" : "Do konca mesiaca ti %#@available@ Trubbo Plus (chceš %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostávajú už len %lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázok"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázok"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -6562,22 +6640,66 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázky zdarma do konce měsíce: %1$lld. Požadovaný počet: %2$lld."
+            "value" : "Do konce měsíce ti %#@available@ zdarma (chceš %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývají už jen %lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld otázek"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Only %1$lld free question left this month (you asked for %2$lld)."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Only %1$lld free questions left this month (you asked for %2$lld)."
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %#@available@ left this month (you asked for %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld free question"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld free questions"
+                    }
+                  }
                 }
               }
             }
@@ -6586,7 +6708,41 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otázky zadarmo do konca mesiaca: %1$lld. Požadovaný počet: %2$lld."
+            "value" : "Do konca mesiaca ti %#@available@ zadarmo (chceš %2$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostávajú už len %lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázok"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld otázok"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -6597,13 +6753,109 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nové otázky v kategorii %2$@: %1$lld. Požadovaný počet: %3$lld."
+            "value" : "V kategorii %2$@ ti %#@available@ (chceš %3$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld nová otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývají už jen %lld nové otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld nové otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zbývá už jen %lld nových otázek"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nové otázky v kategórii %2$@: %1$lld. Požadovaný počet: %3$lld."
+            "value" : "V kategórii %2$@ ti %#@available@ (chceš %3$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld nová otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostávajú už len %lld nové otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld nových otázok"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "zostáva už len %lld nových otázok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %#@available@ left for you in %2$@ (you asked for %3$lld)."
+          },
+          "substitutions" : {
+            "available" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld new question"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld new questions"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -6740,7 +6992,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Objednávání je zatím pozastavené."
+            "value" : "Objednávání je zatím pozastaveno."
           }
         },
         "sk" : {
@@ -9196,7 +9448,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Přihlášením se Trubbo Plus naváže na tvůj Apple účet, zůstane ti i na novém telefonu nebo po přeinstalování."
+            "value" : "Přihlášením se Trubbo Plus naváže na tvůj Apple účet. Zůstane ti i na novém telefonu nebo po přeinstalování."
           }
         },
         "sk" : {
@@ -10552,13 +10804,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Překlad · kritické"
+            "value" : "Překlad · kritický"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preklad · kritické"
+            "value" : "Preklad · kritický"
           }
         }
       }
@@ -10677,13 +10929,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo má právě údržbu. Až skončíme, bude pokračovat samo."
+            "value" : "Trubbo má právě údržbu. Až skončíme, bude pokračovat sám."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trubbo má práve údržbu. Keď skončíme, pokračuje samo."
+            "value" : "Trubbo má práve údržbu. Keď skončíme, pokračuje sám."
           }
         }
       }
@@ -10970,13 +11222,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neznámé"
+            "value" : "Neznámá"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neznáme"
+            "value" : "Neznáma"
           }
         }
       }
@@ -11256,13 +11508,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kdy ukázat odpověď"
+            "value" : "Kdy ukázat odpovědi"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kedy ukázať odpoveď"
+            "value" : "Kedy ukázať odpovede"
           }
         }
       }
@@ -11392,13 +11644,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kabelové"
+            "value" : "Kabelový"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Káblové"
+            "value" : "Káblový"
           }
         }
       }
@@ -11779,7 +12031,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Odpověď se odešle sama po %lld sekundy, pokud ji nezměníš"
+                  "value" : "Odpověď se odešle sama po %lld sekundách, pokud ji nezměníš"
                 }
               },
               "one" : {
@@ -11827,7 +12079,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Odpoveď sa odošle sama po %lld sekundy, ak ju nezmeníš"
+                  "value" : "Odpoveď sa odošle sama po %lld sekundách, ak ju nezmeníš"
                 }
               },
               "one" : {
@@ -12411,7 +12663,7 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "najlepšie"
+            "value" : "najlepšia"
           }
         }
       }
@@ -13812,13 +14064,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Správně %1$lld · Vedle %2$lld · Přeskočeno %3$lld"
+            "value" : "Správně %lld · Vedle %lld · Přeskočeno %lld"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Správne %1$lld · Vedľa %2$lld · Preskočené %3$lld"
+            "value" : "Správne %lld · Vedľa %lld · Preskočené %lld"
           }
         }
       }

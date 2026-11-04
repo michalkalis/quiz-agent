@@ -10,6 +10,7 @@ Všetky texty, ktoré hráč vidí alebo počuje, prejde model mimo Anthropicu, 
 ## Rozhodnutia foundera
 - 2026-11-04: najprv automaticky nájsť podozrivé texty, tie poslať na pilot; plná kontrola všetkých textov (appka, hovorené + povely, App Store, web) až po pilote a finálnom rozhodnutí.
 - 2026-11-04: pilot len Gemini, „fakt max okolo $1“.
+- 2026-11-04: nálezy ohodnotené v artefakte (`pilot-verdicts.json`).
 - Cena: lacno; nad ~$3–4 vopred pýtať ([[feedback_spend_approval_threshold]]).
 
 ## Výber modelov
@@ -26,12 +27,13 @@ Research: [copy-review-models-sk-cs-en-2026-11.md](../research/copy-review-model
 | 226.2 | Pevné kontroly podľa pravidiel (`checks.py`) | hotové |
 | 226.3 | Predtriedenie Gemini Flash (`screen.py`), kandidáti = 226.2 ∪ 226.3 | hotové: 173/725 podozrivých, ~$1.8 |
 | 226.4 | Pilot: kandidáti + 25 kontrolných → len Gemini 3.1 Pro (founder: max ~$1), `pilot.py --only=gemini --budget=0.95` | hotové: 64/71 volaní, 52 nálezov v 31 textoch, 1 na kontrolných, $0.91 |
-| 226.5 | Founder posúdi nálezy v [artefakte](https://claude.ai/artifact/Q8Z8fwHHVcyDYbx6JyTA1D) (voľby v db `verdicts/fN`) → presnosť | čaká na foundera |
+| 226.5 | Founder posúdi nálezy v [artefakte](https://claude.ai/artifact/Q8Z8fwHHVcyDYbx6JyTA1D) (voľby v db `verdicts/fN`) → presnosť | hotové: 45/52 správne (87 %), 7 zamietnutých |
 | 226.6 | Founder rozhodne o plnej kontrole (rozsah, modely, cena) | |
 | 226.7 | Plná kontrola + opravy cez PR (zhoda oboch = navrhnúť opravu, nezhoda = founder) | |
 
 Behy: `docs/testing/runs/copy-review-2026-11-04/`.
 
 ## Zistenia
-- Konflikt: copy-style pravidlo 3 uvádza sk „Ďalej“, tlačidlo je od #224 „Ďalšia“ → manuál opraviť podľa verdiktu foundera (nálezy 7, 10, 11).
+- „Ďalšia“ vs „Ďalej“ (founder: rozhodni ty): obe ostávajú, sú to dve akcie (preskoč na ďalšiu otázku vs pokračuj po výsledku); copy-style pravidlo 3 doplnené, nálezy 7, 10, 13 neaplikované, 11 len čiarka.
+- Aplikované opravy: PR #732; počty v upozorneniach na zostávajúce otázky prerobené na tvary pre počet (substitutions), rodovo neutrálne „chceš“ namiesto „žiadal si“.
 - Flash predtriedenie je drahšie na výstup (premýšľanie ~2× vstup); pri plnej kontrole rátať s tým.

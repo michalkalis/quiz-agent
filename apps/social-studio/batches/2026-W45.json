@@ -183,28 +183,27 @@
    "date": "2026-11-03",
    "files": [
     "carousel-cs-p2-0-cover.jpg",
-    "carousel-cs-p2-1.jpg",
-    "carousel-cs-p2-2.jpg",
-    "carousel-cs-p2-3.jpg",
-    "carousel-cs-p2-4.jpg",
-    "carousel-cs-p2-5.jpg",
-    "carousel-cs-p2-6.jpg",
-    "carousel-cs-p2-7.jpg",
-    "carousel-cs-p2-8-answers.jpg",
-    "carousel-cs-p2-9-answers.jpg"
+    "carousel-cs-p2-1-q.jpg",
+    "carousel-cs-p2-2-a.jpg",
+    "carousel-cs-p2-3-q.jpg",
+    "carousel-cs-p2-4-a.jpg",
+    "carousel-cs-p2-5-q.jpg",
+    "carousel-cs-p2-6-a.jpg",
+    "carousel-cs-p2-7-q.jpg",
+    "carousel-cs-p2-8-a.jpg"
    ],
    "caption": "Kvíz na cestu, 2. díl.\n\nKolik máš správně?\n\n#kvíz #kviz #zajímavosti #cestování #nacestu",
    "youtube": null,
    "voice": null,
    "questions": [
     {
-     "id": "f6104550-837a-4767-a835-460cbe30db1c",
+     "id": "1bb74196-a01e-4247-b57d-096923d3ae67",
      "category": "general",
-     "question": "Když na ulici potkáte kominíka, čeho byste se na jeho oblečení podle staré pověry měli chytit, aby vám přinesl štěstí?",
-     "answer": "knoflíku",
+     "question": "Jmelí, které si o Vánocích věšíme doma pro štěstí, nikdy nezapouští kořeny do země. Kde tedy roste?",
+     "answer": "Na stromech",
      "options": [],
-     "explanation": "Kdo se chytí kominíkova knoflíku a něco si přeje, tomu se to prý splní. Kominík byl symbolem štěstí proto, že čistý komín chránil dům před požárem.",
-     "source_url": "https://www.kudyznudy.cz/aktuality/den-kominiku-cesta-za-kominy-ktere-vypraveji-pribe"
+     "explanation": "Jmelí je poloparazit: kořeny zavrtá do větví hostitelského stromu a bere mu vodu a minerály, ale cukry si vyrábí samo. Lepkavá semínka mu na větve roznášejí ptáci.",
+     "source_url": "https://en.wikipedia.org/wiki/Viscum_album"
     },
     {
      "id": "617b562a-a5fa-487a-bb52-6f0c63803cb4",
@@ -232,48 +231,20 @@
      "options": [],
      "explanation": "Jde o surimi, tedy rozmělněné maso levných bílých ryb, nejčastěji tresky aljašské. Krabí chuť dodává aroma a červený proužek obarvení.",
      "source_url": "https://energozrouti.cz/clanek/cesi-ji-jedi-ve-velkem-za-nizkou-cenou-teto-ryby-se-skryva-nechutna-pravda"
-    },
-    {
-     "id": "c0721e4a-298a-4fe8-ae31-ff8124c351c6",
-     "category": "sports",
-     "question": "Ve Wimbledonu musí tenisté hrát skoro celí v bílém. Pravidlo vzniklo už v 19. století. Co měla bílá barva skrýt?",
-     "answer": "Pot",
-     "options": [],
-     "explanation": "Propocené skvrny na oblečení se ve viktoriánské Anglii považovaly za neslušné a na bílé látce jsou vidět nejméně. Proto i Kvitová a Vondroušová zvedaly wimbledonskou trofej v bílém.",
-     "source_url": "https://www.si.com/tennis/wimbledon-notoriously-strict-dress-code-players-fascinating-origin"
-    },
-    {
-     "id": "bafd4f97-1f1d-4c85-afa5-f9f10bc0aaf3",
-     "category": "food-everyday",
-     "question": "Proč se podle tradice nechával vánoční kapr pár dní plavat ve vaně v čisté vodě? Čeho se jeho maso mělo zbavit?",
-     "answer": "Pachuti bahna",
-     "options": [],
-     "explanation": "Kapři žijí v rybnících s bahnitým dnem a v čisté vodě se měli „vyčistit“, aby maso nebylo cítit bahnem. Dnešní rybáři ale říkají, že kapr z dobrého rybníka bahnem nepáchne a pobyt ve vaně mu spíš přidá stres.",
-     "source_url": "https://energozrouti.cz/diskuze/muj-deda-udelal-s-kaprem-jedinou-vec-a-zbavil-ho-pachuti-bahna-deti-si-dokonce-pridavaly"
-    },
-    {
-     "id": "f781d481-d95a-4ceb-b219-864832ce6c11",
-     "category": "geography-world",
-     "question": "Které české krajské město má přímo v názvu schované, že kdysi patřilo českým královnám jako jejich věno?",
-     "answer": "Hradec Králové",
-     "options": [],
-     "explanation": "„Králové“ znamená „královny“. Město bylo věnným městem českých královen a nejslavnější z nich, Eliška Rejčka, tam založila kostel, který stojí dodnes.",
-     "source_url": "https://cs.wikipedia.org/wiki/Hradec_Králové"
     }
    ],
    "status": "approved",
-   "publish_at": "2026-11-03T17:00:00Z",
+   "publish_at": "2026-11-04T10:27:44Z",
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-9-answers.jpg"
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-cs-p2-8-a.jpg"
    ]
   },
   {
@@ -614,15 +585,14 @@
    "date": "2026-11-07",
    "files": [
     "carousel-en-p4-0-cover.jpg",
-    "carousel-en-p4-1.jpg",
-    "carousel-en-p4-2.jpg",
-    "carousel-en-p4-3.jpg",
-    "carousel-en-p4-4.jpg",
-    "carousel-en-p4-5.jpg",
-    "carousel-en-p4-6.jpg",
-    "carousel-en-p4-7.jpg",
-    "carousel-en-p4-8-answers.jpg",
-    "carousel-en-p4-9-answers.jpg"
+    "carousel-en-p4-1-q.jpg",
+    "carousel-en-p4-2-a.jpg",
+    "carousel-en-p4-3-q.jpg",
+    "carousel-en-p4-4-a.jpg",
+    "carousel-en-p4-5-q.jpg",
+    "carousel-en-p4-6-a.jpg",
+    "carousel-en-p4-7-q.jpg",
+    "carousel-en-p4-8-a.jpg"
    ],
    "caption": "Road trip round, part 4.\n\nHow many did you get right?\n\n#trivia #quiz #popculture #funfacts #roadtrip",
    "youtube": null,
@@ -663,48 +633,20 @@
      "options": [],
      "explanation": "Spain runs on the same clock as Berlin and Paris even though it lies as far west as Portugal and Britain. Spain switched to that time zone in 1940 and never switched back.",
      "source_url": "https://www.thelocal.es/20260326/when-do-the-clocks-change-next-in-spain-in-2026"
-    },
-    {
-     "id": "87945219-e3b1-4b97-afa2-f3fd5ff8d296",
-     "category": "food-everyday",
-     "question": "If you swap the ham in eggs Benedict for spinach, the dish takes its name from which Italian city?",
-     "answer": "Florence",
-     "options": [],
-     "explanation": "It becomes eggs Florentine. In classic French cooking, 'à la florentine' has long meant 'served with spinach', a nod to Florence.",
-     "source_url": "https://en.wikipedia.org/wiki/Eggs_Benedict"
-    },
-    {
-     "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
-     "category": "science-nature",
-     "question": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?",
-     "answer": "Three",
-     "options": [],
-     "explanation": "Two hearts push blood through the gills while a third serves the rest of the body — and that main heart actually stops beating when the octopus swims, which is why it usually prefers to crawl.",
-     "source_url": "https://en.wikipedia.org/wiki/Octopus"
-    },
-    {
-     "id": "5b876950-2cdb-4035-a600-3587cdc9be8f",
-     "category": "food-everyday",
-     "question": "In the office kitchen fridge, which spot is usually the warmest, making it the worst place to keep the shared milk?",
-     "answer": "The door",
-     "options": [],
-     "explanation": "Every time a colleague opens the fridge, the door shelves get a blast of warm room air, so they swing up and down in temperature far more than the back of the fridge. The coldest, most stable spot for milk is usually at the back of a lower shelf.",
-     "source_url": "https://www.tastingtable.com/1929505/warmest-spot-in-fridge-door/"
     }
    ],
    "status": "approved",
    "publish_at": "2026-11-07T18:00:00Z",
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-9-answers.jpg"
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-en-p4-8-a.jpg"
    ]
   },
   {
@@ -716,29 +658,19 @@
    "date": "2026-11-07",
    "files": [
     "carousel-sk-p2-0-cover.jpg",
-    "carousel-sk-p2-1.jpg",
-    "carousel-sk-p2-2.jpg",
-    "carousel-sk-p2-3.jpg",
-    "carousel-sk-p2-4.jpg",
-    "carousel-sk-p2-5.jpg",
-    "carousel-sk-p2-6.jpg",
-    "carousel-sk-p2-7.jpg",
-    "carousel-sk-p2-8-answers.jpg",
-    "carousel-sk-p2-9-answers.jpg"
+    "carousel-sk-p2-1-q.jpg",
+    "carousel-sk-p2-2-a.jpg",
+    "carousel-sk-p2-3-q.jpg",
+    "carousel-sk-p2-4-a.jpg",
+    "carousel-sk-p2-5-q.jpg",
+    "carousel-sk-p2-6-a.jpg",
+    "carousel-sk-p2-7-q.jpg",
+    "carousel-sk-p2-8-a.jpg"
    ],
    "caption": "Kvíz na cestu, 2. diel.\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Zadarmo v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #jedlo #naceste",
    "youtube": null,
    "voice": null,
    "questions": [
-    {
-     "id": "db8aa518-1282-47fc-9580-f777b109e342",
-     "category": "general",
-     "question": "Krabie tyčinky kúpite takmer v každých potravinách. Z akého morského živočícha sa v skutočnosti vyrábajú?",
-     "answer": "z ryby",
-     "options": [],
-     "explanation": "Vyrábajú sa zo surimi, čo je rozmixované mäso bielej ryby, najčastejšie tresky aljašskej. Krab v nich býva iba v názve a v aróme.",
-     "source_url": "https://en.wikipedia.org/wiki/Surimi"
-    },
     {
      "id": "27c4174b-6f3f-4fc8-bcb4-1538aae082e8",
      "category": "general",
@@ -774,39 +706,20 @@
      "options": [],
      "explanation": "Pieseň Tanečnica z Lúčnice patrí medzi najznámejšie hity Elánu. Lúčnica je zas najslávnejší slovenský folklórny súbor, ktorý vystupoval po celom svete.",
      "source_url": "https://lyricstranslate.com/en/el%C3%A1n-tane%C4%8Dnice-z-l%C3%BA%C4%8Dnice-lyrics.html"
-    },
-    {
-     "id": "535d75ef-1475-4bf3-8caa-6b4cb7e95749",
-     "category": "entertainment",
-     "question": "Ktoré chorvátske prímorské mesto hralo v seriáli Hra o tróny hlavné mesto Siedmich kráľovstiev?",
-     "answer": "Dubrovník",
-     "options": [],
-     "explanation": "Dubrovnícke hradby a schody sa stali Kráľovským prístavom. Vďaka seriálu sa toto mesto zaplnilo fanúšikmi až do takej miery, že muselo obmedziť počet turistov.",
-     "source_url": "https://gameofthrones.fandom.com/wiki/Filming_locations_(Game_of_Thrones)"
-    },
-    {
-     "id": "9e8ee79e-fcad-433f-958c-c0b8d84b7555",
-     "category": "sports",
-     "question": "Čo musí podľa známeho pokriku slovenských hokejových fanúšikov robiť každý, kto chce dokázať, že je Slovák?",
-     "answer": "Skákať",
-     "options": [],
-     "explanation": "Pokrik znie „Kto neskáče, nie je Slovák!“, a preto pri ňom poskakujú celé tribúny aj fanzóny, od štadióna až po námestia.",
-     "source_url": "https://forum.wordreference.com/threads/all-slavic-languages-he-who-isnt-jumping-isnt-supporter-of-a-team-nation.1831749/"
     }
    ],
    "status": "approved",
    "publish_at": "2026-11-07T17:00:00Z",
    "media_urls": [
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-0-cover.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-1.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-2.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-3.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-4.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-5.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-6.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-7.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-8-answers.jpg",
-    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-9-answers.jpg"
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/carousel-sk-p2-8-a.jpg"
    ]
   },
   {

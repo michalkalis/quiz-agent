@@ -1,5 +1,6 @@
-// "Road Trip Round" carousel (4:5 stills): cover, one question per slide,
-// answers on the last slide.
+// "Road Trip Round" carousel (4:5 stills): cover, then each question followed
+// right away by its answer (founder 2026-11-04). The answer slide quietly says
+// another question follows; the last one asks for the score instead.
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
 import {COPY} from './copy';
@@ -9,8 +10,6 @@ import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
 import type {CarouselSlideProps} from './types';
 
 const PAD = 84;
-/** More than 4 answers with their why line do not fit one 1350 px slide. */
-export const ANSWERS_PER_SLIDE = 4;
 
 const Brand: React.FC<{color: string}> = ({color}) => (
 	<div style={{display: 'flex', alignItems: 'center', gap: 16}}>
@@ -21,22 +20,22 @@ const Brand: React.FC<{color: string}> = ({color}) => (
 	</div>
 );
 
-// Answer text column = slide (1080) − padding − card padding − number − gap.
+// Why text column = slide (1080) − padding − card padding.
 const Why: React.FC<{sentence: string}> = ({sentence}) => {
-	const why = fitWhy(sentence, {width: 1080 - 2 * PAD - 80 - 40 - 28, maxLines: 3, size: 32, minSize: 26});
-	return why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: 10, fontWeight: 500}}>{why.text}</div> : null;
+	const why = fitWhy(sentence, {width: 1080 - 2 * PAD - 2 * 60, maxLines: 5, size: 44, minSize: 34});
+	return why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: 24, fontWeight: 500}}>{why.text}</div> : null;
 };
 
 export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, part, questions, index}) => {
 	const copy = COPY[language];
 	const q = questions[index];
-	const tint = kind === 'question' && q ? tintFor(q.category) : tintFor('geography-world');
+	const tint = kind !== 'cover' && q ? tintFor(q.category) : tintFor('geography-world');
 
 	return (
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK, padding: PAD, display: 'flex', flexDirection: 'column'}}>
 			<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
 				<Brand color={tint.onBg} />
-				{kind === 'question' ? (
+				{kind !== 'cover' ? (
 					<div style={{fontSize: 40, fontWeight: 700, color: tint.onBg, opacity: 0.9}}>
 						{index + 1}/{questions.length}
 					</div>
@@ -65,23 +64,26 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, par
 				</div>
 			) : null}
 
-			{kind === 'answers' ? (
-				<div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 28}}>
-					<div style={{fontSize: 80, fontWeight: 800, color: tint.onBg, letterSpacing: -1.2, marginBottom: 8}}>{copy.answersTitle}</div>
-					{questions.slice(index * ANSWERS_PER_SLIDE, (index + 1) * ANSWERS_PER_SLIDE).map((a, j) => {
-						const i = index * ANSWERS_PER_SLIDE + j;
-						return (
-						<div key={a.id} style={{background: SURF, borderRadius: 36, padding: '30px 40px', display: 'flex', gap: 28, alignItems: 'flex-start'}}>
-							<div style={{fontSize: 48, fontWeight: 800, color: OK, minWidth: 40}}>{i + 1}</div>
-							<div>
-								<div style={{fontSize: 50, fontWeight: 800, lineHeight: 1.1}}>{a.answer}</div>
-								<Why sentence={a.why} />
-
-							</div>
-						</div>
-						);
-					})}
+			{kind === 'answer' && q ? (
+				<div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 36}}>
+					<div style={{fontSize: 44, fontWeight: 700, color: tint.onBg, opacity: 0.9}}>{copy.answer}</div>
+					<div style={{background: SURF, borderRadius: 44, padding: '56px 60px', boxShadow: '0 22px 44px rgba(17,18,22,.18)'}}>
+						<div style={{fontSize: q.answer.length > 22 ? 64 : 80, fontWeight: 800, lineHeight: 1.08, color: OK, letterSpacing: -0.8}}>{q.answer}</div>
+						<Why sentence={q.why} />
+					</div>
+					<div style={{display: 'flex', justifyContent: 'flex-end'}}>
+						<Monkey size={170} mood="happy" />
+					</div>
 				</div>
+			) : null}
+
+			{/* Founder 2026-11-04 (variant A): a quiet line says another question follows; the last answer asks for the score. */}
+			{kind === 'answer' && q ? (
+				index === questions.length - 1 ? (
+					<div style={{fontSize: 44, fontWeight: 700, color: tint.onBg, textAlign: 'center'}}>{copy.score}</div>
+				) : (
+					<div style={{fontSize: 38, fontWeight: 600, color: tint.onBg, opacity: 0.75, textAlign: 'right'}}>{copy.next} →</div>
+				)
 			) : null}
 		</AbsoluteFill>
 	);

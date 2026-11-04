@@ -61,11 +61,11 @@ export type ReelProps = {
 };
 
 export type CarouselSlideProps = {
-	kind: 'cover' | 'question' | 'answers';
+	kind: 'cover' | 'question' | 'answer';
 	language: Language;
 	part: number;
 	questions: ReelQuestion[];
-	/** kind = 'question': which one (0-based); kind = 'answers': which answers slide (0-based). */
+	/** Which question (0-based); its answer slide follows it right away (founder 2026-11-04). */
 	index: number;
 };
 

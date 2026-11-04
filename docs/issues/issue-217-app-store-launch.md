@@ -90,7 +90,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
     (polia ostávajú, CI kontrola API prejde; iOS ich neukazuje).
   - Prečo: zákazník by v odpovedi videl našu cenu generovania.
   - Hotovo: test vlastník vs. admin, nasadené.
-- [~] **217.4 Výzva na prihlásenie po každom nákupe** — agent; PR #731 otvorené
+- [x] **217.4 Výzva na prihlásenie po každom nákupe** — agent; PR #731 zlúčené 2026-11-04 (balík až po prijatí objednávky, nikdy cez objednávku ani bežiaci kvíz; po prihlásení sa balíky, kredit a štatistiky načítajú nanovo; udalosti `sign_in_prompt_shown` / `sign_in_prompt_result`)
   - **Founder 2026-11-04** (plátno https://claude.ai/artifact/Pk9BoVyYpa2nGuMG77cTr9, riadok „Výber“): nízke okno, ktoré ukáže, čo presne si kúpil (Plus, +N otázok, karta balíka), po kúpe Plus, kreditu aj vlastného balíka. **Žiadna** ponuka na novej inštalácii: noví hráči sa neotravujú, prihlásiť sa dá kedykoľvek v Profile (riadok účtu).
   - Čo: `SignInPromptCoordinator` aj pre kredit a vlastný balík.
     Texty sk/cs/en podľa `copy-style.md`, `xcstringstool sync`, udalosť analytiky v tom istom PR.

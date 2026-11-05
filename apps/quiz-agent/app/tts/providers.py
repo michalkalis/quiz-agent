@@ -16,10 +16,13 @@ import os
 from typing import Optional, Protocol, runtime_checkable
 
 import httpx
-
+import openai
 from quiz_shared.llm import factory as llm_factory
 
-from ..monitoring.provider_alerts import report_elevenlabs_refusal
+from ..monitoring.provider_alerts import (
+    report_elevenlabs_refusal,
+    report_openai_refusal,
+)
 from .voices import (
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
@@ -62,13 +65,17 @@ class OpenAITTSProvider:
         self.default_voice = voice or OPENAI_DEFAULT_VOICE
 
     async def synthesize(self, text: str, voice: str) -> bytes:
-        response = await self.client.audio.speech.create(
-            model=self.model,
-            voice=voice,
-            input=text,
-            response_format=TTS_FORMAT,
-            speed=TTS_SPEED,
-        )
+        try:
+            response = await self.client.audio.speech.create(
+                model=self.model,
+                voice=voice,
+                input=text,
+                response_format=TTS_FORMAT,
+                speed=TTS_SPEED,
+            )
+        except openai.APIStatusError as exc:
+            report_openai_refusal("tts", exc)
+            raise
         return response.content
 
 

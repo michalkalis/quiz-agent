@@ -97,7 +97,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
     Po prihlásení sa Hraj a Profil načítajú nanovo (balíky, kredit, štatistiky).
   - Prečo: kredit a balíky Apple neobnoví (consumable); bez prihlásenia sú na novom telefóne preč.
   - Hotovo: unit testy brány (kto, kedy, strop), snímky, PR zlúčený.
-- [ ] **217.5 Oznámenia Apple o refundoch aj pre vlastné balíky** — agent cez Playwright (founder sa len prihlási)
+- [x] **217.5 Oznámenia Apple o refundoch aj pre vlastné balíky** — agent cez Playwright (founder sa len prihlási). **2026-11-05:** RevenueCat → app CarQuiz → Apple Server Notification Forwarding URL = `https://quiz-pack-api.fly.dev/v1/appstore/notifications`; testovacie oznámenie (App Store Server API `notifications/test`) Production aj Sandbox prešlo cez RevenueCat a `quiz-pack-api` overil JWS (`type=TEST`, log 10:33 UTC).
   - Čo: URL v ASC (App Information → App Store Server Notifications) ostáva na RevenueCat (potrebuje ich
     pre Plus). V RevenueCat (app → App Store settings) nastaviť **Apple Server Notification Forwarding URL**
     na `https://quiz-pack-api.fly.dev/v1/appstore/notifications`; funkcia existuje
@@ -107,7 +107,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   - Prečo: refund vlastného balíka dnes nič neodoberie; RevenueCat oznámenia potrebuje pre Plus.
   - Hotovo: testovacie oznámenie (App Store Server API, vyžaduje 217.6) prejde cez RevenueCat do
     `quiz-pack-api` a overí sa (Production aj Sandbox).
-- [ ] **217.6 In-App Purchase kľúč pre server** — founder (kľúč vytvára founder, hodnoty nikdy do chatu)
+- [x] **217.6 In-App Purchase kľúč pre server** — hotové už 2026-10-16 (kľúč `trubbo-reconcile`, Fly secrets `APP_STORE_SERVER_*` na `quiz-pack-api`); 2026-11-05 overené volaním App Store Server API v Production aj Sandbox (autentifikácia prešla).
   1. Otvor https://appstoreconnect.apple.com → **Users and Access**.
   2. Hore karta **Integrations** → vľavo **In-App Purchase**.
   3. Klikni **Generate In-App Purchase Key** (alebo **+**), názov `Trubbo server`, **Generate**.
@@ -118,7 +118,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   7. Napíš agentovi „kľúč je v Downloads“. Agent nastaví Fly secrets `quiz-pack-api` (aj obsah .p8)
      bez vypísania hodnôt a súbor potom zmaž.
   - Hotovo: `python -m app.storekit.reconcile --help` na prode beží bez „not configured“.
-- [ ] **217.7 RevenueCat: obnova nákupov na novom telefóne** — agent cez Playwright, len čítanie
+- [x] **217.7 RevenueCat: obnova nákupov na novom telefóne** — 2026-11-05: Project settings → „Transfer to new App User ID“ (správne), sandbox nákupy pre kohokoľvek.
   - Čo: Project settings → **Restore Behavior** má byť „Transfer to new App User ID“ (server spracuje TRANSFER).
   - Hotovo: nastavenie zapísané tu; ak je iné, návrh zmeny foundrovi.
 - [x] **217.8 Cena vlastného balíka a živé prepínače** — agent (2026-11-04, len čítanie prodov)

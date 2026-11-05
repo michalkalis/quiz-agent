@@ -75,22 +75,25 @@ export const HookText: React.FC<{text: string; frames: number}> = ({text, frames
 	);
 };
 
-/** Largest size at which `text` fits at most two lines of the band. */
-const fitStep = (text: string): number => {
-	const sizes = [100, 94, 88, 82, 76, 70];
-	if (typeof document === 'undefined') return sizes[2];
-	return sizes.find((s) => lineCount(text, s, INNER_W * 0.97, 800) <= 2) ?? sizes[sizes.length - 1];
+const STEP_SIZES = [100, 94, 88, 82, 76, 70];
+const STEP_LINE = 1.02;
+/** Step lines may run 10 px under the band (still well above the phone). */
+const STEP_H = BAND_H + 10;
+
+/** One size for all step lines: the largest at which each of them fits the band (a long one may take three lines). */
+export const fitSteps = (texts: string[]): number => {
+	if (typeof document === 'undefined' || texts.length === 0) return STEP_SIZES[2];
+	return STEP_SIZES.find((s) => texts.every((t) => lineCount(t, s, INNER_W * 0.97, 800) * s * STEP_LINE <= STEP_H)) ?? STEP_SIZES[STEP_SIZES.length - 1];
 };
 
 /** What happens on screen right now, in a few words: in as one block (quick rise), out with a fade. */
-export const StepText: React.FC<{text: string; frames: number}> = ({text, frames}) => {
+export const StepText: React.FC<{text: string; frames: number; size: number}> = ({text, frames, size}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const size = fitStep(text);
 	const p = spring({frame, fps, config: {damping: 20, stiffness: 150}});
 	return (
-		<div style={{...bandStyle(), opacity: Math.min(1, p * 1.4) * fadeOut(frame, frames, fps), transform: `translateY(${(1 - p) * 26}px)`}}>
-			<div style={{fontSize: size, fontWeight: 800, lineHeight: LINE, textAlign: 'center', letterSpacing: -1.5, maxWidth: INNER_W, textWrap: 'balance'}}>{text}</div>
+		<div style={{...bandStyle(), height: STEP_H, opacity: Math.min(1, p * 1.4) * fadeOut(frame, frames, fps), transform: `translateY(${(1 - p) * 26}px)`}}>
+			<div style={{fontSize: size, fontWeight: 800, lineHeight: STEP_LINE, textAlign: 'center', letterSpacing: -1.5, maxWidth: INNER_W, textWrap: 'balance'}}>{text}</div>
 		</div>
 	);
 };

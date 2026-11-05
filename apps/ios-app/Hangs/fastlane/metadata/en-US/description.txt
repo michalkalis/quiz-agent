@@ -4,7 +4,7 @@ HOW IT WORKS
 • A natural voice reads every question
 • Answer in your own words. Trubbo understands what you mean, not only the exact wording
 • Multiple choice questions: say the answer or its number
-• Control the quiz by voice: start, ok, next, repeat, skip
+• Control the quiz by voice: start, confirm, next, again, repeat
 • After every answer you get a short explanation and a link to the source
 
 PICK YOUR QUIZ

@@ -1,6 +1,6 @@
 # #226 — Nezávislá kontrola textov iným modelom (sk · cs · en)
 
-**Triage:** wip · founder 2026-11-04
+**Triage:** done · founder 2026-11-04
 
 ## Cieľ
 Všetky texty, ktoré hráč vidí alebo počuje, prejde model mimo Anthropicu, lebo texty písal a prekladal Claude. Kontrola vždy dostane kontext: poznámku vývojára, obrazovku (súbor) a susedné texty, štýlové pravidlá `docs/design/copy-style.md`.
@@ -30,7 +30,7 @@ Research: [copy-review-models-sk-cs-en-2026-11.md](../research/copy-review-model
 | 226.4 | Pilot: kandidáti + 25 kontrolných → len Gemini 3.1 Pro (founder: max ~$1), `pilot.py --only=gemini --budget=0.95` | hotové: 64/71 volaní, 52 nálezov v 31 textoch, 1 na kontrolných, $0.91 |
 | 226.5 | Founder posúdi nálezy v [artefakte](https://claude.ai/artifact/Q8Z8fwHHVcyDYbx6JyTA1D) (voľby v db `verdicts/fN`) → presnosť | hotové: 45/52 správne (87 %), 7 zamietnutých |
 | 226.6 | Founder rozhodne o plnej kontrole (rozsah, modely, cena) | hotové 11-05: len Gemini, strop $4 |
-| 226.7 | Plná kontrola (`full.py`: zvyšok appky, hovorené + povely, App Store, web, témy, právne texty) → verdikty v [artefakte](https://claude.ai/artifact/W1QU3QB6wDKHfcmret4gKE) → opravy cez PR | 121/121 volaní, 48 nálezov, $1.63; čaká verdikt |
+| 226.7 | Plná kontrola (`full.py`: zvyšok appky, hovorené + povely, App Store, web, témy, právne texty) → verdikty v [artefakte](https://claude.ai/artifact/W1QU3QB6wDKHfcmret4gKE) → opravy cez PR | 121/121 volaní, 48 nálezov, $1.63; founder schválil 14 (vykanie na tematických stránkach, povely v popise App Store, „Odpovedalo“), právne texty ostávajú vo „vy“ |
 
 Behy: `docs/testing/runs/copy-review-2026-11-04/`.
 
@@ -38,3 +38,6 @@ Behy: `docs/testing/runs/copy-review-2026-11-04/`.
 - „Ďalšia“ vs „Ďalej“ (founder: rozhodni ty): obe ostávajú, sú to dve akcie (preskoč na ďalšiu otázku vs pokračuj po výsledku); copy-style pravidlo 3 doplnené, nálezy 7, 10, 13 neaplikované, 11 len čiarka.
 - Aplikované opravy: PR #732; počty v upozorneniach na zostávajúce otázky prerobené na tvary pre počet (substitutions), rodovo neutrálne „chceš“ namiesto „žiadal si“.
 - Flash predtriedenie je drahšie na výstup (premýšľanie ~2× vstup); pri plnej kontrole rátať s tým.
+- Plná kontrola: presnosť len 14/47 (30 %) oproti pilotu 87 %, pretože pilot dostal predvybrané podozrivé texty. Bez predvýberu model veľa nálezov vymýšľa (napr. tlačidlo „Preskoč“ v sprievodcovi, „Skús znova“).
+- Model prehliadol vykanie „než by ste čakali“ na tematickej stránke; opravené ručne. Pevné kontroly (`checks.py`) treba pustiť aj na web.
+- Popis v App Store sa prejaví až pri najbližšom nahraní textov (#220).

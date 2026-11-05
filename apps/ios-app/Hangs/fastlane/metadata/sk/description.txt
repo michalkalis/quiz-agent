@@ -4,7 +4,7 @@ AKO TO FUNGUJE
 • Každú otázku číta prirodzený hlas
 • Odpovedáš vlastnými slovami. Trubbo pochopí, čo myslíš, nielen presné znenie
 • Pri otázkach s možnosťami povedz odpoveď alebo jej číslo
-• Kvíz ovládaš hlasom: štart, ok, ďalej, zopakuj, preskoč
+• Kvíz ovládaš hlasom: štart, potvrď, ďalej, znova, ďalšia
 • Po každej odpovedi dostaneš krátke vysvetlenie a odkaz na zdroj
 
 VYBER SI KVÍZ

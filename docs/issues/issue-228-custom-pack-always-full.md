@@ -24,6 +24,10 @@ Hráč, ktorý zaplatí za 30 otázok, dnes bežne dostane 24 a pri úzkej téme
 
 > Menší balík s 10 otázkami, „mierne nevýhodnejší“ než súčasný (€8,99 / 30).
 
+> Výklad témy (11-05): „ak by boli len tieto konkrétne slová zadané (hrady a zámky), tak to neznamená hrady a zámky len na Slovensku za to, že je to slovenčina. ale primárne asi slovenské a môžu sa rozšíriť o zahraničné.“
+
+> Kontrola odpovedateľnosti (11-05): „na toto mega pozor. určite by bolo lepšie použiť lepší model, lebo celkovo náklady na vygenerovanie sú drahé, takže lepšie by bolo, keby viac otázok prešlo.“
+
 Kontroly kvality sa NEMENIA (pravidlo: kvalita otázok sa nesmie znížiť).
 
 ## Riešenie (v poradí, v akom sa uplatní)
@@ -36,8 +40,13 @@ Kontroly kvality sa NEMENIA (pravidlo: kvalita otázok sa nesmie znížiť).
 ### 2. Prehĺbenie v rámci zadania (nie mimo neho)
 Keď úspešnosť klesne pod prah, ďalšie kolá dostanú nové uhly **vnútri zadania**: pri „hrady a legendy“ konkrétne hrady, postavy povestí, miesta, nie „slovenská história“ všeobecne. Model navrhne uhly, druhý krok ich overí otázkou „patrí to celé do zadania hráča?“ a čo nepatrí, zahodí.
 
-### 3. Druhý názor pri nesprávnej odpovedi lacného modelu (hypotéza, najprv meranie)
-Pri `wrong_answer` nechať silnejší model posúdiť, či je odpoveď lacného modelu **iná platná odpoveď** (otázka je naozaj nejasná → zahodiť) alebo **len neznalosť** (otázka ostáva). Zámer kontroly sa tým nemení. Pred zapnutím: porovnanie na zahodených otázkach z oboch behov + founderov súhlas (zmena modelov len s dátami).
+**Jazyk nie je hranica témy:** všeobecné zadanie bez krajiny („hrady a zámky“) v slovenčine = hlavne slovenské, doplnené zahraničnými (približne dve tretiny domácich, zvyšok zo sveta). Ak zadanie krajinu alebo miesto menuje, platí presne to. Rovnako pre cs (české) a en (bez domácej preferencie).
+
+### 3. Lepší model na kontrolu odpovedateľnosti (founder: „mega pozor“)
+Dnes kontrolu robí lacný `deepseek-v4-flash`, ktorý úzke slovenské témy nepozná a zahodí aj dobré otázky. Zámer kontroly ostáva: zahodiť otázky, ktoré sú **nejasné** (viac správnych odpovedí, chýba kontext), nie tie, ktoré lacný model **nevie**.
+- **Výmena za silnejší model** z inej rodiny ako generátor (generátor je Claude Opus 5.5; kontrolór z tej istej rodiny by mohol súhlasiť sám so sebou). Kandidáti: GPT, Gemini 3.1 Pro, DeepSeek V4 (nie flash), GLM-5. Pri ~45 kontrolách na balík je rozdiel v cene centy, zatiaľ čo zahodená otázka stojí ~$0,07 výroby.
+- Doplnkovo: pri `wrong_answer` druhý krok, ktorý posúdi, či je odpoveď kontrolóra **iná platná odpoveď** (zahodiť) alebo **neznalosť** (ponechať).
+- **Meranie pred výmenou:** súbor otázok so známym výsledkom: zahodené otázky z meraní 2026-11-04 (dobré, ktoré model nevedel) + otázky, ktoré sú naozaj nejasné (zo zahodených v korpuse). Nový model musí nechať prejsť viac dobrých a **nesmie** pustiť viac nejasných. Výsledok founderovi, výmena až potom.
 
 ### 4. Doplnenie z knižnice len pri veľmi vysokej zhode
 Posledná možnosť: chýbajúce miesta zo **schválených** otázok korpusu v tom istom jazyku, len ak je podobnosť nad vysokým prahom a model potvrdí „presne na zadanie“. Bez oznámenia hráčovi. Nie z otázok, ktoré hráč už hral.
@@ -69,7 +78,7 @@ Na objednávke: počet kôl, úspešnosť za kolo, počet z prehĺbenia / z kni�
 ## Úlohy
 - [ ] 228.1 prispôsobené generovanie + rozpočet (1) + analytika
 - [ ] 228.2 prehĺbenie v rámci zadania (2)
-- [ ] 228.3 meranie druhého názoru na zahodených otázkach (3) → founder rozhodne
+- [ ] 228.3 lepší model na kontrolu odpovedateľnosti (3): porovnanie na zahodených otázkach z meraní (presnosť pri nejasných otázkach sa nesmie zhoršiť), potom výmena; founder smer schválil 11-05
 - [ ] 228.4 doplnenie z knižnice + doplnenie dodatočne (4, 5)
 - [ ] 228.5 otázky navyše do korpusu (6)
 - [ ] 228.6 `pack_10`: meranie nákladu, ASC produkt, appka (7)

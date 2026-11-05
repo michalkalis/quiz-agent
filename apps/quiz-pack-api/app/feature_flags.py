@@ -497,6 +497,27 @@ def pack_batch_schedule() -> tuple[int, ...]:
     return sizes
 
 
+def pack_max_ask() -> int:
+    """#228: most questions one customer round may ask the generator for when
+    it over-asks to cover the gates' losses. Env ``PACK_MAX_ASK`` (default 16)."""
+    return _int_env("PACK_MAX_ASK", default=16)
+
+
+def pack_topup_extra_rounds() -> int:
+    """#228: customer-pack rounds allowed beyond the ones the batch schedule
+    needs (was a fixed 2). Env ``PACK_TOPUP_EXTRA_ROUNDS`` (default 4)."""
+    return _int_env("PACK_TOPUP_EXTRA_ROUNDS", default=4)
+
+
+def pack_topup_time_budget_s() -> float:
+    """#228: no new customer round starts after this many seconds, so a slow
+    order ends on what it has (the floor check decides) instead of being
+    killed mid-round by ``STAGE_TIMEOUT_SECONDS``. Env
+    ``PACK_TOPUP_TIME_BUDGET_S``; default 80 % of the stage timeout."""
+    stage_timeout = float(os.getenv("STAGE_TIMEOUT_SECONDS", "1200") or 1200)
+    return float(_int_env("PACK_TOPUP_TIME_BUDGET_S", default=int(stage_timeout * 0.8)))
+
+
 def pack_subthemes() -> bool:
     """#203 203.9 changes 2 + 4: split a customer pack into narrow sub-themes
     (3-4 questions each) and drop a question whose embedding cosine to one

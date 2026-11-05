@@ -359,6 +359,9 @@ def build_stages(
                 composition_stage=composition,
                 persist_stage=pack_store,
                 batch_schedule=batch_schedule,
+                max_rounds=feature_flags.pack_topup_extra_rounds(),
+                max_ask=feature_flags.pack_max_ask(),
+                time_budget_s=feature_flags.pack_topup_time_budget_s(),
                 **({} if floor_fraction is None else {"floor_fraction": floor_fraction}),
             ),
         ]

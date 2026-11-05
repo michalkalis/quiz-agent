@@ -34,6 +34,8 @@ must never pay for a question that dedup is guaranteed to kill.**
 
 from __future__ import annotations
 
+import math
+
 import logging
 import uuid
 from types import SimpleNamespace
@@ -114,6 +116,30 @@ class _FakeDropStage:
         keep = max(0, len(ctx.questions) - self._drop_n)
         ctx.questions = ctx.questions[:keep]
         return StageResult(info={"dropped": self._drop_n}, cost_cents=0)
+
+
+class _FakeKeepStage:
+    """#228: keeps only the first `keep_n` of the new batch — a gate that
+    lets a fixed number through however many questions were asked for."""
+
+    def __init__(self, name: str, keep_n: int) -> None:
+        self.name = name
+        self._keep_n = keep_n
+
+    async def run(self, ctx: OrderContext, sink: Any) -> StageResult:
+        ctx.questions = ctx.questions[: self._keep_n]
+        return StageResult(info={}, cost_cents=0)
+
+
+class _FakeHalfStage:
+    """#228: keeps half of the new batch (rounded up) — the yield measured on a
+    popular topic on 2026-11-04."""
+
+    name = "scoring"
+
+    async def run(self, ctx: OrderContext, sink: Any) -> StageResult:
+        ctx.questions = ctx.questions[: math.ceil(len(ctx.questions) / 2)]
+        return StageResult(info={}, cost_cents=0)
 
 
 class _PassthroughDedupStage:
@@ -494,7 +520,9 @@ async def test_incremental_floor_failure_keeps_pack_open_for_retry() -> None:
     ctx = _make_ctx(target_count=30, initial=0)
     stage = TopUpStage(
         gen,
-        _FakeDropStage("verifying", 4),
+        # #228: one survivor per round, however much is asked, so even the
+        # adaptive over-ask cannot reach the floor in the scheduled rounds.
+        _FakeKeepStage("verifying", 1),
         _FakeDropStage("scoring", 0),
         _PassthroughDedupStage(),
         persist_stage=persist,
@@ -537,3 +565,92 @@ def test_corpus_cli_walk_is_untouched_by_the_ramp() -> None:
 
     assert gen.calls == [3]
     assert ctx.locked_count == 0
+
+
+# ── #228 — a customer pack must reach what was bought ─────────────────────────
+
+
+def _adaptive_stage(persist, gen, gate, **kw) -> TopUpStage:
+    return TopUpStage(
+        gen,
+        _FakeDropStage("verifying", 0),
+        gate,
+        _PassthroughDedupStage(),
+        persist_stage=persist,
+        batch_schedule=(1, 2, 4, 8),
+        **kw,
+    )
+
+
+@pytest.mark.asyncio
+async def test_lossy_gates_still_fill_the_pack_by_asking_for_more() -> None:
+    """Measured 2026-11-04: about half of a round survives the gates, and
+    asking only for the need left a paid 30-pack at 24. With the same loss the
+    pack must now reach 30 — the generator is asked for more, never the gates
+    loosened."""
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    ctx = _make_ctx(target_count=30, initial=0)
+
+    result = await _adaptive_stage(persist, gen, _FakeHalfStage()).run(ctx, _CountingSink())
+
+    assert len(ctx.questions) == 30
+    assert persist.finalized == "complete"
+    # First round unchanged: the first question still comes as fast as before.
+    assert gen.calls[0] == 1
+    # Later rounds over-ask, bounded by the per-call cap.
+    assert any(asked > wanted for asked, wanted in zip(gen.calls[1:], (2, 4, 8, 8, 8)))
+    assert max(gen.calls) <= 16
+    assert result.info["survived_total"] >= 30
+
+
+@pytest.mark.asyncio
+async def test_extra_survivors_are_trimmed_to_what_was_bought() -> None:
+    """Over-asking can overshoot; the pack holds exactly the bought count and
+    the overshoot is counted (it feeds the surplus-to-corpus step later)."""
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    ctx = _make_ctx(target_count=10, initial=0)
+    # Round 1 loses its only question, so round 2 over-asks 4x into a gate
+    # that then lets everything through.
+    gate = _FakeKeepStage("scoring", 0)
+    stage = _adaptive_stage(persist, gen, gate)
+
+    gen_run = gen.run
+
+    async def _gen_then_open(ctx, sink):
+        result = await gen_run(ctx, sink)
+        if len(gen.calls) > 1:
+            gate._keep_n = 100
+        return result
+
+    gen.run = _gen_then_open  # type: ignore[method-assign]
+    result = await stage.run(ctx, _CountingSink())
+
+    assert len(ctx.questions) == 10
+    assert sum(len(b) for b in persist.batches) == 10
+    assert result.info["surplus"] > 0
+
+
+@pytest.mark.asyncio
+async def test_time_budget_ends_on_what_is_persisted() -> None:
+    """A slow order must not be killed mid-round by the stage timeout: after
+    the budget no new round starts, and the floor check decides (and says
+    why)."""
+    gen = _FakeGenStage()
+    persist = _FakePersistStage()
+    ctx = _make_ctx(target_count=30, initial=0)
+    ticks = iter(range(0, 10_000, 100))
+    stage = _adaptive_stage(
+        persist,
+        gen,
+        _FakeDropStage("scoring", 0),
+        time_budget_s=250,
+        clock=lambda: next(ticks),
+    )
+
+    with pytest.raises(ValueError, match="time budget reached"):
+        await stage.run(ctx, _CountingSink())
+
+    assert persist.batches, "what was generated before the budget stays playable"
+    assert persist.finalized is None

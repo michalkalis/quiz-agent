@@ -19,6 +19,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | 228 | [Vlastný balík: vždy plný + menší balík s 10 otázkami](issue-228-custom-pack-always-full.md) | enhancement · ready-for-agent | `[ ]` #228 | 2026-11-05: plán; meranie 24/30 a 16/30 |
 | 227 | [Trubbo Max: drahé predplatné s vlastnými balíkmi](issue-227-trubbo-max.md) | enhancement · ready-for-agent | `[ ]` #227 | 2026-11-05: plán, €149,99 / 20 balíkov; po #228 |
 | 225 | [Vlastný balík: rovnaké zadanie = hotové otázky](issue-225-custom-pack-reuse.md) | enhancement · done | `[x]` #225 | 2026-11-03: nasadené (PR #699) |
+| 226 | [Nezávislá kontrola textov iným modelom](issue-226-independent-copy-review.md) | enhancement · wip | `[~]` #226 | 2026-11-04: pilot |
 | 223 | [Stránky s kvízovými otázkami na webe](issue-223-question-topic-pages.md) | enhancement · ready-for-agent | `[~]` #223 | 2026-11-02: naživo 10 tém sk + cs + čerstvá zábava (PR #687 #688 #689 #690); ostáva EN a vyhodnotenie |
 | 222 | [Presun backendu na Hetzner](issue-222-hetzner-migration.md) | chore · ready-for-agent | `[~]` #222 | 2026-11-02: plán; server vytvára agent, prepnutie po review 1.1 |
 | 221 | [Technická modernizácia](issue-221-tech-modernization.md) | chore · ready-for-agent | `[~]` #221 | 2026-11-01: audit verzií; 221.1 nepoužitá knižnica Google preč + spodné hranice (PR #659) |

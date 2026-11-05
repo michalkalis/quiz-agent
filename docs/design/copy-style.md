@@ -6,7 +6,7 @@ Source of truth for every text a player sees or hears: `Localizable.xcstrings`, 
 
 1. **Address:** informal singular. sk/cs „ty“, never „vy“ / „Vy“.
 2. **Gender-neutral toward the player** where it reads naturally: „Tvoja odpoveď“, not „Povedal si“; restructure „si vyčerpal“, „aby si mohol“. The app talking about itself may stay masculine („Nerozumel som“).
-3. **Buttons and actions in the imperative:** sk „Štart, Potvrď, Znova, Preskoč, Zruš, Ďalej“, cs „Start, Potvrď, Znovu, Přeskoč, Zruš, Další“, en "Start, Confirm, Again, Skip, Cancel, Next". Never the infinitive („Potvrdiť“, „Skryť lištu“). Running text that names a button uses its exact current label.
+3. **Buttons and actions in the imperative:** sk „Štart, Potvrď, Znova, Zruš“, cs „Start, Potvrď, Znovu, Zruš“, en "Start, Confirm, Again, Cancel". Two different "next" actions (#224, 2026-11-03): moving on to the next question (former „Preskoč“) is sk „Ďalšia“, cs „Další“, en "Next" (button and voice command); continuing after a result is sk „Ďalej“, cs „Dál“. Do not swap them. Never the infinitive („Potvrdiť“, „Skryť lištu“). Running text that names a button uses its exact current label.
 4. **Voice hints** quote the exact command words of that screen in the quiz language („Povedz „potvrď“, „znova“ alebo novú odpoveď“); every quoted word must be a valid command, in all three languages at once.
 5. **No dashes as punctuation** (—, –, or a spaced -). Use a comma, period or colon. Hyphens inside words and number ranges are fine.
 6. **Counts use xcstrings plural variants** (sk/cs one/few/many/other, en one/other). Never a single form such as „o %lld dní“ or "%lld questions".

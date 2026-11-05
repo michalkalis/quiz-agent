@@ -63,9 +63,9 @@ Automatický posun
 Pauza na výsledku pred ďalšou otázkou
 After each question
 At the end of the quiz
-Kedy ukázať odpoveď
+Kedy ukázať odpovede
 After each question
-Kedy ukázať odpoveď
+Kedy ukázať odpovede
 After each question
 zvuková odozva
 Čítať nahlas

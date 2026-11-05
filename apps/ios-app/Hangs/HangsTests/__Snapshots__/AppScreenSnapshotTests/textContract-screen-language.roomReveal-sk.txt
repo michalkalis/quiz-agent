@@ -1,7 +1,7 @@
 # texts
 Hra spolu
 1/2
-SCIENCE & NATURE
+Science & Nature
 Which planet has the most known moons?
 Správne: 2/2
 A
@@ -25,6 +25,7 @@ room.close
 room.rules.open
 question.progress
 question.counter
+deck.category
 room.reveal.count
 room.reveal.option.a
 room.reveal.option.b

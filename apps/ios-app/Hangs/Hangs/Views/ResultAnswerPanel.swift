@@ -34,8 +34,6 @@ struct ResultAnswerPanel: View {
         static let blockGap = Theme.Hangs.Spacing.sm
         static let labelGap = Theme.Hangs.Spacing.xxs
         static let fadeHeight: CGFloat = 18
-        /// Canvas B1b: the answer is the biggest thing on the card.
-        static let answerSize: CGFloat = 34
         static let hearItHeight: CGFloat = 32
     }
 
@@ -51,17 +49,13 @@ struct ResultAnswerPanel: View {
                     .accessibilityIdentifier("result.question")
             }
 
-            VStack(alignment: .leading, spacing: Metrics.labelGap) {
-                HangsSectionLabel(text: answerLabel)
-                Text(answerText)
-                    .font(isRecap ? .hangsHeading : .hangsDisplay(Metrics.answerSize))
-                    .foregroundStyle(isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.ink)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(3)
-                    .minimumScaleFactor(0.5)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("result.answer")
-            }
+            ResultAnswerHeadline(
+                label: answerLabel,
+                text: answerText,
+                isRecap: isRecap,
+                isCorrect: isCorrect,
+                identifier: "result.answer"
+            )
 
             if let userAnswer {
                 saidLine(userAnswer)
@@ -134,5 +128,35 @@ struct ResultAnswerPanel: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("result.hearIt")
+    }
+}
+
+/// The calm result's answer: its label and the answer, the biggest text on the
+/// card, green only when right. Shared by the solo result and the Together reveal.
+struct ResultAnswerHeadline: View {
+    let label: LocalizedStringKey
+    let text: String
+    var isRecap = false
+    let isCorrect: Bool
+    let identifier: String
+
+    private enum Metrics {
+        static let labelGap = Theme.Hangs.Spacing.xxs
+        /// Canvas B1b: the answer is the biggest thing on the card.
+        static let answerSize: CGFloat = 34
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Metrics.labelGap) {
+            HangsSectionLabel(text: label)
+            Text(text)
+                .font(isRecap ? .hangsHeading : .hangsDisplay(Metrics.answerSize))
+                .foregroundStyle(isCorrect ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.ink)
+                .multilineTextAlignment(.leading)
+                .lineLimit(3)
+                .minimumScaleFactor(0.5)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier(identifier)
+        }
     }
 }

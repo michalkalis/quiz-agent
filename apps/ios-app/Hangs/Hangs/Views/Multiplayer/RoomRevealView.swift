@@ -70,21 +70,27 @@ struct RoomRevealView: View {
     private func answerCard(_ round: RoomState.Round) -> some View {
         let identity = DeckIdentity(category: viewModel.question?.category, packId: nil)
         let typed = viewModel.optionRows(for: round) == nil
-        return HangsDeckCard(style: identity.style, categoryName: identity.chipName) {
+        // #224 calm result, as solo: a neutral card, the dot never the correct mint.
+        return HangsDeckCard(style: identity.notCorrectStyle, categoryName: identity.chipName, isCalm: true) {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 Text(verbatim: round.questionText)
                     .font(.hangsBody)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .fixedSize(horizontal: false, vertical: true)
-                if typed {
-                    Text("Correct answer")
-                        .font(.hangsMonoLabel)
-                        .textCase(.uppercase)
-                    HangsAnswerSticker(text: round.correctAnswer ?? "")
-                        .accessibilityIdentifier("room.reveal.answer")
+                VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+                    if typed {
+                        ResultAnswerHeadline(
+                            label: "Correct answer",
+                            text: round.correctAnswer ?? "",
+                            isCorrect: true,
+                            identifier: "room.reveal.answer"
+                        )
+                    }
+                    Text("Correct: \(viewModel.correctCount(in: round))/\(viewModel.players.count)")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .accessibilityIdentifier("room.reveal.count")
                 }
-                Text("Correct: \(viewModel.correctCount(in: round))/\(viewModel.players.count)")
-                    .font(.hangsLabel)
-                    .accessibilityIdentifier("room.reveal.count")
             }
         }
         .fixedSize(horizontal: false, vertical: true)

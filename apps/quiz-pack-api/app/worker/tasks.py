@@ -150,6 +150,9 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
                 composition_stage=composition,
                 persist_stage=PersistStage(session_factory),
                 batch_schedule=batch_schedule,
+                max_rounds=feature_flags.pack_topup_extra_rounds(),
+                max_ask=feature_flags.pack_max_ask(),
+                time_budget_s=feature_flags.pack_topup_time_budget_s(),
             ),
         ]
     stages += [

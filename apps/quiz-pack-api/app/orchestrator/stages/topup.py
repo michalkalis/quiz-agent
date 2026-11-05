@@ -37,6 +37,9 @@ questions exist yet, so nothing is spent).
 from __future__ import annotations
 
 import logging
+import math
+import time
+from collections.abc import Callable
 
 from app import llm_usage
 from app.orchestrator.context import OrderContext, StageResult
@@ -60,6 +63,16 @@ FLOOR_FRACTION = 0.8
 # rounds gives every question in the shortfall two more tries at surviving
 # verification/scoring/dedup before the floor check decides the outcome.
 MAX_TOPUP_ROUNDS = 2
+
+# #228 (founder 2026-11-05: "radšej viac než menej") — a customer round asks
+# the generator for more questions than it needs, scaled by how many of the
+# order's own questions have survived the gates so far. Measured 2026-11-04:
+# about half survive on a popular topic, fewer on a narrow one; asking for the
+# bare need left "Harry Potter" at 24/30 and a narrow topic at 16/30. The
+# floor keeps one unlucky round from asking for the whole pack 10x over; the
+# cap bounds a single generation call.
+MIN_SURVIVAL_RATE = 0.25
+DEFAULT_MAX_ASK = 16
 
 
 async def _run_substage(stage, ctx: OrderContext, sink: ProgressSink) -> StageResult:
@@ -92,6 +105,9 @@ class TopUpStage:
         strictness: Strictness | None = None,
         persist_stage=None,
         batch_schedule: tuple[int, ...] | list[int] | None = None,
+        max_ask: int = DEFAULT_MAX_ASK,
+        time_budget_s: float | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         # #170 D6 — the same per-category profile DedupStage consults, so the
         # spent-fact filter and the dedup content check read ONE value (the
@@ -125,6 +141,11 @@ class TopUpStage:
             not self._batch_schedule or any(n < 1 for n in self._batch_schedule)
         ):
             raise ValueError("incremental TopUpStage needs a batch_schedule of sizes >= 1")
+        # #228: adaptive asks and the round-start time budget apply only to the
+        # incremental (customer) walk; the corpus CLI walk is unchanged.
+        self._max_ask = max(1, max_ask)
+        self._time_budget_s = time_budget_s
+        self._clock = clock
 
     def _batch_size(self, round_index: int, resumed: bool) -> int:
         # A resumed attempt already has a playable prefix — skip the ramp.
@@ -139,12 +160,32 @@ class TopUpStage:
             rounds += 1
         return rounds
 
-    async def _emit_round(self, sink: ProgressSink, ctx: OrderContext, rounds: int) -> None:
+    def _ask_size(self, wanted: int, asked: int, survived: int) -> int:
+        """#228: questions to generate for `wanted` survivors. The first round
+        has no evidence yet and asks for exactly what it wants, so the first
+        question still reaches the player as fast as before (#182)."""
+        if asked == 0:
+            return wanted
+        rate = max(survived / asked, MIN_SURVIVAL_RATE)
+        return max(wanted, min(math.ceil(wanted / rate), self._max_ask))
+
+    async def _emit_round(
+        self,
+        sink: ProgressSink,
+        ctx: OrderContext,
+        rounds: int,
+        asked: int | None = None,
+        survived: int | None = None,
+    ) -> None:
         """One `round` step per persisted batch so the order's step log / SSE
         (and the client's progress bar via `job.progress`) track how many
         questions are playable, not just which stage is running."""
         target = max(ctx.target_count, 1)
         info = {"round": rounds, "ready": ctx.locked_count, "target": target}
+        if asked is not None:
+            # #228 analytics: per-round yield, to tune the ask from real orders.
+            info["asked"] = asked
+            info["survived"] = survived
         event_id = await sink.start_step("round", info=info)
         await sink.finish_step("round", event_id, info=info)
         await sink.publish(
@@ -173,11 +214,27 @@ class TopUpStage:
         # stays in step with what dedup will actually compare against.
         original_facts = ctx.facts
         exhausted = False
+        out_of_time = False
+        asked_total = 0
+        survived_total = 0
+        surplus = 0
+        started = self._clock()
 
         while len(ctx.questions) < target and rounds < max_rounds:
             shortfall = target - len(ctx.questions)
+            wanted = shortfall
             if incremental:
-                shortfall = min(shortfall, self._batch_size(rounds, resumed))
+                wanted = min(shortfall, self._batch_size(rounds, resumed))
+                shortfall = self._ask_size(wanted, asked_total, survived_total)
+                if (
+                    self._time_budget_s is not None
+                    and rounds > 0
+                    and self._clock() - started >= self._time_budget_s
+                ):
+                    # End on what is persisted rather than being killed by the
+                    # stage timeout mid-round; the floor check below decides.
+                    out_of_time = True
+                    break
             survivors_so_far = ctx.questions
             n_old = len(survivors_so_far)
             original_target = ctx.target_count
@@ -246,11 +303,20 @@ class TopUpStage:
                 ).cost_cents
             rounds += 1
             if incremental:
+                survived = len(ctx.questions) - n_old
+                asked_total += shortfall
+                survived_total += max(survived, 0)
+                if len(ctx.questions) > target:
+                    # Asked for extra on purpose; the pack holds what was bought.
+                    surplus += len(ctx.questions) - target
+                    ctx.questions = ctx.questions[:target]
                 new_tail = ctx.questions[ctx.locked_count:]
                 if new_tail:
                     pack = await self._persist_stage.persist_batch(ctx, new_tail)
                     ctx.locked_count = len(ctx.questions)
-                    await self._emit_round(sink, ctx, rounds)
+                    await self._emit_round(
+                        sink, ctx, rounds, asked=shortfall, survived=max(survived, 0)
+                    )
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",
                 rounds,
@@ -266,6 +332,7 @@ class TopUpStage:
                 f"pack shortfall: {final_count}/{target} questions survived "
                 f"after {rounds} top-up round(s) — below the "
                 f"{self._floor_fraction:.0%} floor ({floor:.1f})"
+                + (" — time budget reached" if out_of_time else "")
             )
 
         info = {
@@ -275,6 +342,10 @@ class TopUpStage:
             "fact_pool_exhausted": exhausted,
         }
         if incremental:
+            info["asked_total"] = asked_total
+            info["survived_total"] = survived_total
+            info["surplus"] = surplus
+            info["out_of_time"] = out_of_time
             pack = await self._persist_stage.finalize(ctx, "complete")
             if pack is None:
                 raise RuntimeError("incremental pipeline finished without a pack")

@@ -77,6 +77,8 @@ struct OrderPackFlowView: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
                 .padding(.vertical, Theme.Hangs.Spacing.lg)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)

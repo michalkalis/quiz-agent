@@ -96,6 +96,7 @@ struct PaywallView: View {
                     .frame(minHeight: viewport.size.height, alignment: .top)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
                     // #102 finding 4: RC confirmed the purchase but the server
                     // `/usage` mirror hasn't caught up yet — show "finishing
@@ -569,6 +570,7 @@ struct PaywallView: View {
                 .frame(minHeight: viewport.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
     }
 

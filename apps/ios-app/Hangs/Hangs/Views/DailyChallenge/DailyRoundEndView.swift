@@ -78,6 +78,8 @@ struct DailyRoundEndView: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
                 .padding(.bottom, Theme.Hangs.Spacing.sm)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
 
             footer
         }

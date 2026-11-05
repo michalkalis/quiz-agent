@@ -46,6 +46,8 @@ struct FeedbackView: View {
                 }
                 .padding(Theme.Hangs.Spacing.md)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle("Send feedback")
             .navigationBarTitleDisplayMode(.inline)

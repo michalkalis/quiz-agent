@@ -20,6 +20,7 @@ struct ProfileStatsView: View {
                 .padding(.vertical, Theme.Hangs.Spacing.md)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .navigationTitle("All stats")
         .navigationBarTitleDisplayMode(.inline)

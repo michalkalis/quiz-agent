@@ -18,6 +18,7 @@ from quiz_shared.llm import factory as llm_factory
 from quiz_shared.utils.text_normalization import normalize_text
 
 from ..config import get_settings
+from ..monitoring.provider_alerts import report_openai_refusal
 from ..quiz.errors import InvalidSubmission
 
 logger = logging.getLogger(__name__)
@@ -346,7 +347,12 @@ class VoiceTranscriber:
         elif language:
             params["language"] = language
 
-        response = await self.client.audio.transcriptions.create(**params)
+        try:
+            response = await self.client.audio.transcriptions.create(**params)
+        except openai.APIStatusError as exc:
+            # 2026-11-04: an exhausted OpenAI credit failed every answer silently.
+            report_openai_refusal("stt", exc)
+            raise
 
         text = response.text.strip()
 

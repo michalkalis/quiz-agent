@@ -32,6 +32,7 @@ struct RoomLobbyHostView: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             HangsPrimaryButton(title: "Start the game", icon: "play.fill", isLoading: viewModel.isWorking) {
                 Task { await viewModel.startGame() }
             }

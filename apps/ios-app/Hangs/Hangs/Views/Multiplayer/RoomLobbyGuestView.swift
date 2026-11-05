@@ -26,6 +26,7 @@ struct RoomLobbyGuestView: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             HStack(spacing: Theme.Hangs.Spacing.xs) {
                 Circle()
                     .fill(Theme.Hangs.Colors.live)

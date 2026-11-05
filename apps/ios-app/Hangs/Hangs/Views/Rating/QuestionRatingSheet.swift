@@ -50,6 +50,8 @@ struct QuestionRatingSheet: View {
                 }
                 .padding(Theme.Hangs.Spacing.lg)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
             .navigationTitle("Rate question")
             .navigationBarTitleDisplayMode(.inline)

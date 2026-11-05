@@ -84,6 +84,7 @@ struct ContextualSignInSheet: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
         }
         .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.Hangs.Colors.bgSheet.ignoresSafeArea())
         .presentationDetents([.height(contentHeight)])

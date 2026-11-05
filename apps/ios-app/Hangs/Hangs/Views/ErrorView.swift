@@ -38,6 +38,7 @@ struct ErrorView: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             .defaultScrollAnchor(.center)
 
             ctaStack

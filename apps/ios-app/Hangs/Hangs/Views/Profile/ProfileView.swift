@@ -45,6 +45,7 @@ struct ProfileView<Plan: View>: View {
             .padding(.bottom, Theme.Hangs.Spacing.xl)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         // Also on the way back from Settings: a sign-in there renames the row.
         .onAppear(perform: viewModel.appeared)

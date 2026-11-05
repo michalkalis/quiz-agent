@@ -34,6 +34,8 @@
 | `paywall_viewed` | paywall shown | `source` (quota / home (builds ≤ 81) / profile (#216.3, the plan card moved there) / settings / completion) |
 | `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending) |
 | `restore_result` | restore purchases ends | `outcome` |
+| `sign_in_prompt_shown` | the sign-in prompt after a purchase comes on screen (#217.4), for a signed-out buyer, at most twice ever | `kind` (plus / credit / custom_pack) |
+| `sign_in_prompt_result` | that prompt closes (#217.4) | `kind`, `outcome` (signed_in / dismissed; a swipe down is dismissed) |
 | `profile_opened` | the Profile tab comes on screen (#213.4) | `has_account` (signed in with Apple) |
 | `recap_viewed` | a recap story closes (#213.5); builds ≤ 81 only, #216.3 replaced the story with a Profile card | `kind` (first / month / year), `slides_seen` (furthest slide reached), `slides_total` |
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |

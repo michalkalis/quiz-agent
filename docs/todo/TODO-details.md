@@ -26,7 +26,7 @@ hotové položky sú v `docs/archive/todo/TODO-done-archive-2026-08-26.md`.
 
 ### Pre-App-Store removal: in-app rating affordance (#155, D24)
 
-- [ ] Pre-App-Store removal: in-app rating affordance (#155, D24) — runtime TF gating ju v App Store buildoch skryje, ale pred GA odstrániť aj kód (spolu s TEMP `generatedBy` badge riadkom nižšie). Mechanika odstránenia: zmazať `.questionRatingEntry(…)` v `QuestionView.swift` + `ResultView.swift`, `ratingEntry` parametre a `ContentView.ratingEntry`, potom celý adresár `Hangs/Views/Rating/` + `QuestionRatingService`/`MockQuestionRatingService`/`Models/QuestionRating.swift`/`Utilities/BuildChannel.swift` a testy `QuestionRating*Tests.swift`.
+- [x] (zatvorené 2026-11-04, #217 — App Store launch, 217.9: `BuildChannel.debugSurfacesEnabled()` vracia v APP_STORE variante vždy `false`, kód odstraňovať netreba) Pre-App-Store removal: in-app rating affordance (#155, D24) — runtime TF gating ju v App Store buildoch skryje, ale pred GA odstrániť aj kód (spolu s TEMP `generatedBy` badge riadkom nižšie). Mechanika odstránenia: zmazať `.questionRatingEntry(…)` v `QuestionView.swift` + `ResultView.swift`, `ratingEntry` parametre a `ContentView.ratingEntry`, potom celý adresár `Hangs/Views/Rating/` + `QuestionRatingService`/`MockQuestionRatingService`/`Models/QuestionRating.swift`/`Utilities/BuildChannel.swift` a testy `QuestionRating*Tests.swift`.
 
 ### Apple root cert (AppleRootCA-G3.cer) nie je v gite
 
@@ -34,11 +34,11 @@ hotové položky sú v `docs/archive/todo/TODO-done-archive-2026-08-26.md`.
 
 ### Remove TEMP `generatedBy` provenance badge
 
-- [ ] Remove TEMP `generatedBy` provenance badge from `QuestionView.swift` (both MCQ + voice bodies + helper, grep `TEMP (Bedrock gen test)`) before any App Store release build — added 2026-08-01 for the founder's Bedrock generation field test (shows `generation_metadata.model` under the question text).
+- [x] (zatvorené 2026-11-04, #217 — App Store launch, 217.9: TEMP badge je dnes súčasť `QuestionProvenanceRow` a zobrazí sa len pri `BuildChannel.debugSurfacesEnabled()`, ktoré je v APP_STORE variante vždy `false` — kompilačné vypnutie z #209, takže kód odstraňovať netreba) Remove TEMP `generatedBy` provenance badge from `QuestionView.swift` (both MCQ + voice bodies + helper, grep `TEMP (Bedrock gen test)`) before any App Store release build — added 2026-08-01 for the founder's Bedrock generation field test (shows `generation_metadata.model` under the question text).
 
 ### [HUMAN] #140 — Pack purchase on real StoreKit, founder leg 2 (sandbox e2e)
 
-- [ ] `[HUMAN]` #140 founder leg 2 (after leg 1): request a TF build → sandbox e2e on device (order → Apple charge sheet → generation → play; admin-key field must be absent). Pre-GA reminder lives in the issue: flip `STOREKIT_ENVIRONMENT` Sandbox→Production.
+- [~] (presunuté do 217.10 v #217 — App Store launch; „flip `STOREKIT_ENVIRONMENT`“ zrušené, prod beží `Production,Sandbox` od 2026-10-08) `[HUMAN]` #140 founder leg 2 (after leg 1): request a TF build → sandbox e2e on device (order → Apple charge sheet → generation → play; admin-key field must be absent). Pre-GA reminder lives in the issue: flip `STOREKIT_ENVIRONMENT` Sandbox→Production.
 
 ### Učiaca sa gen pipeline (founder wish 2026-08-03)
 

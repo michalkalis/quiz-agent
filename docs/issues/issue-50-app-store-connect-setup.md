@@ -1,6 +1,6 @@
 # Issue 50: App Store Connect listing + ASC API setup (markets SK / CZ / EN)
 
-**Triage:** enhancement · ready-for-human
+**Triage:** done (2026-11-04, zatvorené v #217 — App Store launch): ASC záznam, API kľúč, Paid Apps, SBP a produkty hotové, 1.1 v predaji
 **Status:** Proposed — needs founder action (Apple account). From launch decisions #5 + #7 (`docs/product/launch-decisions-2026-06-08.md`).
 
 **Founder decision 2026-06-09:** Not started — founder will do the `[HUMAN]` steps; needs exact instructions (issued as `docs/artifacts/asc-setup-instructions-2026-06-09.html`, gitignored/local).

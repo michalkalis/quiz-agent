@@ -15,6 +15,9 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
 | 224 | [TF test 2026-11-02: Hra spolu, Home, výsledky, vlastné balíky](issue-224-tf-feedback-2026-11-02.md) | enhancement · ready-for-agent | `[~]` #224 | 2026-11-02: 13 nálezov; 224.1–224.3 v práci, návrhy 224.4–224.6 |
+| 229 | [Kontrola vyhľadávania otázok a duplicít](issue-229-vector-search-dedup-audit.md) | enhancement · ready-for-agent | `[ ]` #229 | 2026-11-05: založené (founder) |
+| 228 | [Vlastný balík: vždy plný + menší balík s 10 otázkami](issue-228-custom-pack-always-full.md) | enhancement · ready-for-agent | `[ ]` #228 | 2026-11-05: plán; meranie 24/30 a 16/30 |
+| 227 | [Trubbo Max: drahé predplatné s vlastnými balíkmi](issue-227-trubbo-max.md) | enhancement · ready-for-agent | `[ ]` #227 | 2026-11-05: plán, €149,99 / 20 balíkov; po #228 |
 | 225 | [Vlastný balík: rovnaké zadanie = hotové otázky](issue-225-custom-pack-reuse.md) | enhancement · done | `[x]` #225 | 2026-11-03: nasadené (PR #699) |
 | 226 | [Nezávislá kontrola textov iným modelom](issue-226-independent-copy-review.md) | enhancement · wip | `[~]` #226 | 2026-11-04: pilot |
 | 223 | [Stránky s kvízovými otázkami na webe](issue-223-question-topic-pages.md) | enhancement · ready-for-agent | `[~]` #223 | 2026-11-02: naživo 10 tém sk + cs + čerstvá zábava (PR #687 #688 #689 #690); ostáva EN a vyhodnotenie |
@@ -172,8 +175,8 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | 56 | [iOS text localization — String Catalog](issue-56-ios-localization.md) | enhancement · in progress | `[~]` #56 | 56.1–56.4 done. Remaining: 56.5 full-suite confirm + 56.6 `[HUMAN]` Xcode catalog populate. NB: #86 UI work will add new strings after |
 | 55 | [Repo file-structure cleanup](issue-55-repo-structure-cleanup.md) | chore · in progress | `[~]` #55 | A/B/C/E/F/G done. Deferred: D artifacts mass-move + `.pen` relocation. New drift: ~30 uncommitted handoff/testing files need a commit pass |
 | 51 | [Product analytics (own events store)](issue-51-product-analytics.md) | enhancement · ready-for-agent | `[ ]` #51 | 2026-10-07: tool revised Sentry → own Postgres events table (server-side first); taxonomy approved; next 51.3 backend |
-| 50 | [App Store Connect listing + ASC API](issue-50-app-store-connect-setup.md) | enhancement · ready-for-human | `[ ]` #50 | Founder does the `[HUMAN]` steps (instructions in artifacts); agent part unblocks once ASC API key lands in `.env` |
-| 48 | [Pre-release review gauntlet](issue-48-pre-release-review-gauntlet.md) | product · ready-for-human (deferred) | `[ ]` #48 | 4-stage release review; stage 2 partly covered by #65 (done). Deferred until #45 tail lands |
+| 50 | [App Store Connect listing + ASC API](issue-50-app-store-connect-setup.md) | enhancement · done 2026-11-04 (zatvorené v #217) | `[x]` #50 | Zatvorené 2026-11-04: ASC záznam, API kľúč, Paid Apps, produkty hotové, 1.1 v predaji |
+| 48 | [Pre-release review gauntlet](issue-48-pre-release-review-gauntlet.md) | product · wontfix 2026-11-04 (zatvorené v #217) | `[x]` #48 | Zatvorené 2026-11-04: nikdy nespustené, 1.1 vyšla bez neho; kontrolu robí PR review + CI a #217 |
 | 45 | [iOS MCQ voice + design-port redesign](issue-45-ios-mcq-voice-and-redesign.md) | enhancement · tail remaining | `[~]` #45 | 45.1–45.6, 45.8–45.10, 45.12 done. Remaining: 45.7 wire+signoff, 45.11 light/dark vs `.pen`, 45.13 snapshot re-record |
 | 41 | [ChromaDB decommission](issue-41-chromadb-decommission.md) | chore · done 2026-07-07 | `[x]` #41 | Phase A (Sessions A–C) + Phase B (B1–B4, founder-approved) complete: chromadb deleted repo-wide, prod /data/chroma wiped, CHROMA_PATH unset, quiz-pack-api back on 256MB. Owns dedup/ChromaDB cleanup scope (ex-#70) |
 | 30 | [Batch-generate questions (grow `general` → ~500)](issue-30-batch-generate-categories.md) | enhancement · deferred (blocked on #72 un-park) | `[ ]` #30 | Generation paused; runs after un-park |

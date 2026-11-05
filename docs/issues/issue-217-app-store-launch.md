@@ -90,14 +90,14 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
     (polia ostávajú, CI kontrola API prejde; iOS ich neukazuje).
   - Prečo: zákazník by v odpovedi videl našu cenu generovania.
   - Hotovo: test vlastník vs. admin, nasadené.
-- [ ] **217.4 Výzva na prihlásenie po každom nákupe** — agent
+- [x] **217.4 Výzva na prihlásenie po každom nákupe** — agent; PR #731 zlúčené 2026-11-04 (balík až po prijatí objednávky, nikdy cez objednávku ani bežiaci kvíz; po prihlásení sa balíky, kredit a štatistiky načítajú nanovo; udalosti `sign_in_prompt_shown` / `sign_in_prompt_result`)
   - **Founder 2026-11-04** (plátno https://claude.ai/artifact/Pk9BoVyYpa2nGuMG77cTr9, riadok „Výber“): nízke okno, ktoré ukáže, čo presne si kúpil (Plus, +N otázok, karta balíka), po kúpe Plus, kreditu aj vlastného balíka. **Žiadna** ponuka na novej inštalácii: noví hráči sa neotravujú, prihlásiť sa dá kedykoľvek v Profile (riadok účtu).
   - Čo: `SignInPromptCoordinator` aj pre kredit a vlastný balík.
     Texty sk/cs/en podľa `copy-style.md`, `xcstringstool sync`, udalosť analytiky v tom istom PR.
     Po prihlásení sa Hraj a Profil načítajú nanovo (balíky, kredit, štatistiky).
   - Prečo: kredit a balíky Apple neobnoví (consumable); bez prihlásenia sú na novom telefóne preč.
   - Hotovo: unit testy brány (kto, kedy, strop), snímky, PR zlúčený.
-- [ ] **217.5 Oznámenia Apple o refundoch aj pre vlastné balíky** — agent cez Playwright (founder sa len prihlási)
+- [x] **217.5 Oznámenia Apple o refundoch aj pre vlastné balíky** — agent cez Playwright (founder sa len prihlási). **2026-11-05:** RevenueCat → app CarQuiz → Apple Server Notification Forwarding URL = `https://quiz-pack-api.fly.dev/v1/appstore/notifications`; testovacie oznámenie (App Store Server API `notifications/test`) Production aj Sandbox prešlo cez RevenueCat a `quiz-pack-api` overil JWS (`type=TEST`, log 10:33 UTC).
   - Čo: URL v ASC (App Information → App Store Server Notifications) ostáva na RevenueCat (potrebuje ich
     pre Plus). V RevenueCat (app → App Store settings) nastaviť **Apple Server Notification Forwarding URL**
     na `https://quiz-pack-api.fly.dev/v1/appstore/notifications`; funkcia existuje
@@ -107,7 +107,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   - Prečo: refund vlastného balíka dnes nič neodoberie; RevenueCat oznámenia potrebuje pre Plus.
   - Hotovo: testovacie oznámenie (App Store Server API, vyžaduje 217.6) prejde cez RevenueCat do
     `quiz-pack-api` a overí sa (Production aj Sandbox).
-- [ ] **217.6 In-App Purchase kľúč pre server** — founder (kľúč vytvára founder, hodnoty nikdy do chatu)
+- [x] **217.6 In-App Purchase kľúč pre server** — hotové už 2026-10-16 (kľúč `trubbo-reconcile`, Fly secrets `APP_STORE_SERVER_*` na `quiz-pack-api`); 2026-11-05 overené volaním App Store Server API v Production aj Sandbox (autentifikácia prešla).
   1. Otvor https://appstoreconnect.apple.com → **Users and Access**.
   2. Hore karta **Integrations** → vľavo **In-App Purchase**.
   3. Klikni **Generate In-App Purchase Key** (alebo **+**), názov `Trubbo server`, **Generate**.
@@ -118,18 +118,20 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   7. Napíš agentovi „kľúč je v Downloads“. Agent nastaví Fly secrets `quiz-pack-api` (aj obsah .p8)
      bez vypísania hodnôt a súbor potom zmaž.
   - Hotovo: `python -m app.storekit.reconcile --help` na prode beží bez „not configured“.
-- [ ] **217.7 RevenueCat: obnova nákupov na novom telefóne** — agent cez Playwright, len čítanie
+- [x] **217.7 RevenueCat: obnova nákupov na novom telefóne** — 2026-11-05: Project settings → „Transfer to new App User ID“ (správne), sandbox nákupy pre kohokoľvek.
   - Čo: Project settings → **Restore Behavior** má byť „Transfer to new App User ID“ (server spracuje TRANSFER).
   - Hotovo: nastavenie zapísané tu; ak je iné, návrh zmeny foundrovi.
-- [ ] **217.8 Cena vlastného balíka a živé prepínače** — agent
+- [x] **217.8 Cena vlastného balíka a živé prepínače** — agent (2026-11-04, len čítanie prodov)
+  - **Výsledok:** v prode len 5 doručených objednávok, z toho 1 súčasnou cestou (Fly worker, 30 otázok, 2026-11-02): **$1,65** (`generation_jobs.total_cost_cents`; `llm_cost_usd` meria len OpenRouter, nepoužiteľné). Čistý príjem €8,99 / 1,23 DPH × 0,85 Apple = €6,21 ≈ $6,71 → zisk ≈ $5 na balík (~75 %). n = 1, spresní 217.10 a ďalšie objednávky.
+  - **Prepínače:** `orders_enabled` true, `multiplayer_enabled_app_store` false, údržba vypnutá, min/odporúčané verzie prázdne; `STOREKIT_ENVIRONMENT` (pack-api) = `Production,Sandbox`, `RC_ALLOWED_ENVIRONMENT` (quiz-agent) = `PRODUCTION,SANDBOX`. Nič neblokuje vydanie.
   - Čo: z prod DB `llm_cost_usd` posledných objednávok z Fly workera (API režim) vs. čistý príjem ~€6,20;
     `/app-config` a Fly env: `orders_enabled`, `multiplayer_enabled`, `STOREKIT_ENVIRONMENT`, `RC_ALLOWED_ENVIRONMENT`.
   - Prečo: po #182 nikto nemeral; zapnuté prepínače platia aj pre App Store build (release-flow).
   - Hotovo: čísla zapísané tu; ak balík vychádza v strate, otázka foundrovi (cena / dočasne vypnúť objednávky).
-- [ ] **217.9 Upratať zastarané pripomienky** — agent (docs PR)
-  - Čo: v `TODO.md` a `TODO-details.md` uzavrieť riadky „Pre-App-Store removal (#155)“, „Remove TEMP
-    `generatedBy`“ (platí compile-time vypnutie z #209, novší a otestovaný vzor), `#140 leg 2` presunúť sem,
-    „pred GA prepnúť STOREKIT_ENVIRONMENT“ zrušiť; #62 označiť „nahradené #217“; #48 a #50 zrevidovať.
+- [x] **217.9 Upratať zastarané pripomienky** — agent (docs PR) — hotové 2026-11-04: rating panel a TEMP `generatedBy` badge zatvorené (zostávajú v kóde, v APP_STORE variante sú vypnuté, overené), leg 2 z „Pack purchase on real StoreKit“ presunutý do 217.10, „Auth Phase 3“ už zatvorené, „review gauntlet“ a „ASC listing“ zatvorené
+  - Čo: v `TODO.md` a `TODO-details.md` uzavrieť riadky „Pre-App-Store removal (#155 — in-app rating panel)“, „Remove TEMP
+    `generatedBy`“ (platí compile-time vypnutie z #209, novší a otestovaný vzor), #140 (pack purchase na StoreKit) leg 2 presunúť sem,
+    „pred GA prepnúť STOREKIT_ENVIRONMENT“ zrušiť; #62 (Auth Phase 3) označiť „nahradené #217“; #48 (review gauntlet) a #50 (ASC listing) zrevidovať.
   - Hotovo: žiadny riadok v TODO nesľubuje pred vydaním prácu, ktorá je hotová.
 - [ ] **217.10 Test na zariadení: nákupy a pokrok po reinštalácii** — founder (TF build s 217.2 a 217.4 na požiadanie)
   1. Trubbo → **Profile** → účet: ak si prihlásený, **Sign out**.
@@ -141,7 +143,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   7. Na ponuke prihlásenia (alebo **Profile** → **Sign in with Apple**) sa prihlás.
   8. Over: v Profile je tvoje meno, kredit a Plus sedia, balík je v Moje balíky a hrá sa, štatistiky sú rovnaké.
   9. Napíš agentovi „OK“ alebo pošli snímku toho, čo nesedí (Feedback v appke stačí).
-  - Hotovo: všetkých 8 bodov sedí → zaškrtnúť aj #61 akceptáciu, #78 a #140 leg 2.
+  - Hotovo: všetkých 8 bodov sedí → zaškrtnúť aj #61 akceptáciu, #78 a #140 leg 2 (v TODO riadok presunutý sem).
 - [ ] **217.11 Verzia na vydanie a podanie** — agent; podanie na povel foundera
   - Čo: podľa otázky 1. Ak ide 1.2: po vydaní alebo stiahnutí 1.1 PR so zvýšením `MARKETING_VERSION`;
     lokálne skompilovať Release-Prod; skontrolovať prepínače (217.8); App Store build

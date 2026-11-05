@@ -100,52 +100,154 @@ struct ErrorScreenRetryTests {
     }
 }
 
-@Suite("Post-purchase sign-in prompt (#194 A1)")
+@Suite("Post-purchase sign-in prompt (#194 A1, #217.4)")
 @MainActor
 struct SignInPromptCoordinatorTests {
-    @Test("a signed-out buyer outside the paywall is prompted at once, and it counts")
+    private static let signedIn = AuthTokens(
+        accessToken: "a", refreshToken: "r", anonId: "u",
+        accountName: nil, accountEmail: nil, appleUserId: "apple"
+    )
+    private static let pack = SignInPromptPurchase.customPack(name: "Harry Potter", questionCount: 30, colorKey: "o1")
+
+    @Test("a signed-out buyer at rest is prompted at once, it counts and is tracked")
     func promptsImmediately() {
+        let store = MockPersistenceStore()
+        let analytics = MockAnalyticsClient()
+        let coordinator = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore(), analytics: analytics)
+
+        coordinator.purchaseCompleted(.plus, canPresentNow: true)
+
+        #expect(coordinator.presented == .plus)
+        #expect(store.signInPromptShownCount == 1)
+        #expect(analytics.events == [.signInPromptShown(kind: .plus)])
+    }
+
+    /// #217.4: credit and custom packs are lost on a new phone without an
+    /// account (Apple restores only Plus), so their purchases prompt too.
+    @Test("credit and custom pack purchases prompt like Plus", arguments: [
+        SignInPromptPurchase.credit(questionCount: 100),
+        SignInPromptPurchase.customPack(name: "Harry Potter", questionCount: 30, colorKey: "o1"),
+    ])
+    func creditAndPackPrompt(purchase: SignInPromptPurchase) {
+        let coordinator = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: StubTokenStore())
+
+        coordinator.purchaseCompleted(purchase, canPresentNow: true)
+
+        #expect(coordinator.presented == purchase)
+    }
+
+    /// Two sheets cannot overlap: the prompt waits for the paywall / order flow / quiz.
+    @Test("a purchase made on another screen prompts only once the app is at rest")
+    func waitsForRest() {
+        let coordinator = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: StubTokenStore())
+
+        coordinator.purchaseCompleted(.credit(questionCount: 100), canPresentNow: false)
+        #expect(coordinator.presented == nil)
+
+        coordinator.presentPendingIfAny()
+        #expect(coordinator.presented == .credit(questionCount: 100))
+
+        coordinator.finish(.dismissed)
+        coordinator.presentPendingIfAny()
+        #expect(coordinator.presented == nil, "a later rest must not re-prompt")
+    }
+
+    @Test("a second purchase before the waiting prompt shows replaces it, counted once")
+    func secondPurchaseWhileWaiting() {
         let store = MockPersistenceStore()
         let coordinator = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore())
 
-        coordinator.premiumActivated(whilePaywallShown: false)
+        coordinator.purchaseCompleted(.credit(questionCount: 100), canPresentNow: false)
+        coordinator.purchaseCompleted(Self.pack, canPresentNow: false)
+        coordinator.presentPendingIfAny()
 
-        #expect(coordinator.isPresented)
+        #expect(coordinator.presented == Self.pack)
         #expect(store.signInPromptShownCount == 1)
     }
 
-    /// Two sheets cannot overlap: the prompt waits for the paywall to close.
-    @Test("a purchase from the paywall prompts only after the paywall is dismissed")
-    func waitsForPaywall() {
-        let coordinator = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: StubTokenStore())
-
-        coordinator.premiumActivated(whilePaywallShown: true)
-        #expect(!coordinator.isPresented)
-
-        coordinator.paywallDismissed()
-        #expect(coordinator.isPresented)
-
-        coordinator.isPresented = false
-        coordinator.paywallDismissed()
-        #expect(!coordinator.isPresented, "a later paywall close must not re-prompt")
-    }
-
-    @Test("no prompt for a signed-in user or past the cap")
-    func gated() {
-        let signedIn = AuthTokens(
-            accessToken: "a", refreshToken: "r", anonId: "u",
-            accountName: nil, accountEmail: nil, appleUserId: "apple"
-        )
+    @Test("no prompt for a signed-in user, also when they signed in while it waited")
+    func signedInNeverPrompted() {
         let store = MockPersistenceStore()
-        let signedInCoordinator = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore(signedIn))
-        signedInCoordinator.premiumActivated(whilePaywallShown: false)
-        #expect(!signedInCoordinator.isPresented)
+        let signedInCoordinator = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore(Self.signedIn))
+        signedInCoordinator.purchaseCompleted(.plus, canPresentNow: true)
+        #expect(signedInCoordinator.presented == nil)
         #expect(store.signInPromptShownCount == 0)
 
-        store.signInPromptShownCount = SignInPromptGate.maxPresentations
-        let capped = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore())
-        capped.premiumActivated(whilePaywallShown: false)
-        #expect(!capped.isPresented)
+        let tokens = StubTokenStore()
+        let waiting = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: tokens)
+        waiting.purchaseCompleted(Self.pack, canPresentNow: false)
+        tokens.save(Self.signedIn)
+        waiting.presentPendingIfAny()
+        #expect(waiting.presented == nil)
+    }
+
+    /// The cap is shared: a Plus prompt and a pack prompt use it up together.
+    @Test("no prompt past the cap, across all purchase kinds")
+    func capAcrossKinds() {
+        let store = MockPersistenceStore()
+        let coordinator = SignInPromptCoordinator(persistenceStore: store, tokenStore: StubTokenStore())
+
+        coordinator.purchaseCompleted(.plus, canPresentNow: true)
+        coordinator.finish(.dismissed)
+        coordinator.purchaseCompleted(.credit(questionCount: 100), canPresentNow: true)
+        coordinator.finish(.dismissed)
+        coordinator.purchaseCompleted(Self.pack, canPresentNow: true)
+
+        #expect(coordinator.presented == nil)
+        #expect(store.signInPromptShownCount == SignInPromptGate.maxPresentations)
+    }
+
+    /// The prompt's funnel: shown → signed in or dismissed, once per showing
+    /// (a button close is followed by the sheet's own dismiss callback).
+    @Test("the outcome is tracked once, a swipe down as dismissed")
+    func outcomeTrackedOnce() {
+        let analytics = MockAnalyticsClient()
+        let coordinator = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: StubTokenStore(), analytics: analytics)
+
+        coordinator.purchaseCompleted(Self.pack, canPresentNow: true)
+        coordinator.finish(.signedIn)
+        coordinator.sheetDismissed()
+        #expect(analytics.events(named: "sign_in_prompt_result") == [.signInPromptResult(kind: .customPack, outcome: .signedIn)])
+
+        let swiped = MockAnalyticsClient()
+        let other = SignInPromptCoordinator(persistenceStore: MockPersistenceStore(), tokenStore: StubTokenStore(), analytics: swiped)
+        other.purchaseCompleted(.credit(questionCount: 100), canPresentNow: true)
+        other.presented = nil
+        other.sheetDismissed()
+        #expect(swiped.events(named: "sign_in_prompt_result") == [.signInPromptResult(kind: .credit, outcome: .dismissed)])
+    }
+}
+
+/// #217.4 (task brief 2026-11-04): signing in from the prompt re-keys the
+/// phone's purchases to the account, and Play and Profile sit behind the
+/// sheet without reappearing, so they must load the account's data again or
+/// the player would see the old (anonymous) packs, credit and stats.
+@Suite("Reload after sign-in (#217.4)")
+@MainActor
+struct ReloadAfterSignInTests {
+    @Test("packs, stats and usage are fetched again")
+    func reloads() async {
+        let network = Fixtures.makeFullMockNetwork()
+        let packs = MockPackOrderService()
+        let stats = MockPlayerStatsService()
+        let appState = AppState(
+            networkService: network,
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            packOrderService: packs,
+            playerStatsService: stats
+        )
+        _ = appState.sharedQuizViewModel()
+        let usageBefore = network.getUsageCallCount
+        let listBefore = packs.listOrdersCallCount
+        let statsBefore = stats.fetchCount
+
+        await appState.reloadAfterSignIn()
+
+        #expect(packs.listOrdersCallCount == listBefore + 1)
+        #expect(stats.fetchCount == statsBefore + 1)
+        #expect(network.getUsageCallCount > usageBefore)
     }
 }
 

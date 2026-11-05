@@ -26,6 +26,8 @@ enum StoreProduct {
     static let monthlySubId = "com.carquiz.unlimited.monthly"
     /// Consumable pack (+100 questions, never expires).
     static let packId = "com.carquiz.pack.questions100"
+    /// How many questions the consumable pack adds.
+    static let packQuestionCount = 100
     /// The RC *package* identifier in the `default` offering for the pack
     /// (the sub is looked up via `.monthly`, the pack needs its custom
     /// package identifier — issue #93 Session 0 provisioning).

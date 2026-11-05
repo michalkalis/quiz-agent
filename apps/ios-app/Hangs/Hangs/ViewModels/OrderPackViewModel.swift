@@ -54,6 +54,9 @@ final class OrderPackViewModel: ObservableObject {
     /// good one-word topics ("Bratislava").
     static let maxPromptLength = 1000
 
+    /// The size of every custom pack, until the order's snapshot says so.
+    static let orderedQuestionCount = 30
+
     /// Consecutive `getOrder` failures tolerated before the poll gives up with
     /// `.failed`. A transient network/timeout blip on cellular must NOT dead-end a
     /// paid order that is still generating server-side — a false failure strands
@@ -110,6 +113,10 @@ final class OrderPackViewModel: ObservableObject {
     /// retry of THAT order (`POST /v1/orders/{id}/retry`), never a second paid
     /// create — the backend caps manual retries at 3.
     private(set) var orderId: String?
+
+    /// #217.4: the paid order the backend accepted that the sign-in prompt has
+    /// not offered yet: its id and the topic as typed.
+    private var acceptedPaidOrder: (orderId: String, topic: String)?
 
     /// The StoreKit proof the current order was created with (nil = Debug admin
     /// order). Kept in memory after the durable pending slot is cleared, because
@@ -346,6 +353,27 @@ final class OrderPackViewModel: ObservableObject {
         }
     }
 
+    /// #217.4: the paid order the backend accepted since the last call, as the
+    /// sign-in prompt shows it. Only after acceptance does the order sit on this
+    /// phone's identity, which a sign-in then moves to the account. Nil when
+    /// there is none, for a Debug admin order, and for an order that can never
+    /// be delivered (refunded, retry budget spent): there is nothing to keep.
+    func takeAcceptedPaidOrder() -> SignInPromptPurchase? {
+        guard let accepted = acceptedPaidOrder else { return nil }
+        acceptedPaidOrder = nil
+        if case .failed(_, retryable: false) = state, orderId == nil { return nil }
+        let snapshot: OrderSnapshot? = switch state {
+        case let .polling(snapshot): snapshot
+        case let .delivered(snapshot): snapshot
+        default: nil
+        }
+        return .customPack(
+            name: snapshot?.displayTitle ?? accepted.topic,
+            questionCount: snapshot?.targetCount ?? Self.orderedQuestionCount,
+            colorKey: snapshot?.colorKey ?? accepted.orderId
+        )
+    }
+
     /// Cancel any in-flight polling. NOT called on sheet dismissal — the user
     /// closing the "Preparing" sheet is not a cancellation, and the pack must
     /// keep arriving behind it.
@@ -444,6 +472,7 @@ final class OrderPackViewModel: ObservableObject {
             // The backend accepted the order — the purchase is spent. (Guarded
             // so a Debug admin order can never discard a real unspent proof.)
             purchaseService.clearPendingProof()
+            acceptedPaidOrder = (created.orderId, trimmedPrompt)
         }
 
         await poll(orderId: created.orderId)

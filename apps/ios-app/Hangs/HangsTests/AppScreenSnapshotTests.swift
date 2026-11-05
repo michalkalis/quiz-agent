@@ -38,7 +38,7 @@ enum AppScreen: String, CaseIterable {
     case setRecap
     case confirmTranscribing, confirmTranscript
     case orderForm, orderSummary, orderPreparing, orderReadyGenerating, orderReady, orderFailed
-    case signInIdle, signInSigningIn, signInFailed
+    case signInIdle, signInSigningIn, signInFailed, signInCredit, signInPack
     case errorRetry, errorGoHome, errorDismiss
     case paywallPack, paywallAllowanceSpent, paywallOffline
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories

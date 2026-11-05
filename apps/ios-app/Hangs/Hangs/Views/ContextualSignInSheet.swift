@@ -3,32 +3,28 @@
 //  Hangs
 //
 //  #58 §9 — contextual sign-in prompt (decision 10, Variant B): a bottom
-//  sheet offered at the moment Premium turns on (purchase or restore),
-//  linking the purchase to the user's Apple account. Matches Pencil
-//  Auth/Contextual-SignIn (WAIEy). Zero friction before payment — the
-//  sheet never appears pre-purchase; Settings keeps the permanent entry.
+//  sheet offered right after a purchase (#217.4: Trubbo Plus, question credit
+//  or a custom pack), linking it to the user's Apple account. Zero friction
+//  before payment: the sheet never appears pre-purchase or on a fresh
+//  install; Profile keeps the permanent entry.
 //
 
 import AuthenticationServices
 import SwiftUI
 
-/// Decides when the contextual sign-in sheet may appear (decision 10):
-/// once right after purchase, at most one reminder on a later app open,
-/// then never again on its own.
+/// Decides when the contextual sign-in sheet may appear (decision 10, #217.4):
+/// after a purchase of any kind, at most twice ever across all kinds (the
+/// purchase moment + one reminder), then never again on its own.
 enum SignInPromptGate {
     /// 1 post-purchase presentation + 1 reminder — founder-approved cap.
     static let maxPresentations = 2
 
-    static func shouldPrompt(isPurchased: Bool, isSignedIn: Bool, shownCount: Int) -> Bool {
-        isPurchased && !isSignedIn && shownCount < maxPresentations
+    static func shouldPrompt(isSignedIn: Bool, shownCount: Int) -> Bool {
+        !isSignedIn && shownCount < maxPresentations
     }
 }
 
 struct ContextualSignInSheet: View {
-    let authService: AuthService
-    /// Called on successful sign-in and on "Maybe later".
-    let onDismiss: () -> Void
-
     enum Phase {
         case idle
         case signingIn
@@ -40,73 +36,93 @@ struct ContextualSignInSheet: View {
     /// SignInWithAppleButton onRequest → onCompletion lifecycle (F6: the
     /// request carries base64url-nopad(SHA256(rawNonce))).
     @State private var pendingRawNonce = ""
+    /// The content's height, which the sheet's detent follows so the sheet
+    /// stays as low as its content at every text size.
+    @State private var contentHeight = Metrics.initialHeight
 
-    init(authService: AuthService, initialPhase: Phase = .idle, onDismiss: @escaping () -> Void) {
+    /// What was just bought; the sheet shows it and offers to keep it.
+    let purchase: SignInPromptPurchase
+    let authService: AuthService
+    /// Called on successful sign-in and on "Maybe later".
+    let onFinish: (SignInPromptOutcome) -> Void
+
+    init(
+        purchase: SignInPromptPurchase,
+        authService: AuthService,
+        initialPhase: Phase = .idle,
+        onFinish: @escaping (SignInPromptOutcome) -> Void
+    ) {
+        self.purchase = purchase
         self.authService = authService
-        self.onDismiss = onDismiss
+        self.onFinish = onFinish
         _phase = State(initialValue: initialPhase)
     }
 
     var body: some View {
-        // #194 C7 (canvas Bg-SignIn): left-aligned sheet, a fan of four
-        // category cards with the seal (#198), capsule Apple button, glass
-        // "Maybe later".
-        VStack(alignment: .leading, spacing: 0) {
-            badge
-                .padding(.top, Theme.Hangs.Spacing.xl)
+        // #217.4 (canvas F-*): a low, left-aligned sheet: the purchase as a
+        // tilted card, what signing in keeps, capsule Apple button, "Maybe later".
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                SignInPromptHero(purchase: purchase)
+                    .padding(.top, Theme.Hangs.Spacing.xxl)
+                    .padding(.leading, Theme.Hangs.Spacing.xxs)
 
-            heroBlock
-                .padding(.top, Theme.Hangs.Spacing.md)
+                heroBlock
+                    .padding(.top, Theme.Hangs.Spacing.lg)
 
-            if phase == .failed {
-                errorBanner
-                    .padding(.top, Theme.Hangs.Spacing.md)
+                if phase == .failed {
+                    errorBanner
+                        .padding(.top, Theme.Hangs.Spacing.md)
+                }
+
+                actionStack
+                    .padding(.top, Theme.Hangs.Spacing.lg)
             }
-
-            actionStack
-                .padding(.top, Theme.Hangs.Spacing.lg)
-
-            Spacer(minLength: Theme.Hangs.Spacing.md)
-
-            privacyNote
-                .padding(.bottom, Theme.Hangs.Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Theme.Hangs.Spacing.xl)
+            .padding(.bottom, Theme.Hangs.Spacing.xs)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
         }
-        .padding(.horizontal, Theme.Hangs.Spacing.xl)
+        .scrollBounceBehavior(.basedOnSize)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.Hangs.Colors.bgSheet.ignoresSafeArea())
+        .presentationDetents([.height(contentHeight)])
         .accessibilityIdentifier("signInPrompt.root")
     }
 
     // MARK: - Blocks
 
-    /// #198 (canvas Bg-SignIn): four tilted category cards, the seal on the
-    /// cobalt front one.
-    private var badge: some View {
-        PaywallHeroDeck(fills: ["history", "science-nature", "movies-music", "geography-world"].map {
-            Theme.Hangs.Category.style(for: $0).fill
-        }) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.hangsHeading)
-                .foregroundStyle(Theme.Hangs.Category.style(for: "geography-world").text)
-        }
-        .padding(.leading, Metrics.fanInset)
-        .accessibilityIdentifier("signInPrompt.badge")
-    }
-
     private var heroBlock: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-            Text("SAVE YOUR PURCHASE")
+            Text(title)
                 .font(.hangsTitle)
+                .textCase(.uppercase)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("signInPrompt.title")
 
-            Text("Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling.")
+            Text(message)
                 .font(.hangsBodyLG)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("signInPrompt.subtitle")
+        }
+    }
+
+    private var title: LocalizedStringKey {
+        switch purchase {
+        case .plus: "Save your Plus"
+        case .credit: "Save your credit"
+        case .customPack: "Save your pack"
+        }
+    }
+
+    private var message: LocalizedStringKey {
+        switch purchase {
+        case .plus: "Signing in links Trubbo Plus to your Apple account, so it stays with you on a new phone or after reinstalling."
+        case .credit: "Your credit is only on this phone for now. Sign in with Apple and it stays with you on a new phone or after reinstalling."
+        case .customPack: "Your pack is only on this phone for now. Sign in with Apple and it stays with you on a new phone or after reinstalling."
         }
     }
 
@@ -134,20 +150,21 @@ struct ContextualSignInSheet: View {
     }
 
     private var actionStack: some View {
-        VStack(spacing: Theme.Hangs.Spacing.sm) {
+        VStack(spacing: Theme.Hangs.Spacing.xxs) {
             if phase == .signingIn {
                 signingInIndicator
             } else {
                 appleButton
             }
 
-            HangsSecondaryButton(
+            HangsGhostButton(
                 title: phase == .failed
                     ? "Later — I'll sign in from Settings"
                     : "Maybe later",
-                height: Metrics.buttonHeight
+                color: Theme.Hangs.Colors.ink,
+                font: .hangsButton
             ) {
-                onDismiss()
+                onFinish(.dismissed)
             }
             .disabled(phase == .signingIn)
             .accessibilityIdentifier("signInPrompt.later")
@@ -188,25 +205,11 @@ struct ContextualSignInSheet: View {
         .accessibilityIdentifier("signInPrompt.signingIn")
     }
 
-    private var privacyNote: some View {
-        Label {
-            Text("Keeps your purchases and progress across devices. Nothing else is shared.")
-                .font(.hangsCaption)
-                .fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "lock")
-                .font(.hangsCaption)
-                .accessibilityHidden(true)
-        }
-        .foregroundStyle(Theme.Hangs.Colors.muted)
-        .accessibilityIdentifier("signInPrompt.privacyNote")
-    }
-
     private enum Metrics {
-        /// The fan reaches ~22pt past its front card; keep it inside the text column.
-        static let fanInset: CGFloat = 26
+        /// The canvas sheet (F-*) at the default text size, until measured.
+        static let initialHeight: CGFloat = 400
         static let errorDisc: CGFloat = 30
-        static let buttonHeight: CGFloat = 56
+        static let buttonHeight: CGFloat = 52
     }
 
     // MARK: - Sign-in handling
@@ -230,7 +233,7 @@ struct ContextualSignInSheet: View {
                     email: payload.email
                 )
                 if newTokens != nil {
-                    onDismiss()
+                    onFinish(.signedIn)
                 } else {
                     phase = .failed
                 }
@@ -247,6 +250,9 @@ struct ContextualSignInSheet: View {
 
 #if DEBUG
 #Preview {
-    ContextualSignInSheet(authService: AuthService(baseURL: Config.apiBaseURL)) {}
+    ContextualSignInSheet(
+        purchase: .customPack(name: "Harry Potter", questionCount: 30, colorKey: "order-1"),
+        authService: AuthService(baseURL: Config.apiBaseURL)
+    ) { _ in }
 }
 #endif

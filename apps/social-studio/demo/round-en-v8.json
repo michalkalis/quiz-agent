@@ -1,0 +1,193 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round8.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"segments": [
+		{
+			"from": 0.0,
+			"to": 32.767
+		}
+	],
+	"taps": [
+		{
+			"t": 3.45,
+			"x": 603,
+			"y": 2301
+		},
+		{
+			"t": 10.03,
+			"x": 270,
+			"y": 2388
+		},
+		{
+			"t": 15.03,
+			"x": 864,
+			"y": 2349
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.0,
+			"to": 3.6,
+			"x": 603,
+			"y": 1320,
+			"scale": 1.1
+		},
+		{
+			"from": 3.6,
+			"to": 8.8,
+			"x": 603,
+			"y": 1350,
+			"scale": 1.2
+		},
+		{
+			"from": 8.8,
+			"to": 10.08,
+			"x": 603,
+			"y": 2310,
+			"scale": 1.3
+		},
+		{
+			"from": 10.08,
+			"to": 13.98,
+			"x": 603,
+			"y": 2220,
+			"scale": 1.3
+		},
+		{
+			"from": 13.98,
+			"to": 15.48,
+			"x": 603,
+			"y": 1800,
+			"scale": 1.3
+		},
+		{
+			"from": 15.48,
+			"to": 17.63,
+			"x": 603,
+			"y": 939,
+			"scale": 1.25
+		},
+		{
+			"from": 17.63,
+			"to": 19.23,
+			"x": 603,
+			"y": 1080,
+			"scale": 1.25
+		},
+		{
+			"from": 19.23,
+			"to": 25.832,
+			"x": 603,
+			"y": 645,
+			"scale": 1.5
+		},
+		{
+			"from": 25.832,
+			"to": 29.192,
+			"x": 603,
+			"y": 960,
+			"scale": 1.35
+		},
+		{
+			"from": 29.192,
+			"to": 32.767,
+			"x": 603,
+			"y": 990,
+			"scale": 1.25
+		}
+	],
+	"audio": [
+		{
+			"t": 0.3,
+			"src": "demo/rec/n-g-intro.mp3"
+		},
+		{
+			"t": 3.91,
+			"src": "demo/rec/n-q-island.mp3"
+		},
+		{
+			"t": 10.4,
+			"src": "demo/rec/n-player-denmark.mp3"
+		},
+		{
+			"t": 15.53,
+			"src": "demo/rec/n-correct-denmark.mp3"
+		},
+		{
+			"t": 19.53,
+			"src": "demo/rec/n-g-local2.mp3"
+		},
+		{
+			"t": 26.132,
+			"src": "demo/rec/n-g-reveal.mp3"
+		},
+		{
+			"t": 29.492,
+			"src": "demo/rec/n-g-custom.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.0,
+			"to": 3.8,
+			"text": "A voice quiz with fun questions",
+			"kind": "step"
+		},
+		{
+			"from": 3.8,
+			"to": 8.95,
+			"text": "Trubbo reads the question out loud",
+			"kind": "step"
+		},
+		{
+			"from": 8.95,
+			"to": 12.73,
+			"text": "Think, then say or type your answer",
+			"kind": "step"
+		},
+		{
+			"from": 12.73,
+			"to": 15.43,
+			"text": "Trubbo checks your answer",
+			"kind": "step"
+		},
+		{
+			"from": 15.43,
+			"to": 19.43,
+			"text": "And explains the result",
+			"kind": "step"
+		},
+		{
+			"from": 19.43,
+			"to": 26.032,
+			"text": "Local multiplayer with friends nearby",
+			"kind": "step"
+		},
+		{
+			"from": 26.032,
+			"to": 29.392,
+			"text": "See who answered what",
+			"kind": "step"
+		},
+		{
+			"from": 29.392,
+			"to": 32.8,
+			"text": "Custom quizzes on any topic",
+			"kind": "step"
+		},
+		{
+			"from": 11.23,
+			"to": 12.546999999999999,
+			"text": "Denmark!",
+			"kind": "player"
+		}
+	],
+	"endCard": true,
+	"endWord": "Free.",
+	"endAudio": "demo/rec/n-g-free.mp3"
+}

@@ -2,7 +2,7 @@
 // first frame, so useCurrentFrame() is local. The phone never reaches under the caption band
 // (AppDemo clips it below the band), so the texts need no backing.
 import React from 'react';
-import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {BUBBLE_BOTTOM, CHIP_H, CHIP_TOP, H, TEXT_W, TOP_BAND, W} from './demoLayout';
 import {lineCount} from './fitWhy';
 import {FONT, INK, SURF, tintFor} from './theme';
@@ -94,6 +94,37 @@ export const StepText: React.FC<{text: string; frames: number; size: number}> = 
 	return (
 		<div style={{...bandStyle(), height: STEP_H, opacity: Math.min(1, p * 1.4) * fadeOut(frame, frames, fps), transform: `translateY(${(1 - p) * 26}px)`}}>
 			<div style={{fontSize: size, fontWeight: 800, lineHeight: STEP_LINE, textAlign: 'center', letterSpacing: -1.5, maxWidth: INNER_W, textWrap: 'balance'}}>{text}</div>
+		</div>
+	);
+};
+
+const SAID_SIZES = [86, 80, 74, 68, 62];
+
+/**
+ * The narrator's words as spoken, where the headline used to be (a little smaller, at most two lines).
+ * Default: each word fades and rises in on its own start. `karaoke`: the whole line shows faint from
+ * the start and each word turns solid ink when spoken. Layout is fixed from the start, so lines never reflow.
+ */
+export const SaidText: React.FC<{words: string[]; at: number[]; frames: number; karaoke?: boolean}> = ({words, at, frames, karaoke}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const text = words.join(' ');
+	const size = typeof document === 'undefined' ? SAID_SIZES[1] : (SAID_SIZES.find((s) => lineCount(text, s, INNER_W * 0.97, 800) <= 2) ?? SAID_SIZES[SAID_SIZES.length - 1]);
+	const ease = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)} as const;
+	const blockIn = karaoke ? interpolate(frame, [0, fps * 0.2], [0, 1], ease) : 1;
+	return (
+		<div style={{...bandStyle(), opacity: blockIn * fadeOut(frame, frames, fps)}}>
+			<div style={{fontSize: size, fontWeight: 800, lineHeight: 1.06, textAlign: 'center', letterSpacing: -1, maxWidth: INNER_W, textWrap: 'balance'}}>
+				{words.map((w, i) => {
+					const p = interpolate(frame, [at[i] ?? 0, (at[i] ?? 0) + fps * (karaoke ? 0.12 : 0.18)], [0, 1], ease);
+					const style: React.CSSProperties = karaoke ? {opacity: 0.35 + 0.65 * p} : {opacity: p, transform: `translateY(${(1 - p) * 10}px)`};
+					return (
+						<span key={i} style={{display: 'inline-block', marginRight: i < words.length - 1 ? '0.24em' : 0, ...style}}>
+							{w}
+						</span>
+					);
+				})}
+			</div>
 		</div>
 	);
 };

@@ -3,6 +3,7 @@
 import React from 'react';
 import {AbsoluteFill, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {BEZEL, PHONE_CX, PHONE_CY, type PhoneBox} from './demoLayout';
+import {DemoMark, type MarkBox} from './DemoMarks';
 import type {Timeline} from './demoTimeline';
 
 export const RIPPLE_S = 0.6;
@@ -63,7 +64,7 @@ const Spotlight: React.FC<{spots: Spot[]}> = ({spots}) => {
 	);
 };
 
-export const DemoPhone: React.FC<{src: string; rec: {w: number; h: number}; box: PhoneBox; timeline: Timeline; ripples: Ripple[]; spots: Spot[]; fps: number}> = ({src, rec, box, timeline, ripples, spots, fps}) => {
+export const DemoPhone: React.FC<{src: string; rec: {w: number; h: number}; box: PhoneBox; timeline: Timeline; ripples: Ripple[]; spots: Spot[]; marks?: MarkBox[]; fps: number}> = ({src, rec, box, timeline, ripples, spots, marks = [], fps}) => {
 	const k = box.screenW / rec.w;
 	return (
 		<div
@@ -86,6 +87,13 @@ export const DemoPhone: React.FC<{src: string; rec: {w: number; h: number}; box:
 				))}
 				<AbsoluteFill>
 					<Spotlight spots={spots.map((h) => ({...h, x: h.x * k, y: h.y * k, w: h.w * k, h: h.h * k}))} />
+				</AbsoluteFill>
+				<AbsoluteFill>
+					{marks.map((m, i) => (
+						<Sequence key={i} from={m.start} durationInFrames={Math.max(1, m.frames)} layout="none">
+							<DemoMark m={{...m, x: m.x * k, y: m.y * k, w: m.w * k, h: m.h * k}} />
+						</Sequence>
+					))}
 				</AbsoluteFill>
 				<AbsoluteFill>
 					{ripples.map((r, i) => (

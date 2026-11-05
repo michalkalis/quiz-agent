@@ -16,6 +16,7 @@ Druhé, drahé mesačné predplatné nad Trubbo Plus pre ľudí, ktorí nerieši
 - 11-04: 20 balíkov mesačne; „musí to byť výhodnejšie ako kúpa custom balíčka priamo“. Nesmie sa objaviť v TF buildoch ani v App Store, kým to founder nepustí.
 - 11-05: **€149,99 mesačne, 20 vlastných balíkov (po 30 otázok).**
 - 11-05: **10 balíkov za deň** (nie 5); **otázky z knižnice bez obmedzenia**; Max za prepínačom OK; „over, či to nie je moc in-app purchase možností, aby to užívateľa moc nezahltilo“.
+- 11-05 (vizuálny výber, [artefakt](https://claude.ai/artifact/UXb4iq5s7Rh6z7UcRvibjP)): paywall **C** (prepínač Plus | Max hore), vlastný balík **B** (prepínač 10 | 30 v karte balíka), profil **B** (kompaktný riadok s plánom a tlačidlom Zmeniť). Mení 11-02: **Max člen je patrón** a má **priamy kontakt na foundera, aj hovor**: „suma je fakt veľká a treba informovať, že tak trochu nám pomáha do začiatku, čo je viac-menej Patreon… ak by pribudlo moc Max predplatiteľov, tak zmeníme podmienky“.
 
 ## Ekonomika (meranie 2026-11-04)
 
@@ -47,6 +48,7 @@ Pre hráča: 20 balíkov zvlášť = €179,80 (+ Plus €4,99) → Max je o ~�
 1. Všetko z Plus a **otázky z knižnice bez mesačného limitu** (náklad ~$0,0006 za odpoveď, hlas zdieľaný). Doložka o férovom používaní ostáva: len osobné použitie, žiadne roboty ani hromadné kopírovanie (#199). Text v appke smie povedať „bez limitu“ len pri Max; pri Plus ostáva 1 000.
 2. **20 vlastných balíkov za obdobie predplatného.** Nevyčerpané sa neprenášajú.
 3. Hlas pri výbere novej témy: v1 ručne (founder pošle Max členom anketu), bez kódu.
+4. **Patrón Trubbo:** paywall pri Max jednou vetou povie, že členstvo podporuje Trubbo na začiatku. **Priamy kontakt na foundera**: v1 e-mailová adresa len pre Max členov v Profile + ponuka hovoru dohodnutého e-mailom, bez kódu na rezervácie. Ak členov pribudne priveľa, zmena platí pre nové predplatné; existujúcim členom oznámiť vopred (zmena obsahu predplatného).
 
 ## Riešenie
 
@@ -79,9 +81,9 @@ Prepínač `max_enabled` v `/app-config` (DB prepínač, predvolene OFF) + skryt
 
 ## Koľko nákupov naraz (founder 2026-11-05)
 Po #227 a #228 bude 5 platených vecí: Plus, Max, 100 otázok z knižnice, vlastný balík 10 a 30. Nikdy ich neukazovať všetky naraz; hráč vidí najviac 3 možnosti, a len tam, kde dávajú zmysel:
-- **Došli otázky (paywall):** Plus a Max vedľa seba, Plus predvolene vybraný; 100 otázok ako malý odkaz pod nimi („Len 100 otázok za €2,99“). Max člen paywall nevidí.
-- **Vlastný balík:** výber 10 alebo 30 otázok; Max člen namiesto ceny vidí „v cene Max“.
-- **Profil:** len aktuálny plán a tlačidlo na zmenu.
+- **Došli otázky (paywall), variant C:** prepínač Plus | Max hore, pod ním karta vybraného plánu, Plus predvolene; 100 otázok ako malý odkaz („Len 100 otázok za €2,99“). Max člen paywall nevidí.
+- **Vlastný balík, variant B:** prepínač 10 | 30 priamo v karte balíka, cena v riadku pod ním; Max člen namiesto ceny vidí „V cene Max · zostáva N z 20“.
+- **Profil, variant B:** kompaktný riadok (plán, cena, stav, tlačidlo Zmeniť).
 Odporúčanie z praxe: viac ako 3 možnosti naraz zvyšuje váhanie a odchody; dve hlavné viditeľne, tretia menej výrazne. Kontrolovaný test pre presne náš prípad neexistuje, rozhodnú dáta z `max_paywall_view` / `max_purchase`.
 
 ## Analytika (v tých istých PR)

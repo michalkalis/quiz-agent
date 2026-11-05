@@ -1,7 +1,7 @@
 # #228 — Vlastný balík: vždy plný + menší balík s 10 otázkami
 
 **Triage:** enhancement · ready-for-agent
-**Status:** plán 2026-11-05; implementácia nezačatá
+**Status:** 228.1 nasadené 2026-11-05 (PR #742); zvyšok čaká
 **Založené:** 2026-11-04 (founder)
 **Súvisí:** #227 — Trubbo Max (závisí od tohto), #182 — custom pack hrateľný od prvej otázky (rampa dávok), #143 — Custom-pack COGS reduction, #225 — rovnaké zadanie = hotové otázky, #229 — kontrola vyhľadávania a duplicít
 
@@ -76,7 +76,7 @@ Na objednávke: počet kôl, úspešnosť za kolo, počet z prehĺbenia / z kni�
 - Korpusové generovanie nezmenené.
 
 ## Úlohy
-- [ ] 228.1 prispôsobené generovanie + rozpočet (1) + analytika
+- [x] 228.1 prispôsobené generovanie + rozpočet (1) + analytika — PR #742, nasadené 11-05. Naostro (prod nastavenie, sk): Harry Potter 30/30 (predtým 24), ~$3,00 bez hlasu, 26 min; slovenské hrady 30/30 (predtým 16, zlyhanie), ~$4,25 bez hlasu, 31 min. Úzka téma je drahšia, ako počítala ekonomika Max ($3,5 na balík) → prepočítať v 227.0. Výber 10 | 30 na obrazovke: variant B (#227).
 - [ ] 228.2 prehĺbenie v rámci zadania (2)
 - [ ] 228.3 lepší model na kontrolu odpovedateľnosti (3): porovnanie na zahodených otázkach z meraní (presnosť pri nejasných otázkach sa nesmie zhoršiť), potom výmena; founder smer schválil 11-05
 - [ ] 228.4 doplnenie z knižnice + doplnenie dodatočne (4, 5)

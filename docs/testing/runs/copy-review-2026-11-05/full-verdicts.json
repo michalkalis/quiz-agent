@@ -1,0 +1,61 @@
+{
+ "source": "artifact W1QU3QB6wDKHfcmret4gKE db verdicts, 2026-11-05",
+ "ok": [
+  7,
+  8,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32
+ ],
+ "no": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  25,
+  26,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48
+ ],
+ "no_verdict": [
+  41
+ ],
+ "agent_adjustments": {
+  "19,20": "en list aligned with sk/cs: start, confirm, next, again, repeat (\"cancel\" is no voice command)",
+  "extra": "topic page 'priroda' lead: formal 'by ste/byste' missed by the model -> 'ne\u017e sa zd\u00e1 / ne\u017e se zd\u00e1'"
+ }
+}

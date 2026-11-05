@@ -1774,13 +1774,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odpovede: %1$lld/%2$lld"
+            "value" : "Odpovedalo: %1$lld/%2$lld"
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odpovědi: %1$lld/%2$lld"
+            "value" : "Odpovědělo: %1$lld/%2$lld"
           }
         }
       }

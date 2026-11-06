@@ -1,6 +1,6 @@
 //
 // Prod.xcconfig
-// Environment-only settings for the production build (API → Fly.io, TestFlight/App Store).
+// Environment-only settings for the production build (API → own domain on Hetzner, TestFlight/App Store).
 // Include Shared here so any xcconfig that wants just Prod can pull the base too.
 //
 
@@ -11,8 +11,8 @@ ENVIRONMENT_NAME = Production
 
 // MARK: - API
 // `$()` escape breaks the `//` token so xcconfig doesn't treat the rest as a comment.
-API_BASE_URL = https:/$()/quiz-agent-api.fly.dev
-PACK_API_BASE_URL = https:/$()/quiz-pack-api.fly.dev
+API_BASE_URL = https:/$()/api.trubbo.app
+PACK_API_BASE_URL = https:/$()/pack.trubbo.app
 
 // MARK: - Sentry
 SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112

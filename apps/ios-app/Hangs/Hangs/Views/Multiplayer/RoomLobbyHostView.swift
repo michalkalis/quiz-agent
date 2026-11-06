@@ -3,6 +3,8 @@
 //  Hangs
 //
 //  #212: the host's room before the start: QR code, invite link, players.
+//  #224 (A+B): the QR sits beside the invite text and the rules fold into one
+//  row that opens the rules sheet, so up to ~5 players fit without scrolling.
 //
 
 import SwiftUI
@@ -10,6 +12,7 @@ import SwiftUI
 struct RoomLobbyHostView: View {
     @ObservedObject var viewModel: RoomViewModel
     @State private var playerToRemove: RoomState.Player?
+    @State private var showingRules = false
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.md) {
@@ -24,11 +27,7 @@ struct RoomLobbyHostView: View {
                             .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
                     }
                     playerList
-                    RoomRulesCard(viewModel: viewModel)
-                    gameSummary
-                        .font(.hangsBody)
-                        .foregroundStyle(Theme.Hangs.Colors.muted)
-                        .accessibilityIdentifier("room.lobby.summary")
+                    rulesRow
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -41,6 +40,9 @@ struct RoomLobbyHostView: View {
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)
+        .sheet(isPresented: $showingRules) {
+            RoomRulesSheet(viewModel: viewModel)
+        }
         .confirmationDialog(
             "Remove this player from the game?",
             isPresented: Binding(get: { playerToRemove != nil }, set: { if !$0 { playerToRemove = nil } }),
@@ -56,17 +58,31 @@ struct RoomLobbyHostView: View {
     private var inviteCard: some View {
         HangsCard {
             VStack(spacing: Theme.Hangs.Spacing.sm) {
-                Text("Scan to join")
-                    .font(.hangsHeading)
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                if let created = viewModel.created, let image = QRCodeImage.make(created.qrURL.absoluteString) {
-                    Image(uiImage: image)
-                        .interpolation(.none)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: Metrics.qrSide, height: Metrics.qrSide)
-                        .accessibilityLabel(Text("QR code to join the game"))
-                        .accessibilityIdentifier("room.qr")
+                HStack(spacing: Theme.Hangs.Spacing.md) {
+                    if let created = viewModel.created, let image = QRCodeImage.make(created.qrURL.absoluteString) {
+                        Image(uiImage: image)
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: Metrics.qrSide, height: Metrics.qrSide)
+                            .accessibilityLabel(Text("QR code to join the game"))
+                            .accessibilityIdentifier("room.qr")
+                    } else {
+                        ProgressView()
+                            .frame(width: Metrics.qrSide, height: Metrics.qrSide)
+                    }
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
+                        Text("Scan to join")
+                            .font(.hangsHeading)
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                        Text("Players on the same Wi-Fi also find the game in Trubbo under Together.")
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if let created = viewModel.created {
                     // a11y-id: call-site — ShareLink takes its identifier below
                     ShareLink(item: created.inviteURL, message: Text("Join my game in Trubbo")) {
                         Label("Send the link", systemImage: "square.and.arrow.up")
@@ -76,17 +92,9 @@ struct RoomLobbyHostView: View {
                             .background(Capsule().fill(Theme.Hangs.Colors.bgInset))
                     }
                     .accessibilityIdentifier("room.share")
-                } else {
-                    ProgressView()
-                        .frame(width: Metrics.qrSide, height: Metrics.qrSide)
                 }
-                Text("Players on the same Wi-Fi also find the game in Trubbo under Together.")
-                    .font(.hangsCaption)
-                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(Theme.Hangs.Spacing.lg)
+            .padding(Theme.Hangs.Spacing.md)
             .frame(maxWidth: .infinity)
         }
     }
@@ -133,16 +141,53 @@ struct RoomLobbyHostView: View {
         .accessibilityIdentifier("room.player.\(player.participantId)")
     }
 
-    /// "10 questions · Medium": what everyone plays, the host's own choices
-    /// (the difficulty reads as on Home).
-    private var gameSummary: Text {
-        Text("\(viewModel.solo.numberOfQuestions) questions")
-            + Text(verbatim: " · \(viewModel.solo.difficultyDisplayName())")
+    /// #224 (A): the rules in one row; the sheet changes them.
+    private var rulesRow: some View {
+        HangsCard {
+            Button {
+                showingRules = true
+            } label: {
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+                        Text("Game rules")
+                            .font(.hangsLabel)
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                        rulesSummary
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .accessibilityIdentifier("room.lobby.summary")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.right")
+                        .font(.hangsCaption.weight(.semibold))
+                        .foregroundStyle(Theme.Hangs.Colors.mutedFaint)
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.vertical, Theme.Hangs.Spacing.sm)
+                .frame(minHeight: Metrics.rowHeight)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("room.lobby.rules")
+        }
+    }
+
+    /// "10 questions · Medium · Answers at the end · 30 s": what everyone
+    /// plays (the difficulty reads as on Home) and the room's rules.
+    private var rulesSummary: Text {
+        let settings = viewModel.settings
+        let rules = [
+            viewModel.solo.difficultyDisplayName(),
+            settings.revealMode.displayName,
+            MultiplayerSettings.secondsDisplay(settings.thinkingSeconds),
+        ]
+        return Text("\(viewModel.solo.numberOfQuestions) questions")
+            + Text(verbatim: rules.map { " · \($0)" }.joined())
     }
 
     private enum Metrics {
-        /// Big enough for a phone camera across a table.
-        static let qrSide: CGFloat = 188
+        /// #224 (B): beside the text; still scans from a phone across a table.
+        static let qrSide: CGFloat = 128
         static let shareHeight: CGFloat = 44
         static let removeSide: CGFloat = 44
         static let removeIcon: CGFloat = 14

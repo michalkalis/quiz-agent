@@ -1,9 +1,9 @@
 # texts
 Hra spolu
 Naskenuj a přidej se
+Hráči ve stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu.
 Pošli odkaz
 Přidej se k mé hře v Trubbu
-Hráči ve stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu.
 Hráči
 2
 M
@@ -12,25 +12,7 @@ ty · hostitel
 J
 Jana
 Pravidla hry
-After each question
-At the end of the quiz
-Kdy ukázat odpovědi
-At the end of the quiz
-Kdy ukázat odpovědi
-At the end of the quiz
-15 s
-30 s
-45 s
-60 s
-Vlastní
-Čas na odpověď
-30 s
-Čas na odpověď
-30 s
-Číst otázky nahlas
-
-Platí pro všechny hráče. Tvoje sólo nastavení zůstává.
-10 otázek · Random
+10 otázek · Random · At the end of the quiz · 30 s
 Začni hru
 # identifiers
 room.close
@@ -39,15 +21,6 @@ room.share
 room.player.p_you
 room.player.p_other
 room.player.remove.p_other
-room.rules.reveal
-room.rules.reveal.question
-room.rules.reveal.round
-room.rules.time
-room.rules.time.15
-room.rules.time.30
-room.rules.time.45
-room.rules.time.60
-room.rules.time.custom
-room.rules.readsAloud
+room.lobby.rules
 room.lobby.summary
 room.start

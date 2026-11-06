@@ -49,21 +49,31 @@ struct RoomRulesSheet: View {
                     HangsToggleRow(label: "Read questions aloud", isOn: readsAloud)
                         .accessibilityIdentifier("room.rules.sheet.readsAloud")
                     HangsDivider()
-                    HangsConfigRowLabel(
-                        label: "When to show answers",
-                        value: viewModel.settings.revealMode.displayName,
-                        valueColor: Theme.Hangs.Colors.muted,
-                        showsChevron: false,
-                        labelColor: Theme.Hangs.Colors.muted
-                    )
-                    .accessibilityIdentifier("room.rules.sheet.reveal")
+                    if viewModel.canChangeRevealMode {
+                        revealMenu
+                    } else {
+                        HangsConfigRowLabel(
+                            label: "When to show answers",
+                            value: viewModel.settings.revealMode.displayName,
+                            valueColor: Theme.Hangs.Colors.muted,
+                            showsChevron: false,
+                            labelColor: Theme.Hangs.Colors.muted
+                        )
+                        .accessibilityIdentifier("room.rules.sheet.reveal")
+                    }
                 }
             }
             .disabled(viewModel.isSavingSettings)
-            Text("Changes apply from the next question. When to show answers can only be changed before the game.")
-                .font(.hangsCaption)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
-                .fixedSize(horizontal: false, vertical: true)
+            Group {
+                if viewModel.canChangeRevealMode {
+                    Text("Applies to all players. Your solo settings stay as they are.")
+                } else {
+                    Text("Changes apply from the next question. When to show answers can only be changed before the game.")
+                }
+            }
+            .font(.hangsCaption)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
+            .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(Theme.Hangs.Spacing.md)
@@ -85,6 +95,24 @@ struct RoomRulesSheet: View {
                 if picked != Self.customTag { setTime(picked) }
             }
         )
+    }
+
+    /// #224: before the start (the lobby's rules row) the host still picks
+    /// when answers show; once the game runs the server keeps it fixed.
+    private var revealMenu: some View {
+        Menu {
+            ForEach(RoomState.RevealMode.allCases, id: \.self) { mode in
+                Button(mode.displayName) { setReveal(mode) }
+                    .accessibilityIdentifier("room.rules.sheet.reveal.\(mode.rawValue)")
+            }
+        } label: {
+            HangsConfigRowLabel(label: "When to show answers", value: viewModel.settings.revealMode.displayName)
+        }
+        .accessibilityIdentifier("room.rules.sheet.reveal")
+    }
+
+    private func setReveal(_ mode: RoomState.RevealMode) {
+        Task { await viewModel.setRevealMode(mode) }
     }
 
     private var readsAloud: Binding<Bool> {

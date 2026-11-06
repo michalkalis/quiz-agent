@@ -29,18 +29,22 @@ struct RoomPage {
     var winner: XCUIElement { app.descendants(matching: .any)["room.final.winner"] }
     var awayNote: XCUIElement { app.descendants(matching: .any)["room.final.away"] }
     var doneButton: XCUIElement { app.buttons["room.done"] }
-    var rulesReveal: XCUIElement { app.buttons["room.rules.reveal"] }
-    var rulesTime: XCUIElement { app.buttons["room.rules.time"] }
-    var rulesReadsAloud: XCUIElement { app.descendants(matching: .any)["room.rules.readsAloud"] }
+    /// #224: the lobby's one-line rules row; it opens the rules sheet.
+    var lobbyRules: XCUIElement { app.buttons["room.lobby.rules"] }
+    var rulesReveal: XCUIElement { app.buttons["room.rules.sheet.reveal"] }
+    var rulesTime: XCUIElement { app.segmentedControls["room.rules.sheet.time"] }
+    var rulesReadsAloud: XCUIElement { app.descendants(matching: .any)["room.rules.sheet.readsAloud"] }
+    var rulesDone: XCUIElement { app.buttons["room.rules.done"] }
     var guestRules: XCUIElement { app.descendants(matching: .any)["room.rules.guest"] }
     var rulesOpen: XCUIElement { app.buttons["room.rules.open"] }
 
     func revealOption(_ mode: String) -> XCUIElement {
-        app.buttons["room.rules.reveal.\(mode)"]
+        app.buttons["room.rules.sheet.reveal.\(mode)"]
     }
 
+    /// A segment of the sheet's answer time picker (segments carry no identifier).
     func timeOption(_ seconds: Int) -> XCUIElement {
-        app.buttons["room.rules.time.\(seconds)"]
+        rulesTime.buttons["\(seconds) s"] // a11y-id: segment label, UI pinned to English
     }
 
     /// What a rules row shows: its label and value as VoiceOver reads them.

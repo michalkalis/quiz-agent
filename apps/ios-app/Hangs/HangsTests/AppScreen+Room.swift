@@ -25,6 +25,10 @@ extension AppScreen {
         switch self {
         case .roomLobbyHost:
             await model.beginHosting()
+        case .roomLobbyHostFull:
+            // #224: four players and the start button on one screen, no scrolling.
+            rooms.extraGuests = ["Peťo", "Zuzka"]
+            await model.beginHosting()
         case .roomLobbyGuest:
             await model.join(.token(MockRoomService.token))
         case .roomQuestion:
@@ -56,6 +60,11 @@ extension AppScreen {
             await model.startGame()
             await model.readTask?.value
             await model.submitOption(key: "b")
+        case .roomRulesLobby:
+            // #224: opened from the lobby's rules row, the reveal is editable.
+            await model.beginHosting()
+            model.stopAll()
+            return AnyView(RoomRulesSheet(viewModel: model).background(Theme.Hangs.Colors.bg))
         case .roomRules:
             await model.beginHosting()
             await model.startGame()

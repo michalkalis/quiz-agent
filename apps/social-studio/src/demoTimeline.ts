@@ -74,22 +74,29 @@ export const cameraKeys = (props: AppDemoProps, tl: Timeline, fps: number): Key[
 	return keys.sort((a, b) => a.frame - b.frame);
 };
 
-const lerp = (a: Cam, b: Cam, p: number): Cam => ({s: a.s + (b.s - a.s) * p, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p});
+type Xf = {tx: number; ty: number; scale: number};
+const lerp = (a: Xf, b: Xf, p: number): Xf => ({tx: a.tx + (b.tx - a.tx) * p, ty: a.ty + (b.ty - a.ty) * p, scale: a.scale + (b.scale - a.scale) * p});
 
 /** Calm, overdamped: no overshoot. */
 const ease = (frame: number, fps: number) => spring({frame, fps, config: {damping: 24, stiffness: 70, mass: 1}});
 
-/** Camera at a frame: each key springs from wherever the previous one had got to. */
-export const cameraAt = (keys: Key[], frame: number, fps: number, rest: Cam): Cam => {
-	let from = rest;
-	let cur = rest;
+/**
+ * Camera transform at a frame. Each key's framing is turned into its final transform once, and moves blend
+ * those transforms (translate and scale together, one eased progress), so every point on screen travels
+ * a straight, monotonic path: no sideways swing from re-framing mid-move.
+ */
+export const cameraAt = (keys: Key[], frame: number, fps: number, rest: Cam, rec: {w: number; h: number}, box: PhoneBox): Xf => {
+	const at = (c: Cam) => cameraTransform(c, rec, box);
+	let from = at(rest);
+	let cur = from;
 	for (let i = 0; i < keys.length; i++) {
 		const k = keys[i];
 		if (frame < k.frame) break;
+		const to = at(k.to);
 		const p = (f: number) => (k.cut ? 1 : ease(f, fps));
-		cur = lerp(from, k.to, p(frame - k.frame));
+		cur = lerp(from, to, p(frame - k.frame));
 		const next = keys[i + 1];
-		if (next) from = lerp(from, k.to, p(next.frame - k.frame));
+		if (next) from = lerp(from, to, p(next.frame - k.frame));
 	}
 	return cur;
 };

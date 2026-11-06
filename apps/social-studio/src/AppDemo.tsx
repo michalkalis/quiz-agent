@@ -8,7 +8,7 @@ import {DemoPhone, type Ripple, type Spot} from './DemoPhone';
 import {fitSaid, fitSteps, fitTitle, HookText, KineticText, LabelChip, PlayerBubble, SaidText, StepText, TitleWord} from './DemoCaptions';
 import type {MarkBox} from './DemoMarks';
 import {phoneBox, PHONE_CX, PHONE_CY, PHONE_TOP, TOP_BAND} from './demoLayout';
-import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam, runEnd, startsSegment} from './demoTimeline';
+import {buildTimeline, cameraAt, cameraKeys, mapRange, mapTime, restCam, runEnd, startsSegment} from './demoTimeline';
 import type {AppDemoProps, DemoCaption, DemoCaptionKind} from './demoTypes';
 import {END_CARD_S, EndCard} from './EndCard';
 import {FONT, INK, tintFor} from './theme';
@@ -17,15 +17,14 @@ export const appDemoFrames = (props: AppDemoProps, fps: number) => buildTimeline
 
 type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number; restScale?: number};
 
-// Zoomed content stops well under the texts: fully hidden down to 30 px under the band, fully shown from the phone's resting top.
-const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom + 30}px, #000 ${PHONE_TOP}px)`;
+// Zoomed content is cut by a crisp edge just above the phone's resting top: the captions keep their own clean zone.
+const PHONE_MASK = `linear-gradient(to bottom, transparent ${PHONE_TOP - 20}px, #000 ${PHONE_TOP - 20}px)`;
 
 /** Camera at this component's frame. */
 const useCamera = (rig: Rig) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const cam = cameraAt(rig.keys, Math.min(frame, rig.frames), fps, restCam(rig.rec, rig.restScale));
-	return cameraTransform(cam, rig.rec, rig.box);
+	return cameraAt(rig.keys, Math.min(frame, rig.frames), fps, restCam(rig.rec, rig.restScale), rig.rec, rig.box);
 };
 
 // Own components, so only these re-render every frame, not the video layers.

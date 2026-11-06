@@ -63,10 +63,20 @@ const Stroke: React.FC<{d: string; p: number; o: number; color: string; width: n
 );
 
 export const DemoMark: React.FC<{m: MarkBox}> = ({m}) => {
-	const draw = useDraw(m.frames, m.style === 'highlighter' ? 0.3 : m.style === 'ring' ? 0.4 : m.style === 'underline' ? 0.35 : 0.4, m.style === 'ring' ? 0.1 : 0);
+	const draw = useDraw(m.frames, m.style === 'highlighter' || m.style === 'swipe' ? 0.3 : m.style === 'glow' || m.style === 'dim' ? 0.45 : m.style === 'ring' ? 0.4 : m.style === 'underline' ? 0.35 : 0.4, m.style === 'ring' ? 0.1 : 0);
 	if (m.style === 'circle') return <Stroke d={loopPath(m)} {...draw} color={ORANGE} width={5} opacity={0.85} />;
 	if (m.style === 'underline') return <Stroke d={underlinePath(m)} {...draw} color={ORANGE} width={6} opacity={0.85} />;
 	if (m.style === 'ring') return <Stroke d={roundRectPath(m, 10)} {...draw} color={INDIGO} width={2.5} opacity={0.55} />;
+	if (m.style === 'glow' || m.style === 'dim') {
+		// glow: a soft light halo round the element, lifted by a faint shadow. dim: the rest of the screen a little darker, feathered edge.
+		const pad = 10;
+		const o = Math.min(draw.p, 1) * draw.o;
+		const shadow = m.style === 'glow' ? `0 0 28px 10px rgba(255,255,255,${0.95 * o}), 0 0 46px 16px rgba(59,63,216,${0.18 * o}), 0 10px 24px rgba(17,18,22,${0.16 * o})` : `0 0 40px 3000px rgba(0,0,0,${0.15 * o})`;
+		return <div style={{position: 'absolute', left: m.x - pad, top: m.y - pad, width: m.w + 2 * pad, height: m.h + 2 * pad, borderRadius: 18, boxShadow: shadow, transform: m.style === 'glow' ? `scale(${1 + 0.03 * o})` : undefined}} />;
+	}
+	if (m.style === 'swipe') {
+		return <div style={{position: 'absolute', left: m.x - 10, top: m.y + m.h * 0.15, width: m.w + 20, height: m.h * 0.8, background: INDIGO, opacity: 0.25 * draw.o, borderRadius: 14, clipPath: `inset(0 ${(1 - draw.p) * 100}% 0 0 round 14px)`}} />;
+	}
 	// Highlighter: a translucent band a little larger than the element, swiped left to right, ragged ends.
 	const padX = 16;
 	const padY = 10;

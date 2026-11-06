@@ -5,13 +5,18 @@ Quiz language
 English
 Difficulty
 Medium
+Number of questions
+10
+30
+Number of questions
 Price
 8,99 €
 Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately.
-Pay & create pack
+Pay 8,99 € & create pack
 # identifiers
 orderPack.summaryPrompt
 orderPack.summaryDifficulty
+orderPack.size
 orderPack.price
 orderPack.noCancelNotice
 orderPack.pay

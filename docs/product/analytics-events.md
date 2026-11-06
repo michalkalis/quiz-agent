@@ -32,7 +32,7 @@
 | `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
 | `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
 | `paywall_viewed` | paywall shown | `source` (quota / home (builds ≤ 81) / profile (#216.3, the plan card moved there) / settings / completion) |
-| `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending) |
+| `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending), `question_count` (custom_pack only, from #228.6: the size bought, 10 or 30) |
 | `restore_result` | restore purchases ends | `outcome` |
 | `sign_in_prompt_shown` | the sign-in prompt after a purchase comes on screen (#217.4), for a signed-out buyer, at most twice ever | `kind` (plus / credit / custom_pack) |
 | `sign_in_prompt_result` | that prompt closes (#217.4) | `kind`, `outcome` (signed_in / dismissed; a swipe down is dismissed) |

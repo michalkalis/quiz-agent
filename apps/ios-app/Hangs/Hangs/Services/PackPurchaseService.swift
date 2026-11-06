@@ -7,7 +7,7 @@
 //  (`X-StoreKit-JWS`), and RevenueCat's SDK keeps `jwsRepresentation` internal —
 //  only a direct `Product.purchase()` hands us the signed transaction to
 //  forward. Subscriptions and the #93 credit pack stay on RevenueCat; this
-//  service owns exactly one consumable.
+//  service owns the custom-pack consumables, one per `PackSize` (#228.6).
 //
 //  Crash-safety: the proof is persisted BEFORE the transaction is finished, so
 //  a purchase whose order POST never completed (app death, network) is retried
@@ -33,22 +33,22 @@ nonisolated struct PackPaymentProof: Codable, Equatable, Sendable {
 
 // MARK: - Protocol
 
-/// StoreKit purchase of the custom-pack product.
+/// StoreKit purchase of the custom-pack products.
 protocol PackPurchaseServiceProtocol: Sendable {
-    /// Run the App Store payment sheet for the pack product and return the
-    /// proof. The proof is durably persisted before this returns; call
+    /// Run the App Store payment sheet for the product of `size` and return
+    /// the proof. The proof is durably persisted before this returns; call
     /// `clearPendingProof()` once the backend has accepted the order.
-    func purchase() async throws -> PackPaymentProof
+    func purchase(_ size: PackSize) async throws -> PackPaymentProof
     /// Proof of an earlier purchase whose order was never accepted by the
     /// backend (crash/network between payment and order creation). Reuse it
     /// instead of purchasing again — the server replays idempotently.
     func pendingProof() -> PackPaymentProof?
     /// Forget the persisted proof after the backend accepted the order.
     func clearPendingProof()
-    /// The pack product's localized App Store price (`Product.displayPrice`),
-    /// or nil when StoreKit can't return the product — callers hide the price
-    /// rather than show a guess.
-    func displayPrice() async -> String?
+    /// Each pack product's localized App Store price (`Product.displayPrice`).
+    /// A size StoreKit can't return is absent — not yet approved in App Store
+    /// Connect, or a store outage — and callers hide it rather than guess.
+    func displayPrices() async -> [PackSize: String]
 }
 
 enum PackPurchaseError: LocalizedError, Equatable {
@@ -114,12 +114,6 @@ nonisolated struct PendingPackPurchaseStore: Sendable {
 // MARK: - Live implementation
 
 final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
-    /// The App Store product id — must equal a `_PRODUCT_TIERS` key on the
-    /// server (`orders.py`), because the backend cross-checks the JWS's
-    /// productId against the order body. Single tier today, mirroring
-    /// `PackOrderService.productId`.
-    nonisolated static let productId = "pack_30"
-
     private let store: PendingPackPurchaseStore
     /// Lives as long as the service (AppState owns one for the app's lifetime);
     /// held so `deinit` can cancel it. Lock-guarded to keep the type `Sendable`
@@ -177,14 +171,14 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
         jws: String,
         finish: () async -> Void
     ) async -> Bool {
-        guard productId == Self.productId else { return false }
+        guard PackSize(productId: productId) != nil else { return false }
         store.save(PackPaymentProof(transactionId: transactionId, productId: productId, jws: jws))
         await finish()
         return true
     }
 
-    func purchase() async throws -> PackPaymentProof {
-        guard let product = try await Product.products(for: [Self.productId]).first else {
+    func purchase(_ size: PackSize) async throws -> PackPaymentProof {
+        guard let product = try await Product.products(for: [size.productId]).first else {
             throw PackPurchaseError.productUnavailable
         }
 
@@ -222,12 +216,15 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
         store.clear()
     }
 
-    func displayPrice() async -> String? {
+    func displayPrices() async -> [PackSize: String] {
         do {
-            return try await Product.products(for: [Self.productId]).first?.displayPrice
+            let products = try await Product.products(for: PackSize.allCases.map(\.productId))
+            return products.reduce(into: [:]) { prices, product in
+                if let size = PackSize(productId: product.id) { prices[size] = product.displayPrice }
+            }
         } catch {
-            Logger.quiz.info("pack price unavailable: \(error.localizedDescription, privacy: .public)")
-            return nil
+            Logger.quiz.info("pack prices unavailable: \(error.localizedDescription, privacy: .public)")
+            return [:]
         }
     }
 }

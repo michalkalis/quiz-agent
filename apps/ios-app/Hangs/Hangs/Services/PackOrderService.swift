@@ -45,10 +45,6 @@ protocol PackOrderServiceProtocol: Sendable {
 
 /// Thread-safe pack-order service using a Swift 6 actor.
 actor PackOrderService: PackOrderServiceProtocol {
-    /// v1 single tier — server overwrites `target_count` from the tier anyway.
-    private nonisolated static let productId = "pack_30"
-    private nonisolated static let targetCount = 30
-
     private let baseURL: URL
     private let session: URLSession
     private let authService: AuthServiceProtocol?
@@ -106,10 +102,11 @@ actor PackOrderService: PackOrderServiceProtocol {
 
         let payload = CreateOrderRequest(
             transactionId: intent.idempotencyKey,
-            productId: intent.paymentProof?.productId ?? Self.productId,
+            productId: intent.paymentProof?.productId ?? intent.size.productId,
             prompt: intent.prompt,
             language: intent.language,
-            targetCount: Self.targetCount,
+            // The server overwrites it from the product's tier anyway.
+            targetCount: intent.size.questionCount,
             category: intent.category,
             theme: intent.theme,
             difficulty: intent.difficulty

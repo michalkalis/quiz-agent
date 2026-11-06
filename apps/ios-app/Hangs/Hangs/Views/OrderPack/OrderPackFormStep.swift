@@ -19,7 +19,10 @@ struct OrderPackFormStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
-            PackPreviewCard(topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
+            PackPreviewCard(
+                topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines),
+                questionCount: viewModel.size.questionCount
+            )
             topicGroup
             OrderPackDifficultyPicker(
                 selection: viewModel.difficulty,
@@ -173,6 +176,7 @@ struct OrderPackFormStep: View {
 /// the text field below is the input.
 private struct PackPreviewCard: View {
     let topic: String
+    let questionCount: Int
 
     var body: some View {
         let style = Theme.Hangs.Category.style(for: nil)
@@ -190,7 +194,7 @@ private struct PackPreviewCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Spacer(minLength: Theme.Hangs.Spacing.xxs)
-                    Text(verbatim: "\(Metrics.packSize)")
+                    Text(verbatim: "\(questionCount)")
                 }
                 .font(.hangsMonoMini)
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
@@ -217,9 +221,6 @@ private struct PackPreviewCard: View {
 
     private enum Metrics {
         static let card = CGSize(width: 132, height: 164)
-        /// Questions per custom pack, as in the summary copy ("Custom pack · 30
-        /// questions") and `PackOrderService.targetCount`.
-        static let packSize = 30
     }
 }
 

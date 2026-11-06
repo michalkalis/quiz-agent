@@ -98,7 +98,7 @@ extension AppScreen {
         let service = MockPackOrderService(getResult: .success(orderSnapshot))
         let vm = OrderPackViewModel(
             service: service,
-            purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"),
+            purchaseService: MockPackPurchaseService(prices: [.ten: "3,49 €", .thirty: "8,99 €"]),
             adminKeyAvailable: { true },
             // Pinned to the server default, and no live fetch: the menu must not
             // depend on what the test host happens to have cached.

@@ -38,7 +38,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
     "paywall_viewed": ["source"],
-    "purchase_result": ["product_id", "kind", "outcome"],
+    "purchase_result": ["product_id", "kind", "outcome", "question_count"],
     "restore_result": ["outcome"],
     "sign_in_prompt_shown": ["kind"],
     "sign_in_prompt_result": ["kind", "outcome"],
@@ -75,7 +75,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
     .paywallViewed(source: .quota),
-    .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),
+    .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success, questionCount: 30),
     .restoreResult(outcome: .nothingToRestore),
     .signInPromptShown(kind: .customPack),
     .signInPromptResult(kind: .credit, outcome: .signedIn),
@@ -389,7 +389,7 @@ struct PurchaseAnalyticsTests {
         await vm.submit()
 
         #expect(analytics.events == [.purchaseResult(
-            productId: StoreKitPackPurchaseService.productId, kind: .customPack, outcome: .cancelled
+            productId: "pack_30", kind: .customPack, outcome: .cancelled, questionCount: 30
         )])
     }
 }

@@ -105,6 +105,10 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
     let difficulty: PackDifficulty?
     /// StoreKit proof authorising this order; nil = Debug admin path.
     let paymentProof: PackPaymentProof?
+    /// #228.6: the pack size ordered. With a proof it is the size that proof
+    /// paid for, whatever was asked: the server sizes the pack from the
+    /// receipt's product, so the intent can never disagree with it.
+    let size: PackSize
 
     init(
         prompt: String,
@@ -112,10 +116,12 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
         category: String?,
         theme: String?,
         difficulty: PackDifficulty? = nil,
+        size: PackSize = .standard,
         paymentProof: PackPaymentProof? = nil,
         idempotencyKey: String = "admin-\(UUID().uuidString)"
     ) {
         self.idempotencyKey = paymentProof?.transactionId ?? idempotencyKey
+        self.size = paymentProof.flatMap { PackSize(productId: $0.productId) } ?? size
         self.prompt = prompt
         self.language = language
         self.category = category

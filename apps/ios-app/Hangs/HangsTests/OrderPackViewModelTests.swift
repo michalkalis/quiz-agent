@@ -378,11 +378,11 @@ struct OrderPackViewModelTests {
     // number — when StoreKit can't answer.
     @Test("the summary price comes from StoreKit, and is absent when it can't load")
     func priceLoadsFromPurchaseService() async {
-        let priced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"))
+        let priced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(prices: [.thirty: "8,99 €"]))
         await priced.loadPrice()
         #expect(priced.packPrice == "8,99 €")
 
-        let unpriced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: nil))
+        let unpriced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(prices: [:]))
         await unpriced.loadPrice()
         #expect(unpriced.packPrice == nil)
     }

@@ -3192,19 +3192,19 @@
         }
       }
     },
-    "Custom pack · 30 questions" : {
-      "comment" : "Label of the custom-pack order summary card",
+    "Custom pack · %lld questions" : {
+      "comment" : "Order summary label (#228.6): the custom pack and how many questions the chosen size has (10 or 30)",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vlastní balíček · 30 otázek"
+            "value" : "Vlastní balíček · %lld otázek"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vlastný balík · 30 otázok"
+            "value" : "Vlastný balík · %lld otázok"
           }
         }
       }
@@ -6368,6 +6368,23 @@
         }
       }
     },
+    "Number of questions" : {
+      "comment" : "Order summary row (#228.6): the 10 | 30 pack size switch",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Počet otázek"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Počet otázok"
+          }
+        }
+      }
+    },
     "OK" : {
       "comment" : "Dismiss button on the account-deletion result alert",
       "localizations" : {
@@ -7152,6 +7169,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pauza"
+          }
+        }
+      }
+    },
+    "Pay %@ & create pack" : {
+      "comment" : "Order summary button (#228.6): pay the shown App Store price and start the custom pack; %@ is the localized price",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaplať %@ a vytvoř balíček"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaplať %@ a vytvor balík"
           }
         }
       }

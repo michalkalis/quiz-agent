@@ -15,7 +15,7 @@ import {FONT, INK, tintFor} from './theme';
 
 export const appDemoFrames = (props: AppDemoProps, fps: number) => buildTimeline(props.segments, fps).frames + (props.endCard ? Math.round(END_CARD_S * fps) : 0);
 
-type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number};
+type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number; restScale?: number};
 
 // Zoomed content stops well under the texts: fully hidden down to 30 px under the band, fully shown from the phone's resting top.
 const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom + 30}px, #000 ${PHONE_TOP}px)`;
@@ -24,7 +24,7 @@ const PHONE_MASK = `linear-gradient(to bottom, transparent ${TOP_BAND.bottom + 3
 const useCamera = (rig: Rig) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const cam = cameraAt(rig.keys, Math.min(frame, rig.frames), fps, restCam(rig.rec));
+	const cam = cameraAt(rig.keys, Math.min(frame, rig.frames), fps, restCam(rig.rec, rig.restScale));
 	return cameraTransform(cam, rig.rec, rig.box);
 };
 
@@ -70,7 +70,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 	const box = phoneBox(rec);
 	const tl = buildTimeline(props.segments, fps);
 
-	const rig: Rig = {keys: cameraKeys(props, tl, fps), rec, box, frames: tl.frames};
+	const rig: Rig = {keys: cameraKeys(props, tl, fps), rec, box, frames: tl.frames, restScale: props.restScale};
 
 	const ripples: Ripple[] = [];
 	for (const t of props.taps ?? []) {

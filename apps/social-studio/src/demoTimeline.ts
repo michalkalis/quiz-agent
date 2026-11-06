@@ -57,7 +57,7 @@ export const startsSegment = (tl: Timeline, t: number) => tl.segments.some((s) =
 
 /** Camera keys in output frames: explicit zooms in/out, plus a small nudge on taps outside any zoom. A zoom that starts with a cut starts there at once, like the cut. */
 export const cameraKeys = (props: AppDemoProps, tl: Timeline, fps: number): Key[] => {
-	const rest: Cam = {s: 1, x: props.recordingSize.w / 2, y: props.recordingSize.h / 2};
+	const rest = restCam(props.recordingSize, props.restScale);
 	const keys: Key[] = [];
 	const zoomSpans: [number, number][] = [];
 	for (const z of props.zooms ?? []) {
@@ -109,15 +109,15 @@ const FOCUS_FULL_AT = 1.2;
 
 /**
  * CSS transform (origin = phone centre) for camera.s.
- * Horizontally the camera zooms about its point; vertically it brings the point up to FOCUS_CY,
+ * It brings its point to the middle of the frame horizontally (as far as the phone still covers the frame) and up to FOCUS_CY vertically,
  * the free space under the caption band, so the zoomed content never sits under a text (AppDemo clips the phone below the band). The
  * phone never opens a gap above its resting top, and its bottom always reaches the safe bottom.
  */
 export const cameraTransform = (cam: Cam, rec: {w: number; h: number}, box: PhoneBox) => {
 	const px = PHONE_CX - box.screenW / 2 + (cam.x / rec.w) * box.screenW;
 	const py = PHONE_CY - box.screenH / 2 + (cam.y / rec.h) * box.screenH;
-	const tx = clampShift((1 - cam.s) * (px - PHONE_CX), PHONE_CX, box.outerW, cam.s, W);
 	const pull = Math.min(1, Math.max(0, (cam.s - 1) / (FOCUS_FULL_AT - 1)));
+	const tx = clampShift((PHONE_CX - px) * pull + (1 - cam.s) * (px - PHONE_CX), PHONE_CX, box.outerW, cam.s, W);
 	const target = py + (FOCUS_CY - py) * pull;
 	const half = (cam.s * box.outerH) / 2;
 	const tyMax = PHONE_TOP - (PHONE_CY - half);
@@ -126,4 +126,4 @@ export const cameraTransform = (cam: Cam, rec: {w: number; h: number}, box: Phon
 	return {tx, ty, scale: cam.s};
 };
 
-export const restCam = (rec: {w: number; h: number}): Cam => ({s: 1, x: rec.w / 2, y: rec.h / 2});
+export const restCam = (rec: {w: number; h: number}, s = 1): Cam => ({s, x: rec.w / 2, y: rec.h / 2});

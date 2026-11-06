@@ -39,6 +39,8 @@ export type AppDemoProps = {
 	endWord?: string;
 	/** A voice clip over the end card (staticFile path), from its start. */
 	endAudio?: string;
+	/** Camera scale when no zoom is on (default 1). Below 1 the whole phone shows, smaller, its top still just under the caption band. */
+	restScale?: number;
 	/** Background tint, a category name from theme.ts (default: general = cobalt). */
 	category?: string;
 };

@@ -144,7 +144,7 @@ vlastníctva platených dát), poradie zlúčenia voči 409, a voľba RevenueCat
   8. Over: v Profile je tvoje meno, kredit a Plus sedia, balík je v Moje balíky a hrá sa, štatistiky sú rovnaké.
   9. Napíš agentovi „OK“ alebo pošli snímku toho, čo nesedí (Feedback v appke stačí).
   - Hotovo: všetkých 8 bodov sedí → zaškrtnúť aj #61 akceptáciu, #78 a #140 leg 2 (v TODO riadok presunutý sem).
-- [ ] **217.11 Verzia na vydanie a podanie** — agent; podanie na povel foundera
+- [x] **217.11 Verzia na vydanie a podanie** — agent; podanie na povel foundera. **2026-11-06 PODANÉ** (founder „rozhodni“, podanie paralelne s TF testom 217.10): 1.2 build 84 (`ios/1.2-b84-store`) `WAITING_FOR_REVIEW`, vydanie po schválení + phased 7 dní, s ním `pack_10` (#228). Appka volá `api`/`pack.trubbo.app` (PR #752), nové texty + Čo je nové; skript vie založiť ďalšiu verziu (PR #753). Ak 217.10 nájde chybu: „Remove from Review“ → nový `-store` build → znova podať.
   - Čo: podľa otázky 1. Ak ide 1.2: po vydaní alebo stiahnutí 1.1 PR so zvýšením `MARKETING_VERSION`;
     lokálne skompilovať Release-Prod; skontrolovať prepínače (217.8); App Store build
     `gh workflow run ios-release.yml --ref main -f environment=production -f store=true`; founder ho v TF

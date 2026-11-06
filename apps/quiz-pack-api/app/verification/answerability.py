@@ -34,6 +34,13 @@ logger = logging.getLogger(__name__)
 
 _ARTICLES = ("the ", "a ", "an ")
 _INFLECTED_LANGUAGES = frozenset({"sk", "cs"})
+# #228.3: the blind-attempt check model. Picked over deepseek-v4-flash on the
+# 2026-11-06 eval (docs/testing/runs/answerability-eval-2026-11-06): keeps
+# 52/53 good questions vs 44, drops more genuinely ambiguous ones, and the
+# founder's blind review agreed with it most. Scoped to this checker only —
+# the shared factory ANSWERABILITY role (regional, shape classifier) is
+# unchanged. ANSWERABILITY_MODEL still overrides.
+CHECK_MODEL = "google/gemini-4-argon"
 
 _PROMPT = """You are a strong quiz player. Answer the question below. You cannot look anything up — use reasoning, estimation, elimination and general knowledge. Commit to your single best answer, written in the language of the question.
 
@@ -52,7 +59,9 @@ class AnswerabilityResult:
 
 def _normalize(text: str) -> str:
     # #192: keep letters of any alphabet (Slovak/Czech pack answers).
-    text = re.sub(r"[^\w ]+|_", " ", text.lower()).strip()
+    # Apostrophes vanish rather than split: "April Fool's" = "April Fools".
+    text = re.sub(r"['’]", "", text.lower())
+    text = re.sub(r"[^\w ]+|_", " ", text).strip()
     for article in _ARTICLES:
         if text.startswith(article):
             text = text[len(article):]
@@ -108,7 +117,7 @@ class AnswerabilityChecker:
         self._model = (
             model
             or feature_flags.answerability_model()
-            or llm_factory.ANSWERABILITY
+            or CHECK_MODEL
         )
         self._client = None
 

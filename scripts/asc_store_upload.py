@@ -91,7 +91,10 @@ def promo_text_only(app_id: str) -> None:
 
 def step_listing(app_id: str) -> None:
     print("listing")
-    info = next(i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION")
+    info = next((i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION"), None)
+    if info is None:
+        print("  no editable app info: every version is on sale, run the version step first")
+        return
     cat = txt(MD / "primary_category.txt")
     cur_cat = (get(f"/appInfos/{info['id']}/primaryCategory").get("data") or {}).get("id")
     if cat and cur_cat != cat:
@@ -113,14 +116,16 @@ def step_listing(app_id: str) -> None:
     copyright_ = txt(MD / "copyright.txt")
     if copyright_ and ver["attributes"].get("copyright") != copyright_:
         send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"copyright": copyright_}}})
+    released = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": "READY_FOR_SALE"})["data"]
     existing = get(f"/appStoreVersions/{ver['id']}/appStoreVersionLocalizations").get("data", [])
     for loc in LOCALES:
         d = MD / loc
-        # whatsNew is rejected on a first version, so release_notes.txt is not sent.
-        upsert("appStoreVersionLocalizations", existing, loc,
-               {"description": txt(d / "description.txt"), "keywords": txt(d / "keywords.txt"),
-                "promotionalText": txt(d / "promotional_text.txt"), "supportUrl": txt(d / "support_url.txt"),
-                "marketingUrl": txt(d / "marketing_url.txt")},
+        fields = {"description": txt(d / "description.txt"), "keywords": txt(d / "keywords.txt"),
+                  "promotionalText": txt(d / "promotional_text.txt"), "supportUrl": txt(d / "support_url.txt"),
+                  "marketingUrl": txt(d / "marketing_url.txt")}
+        if released:  # whatsNew is rejected on a first version
+            fields["whatsNew"] = txt(d / "release_notes.txt")
+        upsert("appStoreVersionLocalizations", existing, loc, fields,
                ("appStoreVersion", "appStoreVersions", ver["id"]))
 
 
@@ -320,8 +325,14 @@ def marketing_version() -> str:
 
 
 def step_version(app_id: str) -> None:
-    """The App Store version record follows the app's MARKETING_VERSION (the redesign ships as 1.1)."""
+    """The App Store version record follows the app's MARKETING_VERSION; once the last one is on sale, create the next."""
     print("version")
+    if not get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})["data"]:
+        send("POST", "/appStoreVersions", {"data": {"type": "appStoreVersions",
+                                                     "attributes": {"platform": "IOS", "versionString": marketing_version(),
+                                                                    "releaseType": "AFTER_APPROVAL"},
+                                                     "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+        return
     ver = editable_version(app_id)
     if ver["attributes"]["versionString"] != (v := marketing_version()):
         send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"versionString": v}}})
@@ -482,6 +493,8 @@ def main() -> int:
     app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
     copy = json.loads((FL / "store_copy.json").read_text())
     steps = args.steps.split(",")
+    if "version" in steps:  # first: listing needs the editable version it may create
+        step_version(app_id)
     if "listing" in steps:
         step_listing(app_id)
     if "review" in steps:
@@ -494,8 +507,6 @@ def main() -> int:
         step_iap(app_id, copy)
     if "screenshots" in steps:
         step_screenshots(app_id)
-    if "version" in steps:
-        step_version(app_id)
     if "age-rating" in steps:
         step_age_rating(app_id)
     if "beta-group" in steps:

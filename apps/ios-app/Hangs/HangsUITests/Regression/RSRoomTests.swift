@@ -42,9 +42,13 @@ final nonisolated class RSRoomTests: XCTestCase {
         XCTAssertTrue(room.player("p_other").exists, "RS-28: joined player missing from the lobby")
         // #213.8: a game together reveals at the end by default; this run
         // plays the per-question reveal, picked in the lobby's rules.
+        room.lobbyRules.tap()
+        XCTAssertTrue(room.rulesReveal.waitForExistence(timeout: 5), "RS-28: rules sheet missing")
         room.rulesReveal.tap()
         XCTAssertTrue(room.revealOption("question").waitForExistence(timeout: 5), "RS-28: reveal choices missing")
         room.revealOption("question").tap()
+        room.rulesDone.tap()
+        XCTAssertTrue(room.startButton.waitForExistence(timeout: 5), "RS-28: start missing after the rules sheet")
         room.startButton.tap()
 
         // Question 1 (A–D) opens after the read-aloud.
@@ -87,16 +91,19 @@ final nonisolated class RSRoomTests: XCTestCase {
             room.nameField.typeText("Michal")
             room.nameSave.tap()
         }
-        XCTAssertTrue(room.rulesTime.waitForExistence(timeout: 10), "RS-32: rules card missing in the host lobby")
-        XCTAssertTrue(room.spoken(room.rulesReveal).contains("At the end of the quiz"), "RS-32: reveal default is not at the end")
-        XCTAssertTrue(room.spoken(room.rulesTime).contains("30 s"), "RS-32: answer time default is not 30 s")
+        // #224: the lobby shows the rules as one row; the sheet changes them.
+        XCTAssertTrue(room.lobbyRules.waitForExistence(timeout: 10), "RS-32: rules row missing in the host lobby")
+        XCTAssertTrue(room.spoken(room.lobbyRules).contains("At the end of the quiz"), "RS-32: reveal default is not at the end")
+        XCTAssertTrue(room.spoken(room.lobbyRules).contains("30 s"), "RS-32: answer time default is not 30 s")
+        room.lobbyRules.tap()
+        XCTAssertTrue(room.rulesReveal.waitForExistence(timeout: 5), "RS-32: reveal is not editable in the lobby's sheet")
         XCTAssertTrue(room.rulesReadsAloud.exists, "RS-32: read-aloud switch missing")
 
-        room.rulesTime.tap()
         XCTAssertTrue(room.timeOption(45).waitForExistence(timeout: 5), "RS-32: answer time choices missing")
         room.timeOption(45).tap()
-        let updated = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "45 s", "45 s")
-        let wait = XCTNSPredicateExpectation(predicate: updated, object: room.rulesTime)
+        room.rulesDone.tap()
+        let updated = NSPredicate(format: "label CONTAINS %@", "45 s")
+        let wait = XCTNSPredicateExpectation(predicate: updated, object: room.lobbyRules)
         XCTAssertEqual(XCTWaiter().wait(for: [wait], timeout: 5), .completed, "RS-32: answer time did not change to 45 s")
         RSFlow.assertAlive(app, "RS-32 host")
 

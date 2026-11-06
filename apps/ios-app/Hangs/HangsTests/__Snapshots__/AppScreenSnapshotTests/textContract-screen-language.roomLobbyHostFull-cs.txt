@@ -1,0 +1,34 @@
+# texts
+Hra spolu
+Naskenuj a přidej se
+Hráči ve stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu.
+Pošli odkaz
+Přidej se k mé hře v Trubbu
+Hráči
+4
+M
+Michal
+ty · hostitel
+J
+Jana
+P
+Peťo
+Z
+Zuzka
+Pravidla hry
+10 otázek · Random · At the end of the quiz · 30 s
+Začni hru
+# identifiers
+room.close
+room.qr
+room.share
+room.player.p_you
+room.player.p_other
+room.player.remove.p_other
+room.player.p_guest0
+room.player.remove.p_guest0
+room.player.p_guest1
+room.player.remove.p_guest1
+room.lobby.rules
+room.lobby.summary
+room.start

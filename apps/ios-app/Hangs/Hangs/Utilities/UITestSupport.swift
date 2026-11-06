@@ -27,7 +27,7 @@
         private static var mockNetwork: MockNetworkService?
         private static var mockRooms: MockRoomService?
         /// #212: where a test's join link lands, as if the player opened it.
-        static weak var roomInvites: RoomInviteInbox?
+        weak static var roomInvites: RoomInviteInbox?
         /// #213.8: the host's game-together rules, emptied once per launch so
         /// every RS run starts from the defaults (a test's change never leaks).
         static let roomSettingsDefaults: UserDefaults = {
@@ -211,6 +211,9 @@
             if CommandLine.arguments.contains("--ui-test-room-nearby") {
                 rooms.nearby = [NearbyRoom(roomId: MockRoomService.roomId, hostName: "Michal", hostColor: "#ff6b2c", playerCount: 1)]
             }
+            if CommandLine.arguments.contains("--ui-test-room-full") {
+                rooms.extraGuests = ["Peťo", "Zuzka"]
+            }
             if CommandLine.arguments.contains("--ui-test-room-round") {
                 rooms.revealMode = .round
             }
@@ -263,7 +266,6 @@
             silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.0))
             return true
         }
-
 
         /// Register the live command sink. Called by `AppState.sharedQuizViewModel()`
         /// once the real `QuizViewModel` exists. A later registration replaces the

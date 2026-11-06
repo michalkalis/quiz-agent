@@ -44,7 +44,7 @@ enum AppScreen: String, CaseIterable {
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
     case myPacks, myPacksLoadFailed
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
-    case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules
+    case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
     case profile, profileNewPlayer, profileLoadFailed, allStats
     case recapShareImage
 

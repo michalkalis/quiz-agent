@@ -167,6 +167,43 @@ async def test_slovak_answer_with_another_ending_is_not_a_miss() -> None:
     assert (await checker.check(question)).passed is False
 
 
+def test_apostrophe_spelling_is_not_a_miss() -> None:
+    """2026-11-06 eval: "April Fools' Day" was dropped against "April Fool's
+    Day" because the apostrophe split "fool s". A right answer spelled with
+    the apostrophe elsewhere must pass, or good questions cost extra top-ups."""
+    assert _text_answers_match("April Fools' Day (1 April)", ["April Fool's Day"])
+    assert not _text_answers_match("Halloween", ["April Fool's Day"])
+
+
+@pytest.mark.asyncio
+async def test_slovak_short_words_in_a_longer_answer_still_match() -> None:
+    """2026-11-06 eval: "Pretože bol už mŕtvy" was dropped against "Bol mŕtvy":
+    the 3-letter word "bol" never met the 4-letter stem bar even though it is
+    the identical word. A right answer said in a full sentence must pass."""
+    question = _question(
+        question="Prečo sa Formosus na súde nemohol brániť?",
+        correct_answer="Bol mŕtvy",
+        language="sk",
+    )
+    checker = _checker_returning(
+        '{"answer": "Pretože bol už mŕtvy (exhumovaná mŕtvola).", "gave_up": false, "issue": null}'
+    )
+    assert (await checker.check(question)).passed is True
+
+    # Still strict: one shared short word alone is not the answer.
+    checker = _checker_returning('{"answer": "Bol chorý", "gave_up": false, "issue": null}')
+    assert (await checker.check(question)).passed is False
+
+
+def test_default_check_model_is_the_evaluated_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#228.3: the founder approved Gemini 4 Argon for this check on eval data;
+    the shared flash-class ANSWERABILITY role must not silently come back."""
+    monkeypatch.delenv("ANSWERABILITY_MODEL", raising=False)
+    assert AnswerabilityChecker()._model == "google/gemini-4-argon"
+    monkeypatch.setenv("ANSWERABILITY_MODEL", "deepseek-v4-flash")
+    assert AnswerabilityChecker()._model == "deepseek-v4-flash"
+
+
 @pytest.mark.asyncio
 async def test_english_answers_get_no_stem_tolerance() -> None:
     """Prefix matching is only safe for inflected languages; in English it would

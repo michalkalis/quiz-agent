@@ -86,7 +86,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 
 	const marks: MarkBox[] = (props.marks ?? []).flatMap((m) => {
 		const r = mapRange(tl, m.from, m.to);
-		return r ? [{frames: Math.round((r[1] - r[0]) * fps), start: Math.round(r[0] * fps), x: m.x, y: m.y, w: m.w, h: m.h, style: m.style, r: m.r, alpha: m.alpha}] : [];
+		return r ? [{frames: Math.round((r[1] - r[0]) * fps), start: Math.round(r[0] * fps), x: m.x, y: m.y, w: m.w, h: m.h, style: m.style, r: m.r, alpha: m.alpha, prev: m.prev, hold: m.hold}] : [];
 	});
 
 	const captions = oneAtATime((props.captions ?? []).flatMap((c) => mapCaption(tl, c, fps)));

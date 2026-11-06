@@ -5,7 +5,7 @@ import {Easing, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import type {DemoMarkStyle} from './demoTypes';
 
 /** A mark in output frames (relative to its Sequence) and screen pixels. */
-export type MarkBox = {start: number; frames: number; x: number; y: number; w: number; h: number; style: DemoMarkStyle; r?: number; alpha?: number};
+export type MarkBox = {start: number; frames: number; x: number; y: number; w: number; h: number; style: DemoMarkStyle; r?: number; alpha?: number; prev?: {x: number; y: number; w: number; h: number}; hold?: boolean};
 
 const ORANGE = '#FF6B2C';
 const INDIGO = '#3B3FD8';
@@ -73,6 +73,18 @@ export const DemoMark: React.FC<{m: MarkBox}> = ({m}) => {
 		const o = draw.p * draw.o * (m.alpha ?? 1);
 		const shadow = m.style === 'glow' ? `0 10px 26px rgba(59,63,216,${0.34 * o}), 0 3px 8px rgba(17,18,22,${0.14 * o})` : `0 0 24px 3000px rgba(0,0,0,${0.15 * o})`;
 		return <div style={{position: 'absolute', left: m.x - pad, top: m.y - pad, width: m.w + 2 * pad, height: m.h + 2 * pad, borderRadius: (m.r ?? 12) + pad, boxShadow: shadow, transform: m.style === 'glow' ? `translateY(${-3 * o}px) scale(${1 + 0.02 * o})` : undefined}} />;
+	}
+	if (m.style === 'band') {
+		// Line-follow band behind the spoken line on a coloured card: soft white, slides from the previous line, fades only at the ends.
+		const frame = useCurrentFrame();
+		const {fps} = useVideoConfig();
+		const mv = m.prev ? interpolate(frame, [0, 0.3 * fps], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)}) : 1;
+		const at = (a: number, b: number) => a + (b - a) * mv;
+		const b = m.prev ? {x: at(m.prev.x, m.x), y: at(m.prev.y, m.y), w: at(m.prev.w, m.w), h: at(m.prev.h, m.h)} : m;
+		const o = (m.prev ? 1 : draw.p) * (m.hold ? 1 : draw.o) * (m.alpha ?? 1);
+		const px = 14;
+		const py = 6;
+		return <div style={{position: 'absolute', left: b.x - px, top: b.y - py, width: b.w + 2 * px, height: b.h + 2 * py, borderRadius: (b.h + 2 * py) / 2.6, background: '#FFFFFF', opacity: 0.18 * o}} />;
 	}
 	if (m.style === 'tint') {
 		const pad = 6;

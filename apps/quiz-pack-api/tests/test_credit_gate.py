@@ -24,9 +24,10 @@ TODAY = date(2026, 10, 15)
 def _env(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
     monkeypatch.setenv("ANTHROPIC_ADMIN_KEY", "sk-ant-admin-test")
-    monkeypatch.setenv("ANTHROPIC_CREDIT_START", "2026-10-09")
-    monkeypatch.setenv("ANTHROPIC_CREDIT_EXPIRES", "2026-11-06")
-    monkeypatch.delenv("ANTHROPIC_CREDIT_USD", raising=False)
+    # The period is committed code now; tests pin their own.
+    monkeypatch.setattr(credit_gate, "CREDIT_START", date(2026, 10, 9))
+    monkeypatch.setattr(credit_gate, "CREDIT_EXPIRES", date(2026, 11, 6))
+    monkeypatch.setattr(credit_gate, "CREDIT_USD", 200.0)
     monkeypatch.delenv("ANTHROPIC_CREDIT_RESERVE_USD", raising=False)
 
 
@@ -74,7 +75,7 @@ def test_reserve_reached_switches_to_session():
 
 
 def test_custom_budget_and_reserve(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_CREDIT_USD", "100")
+    monkeypatch.setattr(credit_gate, "CREDIT_USD", 100.0)
     monkeypatch.setenv("ANTHROPIC_CREDIT_RESERVE_USD", "10")
     assert (
         credit_gate.decide(TODAY, client=_client([["8900"]])).route == credit_gate.API
@@ -90,7 +91,6 @@ def test_custom_budget_and_reserve(monkeypatch):
     [
         ("ANTHROPIC_ADMIN_KEY", TODAY),
         ("ANTHROPIC_API_KEY", TODAY),
-        ("ANTHROPIC_CREDIT_START", TODAY),
         (None, date(2026, 11, 6)),  # expiry day: the credit is gone
         (None, date(2026, 10, 8)),  # before the credit was granted
     ],

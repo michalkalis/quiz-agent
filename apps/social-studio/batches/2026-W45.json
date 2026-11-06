@@ -876,6 +876,35 @@
    ],
    "tiktok_buffer": "6ae8eee5fb05897d9d3aa810",
    "note": "Deleted 2026-11-02 on founder request (no voice, redo later)."
+  },
+  {
+   "key": "demo-ig_en",
+   "account": "ig_en",
+   "day": "Fri",
+   "format": "demo",
+   "language": "en",
+   "date": "2026-11-06",
+   "files": [
+    "demo-en.mp4",
+    "demo-en.jpg"
+   ],
+   "caption": "Trubbo is a voice quiz for iPhone with fun questions. Play alone or with friends on the same Wi-Fi. Free on the App Store.",
+   "voice": "app voice + narrator (ElevenLabs), AppDemo v16",
+   "ai_generated": true,
+   "questions": [],
+   "status": "published",
+   "publish_at": "2026-11-06T20:20:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/demo-en.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W45/demo-en.jpg"
+   ],
+   "tiktok_buffer": "6aee3876d6bbae6fa1467053",
+   "links": {
+    "instagram": "https://www.instagram.com/reel/DfadnqFjldT/",
+    "facebook": "https://www.facebook.com/reel/1008073014903129/",
+    "youtube": "https://youtube.com/shorts/qqhqucwq6M4"
+   },
+   "note": "App promo video, published by hand 2026-11-06 (founder approved). Facebook and YouTube text carry the App Store link (ct=fb_en / yt_en)."
   }
  ]
 }

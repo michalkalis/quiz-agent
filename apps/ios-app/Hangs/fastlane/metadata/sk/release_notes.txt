@@ -1,1 +1,5 @@
-Prvé vydanie.
+Nový vzhľad: hra je rýchlejšie po ruke a výsledky sú pokojnejšie.
+Rýchly kvíz spustíš jedným ťuknutím, kategórie si vyberieš ťuknutím.
+Pri vlastnom balíku si zvolíš obťažnosť: ľahká, stredná, ťažká alebo mix.
+Nákupy a pokrok idú s tvojím Apple účtom, nestratíš ich ani na novom telefóne.
+Kopa drobných opráv a vylepšení.

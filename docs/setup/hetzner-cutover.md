@@ -15,7 +15,7 @@ Moves production from Fly to `trubbo-prod-1` (2.31.163.95, see [`infra/hetzner/R
 - [ ] Forwarder rehearsal green: `infra/fly-forwarder/rehearse.sh` (throwaway Fly app, cents; passed 2026-11-03).
 - [ ] Fly secret `FORWARDER_SECRET` staged on both apps, value straight from the server: `ssh trubbo-prod 'cat trubbo/repo/infra/hetzner/env/forwarder.env' | env -u FLY_API_TOKEN fly secrets import -a <app> --stage`.
 - [ ] Note the rollback images: `fly releases -a <app> --image` for `quiz-agent-api` and `quiz-pack-api`.
-- [ ] `CUT_SHA` = the newer of the tags `deployed/quiz-agent` and `deployed/quiz-pack-api` (the code Fly runs). Hetzner starts on exactly that code, so no migration runs and the way back stays open.
+- [ ] `CUT_SHA` = the newer of the tags `deployed/quiz-agent` and `deployed/quiz-pack-api` (the code Fly runs), as the full 40-char sha (`git rev-parse`; deploy-ssh refuses short ones). Hetzner starts on exactly that code, so no migration runs and the way back stays open.
 - [ ] No Backend Deploy run from step 1 until the go decision (step 6).
 - [ ] Time: a quiet hour, outside 02:00–05:00 UTC (nightly backup 02:17, server auto-reboot 04:30) and not Wednesday 03:00 UTC (fresh top-up).
 
@@ -29,7 +29,7 @@ Moves production from Fly to `trubbo-prod-1` (2.31.163.95, see [`infra/hetzner/R
 
 1. Maintenance on, orders off: PUT `https://quiz-agent-api.fly.dev/api/v1/admin/app-switches` with `{"set": {"maintenance_enabled": true, "orders_enabled": false, "maintenance_sk": "Sťahujeme sa na nový server, o pár minút sme späť.", "notice_sk": "Krátka údržba, o pár minút sme späť."}}` (plus `_cs` / `_en`). Note the time (`FREEZE_AT`, UTC).
 2. Wait 90 s (the clients' switch cache is 60 s).
-3. Deploy the forwarder onto both apps, from `infra/fly-forwarder/`: `fly deploy -c fly.<app>.toml -a <app> --yes`. For `quiz-pack-api` flyctl lists that it destroys the `web` and `worker` machines: that is the point. From here on `*.fly.dev` reaches the stopped Hetzner apps, so Apple and RevenueCat get errors and retry later: nothing is acknowledged that the new database would miss.
+3. Deploy the forwarder onto both apps, from `infra/fly-forwarder/`: `fly deploy -c fly.<app>.toml -a <app> --strategy immediate --ha=false --yes`. `immediate` because the forwarder's health check goes to the stopped Hetzner apps, so a rolling deploy would wait on checks that cannot pass yet. For `quiz-pack-api` flyctl lists that it destroys the `web` and `worker` machines: that is the point. From here on `*.fly.dev` reaches the stopped Hetzner apps, so Apple and RevenueCat get errors and retry later: nothing is acknowledged that the new database would miss.
 
 ## 3. Move the data
 

@@ -76,6 +76,33 @@
     "Vlastní balíček, 30 otázek",
     "30 otázek na téma, které si vybereš"
    ]
+  },
+  "pack_10": {
+   "en-GB": [
+    "Custom Pack, 10 Questions",
+    "10 questions on a topic you choose"
+   ],
+   "en-US": [
+    "Custom Pack, 10 Questions",
+    "10 questions on a topic you choose"
+   ],
+   "sk": [
+    "Vlastný balík, 10 otázok",
+    "10 otázok na tému, ktorú si vyberieš"
+   ],
+   "cs": [
+    "Vlastní balíček, 10 otázek",
+    "10 otázek na téma, které si vybereš"
+   ]
+  }
+ },
+ "iap_create": {
+  "_comment": "Consumables the iap-create step creates when missing in App Store Connect (existing ones are never changed). price = customer price in the base territory copied from `mirror`; availability is copied from `mirror`; other territories follow Apple's equalization.",
+  "pack_10": {
+   "reference_name": "Custom Pack 10",
+   "mirror": "pack_30",
+   "price": "3.49",
+   "review_note": "Consumable custom pack: 10 quiz questions generated on a topic the user types in. Purchase from Settings > Custom pack. Generation takes a few minutes; the quiz becomes playable from the first batch of questions."
   }
  }
 }

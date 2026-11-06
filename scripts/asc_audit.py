@@ -115,7 +115,8 @@ def main() -> int:
         iid = iap["id"]
         loc = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{iid}/inAppPurchaseLocalizations")
         row["localizations"] = [attrs(l) for l in loc.get("data", [])]
-        sched = get(f"/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
+        v2 = BASE.replace("/v1", "/v2")  # these relationships exist only on the v2 path
+        sched = get(f"{v2}/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
         if "_error" not in sched and sched.get("data"):
             sid = sched["data"]["id"]
             row["baseTerritory"] = (sched["data"].get("relationships", {}).get("baseTerritory", {}).get("data") or {}).get("id")
@@ -125,9 +126,9 @@ def main() -> int:
             row["automaticPrices_watch"] = prices_with_points(auto, "inAppPurchasePricePoint")
         else:
             row["priceSchedule"] = sched
-        shot = get(f"/inAppPurchases/{iid}/appStoreReviewScreenshot")
+        shot = get(f"{v2}/inAppPurchases/{iid}/appStoreReviewScreenshot")
         row["reviewScreenshot"] = attrs(shot["data"]).get("assetDeliveryState") if shot.get("data") else shot.get("_error", "none")
-        av = get(f"/inAppPurchases/{iid}/inAppPurchaseAvailability", include="availableTerritories", limit=200)
+        av = get(f"{v2}/inAppPurchases/{iid}/inAppPurchaseAvailability", include="availableTerritories")
         row["availability"] = {"availableInNewTerritories": av.get("data", {}).get("attributes", {}).get("availableInNewTerritories"), "territoryCount": len(av.get("included", []))} if "_error" not in av else av
         report["inAppPurchases"].append(row)
 

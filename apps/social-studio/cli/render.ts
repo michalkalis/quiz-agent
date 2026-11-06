@@ -154,19 +154,17 @@ async function explainTrack(raw: QuestionInput, q: ReelQuestion): Promise<Explai
 
 type QuestionTrack = Pick<ReelProps, 'audio' | 'words' | 'questionMs' | 'optionsAtMs' | 'optionAtMs'>;
 
-/** Where each MCQ option starts in the spoken text ("… Jedna: X. Dva: Y."), as a
- * fraction of its non-space characters (whisper's characters carry no spaces). */
-function optionFracs(spoken: string, stemChars: number, options: string[]): number[] {
-	const solid = (s: string) => s.replace(/\s+/g, '').length;
-	const total = solid(spoken);
+/** Where each MCQ option starts in the spoken text ("… Jedna: X. Dva: Y."): the
+ * offset of its label, or of the option itself when it has none. */
+function optionStarts(spoken: string, stemChars: number, options: string[]): number[] {
 	let from = stemChars;
 	return options.map((opt, i) => {
 		const hit = spoken.indexOf(opt, from);
-		if (hit < 0) return Math.min(1, (solid(spoken.slice(0, stemChars)) + ((total - solid(spoken.slice(0, stemChars))) * i) / options.length) / total);
+		if (hit < 0) return Math.round(stemChars + ((spoken.length - stemChars) * i) / options.length);
 		const colon = spoken.lastIndexOf(':', hit);
 		const labelStart = colon > from - 1 ? spoken.lastIndexOf(' ', colon) + 1 : hit;
 		from = hit + opt.length;
-		return solid(spoken.slice(0, labelStart)) / total;
+		return labelStart;
 	});
 }
 
@@ -186,8 +184,8 @@ async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<Quest
 	const spoken = raw.spoken_text ?? [q.question, ...q.options].join(' ');
 	const share = q.options.length ? Math.min(1, raw.question.length / spoken.length) : 1;
 	// Plus the end of the clip, so the last option stops being marked when the voice stops.
-	const fracs = q.options.length ? [...optionFracs(spoken, raw.question.length, q.options), 1] : [];
-	const {words, optionsAtMs, extraMs} = await timeWords(file, q.language, displayWords, share, fracs);
+	const offsets = q.options.length ? [...optionStarts(spoken, raw.question.length, q.options), spoken.length] : [];
+	const {words, optionsAtMs, extraMs} = await timeWords(file, q.language, displayWords, share, {text: spoken, offsets});
 	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, optionAtMs: extraMs};
 }
 

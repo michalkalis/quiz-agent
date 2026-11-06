@@ -11,6 +11,7 @@ import {
 	toCaptions,
 } from '@remotion/install-whisper-cpp';
 import type {Language, TimedWord} from '../src/types';
+import {alignTimes, type Spoken} from './align';
 import {APP_DIR, CACHE_DIR} from './paths';
 
 // Remotion's bundled ffmpeg/ffprobe: no dependency on a system install.
@@ -27,8 +28,6 @@ export async function ensureWhisper(): Promise<void> {
 	await installWhisperCpp({to: WHISPER_DIR, version: WHISPER_VERSION, printOutput: false});
 	await downloadWhisperModel({folder: WHISPER_DIR, model: MODEL, printOutput: false});
 }
-
-type Spoken = {text: string; startMs: number; endMs: number};
 
 async function spokenWords(audioPath: string, language: Language): Promise<Spoken[]> {
 	mkdirSync(path.join(CACHE_DIR, 'wav'), {recursive: true});
@@ -66,8 +65,8 @@ export async function timeWords(
 	language: Language,
 	displayWords: string[],
 	spokenShare = 1,
-	/** Further points in the clip, as fractions of the spoken characters, to time (MCQ option starts). */
-	extraFracs: number[] = [],
+	/** Further points to time, as character offsets into the text the clip reads (MCQ option starts). */
+	extra: {text: string; offsets: number[]} = {text: '', offsets: []},
 ): Promise<{words: TimedWord[]; optionsAtMs: number; extraMs: number[]}> {
 	const spoken = await spokenWords(audioPath, language);
 	if (spoken.length === 0) throw new Error('whisper found no speech in the clip');
@@ -93,7 +92,7 @@ export async function timeWords(
 		pos += text.length;
 		return {text, startMs};
 	});
-	return {words, optionsAtMs: Math.round(at(spokenShare)), extraMs: extraFracs.map((x) => Math.round(at(x)))};
+	return {words, optionsAtMs: Math.round(at(spokenShare)), extraMs: alignTimes(extra.text, spoken, extra.offsets, language)};
 }
 
 export function audioDurationMs(audioPath: string): number {

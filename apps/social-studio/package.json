@@ -10,7 +10,8 @@
     "render": "tsx cli/render.ts",
     "batch": "tsx cli/batch.ts",
     "coverage": "fly ssh console -a quiz-agent-api -C 'python - --coverage' < scripts/fetch_question.py",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test cli/*.test.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.537",

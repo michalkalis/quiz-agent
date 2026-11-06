@@ -91,7 +91,7 @@ export const DemoPhone: React.FC<{src: string; rec: {w: number; h: number}; box:
 				<AbsoluteFill>
 					{marks.map((m, i) => (
 						<Sequence key={i} from={m.start} durationInFrames={Math.max(1, m.frames)} layout="none">
-							<DemoMark m={{...m, x: m.x * k, y: m.y * k, w: m.w * k, h: m.h * k}} />
+							<DemoMark m={{...m, x: m.x * k, y: m.y * k, w: m.w * k, h: m.h * k, r: m.r === undefined ? undefined : m.r * k}} />
 						</Sequence>
 					))}
 				</AbsoluteFill>

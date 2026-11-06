@@ -13,7 +13,8 @@ export type DemoHighlight = {from: number; to: number; x: number; y: number; w: 
 
 /** A light hand-drawn marker on the element the voice talks about (recording pixels): a loose loop, a highlighter swipe, an underline, or a thin traced outline. */
 export type DemoMarkStyle = 'circle' | 'highlighter' | 'underline' | 'ring' | 'glow' | 'dim' | 'swipe';
-export type DemoMark = {from: number; to: number; x: number; y: number; w: number; h: number; style: DemoMarkStyle};
+/** `r` = the element's own corner radius, `alpha` = strength (default 1), both optional. */
+export type DemoMark = {from: number; to: number; x: number; y: number; w: number; h: number; style: DemoMarkStyle; r?: number; alpha?: number};
 
 /** voice = what the app says · player = what the player answers (no audio) · label = feature chip · title = one big word · step = a short line saying what happens on screen · said = the narrator's words as spoken (`words`: each word's start, recording time; `karaoke`: the whole line shows faint and each word turns solid when spoken) (all but player share the band). */
 export type DemoCaptionKind = 'voice' | 'player' | 'label' | 'title' | 'step' | 'said';

@@ -29,7 +29,8 @@ enum AnalyticsEvent: Equatable {
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
     case voiceCommand(command: VoiceCommand, phase: String)
     case paywallViewed(source: PaywallSource)
-    case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome)
+    /// `questionCount`: the custom pack's size (#228.6); nil for every other kind.
+    case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome, questionCount: Int? = nil)
     case restoreResult(outcome: RestoreOutcome)
     /// #217.4: the sign-in prompt after a purchase came on screen, and how it closed.
     case signInPromptShown(kind: SignInPromptKind)
@@ -122,11 +123,12 @@ enum AnalyticsEvent: Equatable {
             [("command", .string(command.rawValue)), ("phase", .string(phase))]
         case let .paywallViewed(source):
             [("source", .string(source.rawValue))]
-        case let .purchaseResult(productId, kind, outcome):
+        case let .purchaseResult(productId, kind, outcome, questionCount):
             [
                 ("product_id", .string(productId)),
                 ("kind", .string(kind.rawValue)),
                 ("outcome", .string(outcome.rawValue)),
+                ("question_count", questionCount.map { .int($0) }),
             ]
         case let .restoreResult(outcome):
             [("outcome", .string(outcome.rawValue))]

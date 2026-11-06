@@ -3192,19 +3192,85 @@
         }
       }
     },
-    "Custom pack · 30 questions" : {
-      "comment" : "Label of the custom-pack order summary card",
+    "Custom pack · %lld questions" : {
+      "comment" : "Order summary label (#228.6): the custom pack and how many questions the chosen size has (10 or 30)",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vlastní balíček · 30 otázek"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastní balíček · %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastní balíček · %lld otázky"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastní balíček · %lld otázka"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastní balíček · %lld otázek"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Custom pack · %lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Custom pack · %lld questions"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vlastný balík · 30 otázok"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastný balík · %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastný balík · %lld otázky"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastný balík · %lld otázka"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Vlastný balík · %lld otázok"
+                }
+              }
+            }
           }
         }
       }
@@ -6368,6 +6434,23 @@
         }
       }
     },
+    "Number of questions" : {
+      "comment" : "Order summary row (#228.6): the 10 | 30 pack size switch",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Počet otázek"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Počet otázok"
+          }
+        }
+      }
+    },
     "OK" : {
       "comment" : "Dismiss button on the account-deletion result alert",
       "localizations" : {
@@ -7152,6 +7235,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pauza"
+          }
+        }
+      }
+    },
+    "Pay %@ & create pack" : {
+      "comment" : "Order summary button (#228.6): pay the shown App Store price and start the custom pack; %@ is the localized price",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaplať %@ a vytvoř balíček"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaplať %@ a vytvor balík"
           }
         }
       }

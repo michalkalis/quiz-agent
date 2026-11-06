@@ -212,7 +212,7 @@ struct PurchaseEdgeCaseScenarioTests {
         let suiteName = "PurchaseEdgeCaseScenarioTests.\(UUID().uuidString)"
         UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
         let durable = PendingPackPurchaseStore(suiteName: suiteName)
-        let approved = PackPaymentProof(transactionId: "990000000000321", productId: StoreKitPackPurchaseService.productId, jws: "approved.jws")
+        let approved = PackPaymentProof(transactionId: "990000000000321", productId: PackSize.thirty.productId, jws: "approved.jws")
         let captured = await StoreKitPackPurchaseService.captureAndFinish(
             store: durable, transactionId: approved.transactionId, productId: approved.productId, jws: approved.jws, finish: {}
         )

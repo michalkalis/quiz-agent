@@ -21,33 +21,42 @@ final class MockPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
     )
 
     private let purchaseResult: Result<PackPaymentProof, PackPurchaseError>
-    private let price: String?
+    private let prices: [PackSize: String]
     private let state: OSAllocatedUnfairLock<State>
 
     private struct State {
         var pending: PackPaymentProof?
-        var purchaseCallCount = 0
+        var purchasedSizes: [PackSize] = []
     }
 
+    /// - Parameter prices: what StoreKit "returns"; a size left out is a
+    ///   product the App Store doesn't sell (yet).
     init(
         purchaseResult: Result<PackPaymentProof, PackPurchaseError> = .success(MockPackPurchaseService.mockProof),
         pending: PackPaymentProof? = nil,
-        displayPrice: String? = nil
+        prices: [PackSize: String] = [:]
     ) {
         self.purchaseResult = purchaseResult
-        self.price = displayPrice
+        self.prices = prices
         self.state = OSAllocatedUnfairLock(initialState: State(pending: pending))
     }
 
-    /// How many times `purchase()` ran — lets a test prove a retry reused the
-    /// pending proof instead of charging again.
+    /// How many times `purchase(_:)` ran — lets a test prove a retry reused
+    /// the pending proof instead of charging again.
     var purchaseCallCount: Int {
-        state.withLock { $0.purchaseCallCount }
+        state.withLock { $0.purchasedSizes.count }
     }
 
-    func purchase() async throws -> PackPaymentProof {
-        state.withLock { $0.purchaseCallCount += 1 }
-        let proof = try purchaseResult.get()
+    /// The size each payment sheet was opened for, in order.
+    var purchasedSizes: [PackSize] {
+        state.withLock { $0.purchasedSizes }
+    }
+
+    /// Like StoreKit, the proof names the product that was bought.
+    func purchase(_ size: PackSize) async throws -> PackPaymentProof {
+        state.withLock { $0.purchasedSizes.append(size) }
+        let canned = try purchaseResult.get()
+        let proof = PackPaymentProof(transactionId: canned.transactionId, productId: size.productId, jws: canned.jws)
         state.withLock { $0.pending = proof }
         return proof
     }
@@ -60,7 +69,7 @@ final class MockPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
         state.withLock { $0.pending = nil }
     }
 
-    func displayPrice() async -> String? {
-        price
+    func displayPrices() async -> [PackSize: String] {
+        prices
     }
 }

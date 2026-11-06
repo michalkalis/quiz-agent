@@ -81,5 +81,5 @@ Na objednávke: počet kôl, úspešnosť za kolo, počet z prehĺbenia / z kni�
 - [ ] 228.3 lepší model na kontrolu odpovedateľnosti (3): porovnanie na zahodených otázkach z meraní (presnosť pri nejasných otázkach sa nesmie zhoršiť), potom výmena; founder smer schválil 11-05
 - [ ] 228.4 doplnenie z knižnice + doplnenie dodatočne (4, 5)
 - [ ] 228.5 otázky navyše do korpusu (6)
-- [ ] 228.6 `pack_10`: meranie nákladu, ASC produkt, appka (7)
+- [ ] 228.6 `pack_10`: meranie nákladu, ASC produkt, appka (7). Appka hotová (variant B: prepínač 10 | 30 v karte zhrnutia, cena zo StoreKitu, `question_count` v `purchase_result`); prepínač sa ukáže až keď StoreKit vráti `pack_10`, dovtedy ostáva len 30.
 - [ ] 228.7 overenie: 5 tém (2 úzke, 2 bežné, 1 osobná) sk/cs/en → vždy 30, kvalita bez zmeny

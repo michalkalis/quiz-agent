@@ -69,7 +69,8 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
     "paywall_viewed": frozenset({"source"}),
-    "purchase_result": frozenset({"product_id", "kind", "outcome"}),
+    # #228.6: question_count = the custom pack size bought (10 | 30).
+    "purchase_result": frozenset({"product_id", "kind", "outcome", "question_count"}),
     "restore_result": frozenset({"outcome"}),
     # #217.4: the sign-in prompt after a purchase came on screen (kind = plus |
     # credit | custom_pack), and how it closed (signed_in | dismissed).

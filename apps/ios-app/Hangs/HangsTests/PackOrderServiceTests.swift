@@ -239,7 +239,8 @@ struct PackOrderServiceTests {
 
         PackOrderStubURLProtocol.handler = { req in
             if let data = readRequestBody(req),
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            {
                 let v = json["difficulty"] as? String
                 let present = json["difficulty"] != nil
                 value.withLock { $0 = v }
@@ -318,7 +319,9 @@ struct PackOrderServiceTests {
         // The guard is hit before any network call, so the second task only needs
         // scheduler turns (no I/O) to reach it and start awaiting the first task.
         // Then release the single blocked request.
-        for _ in 0 ..< 1000 { await Task.yield() }
+        for _ in 0 ..< 1000 {
+            await Task.yield()
+        }
         gate.signal()
 
         let (firstResult, secondResult) = try await (first, second)
@@ -483,6 +486,30 @@ struct PackOrderServiceTests {
         let transactionId = try #require(capturedTransactionId(request))
         #expect(transactionId.hasPrefix("admin-"),
                 "keyless synthetic orders must stay in the server's admin- id namespace")
+    }
+
+    // WHY (#228.6): the server reads the pack size from `product_id`; an
+    // order for a 10 pack that still said pack_30 would build the wrong pack.
+    @Test("the intent's size is the product and target count on the wire")
+    func sizeIsSentOnTheWire() async throws {
+        let service = makeService(adminKey: "seeded-admin-key")
+        let sent = OSAllocatedUnfairLock<(product: String?, count: Int?)>(initialState: (nil, nil))
+
+        PackOrderStubURLProtocol.handler = { req in
+            let json = readRequestBody(req).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            let wire = (product: json?["product_id"] as? String, count: json?["target_count"] as? Int)
+            sent.withLock { $0 = wire }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        _ = try await service.createOrder(
+            intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, size: .ten)
+        )
+
+        let wire = sent.withLock { $0 }
+        #expect(wire.product == "pack_10")
+        #expect(wire.count == 10)
     }
 
     @Test("a non-401 failure is unchanged — still PackOrderError.server with the backend detail, no refresh")

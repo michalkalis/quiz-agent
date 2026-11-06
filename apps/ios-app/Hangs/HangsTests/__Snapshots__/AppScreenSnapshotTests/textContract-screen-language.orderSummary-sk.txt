@@ -5,13 +5,18 @@ Jazyk kvízu
 English
 Náročnosť
 Stredná
+Počet otázok
+10
+30
+Počet otázok
 Cena
 8,99 €
 Po zaplatení sa objednávka nedá zrušiť. Generovanie balíka je platená služba a spustí sa okamžite.
-Zaplať a vytvor balík
+Zaplať 8,99 € a vytvor balík
 # identifiers
 orderPack.summaryPrompt
 orderPack.summaryDifficulty
+orderPack.size
 orderPack.price
 orderPack.noCancelNotice
 orderPack.pay

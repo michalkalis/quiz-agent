@@ -54,9 +54,6 @@ final class OrderPackViewModel: ObservableObject {
     /// good one-word topics ("Bratislava").
     static let maxPromptLength = 1000
 
-    /// The size of every custom pack, until the order's snapshot says so.
-    static let orderedQuestionCount = 30
-
     /// Consecutive `getOrder` failures tolerated before the poll gives up with
     /// `.failed`. A transient network/timeout blip on cellular must NOT dead-end a
     /// paid order that is still generating server-side — a false failure strands
@@ -92,11 +89,17 @@ final class OrderPackViewModel: ObservableObject {
 
     @Published private(set) var state: OrderState = .editing
 
-    /// Localized App Store price of the pack product (`Product.displayPrice`),
-    /// shown on the payment summary. Nil until it loads — and it stays nil
-    /// (row hidden) when StoreKit can't answer, because a guessed price is
-    /// worse than none.
-    @Published private(set) var packPrice: String?
+    /// #228.6: the pack size being bought; 30 unless the buyer picks 10.
+    @Published private(set) var size: PackSize = .standard
+
+    /// Localized App Store price per pack size (`Product.displayPrice`). Empty
+    /// until it loads; a size StoreKit can't answer for stays absent, because
+    /// a guessed price is worse than none.
+    @Published private(set) var packPrices: [PackSize: String] = [:]
+
+    /// True while an unspent, already-paid proof waits (an interrupted earlier
+    /// order). It is spent before any new charge, so it decides the size.
+    @Published private(set) var isSizeFixedByPendingPurchase = false
 
     private let service: PackOrderServiceProtocol
     private let purchaseService: PackPurchaseServiceProtocol
@@ -116,7 +119,7 @@ final class OrderPackViewModel: ObservableObject {
 
     /// #217.4: the paid order the backend accepted that the sign-in prompt has
     /// not offered yet: its id and the topic as typed.
-    private var acceptedPaidOrder: (orderId: String, topic: String)?
+    private var acceptedPaidOrder: (orderId: String, topic: String, size: PackSize)?
 
     /// The StoreKit proof the current order was created with (nil = Debug admin
     /// order). Kept in memory after the durable pending slot is cleared, because
@@ -171,6 +174,20 @@ final class OrderPackViewModel: ObservableObject {
 
     deinit {
         pollTask?.cancel()
+    }
+
+    /// The price of the size being bought, shown on the summary and its button.
+    /// Nil hides the price row: StoreKit didn't answer.
+    var packPrice: String? {
+        packPrices[size]
+    }
+
+    /// The 10 | 30 switch shows only once StoreKit sells `pack_10` (the guard
+    /// until App Store Connect approves it), and never over a pending paid
+    /// order, whose size is already settled. Hidden = exactly the 30-only
+    /// summary of before.
+    var offersSizeChoice: Bool {
+        packPrices[.ten] != nil && !isSizeFixedByPendingPurchase
     }
 
     /// True when the trimmed prompt is non-empty and within the server ceiling.
@@ -270,11 +287,20 @@ final class OrderPackViewModel: ObservableObject {
         orderLanguages()
     }
 
-    /// Load the pack price for the summary. Kept once loaded; a failed load
-    /// leaves it nil so the next summary visit tries again.
+    /// Load the pack prices for the summary. Kept once every size has one; a
+    /// missing size (a failed load, or `pack_10` not on sale yet) is asked for
+    /// again on the next summary visit.
     func loadPrice() async {
-        guard packPrice == nil else { return }
-        packPrice = await purchaseService.displayPrice()
+        guard packPrices.count < PackSize.allCases.count else { return }
+        packPrices = await purchaseService.displayPrices()
+    }
+
+    /// Explicit size pick (summary switch). Only before paying, and only for a
+    /// size the switch offers.
+    func selectSize(_ newSize: PackSize) {
+        guard state == .confirming, offersSizeChoice,
+              newSize == .standard || packPrices[newSize] != nil else { return }
+        size = newSize
     }
 
     /// Explicit user language pick (form menu).
@@ -292,6 +318,12 @@ final class OrderPackViewModel: ObservableObject {
     /// the pre-purchase flow from a submitted order.
     func advanceToSummary() {
         guard state == .editing, isValid else { return }
+        if let pending = purchaseService.pendingProof().flatMap({ PackSize(productId: $0.productId) }) {
+            size = pending
+            isSizeFixedByPendingPurchase = true
+        } else {
+            isSizeFixedByPendingPurchase = false
+        }
         state = .confirming
     }
 
@@ -369,7 +401,7 @@ final class OrderPackViewModel: ObservableObject {
         }
         return .customPack(
             name: snapshot?.displayTitle ?? accepted.topic,
-            questionCount: snapshot?.targetCount ?? Self.orderedQuestionCount,
+            questionCount: snapshot?.targetCount ?? accepted.size.questionCount,
             colorKey: snapshot?.colorKey ?? accepted.orderId
         )
     }
@@ -390,8 +422,10 @@ final class OrderPackViewModel: ObservableObject {
         orderPaymentProof = nil
         pendingIntent = nil
         hasChosenLanguage = false
-        // The level is chosen per order, never carried over (#224).
+        // The level is chosen per order, never carried over (#224); the size
+        // starts from 30 again.
         difficulty = nil
+        size = .standard
         language = supportedLanguage(defaultLanguage)
         // The prompt text is deliberately kept — reordering a variation of the
         // last topic is the common case, and retyping it is pure friction.
@@ -432,11 +466,13 @@ final class OrderPackViewModel: ObservableObject {
         // content is unchanged from the last attempt — a retry after a create
         // that never landed. Any change to the fields is a genuinely new
         // intent, so it mints a fresh key rather than reusing a stale one.
+        let orderSize = proof.flatMap { PackSize(productId: $0.productId) } ?? size
         let intent: PackOrderIntent
         if let pending = pendingIntent,
            pending.prompt == trimmedPrompt,
            pending.language == language,
            pending.difficulty == difficulty,
+           pending.size == orderSize,
            pending.paymentProof == proof
         {
             intent = pending
@@ -450,6 +486,7 @@ final class OrderPackViewModel: ObservableObject {
                 category: nil,
                 theme: nil,
                 difficulty: difficulty,
+                size: orderSize,
                 paymentProof: proof
             )
         }
@@ -472,7 +509,7 @@ final class OrderPackViewModel: ObservableObject {
             // The backend accepted the order — the purchase is spent. (Guarded
             // so a Debug admin order can never discard a real unspent proof.)
             purchaseService.clearPendingProof()
-            acceptedPaidOrder = (created.orderId, trimmedPrompt)
+            acceptedPaidOrder = (created.orderId, trimmedPrompt, intent.size)
         }
 
         await poll(orderId: created.orderId)
@@ -526,9 +563,10 @@ final class OrderPackViewModel: ObservableObject {
         if let pending = purchaseService.pendingProof() {
             return pending
         }
+        let size = size
         do {
-            let proof = try await purchaseService.purchase()
-            trackPackPurchase(.success)
+            let proof = try await purchaseService.purchase(size)
+            trackPackPurchase(.success, size: size)
             return proof
         } catch {
             let outcome: PurchaseResultOutcome = switch error as? PackPurchaseError {
@@ -536,16 +574,17 @@ final class OrderPackViewModel: ObservableObject {
             case .pending: .pending
             default: .failed
             }
-            trackPackPurchase(outcome)
+            trackPackPurchase(outcome, size: size)
             throw error
         }
     }
 
-    private func trackPackPurchase(_ outcome: PurchaseResultOutcome) {
+    private func trackPackPurchase(_ outcome: PurchaseResultOutcome, size: PackSize) {
         analytics.track(.purchaseResult(
-            productId: StoreKitPackPurchaseService.productId,
+            productId: size.productId,
             kind: .customPack,
-            outcome: outcome
+            outcome: outcome,
+            questionCount: size.questionCount
         ))
     }
 

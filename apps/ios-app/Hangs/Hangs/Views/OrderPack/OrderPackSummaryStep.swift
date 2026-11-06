@@ -9,7 +9,9 @@
 //
 //  The price row shows the App Store's localized price for the pack product;
 //  when StoreKit can't return it the row is hidden — inventing a number would
-//  be worse than showing none.
+//  be worse than showing none. #228.6 (founder's variant B): the 10 | 30
+//  switch sits in the card above the price, and only once StoreKit sells
+//  `pack_10`; without it the card is the 30-only summary of before.
 //
 
 import SwiftUI
@@ -21,7 +23,7 @@ struct OrderPackSummaryStep: View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 18, leading: 18, bottom: 18, trailing: 18)) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HangsSectionLabel(text: "Custom pack · 30 questions")
+                    HangsSectionLabel(text: "Custom pack · \(viewModel.size.questionCount) questions")
 
                     Text(verbatim: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.hangsHeading)
@@ -52,6 +54,10 @@ struct OrderPackSummaryStep: View {
                         .accessibilityIdentifier("orderPack.summaryDifficulty")
                     }
 
+                    if viewModel.offersSizeChoice {
+                        sizeRow
+                    }
+
                     if let price = viewModel.packPrice {
                         HStack(spacing: Theme.Hangs.Spacing.xs) {
                             Text("Price")
@@ -69,12 +75,37 @@ struct OrderPackSummaryStep: View {
 
             noticeBox
 
-            HangsPrimaryButton(title: "Pay & create pack", icon: "sparkles") {
+            HangsPrimaryButton(title: payTitle, icon: "sparkles") {
                 Task { await viewModel.submit() }
             }
             .accessibilityIdentifier("orderPack.pay")
         }
         .task { await viewModel.loadPrice() }
+    }
+
+    private var payTitle: LocalizedStringKey {
+        if let price = viewModel.packPrice {
+            "Pay \(price) & create pack"
+        } else {
+            "Pay & create pack"
+        }
+    }
+
+    private var sizeRow: some View {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
+            Text("Number of questions")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Picker("Number of questions", selection: Binding(get: { viewModel.size }, set: viewModel.selectSize)) {
+                ForEach(PackSize.allCases, id: \.self) { size in
+                    Text(verbatim: "\(size.questionCount)").tag(size)
+                }
+            }
+            .pickerStyle(.segmented)
+            .fixedSize()
+            .accessibilityIdentifier("orderPack.size")
+        }
     }
 
     private var noticeBox: some View {

@@ -5,13 +5,18 @@ Jazyk kvízu
 English
 Obtížnost
 Střední
+Počet otázek
+10
+30
+Počet otázek
 Cena
 8,99 €
 Po zaplacení už objednávku nelze zrušit. Generování balíčku je placená služba a spustí se okamžitě.
-Zaplať a vytvoř balíček
+Zaplať 8,99 € a vytvoř balíček
 # identifiers
 orderPack.summaryPrompt
 orderPack.summaryDifficulty
+orderPack.size
 orderPack.price
 orderPack.noCancelNotice
 orderPack.pay

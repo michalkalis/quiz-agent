@@ -5,7 +5,7 @@
 import React from 'react';
 import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {DemoPhone, type Ripple, type Spot} from './DemoPhone';
-import {fitSteps, fitTitle, HookText, KineticText, LabelChip, PlayerBubble, SaidText, StepText, TitleWord} from './DemoCaptions';
+import {fitSaid, fitSteps, fitTitle, HookText, KineticText, LabelChip, PlayerBubble, SaidText, StepText, TitleWord} from './DemoCaptions';
 import type {MarkBox} from './DemoMarks';
 import {phoneBox, PHONE_CX, PHONE_CY, PHONE_TOP, TOP_BAND} from './demoLayout';
 import {buildTimeline, cameraAt, cameraKeys, cameraTransform, mapRange, mapTime, restCam, runEnd, startsSegment} from './demoTimeline';
@@ -54,9 +54,9 @@ const oneAtATime = (layers: Layer[]): Layer[] => {
 	});
 };
 
-const CaptionLayer: React.FC<{c: Layer; tint: ReturnType<typeof tintFor>; titleSize: number; stepSize: number}> = ({c, tint, titleSize, stepSize}) => {
+const CaptionLayer: React.FC<{c: Layer; tint: ReturnType<typeof tintFor>; titleSize: number; stepSize: number; saidSize: number}> = ({c, tint, titleSize, stepSize, saidSize}) => {
 	if (c.kind === 'voice') return <KineticText text={c.text} frames={c.frames} />;
-	if (c.kind === 'said') return <SaidText words={c.words?.map((w) => w.w) ?? c.text.split(/\s+/)} at={c.wordFrames} frames={c.frames} karaoke={c.karaoke} />;
+	if (c.kind === 'said') return <SaidText words={c.words?.map((w) => w.w) ?? c.text.split(/\s+/)} at={c.wordFrames} frames={c.frames} size={saidSize} karaoke={c.karaoke} />;
 	if (c.kind === 'step') return <StepText text={c.text} frames={c.frames} size={stepSize} />;
 	if (c.kind === 'title') return <TitleWord text={c.text} frames={c.frames} size={titleSize} />;
 	if (c.kind === 'player') return <PlayerBubble text={c.text} frames={c.frames} tint={tint} />;
@@ -93,6 +93,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 	const captions = oneAtATime((props.captions ?? []).flatMap((c) => mapCaption(tl, c, fps)));
 	// All title words share one size (the largest at which the longest still fits one line).
 	const stepSize = fitSteps(captions.filter((c) => c.kind === 'step').map((c) => c.text));
+	const saidSize = fitSaid(captions.filter((c) => c.kind === 'said').map((c) => c.text));
 	const titleSize = fitTitle([...captions.filter((c) => c.kind === 'title').map((c) => c.text), ...(props.endWord ? [props.endWord] : [])]);
 	// The hook gives way to the first caption in its band instead of drawing under it.
 	const firstVoice = Math.min(Infinity, ...captions.filter((c) => SLOT[c.kind] === 'band').map((c) => c.startFrame));
@@ -115,7 +116,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 				) : null}
 				{captions.map((c, i) => (
 					<Sequence key={i} from={c.startFrame} durationInFrames={c.frames} layout="none">
-						<CaptionLayer c={c} tint={tint} titleSize={titleSize} stepSize={stepSize} />
+						<CaptionLayer c={c} tint={tint} titleSize={titleSize} stepSize={stepSize} saidSize={saidSize} />
 					</Sequence>
 				))}
 				{(props.audio ?? []).map((a, i) => {

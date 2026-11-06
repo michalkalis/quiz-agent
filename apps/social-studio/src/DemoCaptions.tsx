@@ -99,17 +99,20 @@ export const StepText: React.FC<{text: string; frames: number; size: number}> = 
 };
 
 const SAID_SIZES = [86, 80, 74, 68, 62];
+/** One size for all spoken lines: the largest at which every one of them fits two lines. */
+export const fitSaid = (texts: string[]): number => {
+	if (typeof document === 'undefined' || texts.length === 0) return SAID_SIZES[1];
+	return SAID_SIZES.find((s) => texts.every((t) => lineCount(t, s, INNER_W * 0.97, 800) <= 2)) ?? SAID_SIZES[SAID_SIZES.length - 1];
+};
 
 /**
  * The narrator's words as spoken, where the headline used to be (a little smaller, at most two lines).
  * Default: each word fades and rises in on its own start. `karaoke`: the whole line shows faint from
  * the start and each word turns solid ink when spoken. Layout is fixed from the start, so lines never reflow.
  */
-export const SaidText: React.FC<{words: string[]; at: number[]; frames: number; karaoke?: boolean}> = ({words, at, frames, karaoke}) => {
+export const SaidText: React.FC<{words: string[]; at: number[]; frames: number; size: number; karaoke?: boolean}> = ({words, at, frames, size, karaoke}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const text = words.join(' ');
-	const size = typeof document === 'undefined' ? SAID_SIZES[1] : (SAID_SIZES.find((s) => lineCount(text, s, INNER_W * 0.97, 800) <= 2) ?? SAID_SIZES[SAID_SIZES.length - 1]);
 	const ease = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)} as const;
 	const blockIn = karaoke ? interpolate(frame, [0, fps * 0.2], [0, 1], ease) : 1;
 	return (

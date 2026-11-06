@@ -71,8 +71,8 @@ export const DemoMark: React.FC<{m: MarkBox}> = ({m}) => {
 		// glow: a soft light halo round the element, lifted by a faint shadow. dim: the rest of the screen a little darker, feathered edge.
 		const pad = 10;
 		const o = Math.min(draw.p, 1) * draw.o;
-		const shadow = m.style === 'glow' ? `0 0 28px 10px rgba(255,255,255,${0.95 * o}), 0 0 46px 16px rgba(59,63,216,${0.18 * o}), 0 10px 24px rgba(17,18,22,${0.16 * o})` : `0 0 40px 3000px rgba(0,0,0,${0.15 * o})`;
-		return <div style={{position: 'absolute', left: m.x - pad, top: m.y - pad, width: m.w + 2 * pad, height: m.h + 2 * pad, borderRadius: 18, boxShadow: shadow, transform: m.style === 'glow' ? `scale(${1 + 0.03 * o})` : undefined}} />;
+		const shadow = m.style === 'glow' ? `0 0 0 2px rgba(59,63,216,${0.35 * o}), 0 0 36px 14px rgba(255,255,255,${o}), 0 0 70px 26px rgba(59,63,216,${0.32 * o}), 0 16px 34px rgba(17,18,22,${0.28 * o})` : `0 0 40px 3000px rgba(0,0,0,${0.15 * o})`;
+		return <div style={{position: 'absolute', left: m.x - pad, top: m.y - pad, width: m.w + 2 * pad, height: m.h + 2 * pad, borderRadius: 18, boxShadow: shadow, transform: m.style === 'glow' ? `scale(${1 + 0.04 * o})` : undefined}} />;
 	}
 	if (m.style === 'swipe') {
 		return <div style={{position: 'absolute', left: m.x - 10, top: m.y + m.h * 0.15, width: m.w + 20, height: m.h * 0.8, background: INDIGO, opacity: 0.25 * draw.o, borderRadius: 14, clipPath: `inset(0 ${(1 - draw.p) * 100}% 0 0 round 14px)`}} />;

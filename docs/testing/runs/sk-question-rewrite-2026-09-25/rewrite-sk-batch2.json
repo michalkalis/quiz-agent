@@ -1,0 +1,469 @@
+{
+  "summary": {
+    "language": "sk",
+    "finished_at": "2026-09-25T10:44:11.405147+00:00",
+    "chosen": 62,
+    "rewritten": 44,
+    "unchanged": 18,
+    "failed": 0,
+    "gate": {
+      "approved": 44
+    },
+    "rewrite_seconds": 73,
+    "total_seconds": 331
+  },
+  "rows": [
+    {
+      "question_id": "06b74a86-c42d-4ef9-bd7c-1e390a9f3b3d",
+      "status_before": "approved",
+      "before": "Ako dlho bola Veľká pyramída v Gíze najvyššou stavbou postavenou človekom na Zemi?",
+      "after": "Ako dlho bola Veľká pyramída v Gíze najvyššou stavbou postavenou človekom na Zemi?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "1608e440-e86e-4819-b3b4-82fad5fa0c92",
+      "status_before": "approved",
+      "before": "Uluru, obrovský červený pieskovcový monolit posvätný pre miestny národ Anangu, sa dvíha z púšte v srdci ktorej krajiny?",
+      "after": "Uluru, obrovský červený pieskovcový monolit posvätný pre miestny národ Anangu, sa dvíha z púšte v srdci jednej krajiny. V ktorej krajine sa Uluru nachádza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "157a82db-98fc-4f17-9d3e-e801f4aac8b8",
+      "status_before": "approved",
+      "before": "Morskí fotografi zachytili celé skupiny ktorého obrovského živočícha, ako spia vzpriamene tesne pod hladinou a nehybne visia ako obrovské plávajúce stĺpy?",
+      "after": "Morskí fotografi zachytili celé skupiny obrovských živočíchov, ako spia vzpriamene tesne pod hladinou a nehybne visia ako obrovské plávajúce stĺpy. O ktoré živočíchy ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "41b7bf47-dfce-4faa-a72d-4cfc9c80d878",
+      "status_before": "approved",
+      "before": "Seriál Star Wars: Shadow Lord z roku 2026 na Disney Plus je postavený okolo ktorého klasického záporáka?",
+      "after": "Okolo ktorého klasického záporáka je postavený seriál Star Wars: Shadow Lord z roku 2026 na Disney Plus?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d7037adf-0d58-5ddd-aa99-ee46d686b52f",
+      "status_before": "approved",
+      "before": "Ktorá K-pop skupina sa k roku 2026 stala prvou, v ktorej všetci členovia zvládli výzvu s pálivými krídelkami v relácii Hot Ones?",
+      "after": "Ktorá K-pop skupina sa k roku 2026 stala prvou, v ktorej všetci členovia zvládli výzvu s pálivými krídelkami v relácii Hot Ones?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+      "status_before": "approved",
+      "before": "Pod akým názvom sa kiwi predávalo, kým ho novozélandskí vývozcovia v roku 1959 nepremenovali?",
+      "after": "Pod akým názvom sa kiwi predávalo, kým ho novozélandskí vývozcovia v roku 1959 nepremenovali?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4634fc00-9e53-485e-8234-e5e2d570a886",
+      "status_before": "approved",
+      "before": "Hororový film Obsession z roku 2026 sa stal najvýnosnejším filmom v histórii svojho štúdia Focus Features. Aký veľký bol zhruba jeho produkčný rozpočet v amerických dolároch?",
+      "after": "Hororový film Obsession z roku 2026 sa stal najvýnosnejším filmom v histórii svojho štúdia Focus Features. Aký veľký bol zhruba jeho produkčný rozpočet v amerických dolároch?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "70cda270-b5ce-4f76-aa2c-482b9bfa8808",
+      "status_before": "approved",
+      "before": "Akú farbu má koža ľadového medveďa pod hustou bielou srsťou?",
+      "after": "Akú farbu má koža ľadového medveďa pod hustou bielou srsťou?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "99d505ea-717c-4bd8-a561-8704af656157",
+      "status_before": "approved",
+      "before": "Autor, ktorý napísal Toma Sawyera, sa narodil v roku 1835 a zomrel v roku 1910, čím svoj život ohraničil dvoma objaveniami ktorého nebeského návštevníka?",
+      "after": "Autor, ktorý napísal Toma Sawyera, sa narodil v roku 1835 a zomrel v roku 1910, takže jeho život ohraničili dve objavenia toho istého nebeského návštevníka. Ktorý nebeský návštevník to bol?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d06760ad-40b4-4913-b091-0f893e0f3e59",
+      "status_before": "approved",
+      "before": "Erupcia ktorej sopky v prielive medzi Jávou a Sumatrou v roku 1883 vyvolala zvuk, ktorý sa všeobecne považuje za najhlasnejší v zaznamenanej histórii — bolo ho počuť takmer 5 000 kilometrov ďaleko?",
+      "after": "V roku 1883 vybuchla sopka v prielive medzi Jávou a Sumatrou a vyvolala zvuk, ktorý sa všeobecne považuje za najhlasnejší v zaznamenanej histórii. Bolo ho počuť takmer 5 000 kilometrov ďaleko. Ako sa volá táto sopka?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2b3ba69e-02fc-4768-a4a2-f1eee16cce97",
+      "status_before": "approved",
+      "before": "Pravda alebo nepravda: pred miliónmi rokov tiekla rieka Amazonka na západ, teda opačným smerom ako dnes.",
+      "after": "Pred miliónmi rokov tiekla rieka Amazonka na západ, teda opačným smerom ako dnes. Je toto tvrdenie pravdivé, alebo nepravdivé?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2aa4ac32-60e7-476a-8ab4-3d0eafcf97f1",
+      "status_before": "approved",
+      "before": "Stegosaurus a Tyrannosaurus rex sa nájdu v každej škatuli s hračkami, no nikdy sa nestretli. Približne aký veľký časový odstup delil tieto dva dinosaury?",
+      "after": "Stegosaurus a Tyrannosaurus rex sa nájdu v každej škatuli s hračkami, no nikdy sa nestretli. Koľko času približne delilo tieto dva dinosaury?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "74b0fa56-ef2d-4522-882a-8a131c3ba1f2",
+      "status_before": "approved",
+      "before": "Ktorá sopka v roku 79 n. l. svojou erupciou pochovala rímske mestá Pompeje a Herculaneum pod metre popola?",
+      "after": "Ktorá sopka v roku 79 n. l. svojou erupciou pochovala rímske mestá Pompeje a Herculaneum pod metre popola?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "80d3216d-9c48-44da-8d3c-b8b1a3bb71b9",
+      "status_before": "approved",
+      "before": "Aký silný je približne najväčší elektrický výboj, aký dokáže vyslať elektrický úhor?",
+      "after": "Aký silný je približne najväčší elektrický výboj, aký dokáže vyslať elektrický úhor?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "3b139bd6-4848-4ed4-9ded-1f5aef48ae11",
+      "status_before": "approved",
+      "before": "Akým druhom rýb sú Nemo a jeho otec Marlin v pixarovskom filme Hľadá sa Nemo?",
+      "after": "Akým druhom rýb sú Nemo a jeho otec Marlin v pixarovskom filme Hľadá sa Nemo?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e5bf1d20-bf0e-478f-90e1-24afb936a28b",
+      "status_before": "approved",
+      "before": "Timbuktu, legendárne púštne mesto, ktorého stredoveké univerzity a knižnice uchovávali státisíce rukopisov, leží na okraji Sahary v ktorej dnešnej krajine?",
+      "after": "Timbuktu je legendárne púštne mesto, ktorého stredoveké univerzity a knižnice uchovávali státisíce rukopisov, a leží na okraji Sahary. V ktorej dnešnej krajine sa toto mesto nachádza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+      "status_before": "approved",
+      "before": "Po šiestich mesiacoch, ktoré strávili v beztiaži na Medzinárodnej vesmírnej stanici, sa astronauti vracajú na Zem až s piatimi centimetrami niečoho navyše, o čo však rýchlo zase prídu. Päť centimetrov čoho?",
+      "after": "Po šiestich mesiacoch, ktoré strávili v beztiaži na Medzinárodnej vesmírnej stanici, sa astronauti vracajú na Zem až s piatimi centimetrami niečoho navyše, o čo však rýchlo zase prídu. Čoho majú astronauti po návrate až o päť centimetrov viac?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+      "status_before": "approved",
+      "before": "Z ktorej krajiny pochádza hlavolamová kocka, ktorú v roku 1974 vynašiel profesor architektúry Ernő Rubik?",
+      "after": "Z ktorej krajiny pochádza hlavolamová kocka, ktorú v roku 1974 vynašiel profesor architektúry Ernő Rubik?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "8045972d-9cba-4e9b-8f92-21bbcfba81ed",
+      "status_before": "approved",
+      "before": "Koľko bleskov na celej planéte približne udrie do zeme alebo do mora za jediný deň?",
+      "after": "Koľko bleskov na celej planéte približne udrie do zeme alebo do mora za jediný deň?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+      "status_before": "approved",
+      "before": "Po pôvodnom deväťtýždňovom kraľovaní na prvom mieste britského rebríčka v polovici 70. rokov zosadila skladbu Bohemian Rhapsody od Queen pieseň, ktorá má v názve jeden z najznámejších spievaných výkrikov Freddieho Mercuryho — ktorá kapela ju zhodila z vrcholu?",
+      "after": "Po pôvodnom deväťtýždňovom kraľovaní na prvom mieste britského rebríčka v polovici 70. rokov zosadila skladbu Bohemian Rhapsody od Queen pieseň, ktorá má v názve jeden z najznámejších spievaných výkrikov Freddieho Mercuryho. Ktorá kapela zhodila Bohemian Rhapsody z vrcholu rebríčka?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d85b016e-16cb-4dbd-a1c9-48cf5c1db6fc",
+      "status_before": "approved",
+      "before": "Pravda, alebo lož: mačka, ktorú Marlon Brando hladí v úvodnej scéne Krstného otca, bola túlavá mačka, ktorú režisér našiel v areáli štúdia a bez toho, aby to bolo v scenári, mu ju položil do lona.",
+      "after": "Mačka, ktorú Marlon Brando hladí v úvodnej scéne Krstného otca, bola túlavá mačka, ktorú režisér našiel v areáli štúdia a bez toho, aby to bolo v scenári, mu ju položil do lona. Je to pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+      "status_before": "approved",
+      "before": "Turisti v Londýne ukazujú na hodinovú vežu Westminsterského paláca a hovoria jej Big Ben — ale presne povedané, Big Ben je názov čoho?",
+      "after": "Turisti v Londýne ukazujú na hodinovú vežu Westminsterského paláca a hovoria jej Big Ben. Čoho názov je však, presne povedané, Big Ben?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "1134f16b-b2c6-4ea0-b109-67ef8a4dd382",
+      "status_before": "approved",
+      "before": "Reštaurátor Caesar Cardini vynašiel v 20. rokoch 20. storočia šalát Caesar vo svojej reštaurácii v ktorej krajine?",
+      "after": "Reštauratér Caesar Cardini vynašiel v 20. rokoch 20. storočia vo svojej reštaurácii šalát Caesar. V ktorej krajine sa táto reštaurácia nachádzala?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "cb0d1669-b7c6-45b3-a80c-6c7bd50fe9b1",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: Albert Einstein preslávene prepadol z matematiky, keď bol školák.",
+      "after": "Albert Einstein ako školák slávne prepadol z matematiky. Je to pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+      "status_before": "approved",
+      "before": "Vďaka ďalekým zámorským územiam siahajúcim od Tichého oceánu po Karibik sa ktorá krajina rozprestiera cez dvanásť časových pásiem — viac než ktorýkoľvek iný štát na Zemi?",
+      "after": "Vďaka ďalekým zámorským územiam siahajúcim od Tichého oceánu po Karibik sa jedna krajina rozprestiera cez dvanásť časových pásiem, čo je viac než ktorýkoľvek iný štát na Zemi. Ktorá krajina to je?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "1696975f-e6c4-4d5c-b43d-7ebae366548f",
+      "status_before": "approved",
+      "before": "Najstaršia medzinárodná trofej v športe, prvýkrát získaná v roku 1851 a súťaží sa o ňu dodnes, sa udeľuje v ktorom športe?",
+      "after": "Najstaršia medzinárodná trofej v športe bola prvýkrát získaná v roku 1851 a súťaží sa o ňu dodnes. V ktorom športe sa táto trofej udeľuje?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "581fe118-7952-400c-a15d-2f667229e1b1",
+      "status_before": "approved",
+      "before": "Švédska skupina ABBA sa preslávila po celom svete víťazstvom v súťaži Eurovízia 1974 s ktorou piesňou, pomenovanou podľa slávnej napoleonskej bitky?",
+      "after": "Švédska skupina ABBA sa preslávila po celom svete víťazstvom v súťaži Eurovízia 1974. S ktorou piesňou, pomenovanou podľa slávnej napoleonskej bitky, v tejto súťaži zvíťazila?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "8c30ce12-cc10-4195-bec6-a2acab2e04ee",
+      "status_before": "approved",
+      "before": "Najmenšia kosť v ľudskom tele je ľahšia ako zrnko ryže. Hlboko v ktorom zmyslovom orgáne sa nachádza?",
+      "after": "Najmenšia kosť v ľudskom tele je ľahšia ako zrnko ryže. V ktorom zmyslovom orgáne sa táto kosť nachádza hlboko vo vnútri?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7e0c66f0-a532-46f4-a761-c1fc4afce7cd",
+      "status_before": "approved",
+      "before": "Podľa vlastného oficiálneho prieskumu má ktorá krajina viac ostrovov než ktorákoľvek iná na Zemi — približne 267 000, pričom drvivá väčšina z nich je neobývaná?",
+      "after": "Ktorá krajina má podľa vlastného oficiálneho prieskumu viac ostrovov než ktorákoľvek iná na Zemi – približne 267 000, pričom drvivá väčšina z nich je neobývaná?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "92bf6bb3-6bf5-4426-a1ce-300a9b67eb53",
+      "status_before": "approved",
+      "before": "Ktorý album Michaela Jacksona s odhadovaným počtom 70 miliónov predaných kópií zostáva najpredávanejším albumom všetkých čias?",
+      "after": "Ktorý album Michaela Jacksona s odhadovaným počtom 70 miliónov predaných kópií zostáva najpredávanejším albumom všetkých čias?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "3c5f3786-887e-4f10-bced-217a83ca3755",
+      "status_before": "approved",
+      "before": "Mesiac sa každý rok vzdiali od Zeme približne o štyri centimetre. Vedci túto rýchlosť radi prirovnávajú k rýchlosti rastu ktorej časti ľudského tela?",
+      "after": "Mesiac sa každý rok vzdiali od Zeme približne o štyri centimetre. Vedci túto rýchlosť radi prirovnávajú k rýchlosti rastu jednej časti ľudského tela. O ktorú časť ľudského tela ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "bf84eaa2-b504-43f0-b330-e3797e929c29",
+      "status_before": "approved",
+      "before": "Venezuelský Anjelský vodopád, ktorý je s výškou 979 metrov najvyšším vodopádom sveta, dostal svoje meno podľa čoho?",
+      "after": "Venezuelský Anjelský vodopád je s výškou 979 metrov najvyšším vodopádom sveta. Podľa čoho dostal tento vodopád svoje meno?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0a446ae2-9e02-489d-804e-ce0460b3ecde",
+      "status_before": "approved",
+      "before": "Voda okolo jadra atómového reaktora žiari desivo modrým svetlom, pretože nabité častice, ktoré ňou preletujú, sa pohybujú rýchlejšie než niečo. Rýchlejšie než čo?",
+      "after": "Voda okolo jadra atómového reaktora žiari desivo modrým svetlom, pretože nabité častice, ktoré ňou preletujú, sa pohybujú rýchlejšie než niečo. Čo tieto častice svojou rýchlosťou prekonávajú?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "870796c2-423f-4b1c-81f2-7ba7ffe1242e",
+      "status_before": "approved",
+      "before": "Koľkokrát približne udrie ľudské srdce za priemerný ľudský život?",
+      "after": "Koľkokrát približne udrie ľudské srdce za priemerný ľudský život?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "db6b3698-7f20-4fd5-8ad4-5270827c9e8d",
+      "status_before": "approved",
+      "before": "Dlho uvádzaný muzikál Andrewa Lloyda Webbera Cats vychádza z hravej básnickej zbierky z roku 1939, ktorej autorom je ktorý nositeľ Nobelovej ceny, známejší vďaka dielu The Waste Land?",
+      "after": "Dlho uvádzaný muzikál Andrewa Lloyda Webbera Cats vychádza z hravej básnickej zbierky z roku 1939. Ktorý nositeľ Nobelovej ceny, známejší vďaka dielu The Waste Land, je autorom tejto zbierky?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9e8c2ebd-7131-4bdc-a3db-7181b5b8d0be",
+      "status_before": "approved",
+      "before": "Ktorá sopečná hornina, plná plynových bubliniek zo sopečného výbuchu, ktorý ju vytvoril, je známa tým, že dokáže plávať na vode?",
+      "after": "Ktorá sopečná hornina, plná plynových bubliniek zo sopečného výbuchu, ktorý ju vytvoril, je známa tým, že dokáže plávať na vode?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "5053fc85-0181-4836-8f85-104a78cee067",
+      "status_before": "approved",
+      "before": "Ktorý európsky jazyk, ktorým sa hovorí v západných Pyrenejach na pomedzí Španielska a Francúzska, je skutočným izolátom — nepríbuzným so žiadnym iným známym živým jazykom?",
+      "after": "Ktorý európsky jazyk, ktorým sa hovorí v západných Pyrenejach na pomedzí Španielska a Francúzska, je skutočným izolátom — nepríbuzným so žiadnym iným známym živým jazykom?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "6afeb849-779b-5ad5-97b1-c51fca1b132b",
+      "status_before": "approved",
+      "before": "Keď sa v 30. rokoch 20. storočia stavala Hooverova priehrada, robotníci zabudovali dovnútra konštrukcie stovky kilometrov oceľových rúr a prečerpávali cez ne ľadovo studenú vodu. Inžinieri vypočítali, že bez tohto triku by priehrada potrebovala vyše storočia na to, aby dokončila čo?",
+      "after": "Keď sa v 30. rokoch 20. storočia stavala Hooverova priehrada, robotníci zabudovali dovnútra konštrukcie stovky kilometrov oceľových rúr a prečerpávali cez ne ľadovo studenú vodu. Inžinieri vypočítali, že bez tohto triku by priehrada potrebovala na dokončenie istého procesu vyše storočia. Aký proces by priehrada bez tohto triku dokončovala vyše storočia?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "97c3253f-6a01-50da-83e3-2a9c3aa4bfb2",
+      "status_before": "approved",
+      "before": "Slávnych jedenásť Oscarov pre Titanic v roku 1998 rekord neprekonalo, iba vyrovnalo — ktorý veľkofilm z roku 1959 ho vytvoril?",
+      "after": "Slávnych jedenásť Oscarov pre Titanic v roku 1998 rekord neprekonalo, iba ho vyrovnalo. Ktorý veľkofilm z roku 1959 vytvoril tento oscarový rekord?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55",
+      "status_before": "approved",
+      "before": "V roku 1908 nemecká žena v domácnosti menom Melitta Bentzová vytrhla zo školského zošita svojho syna list pijavého papiera, prepichla dierky do mosadzného hrnca a vynašla tak kuchynskú pomôcku, ktorá dodnes nesie jej meno. O čo ide?",
+      "after": "V roku 1908 nemecká žena v domácnosti menom Melitta Bentzová vytrhla zo školského zošita svojho syna list pijavého papiera a prepichla dierky do mosadzného hrnca. Vynašla tak kuchynskú pomôcku, ktorá dodnes nesie jej meno. Akú kuchynskú pomôcku Melitta Bentzová vynašla?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "cc9db6e6-b3b6-4631-b2f8-30ef07d10892",
+      "status_before": "approved",
+      "before": "Sklenenú pyramídu pri vchode do Louvru v Paríži navrhol architekt, ktorý sa dožil 102 rokov. Približne koľko jednotlivých sklenených tabúľ táto pyramída obsahuje?",
+      "after": "Sklenenú pyramídu pri vchode do Louvru v Paríži navrhol architekt, ktorý sa dožil 102 rokov. Koľko jednotlivých sklenených tabúľ táto pyramída približne obsahuje?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "25854186-392a-4ab7-880a-4aa1a7e8bed9",
+      "status_before": "approved",
+      "before": "Najkratšia vojna v zaznamenaných dejinách sa odohrala medzi Britániou a Zanzibarom v roku 1896. Ako dlho približne trvala?",
+      "after": "Najkratšia vojna v zaznamenaných dejinách sa odohrala medzi Britániou a Zanzibarom v roku 1896. Ako dlho približne trvala?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+      "status_before": "approved",
+      "before": "Thriller Alfreda Hitchcocka Psycho z roku 1960 je známy scénou v sprche — no zlomil aj druhé hollywoodske kúpeľňové tabu: údajne sa stal prvým veľkým americkým filmom, ktorý na plátne ukázal, ako sa skutočne používa ktoré bežné zariadenie?",
+      "after": "Thriller Alfreda Hitchcocka Psycho z roku 1960 je známy scénou v sprche, no zlomil aj druhé hollywoodske kúpeľňové tabu: údajne sa stal prvým veľkým americkým filmom, ktorý na plátne ukázal skutočné používanie jedného bežného zariadenia. Ktoré bežné zariadenie to bolo?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "fd623190-5f5d-5a43-9bcc-b5f38e159360",
+      "status_before": "approved",
+      "before": "Z času na čas sa časti Európy zobudia do strašidelného „krvavého dažďa“, ktorý pokryje autá a sneh červenkastým filmom. Táto farba pochádza z prachu unášaného tisíce kilometrov na sever z ktorej púšte?",
+      "after": "Z času na čas sa časti Európy zobudia do strašidelného „krvavého dažďa“, ktorý pokryje autá a sneh červenkastým filmom. Táto farba pochádza z prachu, ktorý vietor unáša tisíce kilometrov na sever. Z ktorej púšte tento prach pochádza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "40519abd-5e42-5cf1-972f-a8b81cf9545d",
+      "status_before": "approved",
+      "before": "V roku 2026 boli fanúšikovia Deep Purple svedkami rockovej histórie, keď sa gitarista, ktorý zložil legendárny riff 'Smoke on the Water', prvýkrát od roku 1993 postavil s kapelou na pódium — kto to je?",
+      "after": "V roku 2026 boli fanúšikovia Deep Purple svedkami rockovej histórie, keď sa gitarista, ktorý zložil legendárny riff 'Smoke on the Water', prvýkrát od roku 1993 postavil s kapelou na pódium. Ako sa volá tento gitarista?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "77886e62-a469-402c-84cd-48efd7922361",
+      "status_before": "approved",
+      "before": "Hoci je miestami niekoľko kilometrov široký, hlavný tok ktorej mohutnej rieky nepreklenuje po celej jej dĺžke ani jediný most?",
+      "after": "Hlavný tok jednej mohutnej rieky je miestami niekoľko kilometrov široký, a predsa ho po celej jej dĺžke nepreklenuje ani jediný most. Ktorá je to rieka?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "959b9b2b-ac48-4bff-a667-ec1189035d8d",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: lode plávajúce cez Suezský prieplav musia prejsť sústavou plavebných komôr.",
+      "after": "Lode plávajúce cez Suezský prieplav musia prejsť sústavou plavebných komôr. Je to pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e6ab36db-58fd-41cd-ae87-c355ec8860d0",
+      "status_before": "approved",
+      "before": "Botanici klasifikujú plod ako bobuľu, ak vzniká zo semenníka jedného kvetu a semená sú uložené v jeho dužine. Podľa tohto prísneho pravidla, ktoré bežné ovocie, ktoré by ho väčšina ľudí nikdy nenazvala bobuľou, ňou v skutočnosti je?",
+      "after": "Botanici klasifikujú plod ako bobuľu, ak vzniká zo semenníka jedného kvetu a semená sú uložené v jeho dužine. Podľa tohto prísneho pravidla je bobuľou aj jedno bežné ovocie, ktoré by väčšina ľudí nikdy bobuľou nenazvala. Ktoré bežné ovocie je podľa tohto pravidla v skutočnosti bobuľou?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b48c7daa-3b74-4905-b114-40671024a829",
+      "status_before": "approved",
+      "before": "Ktorá krajina v roku 2005 náhle presťahovala svoje hlavné mesto z najväčšieho mesta do Nepjita — účelovo vybudovanej metropoly s 20-pruhovými diaľnicami, ktoré bývajú takmer úplne prázdne?",
+      "after": "Ktorá krajina v roku 2005 náhle presťahovala svoje hlavné mesto z najväčšieho mesta do Nepjita — účelovo vybudovanej metropoly s 20-pruhovými diaľnicami, ktoré bývajú takmer úplne prázdne?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+      "status_before": "approved",
+      "before": "Prvá verzia scenára ktorej trhákovej upírskej ságy zobrazovala hrdinku ako špičkovú športovkyňu, ktorú na vodných skútroch prenasleduje FBI?",
+      "after": "Prvá verzia scenára jednej trhákovej upírskej ságy zobrazovala hrdinku ako špičkovú športovkyňu, ktorú na vodných skútroch prenasleduje FBI. O ktorú upírsku ságu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "dbd0a4df-29d0-4804-bcf3-604b3b37646c",
+      "status_before": "approved",
+      "before": "Podľa mexických zákonov sa tequila smie destilovať len z jedného druhu ktorej rastliny?",
+      "after": "Podľa mexických zákonov sa tequila smie destilovať len z jedného druhu istej rastliny. O ktorú rastlinu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f7017ba7-a1af-4526-8d1f-76bde8d792e0",
+      "status_before": "approved",
+      "before": "Everest je najvyšší vrch nad morskou hladinou, ale keďže Zem je na rovníku vydutá, vrchol najvzdialenejší od stredu planéty patrí ktorej ekvádorskej sopke?",
+      "after": "Everest je najvyšší vrch nad morskou hladinou, ale keďže Zem je na rovníku vydutá, najvzdialenejší od stredu planéty je vrchol inej hory. Ktorej ekvádorskej sopke patrí vrchol najvzdialenejší od stredu planéty?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b396338d-af9a-5dc5-ad8b-1575177d7feb",
+      "status_before": "approved",
+      "before": "V januári 1969 ktorá kapela odohrala svoje úplne posledné verejné vystúpenie — neohlásený obedňajší koncert na streche svojej londýnskej administratívnej budovy, ktorý ukončila polícia?",
+      "after": "V januári 1969 odohrala istá kapela svoje úplne posledné verejné vystúpenie — neohlásený obedňajší koncert na streche svojej londýnskej administratívnej budovy, ktorý ukončila polícia. Ktorá kapela to bola?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "49275265-daf6-4d8e-8895-6916d5137113",
+      "status_before": "approved",
+      "before": "Psychológovia tvrdia, že to, čo nazývame lenivosťou, je často maskou pre niečo úplne iné. Podľa tohto názoru býva prokrastinácia zvyčajne poháňaná čím?",
+      "after": "Psychológovia tvrdia, že to, čo nazývame lenivosťou, je často maskou pre niečo úplne iné. Čím býva podľa tohto názoru prokrastinácia zvyčajne poháňaná?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "8aff34d0-a045-4856-8e53-f2f18af215d6",
+      "status_before": "approved",
+      "before": "Lietajúci tanier známy ako frisbee vďačí za svoj názov jednej firme z Connecticutu, ktorá vyrábala aký druh jedla?",
+      "after": "Lietajúci tanier známy ako frisbee vďačí za svoj názov jednej firme z Connecticutu. Aký druh jedla táto firma vyrábala?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "42a10e74-2914-44d5-8d35-edc5e8ab759d",
+      "status_before": "approved",
+      "before": "V ktorom desaťročí bola založená spoločnosť Nintendo, výrobca videohier?",
+      "after": "V ktorom desaťročí bola založená spoločnosť Nintendo, výrobca videohier?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0fa4dbec-502f-41fe-9696-decb852245a1",
+      "status_before": "approved",
+      "before": "'Wilhelmov výkrik', konzervovaný výkrik recyklovaný v stovkách filmov od Hviezdnych vojen po Toy Story, bol prvýkrát nahratý pre western v ktorom desaťročí?",
+      "after": "„Wilhelmov výkrik“ je konzervovaný výkrik recyklovaný v stovkách filmov od Hviezdnych vojen po Toy Story. V ktorom desaťročí bol prvýkrát nahratý pre western?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0123e93e-26cc-4931-b34d-4ebbccbfcb33",
+      "status_before": "approved",
+      "before": "Slnko a Mesiac vyzerajú na našej oblohe takmer presne rovnako veľké vďaka pozoruhodnej náhode, v ktorej vystupuje rovnaké číslo. Aký zhruba faktor spája ich veľkosti a ich vzdialenosti?",
+      "after": "Slnko a Mesiac vyzerajú na našej oblohe takmer presne rovnako veľké vďaka pozoruhodnej náhode, v ktorej vystupuje rovnaké číslo. Aký zhruba faktor spája ich veľkosti a ich vzdialenosti?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "fd16911e-1aa8-4505-9726-fc85ab5ed995",
+      "status_before": "approved",
+      "before": "Uvidíte záblesk blesku a začnete počítať, kým sa neozve hrom. Približne koľko sekúnd počítania zodpovedá jednému kilometru vzdialenosti od búrky?",
+      "after": "Uvidíte záblesk blesku a začnete počítať, kým sa neozve hrom. Koľko sekúnd počítania približne zodpovedá jednému kilometru vzdialenosti od búrky?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "da500a5a-96a3-4c13-93bd-e548c5a4a2c2",
+      "status_before": "approved",
+      "before": "Prelomový hit skupiny Nirvana 'Smells Like Teen Spirit' dostal názov podľa vety, ktorú Kurtovi Cobainovi načmárala kamarátka na stenu. Cobain netušil, že tá veta odkazovala na značku ktorého bežného výrobku?",
+      "after": "Prelomový hit skupiny Nirvana 'Smells Like Teen Spirit' dostal názov podľa vety, ktorú Kurtovi Cobainovi načmárala kamarátka na stenu. Cobain netušil, že tá veta odkazovala na značku istého bežného výrobku. Aký bežný výrobok to bol?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9015951b-446e-4752-8b33-e22f747a3f12",
+      "status_before": "approved",
+      "before": "Bezdrôtová technológia, ktorá spája váš telefón s autom, je pomenovaná po kráľovi z desiateho storočia z ktorej krajiny?",
+      "after": "Bezdrôtová technológia, ktorá spája váš telefón s autom, je pomenovaná po kráľovi z desiateho storočia. Z ktorej krajiny pochádzal tento kráľ?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "8022e07b-ecc0-5a01-bdca-579271097aec",
+      "status_before": "approved",
+      "before": "V roku 1945 si inžinier Percy Spencer všimol, že sa mu vo vrecku topí čokoládová tyčinka, keď stál pri zapnutom radare — nehoda, ktorá ho priviedla k vynálezu ktorého kuchynského spotrebiča?",
+      "after": "V roku 1945 si inžinier Percy Spencer všimol, že sa mu vo vrecku topí čokoládová tyčinka, keď stál pri zapnutom radare. Táto náhoda ho priviedla k vynálezu kuchynského spotrebiča. Ktorý kuchynský spotrebič vynašiel?",
+      "status_after": "approved"
+    }
+  ]
+}

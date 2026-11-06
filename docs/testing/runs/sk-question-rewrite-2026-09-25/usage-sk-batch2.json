@@ -1,0 +1,43 @@
+{
+  "stages": {
+    "rewrite": {
+      "session:opus": {
+        "calls": 62,
+        "input_tokens": 71225,
+        "output_tokens": 13543,
+        "calls_without_usage": 0,
+        "cost_cents": null
+      }
+    },
+    "verify": {
+      "session:sonnet": {
+        "calls": 88,
+        "input_tokens": 819350,
+        "output_tokens": 4514,
+        "calls_without_usage": 0,
+        "cost_cents": null
+      },
+      "session:opus": {
+        "calls": 44,
+        "input_tokens": 214740,
+        "output_tokens": 27305,
+        "calls_without_usage": 0,
+        "cost_cents": null
+      },
+      "session:haiku": {
+        "calls": 44,
+        "input_tokens": 300407,
+        "output_tokens": 19690,
+        "calls_without_usage": 0,
+        "cost_cents": null
+      }
+    }
+  },
+  "total_cost_cents_known": 0.0,
+  "unpriced_models": [
+    "session:haiku",
+    "session:opus",
+    "session:sonnet"
+  ],
+  "coverage": "Counts only LangChain-path chat calls (quiz_shared.llm.factory.chat_openai/chat_model — the sole LLM-client interception point). Known gaps, never wrapped: app/sourcing/opentriviadb_source.py + app/sourcing/topic_planner.py (topic-sourcing chat calls via native openai_client()), packages/shared/quiz_shared/utils/embeddings.py (embedding calls), app/image_generation/hint_images.py + silhouette_questions.py (image generation, priced per-image anyway)."
+}

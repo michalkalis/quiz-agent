@@ -7,11 +7,11 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   metadata/copyright.txt, primary_category.txt
   metadata/age_rating.json           age rating questionnaire answers (ageRatingDeclarations attributes)
   Hangs.xcodeproj MARKETING_VERSION  the App Store version string
-  store_copy.json                    TestFlight Test Information, What to Test, IAP texts
+  store_copy.json                    TestFlight Test Information, What to Test, IAP texts, consumables to create
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -22,14 +22,16 @@ import hashlib
 import json
 import os
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import requests
-from asc_audit import BASE, BUNDLE_ID, HEADERS, get
+from asc_audit import BASE, BUNDLE_ID, HEADERS, get, prices_with_points
 
 FL = Path(__file__).resolve().parents[1] / "apps/ios-app/Hangs/fastlane"
 MD = FL / "metadata"
 LOCALES = ["en-GB", "en-US", "sk", "cs"]
+V2 = BASE.replace("/v1", "/v2")
 APPLY = False
 
 
@@ -43,7 +45,8 @@ def send(method: str, path: str, body: dict | None = None) -> dict:
     print(f"  {method} {path} {json.dumps(shown, ensure_ascii=False)[:160] if body else ''}")
     if not APPLY:
         return {}
-    r = requests.request(method, f"{BASE}{path}", headers={**HEADERS, "Content-Type": "application/json"}, json=body, timeout=60)
+    url = path if path.startswith("http") else f"{BASE}{path}"
+    r = requests.request(method, url, headers={**HEADERS, "Content-Type": "application/json"}, json=body, timeout=60)
     if r.status_code >= 300:
         print(f"  !! {r.status_code} {r.text[:600]}")
         raise SystemExit(1)
@@ -157,6 +160,97 @@ def step_testflight(app_id: str, copy: dict, build: str | None) -> None:
             upsert("betaBuildLocalizations", existing, loc, {"whatsNew": tf["what_to_test"][loc]}, ("build", "builds", b["id"]))
 
 
+def all_pages(path: str, **params) -> list[dict]:
+    """GET every page of a list endpoint (follows links.next)."""
+    out, res = [], get(path, **params)
+    while True:
+        if "_error" in res:
+            raise SystemExit(f"  !! GET {path}: {res}")
+        out += res.get("data", [])
+        if not (nxt := res.get("links", {}).get("next")):
+            return out
+        res = get(nxt)
+
+
+def iap_base_price(iap_id: str) -> tuple[str | None, list[dict]]:
+    """Base territory and manual prices of an in-app purchase's price schedule; (None, []) when it has none."""
+    sched = get(f"{V2}/inAppPurchases/{iap_id}/iapPriceSchedule", include="baseTerritory")
+    if "_error" in sched or not sched.get("data"):
+        return None, []
+    base = (sched["data"].get("relationships", {}).get("baseTerritory", {}).get("data") or {}).get("id")
+    manual = get(f"/inAppPurchasePriceSchedules/{sched['data']['id']}/manualPrices", include="inAppPurchasePricePoint,territory", limit=200)
+    return base, prices_with_points(manual, "inAppPurchasePricePoint")
+
+
+def iap_availability(iap_id: str) -> tuple[bool, list[str]] | None:
+    """(availableInNewTerritories, territory ids) of an in-app purchase; None when availability is not set."""
+    av = get(f"{V2}/inAppPurchases/{iap_id}/inAppPurchaseAvailability")
+    if "_error" in av or not av.get("data"):
+        return None
+    terrs = all_pages(f"/inAppPurchaseAvailabilities/{av['data']['id']}/availableTerritories", limit=200)
+    return av["data"]["attributes"].get("availableInNewTerritories"), [t["id"] for t in terrs]
+
+
+def iap_price_point(iap_id: str, territory: str, price: str) -> dict:
+    points = all_pages(f"{V2}/inAppPurchases/{iap_id}/pricePoints", limit=200, **{"filter[territory]": territory})
+    hit = next((p for p in points if Decimal(p["attributes"]["customerPrice"]) == Decimal(price)), None)
+    if not hit:
+        raise SystemExit(f"  !! no price point {price} in {territory}")
+    return hit
+
+
+def step_iap_create(app_id: str, copy: dict) -> None:
+    """Create the consumables listed under iap_create that are missing in ASC: reference name, review note,
+    price in the base territory of `mirror` (other territories follow Apple's equalization) and the territories
+    of `mirror`. Existing products keep their settings; only a missing price or availability is filled in."""
+    print("iap-create")
+    have = {p["attributes"]["productId"]: p for p in all_pages(f"/apps/{app_id}/inAppPurchasesV2", limit=200)}
+    for pid, spec in copy.get("iap_create", {}).items():
+        if pid.startswith("_"):
+            continue
+        if pid not in copy["in_app_purchases"]:
+            raise SystemExit(f"  !! {pid}: no texts in in_app_purchases (the iap step writes them)")
+        mirror = have.get(spec["mirror"])
+        if not mirror:
+            raise SystemExit(f"  !! {pid}: mirror {spec['mirror']} not found in ASC")
+        base, manual = iap_base_price(mirror["id"])
+        avail = iap_availability(mirror["id"])
+        if not base or not avail:
+            raise SystemExit(f"  !! {pid}: mirror {spec['mirror']} has no price schedule or availability")
+        print(f"  mirror {spec['mirror']} ({mirror['attributes']['state']}): base {base}, manual prices "
+              f"{[(m['territory'], m.get('customerPrice')) for m in manual]}, {len(avail[1])} territories, "
+              f"availableInNewTerritories={avail[0]}")
+        if len(manual) > 1:
+            print("  note: the mirror has manual prices beyond its base territory; only the base price is set here")
+        cur = have.get(pid)
+        if cur:
+            iap_id = cur["id"]
+            need_price, need_avail = iap_base_price(iap_id)[0] is None, iap_availability(iap_id) is None
+            print(f"  {pid}: exists ({cur['attributes']['state']}), price set={not need_price}, availability set={not need_avail}")
+        else:
+            res = send("POST", f"{V2}/inAppPurchases", {"data": {"type": "inAppPurchases", "attributes": {
+                "name": spec["reference_name"], "productId": pid, "inAppPurchaseType": mirror["attributes"]["inAppPurchaseType"],
+                "reviewNote": spec["review_note"]}, "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+            iap_id = res.get("data", {}).get("id")
+            need_price = need_avail = True
+        if need_price:
+            # Price point ids belong to one product; a dry run looks the tier up on the mirror instead.
+            point = iap_price_point(iap_id or mirror["id"], base, spec["price"])
+            print(f"  price {base} {point['attributes']['customerPrice']} (proceeds {point['attributes'].get('proceeds')})")
+            send("POST", "/inAppPurchasePriceSchedules", {"data": {"type": "inAppPurchasePriceSchedules", "relationships": {
+                "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                "baseTerritory": {"data": {"type": "territories", "id": base}},
+                "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${base-price}"}]}}},
+                "included": [{"type": "inAppPurchasePrices", "id": "${base-price}", "attributes": {"startDate": None},
+                              "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                                                "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point["id"]}}}}]})
+        if need_avail:
+            send("POST", "/inAppPurchaseAvailabilities", {"data": {"type": "inAppPurchaseAvailabilities",
+                "attributes": {"availableInNewTerritories": avail[0]}, "relationships": {
+                    "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                    "availableTerritories": {"data": [{"type": "territories", "id": t} for t in avail[1]]}}}})
+
+
 def step_iap(app_id: str, copy: dict) -> None:
     print("iap")
     iap = copy["in_app_purchases"]
@@ -165,7 +259,7 @@ def step_iap(app_id: str, copy: dict) -> None:
         if not texts:
             continue
         # Only the v2 path lists IAP localizations; the v1 path answers with an empty list.
-        existing = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
+        existing = get(f"{V2}/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
         for loc in LOCALES:
             name, desc = texts[loc]
             upsert("inAppPurchaseLocalizations", existing, loc, {"name": name, "description": desc}, ("inAppPurchaseV2", "inAppPurchases", p["id"]))
@@ -394,6 +488,8 @@ def main() -> int:
         step_review(app_id)
     if "testflight" in steps:
         step_testflight(app_id, copy, args.build)
+    if "iap-create" in steps:
+        step_iap_create(app_id, copy)
     if "iap" in steps:
         step_iap(app_id, copy)
     if "screenshots" in steps:

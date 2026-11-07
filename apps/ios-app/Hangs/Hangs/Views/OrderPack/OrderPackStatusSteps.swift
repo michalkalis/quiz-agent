@@ -35,7 +35,7 @@ struct OrderPackPreparingStep: View {
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.isHeader)
-                Text("Usually takes a few minutes.")
+                Text("We check every question against sources, so it takes a few minutes.")
                     .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
                     .multilineTextAlignment(.center)

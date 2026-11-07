@@ -13,15 +13,18 @@ PICK YOUR QUIZ
 • Play in English, Slovak or Czech
 • Prefer typing? Every answer can be entered on screen too
 
+CHECKED QUESTIONS
+An AI chat can make things up in a quiz and still sound sure. Trubbo checks every question against sources on the web before you play it and drops anything that doesn't hold up. Every answer shows where the fact comes from.
+
 YOUR OWN PACK
-Describe any topic, for example space for kids or 90s music, and Trubbo writes a pack of 30 questions for you. The first questions are ready to play within minutes.
+Describe any topic, for example space for kids or 90s music, and Trubbo writes a pack of 30 questions for you, checked against sources too. The first questions are ready to play within minutes.
 
 FREE OR TRUBBO PLUS
 30 questions free every month. The Trubbo Plus subscription gives you 1,000 questions a month. A one-time pack of 100 questions never expires. Prices are shown in the app before you buy. The subscription renews automatically until you cancel it in your Apple Account settings.
 
 GOOD TO KNOW
 Playing in the car? Drive safe.
-Questions and answer evaluation are created with the help of AI and can contain mistakes. You can export or delete your data anytime in Settings.
+Questions and answer evaluation are created with the help of AI. We check the questions against sources, but a mistake can still slip through now and then. You can export or delete your data anytime in Settings.
 
 Privacy Policy: https://trubbo.app/privacy
 Terms of Use: https://trubbo.app/terms

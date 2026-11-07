@@ -13,15 +13,18 @@ VYBER SI KVÍZ
 • Hraj česky, slovensky nebo anglicky
 • Raději píšeš? Každou odpověď můžeš zadat i na obrazovce
 
+OVĚŘENÉ OTÁZKY
+AI chat si v kvízu umí vymýšlet a zní přitom jistě. Trubbo každou otázku před hrou ověří podle zdrojů na webu a co neobstojí, vyřadí. U každé odpovědi vidíš, odkud fakt pochází.
+
 VLASTNÍ BALÍČEK
-Napiš jakékoli téma, třeba vesmír pro děti nebo hudbu 90. let, a Trubbo ti připraví balíček 30 otázek. První otázky můžeš hrát už za pár minut.
+Napiš jakékoli téma, třeba vesmír pro děti nebo hudbu 90. let, a Trubbo ti připraví balíček 30 otázek. I ty ověří podle zdrojů. První otázky můžeš hrát už za pár minut.
 
 ZDARMA NEBO TRUBBO PLUS
 Každý měsíc 30 otázek zdarma. Předplatné Trubbo Plus ti dá 1 000 otázek měsíčně. Jednorázový balíček 100 otázek nikdy nevyprší. Ceny uvidíš v aplikaci ještě před nákupem. Předplatné se obnovuje automaticky, dokud ho nezrušíš v nastavení Apple účtu.
 
 DOBRÉ VĚDĚT
 Hraješ v autě? Jeď opatrně.
-Otázky a vyhodnocení odpovědí vznikají s pomocí umělé inteligence a mohou obsahovat chyby. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
+Otázky a vyhodnocení odpovědí vznikají s pomocí umělé inteligence. Otázky ověřujeme podle zdrojů, přesto se výjimečně může objevit chyba. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
 
 Zásady ochrany soukromí: https://trubbo.app/cs/privacy
 Podmínky použití: https://trubbo.app/cs/terms

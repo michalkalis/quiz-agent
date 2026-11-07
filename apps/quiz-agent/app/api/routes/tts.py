@@ -132,23 +132,15 @@ async def _remember_question_text(
         logger.info("Question text not cached on busy session %s", served.session_id)
 
 
-@router.get("/sessions/{session_id}/question/audio")
-@limiter.limit("60/minute")
-async def get_question_audio(
-    request: Request,
-    session_id: str,
-    session_manager: SessionManager = Depends(get_session_manager),
-    tts_service: TTSService = Depends(get_tts_service),
-    question_retriever: QuestionRetriever = Depends(get_question_retriever),
-    translation_service=Depends(get_translation_service),
-    subject: AuthSubject = Depends(require_auth_or_grace),
-):
-    """Get audio for current question in session (cached)."""
-    session = await session_manager.get_session(session_id)
-    # #144: this audio IS the question read aloud, so it leaks exactly what
-    # /sessions/{id}/question leaks — same owner gate.
-    require_session_ownership(session, subject, session_id=session_id)
-
+async def question_audio_response(
+    session,
+    session_manager: SessionManager,
+    tts_service: TTSService,
+    question_retriever: QuestionRetriever,
+    translation_service,
+) -> Response:
+    """The current question read aloud (cached). Callers authorize first:
+    the solo route by session owner, the room route (#230.1) by membership."""
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question in session")
 
@@ -175,7 +167,7 @@ async def get_question_audio(
                     current_question,
                     session.language,
                     translation_service,
-                    session_id=session_id,
+                    session_id=session.session_id,
                     question_store=question_retriever,
                     build_channel=session.build_channel,
                 )
@@ -211,9 +203,34 @@ async def get_question_audio(
         raise
     except Exception as e:
         logger.error(
-            "Audio generation failed for session %s: %s", session_id, e, exc_info=True
+            "Audio generation failed for session %s: %s",
+            session.session_id,
+            e,
+            exc_info=True,
         )
         raise HTTPException(status_code=500, detail="Audio generation failed")
+
+
+@router.get("/sessions/{session_id}/question/audio")
+@limiter.limit("60/minute")
+async def get_question_audio(
+    request: Request,
+    session_id: str,
+    session_manager: SessionManager = Depends(get_session_manager),
+    tts_service: TTSService = Depends(get_tts_service),
+    question_retriever: QuestionRetriever = Depends(get_question_retriever),
+    translation_service=Depends(get_translation_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """Get audio for current question in session (cached)."""
+    session = await session_manager.get_session(session_id)
+    # #144: this audio IS the question read aloud, so it leaks exactly what
+    # /sessions/{id}/question leaks — same owner gate.
+    require_session_ownership(session, subject, session_id=session_id)
+
+    return await question_audio_response(
+        session, session_manager, tts_service, question_retriever, translation_service
+    )
 
 
 @router.get("/tts/feedback/{result}")

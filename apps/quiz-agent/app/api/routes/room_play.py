@@ -10,13 +10,20 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from ...auth.identity import AuthSubject
 from ...rate_limit import limiter
 from ...rooms.service import RoomError, RoomService
-from ..deps import get_rooms, require_auth_or_grace
+from ..deps import (
+    get_question_retriever,
+    get_rooms,
+    get_session_manager,
+    get_translation_service,
+    get_tts_service,
+    require_auth_or_grace,
+)
 from .rooms import (
     RoomStateResponse,
     raise_http,
@@ -24,6 +31,7 @@ from .rooms import (
     state_reply,
     subject_or_401,
 )
+from .tts import question_audio_response
 
 router = APIRouter()
 
@@ -164,3 +172,33 @@ async def _run(coro) -> None:
         await coro
     except RoomError as e:
         raise_http(e)
+
+
+@router.get("/rooms/{room_id}/question/audio")
+@limiter.limit("60/minute")
+async def room_question_audio(
+    request: Request,
+    room_id: str,
+    question_id: str = Query(max_length=128),
+    rooms: Optional[RoomService] = Depends(get_rooms),
+    session_manager=Depends(get_session_manager),
+    tts_service=Depends(get_tts_service),
+    question_retriever=Depends(get_question_retriever),
+    translation_service=Depends(get_translation_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """The current question read aloud, for any member (#230.1): a guest in
+    another city hears what the host's phone reads. Same cached audio as
+    ``/sessions/{id}/question/audio``. Not a member → 404; lobby, finished or
+    not the current question → 409 (nothing is read before the guest sees it)."""
+    subject_id, service = subject_or_401(subject), service_or_404(rooms)
+    try:
+        session, _ = await service.state(room_id, subject_id)
+    except RoomError as e:
+        raise_http(e)
+    phase = getattr(session.phase, "value", session.phase)
+    if phase in ("idle", "finished") or session.current_question_id != question_id:
+        raise HTTPException(status_code=409, detail="Not the current question")
+    return await question_audio_response(
+        session, session_manager, tts_service, question_retriever, translation_service
+    )

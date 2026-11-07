@@ -1,0 +1,948 @@
+{
+	"language": "sk",
+	"recording": "demo/rec/sk/roundsk.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"restScale": 0.88,
+	"segments": [
+		{
+			"from": 0,
+			"to": 52.967
+		}
+	],
+	"taps": [
+		{
+			"t": 6.75,
+			"x": 603,
+			"y": 2284
+		},
+		{
+			"t": 19.95,
+			"x": 272,
+			"y": 2388
+		},
+		{
+			"t": 30.2,
+			"x": 864,
+			"y": 2350
+		}
+	],
+	"zooms": [
+		{
+			"from": 5.5,
+			"to": 7.3,
+			"x": 603,
+			"y": 2284,
+			"scale": 1.8
+		},
+		{
+			"from": 10.3,
+			"to": 16.1,
+			"x": 603,
+			"y": 1230,
+			"scale": 1.2
+		},
+		{
+			"from": 16.3,
+			"to": 18.6,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.7
+		},
+		{
+			"from": 18.6,
+			"to": 26.6,
+			"x": 504,
+			"y": 2348,
+			"scale": 1.7
+		},
+		{
+			"from": 26.7,
+			"to": 30.2,
+			"x": 603,
+			"y": 1554,
+			"scale": 1.5
+		},
+		{
+			"from": 30.2,
+			"to": 33.3,
+			"x": 327,
+			"y": 938,
+			"scale": 1.8
+		},
+		{
+			"from": 33.3,
+			"to": 36.5,
+			"x": 586,
+			"y": 1378,
+			"scale": 1.6
+		},
+		{
+			"from": 40.0,
+			"to": 43.6,
+			"x": 603,
+			"y": 679,
+			"scale": 1.8
+		},
+		{
+			"from": 45.4,
+			"to": 48.1,
+			"x": 603,
+			"y": 1340,
+			"scale": 1.6
+		},
+		{
+			"from": 49.4,
+			"to": 52.9,
+			"x": 603,
+			"y": 1315,
+			"scale": 1.8
+		}
+	],
+	"audio": [
+		{
+			"t": 0.3,
+			"src": "demo/rec/sk/norm/n1.mp3"
+		},
+		{
+			"t": 6.1,
+			"src": "demo/rec/sk/norm/n2.mp3"
+		},
+		{
+			"t": 10.45,
+			"src": "demo/rec/sk/norm/app-q.mp3"
+		},
+		{
+			"t": 16.4,
+			"src": "demo/rec/sk/norm/n3.mp3"
+		},
+		{
+			"t": 18.75,
+			"src": "demo/rec/sk/norm/n4.mp3"
+		},
+		{
+			"t": 24.8,
+			"src": "demo/rec/sk/norm/player.mp3"
+		},
+		{
+			"t": 27.5,
+			"src": "demo/rec/sk/norm/n5.mp3"
+		},
+		{
+			"t": 30.6,
+			"src": "demo/rec/sk/norm/app-correct.mp3"
+		},
+		{
+			"t": 33.4,
+			"src": "demo/rec/sk/norm/n6.mp3"
+		},
+		{
+			"t": 36.6,
+			"src": "demo/rec/sk/norm/n7.mp3"
+		},
+		{
+			"t": 43.95,
+			"src": "demo/rec/sk/norm/n8.mp3"
+		},
+		{
+			"t": 48.55,
+			"src": "demo/rec/sk/norm/n9.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.3,
+			"to": 2.78,
+			"text": "Trubbo je hlasový kvíz pre iPhone",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 0.3
+				},
+				{
+					"w": "je",
+					"t": 0.7
+				},
+				{
+					"w": "hlasový",
+					"t": 1.06
+				},
+				{
+					"w": "kvíz",
+					"t": 1.58
+				},
+				{
+					"w": "pre",
+					"t": 1.98
+				},
+				{
+					"w": "iPhone",
+					"t": 2.14
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 2.78,
+			"to": 6.35,
+			"text": "so zábavnými otázkami, nie školskými.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "so",
+					"t": 2.78
+				},
+				{
+					"w": "zábavnými",
+					"t": 3.02
+				},
+				{
+					"w": "otázkami,",
+					"t": 3.66
+				},
+				{
+					"w": "nie",
+					"t": 4.7
+				},
+				{
+					"w": "školskými.",
+					"t": 4.98
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 6.1,
+			"to": 7.22,
+			"text": "Ťukni na Štart",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Ťukni",
+					"t": 6.1
+				},
+				{
+					"w": "na",
+					"t": 6.42
+				},
+				{
+					"w": "Štart",
+					"t": 6.66
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 7.22,
+			"to": 10.63,
+			"text": "a Trubbo ti každú otázku prečíta nahlas.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "a",
+					"t": 7.22
+				},
+				{
+					"w": "Trubbo",
+					"t": 7.46
+				},
+				{
+					"w": "ti",
+					"t": 7.82
+				},
+				{
+					"w": "každú",
+					"t": 8.02
+				},
+				{
+					"w": "otázku",
+					"t": 8.46
+				},
+				{
+					"w": "prečíta",
+					"t": 9.02
+				},
+				{
+					"w": "nahlas.",
+					"t": 9.46
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 10.45,
+			"to": 12.61,
+			"text": "Ktorého európskeho kráľovstva",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Ktorého",
+					"t": 10.45
+				},
+				{
+					"w": "európskeho",
+					"t": 11.01
+				},
+				{
+					"w": "kráľovstva",
+					"t": 11.73
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 12.61,
+			"to": 14.45,
+			"text": "je najväčší ostrov sveta",
+			"kind": "said",
+			"words": [
+				{
+					"w": "je",
+					"t": 12.61
+				},
+				{
+					"w": "najväčší",
+					"t": 12.85
+				},
+				{
+					"w": "ostrov",
+					"t": 13.49
+				},
+				{
+					"w": "sveta",
+					"t": 13.97
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 14.45,
+			"to": 16.58,
+			"text": "samosprávnym územím?",
+			"kind": "said",
+			"words": [
+				{
+					"w": "samosprávnym",
+					"t": 14.45
+				},
+				{
+					"w": "územím?",
+					"t": 15.33
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 16.4,
+			"to": 19.09,
+			"text": "Máš pár sekúnd na rozmyslenie.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Máš",
+					"t": 16.4
+				},
+				{
+					"w": "pár",
+					"t": 16.64
+				},
+				{
+					"w": "sekúnd",
+					"t": 16.88
+				},
+				{
+					"w": "na",
+					"t": 17.52
+				},
+				{
+					"w": "rozmyslenie.",
+					"t": 17.68
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 18.75,
+			"to": 20.75,
+			"text": "Potom ťukni na Odpovedz",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Potom",
+					"t": 18.75
+				},
+				{
+					"w": "ťukni",
+					"t": 19.39
+				},
+				{
+					"w": "na",
+					"t": 19.87
+				},
+				{
+					"w": "Odpovedz",
+					"t": 19.99
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 20.75,
+			"to": 22.75,
+			"text": "a povedz odpoveď nahlas,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "a",
+					"t": 20.75
+				},
+				{
+					"w": "povedz",
+					"t": 20.99
+				},
+				{
+					"w": "odpoveď",
+					"t": 21.31
+				},
+				{
+					"w": "nahlas,",
+					"t": 21.91
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 22.75,
+			"to": 25.12,
+			"text": "alebo ju napíš, ak chceš.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "alebo",
+					"t": 22.75
+				},
+				{
+					"w": "ju",
+					"t": 23.11
+				},
+				{
+					"w": "napíš,",
+					"t": 23.23
+				},
+				{
+					"w": "ak",
+					"t": 23.87
+				},
+				{
+					"w": "chceš.",
+					"t": 24.03
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 24.8,
+			"to": 27.015,
+			"text": "Hmm... Dánsko!",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Hmm...",
+					"t": 24.8
+				},
+				{
+					"w": "Dánsko!",
+					"t": 25.589
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 25.489,
+			"to": 26.9,
+			"text": "Dánsko!",
+			"kind": "player"
+		},
+		{
+			"from": 27.5,
+			"to": 30.35,
+			"text": "Trubbo tvoju odpoveď skontroluje",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 27.5
+				},
+				{
+					"w": "tvoju",
+					"t": 27.94
+				},
+				{
+					"w": "odpoveď",
+					"t": 28.34
+				},
+				{
+					"w": "skontroluje",
+					"t": 28.86
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 30.6,
+			"to": 33.61,
+			"text": "Správne! Odpoveď je Dánsko.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Správne!",
+					"t": 30.6
+				},
+				{
+					"w": "Odpoveď",
+					"t": 31.64
+				},
+				{
+					"w": "je",
+					"t": 32.28
+				},
+				{
+					"w": "Dánsko.",
+					"t": 32.44
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 33.4,
+			"to": 36.81,
+			"text": "a vysvetlí ju jednou či dvoma vetami.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "a",
+					"t": 33.4
+				},
+				{
+					"w": "vysvetlí",
+					"t": 33.56
+				},
+				{
+					"w": "ju",
+					"t": 34.2
+				},
+				{
+					"w": "jednou",
+					"t": 34.36
+				},
+				{
+					"w": "či",
+					"t": 34.92
+				},
+				{
+					"w": "dvoma",
+					"t": 35.16
+				},
+				{
+					"w": "vetami.",
+					"t": 35.56
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 36.6,
+			"to": 39.32,
+			"text": "Hrať môžeš aj s kamarátmi okolo seba.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Hrať",
+					"t": 36.6
+				},
+				{
+					"w": "môžeš",
+					"t": 36.92
+				},
+				{
+					"w": "aj",
+					"t": 37.32
+				},
+				{
+					"w": "s",
+					"t": 37.52
+				},
+				{
+					"w": "kamarátmi",
+					"t": 37.6
+				},
+				{
+					"w": "okolo",
+					"t": 38.2
+				},
+				{
+					"w": "seba.",
+					"t": 38.6
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 39.32,
+			"to": 40.52,
+			"text": "V tej istej Wi-Fi",
+			"kind": "said",
+			"words": [
+				{
+					"w": "V",
+					"t": 39.32
+				},
+				{
+					"w": "tej",
+					"t": 39.44
+				},
+				{
+					"w": "istej",
+					"t": 39.64
+				},
+				{
+					"w": "Wi-Fi",
+					"t": 40.04
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 40.52,
+			"to": 43.45,
+			"text": "sa im tvoja hra ukáže v telefóne.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "sa",
+					"t": 40.52
+				},
+				{
+					"w": "im",
+					"t": 40.76
+				},
+				{
+					"w": "tvoja",
+					"t": 40.88
+				},
+				{
+					"w": "hra",
+					"t": 41.24
+				},
+				{
+					"w": "ukáže",
+					"t": 41.56
+				},
+				{
+					"w": "v",
+					"t": 42.0
+				},
+				{
+					"w": "telefóne.",
+					"t": 42.16
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 43.95,
+			"to": 45.15,
+			"text": "Po každej otázke",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Po",
+					"t": 43.95
+				},
+				{
+					"w": "každej",
+					"t": 44.11
+				},
+				{
+					"w": "otázke",
+					"t": 44.59
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 45.15,
+			"to": 48.32,
+			"text": "všetci uvidia, kto čo odpovedal.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "všetci",
+					"t": 45.15
+				},
+				{
+					"w": "uvidia,",
+					"t": 45.59
+				},
+				{
+					"w": "kto",
+					"t": 46.27
+				},
+				{
+					"w": "čo",
+					"t": 46.59
+				},
+				{
+					"w": "odpovedal.",
+					"t": 46.95
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 48.55,
+			"to": 50.95,
+			"text": "A môžeš si objednať vlastný kvíz",
+			"kind": "said",
+			"words": [
+				{
+					"w": "A",
+					"t": 48.55
+				},
+				{
+					"w": "môžeš",
+					"t": 48.71
+				},
+				{
+					"w": "si",
+					"t": 49.35
+				},
+				{
+					"w": "objednať",
+					"t": 49.51
+				},
+				{
+					"w": "vlastný",
+					"t": 49.99
+				},
+				{
+					"w": "kvíz",
+					"t": 50.47
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 50.95,
+			"to": 52.967,
+			"text": "na akúkoľvek tému.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "na",
+					"t": 50.95
+				},
+				{
+					"w": "akúkoľvek",
+					"t": 51.19
+				},
+				{
+					"w": "tému.",
+					"t": 51.91
+				}
+			],
+			"karaoke": true
+		}
+	],
+	"marks": [
+		{
+			"from": 6.3,
+			"to": 7.3,
+			"x": 30,
+			"y": 2198,
+			"w": 1146,
+			"h": 173,
+			"r": 86,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 10.4,
+			"to": 11.68,
+			"x": 103,
+			"y": 1525,
+			"w": 759,
+			"h": 108,
+			"style": "band",
+			"alpha": 1,
+			"hold": true
+		},
+		{
+			"from": 11.68,
+			"to": 13.44,
+			"x": 101,
+			"y": 1635,
+			"w": 790,
+			"h": 108,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 103,
+				"y": 1525,
+				"w": 759,
+				"h": 108
+			},
+			"hold": true
+		},
+		{
+			"from": 13.44,
+			"to": 14.4,
+			"x": 100,
+			"y": 1745,
+			"w": 466,
+			"h": 108,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 101,
+				"y": 1635,
+				"w": 790,
+				"h": 108
+			},
+			"hold": true
+		},
+		{
+			"from": 14.4,
+			"to": 16.1,
+			"x": 100,
+			"y": 1855,
+			"w": 946,
+			"h": 108,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 100,
+				"y": 1745,
+				"w": 466,
+				"h": 108
+			}
+		},
+		{
+			"from": 16.9,
+			"to": 18.6,
+			"x": 46,
+			"y": 2092,
+			"w": 1114,
+			"h": 178,
+			"r": 89,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 19.8,
+			"to": 20.6,
+			"x": 48,
+			"y": 2304,
+			"w": 447,
+			"h": 168,
+			"r": 84,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 22.8,
+			"to": 24.6,
+			"x": 522,
+			"y": 2307,
+			"w": 441,
+			"h": 162,
+			"r": 81,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 24.8,
+			"to": 26.5,
+			"x": 42,
+			"y": 2088,
+			"w": 1122,
+			"h": 186,
+			"r": 93,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 28.3,
+			"to": 30.0,
+			"x": 119,
+			"y": 1500,
+			"w": 409,
+			"h": 108,
+			"r": 12,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 31.6,
+			"to": 33.3,
+			"x": 106,
+			"y": 882,
+			"w": 442,
+			"h": 112,
+			"r": 12,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 33.7,
+			"to": 36.4,
+			"x": 100,
+			"y": 1175,
+			"w": 972,
+			"h": 405,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 41.3,
+			"to": 43.5,
+			"x": 49,
+			"y": 589,
+			"w": 1108,
+			"h": 180,
+			"r": 72,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 46.2,
+			"to": 48.0,
+			"x": 48,
+			"y": 1183,
+			"w": 1110,
+			"h": 315,
+			"r": 66,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 51.0,
+			"to": 52.8,
+			"x": 48,
+			"y": 1199,
+			"w": 668,
+			"h": 112,
+			"r": 10,
+			"style": "glow",
+			"alpha": 0.6
+		}
+	],
+	"endCard": true,
+	"endWord": "Zadarmo.",
+	"endAudio": "demo/rec/sk/norm/n10.mp3"
+}

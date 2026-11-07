@@ -71,6 +71,7 @@ Všetko pod `/api/v1`, s prihlásením (anonymný `subject_id` stačí), mimo pr
 | všetci | `POST /rooms/{id}/answer` {question_id, answer} | kľúč možnosti (a–d) alebo napísaný text; raz, konečné; 409 = už odpovedal / čas vypršal |
 | všetci | `POST /rooms/{id}/away` {question_id} | appka išla do pozadia počas otázky, nie počas hovoru (212.4) |
 | hostiteľ | `POST /rooms/{id}/next` | ďalšia otázka pre všetkých alebo koniec; 409 kým sa odpovedá |
+| hostiteľ, hosť | `GET /rooms/{id}/question/audio?question_id=` | zvuk aktuálnej otázky pre člena (audio/opus, rovnaký ako solo); cudzí 404, iná otázka alebo lobby/koniec 409 (230.1) |
 | všetci | `GET /rooms/{id}/state?since=<version>` cca raz za sekundu | `changed:false` = bez zmeny; inak status lobby/playing/finished, players, question (tvar ako solo), round, na konci ranking, rounds, away (len hostiteľ) |
 
 `round.phase`: reading (hostiteľ číta, `remaining_ms` chýba) → answering (odpočet od `remaining_ms`, nie od hodín mobilu) → grading → revealed (`correct_answer`, `explanation`, `results`). `answered` = kto už odpovedal, čo odpovedal je skryté do odhalenia. Pri `reveal_mode=round` appka výsledky otázok ukáže až na konci z `rounds`. `finished_reason`: max_questions / usage_limit (hostiteľovi došiel limit, ponuka ako solo) / no_more_questions. Čas: A až D = thinking + 5 s, voľná = thinking + 18 s, 2 s tolerancia na doručenie.

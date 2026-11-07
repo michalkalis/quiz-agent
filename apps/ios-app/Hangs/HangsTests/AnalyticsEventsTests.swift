@@ -48,6 +48,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "together_opened": [],
     "room_settings_changed": ["setting", "value", "surface"],
     "room_pause_changed": ["paused", "question"],
+    "room_guest_read_aloud": ["on", "via"],
     "home_category_stepped": ["direction", "input", "to"],
     "home_category_picker_opened": ["source"],
     "quick_game_changed": ["enabled"],

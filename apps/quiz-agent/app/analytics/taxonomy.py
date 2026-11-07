@@ -88,6 +88,7 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
     # #224.4: the host stayed on a reveal (paused) or let the game go on.
     "room_pause_changed": frozenset({"paused", "question"}),
+    "room_guest_read_aloud": frozenset({"on", "via"}),
     # #224.6: a step on the Home category deck (to = category id or "all"), and
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),

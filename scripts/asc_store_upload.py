@@ -94,6 +94,7 @@ def step_listing(app_id: str) -> None:
     info = next((i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION"), None)
     if info is None:
         print("  no editable app info: every version is on sale, run the version step first")
+        promo_text_only(app_id)
         return
     cat = txt(MD / "primary_category.txt")
     cur_cat = (get(f"/appInfos/{info['id']}/primaryCategory").get("data") or {}).get("id")

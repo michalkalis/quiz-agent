@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 230 | [Hra spolu na diaľku (cez internet)](issue-230-together-remote.md) | enhancement · ready-for-agent | `[~]` #230 | 2026-11-07: server nasadený (PR #761), appka v PR, test na zariadení s hovorom |
 | 224 | [TF test 2026-11-02: Hra spolu, Home, výsledky, vlastné balíky](issue-224-tf-feedback-2026-11-02.md) | enhancement · ready-for-agent | `[~]` #224 | 2026-11-02: 13 nálezov; 224.1–224.3 v práci, návrhy 224.4–224.6 |
 | 229 | [Kontrola vyhľadávania otázok a duplicít](issue-229-vector-search-dedup-audit.md) | enhancement · ready-for-agent | `[ ]` #229 | 2026-11-05: založené (founder) |
 | 228 | [Vlastný balík: vždy plný + menší balík s 10 otázkami](issue-228-custom-pack-always-full.md) | enhancement · ready-for-agent | `[ ]` #228 | 2026-11-05: plán; meranie 24/30 a 16/30 |

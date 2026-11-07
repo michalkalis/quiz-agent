@@ -43,6 +43,6 @@ Hra spolu funguje aj s hráčmi v inom meste (napr. brat). Hosť sa pripojí odk
 
 ## Úlohy
 
-- [ ] **230.1 Server: zvuk otázky pre hosťa** — endpoint, testy (hosť dostane zvuk, cudzí 404, stará otázka 409, lobby 409), nasadenie.
-- [ ] **230.2 Appka: hosť číta nahlas + pozvanie na diaľku** — prepínač, predvolba podľa cesty pripojenia, prehrávanie bez prerušenia hovoru, texty, analytika, unit testy RoomViewModel, snímky.
+- [x] **230.1 Server: zvuk otázky pre hosťa** (2026-11-07, PR #761, nasadené) — endpoint, testy (hosť dostane zvuk, cudzí 404, stará otázka 409, lobby 409), nasadenie.
+- [x] **230.2 Appka: hosť číta nahlas + pozvanie na diaľku** — prepínač, predvolba podľa cesty pripojenia, prehrávanie bez prerušenia hovoru, texty, analytika, unit testy RoomViewModel, snímky.
 - [ ] **230.3 Test na zariadení** — founder s niekým mimo domu (WhatsApp hovor + hra), s TestFlight buildom na požiadanie.

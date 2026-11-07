@@ -30,7 +30,9 @@ struct RoomQuestionView: View {
                             question: question,
                             isHost: viewModel.isHost,
                             canReplay: viewModel.settings.readsAloud && !viewModel.isReadingAloud,
-                            hostIsReading: round.phase == .reading,
+                            hostIsReading: round.phase == .reading && !viewModel.guestReadsAloud,
+                            guestReadsAloud: viewModel.guestReadsAloud,
+                            toggleGuestReadAloud: { Task { await viewModel.setGuestReadsAloud(!viewModel.guestReadsAloud) } },
                             replay: viewModel.readAgain
                         )
                         answerArea(question, round: round)

@@ -4,6 +4,7 @@ Naskenuj a pridaj sa
 Hráči v tej istej Wi-Fi nájdu hru aj v Trubbe pod tlačidlom Spolu.
 Pošli odkaz
 Pridaj sa k mojej hre v Trubbe
+Odkaz funguje aj pre kamarátov v inom meste.
 Hráči
 4
 M

@@ -8174,6 +8174,57 @@
         }
       }
     },
+    "Read aloud on this phone" : {
+      "comment" : "Hra spolu (#230): guest's speaker button, reads each question on their own phone",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čti nahlas na tomto mobilu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čítaj nahlas na tomto mobile"
+          }
+        }
+      }
+    },
+    "On" : {
+      "comment" : "Hra spolu (#230): state of the guest's read-aloud button",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapnuto"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapnuté"
+          }
+        }
+      }
+    },
+    "The link also works for friends in another city." : {
+      "comment" : "Hra spolu (#230): host lobby, one line under the share button",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odkaz funguje i pro kamarády v jiném městě."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odkaz funguje aj pre kamarátov v inom meste."
+          }
+        }
+      }
+    },
     "Read again" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {

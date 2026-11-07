@@ -143,6 +143,12 @@ import os
             setupQuietListeningSessionCallCount += 1
         }
 
+        var setupPlaybackOnlySessionCallCount = 0
+
+        func setupPlaybackOnlySession() throws {
+            setupPlaybackOnlySessionCallCount += 1
+        }
+
         /// Counts deactivations so the scene-phase teardown tests can assert the
         /// session is released only when idle (never under in-flight TTS).
         var deactivateSessionCallCount = 0

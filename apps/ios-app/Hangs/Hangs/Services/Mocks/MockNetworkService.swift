@@ -399,7 +399,10 @@ import os
             return response
         }
 
-        func downloadAudio(from _: String) async throws -> Data {
+        var downloadedAudioPaths: [String] = []
+
+        func downloadAudio(from path: String) async throws -> Data {
+            downloadedAudioPaths.append(path)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }

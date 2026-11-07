@@ -18,6 +18,9 @@ struct RoomQuestionCard: View {
     let canReplay: Bool
     /// Guest: the host's phone is reading the question aloud right now.
     let hostIsReading: Bool
+    /// Guest: this phone reads the question aloud (#230.2); the button switches it.
+    var guestReadsAloud = false
+    var toggleGuestReadAloud: () -> Void = {}
     let replay: () -> Void
 
     @State private var scroll = ScrollPosition()
@@ -67,14 +70,29 @@ struct RoomQuestionCard: View {
             .opacity(canReplay ? 1 : Metrics.dimmed)
             .accessibilityLabel(Text("Read again"))
             .accessibilityIdentifier("room.readAgain")
-        } else if hostIsReading {
-            Label("The host is reading aloud", systemImage: "speaker.wave.2")
-                .font(.hangsCaption)
-                .labelStyle(.titleAndIcon)
-                .lineLimit(1)
-                .minimumScaleFactor(Metrics.minScale)
-                .accessibilityIdentifier("room.question.reading")
+        } else {
+            HStack(spacing: Metrics.gap) {
+                if hostIsReading { hostReadingLabel }
+                Button(action: toggleGuestReadAloud) {
+                    Image(systemName: guestReadsAloud ? "speaker.wave.2" : "speaker.slash")
+                        .font(.hangsBody(Metrics.iconSize, weight: .semibold))
+                        .frame(width: Metrics.buttonSide, height: Metrics.buttonSide)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Read aloud on this phone"))
+                .accessibilityValue(Text(guestReadsAloud ? "On" : "Off"))
+                .accessibilityIdentifier("room.guestReadAloud")
+            }
         }
+    }
+
+    private var hostReadingLabel: some View {
+        Label("The host is reading aloud", systemImage: "speaker.wave.2")
+            .font(.hangsCaption)
+            .labelStyle(.titleAndIcon)
+            .lineLimit(1)
+            .minimumScaleFactor(Metrics.minScale)
+            .accessibilityIdentifier("room.question.reading")
     }
 
     /// Same pacing as the solo screen: a beat on the top, then a slow drift.
@@ -94,5 +112,6 @@ struct RoomQuestionCard: View {
         static let iconSize: CGFloat = 16
         static let buttonSide: CGFloat = 44
         static let dimmed = 0.4
+        static let gap: CGFloat = 4
     }
 }

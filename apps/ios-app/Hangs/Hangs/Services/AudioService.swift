@@ -64,6 +64,9 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
 
     func setupAudioSession(mode: AudioMode) throws
     func setupQuietListeningSession() throws
+    /// #230.2: a guest's phone only plays the question. No microphone, mixable,
+    /// so it never interrupts a call or music that is already running.
+    func setupPlaybackOnlySession() throws
     func deactivateSession()
     /// #185 track C: undo the implicit `.voiceChat` a voice-processing engine
     /// leaves on the session — called while no command-listener engine is up
@@ -375,6 +378,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         registerSessionObservers()
 
         Logger.audio.info("🎤 Audio session configured for quiet Home listening (mixable, no ducking)")
+    }
+
+    func setupPlaybackOnlySession() throws {
+        let session = AVAudioSession.sharedInstance()
+        let configuration = SessionConfiguration(category: .playback, mode: .default, options: [.mixWithOthers])
+        resetMicCapture()
+        try session.setCategory(configuration.category, mode: configuration.mode, options: configuration.options)
+        appliedSessionConfiguration = configuration
+        try session.setActive(true)
+        registerSessionObservers()
+        Logger.audio.info("Audio session configured for playback only (mixable, no microphone)")
     }
 
     /// Observe route changes (Bluetooth connect/disconnect) and session

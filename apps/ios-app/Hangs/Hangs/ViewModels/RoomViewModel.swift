@@ -59,6 +59,9 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var autoAdvanceLeft: Int?
     /// Host: a pause or resume is on its way to the server (#224.4).
     @Published var isChangingPause = false
+    /// Guest: this phone reads each question aloud itself (#230.2). On by
+    /// default after a link join (a friend in another city), off next to the host.
+    @Published var guestReadsAloud = false
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
@@ -97,6 +100,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     var readQuestionId: String?
     var advanceQuestionId: String?
     var questionAudioPath: String?
+    var guestReadTask: Task<Void, Never>?
+    var guestReadQuestionId: String?
 
     static let pollInterval: Duration = .seconds(1)
     static let nearbyInterval: Duration = .seconds(3)
@@ -220,6 +225,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         stopNearbySearch()
         self.invite = invite
         role = .guest
+        if case .token = invite { guestReadsAloud = true } else { guestReadsAloud = false }
         isWorking = true
         defer { isWorking = false }
         do {
@@ -296,6 +302,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// everyone unless it is already over.
     func leave() async {
         stopAll()
+        if role == .guest { await audio.stopPlayback() }
         guard let roomId = state?.roomId ?? created?.roomId else { return }
         if role == .guest, let you = state?.you, !hasEnded {
             try? await rooms.removePlayer(roomId: roomId, participantId: you)
@@ -309,6 +316,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         pollTask?.cancel()
         pollTask = nil
         readTask?.cancel()
+        guestReadTask?.cancel()
         advanceTask?.cancel()
         autoAdvanceLeft = nil
     }
@@ -360,6 +368,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
             }
         }
         if role == .host { hostReact(to: new) }
+        if role == .guest { guestReact(to: new) }
         if new.finishedReason == "usage_limit" { quotaReached = true }
     }
 

@@ -61,6 +61,15 @@ nonisolated enum RoomInvite: Equatable, Sendable {
     case token(String)
     case qr(String)
 
+    /// How the guest got in, as the analytics name it (same words as the server's `via`).
+    var via: String {
+        switch self {
+        case .nearby: "nearby"
+        case .qr: "qr"
+        case .token: "link"
+        }
+    }
+
     static let joinPageURL = "https://trubbo.app/join"
     static let tokenQueryItem = "t"
     static let qrFragment = "qr"

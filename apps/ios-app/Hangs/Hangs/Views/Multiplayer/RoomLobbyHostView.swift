@@ -92,6 +92,10 @@ struct RoomLobbyHostView: View {
                             .background(Capsule().fill(Theme.Hangs.Colors.bgInset))
                     }
                     .accessibilityIdentifier("room.share")
+                    Text("The link also works for friends in another city.")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .frame(maxWidth: .infinity)
                 }
             }
             .padding(Theme.Hangs.Spacing.md)

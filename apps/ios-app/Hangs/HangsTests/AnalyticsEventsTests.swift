@@ -84,6 +84,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .togetherOpened,
     .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
     .roomPauseChanged(paused: true, question: 3),
+    .roomGuestReadAloud(on: true, via: "link"),
     .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
     .homeCategoryPickerOpened(source: .deckButton),
     .quickGameChanged(enabled: true),

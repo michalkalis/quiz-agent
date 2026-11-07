@@ -25,6 +25,7 @@ question.counter
 room.question.players
 room.question.timer
 question.category
+room.guestReadAloud
 question.text
 mcq.option.a
 mcq.option.b

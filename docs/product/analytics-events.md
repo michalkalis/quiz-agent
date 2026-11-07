@@ -41,6 +41,7 @@
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |
 | `together_opened` | the Together tab comes on screen (#216.2); with `room_created` / `room_joined` it shows how many who look at the tab go on to play | — |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
+| `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |
 | `room_pause_changed` | the host of a game together stayed on a reveal or resumed (#224.4); the server accepted it | `paused` (true / false), `question` (number) |
 | `home_category_stepped` | a step on the Home category deck (#224.6): one per tap or VoiceOver adjust | `direction` (next / previous), `input` (tap / voiceover), `to` (category id, or `all`) |
 | `home_category_picker_opened` | the multi-category picker opened on Home (#224.6) | `source` (deck_button / pill) |

@@ -37,7 +37,8 @@ struct RoomViewModelTests {
     private func makeModel(
         accountName: String? = "Michal Kalis",
         solo: QuizSettings = .default,
-        settings: MultiplayerSettings = Self.perQuestion
+        settings: MultiplayerSettings = Self.perQuestion,
+        analytics: AnalyticsClient = NoopAnalyticsClient()
     ) -> RoomViewModel {
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = .previewStartQuiz
@@ -45,7 +46,7 @@ struct RoomViewModelTests {
         settingsStore.save(settings)
         return RoomViewModel(
             rooms: rooms, network: network, audio: audio, solo: solo, deviceId: "device",
-            accountName: accountName, names: names, settingsStore: settingsStore, calls: calls,
+            accountName: accountName, names: names, settingsStore: settingsStore, analytics: analytics, calls: calls,
             clock: AnyClock(clock), languageCode: "sk", isOffCellular: { true }
         )
     }
@@ -283,6 +284,104 @@ struct RoomViewModelTests {
         #expect(model.round?.number == 2)
         #expect(model.screen == .question)
         #expect(rooms.openCalls == 0, "only the host opens a question")
+    }
+
+    // MARK: - Guest reads aloud (#230.2)
+
+    private let audioPath = "/api/v1/rooms/\(MockRoomService.roomId)/question/audio?question_id=mq1"
+
+    @Test("Only a link join reads aloud by default: a friend in another city has no host in the room to listen to")
+    func guestReadDefaults() async {
+        for (invite, expected) in [
+            (RoomInvite.token(MockRoomService.token), true),
+            (.qr(MockRoomService.token), false),
+            (.nearby(NearbyRoom(roomId: "r", hostName: "M", hostColor: nil, playerCount: 1)), false),
+        ] {
+            let model = makeModel()
+            await model.join(invite)
+            model.stopAll()
+            #expect(model.guestReadsAloud == expected, "\(invite.via)")
+        }
+    }
+
+    @Test("The guest's phone downloads the room audio once per question, even though it polls every second")
+    func guestReadsOncePerQuestion() async {
+        network.mockAudioData = Data([1, 2, 3])
+        let model = makeModel()
+        await model.join(.token(MockRoomService.token))
+        defer { model.stopAll() }
+
+        rooms.hostStarts()
+        await model.refresh()
+        await model.guestReadTask?.value
+        rooms.hostStarts() // a new room version for the same question
+        await model.refresh()
+        #expect(network.downloadedAudioPaths == [audioPath])
+        #expect(audio.playOpusCallCount == 1)
+        #expect(audio.lastPlayedData == Data([1, 2, 3]))
+        #expect(audio.setupPlaybackOnlySessionCallCount == 1, "playback only and mixable, so a call is never interrupted")
+        #expect(audio.setupAudioSessionCallCount == 0, "the ducking recording session is for the host's quiz")
+    }
+
+    @Test("A guest next to the host (QR) stays silent: the host's phone already reads the question")
+    func guestQrSilent() async {
+        let model = makeModel()
+        await model.join(.qr(MockRoomService.token))
+        defer { model.stopAll() }
+
+        rooms.hostStarts()
+        await model.refresh()
+        await model.guestReadTask?.value
+        #expect(network.downloadedAudioPaths.isEmpty)
+        #expect(audio.playOpusCallCount == 0)
+    }
+
+    @Test("Switching reading off mid-clip stops it, and switching it on again does not replay the same question")
+    func guestToggleOff() async {
+        let analytics = MockAnalyticsClient()
+        audio.holdsPlaybackUntilStopped = true
+        let model = makeModel(analytics: analytics)
+        await model.join(.token(MockRoomService.token))
+        defer { model.stopAll() }
+
+        rooms.hostStarts()
+        await model.refresh()
+        while !audio.isPlaying {
+            await Task.yield()
+        }
+        await model.setGuestReadsAloud(false)
+        await model.guestReadTask?.value
+        #expect(audio.stopPlaybackCallCount == 1)
+        #expect(!model.guestReadsAloud)
+
+        await model.setGuestReadsAloud(true)
+        await model.guestReadTask?.value
+        #expect(network.downloadedAudioPaths == [audioPath], "this question was already read once")
+        #expect(analytics.events == [.roomGuestReadAloud(on: false, via: "link"), .roomGuestReadAloud(on: true, via: "link")])
+    }
+
+    @Test("A guest who turns reading on later reads the question that is open, ")
+    func guestTurnsOnLater() async {
+        let model = makeModel()
+        await model.join(.qr(MockRoomService.token))
+        defer { model.stopAll() }
+        rooms.hostStarts()
+        await model.refresh()
+
+        await model.setGuestReadsAloud(true)
+        await model.guestReadTask?.value
+        #expect(network.downloadedAudioPaths == [audioPath])
+    }
+
+    @Test("The host's own reading is untouched by the guest code: it uses the session download and the quiz audio session")
+    func hostUnchanged() async {
+        let model = await hostAtFirstQuestion()
+        defer { model.stopAll() }
+
+        #expect(audio.setupPlaybackOnlySessionCallCount == 0)
+        #expect(audio.setupAudioSessionCallCount == 1)
+        #expect(network.downloadedAudioPaths.allSatisfy { $0.contains("/sessions/") })
+        #expect(!model.guestReadsAloud)
     }
 
     @Test("A game that is full or over says so, and the guest stays on the start screen")

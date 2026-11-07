@@ -45,6 +45,8 @@ enum AnalyticsEvent: Equatable {
     /// ("round", "45", "true").
     /// #224.4: the host stayed on a reveal (paused) or let the game go on.
     case roomPauseChanged(paused: Bool, question: Int)
+    /// #230.2: a guest switched reading aloud on their own phone on or off; `via` is nearby, qr or link.
+    case roomGuestReadAloud(on: Bool, via: String)
     /// #224.6: a step on the Home category deck; `to` is the category id or "all".
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
@@ -76,6 +78,7 @@ enum AnalyticsEvent: Equatable {
         case .togetherOpened: "together_opened"
         case .roomSettingsChanged: "room_settings_changed"
         case .roomPauseChanged: "room_pause_changed"
+        case .roomGuestReadAloud: "room_guest_read_aloud"
         case .homeCategoryStepped: "home_category_stepped"
         case .homeCategoryPickerOpened: "home_category_picker_opened"
         case .quickGameChanged: "quick_game_changed"
@@ -144,6 +147,8 @@ enum AnalyticsEvent: Equatable {
             []
         case let .roomPauseChanged(paused, question):
             [("paused", .bool(paused)), ("question", .int(question))]
+        case let .roomGuestReadAloud(on, via):
+            [("on", .bool(on)), ("via", .string(via))]
         case let .homeCategoryStepped(direction, input, to):
             [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
         case let .homeCategoryPickerOpened(source):

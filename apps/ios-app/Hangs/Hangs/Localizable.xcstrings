@@ -8180,13 +8180,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Číst nahlas na tomto mobilu"
+            "value" : "Čti nahlas na tomto mobilu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Čítať nahlas na tomto mobile"
+            "value" : "Čítaj nahlas na tomto mobile"
           }
         }
       }

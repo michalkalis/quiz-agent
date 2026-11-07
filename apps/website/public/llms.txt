@@ -1,6 +1,6 @@
 # Trubbo
 
-> Trubbo is a fun quiz for iPhone, for road trips and parties. It reads every question aloud and you answer out loud. In English, Slovak and Czech.
+> Trubbo is a fun quiz for iPhone, for road trips and parties. It reads every question aloud, you answer out loud, and every question is checked against sources before you play. In English, Slovak and Czech.
 
 Trubbo reads each question aloud and the player answers in their own words; the app checks the answer and tells the story behind it. People play it alone or together: on road trips, at parties, at the cabin, with family.
 

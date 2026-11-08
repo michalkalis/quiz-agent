@@ -25,9 +25,18 @@ const EndWord: React.FC<{text: string; size: number}> = ({text, size}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const p = spring({frame: frame - Math.round(fps * 0.2), fps, config: {damping: 11, stiffness: 160}});
+	// Centred optically: a trailing period (or similar) hangs right of the centred word; it carries almost no visual weight.
+	const [, body, tail] = /^(.*?)([.,!?…]*)$/su.exec(text) ?? [text, text, ''];
 	return (
-		<div style={{opacity: Math.min(1, p * 1.5), color: INK}}>
-			<TitleText text={text} size={size} scale={0.6 + 0.4 * p} />
+		<div style={{opacity: Math.min(1, p * 1.5), color: INK, transform: `scale(${0.6 + 0.4 * p})`}}>
+			<div style={{position: 'relative'}}>
+				<TitleText text={body} size={size} />
+				{tail ? (
+					<div style={{position: 'absolute', left: '100%', top: 0}}>
+						<TitleText text={tail} size={size} />
+					</div>
+				) : null}
+			</div>
 		</div>
 	);
 };

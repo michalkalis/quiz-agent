@@ -7486,13 +7486,13 @@
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hráči v tej istej Wi-Fi nájdu hru aj v Trubbe pod tlačidlom Spolu."
+            "value" : "Hráči na tej istej Wi-Fi nájdu hru aj v Trubbe pod tlačidlom Spolu."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hráči ve stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu."
+            "value" : "Hráči na stejné Wi-Fi najdou hru i v Trubbu pod tlačítkem Spolu."
           }
         }
       }

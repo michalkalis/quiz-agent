@@ -20,6 +20,12 @@ FORMAL = {
 # Plural imperative as the first word ("Skúste", "Zkuste", "Zadajte").
 FORMAL_IMPERATIVE = re.compile(r"^(\w{3,}(?:ajte|ejte|ujte|ite|íte|ete|ste|te))\b")
 WRONG_SCRIPT = {"sk": re.compile(r"[řůě]"), "cs": re.compile(r"[äôľĺŕ]")}
+CONTRAST_TAIL = re.compile(r",\s(nie|ne|not)\s\w|\bnielen\b|\bnejen\b|\bnot (just|only)\b", re.IGNORECASE)
+STOCK_WORDS = re.compile(
+    r"\b(seamless\w*|elevate\w*|unleash\w*|delve\w*|effortless\w*|immersive|vibrant|game-changer|"
+    r"jedinečn\w+|bezproblémov\w+|revolučn\w+|ponor sa|ponoř se)\b",
+    re.IGNORECASE,
+)
 TERMS = re.compile(r"\b(relácia|relácie|reláciu|relace|session|game)\b", re.IGNORECASE)
 
 
@@ -61,6 +67,10 @@ def check(row: dict) -> list[dict]:
             together = "#212" in row["comment"] or "Hra spolu" in row["comment"]  # multiplayer is a game
             if TERMS.search(text) and not together and "vypršala" not in text and "vypršela" not in text:
                 flag(lang, 7, f"term: {TERMS.search(text).group(0)!r}")
+            if CONTRAST_TAIL.search(text):
+                flag(lang, 12, f"contrast tail: {text!r}")
+            if STOCK_WORDS.search(text):
+                flag(lang, 15, f"stock word {STOCK_WORDS.search(text).group(0)!r}")
             if "Hangs" in text:
                 flag(lang, 7, "code name in text")
         if lang != "en":

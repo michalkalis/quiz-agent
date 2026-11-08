@@ -16,6 +16,25 @@ Source of truth for every text a player sees or hears: `Localizable.xcstrings`, 
 10. **Spoken texts** (TTS) read naturally aloud: no symbols, abbreviations or quote marks the voice would pronounce.
 11. **Placeholders** (`%@`, `%lld`, `%1$@`) keep their count and order in every language.
 
+### Sound like a person (rules 12 to 19)
+
+Founder, 2026-11-08: these apply to every Trubbo text, also App Store, web, socials and video narration (CI checks only the app strings listed above). Test: would a friend say it out loud like this? Sources: `docs/research/human-sounding-copy-2026-11-08.md`.
+
+12. **No contrast tail.** No „X, nie Y“, „nie X, ale Y“, „nielen X, ale aj Y“, "not X, but Y", "not just X". Say the positive thing concretely.
+    ✗ „so zábavnými otázkami, nie školskými“ → ✓ „so zábavnými otázkami z bežného života“ · ✗ "fun questions, not school trivia" → ✓ "fun questions about everyday life"
+13. **Concrete nouns, not abstract ones.** Name the thing: otázky, kvíz, kamaráti, telefón. Not „zážitok“, „obsah“, „funkcia“, „riešenie“, "experience", "content", "feature".
+    ✗ „Zážitok z kvízu pre celú partiu“ → ✓ „Kvíz pre celú partiu“
+14. **Verbs, not office nouns.** ✗ „Trubbo vykoná kontrolu odpovede“ → ✓ „Trubbo skontroluje odpoveď“. Also not „za účelom“, „prostredníctvom“, „realizovať“, "utilize", "facilitate".
+15. **No stock marketing words.** en: seamless, elevate, unleash, delve, effortless, immersive, vibrant, ultimate, next-level, game-changer, empower. sk: jedinečný, bezproblémový, revolučný, dokonalý zážitok, posuň na novú úroveň, ponor sa. cs: jedinečný, bezproblémový, revoluční, dokonalý zážitek, posuň na novou úroveň, ponoř se. Say what the player gets.
+    ✗ "Elevate your road trips with seamless voice trivia" → ✓ "Play a quiz by voice on your next drive"
+16. **No triads for show.** No three adjectives or three parallel benefits in a row; keep the one or two that matter.
+    ✗ „Rýchly, zábavný a chytrý kvíz“ → ✓ „Rýchly kvíz na cestu“
+17. **No filler hooks or reveals.** No sales rhetorical question as an opener („Chceš zažiť…?“, "Ready to…?") and no colon or question reveal („Výsledok? Zábava.“). Real quiz questions are fine. No empty intensifiers: „jednoducho, skutočne, naozaj“, "simply, truly, actually, just".
+    ✗ „Hľadáš zábavu na cesty? Trubbo je tu!“ → ✓ „Trubbo ti cestou prečíta otázky a ty odpovedáš.“
+18. **sk/cs prepositions and phrases as people say them, not copied from English.** ✗ „v tej istej Wi‑Fi“ → ✓ „na tej istej Wi‑Fi“ (cs „na stejné Wi‑Fi“) · ✗ „Užívaj si kvíz“ (*enjoy*) → ✓ „Bav sa“ or nothing · ✗ „urob rozdiel“ (*make a difference*) → say the effect.
+19. **Spoken texts and narration: short sentences, one idea each, in the order the player does it**, mixing short and medium lengths. Web and social copy: no emoji bullets, sentence case ("Play with friends", not "Play With Friends").
+    ✗ „Po zodpovedaní otázky dostaneš vysvetlenie v jednej či dvoch vetách.“ → ✓ „Odpovieš. Trubbo ti povie, či je to správne, a prečo.“
+
 ## Review procedure
 
 Report only objective violations of the rules above, each with the exact replacement text for every affected language. Taste and tone are not findings; when a text looks off but no rule covers it, leave it for the founder in one summary comment. Author agents fix or rebut every finding before merge (PR workflow in `.claude/rules/shared.md`).

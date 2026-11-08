@@ -10,6 +10,9 @@ import {INK, SURF, tintFor} from './theme';
 import type {Language} from './types';
 
 export const END_CARD_S = 3.2;
+/** Same inset on both sides (the wider one), so the card is centred on the frame, not on the asymmetric safe area. */
+const SIDE = Math.max(SAFE.left, SAFE.right);
+
 export const END_TINT = tintFor('science-nature');
 
 export const Fade: React.FC<{frames: number; children: React.ReactNode; bg: string; out?: boolean}> = ({frames, children, bg, out = true}) => {
@@ -46,7 +49,7 @@ export const EndCard: React.FC<{language: Language; frames: number; word?: strin
 	const copy = COPY[language];
 	return (
 		<Fade frames={frames} bg={END_TINT.bg} out={false}>
-			<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: word ? 40 : 56, padding: `${SAFE.top}px ${SAFE.right}px ${SAFE.bottom - 120}px ${SAFE.left}px`}}>
+			<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: word ? 40 : 56, padding: `${SAFE.top}px ${SIDE}px ${SAFE.bottom - 120}px ${SIDE}px`}}>
 				{word ? <EndWord text={word} size={wordSize} /> : null}
 				<div style={{width: 340, height: 340, borderRadius: 170, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 					<Monkey size={260} mood="happy" />

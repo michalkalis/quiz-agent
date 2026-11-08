@@ -10,7 +10,7 @@
 	"segments": [
 		{
 			"from": 0,
-			"to": 52.967
+			"to": 51.367
 		}
 	],
 	"taps": [
@@ -20,12 +20,12 @@
 			"y": 2284
 		},
 		{
-			"t": 19.95,
+			"t": 16.85,
 			"x": 272,
 			"y": 2388
 		},
 		{
-			"t": 30.2,
+			"t": 26.3,
 			"x": 864,
 			"y": 2350
 		}
@@ -36,120 +36,116 @@
 			"to": 7.3,
 			"x": 603,
 			"y": 2284,
-			"scale": 1.8
-		},
-		{
-			"from": 10.3,
-			"to": 16.1,
-			"x": 603,
-			"y": 1230,
-			"scale": 1.2
-		},
-		{
-			"from": 16.3,
-			"to": 18.6,
-			"x": 603,
-			"y": 2181,
-			"scale": 1.7
-		},
-		{
-			"from": 18.6,
-			"to": 26.6,
-			"x": 504,
-			"y": 2348,
-			"scale": 1.7
-		},
-		{
-			"from": 26.7,
-			"to": 30.2,
-			"x": 603,
-			"y": 1554,
 			"scale": 1.5
 		},
 		{
-			"from": 30.2,
-			"to": 33.3,
-			"x": 327,
-			"y": 938,
-			"scale": 1.8
+			"from": 10.0,
+			"to": 12.8,
+			"x": 603,
+			"y": 1804,
+			"scale": 1.15
 		},
 		{
-			"from": 33.3,
-			"to": 36.5,
-			"x": 586,
-			"y": 1378,
-			"scale": 1.6
+			"from": 13.0,
+			"to": 16.5,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.5
 		},
 		{
-			"from": 40.0,
-			"to": 43.6,
+			"from": 16.5,
+			"to": 23.4,
+			"x": 603,
+			"y": 2284,
+			"scale": 1.5
+		},
+		{
+			"from": 24.6,
+			"to": 26.3,
+			"x": 603,
+			"y": 1614,
+			"scale": 1.4
+		},
+		{
+			"from": 26.3,
+			"to": 30.1,
+			"x": 603,
+			"y": 1010,
+			"scale": 1.5
+		},
+		{
+			"from": 30.1,
+			"to": 35.0,
+			"x": 603,
+			"y": 1304,
+			"scale": 1.4
+		},
+		{
+			"from": 39.3,
+			"to": 42.0,
 			"x": 603,
 			"y": 679,
-			"scale": 1.8
-		},
-		{
-			"from": 45.4,
-			"to": 48.1,
-			"x": 603,
-			"y": 1340,
 			"scale": 1.6
 		},
 		{
-			"from": 49.4,
-			"to": 52.9,
+			"from": 42.8,
+			"to": 46.5,
 			"x": 603,
-			"y": 1315,
-			"scale": 1.8
+			"y": 1340,
+			"scale": 1.4
+		},
+		{
+			"from": 47.6,
+			"to": 51.3,
+			"x": 603,
+			"y": 1324,
+			"scale": 1.6
 		}
 	],
 	"audio": [
 		{
 			"t": 0.3,
-			"src": "demo/rec/sk/norm/n1.mp3"
+			"src": "demo/rec/sk/norm/m1.mp3"
 		},
 		{
 			"t": 6.1,
-			"src": "demo/rec/sk/norm/n2.mp3"
+			"src": "demo/rec/sk/norm/m2.mp3"
 		},
 		{
-			"t": 10.45,
+			"t": 10.2,
 			"src": "demo/rec/sk/norm/app-q.mp3"
 		},
 		{
-			"t": 16.4,
-			"src": "demo/rec/sk/norm/n3.mp3"
+			"t": 13.0,
+			"src": "demo/rec/sk/norm/m3.mp3"
 		},
 		{
-			"t": 18.75,
-			"src": "demo/rec/sk/norm/n4.mp3"
+			"t": 15.8,
+			"src": "demo/rec/sk/norm/m4.mp3"
 		},
 		{
-			"t": 24.8,
+			"t": 21.0,
 			"src": "demo/rec/sk/norm/player.mp3"
 		},
 		{
-			"t": 27.5,
-			"src": "demo/rec/sk/norm/n5.mp3"
-		},
-		{
-			"t": 30.6,
+			"t": 26.7,
 			"src": "demo/rec/sk/norm/app-correct.mp3"
 		},
 		{
-			"t": 33.4,
-			"src": "demo/rec/sk/norm/n6.mp3"
+			"t": 30.15,
+			"src": "demo/rec/sk/norm/m5.mp3"
 		},
 		{
-			"t": 36.6,
-			"src": "demo/rec/sk/norm/n7.mp3"
+			"t": 35.45,
+			"src": "demo/rec/sk/norm/m6.mp3"
 		},
 		{
-			"t": 43.95,
-			"src": "demo/rec/sk/norm/n8.mp3"
+			"t": 42.6,
+			"src": "demo/rec/sk/norm/m7.mp3"
 		},
 		{
-			"t": 48.55,
-			"src": "demo/rec/sk/norm/n9.mp3"
+			"t": 46.95,
+			"src": "demo/rec/sk/norm/m8.mp3"
 		}
 	],
 	"captions": [
@@ -169,7 +165,7 @@
 				},
 				{
 					"w": "hlasový",
-					"t": 1.06
+					"t": 0.94
 				},
 				{
 					"w": "kvíz",
@@ -177,19 +173,19 @@
 				},
 				{
 					"w": "pre",
-					"t": 1.98
+					"t": 1.9
 				},
 				{
 					"w": "iPhone",
-					"t": 2.14
+					"t": 2.34
 				}
 			],
 			"karaoke": true
 		},
 		{
 			"from": 2.78,
-			"to": 6.35,
-			"text": "so zábavnými otázkami, nie školskými.",
+			"to": 6.27,
+			"text": "so zábavnými otázkami z bežného života.",
 			"kind": "said",
 			"words": [
 				{
@@ -201,23 +197,27 @@
 					"t": 3.02
 				},
 				{
-					"w": "otázkami,",
-					"t": 3.66
+					"w": "otázkami",
+					"t": 3.74
 				},
 				{
-					"w": "nie",
-					"t": 4.7
+					"w": "z",
+					"t": 4.38
 				},
 				{
-					"w": "školskými.",
-					"t": 4.98
+					"w": "bežného",
+					"t": 4.54
+				},
+				{
+					"w": "života.",
+					"t": 5.06
 				}
 			],
 			"karaoke": true
 		},
 		{
 			"from": 6.1,
-			"to": 7.22,
+			"to": 7.3,
 			"text": "Ťukni na Štart",
 			"kind": "said",
 			"words": [
@@ -237,522 +237,510 @@
 			"karaoke": true
 		},
 		{
-			"from": 7.22,
-			"to": 10.63,
-			"text": "a Trubbo ti každú otázku prečíta nahlas.",
+			"from": 7.3,
+			"to": 10.31,
+			"text": "a Trubbo ti prečíta otázku nahlas.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "a",
-					"t": 7.22
+					"t": 7.3
 				},
 				{
 					"w": "Trubbo",
-					"t": 7.46
+					"t": 7.54
 				},
 				{
 					"w": "ti",
-					"t": 7.82
-				},
-				{
-					"w": "každú",
-					"t": 8.02
-				},
-				{
-					"w": "otázku",
-					"t": 8.46
+					"t": 7.94
 				},
 				{
 					"w": "prečíta",
-					"t": 9.02
+					"t": 8.1
+				},
+				{
+					"w": "otázku",
+					"t": 8.62
 				},
 				{
 					"w": "nahlas.",
-					"t": 9.46
+					"t": 9.18
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 10.45,
-			"to": 12.61,
-			"text": "Ktorého európskeho kráľovstva",
+			"from": 10.2,
+			"to": 11.68,
+			"text": "Čo je najtvrdšia látka",
 			"kind": "said",
 			"words": [
 				{
-					"w": "Ktorého",
-					"t": 10.45
+					"w": "Čo",
+					"t": 10.2
 				},
-				{
-					"w": "európskeho",
-					"t": 11.01
-				},
-				{
-					"w": "kráľovstva",
-					"t": 11.73
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 12.61,
-			"to": 14.45,
-			"text": "je najväčší ostrov sveta",
-			"kind": "said",
-			"words": [
 				{
 					"w": "je",
-					"t": 12.61
+					"t": 10.36
 				},
 				{
-					"w": "najväčší",
-					"t": 12.85
+					"w": "najtvrdšia",
+					"t": 10.44
 				},
 				{
-					"w": "ostrov",
-					"t": 13.49
-				},
-				{
-					"w": "sveta",
-					"t": 13.97
+					"w": "látka",
+					"t": 11.24
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 14.45,
-			"to": 16.58,
-			"text": "samosprávnym územím?",
+			"from": 11.68,
+			"to": 13.21,
+			"text": "v ľudskom tele?",
 			"kind": "said",
 			"words": [
 				{
-					"w": "samosprávnym",
-					"t": 14.45
+					"w": "v",
+					"t": 11.68
 				},
 				{
-					"w": "územím?",
-					"t": 15.33
+					"w": "ľudskom",
+					"t": 11.76
+				},
+				{
+					"w": "tele?",
+					"t": 12.2
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 16.4,
-			"to": 19.09,
-			"text": "Máš pár sekúnd na rozmyslenie.",
+			"from": 13.0,
+			"to": 15.45,
+			"text": "Chvíľu máš na rozmyslenie.",
 			"kind": "said",
 			"words": [
 				{
-					"w": "Máš",
-					"t": 16.4
+					"w": "Chvíľu",
+					"t": 13.0
 				},
 				{
-					"w": "pár",
-					"t": 16.64
-				},
-				{
-					"w": "sekúnd",
-					"t": 16.88
+					"w": "máš",
+					"t": 13.52
 				},
 				{
 					"w": "na",
-					"t": 17.52
+					"t": 13.8
 				},
 				{
 					"w": "rozmyslenie.",
-					"t": 17.68
+					"t": 13.96
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 18.75,
-			"to": 20.75,
+			"from": 15.8,
+			"to": 17.72,
 			"text": "Potom ťukni na Odpovedz",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Potom",
-					"t": 18.75
+					"t": 15.8
 				},
 				{
 					"w": "ťukni",
-					"t": 19.39
+					"t": 16.36
 				},
 				{
 					"w": "na",
-					"t": 19.87
+					"t": 16.76
 				},
 				{
 					"w": "Odpovedz",
-					"t": 19.99
+					"t": 16.88
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 20.75,
-			"to": 22.75,
-			"text": "a povedz odpoveď nahlas,",
+			"from": 17.72,
+			"to": 19.4,
+			"text": "a povedz odpoveď.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "a",
-					"t": 20.75
+					"t": 17.72
 				},
 				{
 					"w": "povedz",
-					"t": 20.99
+					"t": 18.04
 				},
 				{
-					"w": "odpoveď",
-					"t": 21.31
-				},
-				{
-					"w": "nahlas,",
-					"t": 21.91
+					"w": "odpoveď.",
+					"t": 18.44
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 22.75,
-			"to": 25.12,
-			"text": "alebo ju napíš, ak chceš.",
+			"from": 19.4,
+			"to": 21.13,
+			"text": "Alebo ju napíš.",
 			"kind": "said",
 			"words": [
 				{
-					"w": "alebo",
-					"t": 22.75
+					"w": "Alebo",
+					"t": 19.4
 				},
 				{
 					"w": "ju",
-					"t": 23.11
+					"t": 19.8
 				},
 				{
-					"w": "napíš,",
-					"t": 23.23
-				},
-				{
-					"w": "ak",
-					"t": 23.87
-				},
-				{
-					"w": "chceš.",
-					"t": 24.03
+					"w": "napíš.",
+					"t": 20.0
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 24.8,
-			"to": 27.015,
-			"text": "Hmm... Dánsko!",
+			"from": 21.0,
+			"to": 23.633,
+			"text": "Hmm... zubná sklovina!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Hmm...",
-					"t": 24.8
+					"t": 21.0
 				},
 				{
-					"w": "Dánsko!",
-					"t": 25.589
+					"w": "zubná",
+					"t": 21.859
+				},
+				{
+					"w": "sklovina!",
+					"t": 22.242
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 25.489,
-			"to": 26.9,
-			"text": "Dánsko!",
+			"from": 21.759,
+			"to": 23.6,
+			"text": "Zubná sklovina!",
 			"kind": "player"
 		},
 		{
-			"from": 27.5,
-			"to": 30.35,
-			"text": "Trubbo tvoju odpoveď skontroluje",
-			"kind": "said",
-			"words": [
-				{
-					"w": "Trubbo",
-					"t": 27.5
-				},
-				{
-					"w": "tvoju",
-					"t": 27.94
-				},
-				{
-					"w": "odpoveď",
-					"t": 28.34
-				},
-				{
-					"w": "skontroluje",
-					"t": 28.86
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 30.6,
-			"to": 33.61,
-			"text": "Správne! Odpoveď je Dánsko.",
+			"from": 26.7,
+			"to": 27.82,
+			"text": "Správne!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Správne!",
-					"t": 30.6
-				},
-				{
-					"w": "Odpoveď",
-					"t": 31.64
-				},
-				{
-					"w": "je",
-					"t": 32.28
-				},
-				{
-					"w": "Dánsko.",
-					"t": 32.44
+					"t": 26.7
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 33.4,
-			"to": 36.81,
-			"text": "a vysvetlí ju jednou či dvoma vetami.",
+			"from": 27.82,
+			"to": 30.43,
+			"text": "Odpoveď je zubná sklovina.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Odpoveď",
+					"t": 27.82
+				},
+				{
+					"w": "je",
+					"t": 28.38
+				},
+				{
+					"w": "zubná",
+					"t": 28.62
+				},
+				{
+					"w": "sklovina.",
+					"t": 29.1
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 30.15,
+			"to": 32.47,
+			"text": "Trubbo ti povie, či máš pravdu,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 30.15
+				},
+				{
+					"w": "ti",
+					"t": 30.59
+				},
+				{
+					"w": "povie,",
+					"t": 30.71
+				},
+				{
+					"w": "či",
+					"t": 31.27
+				},
+				{
+					"w": "máš",
+					"t": 31.39
+				},
+				{
+					"w": "pravdu,",
+					"t": 31.67
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 32.47,
+			"to": 35.72,
+			"text": "a jednou dvoma vetami vysvetlí prečo.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "a",
-					"t": 33.4
-				},
-				{
-					"w": "vysvetlí",
-					"t": 33.56
-				},
-				{
-					"w": "ju",
-					"t": 34.2
+					"t": 32.47
 				},
 				{
 					"w": "jednou",
-					"t": 34.36
-				},
-				{
-					"w": "či",
-					"t": 34.92
+					"t": 32.63
 				},
 				{
 					"w": "dvoma",
-					"t": 35.16
+					"t": 33.19
 				},
 				{
-					"w": "vetami.",
-					"t": 35.56
+					"w": "vetami",
+					"t": 33.59
+				},
+				{
+					"w": "vysvetlí",
+					"t": 34.03
+				},
+				{
+					"w": "prečo.",
+					"t": 34.63
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 36.6,
-			"to": 39.32,
-			"text": "Hrať môžeš aj s kamarátmi okolo seba.",
+			"from": 35.45,
+			"to": 38.01,
+			"text": "Hrať môžeš aj s kamarátmi pri sebe.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Hrať",
-					"t": 36.6
+					"t": 35.45
 				},
 				{
 					"w": "môžeš",
-					"t": 36.92
+					"t": 35.77
 				},
 				{
 					"w": "aj",
-					"t": 37.32
+					"t": 36.25
 				},
 				{
 					"w": "s",
-					"t": 37.52
+					"t": 36.37
 				},
 				{
 					"w": "kamarátmi",
-					"t": 37.6
+					"t": 36.45
 				},
 				{
-					"w": "okolo",
-					"t": 38.2
+					"w": "pri",
+					"t": 37.13
 				},
 				{
-					"w": "seba.",
-					"t": 38.6
+					"w": "sebe.",
+					"t": 37.29
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 39.32,
-			"to": 40.52,
-			"text": "V tej istej Wi-Fi",
+			"from": 38.01,
+			"to": 39.97,
+			"text": "Keď ste na tej istej Wi-Fi,",
 			"kind": "said",
 			"words": [
 				{
-					"w": "V",
-					"t": 39.32
+					"w": "Keď",
+					"t": 38.01
+				},
+				{
+					"w": "ste",
+					"t": 38.33
+				},
+				{
+					"w": "na",
+					"t": 38.49
 				},
 				{
 					"w": "tej",
-					"t": 39.44
+					"t": 38.61
 				},
 				{
 					"w": "istej",
-					"t": 39.64
+					"t": 38.89
 				},
 				{
-					"w": "Wi-Fi",
-					"t": 40.04
+					"w": "Wi-Fi,",
+					"t": 39.21
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 40.52,
-			"to": 43.45,
-			"text": "sa im tvoja hra ukáže v telefóne.",
+			"from": 39.97,
+			"to": 42.3,
+			"text": "hra sa im ukáže v telefóne.",
 			"kind": "said",
 			"words": [
 				{
+					"w": "hra",
+					"t": 39.97
+				},
+				{
 					"w": "sa",
-					"t": 40.52
+					"t": 40.17
 				},
 				{
 					"w": "im",
-					"t": 40.76
-				},
-				{
-					"w": "tvoja",
-					"t": 40.88
-				},
-				{
-					"w": "hra",
-					"t": 41.24
+					"t": 40.33
 				},
 				{
 					"w": "ukáže",
-					"t": 41.56
+					"t": 40.49
 				},
 				{
 					"w": "v",
-					"t": 42.0
+					"t": 40.85
 				},
 				{
 					"w": "telefóne.",
-					"t": 42.16
+					"t": 41.01
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 43.95,
-			"to": 45.15,
+			"from": 42.6,
+			"to": 43.88,
 			"text": "Po každej otázke",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Po",
-					"t": 43.95
+					"t": 42.6
 				},
 				{
 					"w": "každej",
-					"t": 44.11
+					"t": 42.76
 				},
 				{
 					"w": "otázke",
-					"t": 44.59
+					"t": 43.24
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 45.15,
-			"to": 48.32,
-			"text": "všetci uvidia, kto čo odpovedal.",
+			"from": 43.88,
+			"to": 46.89,
+			"text": "všetci vidia, kto čo odpovedal.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "všetci",
-					"t": 45.15
+					"t": 43.88
 				},
 				{
-					"w": "uvidia,",
-					"t": 45.59
+					"w": "vidia,",
+					"t": 44.48
 				},
 				{
 					"w": "kto",
-					"t": 46.27
+					"t": 44.92
 				},
 				{
 					"w": "čo",
-					"t": 46.59
+					"t": 45.24
 				},
 				{
 					"w": "odpovedal.",
-					"t": 46.95
+					"t": 45.48
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 48.55,
-			"to": 50.95,
+			"from": 46.95,
+			"to": 49.51,
 			"text": "A môžeš si objednať vlastný kvíz",
 			"kind": "said",
 			"words": [
 				{
 					"w": "A",
-					"t": 48.55
+					"t": 46.95
 				},
 				{
 					"w": "môžeš",
-					"t": 48.71
+					"t": 47.11
 				},
 				{
 					"w": "si",
-					"t": 49.35
+					"t": 47.83
 				},
 				{
 					"w": "objednať",
-					"t": 49.51
+					"t": 47.99
 				},
 				{
 					"w": "vlastný",
-					"t": 49.99
+					"t": 48.51
 				},
 				{
 					"w": "kvíz",
-					"t": 50.47
+					"t": 49.03
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 50.95,
-			"to": 52.967,
+			"from": 49.51,
+			"to": 51.367,
 			"text": "na akúkoľvek tému.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "na",
-					"t": 50.95
+					"t": 49.51
 				},
 				{
 					"w": "akúkoľvek",
-					"t": 51.19
+					"t": 49.87
 				},
 				{
 					"w": "tému.",
-					"t": 51.91
+					"t": 50.59
 				}
 			],
 			"karaoke": true
@@ -771,69 +759,35 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 10.4,
-			"to": 11.68,
-			"x": 103,
-			"y": 1525,
-			"w": 759,
-			"h": 108,
+			"from": 10.15,
+			"to": 11.71,
+			"x": 100,
+			"y": 1744,
+			"w": 843,
+			"h": 110,
 			"style": "band",
 			"alpha": 1,
 			"hold": true
 		},
 		{
-			"from": 11.68,
-			"to": 13.44,
+			"from": 11.71,
+			"to": 12.9,
 			"x": 101,
-			"y": 1635,
-			"w": 790,
-			"h": 108,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 103,
-				"y": 1525,
-				"w": 759,
-				"h": 108
-			},
-			"hold": true
-		},
-		{
-			"from": 13.44,
-			"to": 14.4,
-			"x": 100,
-			"y": 1745,
-			"w": 466,
-			"h": 108,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 101,
-				"y": 1635,
-				"w": 790,
-				"h": 108
-			},
-			"hold": true
-		},
-		{
-			"from": 14.4,
-			"to": 16.1,
-			"x": 100,
-			"y": 1855,
-			"w": 946,
-			"h": 108,
+			"y": 1856,
+			"w": 527,
+			"h": 110,
 			"style": "band",
 			"alpha": 1,
 			"prev": {
 				"x": 100,
-				"y": 1745,
-				"w": 466,
-				"h": 108
+				"y": 1744,
+				"w": 843,
+				"h": 110
 			}
 		},
 		{
-			"from": 16.9,
-			"to": 18.6,
+			"from": 13.3,
+			"to": 16.4,
 			"x": 46,
 			"y": 2092,
 			"w": 1114,
@@ -843,8 +797,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 19.8,
-			"to": 20.6,
+			"from": 16.6,
+			"to": 17.4,
 			"x": 48,
 			"y": 2304,
 			"w": 447,
@@ -854,8 +808,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 22.8,
-			"to": 24.6,
+			"from": 19.4,
+			"to": 20.7,
 			"x": 522,
 			"y": 2307,
 			"w": 441,
@@ -865,8 +819,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 24.8,
-			"to": 26.5,
+			"from": 21.0,
+			"to": 23.3,
 			"x": 42,
 			"y": 2088,
 			"w": 1122,
@@ -876,41 +830,41 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 28.3,
-			"to": 30.0,
-			"x": 119,
+			"from": 25.2,
+			"to": 26.2,
+			"x": 117,
 			"y": 1500,
-			"w": 409,
+			"w": 753,
 			"h": 108,
 			"r": 12,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 31.6,
-			"to": 33.3,
-			"x": 106,
-			"y": 882,
-			"w": 442,
-			"h": 112,
+			"from": 27.0,
+			"to": 30.0,
+			"x": 63,
+			"y": 845,
+			"w": 924,
+			"h": 170,
 			"r": 12,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 33.7,
-			"to": 36.4,
-			"x": 100,
+			"from": 32.8,
+			"to": 35.0,
+			"x": 102,
 			"y": 1175,
-			"w": 972,
-			"h": 405,
+			"w": 1003,
+			"h": 258,
 			"r": 14,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 41.3,
-			"to": 43.5,
+			"from": 40.1,
+			"to": 42.0,
 			"x": 49,
 			"y": 589,
 			"w": 1108,
@@ -920,8 +874,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 46.2,
-			"to": 48.0,
+			"from": 43.0,
+			"to": 46.4,
 			"x": 48,
 			"y": 1183,
 			"w": 1110,
@@ -931,12 +885,12 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 51.0,
-			"to": 52.8,
+			"from": 48.5,
+			"to": 51.2,
 			"x": 48,
 			"y": 1199,
-			"w": 668,
-			"h": 112,
+			"w": 672,
+			"h": 129,
 			"r": 10,
 			"style": "glow",
 			"alpha": 0.6

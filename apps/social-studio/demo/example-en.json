@@ -1,0 +1,29 @@
+{
+	"language": "en",
+	"recording": "demo/placeholder.mp4",
+	"recordingSize": {"w": 660, "h": 1434},
+	"segments": [
+		{"from": 0, "to": 2.8},
+		{"from": 3.2, "to": 5.6},
+		{"from": 6, "to": 9},
+		{"from": 9.4, "to": 11.6, "speed": 1.5}
+	],
+	"taps": [
+		{"t": 1.0, "x": 252, "y": 1384},
+		{"t": 3.0, "x": 330, "y": 700},
+		{"t": 4.5, "x": 330, "y": 900},
+		{"t": 10.0, "x": 175, "y": 1316}
+	],
+	"zooms": [{"from": 9.5, "to": 11.4, "x": 330, "y": 1250, "scale": 1.5}],
+	"audio": [{"t": 2.0, "src": "demo/voice.mp3", "volume": 0.9}],
+	"captions": [
+		{"from": 0.2, "to": 1.9, "text": "Answer out loud", "kind": "label"},
+		{"from": 2.0, "to": 4.4, "text": "Which planet has the shortest day in the Solar System?", "kind": "voice"},
+		{"from": 4.6, "to": 5.5, "text": "Jupiter!", "kind": "player"},
+		{"from": 6.3, "to": 8.6, "text": "Instant feedback", "kind": "label"},
+		{"from": 6.5, "to": 8.8, "text": "I think it is France", "kind": "player"},
+		{"from": 9.5, "to": 11.2, "text": "Which country has the most time zones?", "kind": "voice"}
+	],
+	"hook": {"text": "Trivia you answer out loud", "seconds": 2},
+	"endCard": true
+}

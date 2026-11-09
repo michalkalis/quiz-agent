@@ -1,0 +1,650 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round9.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"restScale": 0.88,
+	"segments": [
+		{
+			"from": 0,
+			"to": 50.667
+		}
+	],
+	"taps": [
+		{
+			"t": 6.52,
+			"x": 603,
+			"y": 2284
+		},
+		{
+			"t": 19.45,
+			"x": 270,
+			"y": 2388
+		},
+		{
+			"t": 28.25,
+			"x": 864,
+			"y": 2349
+		}
+	],
+	"zooms": [
+		{
+			"from": 5.5,
+			"to": 7.1,
+			"x": 603,
+			"y": 2283,
+			"scale": 1.8
+		},
+		{
+			"from": 10.3,
+			"to": 15.6,
+			"x": 603,
+			"y": 1230,
+			"scale": 1.2
+		},
+		{
+			"from": 16.0,
+			"to": 18.25,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.7
+		},
+		{
+			"from": 18.25,
+			"to": 24.95,
+			"x": 504,
+			"y": 2340,
+			"scale": 1.7
+		},
+		{
+			"from": 25.8,
+			"to": 28.6,
+			"x": 603,
+			"y": 1920,
+			"scale": 1.6
+		},
+		{
+			"from": 29.2,
+			"to": 31.8,
+			"x": 375,
+			"y": 945,
+			"scale": 1.8
+		},
+		{
+			"from": 31.8,
+			"to": 34.3,
+			"x": 600,
+			"y": 1356,
+			"scale": 1.6
+		},
+		{
+			"from": 39.4,
+			"to": 41.6,
+			"x": 603,
+			"y": 666,
+			"scale": 1.8
+		},
+		{
+			"from": 43.9,
+			"to": 46.2,
+			"x": 603,
+			"y": 1419,
+			"scale": 1.6
+		},
+		{
+			"from": 47.6,
+			"to": 50.15,
+			"x": 603,
+			"y": 1335,
+			"scale": 1.8
+		}
+	],
+	"audio": [
+		{
+			"t": 0.3,
+			"src": "demo/rec/v9/n1.mp3"
+		},
+		{
+			"t": 6.1,
+			"src": "demo/rec/v9/n2.mp3"
+		},
+		{
+			"t": 16.25,
+			"src": "demo/rec/v9/n3.mp3"
+		},
+		{
+			"t": 18.6,
+			"src": "demo/rec/v9/n4.mp3"
+		},
+		{
+			"t": 26.0,
+			"src": "demo/rec/v9/n5.mp3"
+		},
+		{
+			"t": 31.9,
+			"src": "demo/rec/v9/n6.mp3"
+		},
+		{
+			"t": 35.1,
+			"src": "demo/rec/v9/n7.mp3"
+		},
+		{
+			"t": 42.25,
+			"src": "demo/rec/v9/n8.mp3"
+		},
+		{
+			"t": 46.85,
+			"src": "demo/rec/v9/n9.mp3"
+		},
+		{
+			"t": 10.45,
+			"src": "demo/rec/n-q-island.mp3"
+		},
+		{
+			"t": 23.1,
+			"src": "demo/rec/n-player-denmark.mp3"
+		},
+		{
+			"t": 28.95,
+			"src": "demo/rec/n-correct-denmark.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.3,
+			"to": 2.94,
+			"text": "Trubbo is a voice quiz for iPhone,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 0.3
+				},
+				{
+					"w": "is",
+					"t": 0.86
+				},
+				{
+					"w": "a",
+					"t": 1.02
+				},
+				{
+					"w": "voice",
+					"t": 1.18
+				},
+				{
+					"w": "quiz",
+					"t": 1.5
+				},
+				{
+					"w": "for",
+					"t": 1.82
+				},
+				{
+					"w": "iPhone,",
+					"t": 1.98
+				}
+			]
+		},
+		{
+			"from": 2.94,
+			"to": 6.27,
+			"text": "with fun questions, not school trivia.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "with",
+					"t": 2.94
+				},
+				{
+					"w": "fun",
+					"t": 3.1
+				},
+				{
+					"w": "questions,",
+					"t": 3.42
+				},
+				{
+					"w": "not",
+					"t": 4.46
+				},
+				{
+					"w": "school",
+					"t": 4.86
+				},
+				{
+					"w": "trivia.",
+					"t": 5.1
+				}
+			]
+		},
+		{
+			"from": 6.1,
+			"to": 8.42,
+			"text": "Tap Start, and Trubbo reads",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Tap",
+					"t": 6.1
+				},
+				{
+					"w": "Start,",
+					"t": 6.42
+				},
+				{
+					"w": "and",
+					"t": 7.3
+				},
+				{
+					"w": "Trubbo",
+					"t": 7.54
+				},
+				{
+					"w": "reads",
+					"t": 8.02
+				}
+			]
+		},
+		{
+			"from": 8.42,
+			"to": 10.55,
+			"text": "each question out loud.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "each",
+					"t": 8.42
+				},
+				{
+					"w": "question",
+					"t": 8.66
+				},
+				{
+					"w": "out",
+					"t": 9.22
+				},
+				{
+					"w": "loud.",
+					"t": 9.46
+				}
+			]
+		},
+		{
+			"from": 16.25,
+			"to": 18.7,
+			"text": "You get a few seconds to think.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "You",
+					"t": 16.25
+				},
+				{
+					"w": "get",
+					"t": 16.49
+				},
+				{
+					"w": "a",
+					"t": 16.61
+				},
+				{
+					"w": "few",
+					"t": 16.73
+				},
+				{
+					"w": "seconds",
+					"t": 16.97
+				},
+				{
+					"w": "to",
+					"t": 17.45
+				},
+				{
+					"w": "think.",
+					"t": 17.61
+				}
+			]
+		},
+		{
+			"from": 18.6,
+			"to": 21.08,
+			"text": "Then tap Answer and say it,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Then",
+					"t": 18.6
+				},
+				{
+					"w": "tap",
+					"t": 19.0
+				},
+				{
+					"w": "Answer",
+					"t": 19.4
+				},
+				{
+					"w": "and",
+					"t": 20.04
+				},
+				{
+					"w": "say",
+					"t": 20.28
+				},
+				{
+					"w": "it,",
+					"t": 20.52
+				}
+			]
+		},
+		{
+			"from": 21.08,
+			"to": 23.21,
+			"text": "or type it if you prefer.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "or",
+					"t": 21.08
+				},
+				{
+					"w": "type",
+					"t": 21.4
+				},
+				{
+					"w": "it",
+					"t": 21.72
+				},
+				{
+					"w": "if",
+					"t": 21.88
+				},
+				{
+					"w": "you",
+					"t": 22.0
+				},
+				{
+					"w": "prefer.",
+					"t": 22.12
+				}
+			]
+		},
+		{
+			"from": 26.0,
+			"to": 28.37,
+			"text": "Trubbo checks your answer",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 26.0
+				},
+				{
+					"w": "checks",
+					"t": 26.56
+				},
+				{
+					"w": "your",
+					"t": 26.96
+				},
+				{
+					"w": "answer",
+					"t": 27.12
+				}
+			]
+		},
+		{
+			"from": 31.9,
+			"to": 34.83,
+			"text": "and explains it in a sentence or two.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "and",
+					"t": 31.9
+				},
+				{
+					"w": "explains",
+					"t": 32.06
+				},
+				{
+					"w": "it",
+					"t": 32.7
+				},
+				{
+					"w": "in",
+					"t": 32.94
+				},
+				{
+					"w": "a",
+					"t": 33.06
+				},
+				{
+					"w": "sentence",
+					"t": 33.18
+				},
+				{
+					"w": "or",
+					"t": 33.66
+				},
+				{
+					"w": "two.",
+					"t": 33.82
+				}
+			]
+		},
+		{
+			"from": 35.1,
+			"to": 37.66,
+			"text": "You can also play with friends nearby.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "You",
+					"t": 35.1
+				},
+				{
+					"w": "can",
+					"t": 35.26
+				},
+				{
+					"w": "also",
+					"t": 35.42
+				},
+				{
+					"w": "play",
+					"t": 35.74
+				},
+				{
+					"w": "with",
+					"t": 36.06
+				},
+				{
+					"w": "friends",
+					"t": 36.22
+				},
+				{
+					"w": "nearby.",
+					"t": 36.62
+				}
+			]
+		},
+		{
+			"from": 37.66,
+			"to": 39.1,
+			"text": "On the same Wi-Fi,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "On",
+					"t": 37.66
+				},
+				{
+					"w": "the",
+					"t": 37.82
+				},
+				{
+					"w": "same",
+					"t": 37.98
+				},
+				{
+					"w": "Wi-Fi,",
+					"t": 38.3
+				}
+			]
+		},
+		{
+			"from": 39.1,
+			"to": 41.79,
+			"text": "your game shows up on their phones.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "your",
+					"t": 39.1
+				},
+				{
+					"w": "game",
+					"t": 39.34
+				},
+				{
+					"w": "shows",
+					"t": 39.66
+				},
+				{
+					"w": "up",
+					"t": 39.98
+				},
+				{
+					"w": "on",
+					"t": 40.14
+				},
+				{
+					"w": "their",
+					"t": 40.3
+				},
+				{
+					"w": "phones.",
+					"t": 40.54
+				}
+			]
+		},
+		{
+			"from": 42.25,
+			"to": 44.01,
+			"text": "After each question,",
+			"kind": "said",
+			"words": [
+				{
+					"w": "After",
+					"t": 42.25
+				},
+				{
+					"w": "each",
+					"t": 42.73
+				},
+				{
+					"w": "question,",
+					"t": 42.97
+				}
+			]
+		},
+		{
+			"from": 44.01,
+			"to": 46.46,
+			"text": "everyone sees who answered what.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "everyone",
+					"t": 44.01
+				},
+				{
+					"w": "sees",
+					"t": 44.33
+				},
+				{
+					"w": "who",
+					"t": 44.73
+				},
+				{
+					"w": "answered",
+					"t": 44.97
+				},
+				{
+					"w": "what.",
+					"t": 45.37
+				}
+			]
+		},
+		{
+			"from": 46.85,
+			"to": 48.81,
+			"text": "And you can order a custom quiz",
+			"kind": "said",
+			"words": [
+				{
+					"w": "And",
+					"t": 46.85
+				},
+				{
+					"w": "you",
+					"t": 47.01
+				},
+				{
+					"w": "can",
+					"t": 47.17
+				},
+				{
+					"w": "order",
+					"t": 47.33
+				},
+				{
+					"w": "a",
+					"t": 47.73
+				},
+				{
+					"w": "custom",
+					"t": 48.01
+				},
+				{
+					"w": "quiz",
+					"t": 48.37
+				}
+			]
+		},
+		{
+			"from": 48.81,
+			"to": 50.42,
+			"text": "on any topic.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "on",
+					"t": 48.81
+				},
+				{
+					"w": "any",
+					"t": 49.01
+				},
+				{
+					"w": "topic.",
+					"t": 49.25
+				}
+			]
+		},
+		{
+			"from": 23.93,
+			"to": 25.3,
+			"text": "Denmark!",
+			"kind": "player"
+		}
+	],
+	"endCard": true,
+	"endWord": "Free.",
+	"endAudio": "demo/rec/v9/n10.mp3"
+}

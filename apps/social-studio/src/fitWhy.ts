@@ -10,7 +10,7 @@ type Box = {width: number; maxLines: number; size: number; minSize: number; weig
 let ctx: CanvasRenderingContext2D | null = null;
 
 /** Lines the text wraps to at this size (greedy word wrap, like the browser). */
-const lineCount = (text: string, size: number, width: number, weight: number): number => {
+export const lineCount = (text: string, size: number, width: number, weight: number): number => {
 	ctx ??= document.createElement('canvas').getContext('2d');
 	if (!ctx) return 1;
 	ctx.font = `${weight} ${size}px ${FONT}`;

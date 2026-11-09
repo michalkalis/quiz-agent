@@ -5,6 +5,7 @@
 import React from 'react';
 import {AbsoluteFill, Img, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COPY} from './copy';
+import {END_CARD_S, EndCard, Fade} from './EndCard';
 import {Monkey} from './Monkey';
 import {SAFE} from './ReelParts';
 import {FONT, INK, SURF, tintFor} from './theme';
@@ -14,20 +15,12 @@ export type PinnedProps = {language: Language; shots: string[]};
 
 export const PINNED_OPEN_S = 2.4;
 export const PINNED_SHOT_S = 2.2;
-export const PINNED_END_S = 3.2;
+export const PINNED_END_S = END_CARD_S;
 export const pinnedSeconds = (shots: number) => PINNED_OPEN_S + shots * PINNED_SHOT_S + PINNED_END_S;
 
 const TINT = tintFor('science-nature');
 // The listing screenshots' own background, so the frame edges disappear.
 const SHOT_BG = '#E9EAEE';
-
-const Fade: React.FC<{frames: number; children: React.ReactNode; bg: string; out?: boolean}> = ({frames, children, bg, out = true}) => {
-	const frame = useCurrentFrame();
-	const {fps} = useVideoConfig();
-	const fadeIn = interpolate(frame, [0, fps * 0.25], [0, 1], {extrapolateRight: 'clamp'});
-	const fadeOut = out ? interpolate(frame, [frames - fps * 0.2, frames], [1, 0], {extrapolateLeft: 'clamp'}) : 1;
-	return <AbsoluteFill style={{background: bg, opacity: Math.min(fadeIn, fadeOut)}}>{children}</AbsoluteFill>;
-};
 
 const Shot: React.FC<{src: string}> = ({src}) => {
 	const frame = useCurrentFrame();
@@ -74,22 +67,7 @@ export const Pinned: React.FC<PinnedProps> = ({language, shots}) => {
 				</Sequence>
 			))}
 			<Sequence from={endAt} durationInFrames={end}>
-				<Fade frames={end} bg={TINT.bg} out={false}>
-					<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 56, padding: `${SAFE.top}px ${SAFE.right}px ${SAFE.bottom - 120}px ${SAFE.left}px`}}>
-						<div style={{width: 340, height: 340, borderRadius: 170, background: SURF, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-							<Monkey size={260} mood="happy" />
-						</div>
-						<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20}}>
-							<div style={{fontSize: 120, fontWeight: 800, color: INK, letterSpacing: -2}}>Trubbo</div>
-							<div style={{fontSize: 60, fontWeight: 700, lineHeight: 1.1, textAlign: 'center', color: INK}}>{copy.tagline}</div>
-							{/* Apple's badge exists in English here; sk/cs show the line only. */}
-							{language === 'en' ? (
-								<Img src={staticFile('store/app-store-badge.svg')} style={{height: 120, marginTop: 40}} />
-							) : null}
-							<div style={{fontSize: 44, fontWeight: 600, color: INK, opacity: 0.85, marginTop: language === 'en' ? 12 : 32}}>{copy.soon}</div>
-						</div>
-					</AbsoluteFill>
-				</Fade>
+				<EndCard language={language} frames={end} />
 			</Sequence>
 		</AbsoluteFill>
 	);

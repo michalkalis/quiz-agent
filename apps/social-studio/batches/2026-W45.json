@@ -876,6 +876,34 @@
    ],
    "tiktok_buffer": "6ae8eee5fb05897d9d3aa810",
    "note": "Deleted 2026-11-02 on founder request (no voice, redo later)."
+  },
+  {
+   "key": "demo-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "demo",
+   "language": "sk",
+   "date": "2026-11-09",
+   "files": [
+    "demo-sk.mp4",
+    "demo-sk.jpg"
+   ],
+   "caption": "Trubbo je hlasový kvíz pre iPhone so zábavnými otázkami z bežného života. Hraj sám alebo s kamarátmi na tej istej Wi-Fi. Zadarmo v App Store, odkaz v profile.",
+   "voice": "app voice + narrator (ElevenLabs), AppDemo SK",
+   "ai_generated": true,
+   "questions": [],
+   "status": "published",
+   "publish_at": "2026-11-09T13:05:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W46/demo-sk.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W46/demo-sk.jpg"
+   ],
+   "links": {
+    "instagram": "https://www.instagram.com/reel/DfhZVaViFhP/",
+    "facebook": "https://www.facebook.com/reel/1152311497169810/",
+    "youtube": "https://youtube.com/shorts/KgN9BiVdYWM"
+   },
+   "note": "SK app promo video, published by hand 2026-11-09 (founder approved). Facebook and YouTube text carry the App Store link (ct=fb_sk / yt_sk). TikTok SK uploaded by the founder in the app (0-views account)."
   }
  ]
 }

@@ -14,7 +14,8 @@ Druhé, drahé mesačné predplatné nad Trubbo Plus pre ľudí, ktorí nerieši
 - 10-28: drahý plán, cena nemusí presne zodpovedať tomu, čo hráč reálne dostane. Jednorazové číslované členstvo („Black“) teraz nie, „kým nemáme používateľov“; „navždy“ zatiaľ nie.
 - 11-02: v cene veľa vlastných balíkov, ale ekonomicky to musí vychádzať. Priama linka na foundera NIE („užívateľ dostane dosť za to, že zaplatí viac“). Zlatá ikona, oslovenie menom a vlastná otázka v korpuse NIE. Hlas pri výbere novej témy ÁNO.
 - 11-04: 20 balíkov mesačne; „musí to byť výhodnejšie ako kúpa custom balíčka priamo“. Nesmie sa objaviť v TF buildoch ani v App Store, kým to founder nepustí.
-- 11-05: **€149,99 mesačne, 20 vlastných balíkov (po 30 otázok).**
+- 11-05: ~~€149,99~~ mesačne, 20 vlastných balíkov (po 30 otázok).
+- 11-09: balík 30 zlacnený €8,99 → **€6,99**, preto **Max €119,99** (20 balíkov). Founder vedome prijal, že pri samých úzkych témach (~$4,80 s hlasom) vyjde Max mierne do mínusu.
 - 11-05: **10 balíkov za deň** (nie 5); **otázky z knižnice bez obmedzenia**; Max za prepínačom OK; „over, či to nie je moc in-app purchase možností, aby to užívateľa moc nezahltilo“.
 - 11-05 (vizuálny výber, [artefakt](https://claude.ai/artifact/UXb4iq5s7Rh6z7UcRvibjP)): paywall **C** (prepínač Plus | Max hore), vlastný balík **B** (prepínač 10 | 30 v karte balíka), profil **B** (kompaktný riadok s plánom a tlačidlom Zmeniť). Mení 11-02: **Max člen je patrón** a má **priamy kontakt na foundera, aj hovor**: „suma je fakt veľká a treba informovať, že tak trochu nám pomáha do začiatku, čo je viac-menej Patreon… ak by pribudlo moc Max predplatiteľov, tak zmeníme podmienky“.
 
@@ -33,15 +34,16 @@ Skúšobné behy s produkčným nastavením (sk, 30 otázok, nič sa neuložilo;
 
 Neúspešný beh stojí skoro rovnako (~$2,4) a produkcia ho skúsi až 3×. Preto #228 ide pred Max.
 
-Príjem z €149,99 (SK: −23 % DPH, −15 % Apple) ≈ **€103,7** mesačne.
+Príjem z €119,99 (SK: −23 % DPH, −15 % Apple) ≈ **€82,9** mesačne. Meranie 11-08 (bežná téma, plná cena aj z kreditu): ~$2,80 bez hlasu; úzka téma po #228 ~$4,25 + hlas.
 
 | Využitie | Náklad | Ostane |
 |---|---|---|
-| 5 balíkov | ~€16 | ~€88 |
-| 20 balíkov (všetko) | ~€64 | ~€40 |
-| + knižnica, 3 000 odpovedí | ~€2 | ~€38 |
+| 5 balíkov | ~€16 | ~€67 |
+| 20 balíkov (všetko, $3,5/balík) | ~€64 | ~€19 |
+| 20 balíkov, samé úzke témy (~$4,80) | ~€86 | ~€−3 |
+| + knižnica, 3 000 odpovedí | ~€2 | o €2 menej |
 
-Pre hráča: 20 balíkov zvlášť = €179,80 (+ Plus €4,99) → Max je o ~€35 výhodnejší. €199,99 by podmienku foundera nesplnilo.
+Pre hráča: 20 balíkov zvlášť = €139,80 (+ Plus €4,99) → Max je o ~€25 výhodnejší. Nad €139,80 by podmienku foundera nesplnilo.
 
 ## Čo Max obsahuje
 
@@ -76,7 +78,7 @@ Nárok sa obnovuje s **obdobím predplatného od Apple** (dátum nákupu → dá
 Prepínač `max_enabled` v `/app-config` (DB prepínač, predvolene OFF) + skrytie v App Store builde ako pri hre spolu (`multiplayerHiddenByChannel`, `AppConfigStore.swift:70`). Kód sa zlučuje do `main` (pravidlo z 2026-10-16: flagy, nie dlhé vetvy); kým je prepínač OFF, hráč Max nevidí ani v TF. Founder súhlasil 2026-11-05.
 
 ### App Store Connect + RevenueCat
-- Nové automaticky obnovované predplatné `com.carquiz.max.monthly`, €149,99, tá istá skupina ako Plus, vyššia úroveň. Texty en/sk/cs bez pomlčiek a bez „bez limitu“.
+- Nové automaticky obnovované predplatné `com.carquiz.max.monthly`, €119,99, tá istá skupina ako Plus, vyššia úroveň. Texty en/sk/cs bez pomlčiek a bez „bez limitu“.
 - RevenueCat: entitlement `max`, balík v offeringu; Plus offering ostáva.
 
 ## Koľko nákupov naraz (founder 2026-11-05)

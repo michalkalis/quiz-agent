@@ -96,6 +96,10 @@
    ]
   }
  },
+ "iap_prices": {
+  "_comment": "Customer price in each product's base territory; the iap-price step changes ASC when it differs (other territories follow Apple's equalization). 2026-11-09 founder: pack_30 8.99 -> 6.99.",
+  "pack_30": "6.99"
+ },
  "iap_create": {
   "_comment": "Consumables the iap-create step creates when missing in App Store Connect (existing ones are never changed). price = customer price in the base territory copied from `mirror`; availability is copied from `mirror`; other territories follow Apple's equalization.",
   "pack_10": {

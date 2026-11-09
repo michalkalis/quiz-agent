@@ -11,7 +11,7 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap-price,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
 """
 
@@ -205,6 +205,42 @@ def iap_price_point(iap_id: str, territory: str, price: str) -> dict:
     return hit
 
 
+def set_base_price(iap_id: str, base: str, point_id: str) -> None:
+    """Replace the price schedule with one base-territory price, effective now; other territories follow
+    Apple's equalization (manual prices in other territories are dropped)."""
+    send("POST", "/inAppPurchasePriceSchedules", {"data": {"type": "inAppPurchasePriceSchedules", "relationships": {
+        "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+        "baseTerritory": {"data": {"type": "territories", "id": base}},
+        "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${base-price}"}]}}},
+        "included": [{"type": "inAppPurchasePrices", "id": "${base-price}", "attributes": {"startDate": None},
+                      "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                                        "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point_id}}}}]})
+
+
+def step_iap_price(app_id: str, copy: dict) -> None:
+    """Set the base-territory price of existing products listed under iap_prices when it differs from ASC."""
+    print("iap-price")
+    have = {p["attributes"]["productId"]: p for p in all_pages(f"/apps/{app_id}/inAppPurchasesV2", limit=200)}
+    for pid, price in copy.get("iap_prices", {}).items():
+        if pid.startswith("_"):
+            continue
+        cur = have.get(pid)
+        if not cur:
+            raise SystemExit(f"  !! {pid}: not found in ASC")
+        base, manual = iap_base_price(cur["id"])
+        if not base:
+            raise SystemExit(f"  !! {pid}: no price schedule (iap-create sets the first price)")
+        now = next((m.get("customerPrice") for m in manual if m["territory"] == base), None)
+        if now is not None and Decimal(now) == Decimal(price):
+            print(f"  {pid}: {base} {now} already")
+            continue
+        if len(manual) > 1:
+            print(f"  note: {pid} has manual prices beyond {base}; they are replaced by equalization")
+        point = iap_price_point(cur["id"], base, price)
+        print(f"  {pid}: {base} {now} -> {point['attributes']['customerPrice']} (proceeds {point['attributes'].get('proceeds')})")
+        set_base_price(cur["id"], base, point["id"])
+
+
 def step_iap_create(app_id: str, copy: dict) -> None:
     """Create the consumables listed under iap_create that are missing in ASC: reference name, review note,
     price in the base territory of `mirror` (other territories follow Apple's equalization) and the territories
@@ -243,13 +279,7 @@ def step_iap_create(app_id: str, copy: dict) -> None:
             # Price point ids belong to one product; a dry run looks the tier up on the mirror instead.
             point = iap_price_point(iap_id or mirror["id"], base, spec["price"])
             print(f"  price {base} {point['attributes']['customerPrice']} (proceeds {point['attributes'].get('proceeds')})")
-            send("POST", "/inAppPurchasePriceSchedules", {"data": {"type": "inAppPurchasePriceSchedules", "relationships": {
-                "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
-                "baseTerritory": {"data": {"type": "territories", "id": base}},
-                "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${base-price}"}]}}},
-                "included": [{"type": "inAppPurchasePrices", "id": "${base-price}", "attributes": {"startDate": None},
-                              "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}},
-                                                "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point["id"]}}}}]})
+            set_base_price(iap_id, base, point["id"])
         if need_avail:
             send("POST", "/inAppPurchaseAvailabilities", {"data": {"type": "inAppPurchaseAvailabilities",
                 "attributes": {"availableInNewTerritories": avail[0]}, "relationships": {
@@ -502,6 +532,8 @@ def main() -> int:
         step_review(app_id)
     if "testflight" in steps:
         step_testflight(app_id, copy, args.build)
+    if "iap-price" in steps:
+        step_iap_price(app_id, copy)
     if "iap-create" in steps:
         step_iap_create(app_id, copy)
     if "iap" in steps:

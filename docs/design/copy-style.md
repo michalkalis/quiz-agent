@@ -34,6 +34,8 @@ Founder, 2026-11-08: these apply to every Trubbo text, also App Store, web, soci
 18. **sk/cs prepositions and phrases as people say them, not copied from English.** ✗ „v tej istej Wi‑Fi“ → ✓ „na tej istej Wi‑Fi“ (cs „na stejné Wi‑Fi“) · ✗ „Užívaj si kvíz“ (*enjoy*) → ✓ „Bav sa“ or nothing · ✗ „urob rozdiel“ (*make a difference*) → say the effect.
 19. **Spoken texts and narration: short sentences, one idea each, in the order the player does it**, mixing short and medium lengths. Web and social copy: no emoji bullets, sentence case ("Play with friends", not "Play With Friends").
     ✗ „Po zodpovedaní otázky dostaneš vysvetlenie v jednej či dvoch vetách.“ → ✓ „Odpovieš. Trubbo ti povie, či je to správne, a prečo.“
+20. **No prices on social media** (founder, 2026-11-09): posts, captions, video narration, pinned comments and profile bios never state a price or amount (€, $, „za X €“). Prices change; the App Store shows the current one. „Zadarmo v App Store“ is not a price and stays fine.
+    ✗ „Vlastný balík za 6,99 €“ → ✓ „Vlastný balík na tému, ktorú si vyberieš“
 
 ## Review procedure
 

@@ -50,3 +50,10 @@ Formát ostáva: kolo 3 otázok, odpoveď hneď po otázke, na konci „Koľko s
 - SK/CZ: domáca hudba (Gott, Elán), domáce jedlo, bežný život (paneláky, nárečia), filmové a TV klasiky, potom Harry Potter.
 - Test: jedno tematické video na tému, porovnať s bežnými 110–130 pozretiami na Instagrame.
 - Práva: názov seriálu len popisne („otázka o Harrym Potterovi“), žiadne logá, zábery, hudba ani písmo zo seriálu.
+
+## Kolo 2 (founder 2026-11-09)
+
+- A: úvod „Bývate ďaleko od seba? Zahrajte si spolu kvíz aj tak.“ alebo „Zase si len posielate reelsy? Zahrajte si radšej spolu kvíz.“; hrá partia (3 telefóny, 3 mestá); otázka Kleopatra (bližšie k Mesiacu než k pyramíde) namiesto chobotnice.
+- B: téma Harry Potter; úvod tri rýchle texty „Bavia ťa kvízy?“ / „Ale téma nikdy nie je úplne tvoja?“ / „Trubbo ti pripraví kvíz na tému, akú si zadáš.“; bežné otázky nezhadzovať (antireklama); balík 10 otázok.
+- Všetky texty rodovo neutrálne vo všetkých jazykoch.
+- Storyboard v2: docs/artifacts/storyboard/v2.html (lokálne, gitignored), čaká na výber úvodu A a schválenie.

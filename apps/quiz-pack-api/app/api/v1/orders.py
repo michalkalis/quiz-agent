@@ -58,12 +58,13 @@ from arq.connections import ArqRedis
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
 from quiz_shared.utils.user_text import clean_user_text
 
-from ... import app_switches, order_budget, pack_reuse
+from ... import app_switches, order_budget, pack_reuse, topic_check
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
 from ...db.models.pack import QuestionPack
 from ...db.session import AsyncSessionLocal, get_session
+from ...rate_limit import limiter
 from ...sse import event_stream
 from ...storekit import (
     AppleJWSVerifier,
@@ -135,6 +136,19 @@ class CreateOrderRequest(BaseModel):
     @classmethod
     def _drop_invisible_characters(cls, value: str) -> str:
         return clean_user_text(value)
+
+
+class TopicCheckRequest(BaseModel):
+    """#233: the order form's text, checked before the player pays."""
+
+    prompt: str
+    language: str
+
+
+class TopicCheckResponse(BaseModel):
+    # Plain string (not an enum) so the response contract stays expand-only.
+    # ok | softened | blocked; anything unknown a client treats as ok.
+    verdict: str
 
 
 class OrderCreatedResponse(BaseModel):
@@ -319,6 +333,31 @@ def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+
+@router.post("/topic-check", response_model=TopicCheckResponse)
+@limiter.limit("20/minute")
+async def check_order_topic(
+    request: Request,
+    body: TopicCheckRequest,
+    user_id: Annotated[str, Depends(require_user)],
+) -> TopicCheckResponse:
+    """#233: sort the order text into ok / softened / blocked before payment.
+
+    Same length bounds as `create_order`, so a text the order would refuse is
+    never checked. Fails open (`ok`): see `app.topic_check`.
+    """
+    prompt = body.prompt.strip()
+    if not (1 <= len(prompt) <= 1000):
+        raise HTTPException(
+            status_code=422,
+            detail="prompt must be between 1 and 1000 characters (after stripping whitespace)",
+        )
+    verdict, failed = await topic_check.check_topic(prompt)
+    logger.info(
+        "topic check verdict=%s failed=%s language=%s", verdict, failed, body.language
+    )
+    return TopicCheckResponse(verdict=verdict)
 
 
 @router.post("", status_code=202, response_model=OrderCreatedResponse)

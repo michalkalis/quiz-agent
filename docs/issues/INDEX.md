@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 233 | [Vlastný balík: kontrola témy pred platbou](issue-233-custom-pack-topic-check.md) | enhancement · ready-for-agent | `[~]` #233 | 2026-11-11: rozhodnutia foundera (pred platbou; nebezpečné stop, vulgárne s upozornením); eval 29/30 Haiku 5.5 |
 | 232 | [Odporuč Trubbo kamarátovi + zdieľanie balíka](issue-232-referral-and-pack-sharing.md) | enhancement · ready-for-agent | `[ ]` #232 | 2026-11-09: plán + rozhodnutia foundera (odmena len pozývajúcemu po 1. kvíze kamaráta, strop 3, zdieľanie balíka aj hra spolu s balíkom) |
 | 231 | [Ukrajinčina ako štvrtý jazyk](issue-231-ukrainian.md) | enhancement · ready-for-agent | `[ ]` #231 | 2026-11-08: plán + rozhodnutia foundera (hlavne Ukrajina, mix prekladu a natívnych otázok, rodený hovorca, bez vojny) |
 | 230 | [Hra spolu na diaľku (cez internet)](issue-230-together-remote.md) | enhancement · ready-for-agent | `[~]` #230 | 2026-11-07: server nasadený (PR #761), appka v PR, test na zariadení s hovorom |

@@ -131,6 +131,7 @@ struct FeedbackView: View {
                     .scrollContentBackground(.hidden)
                     .disabled(viewModel.isSending)
                     .accessibilityIdentifier("feedback.message")
+                    .limitLength($viewModel.message, to: TextInputLimit.feedback)
                     .overlay(alignment: .topLeading) {
                         if viewModel.message.isEmpty {
                             Text("What went well or wrong? Say it or type it.")

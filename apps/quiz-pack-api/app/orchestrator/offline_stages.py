@@ -25,6 +25,7 @@ from quiz_shared.llm import factory as llm_factory
 
 from app import feature_flags
 from app.db.models import GenerationOrder
+from app.orchestrator.context import CLI_PRODUCT_ID
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
     AnswerabilityStage,
@@ -75,7 +76,7 @@ def build_order(args: argparse.Namespace) -> GenerationOrder:
     return GenerationOrder(
         id=uuid.uuid4(),
         transaction_id=f"cli-{uuid.uuid4().hex[:12]}",
-        product_id="pack_cli",
+        product_id=CLI_PRODUCT_ID,
         prompt=prompt,
         category=args.category,
         theme=args.theme,

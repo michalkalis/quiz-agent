@@ -8215,13 +8215,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Některá slova v zadání jsou vulgární nebo jen pro dospělé. Balíček uděláme, ale otázky budou zmírněné."
+            "value" : "Některá slova v tématu jsou vulgární nebo jen pro dospělé. Balíček uděláme, ale otázky budou zmírněné."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Niektoré slová v zadaní sú vulgárne alebo len pre dospelých. Balík spravíme, ale otázky budú zmiernené."
+            "value" : "Niektoré slová v téme sú vulgárne alebo len pre dospelých. Balík spravíme, ale otázky budú zmiernené."
           }
         }
       }

@@ -73,6 +73,9 @@ struct OrderPackSummaryStep: View {
                 }
             }
 
+            if viewModel.isTopicSoftened {
+                softenedNotice
+            }
             noticeBox
 
             HangsPrimaryButton(title: payTitle, icon: "sparkles") {
@@ -106,6 +109,27 @@ struct OrderPackSummaryStep: View {
             .fixedSize()
             .accessibilityIdentifier("orderPack.size")
         }
+    }
+
+    /// #233: the topic passed the check, but its questions will be toned down.
+    private var softenedNotice: some View {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: "info.circle")
+                .font(.hangsBody.weight(.semibold))
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+            Text("Some words in your topic are rude or for adults only. We'll make the pack, but the questions will be toned down.")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(Theme.Hangs.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(Theme.Hangs.Colors.muted.opacity(0.10))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("orderPack.topicSoftened")
     }
 
     private var noticeBox: some View {

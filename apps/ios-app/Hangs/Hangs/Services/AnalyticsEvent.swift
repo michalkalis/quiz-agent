@@ -55,6 +55,9 @@ enum AnalyticsEvent: Equatable {
     case quickGameChanged(enabled: Bool)
     /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
     case questionSkipped(quick: Bool)
+    /// #233: the custom pack topic check before payment; `verdict` is
+    /// ok / softened / blocked, or "error" when the check could not run.
+    case packTopicChecked(verdict: String)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -83,6 +86,7 @@ enum AnalyticsEvent: Equatable {
         case .homeCategoryPickerOpened: "home_category_picker_opened"
         case .quickGameChanged: "quick_game_changed"
         case .questionSkipped: "question_skipped"
+        case .packTopicChecked: "pack_topic_checked"
         }
     }
 
@@ -157,6 +161,8 @@ enum AnalyticsEvent: Equatable {
             [("enabled", .bool(enabled))]
         case let .questionSkipped(quick):
             [("quick", .bool(quick))]
+        case let .packTopicChecked(verdict):
+            [("verdict", .string(verdict))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

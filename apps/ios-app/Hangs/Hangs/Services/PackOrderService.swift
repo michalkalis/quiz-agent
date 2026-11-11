@@ -41,6 +41,14 @@ protocol PackOrderServiceProtocol: Sendable {
     /// passes nil. That is what makes a failed order recoverable after the app
     /// (or the Settings screen) has been torn down and the proof is gone.
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse
+    /// `POST /v1/orders/topic-check` (#233) — is the order text a topic we
+    /// make packs about? Asked before payment; bearer required.
+    func checkTopic(prompt: String, language: String) async throws -> TopicVerdict
+}
+
+extension PackOrderServiceProtocol {
+    /// Test doubles that never order a pack let every topic through.
+    func checkTopic(prompt _: String, language _: String) async throws -> TopicVerdict { .ok }
 }
 
 /// Thread-safe pack-order service using a Swift 6 actor.
@@ -127,6 +135,27 @@ actor PackOrderService: PackOrderServiceProtocol {
             throw PackOrderError.server(Self.errorMessage(from: data))
         }
         return try JSONDecoder().decode(OrderCreatedResponse.self, from: data)
+    }
+
+    func checkTopic(prompt: String, language: String) async throws -> TopicVerdict {
+        let url = baseURL.appendingPathComponent("/v1/orders/topic-check")
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: false)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(TopicCheckRequest(prompt: prompt, language: language))
+
+        Logger.network.debug("🌐 POST \(url, privacy: .public) (pack topic check)")
+        let (data, response) = try await send(request)
+        guard let http = response as? HTTPURLResponse else {
+            throw PackOrderError.invalidResponse
+        }
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
+        }
+        guard http.statusCode == 200 else {
+            throw PackOrderError.server(Self.errorMessage(from: data))
+        }
+        let verdict = try JSONDecoder().decode(TopicCheckResponse.self, from: data).verdict
+        return TopicVerdict(rawValue: verdict) ?? .ok
     }
 
     func listOrders() async throws -> [OrderSnapshot] {

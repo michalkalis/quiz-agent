@@ -53,6 +53,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "home_category_picker_opened": ["source"],
     "quick_game_changed": ["enabled"],
     "question_skipped": ["quick"],
+    "pack_topic_checked": ["verdict"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -90,6 +91,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .homeCategoryPickerOpened(source: .deckButton),
     .quickGameChanged(enabled: true),
     .questionSkipped(quick: true),
+    .packTopicChecked(verdict: "blocked"),
 ]
 
 @MainActor

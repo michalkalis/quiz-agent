@@ -106,6 +106,13 @@ final class OrderPackViewModel: ObservableObject {
     /// order). It is spent before any new charge, so it decides the size.
     @Published private(set) var isSizeFixedByPendingPurchase = false
 
+    /// #233: the topic check for `checkedPrompt` is running / came back.
+    @Published private(set) var isCheckingTopic = false
+    @Published private(set) var topicVerdict: TopicVerdict?
+    /// The trimmed text `topicVerdict` belongs to: an edit makes it stale, so
+    /// the blocked notice goes away as soon as the player changes the topic.
+    private var checkedPrompt: String?
+
     private let service: PackOrderServiceProtocol
     private let purchaseService: PackPurchaseServiceProtocol
     /// Whether the Debug admin door is open (a key is stored). Injected so unit
@@ -319,6 +326,41 @@ final class OrderPackViewModel: ObservableObject {
     /// Explicit difficulty pick (form buttons).
     func selectDifficulty(_ level: PackDifficulty) {
         difficulty = level
+    }
+
+    /// #233: the form's "Continue". Checks the topic before the summary (and
+    /// so before any payment): `blocked` keeps the player on the form,
+    /// `softened` shows a note on the summary. A failed check lets them through.
+    func continueFromForm() async {
+        guard state == .editing, isValid, !isCheckingTopic else { return }
+        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if checkedPrompt != text {
+            isCheckingTopic = true
+            let verdict: TopicVerdict
+            do {
+                verdict = try await service.checkTopic(prompt: text, language: language)
+                analytics.track(.packTopicChecked(verdict: verdict.rawValue))
+            } catch {
+                verdict = .ok
+                analytics.track(.packTopicChecked(verdict: "error"))
+            }
+            isCheckingTopic = false
+            topicVerdict = verdict
+            checkedPrompt = text
+        }
+        guard !isTopicBlocked else { return }
+        advanceToSummary()
+    }
+
+    /// #233: the current text was checked and must not become a pack.
+    var isTopicBlocked: Bool { verdict(for: .blocked) }
+
+    /// #233: the current text passed, but its questions will be toned down.
+    var isTopicSoftened: Bool { verdict(for: .softened) }
+
+    private func verdict(for wanted: TopicVerdict) -> Bool {
+        topicVerdict == wanted
+            && checkedPrompt == prompt.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Form → payment summary. Guarded on `.editing` so it can never re-enter

@@ -58,6 +58,10 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// Call counters so a test can prove WHICH endpoint "Try again" used — a
     /// retry of a paid order must never fall through to a second `createOrder`.
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
+    private let topicResult: Result<TopicVerdict, PackFailure>
+    private let topicCalls = OSAllocatedUnfairLock(initialState: 0)
+    /// #233: how often the pre-payment topic check ran.
+    var topicCheckCallCount: Int { topicCalls.withLock { $0 } }
     private let retryCalls = OSAllocatedUnfairLock(initialState: 0)
     private let listCalls = OSAllocatedUnfairLock(initialState: 0)
 
@@ -90,8 +94,10 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         listResults: [Result<[OrderSnapshot], PackFailure>] = [],
         retryFailure: PackOrderError? = nil,
         listFailure: PackOrderError? = nil,
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok)
     ) {
+        self.topicResult = topicResult
         self.retryFailure = retryFailure
         self.listFailure = listFailure
         self.createDelaySeconds = createDelaySeconds
@@ -118,6 +124,11 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
             try await clock.sleep(for: .seconds(createDelaySeconds))
         }
         return try createResult.get()
+    }
+
+    func checkTopic(prompt _: String, language _: String) async throws -> TopicVerdict {
+        topicCalls.withLock { $0 += 1 }
+        return try topicResult.get()
     }
 
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {

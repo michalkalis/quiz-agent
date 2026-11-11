@@ -144,6 +144,12 @@ class TopicCheckRequest(BaseModel):
     prompt: str
     language: str
 
+    # Judged by what the player sees, exactly like `CreateOrderRequest`.
+    @field_validator("prompt")
+    @classmethod
+    def _drop_invisible_characters(cls, value: str) -> str:
+        return clean_user_text(value)
+
 
 class TopicCheckResponse(BaseModel):
     # Plain string (not an enum) so the response contract stays expand-only.

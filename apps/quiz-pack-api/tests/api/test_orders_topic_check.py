@@ -75,3 +75,24 @@ async def test_same_length_bounds_as_ordering(client, prompt, monkeypatch):
             headers=_bearer("acct-1"),
         )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_invisible_characters_dropped_before_the_check(client, monkeypatch):
+    # Same rule as ordering (#643): a text padded with invisible characters is
+    # judged by what the player actually sees.
+    seen = []
+
+    async def fake_check(prompt):
+        seen.append(prompt)
+        return "ok", False
+
+    monkeypatch.setattr(topic_check, "check_topic", fake_check)
+    async with client:
+        resp = await client.post(
+            "/v1/orders/topic-check",
+            json={"prompt": "do​gs‮", "language": "en"},
+            headers=_bearer("acct-1"),
+        )
+    assert resp.status_code == 200
+    assert seen == ["dogs"]

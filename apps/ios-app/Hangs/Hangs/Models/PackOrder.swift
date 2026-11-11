@@ -43,6 +43,24 @@ nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+// MARK: - Topic check (#233)
+
+/// Verdict of `POST /v1/orders/topic-check`, asked before the player pays.
+/// `softened`: the questions will be toned down; `blocked`: pick another topic.
+nonisolated enum TopicVerdict: String, Sendable {
+    case ok, softened, blocked
+}
+
+nonisolated struct TopicCheckRequest: Encodable, Sendable {
+    let prompt: String
+    let language: String
+}
+
+/// `verdict` is a plain string on the wire; an unknown value reads as `.ok`.
+nonisolated struct TopicCheckResponse: Decodable, Sendable {
+    let verdict: String
+}
+
 // MARK: - Create order request
 
 /// Body of `POST /v1/orders`. `category`/`theme` are omitted from the JSON when

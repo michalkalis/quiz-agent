@@ -30,7 +30,13 @@ struct OrderPackFormStep: View {
             )
             languageGroup
 
-            HangsPrimaryButton(title: "Continue", trailingIcon: "arrow.right", action: continueToSummary)
+            HangsPrimaryButton(
+                title: "Continue",
+                trailingIcon: "arrow.right",
+                // #233: the topic check runs before the summary.
+                isLoading: viewModel.isCheckingTopic,
+                action: continueToSummary
+            )
                 // #188 G14 (M9): the button draws its own legible disabled state.
                 .disabled(!viewModel.isValid)
                 .accessibilityIdentifier("orderPack.submit")
@@ -73,6 +79,14 @@ struct OrderPackFormStep: View {
                         .foregroundStyle(viewModel.isPromptValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
+            }
+            if viewModel.isTopicBlocked {
+                Text("We can't make a quiz on this topic. Please try a different one.")
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.error)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, Theme.Hangs.Spacing.md)
+                    .accessibilityIdentifier("orderPack.topicBlocked")
             }
             Text("Tell us what the quiz should be about. A few words are enough.")
                 .font(.hangsCaption)
@@ -136,7 +150,7 @@ struct OrderPackFormStep: View {
     private func continueToSummary() {
         Task {
             await dictation.stop()
-            viewModel.advanceToSummary()
+            await viewModel.continueFromForm()
         }
     }
 

@@ -8208,6 +8208,24 @@
         }
       }
     },
+    "Some words in your topic are rude or for adults only. We'll make the pack, but the questions will be toned down." : {
+      "comment" : "Order summary (#233): the topic passed the check but its questions will be toned down",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Některá slova v zadání jsou vulgární nebo jen pro dospělé. Balíček uděláme, ale otázky budou zmírněné."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niektoré slová v zadaní sú vulgárne alebo len pre dospelých. Balík spravíme, ale otázky budú zmiernené."
+          }
+        }
+      }
+    },
     "The link also works for friends in another city." : {
       "comment" : "Hra spolu (#230): host lobby, one line under the share button",
       "localizations" : {
@@ -10261,6 +10279,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zhrnutie"
+          }
+        }
+      }
+    },
+    "We can't make a quiz on this topic. Please try a different one." : {
+      "comment" : "Order form (#233): the topic check refused the topic before payment; the player edits it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na tohle téma kvíz neuděláme. Zkus jiné."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na túto tému kvíz nespravíme. Skús inú."
           }
         }
       }

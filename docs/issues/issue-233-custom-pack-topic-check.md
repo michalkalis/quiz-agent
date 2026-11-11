@@ -1,7 +1,7 @@
 # #233 — Vlastný balík: kontrola témy pred platbou
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-11 plán + rozhodnutia foundera; implementácia v PR
+**Status:** 2026-11-11 server + appka v PR #775; ďalej nasadenie servera, potom 1.3 build
 **Founder:** 2026-11-11 „najlepšie by bolo, keby je informovaný, že zadal nepovolenú tému a nech vyberie niečo iné“
 
 ## Prečo
@@ -68,3 +68,4 @@ Jedno volanie Haiku na „Pokračovať“, rádovo stotiny centa. Pridané čaka
 ## Stav
 
 - 2026-11-11 233.1 + 233.2: server hotový v PR. Eval (`docs/testing/runs/topic-check-2026-11-11/`): Haiku 5.5 29/30 trikrát po sebe, ~1,3 s na kontrolu; všetky nebezpečné zastavené, žiadne bežné zablokované; jediná odchýlka „Rude-sounding place names“ → `ok` (neškodné). Sonnet 5.5 28/30 a pomalší. Zistenia: model pred slovom krátko premýšľa (strop výstupu 512), občas slovo vysvetlí (berie sa posledné slovo), odmietnutie poskytovateľa = `blocked`.
+- 2026-11-11 233.4: appka v tom istom PR — kontrola na „Pokračovať“, hláška pod poľom pri `blocked`, poznámka na súhrne pri `softened`, chyba = pustí ďalej; udalosť `pack_topic_checked`; texty sk/cs/en; 6 testov ViewModelu.

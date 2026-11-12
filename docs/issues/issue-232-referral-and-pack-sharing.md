@@ -34,7 +34,7 @@ Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presn
 - **Pevný zoznam otázok** už server vie: denná výzva tak púšťa svojich 5 otázok v danom poradí a preskočí chýbajúce. Pri zakladaní bežnej relácie sa zoznam otázok zatiaľ zadať nedá.
 - **Denná výzva:** 5 otázok pre jazyk a deň, rovnaké pre všetkých, jeden pokus na hráča, starší deň sa hrať nedá. Porovnanie s ostatnými hráčmi už má („lepší ako X % z N“). Dnes sa zdieľa len text výsledku bez odkazu.
 - **Bežné kolo** vyberá otázky priebežne a náhodne, takže kolo sa po dohraní nedá zopakovať, kým si server nezapamätá, čo padlo. Preklady sk/cs majú rovnaké ID ako originál, ale preklad za behu nemusí vyjsť dvakrát rovnako.
-- **Vlastný balík** smie hrať len vlastník (cudzí balík vráti „nenájdené“). Kópiu hotového balíka pre iného vlastníka server vie spraviť okamžite (#225).
+- **Vlastný balík** smie hrať len vlastník (cudzí balík vráti „nenájdené“). Kópiu hotového balíka pre iného vlastníka server vie spraviť okamžite (#225 — hotové balíky znova).
 - **Limit zadarmo:** dennú výzvu a balík limit nepočíta, bežné kolo áno. Miestnosť dnes odmieta balík aj dennú výzvu.
 - **Odkazy a web:** pozvánky do hry spolu idú cez trubbo.app/join?t=… ako univerzálny odkaz. Web je statický (GitHub Pages), takže nová stránka má rovnaký tvar: play.html a trubbo.app/play?s=TOKEN.
 
@@ -44,7 +44,7 @@ Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presn
 - **Zoznam otázok zostaví server sám** z odosielateľovej vlastnej relácie, teda z otázok, ktoré naozaj dostal, s kontrolou, že relácia je jeho. Nikdy ho nepreberá od appky, inak by sa cez zdieľanie dal obísť limit zadarmo.
 - **Pri ukladaní** prejdú len otázky, ktoré by mohol dostať ktokoľvek: schválené, bez obrázka, nie z balíka a pri sk/cs so schváleným uloženým prekladom (rovnaké pravidlo ako výber dennej výzvy). Tak kamarát vidí to isté znenie ako odosielateľ a hráč z TestFlightu cez odkaz nepošle neschválenú otázku do App Store buildu.
 - **Pri hraní** sa zoznam znova prefiltruje pravidlami kamaráta (stav schválenia podľa jeho buildu, medzitým vyradené otázky). Pevný zoznam dennej výzvy dnes tieto filtre obchádza, lebo jej otázky sú prefiltrované vopred. Pre zdieľané kolo to platiť nemôže.
-- **Zdieľaný balík má vlastné pravidlo**, lebo otázky balíka sa nikdy neschvaľujú do korpusu a filter schválenia by ho vyprázdnil. Platí: len otázky toho istého balíka a bez vyradených a expirovaných (rovnaké pravidlo ako kópia balíka #225).
+- **Zdieľaný balík má vlastné pravidlo**, lebo otázky balíka sa nikdy neschvaľujú do korpusu a filter schválenia by ho vyprázdnil. Platí: len otázky toho istého balíka a bez vyradených a expirovaných (rovnaké pravidlo ako kópia balíka v #225 — hotové balíky znova).
 
 **Kamarát hrá:**
 - **Kolo:** nová relácia s pevným zoznamom otázok zo záznamu, v jazyku záznamu.
@@ -53,7 +53,7 @@ Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presn
 - **Limit zadarmo** zdieľaný kvíz nepočíta (ako denná výzva). Korpusové otázky nás nestoja takmer nič, takže limit tu nie je ochrana nákladov a zbytočne by kamarátovi zavrel dvere. Predpoklad agenta, founder môže zmeniť.
 
 **Porovnanie výsledkov.**
-- Každý dohraný zdieľaný kvíz zapíše výsledok k záznamu, **jeden na človeka**. Zariadenie aj účet sa rátajú ako jedna osoba (rovnaké ako pri #225), takže opakované hranie poradie neskreslí.
+- Každý dohraný zdieľaný kvíz zapíše výsledok k záznamu, **jeden na človeka**. Zariadenie aj účet sa rátajú ako jedna osoba (rovnaké ako pri #225 — hotové balíky znova), takže opakované hranie poradie neskreslí.
 - Na konci kamarát vidí poradie: odosielateľ, on a ostatní, kto to hral (meno z hry spolu, inak „Hráč 1, 2…“).
 - Odosielateľ vidí to isté pri kvíze vo svojej histórii.
 - Bez notifikácií.
@@ -119,4 +119,4 @@ Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných d�
   - strop overovať pri prevzatí a zlúčení účtov;
   - objednávky referral- potrebujú vlastnú vetvu oprávnenia;
   - founder vytvorí kľúč DeviceCheck.
-- Začať, keď bude dosť hráčov, aby sa dalo zmerať, či zdieľanie samo funguje (udalosti z 232.1).
+- Začať, keď bude dosť hráčov, aby sa dalo zmerať, či zdieľanie samo funguje (udalosti z 232.1 — server: zdieľaný kvíz).

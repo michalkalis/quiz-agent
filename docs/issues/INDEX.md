@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 234 | [Trubbo Beta ako samostatná appka vedľa App Store verzie](issue-234-beta-app-side-by-side.md) | enhancement · ready-for-agent | `[ ]` #234 | 2026-11-12: plán skontrolovaný (SOUND), plná beta s nákupmi, founder + Svitlana |
 | 233 | [Vlastný balík: kontrola témy pred platbou](issue-233-custom-pack-topic-check.md) | enhancement · ready-for-agent | `[~]` #233 | 2026-11-11: rozhodnutia foundera (pred platbou; nebezpečné stop, vulgárne s upozornením); eval 29/30 Haiku 5.5; server nasadený (PR #775), appka s 1.3 |
 | 232 | [Zahraj si môj kvíz: zdieľanie kvízu odkazom](issue-232-referral-and-pack-sharing.md) | enhancement · ready-for-agent | `[ ]` #232 | 2026-11-11/12: rozsah zmenený na zdieľanie kvízu odkazom bez kódu + porovnanie výsledkov; odmena za pozvanie neskôr |
 | 231 | [Ukrajinčina ako štvrtý jazyk](issue-231-ukrainian.md) | enhancement · ready-for-agent | `[ ]` #231 | 2026-11-08: plán + rozhodnutia foundera (hlavne Ukrajina, mix prekladu a natívnych otázok, rodený hovorca, bez vojny) |

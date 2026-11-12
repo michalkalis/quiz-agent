@@ -1,118 +1,122 @@
-# #232 — Odporuč Trubbo kamarátovi + zdieľanie vlastného balíka
+# #232 — Zahraj si môj kvíz: zdieľanie kvízu odkazom
 
 **Triage:** enhancement · ready-for-agent
-**Status:** plán 2026-11-09, rozhodnutia foundera nižšie, design-soundness SOUND 0,85 (2 kolá); ďalej 232.0 overenie
-**Founder:** 2026-11-09 „viac propagovať zdieľanie appky za nejaký benefit, napríklad balík 10 custom otázok“
+**Status:** rozsah zmenený 2026-11-11 (najprv zdieľanie kvízu, odmena za pozvanie neskôr); design-soundness 2 kolá zapracované (posledný nález: vlastné pravidlo pre balík); ďalej 232.0 overenie
+**Founder:** 2026-11-09 „viac propagovať zdieľanie appky za nejaký benefit“; 2026-11-11 „pozvanie kamaráta musí fungovať bez kopírovania kódu“, vybral „zdieľať kvíz odkazom“; 2026-11-12 nápad „zahrám si kolo, pošlem odkaz na to isté kolo partii a porovnáme výsledky“ (zlúčený sem z TODO)
 **Návrh a prieskum:** https://claude.ai/artifact/FT91hmcTC6Xhczf7TpJnmQ (session quiz-agent-20)
 
 ## Cieľ
 
-Hráč pozve kamaráta alebo mu pošle svoj vlastný balík. Keď kamarát v appke dohrá prvý kvíz, pozývajúci dostane vlastný balík 10 otázok zadarmo.
+Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presne tie isté otázky, aj keď si appku musí najprv stiahnuť, a nemusí nič kopírovať ani písať. Na konci vidí, ako dopadol oproti odosielateľovi a ostatným, ktorí ten kvíz hrali.
 
 **Hotovo, keď:**
-- hráč pošle pozvánku a kamarát sa cez odkaz (alebo kód) dostane do appky;
-- pozývajúci dostane balík 10 otázok s témou podľa vlastného výberu, keď kamarát dohrá prvý kvíz, sólo alebo ako hosť v hre spolu;
-- jeden človek dostane najviac 3 takéto balíky a jeden fyzický mobil môže odmenu spustiť len raz;
-- hráč pošle svoj vlastný balík kamarátovi, ktorý si ho zahrá zadarmo;
-- hotový vlastný balík sa dá hrať v hre spolu;
+- odkaz sa dá poslať po bežnom kole, po dennej výzve aj pri vlastnom balíku;
+- kamarát s appkou ťukne na odkaz a hneď hrá;
+- kamarát bez appky ťukne na odkaz, stiahne appku a po prvom spustení ťukne na jedno tlačidlo, ktoré ho pustí do toho istého kvízu;
+- po dohraní vidia odosielateľ aj kamaráti porovnanie výsledkov;
+- hotový vlastný balík sa dá hrať aj v hre spolu;
 - všetko je za vypínačom na serveri, analytické udalosti sú v tom istom PR a test na zariadení prešiel.
 
-## Rozhodnutia foundera (2026-11-09)
+## Rozhodnutia foundera
 
 | Otázka | Voľba |
 |---|---|
-| Kto dostane odmenu | **Len pozývajúci** (pozvaný nič, bezpečné voči Apple 3.2.2) |
-| Odmena | Vlastný balík **10 otázok**, tému si vyberie pozývajúci |
-| Kedy | Až keď kamarát **dohrá prvý kvíz**, samotné pozvanie ani stiahnutie nestačí |
-| Strop | **3 balíky na človeka**. Rozpočet je takmer nulový: aj keď pozve influencer, náklad je najviac ~$3. Iné stratégie až z tržieb. |
-| Zdieľanie balíka | **Hneď spolu** s odporúčaním |
-| Ochrana proti zneužitiu | **Obe poistky** (2026-11-10, „ak je to bežná best practice“): označenie mobilu kamaráta cez Apple DeviceCheck a odmena až po prihlásení pozývajúceho cez Apple. Obe sú bežné: Apple uvádza DeviceCheck práve na mobily, ktoré už využili promo ponuku, a odporúčacie programy (Dropbox, Revolut, Duolingo) odmenu dávajú len na účet. |
-| Balík v hre spolu | Founder sa pýtal „môžu si custom balík zahrať spolu, že?“. Dnes **nie**, server balíky v miestnosti odmieta (len sólo). Pridávam to sem, lebo je to prirodzený spôsob, ako balík zdieľať. |
+| Prvý krok (11-11) | **Zdieľať akýkoľvek kvíz odkazom**, bez odmeny. Dáta: 7 hráčov za 30 dní, žiadny ostrý nákup vlastného balíka, takže samotné zdieľanie balíka by nemal kto použiť. |
+| Bez kódu (11-11) | Kamarát nič nekopíruje ani nepíše |
+| Porovnanie (11-12) | Každý si kvíz zahrá, kedy chce, a výsledky sa porovnajú. Nie naživo, na to je hra spolu. |
+| Poslaný balík (11-12) | Kamarát si ho **zahrá raz** ako výzvu, neuloží sa mu (odkaz sa dá posielať ďalej, trvalá kópia by brala predaj balíkov) |
+| Balík v hre spolu (11-09) | Áno. Hra spolu je od 11-12 zapnutá aj v App Store buildoch. |
+| Odmena za pozvanie (11-09/10) | **Neskôr**, na to isté prepojenie. Platí: len pozývajúci, balík 10 otázok po prvom dohranom kvíze kamaráta, strop 3 na Apple účet, mobil kamaráta označený cez DeviceCheck. Pozri „Neskôr“. |
 
-## Čo už platí (overené 2026-11-09)
+## Čo už platí (overené 2026-11-12)
 
-- **Odkazy:** pozvánky do hry spolu idú cez trubbo.app/join?t=… a otvárajú appku (univerzálny odkaz). Bez appky sa zobrazí statická stránka join.html v sk/cs/en s tlačidlom App Store. Web je statický (GitHub Pages, bez smerovania ciest), takže nová stránka musí ísť rovnakým spôsobom: p.html a trubbo.app/p?c=KÓD. Do appky sa po inštalácii nedá preniesť žiadny údaj, takže kód treba zadať ručne.
-- **Balík zadarmo bez nákupu:** server balíkov vytvára objednávky s vlastným identifikátorom transakcie a rovnaký identifikátor nikdy nevytvorí balík druhýkrát. Kópiu hotového balíka pre iného vlastníka už vie urobiť (#225 opätovné použitie balíka).
-- **Vlastníctvo balíka:** balík patrí jednému hráčovi a zoznam „Moje balíky“ sa skladá z jeho objednávok. Ochrana proti čítaniu cudzích balíkov sa nemení.
-- **Hráči:** predvolene anonymní, Prihlásenie cez Apple je voliteľné a zlúčenie účtov existuje. Prihlasovacie údaje sú v iPhone Keychain, ktorý reinštaláciu zvyčajne prežije, ale Apple to nezaručuje. Anonymnú identitu preto nemožno brať ako poistku proti zneužitiu.
-- **Dohraný kvíz:** zapisuje sa hráčovi, ktorému patrí relácia. V hre spolu je to hostiteľ, takže hosť dnes „nedohrá“ nič.
-- **Balík v miestnosti:** server ho odmieta pri vytváraní miestnosti (spoločná podmienka s dennou výzvou). Vlastníctvo balíka sa overí už pri štarte relácie hostiteľa. Hra v miestnosti nečaká na balík, ktorý sa ešte vyrába, a pri prázdnom zásobníku skončí.
-- **Analytika:** vlastná tabuľka udalostí so zoznamom povolených. Zdieľanie dnes meria len zhrnutie profilu.
-- **Kampaňové odkazy App Store** ukazujú len súhrny, nie konkrétneho človeka, takže na pripísanie odmeny nestačia.
-- **Prieskum:** odporúčanie je doplnok, nie hlavný zdroj hráčov (Duolingo +3 %). Zdroje sú v artefakte.
+- **App Store odkaz s parametrom appka po inštalácii neprečíta.** Kampaňový parameter Apple ukazuje len v súhrnných štatistikách. Prenos treba spraviť vlastnou stránkou ([Apple](https://developer.apple.com/help/app-store-connect-analytics/acquisition/campaign-links/)).
+- **Pevný zoznam otázok** už server vie: denná výzva tak púšťa svojich 5 otázok v danom poradí a preskočí chýbajúce. Pri zakladaní bežnej relácie sa zoznam otázok zatiaľ zadať nedá.
+- **Denná výzva:** 5 otázok pre jazyk a deň, rovnaké pre všetkých, jeden pokus na hráča, starší deň sa hrať nedá. Porovnanie s ostatnými hráčmi už má („lepší ako X % z N“). Dnes sa zdieľa len text výsledku bez odkazu.
+- **Bežné kolo** vyberá otázky priebežne a náhodne, takže kolo sa po dohraní nedá zopakovať, kým si server nezapamätá, čo padlo. Preklady sk/cs majú rovnaké ID ako originál, ale preklad za behu nemusí vyjsť dvakrát rovnako.
+- **Vlastný balík** smie hrať len vlastník (cudzí balík vráti „nenájdené“). Kópiu hotového balíka pre iného vlastníka server vie spraviť okamžite (#225 — hotové balíky znova).
+- **Limit zadarmo:** dennú výzvu a balík limit nepočíta, bežné kolo áno. Miestnosť dnes odmieta balík aj dennú výzvu.
+- **Odkazy a web:** pozvánky do hry spolu idú cez trubbo.app/join?t=… ako univerzálny odkaz. Web je statický (GitHub Pages), takže nová stránka má rovnaký tvar: play.html a trubbo.app/play?s=TOKEN.
 
 ## Návrh riešenia
 
-**Osobný kód.** Každý hráč má krátky kód (6 znakov, bez zameniteľných znakov). Odkaz trubbo.app/p?c=KÓD otvorí appku, ak ju kamarát má, a kód sa doplní sám. Ak appku nemá, zobrazí sa stránka s tlačidlom App Store a veľkým kódom, ktorý zadá v appke v časti „Mám kód od kamaráta“ (v profile a po prvom kvíze).
+**Zdieľaný kvíz na serveri.** Po dohratí kvízu (alebo pri balíku) appka požiada o odkaz. Server uloží záznam so zoznamom otázok v poradí, jazykom, druhom (kolo, denná výzva, balík), odosielateľom a jeho výsledkom a vráti krátky náhodný token. Záznam neobsahuje nič, čo by odhalilo odpovede, a vzniká až na požiadanie, nie pri každom kole.
+- **Zoznam otázok zostaví server sám** z odosielateľovej vlastnej relácie, teda z otázok, ktoré naozaj dostal, s kontrolou, že relácia je jeho. Nikdy ho nepreberá od appky, inak by sa cez zdieľanie dal obísť limit zadarmo.
+- **Pri ukladaní** prejdú len otázky, ktoré by mohol dostať ktokoľvek: schválené, bez obrázka, nie z balíka a pri sk/cs so schváleným uloženým prekladom (rovnaké pravidlo ako výber dennej výzvy). Tak kamarát vidí to isté znenie ako odosielateľ a hráč z TestFlightu cez odkaz nepošle neschválenú otázku do App Store buildu.
+- **Pri hraní** sa zoznam znova prefiltruje pravidlami kamaráta (stav schválenia podľa jeho buildu, medzitým vyradené otázky). Pevný zoznam dennej výzvy dnes tieto filtre obchádza, lebo jej otázky sú prefiltrované vopred. Pre zdieľané kolo to platiť nemôže.
+- **Zdieľaný balík má vlastné pravidlo**, lebo otázky balíka sa nikdy neschvaľujú do korpusu a filter schválenia by ho vyprázdnil. Platí: len otázky toho istého balíka a bez vyradených a expirovaných (rovnaké pravidlo ako kópia balíka v #225 — hotové balíky znova).
 
-**Ochrana proti zneužitiu** (hlavný predpoklad, nie doplnok). Anonymná identita sa dá obnoviť reinštaláciou, preto sa obe strany viažu na niečo trvalejšie:
-- **Mobil kamaráta:** Apple DeviceCheck (bez SDK, Apple si drží 2 bity na fyzický mobil pre celý vývojársky tím, [dokumentácia](https://developer.apple.com/documentation/devicecheck/dcdevice)). Pri pripísaní odmeny server nastaví bit „tento mobil už odmenu spustil“. Bit prežije reinštaláciu, vynuluje sa až rozhodnutím servera. Bez platného DeviceCheck tokenu (simulátor, chyba) odmena nepríde. Server spracúva uplatnenia jedného mobilu postupne, lebo prečítanie a zápis bitu nie sú jedna operácia. Použijeme jeden z dvoch bitov a druhý ostane voľný.
-- **Pozývajúci:** odmenu dostane len hráč **prihlásený cez Apple**. Strop 3 sa ráta na Apple účet, ktorý reinštaláciu prežije. Odkaz a kód môže poslať ktokoľvek. Kým sa neprihlási, odmena čaká a appka mu to povie („prihlás sa a balík je tvoj“).
-- **Ďalej:** vlastný kód sa nedá použiť. Kód sa prijme len od hráča, ktorý ešte nedohral žiadny kvíz, alebo je v appke najviac 7 dní.
-- **Výsledok:** jedna odmena si vyžaduje nový fyzický mobil, takže zneužitie sa nedá opakovať v slučke.
+**Kamarát hrá:**
+- **Kolo:** nová relácia s pevným zoznamom otázok zo záznamu, v jazyku záznamu.
+- **Denná výzva:** v ten istý deň a jazyk odkaz kamarátovi spustí jeho vlastnú dennú výzvu (otázky sú rovnaké a ráta sa mu pokus). Neskôr sa tých 5 otázok hrá ako bežné zdieľané kolo.
+- **Balík: zahrá si ho raz** (founder 2026-11-12). Kamarát hrá tie isté otázky ako výzvu, ale balík sa mu neuloží a nedostane kópiu, takže predaj balíkov to nepoškodí. Relácia z tokenu smie čítať len otázky uložené v zázname a len z tohto balíka. Bežná kontrola vlastníctva balíka pre ostatné relácie sa nemení. „Raz“ sa stráži už pri založení relácie z tokenu, na osobu (zariadenie aj účet ako jedna osoba), nielen jedným výsledkom. Zdieľať sa dá len hotový balík.
+- **Limit zadarmo** zdieľaný kvíz nepočíta (ako denná výzva). Korpusové otázky nás nestoja takmer nič, takže limit tu nie je ochrana nákladov a zbytočne by kamarátovi zavrel dvere. Predpoklad agenta, founder môže zmeniť.
 
-**Kedy sa odmena pripíše.** Keď kamarát po zadaní kódu dohrá kvíz, sólo aj ako hosť v hre spolu. Koniec hry v miestnosti sa preto ráta každému účastníkovi zvlášť, nie len hostiteľovi. Inak by pozvánka „po hre spolu“ nikdy nefungovala.
+**Porovnanie výsledkov.**
+- Každý dohraný zdieľaný kvíz zapíše výsledok k záznamu, **jeden na človeka**. Zariadenie aj účet sa rátajú ako jedna osoba (rovnaké ako pri #225 — hotové balíky znova), takže opakované hranie poradie neskreslí.
+- Na konci kamarát vidí poradie: odosielateľ, on a ostatní, kto to hral (meno z hry spolu, inak „Hráč 1, 2…“).
+- Odosielateľ vidí to isté pri kvíze vo svojej histórii.
+- Bez notifikácií.
 
-**Odmena ako kredit, bez novej knihy.** Riadok odporúčania je zároveň kredit (stavy: čaká na prihlásenie, získaný, minutý, číslo objednávky). Pozývajúci uvidí na Domove „Máš balík zadarmo, vyber tému“. Minutie ide existujúcim vytvorením objednávky s identifikátorom referral-{id}, takže jeden kredit dá najviac jeden balík. Tabuľka je v spoločnej databáze. Vlastní ju quiz-agent (pozná hráčov a dohrané kvízy) a quiz-pack-api kredit len mení na objednávku (rovnaký vzor ako app_switches). Kredit nevyprší. Po 3 odmenách sa pozvánky dajú posielať ďalej, ale appka vopred povie, že odmena už nepríde.
+**Prenos cez inštaláciu bez kódu:**
+1. Odkaz trubbo.app/play?s=TOKEN otvorí appku, ak ju kamarát má (univerzálny odkaz).
+2. Ak ju nemá, otvorí sa naša stránka play.html v sk/cs/en s témou kvízu a tlačidlom „Stiahnuť z App Store“. Ťuknutie na tlačidlo uloží odkaz do schránky a otvorí App Store. Zápis do schránky prehliadač povolí, lebo ide o ťuknutie používateľa.
+3. Pri prvom spustení appka bez opýtania zistí, či je v schránke pravdepodobne odkaz (Apple na to má funkciu, ktorá neukazuje upozornenie). Ak áno, ukáže systémové tlačidlo Apple „Vložiť“ s textom „Máš kvíz od kamaráta?“. To tlačidlo upozornenie nevyvolá. Appka prijme len odkaz na trubbo.app/play.
+4. Záloha: stránka aj appka povedia „ťukni na odkaz ešte raz“, a ten už otvorí appku.
 
-**Zdieľanie balíka.** Pri vlastnom hotovom balíku je „Pošli kamarátovi“. Odkaz trubbo.app/p?c=KÓD&b=TOKEN nesie aj kód odosielateľa.
-- Kamarátovi vznikne **vlastná kópia** existujúcou kópiou balíka (#225) a objednávka s identifikátorom share-{token}-{hráč}. Opakované otvorenie nič nezduplikuje a balík sa mu zobrazí v jeho zozname.
-- Pravidlá vlastníctva sa nemenia.
-- Webová stránka ukáže tému balíka cez verejný endpoint, ktorý podľa tokenu vráti len názov a jazyk.
-- Ak je kamarát nový a dohrá kvíz, odosielateľ dostane odmenu ako pri pozvánke.
+Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných dátach a podľa Apple je to sledovanie odtlačkom zariadenia).
 
-**Balík v hre spolu.** Podmienka pri zakladaní miestnosti sa rozdelí: denná výzva ostáva len sólo, **hotový** vlastný balík sa povolí. Balík, ktorý sa ešte vyrába, sa pre miestnosť nedá vybrať, takže netreba čakanie v hre spolu. Hostia dostávajú otázky v tom istom tvare ako dnes, kontrakt sa nemení.
+**Kde sa ponúkne.**
+- Tlačidlo „Pošli kamarátovi“ na konci kola.
+- Na konci dennej výzvy, kde nahradí dnešný text bez odkazu: text ostane, pribudne k nemu odkaz.
+- Pri vlastnom balíku.
+- Nič nevyskakuje samo.
 
-**Kde sa ponúkne.** Riadok „Pozvi kamaráta“ v profile, nenápadná výzva po dobre odohranom kvíze (najviac raz za čas) a po hre spolu. Nič nevyskakuje opakovane.
+**Balík v hre spolu.** Dnes jedna vlastnosť relácie znamená naraz „nepočíta sa do limitu“ aj „len sólo“. Rozdelí sa na dve, aby zdieľané kvízy (bez limitu) nezdedili zákaz hry spolu omylom. Potom denná výzva ostáva len sólo a **hotový** vlastný balík sa povolí. Balík, ktorý sa ešte vyrába, sa vybrať nedá, takže hra spolu nemusí čakať na otázky. Hostia dostávajú otázky v tom istom tvare ako dnes.
 
-**Súkromie.** Len systémové okno zdieľania. Appka nikomu nepíše, nečíta kontakty a nevyžaduje žiadne povolenie (Apple 5.1.2, GDPR).
+**Súkromie.** Len systémové okno zdieľania. Appka nikomu nepíše a nečíta kontakty (Apple 5.1.2, GDPR). Token je náhodný, nedá sa uhádnuť a ukáže len tému kvízu a mená hráčov z porovnania.
 
-**Pravidlá Apple.** Odmena len pre pozývajúceho a až za činnosť v appke (3.2.2). Zaplatený obsah sa nikdy nepodmieňuje zdieľaním (3.1.2). Poslaný balík je obsah, ktorý odosielateľ už má, nič sa ním neodomyká mimo nákupov.
-
-**Kompatibilita a vypínač.** Prepínač v app-config na serveri, predvolene vypnutý, kým founder neotestuje (pravidlo z 2026-10-16). Nové endpointy a polia sú len doplnky a v existujúcich odpovediach nepribudne žiadna nová hodnota zoznamu (napr. dôvod konca miestnosti), aby prešla kontrola kompatibility starých buildov.
+**Kompatibilita a vypínač.**
+- Prepínač v app-config na serveri, predvolene vypnutý, kým founder neotestuje.
+- Nové endpointy a voliteľné polia sú len doplnky.
+- V existujúcich odpovediach nepribudne žiadna nová hodnota zoznamu, aby prešla kontrola kompatibility starých buildov.
 
 ## Úlohy
 
-- [ ] **232.0 Overenie a príprava**
-  - DeviceCheck: na reálnom iPhone overiť, či bit prežije reinštaláciu.
-  - Founder vytvorí kľúč DeviceCheck (.p8) v Apple Developer. Agent dá presný postup, kľúč pôjde do tajných premenných servera, nikdy do chatu.
-  - Overiť, či Keychain identita prežije reinštaláciu (len na informáciu, poistka na tom nestojí).
-  - Univerzálny odkaz /p vedľa /join.
-- [ ] **232.1 Server: kódy, ochrana, kredity**
-  - Kód hráča.
-  - Uplatnenie kódu s DeviceCheck a pravidlami vyššie.
-  - Koniec hry pre každého účastníka miestnosti.
-  - Pripísanie odmeny, kredit na Apple účet, strop 3.
-  - Minutie kreditu cez objednávku referral-{id}.
+- [ ] **232.0 Overenie** na reálnom iPhone:
+  - zápis do schránky z našej stránky v Safari aj vo vnútorných prehliadačoch (Messenger, Instagram; WhatsApp otvára Safari?);
+  - zistenie odkazu v schránke bez upozornenia a systémové tlačidlo Vložiť po čerstvej inštalácii z TestFlightu;
+  - univerzálny odkaz /play vedľa /join;
+  - stálosť uloženého prekladu pre sk/cs otázky v zdieľanom kole.
+- [ ] **232.1 Server: zdieľaný kvíz**
+  - Záznam a token.
+  - Relácia z tokenu (kolo, denná výzva, balík raz bez kópie), filtre pri uložení aj hraní, bez limitu zadarmo.
+  - Výsledky a poradie.
+  - Verejný endpoint s témou pre web.
   - Vypínač.
-  - Udalosti: pozvánka zdieľaná, kód uplatnený, odmena pripísaná, kredit použitý.
-- [ ] **232.2 Server: zdieľaný balík + balík v hre spolu**
-  - Zdieľací token.
-  - Kópia balíka kamarátovi (share-…).
-  - Verejný endpoint s názvom a jazykom balíka.
-  - Miestnosť prijme hotový balík.
-  - Udalosti: balík zdieľaný, zdieľaný balík otvorený a dohraný, miestnosť s balíkom.
+  - Udalosti: kvíz zdieľaný, odkaz otvorený (appka alebo web), vložený zo schránky, zdieľaný kvíz dohraný.
+- [ ] **232.2 Server: balík v hre spolu** — miestnosť prijme hotový balík. Udalosť: miestnosť s balíkom.
 - [ ] **232.3 Web**
-  - p.html v sk/cs/en (kód, tlačidlo App Store, téma balíka).
+  - play.html v sk/cs/en (téma, tlačidlo App Store so zápisom do schránky, „ťukni ešte raz“).
   - Rozšírenie súboru pre univerzálne odkazy.
 - [ ] **232.4 Appka**
-  - Pozvi kamaráta (profil, po kvíze, po hre spolu).
-  - Pole na kód a DeviceCheck token.
-  - Kredit, výzva na prihlásenie a výber témy.
-  - Pošli kamarátovi pri balíku.
+  - „Pošli kamarátovi“ (koniec kola, denná výzva, balík).
+  - Otvorenie odkazu.
+  - Tlačidlo „Máš kvíz od kamaráta?“ pri prvom spustení.
+  - Obrazovka porovnania.
   - Výber hotového balíka v hre spolu.
   - Texty sk/cs/en cez xcstrings.
   - Pixel snímky.
-- [ ] **232.5 Texty na schválenie**
-  - Správa pri zdieľaní, web a appka v artefakte pre foundera.
-  - Podľa copy-style: rodovo neutrálne, nie ako AI a bez cien v texte zdieľania.
-- [ ] **232.6 Test foundera** na TestFlight builde (keď si ho vyžiada): dva reálne iPhony, pozvánka, odmena, zdieľaný balík, balík v hre spolu. Potom zapnúť vypínač.
+- [ ] **232.5 Texty na schválenie** — správa pri zdieľaní, web a appka v artefakte. Podľa copy-style: rodovo neutrálne, nie ako AI, bez cien.
+- [ ] **232.6 Test foundera** na TestFlight builde (keď si ho vyžiada): dva reálne iPhony, kamarát s appkou aj s čerstvou inštaláciou, kolo, denná výzva, balík, balík v hre spolu. Potom zapnúť vypínač.
 
-## Otvorené
+## Neskôr: odmena za pozvanie (rozhodnuté, nerobí sa teraz)
 
-- Náklad balíka 10 je len odhad (~$1, z merania balíka 30). Prvé odmeny zmerať, úzke témy vychádzajú drahšie.
-- Pozvaný kamarát nedostane nič (rozhodnutie). Ak sa ukáže, že pozvánky nikto neprijíma, vrátiť sa k tomu až s dátami z udalostí.
-- **Pri implementácii (z kontroly):**
-  - Koniec hry pre každého účastníka mení, čo počíta udalosť dohraného kvízu. Pridať vlastnosť hostiteľ/hosť alebo samostatnú udalosť, aby sedeli prehľady aj limity.
-  - Strop 3 overovať pri prevzatí a pri zlúčení účtov, nie pri vzniku. Inak zlúčenie viacerých anonymných identít prekročí strop.
-  - Objednávky referral- a share- potrebujú vlastnú vetvu oprávnenia vedľa nákupu a administrátora. Nikdy neprijmú identifikátor s predponou od appky a pozastavenie objednávok aj kópia balíka pre ne platia.
+- Na to isté prepojenie: zdieľaný odkaz už nesie odosielateľa.
+- Pozývajúci dostane balík 10 otázok, keď nový kamarát dohrá prvý kvíz (sólo alebo ako hosť v hre spolu). Pozvaný nedostane nič (Apple 3.2.2). Strop sú 3 balíky na Apple účet, odmenu treba prevziať prihlásením cez Apple. Mobil kamaráta sa označí cez Apple DeviceCheck, takže odmenu spustí len raz aj po reinštalácii ([Apple](https://developer.apple.com/documentation/devicecheck/dcdevice) to uvádza priamo na promo ponuky).
+- Z kontroly riešenia (design-soundness SOUND 0,85, 2026-11-10):
+  - koniec hry v miestnosti rátať každému účastníkovi;
+  - strop overovať pri prevzatí a zlúčení účtov;
+  - objednávky referral- potrebujú vlastnú vetvu oprávnenia;
+  - founder vytvorí kľúč DeviceCheck.
+- Začať, keď bude dosť hráčov, aby sa dalo zmerať, či zdieľanie samo funguje (udalosti z 232.1 — server: zdieľaný kvíz).

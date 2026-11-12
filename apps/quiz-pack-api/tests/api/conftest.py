@@ -160,10 +160,12 @@ async def client(
     _clean_orders: None,
 ) -> AsyncIterator[httpx.AsyncClient]:
     """Async HTTP client wired against a minimal test app."""
+    # Both environments, like prod (STOREKIT_ENVIRONMENT="Production,Sandbox"):
+    # some rules differ between TestFlight and paying customers.
     verifier = AppleJWSVerifier(
         test_chain.root_cert,
         "com.missinghue.hangs",
-        "Sandbox",
+        ("Sandbox", "Production"),
     )
 
     async def _override_session() -> AsyncIterator[AsyncSession]:

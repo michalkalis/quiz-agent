@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Annotated, Literal, Optional
 
@@ -336,6 +336,60 @@ def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
     return messages["en"]
 
 
+# Shown verbatim by shipped builds, like the paused message. The date is when
+# the oldest order in the window ages out, i.e. when the next one is allowed.
+_TESTER_CAP_REACHED = {
+    "sk": "Týždenný limit testovacích balíkov je vyčerpaný. Ďalší sa dá vytvoriť od {date}.",
+    "cs": "Týdenní limit testovacích balíčků je vyčerpaný. Další půjde vytvořit od {date}.",
+    "en": "You've used this week's test packs. You can create the next one on {date}.",
+}
+_EN_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_TESTER_CAP_WINDOW = timedelta(days=7)
+
+
+def _tester_cap_detail(accept_language: Optional[str], next_allowed: datetime) -> str:
+    """The cap message in the first of sk/cs/en the client accepts."""
+    lang = "en"
+    for part in (accept_language or "").split(","):
+        code = part.split(";")[0].strip().split("-")[0].lower()
+        if code in _TESTER_CAP_REACHED:
+            lang = code
+            break
+    if lang == "en":
+        date = f"{_EN_MONTHS[next_allowed.month - 1]} {next_allowed.day}"
+    else:
+        date = f"{next_allowed.day}. {next_allowed.month}"
+    return _TESTER_CAP_REACHED[lang].format(date=date)
+
+
+async def _tester_cap_next_allowed(
+    session: AsyncSession, user_id: str, cap: int
+) -> Optional[datetime]:
+    """When this account may order again, or None if it is under the cap.
+
+    Counts the account's Sandbox (TestFlight) orders in the last 7 days.
+    """
+    since = datetime.now(timezone.utc) - _TESTER_CAP_WINDOW
+    stmt = (
+        select(GenerationOrder.created_at)
+        .where(
+            GenerationOrder.user_id == user_id,
+            GenerationOrder.storekit_environment == "Sandbox",
+            GenerationOrder.created_at > since,
+        )
+        .order_by(GenerationOrder.created_at.desc())
+        .limit(cap)
+    )
+    recent = (await session.execute(stmt)).scalars().all()
+    if len(recent) < cap:
+        return None
+    # The cap-th newest order is the one whose aging out frees a slot.
+    oldest = recent[-1]
+    if oldest.tzinfo is None:
+        oldest = oldest.replace(tzinfo=timezone.utc)
+    return oldest + _TESTER_CAP_WINDOW
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -470,6 +524,20 @@ async def create_order(
         )
         _report_verified_reject(verified_tx, "orders_paused", detail)
         raise HTTPException(status_code=503, detail=detail)
+
+    # 5c. Tester weekly cap. Sandbox purchases are free for TestFlight testers
+    # but generation is not, so each account gets a few packs a week. After
+    # the idempotency check so a replay still gets its 200; the device keeps
+    # the Sandbox proof and spends it once a slot frees up.
+    cap = settings.tester_weekly_pack_cap
+    if cap > 0 and verified_tx is not None and verified_tx.environment == "Sandbox":
+        next_allowed = await _tester_cap_next_allowed(session, user_id, cap)
+        if next_allowed is not None:
+            logger.info("tester weekly pack cap reached user=%s cap=%d", user_id, cap)
+            raise HTTPException(
+                status_code=429,
+                detail=_tester_cap_detail(request.headers.get("accept-language"), next_allowed),
+            )
 
     # 6. Insert order + job
     order = GenerationOrder(

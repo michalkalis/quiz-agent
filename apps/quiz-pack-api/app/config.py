@@ -101,6 +101,13 @@ class Settings(BaseSettings):
     # quiz-agent's `app_switches` row `pack_reuse_enabled`.
     pack_reuse_enabled: bool = True
 
+    # TestFlight testers order with Sandbox purchases, which cost them nothing
+    # while generation still costs us (~$2.25 a pack_30, 2026-11-08). Cap per
+    # account over a rolling 7 days rather than per day, so a tester can test
+    # several packs in one sitting. 0 turns the cap off. Real App Store
+    # purchases and the founder's admin orders are never capped.
+    tester_weekly_pack_cap: int = 7
+
     # Sentry (backend arch review 2026-07-18). Per-deploy Fly secret; unset →
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate
     # processes, both init).

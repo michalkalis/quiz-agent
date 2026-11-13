@@ -621,6 +621,32 @@ class AccountPlayerRecapRecord(BaseModel):
     payload: dict
 
 
+class AccountSharedQuizRecord(BaseModel):
+    """A quiz the person sent by link, with their own result (#232)."""
+
+    token: str = Field(description="The link id")
+    kind: str = Field(description="round | daily | pack")
+    language: str
+    title: Optional[str] = Field(description="The pack's name")
+    question_count: int
+    created_at: datetime
+    display_name: Optional[str] = Field(description="Name shown to friends")
+    score: Optional[float]
+    total: Optional[int]
+
+
+class AccountSharedQuizResultRecord(BaseModel):
+    """The person's own play of a quiz a friend sent (#232)."""
+
+    kind: str
+    language: str
+    display_name: Optional[str] = Field(description="Name shown to the others")
+    score: Optional[float]
+    total: Optional[int]
+    started_at: datetime
+    finished_at: Optional[datetime]
+
+
 class AccountExportResponse(BaseModel):
     """GDPR Art. 20 data export for a Sign in with Apple account (issue #61, 61.5)
     or an anonymous identity (``apple_sub`` null; #193 — beta hardening).
@@ -659,6 +685,13 @@ class AccountExportResponse(BaseModel):
     )
     player_recaps: List[AccountPlayerRecapRecord] = Field(
         default_factory=list, description="Stored recap snapshots, oldest first"
+    )
+    shared_quizzes: List[AccountSharedQuizRecord] = Field(
+        default_factory=list, description="Quizzes sent by link, oldest first"
+    )
+    shared_quiz_results: List[AccountSharedQuizResultRecord] = Field(
+        default_factory=list,
+        description="Own results on quizzes friends sent, oldest first",
     )
 
 

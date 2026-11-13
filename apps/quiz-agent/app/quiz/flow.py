@@ -165,10 +165,13 @@ class QuizFlowService:
         translation_service: Any,
         analytics: Optional[AnalyticsRecorder] = None,
         daily_challenge: Any = None,
+        shared_quiz: Any = None,
     ):
         self.analytics = analytics or AnalyticsRecorder()
         # #205 DailyChallengeService; None without a database.
         self.daily_challenge = daily_challenge
+        # #232 SharedQuizService (records shared-quiz results); None without DB.
+        self.shared_quiz = shared_quiz
         self.session_manager = session_manager
         self.input_parser = input_parser
         self.question_retriever = question_retriever
@@ -316,6 +319,7 @@ class QuizFlowService:
             await self.session_manager.update_session(session)
             self._emit_completed(session, "max_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
             return result
@@ -375,6 +379,7 @@ class QuizFlowService:
             await self.session_manager.update_session(session)
             self._emit_completed(session, "no_more_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
@@ -453,6 +458,7 @@ class QuizFlowService:
                 )
                 await self.session_manager.update_session(session)
                 self._emit_completed(session, "no_more_questions")
+                await self.shared_finish(session)
                 result.quiz_finished = True
                 result.message = "No more questions available"
                 return result
@@ -786,6 +792,16 @@ class QuizFlowService:
             await self.daily_challenge.finish(session)
         except Exception as e:
             logger.error("Daily challenge finish not recorded: %s", e, exc_info=True)
+
+    async def shared_finish(self, session: QuizSession) -> None:
+        """#232: record a finished shared quiz's result(s). A failure only
+        loses the comparison row — never the finish itself."""
+        if not (session.shared_quiz_id and self.shared_quiz):
+            return
+        try:
+            await self.shared_quiz.finish(session)
+        except Exception as e:
+            logger.error("Shared quiz result not recorded: %s", e, exc_info=True)
 
     async def _correct_answer_display(
         self,

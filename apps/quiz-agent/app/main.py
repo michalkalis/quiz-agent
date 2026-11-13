@@ -372,6 +372,20 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.daily_challenge = daily_challenge
+    # #232: share a quiz by link (needs the database for shares and results).
+    shared_quiz = None
+    if auth_sessionmaker is not None:
+        from .shared_quiz.service import SharedQuizService
+        from .shared_quiz.store import SharedQuizStore
+
+        shared_quiz = SharedQuizService(
+            SharedQuizStore(auth_sessionmaker),
+            session_manager,
+            question_retriever,
+            daily_challenge,
+            analytics,
+        )
+    app.state.shared_quiz = shared_quiz
     # #212: same-room multiplayer rooms; tickets are signed with the auth
     # secret, so rooms exist only where sign-in does.
     rooms = None
@@ -385,6 +399,7 @@ async def lifespan(app: FastAPI):
             PostgresRoomStore(shared_sm),
             NetTickets(settings.auth_jwt_secret),
             analytics,
+            pack_status=question_retriever.pack_status,
         )
     app.state.rooms = rooms
     app.state.quiz_flow = quiz_flow = QuizFlowService(
@@ -397,6 +412,7 @@ async def lifespan(app: FastAPI):
         translation_service=translation_service,
         analytics=analytics,
         daily_challenge=daily_challenge,
+        shared_quiz=shared_quiz,
     )
     if rooms is not None:
         from .rooms.play import RoomPlay

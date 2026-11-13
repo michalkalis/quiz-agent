@@ -65,6 +65,8 @@ async def test_defaults_never_block_or_hide_anything():
         "recommended_version_testflight": None,
         "maintenance_enabled": False,
         "maintenance_message": None,
+        # #232: sharing by link stays hidden until switched on in the DB.
+        "shared_quiz_enabled": False,
     }
     # Public and cacheable: hit at every launch/foreground, no per-user data.
     assert cache_control == "public, max-age=60"

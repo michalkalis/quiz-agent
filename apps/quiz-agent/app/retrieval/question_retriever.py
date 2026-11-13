@@ -31,6 +31,10 @@ T = TypeVar("T")
 # DB round trip on the hot path.
 BOOST_WEIGHT = 2.0
 
+# #232: pack rows never get approved, so these are the statuses that take one
+# out of a pack (same rule as quiz-pack-api's pack copy, #225 pack_reuse.py).
+PACK_DROPPED_STATUSES = ("rejected", "archived")
+
 
 def pick_weight(q: Question, now: datetime) -> float:
     """`BOOST_WEIGHT` while `q.boost_until` is in the future, else 1."""
@@ -349,15 +353,74 @@ class QuestionRetriever:
 
     async def _next_fixed_question(self, session: QuizSession) -> Optional[Question]:
         """The first question of ``fixed_question_ids`` not asked yet. A row that
-        has since disappeared is skipped rather than ending the round."""
+        has since disappeared is skipped rather than ending the round.
+
+        #232: a shared-quiz list was built from someone else's session, so each
+        row is re-checked against THIS session's serving filters (its build's
+        review statuses, images, language, rows rejected since). Only the daily
+        challenge's own set — pre-filtered for every player — reads rows as is.
+        """
+        recheck = bool(session.shared_quiz_id) and not session.daily_challenge_date
         for question_id in session.fixed_question_ids:
             if question_id in session.asked_question_ids:
                 continue
-            question = await self._store.get(question_id)
+            question = await (
+                self.shared_question(session, question_id)
+                if recheck
+                else self._store.get(question_id)
+            )
             if question is not None:
                 return question
-            logger.warning("Daily challenge question %s is gone", question_id)
+            logger.warning(
+                "Fixed-list question %s is gone or not servable", question_id
+            )
         return None
+
+    async def shared_question(
+        self, session: QuizSession, question_id: str
+    ) -> Optional[Question]:
+        """``question_id`` if this session's own serving filters allow it (#232).
+
+        The same filter dict a normal question of this session would pass
+        (difficulty aside: a shared list mixes them), narrowed to the one row.
+        A pack session additionally drops rows rejected or archived since —
+        pack rows carry no approval, so the review gate cannot do it.
+        """
+        filters = self._build_metadata_filters("random", session)
+        filters.pop("difficulty", None)
+        filters["id"] = question_id
+        rows = await self._store.search(query_text=None, filters=filters, n_results=1)
+        question = rows[0] if rows else None
+        if question is None or question.is_expired():
+            return None
+        if session.pack_id and question.review_status in PACK_DROPPED_STATUSES:
+            return None
+        if question_id in await self._structure_fix_pending(session):
+            return None
+        return question
+
+    async def pack_question_ids(self, pack_id: str, limit: int = 500) -> List[str]:
+        """A pack's playable questions in creation order (#232 share a finished
+        pack): the same rule as copying a pack for another owner (#225) —
+        neither rejected nor archived, not expired."""
+        rows = await self._store.search(
+            query_text=None, filters={"pack_id": pack_id}, n_results=limit
+        )
+        rows = [
+            q
+            for q in rows
+            if q.review_status not in PACK_DROPPED_STATUSES and not q.is_expired()
+        ]
+        rows.sort(key=lambda q: (q.created_at, q.id))
+        return [q.id for q in rows]
+
+    async def pack_status(self, pack_id: Optional[str]) -> Optional[str]:
+        """``question_packs.generation_status`` (#232: only a ``complete`` pack
+        may be shared or played together). None = no such pack or no state."""
+        probe = getattr(self._store, "pack_generation_status", None)
+        if not pack_id or probe is None:
+            return None
+        return await probe(pack_id)
 
     async def daily_candidates(self, language: str, n: int = 300) -> List[Question]:
         """Random approved questions a daily challenge in ``language`` may use

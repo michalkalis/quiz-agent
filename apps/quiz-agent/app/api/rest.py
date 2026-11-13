@@ -26,6 +26,7 @@ from .routes import (
     room_play,
     rooms,
     sessions,
+    shared_quiz,
     tts,
     voice,
     voice_experiment,
@@ -56,6 +57,7 @@ router.include_router(voice_experiment.router)
 router.include_router(daily_challenge.router)
 router.include_router(rooms.router)
 router.include_router(room_play.router)
+router.include_router(shared_quiz.router)
 router.include_router(me_recaps.router)
 router.include_router(me_stats.router)
 router.include_router(pack_watch.router)  # #207: pack worker's minute ping

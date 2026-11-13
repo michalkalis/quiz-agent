@@ -12,6 +12,7 @@ from typing import Annotated, List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, BeforeValidator, Field
 
+from ... import app_switches
 from ...auth.identity import AuthSubject
 from ...config import get_settings
 from ...rate_limit import fly_client_ip, limiter
@@ -20,7 +21,7 @@ from quiz_shared.models.room import RoomGame
 from quiz_shared.utils.user_text import clean_user_text
 
 from ...rooms.service import NearbyRoom, RoomError, RoomService
-from ..deps import get_rooms, require_auth_or_grace
+from ..deps import get_auth_sessionmaker, get_rooms, require_auth_or_grace
 from .room_view import GameView, game_view, stable
 
 router = APIRouter()
@@ -162,6 +163,10 @@ async def create_room(
                 reveal_mode=body.reveal_mode,
                 thinking_seconds=body.thinking_seconds,
                 reads_aloud=body.reads_aloud,
+            ),
+            # #232.2: a finished custom pack plays together behind this switch.
+            allow_pack=await app_switches.is_on(
+                get_settings(), get_auth_sessionmaker(request), "shared_quiz_enabled"
             ),
         )
     except RoomError as e:

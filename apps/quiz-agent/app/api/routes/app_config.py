@@ -73,6 +73,8 @@ class AppConfigResponse(BaseModel):
     # message is optional; without it the app shows its own default text.
     maintenance_enabled: bool = False
     maintenance_message: Optional[AppNotice] = None
+    # #232: offer "send to a friend" and open shared-quiz links. DB switch, off.
+    shared_quiz_enabled: bool = False
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
@@ -99,6 +101,7 @@ async def get_app_config(
         voice_experiment=await voice_experiment_config(sessionmaker),
         maintenance_enabled=switches["maintenance_enabled"],
         maintenance_message=maintenance_message,
+        shared_quiz_enabled=switches["shared_quiz_enabled"],
     )
 
 

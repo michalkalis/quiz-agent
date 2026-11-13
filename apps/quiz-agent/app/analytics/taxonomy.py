@@ -43,6 +43,14 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     "room_created": frozenset({"room_id"}),
     "room_joined": frozenset({"room_id", "via"}),
     "room_finished": frozenset({"room_id", "reason", "players", "questions_asked"}),
+    # #232.2: the host's finished custom pack became a game together.
+    "room_with_pack": frozenset({"room_id"}),
+    # #232: share a quiz by link. kind = round | daily | pack; opened under the
+    # player who starts it (source app) or anonymously from the website's play
+    # page (source web); finished once per session that recorded a result.
+    "quiz_shared": frozenset({"kind", "language", "question_count"}),
+    "shared_quiz_opened": frozenset({"kind", "source"}),
+    "shared_quiz_finished": frozenset({"kind", "players", "questions_asked"}),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}
     ),
@@ -84,6 +92,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "recap_shared": frozenset({"kind"}),
     # #216.2: the Together tab came on screen.
     "together_opened": frozenset(),
+    # #232: the first-launch "quiz from a friend?" paste button was used
+    # (outcome = opened | not_a_link).
+    "shared_quiz_pasted": frozenset({"outcome"}),
     # #213.8: the host changed a rule of a game together (lobby or in game).
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
     # #224.4: the host stayed on a reveal (paused) or let the game go on.

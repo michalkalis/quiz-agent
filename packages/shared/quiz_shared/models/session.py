@@ -187,8 +187,17 @@ class QuizSession(BaseModel):
     fixed_question_ids: List[str] = Field(
         default_factory=list,
         description=(
-            "Questions this session plays, in order (#205 daily challenge). "
-            "Empty → the retriever picks each question."
+            "Questions this session plays, in order (#205 daily challenge, "
+            "#232 shared quiz). Empty → the retriever picks each question."
+        ),
+    )
+    shared_quiz_id: Optional[str] = Field(
+        None,
+        description=(
+            "#232 shared quiz: the share this session plays (started from a "
+            "link). Its ``fixed_question_ids`` are re-checked against this "
+            "session's own serving filters at play time, it is exempt from the "
+            "free monthly quota, and its finish records one result per person."
         ),
     )
 
@@ -265,9 +274,21 @@ class QuizSession(BaseModel):
 
     @property
     def is_quota_exempt(self) -> bool:
-        """Custom-pack (#95, paid content) and daily-challenge (#205, founder
-        decision 4) sessions never draw on the free monthly quota."""
-        return bool(self.pack_id or self.daily_challenge_date)
+        """Custom-pack (#95, paid content), daily-challenge (#205, founder
+        decision 4) and shared-quiz (#232) sessions never draw on the free
+        monthly quota."""
+        return bool(self.pack_id or self.daily_challenge_date or self.shared_quiz_id)
+
+    @property
+    def is_solo_only(self) -> bool:
+        """Sessions that may not become a game together (#232 split this from
+        ``is_quota_exempt``): the daily challenge (one attempt per player) and
+        a pack played from a shared link (played once by that person, never
+        handed on to a room). An owner's own finished pack and a shared corpus
+        round may be played together."""
+        return bool(self.daily_challenge_date) or bool(
+            self.shared_quiz_id and self.pack_id
+        )
 
     def is_multiplayer(self) -> bool:
         """Check if session is multiplayer."""

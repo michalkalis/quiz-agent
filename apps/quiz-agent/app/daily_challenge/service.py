@@ -20,13 +20,13 @@ from quiz_shared.models.session import QuizSession
 
 from ..db.base import utcnow
 from ..db.models import (
-    AnonymousIdentity,
     DailyChallengeAnswer,
     DailyChallengePlay,
     DailyChallengeSet,
 )
 from ..retrieval.question_retriever import QuestionRetriever
 from ..serializers import correct_option_key
+from ..shared_quiz.store import person_ids
 from . import copy
 from .rules import (
     MAX_SPOKEN_LINES,
@@ -352,23 +352,7 @@ class DailyChallengeService:
         anonymous id was signed in to, and that account's other anonymous ids.
         Sign-in moves plays to the account and sign-out returns the device to
         its anon id, so a one-per-day guard on one id alone could be replayed."""
-        ids = {subject_id}
-        upgraded = (
-            await db.execute(
-                select(AnonymousIdentity.upgraded_to_user_id).where(
-                    AnonymousIdentity.anon_id == subject_id
-                )
-            )
-        ).scalar_one_or_none()
-        owner = upgraded or subject_id
-        ids.add(owner)
-        linked = await db.execute(
-            select(AnonymousIdentity.anon_id).where(
-                AnonymousIdentity.upgraded_to_user_id == owner
-            )
-        )
-        ids.update(linked.scalars())
-        return sorted(ids)
+        return await person_ids(db, subject_id)
 
     async def _play(
         self, db: AsyncSession, subject_id: str, day: date

@@ -53,6 +53,7 @@ BOOL_KEYS = (
     "multiplayer_enabled_app_store",
     "triage_bridge_enabled",
     "pack_reuse_enabled",
+    "shared_quiz_enabled",
 )
 KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
@@ -113,6 +114,8 @@ def env_values(settings: Settings) -> dict[str, Any]:
         # #225: quiz-pack-api copies a finished pack for an identical order;
         # on unless switched off (its env `PACK_REUSE_ENABLED` is the default).
         "pack_reuse_enabled": True,
+        # #232: share a quiz by link; off until the founder has tested it.
+        "shared_quiz_enabled": False,
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,
@@ -125,7 +128,11 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     for key, raw in overrides.items():
         if key in ("orders_enabled", "triage_bridge_enabled", "pack_reuse_enabled"):
             out[key] = raw != "false"
-        elif key in ("maintenance_enabled", "multiplayer_enabled_app_store"):
+        elif key in (
+            "maintenance_enabled",
+            "multiplayer_enabled_app_store",
+            "shared_quiz_enabled",
+        ):
             out[key] = raw == "true"
         elif key in out:
             out[key] = raw
@@ -158,6 +165,12 @@ async def cached_overrides(sessionmaker) -> dict[str, str | None]:
             value = stale
         _cache = (time.monotonic() + CACHE_SECONDS, value)
         return value
+
+
+async def is_on(settings: Settings, sessionmaker, key: str) -> bool:
+    """One boolean switch as ``/app-config`` serves it (cached, fail open to
+    the env value) — for server features gated by the same switch (#232)."""
+    return bool(effective(settings, await cached_overrides(sessionmaker))[key])
 
 
 async def write(

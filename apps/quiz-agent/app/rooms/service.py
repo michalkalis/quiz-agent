@@ -79,10 +79,14 @@ class RoomService:
         store: RoomStore,
         tickets: NetTickets,
         analytics=None,
+        pack_status=None,
     ) -> None:
         self.sessions = sessions
         self.store = store
         self.tickets = tickets
+        # #232.2: async pack_id -> question_packs.generation_status (the
+        # question retriever's); a pack plays together only once complete.
+        self.pack_status = pack_status
         # #212.5: room_created / room_joined (app.analytics.AnalyticsRecorder).
         self.analytics = analytics
         # #212.2 answer flow (rooms.play.RoomPlay), wired once the quiz flow exists.
@@ -95,9 +99,14 @@ class RoomService:
         host_name: str,
         keys: dict[str, str],
         game: RoomGame | None = None,
+        allow_pack: bool = False,
     ) -> tuple[Room, QuizSession]:
         """Make the host's idle session a room. Calling it again for the same
-        session returns the same room (a retried request must not fork it)."""
+        session returns the same room (a retried request must not fork it).
+
+        #232.2: the host's own custom pack plays together once it is finished
+        (``allow_pack`` = the shared-quiz switch); one still being made is
+        refused, so a game never has to wait for questions."""
         async with self.sessions.session_lock(session_id):
             session = await self.sessions.get_session(session_id)
             if session is None or session.user_id != subject_id:
@@ -106,8 +115,10 @@ class RoomService:
                 room = await self.store.get(session.room_code, _now())
                 if room is not None:
                     return room, session
-            if session.is_quota_exempt:
-                raise RoomError(422, "Packs and the daily challenge are solo only")
+            if session.is_solo_only:
+                raise RoomError(422, "The daily challenge is solo only")
+            if session.pack_id and not await self._pack_ready(session, allow_pack):
+                raise RoomError(422, "Only a finished pack can be played together")
             if session.phase != SessionPhase.IDLE:
                 raise RoomError(409, "The quiz has already started")
             now = _now()
@@ -140,7 +151,14 @@ class RoomService:
             session.include_images = False
             await self.sessions.update_session(session)
             self._emit("room_created", subject_id, session_id, room.room_id)
+            if session.pack_id:
+                self._emit("room_with_pack", subject_id, session_id, room.room_id)
             return room, session
+
+    async def _pack_ready(self, session: QuizSession, allow_pack: bool) -> bool:
+        if not allow_pack or self.pack_status is None:
+            return False
+        return await self.pack_status(session.pack_id) == "complete"
 
     async def nearby(self, subject_id: str, keys: dict[str, str]) -> list[NearbyRoom]:
         """Rooms waiting to start on the caller's network (not the caller's own)."""

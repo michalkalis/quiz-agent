@@ -198,6 +198,7 @@ class RoomPlay:
         session.room_game.finished_reason = reason
         await self.sessions.update_session(session)
         self.flow._emit_completed(session, reason)
+        await self.flow.shared_finish(session)
         self.flow.analytics.emit(
             "room_finished",
             subject_id=session.user_id,

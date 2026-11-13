@@ -18,6 +18,10 @@
 | `room_created` | a host turns an idle session into a game together (#212.5); not on a retried create | `room_id` |
 | `room_joined` | a guest joins a game for the first time (#212.5), under the guest; a rejoin (name change) is not counted | `room_id`, `via` (nearby = the Wi-Fi list / qr = scanned code / link = shared link, also builds that do not send it) |
 | `room_finished` | a game together ends (#212.5), under the host, next to its `quiz_completed` | `room_id`, `reason`, `players` (incl. host), `questions_asked` |
+| `room_with_pack` | a host's finished custom pack becomes a game together (#232.2), next to its `room_created` | `room_id` |
+| `quiz_shared` | a player creates a "play my quiz" link (#232); not when the same session or pack is shared again (same link back) | `kind` (round / daily / pack), `language`, `question_count` |
+| `shared_quiz_opened` | a shared-quiz link is opened: in the app when the player starts it (under that player), or on the website's play page (anonymous) | `kind`, `source` (app / web) |
+| `shared_quiz_finished` | a session started from a shared link finishes and records a result (#232); once per session, under the player (or host of a game together) | `kind`, `players` (results recorded), `questions_asked` |
 | `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 
 ## App events (posted to `POST /api/v1/analytics/events` — only what the server cannot see)
@@ -40,6 +44,7 @@
 | `recap_viewed` | a recap story closes (#213.5); builds ≤ 81 only, #216.3 replaced the story with a Profile card | `kind` (first / month / year), `slides_seen` (furthest slide reached), `slides_total` |
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |
 | `together_opened` | the Together tab comes on screen (#216.2); with `room_created` / `room_joined` it shows how many who look at the tab go on to play | — |
+| `shared_quiz_pasted` | the first-launch "quiz from a friend?" paste button was used (#232) | `outcome` (opened / not_a_link) |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
 | `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |
 | `room_pause_changed` | the host of a game together stayed on a reveal or resumed (#224.4); the server accepted it | `paused` (true / false), `question` (number) |

@@ -22,6 +22,9 @@ export type DemoCaptionKind = 'voice' | 'player' | 'label' | 'title' | 'step' | 
 export type DemoWord = {w: string; t: number};
 export type DemoCaption = {from: number; to: number; text: string; kind: DemoCaptionKind; words?: DemoWord[]; karaoke?: boolean};
 
+/** A quick full-screen line before the recording (`intro`): `words[].t` and `audioAt` are seconds from the card's start. */
+export type DemoIntroCard = {seconds: number; words: DemoWord[]; audio?: string; audioAt?: number};
+
 export type AppDemoProps = {
 	language: Language;
 	/** staticFile path of the simulator mp4. */
@@ -34,6 +37,8 @@ export type AppDemoProps = {
 	highlights?: DemoHighlight[];
 	marks?: DemoMark[];
 	captions?: DemoCaption[];
+	/** Full-screen lines on the category colour, one after another (hard cuts), before the recording starts. */
+	intro?: DemoIntroCard[];
 	/** Title over the first seconds, above the phone (the app is visible from frame 1). */
 	hook?: {text: string; seconds: number};
 	endCard?: boolean;

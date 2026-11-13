@@ -1,0 +1,661 @@
+{
+	"language": "sk",
+	"recording": "demo/rec/hp/hpsk.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "movies-music",
+	"restScale": 0.88,
+	"intro": [
+		{
+			"seconds": 1.67,
+			"audio": "demo/rec/hp/norm/sk-i1.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "Bavia",
+					"t": 0.12
+				},
+				{
+					"w": "ťa",
+					"t": 0.515
+				},
+				{
+					"w": "kvízy?",
+					"t": 0.666
+				}
+			]
+		},
+		{
+			"seconds": 3.48,
+			"audio": "demo/rec/hp/norm/sk-i2.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "Ale",
+					"t": 0.12
+				},
+				{
+					"w": "téma",
+					"t": 1.142
+				},
+				{
+					"w": "nikdy",
+					"t": 1.536
+				},
+				{
+					"w": "nie",
+					"t": 1.85
+				},
+				{
+					"w": "je",
+					"t": 2.024
+				},
+				{
+					"w": "úplne",
+					"t": 2.152
+				},
+				{
+					"w": "tvoja?",
+					"t": 2.5
+				}
+			]
+		},
+		{
+			"seconds": 3.25,
+			"audio": "demo/rec/hp/norm/sk-i3.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 0.12
+				},
+				{
+					"w": "ti",
+					"t": 0.55
+				},
+				{
+					"w": "pripraví",
+					"t": 0.689
+				},
+				{
+					"w": "kvíz",
+					"t": 1.165
+				},
+				{
+					"w": "na",
+					"t": 1.467
+				},
+				{
+					"w": "tému,",
+					"t": 1.606
+				},
+				{
+					"w": "akú",
+					"t": 1.885
+				},
+				{
+					"w": "si",
+					"t": 2.094
+				},
+				{
+					"w": "zadáš.",
+					"t": 2.221
+				}
+			]
+		}
+	],
+	"segments": [
+		{
+			"from": 0,
+			"to": 27.557
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.9,
+			"to": 4.3,
+			"x": 603,
+			"y": 1390,
+			"scale": 1.5
+		},
+		{
+			"from": 4.3,
+			"to": 7.07,
+			"x": 603,
+			"y": 751,
+			"scale": 1.5
+		},
+		{
+			"from": 7.07,
+			"to": 19.11,
+			"x": 603,
+			"y": 1578,
+			"scale": 1.5
+		},
+		{
+			"from": 19.11,
+			"to": 21.26,
+			"x": 603,
+			"y": 1931,
+			"scale": 1.5
+		},
+		{
+			"from": 21.26,
+			"to": 27.557,
+			"x": 603,
+			"y": 1006,
+			"scale": 1.5
+		}
+	],
+	"audio": [
+		{
+			"t": 0.2,
+			"src": "demo/rec/hp/norm/sk-n4.mp3"
+		},
+		{
+			"t": 4.45,
+			"src": "demo/rec/hp/norm/sk-n5.mp3"
+		},
+		{
+			"t": 7.32,
+			"src": "demo/rec/hp/norm/sk-app-q.mp3"
+		},
+		{
+			"t": 21.61,
+			"src": "demo/rec/hp/norm/sk-app-ok.mp3"
+		},
+		{
+			"t": 24.1,
+			"src": "demo/rec/hp/norm/sk-n6.mp3"
+		},
+		{
+			"t": 19.41,
+			"src": "demo/rec/hp/norm/sk-player.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.2,
+			"to": 1.431,
+			"text": "Napíš, o čom chceš hrať.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Napíš,",
+					"t": 0.2
+				},
+				{
+					"w": "o",
+					"t": 0.595
+				},
+				{
+					"w": "čom",
+					"t": 0.664
+				},
+				{
+					"w": "chceš",
+					"t": 0.839
+				},
+				{
+					"w": "hrať.",
+					"t": 1.059
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 1.431,
+			"to": 3.201,
+			"text": "Napríklad Harry Potter.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Napríklad",
+					"t": 1.431
+				},
+				{
+					"w": "Harry",
+					"t": 1.907
+				},
+				{
+					"w": "Potter.",
+					"t": 2.092
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 4.45,
+			"to": 5.263,
+			"text": "O pár minút máš",
+			"kind": "said",
+			"words": [
+				{
+					"w": "O",
+					"t": 4.45
+				},
+				{
+					"w": "pár",
+					"t": 4.613
+				},
+				{
+					"w": "minút",
+					"t": 4.81
+				},
+				{
+					"w": "máš",
+					"t": 5.065
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 5.263,
+			"to": 7.02,
+			"text": "hotových desať otázok.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "hotových",
+					"t": 5.263
+				},
+				{
+					"w": "desať",
+					"t": 5.657
+				},
+				{
+					"w": "otázok.",
+					"t": 5.959
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 7.32,
+			"to": 10.6,
+			"text": "Bazilisk z Tajomnej komnaty zabíja pohľadom",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Bazilisk",
+					"t": 7.32
+				},
+				{
+					"w": "z",
+					"t": 7.96
+				},
+				{
+					"w": "Tajomnej",
+					"t": 8.08
+				},
+				{
+					"w": "komnaty",
+					"t": 8.6
+				},
+				{
+					"w": "zabíja",
+					"t": 9.16
+				},
+				{
+					"w": "pohľadom",
+					"t": 9.64
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 10.6,
+			"to": 13.0,
+			"text": "a pavúky pred ním utekajú.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "a",
+					"t": 10.6
+				},
+				{
+					"w": "pavúky",
+					"t": 10.84
+				},
+				{
+					"w": "pred",
+					"t": 11.4
+				},
+				{
+					"w": "ním",
+					"t": 11.6
+				},
+				{
+					"w": "utekajú.",
+					"t": 11.92
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 13.0,
+			"to": 15.8,
+			"text": "Ktorý obyčajný vták z dedinského dvora",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Ktorý",
+					"t": 13.0
+				},
+				{
+					"w": "obyčajný",
+					"t": 13.52
+				},
+				{
+					"w": "vták",
+					"t": 14.08
+				},
+				{
+					"w": "z",
+					"t": 14.4
+				},
+				{
+					"w": "dedinského",
+					"t": 14.52
+				},
+				{
+					"w": "dvora",
+					"t": 15.16
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 15.8,
+			"to": 18.46,
+			"text": "ho však môže zabiť vlastným hlasom?",
+			"kind": "said",
+			"words": [
+				{
+					"w": "ho",
+					"t": 15.8
+				},
+				{
+					"w": "však",
+					"t": 15.92
+				},
+				{
+					"w": "môže",
+					"t": 16.2
+				},
+				{
+					"w": "zabiť",
+					"t": 16.6
+				},
+				{
+					"w": "vlastným",
+					"t": 17.0
+				},
+				{
+					"w": "hlasom?",
+					"t": 17.56
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 19.914,
+			"to": 21.36,
+			"text": "Kohút!",
+			"kind": "player"
+		},
+		{
+			"from": 21.61,
+			"to": 22.65,
+			"text": "Správne!",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Správne!",
+					"t": 21.61
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 22.65,
+			"to": 24.05,
+			"text": "Je to kohút.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Je",
+					"t": 22.65
+				},
+				{
+					"w": "to",
+					"t": 22.81
+				},
+				{
+					"w": "kohút.",
+					"t": 23.01
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 24.1,
+			"to": 25.516,
+			"text": "Ku každej odpovedi dostaneš",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Ku",
+					"t": 24.1
+				},
+				{
+					"w": "každej",
+					"t": 24.321
+				},
+				{
+					"w": "odpovedi",
+					"t": 24.657
+				},
+				{
+					"w": "dostaneš",
+					"t": 25.087
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 25.516,
+			"to": 27.557,
+			"text": "aj krátke vysvetlenie.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "aj",
+					"t": 25.516
+				},
+				{
+					"w": "krátke",
+					"t": 25.621
+				},
+				{
+					"w": "vysvetlenie.",
+					"t": 25.981
+				}
+			],
+			"karaoke": true
+		}
+	],
+	"marks": [
+		{
+			"from": 1.2,
+			"to": 4.1,
+			"x": 48,
+			"y": 1194,
+			"w": 1110,
+			"h": 393,
+			"r": 40,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 5.2,
+			"to": 6.97,
+			"x": 350,
+			"y": 488,
+			"w": 492,
+			"h": 526,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 7.27,
+			"to": 8.55,
+			"x": 102,
+			"y": 1198,
+			"w": 686,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"hold": true
+		},
+		{
+			"from": 8.55,
+			"to": 10.55,
+			"x": 101,
+			"y": 1307,
+			"w": 965,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 102,
+				"y": 1198,
+				"w": 686,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 10.55,
+			"to": 12.95,
+			"x": 99,
+			"y": 1416,
+			"w": 999,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 101,
+				"y": 1307,
+				"w": 965,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 12.95,
+			"to": 14.47,
+			"x": 102,
+			"y": 1525,
+			"w": 796,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 99,
+				"y": 1416,
+				"w": 999,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 14.47,
+			"to": 16.15,
+			"x": 99,
+			"y": 1634,
+			"w": 973,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 102,
+				"y": 1525,
+				"w": 796,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 16.15,
+			"to": 17.51,
+			"x": 101,
+			"y": 1743,
+			"w": 768,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 99,
+				"y": 1634,
+				"w": 973,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 17.51,
+			"to": 18.36,
+			"x": 101,
+			"y": 1852,
+			"w": 333,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 101,
+				"y": 1743,
+				"w": 768,
+				"h": 107
+			}
+		},
+		{
+			"from": 19.41,
+			"to": 21.21,
+			"x": 43,
+			"y": 2088,
+			"w": 1120,
+			"h": 186,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 21.56,
+			"to": 24.05,
+			"x": 104,
+			"y": 866,
+			"w": 375,
+			"h": 200,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 24.1,
+			"to": 27.557,
+			"x": 101,
+			"y": 1273,
+			"w": 996,
+			"h": 233,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		}
+	],
+	"endCard": true,
+	"endAudio": "demo/rec/hp/norm/sk-n10.mp3"
+}

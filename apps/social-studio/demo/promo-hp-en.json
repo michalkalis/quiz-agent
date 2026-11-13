@@ -1,0 +1,739 @@
+{
+	"language": "en",
+	"recording": "demo/rec/hp/hpen.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "movies-music",
+	"restScale": 0.88,
+	"intro": [
+		{
+			"seconds": 1.86,
+			"audio": "demo/rec/hp/norm/en-i1.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "Do",
+					"t": 0.12
+				},
+				{
+					"w": "you",
+					"t": 0.28
+				},
+				{
+					"w": "like",
+					"t": 0.52
+				},
+				{
+					"w": "quizzes?",
+					"t": 0.84
+				}
+			]
+		},
+		{
+			"seconds": 2.98,
+			"audio": "demo/rec/hp/norm/en-i2.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "But",
+					"t": 0.12
+				},
+				{
+					"w": "the",
+					"t": 0.28
+				},
+				{
+					"w": "topic",
+					"t": 0.44
+				},
+				{
+					"w": "is",
+					"t": 0.92
+				},
+				{
+					"w": "never",
+					"t": 1.24
+				},
+				{
+					"w": "quite",
+					"t": 1.56
+				},
+				{
+					"w": "yours?",
+					"t": 1.88
+				}
+			]
+		},
+		{
+			"seconds": 3.62,
+			"audio": "demo/rec/hp/norm/en-i3.mp3",
+			"audioAt": 0.12,
+			"words": [
+				{
+					"w": "Trubbo",
+					"t": 0.12
+				},
+				{
+					"w": "makes",
+					"t": 0.6
+				},
+				{
+					"w": "you",
+					"t": 0.92
+				},
+				{
+					"w": "a",
+					"t": 1.0
+				},
+				{
+					"w": "quiz",
+					"t": 1.16
+				},
+				{
+					"w": "on",
+					"t": 1.56
+				},
+				{
+					"w": "the",
+					"t": 1.72
+				},
+				{
+					"w": "topic",
+					"t": 1.88
+				},
+				{
+					"w": "you",
+					"t": 2.28
+				},
+				{
+					"w": "type",
+					"t": 2.52
+				},
+				{
+					"w": "in.",
+					"t": 2.76
+				}
+			]
+		}
+	],
+	"segments": [
+		{
+			"from": 0,
+			"to": 28.797
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.9,
+			"to": 4.3,
+			"x": 603,
+			"y": 1390,
+			"scale": 1.5
+		},
+		{
+			"from": 4.3,
+			"to": 7.66,
+			"x": 603,
+			"y": 750,
+			"scale": 1.5
+		},
+		{
+			"from": 7.66,
+			"to": 20.26,
+			"x": 603,
+			"y": 1580,
+			"scale": 1.5
+		},
+		{
+			"from": 20.26,
+			"to": 22.41,
+			"x": 603,
+			"y": 1931,
+			"scale": 1.5
+		},
+		{
+			"from": 22.41,
+			"to": 28.797,
+			"x": 603,
+			"y": 1005,
+			"scale": 1.5
+		}
+	],
+	"audio": [
+		{
+			"t": 0.2,
+			"src": "demo/rec/hp/norm/en-n4.mp3"
+		},
+		{
+			"t": 4.45,
+			"src": "demo/rec/hp/norm/en-n5.mp3"
+		},
+		{
+			"t": 7.91,
+			"src": "demo/rec/hp/norm/en-app-q.mp3"
+		},
+		{
+			"t": 22.76,
+			"src": "demo/rec/hp/norm/en-app-ok.mp3"
+		},
+		{
+			"t": 25.25,
+			"src": "demo/rec/hp/norm/en-n6.mp3"
+		},
+		{
+			"t": 20.56,
+			"src": "demo/rec/hp/norm/en-player.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.2,
+			"to": 2.04,
+			"text": "Type what you want to play.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Type",
+					"t": 0.2
+				},
+				{
+					"w": "what",
+					"t": 0.52
+				},
+				{
+					"w": "you",
+					"t": 0.76
+				},
+				{
+					"w": "want",
+					"t": 0.92
+				},
+				{
+					"w": "to",
+					"t": 1.04
+				},
+				{
+					"w": "play.",
+					"t": 1.16
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 2.04,
+			"to": 4.25,
+			"text": "Harry Potter, for example.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Harry",
+					"t": 2.04
+				},
+				{
+					"w": "Potter,",
+					"t": 2.36
+				},
+				{
+					"w": "for",
+					"t": 2.96
+				},
+				{
+					"w": "example.",
+					"t": 3.08
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 4.45,
+			"to": 6.01,
+			"text": "In a few minutes you have",
+			"kind": "said",
+			"words": [
+				{
+					"w": "In",
+					"t": 4.45
+				},
+				{
+					"w": "a",
+					"t": 4.61
+				},
+				{
+					"w": "few",
+					"t": 4.717
+				},
+				{
+					"w": "minutes",
+					"t": 5.01
+				},
+				{
+					"w": "you",
+					"t": 5.49
+				},
+				{
+					"w": "have",
+					"t": 5.65
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 6.01,
+			"to": 7.61,
+			"text": "ten questions ready.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "ten",
+					"t": 6.01
+				},
+				{
+					"w": "questions",
+					"t": 6.21
+				},
+				{
+					"w": "ready.",
+					"t": 6.77
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 7.91,
+			"to": 9.59,
+			"text": "In Harry Potter, someone",
+			"kind": "said",
+			"words": [
+				{
+					"w": "In",
+					"t": 7.91
+				},
+				{
+					"w": "Harry",
+					"t": 8.07
+				},
+				{
+					"w": "Potter,",
+					"t": 8.39
+				},
+				{
+					"w": "someone",
+					"t": 9.19
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 9.59,
+			"to": 11.67,
+			"text": "keeps killing Hagrid's birds",
+			"kind": "said",
+			"words": [
+				{
+					"w": "keeps",
+					"t": 9.59
+				},
+				{
+					"w": "killing",
+					"t": 9.99
+				},
+				{
+					"w": "Hagrid's",
+					"t": 10.43
+				},
+				{
+					"w": "birds",
+					"t": 11.23
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 11.67,
+			"to": 12.95,
+			"text": "while the giant snake",
+			"kind": "said",
+			"words": [
+				{
+					"w": "while",
+					"t": 11.67
+				},
+				{
+					"w": "the",
+					"t": 11.87
+				},
+				{
+					"w": "giant",
+					"t": 12.07
+				},
+				{
+					"w": "snake",
+					"t": 12.47
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 12.95,
+			"to": 15.91,
+			"text": "called the basilisk is loose in the castle.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "called",
+					"t": 12.95
+				},
+				{
+					"w": "the",
+					"t": 13.15
+				},
+				{
+					"w": "basilisk",
+					"t": 13.35
+				},
+				{
+					"w": "is",
+					"t": 14.07
+				},
+				{
+					"w": "loose",
+					"t": 14.31
+				},
+				{
+					"w": "in",
+					"t": 14.59
+				},
+				{
+					"w": "the",
+					"t": 14.71
+				},
+				{
+					"w": "castle.",
+					"t": 14.79
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 15.91,
+			"to": 17.59,
+			"text": "The sound of which farm animal",
+			"kind": "said",
+			"words": [
+				{
+					"w": "The",
+					"t": 15.91
+				},
+				{
+					"w": "sound",
+					"t": 16.07
+				},
+				{
+					"w": "of",
+					"t": 16.39
+				},
+				{
+					"w": "which",
+					"t": 16.55
+				},
+				{
+					"w": "farm",
+					"t": 16.87
+				},
+				{
+					"w": "animal",
+					"t": 17.19
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 17.59,
+			"to": 19.61,
+			"text": "is deadly to the basilisk?",
+			"kind": "said",
+			"words": [
+				{
+					"w": "is",
+					"t": 17.59
+				},
+				{
+					"w": "deadly",
+					"t": 17.91
+				},
+				{
+					"w": "to",
+					"t": 18.43
+				},
+				{
+					"w": "the",
+					"t": 18.51
+				},
+				{
+					"w": "basilisk?",
+					"t": 18.63
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 21.087,
+			"to": 22.51,
+			"text": "A rooster!",
+			"kind": "player"
+		},
+		{
+			"from": 22.76,
+			"to": 23.72,
+			"text": "Correct!",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Correct!",
+					"t": 22.76
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 23.72,
+			"to": 25.2,
+			"text": "It's the rooster.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "It's",
+					"t": 23.72
+				},
+				{
+					"w": "the",
+					"t": 23.92
+				},
+				{
+					"w": "rooster.",
+					"t": 24.12
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 25.25,
+			"to": 26.53,
+			"text": "Every answer comes",
+			"kind": "said",
+			"words": [
+				{
+					"w": "Every",
+					"t": 25.25
+				},
+				{
+					"w": "answer",
+					"t": 25.65
+				},
+				{
+					"w": "comes",
+					"t": 26.21
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 26.53,
+			"to": 28.797,
+			"text": "with a short explanation.",
+			"kind": "said",
+			"words": [
+				{
+					"w": "with",
+					"t": 26.53
+				},
+				{
+					"w": "a",
+					"t": 26.65
+				},
+				{
+					"w": "short",
+					"t": 26.77
+				},
+				{
+					"w": "explanation.",
+					"t": 27.09
+				}
+			],
+			"karaoke": true
+		}
+	],
+	"marks": [
+		{
+			"from": 1.2,
+			"to": 4.1,
+			"x": 48,
+			"y": 1194,
+			"w": 1110,
+			"h": 393,
+			"r": 40,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 5.2,
+			"to": 7.56,
+			"x": 350,
+			"y": 487,
+			"w": 491,
+			"h": 526,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 7.86,
+			"to": 9.54,
+			"x": 102,
+			"y": 1200,
+			"w": 925,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"hold": true
+		},
+		{
+			"from": 9.54,
+			"to": 11.62,
+			"x": 100,
+			"y": 1309,
+			"w": 965,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 102,
+				"y": 1200,
+				"w": 925,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 11.62,
+			"to": 12.9,
+			"x": 97,
+			"y": 1418,
+			"w": 784,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 100,
+				"y": 1309,
+				"w": 965,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 12.9,
+			"to": 14.54,
+			"x": 99,
+			"y": 1527,
+			"w": 954,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 97,
+				"y": 1418,
+				"w": 784,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 14.54,
+			"to": 16.5,
+			"x": 99,
+			"y": 1636,
+			"w": 968,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 99,
+				"y": 1527,
+				"w": 954,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 16.5,
+			"to": 17.86,
+			"x": 97,
+			"y": 1745,
+			"w": 770,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 99,
+				"y": 1636,
+				"w": 968,
+				"h": 107
+			},
+			"hold": true
+		},
+		{
+			"from": 17.86,
+			"to": 19.51,
+			"x": 99,
+			"y": 1854,
+			"w": 830,
+			"h": 107,
+			"style": "band",
+			"alpha": 1,
+			"prev": {
+				"x": 97,
+				"y": 1745,
+				"w": 770,
+				"h": 107
+			}
+		},
+		{
+			"from": 20.56,
+			"to": 22.36,
+			"x": 43,
+			"y": 2088,
+			"w": 1117,
+			"h": 186,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 22.71,
+			"to": 25.2,
+			"x": 101,
+			"y": 865,
+			"w": 431,
+			"h": 199,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		},
+		{
+			"from": 25.25,
+			"to": 28.797,
+			"x": 99,
+			"y": 1276,
+			"w": 1004,
+			"h": 384,
+			"r": 14,
+			"style": "glow",
+			"alpha": 0.6
+		}
+	],
+	"endCard": true,
+	"endAudio": "demo/rec/hp/norm/en-n10.mp3"
+}

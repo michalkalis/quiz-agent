@@ -11,9 +11,11 @@ import {phoneBox, PHONE_CX, PHONE_CY, PHONE_TOP, TOP_BAND} from './demoLayout';
 import {buildTimeline, cameraAt, cameraKeys, mapRange, mapTime, restCam, runEnd, startsSegment} from './demoTimeline';
 import type {AppDemoProps, DemoCaption, DemoCaptionKind} from './demoTypes';
 import {END_CARD_S, EndCard} from './EndCard';
+import {IntroCards, introFrames} from './IntroCards';
 import {FONT, INK, tintFor} from './theme';
 
-export const appDemoFrames = (props: AppDemoProps, fps: number) => buildTimeline(props.segments, fps).frames + (props.endCard ? Math.round(END_CARD_S * fps) : 0);
+export const appDemoFrames = (props: AppDemoProps, fps: number) =>
+	introFrames(props.intro, fps) + buildTimeline(props.segments, fps).frames + (props.endCard ? Math.round(END_CARD_S * fps) : 0);
 
 type Rig = {keys: ReturnType<typeof cameraKeys>; rec: AppDemoProps['recordingSize']; box: ReturnType<typeof phoneBox>; frames: number; restScale?: number};
 
@@ -68,6 +70,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 	const rec = props.recordingSize;
 	const box = phoneBox(rec);
 	const tl = buildTimeline(props.segments, fps);
+	const intro = introFrames(props.intro, fps);
 
 	const rig: Rig = {keys: cameraKeys(props, tl, fps), rec, box, frames: tl.frames, restScale: props.restScale};
 
@@ -101,7 +104,12 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 	return (
 		<AbsoluteFill style={{fontFamily: FONT, color: INK, background: '#F3F4F8'}}>
 			<AbsoluteFill style={{background: `radial-gradient(1300px 1000px at 50% 34%, ${tint.bg}38, transparent 72%), radial-gradient(1100px 800px at 50% 100%, ${tint.deep}20, transparent 70%)`}} />
-			<Sequence durationInFrames={Math.max(1, tl.frames)} layout="none">
+			{intro > 0 && props.intro ? (
+				<Sequence durationInFrames={intro} layout="none">
+					<IntroCards cards={props.intro} category={props.category} />
+				</Sequence>
+			) : null}
+			<Sequence from={intro} durationInFrames={Math.max(1, tl.frames)} layout="none">
 				{/* The phone is cut off (soft edge) just under the caption band: zoomed in, it slides up behind it, never under a text. */}
 				<AbsoluteFill style={{maskImage: PHONE_MASK, WebkitMaskImage: PHONE_MASK}}>
 					<Camera rig={rig}>
@@ -133,7 +141,7 @@ export const AppDemo: React.FC<AppDemoProps> = (props) => {
 				})}
 			</Sequence>
 			{props.endCard ? (
-				<Sequence from={tl.frames} durationInFrames={Math.round(END_CARD_S * fps)}>
+				<Sequence from={intro + tl.frames} durationInFrames={Math.round(END_CARD_S * fps)}>
 					<EndCard language={props.language} frames={Math.round(END_CARD_S * fps)} word={props.endWord} wordSize={titleSize} />
 					{props.endAudio ? (
 						<Sequence from={Math.round(0.35 * fps)} layout="none">

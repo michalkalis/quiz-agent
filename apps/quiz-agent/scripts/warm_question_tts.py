@@ -58,7 +58,9 @@ async def tts_texts(store: PgvectorQuestionStore, lang: str, n: int) -> list[str
         sql = SQL_EN if lang == "en" else SQL_OTHER
         ids = [str(r[0]) for r in (await db.execute(text(sql), {"lang": lang, "n": n}))]
     # Current builds declare these, so MCQ options are read with their labels.
-    session = SimpleNamespace(language=lang, client_capabilities=[ANSWER_CODES, OPTION_LABELS])
+    session = SimpleNamespace(
+        language=lang, client_capabilities=[ANSWER_CODES, OPTION_LABELS]
+    )
     texts = []
     for qid in ids:
         question = await store.get(qid)
@@ -67,7 +69,9 @@ async def tts_texts(store: PgvectorQuestionStore, lang: str, n: int) -> list[str
         payload, _ = await translated_question_payload(
             question, lang, None, question_store=store
         )
-        spoken = spoken_question_text(payload["question"], payload.get("possible_answers"), session)
+        spoken = spoken_question_text(
+            payload["question"], payload.get("possible_answers"), session
+        )
         texts.append(normalize_numbers_for_tts(spoken, lang))
     return texts
 

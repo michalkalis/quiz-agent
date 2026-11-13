@@ -1,7 +1,7 @@
 # #232 — Zahraj si môj kvíz: zdieľanie kvízu odkazom
 
 **Triage:** enhancement · ready-for-agent
-**Status:** rozsah zmenený 2026-11-11 (najprv zdieľanie kvízu, odmena za pozvanie neskôr); design-soundness 2 kolá zapracované (posledný nález: vlastné pravidlo pre balík); ďalej 232.0 overenie
+**Status:** 2026-11-13: server (232.1, 232.2) nasadený za vypnutým vypínačom `shared_quiz_enabled` (PR #786); skúšobná stránka schránky trubbo.app/clip-test.html čaká na test foundera (232.0); ďalej návrhy obrazoviek + texty na výber, potom web a appka
 **Founder:** 2026-11-09 „viac propagovať zdieľanie appky za nejaký benefit“; 2026-11-11 „pozvanie kamaráta musí fungovať bez kopírovania kódu“, vybral „zdieľať kvíz odkazom“; 2026-11-12 nápad „zahrám si kolo, pošlem odkaz na to isté kolo partii a porovnáme výsledky“ (zlúčený sem z TODO)
 **Návrh a prieskum:** https://claude.ai/artifact/FT91hmcTC6Xhczf7TpJnmQ (session quiz-agent-20)
 
@@ -83,19 +83,19 @@ Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných d�
 
 ## Úlohy
 
-- [ ] **232.0 Overenie** na reálnom iPhone:
+- [~] **232.0 Overenie** (skúšobná stránka nasadená PR #785, čaká telefón foundera; po teste stránku zmazať) na reálnom iPhone:
   - zápis do schránky z našej stránky v Safari aj vo vnútorných prehliadačoch (Messenger, Instagram; WhatsApp otvára Safari?);
   - zistenie odkazu v schránke bez upozornenia a systémové tlačidlo Vložiť po čerstvej inštalácii z TestFlightu;
   - univerzálny odkaz /play vedľa /join;
   - stálosť uloženého prekladu pre sk/cs otázky v zdieľanom kole.
-- [ ] **232.1 Server: zdieľaný kvíz**
+- [x] **232.1 Server: zdieľaný kvíz** (PR #786, nezávislá kontrola: 5 nálezov opravených)
   - Záznam a token.
   - Relácia z tokenu (kolo, denná výzva, balík raz bez kópie), filtre pri uložení aj hraní, bez limitu zadarmo.
   - Výsledky a poradie.
   - Verejný endpoint s témou pre web.
   - Vypínač.
   - Udalosti: kvíz zdieľaný, odkaz otvorený (appka alebo web), vložený zo schránky, zdieľaný kvíz dohraný.
-- [ ] **232.2 Server: balík v hre spolu** — miestnosť prijme hotový balík. Udalosť: miestnosť s balíkom.
+- [x] **232.2 Server: balík v hre spolu** (PR #786) — miestnosť prijme hotový balík. Udalosť: miestnosť s balíkom.
 - [ ] **232.3 Web**
   - play.html v sk/cs/en (téma, tlačidlo App Store so zápisom do schránky, „ťukni ešte raz“).
   - Rozšírenie súboru pre univerzálne odkazy.

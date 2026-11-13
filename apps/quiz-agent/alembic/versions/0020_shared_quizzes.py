@@ -42,6 +42,20 @@ def upgrade() -> None:
     )
     op.create_index("ux_shared_quizzes_token", "shared_quizzes", ["token"], unique=True)
     op.create_index("ix_shared_quizzes_sender", "shared_quizzes", ["sender_subject_id"])
+    op.create_index(
+        "ux_shared_quizzes_sender_session",
+        "shared_quizzes",
+        ["sender_subject_id", "source_session_id"],
+        unique=True,
+        postgresql_where=sa.text("source_session_id IS NOT NULL AND pack_id IS NULL"),
+    )
+    op.create_index(
+        "ux_shared_quizzes_sender_pack",
+        "shared_quizzes",
+        ["sender_subject_id", "pack_id"],
+        unique=True,
+        postgresql_where=sa.text("pack_id IS NOT NULL"),
+    )
     op.create_table(
         "shared_quiz_results",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
@@ -70,6 +84,8 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_shared_quiz_results_subject_id", table_name="shared_quiz_results")
     op.drop_table("shared_quiz_results")
+    op.drop_index("ux_shared_quizzes_sender_pack", table_name="shared_quizzes")
+    op.drop_index("ux_shared_quizzes_sender_session", table_name="shared_quizzes")
     op.drop_index("ix_shared_quizzes_sender", table_name="shared_quizzes")
     op.drop_index("ux_shared_quizzes_token", table_name="shared_quizzes")
     op.drop_table("shared_quizzes")

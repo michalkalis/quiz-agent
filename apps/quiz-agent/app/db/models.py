@@ -717,6 +717,22 @@ class SharedQuiz(Base):
     __table_args__ = (
         Index("ux_shared_quizzes_token", "token", unique=True),
         Index("ix_shared_quizzes_sender", "sender_subject_id"),
+        # One link per sender per quiz, so a double tap cannot make two: per
+        # session for a round / daily, per pack for a pack (play once per pack).
+        Index(
+            "ux_shared_quizzes_sender_session",
+            "sender_subject_id",
+            "source_session_id",
+            unique=True,
+            postgresql_where="source_session_id IS NOT NULL AND pack_id IS NULL",
+        ),
+        Index(
+            "ux_shared_quizzes_sender_pack",
+            "sender_subject_id",
+            "pack_id",
+            unique=True,
+            postgresql_where="pack_id IS NOT NULL",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

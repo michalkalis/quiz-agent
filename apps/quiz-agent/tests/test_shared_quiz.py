@@ -11,7 +11,7 @@ replaying cannot skew the comparison. Everything hides behind a DB switch.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -302,24 +302,43 @@ async def test_only_the_owner_shares_a_pack_and_only_when_finished(client, app):
     assert resp.status_code == 409
 
 
-async def test_daily_link_the_same_day_starts_the_friends_own_challenge(client, app):
-    today = datetime.now(timezone.utc).date()
-    daily = app.state.shared_quiz.daily
-    set_ids = await daily.question_ids("en", today)
+async def _daily_share(client, app, day):
+    set_ids = await app.state.shared_quiz.daily.question_ids("en", day)
     session = await _finished(
-        app, "sender", set_ids, daily_challenge_date=today.isoformat()
+        app, "sender", set_ids, daily_challenge_date=day.isoformat()
     )
     token = (await _share(client, "sender", session_id=session.session_id))["token"]
-    resp = await _start(client, token, "friend", date=today.isoformat())
+    return token, set_ids
+
+
+async def test_daily_link_opened_today_is_the_friends_own_challenge(client, app):
+    """No date from the app: the server decides, so today's five never run as
+    a round beside the crowd numbers ("better than X %")."""
+    today = datetime.now(timezone.utc).date()
+    token, set_ids = await _daily_share(client, app, today)
+    # Even a stale date in the body is not a lever any more (field is gone).
+    resp = await _start(client, token, "friend", date="2026-01-01")
     played = await _session(app, resp)
     assert played.daily_challenge_date == today.isoformat()
     assert played.fixed_question_ids == set_ids and played.is_solo_only
-    # Another day it is just a shared round of the same five questions.
-    resp = await _start(client, token, "late", date=date(2026, 1, 1).isoformat())
-    assert resp.status_code == 422  # not today: the daily date guard
-    resp = await _start(client, token, "late")
-    late = await _session(app, resp)
+    play, _ = await app.state.shared_quiz.daily.begin("friend", "en", today)
+    assert play.session_id == played.session_id  # it is their attempt
+
+
+async def test_daily_link_of_a_closed_day_plays_as_a_round(client, app):
+    old = datetime.now(timezone.utc).date() - timedelta(days=3)
+    token, set_ids = await _daily_share(client, app, old)
+    late = await _session(app, await _start(client, token, "late"))
     assert late.daily_challenge_date is None and late.fixed_question_ids == set_ids
+
+
+async def test_daily_link_after_playing_today_in_another_language(client, app):
+    today = datetime.now(timezone.utc).date()
+    token, _ = await _daily_share(client, app, today)
+    await app.state.shared_quiz.daily.begin("friend", "sk", today)
+    resp = await _start(client, token, "friend")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "daily_played_other_language"
 
 
 async def test_daily_already_played_today_still_lands_in_the_ranking(client, app):
@@ -337,7 +356,7 @@ async def test_daily_already_played_today_still_lands_in_the_ranking(client, app
         await daily.record_answer(own, qid, "correct")
     await daily.finish(own)
 
-    resp = await _start(client, token, "friend", date=today.isoformat())
+    resp = await _start(client, token, "friend")
     assert resp.json() == {"kind": "daily", "session": None, "already_played": True}
     ranking = await client.get(
         f"/api/v1/shared-quizzes/{token}/results", headers=_h("friend")

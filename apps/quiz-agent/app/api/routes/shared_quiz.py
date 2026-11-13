@@ -8,7 +8,6 @@ No payload here ever carries a question or an answer.
 
 from __future__ import annotations
 
-from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
@@ -29,7 +28,6 @@ from ..deps import (
     require_auth_or_grace,
     session_to_response,
 )
-from .daily_challenge import _parse_day
 from .rooms import _PlayerName
 
 router = APIRouter()
@@ -59,11 +57,9 @@ class ShareResponse(ShareInfo):
 
 
 class StartShareRequest(BaseModel):
-    date: Optional[str] = Field(
-        default=None,
-        description="The player's local date (YYYY-MM-DD): a daily link opened "
-        "the same day starts the player's own daily challenge",
-    )
+    """Whether a daily link starts the player's own daily challenge is decided
+    by the server from the challenge's date, never by the app."""
+
     display_name: Optional[_PlayerName] = None
 
 
@@ -150,12 +146,10 @@ async def start_share(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ) -> StartShareResponse:
     svc = await _service(request, service)
-    day: Optional[date] = _parse_day(body.date) if body.date else None
     try:
         outcome = await svc.start(
             token,
             _subject(subject),
-            day=day,
             name=body.display_name,
             # Same whitelist as session creation: only the exact literal widens
             # the review gate to TestFlight's pending questions.

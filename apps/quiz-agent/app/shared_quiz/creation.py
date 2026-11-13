@@ -63,8 +63,10 @@ class ShareCreation:
                 return share
         if session.phase != SessionPhase.FINISHED:
             raise ShareError(409, "not_finished", "Only a finished quiz can be shared")
+        # A pack has one link per owner (its "play once" is per pack), so a
+        # pack session reuses it; any other quiz has one link per session.
         found = await self.store.existing(
-            subject_id, session_id=session_id, pack_id=None
+            subject_id, session_id=session_id, pack_id=session.pack_id
         )
         if found is not None:
             return found
@@ -131,7 +133,9 @@ class ShareCreation:
     async def _insert(self, subject_id: str, **fields) -> SharedQuiz:
         if not fields["question_ids"]:
             raise ShareError(409, "nothing_to_share", "No question can be shared")
-        share = await self.store.insert(sender_subject_id=subject_id, **fields)
+        share, created = await self.store.insert(sender_subject_id=subject_id, **fields)
+        if not created:  # a double tap: the other request made the link
+            return share
         self._emit(
             "quiz_shared",
             subject_id,

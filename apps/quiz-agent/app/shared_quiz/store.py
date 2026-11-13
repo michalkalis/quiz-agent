@@ -8,7 +8,7 @@ import secrets
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -72,25 +72,42 @@ class SharedQuizStore:
     async def existing(
         self, sender: str, *, session_id: Optional[str], pack_id: Optional[str]
     ) -> Optional[SharedQuiz]:
-        """The share this sender already made of the same session (or, without
-        a session, the same pack): sending twice gives the same link."""
+        """The link this sender already made: one per pack (``pack_id``), else
+        one per session — sending twice gives the same link."""
         stmt = select(SharedQuiz).where(SharedQuiz.sender_subject_id == sender)
-        if session_id:
-            stmt = stmt.where(SharedQuiz.source_session_id == session_id)
+        if pack_id:
+            stmt = stmt.where(SharedQuiz.pack_id == uuid.UUID(str(pack_id)))
         else:
             stmt = stmt.where(
-                SharedQuiz.source_session_id.is_(None),
-                SharedQuiz.pack_id == uuid.UUID(str(pack_id)),
+                SharedQuiz.source_session_id == session_id,
+                SharedQuiz.pack_id.is_(None),
             )
         async with self._sm() as db:
             return (await db.execute(stmt.limit(1))).scalars().first()
 
-    async def insert(self, **fields) -> SharedQuiz:
-        row = SharedQuiz(id=uuid.uuid4(), token=secrets.token_urlsafe(16), **fields)
+    async def insert(self, **fields) -> tuple[SharedQuiz, bool]:
+        """Insert unless the same link already exists (partial unique indexes
+        on sender + session / sender + pack) → (share, created)."""
         async with self._sm() as db:
-            db.add(row)
+            new_id = (
+                await db.execute(
+                    pg_insert(SharedQuiz)
+                    .values(token=secrets.token_urlsafe(16), **fields)
+                    .on_conflict_do_nothing()
+                    .returning(SharedQuiz.id)
+                )
+            ).scalar_one_or_none()
             await db.commit()
-        return row
+            if new_id is not None:
+                return await db.get(SharedQuiz, new_id), True
+        found = await self.existing(
+            fields["sender_subject_id"],
+            session_id=fields.get("source_session_id"),
+            pack_id=fields.get("pack_id"),
+        )
+        if found is None:  # pragma: no cover - only a token collision
+            raise RuntimeError("shared quiz insert conflicted with no existing row")
+        return found, False
 
     async def by_token(self, token: str) -> Optional[SharedQuiz]:
         async with self._sm() as db:
@@ -105,10 +122,17 @@ class SharedQuizStore:
     async def begin_play(
         self, share: SharedQuiz, subject_id: str, name: Optional[str], *, once: bool
     ) -> bool:
-        """Note that this person started the share. ``once`` (a pack link):
-        False when this person already started it — under any of their ids."""
+        """Note that this person started the share. ``once`` (a pack): False
+        when this person — under any of their ids — already started this pack
+        through any link."""
         async with self._sm() as db:
             ids = await person_ids(db, subject_id)
+            if (
+                once
+                and share.pack_id is not None
+                and await self._played_pack(db, share.pack_id, ids)
+            ):
+                return False
             found = await self._row(db, share.id, ids)
             if found is not None:
                 if name and found.finished_at is None:
@@ -129,6 +153,18 @@ class SharedQuizStore:
             await db.commit()
             return bool(inserted.rowcount) or not once
 
+    async def release_play(self, share_id: uuid.UUID, subject_id: str) -> None:
+        """Undo an unfinished ``begin_play`` whose session could not be made."""
+        async with self._sm() as db:
+            await db.execute(
+                delete(SharedQuizResult).where(
+                    SharedQuizResult.shared_quiz_id == share_id,
+                    SharedQuizResult.subject_id == subject_id,
+                    SharedQuizResult.finished_at.is_(None),
+                )
+            )
+            await db.commit()
+
     async def record_result(
         self,
         share_id: uuid.UUID,
@@ -139,21 +175,37 @@ class SharedQuizStore:
         session_id: Optional[str],
         name: Optional[str] = None,
     ) -> bool:
-        """The person's first finish counts; a later one changes nothing.
-        True when this call recorded the result."""
+        """The person's first finish counts; a later or concurrent one changes
+        nothing. True when this call recorded the result."""
         now = utcnow()
         async with self._sm() as db:
-            found = await self._row(db, share_id, await person_ids(db, subject_id))
-            if found is not None and found.finished_at is not None:
-                return False
+            ids = await person_ids(db, subject_id)
+            found = await self._row(db, share_id, ids)
             if found is None:
-                found = SharedQuizResult(
-                    id=uuid.uuid4(),
-                    shared_quiz_id=share_id,
-                    subject_id=subject_id,
-                    started_at=now,
+                inserted = await db.execute(
+                    pg_insert(SharedQuizResult)
+                    .values(
+                        id=uuid.uuid4(),
+                        shared_quiz_id=share_id,
+                        subject_id=subject_id,
+                        display_name=name,
+                        session_id=session_id,
+                        score=score,
+                        total=total,
+                        started_at=now,
+                        finished_at=now,
+                    )
+                    .on_conflict_do_nothing()
                 )
-                db.add(found)
+                await db.commit()
+                if inserted.rowcount:
+                    return True
+                # A concurrent start or finish wrote the row first.
+                found = await self._row(db, share_id, ids)
+                if found is None:
+                    return False
+            if found.finished_at is not None:
+                return False
             found.display_name = name or found.display_name
             found.score, found.total = score, total
             found.session_id, found.finished_at = session_id, now
@@ -174,6 +226,19 @@ class SharedQuizStore:
                     )
                 ).scalars()
             )
+
+    @staticmethod
+    async def _played_pack(db: AsyncSession, pack_id, ids: List[str]) -> bool:
+        return (
+            await db.execute(
+                select(SharedQuizResult.id)
+                .join(SharedQuiz, SharedQuizResult.shared_quiz_id == SharedQuiz.id)
+                .where(
+                    SharedQuiz.pack_id == pack_id, SharedQuizResult.subject_id.in_(ids)
+                )
+                .limit(1)
+            )
+        ).first() is not None
 
     @staticmethod
     async def _row(

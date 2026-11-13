@@ -26,7 +26,16 @@ from decimal import Decimal
 from pathlib import Path
 
 import requests
-from asc_audit import BASE, BUNDLE_ID, HEADERS, get, prices_with_points
+from asc_audit import (
+    BASE,
+    BUNDLE_ID,
+    HEADERS,
+    VERSIONS,
+    get,
+    latest_version,
+    prices_with_points,
+    version_localizations,
+)
 
 FL = Path(__file__).resolve().parents[1] / "apps/ios-app/Hangs/fastlane"
 MD = FL / "metadata"
@@ -53,18 +62,45 @@ def send(method: str, path: str, body: dict | None = None) -> dict:
     return r.json() if r.text else {}
 
 
-def upsert(kind: str, existing: list[dict], locale: str, attrs: dict, rel: tuple[str, str, str]) -> None:
+def upsert(kind: str, existing: list[dict], locale: str, attrs: dict, rel: tuple[str, str, str], base: str = "") -> None:
     """Create or patch a localization resource of type `kind` for `locale`."""
     attrs = {k: v for k, v in attrs.items() if v is not None}
     cur = next((e for e in existing if e["attributes"].get("locale") == locale), None)
     if cur:
         diff = {k: v for k, v in attrs.items() if cur["attributes"].get(k) != v}
         if diff:
-            send("PATCH", f"/{kind}/{cur['id']}", {"data": {"type": kind, "id": cur["id"], "attributes": diff}})
+            send("PATCH", f"{base}/{kind}/{cur['id']}", {"data": {"type": kind, "id": cur["id"], "attributes": diff}})
     else:
         rel_name, rel_type, rel_id = rel
-        send("POST", f"/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
-                                           "relationships": {rel_name: {"data": {"type": rel_type, "id": rel_id}}}}})
+        send("POST", f"{base}/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
+                                                  "relationships": {rel_name: {"data": {"type": rel_type, "id": rel_id}}}}})
+
+
+PRODUCT_EDITABLE = {"PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED", "DEVELOPER_REJECTED"}
+
+
+def sync_product_texts(kind: str, product_id: str, texts: dict[str, dict]) -> None:
+    """Upsert IAP / subscription / group texts ({locale: attrs}) on the product's editable version.
+
+    Texts live on versions; an approved version is frozen, so a change opens a new version
+    (it then rides along with the next app review, see asc_app_review_submit.py)."""
+    vtype = VERSIONS[kind][1]
+    loc_kind = vtype.replace("Versions", "Localizations")
+    ver = latest_version(kind, product_id)
+    existing = version_localizations(kind, ver)
+    have = {e["attributes"].get("locale"): e["attributes"] for e in existing}
+    changed = [loc for loc, a in texts.items() if any(have.get(loc, {}).get(k) != v for k, v in a.items() if v is not None)]
+    if not changed:
+        return
+    if not ver or ver["attributes"]["state"] not in PRODUCT_EDITABLE:
+        state = ver["attributes"]["state"] if ver else "none"
+        print(f"  {kind}/{product_id}: version {state} is frozen, opening a new one")
+        res = send("POST", f"/{vtype}", {"data": {"type": vtype, "relationships": {kind[:-1]: {"data": {"type": kind, "id": product_id}}}}})
+        ver = res.get("data") or {"id": "<new>"}
+        if APPLY:  # a new version may start with a copy of the previous texts
+            existing = version_localizations(kind, ver)
+    for loc in changed:
+        upsert(loc_kind, existing, loc, texts[loc], ("version", vtype, ver["id"]), base=V2)
 
 
 EDITABLE = "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED"
@@ -292,25 +328,14 @@ def step_iap(app_id: str, copy: dict) -> None:
     iap = copy["in_app_purchases"]
     for p in get(f"/apps/{app_id}/inAppPurchasesV2", limit=50).get("data", []):
         texts = iap.get(p["attributes"]["productId"])
-        if not texts:
-            continue
-        # Only the v2 path lists IAP localizations; the v1 path answers with an empty list.
-        existing = get(f"{V2}/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
-        for loc in LOCALES:
-            name, desc = texts[loc]
-            upsert("inAppPurchaseLocalizations", existing, loc, {"name": name, "description": desc}, ("inAppPurchaseV2", "inAppPurchases", p["id"]))
+        if texts:
+            sync_product_texts("inAppPurchases", p["id"], {loc: {"name": texts[loc][0], "description": texts[loc][1]} for loc in LOCALES})
     for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20).get("data", []):
-        existing = get(f"/subscriptionGroups/{g['id']}/subscriptionGroupLocalizations").get("data", [])
-        for loc in LOCALES:
-            upsert("subscriptionGroupLocalizations", existing, loc, {"name": iap["subscription_group"][loc]}, ("subscriptionGroup", "subscriptionGroups", g["id"]))
+        sync_product_texts("subscriptionGroups", g["id"], {loc: {"name": iap["subscription_group"][loc]} for loc in LOCALES})
         for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20).get("data", []):
             texts = iap.get(s["attributes"]["productId"])
-            if not texts:  # annual stays untouched and unsubmitted (founder 2026-10-07)
-                continue
-            existing = get(f"/subscriptions/{s['id']}/subscriptionLocalizations").get("data", [])
-            for loc in LOCALES:
-                name, desc = texts[loc]
-                upsert("subscriptionLocalizations", existing, loc, {"name": name, "description": desc}, ("subscription", "subscriptions", s["id"]))
+            if texts:  # annual stays untouched and unsubmitted (founder 2026-10-07)
+                sync_product_texts("subscriptions", s["id"], {loc: {"name": texts[loc][0], "description": texts[loc][1]} for loc in LOCALES})
 
 
 def step_screenshots(app_id: str) -> None:

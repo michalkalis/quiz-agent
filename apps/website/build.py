@@ -45,7 +45,7 @@ STORE = {
 }
 BETA = "https://testflight.apple.com/join/qvbqMh1k"
 FONT_FILES = ["calistoga-latin.woff2", "calistoga-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2", "rethink-sans-latin.woff2"]
-STATIC = [*FONT_FILES, "funnel-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
+STATIC = [*FONT_FILES, "funnel-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", "clip-test.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
 
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")

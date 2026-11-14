@@ -240,9 +240,8 @@ nonisolated enum Config {
     /// #234 — Trubbo Beta is its own iOS app in the same RevenueCat project,
     /// with its own public key; its `beta.` products hang off the same
     /// `unlimited` entitlement and offering.
-    /// TODO(#234 — Trubbo Beta, task 234.5): PLACEHOLDER, replace with the beta
-    /// app's real `appl_` key from RevenueCat before the first beta build.
-    static let revenueCatPublicSDKKeyBeta = "appl_BETA_KEY_PLACEHOLDER_234"
+    /// RevenueCat app "Trubbo Beta (TestFlight)" (app411663fe8f), created 2026-11-14.
+    static let revenueCatPublicSDKKeyBeta = "appl_YDuzXLReVxhTTmWTWKCkoWPYpMJ"
 
     // MARK: - Sentry
 

@@ -181,6 +181,19 @@ import os
         /// concurrent syncs).
         var syncEntitlementsGate: (@Sendable () async -> Void)?
 
+        // MARK: #232 shared quiz (see +SharedQuiz)
+
+        /// What `createSharedQuiz` returns; nil = it throws `notFound`.
+        var stubbedShareCreated: SharedQuizCreated?
+        var createSharedQuizCalls: [(sessionId: String?, packId: String?, displayName: String?)] = []
+        /// What `startSharedQuiz` returns; nil = a session from `mockSession`.
+        var stubbedShareStart: SharedQuizStart?
+        var startSharedQuizError: Error?
+        var startSharedQuizCalls: [(token: String, displayName: String?)] = []
+        /// What `sharedQuizResults` returns; nil = it throws `notFound`.
+        var stubbedShareResults: SharedQuizResults?
+        var sharedQuizResultsCallCount = 0
+
         // MARK: #205 daily challenge (see +Daily)
 
         /// What `fetchDailyChallenge` returns; nil = today not played yet.

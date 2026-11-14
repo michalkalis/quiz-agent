@@ -32,16 +32,31 @@ struct RoundCompleteView: View {
         var idPrefix: String { self == .score ? "completion" : "recap" }
     }
 
-    @ObservedObject var viewModel: QuizViewModel
     @Environment(\.locale) private var locale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
+    @ObservedObject var viewModel: QuizViewModel
+    /// #232: this round's link and comparison (sender or friend).
+    @StateObject private var share: SharedQuizShareModel
+    @State private var expandedEntryId: Int?
+    @State private var sourceSheet: RecapSource?
     let route: Route
     let summary: QuizCompleteSummary
     /// Free questions left when the upsell applies (score route only).
     var upsellRemaining: Int?
 
-    @State private var expandedEntryId: Int?
-    @State private var sourceSheet: RecapSource?
+    init(viewModel: QuizViewModel, route: Route, summary: QuizCompleteSummary, upsellRemaining: Int? = nil) {
+        self.viewModel = viewModel
+        self.route = route
+        self.summary = summary
+        self.upsellRemaining = upsellRemaining
+        _share = StateObject(wrappedValue: SharedQuizShareModel(
+            network: viewModel.networkService,
+            source: viewModel.shareableRoundSessionId.map { .session($0) },
+            token: viewModel.activeShare?.token,
+            previewTopic: Self.previewTopic
+        ))
+    }
 
     private enum Metrics {
         /// Canvas B4a: the score figure (64 display).
@@ -68,6 +83,18 @@ struct RoundCompleteView: View {
                             .accessibilityIdentifier("\(route.idPrefix).cards")
                     }
 
+                    // #232 (1A): send the round to a friend; then (4A) how
+                    // everyone who played it did.
+                    if viewModel.shareableRoundSessionId != nil {
+                        SharedQuizSendCard(isCreating: share.isCreating, failureMessage: share.failureMessage, action: sendToFriend)
+                        .padding(.top, Theme.Hangs.Spacing.xxs)
+                        .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
+                    }
+                    if showsSharing, !share.rows.isEmpty {
+                        SharedQuizRankingCard(rows: share.rows)
+                            .padding(.top, Theme.Hangs.Spacing.xs)
+                    }
+
                     if let upsellRemaining {
                         upsellCard(remaining: upsellRemaining)
                     }
@@ -85,6 +112,12 @@ struct RoundCompleteView: View {
             footer
         }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        .task {
+            if showsSharing { share.loadResults() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active, showsSharing { share.loadResults() }
+        }
         .sheet(item: $sourceSheet) { source in
             SourceWebView(
                 url: source.id,
@@ -96,13 +129,44 @@ struct RoundCompleteView: View {
         }
     }
 
+    // MARK: - Shared quiz (#232)
+
+    /// The round came from a friend's link (switch on).
+    private var isFriendsRound: Bool {
+        viewModel.activeShare != nil && viewModel.sharedQuizEnabled()
+    }
+
+    /// The comparison has a link to read: the friend's, or the sender's once sent.
+    private var showsSharing: Bool {
+        viewModel.sharedQuizEnabled() && (isFriendsRound || viewModel.shareableRoundSessionId != nil)
+    }
+
+    private func sendToFriend() {
+        let score = summary.displayScore
+        share.send { SharedQuizMessage.round(questionCount: $0.questionCount, score: score, url: $0.url) }
+    }
+
+    /// The share sheet's title: the pack's name, else the round's one category.
+    private static func previewTopic(_ created: SharedQuizCreated) -> String? {
+        if let title = created.title { return title }
+        guard created.categories.count == 1, let category = created.categories.first else { return nil }
+        return Config.categoryDisplayName(for: category, locale: .interface)
+    }
+
     // MARK: - Score
 
     /// Canvas B4a: the category as a quiet label, the score as one big figure
     /// with "out of N" beside it, and the breakdown as a single line.
     private var scoreBlock: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-            if let categoryName {
+            if isFriendsRound {
+                friendsQuizLabel
+                    .textCase(.uppercase)
+                    .font(.hangsOverline)
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
+                    .lineLimit(1)
+            } else if let categoryName {
                 Text(verbatim: categoryName)
                     .textCase(.uppercase)
                     .font(.hangsOverline)
@@ -131,6 +195,15 @@ struct RoundCompleteView: View {
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("completion.breakdown")
+        }
+    }
+
+    /// #232 (4A): "Geography · quiz from a friend".
+    @ViewBuilder private var friendsQuizLabel: some View {
+        if let categoryName {
+            Text("\(categoryName) · quiz from a friend")
+        } else {
+            Text("Quiz from a friend")
         }
     }
 
@@ -272,7 +345,7 @@ struct RoundCompleteView: View {
             // From the size where button titles wrap, the two stack: a 124pt Home
             // beside Play Again would break "Home" mid-word.
             let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
-                playAgainButton
+                mainButton
                 homeButton
             }
             if HangsButtonTitle.wraps(at: dynamicTypeSize) {
@@ -280,7 +353,7 @@ struct RoundCompleteView: View {
             } else {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: Theme.Hangs.Spacing.sm) {
-                        playAgainButton
+                        mainButton
                         homeButton.frame(width: Metrics.homeWidth)
                     }
                     stacked
@@ -289,6 +362,16 @@ struct RoundCompleteView: View {
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)
+    }
+
+    /// #232 (4A): a friend's round is not played again; it is sent on.
+    @ViewBuilder private var mainButton: some View {
+        if isFriendsRound {
+            HangsPrimaryButton(title: "Send to a friend", icon: "square.and.arrow.up", isLoading: share.isCreating, action: sendToFriend)
+            .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
+        } else {
+            playAgainButton
+        }
     }
 
     private var playAgainButton: some View {

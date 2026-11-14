@@ -260,6 +260,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         isPlayable && (packGenerationStatus == "generating" || !isTerminal)
     }
 
+    /// #232: every question is made, so the pack can be sent to a friend or
+    /// played together (the server refuses a pack still being made).
+    var isFinishedPack: Bool { isPlayable && !isStillGenerating }
+
     /// #200: the questions the pack holds once generation is over: what was
     /// persisted (`actual_count`), the ordered count when the server did not
     /// say. Nil while it still grows, so it can never count as played through.

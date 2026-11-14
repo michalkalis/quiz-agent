@@ -41,6 +41,8 @@ extension AppScreen {
             await makeRoom()
         case .recapShareImage:
             makeRecapShareImage()
+        case .sharedQuizRanking, .homeSharedPaste, .roomContentPicker:
+            await makeSharedQuiz()
         case .profile, .profileNewPlayer, .profileLoadFailed, .allStats:
             await makeProfile()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")

@@ -82,6 +82,30 @@ protocol NetworkServiceProtocol: Sendable {
     /// usual `/sessions/{id}/start`, or no session when today's challenge is
     /// already played (the state then carries the result).
     func startDailyChallenge(date: String, language: String) async throws -> DailyStartResult
+    /// #232: `POST /shared-quizzes` — a link to the caller's finished quiz
+    /// (`sessionId`) or finished pack (`packId`). `displayName` is the name the
+    /// comparison shows (the one from a game together), nil = "Player N".
+    func createSharedQuiz(sessionId: String?, packId: String?, displayName: String?) async throws -> SharedQuizCreated
+    /// #232: `POST /shared-quizzes/{token}/start` — the friend's session.
+    func startSharedQuiz(token: String, displayName: String?) async throws -> SharedQuizStart
+    /// #232: `GET /shared-quizzes/{token}/results` — the comparison as the
+    /// server filters it for this viewer.
+    func sharedQuizResults(token: String) async throws -> SharedQuizResults
+}
+
+/// #232: test doubles that never share answer like the server with the switch off.
+extension NetworkServiceProtocol {
+    func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func startSharedQuiz(token _: String, displayName _: String?) async throws -> SharedQuizStart {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func sharedQuizResults(token _: String) async throws -> SharedQuizResults {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -259,6 +283,14 @@ actor NetworkService: NetworkServiceProtocol {
         {
             logHTTPError(endpoint: endpointPath, status: 409, code: coded.detail.code)
             throw NetworkError.packExhausted
+        }
+
+        // #232: a shared quiz that cannot be created or started; the code
+        // decides what the player is told. A 404 also means the switch is off.
+        if endpointPath.hasPrefix("/api/v1/shared-quizzes"), [404, 409].contains(httpResponse.statusCode) {
+            let code = (try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data))?.detail.code
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: code)
+            throw NetworkError.sharedQuizUnavailable(SharedQuizUnavailable(statusCode: httpResponse.statusCode, code: code))
         }
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
@@ -1007,6 +1039,8 @@ enum NetworkError: LocalizedError {
     /// HTTP 409 `pack_exhausted` (#200): every question of the pack is in the
     /// start's exclusions. Not a failure — the pack can start over.
     case packExhausted
+    /// HTTP 404/409 from a shared-quiz route (#232).
+    case sharedQuizUnavailable(SharedQuizUnavailable)
 
     var errorDescription: String? {
         switch self {
@@ -1031,6 +1065,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .packExhausted:
             return String(localized: "You've played every question in this pack.", bundle: .interface, locale: .interface, comment: "A custom pack has nothing left this phone has not played")
+        case let .sharedQuizUnavailable(reason):
+            return reason.message
         }
     }
 }

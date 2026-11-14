@@ -47,6 +47,8 @@ enum AppScreen: String, CaseIterable {
     case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
     case profile, profileNewPlayer, profileLoadFailed, allStats
     case recapShareImage
+    /// #232: share a quiz by link (1A send card, 4A ranking, 3 paste row, 5A picker).
+    case completionShare, sharedQuizRanking, homeSharedPaste, roomContentPicker
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

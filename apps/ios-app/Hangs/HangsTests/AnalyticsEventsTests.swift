@@ -54,6 +54,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "quick_game_changed": ["enabled"],
     "question_skipped": ["quick"],
     "pack_topic_checked": ["verdict"],
+    "shared_quiz_pasted": ["outcome"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -92,6 +93,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .quickGameChanged(enabled: true),
     .questionSkipped(quick: true),
     .packTopicChecked(verdict: "blocked"),
+    .sharedQuizPasted(outcome: .notALink),
 ]
 
 @MainActor

@@ -72,6 +72,9 @@ final class AppConfigStore: ObservableObject {
     /// #204.9: the voice-settings experiment, read when a quiz round starts.
     var voiceExperiment: VoiceExperimentConfig? { config.voiceExperiment }
 
+    /// #232: share a quiz by link; every surface of it hides while off.
+    var sharedQuizEnabled: Bool { config.sharedQuizEnabled }
+
     /// The notice to show on Home, nil once the player dismissed this text.
     /// A new text from the server shows again.
     var notice: String? {
@@ -174,7 +177,8 @@ final class AppConfigStore: ObservableObject {
             let maintenance = arguments.contains("--app-config-maintenance")
             let daily = DailyChallengeFixtures.isActive(arguments)
             let multiplayer = arguments.contains("--app-config-multiplayer")
-            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer else { return nil }
+            let sharedQuiz = arguments.contains("--app-config-shared-quiz")
+            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -188,7 +192,8 @@ final class AppConfigStore: ObservableObject {
                 recommendedVersionAppStore: recommended ? "999" : nil,
                 recommendedVersionTestflight: recommended ? "999" : nil,
                 maintenanceEnabled: maintenance,
-                multiplayerEnabled: multiplayer
+                multiplayerEnabled: multiplayer,
+                sharedQuizEnabled: sharedQuiz
             )
         }
     #endif

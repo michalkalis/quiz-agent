@@ -53,23 +53,7 @@ extension RoomViewModel {
         isWorking = true
         defer { isWorking = false }
         do {
-            let session = try await network.createSession(
-                maxQuestions: solo.numberOfQuestions,
-                difficulty: solo.difficulty,
-                language: Language.selectable(solo.language).id,
-                categories: solo.categories,
-                userId: deviceId,
-                includeImages: MultiplayerSettings.includeImageQuestions,
-                skipLocalQuestions: !solo.includeLocalQuestions,
-                packId: nil
-            )
-            created = try await rooms.createRoom(
-                sessionId: session.id,
-                hostName: name,
-                revealMode: settings.revealMode,
-                thinkingSeconds: settings.thinkingSeconds,
-                readsAloud: settings.readsAloud
-            )
+            created = try await createRoom(hostName: name)
             await refresh()
             startPolling()
         } catch {
@@ -79,6 +63,27 @@ extension RoomViewModel {
             errorMessage = Self.genericMessage
             startNearbySearch()
         }
+    }
+
+    /// A fresh session with the room's content, made a room.
+    func createRoom(hostName name: String) async throws -> RoomCreated {
+        let session = try await network.createSession(
+            maxQuestions: solo.numberOfQuestions,
+            difficulty: solo.difficulty,
+            language: Language.selectable(solo.language).id,
+            categories: solo.categories,
+            userId: deviceId,
+            includeImages: MultiplayerSettings.includeImageQuestions,
+            skipLocalQuestions: !solo.includeLocalQuestions,
+            packId: content.packId
+        )
+        return try await rooms.createRoom(
+            sessionId: session.id,
+            hostName: name,
+            revealMode: settings.revealMode,
+            thinkingSeconds: settings.thinkingSeconds,
+            readsAloud: settings.readsAloud
+        )
     }
 
     func remove(_ player: RoomState.Player) async {
@@ -98,9 +103,10 @@ extension RoomViewModel {
         defer { isWorking = false }
         if settings.readsAloud { prepareReadAloudAudio() }
         do {
+            // A pack plays its own questions; the solo history does not apply.
             let response = try await network.startQuiz(
                 sessionId: created.sessionId,
-                excludedQuestionIds: excludedQuestionIds()
+                excludedQuestionIds: content.packId == nil ? excludedQuestionIds() : []
             )
             questionAudioPath = response.audio?.questionUrl
             await refresh()

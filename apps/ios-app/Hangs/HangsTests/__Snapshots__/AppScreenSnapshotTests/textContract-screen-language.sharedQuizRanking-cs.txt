@@ -1,0 +1,14 @@
+# texts
+Pořadí
+1.
+Rýchly gepard
+8
+2.
+Ty
+7.5
+3.
+Zuzka
+5
+Až ho dohrají další, objeví se tady.
+# identifiers
+sharedQuiz.ranking

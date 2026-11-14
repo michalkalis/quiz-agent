@@ -24,6 +24,12 @@ struct PlayerNameStore {
         defaults.string(forKey: key).flatMap(Self.cleaned)
     }
 
+    /// #232: the name a shared quiz's comparison shows: the typed one, else
+    /// an automatic one in the interface language, as in a game together.
+    var shownName: String {
+        chosenName ?? Self.automaticName(languageCode: Locale.interface.language.languageCode?.identifier)
+    }
+
     func save(_ name: String) {
         guard let name = Self.cleaned(name) else { return }
         defaults.set(name, forKey: key)

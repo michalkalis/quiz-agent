@@ -13,6 +13,9 @@ struct RoomLobbyHostView: View {
     @ObservedObject var viewModel: RoomViewModel
     @State private var playerToRemove: RoomState.Player?
     @State private var showingRules = false
+    @State private var showingContent = false
+    /// #232 (5A): the host's packs for "What we play"; nil hides the row.
+    var packs: MyPacksViewModel?
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.md) {
@@ -27,6 +30,9 @@ struct RoomLobbyHostView: View {
                             .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
                     }
                     playerList
+                    if let packs, viewModel.packsEnabled() {
+                        contentRow(packs)
+                    }
                     rulesRow
                 }
             }
@@ -143,6 +149,51 @@ struct RoomLobbyHostView: View {
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .frame(minHeight: Metrics.rowHeight)
         .accessibilityIdentifier("room.player.\(player.participantId)")
+    }
+
+    /// #232 (5A): what the room plays; changeable until someone joins.
+    private func contentRow(_ packs: MyPacksViewModel) -> some View {
+        HangsCard {
+            Button {
+                showingContent = true
+            } label: {
+                HStack(spacing: Theme.Hangs.Spacing.sm) {
+                    VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+                        Text("What we play")
+                            .font(.hangsLabel)
+                            .foregroundStyle(Theme.Hangs.Colors.ink)
+                        contentSummary
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .lineLimit(1)
+                            .accessibilityIdentifier("room.lobby.content.summary")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    if viewModel.canChangeContent {
+                        Image(systemName: "chevron.right")
+                            .font(.hangsCaption.weight(.semibold))
+                            .foregroundStyle(Theme.Hangs.Colors.mutedFaint)
+                    }
+                }
+                .padding(.horizontal, Theme.Hangs.Spacing.md)
+                .padding(.vertical, Theme.Hangs.Spacing.sm)
+                .frame(minHeight: Metrics.rowHeight)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .disabled(!viewModel.canChangeContent || viewModel.isWorking)
+            .accessibilityIdentifier("room.lobby.content")
+        }
+        .sheet(isPresented: $showingContent) {
+            RoomContentSheet(viewModel: viewModel, packs: packs)
+        }
+    }
+
+    @ViewBuilder private var contentSummary: some View {
+        switch viewModel.content {
+        case .home: Text("Categories from Home")
+        case let .pack(_, title): Text(verbatim: title)
+        }
     }
 
     /// #224 (A): the rules in one row; the sheet changes them.

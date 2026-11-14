@@ -2,8 +2,9 @@
 //  ShareTextItem.swift
 //  Hangs
 //
-//  #232: a message for the share sheet whose header shows a clean title and
-//  the link, instead of the first words of the message.
+//  #232: a message for the share sheet whose header shows the Trubbo mark, a
+//  clean title and the link, instead of the first words of the message and a
+//  blank icon.
 //
 
 import LinkPresentation
@@ -33,6 +34,9 @@ final class ShareTextItem: NSObject, UIActivityItemSource {
         metadata.title = title
         metadata.originalURL = url
         metadata.url = url
+        if let mark = UIImage(named: "TrubboMascot") {
+            metadata.iconProvider = NSItemProvider(object: mark)
+        }
         return metadata
     }
 }

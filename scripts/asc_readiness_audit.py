@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import sys
 
-from asc_audit import BUNDLE_ID, attrs, get
+from asc_audit import BUNDLE_ID, attrs, exact_bundle, get
 
 
 def short(value, n: int = 70):
@@ -23,7 +23,7 @@ def compact(item, drop=()):
 
 
 def main() -> int:
-    apps = get("/apps", **{"filter[bundleId]": BUNDLE_ID})
+    apps = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)
     if "_error" in apps or not apps.get("data"):
         print(json.dumps({"apps": apps}, indent=1))
         return 1

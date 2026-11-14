@@ -20,6 +20,36 @@ default_platform(:ios)
 #   workflow — nothing persists between runs.
 # -----------------------------------------------------------------------------
 
+# #234 — Trubbo Beta: the TestFlight build of Release-Prod (APP_STORE_VARIANT=NO)
+# is its own app, `com.missinghue.hangs.beta`; the App Store variant stays the
+# live app. Prod.xcconfig picks the same id at compile time; Staging (deprecated)
+# keeps the live id.
+LIVE_BUNDLE_ID = "com.missinghue.hangs"
+BETA_BUNDLE_ID = "com.missinghue.hangs.beta"
+ALL_BUNDLE_IDS = [LIVE_BUNDLE_ID, BETA_BUNDLE_ID].freeze
+
+def bundle_id_for(configuration:, store_variant:)
+  configuration == "Release-Prod" && !store_variant ? BETA_BUNDLE_ID : LIVE_BUNDLE_ID
+end
+
+# The app a non-build lane acts on: APP_BUNDLE_ID if set, else the variant
+# (APP_STORE_VARIANT=YES → live, anything else → beta).
+def variant_bundle_id
+  return ENV["APP_BUNDLE_ID"] if ENV["APP_BUNDLE_ID"].to_s != ""
+
+  ENV["APP_STORE_VARIANT"] == "YES" ? LIVE_BUNDLE_ID : BETA_BUNDLE_ID
+end
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV["ASC_API_KEY_ID"],
+    issuer_id: ENV["ASC_API_ISSUER_ID"],
+    key_content: ENV["ASC_API_KEY_CONTENT"],
+    is_key_content_base64: ENV["ASC_API_KEY_CONTENT_IS_BASE64"] == "true",
+    in_house: false
+  )
+end
+
 platform :ios do
   # Local env loading:
   #   fastlane natively auto-loads `fastlane/.env` and `fastlane/.env.default`.
@@ -89,12 +119,25 @@ platform :ios do
       in_house: false
     )
 
+    store_variant = ENV["APP_STORE_VARIANT"] == "YES"
+    UI.user_error!("The App Store variant is a production build only.") if store_variant && configuration != "Release-Prod"
+    bundle_id = bundle_id_for(configuration: configuration, store_variant: store_variant)
+    UI.message("App: #{bundle_id}")
+
+    # #234: the beta app's RevenueCat key ships as a placeholder until the
+    # RevenueCat app exists; a beta build with it would have no paywall.
+    if bundle_id == BETA_BUNDLE_ID && File.read("../Hangs/Utilities/Config.swift").include?("BETA_KEY_PLACEHOLDER")
+      UI.user_error!("Config.revenueCatPublicSDKKeyBeta is still the placeholder (#234 task 234.5).")
+    end
+
     # Sync distribution cert + provisioning profile from the encrypted git repo.
     # readonly on CI prevents the key from accidentally regenerating shared certs,
-    # which would invalidate existing installations.
+    # which would invalidate existing installations. Only the app being built:
+    # its profile is the one the archive needs.
     match(
       type: "appstore",
       api_key: api_key,
+      app_identifier: [bundle_id],
       readonly: true
     )
 
@@ -111,14 +154,24 @@ platform :ios do
     # collide with an existing build. Apple's API sometimes reports a lower number
     # than what's actually reserved (invalidated uploads still hold the number),
     # so BUILD_NUMBER_FLOOR lets us nudge past a stuck number when retrying.
-    tf_latest = latest_testflight_build_number(
-      api_key: api_key,
-      app_identifier: "com.missinghue.hangs",
-      initial_build_number: 0
-    )
+    # #234: one counter across the live and the beta app, so the
+    # ios/<version>-b<build> tag names exactly one build.
+    latest = ALL_BUNDLE_IDS.to_h do |id|
+      number = begin
+        latest_testflight_build_number(api_key: api_key, app_identifier: id, initial_build_number: 0)
+      rescue StandardError => e
+        # The other app may not exist in ASC yet; the one being built must.
+        raise if id == bundle_id
+
+        UI.important("No TestFlight builds read for #{id} (#{e.message}); counting it as 0.")
+        0
+      end
+      [id, number.to_i]
+    end
+    tf_latest = latest.values.max
     floor = (ENV["BUILD_NUMBER_FLOOR"] || "0").to_i
     next_build = [tf_latest, floor].max + 1
-    UI.message("📦 Build number: tf_latest=#{tf_latest}, floor=#{floor}, next=#{next_build}")
+    UI.message("📦 Build number: tf_latest=#{latest}, floor=#{floor}, next=#{next_build}")
 
     # Override CURRENT_PROJECT_VERSION on the xcodebuild command line. Command-line
     # build settings have the highest precedence (above xcconfig and target
@@ -133,8 +186,6 @@ platform :ios do
     # App Store variant: the APP_STORE condition compiles every TestFlight tester
     # surface off, because App Review's sandbox receipt looks like a TestFlight
     # install. Anything else builds the TestFlight variant, unchanged.
-    store_variant = ENV["APP_STORE_VARIANT"] == "YES"
-    UI.user_error!("The App Store variant is a production build only.") if store_variant && configuration != "Release-Prod"
     UI.important("App Store variant: tester surfaces compiled off.") if store_variant
 
     build_app(
@@ -143,7 +194,7 @@ platform :ios do
       export_options: {
         method: "app-store",
         provisioningProfiles: {
-          "com.missinghue.hangs" => "match AppStore com.missinghue.hangs"
+          bundle_id => "match AppStore #{bundle_id}"
         },
         signingStyle: "manual",
         teamID: "KAGWHPZZFQ"
@@ -156,16 +207,18 @@ platform :ios do
     # group gets a build only when someone adds it in App Store Connect.
     upload_to_testflight(
       api_key: api_key,
+      app_identifier: bundle_id,
       skip_waiting_for_build_processing: true,
       distribute_external: false,
       skip_submission: true
     )
 
-    UI.success("Uploaded #{configuration} #{store_variant ? 'App Store variant' : 'TestFlight'} build #{next_build}.")
+    UI.success("Uploaded #{configuration} #{store_variant ? 'App Store variant' : 'TestFlight'} build #{next_build} to #{bundle_id}.")
   end
 
-  desc "Set export compliance (uses_non_exempt_encryption = false) for the latest TestFlight build."
-  lane :set_compliance do
+  desc "Set export compliance (uses_non_exempt_encryption = false) for the latest TestFlight build " \
+       "of one app: bundle_id:<id>, else APP_BUNDLE_ID, else the variant (APP_STORE_VARIANT=YES → live, else beta)."
+  lane :set_compliance do |options|
     ensure_env_vars(env_vars: %w[ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_CONTENT])
 
     Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
@@ -174,8 +227,9 @@ platform :ios do
       key: ENV["ASC_API_KEY_CONTENT"]
     )
 
-    app = Spaceship::ConnectAPI::App.find("com.missinghue.hangs")
-    UI.user_error!("App com.missinghue.hangs not found in App Store Connect.") if app.nil?
+    bundle_id = options[:bundle_id] || variant_bundle_id
+    app = Spaceship::ConnectAPI::App.find(bundle_id)
+    UI.user_error!("App #{bundle_id} not found in App Store Connect.") if app.nil?
 
     # Primary prevention is the ITSAppUsesNonExemptEncryption=false key in
     # Info.plist — that makes every uploaded build ship with compliance already
@@ -208,8 +262,8 @@ platform :ios do
       is_key_content_base64: ENV["ASC_API_KEY_CONTENT_IS_BASE64"] == "true"
     )
 
-    match(type: "appstore", api_key: api_key, readonly: true)
-    UI.success("Match read OK. Cert + profile installed in keychain.")
+    match(type: "appstore", api_key: api_key, app_identifier: [variant_bundle_id], readonly: true)
+    UI.success("Match read OK for #{variant_bundle_id}. Cert + profile installed in keychain.")
   end
 
   # ---------------------------------------------------------------------------
@@ -222,6 +276,8 @@ platform :ios do
   # Usage:
   #   cd apps/ios-app/Hangs
   #   fastlane ios refresh_appstore_profile capability:ASSOCIATED_DOMAINS
+  #   (live app; prefix APP_BUNDLE_ID=com.missinghue.hangs.beta for Trubbo Beta, #234 —
+  #   a new capability goes on BOTH apps)
   # ---------------------------------------------------------------------------
   desc "Enable an App ID capability and regenerate the App Store profile."
   lane :refresh_appstore_profile do |options|
@@ -247,8 +303,65 @@ platform :ios do
       end
     end
 
-    match(type: "appstore", api_key: api_key, readonly: false, force: true)
+    match(type: "appstore", api_key: api_key, app_identifier: [CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)], readonly: false, force: true)
     UI.success("App Store profile regenerated and pushed to the certs repo.")
+  end
+
+  # ---------------------------------------------------------------------------
+  # #234 — Trubbo Beta, task 234.2: register the beta Bundle ID and create its
+  # match profiles (App Store + development). Run LOCALLY, once, with the
+  # founder's OK (touches shared signing; reuses the existing distribution
+  # certificate, never nukes). Not run by any workflow.
+  #
+  #   cd apps/ios-app/Hangs
+  #   bundle exec fastlane ios register_beta_app
+  #
+  # What the API cannot do (do it in the developer portal afterwards):
+  #   · Sign in with Apple grouping: the API turns the capability on as a
+  #     PRIMARY App ID. Grouping the beta under com.missinghue.hangs is set in
+  #     developer.apple.com → Identifiers → com.missinghue.hangs.beta → Sign In
+  #     with Apple → Edit → "Group with an existing primary App ID". Then rerun
+  #     this lane with force_profiles:true so the profiles pick it up.
+  #   · The App Store Connect app record ("Trubbo Beta"): Apple allows it in
+  #     the ASC web UI only (founder step 234.3).
+  # ---------------------------------------------------------------------------
+  desc "One-time (#234): register com.missinghue.hangs.beta (Sign in with Apple + Associated Domains) " \
+       "and create its match App Store + development profiles."
+  lane :register_beta_app do |options|
+    UI.user_error!("Run register_beta_app locally, not on CI.") if ENV["CI"]
+
+    ensure_env_vars(
+      env_vars: %w[ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_CONTENT MATCH_GIT_URL MATCH_PASSWORD]
+    )
+    api_key = asc_api_key
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: api_key)
+
+    bundle_id = Spaceship::ConnectAPI::BundleId.find(BETA_BUNDLE_ID)
+    if bundle_id.nil?
+      bundle_id = Spaceship::ConnectAPI::BundleId.create(
+        name: "Trubbo Beta",
+        platform: Spaceship::ConnectAPI::BundleIdPlatform::IOS,
+        identifier: BETA_BUNDLE_ID
+      )
+      UI.success("Registered #{BETA_BUNDLE_ID}.")
+    else
+      UI.message("#{BETA_BUNDLE_ID} is already registered.")
+    end
+
+    enabled = bundle_id.get_capabilities.map(&:capability_type)
+    %w[APPLE_ID_AUTH ASSOCIATED_DOMAINS].each do |capability|
+      next UI.message("#{capability} is already on.") if enabled.include?(capability)
+
+      bundle_id.create_capability(capability)
+      UI.success("#{capability} turned on for #{BETA_BUNDLE_ID}.")
+    end
+    UI.important("Sign in with Apple is now a primary App ID; group it under #{LIVE_BUNDLE_ID} in the developer portal (see lane comment).")
+
+    force = options[:force_profiles] == true || options[:force_profiles].to_s == "true"
+    %w[appstore development].each do |type|
+      match(type: type, api_key: api_key, app_identifier: [BETA_BUNDLE_ID], readonly: false, force: force)
+    end
+    UI.success("match AppStore + Development profiles for #{BETA_BUNDLE_ID} pushed to the certs repo.")
   end
 
   # ---------------------------------------------------------------------------

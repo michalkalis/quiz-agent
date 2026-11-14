@@ -5,6 +5,11 @@ name: asc-add-tester
 on:
   workflow_dispatch:
     inputs:
+      app:
+        description: "App: Trubbo (live, com.missinghue.hangs) or Trubbo Beta (com.missinghue.hangs.beta, #234)"
+        type: choice
+        options: [com.missinghue.hangs.beta, com.missinghue.hangs]
+        default: com.missinghue.hangs.beta
       email:
         description: "Tester e-mail (their Apple ID)"
         required: true
@@ -47,6 +52,9 @@ jobs:
           ASC_API_KEY_ID: ${{ secrets.ASC_ADMIN_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_ADMIN_API_KEY_CONTENT }}
+          # #234: testers of TestFlight builds go to Trubbo Beta; the live app keeps its groups for the
+          # pre-submission check of the App Store build.
+          ASC_AUDIT_BUNDLE_ID: ${{ inputs.app || 'com.missinghue.hangs.beta' }}
           # Inputs go through env, never into the script text (no shell injection).
           EMAIL: ${{ inputs.email }}
           FIRST: ${{ inputs.first_name }}

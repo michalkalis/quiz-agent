@@ -305,6 +305,10 @@ def main() -> int:
     for name in STATIC:
         (OUT / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / name, OUT / name)
+    # #234: Trubbo Beta invites on /beta/join (its own universal link path, see the AASA); without the app the
+    # link lands on the same page as /join.
+    (OUT / "beta").mkdir(exist_ok=True)
+    shutil.copy2(SRC / "join.html", OUT / "beta" / "join.html")
     # "Hear the question" recordings, one per language (src/audio/question-<lang>.mp3); the page falls back to
     # the browser's voice while one is missing.
     if (SRC / "audio").is_dir():

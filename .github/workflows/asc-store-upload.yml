@@ -5,8 +5,13 @@ name: asc-store-upload
 on:
   workflow_dispatch:
     inputs:
+      app:
+        description: "App: Trubbo (live, com.missinghue.hangs) or Trubbo Beta (com.missinghue.hangs.beta, #234)"
+        type: choice
+        options: [com.missinghue.hangs, com.missinghue.hangs.beta]
+        default: com.missinghue.hangs
       steps:
-        description: "Comma list: listing,review,testflight,iap-create,iap-price,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release — or app-review alone (needs build) to submit the version to App Review"
+        description: "Comma list: listing,review,testflight,iap-create,iap-price,iap,iap-mirror,iap-review,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release — or app-review alone (needs build) to submit the version to App Review. Beta app: testflight,iap-mirror,iap,iap-review,iap-price,groups-setup,promote only"
         default: listing,review,testflight,iap
       build:
         description: "Build number that gets What to Test (optional)"
@@ -41,6 +46,8 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_CONTENT: ${{ secrets.ASC_API_KEY_CONTENT }}
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          # #234: target app; for the beta the scripts prefix product ids with `beta.`.
+          ASC_AUDIT_BUNDLE_ID: ${{ inputs.app || 'com.missinghue.hangs' }}
           # Inputs go through env, never into the script text (no shell injection).
           STEPS: ${{ inputs.steps || 'listing,review,testflight,iap,screenshots' }}
           BUILD: ${{ inputs.build }}
@@ -57,6 +64,7 @@ jobs:
           [[ "$APPLY" == "true" ]] && args+=(--apply)
           if [[ "$STEPS" == "app-review" ]]; then
             [[ -n "$BUILD" ]] || { echo "app-review needs build"; exit 1; }
+            [[ "$ASC_AUDIT_BUNDLE_ID" == "com.missinghue.hangs" ]] || { echo "app-review is for the live app only"; exit 1; }
             apply=(); [[ "$APPLY" == "true" ]] && apply=(--apply)
             python scripts/asc_app_review_submit.py --build "$BUILD" "${apply[@]}"
           else

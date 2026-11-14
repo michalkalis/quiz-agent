@@ -15,16 +15,27 @@ flowchart LR
 
 ## Dva varianty buildu z toho istého kódu
 
-| Variant | Kto ho dostane | Tester nástroje | Ako vzniká |
-|---|---|---|---|
-| **TestFlight** | Founder, potom na povel blízki a beta | áno (diagnostika hlasu, nahrávky odpovedí, hodnotenie otázok, neschválené otázky, štítky) | `gh workflow run ios-release.yml -f environment=production` |
-| **App Store** | App Review a zákazníci (Founder ho vidí v TestFlighte na kontrolu) | nie, vypnuté už pri stavbe | `gh workflow run ios-release.yml --ref main -f environment=production -f store=true` |
+| Variant | Appka | Kto ho dostane | Tester nástroje | Ako vzniká |
+|---|---|---|---|---|
+| **TestFlight** | **Trubbo Beta** (`com.missinghue.hangs.beta`) | Founder a blízki (Svitlana) | áno (diagnostika hlasu, nahrávky odpovedí, hodnotenie otázok, neschválené otázky, štítky) | `gh workflow run ios-release.yml -f environment=production` |
+| **App Store** | **Trubbo** (`com.missinghue.hangs`) | App Review a zákazníci (Founder ho vidí v TestFlighte na kontrolu pred podaním) | nie, vypnuté už pri stavbe | `gh workflow run ios-release.yml --ref main -f environment=production -f store=true` |
+
+**Dve appky vedľa seba (#234 — Trubbo Beta).** TestFlight build je samostatná appka „Trubbo Beta“ s oranžovým pásikom BETA na ikone, takže na telefóne môže byť vedľa verzie z App Store. Identifikátor, názov, ikonu a podmienku `BETA` určuje `Prod.xcconfig` podľa `APP_STORE_VARIANT`; fastlane z neho berie aj profil a appku v ASC. Číslo buildu je spoločné pre obe appky (najvyšší TestFlight build z oboch + 1), takže tag `ios/<verzia>-b<build>` je vždy jednoznačný. Odlišnosti bety:
+- **Nákupy:** rovnaký katalóg s predponou `beta.` (`beta.pack_30`, `beta.com.carquiz.unlimited.monthly`, …), vždy sandbox; server predponu odstráni len pri beta identifikátore. RevenueCat: vlastná iOS appka v tom istom projekte (`Config.revenueCatPublicSDKKeyBeta`).
+- **Pozvánky do Hry spolu:** beta `trubbo.app/beta/join`, ostrá `trubbo.app/join` (AASA v `apps/website`). Pozvánky sa teda testujú beta ↔ beta.
+- **Zmena katalógu alebo cien = obe appky.** Najprv ostrá ako doteraz, potom beta: `gh workflow run asc-store-upload.yml -f app=com.missinghue.hangs.beta -f steps=iap-mirror,iap,iap-review,iap-price -f apply=true` (nový produkt skopíruje z ostrej appky, texty zo `store_copy.json`, review screenshot z `fastlane/iap_review`; beta nákupom stačí stav Ready to Submit).
+- **Nová schopnosť (entitlement):** zapnúť pre oba identifikátory (`refresh_appstore_profile`, pre betu s `APP_BUNDLE_ID=com.missinghue.hangs.beta`).
+- Debug-Prod na zariadení je tiež beta identifikátor (vývojový profil).
 
 Prečo dva: App Review inštaluje appku s rovnakým „sandbox“ dokladom ako TestFlight, takže kontrola za behu ich nerozlíši. Nástroje viditeľné recenzentovi = zamietnutie podľa pravidla 2.2 (#209). Nový tester nástroj sa vždy schová za `BuildChannel.debugSurfacesEnabled()`.
 
 TestFlight buildy len na požiadanie foundera (CLAUDE.md, pravidlo 8). Každý nahraný build dostane git tag `ios/<verzia>-b<build>`, App Store variant navyše `-store`.
 
 ## Skupiny testerov (TestFlight)
+
+**Trubbo Beta:** `Founder` a `family+friends`, obe interné a každý build automaticky (`gh workflow run asc-store-upload.yml -f app=com.missinghue.hangs.beta -f steps=groups-setup -f apply=true`). Public beta tu nie je.
+
+**Trubbo (ostrá appka)** — v TestFlighte už len App Store buildy na kontrolu pred podaním:
 
 | Skupina | Typ | Kto | Ktoré buildy |
 |---|---|---|---|
@@ -37,6 +48,7 @@ Automatické buildy internej skupiny Apple nastavuje len pri jej založení, nes
 
 Povel foundera = súhlas na zápis do App Store Connect pre ten krok. Príkazy (bez `-f apply=true` len skúšobný beh):
 
+- všetky ASC workflowy majú voľbu `app` (ostrá predvolená v `asc-store-upload`, beta predvolená v `asc-add-tester`)
 - nastavenie skupín: `gh workflow run asc-store-upload.yml -f steps=groups-setup -f apply=true`
 - poslať build N skupine: `gh workflow run asc-store-upload.yml -f steps=promote -f build=N -f group="family+friends" -f apply=true` (alebo `Founder`, `Public beta`)
 
@@ -44,8 +56,8 @@ Povel foundera = súhlas na zápis do App Store Connect pre ten krok. Príkazy (
 
 **Pridanie blízkeho testera ručne:**
 1. App Store Connect → Users and Access → „+“.
-2. Meno, e-mail jeho Apple ID, rola **Customer Support**; v časti Apps zvoliť len Trubbo.
-3. Po prijatí pozvánky: Apps → Trubbo → TestFlight → Internal Testing → family+friends → Testers „+“ → vybrať ho.
+2. Meno, e-mail jeho Apple ID, rola **Customer Support**; v časti Apps zvoliť Trubbo Beta (a Trubbo, ak má vidieť aj App Store build).
+3. Po prijatí pozvánky: Apps → Trubbo Beta → TestFlight → Internal Testing → family+friends → Testers „+“ → vybrať ho.
 4. Tester si nainštaluje appku TestFlight a prijme pozvánku z e-mailu.
 
 **Pridanie beta testera e-mailom:** TestFlight → External Testing → Public beta → Testers „+“ → Add New Testers → e-mail (bez prístupu do App Store Connect).
@@ -73,7 +85,7 @@ Trunk-based (`shared.md`): krátke vetvy → PR → nezávislý Claude review �
 |---|---|---|---|
 | **Local** | schéma `Hangs-Local`, simulátor | `localhost:8002` / `:8003` | vývoj, testy |
 | **Staging** | iOS build sa nerobí | `*-staging.fly.dev` (`docs/setup/staging.md`) | skúška rizikových zmien backendu a migrácií |
-| **Prod** | TestFlight aj App Store | `quiz-agent-api.fly.dev`, `quiz-pack-api.fly.dev` | všetci používatelia vrátane testerov |
+| **Prod** | TestFlight (Trubbo Beta) aj App Store (Trubbo) | `quiz-agent-api.fly.dev`, `quiz-pack-api.fly.dev` | všetci používatelia vrátane testerov |
 
 - Backend sa nasadzuje len z `main` a musí udržať funkčné všetky živé verzie appky (verzia v obchode + TestFlight buildy u testerov): žiadne lámajúce zmeny API.
 - **Founder dostane novú funkciu prvý (founder 2026-10-29).** Funkcia za serverovým prepínačom (`/app-config`, napr. `multiplayer_enabled`) sa zapne v prode spolu s prvým TestFlight buildom, ktorý ju obsahuje. Ten build ide automaticky len skupine Founder; testeri na starších buildoch kód funkcie nemajú, prepínač ich nezasiahne, a serverové zmeny musia ich buildy udržať funkčné (CI kontrola API). Blízki a beta funkciu dostanú až s buildom na povel foundera. Pozor: zapnutý prepínač platí aj pre App Store build z toho istého kódu, pred podaním verzie skontrolovať, ktoré prepínače sú zapnuté.

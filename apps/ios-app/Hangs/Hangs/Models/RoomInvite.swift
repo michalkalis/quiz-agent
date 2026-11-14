@@ -15,8 +15,10 @@ nonisolated struct RoomCreated: Decodable, Sendable, Equatable {
 
     /// The universal link in the QR code and the shared message. Without the
     /// app it opens the trubbo.app join page, which leads to the App Store.
-    var inviteURL: URL {
-        var components = URLComponents(string: RoomInvite.joinPageURL)
+    var inviteURL: URL { inviteURL(isBeta: BetaApp.isBetaBuild) }
+
+    func inviteURL(isBeta: Bool) -> URL {
+        var components = URLComponents(string: RoomInvite.joinPageURL(isBeta: isBeta))
         components?.queryItems = [URLQueryItem(name: RoomInvite.tokenQueryItem, value: joinToken)]
         return components?.url ?? URL(fileURLWithPath: "/")
     }
@@ -70,22 +72,28 @@ nonisolated enum RoomInvite: Equatable, Sendable {
         }
     }
 
-    static let joinPageURL = "https://trubbo.app/join"
+    /// #234: Trubbo Beta invites on `/beta/join` so a link never opens the
+    /// other app; the website serves both paths the same way.
+    static func joinPageURL(isBeta: Bool = BetaApp.isBetaBuild) -> String {
+        "https://trubbo.app" + BetaApp.joinPath(isBeta: isBeta)
+    }
+
     static let tokenQueryItem = "t"
     static let qrFragment = "qr"
 
     /// A join link as an invite: `.qr` when it came from the QR code.
-    static func invite(from url: URL) -> RoomInvite? {
-        guard let token = token(from: url) else { return nil }
+    static func invite(from url: URL, isBeta: Bool = BetaApp.isBetaBuild) -> RoomInvite? {
+        guard let token = token(from: url, isBeta: isBeta) else { return nil }
         return url.fragment == qrFragment ? .qr(token) : .token(token)
     }
 
-    /// The join token in a `https://trubbo.app/join?t=…` link, nil for any
-    /// other URL.
-    static func token(from url: URL) -> String? {
+    /// The join token in a `https://trubbo.app/join?t=…` link (`/beta/join`
+    /// in Trubbo Beta), nil for any other URL.
+    static func token(from url: URL, isBeta: Bool = BetaApp.isBetaBuild) -> String? {
+        let joinPath = BetaApp.joinPath(isBeta: isBeta)
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               components.scheme == "https", components.host == "trubbo.app",
-              components.path == "/join" || components.path == "/join/"
+              components.path == joinPath || components.path == joinPath + "/"
         else { return nil }
         let token = components.queryItems?.first { $0.name == tokenQueryItem }?.value
         return token.flatMap { $0.isEmpty ? nil : $0 }

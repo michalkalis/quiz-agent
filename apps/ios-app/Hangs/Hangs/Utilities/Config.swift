@@ -231,7 +231,17 @@ nonisolated enum Config {
     /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by
     /// design — safe to embed in the client; entitlement is still resolved
     /// server-side via the backend's RevenueCat secret key + webhook mirror.
-    static let revenueCatPublicSDKKey = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+    static var revenueCatPublicSDKKey: String {
+        BetaApp.isBetaBuild ? revenueCatPublicSDKKeyBeta : revenueCatPublicSDKKeyLive
+    }
+
+    static let revenueCatPublicSDKKeyLive = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+
+    /// #234 — Trubbo Beta is its own iOS app in the same RevenueCat project,
+    /// with its own public key; its `beta.` products hang off the same
+    /// `unlimited` entitlement and offering.
+    /// RevenueCat app "Trubbo Beta (TestFlight)" (app411663fe8f), created 2026-11-14.
+    static let revenueCatPublicSDKKeyBeta = "appl_YDuzXLReVxhTTmWTWKCkoWPYpMJ"
 
     // MARK: - Sentry
 

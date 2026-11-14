@@ -18,6 +18,8 @@
 import Clocks
 import Foundation
 @testable import Hangs
+import LinkPresentation
+import UIKit
 import Testing
 
 @MainActor
@@ -183,6 +185,17 @@ struct SharedQuizFlowTests {
         #expect(shared.count == 2)
         #expect(shared.first?.text.hasSuffix("\nhttps://trubbo.app/play?s=\(created.token)") == true)
         #expect(model.token == created.token)
+    }
+
+    @Test("founder 2026-11-14: the share sheet header shows the Trubbo mark, the topic and the link, not the message's first words")
+    @MainActor
+    func shareHeader() throws {
+        let url = try #require(URL(string: "https://trubbo.app/play?s=K7m2Qx"))
+        let item = ShareTextItem(text: "Play my quiz…\n\(url.absoluteString)", title: "Space · Trubbo", url: url)
+        let metadata = try #require(item.activityViewControllerLinkMetadata(UIActivityViewController(activityItems: [], applicationActivities: nil)))
+        #expect(metadata.title == "Space · Trubbo")
+        #expect(metadata.url == url)
+        #expect(metadata.iconProvider != nil, "without an icon the header shows a blank square")
     }
 
     @Test("a failed link says so and opens no sheet")

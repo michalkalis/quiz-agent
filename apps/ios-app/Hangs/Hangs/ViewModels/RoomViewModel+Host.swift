@@ -28,8 +28,9 @@ extension RoomViewModel {
     /// In the round-reveal mode there is nothing to look at between questions.
     static let roundModePauseSeconds = 3
 
-    /// The host's name: the account's first name, else the one typed before.
-    var hostName: String? { accountName ?? names.chosenName }
+    /// The host's name: the one typed before (in a game or the Profile), else
+    /// the account's first name.
+    var hostName: String? { names.chosenName ?? accountName }
 
     /// Starts hosting; without a name to show, asks for one first.
     func beginHosting() async {

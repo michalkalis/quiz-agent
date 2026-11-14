@@ -7,15 +7,16 @@
 
 import Foundation
 
-/// A name the player typed is kept for the next game. Until then a guest
-/// plays under an automatic one (founder 2026-10-28); a host without an
-/// account name is asked once.
+/// A name the player typed (in a game together or in the Profile) is kept
+/// and wins over the Apple account's first name. Without either a guest plays
+/// under an automatic one (founder 2026-10-28); a host is asked once.
 struct PlayerNameStore {
     static let maxLength = 24
 
     private let defaults: UserDefaults
     private let key = "multiplayer.playerName"
-    private let automaticKey = "sharedQuiz.automaticName"
+    /// Internal so a snapshot can pin the automatic name.
+    static let automaticKey = "sharedQuiz.automaticName"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -25,16 +26,22 @@ struct PlayerNameStore {
         defaults.string(forKey: key).flatMap(Self.cleaned)
     }
 
-    /// #232: the name a shared quiz's comparison shows: the typed one, else
-    /// an automatic one in the interface language, as in a game together. The
-    /// first automatic name is kept, so one person reads the same in every
-    /// comparison. It is not a typed name: a game together still asks a host.
-    func sharedQuizName(languageCode: String? = Locale.interface.language.languageCode?.identifier) -> String {
-        if let chosenName { return chosenName }
-        if let kept = defaults.string(forKey: automaticKey).flatMap(Self.cleaned) { return kept }
+    /// #232 (founder 2026-11-14): the name the others see in a game together
+    /// and in a shared quiz's comparison: the typed one, else the Apple
+    /// account's first name, else an automatic one in the interface language.
+    /// The first automatic name is kept, so one person reads the same
+    /// everywhere. Only a typed or account name lets a host start a game.
+    func playerName(accountName: String?, languageCode: String? = Locale.interface.language.languageCode?.identifier) -> String {
+        if let name = chosenName ?? Self.firstName(of: accountName) { return name }
+        if let kept = defaults.string(forKey: Self.automaticKey).flatMap(Self.cleaned) { return kept }
         let name = Self.automaticName(languageCode: languageCode)
-        defaults.set(name, forKey: automaticKey)
+        defaults.set(name, forKey: Self.automaticKey)
         return name
+    }
+
+    /// The first word of the Apple account name ("Michal Kalis" → "Michal").
+    static func firstName(of accountName: String?) -> String? {
+        accountName?.split(separator: " ").first.flatMap { cleaned(String($0)) }
     }
 
     func save(_ name: String) {

@@ -29,6 +29,9 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var stats: PlayerStats?
     @Published private(set) var loadState: LoadState = .loading
     @Published private(set) var account = Account(name: nil, isSignedIn: false)
+    /// #232 (founder 2026-11-14): the name friends see in a game together and
+    /// in a shared quiz, changed in the "Your name" row.
+    @Published private(set) var playerName = ""
     /// Newest first, only kinds this build knows.
     @Published private(set) var recaps: [PlayerRecap] = []
 
@@ -142,6 +145,14 @@ final class ProfileViewModel: ObservableObject {
         analytics.track(.recapShared(kind: recap.kind?.rawValue ?? ""))
     }
 
+    /// A name typed in the "Your name" row; it wins over the account's first name.
+    func rename(to name: String) {
+        guard let clean = PlayerNameStore.cleaned(name), clean != playerName else { return }
+        nameStore.save(clean)
+        reloadAccount()
+        analytics.track(.playerNameChanged)
+    }
+
     /// The account changed (sign-in, sign-out, deletion): the old cards
     /// belong to someone else.
     func reset() {
@@ -157,5 +168,6 @@ final class ProfileViewModel: ObservableObject {
         let isSignedIn = tokens?.isSignedIn == true
         let name = tokens?.accountName.flatMap(PlayerNameStore.cleaned) ?? nameStore.chosenName
         account = Account(name: name, isSignedIn: isSignedIn)
+        playerName = nameStore.playerName(accountName: tokens?.accountName)
     }
 }

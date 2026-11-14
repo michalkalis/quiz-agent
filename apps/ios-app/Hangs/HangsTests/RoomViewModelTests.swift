@@ -89,6 +89,21 @@ struct RoomViewModelTests {
         #expect(names.chosenName == "Zuzka")
     }
 
+    @Test("founder 2026-11-14: a name changed in the Profile wins over the account's first name, for the host and as a guest")
+    func typedNameWinsOverAccount() async {
+        names.save("Miško")
+        let model = makeModel()
+        #expect(model.playerName == "Miško", "a guest joins under the Profile name")
+        await model.beginHosting()
+        defer { model.stopAll() }
+        #expect(model.me?.displayName == "Miško")
+    }
+
+    @Test("a signed-in guest without a typed name plays under the account's first name, not an animal")
+    func guestUsesAccountFirstName() {
+        #expect(makeModel().playerName == "Michal")
+    }
+
     @Test("The host's phone reads the question aloud first and only then opens the answer time")
     func hostReadsThenOpens() async {
         let model = await hostAtFirstQuestion()

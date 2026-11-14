@@ -1,5 +1,9 @@
 # texts
 PROFILE
+Your name
+Múdra sova
+Your name
+Múdra sova
 37
 of 60
 Your first recap
@@ -8,5 +12,6 @@ Your first recap
 # identifiers
 profile.settings
 profile.account
+profile.name
 profile.firstRecap
 profile.allStats

@@ -1302,7 +1302,7 @@ final class QuizViewModel: ObservableObject {
             // pack plays once) or gone: Home says so, no error screen.
             if let shared {
                 let result = try await withTransientStartRetry {
-                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().sharedQuizName())
+                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName))
                 }
                 activeShare?.kind = result.kind
                 guard let session = result.session else {

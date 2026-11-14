@@ -24,6 +24,8 @@ extension AppScreen {
             : AuthTokens(accessToken: "a", refreshToken: "r", anonId: "anon")
         let names = UserDefaults(suiteName: "AppScreen.profile") ?? .standard
         names.removePersistentDomain(forName: "AppScreen.profile")
+        // The automatic name is random; pin it so the baseline holds.
+        names.set("Múdra sova", forKey: PlayerNameStore.automaticKey)
         let model = ProfileViewModel(
             service: MockPlayerStatsService(results: results, recaps: [.success(self == .profile ? [.mockOctober] : [])]),
             tokenStore: SnapshotTokenStore(tokens),

@@ -147,11 +147,19 @@ struct SharedQuizFlowTests {
     @Test("without a typed name one automatic name is kept, so one person reads the same in every comparison")
     func automaticNameKept() throws {
         let names = PlayerNameStore(defaults: try #require(UserDefaults(suiteName: "shared-name-\(UUID().uuidString)")))
-        let first = names.sharedQuizName(languageCode: "sk")
-        #expect(names.sharedQuizName(languageCode: "sk") == first)
+        let first = names.playerName(accountName: nil, languageCode: "sk")
+        #expect(names.playerName(accountName: nil, languageCode: "sk") == first)
         #expect(names.chosenName == nil, "an automatic name is not a typed one: a host is still asked")
         names.save("Zuzka")
-        #expect(names.sharedQuizName() == "Zuzka", "a typed name wins")
+        #expect(names.playerName(accountName: nil) == "Zuzka", "a typed name wins")
+    }
+
+    @Test("founder 2026-11-14: an Apple account shows its first name, and a name typed in the Profile wins over it")
+    func accountFirstNameThenTyped() throws {
+        let names = PlayerNameStore(defaults: try #require(UserDefaults(suiteName: "account-name-\(UUID().uuidString)")))
+        #expect(names.playerName(accountName: "Michal Kalis") == "Michal", "friends see the first name, never the surname")
+        names.save("Miško")
+        #expect(names.playerName(accountName: "Michal Kalis") == "Miško")
     }
 
     // MARK: - Sending

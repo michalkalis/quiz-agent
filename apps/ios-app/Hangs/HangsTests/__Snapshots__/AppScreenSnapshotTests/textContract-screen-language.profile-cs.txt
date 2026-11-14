@@ -1,5 +1,9 @@
 # texts
 PROFIL
+Tvoje jméno
+Michal
+Tvoje jméno
+Michal
 Tvůj M10
 Celkem
 312 otázek
@@ -13,5 +17,6 @@ nejčastěji v neděli
 # identifiers
 profile.settings
 profile.account
+profile.name
 profile.recap
 profile.allStats

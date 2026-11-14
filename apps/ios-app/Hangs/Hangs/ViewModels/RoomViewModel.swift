@@ -139,14 +139,14 @@ final class RoomViewModel: ObservableObject, Identifiable {
         settings = settingsStore.load()
         self.analytics = analytics
         self.deviceId = deviceId
-        self.accountName = accountName.flatMap { $0.split(separator: " ").first.map(String.init) }
+        self.accountName = PlayerNameStore.firstName(of: accountName)
         self.excludedQuestionIds = excludedQuestionIds
         self.names = names
         self.calls = calls ?? CallMonitor()
         self.clock = clock
         self.isOffCellular = isOffCellular
         self.packsEnabled = packsEnabled
-        playerName = names.chosenName ?? PlayerNameStore.automaticName(languageCode: languageCode)
+        playerName = names.playerName(accountName: accountName, languageCode: languageCode)
     }
 
     // MARK: - What the screen shows

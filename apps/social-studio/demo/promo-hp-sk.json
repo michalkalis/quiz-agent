@@ -105,7 +105,15 @@
 	"segments": [
 		{
 			"from": 0,
-			"to": 22.137
+			"to": 7.78
+		},
+		{
+			"from": 7.78,
+			"to": 15.83
+		},
+		{
+			"from": 15.83,
+			"to": 22.937
 		}
 	],
 	"zooms": [
@@ -118,28 +126,28 @@
 		},
 		{
 			"from": 4.68,
-			"to": 7.48,
+			"to": 7.78,
 			"x": 603,
 			"y": 751,
 			"scale": 1.5
 		},
 		{
-			"from": 7.48,
-			"to": 12.88,
+			"from": 7.78,
+			"to": 13.38,
 			"x": 603,
 			"y": 1866,
 			"scale": 1.5
 		},
 		{
-			"from": 12.88,
-			"to": 15.03,
+			"from": 13.38,
+			"to": 15.83,
 			"x": 603,
 			"y": 1977,
 			"scale": 1.5
 		},
 		{
-			"from": 15.03,
-			"to": 22.137,
+			"from": 15.83,
+			"to": 22.937,
 			"x": 603,
 			"y": 829,
 			"scale": 1.5
@@ -155,19 +163,19 @@
 			"src": "demo/rec/hp/norm/sk-n5.mp3"
 		},
 		{
-			"t": 7.73,
+			"t": 8.03,
 			"src": "demo/rec/hp/norm/sk-app-q.mp3"
 		},
 		{
-			"t": 15.38,
+			"t": 16.18,
 			"src": "demo/rec/hp/norm/sk-app-ok.mp3"
 		},
 		{
-			"t": 17.87,
+			"t": 18.67,
 			"src": "demo/rec/hp/norm/sk-n6.mp3"
 		},
 		{
-			"t": 13.18,
+			"t": 13.68,
 			"src": "demo/rec/hp/norm/sk-player.mp3"
 		}
 	],
@@ -245,7 +253,7 @@
 		},
 		{
 			"from": 5.79,
-			"to": 7.43,
+			"to": 7.63,
 			"text": "máš kvíz hotový.",
 			"kind": "said",
 			"words": [
@@ -265,137 +273,137 @@
 			"karaoke": true
 		},
 		{
-			"from": 7.73,
-			"to": 9.69,
+			"from": 8.03,
+			"to": 9.99,
 			"text": "Ktorý obyčajný vták môže",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Ktorý",
-					"t": 7.73
+					"t": 8.03
 				},
 				{
 					"w": "obyčajný",
-					"t": 8.13
+					"t": 8.43
 				},
 				{
 					"w": "vták",
-					"t": 8.89
+					"t": 9.19
 				},
 				{
 					"w": "môže",
-					"t": 9.33
+					"t": 9.63
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 9.69,
-			"to": 12.23,
+			"from": 9.99,
+			"to": 12.53,
 			"text": "zabiť baziliska vlastným hlasom?",
 			"kind": "said",
 			"words": [
 				{
 					"w": "zabiť",
-					"t": 9.69
+					"t": 9.99
 				},
 				{
 					"w": "baziliska",
-					"t": 10.05
+					"t": 10.35
 				},
 				{
 					"w": "vlastným",
-					"t": 10.73
+					"t": 11.03
 				},
 				{
 					"w": "hlasom?",
-					"t": 11.33
+					"t": 11.63
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 14.12,
-			"to": 15.13,
+			"from": 14.62,
+			"to": 15.797,
 			"text": "Kohút!",
 			"kind": "player"
 		},
 		{
-			"from": 15.38,
-			"to": 16.42,
+			"from": 16.18,
+			"to": 17.22,
 			"text": "Správne!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Správne!",
-					"t": 15.38
+					"t": 16.18
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 16.42,
-			"to": 17.82,
+			"from": 17.22,
+			"to": 18.62,
 			"text": "Je to kohút.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Je",
-					"t": 16.42
+					"t": 17.22
 				},
 				{
 					"w": "to",
-					"t": 16.58
+					"t": 17.38
 				},
 				{
 					"w": "kohút.",
-					"t": 16.78
+					"t": 17.58
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 17.87,
-			"to": 19.79,
+			"from": 18.67,
+			"to": 20.59,
 			"text": "Ku každej odpovedi dostaneš",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Ku",
-					"t": 17.87
+					"t": 18.67
 				},
 				{
 					"w": "každej",
-					"t": 17.99
+					"t": 18.79
 				},
 				{
 					"w": "odpovedi",
-					"t": 18.43
+					"t": 19.23
 				},
 				{
 					"w": "dostaneš",
-					"t": 19.15
+					"t": 19.95
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 19.79,
-			"to": 22.137,
+			"from": 20.59,
+			"to": 22.937,
 			"text": "aj krátke vysvetlenie.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "aj",
-					"t": 19.79
+					"t": 20.59
 				},
 				{
 					"w": "krátke",
-					"t": 19.95
+					"t": 20.75
 				},
 				{
 					"w": "vysvetlenie.",
-					"t": 20.39
+					"t": 21.19
 				}
 			],
 			"karaoke": true
@@ -414,8 +422,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 5.58,
-			"to": 7.38,
+			"from": 5.99,
+			"to": 7.68,
 			"x": 350,
 			"y": 488,
 			"w": 492,
@@ -425,8 +433,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 7.68,
-			"to": 9.64,
+			"from": 7.98,
+			"to": 9.94,
 			"x": 92,
 			"y": 1716,
 			"w": 883,
@@ -436,8 +444,8 @@
 			"hold": true
 		},
 		{
-			"from": 9.64,
-			"to": 11.28,
+			"from": 9.94,
+			"to": 11.58,
 			"x": 89,
 			"y": 1817,
 			"w": 802,
@@ -453,8 +461,8 @@
 			"hold": true
 		},
 		{
-			"from": 11.28,
-			"to": 12.13,
+			"from": 11.58,
+			"to": 12.43,
 			"x": 90,
 			"y": 1918,
 			"w": 309,
@@ -469,8 +477,8 @@
 			}
 		},
 		{
-			"from": 13.18,
-			"to": 14.98,
+			"from": 13.68,
+			"to": 15.78,
 			"x": 38,
 			"y": 2134,
 			"w": 1130,
@@ -480,8 +488,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 15.33,
-			"to": 17.82,
+			"from": 16.13,
+			"to": 18.62,
 			"x": 91,
 			"y": 689,
 			"w": 346,
@@ -491,8 +499,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 17.87,
-			"to": 22.137,
+			"from": 18.67,
+			"to": 22.937,
 			"x": 93,
 			"y": 1063,
 			"w": 908,

@@ -4,7 +4,8 @@
       {
         "appIDs": ["KAGWHPZZFQ.com.missinghue.hangs"],
         "components": [
-          { "/": "/join", "?": { "t": "?*" }, "comment": "Hra spolu invite (#212): QR code and shared link" }
+          { "/": "/join", "?": { "t": "?*" }, "comment": "Hra spolu invite (#212): QR code and shared link" },
+          { "/": "/play", "?": { "s": "?*" }, "comment": "Quiz shared by link (#232)" }
         ]
       }
     ]

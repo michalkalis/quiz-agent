@@ -18,8 +18,9 @@ Marks = List[Optional[bool]]
 
 def known_in_session(session: QuizSession, subject_id: str) -> Dict[str, bool]:
     """question_id → knew it, for ``subject_id`` in this session. A game
-    together grades on ``room_game`` (a question nobody answered for this
-    player counts as not known); a solo session on ``question_results``."""
+    together grades on ``room_game``: a question served before the player
+    joined was not played (left out → null), one they did not answer counts
+    as not known. A solo session grades on ``question_results``."""
     if session.room_game is not None:
         player = next(
             (p for p in session.participants if p.user_id == subject_id), None
@@ -28,7 +29,7 @@ def known_in_session(session: QuizSession, subject_id: str) -> Dict[str, bool]:
             return {}
         known = {}
         for rnd in session.room_game.rounds:
-            if not rnd.closed:
+            if not rnd.closed or rnd.served_at < player.joined_at:
                 continue
             answer = rnd.answers.get(player.participant_id)
             known[rnd.question_id] = bool(

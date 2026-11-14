@@ -11,7 +11,7 @@ question; a question a player was never served is "not played", not "wrong".
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from quiz_shared.models.participant import Participant
@@ -125,13 +125,29 @@ async def test_marks_follow_the_shares_question_order(client, app):  # noqa: F81
     assert marks[False] == [True, None, True]
 
 
-async def test_a_game_together_marks_every_player(client, app):  # noqa: F811
-    token = await _round_share(client, app)
+async def _room_marks(client, app, token, guest_joined):  # noqa: F811
+    """A game together with three closed rounds served a minute apart; the
+    guest's marks as the guest sees them."""
     host = await _session(app, await _start(client, token, "host"))
-    now = datetime.now(timezone.utc)
+    start = datetime.now(timezone.utc) - timedelta(minutes=10)
     host.participants = [
-        Participant(participant_id="p-host", user_id="host", display_name="Host"),
-        Participant(participant_id="p-guest", user_id="guest", display_name="Guest"),
+        Participant(
+            participant_id="p-host",
+            user_id="host",
+            display_name="Host",
+            joined_at=start,
+        ),
+        Participant(
+            participant_id="p-guest",
+            user_id="guest",
+            display_name="Guest",
+            joined_at=start + guest_joined,
+        ),
+    ]
+    rounds = [
+        ("q1", {"p-host": "correct", "p-guest": "incorrect"}),
+        ("q2", {"p-host": "incorrect"}),  # guest did not answer
+        ("q3", {"p-host": "correct", "p-guest": "correct"}),
     ]
     host.room_game = RoomGame(
         rounds=[
@@ -140,27 +156,36 @@ async def test_a_game_together_marks_every_player(client, app):  # noqa: F811
                 number=i + 1,
                 question={},
                 is_open=True,
-                served_at=now,
+                served_at=start + timedelta(minutes=i + 1),
                 closed=True,
                 answers={
-                    pid: RoomAnswer(answer="x", at=now, result=result)
+                    pid: RoomAnswer(answer="x", at=start, result=result)
                     for pid, result in answers.items()
                 },
             )
-            for i, (qid, answers) in enumerate(
-                [
-                    ("q1", {"p-host": "correct", "p-guest": "incorrect"}),
-                    ("q2", {"p-host": "incorrect"}),  # guest did not answer
-                    ("q3", {"p-host": "correct", "p-guest": "correct"}),
-                ]
-            )
+            for i, (qid, answers) in enumerate(rounds)
         ]
     )
     await _finish(app, host, 2.0)
     players = (await _results(client, token, "guest")).json()["players"]
-    assert {p["name"]: p["marks"] for p in players if not p["is_sender"]} == {
-        "Guest": [False, False, True]
-    }
+    return next(p["marks"] for p in players if p["is_you"])
+
+
+async def test_a_game_together_marks_every_player(client, app):  # noqa: F811
+    token = await _round_share(client, app)
+    assert await _room_marks(client, app, token, timedelta(0)) == [
+        False,
+        False,
+        True,
+    ]
+
+
+async def test_a_late_joiner_has_no_mark_for_what_came_before(client, app):  # noqa: F811
+    """A ✗ on a question served before they joined would read as a wrong
+    answer they never gave."""
+    token = await _round_share(client, app)
+    late = timedelta(minutes=2, seconds=30)  # after q1 and q2 were served
+    assert await _room_marks(client, app, token, late) == [None, None, True]
 
 
 async def test_daily_marks_cover_the_whole_play(client, app):  # noqa: F811

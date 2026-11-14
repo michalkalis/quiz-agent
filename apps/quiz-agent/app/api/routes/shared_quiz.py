@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
+import re
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from pydantic import BaseModel, Field
 
 from ... import app_switches
@@ -38,6 +40,17 @@ Token = Path(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
 # Allowed on this one read-only route, not app-wide: the global CORS list
 # also allows credentials, which this page never needs.
 WEBSITE_ORIGIN = "https://trubbo.app"
+_PREVIEW_PATH = re.compile(r"^/api/v1/shared-quizzes/[^/]+$")
+
+
+async def website_cors(request: Request, call_next):
+    """HTTP middleware: the public preview answers the website with its
+    origin on every status (also 404 switch off, 422, 429), so the page can
+    tell an answer from a network error."""
+    response = await call_next(request)
+    if request.method == "GET" and _PREVIEW_PATH.match(request.url.path):
+        response.headers["Access-Control-Allow-Origin"] = WEBSITE_ORIGIN
+    return response
 
 
 class CreateShareRequest(BaseModel):
@@ -195,13 +208,11 @@ async def share_results(
 @limiter.limit("60/minute")
 async def share_preview(
     request: Request,
-    response: Response,
     token: str = Token,
     service: Optional[SharedQuizService] = Depends(get_shared_quiz),
 ) -> SharePreview:
     """Public and read-only, for the website's play page: what the link is,
-    never its questions or players."""
-    response.headers["Access-Control-Allow-Origin"] = WEBSITE_ORIGIN
+    never its questions or players. Its CORS header: ``website_cors``."""
     svc = await _service(request, service)
     try:
         share = await svc.preview(token)

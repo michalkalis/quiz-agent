@@ -126,6 +126,7 @@ async def app(db_sessionmaker, monkeypatch):
     app = FastAPI()
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.middleware("http")(share_routes.website_cors)
     app.include_router(share_routes.router, prefix="/api/v1")
     app.state.token_service = _tokens()
     app.state.auth_sessionmaker = db_sessionmaker
@@ -379,4 +380,13 @@ async def test_public_preview_shows_no_questions_and_needs_no_login(client, app)
         "title": None,
         "categories": ["music"],
     }
-    assert (await client.get("/api/v1/shared-quizzes/unknown-token")).status_code == 404
+    # Errors carry the origin too, so the page can tell a 404 (or the switch
+    # off, or a 429) from a network error.
+    missing = await client.get("/api/v1/shared-quizzes/unknown-token")
+    assert missing.status_code == 404
+    assert missing.headers["access-control-allow-origin"] == "https://trubbo.app"
+    # Only this public read: the logged-in routes stay on the global list.
+    results = await client.get(
+        f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
+    )
+    assert "access-control-allow-origin" not in results.headers

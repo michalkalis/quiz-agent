@@ -121,7 +121,7 @@
 	"segments": [
 		{
 			"from": 0,
-			"to": 28.797
+			"to": 21.677
 		}
 	],
 	"zooms": [
@@ -134,30 +134,30 @@
 		},
 		{
 			"from": 4.3,
-			"to": 7.66,
+			"to": 7.26,
 			"x": 603,
 			"y": 750,
 			"scale": 1.5
 		},
 		{
-			"from": 7.66,
-			"to": 20.26,
+			"from": 7.26,
+			"to": 13.14,
 			"x": 603,
-			"y": 1580,
+			"y": 1867,
 			"scale": 1.5
 		},
 		{
-			"from": 20.26,
-			"to": 22.41,
+			"from": 13.14,
+			"to": 15.29,
 			"x": 603,
-			"y": 1931,
+			"y": 1977,
 			"scale": 1.5
 		},
 		{
-			"from": 22.41,
-			"to": 28.797,
+			"from": 15.29,
+			"to": 21.677,
 			"x": 603,
-			"y": 1005,
+			"y": 837,
 			"scale": 1.5
 		}
 	],
@@ -171,19 +171,19 @@
 			"src": "demo/rec/hp/norm/en-n5.mp3"
 		},
 		{
-			"t": 7.91,
+			"t": 7.51,
 			"src": "demo/rec/hp/norm/en-app-q.mp3"
 		},
 		{
-			"t": 22.76,
+			"t": 15.64,
 			"src": "demo/rec/hp/norm/en-app-ok.mp3"
 		},
 		{
-			"t": 25.25,
+			"t": 18.13,
 			"src": "demo/rec/hp/norm/en-n6.mp3"
 		},
 		{
-			"t": 20.56,
+			"t": 13.44,
 			"src": "demo/rec/hp/norm/en-player.mp3"
 		}
 	],
@@ -248,8 +248,8 @@
 		},
 		{
 			"from": 4.45,
-			"to": 6.01,
-			"text": "In a few minutes you have",
+			"to": 5.57,
+			"text": "In a few minutes",
 			"kind": "said",
 			"words": [
 				{
@@ -262,304 +262,201 @@
 				},
 				{
 					"w": "few",
-					"t": 4.717
+					"t": 4.69
 				},
 				{
 					"w": "minutes",
 					"t": 5.01
-				},
-				{
-					"w": "you",
-					"t": 5.49
-				},
-				{
-					"w": "have",
-					"t": 5.65
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 6.01,
-			"to": 7.61,
-			"text": "ten questions ready.",
+			"from": 5.57,
+			"to": 7.21,
+			"text": "your quiz is ready.",
 			"kind": "said",
 			"words": [
 				{
-					"w": "ten",
-					"t": 6.01
+					"w": "your",
+					"t": 5.57
 				},
 				{
-					"w": "questions",
+					"w": "quiz",
+					"t": 5.97
+				},
+				{
+					"w": "is",
 					"t": 6.21
 				},
 				{
 					"w": "ready.",
-					"t": 6.77
+					"t": 6.37
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 7.91,
-			"to": 9.59,
-			"text": "In Harry Potter, someone",
+			"from": 7.51,
+			"to": 9.75,
+			"text": "In Harry Potter, which farm",
 			"kind": "said",
 			"words": [
 				{
 					"w": "In",
-					"t": 7.91
+					"t": 7.51
 				},
 				{
 					"w": "Harry",
-					"t": 8.07
+					"t": 7.67
 				},
 				{
 					"w": "Potter,",
-					"t": 8.39
-				},
-				{
-					"w": "someone",
-					"t": 9.19
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 9.59,
-			"to": 11.67,
-			"text": "keeps killing Hagrid's birds",
-			"kind": "said",
-			"words": [
-				{
-					"w": "keeps",
-					"t": 9.59
-				},
-				{
-					"w": "killing",
-					"t": 9.99
-				},
-				{
-					"w": "Hagrid's",
-					"t": 10.43
-				},
-				{
-					"w": "birds",
-					"t": 11.23
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 11.67,
-			"to": 12.95,
-			"text": "while the giant snake",
-			"kind": "said",
-			"words": [
-				{
-					"w": "while",
-					"t": 11.67
-				},
-				{
-					"w": "the",
-					"t": 11.87
-				},
-				{
-					"w": "giant",
-					"t": 12.07
-				},
-				{
-					"w": "snake",
-					"t": 12.47
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 12.95,
-			"to": 15.91,
-			"text": "called the basilisk is loose in the castle.",
-			"kind": "said",
-			"words": [
-				{
-					"w": "called",
-					"t": 12.95
-				},
-				{
-					"w": "the",
-					"t": 13.15
-				},
-				{
-					"w": "basilisk",
-					"t": 13.35
-				},
-				{
-					"w": "is",
-					"t": 14.07
-				},
-				{
-					"w": "loose",
-					"t": 14.31
-				},
-				{
-					"w": "in",
-					"t": 14.59
-				},
-				{
-					"w": "the",
-					"t": 14.71
-				},
-				{
-					"w": "castle.",
-					"t": 14.79
-				}
-			],
-			"karaoke": true
-		},
-		{
-			"from": 15.91,
-			"to": 17.59,
-			"text": "The sound of which farm animal",
-			"kind": "said",
-			"words": [
-				{
-					"w": "The",
-					"t": 15.91
-				},
-				{
-					"w": "sound",
-					"t": 16.07
-				},
-				{
-					"w": "of",
-					"t": 16.39
+					"t": 8.07
 				},
 				{
 					"w": "which",
-					"t": 16.55
+					"t": 8.95
 				},
 				{
 					"w": "farm",
-					"t": 16.87
-				},
-				{
-					"w": "animal",
-					"t": 17.19
+					"t": 9.27
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 17.59,
-			"to": 19.61,
-			"text": "is deadly to the basilisk?",
+			"from": 9.75,
+			"to": 10.63,
+			"text": "bird can kill the",
 			"kind": "said",
 			"words": [
 				{
-					"w": "is",
-					"t": 17.59
+					"w": "bird",
+					"t": 9.75
 				},
 				{
-					"w": "deadly",
-					"t": 17.91
+					"w": "can",
+					"t": 9.99
 				},
 				{
-					"w": "to",
-					"t": 18.43
+					"w": "kill",
+					"t": 10.23
 				},
 				{
 					"w": "the",
-					"t": 18.51
-				},
-				{
-					"w": "basilisk?",
-					"t": 18.63
+					"t": 10.43
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 21.087,
-			"to": 22.51,
+			"from": 10.63,
+			"to": 12.49,
+			"text": "basilisk with its call?",
+			"kind": "said",
+			"words": [
+				{
+					"w": "basilisk",
+					"t": 10.63
+				},
+				{
+					"w": "with",
+					"t": 11.31
+				},
+				{
+					"w": "its",
+					"t": 11.43
+				},
+				{
+					"w": "call?",
+					"t": 11.67
+				}
+			],
+			"karaoke": true
+		},
+		{
+			"from": 13.967,
+			"to": 15.39,
 			"text": "A rooster!",
 			"kind": "player"
 		},
 		{
-			"from": 22.76,
-			"to": 23.72,
+			"from": 15.64,
+			"to": 16.6,
 			"text": "Correct!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Correct!",
-					"t": 22.76
+					"t": 15.64
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 23.72,
-			"to": 25.2,
+			"from": 16.6,
+			"to": 18.08,
 			"text": "It's the rooster.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "It's",
-					"t": 23.72
+					"t": 16.6
 				},
 				{
 					"w": "the",
-					"t": 23.92
+					"t": 16.8
 				},
 				{
 					"w": "rooster.",
-					"t": 24.12
+					"t": 17.0
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 25.25,
-			"to": 26.53,
+			"from": 18.13,
+			"to": 19.41,
 			"text": "Every answer comes",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Every",
-					"t": 25.25
+					"t": 18.13
 				},
 				{
 					"w": "answer",
-					"t": 25.65
+					"t": 18.53
 				},
 				{
 					"w": "comes",
-					"t": 26.21
+					"t": 19.09
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 26.53,
-			"to": 28.797,
+			"from": 19.41,
+			"to": 21.677,
 			"text": "with a short explanation.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "with",
-					"t": 26.53
+					"t": 19.41
 				},
 				{
 					"w": "a",
-					"t": 26.65
+					"t": 19.53
 				},
 				{
 					"w": "short",
-					"t": 26.77
+					"t": 19.65
 				},
 				{
 					"w": "explanation.",
-					"t": 27.09
+					"t": 19.97
 				}
 			],
 			"karaoke": true
@@ -579,7 +476,7 @@
 		},
 		{
 			"from": 5.2,
-			"to": 7.56,
+			"to": 7.16,
 			"x": 350,
 			"y": 487,
 			"w": 491,
@@ -589,146 +486,78 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 7.86,
-			"to": 9.54,
-			"x": 102,
-			"y": 1200,
-			"w": 925,
-			"h": 107,
+			"from": 7.46,
+			"to": 9.7,
+			"x": 92,
+			"y": 1718,
+			"w": 901,
+			"h": 98,
 			"style": "band",
 			"alpha": 1,
 			"hold": true
 		},
 		{
-			"from": 9.54,
-			"to": 11.62,
-			"x": 100,
-			"y": 1309,
-			"w": 965,
-			"h": 107,
+			"from": 9.7,
+			"to": 11.38,
+			"x": 90,
+			"y": 1818,
+			"w": 939,
+			"h": 98,
 			"style": "band",
 			"alpha": 1,
 			"prev": {
-				"x": 102,
-				"y": 1200,
-				"w": 925,
-				"h": 107
+				"x": 92,
+				"y": 1718,
+				"w": 901,
+				"h": 98
 			},
 			"hold": true
 		},
 		{
-			"from": 11.62,
-			"to": 12.9,
-			"x": 97,
-			"y": 1418,
-			"w": 784,
-			"h": 107,
+			"from": 11.38,
+			"to": 12.39,
+			"x": 90,
+			"y": 1918,
+			"w": 271,
+			"h": 98,
 			"style": "band",
 			"alpha": 1,
 			"prev": {
-				"x": 100,
-				"y": 1309,
-				"w": 965,
-				"h": 107
-			},
-			"hold": true
-		},
-		{
-			"from": 12.9,
-			"to": 14.54,
-			"x": 99,
-			"y": 1527,
-			"w": 954,
-			"h": 107,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 97,
-				"y": 1418,
-				"w": 784,
-				"h": 107
-			},
-			"hold": true
-		},
-		{
-			"from": 14.54,
-			"to": 16.5,
-			"x": 99,
-			"y": 1636,
-			"w": 968,
-			"h": 107,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 99,
-				"y": 1527,
-				"w": 954,
-				"h": 107
-			},
-			"hold": true
-		},
-		{
-			"from": 16.5,
-			"to": 17.86,
-			"x": 97,
-			"y": 1745,
-			"w": 770,
-			"h": 107,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 99,
-				"y": 1636,
-				"w": 968,
-				"h": 107
-			},
-			"hold": true
-		},
-		{
-			"from": 17.86,
-			"to": 19.51,
-			"x": 99,
-			"y": 1854,
-			"w": 830,
-			"h": 107,
-			"style": "band",
-			"alpha": 1,
-			"prev": {
-				"x": 97,
-				"y": 1745,
-				"w": 770,
-				"h": 107
+				"x": 90,
+				"y": 1818,
+				"w": 939,
+				"h": 98
 			}
 		},
 		{
-			"from": 20.56,
-			"to": 22.36,
-			"x": 43,
-			"y": 2088,
-			"w": 1117,
+			"from": 13.44,
+			"to": 15.24,
+			"x": 38,
+			"y": 2134,
+			"w": 1129,
 			"h": 186,
 			"r": 14,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 22.71,
-			"to": 25.2,
-			"x": 101,
-			"y": 865,
-			"w": 431,
-			"h": 199,
+			"from": 15.59,
+			"to": 18.08,
+			"x": 92,
+			"y": 697,
+			"w": 396,
+			"h": 181,
 			"r": 14,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 25.25,
-			"to": 28.797,
-			"x": 99,
-			"y": 1276,
-			"w": 1004,
-			"h": 384,
+			"from": 18.13,
+			"to": 21.677,
+			"x": 91,
+			"y": 1064,
+			"w": 1017,
+			"h": 301,
 			"r": 14,
 			"style": "glow",
 			"alpha": 0.6

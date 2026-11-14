@@ -62,7 +62,7 @@ final class SharedQuizShareModel: ObservableObject {
         network: NetworkServiceProtocol,
         source: Source?,
         token: String? = nil,
-        displayName: String? = PlayerNameStore().sharedQuizName(),
+        displayName: String? = PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName),
         previewTopic: @escaping (SharedQuizCreated) -> String? = { $0.title },
         present: @escaping (ShareTextItem) -> Void = { ShareSheetPresenter.present([$0]) }
     ) {

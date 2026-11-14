@@ -35,7 +35,7 @@ Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presn
 | Koniec kola | **1A**: nenápadná karta „Pošli kamarátovi“ pod skóre |
 | Denná výzva | Jedna verzia (text výsledku + odkaz). Náhľad v okne zdieľania (nadpis, formát) treba doladiť. |
 | Kamarát po inštalácii | **Menej výrazné ako 3A aj 3B:** jeden nenápadný riadok na Domove „Máš odkaz na kvíz od kamaráta?“ so systémovým tlačidlom Vložiť. Len pri **prvom spustení po inštalácii** a len keď schránka pravdepodobne obsahuje odkaz. Zmizne po zavretí alebo po prvom kvíze, takže väčšina hráčov ho neuvidí. Overiť priamo náš formát bez upozornenia iOS nejde, iOS bez opýtania prezradí len „je tam asi odkaz“. |
-| Mená | Rovnaké meno ako v hre spolu (automatické „Rýchly gepard“, dá sa premenovať). Žiadny profil navyše. |
+| Mená | Jedno meno pre hru spolu aj zdieľaný kvíz: napísané, inak krstné meno z Apple, inak automatické („Rýchly gepard“). Mení sa v Profile v riadku „Tvoje meno“ (founder 2026-11-14). |
 | Porovnanie | **4A** s ✓/✗ pri každej otázke. **Kto čo vidí:** pozvaný kamarát len seba a odosielateľa; odosielateľ s jedným kamarátom vás dvoch, s viacerými všetkých. Filtruje server, kamaráti sa navzájom nevidia. |
 | Balík v hre spolu | **5A**: výber „Čo hráme“ v miestnosti hostiteľa |
 | Text správy | Kolo **B**, denná výzva **B** (sk/cs/en na plátne) |
@@ -109,11 +109,11 @@ Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných d�
   - Vypínač.
   - Udalosti: kvíz zdieľaný, odkaz otvorený (appka alebo web), vložený zo schránky, zdieľaný kvíz dohraný.
 - [x] **232.2 Server: balík v hre spolu** (PR #786) — miestnosť prijme hotový balík. Udalosť: miestnosť s balíkom.
-- [ ] **232.2b Server: úprava porovnania** — ukladať ✓/✗ pri každej otázke (odosielateľ aj kamaráti) a poradie filtrovať podľa toho, kto sa pozerá (pravidlá v tabuľke výberu). Len doplnky v API.
-- [ ] **232.3 Web**
+- [x] **232.2b Server: úprava porovnania** (PR #792) — ukladať ✓/✗ pri každej otázke (odosielateľ aj kamaráti) a poradie filtrovať podľa toho, kto sa pozerá (pravidlá v tabuľke výberu). Len doplnky v API.
+- [x] **232.3 Web** (PR #793)
   - play.html v sk/cs/en (téma, tlačidlo App Store so zápisom do schránky, „ťukni ešte raz“).
   - Rozšírenie súboru pre univerzálne odkazy.
-- [ ] **232.4 Appka**
+- [x] **232.4 Appka** (PR #794)
   - „Pošli kamarátovi“ (koniec kola, denná výzva, balík).
   - Otvorenie odkazu.
   - Tlačidlo „Máš kvíz od kamaráta?“ pri prvom spustení.
@@ -121,6 +121,7 @@ Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných d�
   - Výber hotového balíka v hre spolu.
   - Texty sk/cs/en cez xcstrings.
   - Pixel snímky.
+- [~] **232.4b Appka: meno hráča** — krstné meno z Apple ako predvolené, riadok „Tvoje meno“ v Profile, udalosť zmeny mena.
 - [ ] **232.5 Texty na schválenie** — správa pri zdieľaní, web a appka v artefakte. Podľa copy-style: rodovo neutrálne, nie ako AI, bez cien.
 - [ ] **232.6 Test foundera** na TestFlight builde (keď si ho vyžiada): dva reálne iPhony, kamarát s appkou aj s čerstvou inštaláciou, kolo, denná výzva, balík, balík v hre spolu. Potom zapnúť vypínač.
 

@@ -1,5 +1,9 @@
 # texts
 PROFILE
+Your name
+Michal
+Your name
+Michal
 Your M10
 In total
 312 questions
@@ -13,5 +17,6 @@ mostly on Sundays
 # identifiers
 profile.settings
 profile.account
+profile.name
 profile.recap
 profile.allStats

@@ -92,6 +92,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "recap_shared": frozenset({"kind"}),
     # #216.2: the Together tab came on screen.
     "together_opened": frozenset(),
+    # #232: the player changed their name in the Profile (the name friends see
+    # in a game together and in a shared quiz).
+    "player_name_changed": frozenset(),
     # #232: the first-launch "quiz from a friend?" paste button was used
     # (outcome = opened | not_a_link).
     "shared_quiz_pasted": frozenset({"outcome"}),

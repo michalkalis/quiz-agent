@@ -13,6 +13,7 @@ import SwiftUI
 
 struct ProfileView<Plan: View>: View {
     @ObservedObject var viewModel: ProfileViewModel
+    @State private var isEditingName = false
     /// The plan from /usage, nil until it has loaded.
     var isPlus: Bool?
     /// #216.3: "your plan", moved here from Home; the caller owns its model.
@@ -27,6 +28,8 @@ struct ProfileView<Plan: View>: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("profile.account")
+
+                nameRow
 
                 plan()
 
@@ -49,6 +52,10 @@ struct ProfileView<Plan: View>: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         // Also on the way back from Settings: a sign-in there renames the row.
         .onAppear(perform: viewModel.appeared)
+        .sheet(isPresented: $isEditingName) {
+            RoomNameSheet(title: "Your name", initialName: viewModel.playerName, onSave: saveName)
+                .presentationDetents([.height(Metrics.nameSheetHeight)])
+        }
     }
 
     private var header: some View {
@@ -75,6 +82,24 @@ struct ProfileView<Plan: View>: View {
         .padding(.top, Theme.Hangs.Spacing.xs)
     }
 
+    // MARK: - Your name
+
+    /// #232 (founder 2026-11-14): the name friends see in a game together and
+    /// in a shared quiz.
+    private var nameRow: some View {
+        HangsCard {
+            HangsConfigRow(label: "Your name", value: viewModel.playerName) {
+                isEditingName = true
+            }
+            .accessibilityIdentifier("profile.name")
+        }
+    }
+
+    private func saveName(_ name: String) {
+        viewModel.rename(to: name)
+        isEditingName = false
+    }
+
     // MARK: - All stats
 
     private var allStatsRow: some View {
@@ -86,6 +111,11 @@ struct ProfileView<Plan: View>: View {
             .accessibilityIdentifier("profile.allStats")
         }
     }
+}
+
+private enum Metrics {
+    /// The name sheet's height, as in a game together.
+    static let nameSheetHeight: CGFloat = 300
 }
 
 extension ProfileView where Plan == EmptyView {

@@ -161,6 +161,35 @@ struct ProfileViewModelTests {
         #expect(signedIn.account == .init(name: "Michal", isSignedIn: true))
     }
 
+    @Test("founder 2026-11-14: \"Your name\" starts as the Apple first name; a new name is kept for games and shared quizzes")
+    func yourNameRow() throws {
+        let defaults = try #require(UserDefaults(suiteName: "ProfileViewModelTests.yourName"))
+        defaults.removePersistentDomain(forName: "ProfileViewModelTests.yourName")
+        let names = PlayerNameStore(defaults: defaults)
+        let analytics = MockAnalyticsClient()
+        let model = ProfileViewModel(
+            service: MockPlayerStatsService(),
+            tokenStore: StubTokenStore(AuthTokens(
+                accessToken: "a", refreshToken: "r", anonId: "user",
+                accountName: "Michal Kalis", accountEmail: nil, appleUserId: "apple"
+            )),
+            nameStore: names,
+            analytics: analytics
+        )
+        model.appeared()
+        #expect(model.playerName == "Michal", "friends see the first name, not the surname")
+
+        model.rename(to: "  Miško ")
+
+        #expect(model.playerName == "Miško")
+        #expect(names.chosenName == "Miško", "a game together and a shared quiz read the same stored name")
+        #expect(analytics.events == [.playerNameChanged])
+
+        model.rename(to: "   ")
+        #expect(model.playerName == "Miško", "an empty name is ignored")
+        #expect(analytics.events == [.playerNameChanged])
+    }
+
     @Test("opening the tab is measured, split by signed in or not")
     func tabOpenedIsTracked() {
         let analytics = MockAnalyticsClient()

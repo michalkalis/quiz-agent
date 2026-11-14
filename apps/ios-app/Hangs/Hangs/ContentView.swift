@@ -434,7 +434,11 @@ struct ContentView: View {
             openPendingInvite()
             openPendingSharedQuiz()
         }
-        // #232: a link that cannot be played (already played, gone).
+        // #232: the comparison of the sender's own link or an already played one.
+        .sheet(item: $viewModel.sharedQuizComparison) { play in
+            SharedQuizResultsSheet(network: viewModel.networkService, token: play.token)
+        }
+        // #232: a link that cannot be played (gone, nothing playable).
         .alert(
             viewModel.sharedQuizNotice ?? "",
             isPresented: Binding(

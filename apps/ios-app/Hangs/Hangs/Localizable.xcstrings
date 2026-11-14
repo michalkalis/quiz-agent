@@ -8486,6 +8486,23 @@
         }
       }
     },
+    "Quiz results" : {
+      "comment" : "#232: title of the comparison sheet a shared quiz link opens",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Výsledky kvízu"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Výsledky kvízu"
+          }
+        }
+      }
+    },
     "Quiz topic" : {
       "comment" : "Section label above the custom-pack topic field",
       "localizations" : {
@@ -10746,22 +10763,22 @@
         }
       }
     },
-    "They play the same questions and you compare." : {
+    "They play the same questions. Open your link to see the results." : {
+      "comment" : "#232: under \"Send to a friend\" on the round end; opening the own link later shows the comparison",
       "localizations" : {
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zahrá si tie isté otázky a porovnáte sa."
+            "value" : "Zahrá si tie isté otázky. Výsledky uvidíš, keď si otvoríš svoj odkaz."
           }
         },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zahraje si stejné otázky a porovnáte se."
+            "value" : "Zahraje si stejné otázky. Výsledky uvidíš, až si otevřeš svůj odkaz."
           }
         }
-      },
-      "comment" : "#232: under \"Send to a friend\" on the round end"
+      }
     },
     "This quiz can't be played any more." : {
       "localizations" : {

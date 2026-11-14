@@ -3,8 +3,9 @@
 //  Hangs
 //
 //  #232 (founder 2026-11-14, variant 1A): a quiet card under the round's
-//  score: "Send to a friend", what the friend gets, a chevron. The tap makes
-//  the link, then opens the share sheet; the card spins meanwhile.
+//  score: "Send to a friend", what the friend gets and where the results
+//  are later (the sender's own link opens the comparison), a chevron. The
+//  tap makes the link, then opens the share sheet; the card spins meanwhile.
 //
 
 import SwiftUI
@@ -64,7 +65,7 @@ struct SharedQuizSendCard: View {
         if let failureMessage {
             Text(verbatim: failureMessage)
         } else {
-            Text("They play the same questions and you compare.")
+            Text("They play the same questions. Open your link to see the results.")
         }
     }
 }

@@ -162,6 +162,9 @@ final class QuizViewModel: ObservableObject {
     /// #232: a link that could not be played (already played, gone); Home
     /// shows it once. The start never reaches the error screen for it.
     @Published var sharedQuizNotice: String?
+    /// #232: the comparison of a link this player cannot play again (the
+    /// sender's own link, a friend's already played one); Home shows it.
+    @Published var sharedQuizComparison: SharedQuizPlay?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -1299,7 +1302,7 @@ final class QuizViewModel: ObservableObject {
             // pack plays once) or gone: Home says so, no error screen.
             if let shared {
                 let result = try await withTransientStartRetry {
-                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().shownName)
+                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().sharedQuizName())
                 }
                 activeShare?.kind = result.kind
                 guard let session = result.session else {
@@ -1455,9 +1458,13 @@ final class QuizViewModel: ObservableObject {
                 return
             }
 
-            if shared != nil, case let .sharedQuizUnavailable(reason)? = error as? NetworkError {
+            if let shared, case let .sharedQuizUnavailable(reason)? = error as? NetworkError {
                 activeShare = nil
-                sharedQuizNotice = reason.message
+                if reason == .alreadyPlayed {
+                    sharedQuizComparison = SharedQuizPlay(token: shared)
+                } else {
+                    sharedQuizNotice = reason.message
+                }
                 transition(to: .idle)
                 return
             }

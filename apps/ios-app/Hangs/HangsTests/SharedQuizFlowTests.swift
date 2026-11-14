@@ -97,7 +97,7 @@ struct SharedQuizFlowTests {
         vm.taskBag.cancelAll()
     }
 
-    @Test("an already played link lands on Home with the reason")
+    @Test("an already played link shows its comparison on Home, no error, no second attempt")
     func friendAlreadyPlayed() async {
         let (vm, network) = makeViewModel(enabled: true) {
             $0.startSharedQuizError = NetworkError.sharedQuizUnavailable(.alreadyPlayed)
@@ -107,8 +107,51 @@ struct SharedQuizFlowTests {
 
         #expect(vm.quizState == .idle)
         #expect(vm.activeShare == nil)
-        #expect(vm.sharedQuizNotice == SharedQuizUnavailable.alreadyPlayed.message)
+        #expect(vm.sharedQuizComparison == SharedQuizPlay(token: created.token))
+        #expect(vm.sharedQuizNotice == nil)
         #expect(network.capturedStartQuizExcludedIds == nil, "nothing may be played twice")
+    }
+
+    @Test("a gone link lands on Home with the reason")
+    func goneLink() async {
+        let (vm, _) = makeViewModel(enabled: true) {
+            $0.startSharedQuizError = NetworkError.sharedQuizUnavailable(.notFound)
+        }
+
+        await vm.beginSharedQuiz(token: created.token).value
+
+        #expect(vm.quizState == .idle)
+        #expect(vm.sharedQuizComparison == nil)
+        #expect(vm.sharedQuizNotice == SharedQuizUnavailable.notFound.message)
+    }
+
+    @Test("the sender's own link opens the comparison and never starts the quiz again")
+    func ownLinkCompares() async {
+        let (vm, network) = makeViewModel(enabled: true) {
+            $0.stubbedShareResults = SharedQuizResults(
+                kind: "round", language: "sk", title: nil, categories: [], questionCount: 10,
+                players: [
+                    SharedQuizPlayer(name: "Jana", score: 8, total: 10),
+                    SharedQuizPlayer(name: "Michal", score: 7, total: 10, isSender: true, isYou: true),
+                ]
+            )
+        }
+
+        await vm.beginSharedQuiz(token: created.token).value
+
+        #expect(vm.sharedQuizComparison == SharedQuizPlay(token: created.token))
+        #expect(network.startSharedQuizCalls.isEmpty, "the sender's own link must not start a new round")
+        #expect(vm.quizState == .idle)
+    }
+
+    @Test("without a typed name one automatic name is kept, so one person reads the same in every comparison")
+    func automaticNameKept() throws {
+        let names = PlayerNameStore(defaults: try #require(UserDefaults(suiteName: "shared-name-\(UUID().uuidString)")))
+        let first = names.sharedQuizName(languageCode: "sk")
+        #expect(names.sharedQuizName(languageCode: "sk") == first)
+        #expect(names.chosenName == nil, "an automatic name is not a typed one: a host is still asked")
+        names.save("Zuzka")
+        #expect(names.sharedQuizName() == "Zuzka", "a typed name wins")
     }
 
     // MARK: - Sending

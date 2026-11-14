@@ -42,6 +42,8 @@ final class SharedQuizShareModel: ObservableObject {
     @Published private(set) var status: Status = .idle
     @Published private(set) var token: String?
     @Published private(set) var rows: [Row] = []
+    /// The comparison could not be read (the link is gone or not this player's).
+    @Published private(set) var loadFailed = false
 
     private let network: NetworkServiceProtocol
     private let source: Source?
@@ -60,7 +62,7 @@ final class SharedQuizShareModel: ObservableObject {
         network: NetworkServiceProtocol,
         source: Source?,
         token: String? = nil,
-        displayName: String? = PlayerNameStore().shownName,
+        displayName: String? = PlayerNameStore().sharedQuizName(),
         previewTopic: @escaping (SharedQuizCreated) -> String? = { $0.title },
         present: @escaping (ShareTextItem) -> Void = { ShareSheetPresenter.present([$0]) }
     ) {
@@ -134,7 +136,9 @@ final class SharedQuizShareModel: ObservableObject {
             let results = try await network.sharedQuizResults(token: token)
             guard !Task.isCancelled else { return }
             rows = Self.rows(from: results.players)
+            loadFailed = false
         } catch {
+            loadFailed = rows.isEmpty
             // The comparison is extra: the screen keeps what it had.
             Logger.network.info("Shared quiz results skipped: \(error.localizedDescription, privacy: .public)")
         }

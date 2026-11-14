@@ -8,8 +8,9 @@
 
 import Foundation
 
-nonisolated struct SharedQuizPlay: Equatable, Sendable {
+nonisolated struct SharedQuizPlay: Equatable, Sendable, Identifiable {
     let token: String
+    var id: String { token }
     /// round | daily | pack, once the server has started it.
     var kind: String?
 }

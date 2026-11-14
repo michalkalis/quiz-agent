@@ -10,10 +10,31 @@ import Foundation
 
 extension QuizViewModel {
     /// A friend's link (tapped, or pasted on the first launch): the shared
-    /// quiz starts right away. The mic is asked for as at every start.
+    /// quiz starts right away. The mic is asked for as at every start. The
+    /// sender's own link opens its comparison instead: that is where the
+    /// sender sees how friends did, after leaving the round end.
     @discardableResult
     func beginSharedQuiz(token: String) -> Task<Void, Never> {
-        beginQuizStart(shared: token)
+        let task = Task {
+            if await isOwnSharedQuiz(token: token) {
+                sharedQuizComparison = SharedQuizPlay(token: token)
+                return
+            }
+            await startNewQuiz(shared: token)
+        }
+        taskBag.add(task, key: .quizStart)
+        return task
+    }
+
+    /// The server lists the viewer as the link's sender. Any failure (a
+    /// friend's first open is a 404 here) means: play it.
+    private func isOwnSharedQuiz(token: String) async -> Bool {
+        guard let results = try? await networkService.sharedQuizResults(token: token) else { return false }
+        return results.players.contains { $0.isSender && $0.isYou }
+    }
+
+    func dismissSharedQuizComparison() {
+        sharedQuizComparison = nil
     }
 
     func dismissSharedQuizNotice() {

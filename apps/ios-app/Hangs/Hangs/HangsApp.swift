@@ -24,6 +24,7 @@ struct HangsApp: App {
         #endif
         #if DEBUG
             UITestSupport.roomInvites = appState.roomInvites
+            UITestSupport.sharedQuizInbox = appState.sharedQuizInbox
         #endif
 
         // Skip Sentry on simulator — only real-device debug + release builds report.

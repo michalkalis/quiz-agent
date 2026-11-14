@@ -39,6 +39,7 @@ from asc_audit import (
     BUNDLE_ID,
     HEADERS,
     VERSIONS,
+    exact_bundle,
     get,
     latest_version,
     prices_with_points,
@@ -588,7 +589,7 @@ def main() -> int:
     beta = BUNDLE_ID == BETA_BUNDLE_ID
     prefix = args.product_prefix if args.product_prefix is not None else ("beta." if beta else "")
     print(f"app {BUNDLE_ID}, product id prefix '{prefix}'")
-    app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
+    app_id = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)["data"][0]["id"]
     source = json.loads((FL / "store_copy.json").read_text())
     copy = prefixed(source, prefix)
     steps = args.steps.split(",")
@@ -609,7 +610,7 @@ def main() -> int:
     if "iap-create" in steps:
         step_iap_create(app_id, copy)
     if "iap-mirror" in steps:
-        live_id = get("/apps", **{"filter[bundleId]": mirror.LIVE_BUNDLE_ID})["data"][0]["id"]
+        live_id = exact_bundle(get("/apps", **{"filter[bundleId]": mirror.LIVE_BUNDLE_ID}), mirror.LIVE_BUNDLE_ID)["data"][0]["id"]
         mirror.step_iap_mirror(sys.modules[__name__], app_id, live_id, prefix, source)
     if "iap" in steps:
         step_iap(app_id, copy)

@@ -92,9 +92,16 @@ def prices_with_points(payload, rel_point: str):
     return out
 
 
+def exact_bundle(resp: dict, bundle_id: str) -> dict:
+    """`filter[bundleId]` also matches longer IDs (com.x.hangs → com.x.hangs.beta, #234), so keep only the exact app."""
+    if isinstance(resp.get("data"), list):
+        resp["data"] = [a for a in resp["data"] if a.get("attributes", {}).get("bundleId") == bundle_id]
+    return resp
+
+
 def main() -> int:
     report: dict = {}
-    apps = get("/apps", **{"filter[bundleId]": BUNDLE_ID, "fields[apps]": "name,bundleId,primaryLocale,sku,contentRightsDeclaration"})
+    apps = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID, "fields[apps]": "name,bundleId,primaryLocale,sku,contentRightsDeclaration"}), BUNDLE_ID)
     if "_error" in apps or not apps.get("data"):
         print(json.dumps({"apps": apps}, indent=1))
         return 1

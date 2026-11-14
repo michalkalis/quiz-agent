@@ -21,7 +21,7 @@ import sys
 import asc_iap_mirror as mirror
 import asc_store_upload as up
 import requests
-from asc_audit import BASE, BUNDLE_ID, get, latest_version
+from asc_audit import BASE, BUNDLE_ID, exact_bundle, get, latest_version
 
 V2 = BASE.replace("/v1", "/v2")
 SHOTS = up.FL / "iap_review"
@@ -38,7 +38,7 @@ def main() -> int:
     args = ap.parse_args()
     up.APPLY = args.apply
     print("APPLY" if up.APPLY else "DRY RUN (pass --apply to write)")
-    app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
+    app_id = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)["data"][0]["id"]
     wanted = set(json.loads((up.FL / "store_copy.json").read_text())["in_app_purchases"]) - {"subscription_group"}
 
     print("iap review screenshots")

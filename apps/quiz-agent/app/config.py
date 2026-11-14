@@ -21,6 +21,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
+from quiz_shared.store_ids import parse_id_list
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,8 @@ class Settings(BaseSettings):
     # (TestFlight/App Store), or "both" (one backend serves both build
     # distributions without flipping a flag). It is set via the
     # `APP_ATTEST_PRODUCTION` env var (see `_attest_environment`).
+    # #234: APP_ATTEST_APP_ID is comma-separated (App Store app first, then the
+    # TestFlight-only beta app); one value = one app, as before.
     attest_challenge_ttl_seconds: int = 300  # 5 min — one attest/assert round-trip
     app_attest_required: bool = False
     app_attest_app_id: Optional[str] = None
@@ -119,6 +122,9 @@ class Settings(BaseSettings):
     # `…_team_id` form the client_secret header.kid / issuer. `apple_token_enc_key`
     # is a Fernet key (one `Fernet.generate_key()`) for encrypting Apple's refresh
     # token at rest (F1/F2).
+    # #234: APPLE_SIGNIN_CLIENT_ID is comma-separated — the App Store app first
+    # (primary), then the beta app. Any entry is an accepted id_token `aud`; the
+    # client_secret `sub` is always the client id that issued the token.
     # #101 prod/sandbox separation: which RevenueCat purchase environment(s)
     # this deployment ingests + honors — comma-separated, e.g.
     # "PRODUCTION,SANDBOX" on prod (TestFlight + App Review buy in sandbox).
@@ -281,6 +287,16 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_rc_environment(cls, value: object) -> Optional[frozenset[str]]:
         return _rc_environment(None if value is None else str(value))
+
+    @property
+    def apple_signin_client_ids(self) -> tuple[str, ...]:
+        """`APPLE_SIGNIN_CLIENT_ID` as an ordered tuple; first = primary."""
+        return parse_id_list(self.apple_signin_client_id)
+
+    @property
+    def app_attest_app_ids(self) -> tuple[str, ...]:
+        """`APP_ATTEST_APP_ID` as an ordered tuple; first = primary."""
+        return parse_id_list(self.app_attest_app_id)
 
 
 def get_settings() -> Settings:

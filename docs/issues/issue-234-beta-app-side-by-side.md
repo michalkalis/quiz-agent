@@ -107,3 +107,4 @@ Apple ani RevenueCat nič neúčtujú (beta nákupy sú sandbox). Práca: 6 krok
 ## Stav
 
 - 2026-11-12: plán podľa rozhodnutí foundera; `/design-soundness` SOUND 0,78 bez vád, 5 upozornení zapracovaných (zoskupenie App ID, väzba refresh tokenu na appku, všetky vstupy ID produktov, podmienka `BETA` len v Prod, spoločný platený stav).
+- 2026-11-14: 234.1 server hotový v PR (nenasadené): zoznamy `APP_BUNDLE_ID` / `APPLE_SIGNIN_CLIENT_ID` / `APP_ATTEST_APP_ID`, `quiz_shared.store_ids.canonical_product_id` (StoreKit podľa bundle, RevenueCat podľa Sandbox), stĺpec `users.apple_refresh_token_client_id`. Po nasadení nastaviť hodnoty na Hetzneri (viď PR).

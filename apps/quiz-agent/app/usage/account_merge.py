@@ -68,12 +68,15 @@ async def upsert_apple_user(
     *,
     apple_sub: str,
     encrypted_refresh: Optional[bytes],
+    refresh_client_id: Optional[str] = None,
 ) -> User:
     """Find the account for ``apple_sub`` or create it.
 
     Never persists email or name (GDPR data minimisation, founder 2026-10-07):
     nothing uses them, so they are deliberately not parameters. The encrypted
-    Apple refresh token is refreshed whenever Apple returns a new one."""
+    Apple refresh token is refreshed whenever Apple returns a new one, together
+    with ``refresh_client_id``, the app that obtained it (#234): the revoke at
+    account deletion must authenticate as that same client."""
     user = (
         await session.execute(select(User).where(User.apple_sub == apple_sub))
     ).scalar_one_or_none()
@@ -87,6 +90,9 @@ async def upsert_apple_user(
                 user = User(
                     apple_sub=apple_sub,
                     apple_refresh_token_encrypted=encrypted_refresh,
+                    apple_refresh_token_client_id=(
+                        refresh_client_id if encrypted_refresh is not None else None
+                    ),
                 )
                 session.add(user)
                 await session.flush()  # populate user.id for merge + token issue
@@ -97,6 +103,7 @@ async def upsert_apple_user(
             ).scalar_one()
     if encrypted_refresh is not None:
         user.apple_refresh_token_encrypted = encrypted_refresh
+        user.apple_refresh_token_client_id = refresh_client_id
     return user
 
 

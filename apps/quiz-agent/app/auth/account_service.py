@@ -364,8 +364,12 @@ async def revoke_apple_grant(
     cipher: Optional[AppleTokenCipher],
     encrypted: Optional[bytes],
     user_id: str,
+    *,
+    client_id: Optional[str] = None,
 ) -> None:
     """Best-effort Apple token revoke for a just-deleted account (F4).
+
+    ``client_id`` is the app that obtained the token (#234); None = primary.
 
     Never raises: the GDPR delete already committed, so neither a missing refresh
     token, an unconfigured client, a decrypt error, nor an Apple outage may undo it.
@@ -387,7 +391,7 @@ async def revoke_apple_grant(
         )
         return
     try:
-        await oauth_client.revoke(cipher.decrypt(encrypted))
+        await oauth_client.revoke(cipher.decrypt(encrypted), client_id=client_id)
         logger.info("Revoked Apple grant for deleted account %s.", user_id)
     except AppleOAuthError:
         logger.warning(

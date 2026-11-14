@@ -7,7 +7,8 @@ itself a JWS of the familiar transaction payload.
 
 Trust model: the request carries no shared secret, no bearer, no IP allowlist —
 the *only* thing that makes a refund notification believable is that its JWS
-chains to the configured Apple root and names our bundle. So both JWS layers go
+chains to the configured Apple root and names one of our bundles (#234:
+the App Store app or the beta app). So both JWS layers go
 through the very same `AppleJWSVerifier` the order path uses; nothing here
 parses an unverified payload.
 """
@@ -73,9 +74,9 @@ def decode_notification(
         raise JWSInvalid(f"not an App Store Server Notification payload: {exc}") from exc
 
     bundle_id = notification.data.bundle_id if notification.data else None
-    if bundle_id is not None and bundle_id != verifier.app_bundle_id:
+    if bundle_id is not None and bundle_id not in verifier.app_bundle_ids:
         raise JWSWrongBundle(
             f"notification bundle mismatch: bundleId={bundle_id!r}, "
-            f"expected {verifier.app_bundle_id!r}"
+            f"expected one of {list(verifier.app_bundle_ids)!r}"
         )
     return notification

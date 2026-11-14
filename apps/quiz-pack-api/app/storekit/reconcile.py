@@ -74,10 +74,35 @@ def private_key_pem(raw: str) -> str:
     return base64.b64decode(raw).decode()
 
 
+def server_api_clients(settings: Settings) -> list[AppStoreServerClient]:
+    """One Server API client per (app, store environment).
+
+    The JWT's `bid` scopes every call to one app, so a customer of the beta app
+    (#234) is only visible through a client signed for the beta bundle. The
+    In-App Purchase key is team-wide, so the same key serves both apps. Order:
+    each app's Production before Sandbox, the App Store app first.
+    """
+    key_pem = private_key_pem(settings.app_store_server_private_key)
+    return [
+        AppStoreServerClient(
+            ServerApiCredentials(
+                key_id=settings.app_store_server_key_id,
+                issuer_id=settings.app_store_server_issuer_id,
+                private_key_pem=key_pem,
+                bundle_id=bundle_id,
+            ),
+            env,
+        )
+        for bundle_id in settings.app_bundle_ids
+        for env in ("Production", "Sandbox")
+        if env in settings.storekit_environment
+    ]
+
+
 def history_any_environment(
     clients: Sequence[AppStoreServerClient], transaction_id: str
 ) -> list[str]:
-    """The customer's signed transactions from whichever store knows the seed.
+    """The customer's signed transactions from whichever app/store knows the seed.
 
     A TestFlight / App Review purchase lives in Sandbox, a customer's in
     Production; asking the wrong one answers 404. Production also answers 401
@@ -132,8 +157,9 @@ def pack_transactions_since(
             continue
         covered.add(seed)
         for jws in history(seed):
-            # Same trust as at purchase time: Apple's chain, our bundle and
-            # store environments. Refunds are kept out below, not rejected.
+            # Same trust as at purchase time: Apple's chain, our bundles and
+            # store environments; the product id comes back as the live
+            # catalog id (#234). Refunds are kept out below, not rejected.
             tx = verifier.verify_transaction_info(jws)
             covered.add(tx.transaction_id)
             if (
@@ -292,19 +318,9 @@ async def _main(args: argparse.Namespace) -> int:
     if not settings.storekit_environment:
         print("reconcile: STOREKIT_ENVIRONMENT is not set")
         return 2
-    creds = ServerApiCredentials(
-        key_id=settings.app_store_server_key_id,
-        issuer_id=settings.app_store_server_issuer_id,
-        private_key_pem=private_key_pem(settings.app_store_server_private_key),
-        bundle_id=settings.app_bundle_id,
-    )
-    clients = [
-        AppStoreServerClient(creds, env)
-        for env in ("Production", "Sandbox")
-        if env in settings.storekit_environment
-    ]
+    clients = server_api_clients(settings)
     verifier = AppleJWSVerifier.from_path(
-        settings.storekit_root_cert_path, settings.app_bundle_id, settings.storekit_environment
+        settings.storekit_root_cert_path, settings.app_bundle_ids, settings.storekit_environment
     )
     arq_pool = await create_pool(RedisSettings.from_dsn(settings.redis_url)) if args.apply else None
     try:

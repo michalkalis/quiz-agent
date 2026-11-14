@@ -212,6 +212,12 @@ class User(Base):
     apple_refresh_token_encrypted: Mapped[bytes | None] = mapped_column(
         LargeBinary, nullable=True
     )
+    # The Sign in with Apple client (app bundle id) that obtained that refresh
+    # token (#234: App Store app or beta app). Apple only honours a revoke from
+    # the same client. NULL = the primary client (every pre-#234 row).
+    apple_refresh_token_client_id: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

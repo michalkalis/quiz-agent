@@ -327,7 +327,7 @@
             case ("command", "/send"):
                 return await handleCommand(text)
             case ("room", "/join"):
-                guard let roomInvites, let link = URL(string: "https://trubbo.app/join?t=\(text)") else { return false }
+                guard let roomInvites, let link = URL(string: "\(RoomInvite.joinPageURL())?t=\(text)") else { return false }
                 return roomInvites.receive(link)
             case ("room", "/start"):
                 guard let mockRooms else { return false }

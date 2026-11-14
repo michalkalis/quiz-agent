@@ -19,13 +19,15 @@ import Foundation
 import os
 
 /// Pinned RC / App Store identifiers (issue #93 D-ids). Seed migration `0005`
-/// and the RC offering both hardcode these exact strings.
+/// and the RC offering both hardcode these exact strings. The product ids are
+/// the ones StoreKit reports in this app: `beta.`-prefixed in Trubbo Beta
+/// (#234, `BetaApp.storeProductID`).
 enum StoreProduct {
     /// Subscription product id (RC's built-in `.monthly` offering accessor
     /// resolves this by billing period, not by this string).
-    static let monthlySubId = "com.carquiz.unlimited.monthly"
+    static let monthlySubId = BetaApp.storeProductID("com.carquiz.unlimited.monthly")
     /// Consumable pack (+100 questions, never expires).
-    static let packId = "com.carquiz.pack.questions100"
+    static let packId = BetaApp.storeProductID("com.carquiz.pack.questions100")
     /// How many questions the consumable pack adds.
     static let packQuestionCount = 100
     /// The RC *package* identifier in the `default` offering for the pack

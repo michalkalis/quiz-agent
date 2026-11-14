@@ -5,7 +5,9 @@ git_url(ENV["MATCH_GIT_URL"])
 storage_mode("git")
 type("appstore")
 
-app_identifier(["com.missinghue.hangs"])
+# #234: the live app and Trubbo Beta. Lanes that build pass only the app they
+# build (testflight_build), so a missing beta profile never blocks a live build.
+app_identifier(["com.missinghue.hangs", "com.missinghue.hangs.beta"])
 team_id("KAGWHPZZFQ")
 
 # CI runs readonly; developers running match locally can set MATCH_READONLY=false

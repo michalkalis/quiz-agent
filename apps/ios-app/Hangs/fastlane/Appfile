@@ -1,4 +1,6 @@
-app_identifier("com.missinghue.hangs")
+# Default app for lanes that don't name one (deliver/metadata, refresh_appstore_profile):
+# the live app. APP_BUNDLE_ID=com.missinghue.hangs.beta points them at Trubbo Beta (#234).
+app_identifier(ENV["APP_BUNDLE_ID"].to_s.empty? ? "com.missinghue.hangs" : ENV["APP_BUNDLE_ID"])
 team_id("KAGWHPZZFQ")
 
 # Apple ID is NOT used — auth goes through App Store Connect API key (see Fastfile).

@@ -20,11 +20,19 @@ nonisolated enum PackSize: Int, CaseIterable, Sendable {
 
     var questionCount: Int { rawValue }
 
+    /// The live product id, the one the server prices and counts by.
     var productId: String { "pack_\(rawValue)" }
 
+    /// The id StoreKit sells this size under in this app (#234: `beta.`
+    /// prefixed in Trubbo Beta).
+    var storeProductId: String { BetaApp.storeProductID(productId) }
+
     /// The size a purchased product stands for; nil for any other product.
+    /// Takes the live id or this app's store id: a StoreKit transaction names
+    /// the store id, an order the server sends back names the live one.
     init?(productId: String) {
-        guard let size = Self.allCases.first(where: { $0.productId == productId }) else { return nil }
+        guard let size = Self.allCases.first(where: { $0.productId == productId || $0.storeProductId == productId })
+        else { return nil }
         self = size
     }
 }

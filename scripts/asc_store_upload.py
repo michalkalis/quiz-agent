@@ -11,8 +11,15 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap-price,iap,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap-price,iap,iap-mirror,iap-review,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
+
+Target app (#234 — Trubbo Beta): ASC_AUDIT_BUNDLE_ID, default the live app com.missinghue.hangs. For
+com.missinghue.hangs.beta every product id of store_copy.json is read as `beta.` + the id (--product-prefix
+overrides), the catalog is copied from the live app (iap-mirror, asc_iap_mirror.py), only the TestFlight
+steps run, and groups-setup makes Founder + family+friends, both internal with automatic distribution:
+  ASC_AUDIT_BUNDLE_ID=com.missinghue.hangs.beta python scripts/asc_store_upload.py --steps iap-mirror,iap,iap-review --apply
+A catalog or price change runs for both apps.
 """
 
 from __future__ import annotations
@@ -25,6 +32,7 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
+import asc_iap_mirror as mirror
 import requests
 from asc_audit import (
     BASE,
@@ -42,6 +50,9 @@ MD = FL / "metadata"
 LOCALES = ["en-GB", "en-US", "sk", "cs"]
 V2 = BASE.replace("/v1", "/v2")
 APPLY = False
+BETA_BUNDLE_ID = "com.missinghue.hangs.beta"
+# The beta app is never released: its App Store side (listing, version, review, public group) stays empty.
+BETA_STEPS = {"testflight", "iap-create", "iap-price", "iap", "iap-mirror", "iap-review", "groups-setup", "promote"}
 
 
 def txt(path: Path) -> str | None:
@@ -470,6 +481,20 @@ def find_group(app_id: str, name: str) -> dict | None:
     return next((g for g in groups if g["attributes"]["name"] == name), None)
 
 
+def step_groups_setup_beta(app_id: str) -> None:
+    """Trubbo Beta (#234): Founder and family+friends, both internal and getting every build automatically.
+    Automatic distribution is set when the group is created; existing groups are only reported."""
+    print("groups-setup (beta)")
+    for name in (FOUNDER_GROUP, FRIENDS_GROUP):
+        g = find_group(app_id, name)
+        if g:
+            print(f"  {name}: exists, hasAccessToAllBuilds={g['attributes'].get('hasAccessToAllBuilds')}")
+            continue
+        send("POST", "/betaGroups", {"data": {"type": "betaGroups", "attributes": {
+            "name": name, "isInternalGroup": True, "hasAccessToAllBuilds": True, "feedbackEnabled": True},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+
+
 def step_groups_setup(app_id: str) -> None:
     """TestFlight ladder: Founder (internal, all builds) / family+friends (internal, manual) / Public beta (external)."""
     print("groups-setup")
@@ -535,10 +560,24 @@ def step_promote(app_id: str, copy: dict, build: str | None, group_name: str | N
                                                             "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
 
 
+def prefixed(copy: dict, prefix: str) -> dict:
+    """store_copy.json with every product id under `prefix` (the beta app's catalog, #234)."""
+    if not prefix:
+        return copy
+    out = dict(copy)
+    out["in_app_purchases"] = {(k if k == "subscription_group" or k.startswith("_") else prefix + k): v
+                               for k, v in copy["in_app_purchases"].items()}
+    out["iap_prices"] = {(k if k.startswith("_") else prefix + k): v for k, v in copy.get("iap_prices", {}).items()}
+    out["iap_create"] = {(k if k.startswith("_") else prefix + k): (v if k.startswith("_") else {**v, "mirror": prefix + v["mirror"]})
+                         for k, v in copy.get("iap_create", {}).items()}
+    return out
+
+
 def main() -> int:
     global APPLY
     ap = argparse.ArgumentParser()
     ap.add_argument("--steps", default="listing,review,testflight,iap")
+    ap.add_argument("--product-prefix", help="product id prefix in the target app (default: 'beta.' for the beta app, else none)")
     ap.add_argument("--build", help="build number that gets What to Test")
     ap.add_argument("--group", choices=PROMOTE_GROUPS, help="with promote: target TestFlight group")
     ap.add_argument("--apply", action="store_true")
@@ -546,9 +585,17 @@ def main() -> int:
     args = ap.parse_args()
     APPLY = args.apply
     print("APPLY" if APPLY else "DRY RUN (pass --apply to write)")
+    beta = BUNDLE_ID == BETA_BUNDLE_ID
+    prefix = args.product_prefix if args.product_prefix is not None else ("beta." if beta else "")
+    print(f"app {BUNDLE_ID}, product id prefix '{prefix}'")
     app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
-    copy = json.loads((FL / "store_copy.json").read_text())
+    source = json.loads((FL / "store_copy.json").read_text())
+    copy = prefixed(source, prefix)
     steps = args.steps.split(",")
+    if beta and (refused := sorted(set(steps) - BETA_STEPS)):
+        raise SystemExit(f"!! not for the beta app (never released): {refused}")
+    if beta and args.group == PUBLIC_GROUP:
+        raise SystemExit("!! the beta app has no public group")
     if "version" in steps:  # first: listing needs the editable version it may create
         step_version(app_id)
     if "listing" in steps:
@@ -561,8 +608,13 @@ def main() -> int:
         step_iap_price(app_id, copy)
     if "iap-create" in steps:
         step_iap_create(app_id, copy)
+    if "iap-mirror" in steps:
+        live_id = get("/apps", **{"filter[bundleId]": mirror.LIVE_BUNDLE_ID})["data"][0]["id"]
+        mirror.step_iap_mirror(sys.modules[__name__], app_id, live_id, prefix, source)
     if "iap" in steps:
         step_iap(app_id, copy)
+    if "iap-review" in steps:
+        mirror.step_iap_review(sys.modules[__name__], app_id, prefix, source)
     if "screenshots" in steps:
         step_screenshots(app_id)
     if "age-rating" in steps:
@@ -570,7 +622,7 @@ def main() -> int:
     if "beta-group" in steps:
         step_beta_group(app_id, args.build, args.submit_beta_review)
     if "groups-setup" in steps:
-        step_groups_setup(app_id)
+        step_groups_setup_beta(app_id) if beta else step_groups_setup(app_id)
     if "promote" in steps:
         step_promote(app_id, copy, args.build, args.group)
     if "phased-release" in steps:

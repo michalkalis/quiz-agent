@@ -15,10 +15,10 @@ Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.ym
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 
+import asc_iap_mirror as mirror
 import asc_store_upload as up
 import requests
 from asc_audit import BASE, BUNDLE_ID, get, latest_version
@@ -28,30 +28,7 @@ SHOTS = up.FL / "iap_review"
 
 
 def upload_review_screenshot(iap: dict) -> None:
-    pid = iap["attributes"]["productId"]
-    cur = get(f"{V2}/inAppPurchases/{iap['id']}/appStoreReviewScreenshot")
-    if cur.get("data"):
-        state = (cur["data"]["attributes"].get("assetDeliveryState") or {}).get("state")
-        print(f"    existing screenshot: {state}")
-        if state == "COMPLETE":
-            return
-        up.send("DELETE", f"/inAppPurchaseAppStoreReviewScreenshots/{cur['data']['id']}")  # stale upload blocks a new one (409)
-    f = SHOTS / f"{pid}.png"
-    if not f.exists():
-        raise SystemExit(f"  !! {pid}: no review screenshot in ASC and none at {f}")
-    data = f.read_bytes()
-    res = up.send("POST", "/inAppPurchaseAppStoreReviewScreenshots", {"data": {
-        "type": "inAppPurchaseAppStoreReviewScreenshots", "attributes": {"fileName": f.name, "fileSize": len(data)},
-        "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap["id"]}}}}})
-    if not up.APPLY:
-        return
-    for op in res["data"]["attributes"]["uploadOperations"]:
-        hdrs = {h["name"]: h["value"] for h in op.get("requestHeaders", [])}
-        requests.request(op["method"], op["url"], headers=hdrs, data=data[op["offset"]: op["offset"] + op["length"]], timeout=120).raise_for_status()
-    sid = res["data"]["id"]
-    up.send("PATCH", f"/inAppPurchaseAppStoreReviewScreenshots/{sid}", {"data": {
-        "type": "inAppPurchaseAppStoreReviewScreenshots", "id": sid,
-        "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
+    mirror.upload_review_screenshot(up, "inAppPurchase", iap, SHOTS / f"{iap['attributes']['productId']}.png")
 
 
 def main() -> int:

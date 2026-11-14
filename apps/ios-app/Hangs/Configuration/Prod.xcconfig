@@ -18,12 +18,28 @@ PACK_API_BASE_URL = https:/$()/pack.trubbo.app
 SENTRY_DSN = https:/$()/c5440340d41535b4862af9385d9bc38c@o4511195958738944.ingest.de.sentry.io/4511196118188112
 
 // MARK: - Identity
-PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)
-BUNDLE_DISPLAY_NAME = $(APP_DISPLAY_NAME)
+// #234 — Trubbo Beta: the TestFlight build (APP_STORE_VARIANT=NO) is its own
+// app next to the App Store one, so both fit on one phone. Same indirection as
+// the APP_STORE condition in Shared.xcconfig. Only Prod: Local and Staging keep
+// the base identity, and the BETA condition (product id prefix, invite path)
+// must not reach Hangs-Local, whose variant is NO too (local StoreKit tests).
+BETA_BUNDLE_SUFFIX_YES =
+BETA_BUNDLE_SUFFIX_NO = .beta
+BETA_DISPLAY_NAME_YES = $(APP_DISPLAY_NAME)
+BETA_DISPLAY_NAME_NO = $(APP_DISPLAY_NAME) Beta
+BETA_APP_ICON_YES = AppIcon
+BETA_APP_ICON_NO = AppIconBeta
+BETA_CONDITION_YES =
+BETA_CONDITION_NO = BETA
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_BASE)$(BETA_BUNDLE_SUFFIX_$(APP_STORE_VARIANT))
+BUNDLE_DISPLAY_NAME = $(BETA_DISPLAY_NAME_$(APP_STORE_VARIANT))
+ASSETCATALOG_COMPILER_APPICON_NAME = $(BETA_APP_ICON_$(APP_STORE_VARIANT))
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(BETA_CONDITION_$(APP_STORE_VARIANT))
 
 // MARK: - Capabilities
 CODE_SIGN_ENTITLEMENTS = Hangs/Hangs-Prod.entitlements
 
 // Signing lives in the build-type × env composition files (Debug-Prod / Release-Prod),
 // because Debug needs a Development profile (installable on device) while Release-Prod
-// needs the AppStore distribution profile used by fastlane match.
+// needs the AppStore distribution profile used by fastlane match. Debug-Prod is
+// the .beta app too (#234), so on a device it needs that id's development profile.

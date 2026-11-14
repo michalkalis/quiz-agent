@@ -178,7 +178,7 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
     }
 
     func purchase(_ size: PackSize) async throws -> PackPaymentProof {
-        guard let product = try await Product.products(for: [size.productId]).first else {
+        guard let product = try await Product.products(for: [size.storeProductId]).first else {
             throw PackPurchaseError.productUnavailable
         }
 
@@ -218,7 +218,7 @@ final class StoreKitPackPurchaseService: PackPurchaseServiceProtocol, Sendable {
 
     func displayPrices() async -> [PackSize: String] {
         do {
-            let products = try await Product.products(for: PackSize.allCases.map(\.productId))
+            let products = try await Product.products(for: PackSize.allCases.map(\.storeProductId))
             return products.reduce(into: [:]) { prices, product in
                 if let size = PackSize(productId: product.id) { prices[size] = product.displayPrice }
             }

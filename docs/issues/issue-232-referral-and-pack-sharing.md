@@ -3,7 +3,7 @@
 **Triage:** enhancement · ready-for-agent
 **Status:** 2026-11-13: server (232.1, 232.2) nasadený za vypnutým vypínačom `shared_quiz_enabled` (PR #786); skúšobná stránka schránky trubbo.app/clip-test.html čaká na test foundera (232.0); ďalej návrhy obrazoviek + texty na výber, potom web a appka
 **Founder:** 2026-11-09 „viac propagovať zdieľanie appky za nejaký benefit“; 2026-11-11 „pozvanie kamaráta musí fungovať bez kopírovania kódu“, vybral „zdieľať kvíz odkazom“; 2026-11-12 nápad „zahrám si kolo, pošlem odkaz na to isté kolo partii a porovnáme výsledky“ (zlúčený sem z TODO)
-**Návrh a prieskum:** https://claude.ai/artifact/FT91hmcTC6Xhczf7TpJnmQ (session quiz-agent-20)
+**Návrh a prieskum:** https://claude.ai/artifact/FT91hmcTC6Xhczf7TpJnmQ · **Obrazovky:** https://claude.ai/artifact/LfEyYMaonNmGLr5Bcw7oeG (session quiz-agent-20)
 
 ## Cieľ
 
@@ -27,6 +27,19 @@ Hráč po kvíze pošle odkaz „zahraj si môj kvíz“. Kamarát dostane presn
 | Poslaný balík (11-12) | Kamarát si ho **zahrá raz** ako výzvu, neuloží sa mu (odkaz sa dá posielať ďalej, trvalá kópia by brala predaj balíkov) |
 | Balík v hre spolu (11-09) | Áno. Hra spolu je od 11-12 zapnutá aj v App Store buildoch. |
 | Odmena za pozvanie (11-09/10) | **Neskôr**, na to isté prepojenie. Platí: len pozývajúci, balík 10 otázok po prvom dohranom kvíze kamaráta, strop 3 na Apple účet, mobil kamaráta označený cez DeviceCheck. Pozri „Neskôr“. |
+
+## Výber obrazoviek (founder 2026-11-14)
+
+| Obrazovka | Voľba |
+|---|---|
+| Koniec kola | **1A**: nenápadná karta „Pošli kamarátovi“ pod skóre |
+| Denná výzva | Jedna verzia (text výsledku + odkaz). Náhľad v okne zdieľania (nadpis, formát) treba doladiť. |
+| Kamarát po inštalácii | **Menej výrazné ako 3A aj 3B:** jeden nenápadný riadok na Domove „Máš odkaz na kvíz od kamaráta?“ so systémovým tlačidlom Vložiť. Len pri **prvom spustení po inštalácii** a len keď schránka pravdepodobne obsahuje odkaz. Zmizne po zavretí alebo po prvom kvíze, takže väčšina hráčov ho neuvidí. Overiť priamo náš formát bez upozornenia iOS nejde, iOS bez opýtania prezradí len „je tam asi odkaz“. |
+| Mená | Rovnaké meno ako v hre spolu (automatické „Rýchly gepard“, dá sa premenovať). Žiadny profil navyše. |
+| Porovnanie | **4A** s ✓/✗ pri každej otázke. **Kto čo vidí:** pozvaný kamarát len seba a odosielateľa; odosielateľ s jedným kamarátom vás dvoch, s viacerými všetkých. Filtruje server, kamaráti sa navzájom nevidia. |
+| Balík v hre spolu | **5A**: výber „Čo hráme“ v miestnosti hostiteľa |
+| Text správy | Kolo **B**, denná výzva **B** (sk/cs/en na plátne) |
+| Prvý vstup kamaráta | Rovno do kvízu, o mikrofón sa appka opýta až pri prvej odpovedi (návrh agenta, čaká potvrdenie) |
 
 ## Čo už platí (overené 2026-11-12)
 
@@ -96,6 +109,7 @@ Bez kódu, bez SDK, bez porovnávania IP adries (nespoľahlivé na mobilných d�
   - Vypínač.
   - Udalosti: kvíz zdieľaný, odkaz otvorený (appka alebo web), vložený zo schránky, zdieľaný kvíz dohraný.
 - [x] **232.2 Server: balík v hre spolu** (PR #786) — miestnosť prijme hotový balík. Udalosť: miestnosť s balíkom.
+- [ ] **232.2b Server: úprava porovnania** — ukladať ✓/✗ pri každej otázke (odosielateľ aj kamaráti) a poradie filtrovať podľa toho, kto sa pozerá (pravidlá v tabuľke výberu). Len doplnky v API.
 - [ ] **232.3 Web**
   - play.html v sk/cs/en (téma, tlačidlo App Store so zápisom do schránky, „ťukni ešte raz“).
   - Rozšírenie súboru pre univerzálne odkazy.

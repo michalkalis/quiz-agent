@@ -20,7 +20,6 @@ import sys
 
 import asc_iap_mirror as mirror
 import asc_store_upload as up
-import requests
 from asc_audit import BASE, BUNDLE_ID, exact_bundle, get, latest_version
 
 V2 = BASE.replace("/v1", "/v2")

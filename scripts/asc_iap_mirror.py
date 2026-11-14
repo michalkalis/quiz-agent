@@ -124,9 +124,12 @@ def mirror_subscription(up: ModuleType, app_id: str, pid: str, live: dict, live_
     else:
         group_id = find_or_create_group(up, app_id, live_group["attributes"]["referenceName"])
         a = live["attributes"]
+        attributes = {"name": a["name"], "productId": pid, "subscriptionPeriod": a["subscriptionPeriod"],
+            "reviewNote": a.get("reviewNote"), "familySharable": a.get("familySharable") or False,
+            "groupLevel": a.get("groupLevel") or 1}
+        # ASC answers 500 (not 409/422) on null attributes, so send only the set ones.
         res = up.send("POST", "/subscriptions", {"data": {"type": "subscriptions", "attributes": {
-            "name": a["name"], "productId": pid, "subscriptionPeriod": a["subscriptionPeriod"], "reviewNote": a.get("reviewNote"),
-            "familySharable": a.get("familySharable") or False, "groupLevel": a.get("groupLevel") or 1},
+            k: v for k, v in attributes.items() if v is not None},
             "relationships": {"group": {"data": {"type": "subscriptionGroups", "id": group_id or "<new>"}}}}})
         sub_id = res.get("data", {}).get("id")
         need_price = need_avail = True

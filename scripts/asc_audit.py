@@ -35,6 +35,30 @@ def token() -> str:
 
 HEADERS = {"Authorization": f"Bearer {token()}"}
 
+# Product texts live on versions (ASC API 4.4+); the per-product localization endpoints go away in early 2027.
+VERSIONS = {  # product kind -> (list path, version resource type)
+    "inAppPurchases": ("https://api.appstoreconnect.apple.com/v2/inAppPurchases/{}/versions", "inAppPurchaseVersions"),
+    "subscriptions": ("/subscriptions/{}/versions", "subscriptionVersions"),
+    "subscriptionGroups": ("/subscriptionGroups/{}/versions", "subscriptionGroupVersions"),
+}
+
+
+def latest_version(kind: str, product_id: str) -> dict | None:
+    """Newest version of an IAP, subscription or subscription group (None when it has none)."""
+    res = get(VERSIONS[kind][0].format(product_id), limit=50)
+    if "_error" in res:
+        raise SystemExit(f"  !! versions of {kind}/{product_id}: {res}")
+    return max(res.get("data", []), key=lambda v: v["attributes"]["version"], default=None)
+
+
+def version_localizations(kind: str, version: dict | None) -> list[dict]:
+    if not version:
+        return []
+    res = get(f"/{VERSIONS[kind][1]}/{version['id']}/localizations", limit=50)
+    if "_error" in res:
+        raise SystemExit(f"  !! localizations of {VERSIONS[kind][1]}/{version['id']}: {res}")
+    return res.get("data", [])
+
 
 def get(path: str, **params):
     url = path if path.startswith("http") else f"{BASE}{path}"
@@ -113,8 +137,9 @@ def main() -> int:
     for iap in iaps.get("data", []):
         row = attrs(iap)
         iid = iap["id"]
-        loc = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{iid}/inAppPurchaseLocalizations")
-        row["localizations"] = [attrs(l) for l in loc.get("data", [])]
+        ver = latest_version("inAppPurchases", iid)
+        row["version"] = attrs(ver) if ver else None
+        row["localizations"] = [attrs(l) for l in version_localizations("inAppPurchases", ver)]
         v2 = BASE.replace("/v1", "/v2")  # these relationships exist only on the v2 path
         sched = get(f"{v2}/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
         if "_error" not in sched and sched.get("data"):
@@ -138,15 +163,17 @@ def main() -> int:
     for g in groups.get("data", []):
         grow = attrs(g)
         gid = g["id"]
-        gl = get(f"/subscriptionGroups/{gid}/subscriptionGroupLocalizations")
-        grow["localizations"] = [attrs(l) for l in gl.get("data", [])]
+        gver = latest_version("subscriptionGroups", gid)
+        grow["version"] = attrs(gver) if gver else None
+        grow["localizations"] = [attrs(l) for l in version_localizations("subscriptionGroups", gver)]
         subs = get(f"/subscriptionGroups/{gid}/subscriptions", limit=20)
         grow["subscriptions"] = []
         for s in subs.get("data", []):
             srow = attrs(s)
             sid = s["id"]
-            sl = get(f"/subscriptions/{sid}/subscriptionLocalizations")
-            srow["localizations"] = [attrs(l) for l in sl.get("data", [])]
+            sver = latest_version("subscriptions", sid)
+            srow["version"] = attrs(sver) if sver else None
+            srow["localizations"] = [attrs(l) for l in version_localizations("subscriptions", sver)]
             pr = get(f"/subscriptions/{sid}/prices", include="subscriptionPricePoint,territory", limit=200, **{"filter[territory]": ",".join(TERRITORIES)})
             srow["prices_watch"] = prices_with_points(pr, "subscriptionPricePoint")
             pr_all = get(f"/subscriptions/{sid}/prices", limit=200)

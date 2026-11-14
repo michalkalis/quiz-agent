@@ -21,7 +21,7 @@ import sys
 
 import asc_store_upload as up
 import requests
-from asc_audit import BASE, BUNDLE_ID, get
+from asc_audit import BASE, BUNDLE_ID, get, latest_version
 
 V2 = BASE.replace("/v1", "/v2")
 SHOTS = up.FL / "iap_review"
@@ -69,8 +69,11 @@ def main() -> int:
     for p in iaps:
         print(f"  {p['attributes']['productId']}: {p['attributes']['state']}")
         upload_review_screenshot(p)
-    subs = [s for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20)["data"]
-            for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20)["data"] if s["attributes"]["productId"] in wanted]
+    subs, groups = [], []
+    for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20)["data"]:
+        mine = [s for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20)["data"] if s["attributes"]["productId"] in wanted]
+        subs += mine
+        groups += [g] if mine else []
 
     print("build")
     ver = up.editable_version(app_id)
@@ -92,16 +95,18 @@ def main() -> int:
             "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": rs_id}},
             "appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver["id"]}}}}})
 
-    print("in-app purchases")
-    for p in iaps:
-        if p["attributes"]["state"] in ("READY_TO_SUBMIT", "MISSING_METADATA"):
-            up.send("POST", "/inAppPurchaseSubmissions", {"data": {"type": "inAppPurchaseSubmissions",
-                    "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": p["id"]}}}}})
-    for s in subs:
-        print(f"  {s['attributes']['productId']}: {s['attributes']['state']}")
-        if s["attributes"]["state"] == "READY_TO_SUBMIT":
-            up.send("POST", "/subscriptionSubmissions", {"data": {"type": "subscriptionSubmissions",
-                    "relationships": {"subscription": {"data": {"type": "subscriptions", "id": s["id"]}}}}})
+    print("in-app purchases")  # each product rides along as its pending version (ASC API 4.4+)
+    products = [("inAppPurchases", "inAppPurchaseVersion", p) for p in iaps] + \
+               [("subscriptionGroups", "subscriptionGroupVersion", g) for g in groups] + \
+               [("subscriptions", "subscriptionVersion", s) for s in subs]
+    for kind, rel, prod in products:
+        ver = latest_version(kind, prod["id"])
+        state = ver["attributes"]["state"] if ver else "none"
+        print(f"  {prod['attributes'].get('productId') or prod['attributes'].get('referenceName')}: version {state}")
+        if state in up.PRODUCT_EDITABLE - {"READY_FOR_REVIEW"}:  # READY_FOR_REVIEW = already in a submission
+            up.send("POST", "/reviewSubmissionItems", {"data": {"type": "reviewSubmissionItems", "relationships": {
+                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": rs_id}},
+                rel: {"data": {"type": ver["type"], "id": ver["id"]}}}}})
 
     print("submit")
     up.send("PATCH", f"/reviewSubmissions/{rs_id}", {"data": {"type": "reviewSubmissions", "id": rs_id, "attributes": {"submitted": True}}})

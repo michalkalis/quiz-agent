@@ -1,12 +1,15 @@
-"""The shared-quiz comparison (#232): the sender and everyone who finished it,
-best first. A player without a name from a game together is "Hráč N"
-(numbered in the order they started, the sender first)."""
+"""The shared-quiz comparison (#232), best first, filtered by who looks
+(founder 2026-11-14): the sender sees everyone who finished it; a friend sees
+only themselves and the sender, so friends never see each other. A player
+without a name from a game together is "Hráč N", numbered among the rows this
+viewer sees (sender first), so the numbers never reveal how many others played.
+"""
 
 from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..db.models import SharedQuiz, SharedQuizResult
 
@@ -19,6 +22,14 @@ class RankedPlayer(BaseModel):
     total: int
     is_sender: bool = False
     is_you: bool = False
+    marks: Optional[List[Optional[bool]]] = Field(
+        default=None,
+        description=(
+            "#232.2b: one entry per question of the shared quiz, in its order: "
+            "true = knew it, false = did not, null = not played. Null as a "
+            "whole when not recorded (an older result)."
+        ),
+    )
 
 
 def rank(
@@ -29,6 +40,7 @@ def rank(
 ) -> List[RankedPlayer]:
     viewer = set(viewer_ids)
     sender = set(sender_ids)
+    sees_everyone = bool(viewer & sender)
     entries: list[tuple[Optional[str], RankedPlayer]] = []
     if share.sender_score is not None:
         entries.append(
@@ -39,12 +51,16 @@ def rank(
                     score=share.sender_score,
                     total=share.sender_total or 0,
                     is_sender=True,
-                    is_you=share.sender_subject_id in viewer,
+                    is_you=sees_everyone,
+                    marks=share.sender_marks,
                 ),
             )
         )
     for r in results:
         if r.subject_id in sender:
+            continue
+        is_you = r.subject_id in viewer
+        if not (sees_everyone or is_you):
             continue
         entries.append(
             (
@@ -53,7 +69,8 @@ def rank(
                     name="",
                     score=r.score or 0.0,
                     total=r.total or 0,
-                    is_you=r.subject_id in viewer,
+                    is_you=is_you,
+                    marks=r.marks,
                 ),
             )
         )

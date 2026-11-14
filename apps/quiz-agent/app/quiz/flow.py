@@ -285,6 +285,7 @@ class QuizFlowService:
         )
         if result.crowd is not None:
             session.last_evaluation.crowd = result.crowd.model_dump()
+        session.question_results[evaluated_question_id] = result.evaluation.result
         self.analytics.emit(
             "answer_evaluated",
             subject_id=session.user_id,

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from pydantic import BaseModel, Field
 
 from ... import app_switches
@@ -33,6 +33,11 @@ from .rooms import _PlayerName
 router = APIRouter()
 
 Token = Path(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+# The website's play page (#232.3) reads the public preview from the browser.
+# Allowed on this one read-only route, not app-wide: the global CORS list
+# also allows credentials, which this page never needs.
+WEBSITE_ORIGIN = "https://trubbo.app"
 
 
 class CreateShareRequest(BaseModel):
@@ -175,7 +180,9 @@ async def share_results(
     service: Optional[SharedQuizService] = Depends(get_shared_quiz),
     subject: AuthSubject = Depends(require_auth_or_grace),
 ) -> ShareResultsResponse:
-    """Sender and everyone who finished it, best first."""
+    """Best first, by who asks: the sender sees everyone who finished it, a
+    friend who started it only themselves and the sender, anyone else 404.
+    Each player carries a mark per question (``marks``)."""
     svc = await _service(request, service)
     try:
         share, players = await svc.ranking(token, _subject(subject))
@@ -188,11 +195,13 @@ async def share_results(
 @limiter.limit("60/minute")
 async def share_preview(
     request: Request,
+    response: Response,
     token: str = Token,
     service: Optional[SharedQuizService] = Depends(get_shared_quiz),
 ) -> SharePreview:
     """Public and read-only, for the website's play page: what the link is,
     never its questions or players."""
+    response.headers["Access-Control-Allow-Origin"] = WEBSITE_ORIGIN
     svc = await _service(request, service)
     try:
         share = await svc.preview(token)

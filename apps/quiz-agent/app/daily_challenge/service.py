@@ -167,6 +167,14 @@ class DailyChallengeService:
         if regrade and play.finished_at is not None:
             await self._finish(play.id, rescore=True)
 
+    async def knew_by_question(self, subject_id: str, day: date) -> Dict[str, bool]:
+        """question_id → knew it, over the person's whole play of ``day``
+        (#232 shared quiz marks: a challenge resumed in a second session
+        still has every answer here)."""
+        async with self._sm() as db:
+            play = await self._play(db, subject_id, day)
+        return await self._answers(play.id) if play is not None else {}
+
     async def finish(self, session: QuizSession) -> None:
         play = await self._session_play(session)
         if play is not None:

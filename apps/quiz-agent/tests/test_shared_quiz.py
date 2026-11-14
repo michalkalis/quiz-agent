@@ -262,8 +262,10 @@ async def test_results_one_per_person_with_player_numbers(client, app, db_sessio
     other = await _session(app, await _start(client, token, "other"))
     await _finish(app, other, 1.0)
 
+    # The sender sees everyone (a friend sees only themselves and the sender,
+    # pinned in test_shared_quiz_compare.py).
     resp = await client.get(
-        f"/api/v1/shared-quizzes/{token}/results", headers=_h("acct")
+        f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
     )
     assert resp.status_code == 200
     players = resp.json()["players"]
@@ -272,7 +274,7 @@ async def test_results_one_per_person_with_player_numbers(client, app, db_sessio
         ("Mia", 2.0),
         ("Player 2", 1.0),
     ]
-    assert [p["is_you"] for p in players] == [True, False, False]
+    assert [p["is_you"] for p in players] == [False, True, False]
     assert players[1]["is_sender"]
 
 
@@ -369,6 +371,8 @@ async def test_public_preview_shows_no_questions_and_needs_no_login(client, app)
     token = (await _share(client, "sender", session_id=session.session_id))["token"]
     resp = await client.get(f"/api/v1/shared-quizzes/{token}")
     assert resp.status_code == 200
+    # The website's play page reads it from the browser (#232.3).
+    assert resp.headers["access-control-allow-origin"] == "https://trubbo.app"
     assert resp.json() == {
         "kind": "round",
         "language": "en",

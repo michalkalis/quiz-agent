@@ -759,6 +759,10 @@ class SharedQuiz(Base):
     sender_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     sender_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     sender_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # #232.2b: per question of ``question_ids`` (same order) true / false /
+    # null (not played). NULL: shared before marks were kept, or a pack shared
+    # without playing it.
+    sender_marks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -791,6 +795,8 @@ class SharedQuizResult(Base):
     session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     score: Mapped[float | None] = mapped_column(Float, nullable=True)
     total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # #232.2b: like ``SharedQuiz.sender_marks``, for this person's play.
+    marks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

@@ -248,6 +248,7 @@ async def process_resubmission(
     )
     if result.crowd is not None:
         session.last_evaluation.crowd = result.crowd.model_dump()
+    session.question_results[previous.question_id] = result.evaluation.result
     # #213: the corrected verdict supersedes the first ``answer_evaluated`` row;
     # player stats keep the latest row per (session, question).
     flow.analytics.emit(

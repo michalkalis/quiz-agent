@@ -213,6 +213,15 @@ class QuizSession(BaseModel):
     asked_question_ids: List[str] = Field(
         default_factory=list, description="IDs of questions already asked this session"
     )
+    question_results: Dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "#232 shared quiz: question_id → the solo player's latest verdict "
+            "(correct | partially_correct | incorrect | skipped), so a shared "
+            "quiz can show a mark per question. A game together keeps its "
+            "verdicts on ``room_game`` instead."
+        ),
+    )
     client_excluded_ids: List[str] = Field(
         default_factory=list,
         description=(

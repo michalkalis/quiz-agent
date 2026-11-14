@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from pydantic import BaseModel, Field
 
@@ -33,6 +35,22 @@ from .rooms import _PlayerName
 router = APIRouter()
 
 Token = Path(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+# The website's play page (#232.3) reads the public preview from the browser.
+# Allowed on this one read-only route, not app-wide: the global CORS list
+# also allows credentials, which this page never needs.
+WEBSITE_ORIGIN = "https://trubbo.app"
+_PREVIEW_PATH = re.compile(r"^/api/v1/shared-quizzes/[^/]+$")
+
+
+async def website_cors(request: Request, call_next):
+    """HTTP middleware: the public preview answers the website with its
+    origin on every status (also 404 switch off, 422, 429), so the page can
+    tell an answer from a network error."""
+    response = await call_next(request)
+    if request.method == "GET" and _PREVIEW_PATH.match(request.url.path):
+        response.headers["Access-Control-Allow-Origin"] = WEBSITE_ORIGIN
+    return response
 
 
 class CreateShareRequest(BaseModel):
@@ -175,7 +193,9 @@ async def share_results(
     service: Optional[SharedQuizService] = Depends(get_shared_quiz),
     subject: AuthSubject = Depends(require_auth_or_grace),
 ) -> ShareResultsResponse:
-    """Sender and everyone who finished it, best first."""
+    """Best first, by who asks: the sender sees everyone who finished it, a
+    friend who started it only themselves and the sender, anyone else 404.
+    Each player carries a mark per question (``marks``)."""
     svc = await _service(request, service)
     try:
         share, players = await svc.ranking(token, _subject(subject))
@@ -192,7 +212,7 @@ async def share_preview(
     service: Optional[SharedQuizService] = Depends(get_shared_quiz),
 ) -> SharePreview:
     """Public and read-only, for the website's play page: what the link is,
-    never its questions or players."""
+    never its questions or players. Its CORS header: ``website_cors``."""
     svc = await _service(request, service)
     try:
         share = await svc.preview(token)

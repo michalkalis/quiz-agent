@@ -12,6 +12,7 @@ from quiz_shared.models.session import QuizSession
 
 from ..db.models import SharedQuiz
 from . import snapshot
+from .marks import aligned, known_in_session
 
 
 class ShareError(Exception):
@@ -71,6 +72,7 @@ class ShareCreation:
         if found is not None:
             return found
         title, challenge_date = None, None
+        known = known_in_session(session, subject_id)
         if session.pack_id:
             kind = "pack"
             pack = await self._finished_pack(session.pack_id, subject_id)
@@ -83,6 +85,10 @@ class ShareCreation:
             challenge_date = date.fromisoformat(session.daily_challenge_date)
             day_set = await self.daily.question_ids(session.language, challenge_date)
             ids = await snapshot.corpus_ids(self.retriever, day_set, session.language)
+            # A challenge resumed in a second session: the play has every answer.
+            known = (
+                await self.daily.knew_by_question(subject_id, challenge_date) or known
+            )
         else:
             kind = "round"
             ids = await snapshot.corpus_ids(
@@ -101,6 +107,7 @@ class ShareCreation:
             sender_name=name,
             sender_score=player_score(session, subject_id),
             sender_total=len(session.asked_question_ids),
+            sender_marks=aligned(ids, known),
         )
 
     async def _from_pack(

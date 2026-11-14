@@ -174,6 +174,7 @@ class SharedQuizStore:
         total: int,
         session_id: Optional[str],
         name: Optional[str] = None,
+        marks: Optional[list] = None,
     ) -> bool:
         """The person's first finish counts; a later or concurrent one changes
         nothing. True when this call recorded the result."""
@@ -192,6 +193,7 @@ class SharedQuizStore:
                         session_id=session_id,
                         score=score,
                         total=total,
+                        marks=marks,
                         started_at=now,
                         finished_at=now,
                     )
@@ -207,7 +209,7 @@ class SharedQuizStore:
             if found.finished_at is not None:
                 return False
             found.display_name = name or found.display_name
-            found.score, found.total = score, total
+            found.score, found.total, found.marks = score, total, marks
             found.session_id, found.finished_at = session_id, now
             await db.commit()
             return True
@@ -226,6 +228,20 @@ class SharedQuizStore:
                     )
                 ).scalars()
             )
+
+    async def took_part(self, share_id: uuid.UUID, ids: List[str]) -> bool:
+        """Whether this person (any of their ``ids``) started the share."""
+        async with self._sm() as db:
+            return (
+                await db.execute(
+                    select(SharedQuizResult.id)
+                    .where(
+                        SharedQuizResult.shared_quiz_id == share_id,
+                        SharedQuizResult.subject_id.in_(ids),
+                    )
+                    .limit(1)
+                )
+            ).first() is not None
 
     @staticmethod
     async def _played_pack(db: AsyncSession, pack_id, ids: List[str]) -> bool:

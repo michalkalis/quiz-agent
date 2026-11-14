@@ -20,6 +20,7 @@ from ..db.models import SharedQuiz
 from ..retrieval.question_retriever import QuestionRetriever
 from ..session.manager import SessionManager
 from .creation import ShareCreation, ShareError, player_score
+from .marks import aligned, known_in_session
 from .ranking import RankedPlayer, rank
 from .store import SharedQuizStore
 
@@ -160,6 +161,7 @@ class SharedQuizService(ShareCreation):
                     len(share.question_ids),
                     None,
                     name,
+                    await self._daily_known(share, subject_id),
                 )
             return StartOutcome(share, None, already_played=True)
         if not is_sender:
@@ -220,12 +222,21 @@ class SharedQuizService(ShareCreation):
     async def ranking(
         self, token: str, subject_id: str
     ) -> tuple[SharedQuiz, list[RankedPlayer]]:
+        """The sender sees everyone; a friend who started it sees themselves
+        and the sender; anyone else holding the token gets 404, so a forwarded
+        link never shows who played."""
         share = await self.by_token(token)
+        sender_ids = await self.store.person_ids(share.sender_subject_id)
+        viewer_ids = await self.store.person_ids(subject_id)
+        if not set(viewer_ids) & set(sender_ids) and not await self.store.took_part(
+            share.id, viewer_ids
+        ):
+            raise ShareError(404, "not_found", "Shared quiz not found")
         players = rank(
             share,
             await self.store.finished_results(share.id),
-            await self.store.person_ids(share.sender_subject_id),
-            await self.store.person_ids(subject_id),
+            sender_ids,
+            viewer_ids,
         )
         return share, players
 
@@ -253,8 +264,17 @@ class SharedQuizService(ShareCreation):
             if subject_id in sender:
                 continue
             try:
+                known = known_in_session(session, subject_id)
+                if session.daily_challenge_date:
+                    known = await self._daily_known(share, subject_id) or known
                 recorded += await self._record(
-                    share, subject_id, float(score), total, session.session_id, name
+                    share,
+                    subject_id,
+                    float(score),
+                    total,
+                    session.session_id,
+                    name,
+                    known,
                 )
             except Exception as e:  # one player's row never costs the others theirs
                 logger.error(
@@ -270,7 +290,9 @@ class SharedQuizService(ShareCreation):
                 questions_asked=total,
             )
 
-    async def _record(self, share, subject_id, score, total, session_id, name) -> int:
+    async def _record(
+        self, share, subject_id, score, total, session_id, name, known
+    ) -> int:
         return int(
             await self.store.record_result(
                 share.id,
@@ -279,8 +301,16 @@ class SharedQuizService(ShareCreation):
                 total=total,
                 session_id=session_id,
                 name=name,
+                marks=aligned(share.question_ids, known),
             )
         )
+
+    async def _daily_known(self, share: SharedQuiz, subject_id: str) -> dict:
+        """The person's whole daily play (a challenge resumed in a second
+        session has answers the finishing session never saw)."""
+        if self.daily is None or share.challenge_date is None:
+            return {}
+        return await self.daily.knew_by_question(subject_id, share.challenge_date)
 
     def _emit(self, name: str, subject_id, session_id, **properties) -> None:
         if self.analytics is not None:

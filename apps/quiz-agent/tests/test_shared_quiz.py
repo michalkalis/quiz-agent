@@ -126,6 +126,7 @@ async def app(db_sessionmaker, monkeypatch):
     app = FastAPI()
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.middleware("http")(share_routes.website_cors)
     app.include_router(share_routes.router, prefix="/api/v1")
     app.state.token_service = _tokens()
     app.state.auth_sessionmaker = db_sessionmaker
@@ -262,8 +263,10 @@ async def test_results_one_per_person_with_player_numbers(client, app, db_sessio
     other = await _session(app, await _start(client, token, "other"))
     await _finish(app, other, 1.0)
 
+    # The sender sees everyone (a friend sees only themselves and the sender,
+    # pinned in test_shared_quiz_compare.py).
     resp = await client.get(
-        f"/api/v1/shared-quizzes/{token}/results", headers=_h("acct")
+        f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
     )
     assert resp.status_code == 200
     players = resp.json()["players"]
@@ -272,7 +275,7 @@ async def test_results_one_per_person_with_player_numbers(client, app, db_sessio
         ("Mia", 2.0),
         ("Player 2", 1.0),
     ]
-    assert [p["is_you"] for p in players] == [True, False, False]
+    assert [p["is_you"] for p in players] == [False, True, False]
     assert players[1]["is_sender"]
 
 
@@ -369,10 +372,21 @@ async def test_public_preview_shows_no_questions_and_needs_no_login(client, app)
     token = (await _share(client, "sender", session_id=session.session_id))["token"]
     resp = await client.get(f"/api/v1/shared-quizzes/{token}")
     assert resp.status_code == 200
+    # The website's play page reads it from the browser (#232.3).
+    assert resp.headers["access-control-allow-origin"] == "https://trubbo.app"
     assert resp.json() == {
         "kind": "round",
         "language": "en",
         "title": None,
         "categories": ["music"],
     }
-    assert (await client.get("/api/v1/shared-quizzes/unknown-token")).status_code == 404
+    # Errors carry the origin too, so the page can tell a 404 (or the switch
+    # off, or a 429) from a network error.
+    missing = await client.get("/api/v1/shared-quizzes/unknown-token")
+    assert missing.status_code == 404
+    assert missing.headers["access-control-allow-origin"] == "https://trubbo.app"
+    # Only this public read: the logged-in routes stay on the global list.
+    results = await client.get(
+        f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
+    )
+    assert "access-control-allow-origin" not in results.headers

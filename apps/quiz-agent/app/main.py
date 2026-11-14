@@ -84,6 +84,7 @@ from .usage.caps import UsageCaps
 from .usage.elevenlabs_budget import ElevenLabsBudget
 from .usage.tracker import UsageTracker
 from .api import rest, admin
+from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
@@ -537,6 +538,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Admin-Key", "Authorization"],
 )
+
+# #232.3: the website's play page reads the public shared-quiz preview.
+app.middleware("http")(shared_quiz_routes.website_cors)
 
 # Include API routes
 app.include_router(rest.router)

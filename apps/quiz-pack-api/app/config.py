@@ -16,6 +16,7 @@ from arq.constants import default_queue_name as arq_default_queue_name
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
+from quiz_shared.store_ids import parse_id_list
 
 _BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootCA-G3.cer"
 
@@ -57,6 +58,9 @@ class Settings(BaseSettings):
     # serves, mirroring quiz-agent's RC_ALLOWED_ENVIRONMENT. Comma-separated
     # (#193): prod sets "Production,Sandbox" because App Review and TestFlight
     # always buy in Sandbox while real customers buy in Production.
+    # APP_BUNDLE_ID is comma-separated (#234): the App Store app first
+    # (primary), then the TestFlight-only beta app, e.g.
+    # "com.missinghue.hangs,com.missinghue.hangs.beta". One value = one app.
     app_bundle_id: str = "com.missinghue.hangs"
     storekit_environment: Optional[frozenset[str]] = None
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
@@ -112,6 +116,11 @@ class Settings(BaseSettings):
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate
     # processes, both init).
     sentry_dsn: Optional[str] = None
+
+    @property
+    def app_bundle_ids(self) -> tuple[str, ...]:
+        """`APP_BUNDLE_ID` as an ordered tuple; the first entry is primary."""
+        return parse_id_list(self.app_bundle_id)
 
     @field_validator("storekit_environment", mode="before")
     @classmethod

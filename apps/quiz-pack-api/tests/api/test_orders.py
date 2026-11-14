@@ -284,6 +284,61 @@ async def test_create_order_unknown_product_400_is_reported(
 
 
 @pytest.mark.asyncio
+async def test_beta_app_order_is_created_for_the_live_pack(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+) -> None:
+    """#234: the beta app buys `beta.pack_30` and sends that id in the body.
+    The order must be the live `pack_30` (30 questions), stored under the live
+    id that pricing, reconcile and analytics key on."""
+    tx_id = "tx-beta-pack-30"
+    jws = make_jws(
+        payload_overrides={
+            "transactionId": tx_id,
+            "productId": "beta.pack_30",
+            "bundleId": "com.missinghue.hangs.beta",
+        }
+    )
+    body = _valid_body(tx_id=tx_id, product_id="beta.pack_30")
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202, resp.text
+
+    test_session.expire_all()
+    order = (
+        await test_session.execute(
+            select(GenerationOrder).where(GenerationOrder.transaction_id == tx_id)
+        )
+    ).scalar_one()
+    assert order.product_id == "pack_30"
+    assert order.target_count == 30
+
+
+@pytest.mark.asyncio
+async def test_beta_product_id_from_the_live_app_is_refused(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+) -> None:
+    """#234: the `beta.` prefix is only honoured for the beta bundle. The same
+    id from the live app is an unknown product: no order, no generation."""
+    tx_id = "tx-beta-on-live"
+    jws = make_jws(
+        payload_overrides={"transactionId": tx_id, "productId": "beta.pack_30"}
+    )
+    body = _valid_body(tx_id=tx_id, product_id="beta.pack_30")
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 400
+    assert "unknown product_id" in resp.json()["detail"]
+    test_session.expire_all()
+    assert (await test_session.execute(select(GenerationOrder))).scalars().all() == []
+
+
+@pytest.mark.asyncio
 async def test_create_order_bad_language_422_is_reported(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,

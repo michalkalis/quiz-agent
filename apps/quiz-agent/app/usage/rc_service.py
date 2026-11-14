@@ -38,6 +38,8 @@ from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from quiz_shared.store_ids import canonical_rc_product_id
+
 from ..config import get_settings
 from ..db.base import utcnow
 from ..db.models import CreditLedger, Product, Subscription
@@ -100,6 +102,9 @@ def normalize_rc_environment(entry: dict) -> str | None:
 
 
 # --- timestamp helpers -------------------------------------------------------
+
+
+_EPOCH = datetime.fromtimestamp(0, tz=timezone.utc)
 
 
 def _ms_to_dt(ms: int | str) -> datetime:
@@ -584,6 +589,14 @@ async def handle_webhook_event(
         sentry_sdk.capture_message(message, level="warning")
         return
 
+    # #234: the beta app sells `beta.`-prefixed products. RC events name no
+    # bundle, so the prefix is mapped back to the live catalog id only on a
+    # Sandbox event (the beta app is never released, every purchase in it is
+    # Sandbox). Rewritten in place so the route's analytics sees the live id
+    # too. A `beta.` id claiming Production stays unknown and credits nothing.
+    if event.get("product_id"):
+        event["product_id"] = canonical_rc_product_id(event["product_id"], environment)
+
     if etype == "NON_RENEWING_PURCHASE":
         await _grant_pack(sessionmaker, event, environment)
         return
@@ -747,15 +760,28 @@ async def apply_sync_snapshot(
 
     request_date_ms = int(snapshot["request_date_ms"])
     subscriber = snapshot.get("subscriber") or {}
-    subscriptions = {
-        pid: sub
-        for pid, sub in (subscriber.get("subscriptions") or {}).items()
-        if normalize_rc_environment(sub) in allowed
-    }
-    non_subscriptions = {
-        pid: [p for p in purchases if normalize_rc_environment(p) in allowed]
-        for pid, purchases in (subscriber.get("non_subscriptions") or {}).items()
-    }
+    # #234: product ids keyed by the live catalog id. RC v1 names no bundle, so
+    # a `beta.` id maps back only on a Sandbox entry (see
+    # ``canonical_rc_product_id``). If one account holds the same product in
+    # both apps, the entry with the later expiry is kept.
+    subscriptions: dict[str, dict] = {}
+    for raw_pid, sub in (subscriber.get("subscriptions") or {}).items():
+        env = normalize_rc_environment(sub)
+        if env not in allowed:
+            continue
+        pid = canonical_rc_product_id(raw_pid, env)
+        kept = subscriptions.get(pid)
+        if kept is None or (_parse_rc_date(sub.get("expires_date")) or _EPOCH) > (
+            _parse_rc_date(kept.get("expires_date")) or _EPOCH
+        ):
+            subscriptions[pid] = sub
+    non_subscriptions: dict[str, list] = {}
+    for raw_pid, purchases in (subscriber.get("non_subscriptions") or {}).items():
+        for purchase in purchases:
+            env = normalize_rc_environment(purchase)
+            if env in allowed:
+                pid = canonical_rc_product_id(raw_pid, env)
+                non_subscriptions.setdefault(pid, []).append(purchase)
 
     async with sessionmaker() as session:
         await _advisory_lock(session, account_id)

@@ -56,6 +56,7 @@ from sse_starlette.sse import EventSourceResponse
 from arq.connections import ArqRedis
 
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
+from quiz_shared.store_ids import BETA_BUNDLE_ID, canonical_product_id
 from quiz_shared.utils.user_text import clean_user_text
 
 from ... import app_switches, order_budget, pack_reuse, topic_check
@@ -467,7 +468,11 @@ async def create_order(
             raise HTTPException(status_code=401, detail=str(exc)) from exc
         verified_tx = tx
 
-        # 2. Cross-check body vs JWS payload
+        # 2. Cross-check body vs JWS payload. The verifier already mapped the
+        # JWS product to the live catalog id (#234: the beta app buys
+        # `beta.pack_30`); map the body's StoreKit id the same way, by the
+        # VERIFIED bundle, and carry the live id from here on.
+        body.product_id = canonical_product_id(tx.bundle_id, body.product_id)
         if body.transaction_id != tx.transaction_id or body.product_id != tx.product_id:
             _report_verified_reject(
                 verified_tx,
@@ -482,6 +487,9 @@ async def create_order(
                 status_code=400,
                 detail=f"admin orders must use a {_ADMIN_TX_PREFIX!r}-prefixed transaction_id",
             )
+        # The founder's beta build names its products `beta.…` (#234). An admin
+        # order moves no money, so the live id is taken as-is.
+        body.product_id = canonical_product_id(BETA_BUNDLE_ID, body.product_id)
     else:
         raise HTTPException(
             status_code=401,

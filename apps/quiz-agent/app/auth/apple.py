@@ -11,8 +11,9 @@ What is checked:
 - **Signature** against Apple's published JWKS (RS256 only). Keys are fetched
   from ``https://appleid.apple.com/auth/keys`` over httpx and cached 24h; a
   ``kid`` we have not seen forces one refresh (Apple rotates keys).
-- **Issuer** ``https://appleid.apple.com`` and **audience** = the app bundle id
-  (for a *native* SIWA flow the ``aud`` is the bundle id, not a Services ID).
+- **Issuer** ``https://appleid.apple.com`` and **audience** = one of our app
+  bundle ids (for a *native* SIWA flow the ``aud`` is the bundle id, not a
+  Services ID; #234 accepts the App Store app and the beta app).
 - **Expiry** — Apple ``id_token``s live only 5–10 min, so a captured token is
   worthless minutes later.
 - **Nonce (F6)** — the most common bug in this flow. The token's ``nonce`` claim
@@ -28,6 +29,7 @@ import base64
 import hashlib
 import hmac
 import json
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -70,18 +72,21 @@ class AppleIdentityVerifier:
     def __init__(
         self,
         *,
-        audience: str,
+        audience: str | Sequence[str],
         issuer: str = _APPLE_ISSUER,
         jwks_url: str = _APPLE_JWKS_URL,
         http_client: httpx.AsyncClient | None = None,
         jwks_cache_ttl_seconds: int = _JWKS_CACHE_TTL_SECONDS,
     ) -> None:
-        if not audience:
+        if not audience or not all(audience):
             raise RuntimeError(
                 "Apple audience (the app bundle id) must be set to verify "
                 "identity tokens — see APPLE_SIGNIN_CLIENT_ID."
             )
-        self._audience = audience
+        # #234: every configured app (App Store + beta) is an accepted `aud`;
+        # PyJWT accepts a token whose `aud` matches any entry. The verified
+        # claims keep `aud`, which names the client that issued the token.
+        self._audience = [audience] if isinstance(audience, str) else list(audience)
         self._issuer = issuer
         self._jwks_url = jwks_url
         # Injected in tests (httpx.MockTransport); None → a short-lived client
@@ -183,4 +188,4 @@ class AppleIdentityVerifier:
 def build_apple_identity_verifier(settings) -> AppleIdentityVerifier:
     """Construct an ``AppleIdentityVerifier`` from app settings. Wired into the
     app in Session B; raises if the bundle id (audience) is unset."""
-    return AppleIdentityVerifier(audience=settings.apple_signin_client_id)
+    return AppleIdentityVerifier(audience=settings.apple_signin_client_ids)

@@ -161,10 +161,11 @@ async def client(
 ) -> AsyncIterator[httpx.AsyncClient]:
     """Async HTTP client wired against a minimal test app."""
     # Both environments, like prod (STOREKIT_ENVIRONMENT="Production,Sandbox"):
-    # some rules differ between TestFlight and paying customers.
+    # some rules differ between TestFlight and paying customers. Both apps, like
+    # prod after #234 (APP_BUNDLE_ID="<App Store app>,<beta app>").
     verifier = AppleJWSVerifier(
         test_chain.root_cert,
-        "com.missinghue.hangs",
+        "com.missinghue.hangs,com.missinghue.hangs.beta",
         ("Sandbox", "Production"),
     )
 

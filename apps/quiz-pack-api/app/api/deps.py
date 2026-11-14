@@ -35,17 +35,17 @@ _arq_pool_lock = asyncio.Lock()
 @lru_cache(maxsize=1)
 def _build_verifier(
     root_cert_path: str,
-    app_bundle_id: str,
+    app_bundle_ids: tuple[str, ...],
     storekit_environment: frozenset[str] | None,
 ) -> AppleJWSVerifier:
-    return AppleJWSVerifier.from_path(root_cert_path, app_bundle_id, storekit_environment)
+    return AppleJWSVerifier.from_path(root_cert_path, app_bundle_ids, storekit_environment)
 
 
 def get_jws_verifier(settings: Annotated[Settings, Depends(get_settings)]) -> AppleJWSVerifier:
     """Return a cached `AppleJWSVerifier` built from the current settings."""
     return _build_verifier(
         str(settings.storekit_root_cert_path),
-        settings.app_bundle_id,
+        settings.app_bundle_ids,
         settings.storekit_environment,
     )
 

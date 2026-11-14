@@ -275,9 +275,12 @@ async def apple_sign_in(
 
     # 3) Exchange the authorization code immediately — Apple voids it after ~5 min
     #    (F10). Capture Apple's refresh token (it is not always present).
+    # The verified `aud` names the app this sign-in came from (#234: App Store
+    # app or beta app); Apple binds the code and its refresh token to it.
+    client_id = claims.get("aud")
     try:
         exchange = await oauth_client.exchange_authorization_code(
-            body.authorization_code
+            body.authorization_code, client_id=client_id
         )
     except AppleOAuthError:
         raise HTTPException(status_code=502, detail="Apple token exchange failed")
@@ -293,6 +296,7 @@ async def apple_sign_in(
             session,
             apple_sub=apple_sub,
             encrypted_refresh=encrypted,
+            refresh_client_id=client_id,
         )
         user_id = str(user.id)
         if anon_id is not None and anon_id != user_id:
@@ -355,6 +359,7 @@ async def delete_account(
 
     user_id: Optional[str] = None
     encrypted: Optional[bytes] = None
+    refresh_client_id: Optional[str] = None
     async with sessionmaker() as session:
         anon = await resolve_anonymous(subject, session)
         anon_id = anon.anon_id if anon is not None else None
@@ -365,6 +370,7 @@ async def delete_account(
             user = await resolve_account(subject, session)
             user_id = str(user.id)
             encrypted = user.apple_refresh_token_encrypted
+            refresh_client_id = user.apple_refresh_token_client_id
             erased_ids = await erase_account(session, user)
         # #197: car answer recordings live in R2 as well — same before-commit
         # rule as the ratings store below (see ``erase_voice_samples``).
@@ -390,7 +396,9 @@ async def delete_account(
     if user_id is None:
         logger.info("Anonymous identity %s erased (GDPR erasure).", anon_id)
         return Response(status_code=204)
-    await revoke_apple_grant(oauth_client, cipher, encrypted, user_id)
+    await revoke_apple_grant(
+        oauth_client, cipher, encrypted, user_id, client_id=refresh_client_id
+    )
     logger.info("Account %s deleted (GDPR erasure).", user_id)
     return Response(status_code=204)
 

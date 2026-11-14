@@ -13,6 +13,8 @@ struct RoomFlowView: View {
     @ObservedObject var viewModel: RoomViewModel
     @State private var confirmingLeave = false
     @State private var showingRules = false
+    /// #232 (5A): the host's packs for "What we play".
+    var packs: MyPacksViewModel?
     let onShowPlans: () -> Void
     let onClose: () -> Void
 
@@ -107,7 +109,7 @@ struct RoomFlowView: View {
             RoomStartView(viewModel: viewModel)
         case .lobby:
             if viewModel.isHost {
-                RoomLobbyHostView(viewModel: viewModel)
+                RoomLobbyHostView(viewModel: viewModel, packs: packs)
             } else {
                 RoomLobbyGuestView(viewModel: viewModel)
             }

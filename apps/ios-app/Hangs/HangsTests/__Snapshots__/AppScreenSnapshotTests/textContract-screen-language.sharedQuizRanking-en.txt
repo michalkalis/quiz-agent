@@ -1,0 +1,14 @@
+# texts
+Ranking
+1.
+Rýchly gepard
+8
+2.
+You
+7.5
+3.
+Zuzka
+5
+When others finish it, they show up here.
+# identifiers
+sharedQuiz.ranking

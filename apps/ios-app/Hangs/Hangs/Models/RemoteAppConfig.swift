@@ -55,6 +55,10 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// #217: the App Store build shows Together only when this is also on
     /// (TestFlight builds ignore it). Off unless the server says on.
     let multiplayerEnabledAppStore: Bool
+    /// #232: share a quiz by link (send, open, paste, compare, a pack in a
+    /// game together). Off unless the server says on, also in `permissive`:
+    /// the shared-quiz endpoints answer 404 while the server switch is off.
+    let sharedQuizEnabled: Bool
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -77,6 +81,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case maintenanceMessage = "maintenance_message"
         case multiplayerEnabled = "multiplayer_enabled"
         case multiplayerEnabledAppStore = "multiplayer_enabled_app_store"
+        case sharedQuizEnabled = "shared_quiz_enabled"
     }
 
     init(
@@ -91,7 +96,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         maintenanceEnabled: Bool = false,
         maintenanceMessage: Notice? = nil,
         multiplayerEnabled: Bool = false,
-        multiplayerEnabledAppStore: Bool = false
+        multiplayerEnabledAppStore: Bool = false,
+        sharedQuizEnabled: Bool = false
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -105,6 +111,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.maintenanceMessage = maintenanceMessage
         self.multiplayerEnabled = multiplayerEnabled
         self.multiplayerEnabledAppStore = multiplayerEnabledAppStore
+        self.sharedQuizEnabled = sharedQuizEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -122,5 +129,6 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         maintenanceMessage = try? container.decodeIfPresent(Notice.self, forKey: .maintenanceMessage)
         multiplayerEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabled)) ?? false
         multiplayerEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabledAppStore)) ?? false
+        sharedQuizEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .sharedQuizEnabled)) ?? false
     }
 }

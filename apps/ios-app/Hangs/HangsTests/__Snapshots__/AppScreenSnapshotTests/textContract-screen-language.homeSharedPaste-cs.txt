@@ -1,0 +1,5 @@
+# texts
+Máš odkaz na kvíz od kamaráda?
+# identifiers
+home.sharedQuiz.paste
+home.sharedQuiz.dismiss

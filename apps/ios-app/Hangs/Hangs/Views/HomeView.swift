@@ -29,6 +29,9 @@ struct HomeView: View {
     /// #205: today's daily challenge. Nil (inspector tests, previews) — or the
     /// server switch off — renders Home without the card.
     var dailyChallenge: DailyChallengeViewModel?
+    /// #232: a friend's quiz link; nil (inspector tests, previews) renders Home
+    /// without the first-launch paste row.
+    var sharedQuiz: SharedQuizInbox?
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
@@ -36,6 +39,11 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
+                // #232: the first launch's "quiz link from a friend?" row.
+                if let appConfig, let sharedQuiz {
+                    HomeSharedQuizPasteRow(inbox: sharedQuiz, appConfig: appConfig)
+                }
+
                 // #205.4: the daily challenge opens the page, above the quiz.
                 if let appConfig, let dailyChallenge {
                     HomeDailyChallengeSection(
@@ -62,6 +70,7 @@ struct HomeView: View {
                         viewModel: myPacks,
                         createPack: createPackEntry,
                         quizStart: packQuizStart,
+                        onSendPack: sendPackAction,
                         onPlayPack: startPack
                     )
                 }
@@ -120,6 +129,17 @@ struct HomeView: View {
 
     private func startPack(_ pack: PackPlay) {
         viewModel.beginQuizStart(pack: pack)
+    }
+
+    /// #232: "Send to a friend" in a finished pack's menu, with the switch on.
+    private var sendPackAction: ((OrderSnapshot) -> Void)? {
+        guard appConfig?.sharedQuizEnabled == true else { return nil }
+        return sendPack
+    }
+
+    private func sendPack(_ order: OrderSnapshot) {
+        guard let packId = order.packId else { return }
+        viewModel.sendPack(packId: packId)
     }
 
     private func startDailyChallenge(_ day: DailyChallengeDay) {

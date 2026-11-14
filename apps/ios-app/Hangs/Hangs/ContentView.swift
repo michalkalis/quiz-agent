@@ -35,10 +35,13 @@ struct ContentView: View {
     @State private var togetherRoom: RoomViewModel?
     /// Shows the Together tab while the server switch is on.
     @ObservedObject private var appConfig: AppConfigStore
+    /// #232: a friend's quiz link waiting to start.
+    @ObservedObject private var sharedQuiz: SharedQuizInbox
 
     init(appState: AppState) {
         _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
         _appConfig = ObservedObject(wrappedValue: appState.appConfig)
+        _sharedQuiz = ObservedObject(wrappedValue: appState.sharedQuizInbox)
         _dailyChallenge = StateObject(wrappedValue: DailyChallengeViewModel(network: appState.networkService))
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
@@ -61,13 +64,26 @@ struct ContentView: View {
     }
 
     var body: some View {
-        if showOnboarding {
-            OnboardingView(viewModel: onboardingVM)
-                .onChange(of: onboardingVM.isComplete) { _, complete in
-                    if complete { showOnboarding = false }
-                }
-        } else {
-            mainContent
+        Group {
+            if showOnboarding {
+                OnboardingView(viewModel: onboardingVM)
+                    .onChange(of: onboardingVM.isComplete) { _, complete in
+                        if complete { showOnboarding = false }
+                    }
+            } else {
+                mainContent
+            }
+        }
+        // #232: a friend's link opens even over the first launch's onboarding.
+        .onReceive(sharedQuiz.$token) { token in
+            // @Published delivers before the new value is stored.
+            if token != nil { Task { openPendingSharedQuiz() } }
+        }
+        .onChange(of: appConfig.sharedQuizEnabled) { _, _ in openPendingSharedQuiz() }
+        // #232: the first launch asks iOS (no paste alert) whether a link waits.
+        .task(id: appConfig.sharedQuizEnabled) {
+            guard appConfig.sharedQuizEnabled else { return }
+            await sharedQuiz.checkClipboard()
         }
     }
 
@@ -190,6 +206,17 @@ struct ContentView: View {
         openRoom(invite: invite)
     }
 
+    /// #232: a friend's link starts its quiz at once, without the onboarding
+    /// (it stays for the next launch); the mic is asked for at the start, as
+    /// for every quiz. Waits while the switch is off (the config may still be
+    /// the launch default), a game together is up or a quiz runs.
+    private func openPendingSharedQuiz() {
+        guard appConfig.sharedQuizEnabled, room == nil, viewModel.quizState == .idle,
+              let token = sharedQuiz.take() else { return }
+        showOnboarding = false
+        viewModel.beginSharedQuiz(token: token)
+    }
+
     /// The pushed screens, the same on both tabs' stacks.
     @ViewBuilder
     private func routeDestination(_ route: AppRoute) -> some View {
@@ -231,6 +258,7 @@ struct ContentView: View {
                                 myPacks: appState.myPacksViewModel,
                                 appConfig: appState.appConfig,
                                 dailyChallenge: dailyChallenge,
+                                sharedQuiz: sharedQuiz,
                                 onCreatePack: presentOrderFlow
                             )
                         case .question:
@@ -378,6 +406,8 @@ struct ContentView: View {
         .onReceive(viewModel.$quizState) { newState in
             navModel.handleQuizStateChange(newState)
             offerPendingSignInPrompt(quizState: newState)
+            // #232: the paste row is for before the first quiz only.
+            if newState == .startingQuiz { sharedQuiz.quizStarted() }
         }
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
@@ -385,6 +415,7 @@ struct ContentView: View {
         .fullScreenCover(item: $room, onDismiss: roomClosed) { room in
             RoomFlowView(
                 viewModel: room,
+                packs: appState.myPacksViewModel,
                 onShowPlans: {
                     self.room = nil
                     viewModel.showPaywall = true
@@ -399,7 +430,24 @@ struct ContentView: View {
             // the next main-actor turn.
             if invite != nil { Task { openPendingInvite() } }
         }
-        .onChange(of: viewModel.quizScreen) { _, _ in openPendingInvite() }
+        .onChange(of: viewModel.quizScreen) { _, _ in
+            openPendingInvite()
+            openPendingSharedQuiz()
+        }
+        // #232: the comparison of the sender's own link or an already played one.
+        .sheet(item: $viewModel.sharedQuizComparison) { play in
+            SharedQuizResultsSheet(network: viewModel.networkService, token: play.token)
+        }
+        // #232: a link that cannot be played (gone, nothing playable).
+        .alert(
+            viewModel.sharedQuizNotice ?? "",
+            isPresented: Binding(
+                get: { viewModel.sharedQuizNotice != nil },
+                set: { if !$0 { viewModel.dismissSharedQuizNotice() } }
+            )
+        ) {
+            Button("OK", role: .cancel) { viewModel.dismissSharedQuizNotice() }
+        }
         .onChange(of: appConfig.multiplayerHiddenByChannel) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
         // Mounted here, on the root, because `startNewQuiz` has 9 call sites

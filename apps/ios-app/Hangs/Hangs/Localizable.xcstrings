@@ -134,6 +134,23 @@
         }
       }
     },
+    "%@ · quiz from a friend" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · kvíz od kamaráta"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · kvíz od kamaráda"
+          }
+        }
+      },
+      "comment" : "#232: overline on the round end of a friend's quiz; the category name first"
+    },
     "%lld CORRECT" : {
       "comment" : "Recap hero chip: number of correct answers (#132 E)",
       "localizations" : {
@@ -1475,6 +1492,22 @@
         }
       }
     },
+    "A quiz in Trubbo" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz v Trubbe"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz v Trubbu"
+          }
+        }
+      }
+    },
     "A short tone when the microphone turns on. The vibration stays." : {
       "comment" : "Subtitle of the Recording sounds settings toggle: the mic-live tone; the haptic stays when the sound is off.",
       "localizations" : {
@@ -2297,6 +2330,23 @@
         }
       }
     },
+    "Categories from Home" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategórie z Úvodu"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategorie z Úvodu"
+          }
+        }
+      },
+      "comment" : "#232: game together plays the categories set on the Home tab"
+    },
     "Changes apply from the next question. When to show answers can only be changed before the game." : {
       "localizations" : {
         "cs" : {
@@ -2959,6 +3009,22 @@
         }
       }
     },
+    "Couldn't create the link. Try again." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odkaz sa nepodarilo vytvoriť. Skús to znova."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odkaz se nepodařilo vytvořit. Zkus to znovu."
+          }
+        }
+      }
+    },
     "Couldn't load the next question" : {
       "comment" : "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended",
       "localizations" : {
@@ -3320,6 +3386,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DEBUG"
+          }
+        }
+      }
+    },
+    "Daily challenge" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denná výzva"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denní výzva"
           }
         }
       }
@@ -3888,6 +3970,23 @@
           }
         }
       }
+    },
+    "Everyone plays the same questions. Only you need the pack." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všetci hrajú tie isté otázky. Balík stačí mať tebe."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všichni hrají stejné otázky. Balíček stačí mít tobě."
+          }
+        }
+      },
+      "comment" : "#232: footer of the \"What we play\" sheet in a game together"
     },
     "Everyone sees the answers at the end of the game." : {
       "comment" : "Hra spolu (#212)",
@@ -4679,6 +4778,23 @@
           }
         }
       }
+    },
+    "Got a quiz link from a friend?" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máš odkaz na kvíz od kamaráta?"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máš odkaz na kvíz od kamaráda?"
+          }
+        }
+      },
+      "comment" : "#232: first-launch Home row next to the system Paste button"
     },
     "Got it" : {
       "comment" : "Button that dismisses the custom-pack progress sheet without cancelling the order",
@@ -7324,6 +7440,202 @@
         }
       }
     },
+    "Play my quiz in Trubbo. It's %lld questions and I got %@. How many will you get?" : {
+      "comment" : "#232 share message (text B): question count, then the sender's score. The link follows on its own line",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play my quiz in Trubbo. %#@questions@ and I got %2$@. How many will you get?"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "It's %arg question"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "It's %arg questions"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahraj si môj kvíz v Trubbe. %#@questions@, mám %2$@. Koľko dáš ty?"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Sú to %arg otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahraj si můj kvíz v Trubbu. %#@questions@, mám %2$@. Kolik dáš ty?"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Jsou to %arg otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Je to %arg otázek"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Play my quiz in Trubbo. It's %lld questions. How many will you get?" : {
+      "comment" : "#232 share message for a custom pack: its question count. The link follows on its own line",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Play my quiz in Trubbo. It's %lld question. How many will you get?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Play my quiz in Trubbo. It's %lld questions. How many will you get?"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si môj kvíz v Trubbe. Je to %lld otázka. Koľko dáš ty?"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si môj kvíz v Trubbe. Sú to %lld otázky. Koľko dáš ty?"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si môj kvíz v Trubbe. Je to %lld otázky. Koľko dáš ty?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si môj kvíz v Trubbe. Je to %lld otázok. Koľko dáš ty?"
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si můj kvíz v Trubbu. Je to %lld otázka. Kolik dáš ty?"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si můj kvíz v Trubbu. Jsou to %lld otázky. Kolik dáš ty?"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si můj kvíz v Trubbu. Je to %lld otázky. Kolik dáš ty?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si můj kvíz v Trubbu. Je to %lld otázek. Kolik dáš ty?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Play summary" : {
       "comment" : "Recap CTA: read the whole summary aloud (#132 E)",
       "localizations" : {
@@ -7337,6 +7649,89 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prehraj súhrn"
+          }
+        }
+      }
+    },
+    "Play the same %lld questions" : {
+      "comment" : "#232 daily challenge share text: the line above the link to the same questions",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Play the same %lld question"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Play the same %lld questions"
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si tú istú %lld otázku"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si tie isté %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si tie isté %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si tých istých %lld otázok"
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si stejnou %lld otázku"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si stejné %lld otázky"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si stejné %lld otázky"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zahraj si stejných %lld otázek"
+                }
+              }
+            }
           }
         }
       }
@@ -8041,6 +8436,23 @@
         }
       }
     },
+    "Quiz from a friend" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz od kamaráta"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kvíz od kamaráda"
+          }
+        }
+      },
+      "comment" : "#232: overline on the round end of a friend's quiz without one category"
+    },
     "Quiz language" : {
       "localizations" : {
         "cs" : {
@@ -8074,6 +8486,23 @@
         }
       }
     },
+    "Quiz results" : {
+      "comment" : "#232: title of the comparison sheet a shared quiz link opens",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Výsledky kvízu"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Výsledky kvízu"
+          }
+        }
+      }
+    },
     "Quiz topic" : {
       "comment" : "Section label above the custom-pack topic field",
       "localizations" : {
@@ -8090,6 +8519,23 @@
           }
         }
       }
+    },
+    "Ranking" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poradie"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pořadí"
+          }
+        }
+      },
+      "comment" : "#232: section label above the comparison of everyone who played a shared quiz"
     },
     "Read questions aloud" : {
       "localizations" : {
@@ -8208,6 +8654,23 @@
         }
       }
     },
+    "Send to a friend" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli kamarátovi"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli kamarádovi"
+          }
+        }
+      },
+      "comment" : "#232: share this quiz as a link"
+    },
     "Some words in your topic are rude or for adults only. We'll make the pack, but the questions will be toned down." : {
       "comment" : "Order summary (#233): the topic passed the check but its questions will be toned down",
       "extractionState" : "manual",
@@ -8225,6 +8688,23 @@
           }
         }
       }
+    },
+    "That's not a quiz link. Tap the link in the message again." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toto nie je odkaz na kvíz. Klepni znova na odkaz v správe."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tohle není odkaz na kvíz. Klepni znovu na odkaz ve zprávě."
+          }
+        }
+      },
+      "comment" : "#232: the pasted text was not a Trubbo quiz link"
     },
     "The link also works for friends in another city." : {
       "comment" : "Hra spolu (#230): host lobby, one line under the share button",
@@ -10283,6 +10763,71 @@
         }
       }
     },
+    "They play the same questions. Open your link to see the results." : {
+      "comment" : "#232: under \"Send to a friend\" on the round end; opening the own link later shows the comparison",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahrá si tie isté otázky. Výsledky uvidíš, keď si otvoríš svoj odkaz."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahraje si stejné otázky. Výsledky uvidíš, až si otevřeš svůj odkaz."
+          }
+        }
+      }
+    },
+    "This quiz can't be played any more." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kvíz sa už nedá hrať."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenhle kvíz už nejde hrát."
+          }
+        }
+      }
+    },
+    "This quiz can't be sent yet." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kvíz sa ešte nedá poslať."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenhle kvíz ještě nejde poslat."
+          }
+        }
+      }
+    },
+    "This quiz link no longer works." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento odkaz na kvíz už nefunguje."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenhle odkaz na kvíz už nefunguje."
+          }
+        }
+      }
+    },
     "We can't make a quiz on this topic. Please try a different one." : {
       "comment" : "Order form (#233): the topic check refused the topic before payment; the player edits it",
       "extractionState" : "manual",
@@ -10297,6 +10842,73 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Na túto tému kvíz nespravíme. Skús inú."
+          }
+        }
+      }
+    },
+    "What we play" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čo hráme"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co hrajeme"
+          }
+        }
+      },
+      "comment" : "#232: the host picks the categories or a custom pack for a game together"
+    },
+    "When others finish it, they show up here." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keď ho dohrajú ďalší, objavia sa tu."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Až ho dohrají další, objeví se tady."
+          }
+        }
+      },
+      "comment" : "#232: under the comparison of a shared quiz"
+    },
+    "You" : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ty"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ty"
+          }
+        }
+      },
+      "comment" : "#232: the viewer's own row in the comparison"
+    },
+    "You've already played this quiz." : {
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kvíz už máš dohraný."
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenhle kvíz už máš dohraný."
           }
         }
       }

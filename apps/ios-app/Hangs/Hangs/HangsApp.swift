@@ -24,6 +24,7 @@ struct HangsApp: App {
         #endif
         #if DEBUG
             UITestSupport.roomInvites = appState.roomInvites
+            UITestSupport.sharedQuizInbox = appState.sharedQuizInbox
         #endif
 
         // Skip Sentry on simulator — only real-device debug + release builds report.
@@ -89,6 +90,8 @@ struct HangsApp: App {
                     Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
                     // #212: a game invite (QR code or shared link).
                     if appState.roomInvites.receive(url) { return }
+                    // #232: a friend's quiz link.
+                    if appState.sharedQuizInbox.receive(url) { return }
                     #if DEBUG
                     Task { @MainActor in
                         await UITestSupport.handleTestURL(url)

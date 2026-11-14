@@ -37,6 +37,8 @@
         var readsAloud = true
         /// #224: more guests already in the lobby (a full room fits one screen).
         var extraGuests: [String] = []
+        /// #232 (5A): nobody joins the new room (the host can still pick its content).
+        var hostAlone = false
         /// When set, `updateSettings` fails with it (the host's change is undone).
         var settingsError: Error?
         /// Every `updateSettings` call, for asserting what the host sent.
@@ -99,9 +101,12 @@
             self.readsAloud = readsAloud
             players = [
                 .init(participantId: Self.youId, displayName: hostName, color: "#ff6b2c", isHost: true, score: 0),
-                .init(participantId: Self.otherId, displayName: "Jana", color: "#7a5cff", isHost: false, score: 0),
-            ] + extraGuests.enumerated().map { offset, name in
-                .init(participantId: "p_guest\(offset)", displayName: name, color: "#2fb67c", isHost: false, score: 0)
+            ]
+            if !hostAlone {
+                players += [.init(participantId: Self.otherId, displayName: "Jana", color: "#7a5cff", isHost: false, score: 0)]
+                    + extraGuests.enumerated().map { offset, name in
+                        .init(participantId: "p_guest\(offset)", displayName: name, color: "#2fb67c", isHost: false, score: 0)
+                    }
             }
             bump()
             return RoomCreated(roomId: Self.roomId, joinToken: Self.token, sessionId: sessionId)

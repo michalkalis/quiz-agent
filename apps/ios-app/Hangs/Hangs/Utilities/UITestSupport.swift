@@ -28,6 +28,8 @@
         private static var mockRooms: MockRoomService?
         /// #212: where a test's join link lands, as if the player opened it.
         weak static var roomInvites: RoomInviteInbox?
+        /// #232: where `shared/open` delivers a quiz link.
+        weak static var sharedQuizInbox: SharedQuizInbox?
         /// #213.8: the host's game-together rules, emptied once per launch so
         /// every RS run starts from the defaults (a test's change never leaks).
         static let roomSettingsDefaults: UserDefaults = {
@@ -72,6 +74,8 @@
             } else {
                 network.mockTextInputResponse = QuizResponse.previewAnswerCorrect
             }
+
+            SharedQuizFixtures.configure(network)
 
             if CommandLine.arguments.contains("--ui-test-paywall") {
                 network.createSessionError = NetworkError.quotaLimitReached(QuotaLimitError(
@@ -295,6 +299,7 @@
         /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
         ///   call) hits the recording
         /// - `hangs-test://room/join?text=<token>` → the join link opens (#212)
+        /// - `hangs-test://shared/open?text=<token>` → a friend's quiz link opens (#232)
         /// - `hangs-test://room/start`, `hangs-test://room/next` → a guest's host
         ///   starts the scripted game / moves on (#212)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
@@ -329,6 +334,9 @@
             case ("room", "/join"):
                 guard let roomInvites, let link = URL(string: "\(RoomInvite.joinPageURL())?t=\(text)") else { return false }
                 return roomInvites.receive(link)
+            case ("shared", "/open"):
+                guard let sharedQuizInbox else { return false }
+                return sharedQuizInbox.receive(SharedQuizLink.url(token: text))
             case ("room", "/start"):
                 guard let mockRooms else { return false }
                 mockRooms.hostStarts()

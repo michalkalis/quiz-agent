@@ -35,6 +35,8 @@ struct HomePacksSection: View {
     /// Home's Start button does (TestFlight 2026-10-10: a pack tap gave no
     /// feedback). Any start in flight disables every play control.
     let quizStart: QuizStart
+    /// #232: send a finished pack to a friend (row menu); nil hides it.
+    let onSendPack: ((OrderSnapshot) -> Void)?
 
     struct QuizStart: Equatable {
         var isInFlight = false
@@ -53,11 +55,13 @@ struct HomePacksSection: View {
         viewModel: MyPacksViewModel,
         createPack: CreatePackEntry? = nil,
         quizStart: QuizStart = .idle,
+        onSendPack: ((OrderSnapshot) -> Void)? = nil,
         onPlayPack: @escaping (PackPlay) -> Void
     ) {
         self.viewModel = viewModel
         self.createPack = createPack
         self.quizStart = quizStart
+        self.onSendPack = onSendPack
         self.onPlayPack = onPlayPack
     }
 
@@ -173,7 +177,8 @@ struct HomePacksSection: View {
                     progress: viewModel.progress(of: order),
                     isStarting: quizStart.isInFlight && quizStart.packId == order.packId,
                     isPlayDisabled: quizStart.isInFlight,
-                    onPlay: onPlayPack
+                    onPlay: onPlayPack,
+                    onSend: onSendPack
                 )
             }
         }

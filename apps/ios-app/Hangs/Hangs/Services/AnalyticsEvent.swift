@@ -58,6 +58,8 @@ enum AnalyticsEvent: Equatable {
     /// #233: the custom pack topic check before payment; `verdict` is
     /// ok / softened / blocked, or "error" when the check could not run.
     case packTopicChecked(verdict: String)
+    /// #232: the first-launch "quiz link from a friend?" Paste button was used.
+    case sharedQuizPasted(outcome: SharedQuizPasteOutcome)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -87,6 +89,7 @@ enum AnalyticsEvent: Equatable {
         case .quickGameChanged: "quick_game_changed"
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
+        case .sharedQuizPasted: "shared_quiz_pasted"
         }
     }
 
@@ -163,6 +166,8 @@ enum AnalyticsEvent: Equatable {
             [("quick", .bool(quick))]
         case let .packTopicChecked(verdict):
             [("verdict", .string(verdict))]
+        case let .sharedQuizPasted(outcome):
+            [("outcome", .string(outcome.rawValue))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }
@@ -189,6 +194,12 @@ nonisolated enum AnalyticsValue: Encodable, Equatable, Sendable {
 }
 
 // MARK: - Property values
+
+/// #232: what the pasted text was.
+enum SharedQuizPasteOutcome: String {
+    case opened
+    case notALink = "not_a_link"
+}
 
 /// How a Home category deck step was made.
 enum CategoryStepInput: String {

@@ -79,6 +79,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-28 | `RSRoomTests.testRS28…` (+ unit `RoomViewModelTests`) | scripted mock room (`MockRoomService`), DEBUG seed |
 | RS-29 | `RSRoomTests.testRS29…` (+ unit `RoomViewModelTests`) | scripted mock room; host driven over the test listener |
 | RS-32 | `RSRoomTests.testRS32…` (+ unit `RoomViewModelSettingsTests`) | scripted mock room; rules start from the defaults every launch (`UITestSupport.roomSettingsDefaults`); the in-game sheet is covered by unit tests and the `roomRules` snapshot only |
+| RS-33 | `RSSharedQuizTests.testRS33a/b/c…` (+ unit `SharedQuizFlowTests`, `SharedQuizLinkTests`) | link delivered over the test listener; mocks answer for the server (`SharedQuizFixtures`); the friend's quiz is not played to its end (the round end is covered by unit tests and the `completionShare` / `sharedQuizRanking` snapshots) |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -816,6 +817,25 @@ test listener.
 `room.rules.time` reads "45 s". Guest: `room.rules.guest` present;
 `room.rules.reveal`, `room.rules.time`, `room.rules.readsAloud` absent. App
 alive (both launches).
+
+---
+
+## RS-33: A shared quiz link plays once, then compares
+
+**Type:** XCUITest (`RSSharedQuizTests`). #232 (share a quiz by link).
+
+**Hypothesis:** A friend's link starts its quiz at once from Home; a link the
+player cannot play again (already played, or the sender's own) shows the
+comparison instead of an error or a second attempt.
+
+**Steps:** launch with `--app-config-shared-quiz` (a: no other flag; b:
+`--ui-test-shared-quiz-played`; c: `--ui-test-shared-quiz-own`); POST
+`/shared/open?text=rs33-shared-quiz` to the test listener; in b and c tap
+`sharedQuiz.results.done`.
+
+**Asserts:** a: the question screen, no `sharedQuiz.ranking`. b, c:
+`sharedQuiz.ranking` present, no question, back on Home (`home.startQuiz`)
+after Done. App alive.
 
 ---
 

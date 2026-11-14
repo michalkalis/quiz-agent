@@ -70,6 +70,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var settings: MultiplayerSettings
     /// Host: a rules change is on its way to the server.
     @Published var isSavingSettings = false
+    /// #232 (5A): what the room plays; the host changes it in the lobby.
+    @Published var content: RoomContent = .home
 
     let settingsStore: MultiplayerSettingsStore
     let analytics: AnalyticsClient
@@ -83,6 +85,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     let excludedQuestionIds: () -> [String]
     let clock: AnyClock<Duration>
     let names: PlayerNameStore
+    /// #232 (5A): the host may pick a finished custom pack (server switch).
+    let packsEnabled: () -> Bool
     private let calls: CallStatusProviding
     private let isOffCellular: () async -> Bool
 
@@ -123,7 +127,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
         calls: CallStatusProviding? = nil,
         clock: AnyClock<Duration> = .continuous,
         languageCode: String? = Locale.current.language.languageCode?.identifier,
-        isOffCellular: @escaping () async -> Bool = LocalNetworkCheck.isOffCellular
+        isOffCellular: @escaping () async -> Bool = LocalNetworkCheck.isOffCellular,
+        packsEnabled: @escaping () -> Bool = { false }
     ) {
         self.rooms = rooms
         self.network = network
@@ -140,6 +145,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         self.calls = calls ?? CallMonitor()
         self.clock = clock
         self.isOffCellular = isOffCellular
+        self.packsEnabled = packsEnabled
         playerName = names.chosenName ?? PlayerNameStore.automaticName(languageCode: languageCode)
     }
 
@@ -310,6 +316,12 @@ final class RoomViewModel: ObservableObject, Identifiable {
         } else if role == .host, let created, state?.status != .finished {
             try? await network.endSession(sessionId: created.sessionId)
         }
+    }
+
+    /// #232 (5A): the lobby moved to a room with other content.
+    func moveToRoom(_ room: RoomCreated) {
+        created = room
+        state = nil
     }
 
     func stopAll() {

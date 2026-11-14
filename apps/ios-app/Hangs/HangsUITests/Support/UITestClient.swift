@@ -34,6 +34,11 @@ struct UITestClient {
         try await post(path: "/room/join", text: token)
     }
 
+    /// #232: a shared quiz link opens on this phone (tapped in a message).
+    func openSharedQuizLink(token: String) async throws {
+        try await post(path: "/shared/open", text: token)
+    }
+
     /// #212: the scripted room's host (another phone) starts the game.
     func roomHostStarts() async throws {
         try await post(path: "/room/start", text: nil)

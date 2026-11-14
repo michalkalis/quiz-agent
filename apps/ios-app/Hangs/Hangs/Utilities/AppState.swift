@@ -70,6 +70,13 @@ final class AppState: ObservableObject {
         playedCount: { [weak self] in self?.quizViewModel?.playedQuestionCount(inPack: $0) ?? 0 }
     )
 
+    /// #232: a friend's quiz link (tapped or pasted), held until Home starts it.
+    /// Lazy so it is built at the first launch's start, before onboarding ends.
+    private(set) lazy var sharedQuizInbox = SharedQuizInbox(
+        isFirstLaunch: SharedQuizInbox.claimFirstLaunch(hasCompletedOnboarding: persistenceStore.hasCompletedOnboarding),
+        analytics: analytics
+    )
+
     /// #213.4: the Profile tab, long-lived like the packs list so its cards
     /// stay while a quiz runs and while they refresh.
     private(set) lazy var profileViewModel = ProfileViewModel(service: playerStatsService, analytics: analytics)
@@ -389,7 +396,8 @@ final class AppState: ObservableObject {
             accountName: KeychainTokenStore().load()?.accountName,
             excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() },
             settingsStore: roomSettingsStore,
-            analytics: analytics
+            analytics: analytics,
+            packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled }
         )
     }
 
@@ -416,7 +424,8 @@ final class AppState: ObservableObject {
             isLocallyEntitled: { storeManager.isPurchased },
             analytics: analytics,
             answerRecordingUploader: answerRecordingUploader,
-            voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment }
+            voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment },
+            sharedQuizEnabled: { [appConfig] in appConfig.sharedQuizEnabled }
         )
 
         #if DEBUG

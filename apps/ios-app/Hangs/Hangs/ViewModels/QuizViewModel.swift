@@ -156,6 +156,15 @@ final class QuizViewModel: ObservableObject {
     /// the rules it changes are listed on `DailyRound`. Set by the start,
     /// cleared by the next start and by every return Home.
     @Published var activeDaily: DailyRound?
+    /// #232: set while the round plays (or just played) a quiz from a friend's
+    /// link; its round end shows the comparison. Cleared like `activeDaily`.
+    @Published var activeShare: SharedQuizPlay?
+    /// #232: a link that could not be played (already played, gone); Home
+    /// shows it once. The start never reaches the error screen for it.
+    @Published var sharedQuizNotice: String?
+    /// #232: the comparison of a link this player cannot play again (the
+    /// sender's own link, a friend's already played one); Home shows it.
+    @Published var sharedQuizComparison: SharedQuizPlay?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -760,6 +769,9 @@ final class QuizViewModel: ObservableObject {
     /// `AppConfigStore`), and the store that assigns it per quiz round.
     let voiceExperimentConfig: @MainActor () -> VoiceExperimentConfig?
     let voiceExperiment: VoiceExperimentStore
+    /// #232: the server switch for sharing a quiz by link (AppState reads it
+    /// from `AppConfigStore`); every sharing surface hides while it is off.
+    let sharedQuizEnabled: @MainActor () -> Bool
 
     /// #197: sends saved car recordings to the backend; kicked, never awaited.
     let answerRecordingUploader: AnswerRecordingUploading?
@@ -857,9 +869,11 @@ final class QuizViewModel: ObservableObject {
         analytics: AnalyticsClient = NoopAnalyticsClient(),
         answerRecordingUploader: AnswerRecordingUploading? = nil,
         voiceExperimentConfig: @escaping @MainActor () -> VoiceExperimentConfig? = { nil },
-        voiceExperiment: VoiceExperimentStore = .shared
+        voiceExperiment: VoiceExperimentStore = .shared,
+        sharedQuizEnabled: @escaping @MainActor () -> Bool = { false }
     ) {
         self.networkService = networkService
+        self.sharedQuizEnabled = sharedQuizEnabled
         self.analytics = analytics
         self.voiceExperimentConfig = voiceExperimentConfig
         self.voiceExperiment = voiceExperiment
@@ -1175,10 +1189,11 @@ final class QuizViewModel: ObservableObject {
         language: String? = nil,
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
+        shared: String? = nil,
         skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, skipAvailabilityCheck: skipAvailabilityCheck)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, shared: shared, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1197,12 +1212,15 @@ final class QuizViewModel: ObservableObject {
     /// re-open the alert it just answered.
     /// `daily` (#205) plays that day's challenge: the server picks the
     /// questions and hands back the session (or, already played, the result).
+    /// `shared` (#232) plays the quiz behind a friend's link token: the server
+    /// builds the session from the link's questions.
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
+        shared: String? = nil,
         skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
@@ -1217,7 +1235,9 @@ final class QuizViewModel: ObservableObject {
 
         let entryPoint = QuizEntryPoint(packId: pack?.packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
-        activePack = daily == nil ? pack : nil
+        activePack = daily == nil && shared == nil ? pack : nil
+        activeShare = shared.map { SharedQuizPlay(token: $0) }
+        sharedQuizNotice = nil
         packRestartOffer = nil
         errorMessage = nil
         #if DEBUG
@@ -1238,7 +1258,7 @@ final class QuizViewModel: ObservableObject {
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, daily == nil, !skipAvailabilityCheck,
+        if pack == nil, daily == nil, shared == nil, !skipAvailabilityCheck,
            let shortfall = await probeQuestionShortfall(
                requestedCount: quizMaxQuestions,
                difficulty: quizDifficulty,
@@ -1259,14 +1279,14 @@ final class QuizViewModel: ObservableObject {
             // play continues with the next unplayed questions; the library
             // excludes the global history.
             // #205: the server fixes the daily set, so it excludes nothing.
-            let excludedIds = daily != nil ? []
+            let excludedIds = daily != nil || shared != nil ? []
                 : pack.map { persistenceStore.playedPackQuestionIds(packId: $0.packId) }
                 ?? persistenceStore.getExclusionList()
 
             // #205: the daily start comes first. Already played today, it
             // returns the result and no session: the round end shows it, and
             // nothing below (audio session, mic) is touched.
-            var dailySession: QuizSession?
+            var serverSession: QuizSession?
             if let daily {
                 let result = try await withTransientStartRetry {
                     try await networkService.startDailyChallenge(date: daily.isoDate, language: quizLanguage)
@@ -1276,7 +1296,19 @@ final class QuizViewModel: ObservableObject {
                     transition(to: .finished)
                     return
                 }
-                dailySession = session
+                serverSession = session
+            }
+            // #232: the friend's session from the link. Played already (a
+            // pack plays once) or gone: Home says so, no error screen.
+            if let shared {
+                let result = try await withTransientStartRetry {
+                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().sharedQuizName())
+                }
+                activeShare?.kind = result.kind
+                guard let session = result.session else {
+                    throw NetworkError.sharedQuizUnavailable(.alreadyPlayed)
+                }
+                serverSession = session
             }
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
@@ -1332,8 +1364,8 @@ final class QuizViewModel: ObservableObject {
             // (`TransientRetry.retryWindow`) and sessions expire, so the risk is
             // accepted.
             let session: QuizSession
-            if let dailySession {
-                session = dailySession
+            if let serverSession {
+                session = serverSession
             } else {
                 session = try await withTransientStartRetry {
                     try await networkService.createSession(
@@ -1423,6 +1455,17 @@ final class QuizViewModel: ObservableObject {
             }
 
             if let pack, case .packExhausted? = error as? NetworkError, offerRestartAfterServerRanOut(pack) {
+                return
+            }
+
+            if let shared, case let .sharedQuizUnavailable(reason)? = error as? NetworkError {
+                activeShare = nil
+                if reason == .alreadyPlayed {
+                    sharedQuizComparison = SharedQuizPlay(token: shared)
+                } else {
+                    sharedQuizNotice = reason.message
+                }
+                transition(to: .idle)
                 return
             }
 
@@ -1818,7 +1861,7 @@ final class QuizViewModel: ObservableObject {
             errorMessage = nil
         default:
             // Fallback to starting new quiz — the same pack, if it was one (#200).
-            await startNewQuiz(pack: activePack, daily: activeDaily?.day)
+            await startNewQuiz(pack: activePack, daily: activeDaily?.day, shared: activeShare?.token)
         }
     }
 
@@ -1827,6 +1870,8 @@ final class QuizViewModel: ObservableObject {
     @discardableResult
     func retryFromErrorScreen() -> Task<Void, Never> {
         if shouldRetryWithNewSession {
+            // #232: a failed start from a link tries the same link again.
+            if let activeShare { return beginQuizStart(shared: activeShare.token) }
             return playAgain()
         }
         return Task { await retryLastOperation() }
@@ -2746,6 +2791,7 @@ final class QuizViewModel: ObservableObject {
         sessionIncorrectCount = 0
         recapEntries = []
         activeDaily = nil
+        activeShare = nil
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil

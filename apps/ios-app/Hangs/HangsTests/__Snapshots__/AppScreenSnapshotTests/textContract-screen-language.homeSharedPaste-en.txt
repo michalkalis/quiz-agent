@@ -1,0 +1,5 @@
+# texts
+Got a quiz link from a friend?
+# identifiers
+home.sharedQuiz.paste
+home.sharedQuiz.dismiss

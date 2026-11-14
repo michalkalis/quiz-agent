@@ -15,6 +15,7 @@ struct PlayerNameStore {
 
     private let defaults: UserDefaults
     private let key = "multiplayer.playerName"
+    private let automaticKey = "sharedQuiz.automaticName"
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -22,6 +23,18 @@ struct PlayerNameStore {
 
     var chosenName: String? {
         defaults.string(forKey: key).flatMap(Self.cleaned)
+    }
+
+    /// #232: the name a shared quiz's comparison shows: the typed one, else
+    /// an automatic one in the interface language, as in a game together. The
+    /// first automatic name is kept, so one person reads the same in every
+    /// comparison. It is not a typed name: a game together still asks a host.
+    func sharedQuizName(languageCode: String? = Locale.interface.language.languageCode?.identifier) -> String {
+        if let chosenName { return chosenName }
+        if let kept = defaults.string(forKey: automaticKey).flatMap(Self.cleaned) { return kept }
+        let name = Self.automaticName(languageCode: languageCode)
+        defaults.set(name, forKey: automaticKey)
+        return name
     }
 
     func save(_ name: String) {

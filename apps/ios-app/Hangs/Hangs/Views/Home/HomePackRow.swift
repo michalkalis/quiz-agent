@@ -38,6 +38,8 @@ struct HomePackRow: View {
     let isStarting: Bool
     let isPlayDisabled: Bool
     let onPlay: (PackPlay) -> Void
+    /// #232: "Send to a friend" in the row's menu, for a finished pack; nil hides it.
+    var onSend: ((OrderSnapshot) -> Void)?
 
     private var style: Theme.Hangs.Category.Style { Theme.Hangs.Category.style(forPack: order.colorKey) }
 
@@ -50,6 +52,14 @@ struct HomePackRow: View {
             }
             .buttonStyle(.plain)
             .disabled(isPlayDisabled)
+            .contextMenu {
+                if let onSend, order.isFinishedPack {
+                    Button("Play", systemImage: "play.fill") { onPlay(pack) }
+                        .accessibilityIdentifier("home.myPacks.menu.play")
+                    Button("Send to a friend", systemImage: "square.and.arrow.up") { onSend(order) }
+                        .accessibilityIdentifier("home.myPacks.menu.send")
+                }
+            }
             .accessibilityHint(isStarting
                 ? String(localized: "Loading", bundle: .interface, locale: .interface, comment: "Accessibility label: the custom pack's quiz is starting")
                 : String(localized: "Start quiz", bundle: .interface, locale: .interface, comment: "Accessibility label: play this custom pack from Home"))

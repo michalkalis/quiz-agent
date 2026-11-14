@@ -17,6 +17,9 @@ struct DailyRoundEndContent: Equatable {
     let comparison: String?
     let bestHit: DailyBestHit?
     let shareText: String
+    private let day: DailyChallengeDay
+    private let language: String
+    private let rank: String?
 
     init(state: DailyChallengeState?, localMarks: [Bool?], round: DailyRound) {
         let summary = state?.status == .played ? state?.summary : nil
@@ -28,13 +31,14 @@ struct DailyRoundEndContent: Equatable {
         self.total = total
         comparison = summary?.comparison
         bestHit = summary?.bestHit
-        shareText = DailyShareText.make(
-            day: round.day,
-            language: state?.language ?? round.language,
-            marks: marks,
-            score: score,
-            total: total,
-            rank: summary?.rank
-        )
+        day = round.day
+        language = state?.language ?? round.language
+        rank = summary?.rank
+        shareText = DailyShareText.make(day: day, language: language, marks: marks, score: score, total: total, rank: rank)
+    }
+
+    /// #232: the same text with an invite line and the shared link.
+    func shareText(link: URL) -> String {
+        DailyShareText.make(day: day, language: language, marks: marks, score: score, total: total, rank: rank, link: link)
     }
 }

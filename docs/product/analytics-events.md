@@ -57,7 +57,7 @@
 
 ## Already in other tables — query there, don't duplicate
 
-- Custom pack orders and delivery: `generation_orders` (status, created/delivered timestamps).
+- Custom pack orders and delivery: `generation_orders` (status, created/delivered timestamps, `difficulty`, and from #236 `audience`: who the pack is written for, adults / kids_4_6 / kids_7_9 / kids_10_12; NULL = a build before the choice, an adult pack). `audience` is a content setting on the order, never a property of the player: no age is stored anywhere.
 - Question ratings / flags: `question_ratings`. In-app feedback: `feedback`.
 - Questions per subject per day: `daily_usage`.
 
@@ -75,6 +75,7 @@
 | Quota pressure | `quota_hit` per subject per month; share followed by `paywall_viewed` / purchase |
 | Usage context | `quiz_context.audio_route` mix (car vs. home vs. party) |
 | Voice command usage | `voice_command` counts by `command` |
+| Child-band pack share (#236) | `generation_orders` with `audience` LIKE 'kids_%' ÷ orders with `audience` NOT NULL (builds that offer the choice), by band; not in `analytics_events` |
 | Game together (#212.5, verdict 4 weeks after the switch goes on) | games = `room_created`; played = `room_finished` with `players` ≥ 2; joins by `room_joined.via` (many games without guests or mostly link joins = guests cannot find the game, see 212.6); new player = a `room_joined` guest whose first `app_opened` is at most 24 h before the join; later solo game = a `quiz_started` by that guest after the join (a guest never starts a session inside a game) |
 | Voice-settings test (#204.9) | per setting × `route_group`, answers where the coin decided it: bad capture = `stop_reason` = cap OR `heard_speech` = false OR rejected (a later `answer_captured` of the same session + question has a higher `rejected_count`); compare the rate between the ON and OFF arms. The weekly job (`POST /api/v1/admin/voice-experiment/evaluate`) does this; SQL below for ad-hoc checks |
 

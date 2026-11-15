@@ -198,6 +198,8 @@ EXPIRY = _role("LLM_ROLE_EXPIRY", "claude-sonnet-5-5")  # was CRITIQUE
 OTDB_REWRITE = _role("LLM_ROLE_OTDB_REWRITE", "claude-haiku-5-5")  # was gpt-4o-mini
 # #233: custom pack topic check before payment; serve-time, one word out.
 TOPIC_CHECK = _role("LLM_ROLE_TOPIC_CHECK", "claude-haiku-5-5")
+# #236: child-band pack check after generation (forbidden themes), same model.
+KIDS_CHECK = _role("LLM_ROLE_KIDS_CHECK", "claude-haiku-5-5")
 HINT_QUESTION = _role("LLM_ROLE_HINT_QUESTION", "gpt-4o")  # kept: Claude over-clues
 SILHOUETTE_QUESTION = _role("LLM_ROLE_SILHOUETTE_QUESTION", "gpt-4o")  # kept: 2x longer
 HINT_VALIDATE = _role("LLM_ROLE_HINT_VALIDATE", "claude-haiku-5-5")  # was gpt-4o-mini

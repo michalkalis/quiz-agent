@@ -18,7 +18,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
-from app import feature_flags
+from app import feature_flags, kids_check
+from app.audience import is_child
 from app.generation.advanced_generator import AdvancedQuestionGenerator
 from app.generation.answer_normalizer import AnswerNormalizer
 from app.generation.prompt_builder import house_style_version, order_brief_section
@@ -263,7 +264,10 @@ class GenerationStage:
             )
 
         # #203 203.9 — read once, so the prompt and the stamp below agree.
-        house_style = feature_flags.gen_house_style()
+        # #236: the house style is the adults' taste brief; a child-band pack
+        # follows the kids prompt alone.
+        child = is_child(ctx.audience)
+        house_style = feature_flags.gen_house_style() and not child
 
         # Founder blind rating 2026-09-03 — the deterministic inline-option
         # repair. A question that recites "closer to 400 years, 1,400 years,
@@ -289,9 +293,19 @@ class GenerationStage:
                     ctx, calls, topics, categories, coverage_kwargs, house_style
                 )
 
-        return await self._postprocess(
+        result = await self._postprocess(
             ctx, questions, allocation, inline_counts, house_style
         )
+        if child:
+            # #236: before the paid fact-check, so a dropped question costs
+            # no verification. Judge outage raises and fails the order.
+            ctx.questions, dropped = await kids_check.filter_questions(
+                ctx.questions, ctx.audience
+            )
+            result.info["questions"] = len(ctx.questions)
+            result.info["dropped_kids_length"] = dropped["length"]
+            result.info["dropped_kids_theme"] = dropped["theme"]
+        return result
 
     async def _generate_subthemes(
         self,
@@ -350,6 +364,10 @@ class GenerationStage:
         open_count = round(count * self._open_fraction)
         if open_count == 0 and count >= OPEN_SHAPE_MIN_ORDER:
             open_count = 1
+        # #236: the open slice uses the adult lateral-puzzle prompt; a
+        # child-band pack writes every question with the kids prompt.
+        if is_child(ctx.audience):
+            open_count = 0
 
         return await self._generator.generate_questions(
             count=count,
@@ -403,6 +421,9 @@ class GenerationStage:
                 [q.question for q in ctx.questions],
                 house_style=house_style,
             ),
+            # #236: only a child-band call carries it, so an adult call stays
+            # identical to before (same convention as `coverage_kwargs`).
+            **({"audience": ctx.audience} if is_child(ctx.audience) else {}),
             **coverage_kwargs,
         )
 

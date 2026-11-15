@@ -22,6 +22,7 @@ from typing import Callable, Protocol, Sequence
 
 import sentry_sdk
 
+from app import audience as order_audience
 from app import feature_flags, llm_usage
 from app.db.models import GenerationOrder, QuestionPack
 from app.generation.pattern_routing import MCQ_EMPHASIS_MARKER
@@ -141,6 +142,7 @@ class PackGenerator:
             category=order.category,
             theme=order.theme,
             difficulty=getattr(order, "difficulty", None),
+            audience=getattr(order, "audience", None),
             # Deterministic marker check, not LLM-side gating — #42 task
             # 42.20 blocker (root cause D): `ctx.prompt` never reaches the
             # generation LLM, so MCQ emphasis must travel as an explicit
@@ -157,9 +159,11 @@ class PackGenerator:
             # so a per-order grounded run was impossible. NULL (the only value
             # the app/API path ever writes) still inherits the global default,
             # which keeps that path byte-identical.
-            direct_generation=_resolve_direct_generation(
-                getattr(order, "generation_mode", None)
-            ),
+            # #236: a child-band pack always runs direct, the only path with
+            # a kids prompt (the grounded rollback would write it with the
+            # adult fact-first template).
+            direct_generation=order_audience.is_child(getattr(order, "audience", None))
+            or _resolve_direct_generation(getattr(order, "generation_mode", None)),
         )
         if DIRECT_GENERATION_MARKER in (order.prompt or ""):
             # #157 (D4): the legacy marker used to activate direct mode from

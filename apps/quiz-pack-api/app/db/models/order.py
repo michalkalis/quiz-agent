@@ -46,6 +46,10 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     # #224 224.3: buyer-chosen difficulty (easy|medium|hard). NULL = mixed
     # batch (orders from before the picker / older app builds).
     difficulty: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    # #236 236.1: who the pack is written for (`app.audience`): adults or a
+    # child band. A content setting, never a person's age. NULL = builds
+    # before the choice, the same pack as "adults".
+    audience: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(16), nullable=False)
     # #157 (D4): server-side generation-mode switch. Set only by internal
@@ -141,6 +145,11 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
         CheckConstraint(
             "difficulty IS NULL OR difficulty IN ('easy','medium','hard')",
             name="ck_orders_difficulty",
+        ),
+        CheckConstraint(
+            "audience IS NULL OR audience IN "
+            "('adults','kids_4_6','kids_7_9','kids_10_12')",
+            name="ck_orders_audience",
         ),
         CheckConstraint(
             "storekit_environment IS NULL OR storekit_environment IN ('Sandbox','Production')",

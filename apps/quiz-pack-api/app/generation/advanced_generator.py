@@ -27,6 +27,7 @@ from .mcq_answer import resolve_mcq_answer
 from .pattern_routing import verification_mode
 from .examples import example_corpus_path
 from ..scoring.multi_model_scorer import resolve_correct_answer
+from .. import audience as order_audience
 from .. import feature_flags
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,13 @@ logger = logging.getLogger(__name__)
 # call the order fans out into (open slice, best-of-N batch, MCQ sub-batches)
 # carries it; a ContextVar keeps concurrent orders on one generator apart.
 _ORDER_BRIEF: ContextVar[str] = ContextVar("order_brief", default="")
+# #236 — the order's audience (`app.audience`), carried the same way. A child
+# band swaps the generic (direct) prompt for its kids variant; None/"adults"
+# leave every prompt exactly as before.
+_ORDER_AUDIENCE: ContextVar[Optional[str]] = ContextVar("order_audience", default=None)
+
+# #236 — prompt_version stamped on questions written with the kids template.
+KIDS_PROMPT_VERSION = "direct_kids_v1"
 
 try:
     from ..sourcing.models import Fact
@@ -342,6 +350,13 @@ class AdvancedQuestionGenerator:
             )
 
         self.prompt_builder = PromptBuilder(template_path=template_path)
+        # #236 — kids variant of the direct prompt, picked per order in
+        # `_build_batch_prompt` for a child-band audience.
+        self.kids_prompt_builder = PromptBuilder(
+            template_path=os.path.join(
+                current_dir, "..", "..", "prompts", "question_generation_direct_kids.md"
+            )
+        )
 
         # Load V3 fact-first template (used when source_facts provided).
         # #153 Phase A: an explicit override must exist — a typo'd experiment
@@ -436,6 +451,7 @@ class AdvancedQuestionGenerator:
         mcq_emphasis: bool = False,
         open_count: int = 0,
         order_brief: str = "",
+        audience: Optional[str] = None,
     ) -> List[Question]:
         """Generate questions using multi-stage quality pipeline.
 
@@ -480,6 +496,8 @@ class AdvancedQuestionGenerator:
             order_brief: #192 — rendered ``order_brief_section`` (the
                 player's request + output language) appended to every
                 generation prompt of this call. Empty = no tail.
+            audience: #236 — the order's audience; a child band writes the
+                generic-path batches with the kids prompt. None = adults.
 
         Returns:
             List of Question objects with quality metadata
@@ -495,6 +513,7 @@ class AdvancedQuestionGenerator:
             ... )
         """
         token = _ORDER_BRIEF.set(order_brief)
+        audience_token = _ORDER_AUDIENCE.set(audience)
         try:
             return await self._generate_questions(
                 count=count,
@@ -513,6 +532,7 @@ class AdvancedQuestionGenerator:
                 open_count=open_count,
             )
         finally:
+            _ORDER_AUDIENCE.reset(audience_token)
             _ORDER_BRIEF.reset(token)
 
     async def _generate_questions(
@@ -1160,6 +1180,15 @@ class AdvancedQuestionGenerator:
 
         # Build the facts section for V3 prompt
         extra_kwargs = {}
+        # #236 — a child-band order writes its generic-path batches with the
+        # kids prompt, band and difficulty as two separate axes. Open and
+        # fact-first never run for one (GenerationStage / PackGenerator).
+        band = _ORDER_AUDIENCE.get()
+        if not use_open and not use_fact_first and order_audience.is_child(band):
+            prompt_builder = self.kids_prompt_builder
+            prompt_version = KIDS_PROMPT_VERSION
+            extra_kwargs["band_section"] = order_audience.band_section(band)
+            extra_kwargs["difficulty_player"] = order_audience.difficulty_player(band)
         if use_fact_first:
             facts_section = self._format_facts_section(source_facts)
             extra_kwargs["facts_section"] = facts_section

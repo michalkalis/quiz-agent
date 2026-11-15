@@ -60,6 +60,9 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
     private let topicResult: Result<TopicVerdict, PackFailure>
     private let topicCalls = OSAllocatedUnfairLock(initialState: 0)
+    /// Latency on `checkTopic` on `clock` (#236): a test holds the check open
+    /// to change the form under it.
+    private let topicDelaySeconds: Double
     /// #233: how often the pre-payment topic check ran.
     var topicCheckCallCount: Int { topicCalls.withLock { $0 } }
     /// #236: the audience each topic check was asked for, in call order.
@@ -98,9 +101,11 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         retryFailure: PackOrderError? = nil,
         listFailure: PackOrderError? = nil,
         clock: AnyClock<Duration> = .continuous,
-        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok)
+        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok),
+        topicDelaySeconds: Double = 0
     ) {
         self.topicResult = topicResult
+        self.topicDelaySeconds = topicDelaySeconds
         self.retryFailure = retryFailure
         self.listFailure = listFailure
         self.createDelaySeconds = createDelaySeconds
@@ -132,6 +137,9 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     func checkTopic(prompt _: String, language _: String, audience: PackAudience) async throws -> TopicVerdict {
         topicCalls.withLock { $0 += 1 }
         topicAudiences.withLock { $0.append(audience) }
+        if topicDelaySeconds > 0 {
+            try await clock.sleep(for: .seconds(topicDelaySeconds))
+        }
         return try topicResult.get()
     }
 

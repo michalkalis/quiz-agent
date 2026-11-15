@@ -32,6 +32,8 @@ struct OrderPackFormStep: View {
                 selection: viewModel.audience,
                 onSelect: viewModel.selectAudience
             )
+            // The topic check is asked for this band; no switching under it.
+            .disabled(viewModel.isCheckingTopic)
             languageGroup
 
             HangsPrimaryButton(
@@ -69,6 +71,8 @@ struct OrderPackFormStep: View {
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
                     .limitLength($viewModel.prompt, to: OrderPackViewModel.maxPromptInputLength)
+                    // The topic check is asked for this text; no edits under it.
+                    .disabled(viewModel.isCheckingTopic)
 
                     if dictation.isTranscribing {
                         Text("Transcribing…")
@@ -121,7 +125,7 @@ struct OrderPackFormStep: View {
             }
         }
         .frame(minHeight: Metrics.minTapTarget)
-        .disabled(dictation.micButtonDisabled)
+        .disabled(dictation.micButtonDisabled || viewModel.isCheckingTopic)
         .opacity(dictation.micButtonDisabled ? 0.4 : 1)
         .accessibilityIdentifier("orderPack.mic")
     }
@@ -180,6 +184,7 @@ struct OrderPackFormStep: View {
                     .allowsHitTesting(false)
                 }
                 .accessibilityIdentifier("orderPack.language")
+                .disabled(viewModel.isCheckingTopic)
             }
             Text("Preselected from your quiz language in Settings.")
                 .font(.hangsCaption)

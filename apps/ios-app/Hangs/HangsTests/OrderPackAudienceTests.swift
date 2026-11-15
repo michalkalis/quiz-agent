@@ -81,6 +81,31 @@ struct OrderPackAudienceTests {
         #expect(service.capturedTopicAudiences == [.adults, .kids4to6])
     }
 
+    // WHY (PR #806 review): an adult-level verdict must never carry a child
+    // order to the summary. If the band changes while the check is in flight,
+    // the result belongs to the old band, so the new band is checked before
+    // anything advances.
+    @Test("a band switched during the check is checked itself before the summary")
+    func bandSwitchedMidCheckIsRechecked() async {
+        let clock = TestClock()
+        let service = MockPackOrderService(clock: AnyClock(clock), topicDelaySeconds: 1)
+        let vm = makeViewModel(service: service)
+
+        let task = Task { await vm.continueFromForm() }
+        await pumpUntil({ vm.isCheckingTopic && service.topicCheckCallCount == 1 }, "the adult check never started")
+        vm.selectAudience(.kids4to6)
+
+        await clock.advance(by: .seconds(1))
+        await pumpUntil({ service.topicCheckCallCount == 2 }, "the child band was never checked")
+        #expect(vm.state == .editing, "the adult verdict must not advance a child order")
+
+        await clock.advance(by: .seconds(1))
+        await task.value
+
+        #expect(service.capturedTopicAudiences == [.adults, .kids4to6])
+        #expect(vm.state == .confirming)
+    }
+
     @Test("a blocked verdict belongs to its band: switching band clears the notice")
     func blockBelongsToBand() async {
         let vm = makeViewModel(service: MockPackOrderService(topicResult: .success(.blocked)))

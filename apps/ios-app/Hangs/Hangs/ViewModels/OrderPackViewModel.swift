@@ -344,11 +344,15 @@ final class OrderPackViewModel: ObservableObject {
     /// #233: the form's "Continue". Checks the topic before the summary (and
     /// so before any payment): `blocked` keeps the player on the form,
     /// `softened` shows a note on the summary. A failed check lets them through.
+    /// The form locks its inputs while the check runs; should the text or the
+    /// audience still change meanwhile, the verdict belongs to the old values,
+    /// so the new ones are checked before anything advances (#236).
     func continueFromForm() async {
         guard state == .editing, isValid, !isCheckingTopic else { return }
-        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        if checkedPrompt != text || checkedAudience != audience {
+        while true {
+            let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
             let audience = audience
+            guard isValid, checkedPrompt != text || checkedAudience != audience else { break }
             isCheckingTopic = true
             let verdict: TopicVerdict
             do {

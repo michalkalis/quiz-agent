@@ -87,6 +87,11 @@ final class OrderPackViewModel: ObservableObject {
     /// default; `isValid` stays false while this is nil.
     @Published private(set) var difficulty: PackDifficulty?
 
+    /// Who the pack is written for (#236, 236.1). Adults unless the buyer picks
+    /// a child band; a default, so it never holds the order back. Kept across
+    /// orders like the prompt it belongs to.
+    @Published private(set) var audience: PackAudience = .adults
+
     /// Wire language of the ordered pack. Written only through
     /// `selectLanguage(_:)` so the view model can tell an explicit user choice
     /// from the value it preselects out of the global quiz language.
@@ -112,6 +117,9 @@ final class OrderPackViewModel: ObservableObject {
     /// The trimmed text `topicVerdict` belongs to: an edit makes it stale, so
     /// the blocked notice goes away as soon as the player changes the topic.
     private var checkedPrompt: String?
+    /// The audience `topicVerdict` was given for: a child band is checked at a
+    /// stricter tier (#236), so switching it asks again.
+    private var checkedAudience: PackAudience?
 
     private let service: PackOrderServiceProtocol
     private let purchaseService: PackPurchaseServiceProtocol
@@ -328,17 +336,23 @@ final class OrderPackViewModel: ObservableObject {
         difficulty = level
     }
 
+    /// Explicit audience pick (form buttons, #236).
+    func selectAudience(_ choice: PackAudience) {
+        audience = choice
+    }
+
     /// #233: the form's "Continue". Checks the topic before the summary (and
     /// so before any payment): `blocked` keeps the player on the form,
     /// `softened` shows a note on the summary. A failed check lets them through.
     func continueFromForm() async {
         guard state == .editing, isValid, !isCheckingTopic else { return }
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        if checkedPrompt != text {
+        if checkedPrompt != text || checkedAudience != audience {
+            let audience = audience
             isCheckingTopic = true
             let verdict: TopicVerdict
             do {
-                verdict = try await service.checkTopic(prompt: text, language: language)
+                verdict = try await service.checkTopic(prompt: text, language: language, audience: audience)
                 analytics.track(.packTopicChecked(verdict: verdict.rawValue))
             } catch {
                 verdict = .ok
@@ -347,6 +361,7 @@ final class OrderPackViewModel: ObservableObject {
             isCheckingTopic = false
             topicVerdict = verdict
             checkedPrompt = text
+            checkedAudience = audience
         }
         guard !isTopicBlocked else { return }
         advanceToSummary()
@@ -361,6 +376,7 @@ final class OrderPackViewModel: ObservableObject {
     private func verdict(for wanted: TopicVerdict) -> Bool {
         topicVerdict == wanted
             && checkedPrompt == prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+            && checkedAudience == audience
     }
 
     /// Form → payment summary. Guarded on `.editing` so it can never re-enter
@@ -521,6 +537,7 @@ final class OrderPackViewModel: ObservableObject {
            pending.prompt == trimmedPrompt,
            pending.language == language,
            pending.difficulty == difficulty,
+           pending.audience == audience,
            pending.size == orderSize,
            pending.paymentProof == proof
         {
@@ -535,6 +552,7 @@ final class OrderPackViewModel: ObservableObject {
                 category: nil,
                 theme: nil,
                 difficulty: difficulty,
+                audience: audience,
                 size: orderSize,
                 paymentProof: proof
             )

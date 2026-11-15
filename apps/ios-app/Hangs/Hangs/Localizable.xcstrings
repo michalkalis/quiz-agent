@@ -1525,6 +1525,23 @@
         }
       }
     },
+    "Adults" : {
+      "comment" : "Pack order: audience option, the questions are written for adults (the default)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dospělí"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dospelí"
+          }
+        }
+      }
+    },
     "After \"Next\": next question, no explanation" : {
       "comment" : "Home: subtitle of the Quick game row",
       "localizations" : {
@@ -5476,6 +5493,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hraj ďalej"
+          }
+        }
+      }
+    },
+    "Kids 10–12" : {
+      "comment" : "Pack order: audience option, questions written for children aged 10 to 12",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Děti 10–12"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deti 10–12"
+          }
+        }
+      }
+    },
+    "Kids 4–6" : {
+      "comment" : "Pack order: audience option, questions written for children aged 4 to 6",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Děti 4–6"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deti 4–6"
+          }
+        }
+      }
+    },
+    "Kids 7–9" : {
+      "comment" : "Pack order: audience option, questions written for children aged 7 to 9",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Děti 7–9"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deti 7–9"
           }
         }
       }
@@ -10879,6 +10947,23 @@
         }
       },
       "comment" : "#232: under the comparison of a shared quiz"
+    },
+    "Who it's for" : {
+      "comment" : "Pack order: label above the audience choice and on the summary row (who the questions are written for)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro koho"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pre koho"
+          }
+        }
+      }
     },
     "You" : {
       "localizations" : {

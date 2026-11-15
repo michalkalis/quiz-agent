@@ -260,6 +260,57 @@ struct PackOrderServiceTests {
         #expect(sent.withLock { $0["present"] } == (expected != nil))
     }
 
+    // MARK: Audience on the wire (#236)
+
+    /// The `audience` value of every captured JSON body, nil when the body had
+    /// no such key.
+    private func captureAudience() -> OSAllocatedUnfairLock<[String?]> {
+        let seen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+        PackOrderStubURLProtocol.handler = { req in
+            if let data = readRequestBody(req),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            {
+                let audience = json["audience"] as? String
+                seen.withLock { $0.append(audience) }
+            }
+            let isTopicCheck = req.url?.path.hasSuffix("topic-check") == true
+            let body = isTopicCheck ? #"{"verdict":"ok"}"# : Stubs.createdJSON
+            return (.make(status: isTopicCheck ? 200 : 202), Data(body.utf8))
+        }
+        return seen
+    }
+
+    // WHY: the server writes a child band with the kids template and checks;
+    // an adult order must stay byte-for-byte today's request so the server's
+    // "absent = adults" path (and older servers) see nothing new.
+    @Test("a child band is sent on the order and the topic check; adults sends no field",
+          arguments: [(PackAudience.kids7to9, "kids_7_9" as String?), (.kids4to6, "kids_4_6"), (.kids10to12, "kids_10_12"), (.adults, nil)])
+    func audienceIsSentOnTheWire(audience: PackAudience, expected: String?) async throws {
+        let service = makeService()
+        let seen = captureAudience()
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        _ = try await service.checkTopic(prompt: "Space", language: "sk", audience: audience)
+        _ = try await service.createOrder(
+            intent: PackOrderIntent(prompt: "Space", language: "sk", category: nil, theme: nil, difficulty: .easy, audience: audience)
+        )
+
+        #expect(seen.withLock { $0 } == [expected, expected])
+    }
+
+    @Test("an adult request carries no audience key at all")
+    func adultRequestHasNoAudienceKey() throws {
+        let order = try JSONSerialization.jsonObject(with: JSONEncoder().encode(CreateOrderRequest(
+            transactionId: "t", productId: "pack_30", prompt: "Space", language: "sk",
+            targetCount: 30, category: nil, theme: nil, difficulty: .easy
+        ))) as? [String: Any] ?? [:]
+        let check = try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(TopicCheckRequest(prompt: "Space", language: "sk"))
+        ) as? [String: Any] ?? [:]
+        #expect(order["audience"] == nil, "no key, not an explicit null")
+        #expect(check["audience"] == nil, "no key, not an explicit null")
+    }
+
     // MARK: 2. A new intent gets a new key
 
     @Test("a new intent sends a DIFFERENT transaction_id")

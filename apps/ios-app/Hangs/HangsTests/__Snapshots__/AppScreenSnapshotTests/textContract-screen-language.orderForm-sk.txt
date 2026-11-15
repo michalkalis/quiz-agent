@@ -12,6 +12,11 @@ Stredná
 Ťažká
 Mix
 Vyber náročnosť a pokračuj.
+Pre koho
+Dospelí
+Deti 4–6
+Deti 7–9
+Deti 10–12
 English
 Slovenčina
 Čeština
@@ -28,6 +33,10 @@ orderPack.difficulty.medium
 orderPack.difficulty.hard
 orderPack.difficulty.mixed
 orderPack.difficulty.hint
+orderPack.audience.adults
+orderPack.audience.kids_4_6
+orderPack.audience.kids_7_9
+orderPack.audience.kids_10_12
 orderPack.language
 orderPack.language.en
 orderPack.language.sk

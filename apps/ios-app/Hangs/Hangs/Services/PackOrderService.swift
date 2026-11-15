@@ -42,13 +42,14 @@ protocol PackOrderServiceProtocol: Sendable {
     /// (or the Settings screen) has been torn down and the proof is gone.
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse
     /// `POST /v1/orders/topic-check` (#233) — is the order text a topic we
-    /// make packs about? Asked before payment; bearer required.
-    func checkTopic(prompt: String, language: String) async throws -> TopicVerdict
+    /// make packs about? Asked before payment; bearer required. A child-band
+    /// `audience` (#236) is checked at the stricter child tier.
+    func checkTopic(prompt: String, language: String, audience: PackAudience) async throws -> TopicVerdict
 }
 
 extension PackOrderServiceProtocol {
     /// Test doubles that never order a pack let every topic through.
-    func checkTopic(prompt _: String, language _: String) async throws -> TopicVerdict { .ok }
+    func checkTopic(prompt _: String, language _: String, audience _: PackAudience) async throws -> TopicVerdict { .ok }
 }
 
 /// Thread-safe pack-order service using a Swift 6 actor.
@@ -117,7 +118,8 @@ actor PackOrderService: PackOrderServiceProtocol {
             targetCount: intent.size.questionCount,
             category: intent.category,
             theme: intent.theme,
-            difficulty: intent.difficulty
+            difficulty: intent.difficulty,
+            audience: intent.audience
         )
         request.httpBody = try JSONEncoder().encode(payload)
 
@@ -137,11 +139,11 @@ actor PackOrderService: PackOrderServiceProtocol {
         return try JSONDecoder().decode(OrderCreatedResponse.self, from: data)
     }
 
-    func checkTopic(prompt: String, language: String) async throws -> TopicVerdict {
+    func checkTopic(prompt: String, language: String, audience: PackAudience) async throws -> TopicVerdict {
         let url = baseURL.appendingPathComponent("/v1/orders/topic-check")
         var request = makeRequest(url: url, method: "POST", includeAdminKey: false)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(TopicCheckRequest(prompt: prompt, language: language))
+        request.httpBody = try JSONEncoder().encode(TopicCheckRequest(prompt: prompt, language: language, audience: audience))
 
         Logger.network.debug("🌐 POST \(url, privacy: .public) (pack topic check)")
         let (data, response) = try await send(request)

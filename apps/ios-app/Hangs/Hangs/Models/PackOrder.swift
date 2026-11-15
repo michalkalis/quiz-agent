@@ -43,6 +43,39 @@ nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+// MARK: - Audience (#236)
+
+/// Who a custom pack is written for (#236, 236.1). A content setting on the
+/// order ("questions for 7 to 9"), never a fact about the player: it is not
+/// stored on the account and never sent to analytics as a player property.
+/// Adults is the default, so unlike difficulty it never blocks the order.
+nonisolated enum PackAudience: String, CaseIterable, Identifiable, Sendable {
+    case adults
+    case kids4to6 = "kids_4_6"
+    case kids7to9 = "kids_7_9"
+    case kids10to12 = "kids_10_12"
+
+    var id: String { rawValue }
+
+    var isChild: Bool { self != .adults }
+
+    /// Value for the `audience` request field; nil for adults, which the
+    /// server reads exactly like a build before the choice, so an adult order
+    /// stays byte-for-byte today's request.
+    var wireValue: String? {
+        isChild ? rawValue : nil
+    }
+
+    var label: LocalizedStringKey {
+        switch self {
+        case .adults: "Adults"
+        case .kids4to6: "Kids 4–6"
+        case .kids7to9: "Kids 7–9"
+        case .kids10to12: "Kids 10–12"
+        }
+    }
+}
+
 // MARK: - Topic check (#233)
 
 /// Verdict of `POST /v1/orders/topic-check`, asked before the player pays.
@@ -54,6 +87,19 @@ nonisolated enum TopicVerdict: String, Sendable {
 nonisolated struct TopicCheckRequest: Encodable, Sendable {
     let prompt: String
     let language: String
+    /// #236: a child band checks the topic at the stricter child tier.
+    var audience: PackAudience = .adults
+
+    enum CodingKeys: String, CodingKey {
+        case prompt, language, audience
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(prompt, forKey: .prompt)
+        try container.encode(language, forKey: .language)
+        try container.encodeIfPresent(audience.wireValue, forKey: .audience)
+    }
 }
 
 /// `verdict` is a plain string on the wire; an unknown value reads as `.ok`.
@@ -76,6 +122,8 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
     /// Optional on the wire (older servers/clients omit it); the order form
     /// always sends one.
     var difficulty: PackDifficulty? = nil
+    /// #236: sent only for a child band (`PackAudience.wireValue`).
+    var audience: PackAudience = .adults
 
     enum CodingKeys: String, CodingKey {
         case transactionId = "transaction_id"
@@ -86,6 +134,7 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         case category
         case theme
         case difficulty
+        case audience
     }
 
     func encode(to encoder: Encoder) throws {
@@ -98,6 +147,7 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(theme, forKey: .theme)
         try container.encodeIfPresent(difficulty?.wireValue, forKey: .difficulty)
+        try container.encodeIfPresent(audience.wireValue, forKey: .audience)
     }
 }
 
@@ -121,6 +171,8 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
     let theme: String?
     /// Buyer-chosen level (#224); nil only for callers that predate the picker.
     let difficulty: PackDifficulty?
+    /// #236: who the pack is written for.
+    let audience: PackAudience
     /// StoreKit proof authorising this order; nil = Debug admin path.
     let paymentProof: PackPaymentProof?
     /// #228.6: the pack size ordered. With a proof it is the size that proof
@@ -134,6 +186,7 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
         category: String?,
         theme: String?,
         difficulty: PackDifficulty? = nil,
+        audience: PackAudience = .adults,
         size: PackSize = .standard,
         paymentProof: PackPaymentProof? = nil,
         idempotencyKey: String = "admin-\(UUID().uuidString)"
@@ -145,6 +198,7 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
         self.category = category
         self.theme = theme
         self.difficulty = difficulty
+        self.audience = audience
         self.paymentProof = paymentProof
     }
 }
@@ -201,6 +255,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     /// added don't send it; a `var` with a default so the mocks' memberwise
     /// inits stay as they are.
     var prompt: String? = nil
+    /// #236: `kids_4_6` / `kids_7_9` / `kids_10_12`, `adults`, or null (an
+    /// order from a build before the choice: an adult pack). Kept raw like
+    /// `status`, so an unknown future band never breaks a row.
+    var audience: String? = nil
 
     var id: String { orderId }
 
@@ -234,6 +292,7 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         case actualCount = "actual_count"
         case packGenerationStatus = "pack_generation_status"
         case prompt
+        case audience
     }
 
     /// #198.4: the pack's colour key — its pack id once one exists, the order

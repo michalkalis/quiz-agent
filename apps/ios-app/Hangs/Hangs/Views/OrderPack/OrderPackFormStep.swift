@@ -28,6 +28,10 @@ struct OrderPackFormStep: View {
                 selection: viewModel.difficulty,
                 onSelect: viewModel.selectDifficulty
             )
+            OrderPackAudiencePicker(
+                selection: viewModel.audience,
+                onSelect: viewModel.selectAudience
+            )
             languageGroup
 
             HangsPrimaryButton(
@@ -37,9 +41,9 @@ struct OrderPackFormStep: View {
                 isLoading: viewModel.isCheckingTopic,
                 action: continueToSummary
             )
-                // #188 G14 (M9): the button draws its own legible disabled state.
-                .disabled(!viewModel.isValid)
-                .accessibilityIdentifier("orderPack.submit")
+            // #188 G14 (M9): the button draws its own legible disabled state.
+            .disabled(!viewModel.isValid)
+            .accessibilityIdentifier("orderPack.submit")
         }
     }
 

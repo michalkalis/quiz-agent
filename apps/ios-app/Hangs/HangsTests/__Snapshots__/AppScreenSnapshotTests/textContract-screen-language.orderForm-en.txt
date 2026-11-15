@@ -12,6 +12,11 @@ Medium
 Hard
 Mixed
 Choose a difficulty to continue.
+Who it's for
+Adults
+Kids 4–6
+Kids 7–9
+Kids 10–12
 English
 Slovenčina
 Čeština
@@ -28,6 +33,10 @@ orderPack.difficulty.medium
 orderPack.difficulty.hard
 orderPack.difficulty.mixed
 orderPack.difficulty.hint
+orderPack.audience.adults
+orderPack.audience.kids_4_6
+orderPack.audience.kids_7_9
+orderPack.audience.kids_10_12
 orderPack.language
 orderPack.language.en
 orderPack.language.sk

@@ -90,7 +90,7 @@ Hra spolu s pásmom pri hráčovi (dieťa dostane na tú istú tému ľahšiu ot
 |---|---|
 | App Review vyhodnotí appku ako určenú deťom | Rámovanie na rodiča, žiadne detské motívy v ikone a snímkach, sekcia za vypínačom na serveri |
 | Hlas malých detí sa nerozpozná (štúdie: až tretina slov zle u škôlkarov; sk/cs nemerané) | 236.7: uzavreté odpovede, ťuknutie rodiča, skúška pred vydaním |
-| Nevhodná otázka v detskom obsahu | Deterministická kontrola po generovaní + overovanie faktov ako dnes |
+| Nevhodná otázka v detskom obsahu | Kontrola po generovaní (pevné limity dĺžky + malý model ako sudca, pri neistote otázka vypadne) + overovanie faktov ako dnes |
 | COPPA v USA (nejasné, viď 236.2) | Právne posúdenie pred vydaním sekcie v USA; vypínač podľa krajiny |
 | Dopyt je neoverený (žiadne dáta o hľadanosti ani tržbách) | 236.1 je malý krok a zmeria záujem cez podiel detských objednávok |
 

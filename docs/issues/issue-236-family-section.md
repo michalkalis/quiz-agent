@@ -1,7 +1,7 @@
 # #236 — Rodinná sekcia „S deťmi“
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 rešerš hotová, founder vybral smer, plán po kontrole návrhu opravený (šablóna priameho režimu, izolácia od bežného kvízu); ďalej 236.1 (vek pri vlastnom balíku)
+**Status:** 2026-11-15 rešerš hotová, founder vybral smer, plán po kontrole návrhu opravený a uznaný (SOUND 0.8: šablóna priameho režimu, izolácia od bežného kvízu); ďalej 236.1 (vek pri vlastnom balíku)
 **Founder:** 2026-11-15 „do kvízu by sa veľmi hodila trochu viac separátna sekcia pre deti … ide skôr o to, aby rodičia mohli hrať s deťmi. Hlavne mať detské témy, možno deliť podľa veku.“
 
 ## Prečo
@@ -42,9 +42,9 @@ Pravidlá návrhu, ktoré z toho plynú:
 ### 236.1 Vek pri vlastnom balíku
 
 - Objednávka dostane nepovinnú voľbu „Pre koho“: dospelí (predvolené) / deti 4–6 / 7–9 / 10–12. Nepovinné pole, staré buildy fungujú bez zmeny.
-- **Šablóna:** nový detský variant šablóny priameho režimu (tá istá cesta ako dnešná produkcia, žiadne prepínanie režimu generovania, teda rovnaká cena a overovanie). Pravidlá: bez násilia, alkoholu, romantiky, hororu, politiky; krátke vety, jednoduché slová. Stará šablóna pre 8–14 ostáva len ako podklad.
+- **Šablóna:** nový detský variant šablóny priameho režimu (tá istá cesta ako dnešná produkcia, žiadne prepínanie režimu generovania, teda rovnaká cena a overovanie; priamy režim dnes skladá zadanie raz na generátor, voľbu šablóny podľa objednávky treba doplniť). Pravidlá: bez násilia, alkoholu, romantiky, hororu, politiky; krátke vety, jednoduché slová. Stará šablóna pre 8–14 ostáva len ako podklad.
 - **Pásmo a obtiažnosť sú dve osi:** pásmo určuje slovník, dĺžku a tvar otázky; obtiažnosť (ľahká / stredná / ťažká) znamená „v rámci pásma“. Šablóna nesmie vek odvodzovať z obtiažnosti.
-- **Kontrola po vygenerovaní na serveri** (nález externej revízie 2026-08-09: nie len pokyn v zadaní): pevné limity dĺžky podľa pásma + malý model ako sudca zakázaných okruhov. Zoznam slov sme zavrhli, v štyroch skloňovaných jazykoch je krehký. Pri detskom balíku platí opak než inde: keď kontrola zlyhá alebo si nie je istá, otázka vypadne.
+- **Kontrola po vygenerovaní na serveri** (nález externej revízie 2026-08-09: nie len pokyn v zadaní): pevné limity dĺžky podľa pásma + malý model ako sudca zakázaných okruhov. Zoznam slov sme zavrhli, v štyroch skloňovaných jazykoch je krehký. Pri detskom balíku platí opak než inde: keď kontrola zlyhá alebo si nie je istá, otázka vypadne. Výpadok samotného sudcu sa neberie ako zamietnutie otázok: kontrola sa zopakuje a ak nejde ani potom, objednávka sa zastaví ako zlyhaná (bežná cesta vrátenia), aby dopĺňanie nekupovalo ďalšie behy v rámci rozpočtu objednávky zbytočne.
 - Kontrola témy pred platbou (#233 — kontrola témy vlastného balíka) dostane detský stupeň (hraničná téma sa zastaví, nezjemňuje sa). Je to len pohodlie pre hráča: volá ju appka a pri chybe pustí, takže skutočnou poistkou sú šablóna a kontrola po vygenerovaní.
 - Znovupoužitie hotových balíkov (#225 — hotové balíky znova) berie vek ako súčasť zhody, detský a dospelý balík na tú istú tému sa nezamieňajú.
 - Hotovo keď: skutočný balík „vesmír“ pre 7–9 prejde detskou šablónou aj kontrolou a founder ho posúdi; analytická udalosť objednávky nesie pásmo.
@@ -64,7 +64,7 @@ Varianty na Design plátne, founder vyberie pred kódom: karta „S deťmi“ na
 
 - Témy na štart: zvieratá, rozprávky a večerníčky, vesmír, ľudské telo, príroda, šport, jedlo, Slovensko a Česko. Miestne témy natívne v sk/cs, ostatné podľa bežného postupu korpusu.
 - Pásmo sa ukladá ako samostatný údaj otázky (dnešné 8+/12+/16+ hovorí „od koľkých rokov je to vhodné“, nie „pre koho je to písané“); jedna otázka patrí jednému pásmu.
-- **Izolácia od bežného kvízu:** spoločný filter výberu otázok (`_build_metadata_filters`, používa ho bežná hra, balíky aj denná výzva) predvolene vynechá všetko, čo má pásmo. Otázky s pásmom dostane len hra, ktorá si pásmo výslovne vyžiada. Staré buildy a bežní hráči tak detskú otázku nedostanú nikdy; kvalita dnešného kvízu sa nemení. Filter ide do produkcie skôr než prvá otázka s pásmom.
+- **Izolácia od bežného kvízu:** spoločný filter výberu otázok (`_build_metadata_filters`, vetva spoločnej knižnice: bežná hra a denná výzva) predvolene vynechá všetko, čo má pásmo. Hra kúpeného balíka sa nemení, tá je oddelená už svojím balíkom, takže detský balík z 236.1 sa prehrá celý aj v starých buildoch. Otázky s pásmom dostane len hra, ktorá si pásmo výslovne vyžiada. Staré buildy a bežní hráči tak detskú otázku nedostanú nikdy; kvalita dnešného kvízu sa nemení. Filter ide do produkcie skôr než prvá otázka s pásmom.
 - Pilot ~20 otázok na pásmo, founder skalibruje rubriku pre deti, až potom plný beh (~150 na pásmo a jazyk). Odhad nákladov pred behom na schválenie.
 - 52 archivovaných otázok prejsť novou rubrikou, použiteľné vrátiť.
 

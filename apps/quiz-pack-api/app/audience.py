@@ -5,11 +5,14 @@ person: nothing here describes the buyer or a player, and no account or
 profile carries it. NULL (orders from builds before the choice) and "adults"
 mean the same pack: today's adult generation, untouched.
 
-A child band changes three things, all keyed on `is_child`: the generation
+A child band changes these things, all keyed on `is_child`: the generation
 prompt (`prompts/question_generation_direct_kids.md`), a post-generation check
-(`app.kids_check`) and the pre-payment topic check's tier (`app.topic_check`).
-Band and difficulty are separate axes: the band sets vocabulary, length and
-question shape; difficulty is relative WITHIN the band.
+(`app.kids_check`), the pre-payment topic check's tier (`app.topic_check`),
+the audience the quality judges score for (`judge_lens`: the judge panel in
+`app.scoring.multi_model_scorer` and `app.verification.casual_player`) and the
+true/false cap (`app.orchestrator.stages.composition`). Band and difficulty
+are separate axes: the band sets vocabulary, length and question shape;
+difficulty is relative WITHIN the band.
 """
 
 from __future__ import annotations
@@ -29,10 +32,15 @@ class BandLimits(NamedTuple):
     explanation_words: int
 
 
+# Answer caps (founder 2026-11-15): 7-9 and 10-12 were 3 and 4 words, which
+# dropped a good short "why" answer ("There is no wind there", 5 words) as
+# answer_too_long. 6 matches the adult spoken-answer ruling (`craft_guards.
+# _ANSWER_MAX_WORDS`), so a longer cap would only move the drop there. 4-6
+# stays at 2: a preschooler answers in a word or two, or the parent taps.
 LIMITS: dict[str, BandLimits] = {
     "kids_4_6": BandLimits(question_words=14, answer_words=2, explanation_words=20),
-    "kids_7_9": BandLimits(question_words=20, answer_words=3, explanation_words=28),
-    "kids_10_12": BandLimits(question_words=28, answer_words=4, explanation_words=36),
+    "kids_7_9": BandLimits(question_words=20, answer_words=6, explanation_words=28),
+    "kids_10_12": BandLimits(question_words=28, answer_words=6, explanation_words=36),
 }
 
 LABELS: dict[str, str] = {"kids_4_6": "4-6", "kids_7_9": "7-9", "kids_10_12": "10-12"}
@@ -81,6 +89,35 @@ def band_section(audience: str) -> str:
         f"(`correct_answer`, or each option's text) at most "
         f"{limits.answer_words} words, `explanation` at most "
         f"{limits.explanation_words} words."
+    )
+
+
+def judge_lens(audience: str) -> str:
+    """Who a quality judge scores for, for a child band.
+
+    The judge prompts were written and calibrated for adults (pub quiz,
+    driving, a non-native English adult). Founder 2026-11-15: "fun for an
+    adult is not fun for a child, nor for a child of a different age". This
+    paragraph re-aims the same rubric at the band; the judges, the scales
+    and the thresholds stay as they are.
+    """
+    return (
+        f"AUDIENCE: the player is a child aged {LABELS[audience]}, playing "
+        "together with a parent who reads the question aloud. This replaces "
+        "the player described above and every adult reference below: judge "
+        "fun, difficulty, answerability and words for a child of THIS age, "
+        "not for an adult. What delights an adult often bores a child, and a "
+        "fact adults have heard a thousand times can be new and exciting to "
+        "a child of this age (and the reverse). Read \"a pub quiz table\" as "
+        "the family playing together and \"a friend\" as a parent, sibling "
+        "or classmate. Score high: facts about the child's own body, home, "
+        "food and everyday things, things they can try or check right away, "
+        "the biggest/fastest/smelliest, funny or gross-but-harmless facts. "
+        "Score low: abstract textbook facts with no link to a child's world. "
+        "Reasoning from everyday experience toward the answer is the path we "
+        "want a child to have, not a giveaway. A word a child of this age "
+        "does not know counts against the question unless it IS the answer "
+        "and the question leads the child to it."
     )
 
 

@@ -8,7 +8,7 @@
 //  submit path begins a new attempt and the voice upload's write-back checks
 //  it still owns the attempt. #208.8: the only voice path is the batch upload
 //  (record → VAD silence → `submitVoiceAnswer`), so the race is driven there,
-//  with the upload parked on `MockNetworkService.submitVoiceAnswerGate`.
+//  with the upload parked on `MockNetworkService.gates[.submitVoiceAnswer]`.
 //
 //  Uses withMainSerialExecutor (ConcurrencyExtras) for deterministic scheduling.
 //
@@ -95,7 +95,7 @@ struct QuizViewModelSubmissionRaceTests {
         await withMainSerialExecutor {
             let (viewModel, mockNetwork, _, silence) = makeBatchViewModel()
             let gate = UploadGate()
-            mockNetwork.submitVoiceAnswerGate = { await gate.wait() }
+            mockNetwork.gates[.submitVoiceAnswer] = { await gate.wait() }
 
             await speakAnswer(viewModel, silence)
             await pumpUntil({ mockNetwork.submitVoiceAnswerCallCount == 1 }, turns: 2000, "the upload never started")

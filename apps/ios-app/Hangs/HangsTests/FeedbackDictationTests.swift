@@ -107,7 +107,7 @@ struct FeedbackDictationTests {
         await withMainSerialExecutor {
             let (vm, network, audio) = makeVoiceFeedbackVM()
             let gate = DictationGate()
-            network.dictationGate = { await gate.wait() }
+            network.gates[.transcribeDictation] = { await gate.wait() }
             network.dictationTranscript = "the timer froze"
 
             await vm.startDictation()

@@ -111,11 +111,14 @@
             if CommandLine.arguments.contains("--ui-test-plan-loading") {
                 // Never-resolving /usage → the card holds its loading placeholder
                 // so the loading→loaded frame-stability can be verified.
-                network.getUsageGate = { try? await Task.sleep(for: .seconds(600)) }
+                network.gates[.getUsage] = { try? await Task.sleep(for: .seconds(600)) }
             }
 
             // #205: the daily challenge flags (DailyChallengeFixtures).
             DailyChallengeFixtures.configure(network)
+            // #235.1: a bad network (`--ui-test-network slow` etc., see
+            // MockNetworkService+Conditions).
+            network.applyLaunchNetworkCondition()
 
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()

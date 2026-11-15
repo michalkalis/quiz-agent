@@ -34,7 +34,7 @@ def client():
 async def test_returns_the_verdict(client, monkeypatch):
     seen = []
 
-    async def fake_check(prompt):
+    async def fake_check(prompt, audience=None):
         seen.append(prompt)
         return "blocked", False
 
@@ -64,7 +64,7 @@ async def test_requires_sign_in(client):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("prompt", ["   ", "a" * 1001])
 async def test_same_length_bounds_as_ordering(client, prompt, monkeypatch):
-    async def never(prompt):
+    async def never(prompt, audience=None):
         raise AssertionError("model must not be called")
 
     monkeypatch.setattr(topic_check, "check_topic", never)
@@ -83,7 +83,7 @@ async def test_invisible_characters_dropped_before_the_check(client, monkeypatch
     # judged by what the player actually sees.
     seen = []
 
-    async def fake_check(prompt):
+    async def fake_check(prompt, audience=None):
         seen.append(prompt)
         return "ok", False
 

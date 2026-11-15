@@ -7,6 +7,9 @@ delivery). Founder rules (2026-11-02):
 
 - Match = the same text, ignoring letter case, spacing and punctuation.
   Diacritics stay significant ("Pán prsteňov" != "Pan prstenov").
+- #236: the audience is part of the match. An adult pack and a child-band
+  pack on the same topic never stand in for each other; NULL (builds before
+  the choice) and "adults" are the same adult pack.
 - Full price either way; the purchase path in `create_order` is unchanged.
 - The same player ordering the same prompt again gets new questions.
 
@@ -26,6 +29,7 @@ from sqlalchemy import func, insert, literal, or_, select, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .audience import is_child
 from .config import Settings
 from .db.models.job import GenerationJob, append_step
 from .db.models.order import GenerationOrder
@@ -81,6 +85,12 @@ def _same(column, value):
     return column.is_(None) if value is None else column == value
 
 
+def _same_audience(column, value):
+    if is_child(value):
+        return column == value
+    return or_(column.is_(None), column == "adults")
+
+
 async def _identity_ids(session: AsyncSession, user_id: str) -> set[str]:
     """All ids of one person: the account plus every anon id linked to it.
 
@@ -111,6 +121,7 @@ async def _find_source(
         _same(o.difficulty, order.difficulty),
         _same(o.category, order.category),
         _same(o.theme, order.theme),
+        _same_audience(o.audience, order.audience),
     )
 
     # Same player, same prompt again → new questions (founder 2026-11-02).

@@ -44,8 +44,10 @@ async def _seed_source(
     questions: int = COUNT,
     environment: str | None = "Sandbox",  # the test JWS is Sandbox
     expires_at: datetime | None = None,
+    audience: str | None = None,
 ) -> tuple[GenerationOrder, QuestionPack]:
     order = GenerationOrder(
+        audience=audience,
         user_id=owner,
         transaction_id=f"seed-{uuid.uuid4().hex}",
         product_id="pack_20",
@@ -124,6 +126,7 @@ async def _order(
     prompt: str = "  harry   POTTER!! ",
     difficulty: str | None = "hard",
     language: str = "en",
+    audience: str | None = None,
 ) -> uuid.UUID:
     tx = str(uuid.uuid4().int)[:16]
     body = {
@@ -135,6 +138,8 @@ async def _order(
     }
     if difficulty is not None:
         body["difficulty"] = difficulty
+    if audience is not None:
+        body["audience"] = audience
     jws = make_jws(payload_overrides={"transactionId": tx, "originalTransactionId": tx})
     resp = await client.post(
         "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **_bearer(user)}
@@ -220,6 +225,61 @@ async def test_no_copy_when_the_order_differs(
     order = await _load(test_session, order_id)
     assert order.status == "in_progress"
     assert order.reused_from_order_id is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("source_audience", "order_audience"),
+    [
+        (None, "kids_7_9"),  # #236: an adult pack never goes to a child
+        ("kids_7_9", None),  # ...and a child's pack never to an adult order
+        ("kids_7_9", "adults"),
+        ("kids_4_6", "kids_7_9"),  # each band is its own pack
+    ],
+)
+async def test_no_copy_across_audiences(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    source_audience: str | None,
+    order_audience: str | None,
+) -> None:
+    await _seed_source(test_session, audience=source_audience)
+
+    order_id = await _order(client, make_jws, audience=order_audience)
+
+    arq_mock.enqueue_job.assert_called_once()
+    order = await _load(test_session, order_id)
+    assert order.audience == order_audience
+    assert order.reused_from_order_id is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("source_audience", "order_audience"),
+    [
+        (None, None),  # today's match, unchanged
+        (None, "adults"),  # a build that sends "adults" gets the same packs
+        ("kids_7_9", "kids_7_9"),
+    ],
+)
+async def test_same_audience_still_copies(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    source_audience: str | None,
+    order_audience: str | None,
+) -> None:
+    source_order, _ = await _seed_source(test_session, audience=source_audience)
+    source_id = source_order.id
+
+    order_id = await _order(client, make_jws, audience=order_audience)
+
+    arq_mock.enqueue_job.assert_not_called()
+    order = await _load(test_session, order_id)
+    assert order.reused_from_order_id == source_id
 
 
 @pytest.mark.asyncio

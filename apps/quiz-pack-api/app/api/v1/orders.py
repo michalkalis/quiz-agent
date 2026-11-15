@@ -60,6 +60,7 @@ from quiz_shared.store_ids import BETA_BUNDLE_ID, canonical_product_id
 from quiz_shared.utils.user_text import clean_user_text
 
 from ... import app_switches, order_budget, pack_reuse, topic_check
+from ...audience import Audience
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
@@ -130,6 +131,10 @@ class CreateOrderRequest(BaseModel):
     # packs came out too easy). Optional so builds shipped before the picker
     # keep working (NULL = mixed batch, today's behaviour).
     difficulty: Optional[Literal["easy", "medium", "hard"]] = None
+    # #236 236.1: who the pack is written for — a content setting, never a
+    # person's age. Optional so shipped builds keep working (None = adults,
+    # today's pack).
+    audience: Optional[Audience] = None
 
     # Before the length guard, so a paste padded with invisible characters is
     # judged (and stored, and shown back) by what the player actually sees.
@@ -144,6 +149,8 @@ class TopicCheckRequest(BaseModel):
 
     prompt: str
     language: str
+    # #236: a child band checks with the stricter child tier.
+    audience: Optional[Audience] = None
 
     # Judged by what the player sees, exactly like `CreateOrderRequest`.
     @field_validator("prompt")
@@ -196,6 +203,8 @@ class OrderSnapshotResponse(BaseModel):
     # #224 224.3: plain string (not an enum) so the response contract stays
     # expand-only. None = mixed batch.
     difficulty: Optional[str] = None
+    # #236: plain string, expand-only like `difficulty`. None = adults.
+    audience: Optional[str] = None
     created_at: datetime
     delivered_at: Optional[datetime]
     pack_id: Optional[uuid.UUID]
@@ -414,9 +423,10 @@ async def check_order_topic(
             status_code=422,
             detail="prompt must be between 1 and 1000 characters (after stripping whitespace)",
         )
-    verdict, failed = await topic_check.check_topic(prompt)
+    verdict, failed = await topic_check.check_topic(prompt, audience=body.audience)
     logger.info(
-        "topic check verdict=%s failed=%s language=%s", verdict, failed, body.language
+        "topic check verdict=%s failed=%s language=%s audience=%s",
+        verdict, failed, body.language, body.audience,
     )
     return TopicCheckResponse(verdict=verdict)
 
@@ -558,6 +568,7 @@ async def create_order(
         category=body.category,
         theme=body.theme,
         difficulty=body.difficulty,
+        audience=body.audience,
         prompt_key=pack_reuse.prompt_key(body.prompt),
         # From the verified JWS only, never the request body: it decides
         # whether the mba backup (Claude subscription) may generate this order.
@@ -610,8 +621,8 @@ async def create_order(
             raise
         return _idempotent_replay_response(existing)  # type: ignore[return-value]
 
-    # 6b. #225: another player's finished pack for the same prompt, language
-    # and difficulty → deliver a copy now, no generation run. Falls through to
+    # 6b. #225: another player's finished pack for the same prompt, language,
+    # difficulty and audience (#236) → deliver a copy now, no generation run. Falls through to
     # the enqueue on no match or any failure.
     if await pack_reuse.try_reuse(session, order, job, settings):
         return OrderCreatedResponse(
@@ -690,6 +701,7 @@ def _order_snapshot(
         theme=order.theme,
         prompt=order.prompt,
         difficulty=order.difficulty,
+        audience=order.audience,
         created_at=order.created_at,
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,

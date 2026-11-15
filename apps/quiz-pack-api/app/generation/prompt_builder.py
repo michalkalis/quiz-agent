@@ -31,10 +31,17 @@ _DIFFICULTY_RUBRIC = """\
 - `medium` — takes real thought or partial knowledge; a motivated player gets there.
 - `hard` — only players with genuine knowledge of the area get it; still fair, never arcane."""
 
-_DIFFICULTY_GUIDANCE = f"""\
+# Who the rubric is calibrated for. #236: a child-band order passes its own
+# (`app.audience.difficulty_player`); every other prompt keeps this one.
+_ADULT_PLAYER = "a non-native-English adult player"
+
+_DIFFICULTY_GUIDANCE = (
+    """\
 **`difficulty` — assess each question honestly** (never copy one value onto the
-whole batch). Calibrate for a non-native-English adult player:
-{_DIFFICULTY_RUBRIC}"""
+whole batch). Calibrate for {player}:
+"""
+    + _DIFFICULTY_RUBRIC
+)
 
 # #224 — a customer who picks a level must get that level on every question
 # (TF test 2026-11-02: "hard" packs came out too easy). The mixed guidance's
@@ -53,7 +60,7 @@ _FIXED_DIFFICULTY_FIELD = (
 
 _FIXED_DIFFICULTY_GUIDANCE = """\
 **`difficulty` — this order is for `{level}` questions: every question must be
-`{level}`.** Calibrate for a non-native-English adult player:
+`{level}`.** Calibrate for {player}:
 {rubric}
 A question you would honestly rate easier or harder than `{level}` is off
 target: make it `{level}` or replace it with another fact before you emit it.
@@ -384,6 +391,7 @@ class PromptBuilder:
         anti_examples: Optional[str] = None,
         ok_examples: Optional[str] = None,
         generation_model: Optional[str] = None,
+        difficulty_player: Optional[str] = None,
         **kwargs,
     ) -> str:
         """Build complete prompt with all variables filled.
@@ -409,6 +417,8 @@ class PromptBuilder:
             generation_model: Model id the prompt will be sent to; selects the
                 `{process_header}` variant (goal-mode for frontier models,
                 checklist otherwise).
+            difficulty_player: #236 — who the difficulty rubric is calibrated
+                for; None = the adult player every prompt used before.
             **kwargs: Extra template variables (e.g., facts_section for V3 prompt)
 
         Returns:
@@ -468,16 +478,17 @@ class PromptBuilder:
             category_guidance = _CATEGORY_CLASSIFY_GUIDANCE.format(
                 category_ids=", ".join(f"`{c}`" for c in CATEGORIES)
             )
+        player = difficulty_player or _ADULT_PLAYER
         if difficulty:
             difficulty_header = _FIXED_DIFFICULTY_HEADER.format(level=difficulty)
             difficulty_field = _FIXED_DIFFICULTY_FIELD.format(level=difficulty)
             difficulty_guidance = _FIXED_DIFFICULTY_GUIDANCE.format(
-                level=difficulty, rubric=_DIFFICULTY_RUBRIC
+                level=difficulty, rubric=_DIFFICULTY_RUBRIC, player=player
             )
         else:
             difficulty_header = _MIXED_DIFFICULTY_HEADER
             difficulty_field = _DIFFICULTY_FIELD
-            difficulty_guidance = _DIFFICULTY_GUIDANCE
+            difficulty_guidance = _DIFFICULTY_GUIDANCE.format(player=player)
         classification_section = (
             "## DIFFICULTY & CATEGORY (per question)\n\n"
             f"{difficulty_guidance}\n\n{category_guidance}"

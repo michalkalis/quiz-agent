@@ -1,7 +1,7 @@
 # #236 — Rodinná sekcia „S deťmi“
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 rešerš hotová, founder vybral smer; ďalej 236.1 (vek pri vlastnom balíku)
+**Status:** 2026-11-15 rešerš hotová, founder vybral smer, plán po kontrole návrhu opravený (šablóna priameho režimu, izolácia od bežného kvízu); ďalej 236.1 (vek pri vlastnom balíku)
 **Founder:** 2026-11-15 „do kvízu by sa veľmi hodila trochu viac separátna sekcia pre deti … ide skôr o to, aby rodičia mohli hrať s deťmi. Hlavne mať detské témy, možno deliť podľa veku.“
 
 ## Prečo
@@ -10,7 +10,7 @@ Rodiny s deťmi sú od MVP prvý smer rastu, ale dnes pre ne v appke nie je nič
 
 - Detská kategória zanikla pri prechode na záujmové kategórie (2026-08-26). 52 otázok je v archíve, nehrá sa žiadna.
 - Pole vhodnosti podľa veku na otázke (`age_appropriate`: all / 8+ / 12+ / 16+) existuje v modeli, generátore aj nastaveniach appky, ale pri výbere otázok sa nepoužíva.
-- Formulár vlastného balíka radí zadať „vesmír pre deti“. Detská šablóna generovania s bezpečnostnými pravidlami sa však spúšťa len pre zrušenú kategóriu `kids`, takže taký balík sa veľmi pravdepodobne generuje postupom pre dospelých (zistené čítaním kódu, 236.1 to overí na skutočnom balíku).
+- Formulár vlastného balíka radí zadať „vesmír pre deti“, ale balík sa generuje postupom pre dospelých: produkcia beží v priamom režime (`question_generation_direct.md`, „broad international adult audience“), detská šablóna je napojená len na režim so zdrojovými faktami a na zrušenú kategóriu `kids`, navyše je písaná pre 8–14 rokov.
 
 ## Rozhodnutia foundera (2026-11-15)
 
@@ -42,8 +42,10 @@ Pravidlá návrhu, ktoré z toho plynú:
 ### 236.1 Vek pri vlastnom balíku
 
 - Objednávka dostane nepovinnú voľbu „Pre koho“: dospelí (predvolené) / deti 4–6 / 7–9 / 10–12. Nepovinné pole, staré buildy fungujú bez zmeny.
-- Voľba pre deti zapne detskú šablónu (bez násilia, alkoholu, romantiky, hororu, politiky; krátke vety, jednoduché slová) upravenú na tri pásma a pridá **deterministickú kontrolu po vygenerovaní** (dĺžka otázky, zakázané okruhy), nie len pokyn v zadaní (nález externej revízie 2026-08-09).
-- Kontrola témy pred platbou (#233 — kontrola témy vlastného balíka) dostane prísnejší stupeň: pri detskom balíku sa hraničná téma zastaví, nezjemňuje sa.
+- **Šablóna:** nový detský variant šablóny priameho režimu (tá istá cesta ako dnešná produkcia, žiadne prepínanie režimu generovania, teda rovnaká cena a overovanie). Pravidlá: bez násilia, alkoholu, romantiky, hororu, politiky; krátke vety, jednoduché slová. Stará šablóna pre 8–14 ostáva len ako podklad.
+- **Pásmo a obtiažnosť sú dve osi:** pásmo určuje slovník, dĺžku a tvar otázky; obtiažnosť (ľahká / stredná / ťažká) znamená „v rámci pásma“. Šablóna nesmie vek odvodzovať z obtiažnosti.
+- **Kontrola po vygenerovaní na serveri** (nález externej revízie 2026-08-09: nie len pokyn v zadaní): pevné limity dĺžky podľa pásma + malý model ako sudca zakázaných okruhov. Zoznam slov sme zavrhli, v štyroch skloňovaných jazykoch je krehký. Pri detskom balíku platí opak než inde: keď kontrola zlyhá alebo si nie je istá, otázka vypadne.
+- Kontrola témy pred platbou (#233 — kontrola témy vlastného balíka) dostane detský stupeň (hraničná téma sa zastaví, nezjemňuje sa). Je to len pohodlie pre hráča: volá ju appka a pri chybe pustí, takže skutočnou poistkou sú šablóna a kontrola po vygenerovaní.
 - Znovupoužitie hotových balíkov (#225 — hotové balíky znova) berie vek ako súčasť zhody, detský a dospelý balík na tú istú tému sa nezamieňajú.
 - Hotovo keď: skutočný balík „vesmír“ pre 7–9 prejde detskou šablónou aj kontrolou a founder ho posúdi; analytická udalosť objednávky nesie pásmo.
 
@@ -52,6 +54,7 @@ Pravidlá návrhu, ktoré z toho plynú:
 - App Store kľúčové slová a plán vlastnej stránky „Rodina a deti“ (#220 — App Store marketing) prepísať na rodinné rámovanie; `kids quiz` vypustiť.
 - Zásady súkromia: doplniť hlas dieťaťa pri hre s rodičom (appka je určená dospelým, hlas sa po prepise neukladá).
 - Znova prejsť dotazník vekového hodnotenia; overiť vek digitálneho súhlasu v SR a ČR (predpoklad 16 a 15, neoverené).
+- **Otvorené, treba právnika pred vydaním sekcie v USA:** americký COPPA posudzuje aj časť služby zameranú na deti a výnimka pre hlasové nahrávky nerieši posielanie zvuku službe na prepis. Rámovanie „hráčom je rodič“ pokrýva pravidlá Apple o slovách, nie nutne toto. Dovtedy možnosť: sekcia len v obchodoch EÚ.
 
 ### 236.3 Návrh obrazoviek
 
@@ -61,6 +64,7 @@ Varianty na Design plátne, founder vyberie pred kódom: karta „S deťmi“ na
 
 - Témy na štart: zvieratá, rozprávky a večerníčky, vesmír, ľudské telo, príroda, šport, jedlo, Slovensko a Česko. Miestne témy natívne v sk/cs, ostatné podľa bežného postupu korpusu.
 - Pásmo sa ukladá ako samostatný údaj otázky (dnešné 8+/12+/16+ hovorí „od koľkých rokov je to vhodné“, nie „pre koho je to písané“); jedna otázka patrí jednému pásmu.
+- **Izolácia od bežného kvízu:** spoločný filter výberu otázok (`_build_metadata_filters`, používa ho bežná hra, balíky aj denná výzva) predvolene vynechá všetko, čo má pásmo. Otázky s pásmom dostane len hra, ktorá si pásmo výslovne vyžiada. Staré buildy a bežní hráči tak detskú otázku nedostanú nikdy; kvalita dnešného kvízu sa nemení. Filter ide do produkcie skôr než prvá otázka s pásmom.
 - Pilot ~20 otázok na pásmo, founder skalibruje rubriku pre deti, až potom plný beh (~150 na pásmo a jazyk). Odhad nákladov pred behom na schválenie.
 - 52 archivovaných otázok prejsť novou rubrikou, použiteľné vrátiť.
 
@@ -70,7 +74,7 @@ Výber otázok podľa pásma a témy, obrazovky podľa 236.3, analytické udalos
 
 ### 236.6 Otázky „na pokec“
 
-Nový typ otázky bez správnej odpovede: appka prečíta, počká na pokyn „ďalej“, nič nehodnotí a nepočíta body. Vlastná téma v sekcii. Treba vyriešiť od generovania (iná rubrika: vtip a rozhovor, nie fakt; zdroj sa nevyžaduje) cez hlasový priebeh po skóre. Pravidlo „každá otázka má zdroj“ ostáva pre všetky vedomostné otázky.
+Otázka bez správnej odpovede: appka prečíta, počká na pokyn „ďalej“, nič nehodnotí a nepočíta body. Nie je to nová hodnota typu otázky (typ hovorí, ako sa otázka zobrazí; otázka pre 4–6 môže byť výber z dvoch a zároveň nehodnotená), ale samostatný údaj „hodnotí sa / nehodnotí sa“; správna odpoveď prestane byť pri nehodnotených povinná. Server ich podáva len v sekcii a len buildom, ktoré ich vedia zahrať; denná výzva a štatistiky hráča ich vynechávajú. Vlastná téma v sekcii. Treba vyriešiť od generovania (iná rubrika: vtip a rozhovor, nie fakt; zdroj sa nevyžaduje) cez hlasový priebeh po skóre. Pravidlo „každá otázka má zdroj“ ostáva pre všetky vedomostné otázky.
 
 ### 236.7 Pásmo 4–6
 
@@ -87,6 +91,7 @@ Hra spolu s pásmom pri hráčovi (dieťa dostane na tú istú tému ľahšiu ot
 | App Review vyhodnotí appku ako určenú deťom | Rámovanie na rodiča, žiadne detské motívy v ikone a snímkach, sekcia za vypínačom na serveri |
 | Hlas malých detí sa nerozpozná (štúdie: až tretina slov zle u škôlkarov; sk/cs nemerané) | 236.7: uzavreté odpovede, ťuknutie rodiča, skúška pred vydaním |
 | Nevhodná otázka v detskom obsahu | Deterministická kontrola po generovaní + overovanie faktov ako dnes |
+| COPPA v USA (nejasné, viď 236.2) | Právne posúdenie pred vydaním sekcie v USA; vypínač podľa krajiny |
 | Dopyt je neoverený (žiadne dáta o hľadanosti ani tržbách) | 236.1 je malý krok a zmeria záujem cez podiel detských objednávok |
 
 ## Zdroje

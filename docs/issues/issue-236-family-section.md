@@ -1,7 +1,7 @@
 # #236 — Rodinná sekcia „S deťmi“
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 rešerš hotová, founder vybral smer, plán po kontrole návrhu opravený a uznaný (SOUND 0.8: šablóna priameho režimu, izolácia od bežného kvízu); ďalej 236.1 (vek pri vlastnom balíku)
+**Status:** 2026-11-15 plán uznaný (SOUND 0.8); 236.1 server NASADENÝ (PR #803, pole `audience` naživo), ostáva skúška na skutočných balíkoch + voľba vo formulári appky
 **Founder:** 2026-11-15 „do kvízu by sa veľmi hodila trochu viac separátna sekcia pre deti … ide skôr o to, aby rodičia mohli hrať s deťmi. Hlavne mať detské témy, možno deliť podľa veku.“
 
 ## Prečo

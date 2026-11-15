@@ -5,8 +5,7 @@
 //  #224 (224.3): the required difficulty choice on the order form. Four equal
 //  buttons and NO preselection — generated packs came out too easy when the
 //  level was left to the model, so the buyer must pick one before the order
-//  can continue. Selected state matches `AnswerOption.selected` (action fill,
-//  text on action).
+//  can continue.
 //
 
 import SwiftUI
@@ -41,32 +40,10 @@ struct OrderPackDifficultyPicker: View {
     }
 
     private func option(_ level: PackDifficulty) -> some View {
-        let isSelected = selection == level
-        return Button {
+        OrderPackOptionButton(title: level.label, isSelected: selection == level) {
             onSelect(level)
-        } label: {
-            Text(level.label)
-                .font(.hangsButton)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .foregroundStyle(isSelected ? Theme.Hangs.Colors.textOnAction : Theme.Hangs.Colors.ink)
-                .frame(maxWidth: .infinity, minHeight: Metrics.minHeight)
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                        .fill(isSelected ? Theme.Hangs.Colors.action : Theme.Hangs.Colors.bgCard)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                        .strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: isSelected ? 0 : 1)
-                )
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier("orderPack.difficulty.\(level.rawValue)")
-    }
-
-    private enum Metrics {
-        static let minHeight: CGFloat = 52
     }
 }
 

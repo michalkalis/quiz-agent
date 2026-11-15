@@ -54,6 +54,20 @@ struct OrderPackSummaryStep: View {
                         .accessibilityIdentifier("orderPack.summaryDifficulty")
                     }
 
+                    // #236: only a child band is named; an adult pack reads as before.
+                    if viewModel.audience.isChild {
+                        HStack(spacing: Theme.Hangs.Spacing.xs) {
+                            Text("Who it's for")
+                                .font(.hangsBody)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                            Text(viewModel.audience.label)
+                                .font(.hangsBody.weight(.semibold))
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("orderPack.summaryAudience")
+                    }
+
                     if viewModel.offersSizeChoice {
                         sizeRow
                     }

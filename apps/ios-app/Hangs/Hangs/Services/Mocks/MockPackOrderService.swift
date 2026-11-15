@@ -60,8 +60,14 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
     private let topicResult: Result<TopicVerdict, PackFailure>
     private let topicCalls = OSAllocatedUnfairLock(initialState: 0)
+    /// Latency on `checkTopic` on `clock` (#236): a test holds the check open
+    /// to change the form under it.
+    private let topicDelaySeconds: Double
     /// #233: how often the pre-payment topic check ran.
     var topicCheckCallCount: Int { topicCalls.withLock { $0 } }
+    /// #236: the audience each topic check was asked for, in call order.
+    var capturedTopicAudiences: [PackAudience] { topicAudiences.withLock { $0 } }
+    private let topicAudiences = OSAllocatedUnfairLock<[PackAudience]>(initialState: [])
     private let retryCalls = OSAllocatedUnfairLock(initialState: 0)
     private let listCalls = OSAllocatedUnfairLock(initialState: 0)
 
@@ -95,9 +101,11 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         retryFailure: PackOrderError? = nil,
         listFailure: PackOrderError? = nil,
         clock: AnyClock<Duration> = .continuous,
-        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok)
+        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok),
+        topicDelaySeconds: Double = 0
     ) {
         self.topicResult = topicResult
+        self.topicDelaySeconds = topicDelaySeconds
         self.retryFailure = retryFailure
         self.listFailure = listFailure
         self.createDelaySeconds = createDelaySeconds
@@ -126,12 +134,16 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         return try createResult.get()
     }
 
-    func checkTopic(prompt _: String, language _: String) async throws -> TopicVerdict {
+    func checkTopic(prompt _: String, language _: String, audience: PackAudience) async throws -> TopicVerdict {
         topicCalls.withLock { $0 += 1 }
+        topicAudiences.withLock { $0.append(audience) }
+        if topicDelaySeconds > 0 {
+            try await clock.sleep(for: .seconds(topicDelaySeconds))
+        }
         return try topicResult.get()
     }
 
-    func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
+    func retryOrder(id _: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
         retryCalls.withLock { $0 += 1 }
         retryProofs.withLock { $0.append(paymentProof) }
         if let retryFailure { throw retryFailure }
@@ -149,7 +161,7 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         }
     }
 
-    func getOrder(id: String) async throws -> OrderSnapshot {
+    func getOrder(id _: String) async throws -> OrderSnapshot {
         // Per-call Result sequence (throw-then-succeed etc.) wins so a test can
         // inject a transient error mid-poll; clamps to the last element.
         if !getResults.isEmpty {

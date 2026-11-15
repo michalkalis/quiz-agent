@@ -123,11 +123,14 @@ final class SharedQuizInbox: ObservableObject {
         }
     }
 
-    static func clipboardProbablyHasURL() async -> Bool {
+    /// Off the main actor on purpose: iOS calls the `detectPatterns` handler
+    /// on a background queue, and a handler that inherits this class's
+    /// `@MainActor` traps there (the first-launch crash of build 87).
+    nonisolated static func clipboardProbablyHasURL() async -> Bool {
         let pasteboard = UIPasteboard.general
         guard pasteboard.hasStrings || pasteboard.hasURLs else { return false }
         return await withCheckedContinuation { continuation in
-            pasteboard.detectPatterns(for: [.probableWebURL]) { result in
+            pasteboard.detectPatterns(for: [.probableWebURL]) { @Sendable result in
                 continuation.resume(returning: (try? result.get())?.contains(.probableWebURL) ?? false)
             }
         }

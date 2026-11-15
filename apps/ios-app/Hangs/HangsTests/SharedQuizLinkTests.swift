@@ -15,6 +15,7 @@
 import Foundation
 @testable import Hangs
 import Testing
+import UIKit
 
 @Suite("Shared quiz link (#232)")
 @MainActor
@@ -93,6 +94,23 @@ struct SharedQuizLinkTests {
         await later.checkClipboard()
         #expect(!later.offersPaste)
         #expect(!asked, "a later launch must not even ask iOS about the clipboard")
+    }
+
+    /// Every other test swaps the clipboard check for a closure, so the real
+    /// one never ran: iOS answers it off the main thread, and that crashed
+    /// the very first launch after install (build 87, a new player's first
+    /// second in the app).
+    @Test("the real clipboard check survives iOS answering off the main thread")
+    func realClipboardCheckDoesNotCrash() async {
+        let pasteboard = UIPasteboard.general
+        let before = pasteboard.items
+        defer { pasteboard.items = before }
+
+        pasteboard.string = "https://trubbo.app/play?s=\(Self.token)"
+        #expect(await SharedQuizInbox.clipboardProbablyHasURL())
+
+        pasteboard.items = []
+        #expect(await !SharedQuizInbox.clipboardProbablyHasURL())
     }
 
     @Test("a pasted quiz link starts it, is counted, and the row goes")

@@ -276,7 +276,7 @@ struct ContentView: View {
                         }
                     }
                     .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
-                    .toolbar(viewModel.quizScreen == .home ? .visible : .hidden, for: .tabBar)
+                    .toolbar(viewModel.quizScreen.showsTabBar ? .visible : .hidden, for: .tabBar)
                     // #111: single route table for the root stack's push chain —
                     // replaces the 4 imperative NavigationLink destinations.
                     .navigationDestination(for: AppRoute.self, destination: routeDestination)

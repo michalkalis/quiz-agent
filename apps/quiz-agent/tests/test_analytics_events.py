@@ -128,6 +128,34 @@ async def test_together_opened_is_accepted_and_carries_nothing():
     assert cleaned == {}
 
 
+async def test_app_and_server_agree_on_the_client_event_list():
+    # The app keeps its own copy of this allowlist and tests against it. When
+    # the two drift, the server silently drops what the app sends and the
+    # numbers just never show up (#233: every topic-check event was lost).
+    import re
+    from pathlib import Path
+
+    swift = (
+        Path(__file__).resolve().parents[3]
+        / "apps/ios-app/Hangs/HangsTests/AnalyticsEventsTests.swift"
+    )
+    if not swift.exists():
+        pytest.skip("iOS sources not in this checkout")
+    table = swift.read_text().split("backendClientEvents", 1)[1].split("\n]\n", 1)[0]
+    app_copy = {
+        name: frozenset(re.findall(r'"([a-z_]+)"', keys))
+        for name, keys in re.findall(
+            r'^    "([a-z_]+)": \[(.*?)\],?$', table, re.M | re.S
+        )
+    }
+    assert app_copy, "could not read the app's copy of the list"
+    for name, keys in app_copy.items():
+        assert name in CLIENT_EVENTS, f"the app sends {name}, the server drops it"
+        assert keys <= CLIENT_EVENTS[name], (
+            f"{name}: the server drops {keys - CLIENT_EVENTS[name]}"
+        )
+
+
 async def test_recap_events_keep_only_progress_and_kind():
     # #213.5: tells whether players watch their recap to the end and share
     # it; the recap's contents (cards, player type) must not leak into events.

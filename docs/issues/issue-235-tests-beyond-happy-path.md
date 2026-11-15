@@ -1,7 +1,7 @@
 # #235 — Testy mimo bezproblémového priebehu (pomalá sieť, výpadky, prerušenia)
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 plán; dve chyby z buildu 87 opravené vopred (PR #798, PR #799); ďalej 235.1
+**Status:** 2026-11-15 plán; dve chyby z buildu 87 opravené vopred (PR #798 pád pri prvom spustení, PR #799 zmiznutá spodná lišta); ďalej 235.1 (prepínač zlej siete v testoch)
 **Founder:** 2026-11-15 „aby neboli testy len na happy paths, ale zahrnovali aj edge cases, pomalé pripojenie a podobne“
 
 ## Prečo

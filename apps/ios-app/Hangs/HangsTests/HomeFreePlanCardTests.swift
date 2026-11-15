@@ -162,7 +162,7 @@ struct HomeFreePlanCardTests {
         let gate = OneShotGate()
         // Holds the launch fetch in flight, deterministically, so the
         // assertion below observes .loading rather than racing a real fetch.
-        mock.getUsageGate = { await gate.wait() }
+        mock.gates[.getUsage] = { await gate.wait() }
         let vm = QuizViewModel(
             networkService: mock,
             audioService: MockAudioService(),

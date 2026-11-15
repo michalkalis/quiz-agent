@@ -57,7 +57,7 @@ struct AttemptOwnershipTests {
         network.submitVoiceAnswerError = error
 
         let gate = UploadGate()
-        network.submitVoiceAnswerGate = { await gate.wait() }
+        network.gates[.submitVoiceAnswer] = { await gate.wait() }
         let submit = Task { await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2])) }
         await pumpUntil({ network.submitVoiceAnswerCallCount == 1 }, "the upload never reached the network")
         return (vm, network, gate, submit)

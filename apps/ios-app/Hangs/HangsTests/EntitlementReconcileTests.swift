@@ -159,7 +159,7 @@ struct EntitlementReconcileTests {
     func dedupesConcurrentReconciles() async {
         let mock = Fixtures.makeFullMockNetwork()
         let gate = OneShotGate()
-        mock.syncEntitlementsGate = { await gate.wait() } // holds the launch sync in flight, deterministically
+        mock.gates[.syncEntitlements] = { await gate.wait() } // holds the launch sync in flight, deterministically
         let vm = makeVM(network: mock)
 
         await pumpUntil({ mock.syncEntitlementsCallCount == 1 }, "launch sync never started")
@@ -349,7 +349,7 @@ struct EntitlementReconcileTests {
     func refreshUsageIsSingleFlight() async {
         let mock = Fixtures.makeFullMockNetwork()
         let gate = OneShotGate()
-        mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
+        mock.gates[.getUsage] = { await gate.wait() } // holds the launch fetch in flight, deterministically
         let vm = makeVM(network: mock)
 
         await pumpUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")
@@ -378,7 +378,7 @@ struct EntitlementReconcileTests {
             subscriptionStatus: "none", creditBalance: 5
         )
         mock.stubbedUsageSequence = [makeUsage(remaining: 0), recovered]
-        mock.getUsageGate = { await gate.wait() } // holds the launch fetch in flight, deterministically
+        mock.gates[.getUsage] = { await gate.wait() } // holds the launch fetch in flight, deterministically
         let vm = makeVM(network: mock)
 
         await pumpUntil({ mock.getUsageCallCount == 1 }, "launch usage fetch never started")

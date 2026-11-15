@@ -839,6 +839,26 @@ after Done. App alive.
 
 ---
 
+## RS-34: A slow start shows Cancel, then the question
+
+**Type:** XCUITest (`RSNetworkTests`). #235.1 (a "bad network" switch for
+tests).
+
+**Hypothesis:** on a slow server the quiz start stays visibly in flight and
+cancellable on Home (the window in which a player can walk to another tab,
+founder build 87), and the question still arrives once the server answers.
+
+**Steps:** launch with `--ui-test-network slow --ui-test-network-delay 4
+--ui-test-network-calls startQuiz` (the first question comes 4 s late; see
+`MockNetworkService+Conditions.swift` for the other profiles: `timeout`,
+`offline`, `dropped`, `server-error`, `malformed`); tap `home.startQuiz`.
+
+**Asserts:** `home.cancelStart` present and hittable while the start is in
+flight, `question.text` absent; then `question.text` present, `question.state`
+reads `askingQuestion`, `home.cancelStart` gone. App alive.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

@@ -5,6 +5,7 @@
 //  Mock NetworkService for DEBUG builds (SwiftUI previews, UI-test mode).
 //
 
+import Clocks
 @preconcurrency import Foundation
 import os
 
@@ -51,11 +52,14 @@ import os
         /// decrementing on each call — lets a test assert the #FIX2 bounded
         /// retry recovers (fails N times, then loads).
         var getUsageFailuresBeforeSuccess = 0
-        /// Optional hook awaited right after incrementing the call count, before
-        /// `getUsage` returns/throws — lets a test deterministically hold a
-        /// fetch in flight (no wall-clock race) to assert the #FIX2 single-flight
-        /// dedup (a launch fetch + an onAppear fetch must join, not fire twice).
-        var getUsageGate: (@Sendable () async -> Void)?
+        /// #235.1 (see +Conditions): awaited by every call once it is recorded,
+        /// before it answers — lets a test hold ANY call in flight with no
+        /// wall-clock race (`hold(_:)`, or a closure of its own).
+        var gates: [MockNetworkCall: @Sendable () async throws -> Void] = [:]
+        /// #235.1: the bad network each call runs on (none = instant and correct).
+        var networkConditions: [MockNetworkCall: NetworkCondition] = [:]
+        /// What a condition's delays sleep on: a `TestClock` in logic tests.
+        var networkClock: AnyClock<Duration> = .continuous
 
         // Capture properties for unit-test assertions (additive — no behaviour change)
         var capturedTextInputAudio: Bool?
@@ -83,8 +87,6 @@ import os
         var capturedDictationUploads: [(bytes: Int, language: String)] = []
         var dictationTranscript = "mock dictation"
         var dictationError: Error?
-        /// Awaited inside `transcribeDictation` — lets a test hold it in flight.
-        var dictationGate: (@Sendable () async -> Void)?
         /// When set, `submitTextInput` throws this instead of returning — the
         /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
         /// failure (e.g. the #133 409 `question_mismatch`) on the text path
@@ -137,12 +139,6 @@ import os
         var textInputFailuresBeforeSuccess = 0
         var submitVoiceAnswerFailuresBeforeSuccess = 0
         var submitVoiceAnswerCallCount = 0
-        /// Optional hook awaited right after the call is recorded, before
-        /// `submitVoiceAnswer` returns/throws — lets a test hold a voice upload in
-        /// flight deterministically and interleave a Re-record / spoken "again" at
-        /// exactly the #133 V14 window, with no wall-clock race. Sibling of
-        /// `getUsageGate` / `syncEntitlementsGate`.
-        var submitVoiceAnswerGate: (@Sendable () async -> Void)?
         /// The transient failure those two counters throw.
         static let coldWakeError = NetworkError.serverError(statusCode: 503, message: "machine waking")
         /// Number of times `endSession` was invoked — for assertions that X actually
@@ -174,12 +170,6 @@ import os
         /// call — lets tests assert the #102 bounded-retry-with-backoff behavior
         /// (fails N times, then recovers).
         var syncEntitlementsFailuresBeforeSuccess = 0
-        /// Optional hook awaited right after incrementing the call count, before
-        /// `syncEntitlements` returns/throws — lets a test deterministically hold
-        /// a call in flight (no wall-clock race) to assert the #102 single-flight
-        /// dedup (launch + an immediate scene `.active` must not fire two
-        /// concurrent syncs).
-        var syncEntitlementsGate: (@Sendable () async -> Void)?
 
         // MARK: #232 shared quiz (see +SharedQuiz)
 
@@ -227,6 +217,7 @@ import os
             capturedIncludeImages = includeImages
             capturedSkipLocalQuestions = skipLocalQuestions
             capturedCategories = categories
+            try await simulateNetwork(.createSession)
             if createSessionFailuresBeforeSuccess > 0 {
                 createSessionFailuresBeforeSuccess -= 1
                 throw URLError(.timedOut)
@@ -259,6 +250,7 @@ import os
             capturedAvailabilitySkipLocalQuestions = skipLocalQuestions
             capturedAvailabilityRequestedCount = requestedCount
             capturedAvailabilityExcludedIds = excludedQuestionIds
+            try await simulateNetwork(.questionAvailability)
             if let error = questionAvailabilityError { throw error }
             if let stubbed = stubbedAvailability { return stubbed }
             return QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
@@ -267,6 +259,7 @@ import os
         func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
             onStartQuiz?()
+            try await simulateNetwork(.startQuiz)
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }
@@ -286,7 +279,7 @@ import os
             capturedVoiceAnswerQuestionId = questionId
             capturedVoiceAnswerFileName = fileName
             capturedVoiceAnswerBytes = audioData.count
-            await submitVoiceAnswerGate?()
+            try await simulateNetwork(.submitVoiceAnswer)
             if submitVoiceAnswerFailuresBeforeSuccess > 0 {
                 submitVoiceAnswerFailuresBeforeSuccess -= 1
                 throw Self.coldWakeError
@@ -354,6 +347,7 @@ import os
             capturedFeedbackScreenshot = screenshotPNG
             capturedFeedbackAudio = audioWAV
             capturedFeedbackLogs = logsText
+            try await simulateNetwork(.submitFeedback)
             if let feedbackError { throw feedbackError }
             if shouldFail { throw NetworkError.invalidResponse }
         }
@@ -363,6 +357,7 @@ import os
             capturedTextInputAudio = audio
             capturedTextInputInput = input
             capturedTextInputQuestionId = questionId
+            try await simulateNetwork(.submitTextInput)
             if let submitTextInputDelay {
                 try await Task.sleep(for: submitTextInputDelay)
             }
@@ -399,6 +394,7 @@ import os
         func nextQuestion(sessionId _: String, audio: Bool) async throws -> QuizResponse {
             nextQuestionCallCount += 1
             capturedNextQuestionAudio = audio
+            try await simulateNetwork(.nextQuestion)
             if !nextQuestionResults.isEmpty {
                 let index = min(nextQuestionCallCount - 1, nextQuestionResults.count - 1)
                 return try nextQuestionResults[index].get()
@@ -416,6 +412,7 @@ import os
 
         func downloadAudio(from path: String) async throws -> Data {
             downloadedAudioPaths.append(path)
+            try await simulateNetwork(.downloadAudio)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -424,6 +421,7 @@ import os
 
         func endSession(sessionId _: String) async throws {
             endSessionCallCount += 1
+            try await simulateNetwork(.endSession)
             if let error = endSessionError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -431,18 +429,21 @@ import os
         }
 
         func extendSession(sessionId _: String, minutes _: Int) async throws {
+            try await simulateNetwork(.extendSession)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
         }
 
         func rateQuestion(sessionId _: String, rating _: Int) async throws {
+            try await simulateNetwork(.rateQuestion)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
         }
 
         func flagQuestion(sessionId _: String, reason _: String?) async throws {
+            try await simulateNetwork(.flagQuestion)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -450,7 +451,7 @@ import os
 
         func transcribeDictation(audioWAV: Data, language: String) async throws -> String {
             capturedDictationUploads.append((audioWAV.count, language))
-            await dictationGate?()
+            try await simulateNetwork(.transcribeDictation)
             if let dictationError { throw dictationError }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -462,6 +463,7 @@ import os
         /// would have been spoken (and that nothing is spoken in per-question mode).
         func synthesizeSpeech(text: String, language _: String?) async throws -> Data {
             synthesizedTexts.append(text)
+            try await simulateNetwork(.synthesizeSpeech)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -470,7 +472,7 @@ import os
 
         func getUsage() async throws -> UsageInfo {
             getUsageCallCount += 1
-            await getUsageGate?()
+            try await simulateNetwork(.getUsage)
             if getUsageFailuresBeforeSuccess > 0 {
                 getUsageFailuresBeforeSuccess -= 1
                 throw getUsageError ?? NetworkError.invalidResponse
@@ -501,7 +503,7 @@ import os
 
         func syncEntitlements() async throws {
             syncEntitlementsCallCount += 1
-            await syncEntitlementsGate?()
+            try await simulateNetwork(.syncEntitlements)
             if syncEntitlementsFailuresBeforeSuccess > 0 {
                 syncEntitlementsFailuresBeforeSuccess -= 1
                 throw syncEntitlementsError ?? NetworkError.invalidResponse
@@ -521,6 +523,7 @@ import os
 
         func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws {
             postedAnalyticsBatches.append(batch)
+            try await simulateNetwork(.postAnalyticsEvents)
             if analyticsPostFailures > 0 {
                 analyticsPostFailures -= 1
                 throw NetworkError.invalidResponse

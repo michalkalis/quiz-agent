@@ -202,7 +202,7 @@ struct QuestionRatingDictationTests {
         await withMainSerialExecutor {
             let network = MockNetworkService()
             let gate = DictationGate()
-            network.dictationGate = { await gate.wait() }
+            network.gates[.transcribeDictation] = { await gate.wait() }
             network.dictationTranscript = "checkable and fun"
             let (vm, service, audio) = makeRatingVM(network: network)
             vm.select(score: 9)

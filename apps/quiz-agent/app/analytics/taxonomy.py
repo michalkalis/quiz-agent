@@ -98,6 +98,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     # #232: the first-launch "quiz from a friend?" paste button was used
     # (outcome = opened | not_a_link).
     "shared_quiz_pasted": frozenset({"outcome"}),
+    # #233: the topic check before a custom pack order answered
+    # (verdict = ok | softened | blocked | error).
+    "pack_topic_checked": frozenset({"verdict"}),
     # #213.8: the host changed a rule of a game together (lobby or in game).
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
     # #224.4: the host stayed on a reveal (paused) or let the game go on.

@@ -44,6 +44,7 @@
 | `recap_viewed` | a recap story closes (#213.5); builds ≤ 81 only, #216.3 replaced the story with a Profile card | `kind` (first / month / year), `slides_seen` (furthest slide reached), `slides_total` |
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |
 | `together_opened` | the Together tab comes on screen (#216.2); with `room_created` / `room_joined` it shows how many who look at the tab go on to play | — |
+| `pack_topic_checked` | the topic check before a custom pack order answered (#233); one per check sent to the server | `verdict` (ok / softened / blocked / error; error = the check failed and the order went on) |
 | `shared_quiz_pasted` | the first-launch "quiz from a friend?" paste button was used (#232) | `outcome` (opened / not_a_link) |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
 | `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |

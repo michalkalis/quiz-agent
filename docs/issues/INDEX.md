@@ -14,7 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
-| 236 | [Rodinná sekcia „S deťmi“](issue-236-family-section.md) | enhancement · ready-for-agent | `[ ]` #236 | 2026-11-15: rešerš + rozhodnutia foundera (3 pásma, „na pokec“ hneď); mimo Kids Category, rámovanie na rodiča; ďalej 236.1 vek pri vlastnom balíku |
+| 236 | [Rodinná sekcia „S deťmi“](issue-236-family-section.md) | enhancement · ready-for-agent | `[~]` #236 | 2026-11-15: 3 pásma, „na pokec“ hneď; mimo Kids Category, rámovanie na rodiča; 236.1 server nasadený (PR #803), ostáva skúška balíkov a formulár v appke |
 | 235 | [Testy mimo bezproblémového priebehu](issue-235-tests-beyond-happy-path.md) | enhancement · ready-for-agent | `[ ]` #235 | 2026-11-15: plán po teste buildu 87; pomalá sieť, výpadky, prerušenia; ďalej 235.1 (prepínač zlej siete v testoch) |
 | 234 | [Trubbo Beta ako samostatná appka vedľa App Store verzie](issue-234-beta-app-side-by-side.md) | enhancement · ready-for-agent | `[ ]` #234 | 2026-11-12: plán skontrolovaný (SOUND), plná beta s nákupmi, founder + Svitlana |
 | 233 | [Vlastný balík: kontrola témy pred platbou](issue-233-custom-pack-topic-check.md) | enhancement · ready-for-agent | `[~]` #233 | 2026-11-11: rozhodnutia foundera (pred platbou; nebezpečné stop, vulgárne s upozornením); eval 29/30 Haiku 5.5; server nasadený (PR #775), appka s 1.3 |

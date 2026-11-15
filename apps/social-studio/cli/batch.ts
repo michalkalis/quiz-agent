@@ -23,7 +23,7 @@ import {parseArgs} from 'node:util';
 import {COPY} from '../src/copy';
 import type {Language} from '../src/types';
 import {caption, youtubeTitle, type PostFormat} from './captions';
-import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, voiceCharsLeft} from './paths';
+import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {shapeQuestion, type QuestionInput} from './shape';
 
 const {values} = parseArgs({
@@ -117,11 +117,7 @@ const ANSWER_NUMBER_CHARS = 20;
 function loadCandidates(): Candidate[] {
 	const file = path.join(CACHE_DIR, `candidates-${new Date().toISOString().slice(0, 10)}.json`);
 	if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8'));
-	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', 'python - --candidates'], {
-		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
-		maxBuffer: 64 * 1024 * 1024,
-		stdio: ['pipe', 'pipe', 'ignore'],
-	}).toString();
+	const out = runOnProd('--candidates');
 	const marker = out.indexOf('@@JSON@@');
 	if (marker < 0) throw new Error('prod candidates fetch returned no data');
 	mkdirSync(CACHE_DIR, {recursive: true});
@@ -139,7 +135,11 @@ const REVIEW: Record<string, Review> = JSON.parse(readFileSync(path.join(BATCH_D
 // founder/rater score; a per-week jitter keeps equal rows from always winning.
 function score(c: Candidate): number {
 	const jitter = parseInt(createHash('sha1').update(c.id + WEEK.id).digest('hex').slice(0, 6), 16) / 0xffffff;
-	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + jitter * 0.05;
+	// Home topics win on SK/CZ (2026-11-09 stats: YouTube SK & CZ's top five
+	// Shorts were all Czech/Slovak, Karel Gott 4× the next one), so a local
+	// question goes ahead of a general one of similar strength.
+	const local = c.local_scope ? 0.15 : 0;
+	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + local + jitter * 0.05;
 }
 
 const fitsAccount = (c: Candidate, s: Slot) =>

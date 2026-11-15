@@ -17,7 +17,7 @@ import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
 import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
 import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
-import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
+import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {cutAnswerNumber} from './trim';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
@@ -73,12 +73,7 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
 		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
 	const flags = `${ensureAudio ? ` --ensure-audio${questionOnly ? ' --question-only' : ''}` : ''}${withAnswer ? ` --answer=${answerNumber}` : ''}`;
-	const args = `python - ${id}${lang ? ` ${lang}` : ''}${flags}`;
-	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
-		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
-		maxBuffer: 64 * 1024 * 1024,
-		stdio: ['pipe', 'pipe', 'ignore'],
-	}).toString();
+	const out = runOnProd(`${id}${lang ? ` ${lang}` : ''}${flags}`);
 	const marker = out.indexOf('@@JSON@@');
 	if (marker < 0) throw new Error(`prod fetch for ${id} returned no data`);
 	const row = JSON.parse(out.slice(marker + 8).trim());

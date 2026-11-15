@@ -1,7 +1,7 @@
 """One approved question + its app voice clip, from prod.
 
 Not run locally: the CLI pipes this file into the prod API machine
-(`fly ssh console -a quiz-agent-api -C "python - <id> <lang>"`), where the app
+(`ssh trubbo-prod "docker exec -i trubbo-quiz-agent-1 python - <id> <lang>"`), where the app
 code, DB URL and R2 credentials already live, so no secret ever leaves Fly.
 
 - SELECT only, inside a READ ONLY transaction; R2 GET only.

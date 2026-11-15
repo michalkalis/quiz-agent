@@ -251,12 +251,13 @@ enum QuizSequenceShrinker {
     /// Delta-debugging over the input list: drop chunks, halving the chunk
     /// size, while the SAME invariant still breaks. Removing an input keeps
     /// every later input at its own time, so the timers between them still
-    /// run as they did. `fails` replays a candidate from scratch.
+    /// run as they did. `fails` replays a candidate from scratch. Generic so
+    /// the navigation sequences (#235.3) shrink their own inputs the same way.
     @MainActor
-    static func shrink(
-        _ inputs: [TimedInput],
-        fails: ([TimedInput]) async -> Bool
-    ) async -> [TimedInput] {
+    static func shrink<Input>(
+        _ inputs: [Input],
+        fails: ([Input]) async -> Bool
+    ) async -> [Input] {
         var current = inputs
         var chunk = max(1, current.count / 2)
         while chunk >= 1 {

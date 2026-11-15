@@ -37,8 +37,11 @@ change the difficulty.
    - NO horror, scary or disturbing content, and no details of death or injury
    - NO politics, religion or controversial topics
    - NO gambling, betting or money-obsessed themes
-   - YES animals, nature, space, the human body, inventions, fun science,
-     places, sport, food, music, art, stories and fairy tales
+   - YES the child's own body and everyday life, animals, nature, space,
+     inventions, fun science, places, sport, food, music, art, stories and
+     fairy tales
+   - Anything the child may try or check must be safe without help: nothing
+     with heat, fire, sharp things, electricity, or tasting what is not food
    If the player's request leans towards a sensitive area, find the
    child-friendly side of it or write about something nearby; never soften a
    forbidden theme into the question.
@@ -71,6 +74,29 @@ change the difficulty.
 
 ## WHAT MAKES A QUESTION GOOD HERE
 
+What is fun for an adult is often not fun for a child, and what is fun for a
+four-year-old is not fun for a ten-year-old. Write for THIS child's world, and
+stay inside the requested topic by finding the child's way into it. The
+examples below show the angle; never reuse them as questions.
+
+- **The child's own world first.** The best questions are about things the
+  child knows first-hand: their own body, their home, food, pets, toys, the
+  weather, the playground. A surprise hidden in something they meet every
+  day beats a fact about something they have never seen. The target: "In
+  the morning you are slightly taller than in the evening" (their own body,
+  a real surprise, and they can check it tonight).
+- **Things they can try or check right away.** A fact the child can test on
+  the spot (look at your fingertips, hold your nose while you eat, measure
+  yourself with a parent) turns the answer into a game.
+- **Biggest, fastest, smelliest.** Record-breakers from the animal and
+  everyday world, and funny or gross-but-harmless facts (burps, snot, poo,
+  smelly feet) make children laugh and want to tell someone.
+- **Faraway things through a child's door.** Space, history and distant
+  places work when they connect to something the child knows: "Why are the
+  astronauts' footprints on the Moon still there?" → "There is no wind". A
+  short "why" answer of a few words is welcome. Avoid abstract textbook facts
+  with no link to a child's life: "On Venus a day lasts longer than its year"
+  is true, but nothing a child can picture or care about.
 - **Wonder, not school.** Avoid test-style recall ("What is H2O?") and
   answers with no surprise ("What colour is the sky?").
 - **No "what am I" / "who am I" riddles.**

@@ -22,6 +22,8 @@ from datetime import date
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import GenerationProvenance, Question
 
+from app import audience as order_audience
+
 logger = logging.getLogger(__name__)
 
 # Written into ``generation_metadata.extra``. Deliberately NOT one of the
@@ -42,6 +44,28 @@ SOURCE: {source}
 
 1. Estimate what percentage of these casual players would give the correct answer (by knowing it, half-remembering it, or reasoning, estimating or eliminating their way there). For multiple-choice, count only real knowledge or reasoning above blind luck.
 2. Is it a giveaway? true ONLY when the wording itself names or uniquely describes the answer, so someone who never heard of the fact still gets it (e.g. "the actor who played Kylo Ren" when the answer is Adam Driver). Fair deduction from everyday knowledge is NOT a giveaway.
+
+Respond in JSON only:
+{{"casual_correct_pct": <integer 0-100>, "giveaway": <true|false>, "reason": "<one short sentence>"}}"""
+
+
+# #236: a child-band pack is judged for a child of that band, not a casual
+# adult. Same two questions, same JSON and the same floor (a share of the
+# pack's own players); only who those players are changes.
+_CHILD_WHERE = {
+    "en": "anywhere in the world",
+    "sk": "in Slovakia",
+    "cs": "in the Czech Republic",
+}
+
+_CHILD_PROMPT = """You judge quiz questions for a voice quiz game that a parent plays together with their child. Today is {today}. The player is a child aged {band} living {where}, playing with a parent who reads the question aloud but does not give the answer. Judge for a child of THIS age: what they meet at home, at school and in everyday life, and the words they know, not what an adult knows.
+
+QUESTION: {question}
+{options_block}CORRECT ANSWER: {answer}
+SOURCE: {source}
+
+1. Estimate what percentage of children of this age would give the correct answer (by knowing it, half-remembering it, or reasoning, estimating or eliminating their way there from everyday experience). For multiple-choice, count only real knowledge or reasoning above blind luck.
+2. Is it a giveaway? true ONLY when the wording itself names or uniquely describes the answer, so a child who never heard of the fact still gets it. Fair deduction from everyday experience is NOT a giveaway.
 
 Respond in JSON only:
 {{"casual_correct_pct": <integer 0-100>, "giveaway": <true|false>, "reason": "<one short sentence>"}}"""
@@ -90,7 +114,9 @@ class CasualPlayerChecker:
             return None
         return data if isinstance(data, dict) else None
 
-    async def check(self, question: Question, floor: int) -> CasualVerdict:
+    async def check(
+        self, question: Question, floor: int, audience: str | None = None
+    ) -> CasualVerdict:
         options_block = ""
         if question.possible_answers:
             rendered = " | ".join(
@@ -98,14 +124,22 @@ class CasualPlayerChecker:
             )
             options_block = f"OPTIONS: {rendered}\n"
         source = question.source_excerpt or question.source_url or "(none)"
-        prompt = _PROMPT.format(
-            today=(self._today or date.today()).isoformat(),
-            audience=_audience(question.language),
-            question=question.question,
-            options_block=options_block,
-            answer=question.correct_answer,
-            source=source,
-        )
+        fields = {
+            "today": (self._today or date.today()).isoformat(),
+            "question": question.question,
+            "options_block": options_block,
+            "answer": question.correct_answer,
+            "source": source,
+        }
+        if order_audience.is_child(audience):
+            language = (question.language or "en").lower()
+            prompt = _CHILD_PROMPT.format(
+                band=order_audience.LABELS[audience],
+                where=_CHILD_WHERE.get(language, f"where '{language}' is spoken"),
+                **fields,
+            )
+        else:
+            prompt = _PROMPT.format(audience=_audience(question.language), **fields)
         raw = await self._complete(prompt)
         data = self._parse(raw) if raw is not None else None
         if data is None:

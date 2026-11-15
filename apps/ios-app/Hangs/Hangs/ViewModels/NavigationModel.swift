@@ -83,8 +83,19 @@ final class NavigationModel: ObservableObject {
     /// predecessor (`.idle` today; `.error` too once #110's retry transition
     /// lands). QuizState's Equatable compares cases only (associated values
     /// ignored), so plain `==` already matches `.error(...)` correctly here.
+    ///
+    /// The start itself stays on Home with the tab bar up, so the player can
+    /// walk to another tab while a slow server answers. Every state after it
+    /// shows a quiz screen that hides the tab bar, so the quiz (or its error
+    /// screen) must not arrive behind a tab the player cannot leave.
     func handleQuizStateChange(_ new: QuizState) {
-        guard new == .startingQuiz else { return }
-        clearAll()
+        switch new {
+        case .startingQuiz:
+            clearAll()
+        case .idle:
+            break
+        default:
+            if selectedTab != .play { selectedTab = .play }
+        }
     }
 }

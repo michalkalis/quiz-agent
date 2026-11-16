@@ -94,14 +94,18 @@ struct HomeCategoryDeck: View {
         let current = order[CategoryCycle.position(of: selectedCategories, in: order)]
         let target = CategoryCycle.stepped(from: selectedCategories, direction, in: order).first
         let moving = direction == .next ? current : target
-        withAnimation(.timingCurve(0.3, 0.7, 0.2, 1, duration: Metrics.outDuration)) {
+        // Springs, not timing curves: the settle spring is retargeted while the
+        // card is still flying out and keeps its speed, so the two halves read
+        // as one arc. An ease-out first half stopped the card dead at the side
+        // before the second half pulled it back (stutter, founder 2026-11-16).
+        withAnimation(.spring(duration: Metrics.outDuration, bounce: 0)) {
             lift = .init(id: moving ?? HomeCategoryCycleCards.allID, direction: direction)
             onStep(direction, input)
         }
         liftTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(Metrics.outDuration))
+            try? await Task.sleep(for: .seconds(Metrics.retargetDelay))
             guard !Task.isCancelled else { return }
-            withAnimation(.timingCurve(0.2, 0.8, 0.2, 1, duration: Metrics.settleDuration)) { lift = nil }
+            withAnimation(.spring(duration: Metrics.settleDuration, bounce: 0.12)) { lift = nil }
         }
     }
 
@@ -188,9 +192,12 @@ struct HomeCategoryDeck: View {
 enum DeckMetrics {
     static let dotsGap: CGFloat = 18
     static let dotsHeight: CGFloat = 8
-    /// First half of a step: the moving card travels out to the side.
-    static let outDuration = 0.27
-    static let settleDuration = 0.3
+    /// First half of a step: the moving card travels out to the side. The
+    /// settle starts at `retargetDelay`, well before the out spring would come
+    /// to rest, so the card turns around without stopping.
+    static let outDuration = 0.4
+    static let retargetDelay = 0.17
+    static let settleDuration = 0.45
     static let fadeDuration = 0.2
     static let sideOffset: CGFloat = 132
     /// Canvas card: 196 × 256, scaled down to the space Home has left.

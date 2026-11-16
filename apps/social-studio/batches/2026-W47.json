@@ -1,7 +1,7 @@
 {
  "week": "2026-W47",
  "monday": "2026-11-16",
- "created": "2026-11-15T20:22:29.097Z",
+ "created": "2026-11-16T10:04:26.400Z",
  "posts": [
   {
    "key": "mon-ig_en",
@@ -150,15 +150,6 @@
      "source_url": "https://tv.nova.cz/porad/superstar/clanek/648400-superstar-2026-legendarni-show-se-vraci-ve-velkem-stylu-calin-prachar-farna-habera"
     },
     {
-     "id": "cb1f902d-4359-4bd9-856f-5911d55027de",
-     "category": "general",
-     "question": "Dálniční známce se často říká vinětka, podle francouzského slova vignette. Z názvu které rostliny to slovo pochází?",
-     "answer": "vinná réva",
-     "options": [],
-     "explanation": "Vignette znamenalo malý ornament z listů vinné révy, kterým se zdobily staré knihy. Později se tak začaly říkat i malé ozdobné nálepky, a nakonec i dálniční známce.",
-     "source_url": "https://www.etymonline.com/word/vignette"
-    },
-    {
      "id": "274ae4bf-21c4-4877-a71c-877776f6f68e",
      "category": "general",
      "question": "Myslivci mají pro krev zvěře zvláštní slovo. Je to úplně obyčejné slovo, které byste spíš čekali u malíře. Jaké?",
@@ -166,6 +157,15 @@
      "options": [],
      "explanation": "V myslivecké mluvě se krev opravdu nazývá barva. Postřelená zvěř „barví“ a dohledává se po barvě. Podobně má zajíc místo uší slechy a liška místo ocasu oháňku.",
      "source_url": "https://slovnik.iz.sk/?word=blood"
+    },
+    {
+     "id": "5f7ffe67-e8f8-4117-abfb-c2fbf26b1daa",
+     "category": "general",
+     "question": "Samotné slovo pomlázka prozrazuje, co mělo velikonoční šlehání ženám a dívkám původně dát. Co to je?",
+     "answer": "Mládí",
+     "options": [],
+     "explanation": "Pomlázka pochází od slova „pomladit“, tedy omladit. Mladé pružné vrbové proutky měly na šlehanou přenést svou svěžest, zdraví a mladost.",
+     "source_url": "https://www.novinky.cz/zena/velikonoce/clanek/velikonocni-pondeli-a-jeho-tradice-pomlazka-ma-prinest-mladi-rozhodne-ne-modriny-40356007"
     },
     {
      "id": "f781d481-d95a-4ceb-b219-864832ce6c11",
@@ -645,5 +645,6 @@
     }
    ]
   }
- ]
+ ],
+ "version": 2
 }

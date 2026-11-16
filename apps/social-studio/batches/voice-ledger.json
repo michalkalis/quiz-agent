@@ -1340,5 +1340,201 @@
   "language": "cs",
   "chars": 25,
   "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:41:24.030Z",
+  "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+  "language": "en",
+  "chars": 115,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:41:50.217Z",
+  "id": "ffe2b860-714d-4346-aadc-df4a2bca9c9c",
+  "language": "sk",
+  "chars": 145,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:43:11.049Z",
+  "id": "f30607ef-bf42-4deb-9107-8078a4eca141",
+  "language": "en",
+  "chars": 236,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:43:21.446Z",
+  "id": "6172d7e0-1ac3-4909-ac61-1c83284049b3",
+  "language": "en",
+  "chars": 166,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:43:31.837Z",
+  "id": "2008b006-db2a-4104-b561-26de7f5015e3",
+  "language": "en",
+  "chars": 187,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:44:33.481Z",
+  "id": "adfe95be-5b7c-4fda-b26b-d505dccd9093",
+  "language": "sk",
+  "chars": 157,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:44:44.481Z",
+  "id": "e0084f33-6e6a-49fc-a3bb-dc8ff2e692aa",
+  "language": "sk",
+  "chars": 200,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:44:54.852Z",
+  "id": "59c1b36b-7e75-4c32-917e-7fe220730c0f",
+  "language": "sk",
+  "chars": 195,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:45:52.192Z",
+  "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+  "language": "en",
+  "chars": 157,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:46:21.277Z",
+  "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+  "language": "en",
+  "chars": 247,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:46:31.339Z",
+  "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+  "language": "en",
+  "chars": 141,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:46:41.729Z",
+  "id": "46da9f0f-fa47-400c-8204-17d36d5e95e9",
+  "language": "en",
+  "chars": 181,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:46:52.210Z",
+  "id": "ee19cc76-0491-404c-a592-1532fec82229",
+  "language": "en",
+  "chars": 167,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:47:02.061Z",
+  "id": "9f73c5dc-35f2-44ce-9778-e0e7ae5c8675",
+  "language": "en",
+  "chars": 160,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:48:30.781Z",
+  "id": "b6b5e315-eb80-47ae-bd29-e653881df319",
+  "language": "sk",
+  "chars": 140,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:48:40.737Z",
+  "id": "0218eaa6-8e68-4b2d-a32c-9b7044a68780",
+  "language": "sk",
+  "chars": 141,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:48:51.248Z",
+  "id": "d1bf4941-3ce7-486c-b019-67ea3050ce04",
+  "language": "sk",
+  "chars": 203,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:49:01.710Z",
+  "id": "c9985c8f-8b27-44dd-84a7-e3d2167a8470",
+  "language": "sk",
+  "chars": 148,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:49:12.561Z",
+  "id": "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2",
+  "language": "sk",
+  "chars": 252,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:51:20.627Z",
+  "id": "f32924aa-366b-482c-be75-d347d594e5ee",
+  "language": "en",
+  "chars": 170,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:51:29.382Z",
+  "id": "7d06f93f-852f-41a0-af68-5b7b9d612bfc",
+  "language": "en",
+  "chars": 240,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:51:38.140Z",
+  "id": "13447f39-e4b7-4026-adb3-15f88ad6c8c6",
+  "language": "en",
+  "chars": 164,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:52:33.532Z",
+  "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
+  "language": "cs",
+  "chars": 194,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:52:42.786Z",
+  "id": "f6104550-837a-4767-a835-460cbe30db1c",
+  "language": "cs",
+  "chars": 180,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:52:50.873Z",
+  "id": "bd5e0d88-f829-4450-b36b-603ae1cc195d",
+  "language": "cs",
+  "chars": 116,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:55:07.469Z",
+  "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+  "language": "en",
+  "chars": 127,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:55:32.143Z",
+  "id": "ffe2b860-714d-4346-aadc-df4a2bca9c9c",
+  "language": "sk",
+  "chars": 165,
+  "what": "answer"
+ },
+ {
+  "at": "2026-11-16T09:58:35.993Z",
+  "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+  "language": "en",
+  "chars": 169,
+  "what": "answer"
  }
 ]

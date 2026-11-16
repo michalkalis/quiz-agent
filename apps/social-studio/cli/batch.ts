@@ -109,8 +109,8 @@ function voiceCharsAvailable(): number {
 }
 
 /** Characters a reel's new clips cost: the question when the app has no clip
- * yet, plus the answer read aloud (founder 2026-10-25: explanations are only shown). */
-const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + c.answer_chars;
+ * yet, plus the answer and its explanation read aloud (founder 2026-11-16). */
+const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + c.answer_chars + (c.explanation?.length ?? 0);
 /** A round's answer clip also says the question number ("Otázka číslo jeden: "). */
 const ANSWER_NUMBER_CHARS = 20;
 
@@ -236,7 +236,7 @@ function pick(cands: Candidate[]): Pick[] {
 			}
 			// The strongest of the rest closes the round.
 			const ids = first && rest.length === n - 1 ? [first, ...rest.reverse()] : [];
-			// Voice: every question without a clip, plus every answer read aloud (a clip each, explanations are only shown).
+			// Voice: every question without a clip, plus every answer read aloud with its explanation (a clip each).
 			const cost = ids.reduce((sum, c) => sum + voiceCost(c) + ANSWER_NUMBER_CHARS, 0);
 			if (!ids.length || cost > voiceChars) {
 				console.warn(`! ${slot.account} ${slot.day} round of ${n} ${slot.language}: ${ids.length ? 'over the weekly voice budget' : 'not enough reviewed questions'}, slot skipped`);

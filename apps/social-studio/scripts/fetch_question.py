@@ -183,9 +183,18 @@ ANSWER_PREFIX = {
 
 
 def answer_text(row, number):
-    """What a reel's answer clip says: the answer, after its question number in a round (number > 0)."""
+    """What a reel's answer clip says: the answer, after its question number in a
+    round (number > 0), then the explanation (founder 2026-11-16: read it too,
+    the ElevenLabs grant covers it). Single reels ask for number 1 too: the
+    voice picks a language from what comes first, so a bare "Vinica" was read
+    the Polish way, "vinika"; the reel cuts the number off (cli/trim.ts)."""
     prefix = ANSWER_PREFIX[row["language"]].format(n=number) if number else ""
-    return prefix + display_answer(row)
+    answer = display_answer(row).strip()
+    explanation = " ".join((row.get("explanation") or "").split())
+    if not explanation:
+        return prefix + answer
+    stop = "" if answer[-1:] in ".!?" else "."
+    return f"{prefix}{answer}{stop} {explanation}"
 
 
 def display_answer(row):

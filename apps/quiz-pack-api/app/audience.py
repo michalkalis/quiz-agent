@@ -30,6 +30,8 @@ class BandLimits(NamedTuple):
     question_words: int
     answer_words: int
     explanation_words: int
+    # The largest number a child may be asked to say or pick as the answer.
+    answer_number: int
 
 
 # Answer caps (founder 2026-11-15): 7-9 and 10-12 were 3 and 4 words, which
@@ -37,10 +39,21 @@ class BandLimits(NamedTuple):
 # answer_too_long. 6 matches the adult spoken-answer ruling (`craft_guards.
 # _ANSWER_MAX_WORDS`), so a longer cap would only move the drop there. 4-6
 # stays at 2: a preschooler answers in a word or two, or the parent taps.
+#
+# Number caps (founder 2026-11-17, second trial): children cannot picture
+# large numbers, so "how many ways can six bricks join: a hundred, a
+# thousand, a million, almost a billion?" is a blind guess, not a question.
+# Small counts they can picture are fine. The exact caps are a judgment call.
 LIMITS: dict[str, BandLimits] = {
-    "kids_4_6": BandLimits(question_words=14, answer_words=2, explanation_words=20),
-    "kids_7_9": BandLimits(question_words=20, answer_words=6, explanation_words=28),
-    "kids_10_12": BandLimits(question_words=28, answer_words=6, explanation_words=36),
+    "kids_4_6": BandLimits(
+        question_words=14, answer_words=2, explanation_words=20, answer_number=10
+    ),
+    "kids_7_9": BandLimits(
+        question_words=20, answer_words=6, explanation_words=28, answer_number=100
+    ),
+    "kids_10_12": BandLimits(
+        question_words=28, answer_words=6, explanation_words=36, answer_number=1000
+    ),
 }
 
 LABELS: dict[str, str] = {"kids_4_6": "4-6", "kids_7_9": "7-9", "kids_10_12": "10-12"}
@@ -88,7 +101,16 @@ def band_section(audience: str) -> str:
         f"`question` at most {limits.question_words} words, the answer "
         f"(`correct_answer`, or each option's text) at most "
         f"{limits.answer_words} words, `explanation` at most "
-        f"{limits.explanation_words} words."
+        f"{limits.explanation_words} words.\n\n"
+        f"Numbers: a child of this age cannot picture large numbers, so never "
+        f"make the answer a large number to guess. No number above "
+        f"{limits.answer_number} in the answer or in any option, in digits or "
+        f"in words (thousands, a million), and no options that differ by "
+        f"tenfold steps (4, 40, 400, 4,000); the server discards those too. "
+        f"Small counts a child can picture are fine. A big number may appear "
+        f"in the explanation next to something the child knows (\"as heavy as "
+        f"five grown-ups\"); better still, ask about that comparison instead "
+        f"of the number."
     )
 
 

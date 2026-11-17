@@ -9,7 +9,7 @@
    "day": "Mon",
    "format": "five",
    "language": "en",
-   "date": "2026-11-16",
+   "date": "2026-11-17",
    "files": [
     "five-en-10cd9730.mp4",
     "five-en-10cd9730.jpg"
@@ -30,7 +30,15 @@
      "explanation": "Founder Ole Kirk Christiansen took it from the Danish phrase 'leg godt', which simply means 'play well'.",
      "source_url": "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
     }
-   ]
+   ],
+   "note_moved": "Mon slot missed while waiting for re-approval; moved to Tue 17 Nov",
+   "status": "approved",
+   "publish_at": "2026-11-17T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-en-10cd9730.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-en-10cd9730.jpg"
+   ],
+   "tiktok_buffer": "6afc21c93825971990f1e99d"
   },
   {
    "key": "mon-ig_skcz",
@@ -38,7 +46,7 @@
    "day": "Mon",
    "format": "five",
    "language": "sk",
-   "date": "2026-11-16",
+   "date": "2026-11-17",
    "files": [
     "five-sk-ffe2b860.mp4",
     "five-sk-ffe2b860.jpg"
@@ -56,7 +64,15 @@
      "explanation": "Latinské vinea znamená vinica alebo vinohrad, a sedí to, lebo Vinea sa vyrába z hroznovej šťavy. Je to vlastne nealkoholická sestra vína.",
      "source_url": "https://en.wiktionary.org/wiki/vinea"
     }
-   ]
+   ],
+   "note_moved": "Mon slot missed while waiting for re-approval; moved to Tue 17 Nov",
+   "status": "approved",
+   "publish_at": "2026-11-17T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-sk-ffe2b860.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-sk-ffe2b860.jpg"
+   ],
+   "tiktok_buffer": "6afc21cad62bd5b48639768c"
   },
   {
    "key": "tue-ig_en",
@@ -116,6 +132,19 @@
      "explanation": "Dalmatian puppies are born pure white, and their spots only start appearing after about two weeks. So a real litter would look nothing like the cartoon.",
      "source_url": "https://www.dogster.com/lifestyle/are-dalmatians-born-with-their-spots/"
     }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-17T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-8-a.jpg"
    ]
   },
   {
@@ -176,6 +205,19 @@
      "explanation": "„Králové“ znamená „královny“. Město bylo věnným městem českých královen a nejslavnější z nich, Eliška Rejčka, tam založila kostel, který stojí dodnes.",
      "source_url": "https://cs.wikipedia.org/wiki/Hradec_Králové"
     }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-17T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-8-a.jpg"
    ]
   },
   {
@@ -224,7 +266,14 @@
      "explanation": "The name is a pun: in Korean, saja means lion, but it is also the word for the grim reapers who escort souls to the afterlife, which is precisely what the boys are.",
      "source_url": "https://www.billboard.com/lists/huntrx-golden-hot-100-number-one-fifth-week/"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-18T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f30607ef.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f30607ef.jpg"
+   ],
+   "tiktok_buffer": "6afc21cb64f1073d81d43722"
   },
   {
    "key": "wed-ig_skcz",
@@ -269,7 +318,14 @@
      "explanation": "Pani Lautmannová mala malú galantériu s gombíkmi, ktorá takmer nič nezarábala. Brtko tak zo „zabraného“ obchodu nič nemal a nakoniec ho starú pani tajne živili susedia.",
      "source_url": "https://en.wikipedia.org/wiki/The_Shop_on_Main_Street"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-18T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-adfe95be.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-adfe95be.jpg"
+   ],
+   "tiktok_buffer": "6afc21cc3825971990f1ea3e"
   },
   {
    "key": "thu-ig_en",
@@ -301,7 +357,14 @@
      "explanation": "Emoji is Japanese for 'picture character', from 'e' meaning picture and 'moji' meaning character, and its similarity to 'emotion' is pure coincidence.",
      "source_url": "https://www.etymonline.com/word/emoji"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-19T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.jpg"
+   ],
+   "tiktok_buffer": "6afc21cde5d943745edf996d"
   },
   {
    "key": "fri-ig_en",
@@ -367,7 +430,14 @@
      "explanation": "Fishermen out at sea would notice nothing unusual, then return to find their harbour destroyed, so the word literally means 'harbour wave'.",
      "source_url": "https://en.wikipedia.org/wiki/Tsunami"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-20T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.jpg"
+   ],
+   "tiktok_buffer": "6afc21cef1430c135f7c2c55"
   },
   {
    "key": "fri-ig_skcz",
@@ -430,7 +500,14 @@
      "explanation": "Komenský sa narodil 28. marca 1592 a vďaka učebniciam ako Orbis pictus ho dodnes voláme učiteľom národov. Kvety pre pani učiteľku sú teda vlastne aj darček k jeho narodeninám.",
      "source_url": "https://www.teraz.sk/magazin/den-ucitelov-sa-pripomina-od-roku-19/951262-clanok.html"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-20T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.jpg"
+   ],
+   "tiktok_buffer": "6afc21cfe5d943745edf9a15"
   },
   {
    "key": "sat-ig_en",
@@ -490,6 +567,19 @@
      "explanation": "Hawaii was an independent kingdom until 1893, and ʻIolani Palace in Honolulu was the home of its last monarchs. It even had electric lights before the White House did.",
      "source_url": "https://www.nps.gov/places/iolanipalace.htm"
     }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-21T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-8-a.jpg"
    ]
   },
   {
@@ -550,6 +640,19 @@
      "explanation": "Kto ide z Bratislavy do Komárna, celý čas je vlastne na ostrove, len o tom nevie. Žitný ostrov je taký veľký, že sú na ňom celé mestá vrátane Dunajskej Stredy a Veľkého Medera.",
      "source_url": "https://en.wikipedia.org/wiki/%C5%BDitn%C3%BD_ostrov"
     }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-21T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-8-a.jpg"
    ]
   },
   {
@@ -598,7 +701,14 @@
      "explanation": "Voguing was mimicking Vogue's cover poses long before Madonna's 1990 song made it a worldwide craze, and she borrowed it from the ballroom scene.",
      "source_url": "https://en.wikipedia.org/wiki/Vogue_(dance)"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-22T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.jpg"
+   ],
+   "tiktok_buffer": "6afc21d005a7e8ecf85109c6"
   },
   {
    "key": "sun-ig_skcz",
@@ -643,7 +753,14 @@
      "explanation": "Je to zámek Moritzburg u Drážďan. Každou zimu se tam koná výstava věnovaná právě Popelce.",
      "source_url": "https://www.novinky.cz/clanek/vase-zpravy-moritzburg-proslavila-pohadka-o-popelce-naleznete-zde-take-perovou-komnatu-nebo-jediny-sasky-majak-309601"
     }
-   ]
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-22T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.jpg"
+   ],
+   "tiktok_buffer": "6afc21d1e5d943745edf9aed"
   }
  ],
  "version": 2

@@ -1,7 +1,7 @@
 # #231 — Ukrajinčina ako štvrtý jazyk
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-17 231.0 technicky overené (povely, prepis odpovedí); čaká výber písma (founder) a posúdenie čítania (rodený hovorca) — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
+**Status:** 2026-11-17 231.0 technicky overené (povely, prepis odpovedí), 231.1 server nasadený (uk vypnutá); čaká výber písma (founder) a posúdenie čítania (rodený hovorca) — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
 **Founder:** 2026-11-08 „pridaj ukrajinčinu do appky, na všetko, tak ako cz, sk a en“
 
 ## Cieľ
@@ -48,7 +48,7 @@ Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpozn
   - [ ] (b) Čítanie 5 otázok aktuálnym hlasom → posúdi rodený hovorca (stránka, časť 2).
   - [x] (c) Prepis odpovedí na serveri: produkčný model **9/9 bez chyby** (mená, čísla, veta, один–чотири); záložný Scribe 8/9 (Канберра → latinkou „Canberra“).
   - [ ] (d) Písmo: varianty A Onest · B Manrope · C systémové → vyberie founder (stránka, časť 1).
-- [ ] **231.1 Server základ (vypnutý)** — `uk` v spoločnom zozname jazykov a vo všetkých zoznamoch povolených jazykov; čísla, percentá, radové číslovky, mesiace; slová pre možnosti 1–4 (один, два, три, чотири; aj „перший/другий…“) a názvy písmen pre hláskovanie; spätné hlášky a texty dennej výzvy s tromi tvarmi množného čísla; oznámenie v `/app-config` s uk poľom. Servírovanie uk zostáva vypnuté. Testy pre každé miesto.
+- [x] **231.1 Server základ (vypnutý)** (2026-11-17, PR #821, nasadené) — roky sa čítajú ako radové číslovky („у тисяча дев'ятсот шістдесят дев'ятому році“); rodený hovorca v 231.10 overí: čítanie rokov a dátumov, „Знав/Знали“ v dennej výzve, spätné hlášky. Zoznamy povolených jazykov v quiz-pack-api ostali pre 231.2. — `uk` v spoločnom zozname jazykov a vo všetkých zoznamoch povolených jazykov; čísla, percentá, radové číslovky, mesiace; slová pre možnosti 1–4 (один, два, три, чотири; aj „перший/другий…“) a názvy písmen pre hláskovanie; spätné hlášky a texty dennej výzvy s tromi tvarmi množného čísla; oznámenie v `/app-config` s uk poľom. Servírovanie uk zostáva vypnuté. Testy pre každé miesto.
 - [ ] **231.2 Otázky: brány kvality pre ukrajinčinu** — kontroly odpovedateľnosti a prirodzenosti s uk, skloňovanie (uk je ohybný jazyk ako sk/cs), kontrola miešania s ruštinou (ы, э, ъ, ё a ruské tvary), slovník pojmov uk, pravidlo tém (vojna od 2014, politika, Rusko = vyradiť), domáca krajina = Ukrajina vo filtri lokálnosti.
 - [ ] **231.3 Otázky: pilot** — 25 preložených univerzálnych + 25 natívnych ukrajinských (7/10 domáca scéna = Ukrajina, recept #211) → brány → vzorka 50 na posúdenie rodenému hovorcovi v jednej stránke. Odhad nákladov pred spustením (pilot do ~$5).
 - [ ] **231.4 Otázky: plná dávka** — po schválení pilotu cieľ ~1 000+ schválených (aby kategórie nemali diery): preklad univerzálnych en otázok dávkou (rádovo jednotky dolárov) + natívne dávky (rádovo desiatky dolárov) → **suma na súhlas foundera vopred**; uk v týždennom dopĺňaní zábavy (#202). Len schválené do App Store.

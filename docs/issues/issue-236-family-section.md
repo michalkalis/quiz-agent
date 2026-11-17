@@ -1,7 +1,7 @@
 # #236 — Rodinná sekcia „S deťmi“
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 plán uznaný (SOUND 0.8); 236.1 hotové na serveri (PR #803) aj vo formulári appky (PR #806, vyjde s ďalším buildom); kontroly kvality posudzujú detský balík očami dieťaťa daného pásma (PR #807, naživo); ostáva druhá skúška balíkov a verdikt foundera
+**Status:** 2026-11-15 plán uznaný (SOUND 0.8); 236.1 hotové na serveri (PR #803) aj vo formulári appky (PR #806, vyjde s ďalším buildom); kontroly kvality posudzujú detský balík očami dieťaťa daného pásma (PR #807, naživo); druhá skúška 2026-11-17: „vcelku zábavné“, pridané pravidlo o veľkých číslach (PR #818); ďalej 236.2 texty a 236.3 návrh obrazoviek sekcie
 **Founder:** 2026-11-15 „do kvízu by sa veľmi hodila trochu viac separátna sekcia pre deti … ide skôr o to, aby rodičia mohli hrať s deťmi. Hlavne mať detské témy, možno deliť podľa veku.“
 
 ## Prečo
@@ -48,6 +48,8 @@ Pravidlá návrhu, ktoré z toho plynú:
 - Kontrola témy pred platbou (#233 — kontrola témy vlastného balíka) dostane detský stupeň (hraničná téma sa zastaví, nezjemňuje sa). Je to len pohodlie pre hráča: volá ju appka a pri chybe pustí, takže skutočnou poistkou sú šablóna a kontrola po vygenerovaní.
 - Znovupoužitie hotových balíkov (#225 — hotové balíky znova) berie vek ako súčasť zhody, detský a dospelý balík na tú istú tému sa nezamieňajú.
 - **Prvá skúška (2026-11-15, 3×4 otázky, 3,61 USD) a verdikt foundera:** „trochu nudné pre deti“. Zabralo „Ráno po prebudení si o kúsok vyšší než večer“ (vlastné telo a život dieťaťa), nezabral učebnicový fakt o Venuši. Zábavnosť pre dospelého nie je zábavnosť pre dieťa, ani pre inak staré dieťa. Preto PR #807: sudcovia kvality aj kontrola „bežného hráča“ hodnotia ako dieťa daného pásma, áno/nie otázky bez stropu pre 4–6 a 9 z 30 pre staršie (dospelí 2 z 30), odpoveď do 6 slov pre 7–9 a 10–12 (4–6 ostáva 2), zadanie vedie k vlastnému telu, domovu, jedlu a veciam, čo sa dajú hneď vyskúšať; neškodný telesný humor je povolený. Zadania pre dospelých sa nezmenili (strážené odtlačkom v testoch).
+- **Druhá skúška (2026-11-17; „fuj, ale pravda“ 4–6, LEGO 7–9, Harry Potter cez skutočný svet 10–12) a verdikt foundera:** „vcelku sú zábavné“. Výhrada: deti nemajú predstavu o vysokých číslach, takže tipovanie rádovo veľkých čísel nie je otázka pre ne; menšie počty sú v poriadku. Preto PR #818 (naživo): odpoveď ani možnosť nesmie niesť číslo nad 10 (4–6), 100 (7–9), 1 000 (10–12), founder hranice potvrdil; číslo vo vysvetlení ostať môže. Vedľajší účinok: vypadne aj rok ako odpoveď.
+- Otvorené z druhej skúšky: úzke zadanie skĺzne k jednej podtéme (Harry Potter: tri zo štyroch otázok o sovách); kontrola textu nezachytila nejednotné meno (Hedwiga / Hedviga) a čiarku navyše; skúšobný beh nevie čerpať kredit z predplatného (chýba zmiešaná cesta Claude priamo, ostatné cez OpenRouter).
 - Zvolené pásmo si formulár pamätá do ďalšej objednávky (founder 2026-11-15).
 - Otvorené: tvar otázky pre 4–6 je len pokyn v zadaní, nie pevná kontrola; overovač faktov môže zjednodušenú detskú odpoveď označiť ako nepresnú. Sledovať v druhej skúške.
 - Hotovo keď: skutočný balík „vesmír“ pre 7–9 prejde detskou šablónou aj kontrolou a founder ho posúdi; analytická udalosť objednávky nesie pásmo.
@@ -65,6 +67,7 @@ Varianty na Design plátne, founder vyberie pred kódom: karta „S deťmi“ na
 
 ### 236.4 Obsah
 
+- Founder 2026-11-17 schválil celý zoznam 30 tém z rešerše (telo a zmysly, fuj ale pravda, jedlo ako veda, veci doma, ako sa čo vyrába, značky a hry cez skutočný svet, rekordy, „dalo by sa to?“, peniaze, špióni, optické klamy, superschopnosti zvierat, dinosaury, vesmír cez dieťa, zvuky a smiešne slová).
 - Lákavé témy podľa foundera (2026-11-15): menej bežné a zo života dieťaťa, napríklad Harry Potter, LEGO, jedlo, veci z každého dňa, čo niečo naučia; „fuj, ale pravda“ o tele pre najmenších. Známe značky a príbehy cez skutočný svet okolo nich (ako vzniká kocka, kde sa nakrúcalo), nie cez dej.
 - Témy na štart: zvieratá, rozprávky a večerníčky, vesmír, ľudské telo, príroda, šport, jedlo, Slovensko a Česko. Miestne témy natívne v sk/cs, ostatné podľa bežného postupu korpusu.
 - Pásmo sa ukladá ako samostatný údaj otázky (dnešné 8+/12+/16+ hovorí „od koľkých rokov je to vhodné“, nie „pre koho je to písané“); jedna otázka patrí jednému pásmu.

@@ -116,6 +116,14 @@ final class AppState: ObservableObject {
                 if CommandLine.arguments.contains("--ui-test-paywall-offline") {
                     purchaseMock.stubbedOfferings = nil
                 }
+                // #235.5: the store reports a failure, or the player closes the
+                // store sheet without buying (RS-39, RS-40).
+                if CommandLine.arguments.contains("--ui-test-purchase-fail") {
+                    purchaseMock.stubbedPurchaseError = URLError(.notConnectedToInternet)
+                }
+                if CommandLine.arguments.contains("--ui-test-purchase-cancel") {
+                    purchaseMock.stubbedPurchaseOutcome = .userCancelled
+                }
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 if StoreScreenshotFixtures.isActive {

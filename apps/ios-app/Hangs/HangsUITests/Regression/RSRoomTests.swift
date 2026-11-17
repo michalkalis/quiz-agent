@@ -5,7 +5,8 @@
 //  RS-28..RS-29, RS-32 — a game together (#212.3, rules #213.8) on the scripted mock room: two
 //  questions (A–D, then typed), one other player. The server switch is
 //  seeded by `--app-config-multiplayer`; a guest's host is driven over the
-//  test listener.
+//  test listener. RS-41..RS-42 (#235.5): the host loses the network mid-game,
+//  a guest comes back from the background.
 //
 
 import XCTest
@@ -152,5 +153,90 @@ final nonisolated class RSRoomTests: XCTestCase {
         XCTAssertTrue(room.winner.waitForExistence(timeout: 10), "RS-29: final ranking missing")
         XCTAssertFalse(room.awayNote.exists, "RS-29: a guest sees the host-only leave-app line")
         RSFlow.assertAlive(app, "RS-29")
+    }
+
+    // MARK: RS-41 — The host loses the network mid-game
+
+    // Regression guarded (#235.5): the host's phone drives the game, so a dead
+    // connection must show (the slow-connection line), the game must go on by
+    // itself once the network is back, and leaving must work at any time.
+    @MainActor
+    func testRS41HostLosesTheNetworkMidGame() async throws {
+        let app = RSFlow.launch(["--app-config-multiplayer"])
+        let room = RoomPage(app: app)
+        let client = UITestClient()
+        hostAGame(room, "RS-41")
+        XCTAssertTrue(room.option("b").waitForExistence(timeout: 10), "RS-41: options missing on question 1")
+
+        try await client.setNetwork("offline")
+        XCTAssertTrue(room.connectionBanner.waitForExistence(timeout: 10), "RS-41: no slow-connection line while every poll fails")
+        XCTAssertTrue(room.closeButton.isHittable, "RS-41: the host cannot leave while the network is gone")
+
+        try await client.setNetwork("clear")
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: room.connectionBanner)
+        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 10), .completed, "RS-41: the slow-connection line stayed after the network came back")
+        room.option("b").tap()
+        XCTAssertTrue(room.revealAnswer.waitForExistence(timeout: 10), "RS-41: the game did not go on after the network came back")
+
+        room.closeButton.tap()
+        // a11y-id: system alert — confirmationDialog buttons carry no identifiers; English is pinned by RSFlow.baseLaunchArguments
+        let endGame = app.buttons["End game"]
+        XCTAssertTrue(endGame.waitForExistence(timeout: 3), "RS-41: no End game confirmation")
+        endGame.tap()
+        XCTAssertTrue(room.hostButton.waitForExistence(timeout: 5), "RS-41: not back on the Together tab after ending the game")
+        RSFlow.assertAlive(app, "RS-41")
+    }
+
+    // MARK: RS-42 — A guest back from the background sees the current question
+
+    // Regression guarded (#235.5): a guest who switched apps while the host
+    // moved on must come back to the question the room is on, not the stale
+    // reveal they left.
+    @MainActor
+    func testRS42GuestBackFromTheBackgroundIsOnTheCurrentQuestion() async throws {
+        let app = RSFlow.launch(["--app-config-multiplayer"])
+        let room = RoomPage(app: app)
+        let client = UITestClient()
+
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "RS-42: Together tab not ready")
+        try await client.openRoomLink(token: "mock-token")
+        XCTAssertTrue(room.renameCard.waitForExistence(timeout: 10), "RS-42: guest lobby missing after the link")
+        try await client.roomHostStarts()
+        XCTAssertTrue(room.option("b").waitForExistence(timeout: 10), "RS-42: question 1 missing")
+        room.option("b").tap()
+        XCTAssertTrue(room.revealAnswer.waitForExistence(timeout: 10), "RS-42: reveal missing after question 1")
+
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 5) || app.state == .runningBackgroundSuspended, "RS-42: the app did not go to the background")
+        try await client.roomHostMovesOn()
+        app.activate()
+
+        XCTAssertTrue(room.answerField.waitForExistence(timeout: 10), "RS-42: the guest is not on question 2 after coming back")
+        XCTAssertFalse(room.revealAnswer.exists, "RS-42: the stale reveal of question 1 is still on screen")
+        XCTAssertFalse(room.waitingForHost.exists, "RS-42: the guest still waits for a host who moved on")
+        RSFlow.assertAlive(app, "RS-42")
+    }
+
+    /// Together tab → Host → name if asked → per-question reveal → Start.
+    @MainActor
+    private func hostAGame(_ room: RoomPage, _ scenario: String) {
+        XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 10), "\(scenario): Together tab missing")
+        room.togetherButton.tap()
+        XCTAssertTrue(room.hostButton.waitForExistence(timeout: 5), "\(scenario): Host a game missing")
+        room.hostButton.tap()
+        if room.nameField.waitForExistence(timeout: 3) {
+            room.nameField.tap()
+            room.nameField.typeText("Michal")
+            room.nameSave.tap()
+        }
+        XCTAssertTrue(room.lobbyRules.waitForExistence(timeout: 10), "\(scenario): lobby missing")
+        room.lobbyRules.tap()
+        XCTAssertTrue(room.rulesReveal.waitForExistence(timeout: 5), "\(scenario): rules sheet missing")
+        room.rulesReveal.tap()
+        XCTAssertTrue(room.revealOption("question").waitForExistence(timeout: 5), "\(scenario): reveal choices missing")
+        room.revealOption("question").tap()
+        room.rulesDone.tap()
+        XCTAssertTrue(room.startButton.waitForExistence(timeout: 5), "\(scenario): start missing")
+        room.startButton.tap()
     }
 }

@@ -41,7 +41,7 @@ Stav v kóde:
 ## Hotovo, keď
 
 - Čerstvá inštalácia: žiadne systémové okno, kým hráč nič nezapne.
-- Bez povolenia reči fungujú hlasové odpovede vrátane detekcie konca odpovede (overené v kóde 2026-11-17: nahrávanie odpovede beží mimo poslucháča príkazov a ticho sa meria na úrovni mikrofónu; zlyhanie rozpoznávania vypne len príkazy).
+- Bez povolenia reči fungujú hlasové odpovede vrátane detekcie konca odpovede (overiť v 237.2: ticho sa meria na úrovni mikrofónu, zlyhaný štart rozpoznávania dnes vypína len príkazy, ale zvuk odpovede môže ísť cez ten istý zvukový reťazec).
 - Každá z ciest a/b vedie k funkčným povelom; zamietnutie ukáže cestu do Nastavení, nikdy slepý stav.
 - Testy: každá cesta, zamietnutie, pomalé sťahovanie modelu (hráč vidí „pripravujem“, kvíz ide ďalej); skutočné systémové volanie aspoň raz na simulátore alebo riadok v `docs/testing/system-calls-coverage.md`.
 - Analytika: udalosť pre zapnutie povelov s cestou (onboarding / lišta) a výsledkom.

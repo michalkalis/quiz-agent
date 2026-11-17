@@ -37,16 +37,11 @@ LOG=$(mktemp -t rs-suite.XXXXXX)
 START=$SECONDS
 echo "RS suite: destination '$DEST', log $LOG" >&2
 
-# Every RS-NN class plus the slug-named originals; new classes must be added here.
+# The whole HangsUITests target: a hand-kept class list went stale and skipped
+# the room, shared quiz, network, pack, profile, daily and app-config scenarios.
 (cd "$PROJECT_DIR" && xcodebuild test -scheme Hangs-Local -destination "$DEST" \
     -parallel-testing-enabled NO \
-    -only-testing:HangsUITests/RegressionTests \
-    -only-testing:HangsUITests/RSRecordingTests \
-    -only-testing:HangsUITests/RSEditTests \
-    -only-testing:HangsUITests/RSMCQTests \
-    -only-testing:HangsUITests/RSResultTests \
-    -only-testing:HangsUITests/RSPaywallTests \
-    -only-testing:HangsUITests/A11yIdentifierTests \
+    -only-testing:HangsUITests \
     > "$LOG" 2>&1)
 XC_EXIT=$?
 ELAPSED=$((SECONDS - START))

@@ -96,7 +96,8 @@ final class StoreManager: ObservableObject {
     /// now shows an active entitlement (subscription OR pack credits) —
     /// `restorePurchases()` uses this to detect a pack-only recovery, since
     /// consumable packs never flip `isPurchased` (issue #102 finding 3).
-    var onPurchaseSuccess: (@MainActor () async -> Bool)?
+    /// nil = the server could not be reached (#235 F6).
+    var onPurchaseSuccess: (@MainActor () async -> Bool?)?
 
     private let purchaseService: PurchaseService
     /// #51 product analytics — see `StoreManager+Analytics`.
@@ -248,13 +249,20 @@ final class StoreManager: ObservableObject {
             // The bridge reports whether the server mirror now shows an
             // active entitlement (subscription OR credits) — the only signal
             // that can see pack credits, since `isPurchased` never reflects them.
-            let recoveredViaServer = await onPurchaseSuccess?() ?? false
-            if isPurchased || recoveredViaServer {
+            let serverVerdict: Bool? = if let onPurchaseSuccess { await onPurchaseSuccess() } else { false }
+            if isPurchased || serverVerdict == true {
                 // Either the subscription itself came back, or the server
                 // reconciliation surfaced something (pack credits, or a
                 // subscription webhook that landed after the SDK check) —
                 // either way this is a real recovery, not a no-op (#96 P1).
                 purchaseState = .success(productID: nil)
+            } else if serverVerdict == nil {
+                // #235 F6: the store found nothing and the server, the only
+                // one that knows a question pack, did not answer. "Nothing to
+                // restore" would be wrong; Restore can be tapped again.
+                let message = String(localized: "Couldn't connect. Try again.", bundle: .interface, locale: .interface, comment: "Paywall: restore could not reach the server that knows question packs")
+                purchaseError = message
+                purchaseState = .failed(message: message)
             } else {
                 purchaseState = .nothingToRestore
             }

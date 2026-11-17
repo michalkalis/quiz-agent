@@ -92,4 +92,30 @@ struct ProfileConditionTests {
         #expect(model.recaps.isEmpty)
         #expect(model.loadState == .loading)
     }
+
+    // WHY: the server decides whether a recap is new. A "seen" report lost on
+    // a bad network made the same recap come back as new (founder 2026-11-17,
+    // F4): the phone keeps it, the recap stays seen on screen, and the next
+    // Profile visit sends it again until the server takes it.
+    @Test("a failed 'recap seen' is kept, keeps the recap seen and goes out on the next Profile visit")
+    func failedSeenIsResent() async throws {
+        let defaults = UserDefaults(suiteName: "profile-seen-\(UUID().uuidString)")!
+        let service = MockPlayerStatsService(recaps: [.success([.mockOctober])])
+        service.seenError = URLError(.notConnectedToInternet)
+        let model = ProfileViewModel(service: service, tokenStore: StubTokenStore(), defaults: defaults)
+        await model.refresh().value
+        model.recapShown(try #require(model.latestRecap))
+        await pumpUntil { defaults.stringArray(forKey: ProfileViewModel.unsentSeenKey) == [PlayerRecap.mockOctober.id] }
+
+        // Next launch: the server still says "not seen".
+        let next = ProfileViewModel(service: service, tokenStore: StubTokenStore(), defaults: defaults)
+        await next.refresh().value
+        #expect(next.latestRecap?.seen == true, "the recap came back as new")
+
+        service.seenError = nil
+        await next.resendUnsentSeen()?.value
+        #expect(service.seenIDs == [PlayerRecap.mockOctober.id])
+        #expect(defaults.stringArray(forKey: ProfileViewModel.unsentSeenKey)?.isEmpty ?? true, "a delivered report would be sent forever")
+        #expect(next.resendUnsentSeen() == nil)
+    }
 }

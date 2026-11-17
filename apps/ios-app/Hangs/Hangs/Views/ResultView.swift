@@ -167,6 +167,7 @@ struct ResultView: View {
                     isCorrect: verdict == .correct,
                     explanation: explanationText,
                     userAnswer: metaUserAnswer,
+                    hearItFailed: viewModel.readAloudFailure == .explanation,
                     onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
                 ResultMetaRow(

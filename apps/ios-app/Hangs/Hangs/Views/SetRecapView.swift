@@ -54,6 +54,8 @@ struct SetRecapRow: View {
     let entry: RecapEntry
     let isExpanded: Bool
     let hearItDisabled: Bool
+    /// #235 F3: this row's "hear it" could not be fetched; a note says so.
+    var hearItFailed = false
     let onToggle: () -> Void
     let onHearIt: () -> Void
     /// Reports the source URL the driver tapped. The row owns no presentation
@@ -186,6 +188,10 @@ struct SetRecapRow: View {
                 .disabled(hearItDisabled)
                 .opacity(hearItDisabled ? 0.4 : 1)
                 .accessibilityIdentifier("recap.row.\(entry.id).hearIt")
+
+                if hearItFailed {
+                    ReadAloudFailureNote(identifier: "recap.row.\(entry.id).hearItFailed")
+                }
             }
 
             // #179 finding 8: every revealed answer gets the same source link

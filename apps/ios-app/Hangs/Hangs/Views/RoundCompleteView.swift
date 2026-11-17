@@ -249,11 +249,16 @@ struct RoundCompleteView: View {
     // MARK: - Answer list
 
     private var listHeader: some View {
-        HStack(alignment: .center, spacing: Theme.Hangs.Spacing.xs) {
-            HangsSectionLabel(text: "Questions")
-            Spacer(minLength: Theme.Hangs.Spacing.xs)
-            if route == .recap {
-                summaryControl
+        VStack(alignment: .trailing, spacing: Theme.Hangs.Spacing.xxs) {
+            HStack(alignment: .center, spacing: Theme.Hangs.Spacing.xs) {
+                HangsSectionLabel(text: "Questions")
+                Spacer(minLength: Theme.Hangs.Spacing.xs)
+                if route == .recap {
+                    summaryControl
+                }
+            }
+            if route == .recap, viewModel.readAloudFailure == .recapSummary {
+                ReadAloudFailureNote(identifier: "recap.playSummaryFailed")
             }
         }
     }
@@ -305,6 +310,7 @@ struct RoundCompleteView: View {
                     entry: entry,
                     isExpanded: expandedEntryId == entry.id,
                     hearItDisabled: viewModel.isAudioMuted,
+                    hearItFailed: viewModel.readAloudFailure == .recapEntry(entry.id),
                     onToggle: { toggle(entry.id) },
                     onHearIt: { viewModel.playRecapEntryExplanation(entry) },
                     onOpenSource: { sourceSheet = RecapSource(id: $0) }

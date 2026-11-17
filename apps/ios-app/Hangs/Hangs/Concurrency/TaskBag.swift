@@ -80,6 +80,11 @@ final class TaskBag {
         tasks.removeAll()
     }
 
+    /// The task registered under `key`, finished or not.
+    func task(for key: TaskKey) -> Task<Void, Never>? {
+        tasks[key]
+    }
+
     /// Test/diagnostics hook: whether a task is currently registered under
     /// `key`. Does not inspect cancellation state — a task that has finished
     /// naturally may still appear here until something replaces or cancels it.

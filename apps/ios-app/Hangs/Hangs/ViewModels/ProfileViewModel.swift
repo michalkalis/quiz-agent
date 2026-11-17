@@ -39,18 +39,24 @@ final class ProfileViewModel: ObservableObject {
     private let tokenStore: any TokenStore
     private let nameStore: PlayerNameStore
     private let analytics: AnalyticsClient
+    private let defaults: UserDefaults
     private var loadTask: Task<Void, Never>?
+
+    /// #235 F4: recaps seen here whose "seen" the server has not taken yet.
+    static let unsentSeenKey = "profile.unsentRecapSeen"
 
     init(
         service: PlayerStatsServiceProtocol,
         tokenStore: any TokenStore = KeychainTokenStore(),
         nameStore: PlayerNameStore = PlayerNameStore(),
-        analytics: AnalyticsClient = NoopAnalyticsClient()
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
+        defaults: UserDefaults = .standard
     ) {
         self.service = service
         self.tokenStore = tokenStore
         self.nameStore = nameStore
         self.analytics = analytics
+        self.defaults = defaults
     }
 
     /// The three numbers the founder finds worth a look (2026-10-30), in the
@@ -106,6 +112,7 @@ final class ProfileViewModel: ObservableObject {
     func appeared() {
         reloadAccount()
         refresh()
+        resendUnsentSeen()
     }
 
     @discardableResult
@@ -125,7 +132,13 @@ final class ProfileViewModel: ObservableObject {
             }
             // A failed recap fetch keeps the banner the player already saw.
             if let fetched = await freshRecaps, !Task.isCancelled {
-                recaps = fetched.filter { $0.kind != nil }
+                // A "seen" still on its way: the server's copy is older than this phone's.
+                let unsent = unsentSeenIDs
+                recaps = fetched.filter { $0.kind != nil }.map { recap in
+                    var recap = recap
+                    if unsent.contains(recap.id) { recap.seen = true }
+                    return recap
+                }
             }
         }
         loadTask = task
@@ -136,8 +149,40 @@ final class ProfileViewModel: ObservableObject {
     func recapShown(_ recap: PlayerRecap) {
         guard !recap.seen, let index = recaps.firstIndex(where: { $0.id == recap.id }) else { return }
         recaps[index].seen = true
+        unsentSeenIDs.insert(recap.id)
+        sendSeen(recap.id)
+    }
+
+    /// #235 F4: the next Profile visit sends again what failed, so the recap
+    /// does not come back as new. Nothing is shown to the player.
+    @discardableResult
+    func resendUnsentSeen() -> Task<Void, Never>? {
+        let ids = unsentSeenIDs
+        guard !ids.isEmpty else { return nil }
+        let sends = ids.sorted().map { sendSeen($0) }
+        return Task { for send in sends { await send.value } }
+    }
+
+    /// Forgotten once the server took it or no longer knows the recap (404,
+    /// e.g. another account), so it is never sent forever.
+    @discardableResult
+    private func sendSeen(_ id: String) -> Task<Void, Never> {
         let service = service
-        Task { try? await service.markRecapSeen(id: recap.id) }
+        return Task {
+            do {
+                try await service.markRecapSeen(id: id)
+            } catch NetworkError.serverError(statusCode: 404, _) {
+                // Gone for good: sending it again cannot help.
+            } catch {
+                return
+            }
+            unsentSeenIDs.remove(id)
+        }
+    }
+
+    private var unsentSeenIDs: Set<String> {
+        get { Set(defaults.stringArray(forKey: Self.unsentSeenKey) ?? []) }
+        set { defaults.set(Array(newValue), forKey: Self.unsentSeenKey) }
     }
 
     /// The share sheet opened on the recap card.

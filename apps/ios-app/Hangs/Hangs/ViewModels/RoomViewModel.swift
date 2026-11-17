@@ -89,6 +89,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     let packsEnabled: () -> Bool
     private let calls: CallStatusProviding
     private let isOffCellular: () async -> Bool
+    /// #235 F5: a leave the server did not get is kept and sent again later.
+    private let pendingLeaves: PendingRoomLeaveStore
 
     private(set) var invite: RoomInvite?
     private(set) var questionsById: [String: Question] = [:]
@@ -130,7 +132,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
         clock: AnyClock<Duration> = .continuous,
         languageCode: String? = Locale.current.language.languageCode?.identifier,
         isOffCellular: @escaping () async -> Bool = LocalNetworkCheck.isOffCellular,
-        packsEnabled: @escaping () -> Bool = { false }
+        packsEnabled: @escaping () -> Bool = { false },
+        pendingLeaves: PendingRoomLeaveStore = PendingRoomLeaveStore()
     ) {
         self.rooms = rooms
         self.network = network
@@ -148,6 +151,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         self.clock = clock
         self.isOffCellular = isOffCellular
         self.packsEnabled = packsEnabled
+        self.pendingLeaves = pendingLeaves
         playerName = names.playerName(accountName: accountName, languageCode: languageCode)
     }
 
@@ -197,6 +201,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// #216.2: the Together tab came on screen; each visit gets a fresh room.
     func tabOpened() {
         analytics.track(.togetherOpened)
+        // #235 F5: a leave an earlier game could not send goes out now.
+        Task { [pendingLeaves, rooms, network] in await pendingLeaves.resend(rooms: rooms, network: network) }
     }
 
     /// Keeps the "games on this Wi-Fi" list fresh while the start screen is up.
@@ -316,17 +322,23 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     /// Leaves the game: a guest drops out of the room, a host ends it for
     /// everyone unless it is already over.
-    /// The server is told in the background: closing never waits on the network.
+    /// The server is told in the background: closing never waits on the
+    /// network. A leave that does not arrive is kept and sent again (#235 F5).
     func leave() async {
         hasLeft = true
         stopAll()
         if role == .guest { await audio.stopPlayback() }
         guard let roomId = state?.roomId ?? created?.roomId else { return }
+        let leave: PendingRoomLeave
         if role == .guest, let you = state?.you, !hasEnded {
-            Task { [rooms] in try? await rooms.removePlayer(roomId: roomId, participantId: you) }
+            leave = .guest(roomId: roomId, participantId: you)
         } else if role == .host, let created, state?.status != .finished {
-            Task { [network] in try? await network.endSession(sessionId: created.sessionId) }
+            leave = .host(sessionId: created.sessionId)
+        } else {
+            return
         }
+        pendingLeaves.save(leave)
+        Task { [pendingLeaves, rooms, network] in await pendingLeaves.deliver(leave, rooms: rooms, network: network) }
     }
 
     /// #232 (5A): the lobby moved to a room with other content.

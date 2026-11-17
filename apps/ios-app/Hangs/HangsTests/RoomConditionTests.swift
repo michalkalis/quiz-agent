@@ -28,6 +28,7 @@ struct RoomConditionTests {
     private let network = MockNetworkService()
     private let audio = MockAudioService()
     private let clock = TestClock<Duration>()
+    private let leaves = PendingRoomLeaveStore(defaults: UserDefaults(suiteName: "room-conditions-leave-\(UUID().uuidString)")!)
 
     private func makeModel() -> RoomViewModel {
         network.mockSession = QuizResponse.previewStartQuiz.session
@@ -39,7 +40,8 @@ struct RoomConditionTests {
             accountName: "Michal Kalis",
             names: PlayerNameStore(defaults: UserDefaults(suiteName: "room-conditions-\(UUID().uuidString)")!),
             settingsStore: MultiplayerSettingsStore(defaults: UserDefaults(suiteName: "room-conditions-rules-\(UUID().uuidString)")!),
-            clock: AnyClock(clock), languageCode: "sk", isOffCellular: { true }
+            clock: AnyClock(clock), languageCode: "sk", isOffCellular: { true },
+            pendingLeaves: leaves
         )
     }
 
@@ -217,8 +219,8 @@ struct RoomConditionTests {
     }
 
     // WHY: leaving must close the game at once, whatever the network does.
-    // The server is told on a best-effort basis and a failure is not shown
-    // (founder case F5); the close itself must never wait 30 s on it.
+    // A failure is not shown; the leave is sent again later (founder
+    // 2026-11-17, F5). The close itself must never wait 30 s on it.
     @Test("leaving does not wait for a server that does not answer")
     func leaveDoesNotWaitForServer() async {
         let model = await guestAtFirstQuestion()
@@ -231,5 +233,44 @@ struct RoomConditionTests {
 
         await pumpUntil({ left.value }, "closing the game waited on the server")
         await clock.advance(by: NetworkCondition.requestTimeout)
+    }
+
+    // WHY: a guest whose leave never reached the server stayed in the host's
+    // list until the host ended the game (founder 2026-11-17, F5). The leave
+    // is kept and goes out the next time the Together tab opens.
+    @Test("a guest's leave the server never got is sent again when the Together tab opens")
+    func failedGuestLeaveIsResent() async {
+        let model = await guestAtFirstQuestion()
+        rooms.conditions.setNetworkCondition(.offline, for: [.removePlayer])
+        await model.leave()
+        for _ in 0 ..< 50 {
+            await Task.yield()
+        }
+        #expect(rooms.removed.isEmpty)
+        #expect(leaves.load() == .guest(roomId: model.state?.roomId ?? "", participantId: MockRoomService.youId))
+
+        rooms.conditions.setNetworkCondition(nil, for: [.removePlayer])
+        makeModel().tabOpened()
+
+        await pumpUntil({ rooms.removed == [MockRoomService.youId] }, "the kept leave was never sent again")
+        await pumpUntil({ leaves.load() == nil }, "a delivered leave would be sent forever")
+    }
+
+    // WHY: a host's "end the game" that failed is sent again too; once the
+    // server says the game is gone there is nothing left to tell.
+    @Test("a host's end the server never got is sent again, and dropped when the game is gone")
+    func failedHostEndIsResentUntilGone() async {
+        let model = makeModel()
+        await model.beginHosting()
+        network.endSessionError = URLError(.notConnectedToInternet)
+        await model.leave()
+        await pumpUntil { network.endSessionCallCount == 1 }
+        #expect(leaves.load() != nil, "the failed end was forgotten")
+
+        network.endSessionError = NetworkError.sessionNotFound
+        await leaves.resend(rooms: rooms, network: network)
+
+        #expect(network.endSessionCallCount == 2)
+        #expect(leaves.load() == nil, "a game the server no longer has kept being ended")
     }
 }

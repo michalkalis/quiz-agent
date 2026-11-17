@@ -67,7 +67,18 @@ change the difficulty.
    lexical convention (wordplay, spelling, rhymes, idioms, naming quirks):
    those are dropped from non-English sessions. Prefer a fact that survives
    translation.
-8. **Response format.** Emit exactly the output contract at the end of this
+8. **One name, one spelling.** When the pack is written in another language
+   than English (OUTPUT LANGUAGE below), a character, animal or place from a
+   book or film keeps the name children know from its official translation
+   in that language (the Slovak Harry Potter books call Hedwig "Hedviga"),
+   never an English name with a local ending bolted on ("Hedwiga"); if you
+   are not sure of the official name, use the original one. Use that one
+   name and spelling (inflected as the grammar needs) in every field of a
+   question and in every question of the pack, including the questions
+   already in it. Punctuation follows that language's rules, not English
+   habits: in Slovak and Czech no comma before "či", "alebo" or "nebo"
+   joining two choices ("grgáš potom viac či menej?").
+9. **Response format.** Emit exactly the output contract at the end of this
    prompt: field order, canonical short answers, honest flags. Set
    `age_appropriate` to "all".
 {craft_guards_section}

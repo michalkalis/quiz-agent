@@ -264,6 +264,30 @@ def test_adult_tf_cap_is_unchanged(band) -> None:
     assert info["tf_cap"] == 1 and len(ctx.questions) == 1
 
 
+def _compose_one_topic(band: str | None) -> tuple[OrderContext, dict]:
+    # A single-topic custom pack: the model labels every whole-topic question
+    # with the order's topic.
+    qs = [_q(text=f"Which LEGO fact {i}?", topic="LEGO") for i in range(5)]
+    ctx = _ctx(band, qs, target=10)
+    return ctx, asyncio.run(CompositionStage().run(ctx, _Sink())).info
+
+
+@pytest.mark.parametrize("band", BANDS)
+def test_child_pack_keeps_paid_questions_sharing_the_order_topic_label(band) -> None:
+    # Second trial 2026-11-17: "dropped ... topic='LEGO' over per-topic cap 2".
+    # The label is the order's own topic, so the cap threw away paid
+    # questions without measuring any spread; the sub-theme plan does that.
+    ctx, info = _compose_one_topic(band)
+    assert len(ctx.questions) == 5
+    assert info["topic_cap"] is None and info["topic_cap_dropped"] == 0
+
+
+@pytest.mark.parametrize("band", [None, "adults"])
+def test_adult_topic_cap_is_unchanged(band) -> None:
+    ctx, info = _compose_one_topic(band)
+    assert info["topic_cap"] == 2 and len(ctx.questions) == 2
+
+
 # --- 6. the kids prompt steers to the child's world -----------------------------
 
 
@@ -281,3 +305,31 @@ def test_kids_prompt_steers_to_the_childs_world_and_keeps_the_rules() -> None:
         assert rule in text
     # The safety judge must not reject the humour the prompt now asks for.
     assert "gross-out facts" in kids_check._PROMPT
+
+
+def test_kids_prompt_asks_for_one_local_name_and_local_punctuation(monkeypatch) -> None:
+    # Second trial 2026-11-17 (sk): "Hedwigu ... Hedwiga" in one question and
+    # "Hedviga" (the Slovak books' name) in another; "viac, či menej?" with an
+    # English-style comma. No language check runs on custom-pack text, so the
+    # generation call that writes the Slovak must carry the rule, and it must
+    # reach the rendered prompt a child-band order sends.
+    from app.generation import advanced_generator
+    from app.generation.advanced_generator import AdvancedQuestionGenerator
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-not-used")
+    gen =AdvancedQuestionGenerator(
+        generation_model="gpt-4o", critique_model="gpt-4o-mini", prompt_version="direct_v1"
+    )
+    token = advanced_generator._ORDER_AUDIENCE.set("kids_10_12")
+    try:
+        prompt, *_ = gen._build_batch_prompt(
+            count=3, difficulty="medium", topics=["Harry Potter"], categories=None,
+            question_type="text", excluded_topics=None, avoid_questions=None,
+            user_bad_examples=None,
+        )
+    finally:
+        advanced_generator._ORDER_AUDIENCE.reset(token)
+    assert "**One name, one spelling.**" in prompt
+    assert '"Hedviga"' in prompt and "official translation" in prompt
+    assert "every question of the pack" in prompt
+    assert 'no comma before "či"' in prompt

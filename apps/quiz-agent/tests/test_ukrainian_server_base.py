@@ -149,9 +149,23 @@ def test_percent_word_follows_the_ukrainian_plural_rule(digits, word):
     assert normalize_numbers_for_tts(f"{digits}%", "uk").endswith(word)
 
 
-def test_year_has_no_leading_one_thousand():
-    out = normalize_numbers_for_tts("У 1969 році", "uk")
-    assert out == "У тисяча дев'ятсот шістдесят дев'ять році"
+@pytest.mark.parametrize(
+    ("text", "spoken"),
+    [
+        # A year before "рік/року/році" is an ordinal adjective in uk (unlike sk/cs
+        # "v roku 1969"): a cardinal here is the grammar error a native hears first.
+        ("У 1969 році", "У тисяча дев'ятсот шістдесят дев'ятому році"),
+        ("до 1991 року", "до тисяча дев'ятсот дев'яносто першого року"),
+        ("У 2004 році", "У дві тисячі четвертому році"),
+        # Round years fuse into one word.
+        ("у 2000 році", "у двохтисячному році"),
+        ("У 1900 році", "У тисяча дев'ятисотому році"),
+        # A count is not a year: stays cardinal.
+        ("Населення 1969 осіб", "Населення тисяча дев'ятсот шістдесят дев'ять осіб"),
+    ],
+)
+def test_year_is_read_as_a_declined_ordinal(text, spoken):
+    assert normalize_numbers_for_tts(text, "uk") == spoken
 
 
 def test_decimal_comma_is_a_decimal_point_not_thousands():
@@ -185,7 +199,7 @@ def test_sk_percent_unchanged():
         ("3 березня", "третього березня"),
         ("19 століття", "дев'ятнадцятого століття"),
         ("у 20 столітті", "у двадцятому столітті"),
-        ("1. 1. 2026", "першого січня 2026"),
+        ("1. 1. 2026", "першого січня дві тисячі двадцять шостого"),
         ("2. світова війна", "друга світова війна"),
         ("під час 2. світової війни", "під час другої світової війни"),
         ("3. місце", "третє місце"),
@@ -200,7 +214,7 @@ def test_uk_ordinals_and_dates(text, spoken):
 def test_uk_ordinals_run_before_the_cardinal_pass():
     assert (
         normalize_numbers_for_tts("8 листопада 1945", "uk")
-        == "восьмого листопада тисяча дев'ятсот сорок п'ять"
+        == "восьмого листопада тисяча дев'ятсот сорок п'ятого"
     )
 
 

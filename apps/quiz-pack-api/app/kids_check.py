@@ -5,7 +5,8 @@ external review found that a prompt instruction alone is not a guarantee).
 Two parts, run on every generation round of a child-band order, before the
 paid fact-check sees the questions:
 
-1. Fixed word caps per band (`app.audience.LIMITS`). Deterministic.
+1. Fixed caps per band (`app.audience.LIMITS`): words, and how large a
+   number the answer may be. Deterministic.
 2. A small-model judge for the forbidden themes. A word list was rejected: in
    four inflected languages it is brittle.
 
@@ -36,6 +37,8 @@ ATTEMPTS = 3
 RETRY_DELAY_SECONDS = 2.0
 
 _VERDICTS = frozenset({"ok", "unsuitable", "unsure"})
+# "4 000", "4,000", "4.000" (thousands groups) or a plain run of digits.
+_NUMBER = re.compile(r"\d{1,3}(?:[ \u00a0.,]\d{3})+(?!\d)|\d+")
 _LINE = re.compile(r"^\s*(\d+)\s*[:.)-]\s*([a-z]+)", re.MULTILINE)
 
 
@@ -53,6 +56,7 @@ unsuitable: the question, an answer option or the explanation touches any of the
 - politics, religion or controversial topics
 - gambling, betting or money-obsessed themes
 - anything else a parent would not want read to a child of this age
+- the child has to guess or pick a number larger than {number_cap}, written in digits or in words (thousands, a million), or choose between sizes that differ by tenfold steps: children cannot picture such numbers. A big number that is only mentioned in the explanation is fine.
 
 unsure: you are not certain it is fine for a child of this age.
 
@@ -85,7 +89,17 @@ def length_violation(q: Question, audience: str) -> str | None:
         return "answer_too_long"
     if _words(q.explanation) > limits.explanation_words:
         return "explanation_too_long"
+    if any(_largest_number(a) > limits.answer_number for a in _answer_texts(q)):
+        return "answer_number_too_big"
     return None
+
+
+def _largest_number(text: str) -> int:
+    """The largest number written in digits in the text; 0 when none.
+    Numbers in words are left to the judge (inflected languages)."""
+    return max(
+        (int(re.sub(r"\D", "", m)) for m in _NUMBER.findall(text)), default=0
+    )
 
 
 def _render(questions: list[Question]) -> str:
@@ -130,7 +144,9 @@ async def judge(questions: list[Question], audience: str, model: str | None = No
     if not llm_factory.chat_available(model):
         raise KidsJudgeUnavailable(f"no provider for {model}")
     prompt = _PROMPT.format(
-        band=order_audience.LABELS[audience], questions=_render(questions)
+        band=order_audience.LABELS[audience],
+        number_cap=order_audience.LIMITS[audience].answer_number,
+        questions=_render(questions),
     )
     last_error: object = "no verdicts in the reply"
     for attempt in range(1, ATTEMPTS + 1):

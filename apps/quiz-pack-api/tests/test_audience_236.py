@@ -231,6 +231,29 @@ def test_over_long_questions_drop_without_a_judge_call(judge) -> None:
     assert len(client.prompts) == 1 and long_q.question not in client.prompts[0]
 
 
+def test_big_number_answers_drop_and_the_judge_is_told_the_cap(judge) -> None:
+    # Founder 2026-11-17: a child cannot picture large numbers, so guessing
+    # between "a thousand" and "a million" is not a question for them. Small
+    # counts stay; a big number in the explanation alone is fine.
+    client = judge("1: ok\n2: ok")
+    magnitudes = _q(0, possible_answers={"a": "asi 4 kg", "b": "asi 40 kg",
+                                         "c": "asi 400 kg", "d": "asi 4 000 kg"},
+                    correct_answer="c")
+    big_open = _q(1, correct_answer="1,600")
+    small = _q(2, correct_answer="8")
+    explained = _q(3, correct_answer="Yes", explanation="It held 430 kilograms!")
+    kept, dropped = asyncio.run(
+        kids_check.filter_questions([magnitudes, big_open, small, explained], "kids_7_9")
+    )
+    assert kept == [small, explained]
+    assert dropped == {"length": 2, "theme": 0}
+    # Numbers in words ("thousands") are the judge's part, with the band's cap.
+    assert f"larger than {audience.LIMITS['kids_7_9'].answer_number}," in client.prompts[0]
+    assert kids_check.length_violation(_q(4, correct_answer="12"), "kids_4_6") \
+        == "answer_number_too_big"
+    assert kids_check.length_violation(_q(5, correct_answer="12"), "kids_7_9") is None
+
+
 def test_judge_outage_retries_then_fails_the_order(judge) -> None:
     # An outage is not a verdict: retried, then raised as a non-retryable
     # failure so the order ends failed + refundable instead of topping up.

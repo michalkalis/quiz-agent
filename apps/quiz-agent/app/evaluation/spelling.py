@@ -67,6 +67,29 @@ _NAMES = {
     "ipsilon": "y",
     "zet": "z",
     "žet": "ž",
+    # Ukrainian (#231): multi-letter names only; single letters need no entry.
+    "бе": "б",
+    "ве": "в",
+    "ге": "г",
+    "ґе": "ґ",
+    "де": "д",
+    "же": "ж",
+    "зе": "з",
+    "йот": "й",
+    "ка": "к",
+    "ел": "л",
+    "ем": "м",
+    "ен": "н",
+    "пе": "п",
+    "ер": "р",
+    "ес": "с",
+    "те": "т",
+    "еф": "ф",
+    "ха": "х",
+    "це": "ц",
+    "че": "ч",
+    "ша": "ш",
+    "ща": "щ",
     # English (homophones of everyday words deliberately absent)
     "bee": "b",
     "cee": "c",
@@ -95,7 +118,34 @@ _PUNCT = ".,;:!?\"'()"
 # Names (as written, lowercased) that are also ordinary sk/cs/en words or
 # hesitations: they can extend a run but never make one. Accented forms such
 # as "jé" or "há" are plain letter names, except Czech "té" ("that").
-_WEAK_NAMES = {"je", "te", "té", "de", "ha", "ex", "gee", "em", "er", "el", "en", "es"}
+_WEAK_NAMES = {
+    "je",
+    "te",
+    "té",
+    "de",
+    "ha",
+    "ex",
+    "gee",
+    "em",
+    "er",
+    "el",
+    "en",
+    "es",
+    # uk: ordinary words or hesitations ("де" where, "те" that, "це" this, "ка")
+    "де",
+    "те",
+    "це",
+    "ка",
+    "ге",
+    "ха",
+    "ем",
+    "ен",
+    "ер",
+    "ел",
+    "ес",
+    "же",
+    "зе",
+}
 
 
 def _fold(text: str) -> str:

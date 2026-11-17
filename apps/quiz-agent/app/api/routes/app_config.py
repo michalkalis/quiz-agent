@@ -17,7 +17,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ... import app_switches
@@ -39,6 +40,9 @@ class AppNotice(BaseModel):
     sk: Optional[str] = None
     cs: Optional[str] = None
     en: Optional[str] = None
+    # #231: additive; left out of the served JSON while blank (see
+    # ``_without_blank_uk``), so a three-language body stays byte-identical.
+    uk: Optional[str] = None
 
 
 class VoiceExperimentArmConfig(BaseModel):
@@ -79,16 +83,15 @@ class AppConfigResponse(BaseModel):
 
 @router.get("/app-config", response_model=AppConfigResponse)
 async def get_app_config(
-    response: Response, sessionmaker=Depends(get_auth_sessionmaker)
-) -> AppConfigResponse:
+    sessionmaker=Depends(get_auth_sessionmaker),
+) -> JSONResponse:
     settings = get_settings()
     switches = app_switches.effective(
         settings, await app_switches.cached_overrides(sessionmaker)
     )
     notice = _localized(switches, "notice")
     maintenance_message = _localized(switches, "maintenance")
-    response.headers["Cache-Control"] = CACHE_CONTROL
-    return AppConfigResponse(
+    config = AppConfigResponse(
         min_version_app_store=switches["min_version_app_store"],
         min_version_testflight=switches["min_version_testflight"],
         recommended_version_app_store=switches["recommended_version_app_store"],
@@ -103,6 +106,20 @@ async def get_app_config(
         maintenance_message=maintenance_message,
         shared_quiz_enabled=switches["shared_quiz_enabled"],
     )
+    return JSONResponse(
+        _without_blank_uk(config.model_dump(mode="json")),
+        headers={"Cache-Control": CACHE_CONTROL},
+    )
+
+
+def _without_blank_uk(body: dict[str, Any]) -> dict[str, Any]:
+    """Drop ``uk`` from a notice that has none: the client falls back to ``en``
+    and every other build reads exactly the body it read before (#231)."""
+    for key in ("notice", "maintenance_message"):
+        notice = body.get(key)
+        if notice is not None and notice.get("uk") is None:
+            notice.pop("uk", None)
+    return body
 
 
 def _localized(switches: dict[str, Any], prefix: str) -> Optional[AppNotice]:
@@ -111,8 +128,9 @@ def _localized(switches: dict[str, Any], prefix: str) -> Optional[AppNotice]:
         sk=switches[f"{prefix}_sk"],
         cs=switches[f"{prefix}_cs"],
         en=switches[f"{prefix}_en"],
+        uk=switches[f"{prefix}_uk"],
     )
-    return text if (text.sk or text.cs or text.en) else None
+    return text if (text.sk or text.cs or text.en or text.uk) else None
 
 
 class AppSwitchesUpdate(BaseModel):

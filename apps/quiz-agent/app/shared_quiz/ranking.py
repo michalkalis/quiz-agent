@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 from ..db.models import SharedQuiz, SharedQuizResult
 
-_PLAYER_WORD = {"sk": "Hráč", "cs": "Hráč", "en": "Player"}
+_PLAYER_WORD = {"sk": "Hráč", "cs": "Hráč", "uk": "Гравець", "en": "Player"}
 
 
 class RankedPlayer(BaseModel):

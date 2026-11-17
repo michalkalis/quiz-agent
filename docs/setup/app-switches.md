@@ -6,7 +6,7 @@ Vynútená aktualizácia (minimálna verzia), odporúčaná aktualizácia, reži
 |---|---|---|
 | `min_version_app_store`, `min_version_testflight` | `"1.2"` / `"1.2.3"`, `null` = bez minima | buildy pod verziou musia aktualizovať |
 | `orders_enabled` | `true` / `false` | `false` skryje objednávanie v appke a quiz-pack-api odmietne nové objednávky (existujúce bežia ďalej) |
-| `notice_sk`, `notice_cs`, `notice_en` | text do 300 znakov, `null` = bez oznamu | pruh s oznamom; chýbajúci jazyk padne na `en` |
+| `notice_sk`, `notice_cs`, `notice_uk`, `notice_en` | text do 300 znakov, `null` = bez oznamu | pruh s oznamom; chýbajúci jazyk padne na `en` |
 | `recommended_version_app_store`, `recommended_version_testflight` (#214 — odporúčaná aktualizácia a údržba) | ako minimum, `null` = vypnuté | buildy pod verziou dostanú na Home kartu „Nová verzia Trubbo je pripravená“ s tlačidlom do obchodu; hráč ju zavrie a pri tej istej verzii sa už neukáže |
 | `maintenance_enabled` | `true` / `false` | celá obrazovka „Hneď sme späť“ cez celú appku; appka sa každých 30 s pýta znova a po vypnutí pokračuje sama |
 | `multiplayer_enabled_app_store` (#217 — Together v App Store buildi) | `true` / `false` | App Store build ukáže záložku Spolu a otvorí pozvánky len pri `true` (predvolene `false`); TestFlight buildy ju ignorujú a riadi ich `multiplayer_enabled`. Starší server pole nepošle = skryté |

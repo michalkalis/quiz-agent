@@ -51,7 +51,7 @@ def _display_answer(headline: str | None, correct: Any) -> str:
 async def fresh_questions(
     request: Request,
     response: Response,
-    language: Literal["sk", "cs", "en"],
+    language: Literal["sk", "cs", "en", "uk"],
     limit: int = Query(10, ge=1, le=20),
     retriever: QuestionRetriever = Depends(get_question_retriever),
 ) -> FreshQuestionsResponse:

@@ -46,6 +46,8 @@ NOTICE_KEYS = (
     "maintenance_sk",
     "maintenance_cs",
     "maintenance_en",
+    "notice_uk",
+    "maintenance_uk",
 )
 BOOL_KEYS = (
     "orders_enabled",
@@ -102,6 +104,7 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "notice_sk": settings.app_notice_sk,
         "notice_cs": settings.app_notice_cs,
         "notice_en": settings.app_notice_en,
+        "notice_uk": settings.app_notice_uk,
         # #214: DB-only switches (flipped live during a release or an
         # incident, never through a restarting env change); off by default.
         "recommended_version_app_store": None,
@@ -119,6 +122,7 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,
+        "maintenance_uk": None,
     }
 
 

@@ -54,20 +54,32 @@ _CARDINALS = {
     "styri": 4, "ctyri": 4,
     "sest": 6, "sedem": 7, "sedm": 7,
     "osem": 8, "osm": 8, "devat": 9, "devet": 9, "desat": 10, "deset": 10,
+    # uk (#231); п'ять / дев'ять left out like pat/pet: the apostrophe splits them.
+    "один": 1, "одна": 1, "одне": 1, "одну": 1,
+    "два": 2, "дві": 2, "двох": 2, "три": 3, "трьох": 3,
+    "чотири": 4, "чотирьох": 4, "шість": 6, "сім": 7, "вісім": 8, "десять": 10,
 }  # päť/pět ("pat"/"pet") left out: as plain words they are names and pets
 # Colloquial number nouns ("dvojka", "trojku", "čtyřkou"): stem → number.
 _NUMBER_NOUN_STEMS = {
     "jednotk": 1, "jednick": 1, "dvojk": 2, "trojk": 3, "stvork": 4, "ctyrk": 4,
+    "одиниц": 1, "двійк": 2, "трійк": 3, "четвірк": 4,
 }
-_NUMBER_NOUN_ENDINGS = ("a", "u", "ou", "y", "e", "ach", "ami")
+_NUMBER_NOUN_ENDINGS = (
+    "a", "u", "ou", "y", "e", "ach", "ami",
+    "а", "у", "ою", "и", "і", "ю", "ею", "ях", "ами",
+)
 # Ordinals (positional in both schemes): stem → position, declined endings.
 _ORDINAL_STEMS = {
     "prv": 1, "prvn": 1, "druh": 2, "tret": 3, "stvrt": 4, "ctvrt": 4,
     "posledn": _LAST,
+    "перш": 1, "друг": 2, "трет": 3, "четверт": 4, "останн": _LAST,
 }
 _ORDINAL_ENDINGS = (
     "a", "y", "e", "u", "i", "o", "ou", "ej", "eho", "om", "ym", "im",
     "ia", "ie", "iu", "ieho", "iho", "imu", "emu", "ymu",
+    # uk: перш-ий/а/е/у/ою/ої/ого/ому/им/ім/ій/их; трет-ій/я/є/ю/ього/ьому/ьої/ьою/іх
+    "ий", "а", "е", "у", "ою", "ої", "ого", "ому", "им", "ім", "ій", "их",
+    "я", "є", "ю", "ього", "ьому", "ьої", "ьою", "іх", "ьої", "я",
 )
 _EN_ORDINALS = {
     "first": 1, "second": 2, "third": 3, "fourth": 4, "last": _LAST,
@@ -81,11 +93,13 @@ _LETTER_NOUN_ENDINGS = ("o", "a", "u", "om", "e")
 # the ONE thing said ("C", "je to cé", "option B").
 _WEAK_LETTER_WORDS = {
     "be": "b", "ce": "c", "de": "d", "bee": "b", "see": "c", "sea": "c", "dee": "d",
+    # uk letters А Б В Г (labels stay A–D on the wire): "а", "бе", "ве", "ге".
+    "а": "a", "б": "b", "в": "c", "г": "d", "бе": "b", "ве": "c", "ге": "d",
 }
 # English verbs that sound like letters: dropped when another label is said
 # ("it could be C", "let me see, B").
 _LETTER_LOOKALIKE_VERBS = frozenset({"be", "see"})
-_NEGATIONS = frozenset({"nie", "ne", "not", "nope"})
+_NEGATIONS = frozenset({"nie", "ne", "not", "nope", "не", "ні"})
 # Words that carry no choice ("je to…", "the answer is…", "myslím, že…").
 _FILLERS = frozenset(
     """
@@ -99,6 +113,9 @@ _FILLERS = frozenset(
     the it its is i think guess say said answer option number letter choice
     my final go with pick choose will could would maybe probably um uh er
     okay yes yeah please that this im let me
+    це цей ця то так ну добре гаразд звичайно звісно мабуть певно думаю гадаю
+    вибираю обираю беру кажу відповідь відповідаю варіант номер цифра буква
+    літера під на до у з по що я моя мій правильна правильний будь ласка
     """.split()
 )
 
@@ -161,6 +178,16 @@ _LABEL_WORDS = {
         "C": "céčko",
         "D": "déčko",
     },
+    "uk": {
+        "1": "один",
+        "2": "два",
+        "3": "три",
+        "4": "чотири",
+        "A": "а",
+        "B": "бе",
+        "C": "ве",
+        "D": "ге",
+    },
     "en": {"1": "one", "2": "two", "3": "three", "4": "four"},
 }
 
@@ -213,9 +240,11 @@ def _letter_noun(token: str) -> Optional[str]:
 
 
 def _weak_letter(token: str) -> Optional[str]:
+    if token in _WEAK_LETTER_WORDS:
+        return _WEAK_LETTER_WORDS[token]
     if len(token) == 1 and token.isalpha():
         return token
-    return _WEAK_LETTER_WORDS.get(token)
+    return None
 
 
 def _key_for_position(position: int, keys: list[str]) -> Optional[str]:

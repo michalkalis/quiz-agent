@@ -258,6 +258,7 @@ class Settings(BaseSettings):
     room_read_fallback_seconds: int = 45
     app_notice_sk: Optional[str] = None
     app_notice_cs: Optional[str] = None
+    app_notice_uk: Optional[str] = None
     app_notice_en: Optional[str] = None
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
@@ -277,7 +278,13 @@ class Settings(BaseSettings):
     def _normalize_min_app_version(cls, value: object) -> Optional[str]:
         return _min_app_version(None if value is None else str(value))
 
-    @field_validator("app_notice_sk", "app_notice_cs", "app_notice_en", mode="before")
+    @field_validator(
+        "app_notice_sk",
+        "app_notice_cs",
+        "app_notice_uk",
+        "app_notice_en",
+        mode="before",
+    )
     @classmethod
     def _normalize_app_notice(cls, value: object) -> Optional[str]:
         text_value = None if value is None else str(value).strip()

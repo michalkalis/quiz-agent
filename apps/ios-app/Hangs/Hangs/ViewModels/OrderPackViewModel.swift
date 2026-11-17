@@ -676,6 +676,8 @@ final class OrderPackViewModel: ObservableObject {
             let snapshot: OrderSnapshot
             do {
                 snapshot = try await service.getOrder(id: orderId)
+                // Stopped while the reply was on its way: the watch is over (#235.2).
+                guard !Task.isCancelled else { return }
                 consecutiveErrors = 0 // any success clears the transient-error run
             } catch {
                 // Transient-error tolerance: a single network/timeout blip on

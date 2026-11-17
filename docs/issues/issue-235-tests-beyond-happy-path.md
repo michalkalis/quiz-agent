@@ -100,7 +100,18 @@ Asi 8 nových scenárov (čísla RS pridelí `docs/testing/regression-scenarios.
 
 Spolu 48 buniek: 20 ✓, 24 ✓✓, 4 n-a. Hodnotenie a nahlásenie otázky (`QuizViewModel.rateQuestion`/`flagQuestion`) nevolá žiadna obrazovka; hodnotiaci panel chybu ukáže (`QuestionRatingViewModelTests`).
 
-Druhá polovica (nákup a obnova, balík na mieru, hra spolu, zdieľaný odkaz): _doplní 235.2 druhá polovica._
+235.2, druhá polovica (2026-11-17). Rovnaké značky. Atrapy hry spolu a objednávok balíkov dostali to isté podržanie a tie isté podmienky ako atrapa siete.
+
+| Tok | Pomalé | Vyprší čas | Bez siete | Výpadok uprostred | Chyba servera | Poškodená odpoveď | Hráč odíde | Odpoveď po odchode |
+|---|---|---|---|---|---|---|---|---|
+| Nákup a obnova | ✓ nákup, obnova (`PaywallViewInspectorTests`), ponuka (`ScreenStateContractTests`) · ✓✓ pomalé potvrdenie servera, druhé ťuknutie nestrhne | ✓✓ potvrdenie končí na „aktivuje sa“, strhnuté raz | ✓ ponuka (`PaywallViewInspectorTests`) · ✓✓ potvrdenie, obnova · F6 | ✓✓ | ✓ `QuotaPaywallPurchaseLoopTests`, `PurchaseActivationTests` · ✓✓ | ✓✓ | ✓✓ zavretie a otvorenie predajnej obrazovky nákup nezmaže | ✓ neskorá transakcia (`PurchaseEdgeCaseScenarioTests`) · ✓✓ potvrdenie po zavretí odomkne |
+| Balík na mieru | ✓ objednávka, sledovanie (`OrderPackViewModelTests`) · ✓✓ kontrola témy, druhé ťuknutie | ✓ limit sledovania (`OrderPackViewModelTests`) · ✓✓ kontrola, objednávka, sledovanie | ✓✓ kontrola pustí ďalej bez platby, objednávka so Skúsiť znova, sledovanie skončí správou | ✓ platba raz (`OrderPackViewModelTests`) · ✓✓ opakovanie s tou istou platbou | ✓ `PackOrderServiceTests`, `OrderPackViewModelTests` · ✓✓ | ✓ `PackOrderCodableTests` · ✓✓ | ✓ zavretý hárok, objednávka beží ďalej (`OrderPackViewModelTests`, `PackRetryDurabilityTests`) | ✓✓ oprava: zastavené sledovanie neprepíše stav |
+| Hra spolu | ✓ `RoomViewModelTests` · ✓✓ odpoveď sa točí, druhé ťuknutie nie | ✓ poll (`RoomViewModelTests`) · ✓✓ pripojenie, založenie | ✓✓ „spojenie je pomalé“ a hra sa dobehne; pripojenie a založenie vrátia štart s chybou; odpoveď ide poslať znova | ✓✓ | ✓ 404, 409 (`RoomViewModelTests`) · ✓✓ 500 | ✓✓ | ✓ pozadie (`RoomViewModelTests`) · ✓✓ odchod zastaví poll a nečaká na server · F5 | ✓✓ oprava: neskorý stav, pripojenie aj založená miestnosť |
+| Zdieľaný odkaz | ✓✓ spinner so Zrušiť · F7 | ✓✓ chyba so Skúsiť znova, odkaz ostane · F7 | ✓✓ štart; porovnanie povie, že sa nedá načítať | ✓✓ | ✓ odmietnutia (`SharedQuizFlowTests`, `SharedQuizLinkTests`) · ✓✓ 500 | ✓✓ | ✓ odkaz počas kvízu čaká na Home (`SharedQuizLinkTests`) · ✓✓ Zrušiť, odkaz dvakrát | ✓✓ oprava: štart po Zrušiť; staršie porovnanie neprepíše novšie |
+
+Spolu 32 buniek: 1 ✓, 31 ✓✓ (v 15 z nich aj existujúci test), 0 n-a. Neskorý verdikt kontroly témy po zavretí hárku len otvorí súhrn, nič sa nestrhne. Prvé spustenie doručeného balíka: ✓ `PackProgressTests` a riadok Spustenie kvízu. Nové súbory: `HangsTests/PurchaseConditionTests.swift`, `PackOrderConditionTests.swift`, `RoomConditionTests.swift`, `SharedQuizConditionTests.swift`.
+
+**Opravené (druhá polovica):** hosť, ktorý zavrel hru počas pripájania, ostal v cudzej hre ako hráč, čo nikdy neodpovie; hostiteľ, ktorý zavrel hru počas zakladania, nechal otvorenú miestnosť; odpoveď servera po odchode z hry mohla prečítať otázku nahlas v zavretej hre; zavretie hry pri neodpovedajúcom serveri čakalo až 30 s; Zrušiť pri štarte zdieľaného kvízu v okamihu odpovede kvíz aj tak otvorilo; zastavené sledovanie objednávky mohlo ešte prepísať stav.
 
 **Opravené:** keď hráč počas sťahovania zvuku otázky ťukol na nahrávanie, vybral možnosť alebo stlmil, zvuk po príchode aj tak prečítal otázku (do mikrofónu alebo cez výsledok).
 
@@ -110,3 +121,6 @@ Druhá polovica (nákup a obnova, balík na mieru, hra spolu, zdieľaný odkaz):
 - **F2 Hovorená veta (chyba, kvóta, skóre) sa pri zlyhaní hlasovej služby vynechá** (`QuizViewModel+SpokenPrompts.swift`). Obrazovka s tlačidlami a hlasové povely ostanú, len je ticho. Možnosti: nechať tak · prehrať krátku vetu uloženú v appke.
 - **F3 „Vypočuť“ (vysvetlenie, zhrnutie sady) pri zlyhaní neurobí nič a nič nepovie.** Možnosti: nechať tak · krátky text „Teraz sa to nedá prečítať“.
 - **F4 Zobrazenie prehľadu sa serveru nepošle, ak zlyhá** (`markRecapSeen`). Hráčovi sa prehľad pri ďalšom spustení môže ukázať znova ako nový. Možnosti: nechať tak · poslať znova pri ďalšom otvorení Profilu.
+- **F5 Odchod z hry spolu, keď ho server nedostane** (`RoomViewModel.swift` `leave`, aj hlásenie „odišiel z appky“). Hra sa zavrie hneď, ale hostiteľ vidí hosťa v zozname, kým hru neukončí, a hostiteľova hra ostane otvorená, kým ju server sám nezruší. Nikto nič nevidí. Možnosti: nechať tak · poslať odchod znova pri ďalšom spustení appky.
+- **F6 Obnova nákupov bez spojenia so serverom povie „Nie je čo obnoviť“** (`StoreManager.restorePurchases`). Týka sa hráča s balíkom otázok, ktorý nájde len server. Možnosti: nechať tak · napísať „Nepodarilo sa spojiť, skús znova“.
+- **F7 Odkaz od kamaráta na pomalej sieti** (`QuizViewModel+SharedQuiz.swift:32`). Appka sa najprv pýta servera, či je odkaz tvoj; kým odpovie (až 30 s), Home nič neukazuje. Keď otázka zlyhá, aj odosielateľovi sa spustí kvíz namiesto porovnania. Možnosti: nechať tak · ukázať spinner hneď a otázku skrátiť na pár sekúnd.

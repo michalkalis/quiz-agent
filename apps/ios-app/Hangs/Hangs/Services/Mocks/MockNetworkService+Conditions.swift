@@ -137,6 +137,41 @@ import Foundation
         }
     }
 
+    /// #235.2: the game-together service's calls (`MockRoomService.conditions`).
+    enum MockRoomCall: String, CaseIterable, Sendable {
+        case createRoom, nearbyRooms, joinRoom, removePlayer, roomState, openQuestion
+        case updateSettings, answer, reportAway, setPaused, nextQuestion
+    }
+
+    /// #235.2: the same gates and conditions for the other mock services, so
+    /// a test holds a room poll or a pack order exactly like a network call.
+    @MainActor
+    final class MockCallConditions<Call: Hashable & CaseIterable & Sendable> where Call.AllCases: Sendable {
+        var gates: [Call: @Sendable () async throws -> Void] = [:]
+        var networkConditions: [Call: NetworkCondition] = [:]
+        var networkClock: AnyClock<Duration> = .continuous
+
+        nonisolated init() {}
+
+        @discardableResult
+        func hold(_ call: Call) -> NetworkHold {
+            let hold = NetworkHold()
+            gates[call] = { try await hold.wait() }
+            return hold
+        }
+
+        func setNetworkCondition(_ condition: NetworkCondition?, for calls: [Call] = Array(Call.allCases)) {
+            for call in calls {
+                networkConditions[call] = condition
+            }
+        }
+
+        func simulateNetwork(_ call: Call) async throws {
+            try await gates[call]?()
+            try await networkConditions[call]?.apply(clock: networkClock)
+        }
+    }
+
     extension MockNetworkService {
         /// Holds `call` until the returned hold is released.
         @discardableResult

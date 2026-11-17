@@ -3,7 +3,7 @@
 //  HangsTests
 //
 //  #194 phase A2: pixel + text-contract coverage for the screens the hero suite
-//  does not freeze — Settings, Onboarding (all four pages), Completion (with and
+//  does not freeze — Settings, Onboarding (all three pages), Completion (with and
 //  without the upsell card), the set recap, the answer confirmation sheet, the
 //  order-pack flow, the contextual sign-in sheet and the error screen. The
 //  redesign (#194, "Sklo nad kartami") restyles every one of them; a baseline
@@ -33,7 +33,7 @@ import ViewInspector
 @MainActor
 enum AppScreen: String, CaseIterable {
     case settings
-    case onboardingWelcome, onboardingFeatures, onboardingPermission, onboardingDenied
+    case onboardingPermission, onboardingCommands, onboardingDenied
     case completion, completionUpsell
     case setRecap
     case confirmTranscribing, confirmTranscript

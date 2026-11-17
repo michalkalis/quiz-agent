@@ -1,0 +1,25 @@
+# texts
+trubbo
+“next”
+“repeat”
+“start”
+HLASOVÉ PRÍKAZY
+Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
+iPhone sa ťa spýta na rozpoznávanie reči. Odpovedať hlasom môžeš aj bez príkazov.
+“next”
+“repeat”
+“start”
+HLASOVÉ PRÍKAZY
+Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
+iPhone sa ťa spýta na rozpoznávanie reči. Odpovedať hlasom môžeš aj bez príkazov.
+Zapni príkazy
+Teraz nie
+# identifiers
+onboarding.root
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.pageIndicator
+onboarding.enableCommands
+onboarding.commandsNotNow

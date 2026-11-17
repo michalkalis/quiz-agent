@@ -26,6 +26,7 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.hangsCardMotion) private var cardMotion
+    @Environment(\.openURL) private var openURL
     @State private var showEndQuizConfirmation = false
     @State private var showQuizSettings = false
     /// #173: the ⋯ menu's "Rate question" row presents the #155 panel from here
@@ -79,6 +80,7 @@ struct QuestionView: View {
         static let bodySize: CGFloat = 17
         static let captionSize: CGFloat = 15
     }
+
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -652,12 +654,24 @@ struct QuestionView: View {
                 speechHeard: viewModel.isHearingAnswer,
                 inputLevel: viewModel.recordingInputLevel,
                 answerRemaining: viewModel.answerWindowRemaining,
-                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
+                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) },
+                commandsAccessory: viewModel.commandsAccessory(for: phase),
+                onTurnOnCommands: turnOnCommands,
+                onOpenSettings: openSystemSettings
             )
             .padding(.horizontal, Metrics.gutter)
             .padding(.top, Metrics.blockGap)
             .transition(.opacity)
         }
+    }
+
+    /// #237: the listen bar's "Turn on" / "Settings".
+    private func turnOnCommands() {
+        Task { await viewModel.turnOnVoiceCommandsFromListenBar() }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
     }
 
     /// #179 D3: the shared skip capsule — same shape, same word as the voice

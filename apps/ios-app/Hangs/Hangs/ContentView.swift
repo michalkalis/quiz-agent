@@ -39,14 +39,20 @@ struct ContentView: View {
     @ObservedObject private var sharedQuiz: SharedQuizInbox
 
     init(appState: AppState) {
-        _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
+        let quizViewModel = appState.sharedQuizViewModel()
+        _viewModel = StateObject(wrappedValue: quizViewModel)
         _appConfig = ObservedObject(wrappedValue: appState.appConfig)
         _sharedQuiz = ObservedObject(wrappedValue: appState.sharedQuizInbox)
         _dailyChallenge = StateObject(wrappedValue: DailyChallengeViewModel(network: appState.networkService))
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
             persistenceStore: appState.persistenceStore,
-            analytics: appState.analytics
+            analytics: appState.analytics,
+            // #237: the coordinator raises the speech-recognition prompt, reports
+            // the answer and re-arms the listener once commands are ready.
+            enableCommands: { [weak quizViewModel] in
+                await quizViewModel?.enableVoiceCommands(source: .onboarding)
+            }
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
         var signInPromptAtLaunch: SignInPromptPurchase?

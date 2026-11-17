@@ -1,0 +1,25 @@
+# texts
+trubbo
+“next”
+“repeat”
+“start”
+VOICE COMMANDS
+Say “next” and you don't have to touch the phone. Handy when your hands are full.
+Your iPhone will ask about speech recognition. You can answer by voice without commands.
+“next”
+“repeat”
+“start”
+VOICE COMMANDS
+Say “next” and you don't have to touch the phone. Handy when your hands are full.
+Your iPhone will ask about speech recognition. You can answer by voice without commands.
+Turn on commands
+Not now
+# identifiers
+onboarding.root
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.pageIndicator
+onboarding.enableCommands
+onboarding.commandsNotNow

@@ -148,6 +148,7 @@ extension VoiceCommandCoordinator {
         // exception: it ends the recording (stop → submit), and the mic comes
         // down with it (#173).
         if isRecordingActive, !isQuizPaused() { return }
+        restartListenerIfCommandsBecameReady() // #237
         if let screen = currentCommandScreen {
             // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app

@@ -2,14 +2,22 @@
 trubbo
 MIKROFON
 Trubbo potřebuje přístup k mikrofonu, aby slyšel tvoje hlasové odpovědi. Odpovědi můžeš i psát.
+Tvoje odpovědi a témata balíčků zpracovávají externí AI služby. Pokračováním s tím souhlasíš.
+Zásady ochrany soukromí
 MIKROFON
 Trubbo potřebuje přístup k mikrofonu, aby slyšel tvoje hlasové odpovědi. Odpovědi můžeš i psát.
+Tvoje odpovědi a témata balíčků zpracovávají externí AI služby. Pokračováním s tím souhlasíš.
+Zásady ochrany soukromí
 Povol mikrofon
 Možná později
 # identifiers
 onboarding.root
 onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.pageIndicator
 onboarding.allowMic
 onboarding.maybeLater

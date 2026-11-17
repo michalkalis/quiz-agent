@@ -2,14 +2,14 @@
 //  OnboardingViewInspectorTests.swift
 //  HangsTests
 //
-//  #52 task 52.13 — Onboarding redesign × 4 pages.
+//  #52 task 52.13, #237 — Microphone → Voice commands (+ the denied page).
 //
 //  Why these tests matter:
 //  - Each page must render its distinguishing headline and CTA so accidental
 //    regressions (wrong page shown, missing button) fail fast.
-//  - The denied branch must not grow a 4th dot — it sits on the permission dot,
-//    which is a ViewModel-layer rule, not just a view detail.
-//  - These are the invariants a refactor must not break.
+//  - Guideline 5.1.2(i): the AI services notice must sit on the page whose
+//    buttons record the consent — since #237 the microphone page.
+//  - The commands page must say that iOS will ask next, before the player taps.
 //
 
 import Foundation
@@ -25,21 +25,7 @@ private func makeVM(micGranted: Bool = true) -> OnboardingViewModel {
     let audio = MockAudioService()
     audio.micPermissionResult = micGranted
     let store = MockPersistenceStore()
-    return OnboardingViewModel(audioService: audio, persistenceStore: store)
-}
-
-// MARK: - Page-indicator dot rule
-
-@Suite("OnboardingView — page indicator")
-struct OnboardingPageIndicatorTests {
-    @Test("permissionDenied maps to pageIndex 2 (same dot as permission)")
-    func deniedPageIndexIsTwo() async {
-        let vm = makeVM(micGranted: false)
-        vm.advance(); vm.advance() // welcome → features → permission
-        await vm.requestMicPermission()
-        #expect(vm.page == .permissionDenied)
-        #expect(vm.pageIndex == 2, "Denied branch must sit on the 3rd dot, not a 4th")
-    }
+    return OnboardingViewModel(audioService: audio, persistenceStore: store, enableCommands: {})
 }
 
 // MARK: - Structural: headlines and CTAs render per page
@@ -47,56 +33,40 @@ struct OnboardingPageIndicatorTests {
 @MainActor
 @Suite("OnboardingView — page structure")
 struct OnboardingViewStructureTests {
-    @Test("Welcome page renders 'ANSWER BY VOICE' headline and Continue CTA")
-    func welcomePageRendersHeadlineAndCTA() async throws {
+    @Test("Microphone page renders its headline, both CTAs and the AI notice")
+    func microphonePageRendersHeadlineCTAsAndNotice() async throws {
         let vm = makeVM()
-        let view = OnboardingView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "ANSWER BY VOICE") }
-            #expect(throws: Never.self) { try tree.find(text: "Continue") }
-            // Guideline 5.1.2(i): the shortened AI notice and its privacy link
-            // must stay above Continue/Skip, which record the consent.
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "onboarding.aiDisclosure") }
-            #expect(throws: Never.self) { try tree.find(button: "Privacy Policy") }
-        }
-    }
-
-    @Test("Features page renders 'VOICE CONTROL' headline and 3 one-line tips")
-    func featuresPageRendersCardRows() async throws {
-        let vm = makeVM()
-        vm.advance() // welcome → features
-        let view = OnboardingView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "VOICE CONTROL") }
-            // #96 P2: the features card now teaches the command grammar (adopted
-            // from pen `hTdkE`) — the founder's discoverability fix.
-            #expect(throws: Never.self) { try tree.find(text: "start · ok · again · repeat · next") }
-            #expect(throws: Never.self) { try tree.find(text: "Buttons always work") }
-            // Founder 2026-11-04: the page was too wordy. Commands follow the
-            // quiz language, so the old "English by default" card is gone.
-            #expect(throws: (any Error).self) { try tree.find(text: "English by default") }
-        }
-    }
-
-    @Test("Permission page renders 'MIC ACCESS' headline and 'Allow Microphone' CTA")
-    func permissionPageRendersHeadlineAndCTA() async throws {
-        let vm = makeVM()
-        vm.advance(); vm.advance() // welcome → features → permission
         let view = OnboardingView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "MIC ACCESS") }
             #expect(throws: Never.self) { try tree.find(text: "Allow Microphone") }
             #expect(throws: Never.self) { try tree.find(text: "Maybe later") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "onboarding.aiDisclosure") }
+            #expect(throws: Never.self) { try tree.find(button: "Privacy Policy") }
+            // #237: the old welcome and features pages are gone.
+            #expect(throws: (any Error).self) { try tree.find(text: "ANSWER BY VOICE") }
+        }
+    }
+
+    @Test("Commands page renders its headline, the speech-recognition note and both CTAs")
+    func commandsPageRendersHeadlineNoteAndCTAs() async throws {
+        let vm = makeVM()
+        await vm.requestMicPermission()
+        let view = OnboardingView(viewModel: vm)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "VOICE COMMANDS") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "onboarding.speechRecognitionNote") }
+            #expect(throws: Never.self) { try tree.find(text: "Turn on commands") }
+            #expect(throws: Never.self) { try tree.find(text: "Not now") }
+            #expect(throws: Never.self) { try tree.find(text: "“next”") }
         }
     }
 
     @Test("Denied page renders 'MIC IS OFF' headline, 'Open Settings' and 'Type answers instead'")
     func deniedPageRendersHeadlineAndBothCTAs() async throws {
         let vm = makeVM(micGranted: false)
-        vm.advance(); vm.advance()
         await vm.requestMicPermission()
         let view = OnboardingView(viewModel: vm)
         try await ViewHosting.host(view) {

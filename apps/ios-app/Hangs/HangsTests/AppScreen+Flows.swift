@@ -16,10 +16,9 @@ extension AppScreen {
     func makeFlow() async -> AnyView {
         switch self {
         case .settings: Self.settings()
-        case .onboardingWelcome: await Self.onboarding(advances: 0)
-        case .onboardingFeatures: await Self.onboarding(advances: 1)
-        case .onboardingPermission: await Self.onboarding(advances: 2)
-        case .onboardingDenied: await Self.onboarding(advances: 2, micDenied: true)
+        case .onboardingPermission: await Self.onboarding(micAnswer: nil)
+        case .onboardingCommands: await Self.onboarding(micAnswer: true)
+        case .onboardingDenied: await Self.onboarding(micAnswer: false)
         case .signInIdle: Self.signIn(.idle)
         case .signInSigningIn: Self.signIn(.signingIn)
         case .signInFailed: Self.signIn(.failed)
@@ -68,14 +67,13 @@ extension AppScreen {
 
     // MARK: Onboarding
 
-    /// `advances` walks welcome → features → permission; `micDenied` then answers
-    /// the permission request with "no", which lands on the denied page.
-    private static func onboarding(advances: Int, micDenied: Bool = false) async -> AnyView {
+    /// #237: the microphone page (`micAnswer` nil), or the page the mic
+    /// answer leads to — commands when allowed, the denied page when not.
+    private static func onboarding(micAnswer: Bool?) async -> AnyView {
         let audio = MockAudioService()
-        audio.micPermissionResult = !micDenied
-        let vm = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore())
-        for _ in 0 ..< advances { vm.advance() }
-        if micDenied { await vm.requestMicPermission() }
+        audio.micPermissionResult = micAnswer ?? true
+        let vm = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), enableCommands: {})
+        if micAnswer != nil { await vm.requestMicPermission() }
         return AnyView(OnboardingView(viewModel: vm))
     }
 

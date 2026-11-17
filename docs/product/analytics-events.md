@@ -29,12 +29,13 @@
 | Event | When | Properties |
 |---|---|---|
 | `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
-| `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (mic_granted / mic_denied / mic_later / skipped), `step` |
+| `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (from #237, Microphone → Voice commands: commands_on / commands_later / mic_denied / mic_later; mic_granted / skipped on older builds), `step` |
 | `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`), `quick_game` (the Home quick-game switch was on, #224.8; absent on older builds) |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
 | `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry`, `latency_ms` (ms from when the player could answer to speech onset or tap/submit, pauses excluded; left out on retries or when unknown) |
 | `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
 | `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
+| `voice_commands_turned_on` | the player turned voice commands on (#237; speech recognition is asked only then) | `source` (onboarding / listen_bar), `result` (granted / denied: what iOS answered) |
 | `paywall_viewed` | paywall shown | `source` (quota / home (builds ≤ 81) / profile (#216.3, the plan card moved there) / settings / completion) |
 | `purchase_result` | purchase attempt ends | `product_id`, `kind` (subscription / credits / custom_pack), `outcome` (success / cancelled / failed / pending), `question_count` (custom_pack only, from #228.6: the size bought, 10 or 30) |
 | `restore_result` | restore purchases ends | `outcome` |

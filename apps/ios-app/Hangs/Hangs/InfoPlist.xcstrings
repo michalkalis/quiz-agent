@@ -30,19 +30,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hlasovými příkazy ovládáš kvíz bez rukou. Řeč se rozpoznává přímo ve tvém zařízení."
+            "value" : "Ovládáš kvíz hlasovými příkazy, třeba „dál“. Řeč se rozpoznává jen ve tvém zařízení."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voice commands let you control the quiz hands-free. Recognition happens on your device."
+            "value" : "Lets you control the quiz with voice commands like “next”. Recognition stays on your device."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hlasovými príkazmi ovládaš kvíz bez rúk. Reč sa rozpoznáva priamo v tvojom zariadení."
+            "value" : "Ovládaš kvíz hlasovými príkazmi, napríklad „ďalej“. Reč sa rozpoznáva len v tvojom zariadení."
           }
         }
       }

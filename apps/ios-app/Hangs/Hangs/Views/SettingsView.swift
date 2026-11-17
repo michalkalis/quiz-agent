@@ -714,6 +714,8 @@ struct SettingsView: View {
         let base: String
         switch viewModel.commandAvailability {
         case .unknown: base = String(localized: "Checking…", bundle: .interface, locale: .interface, comment: "Voice-command status: availability is being determined")
+        case .permissionNeeded: base = String(localized: "Not turned on", bundle: .interface, locale: .interface, comment: "Voice-command status: speech recognition was never allowed; the player can turn commands on from the quiz listen bar")
+        case .permissionDenied: base = String(localized: "No permission", bundle: .interface, locale: .interface, comment: "Voice-command status: speech recognition is denied in iOS Settings")
         case .installingAssets: base = String(localized: "Installing…", bundle: .interface, locale: .interface, comment: "Voice-command status: on-device recognizer assets are downloading")
         case .ready: base = String(localized: "Ready", bundle: .interface, locale: .interface, comment: "Voice-command status: recognizer is ready")
         case .unavailable: base = String(localized: "Unavailable", bundle: .interface, locale: .interface, comment: "Voice-command status: recognizer could not start")

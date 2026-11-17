@@ -28,6 +28,9 @@ enum AnalyticsEvent: Equatable {
     /// #204.9: the app turned an experiment arm off on this device.
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
     case voiceCommand(command: VoiceCommand, phase: String)
+    /// #237: the player turned voice commands on — where, and what iOS
+    /// answered the speech-recognition request.
+    case voiceCommandsTurnedOn(source: VoiceCommandsSource, result: VoiceCommandsPermissionResult)
     case paywallViewed(source: PaywallSource)
     /// `questionCount`: the custom pack's size (#228.6); nil for every other kind.
     case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome, questionCount: Int? = nil)
@@ -75,6 +78,7 @@ enum AnalyticsEvent: Equatable {
         case .answerCaptured: "answer_captured"
         case .voiceExperimentGuard: "voice_experiment_guard"
         case .voiceCommand: "voice_command"
+        case .voiceCommandsTurnedOn: "voice_commands_turned_on"
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
@@ -134,6 +138,8 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .voiceCommand(command, phase):
             [("command", .string(command.rawValue)), ("phase", .string(phase))]
+        case let .voiceCommandsTurnedOn(source, result):
+            [("source", .string(source.rawValue)), ("result", .string(result.rawValue))]
         case let .paywallViewed(source):
             [("source", .string(source.rawValue))]
         case let .purchaseResult(productId, kind, outcome, questionCount):
@@ -221,13 +227,30 @@ enum AppLaunchKind: String {
     case foreground
 }
 
+/// #237: the onboarding is Microphone → Voice commands. `mic_granted` and
+/// `skipped` belong to the older three-page flow (builds before #237).
 enum OnboardingOutcome: String {
-    case micGranted = "mic_granted"
+    /// The mic was refused; the player left from the denied page.
     case micDenied = "mic_denied"
-    /// "Maybe later" on the permission page — the mic stays undecided.
+    /// "Maybe later" on the microphone page — the mic stays undecided.
     case micLater = "mic_later"
-    /// "Skip" before the permission page was reached.
-    case skipped
+    /// Mic allowed, then "Turn on commands" (whatever iOS answered — see
+    /// `voice_commands_turned_on`).
+    case commandsOn = "commands_on"
+    /// Mic allowed, then "Not now" on the commands page.
+    case commandsLater = "commands_later"
+}
+
+/// #237: where the player turned voice commands on.
+enum VoiceCommandsSource: String {
+    case onboarding
+    case listenBar = "listen_bar"
+}
+
+/// #237: what iOS answered the speech-recognition request.
+enum VoiceCommandsPermissionResult: String {
+    case granted
+    case denied
 }
 
 enum QuizEntryPoint: String {

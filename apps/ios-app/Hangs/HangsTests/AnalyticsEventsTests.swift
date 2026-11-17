@@ -37,6 +37,7 @@ private let backendClientEvents: [String: Set<String>] = [
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
+    "voice_commands_turned_on": ["source", "result"],
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome", "question_count"],
     "restore_result": ["outcome"],
@@ -60,7 +61,7 @@ private let backendClientEvents: [String: Set<String>] = [
 /// One instance of every case, with every optional property present.
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
-    .onboardingFinished(outcome: .micGranted, step: "permission"),
+    .onboardingFinished(outcome: .commandsOn, step: "commands"),
     .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
@@ -77,6 +78,7 @@ private let everyEvent: [AnalyticsEvent] = [
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
+    .voiceCommandsTurnedOn(source: .listenBar, result: .granted),
     .paywallViewed(source: .quota),
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success, questionCount: 30),
     .restoreResult(outcome: .nothingToRestore),
@@ -422,24 +424,6 @@ struct AppLifecycleAnalyticsTests {
 
         #expect(analytics.events == [.appOpened(launch: .cold), .appOpened(launch: .foreground)])
         #expect(analytics.flushCount == 2, "queued events go out every time the app leaves")
-    }
-
-    @Test("onboarding_finished says how and where it ended")
-    func onboardingOutcomes() async {
-        let analytics = MockAnalyticsClient()
-        let audio = MockAudioService()
-        let skipped = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), analytics: analytics)
-        skipped.continueWithoutMic()
-
-        let granted = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), analytics: analytics)
-        granted.advance()
-        granted.advance()
-        await granted.requestMicPermission()
-
-        #expect(analytics.events == [
-            .onboardingFinished(outcome: .skipped, step: "welcome"),
-            .onboardingFinished(outcome: .micGranted, step: "permission"),
-        ])
     }
 }
 

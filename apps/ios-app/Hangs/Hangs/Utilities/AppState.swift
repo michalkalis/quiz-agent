@@ -203,21 +203,21 @@ final class AppState: ObservableObject {
                 let silenceService = SilenceDetectionService(
                     selection: .forQuizLanguage(persistence.loadSettings().language)
                 )
-                // One-time launch authorization + prepare (#77 device fix, #105 auth
-                // gap): request speech-recognition permission, then — if granted —
-                // check/download the on-device en-US SpeechTranscriber model assets.
-                // Without them the command transcriber never yields a result on a
-                // real device. Non-blocking; any failure flips `commandAvailability`
-                // (fail loud).
-                Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+                // One-time launch readiness (#77 device fix): if speech recognition
+                // is already allowed, check/download the on-device model assets —
+                // without them the command transcriber never yields a result on a
+                // real device. #237: NEVER the permission prompt here; it waits
+                // until the player turns commands on (onboarding, listen bar).
+                // Non-blocking; any failure flips `commandAvailability` (fail loud).
+                Task { await silenceService.prepareCommandsIfAuthorized() }
                 resolved = silenceService
             }
         #else
             let silenceService = SilenceDetectionService(
                 selection: .forQuizLanguage(persistence.loadSettings().language)
             )
-            // One-time launch authorization + prepare (#77 / #105) — see DEBUG branch.
-            Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+            // One-time launch readiness, no prompt (#77 / #237) — see DEBUG branch.
+            Task { await silenceService.prepareCommandsIfAuthorized() }
             resolved = silenceService
         #endif
         silenceDetectionService = resolved

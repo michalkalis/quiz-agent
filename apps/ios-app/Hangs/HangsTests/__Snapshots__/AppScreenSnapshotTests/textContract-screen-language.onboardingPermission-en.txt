@@ -2,14 +2,22 @@
 trubbo
 MIC ACCESS
 Trubbo needs microphone access to hear your answers. You can also type them.
+Your answers and pack topics are processed by third-party AI services. By continuing, you agree.
+Privacy Policy
 MIC ACCESS
 Trubbo needs microphone access to hear your answers. You can also type them.
+Your answers and pack topics are processed by third-party AI services. By continuing, you agree.
+Privacy Policy
 Allow Microphone
 Maybe later
 # identifiers
 onboarding.root
 onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
 onboarding.pageIndicator
 onboarding.allowMic
 onboarding.maybeLater

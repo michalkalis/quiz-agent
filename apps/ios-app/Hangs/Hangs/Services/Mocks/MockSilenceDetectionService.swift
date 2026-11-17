@@ -144,6 +144,22 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         commandEngineRequests.append(selection)
     }
 
+    /// #237: how many times the player turned commands on, and what the
+    /// system answers. A grant lands on `availabilityAfterGrant` (`.ready`
+    /// by default; `.installingAssets` holds the model download).
+    private(set) var enableCommandsCallCount = 0
+    var enableCommandsGrants = true
+    var availabilityAfterGrant: VoiceCommandAvailability = .ready
+    /// Runs while the "system prompt" is up — lets a test look at the quiz then.
+    var onEnableCommands: (@MainActor () -> Void)?
+
+    func enableCommands() async -> Bool {
+        enableCommandsCallCount += 1
+        onEnableCommands?()
+        commandAvailability = enableCommandsGrants ? availabilityAfterGrant : .permissionDenied
+        return enableCommandsGrants
+    }
+
     func setTTSPlaybackActive(_ active: Bool) {
         ttsPlaybackActive = active
     }

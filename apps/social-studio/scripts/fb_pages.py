@@ -10,8 +10,9 @@ only. Uses the Pages Reels API (start → hosted file_url upload → finish).
 - Idempotent: a reel whose caption is already a recent Page reel's
   description counts as published.
 
-One-time setup, after FB_USER_TOKEN (long-lived, from the Access Token Tool)
-is in the root .env:
+One-time setup, after FB_USER_TOKEN (long-lived: Graph API Explorer token
+with pages_show_list, pages_read_engagement, pages_manage_posts,
+read_insights, then Access Token Debugger > Extend) is in the root .env:
 
     uv run --no-sync python apps/social-studio/scripts/fb_pages.py --setup
 
@@ -124,6 +125,15 @@ def setup() -> None:
         if name not in by_name:
             print(f"{key}: Page {name!r} not granted (got {sorted(by_name)})")
             continue
+        # A Page token from a short-lived user token dies within the hour and
+        # would break publishing, so it never overwrites a working one.
+        info = call("GET", "debug_token", by_name[name], input_token=by_name[name])
+        info = info.get("data", {})
+        if info.get("expires_at", 1) != 0:
+            print(f"{key}: Page token expires, not saved (extend FB_USER_TOKEN first)")
+            continue
+        if "read_insights" not in info.get("scopes", []):
+            print(f"{key}: note, no read_insights, Page stats stay unreadable")
         set_key(env, key, by_name[name], quote_mode="never")
         subprocess.run(
             ["gh", "secret", "set", key], input=by_name[name].encode(), check=True

@@ -1,3 +1,5 @@
+import {execFileSync} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -17,7 +19,10 @@ export const VOICE_LEDGER = path.join(BATCH_DIR, 'voice-ledger.json');
  * test (founder 2026-10-25).
  * Clips logged before that date fell under the old 5-clips rule and do not
  * count. EXTRA_VOICE_CHARS raises it for one run when the founder okays more. */
-export const VOICE_CHARS_PER_WEEK = 4000 + Number(process.env.EXTRA_VOICE_CHARS ?? 0);
+// 2026-11-16: answers are read with their explanations, and the ElevenLabs
+// grant (33M credits for a year, 2026-11-12) makes the old cap moot; the cap
+// stays only as a runaway guard.
+export const VOICE_CHARS_PER_WEEK = 20000 + Number(process.env.EXTRA_VOICE_CHARS ?? 0);
 const CHAR_BUDGET_FROM = Date.parse('2026-10-24T00:00:00Z');
 
 /** Characters still allowed in the rolling 7 days, from the voice ledger entries. */
@@ -26,3 +31,15 @@ export const voiceCharsLeft = (ledger: {at: string; chars: number}[]): number =>
 	const used = ledger.filter((e) => Date.parse(e.at) >= since).reduce((n, e) => n + e.chars, 0);
 	return Math.max(0, VOICE_CHARS_PER_WEEK - used);
 };
+
+/** Runs scripts/fetch_question.py inside the prod API container and returns its
+ * stdout. Prod is on Hetzner since 2026-11-06 (#222), so it goes over
+ * `ssh trubbo-prod` + `docker exec`; the Fly app only forwards now. The script
+ * still reads prod secrets inside the container, none leave the server. */
+export function runOnProd(args: string): string {
+	return execFileSync('ssh', ['trubbo-prod', `docker exec -i trubbo-quiz-agent-1 python - ${args}`], {
+		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
+		maxBuffer: 64 * 1024 * 1024,
+		stdio: ['pipe', 'pipe', 'ignore'],
+	}).toString();
+}

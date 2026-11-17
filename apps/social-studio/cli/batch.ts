@@ -23,7 +23,7 @@ import {parseArgs} from 'node:util';
 import {COPY} from '../src/copy';
 import type {Language} from '../src/types';
 import {caption, youtubeTitle, type PostFormat} from './captions';
-import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, voiceCharsLeft} from './paths';
+import {APP_DIR, BATCH_DIR, CACHE_DIR, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {shapeQuestion, type QuestionInput} from './shape';
 
 const {values} = parseArgs({
@@ -109,19 +109,15 @@ function voiceCharsAvailable(): number {
 }
 
 /** Characters a reel's new clips cost: the question when the app has no clip
- * yet, plus the answer read aloud (founder 2026-10-25: explanations are only shown). */
-const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + c.answer_chars;
+ * yet, plus the answer and its explanation read aloud (founder 2026-11-16). */
+const voiceCost = (c: Candidate) => (c.has_clip ? 0 : c.chars) + c.answer_chars + (c.explanation?.length ?? 0);
 /** A round's answer clip also says the question number ("Otázka číslo jeden: "). */
 const ANSWER_NUMBER_CHARS = 20;
 
 function loadCandidates(): Candidate[] {
 	const file = path.join(CACHE_DIR, `candidates-${new Date().toISOString().slice(0, 10)}.json`);
 	if (existsSync(file)) return JSON.parse(readFileSync(file, 'utf8'));
-	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', 'python - --candidates'], {
-		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
-		maxBuffer: 64 * 1024 * 1024,
-		stdio: ['pipe', 'pipe', 'ignore'],
-	}).toString();
+	const out = runOnProd('--candidates');
 	const marker = out.indexOf('@@JSON@@');
 	if (marker < 0) throw new Error('prod candidates fetch returned no data');
 	mkdirSync(CACHE_DIR, {recursive: true});
@@ -139,7 +135,11 @@ const REVIEW: Record<string, Review> = JSON.parse(readFileSync(path.join(BATCH_D
 // founder/rater score; a per-week jitter keeps equal rows from always winning.
 function score(c: Candidate): number {
 	const jitter = parseInt(createHash('sha1').update(c.id + WEEK.id).digest('hex').slice(0, 6), 16) / 0xffffff;
-	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + jitter * 0.05;
+	// Home topics win on SK/CZ (2026-11-09 stats: YouTube SK & CZ's top five
+	// Shorts were all Czech/Slovak, Karel Gott 4× the next one), so a local
+	// question goes ahead of a general one of similar strength.
+	const local = c.local_scope ? 0.15 : 0;
+	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + local + jitter * 0.05;
 }
 
 const fitsAccount = (c: Candidate, s: Slot) =>
@@ -236,7 +236,7 @@ function pick(cands: Candidate[]): Pick[] {
 			}
 			// The strongest of the rest closes the round.
 			const ids = first && rest.length === n - 1 ? [first, ...rest.reverse()] : [];
-			// Voice: every question without a clip, plus every answer read aloud (a clip each, explanations are only shown).
+			// Voice: every question without a clip, plus every answer read aloud with its explanation (a clip each).
 			const cost = ids.reduce((sum, c) => sum + voiceCost(c) + ANSWER_NUMBER_CHARS, 0);
 			if (!ids.length || cost > voiceChars) {
 				console.warn(`! ${slot.account} ${slot.day} round of ${n} ${slot.language}: ${ids.length ? 'over the weekly voice budget' : 'not enough reviewed questions'}, slot skipped`);

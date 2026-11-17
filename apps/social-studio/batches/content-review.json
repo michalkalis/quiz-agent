@@ -2814,11 +2814,11 @@
   "reviewed": "2026-10-25"
  },
  "cb1f902d-4359-4bd9-856f-5911d55027de": {
-  "verdict": "keep",
+  "verdict": "drop",
   "stop_power": 6,
   "fact": "verified",
-  "note": "Everyday word origin",
-  "reviewed": "2026-10-24"
+  "note": "Founder 2026-11-16 had never heard 'vinětka': the word exists (mostly for foreign vignettes), but 'often called' overstates it; Czechs say 'dálniční známka'",
+  "reviewed": "2026-11-16"
  },
  "cb3e2e61-e7ce-487f-8a0e-7defc4e709df": {
   "verdict": "keep",

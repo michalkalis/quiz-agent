@@ -16,15 +16,16 @@ export const ANSWER_MS = 1400;
 export const WHY_TAIL_MS = 900;
 export const END_MS = 2000;
 
-/** `card`: the answer is read (`answerMs`), then the whole explanation (`whyChars`) stays up to be read. */
+/** `card`: the answer and then its explanation are read (`answerMs`); without a clip the explanation (`whyChars`) stays up to be read. */
 export const reelTimeline = (style: ReelStyle, questionMs: number, explainMs: number, answerMs = 0, whyChars = 0) => {
 	const qStart = style.opening === 'intro' ? HOOK_MS : style.opening === 'solo' ? HOOK_SOLO_MS : 0;
 	const cdStart = qStart + questionMs;
 	const revealStart = cdStart + COUNTDOWN_MS;
 	const card = style.explain === 'card';
-	const whyStart = card ? revealStart + ANSWER_LEAD_MS + answerMs : revealStart + ANSWER_MS;
+	const spoken = card ? spokenAnswer(revealStart + ANSWER_LEAD_MS, answerMs) : null;
+	const whyStart = spoken ? spoken.whyStart : card ? revealStart + ANSWER_LEAD_MS : revealStart + ANSWER_MS;
 	const endStart =
-		style.explain === 'line' ? revealStart + REVEAL_MS : card ? whyStart + whyHoldMs(whyChars, 10000) : whyStart + explainMs + WHY_TAIL_MS;
+		style.explain === 'line' ? revealStart + REVEAL_MS : spoken ? spoken.end : card ? whyStart + whyHoldMs(whyChars, 10000) : whyStart + explainMs + WHY_TAIL_MS;
 	return {qStart, cdStart, revealStart, whyStart, endStart, totalMs: endStart + END_MS};
 };
 
@@ -37,8 +38,8 @@ export const eyeOpenAt = (t: number) => {
 
 /** Round reel (founder 2026-10-25): 3 or 5 questions in a row, each with a
  * countdown, then its answer right away (founder 2026-10-29: no longer all at
- * the end): the answer read aloud and its explanation shown for a few seconds
- * (not read). */
+ * the end): the answer read aloud, then its explanation (read too since
+ * 2026-11-16). */
 // Founder 2026-10-25: four seconds for three questions; five for five (two felt rushed).
 export const roundCountdownMs = (n: number) => (n >= 5 ? 5000 : 4000);
 /** Answer card on screen before the voice says the answer. */
@@ -46,6 +47,13 @@ export const ANSWER_LEAD_MS = 300;
 /** Reading time for an explanation shown on screen, per character, and its bounds. */
 const WHY_MS_PER_CHAR = 50;
 export const whyHoldMs = (chars: number, maxMs = 5500) => Math.min(maxMs, Math.max(2800, chars * WHY_MS_PER_CHAR));
+
+/** The answer clip reads the answer and then its explanation (founder
+ * 2026-11-16), so the explanation comes up once the answer is said and stays
+ * until the voice ends. Null without a clip: the explanation is then shown
+ * for its reading time. */
+export const spokenAnswer = (voiceStart: number, answerMs: number) =>
+	answerMs > 0 ? {whyStart: voiceStart + Math.min(answerMs, ANSWER_MS), end: voiceStart + answerMs + WHY_TAIL_MS} : null;
 
 /** `startMs`: when the first question comes up (after a `solo` hook). */
 export const roundTimeline = (questionMs: number[], answers: {answerMs: number; whyChars: number}[], startMs = 0) => {
@@ -59,8 +67,9 @@ export const roundTimeline = (questionMs: number[], answers: {answerMs: number; 
 		steps.push({start, voiceStart, cdStart, end: cdStart + countdownMs});
 		start = cdStart + countdownMs;
 		const answerStart = start + ANSWER_LEAD_MS;
-		const whyStart = answerStart + answers[k].answerMs;
-		reveals.push({start, voiceStart: answerStart, whyStart, end: whyStart + whyHoldMs(answers[k].whyChars)});
+		const spoken = spokenAnswer(answerStart, answers[k].answerMs);
+		const whyStart = spoken ? spoken.whyStart : answerStart;
+		reveals.push({start, voiceStart: answerStart, whyStart, end: spoken ? spoken.end : whyStart + whyHoldMs(answers[k].whyChars)});
 		start = reveals[k].end;
 	}
 	return {steps, countdownMs, reveals, endStart: start, totalMs: start + END_MS};

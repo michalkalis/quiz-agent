@@ -9,7 +9,7 @@
     "studio": "remotion studio src/index.ts",
     "render": "tsx cli/render.ts",
     "batch": "tsx cli/batch.ts",
-    "coverage": "fly ssh console -a quiz-agent-api -C 'python - --coverage' < scripts/fetch_question.py",
+    "coverage": "ssh trubbo-prod 'docker exec -i trubbo-quiz-agent-1 python - --coverage' < scripts/fetch_question.py",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test cli/*.test.ts"
   },

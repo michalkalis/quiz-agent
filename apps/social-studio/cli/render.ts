@@ -17,7 +17,7 @@ import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
 import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
 import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
-import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, voiceCharsLeft} from './paths';
+import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {cutAnswerNumber} from './trim';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
@@ -73,12 +73,7 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
 		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
 	const flags = `${ensureAudio ? ` --ensure-audio${questionOnly ? ' --question-only' : ''}` : ''}${withAnswer ? ` --answer=${answerNumber}` : ''}`;
-	const args = `python - ${id}${lang ? ` ${lang}` : ''}${flags}`;
-	const out = execFileSync('fly', ['ssh', 'console', '-a', 'quiz-agent-api', '-C', args], {
-		input: readFileSync(path.join(APP_DIR, 'scripts', 'fetch_question.py')),
-		maxBuffer: 64 * 1024 * 1024,
-		stdio: ['pipe', 'pipe', 'ignore'],
-	}).toString();
+	const out = runOnProd(`${id}${lang ? ` ${lang}` : ''}${flags}`);
 	const marker = out.indexOf('@@JSON@@');
 	if (marker < 0) throw new Error(`prod fetch for ${id} returned no data`);
 	const row = JSON.parse(out.slice(marker + 8).trim());
@@ -212,7 +207,7 @@ const NO_EXPLAIN: ExplainTrack = {audio: null, words: [], parts: [], ms: 0};
 
 async function reelProps(raw: QuestionInput, q: ReelQuestion, hookIndex: number, style: ReelStyle): Promise<ReelProps> {
 	const card = style.explain === 'card';
-	return {q, ...(await questionTrack(raw, q)), hookIndex, style, explain: card ? NO_EXPLAIN : await explainTrack(raw, q), answer: clipTrack(card ? raw.answer_audio_b64 : null)};
+	return {q, ...(await questionTrack(raw, q)), hookIndex, style, explain: card ? NO_EXPLAIN : await explainTrack(raw, q), answer: card ? roundAnswerTrack(raw.answer_audio_b64, q.id) : clipTrack(null)};
 }
 
 const slug = (s: string) => s.slice(0, 8);
@@ -224,7 +219,7 @@ async function main() {
 
 	if (values.round) {
 		const ids = values.round.split(',').map((s) => s.trim());
-		// Founder 2026-10-25: every answer is read (right after its question since 2026-10-29), explanations are only shown.
+		// Every answer is read right after its question, then its explanation (founder 2026-10-29, 2026-11-16).
 		const raws = ids.map((id, k) => loadInput(id, true, k + 1));
 		const qs = raws.map((r) => ({...shapeQuestion(r), options: [], correctIndex: null}));
 		const items = [];
@@ -264,8 +259,10 @@ async function main() {
 		const style = {opening: values.opening, explain: values.explain} as ReelStyle;
 		if (!['intro', 'fused', 'plain', 'solo'].includes(style.opening) || !['line', 'parts', 'captions', 'card'].includes(style.explain))
 			throw new Error('--opening solo|fused|intro|plain, --explain line|parts|captions|card');
-		// card (founder 2026-10-25): the answer is read, the explanation only shown.
-		const raw = style.explain === 'card' ? loadInput(positionals[0], true, 0) : loadInput(positionals[0]);
+		// card: the answer is read, then its explanation (founder 2026-11-16).
+		// The clip opens with "Otázka číslo jedna:", cut off again like in a round:
+		// a bare first word gets the wrong language ("Vinica" read "vinika", 2026-11-16).
+		const raw = style.explain === 'card' ? loadInput(positionals[0], true, 1) : loadInput(positionals[0]);
 		const q = shapeQuestion(raw);
 		const format = values.format ?? (q.options.length ? 'abc' : 'five');
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');

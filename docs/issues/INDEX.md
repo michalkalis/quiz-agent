@@ -14,7 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
-| 237 | [Povolenie povelov na požiadanie + nový onboarding](issue-237-voice-permission-onboarding.md) | enhancement · ready-for-agent | `[~]` #237 | 2026-11-17: systémové okno reči až keď hráč chce (onboarding, pill, výzva po klikoch); mikrofón bez zmeny; onboarding cez varianty |
+| 237 | [Povolenie povelov na požiadanie + nový onboarding](issue-237-voice-permission-onboarding.md) | enhancement · done | `[x]` #237 | 2026-11-18: hotové PR #832; okno reči len na požiadanie (onboarding, lišta), onboarding Mikrofón → Príkazy |
 | 236 | [Rodinná sekcia „S deťmi“](issue-236-family-section.md) | enhancement · ready-for-agent | `[~]` #236 | 2026-11-15: 3 pásma, „na pokec“ hneď; mimo Kids Category, rámovanie na rodiča; 236.1 hotové: server (PR #803), formulár appky (PR #806), kontroly očami dieťaťa (PR #807); druhá skúška 11-17 „vcelku zábavné“ + pravidlo o veľkých číslach (PR #818); ďalej texty (236.2) a návrh obrazoviek sekcie (236.3) |
 | 235 | [Testy mimo bezproblémového priebehu](issue-235-tests-beyond-happy-path.md) | enhancement · ready-for-agent | `[~]` #235 | 2026-11-15: plán po teste buildu 87; hotové 235.1 (prepínač zlej siete v testoch, PR #802) a 235.3 (navigácia ako pravidlo); ďalej 235.2 (tabuľka tok × podmienka) |
 | 234 | [Trubbo Beta ako samostatná appka vedľa App Store verzie](issue-234-beta-app-side-by-side.md) | enhancement · ready-for-agent | `[ ]` #234 | 2026-11-12: plán skontrolovaný (SOUND), plná beta s nákupmi, founder + Svitlana |

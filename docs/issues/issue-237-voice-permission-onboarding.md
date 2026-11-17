@@ -1,7 +1,7 @@
 # #237 — Povolenie povelov až na požiadanie + nový onboarding
 
-**Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-17 PAUZA; varianty vybrané ([plátno](https://claude.ai/artifact/LiGtJvPVQHWq31xfYEqL2e)); 237.2–237.5 naprogramované v WIP commite na vetve `feat/237-commands-on-request` (worktree `.claude/worktrees/issue-237`), appka aj testy sa skompilujú, 82/82 cielených testov prešlo
+**Triage:** enhancement · done
+**Status:** 2026-11-18 HOTOVÉ: PR #832 zlúčený, server nasadený (udalosť `voice_commands_turned_on`); do appky príde s najbližším TestFlight buildom; [plátno](https://claude.ai/artifact/LiGtJvPVQHWq31xfYEqL2e)
 **Founder:** 2026-11-17 „appka pri prvom spustení hneď žiada speech recognition oprávnenia, to je veľmi zlé UX a nie je jasné, k čomu slúži. Aj celý onboarding je len taký z povinnosti… netreba forcovať ten systémový alert za každú cenu.“
 
 ## Prečo

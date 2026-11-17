@@ -1063,7 +1063,7 @@
 			repositoryURL = "https://github.com/pointfreeco/swift-concurrency-extras";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				minimumVersion = 1.4.3;
 			};
 		};
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* XCRemoteSwiftPackageReference "ViewInspector" */ = {

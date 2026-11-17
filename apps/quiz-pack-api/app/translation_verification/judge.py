@@ -49,9 +49,9 @@ _DEFAULT_MODEL = os.getenv("TRANSLATION_JUDGE_MODEL") or llm_factory.CRITIQUE
 
 _GLOSSARY_DIR = Path(__file__).resolve().parent / "glossary"
 
-_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech"}
+_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
 #: The neighbouring language whose forms leak in (real defect sk-r05).
-_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak"}
+_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak", "uk": "Russian"}
 
 
 @dataclass

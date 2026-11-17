@@ -10,6 +10,7 @@
 
 #if DEBUG
 
+    import Clocks
     import Foundation
     import Network
     import os
@@ -26,6 +27,8 @@
         /// the end of speech, and the "server" hears the injected transcript.
         private static var mockNetwork: MockNetworkService?
         private static var mockRooms: MockRoomService?
+        /// #235.5: calls held since launch (`--ui-test-network-hold`).
+        private static var launchHolds: [NetworkHold] = []
         /// #212: where a test's join link lands, as if the player opened it.
         weak static var roomInvites: RoomInviteInbox?
         /// #232: where `shared/open` delivers a quiz link.
@@ -119,6 +122,20 @@
             // #235.1: a bad network (`--ui-test-network slow` etc., see
             // MockNetworkService+Conditions).
             network.applyLaunchNetworkCondition()
+            // #235.5: `--ui-test-network-hold <name,name>` keeps those calls in
+            // flight from launch until `/network/release`, however long the
+            // test runner takes to reach the screen (a fixed delay can run out
+            // while XCUITest waits for the app to idle).
+            if let index = CommandLine.arguments.firstIndex(of: "--ui-test-network-hold"),
+               index + 1 < CommandLine.arguments.count
+            {
+                launchHolds = CommandLine.arguments[index + 1].split(separator: ",").map { name in
+                    guard let call = MockNetworkCall(rawValue: String(name)) else {
+                        preconditionFailure("--ui-test-network-hold: unknown call \(name)")
+                    }
+                    return network.hold(call)
+                }
+            }
 
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()
@@ -293,6 +310,35 @@
             return true
         }
 
+        /// #235.5: the network changes mid-run, so a scenario can lose it and
+        /// get it back. `profile` is a `--ui-test-network` profile (3 s for
+        /// slow / dropped) or `clear`; `calls` names the mock calls it hits.
+        /// Without `calls` it hits every call and the game together's polls,
+        /// which fail with the error the profile throws (a poll cannot be
+        /// slowed). An unknown name answers 404, as at launch.
+        private static func changeNetworkCondition(profile: String, calls names: String?) async -> Bool {
+            guard let mockNetwork, let mockRooms else { return false }
+            var condition: NetworkCondition?
+            if profile != "clear" {
+                guard let parsed = NetworkCondition(profile: profile, delay: .seconds(3)) else { return false }
+                condition = parsed
+            }
+            guard let names else {
+                mockNetwork.setNetworkCondition(condition)
+                do {
+                    try await condition?.apply(clock: AnyClock(ImmediateClock()))
+                    mockRooms.stateError = nil
+                } catch {
+                    mockRooms.stateError = error
+                }
+                return true
+            }
+            let calls = names.split(separator: ",").compactMap { MockNetworkCall(rawValue: String($0)) }
+            guard calls.count == names.split(separator: ",").count else { return false }
+            mockNetwork.setNetworkCondition(condition, for: calls)
+            return true
+        }
+
         /// Route a `hangs-test://` URL to the appropriate mock action.
         ///
         /// Supported URLs:
@@ -305,6 +351,11 @@
         /// - `hangs-test://shared/open?text=<token>` → a friend's quiz link opens (#232)
         /// - `hangs-test://room/start`, `hangs-test://room/next` → a guest's host
         ///   starts the scripted game / moves on (#212)
+        /// - `hangs-test://network/condition?text=<profile>&calls=<name,name>` →
+        ///   the network changes while the app runs (#235.5); `text=clear`
+        ///   brings it back (`changeNetworkCondition`)
+        /// - `hangs-test://network/release` → the calls held since launch
+        ///   (`--ui-test-network-hold`) answer (#235.5)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
@@ -347,6 +398,13 @@
             case ("room", "/next"):
                 guard let mockRooms else { return false }
                 mockRooms.hostMovesOn()
+                return true
+            case ("network", "/condition"):
+                let calls = queryItems.first(where: { $0.name == "calls" })?.value
+                return await changeNetworkCondition(profile: text, calls: calls)
+            case ("network", "/release"):
+                guard !launchHolds.isEmpty else { return false }
+                launchHolds.forEach { $0.release() }
                 return true
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")

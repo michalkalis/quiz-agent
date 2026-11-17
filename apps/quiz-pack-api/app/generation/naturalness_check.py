@@ -35,12 +35,14 @@ from typing import Optional, Sequence
 from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import GenerationProvenance, Question
 
+from app import uk_policy
+
 logger = logging.getLogger(__name__)
 
 _CHECK_MODEL = llm_factory.NATURALNESS
 
 # Only native-language corpora; English rows are written by an English model.
-LANGUAGES = ("sk", "cs")
+LANGUAGES = ("sk", "cs", "uk")
 
 PROBLEM_KINDS = (
     "calque",  # an English phrase or construction carried over literally
@@ -48,7 +50,7 @@ PROBLEM_KINDS = (
     "padding",  # other information that neither helps answer nor delights
     "unnatural",  # stiff, written-style or wrong collocation
     "grammar",
-    "neighbour",  # Czech words in Slovak or Slovak words in Czech
+    "neighbour",  # Czech words in Slovak or Slovak words in Czech; Russian in Ukrainian
 )
 
 DEFAULT_BATCH_SIZE = 20
@@ -107,12 +109,28 @@ Respond with JSON only, no prose:
 Questions:
 """
 
+# #231: appended (never edited into the header, so sk/cs prompts stay byte
+# identical) only when the batch holds a Ukrainian question.
+_UK_NOTE = """
+
+For questions tagged [uk] you are a native Ukrainian editor. Cyrillic is \
+correct there. The "neighbour" kind means Russian: the letters ы э ъ ё, Russian \
+words or forms, and surzhyk (a Russian-Ukrainian mix); proper Ukrainian forms \
+are e.g. "що" not "что", "це" not "это", "був" not "был". Also a "calque" \
+from Russian ("приймати участь", proper "брати участь"; "на протязі", proper \
+"протягом"). Also a "calque": a bookish copula "є" + instrumental where \
+Ukrainians ask directly (native speaker 2026-11-17: "Яке місто є столицею \
+Австралії?", proper "Яка столиця Австралії?"; "Хто є автором збірки віршів \
+«Кобзар»?", proper "Хто написав «Кобзар»?"), and padding that names what every \
+player already knows ("збірки віршів"). Write every rewrite in Ukrainian."""
+
 
 def _foreign_letters(text: str) -> set[str]:
     """Letters outside Latin script. A 10-23 re-check rewrite carried a
     look-alike Cyrillic "а": it reads the same and breaks search and speech."""
     return {
-        ch for ch in text
+        ch
+        for ch in text
         if ch.isalpha() and not unicodedata.name(ch, "").startswith("LATIN")
     }
 
@@ -209,6 +227,8 @@ class NaturalnessChecker:
     @staticmethod
     def _build_prompt(questions: Sequence[Question]) -> str:
         lines = [_PROMPT_HEADER]
+        if any(q.language == "uk" for q in questions):
+            lines[0] += _UK_NOTE
         for i, q in enumerate(questions, start=1):
             lines.append(f"{i}. [{q.language}] {q.question}")
         return "\n".join(lines)
@@ -259,8 +279,7 @@ class NaturalnessChecker:
         matched = sum(1 for r in result if r is not None)
         if matched != n:
             logger.warning(
-                "NaturalnessChecker: checked %d/%d questions; the rest stay "
-                "unchecked",
+                "NaturalnessChecker: checked %d/%d questions; the rest stay unchecked",
                 matched,
                 n,
             )
@@ -285,13 +304,26 @@ class NaturalnessChecker:
                 return [None] * n
             verdicts = self._parse(text, n)
             for i, (q, v) in enumerate(zip(questions, verdicts)):
-                added = v and v.rewrite and (
-                    _foreign_letters(v.rewrite) - _foreign_letters(q.question)
-                )
+                if q.language == "uk":
+                    # Cyrillic is native here; the contamination is Russian
+                    # letters the question itself did not carry.
+                    added = (
+                        v
+                        and v.rewrite
+                        and uk_policy.russian_contamination_reason([v.rewrite])
+                        and not uk_policy.russian_contamination_reason([q.question])
+                    )
+                else:
+                    added = (
+                        v
+                        and v.rewrite
+                        and (_foreign_letters(v.rewrite) - _foreign_letters(q.question))
+                    )
                 if added:
                     logger.warning(
                         "NaturalnessChecker: rewrite of %s adds non-Latin letters; "
-                        "left unchecked", q.id,
+                        "left unchecked",
+                        q.id,
                     )
                     verdicts[i] = None
             return verdicts

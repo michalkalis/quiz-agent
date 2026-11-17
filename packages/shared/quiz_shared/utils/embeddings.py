@@ -74,7 +74,10 @@ def generate_embedding(
 
 
 async def generate_embedding_async(
-    text: str, model: str = "text-embedding-3-small", api_key: Optional[str] = None
+    text: str,
+    model: str = "text-embedding-3-small",
+    api_key: Optional[str] = None,
+    max_retries: Optional[int] = None,
 ) -> List[float]:
     """Awaitable twin of :func:`generate_embedding` (#151).
 
@@ -83,8 +86,15 @@ async def generate_embedding_async(
     embeds on every question lookup, so a blocking call there caps the whole
     process at roughly one retrieval per embedding round trip; the synchronous
     function stays for the synchronous callers (worker dedup, admin, scripts).
+
+    ``max_retries`` overrides the SDK's retry count for this one call (#235:
+    the voice-quiz lookup passes 0 and bounds the call itself); None keeps the
+    client default every other caller relies on.
     """
     client = _get_async_openai_client(api_key)
+    if max_retries is not None:
+        # A per-call copy sharing the cached client's connection pool.
+        client = client.with_options(max_retries=max_retries)
     resolved = model if api_key else llm_factory.resolve_model(model)
     response = await client.embeddings.create(model=resolved, input=text)
 

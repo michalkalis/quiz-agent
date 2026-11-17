@@ -33,7 +33,7 @@ from app.translation_verification.normalize import covers_tokens
 logger = logging.getLogger(__name__)
 
 _ARTICLES = ("the ", "a ", "an ")
-_INFLECTED_LANGUAGES = frozenset({"sk", "cs"})
+_INFLECTED_LANGUAGES = frozenset({"sk", "cs", "uk"})
 # #228.3: the blind-attempt check model. Picked over deepseek-v4-flash on the
 # 2026-11-06 eval (docs/testing/runs/answerability-eval-2026-11-06): keeps
 # 52/53 good questions vs 44, drops more genuinely ambiguous ones, and the

@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "purpose": "Reviewed Ukrainian glossary fed into the MQM-Quiz judge prompt (issue #231 — Ukrainian as a fourth language, 231.2; same shape as sk/cs from #168). Hand-curated seed list of names where the Russian form is the usual model slip; extend only from reviewed native-speaker corrections, NEVER auto-derived.",
+    "language": "uk",
+    "shape": "entries[] = {source, target, note}. `target` null means \"keep the source form unchanged\".",
+    "status": "Seed entries only; a native speaker reviews and extends it in 231.10."
+  },
+  "entries": [
+    {"source": "Kyiv", "target": "Київ", "note": "Ukrainian form; never the Russian Киев"},
+    {"source": "Kharkiv", "target": "Харків", "note": "never Харьков"},
+    {"source": "Odesa", "target": "Одеса", "note": "one «с»; never Одесса"},
+    {"source": "Lviv", "target": "Львів", "note": "never Львов"},
+    {"source": "Dnipro (river and city)", "target": "Дніпро", "note": "never Днепр"},
+    {"source": "Chornobyl", "target": "Чорнобиль", "note": "never Чернобыль"},
+    {"source": "Taras Shevchenko", "target": "Тарас Шевченко", "note": "national poet; Ukrainian name form"},
+    {"source": "Kobzar", "target": null, "note": "Shevchenko's poetry book: keep the title Кобзар"},
+    {"source": "Carol of the Bells", "target": "Щедрик", "note": "Leontovych's carol: the Ukrainian title is the original"},
+    {"source": "Verkhovna Rada", "target": null, "note": "keep the Ukrainian name Верховна Рада"}
+  ]
+}

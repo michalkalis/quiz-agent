@@ -37,6 +37,10 @@ struct RoomPage {
     var rulesDone: XCUIElement { app.buttons["room.rules.done"] }
     var guestRules: XCUIElement { app.descendants(matching: .any)["room.rules.guest"] }
     var rulesOpen: XCUIElement { app.buttons["room.rules.open"] }
+    /// ✕ in the top bar: a guest leaves, a host ends the game.
+    var closeButton: XCUIElement { app.buttons["room.close"] }
+    /// #235.5: "Connection is slow…" after a few failed polls in a row.
+    var connectionBanner: XCUIElement { app.descendants(matching: .any)["room.connection"] }
 
     func revealOption(_ mode: String) -> XCUIElement {
         app.buttons["room.rules.sheet.reveal.\(mode)"]

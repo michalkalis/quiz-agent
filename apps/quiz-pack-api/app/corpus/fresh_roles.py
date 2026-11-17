@@ -31,7 +31,7 @@ OFF = "off"
 
 # The blind answerer: haiku for en, sonnet for the small sk/cs markets
 # (recipe § Run; #195). Passed in code to build_stages, so env cannot move it.
-ANSWERABILITY_PIN = {"en": HAIKU, "sk": SONNET, "cs": SONNET}
+ANSWERABILITY_PIN = {"en": HAIKU, "sk": SONNET, "cs": SONNET, "uk": SONNET}
 
 # Seeds in two steps (founder 2026-10-14: "čítanie celých stránok môže robiť
 # Haiku"): Haiku 5.5 searches and writes the digest (``seed_gather``), Opus 5.5

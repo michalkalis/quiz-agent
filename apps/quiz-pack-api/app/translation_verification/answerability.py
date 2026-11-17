@@ -63,6 +63,12 @@ OTÁZKA: {question}
 {options_block}
 Odpovedz iba vo formáte JSON:
 {{"answer": "<tvoja najlepšia odpoveď po slovensky — pri výbere z možností písmeno možnosti>", "gave_up": <true IBA ak sa nevieš rozhodnúť pre žiadnu odpoveď>, "issue": <null, alebo "ambiguous" ak formulácia pripúšťa viac platných výkladov alebo je obhájiteľná viac než jedna možnosť, alebo "unclear" ak sa nedá zistiť, na čo sa otázka pýta>}}""",
+    "uk": """Ти вправний гравець квізу. Дай відповідь на питання нижче. Ти не можеш нічого шукати: користуйся міркуванням, здогадкою, методом виключення та загальними знаннями. Обери одну найкращу відповідь і відповідай українською.
+
+ПИТАННЯ: {question}
+{options_block}
+Відповідай лише у форматі JSON:
+{{"answer": "<твоя найкраща відповідь українською; у питанні з варіантами це літера варіанта>", "gave_up": <true ЛИШЕ якщо не можеш обрати жодної відповіді>, "issue": <null, або "ambiguous", якщо формулювання допускає кілька слушних тлумачень або можна обґрунтувати більш ніж один варіант, або "unclear", якщо не зрозуміло, про що питання>}}""",
     "cs": """Jsi zdatný kvízový hráč. Odpověz na otázku níže. Nemůžeš si nic vyhledat — použij úsudek, odhad, vylučovací metodu a všeobecné znalosti. Rozhodni se pro jednu nejlepší odpověď a odpověz česky.
 
 OTÁZKA: {question}

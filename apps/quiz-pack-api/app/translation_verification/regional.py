@@ -34,7 +34,7 @@ from app import feature_flags
 
 logger = logging.getLogger(__name__)
 
-_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech"}
+_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
 
 _PROMPT = """Decide one thing about the quiz question below, for an audience of {language_name} players.
 

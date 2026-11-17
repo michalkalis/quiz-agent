@@ -63,8 +63,8 @@ the Eiffel Tower). A question written in Slovak or Czech is not local just \
 because of its language: judge the knowledge needed, not the wording.
 
 When LOCAL, give the country as a lowercase ISO 3166-1 alpha-2 code ("sk" \
-Slovakia, "cz" Czechia, "us" United States, "gb" United Kingdom, ...). When \
-not local, use null. Add a short reason naming the knowledge involved.
+Slovakia, "cz" Czechia, "ua" Ukraine, "us" United States, "gb" United \
+Kingdom, ...). When not local, use null. Add a short reason naming the knowledge involved.
 
 Respond with JSON only, no prose:
 {"labels": [{"index": <1-based int>, "local_scope": "<code>" | null, "reason": "<short reason>"}]}

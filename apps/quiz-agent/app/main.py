@@ -74,7 +74,7 @@ from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 from .config import get_settings
 from .session.manager import SessionManager
 from .input.parser import InputParser
-from .retrieval.question_retriever import QuestionRetriever
+from .retrieval.question_retriever import QuestionRetriever, embed_query
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
@@ -198,7 +198,11 @@ async def lifespan(app: FastAPI):
             leases=LeaseStore(shared_sm),
         )
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(question_store=async_pgvector)
+        # #235: the serve path bounds its query embedding (slow API → an
+        # unranked pick); admin writes on `async_pgvector` keep the long default.
+        question_retriever = QuestionRetriever(
+            question_store=async_pgvector.with_embedder(embed_query)
+        )
         answer_evaluator = AnswerEvaluator()
         # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(

@@ -34,6 +34,7 @@ _AUDIENCE = {
     "en": "an international audience of adults (anywhere in the world)",
     "sk": "adults living in Slovakia",
     "cs": "adults living in the Czech Republic",
+    "uk": "adults living in Ukraine",
 }
 
 _PROMPT = """You judge pub-quiz questions for a voice trivia game. Today is {today}. The players are {audience}: ordinary people who follow film, TV, music and celebrities only loosely (news headlines, social media, what friends talk about) — not fans or insiders.
@@ -56,6 +57,7 @@ _CHILD_WHERE = {
     "en": "anywhere in the world",
     "sk": "in Slovakia",
     "cs": "in the Czech Republic",
+    "uk": "in Ukraine",
 }
 
 _CHILD_PROMPT = """You judge quiz questions for a voice quiz game that a parent plays together with their child. Today is {today}. The player is a child aged {band} living {where}, playing with a parent who reads the question aloud but does not give the answer. Judge for a child of THIS age: what they meet at home, at school and in everyday life, and the words they know, not what an adult knows.

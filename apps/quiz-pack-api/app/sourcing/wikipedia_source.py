@@ -225,6 +225,7 @@ class WikipediaSource:
             "en": "Main_Page",
             "sk": "Hlavná_stránka",
             "cs": "Hlavní_strana",
+            "uk": "Головна_сторінка",
             "de": "Wikipedia:Hauptseite",
             "fr": "Wikipédia:Accueil_principal",
         }

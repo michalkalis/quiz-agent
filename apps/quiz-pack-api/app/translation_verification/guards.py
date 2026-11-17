@@ -1,6 +1,6 @@
 """Deterministic translation guards (#168 — batch translation pipeline SK/CS, T6).
 
-Seven no-LLM checks over ``(source_question, translated_draft, language)``. Each
+Eight no-LLM checks over ``(source_question, translated_draft, language)``. Each
 returns a reason string in the ``craft_guards`` style, or ``None`` when clean.
 
 Unlike the craft guards these are **always enforcing**: ``CRAFT_GUARDS_ENFORCE``
@@ -21,6 +21,7 @@ from typing import Callable, Optional
 
 from quiz_shared.models.question import Question
 
+from app import uk_policy
 from app.scoring.craft_guards import _IMPERIAL_ALWAYS_RE, _METRIC_RE
 from app.translation_verification.draft import TranslatedDraft
 from app.translation_verification.normalize import fold, token_overlap
@@ -269,6 +270,21 @@ def _foreign_letters(text: str) -> set[str]:
     }
 
 
+def _is_cyrillic(ch: str) -> bool:
+    return unicodedata.name(ch, "").startswith("CYRILLIC")
+
+
+def _mixed_script_word(text: str) -> Optional[str]:
+    """A word with both Latin and Cyrillic letters (a homoglyph), else None."""
+    for word in re.findall(r"\w+", text):
+        letters = [ch for ch in word if ch.isalpha()]
+        if any(_is_cyrillic(c) for c in letters) and any(
+            unicodedata.name(c, "").startswith("LATIN") for c in letters
+        ):
+            return word
+    return None
+
+
 def script_integrity_reason(
     source: Question, draft: TranslatedDraft, language: str
 ) -> Optional[str]:
@@ -284,12 +300,33 @@ def script_integrity_reason(
         allowed |= _foreign_letters(text)
     for text in _draft_texts(draft):
         foreign = _foreign_letters(text) - allowed
+        if language == uk_policy.UK:
+            # Cyrillic is the Ukrainian script. A foreign letter is anything
+            # else; Latin look-alikes inside a Cyrillic word (the mirror of
+            # the sk/cs homoglyph) are caught by the mixed-script check.
+            foreign = {ch for ch in foreign if not _is_cyrillic(ch)}
+            if not foreign:
+                mixed = _mixed_script_word(text)
+                if mixed:
+                    return f"script_integrity(mixed script in {mixed!r})"
         if foreign:
             sample = ", ".join(
                 f"{ch!r} {unicodedata.name(ch, '?')}" for ch in sorted(foreign)[:3]
             )
             return f"script_integrity({sample})"
     return None
+
+
+# --- 8. Russian contamination (Ukrainian only) --------------------------------
+
+
+def russian_contamination_reason(
+    source: Question, draft: TranslatedDraft, language: str
+) -> Optional[str]:
+    """Russian-only letters or words in a Ukrainian draft (#231)."""
+    if language != uk_policy.UK:
+        return None
+    return uk_policy.russian_contamination_reason(_draft_texts(draft))
 
 
 GUARDS: tuple[Callable[[Question, TranslatedDraft, str], Optional[str]], ...] = (
@@ -300,6 +337,7 @@ GUARDS: tuple[Callable[[Question, TranslatedDraft, str], Optional[str]], ...] = 
     placeholder_integrity_reason,
     length_ratio_reason,
     script_integrity_reason,
+    russian_contamination_reason,
 )
 
 

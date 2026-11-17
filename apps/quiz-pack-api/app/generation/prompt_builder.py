@@ -7,7 +7,7 @@ from typing import List, Optional, Sequence
 
 from quiz_shared.llm import factory as llm_factory
 
-from .. import feature_flags
+from .. import feature_flags, uk_policy
 from .classification import CATEGORIES
 from .examples import BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
@@ -194,8 +194,8 @@ write JSON as prose. Field notes:
 # never translation (founder 2026-09-01): the templates above say "write in
 # English", so a non-English order gets an explicit override appended after
 # the template, below the prompt-cache breakpoint.
-_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech"}
-_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak"}
+_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
+_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak", "uk": "Russian"}
 
 _ORDER_REQUEST_SECTION = """
 
@@ -258,6 +258,7 @@ _HOME_MARKER = "<!-- home"
 _HOME_COUNTRY = {
     "sk": {"country": "Slovakia", "people": "Slovaks", "tongue": "Slovak"},
     "cs": {"country": "Czechia", "people": "Czechs", "tongue": "Czech"},
+    "uk": {"country": "Ukraine", "people": "Ukrainians", "tongue": "Ukrainian"},
 }
 
 
@@ -278,7 +279,7 @@ def _house_style_parts() -> tuple[str, str]:
 HOUSE_STYLE_V2_VERSION = "2026-10-22"
 _HOUSE_STYLE_V2_DIR = os.path.dirname(_HOUSE_STYLE_PATH)
 _V2_STYLE_MARKER = "<!-- house style -->"
-_V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU"}
+_V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU", "uk": "СТИЛЬ ДОМУ"}
 
 
 @lru_cache(maxsize=4)
@@ -335,9 +336,16 @@ def order_brief_section(
     if name and feature_flags.gen_house_style_v2():
         section += "\n\n" + _house_style_v2_parts(language)[0]
     elif name:
-        section += _OUTPUT_LANGUAGE_SECTION.format(
+        language_section = _OUTPUT_LANGUAGE_SECTION.format(
             name=name, neighbour=_NEIGHBOUR[language]
         )
+        if language == uk_policy.UK:
+            language_section = language_section.replace(
+                '"Pravda" / "Nepravda"', '"Правда" / "Неправда"'
+            )
+        section += language_section
+    if language == uk_policy.UK:
+        section += "\n\n" + uk_policy.UK_TOPIC_POLICY
     # #192 trial run: a narrow request ("Slovak castle legends") has few
     # stand-out facts, and every top-up round reached for the same ones again
     # from a new angle — in-pack dedup only compares wording, and the corpus

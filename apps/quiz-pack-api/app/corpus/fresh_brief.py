@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
+from app import uk_policy
 from app.corpus.covered import format_covered_block
 
 if TYPE_CHECKING:
@@ -42,6 +43,7 @@ AUDIENCE = {
     "en": "adults anywhere in the world",
     "sk": "adults who live in Slovakia and play in Slovak",
     "cs": "adults who live in Czechia and play in Czech",
+    "uk": "adults who live in Ukraine and play in Ukrainian",
 }
 
 _FOCUS_EN = (
@@ -55,7 +57,11 @@ _FOCUS_DOMESTIC = (
     "people in {country} talked about; the rest are world mega-hits well known in "
     "{country}. Do not ask about the {other} scene unless it is genuinely shared."
 )
-_SCENE = {"sk": ("Slovak", "Slovakia", "Czech"), "cs": ("Czech", "Czechia", "Slovak")}
+_SCENE = {
+    "sk": ("Slovak", "Slovakia", "Czech"),
+    "cs": ("Czech", "Czechia", "Slovak"),
+    "uk": ("Ukrainian", "Ukraine", "Russian"),
+}
 
 PLAYER = (
     "Who must be able to answer: an ordinary adult who follows film, TV, music and "
@@ -129,5 +135,7 @@ def build_fresh_brief(
         f"FRESH entertainment questions for {AUDIENCE[lang]}. {focus(lang)} "
         f"{PLAYER} {fresh} {ANCHOR} {_SEEDS_HEADER.format(today=today.isoformat())}"
     )
+    if lang == "uk":
+        head += " " + uk_policy.UK_TOPIC_POLICY
     seed_block = "\n".join(seed_line(s) for s in seeds)
     return f"{head}\n{seed_block}\n\n{format_covered_block(list(covered))}"

@@ -97,6 +97,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     private(set) var answerWindowSeconds: Int?
     private var awayReported: Set<String> = []
     private var pollFailures = 0
+    /// The player closed the game: a reply still on its way changes nothing (#235.2).
+    private(set) var hasLeft = false
     private var pollTask: Task<Void, Never>?
     private var nearbyTask: Task<Void, Never>?
     var readTask: Task<Void, Never>?
@@ -235,9 +237,16 @@ final class RoomViewModel: ObservableObject, Identifiable {
         isWorking = true
         defer { isWorking = false }
         do {
-            try apply(await rooms.joinRoom(invite, displayName: playerName))
+            let joined = try await rooms.joinRoom(invite, displayName: playerName)
+            // Closed while the join was on its way: drop out again (#235.2).
+            guard !hasLeft else {
+                if let you = joined.you { try? await rooms.removePlayer(roomId: joined.roomId, participantId: you) }
+                return
+            }
+            apply(joined)
             startPolling()
         } catch {
+            guard !hasLeft else { return }
             role = nil
             self.invite = nil
             errorMessage = Self.joinMessage(for: error)
@@ -307,14 +316,16 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     /// Leaves the game: a guest drops out of the room, a host ends it for
     /// everyone unless it is already over.
+    /// The server is told in the background: closing never waits on the network.
     func leave() async {
+        hasLeft = true
         stopAll()
         if role == .guest { await audio.stopPlayback() }
         guard let roomId = state?.roomId ?? created?.roomId else { return }
         if role == .guest, let you = state?.you, !hasEnded {
-            try? await rooms.removePlayer(roomId: roomId, participantId: you)
+            Task { [rooms] in try? await rooms.removePlayer(roomId: roomId, participantId: you) }
         } else if role == .host, let created, state?.status != .finished {
-            try? await network.endSession(sessionId: created.sessionId)
+            Task { [network] in try? await network.endSession(sessionId: created.sessionId) }
         }
     }
 
@@ -361,6 +372,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
     }
 
     func apply(_ new: RoomState) {
+        guard !hasLeft else { return }
         pollFailures = 0
         setConnectionTrouble(false)
         guard new.changed else { return }

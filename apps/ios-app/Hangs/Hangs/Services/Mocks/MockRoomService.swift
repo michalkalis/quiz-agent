@@ -50,6 +50,8 @@
         private(set) var pauseCalls: [Bool] = []
         private var holding = false
         private(set) var joinNames: [String] = []
+        /// #235.2: hold any call in flight or put it on a bad network.
+        let conditions = MockCallConditions<MockRoomCall>()
 
         private var role: RoomViewModel.Role?
         private var players: [RoomState.Player] = []
@@ -94,6 +96,7 @@
             thinkingSeconds: Int,
             readsAloud: Bool
         ) async throws -> RoomCreated {
+            try await conditions.simulateNetwork(.createRoom)
             if let createError { throw createError }
             role = .host
             self.revealMode = revealMode
@@ -112,9 +115,13 @@
             return RoomCreated(roomId: Self.roomId, joinToken: Self.token, sessionId: sessionId)
         }
 
-        func nearbyRooms() async throws -> [NearbyRoom] { nearby }
+        func nearbyRooms() async throws -> [NearbyRoom] {
+            try await conditions.simulateNetwork(.nearbyRooms)
+            return nearby
+        }
 
         func joinRoom(_: RoomInvite, displayName: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.joinRoom)
             if let joinError { throw joinError }
             joinNames.append(displayName)
             if role == nil {
@@ -132,17 +139,20 @@
         }
 
         func removePlayer(roomId _: String, participantId: String) async throws {
+            try await conditions.simulateNetwork(.removePlayer)
             removed.append(participantId)
             players.removeAll { $0.participantId == participantId && !$0.isHost }
             bump()
         }
 
         func roomState(roomId _: String, since: Int?) async throws -> RoomState {
+            try await conditions.simulateNetwork(.roomState)
             if let stateError { throw stateError }
             return state(full: since != version)
         }
 
         func openQuestion(roomId _: String, questionId _: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.openQuestion)
             openCalls += 1
             if phase == .reading {
                 phase = .answering
@@ -157,6 +167,7 @@
             thinkingSeconds: Int?,
             readsAloud: Bool?
         ) async throws -> RoomState {
+            try await conditions.simulateNetwork(.updateSettings)
             settingsCalls.append(SettingsCall(revealMode: revealMode, thinkingSeconds: thinkingSeconds, readsAloud: readsAloud))
             if let settingsError { throw settingsError }
             if revealMode != nil, status != .lobby {
@@ -170,6 +181,7 @@
         }
 
         func answer(roomId _: String, questionId _: String, answer: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.answer)
             guard phase == .reading || phase == .answering, roundAnswers[Self.youId] == nil else {
                 throw NetworkError.serverError(statusCode: 409, message: "Already answered")
             }
@@ -182,10 +194,12 @@
         }
 
         func reportAway(roomId _: String, questionId: String) async throws {
+            try await conditions.simulateNetwork(.reportAway)
             awayReports.append(questionId)
         }
 
         func setPaused(roomId _: String, paused: Bool) async throws -> RoomState {
+            try await conditions.simulateNetwork(.setPaused)
             guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Nothing to pause") }
             pauseCalls.append(paused)
             holding = paused
@@ -196,6 +210,7 @@
         func nextQuestion(roomId _: String) async throws -> RoomState {
             // Like URLSession: a cancelled task's request never arrives.
             try Task.checkCancellation()
+            try await conditions.simulateNetwork(.nextQuestion)
             guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Players are still answering") }
             advance()
             return state(full: true)

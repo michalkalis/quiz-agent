@@ -54,10 +54,17 @@ extension RoomViewModel {
         isWorking = true
         defer { isWorking = false }
         do {
-            created = try await createRoom(hostName: name)
+            let room = try await createRoom(hostName: name)
+            // Closed while the room was being made: end it at once (#235.2).
+            guard !hasLeft else {
+                try? await network.endSession(sessionId: room.sessionId)
+                return
+            }
+            created = room
             await refresh()
             startPolling()
         } catch {
+            guard !hasLeft else { return }
             Logger.network.error("Room create failed: \(error, privacy: .public)")
             role = nil
             created = nil

@@ -1304,6 +1304,8 @@ final class QuizViewModel: ObservableObject {
                 let result = try await withTransientStartRetry {
                     try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName))
                 }
+                // Cancelled while the answer was on its way: stay on Home (#235.2).
+                try Task.checkCancellation()
                 activeShare?.kind = result.kind
                 guard let session = result.session else {
                     throw NetworkError.sharedQuizUnavailable(.alreadyPlayed)

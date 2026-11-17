@@ -16,7 +16,10 @@ extension QuizViewModel {
     @discardableResult
     func beginSharedQuiz(token: String) -> Task<Void, Never> {
         let task = Task {
-            if await isOwnSharedQuiz(token: token) {
+            let isOwn = await isOwnSharedQuiz(token: token)
+            // Replaced (the link again, another start) during the check: that one plays (#235.2).
+            guard !Task.isCancelled else { return }
+            if isOwn {
                 sharedQuizComparison = SharedQuizPlay(token: token)
                 return
             }

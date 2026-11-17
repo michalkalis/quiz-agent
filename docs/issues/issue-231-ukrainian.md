@@ -1,14 +1,14 @@
 # #231 — Ukrajinčina ako štvrtý jazyk
 
 **Triage:** enhancement · ready-for-agent
-**Status:** plán hotový 2026-11-08, rozhodnutia foundera nižšie; ďalej 231.0 overenie rizík
+**Status:** 2026-11-17 231.0 technicky overené (povely, prepis odpovedí); čaká výber písma (founder) a posúdenie čítania (rodený hovorca) — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
 **Founder:** 2026-11-08 „pridaj ukrajinčinu do appky, na všetko, tak ako cz, sk a en“
 
 ## Cieľ
 
 Ukrajinčina všade, kde je dnes sk/cs/en: appka, otázky, hlas (čítanie aj povely), hra spolu, web, App Store, nákupy.
 
-**Hotovo, keď:** hráč s ukrajinčinou prejde celú appku po ukrajinsky (texty, otázky, čítanie, povely, odpovede hlasom aj A–Г), hra spolu v miestnosti aj na diaľku funguje s ukrajinským hostiteľom, ukrajinský App Store ukazuje ukrajinský popis, snímky a nákupy, web má /uk/, rodený hovorca schválil texty a vzorku otázok, App Store dostáva len schválené otázky.
+**Hotovo, keď:** hráč s ukrajinčinou prejde celú appku po ukrajinsky (texty, otázky, čítanie, povely, odpovede hlasom aj 1–4), hra spolu v miestnosti aj na diaľku funguje s ukrajinským hostiteľom, ukrajinský App Store ukazuje ukrajinský popis, snímky a nákupy, web má /uk/, rodený hovorca schválil texty a vzorku otázok, App Store dostáva len schválené otázky.
 
 ## Rozhodnutia foundera (2026-11-08)
 
@@ -25,7 +25,7 @@ Ukrajinčina všade, kde je dnes sk/cs/en: appka, otázky, hlas (čítanie aj po
 - **Server čítanie a prepis odpovedí:** ElevenLabs model je viacjazyčný a ukrajinčinu podporuje, jeden hlas pre všetky jazyky; prepis odpovedí dostáva kód jazyka. Kvalitu po ukrajinsky treba počuť (231.0).
 - **Zoznam jazykov je na serveri** s vypínačom (servírované jazyky, jazyky balíkov) → uk môže ísť naostro až po zapnutí, bez buildu. Nová hodnota jazyka nie je zmena kontraktu pre staré buildy.
 - **Hra spolu:** jazyk hry určuje hostiteľ pre všetkých; každý mobil na diaľku číta sám (#230). Nič nové okrem testu.
-- **Písmo appky Rethink Sans nemá cyriliku vôbec** (ani v pôvodnom písme na Google Fonts). Bez zmeny by iOS ukrajinské písmená vykreslil iným písmom ako čísla a latinku → treba rozhodnúť (231.4). Kandidáti s cyrilikou a podobným vzhľadom: Onest (navrhnuté na Ukrajine), Manrope. Web používa to isté písmo.
+- **Písmo appky Rethink Sans nemá cyriliku vôbec** (ani v pôvodnom písme na Google Fonts). Bez zmeny by iOS ukrajinské písmená vykreslil iným písmom ako čísla a latinku → treba rozhodnúť (231.4). Kandidáti s cyrilikou a podobným vzhľadom: Onest, Manrope. Web používa to isté písmo.
 - **Trh:** Ukrajina je samostatný App Store (jazyky ukrajinčina, angličtina, ruština). V SK ~150 tis., v CZ ~395 tis. Ukrajincov s dočasnou ochranou (Eurostat 07/2026, ochrana predĺžená do 03/2027).
 
 ## Rozsah práce (relatívne)
@@ -43,13 +43,17 @@ Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpozn
 
 ## Úlohy
 
-- [ ] **231.0 Overenie rizík pred stavbou** — (a) iPhone iOS 26: diktovanie `uk-UA` dostupné a model sa stiahne; (b) ukážky čítania 5 ukrajinských otázok (aktuálny hlas) → artefakt pre rodeného hovorcu; (c) prepis odpovedí po ukrajinsky cez existujúci porovnávací skript na nahrávkach (bez prehrávania nahlas na Macu); (d) písmo: 2–3 varianty ukrajinských obrazoviek v HTML → founder vyberie. Výsledok: ide/nejde + čo zmeniť.
-- [ ] **231.1 Server základ (vypnutý)** — `uk` v spoločnom zozname jazykov a vo všetkých zoznamoch povolených jazykov; čísla, percentá, radové číslovky, mesiace; názvy písmen pre odpovede (A Б В Г, vyslovené „а, бе, ве, ге“, aj „перший/другий…“); spätné hlášky a texty dennej výzvy s tromi tvarmi množného čísla; oznámenie v `/app-config` s uk poľom. Servírovanie uk zostáva vypnuté. Testy pre každé miesto.
+- [~] **231.0 Overenie rizík pred stavbou** (2026-11-17) — výsledky na nahrávkach z umelého hlasu (ElevenLabs, aktuálny hlas), [stránka na posúdenie](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ):
+  - [x] (a) Apple diktovanie `uk-UA` na Macu (macOS 27, rovnaké nastavenie ako appka): **9/9 povelov** (старт, далі, повтори, пропусти, ще раз, добре, стоп, пауза, додому) aj možnosti один–чотири (prídu ako číslice 1–4). Model sa stiahol sám. Odpovede typu „Канберра“ diktovanie pokazí, ale odpovede prepisuje server. iPhone s iOS 26 a skutočný hlas → 231.11.
+  - [ ] (b) Čítanie 5 otázok aktuálnym hlasom → posúdi rodený hovorca (stránka, časť 2).
+  - [x] (c) Prepis odpovedí na serveri: produkčný model **9/9 bez chyby** (mená, čísla, veta, один–чотири); záložný Scribe 8/9 (Канберра → latinkou „Canberra“).
+  - [ ] (d) Písmo: varianty A Onest · B Manrope · C systémové → vyberie founder (stránka, časť 1).
+- [ ] **231.1 Server základ (vypnutý)** — `uk` v spoločnom zozname jazykov a vo všetkých zoznamoch povolených jazykov; čísla, percentá, radové číslovky, mesiace; slová pre možnosti 1–4 (один, два, три, чотири; aj „перший/другий…“) a názvy písmen pre hláskovanie; spätné hlášky a texty dennej výzvy s tromi tvarmi množného čísla; oznámenie v `/app-config` s uk poľom. Servírovanie uk zostáva vypnuté. Testy pre každé miesto.
 - [ ] **231.2 Otázky: brány kvality pre ukrajinčinu** — kontroly odpovedateľnosti a prirodzenosti s uk, skloňovanie (uk je ohybný jazyk ako sk/cs), kontrola miešania s ruštinou (ы, э, ъ, ё a ruské tvary), slovník pojmov uk, pravidlo tém (vojna od 2014, politika, Rusko = vyradiť), domáca krajina = Ukrajina vo filtri lokálnosti.
 - [ ] **231.3 Otázky: pilot** — 25 preložených univerzálnych + 25 natívnych ukrajinských (7/10 domáca scéna = Ukrajina, recept #211) → brány → vzorka 50 na posúdenie rodenému hovorcovi v jednej stránke. Odhad nákladov pred spustením (pilot do ~$5).
 - [ ] **231.4 Otázky: plná dávka** — po schválení pilotu cieľ ~1 000+ schválených (aby kategórie nemali diery): preklad univerzálnych en otázok dávkou (rádovo jednotky dolárov) + natívne dávky (rádovo desiatky dolárov) → **suma na súhlas foundera vopred**; uk v týždennom dopĺňaní zábavy (#202). Len schválené do App Store.
 - [ ] **231.5 Vlastné balíky po ukrajinsky** — názov jazyka, ochrana pred ruštinou, štýl domu uk, nadpisy; zdroje z ukrajinskej Wikipédie; overiť opätovné použitie balíka (#225) s jazykom uk.
-- [ ] **231.6 Appka** — uk v projekte; 731 textov + 2 systémové; vybrané písmo pre cyriliku; povely po ukrajinsky (štart, ok, ďalej, znova, zopakuj, preskoč, stop, pauza, domov; výplňové slová так, ну, добре…), nápovedy a tlačidlá v rozkazovacom tvare; párovanie odpovedí A–Г a čísel v cyrilike (dnes len latinka bez diakritiky; pozor: й a ї sa nesmú zlúčiť s и a і); dátumy, mená hráčov, právne odkazy na /uk/; analytika jazyka existuje (overiť). Testy: zrkadlo sk/cs testov povelov, pixelové snímky uk.
+- [ ] **231.6 Appka** — uk v projekte; 731 textov + 2 systémové; vybrané písmo pre cyriliku; povely po ukrajinsky (štart, ok, ďalej, znova, zopakuj, preskoč, stop, pauza, domov; výplňové slová так, ну, добре…), nápovedy a tlačidlá v rozkazovacom tvare; párovanie odpovedí 1–4 (MCQ sa číta číslami „Один… Чотири“ ako sk/cs, nie písmenami) a čísel v cyrilike (dnes len latinka bez diakritiky; pozor: й a ї sa nesmú zlúčiť s и a і); dátumy, mená hráčov, právne odkazy na /uk/; analytika jazyka existuje (overiť). Testy: zrkadlo sk/cs testov povelov, pixelové snímky uk.
 - [ ] **231.7 Kontrola textov** — štýl textov pre uk (tykanie „ти“ ako sk/cs, právne texty „ви“, bez pomlčiek), automatická kontrola textov rozšírená o uk (ruské písmená, vykanie), plná kontrola iným modelom ako pri #226.
 - [ ] **231.8 Web** — `/uk/` (texty, 3 právne stránky, tematické stránky s ukrajinskými adresami, ukážka hlasu), hreflang a mapa stránok sa doplnia samé.
 - [ ] **231.9 App Store a nákupy** — ukrajinský popis, názov, podnadpis, kľúčové slová, What's New, snímky s ukrajinskými nadpismi, názvy nákupov a predplatného, TestFlight texty; dostupnosť v obchode Ukrajina a ceny (Apple prepočíta automaticky, **úprava ceny pre Ukrajinu = rozhodnutie foundera**). Nahrá sa s najbližšou verziou.

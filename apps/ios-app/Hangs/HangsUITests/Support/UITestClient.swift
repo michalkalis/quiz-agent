@@ -49,10 +49,26 @@ struct UITestClient {
         try await post(path: "/room/next", text: nil)
     }
 
-    private func post(path: String, text: String?) async throws {
+    /// #235.5: the network changes while the app runs. `profile` is a
+    /// `--ui-test-network` profile or "clear" (the network is back); `calls`
+    /// limits it to those mock calls, nil means every call and the game
+    /// together's polls.
+    func setNetwork(_ profile: String, calls: [String]? = nil) async throws {
+        try await post(path: "/network/condition", text: profile, calls: calls)
+    }
+
+    /// #235.5: the calls held since launch (`--ui-test-network-hold`) answer.
+    func releaseNetwork() async throws {
+        try await post(path: "/network/release", text: nil)
+    }
+
+    private func post(path: String, text: String?, calls: [String]? = nil) async throws {
         var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if let text {
             components.queryItems = [URLQueryItem(name: "text", value: text)]
+        }
+        if let calls {
+            components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "calls", value: calls.joined(separator: ","))]
         }
         guard let url = components.url else {
             XCTFail("UITestClient: could not build URL for path \(path)")

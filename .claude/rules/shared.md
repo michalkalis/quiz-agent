@@ -69,6 +69,17 @@ Live builds must keep working: CI (`Backend CI gate`) fails a PR whose spec (qui
 - **iOS:** Unit test ViewModels with mocked services
 - Test commands in CLAUDE.md quick reference table
 
+### Beyond the happy path (#235 — tests beyond the happy path; founder, 2026-11-15)
+
+Two bugs reached TestFlight build 87 because tests only met a server that answers at once and correctly. A PR is incomplete, and review flags it, when:
+
+- **A bug fix has no test that fails without the fix.** Reported bug → failing test first → fix (Rule #2).
+- **A new or changed network call in the app has no test for a slow answer and a failed one.** Hold the call in flight or apply a condition (`MockNetworkService+Conditions.swift`: slow, timeout, offline, dropped, server error, malformed); assert what the player sees and that they can leave. No wall-clock waiting: injected clock or a held call only.
+- **A system callback is only ever tested through a stand-in.** New code that hands a handler to a system framework (pasteboard, audio, StoreKit, speech…) gets one test that runs the real call on the simulator, or a row marked device-only in `docs/testing/system-calls-coverage.md`.
+- **A failure is swallowed silently** (`try?` or an empty `catch` around a call whose result the player is waiting for) without a comment saying why silence is right.
+
+The rule the tests guard: under every bad condition the player sees progress or a clear error with a way out — never endless waiting, a screen without navigation, silent nothing, or a double charge.
+
 ## Model Routing (token economy)
 
 Advisor/orchestrator pattern via native `Agent`/Workflow `model` only — no third-party plugins or hooks.

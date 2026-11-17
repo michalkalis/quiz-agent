@@ -69,9 +69,16 @@ struct RealSystemCallTests {
         .timeLimit(.minutes(1))
     )
     func speechPermissionRequest() async {
-        // Asked at every launch before the voice commands are prepared.
+        // #237: asked only when the player turns voice commands on.
         let status = await SilenceDetectionService.requestSystemAuthorization()
         #expect(status == SFSpeechRecognizer.authorizationStatus())
+    }
+
+    @Test("launch and every listening window read the real speech permission without asking")
+    func speechPermissionStatusRead() {
+        // #237: runs on a fresh simulator too. Had this read raised the
+        // prompt, the run would hang on the alert instead of answering.
+        #expect(SilenceDetectionService().authorizationStatusProvider() == SFSpeechRecognizer.authorizationStatus())
     }
 
     // MARK: - Sign in with Apple

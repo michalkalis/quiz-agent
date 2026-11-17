@@ -100,6 +100,8 @@ struct ListenBarDismissal: Equatable {
 }
 
 struct ListenBar: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     private enum Metrics {
         /// #188 G11: the countdown beside the 17pt status line — one step
         /// larger, so the number is what the eye lands on.
@@ -144,6 +146,18 @@ struct ListenBar: View {
     enum Size {
         case full // quiz screens: caption row over the words to say
         case slim // compact question screens: short caption + the words on a single ~40pt row
+    }
+
+    /// #237 (canvas pick L1, "button on the right"): what the bar offers while
+    /// voice commands wait on the speech-recognition permission. Decided by
+    /// `VoiceCommandCoordinator.commandsBarAccessory`; the bar only renders it.
+    enum CommandsAccessory: Equatable {
+        /// Never asked: a "Turn on" button.
+        case turnOn
+        /// Allowed, the on-device model is still coming: a note and a spinner.
+        case preparing
+        /// Refused: a "Settings" button into iOS Settings.
+        case openSettings
     }
 
     /// #132 Track B — the think-phase window this bar is counting down. The fill
@@ -211,6 +225,11 @@ struct ListenBar: View {
     /// hands-free commands without noticing.
     var onDismiss: (() -> Void)? = nil
 
+    /// #237: the commands control (command modes only), and what its buttons do.
+    var commandsAccessory: CommandsAccessory? = nil
+    var onTurnOnCommands: (() -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
+
     /// The countdown, iff the mode can host one.
     private var activeThinkCountdown: ThinkCountdown? {
         guard case .command = mode else { return nil }
@@ -229,16 +248,46 @@ struct ListenBar: View {
     /// The chips actually rendered. Answer mode has none by the 2026-07-28 rule
     /// (a command spoken there is not heard, so offering one would be a lie);
     /// evaluating has none because nothing is listening at all.
-    private var chipWords: [String] { isCommandMode ? commandWords : [] }
+    /// #237: no words while commands are off: they would not work, and the
+    /// note under the caption says why instead.
+    private var chipWords: [String] {
+        isCommandMode && activeCommandsAccessory == nil ? commandWords : []
+    }
 
     /// #189: the trailing "live mic" dots only mean something while a command
     /// window is actually armed — the read-back/settle state never had a live
     /// mic to represent.
     private var showsDots: Bool {
+        // #237: no live-mic tell while commands are off — nothing is listening for them.
+        guard activeCommandsAccessory == nil else { return false }
         switch mode {
         case .command, .readingQuestion: return true
         case .readingAnswerBack, .answer, .evaluating, .skipping: return false
         }
+    }
+
+    /// #237: the commands control, in the modes that name command words only.
+    private var activeCommandsAccessory: CommandsAccessory? {
+        isCommandMode && !isBusy ? commandsAccessory : nil
+    }
+
+    /// #237: what the bar says while commands wait — the caption of a plain
+    /// command bar, the line under "Reading the question" / "Think" otherwise.
+    private var commandsNote: Text? {
+        switch activeCommandsAccessory {
+        case .turnOn: Text("Commands are off")
+        case .preparing: Text("Preparing commands…")
+        case .openSettings: Text("Speech recognition is off")
+        case nil: nil
+        }
+    }
+
+    /// The note takes the caption slot only on a plain command bar (no
+    /// countdown, nothing heard) — where the caption would otherwise claim
+    /// "LISTENING FOR COMMANDS".
+    private var commandsNoteIsCaption: Bool {
+        guard commandsNote != nil, case .command = mode, activeThinkCountdown == nil else { return false }
+        return !isHearing && !isRecognizing
     }
 
     /// #122 follow-up: command modes only — answer mode and the busy states have
@@ -388,6 +437,10 @@ struct ListenBar: View {
         if case .skipping = mode {
             return Text("Loading the next question")
         }
+        // #237: commands are off — say so where the words would be.
+        if let commandsNote, chipWords.isEmpty {
+            return commandsNoteIsCaption ? nil : commandsNote
+        }
         // Chips replace the sentence wherever they are given (question screen).
         guard isCommandMode, chipWords.isEmpty, let commandHint else { return nil }
         switch feedback {
@@ -430,6 +483,7 @@ struct ListenBar: View {
         case .skipping:
             return Text("Skipping the question")
         case .command:
+            if commandsNoteIsCaption, let commandsNote { return commandsNote }
             // #174: without the words sub-line (hints outgrown) the miss must
             // still be readable, not just amber — so it takes the caption slot.
             if feedback == .unmatched, commandHint == nil {
@@ -465,11 +519,8 @@ struct ListenBar: View {
     }
 
     var body: some View {
-        content
-            // Combined so VoiceOver reads one "listening … say X" element.
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(accessibilityText)
-            .accessibilityIdentifier("listen-bar")
+        commandsRow
+            .padding(.vertical, stacksCommandsControl ? Theme.Hangs.Spacing.sm : 0)
             .padding(.leading, usesStatusLayout ? 18 : (size == .slim ? 16 : 14))
             .padding(.trailing, trailingPadding)
             // The ✕ is a sibling of the combined element, never inside it: VoiceOver
@@ -590,8 +641,9 @@ struct ListenBar: View {
         HStack(spacing: Theme.Hangs.Spacing.xs) {
             leadingGlyph
 
-            switch size {
-            case .full:
+            // #237: a slim bar that stacks its commands button is two rows
+            // anyway, so its caption gets the full row too.
+            if size == .full || stacksCommandsControl {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         caption
@@ -599,7 +651,7 @@ struct ListenBar: View {
                     }
                     words
                 }
-            case .slim:
+            } else {
                 // One row: the short caption and the words share the 40pt bar.
                 caption
                 trailingIndicator
@@ -684,6 +736,89 @@ struct ListenBar: View {
             .accessibilityIdentifier("listen-bar.dismiss")
         }
     }
+
+    /// #237: at accessibility text sizes the commands button goes under the
+    /// caption, so the caption keeps the full width and never truncates; at
+    /// the default sizes it sits beside it (canvas pick L1).
+    private var stacksCommandsControl: Bool {
+        activeCommandsAccessory != nil && dynamicTypeSize.isAccessibilitySize
+    }
+
+    /// The status content beside the commands control, or above it at
+    /// accessibility sizes. Like the ✕, the commands button is its own
+    /// VoiceOver element, never read as part of the combined one.
+    @ViewBuilder
+    private var commandsRow: some View {
+        if stacksCommandsControl {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
+                labeledContent
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                commandsControl
+            }
+        } else {
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
+                labeledContent
+                commandsControl
+            }
+        }
+    }
+
+    /// Combined so VoiceOver reads one "listening … say X" element.
+    private var labeledContent: some View {
+        content
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityText)
+            .accessibilityIdentifier("listen-bar")
+    }
+
+    /// #237: "Turn on" / "Settings", or the small spinner while the model is
+    /// prepared (the note beside it says what it waits for).
+    @ViewBuilder
+    private var commandsControl: some View {
+        switch activeCommandsAccessory {
+        case .turnOn:
+            commandsButton(title: "Turn on", icon: nil, action: onTurnOnCommands)
+                .accessibilityIdentifier("listen-bar.enableCommands")
+        case .openSettings:
+            commandsButton(title: "Settings", icon: "gearshape.fill", action: onOpenSettings)
+                .accessibilityIdentifier("listen-bar.openSettings")
+        case .preparing:
+            ProgressView()
+                .controlSize(.small)
+                .tint(accent)
+                .accessibilityHidden(true)
+                .accessibilityIdentifier("listen-bar.preparingCommands")
+        case nil:
+            EmptyView()
+        }
+    }
+
+    /// The ink capsule of the L1 pick, at the HIG's 44pt tap height.
+    private func commandsButton(title: LocalizedStringKey, icon: String?, action: (() -> Void)?) -> some View {
+        // a11y-id: call-site
+        Button {
+            action?()
+        } label: {
+            // Not a Label: "Turn on" has no icon, and an empty icon slot would
+            // still take its spacing.
+            HStack(spacing: Theme.Hangs.Spacing.xxs) {
+                if let icon { Image(systemName: icon).accessibilityHidden(true) }
+                Text(title)
+            }
+            .font(.hangsBody.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.textOnAction)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .frame(minHeight: Self.commandsButtonHeight)
+            .background(Capsule().fill(Theme.Hangs.Colors.action))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// #237: the HIG minimum tap height, the L1 button's own height.
+    static let commandsButtonHeight: CGFloat = 44
 
     private var caption: some View {
         captionText

@@ -123,6 +123,26 @@ nonisolated extension ComponentSample {
                 // With the ✕: the countdown and the ✕ each need their own room.
                 QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
             },
+            // #237 (canvas pick L1): commands wait on the speech-recognition
+            // permission — the bar's trailing control, with the ✕ beside it.
+            ComponentSample("questionListenBar.thinkingTurnOn") {
+                QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {},
+                                  commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
+            ComponentSample("questionListenBar.readingPreparing") {
+                QuestionListenBar(phase: .readingQuestion, language: .slovak, onDismiss: {}, commandsAccessory: .preparing)
+            },
+            ComponentSample("questionListenBar.readingOpenSettings") {
+                QuestionListenBar(phase: .readingQuestion, language: .slovak, onDismiss: {},
+                                  commandsAccessory: .openSettings, onOpenSettings: {})
+            },
+            ComponentSample("questionListenBar.readingTurnOn") {
+                QuestionListenBar(phase: .readingQuestion, commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
+            ComponentSample("questionListenBar.slimTurnOn") {
+                QuestionListenBar(phase: .thinking(remaining: 12, total: 30), size: .slim, language: .slovak,
+                                  onDismiss: {}, commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },

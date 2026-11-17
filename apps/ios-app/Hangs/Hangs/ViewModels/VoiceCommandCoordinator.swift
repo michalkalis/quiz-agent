@@ -316,6 +316,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// that it worked, and the undo window is not spent under the question.
     let stopQuestionRead: @MainActor () async -> Void
 
+    /// #237: the player turned commands on and the live listener (started
+    /// without a transcriber) must be rebuilt once they are ready. Written
+    /// only by +Permission.
+    var rearmsListenerWhenCommandsReady = false
+
     /// Long-lived observer of `commandAvailabilityUpdates`. Deliberately NOT in
     /// `taskBag` (quiz-scoped, cleared by `resetState`) — availability changes
     /// span the whole app lifetime. Cancelled in `deinit`.
@@ -409,6 +414,7 @@ final class VoiceCommandCoordinator: ObservableObject {
             for await availability in availabilityStream {
                 guard let self, !Task.isCancelled else { break }
                 self.commandAvailability = availability
+                self.noteCommandAvailabilityChanged()
             }
         }
     }

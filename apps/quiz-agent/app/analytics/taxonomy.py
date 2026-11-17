@@ -76,6 +76,10 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
+    # #237: the player turned voice commands on (source = onboarding |
+    # listen_bar) and what iOS answered the speech-recognition request
+    # (result = granted | denied).
+    "voice_commands_turned_on": frozenset({"source", "result"}),
     "paywall_viewed": frozenset({"source"}),
     # #228.6: question_count = the custom pack size bought (10 | 30).
     "purchase_result": frozenset({"product_id", "kind", "outcome", "question_count"}),

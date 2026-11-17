@@ -221,6 +221,17 @@ async def test_quick_game_events_keep_only_the_mode():
     assert ctx == {"quick_game": True}
 
 
+async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
+    # #237: how many players turn commands on, from the onboarding or the quiz
+    # listen bar, and how many then refuse speech recognition; nothing about
+    # the device or the quiz rides along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_commands_turned_on"],
+        {"source": "listen_bar", "result": "denied", "language": "sk"},
+    )
+    assert cleaned == {"source": "listen_bar", "result": "denied"}
+
+
 async def test_sign_in_prompt_events_keep_only_kind_and_outcome():
     # #217.4: how many buyers of each kind (Plus, credit, custom pack) save their
     # purchase by signing in; nothing about the purchase or the account rides along.

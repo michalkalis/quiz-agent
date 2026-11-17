@@ -45,6 +45,7 @@
 import SwiftUI
 
 struct QuestionVoiceFooter: View {
+    @Environment(\.openURL) private var openURL
     @ObservedObject var viewModel: QuizViewModel
 
     @Binding var showTextInput: Bool
@@ -107,7 +108,10 @@ struct QuestionVoiceFooter: View {
                     speechHeard: viewModel.isHearingAnswer,
                     inputLevel: viewModel.recordingInputLevel,
                     // #188 G11: the recording window, moved out of the Stop button.
-                    answerRemaining: viewModel.answerWindowRemaining
+                    answerRemaining: viewModel.answerWindowRemaining,
+                    commandsAccessory: viewModel.commandsAccessory(for: phase),
+                    onTurnOnCommands: turnOnCommands,
+                    onOpenSettings: openSystemSettings
                 )
                 .padding(.horizontal, Self.gutter)
                 .transition(.opacity)
@@ -256,6 +260,16 @@ struct QuestionVoiceFooter: View {
         textAnswer = ""
         showTextInput = false
         Task { await viewModel.resubmitAnswer(answer) }
+    }
+
+    // MARK: - Commands (#237)
+
+    private func turnOnCommands() {
+        Task { await viewModel.turnOnVoiceCommandsFromListenBar() }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
     }
 
     // MARK: - Derived

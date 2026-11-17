@@ -29,7 +29,7 @@ Stav v kóde:
 - **237.2 Povolenie na požiadanie (logika).** Zrušiť žiadosť pri štarte. Služba povelov dostane explicitné „zapni povely“ (žiadosť → sťahovanie modelu → pripravené). Ak už povolené z minulosti, model sa pripraví ticho ako dnes. Stav „vypnuté, dá sa zapnúť“ odlíšený od „zamietnuté“ (vtedy tlačidlo vedie do Nastavení iOS).
 - **237.3 Pill + výzva (UI).** Podľa vybraného variantu. Počítadlo klikov na hlasom ovládateľné tlačidlá, výzva max raz (a nie počas otázky, ktorá sa práve číta).
 - **237.4 Onboarding (UI).** Podľa vybraného variantu; súhlas s AI ostáva na prvej strane (Apple 5.1.2(i)).
-- **237.5 Kratší text systémového okna** (`InfoPlist.xcstrings`, en/sk/cs/uk), keďže ho hráč uvidí až po vlastnom kliknutí.
+- **237.5 Kratší text systémového okna** (`InfoPlist.xcstrings`, en/sk/cs; uk až s #231 ukrajinčina), keďže ho hráč uvidí až po vlastnom kliknutí.
 
 ## Hotovo, keď
 

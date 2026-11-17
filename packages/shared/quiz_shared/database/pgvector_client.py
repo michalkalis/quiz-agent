@@ -259,6 +259,15 @@ class PgvectorQuestionStore:
         self._session_factory = session_factory
         self._embedder = embedder
 
+    def with_embedder(self, embedder: Embedder) -> PgvectorQuestionStore:
+        """The same database (one engine, one pool) with another embedder.
+
+        #235: the voice-quiz lookup bounds its query embedding tightly, while
+        the admin writes sharing this store keep the long default."""
+        return PgvectorQuestionStore(
+            session_factory=self._session_factory, embedder=embedder
+        )
+
     # ── Writes ─────────────────────────────────────────────────────────
 
     async def add(self, question: Question) -> bool:

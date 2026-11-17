@@ -15,7 +15,7 @@ from typing import Optional
 from ..config import get_settings
 from .cache import TTSCache
 from .remote_cache import R2AudioStore
-from .providers import TTSProvider, build_provider
+from .providers import PRIMARY_TTS_TIMEOUT_S, TTSProvider, build_provider
 from .voices import STATIC_FEEDBACK
 
 logger = logging.getLogger(__name__)
@@ -295,9 +295,22 @@ class TTSService:
                 if self.fallback is None:
                     raise TTSBudgetExceeded()
                 raise RuntimeError("daily TTS budget exhausted")
-            return await self._synthesize_with(
+            primary = self._synthesize_with(
                 self.provider, text, primary_voice, use_cache, billing
             )
+            if self.fallback is None:
+                return await primary
+            # #235: a slow primary hands over to the backup instead of
+            # outlasting the app's wait. The cut-off attempt is cancelled, so
+            # it neither bills nor fills the cache; letting it finish in the
+            # background would keep a synthesis slot busy while the backup
+            # needs one, exactly when the primary is struggling.
+            try:
+                return await asyncio.wait_for(primary, PRIMARY_TTS_TIMEOUT_S)
+            except TimeoutError:
+                raise RuntimeError(
+                    f"no audio within {PRIMARY_TTS_TIMEOUT_S:g} s"
+                ) from None
         except TTSBudgetExceeded:
             raise
         except Exception as primary_error:

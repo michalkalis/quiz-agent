@@ -76,7 +76,7 @@ Return ONLY a JSON array of {count} sub-theme strings, e.g. ["sub-theme one", "s
 # famous matches"); still capped so a sentence never becomes a topic.
 _MAX_SUBTHEME_LEN = 80
 
-_LANGUAGE_NAMES = {"en": "English", "sk": "Slovak", "cs": "Czech"}
+_LANGUAGE_NAMES = {"en": "English", "sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
 
 
 class TopicPlanner:

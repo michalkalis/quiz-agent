@@ -61,6 +61,11 @@ from app.corpus.fresh_roles import check_roles
 logger = logging.getLogger("fresh_topup")
 
 LANGUAGES = ("en", "sk", "cs")
+# #231: Ukrainian is wired but NOT part of the weekly run. It is accepted only
+# when named in --languages; the default and fresh-topup.yml (whose language
+# check is en|sk|cs) never name it, so the weekly job cannot spend on uk until
+# the founder adds it there.
+OPT_IN_LANGUAGES = ("uk",)
 DEFAULT_MAX_USD = 15.0
 DEFAULT_LANG_WORST_USD = 5.0  # seed gather $1 + seed pick $1 + generation $3
 DEFAULT_GEN_WORST_USD = 3.0
@@ -288,10 +293,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     args = parser.parse_args(argv)
     args.languages = [x.strip() for x in args.languages.split(",") if x.strip()]
-    unknown = sorted(set(args.languages) - set(LANGUAGES))
+    unknown = sorted(set(args.languages) - set(LANGUAGES) - set(OPT_IN_LANGUAGES))
     if unknown or not args.languages:
         parser.error(
-            f"--languages must be a subset of {','.join(LANGUAGES)}; got {unknown}"
+            f"--languages must be a subset of {','.join(LANGUAGES + OPT_IN_LANGUAGES)}; "
+            f"got {unknown}"
         )
     return args
 

@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from app import uk_policy
 from app.sourcing.openai_web_search_source import _cited_url
 from app.sourcing.web_search_source import _extract_domain, classify_credibility
 from app.translation_verification.normalize import fold
@@ -102,6 +103,22 @@ def cite_filter(
             )
         )
     return kept, dropped
+
+
+def topic_policy_cut(
+    kept: list[Seed], lang: str, dropped: dict[str, int]
+) -> list[Seed]:
+    """Ukrainian seeds only: drop the war since 2014, current politics and
+    Russia (founder 2026-11-08). Blunt on purpose, see ``app.uk_policy``."""
+    if lang != uk_policy.UK:
+        return kept
+    out: list[Seed] = []
+    for seed in kept:
+        if uk_policy.topic_policy_reason([seed.subject, seed.fact, seed.angle]):
+            _bump(dropped, "topic_policy")
+            continue
+        out.append(seed)
+    return out
 
 
 def seed_names(seed: Seed) -> list[str]:

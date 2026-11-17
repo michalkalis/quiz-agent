@@ -47,7 +47,7 @@ from typing import Any
 
 from quiz_shared.llm import factory as llm_factory
 
-from app import llm_usage
+from app import llm_usage, uk_policy
 from app.corpus import seed_gather
 from app.corpus.fresh_brief import AUDIENCE, freshness_window
 from app.corpus.seed_filters import (
@@ -56,6 +56,7 @@ from app.corpus.seed_filters import (
     domestic_share,
     fame_cut,
     subject_cap,
+    topic_policy_cut,
 )
 from app.corpus.seed_gather import WIKI_LANGUAGE, ModelCall
 from app.corpus.seed_page_check import FetchText, check_pages
@@ -90,6 +91,12 @@ _SCENE = {
         "celebrities, reality and TV shows, domestic hits and moments people in "
         "Czechia talked about. The rest are world mega-hits well known in Czechia "
         '(scope "world"). Skip the Slovak scene unless it is genuinely shared.'
+    ),
+    "uk": (
+        'About 7 in 10 seeds come from the Ukrainian scene (scope "domestic"): '
+        "Ukrainian celebrities, TV shows, music, domestic hits and moments people "
+        "in Ukraine talked about. The rest are world mega-hits well known in "
+        'Ukraine (scope "world"). Skip the Russian scene entirely.'
     ),
 }
 
@@ -140,7 +147,7 @@ class SeedResult:
 def build_pick_prompt(
     lang: str, today: date, ideas: list[str], digest: list[str]
 ) -> str:
-    return _PROMPT.format(
+    prompt = _PROMPT.format(
         today=today.isoformat(),
         count=TARGET_CANDIDATES,
         audience=AUDIENCE[lang],
@@ -150,6 +157,7 @@ def build_pick_prompt(
         ideas="\n".join(ideas) or "- (none available today)",
         digest="\n".join(digest),
     )
+    return prompt + "\n\n" + uk_policy.UK_TOPIC_POLICY if lang == "uk" else prompt
 
 
 def gather_ideas(lang: str, today: date, client=None) -> list[str]:
@@ -298,6 +306,7 @@ async def research_seeds(
     seeds, result.page_check = await check_pages(seeds, fetch_page)
     if result.page_check["page_mismatch"]:
         dropped["page_mismatch"] = result.page_check["page_mismatch"]
+    seeds = topic_policy_cut(seeds, lang, dropped)
     seeds = subject_cap(seeds, dropped)
     if fame_of is None:
         fame_of = _wiki_fame_lookup(lang, today)

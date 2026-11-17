@@ -484,10 +484,6 @@ class QuizFlowService:
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
 
-        # Record usage (#95, #205: skipped for pack and daily sessions — see check above)
-        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
-            await self.usage_tracker.record_question(session.user_id)
-
         # Resolve the next question's text ONCE (stem + options + explanation +
         # answer) and persist the record: /question, /question/audio and the next
         # evaluation all read it instead of resolving again. Pre-translated
@@ -503,7 +499,21 @@ class QuizFlowService:
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record
         open_round(session, translated_q_dict)  # #212.2: no-op outside a room
-        await self.session_manager.update_session(session)
+        stored = await self.session_manager.update_session(session)
+
+        # Record usage (#95, #205: skipped for pack and daily sessions — see check
+        # above) only once the advance is stored (#235.6): a request killed in
+        # between (deploy, cancellation) must not leave a charge behind for an
+        # answer the session never recorded — the app's retry grades it again
+        # and would be charged a second time. Nor is a question charged whose
+        # session expired meanwhile (``False``): it can never be played.
+        if (
+            stored is not False
+            and self.usage_tracker
+            and session.user_id
+            and not session.is_quota_exempt
+        ):
+            await self.usage_tracker.record_question(session.user_id)
 
         result.next_question_dict = translated_q_dict
 

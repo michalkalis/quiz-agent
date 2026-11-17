@@ -119,6 +119,12 @@ jobs:
           cd apps/quiz-agent
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
 
+      # #235 task 235.6: packages/shared is imported by both apps (DB engine,
+      # user-text guards, query helpers) but its own tests never ran in CI.
+      - name: Run shared package tests
+        working-directory: packages/shared
+        run: pytest tests/ -v
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         if: github.event_name == 'pull_request'

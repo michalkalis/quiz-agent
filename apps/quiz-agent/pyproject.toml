@@ -32,6 +32,14 @@ dependencies = [
     "boto3>=1.34.0",
 ]
 
+[project.optional-dependencies]
+# Test-only (#235.6): CI installs every extra; the runtime image (built from
+# uv.lock without extras) leaves them out. schemathesis fuzzes the player API
+# from its OpenAPI schema (tests/test_api_fuzz.py) and brings hypothesis.
+test = [
+    "schemathesis>=4.33.4",
+]
+
 [tool.uv.sources]
 quiz-shared = { workspace = true }
 

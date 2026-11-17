@@ -1,7 +1,7 @@
 # #237 — Povolenie povelov až na požiadanie + nový onboarding
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-17 varianty vybrané ([plátno](https://claude.ai/artifact/LiGtJvPVQHWq31xfYEqL2e)); 237.2–237.5 v práci
+**Status:** 2026-11-17 PAUZA; varianty vybrané ([plátno](https://claude.ai/artifact/LiGtJvPVQHWq31xfYEqL2e)); 237.2–237.5 naprogramované v WIP commite na vetve `feat/237-commands-on-request` (worktree `.claude/worktrees/issue-237`), appka aj testy sa skompilujú, 82/82 cielených testov prešlo
 **Founder:** 2026-11-17 „appka pri prvom spustení hneď žiada speech recognition oprávnenia, to je veľmi zlé UX a nie je jasné, k čomu slúži. Aj celý onboarding je len taký z povinnosti… netreba forcovať ten systémový alert za každú cenu.“
 
 ## Prečo
@@ -45,3 +45,16 @@ Stav v kóde:
 - Každá z ciest a/b vedie k funkčným povelom; zamietnutie ukáže cestu do Nastavení, nikdy slepý stav.
 - Testy: každá cesta, zamietnutie, pomalé sťahovanie modelu (hráč vidí „pripravujem“, kvíz ide ďalej); skutočné systémové volanie aspoň raz na simulátore alebo riadok v `docs/testing/system-calls-coverage.md`.
 - Analytika: udalosť pre zapnutie povelov s cestou (onboarding / lišta) a výsledkom.
+
+## Pokračovanie po pauze (2026-11-17)
+
+Hotové vo WIP: žiadna výzva pri štarte ani pri zmene jazyka; lišta „Zapni“ / „Pripravujem príkazy…“ / „Nastavenia“; onboarding Mikrofón → Hlasové príkazy (súhlas s AI na stránke Mikrofón); kratší text okna en/sk/cs; udalosť `voice_commands_turned_on` (appka + povolené na serveri); bez povolenia beží poslucháč len pre odpovede (koniec reči funguje).
+
+Ostáva:
+1. Spustiť zvyšné testy: snapshoty (komponenty, obrazovky, hero), celé AnalyticsEventsTests a SilenceDetectionServiceTests; 4 preskočené serverové testy v `test_analytics_events.py` overiť.
+2. `xcstringstool sync`, doplniť sk/cs nových textov (poznámky na lište, diagnostika v Nastaveniach).
+3. Nahrať snapshoty: 5 nových stavov lišty, onboarding mikrofón/príkazy/zamietnuté, zmazať staré welcome/features; PNG pozrieť pred commitom.
+4. Lint: a11y id, jazyk rozhrania, design tokeny.
+5. Zlúčiť WIP do riadneho commitu, PR, review, merge.
+
+Na vedomie foundrovi: ťuknutie na „Zapni“ počas kvízu kvíz pozastaví, kým je otvorené okno iOS; hodnoty `onboarding_finished` sú teraz mic_later, mic_denied, commands_on, commands_later.

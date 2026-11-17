@@ -1,0 +1,564 @@
+{
+  "summary": {
+    "language": "sk",
+    "finished_at": "2026-10-07T13:56:25.527822+00:00",
+    "chosen": 76,
+    "rewritten": 62,
+    "unchanged": 14,
+    "failed": 0,
+    "gate": {
+      "approved": 51,
+      "rejected": 11
+    },
+    "rewrite_seconds": 93,
+    "total_seconds": 409
+  },
+  "rows": [
+    {
+      "question_id": "ab505aa0-9998-5e27-b911-3d2b35524d3b",
+      "status_before": "approved",
+      "before": "Na Oscaroch 2026 získal Michael B. Jordan cenu za najlepší mužský herecký výkon v hlavnej úlohe za vampírsky hit Hriešnici (Sinners) — a Oscara za scenár k tomuto filmu si odniesol ktorý režisér, jeho dlhoročný spolupracovník z filmov Creed a Black Panther?",
+      "after": "Na Oscaroch 2026 získal Michael B. Jordan cenu za najlepší mužský herecký výkon v hlavnej úlohe za vampírsky hit Hriešnici (Sinners). Oscara za scenár k tomuto filmu si odniesol jeho dlhoročný spolupracovník z filmov Creed a Black Panther. Ktorý režisér to bol?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "36473869-173e-4d62-be01-bd427cde8ecc",
+      "status_before": "approved",
+      "before": "Jedna talianska banka je známa tým, že prijíma ako záruku na úvery kolesá ktorého syra, pričom ich necháva zrieť vo vlastných trezoroch, kým dlh nie je splatený?",
+      "after": "Jedna talianska banka je známa tým, že prijíma ako záruku na úvery kolesá syra, ktoré necháva zrieť vo vlastných trezoroch, kým dlh nie je splatený. O aký syr ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d3e90bd4-1eb3-4283-8e6d-45746e83dedb",
+      "status_before": "approved",
+      "before": "Astronauti na Medzinárodnej vesmírnej stanici pôsobia, akoby boli v stave beztiaže, hoci gravitácia je tam len o niečo slabšia než na Zemi. Prečo teda lietajú vo vzduchu?",
+      "after": "Astronauti na Medzinárodnej vesmírnej stanici pôsobia, akoby boli v stave beztiaže, hoci gravitácia je tam len o niečo slabšia než na Zemi. Prečo teda lietajú vo vzduchu?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ef9e871b-a4eb-48ac-99ad-c63d2fad5b7a",
+      "status_before": "approved",
+      "before": "Najväčší hit Whitney Houston, 'I Will Always Love You', pôvodne napísala a nahrala Dolly Parton. Verzia Houston sa stala ťahákom soundtracku ku ktorému filmu z roku 1992, v ktorom hrala hlavnú úlohu?",
+      "after": "Najväčší hit Whitney Houston, 'I Will Always Love You', pôvodne napísala a nahrala Dolly Parton. Verzia Houston sa stala ťahákom soundtracku k filmu z roku 1992, v ktorom hrala hlavnú úlohu. Ako sa tento film volá?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "8730a6ed-b8a2-5813-814b-bab0e2c36c17",
+      "status_before": "approved",
+      "before": "Jedno miesto na Zemi zažíva búrky s bleskami až 160 nocí do roka — tak spoľahlivo, že námorníci kedysi používali záblesky ako prírodný maják. Nad ktorým veľkým venezuelským jazerom zúri táto slávna „večná búrka“?",
+      "after": "Jedno miesto na Zemi zažíva búrky s bleskami až 160 nocí do roka — tak spoľahlivo, že námorníci kedysi používali záblesky ako prírodný maják. Nad ktorým veľkým venezuelským jazerom zúri táto slávna „večná búrka“?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d51d048f-791d-42d0-8c21-5430ce568288",
+      "status_before": "approved",
+      "before": "Bezstarostná pieseň 'Hakuna Matata' z Levieho kráľa má názov podľa skutočného výrazu, ktorý znamená 'žiadne starosti'. V akom africkom jazyku?",
+      "after": "Bezstarostná pieseň 'Hakuna Matata' z Levieho kráľa má názov podľa skutočného výrazu, ktorý znamená 'žiadne starosti'. V akom africkom jazyku má tento výraz takýto význam?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+      "status_before": "approved",
+      "before": "Pravda, alebo nepravda: slovo „emoji“ je odvodené od slova „emotion“ (emócia).",
+      "after": "Slovo „emoji“ je odvodené od slova „emotion“ (emócia). Je toto tvrdenie pravda, alebo nepravda?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b08c37fd-cc18-49ff-b6ae-83021b021c15",
+      "status_before": "approved",
+      "before": "Mesiac sa pomaly vzďaľuje od Zeme o niekoľko centimetrov ročne. V ďalekej budúcnosti to znemožní ktorý dramatický nebeský úkaz?",
+      "after": "Mesiac sa pomaly vzďaľuje od Zeme o niekoľko centimetrov ročne. Ktorý dramatický nebeský úkaz to v ďalekej budúcnosti znemožní?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e485cc9f-2539-4639-9517-9742aa68c61f",
+      "status_before": "approved",
+      "before": "Vedec zo spoločnosti 3M, ktorému počas nácviku kostolného spevokolu neustále vypadávala záložka zo spevníka, neskôr vytvoril ktorý kancelársky produkt?",
+      "after": "Vedcovi zo spoločnosti 3M počas nácviku kostolného spevokolu neustále vypadávala záložka zo spevníka. Ktorý kancelársky produkt neskôr vytvoril?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+      "status_before": "approved",
+      "before": "V roku 1971 prepašoval veliteľ misie Apollo 14 Alan Shepard na Mesiac upravenú hlavu palice a stal sa prvým človekom, ktorý tam hral aký šport?",
+      "after": "V roku 1971 prepašoval veliteľ misie Apollo 14 Alan Shepard na Mesiac upravenú hlavu palice a stal sa prvým človekom, ktorý tam hral istý šport. Aký šport to bol?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b861af0a-056d-50a6-852f-4f32eb24823b",
+      "status_before": "approved",
+      "before": "Vesmírny trhák Project Hail Mary z roku 2026 s Ryanom Goslingom režírovalo to isté duo, ktoré stojí za ktorým obľúbeným animovaným komediálnym hitom?",
+      "after": "Vesmírny trhák Project Hail Mary z roku 2026 s Ryanom Goslingom režírovalo duo, ktoré stojí aj za jedným obľúbeným animovaným komediálnym hitom. Ktorý animovaný komediálny hit to je?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "c22b5dc1-439b-5c6b-beaa-dc20e11a7f0b",
+      "status_before": "approved",
+      "before": "V legendárnej scéne v sprche z thrilleru Alfreda Hitchcocka Psycho z roku 1960 vyzerala krv stekajúca do odtoku na čiernobielom filme desivo skutočne — v skutočnosti však išlo o ktorý sladký kuchynský produkt?",
+      "after": "V legendárnej scéne v sprche z thrilleru Alfreda Hitchcocka Psycho z roku 1960 vyzerala krv stekajúca do odtoku na čiernobielom filme desivo skutočne, v skutočnosti to však krv nebola. Aký sladký kuchynský produkt sa na ňu použil?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b73f315c-895e-490c-a32b-3bedb2145efc",
+      "status_before": "approved",
+      "before": "Aká široká je v najužšom mieste Gibraltársky prieliv, ktorý oddeľuje Španielsko od Maroka?",
+      "after": "Aký široký je v najužšom mieste Gibraltársky prieliv, ktorý oddeľuje Španielsko od Maroka?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "bd8beb8d-0c86-42b8-b13b-2561fdb7062a",
+      "status_before": "approved",
+      "before": "Korenina muškátový kvet je sušený čipkovitý červený obal, ktorý obaľuje semeno ktorej inej koreniny?",
+      "after": "Korenina muškátový kvet je sušený čipkovitý červený obal, ktorý obaľuje semeno inej koreniny. O ktorú koreninu ide?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "53254cae-6201-450a-afcf-ef6bddea7fb5",
+      "status_before": "approved",
+      "before": "Astronauti vracajúci sa z výstupov do otvoreného vesmíru hlásia prekvapivý zápach, ktorý im uľpieva na skafandroch a často ho prirovnávajú k akému opekanému jedlu?",
+      "after": "Astronauti vracajúci sa z výstupov do otvoreného vesmíru hlásia prekvapivý zápach, ktorý im uľpieva na skafandroch. K akému opekanému jedlu ho často prirovnávajú?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d0c1a81f-ee07-4e5c-a208-680b34e6380f",
+      "status_before": "approved",
+      "before": "Dávno pred mobilnými telefónmi bola fínska firma Nokia založená v roku 1865 ako mlyn vyrábajúci aký materiál?",
+      "after": "Dávno pred mobilnými telefónmi bola fínska firma Nokia založená v roku 1865 ako mlyn. Aký materiál tento mlyn vyrábal?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f8c9e5c6-6cde-4ae5-90e6-ce78a0c40c41",
+      "status_before": "approved",
+      "before": "Väčšina ryšavých mačiek sú kocúry, pretože príslušný gén sa nachádza na chromozóme X. Aký je zhruba pomer ryšavých samcov k ryšavým samiciam?",
+      "after": "Väčšina ryšavých mačiek sú kocúry, pretože príslušný gén sa nachádza na chromozóme X. Aký je zhruba pomer ryšavých samcov k ryšavým samiciam?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "aaf1fee9-9c79-5cd0-bafc-5199f930f53b",
+      "status_before": "approved",
+      "before": "Do roku 2024 nazbieral filmový vesmír Marvel rekordných štrnásť nominácií na Oscara v jedinej kategórii bez toho, aby ju kedykoľvek vyhral — o ktorú kategóriu ide?",
+      "after": "Do roku 2024 nazbieral filmový vesmír Marvel rekordných štrnásť nominácií na Oscara v jedinej kategórii, no ani raz ju nevyhral. O ktorú oscarovú kategóriu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4605a059-7194-5286-a978-fd47fb09f7db",
+      "status_before": "approved",
+      "before": "Osem rokov pred Lindberghovým slávnym sólovým preletom dokončili letci John Alcock a Arthur Brown v roku 1919 prvý bezmotorový... prvý nepretržitý prelet Atlantiku — vzlietli z Newfoundlandu a skončili nosom zaborení v mäkkom rašelinisku v ktorej krajine?",
+      "after": "Osem rokov pred Lindberghovým slávnym sólovým preletom dokončili letci John Alcock a Arthur Brown v roku 1919 prvý nepretržitý prelet Atlantiku. Vzlietli z Newfoundlandu a skončili nosom zaborení v mäkkom rašelinisku. V ktorej krajine sa ich let skončil?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "e87e8bf4-da8d-4cde-9669-8165b15a2d69",
+      "status_before": "approved",
+      "before": "Hurikán, ktorý vznikne v Atlantiku, by sa nazýval ako, keby presne tá istá búrka vznikla v severozápadnom Tichom oceáne, pri Japonsku alebo Filipínach?",
+      "after": "Hurikán vzniká v Atlantiku. Ako by sa nazývala presne tá istá búrka, keby vznikla v severozápadnom Tichom oceáne, pri Japonsku alebo Filipínach?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "bff6c28b-e35b-44a9-9a84-53721e99e877",
+      "status_before": "approved",
+      "before": "V roku 1886 si bohatá spoločenská dáma z Illinois, ktorú omrzelo, že jej služobníctvo odštiepuje kúsky z jej vzácneho porcelánu, dala patentovať prvú prakticky použiteľnú verziu ktorého kuchynského spotrebiča?",
+      "after": "V roku 1886 si bohatá spoločenská dáma z Illinois, ktorú omrzelo, že jej služobníctvo odštiepuje kúsky z jej vzácneho porcelánu, dala patentovať prvú prakticky použiteľnú verziu istého kuchynského spotrebiča. O aký kuchynský spotrebič išlo?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "5fb8f5a4-c4ac-458b-b966-bb5fde7da28d",
+      "status_before": "approved",
+      "before": "V roku 1971 sa astronaut Alan Shepard stal prvým človekom, ktorý si na Mesiaci zahral aký šport?",
+      "after": "V roku 1971 sa astronaut Alan Shepard stal prvým človekom, ktorý na Mesiaci hral istý šport. Aký šport si tam zahral?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+      "status_before": "approved",
+      "before": "Aký nápoj namiesto šampanského tradične vypije víťaz Indianapolis 500 vo víťaznom kole?",
+      "after": "Aký nápoj namiesto šampanského tradične vypije víťaz Indianapolis 500 vo víťaznom kole?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "c5ad6b00-e4c1-485e-9174-07d5e8832e11",
+      "status_before": "approved",
+      "before": "Posuvné zapínanie sa v roku 1923 stalo komerčným hitom na ktorom type obuvi, viac než desať rokov predtým, ako sa všeobecne ujalo na nohaviciach?",
+      "after": "Posuvné zapínanie sa v roku 1923 stalo komerčným hitom na istom type obuvi, a to viac než desať rokov predtým, ako sa všeobecne ujalo na nohaviciach. O aký typ obuvi išlo?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ef1d8e7a-7c33-41b2-905b-90e371552013",
+      "status_before": "approved",
+      "before": "Ak netopier „vidí“ v úplnej tme pomocou zvuku, čo používa jamkovec (pit viper) na to, aby v noci „videl“ svoju korisť?",
+      "after": "Netopier „vidí“ v úplnej tme pomocou zvuku. Čo používa jamkovec (pit viper) na to, aby v noci „videl“ svoju korisť?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "97778415-6767-4ca6-bde9-c743fc410bbb",
+      "status_before": "approved",
+      "before": "Ktorý umelý jazyk, vytvorený v roku 1887 poľským očným lekárom, ktorý dúfal, že prinesie mier medzi znesvárenými národmi, je najrozšírenejším umelým jazykom na svete?",
+      "after": "Poľský očný lekár vytvoril v roku 1887 umelý jazyk a dúfal, že prinesie mier medzi znesvárenými národmi. Ako sa volá tento jazyk, ktorý je najrozšírenejším umelým jazykom na svete?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "cb0b2955-edbe-4705-8b74-00207b246159",
+      "status_before": "approved",
+      "before": "Mansa Musa, často označovaný za najbohatšieho človeka, aký kedy žil, vládol v štrnástom storočí ktorej západoafrickej ríši?",
+      "after": "Mansa Musa je často označovaný za najbohatšieho človeka, aký kedy žil. Ktorej západoafrickej ríši vládol v štrnástom storočí?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "a885e8ff-b08a-4d97-9ad3-4572bcd454a7",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: Krištof Kolumbus vkročil na pevninu dnešných Spojených štátov.",
+      "after": "Krištof Kolumbus vkročil na pevninu dnešných Spojených štátov. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+      "status_before": "approved",
+      "before": "Ktorému svetoznámemu fyzikovi ponúkli v roku 1952 post prezidenta Izraela, ktorý však zdvorilo odmietol?",
+      "after": "Ktorému svetoznámemu fyzikovi ponúkli v roku 1952 post prezidenta Izraela, ktorý však zdvorilo odmietol?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b42dbae2-90f5-42c3-b53a-c09d697b3ffb",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: od svojho objavenia v roku 1930 Pluto dokončilo aspoň jeden celý obeh okolo Slnka.",
+      "after": "Od svojho objavenia v roku 1930 Pluto dokončilo aspoň jeden celý obeh okolo Slnka. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "a33e9975-01e6-490f-8a88-5f89dbc7377c",
+      "status_before": "approved",
+      "before": "Bavorský zákon o čistote piva, ktorý v pive povoľoval iba vodu, jačmeň a chmeľ, bol vydaný v ktorom roku?",
+      "after": "V ktorom roku bol vydaný bavorský zákon o čistote piva, ktorý v pive povoľoval iba vodu, jačmeň a chmeľ?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "fb7d1cf3-ed18-4dde-9ff5-9c05574fe8b7",
+      "status_before": "approved",
+      "before": "Ktoré číslo je na štandardnej šesťstennej hracej kocke vždy na stene priamo oproti šestke?",
+      "after": "Ktoré číslo je na štandardnej šesťstennej hracej kocke vždy na stene priamo oproti šestke?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "7481a4a3-1e73-488f-a49e-2c41a5f83a82",
+      "status_before": "approved",
+      "before": "Slovo pre konský povoz známy ako koč, ktoré neskôr dalo názov diaľkovým autobusom, pochádza z mena dediny v ktorej krajine?",
+      "after": "Slovo pre konský povoz známy ako koč, ktoré neskôr dalo názov diaľkovým autobusom, pochádza z mena istej dediny. V ktorej krajine sa táto dedina nachádza?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ba6f8853-64f4-436f-87ba-f008839b9fa3",
+      "status_before": "approved",
+      "before": "Rosettská doska, do ktorej je ten istý dekrét vytesaný v troch rôznych písmach, umožnila vedcom konečne prečítať aký dlho nemý systém písma?",
+      "after": "Do Rosettskej dosky je ten istý dekrét vytesaný v troch rôznych písmach. Ktorý dlho nemý systém písma vďaka nej vedci konečne dokázali prečítať?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "80f48da1-4340-4563-a9ea-389c434ba634",
+      "status_before": "approved",
+      "before": "V roku 1816 zažili Európa a Severná Amerika 'rok bez leta', keď v júni snežilo a úroda sa nevydarila. Erupcia ktorej indonézskej sopky o rok skôr za to mohla?",
+      "after": "V roku 1816 zažili Európa a Severná Amerika 'rok bez leta', keď v júni snežilo a úroda sa nevydarila. Ktorá indonézska sopka to spôsobila svojou erupciou o rok skôr?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "008a8939-4ffe-4f1a-b0da-c60ae5e54325",
+      "status_before": "approved",
+      "before": "Koľko bodov má v snookri maximálny brejk, ktorý sa dosiahne potopením každej červenej s čiernou a následným vyčistením všetkých farieb?",
+      "after": "Koľko bodov má v snookri maximálny brejk, ktorý sa dosiahne potopením každej červenej s čiernou a následným vyčistením všetkých farieb?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+      "status_before": "approved",
+      "before": "Prvé basketbalové koše Jamesa Naismitha, pribité na balkón telocvične v roku 1891, boli nádoby pôvodne určené na aké ovocie?",
+      "after": "James Naismith v roku 1891 pribil svoje prvé basketbalové koše na balkón telocvične. Na aké ovocie boli tieto nádoby pôvodne určené?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "748948f7-69d1-40cf-aed7-ee34a1f10ccf",
+      "status_before": "approved",
+      "before": "Ak počítame len ľudí, ktorí sa ju naučili ako materinský jazyk, hovorí na svete viac ľudí po anglicky alebo po španielsky?",
+      "after": "Počítame len ľudí, ktorí sa daný jazyk naučili ako materinský. Ktorým jazykom hovorí na svete viac ľudí, angličtinou, alebo španielčinou?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "cafc353a-6f79-4148-a7d0-2531e976af31",
+      "status_before": "approved",
+      "before": "Pomenujte každodenný predmet, ktorý v roku 1849 vytvoril newyorský mechanik tým, že niekoľko hodín krútil jediný kus drôtu, a potom predal patent za 400 dolárov, aby splatil malý dlh. Jeho dômyselná pružina ukrýva ostrý hrot.",
+      "after": "V roku 1849 newyorský mechanik niekoľko hodín krútil jediný kus drôtu a vytvoril tak každodenný predmet, potom predal patent za 400 dolárov, aby splatil malý dlh. Dômyselná pružina tohto predmetu ukrýva ostrý hrot. Aký každodenný predmet tento mechanik vytvoril?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9eeb7aff-5b5c-487f-b59f-0023a3f475d7",
+      "status_before": "approved",
+      "before": "Pravda alebo nepravda: v najbližšom bode sú Rusko a Spojené štáty od seba vzdialené menej ako 5 kilometrov.",
+      "after": "V najbližšom bode sú Rusko a Spojené štáty od seba vzdialené menej ako 5 kilometrov. Je toto tvrdenie pravdivé, alebo nepravdivé?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f4df4398-a302-4fd4-9f68-6356ce3cbcff",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: loď, ktorá prepláva Panamským prieplavom z atlantickej strany na tichomorskú, končí svoju plavbu východnejšie, než kde začala.",
+      "after": "Pravda alebo lož: loď, ktorá prepláva Panamským prieplavom z atlantickej strany na tichomorskú, končí svoju plavbu východnejšie, než kde začala.",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0cebd37e-85a1-4ab6-9899-4137f95f6edb",
+      "status_before": "approved",
+      "before": "Istý inžinier si počas práce vedľa akej vojenskej technológie všimol, že sa mu vo vrecku roztápa čokoládová tyčinka, čo ho priviedlo k vynálezu mikrovlnnej rúry?",
+      "after": "Istý inžinier si počas práce vedľa vojenskej technológie všimol, že sa mu vo vrecku roztápa čokoládová tyčinka, čo ho priviedlo k vynálezu mikrovlnnej rúry. Vedľa akej vojenskej technológie pracoval?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f1a6ebdf-d4c2-4ef6-971e-be965d5532fa",
+      "status_before": "approved",
+      "before": "Ananás na pizzi rozdeľuje svet. Takzvanú havajskú pizzu nevymysleli ani na Havaji, ani v Taliansku, ale grécky imigrant, ktorý viedol restauráciu v ktorej krajine?",
+      "after": "Ananás na pizzi rozdeľuje svet. Takzvanú havajskú pizzu nevymysleli ani na Havaji, ani v Taliansku, ale grécky imigrant, ktorý viedol reštauráciu. V ktorej krajine mal tento grécky imigrant svoju reštauráciu?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "09cd6605-30cf-4ca5-9cb5-428717fb4cff",
+      "status_before": "approved",
+      "before": "Ktorá africká krajina vydala počas hyperinflačnej krízy v roku 2009 bankovku s nominálnou hodnotou sto biliónov dolárov?",
+      "after": "Ktorá africká krajina vydala počas hyperinflačnej krízy v roku 2009 bankovku s nominálnou hodnotou sto biliónov dolárov?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "81936e04-183f-4a4a-810c-e2227842ac54",
+      "status_before": "approved",
+      "before": "V roku 1901 potápači pri jednom gréckom ostrove vylovili skorodované bronzové zariadenie plné do seba zapadajúcich ozubených kolies, o ktorom sa dnes predpokladá, že predpovedalo zatmenia. Často sa označuje za prvý čo na svete?",
+      "after": "V roku 1901 potápači pri jednom gréckom ostrove vylovili skorodované bronzové zariadenie plné do seba zapadajúcich ozubených kolies, o ktorom sa dnes predpokladá, že predpovedalo zatmenia. Za aký prvý prístroj na svete sa toto zariadenie často označuje?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "acab5d4e-49cd-408e-a04d-d6079d583abb",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: olympijská zlatá medaila je väčšinou zo striebra.",
+      "after": "Olympijská zlatá medaila je väčšinou zo striebra. Je toto tvrdenie pravda alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9782e8e8-9112-4e1c-aecd-d16475c5339f",
+      "status_before": "approved",
+      "before": "Čo mali na sebe športovci pri súťažení na pôvodných starogréckych olympijských hrách?",
+      "after": "Čo mali na sebe športovci pri súťažení na pôvodných starogréckych olympijských hrách?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "a927b2a4-45ce-4ea4-a62b-473b5285ad56",
+      "status_before": "approved",
+      "before": "Mona Lisa sa stala svetovou celebritou až po tom, čo ju v roku 1911 ukradli z Louvru. O dva roky neskôr sa objavila, keď sa ju zlodej pokúsil predať v ktorej krajine?",
+      "after": "Mona Lisa sa stala svetovou celebritou až po tom, čo ju v roku 1911 ukradli z Louvru. O dva roky neskôr sa objavila, keď sa ju zlodej pokúsil predať. V ktorej krajine sa ju zlodej pokúsil predať?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "f625d35f-f218-4ea8-92f9-e67d7f0c81b4",
+      "status_before": "approved",
+      "before": "Ovocie kivi je pomenované podľa národného vtáka Nového Zélandu, ale z ktorej krajiny pochádza samotná rastlina?",
+      "after": "Ovocie kivi je pomenované podľa národného vtáka Nového Zélandu. Z ktorej krajiny však pochádza samotná rastlina?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "76c2e512-af68-418f-8315-32a47b112991",
+      "status_before": "approved",
+      "before": "V roku 1942 chemik, ktorý sa pokúšal vyrobiť priehľadné plastové zameriavače zbraní, zavrhol jednu látku, pretože sa lepila na všetko, čoho sa dotkla. O mnoho rokov neskôr sa začala predávať ako čo?",
+      "after": "V roku 1942 chemik, ktorý sa pokúšal vyrobiť priehľadné plastové zameriavače zbraní, zavrhol jednu látku, pretože sa lepila na všetko, čoho sa dotkla. Ako sa táto látka o mnoho rokov neskôr začala predávať?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "41381afb-6d58-4f7e-a479-1a808e6cddf5",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: Čili papričky sa v Indii a Thajsku pestujú a jedia už tisíce rokov.",
+      "after": "Pravda alebo lož: Čili papričky sa v Indii a Thajsku pestujú a jedia už tisíce rokov.",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2ef7ff3a-9bb7-492b-93a3-761ad8a2da61",
+      "status_before": "approved",
+      "before": "Gettysburský prejav Abrahama Lincolna zaznel hneď po dvojhodinovej reči Edwarda Everetta. Ako dlho približne trvalo Lincolnovi predniesť ten jeho?",
+      "after": "Gettysburský prejav Abrahama Lincolna zaznel hneď po dvojhodinovej reči Edwarda Everetta. Ako dlho približne trvalo, kým Lincoln predniesol svoj vlastný prejav?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "193eb192-0310-4d77-a837-365b65c05f8c",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: ak sa vzduch dostatočne ochladí, sneženie sa stane fyzikálne nemožným.",
+      "after": "Ak sa vzduch dostatočne ochladí, sneženie sa stane fyzikálne nemožným. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "aedfcaff-e1cb-4905-9531-2c36f042e4f9",
+      "status_before": "approved",
+      "before": "Slovo „robot“ vzniklo pre divadelnú hru z roku 1920 a pochádza zo slova s významom nútená práca. V ktorom jazyku?",
+      "after": "Slovo „robot“ vzniklo pre divadelnú hru z roku 1920 a pochádza zo slova s významom nútená práca. Z ktorého jazyka toto slovo pochádza?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "d29c8548-8f63-4ad6-9f58-59a050deece2",
+      "status_before": "approved",
+      "before": "Počas druhej svetovej vojny nosili Nóri v okupovanej krajine nenápadne na klopách saka akú malú kancelársku pomôcku ako symbol odporu a súdržnosti?",
+      "after": "Akú malú kancelársku pomôcku nosili Nóri v okupovanej krajine počas druhej svetovej vojny nenápadne na klopách saka ako symbol odporu a súdržnosti?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "67c4e7ec-0bbf-4529-ac68-eb71ec19943d",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: švajčiarsky hodinársky výrobca Rolex vlastní charitatívna nadácia, nie akcionári ani rodina.",
+      "after": "Švajčiarskeho hodinárskeho výrobcu Rolex vlastní charitatívna nadácia, nie akcionári ani rodina. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "6e4237a4-b83e-410c-a39e-9d2157811f28",
+      "status_before": "approved",
+      "before": "Približne koľko tenisových loptičiek sa použije počas dvoch týždňov wimbledonského turnaja každý rok?",
+      "after": "Koľko tenisových loptičiek sa každý rok približne použije počas dvoch týždňov wimbledonského turnaja?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "0e749807-09b4-4401-a97d-6c6a49b51622",
+      "status_before": "approved",
+      "before": "Astronauti, ktorí sa na Slnko pozerajú z obežnej dráhy, nad zemskou atmosférou, ho vidia v akej farbe?",
+      "after": "Astronauti sa na Slnko pozerajú z obežnej dráhy, nad zemskou atmosférou. Akú farbu má Slnko, keď ho vidia odtiaľ?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "277c9c09-282a-418d-902f-a78bfdb1212a",
+      "status_before": "approved",
+      "before": "Ktorá krajina, ak započítame aj jej zámorské územia, zaberá viac časových pásiem než ktorýkoľvek iný štát na Zemi?",
+      "after": "Ktorá krajina, ak započítame aj jej zámorské územia, zaberá viac časových pásiem než ktorýkoľvek iný štát na Zemi?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "b388a69e-91a6-4f87-8b09-1bceca1a5fd2",
+      "status_before": "approved",
+      "before": "Spojené štáty od roku 1971 zakazujú dovoz tradičného škótskeho haggisu, pretože obsahuje ktorú surovinu?",
+      "after": "Spojené štáty od roku 1971 zakazujú dovoz tradičného škótskeho haggisu. Ktorú surovinu obsahuje haggis, kvôli ktorej je jeho dovoz zakázaný?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ba3936a6-cdb5-446d-b87b-2ab2c76bdf69",
+      "status_before": "approved",
+      "before": "Keby si jedným ťahom kreslil súvislú čiaru bežným guľôčkovým perom, kým by sa neminul atrament, aká dlhá by bola?",
+      "after": "Predstav si, že by si bežným guľôčkovým perom kreslil jedným ťahom súvislú čiaru, kým by sa neminul atrament. Aká dlhá by bola takto nakreslená čiara?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "ccf69e83-8da0-453c-9012-057e87dd203a",
+      "status_before": "approved",
+      "before": "V máji 2010 uskutočnil programátor na Floride prvý zaznamenaný nákup skutočného tovaru za bitcoiny – za desaťtisíc mincí zaplatil za čo?",
+      "after": "V máji 2010 uskutočnil programátor na Floride prvý zaznamenaný nákup skutočného tovaru za bitcoiny a zaplatil za neho desaťtisíc mincí. Čo si za ne kúpil?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "d0954b75-32f3-4e25-bf39-dae8f3f4ac3f",
+      "status_before": "approved",
+      "before": "Pravda alebo lož: dospelý slon fyzicky nedokáže skákať.",
+      "after": "Dospelý slon fyzicky nedokáže skákať. Je toto tvrdenie pravda, alebo lož?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "19ca17f1-ec7c-45d4-be0e-53f122677079",
+      "status_before": "approved",
+      "before": "Keby ste mohli ísť autom kolmo nahor bežnou diaľničnou rýchlosťou, ako dlho by približne trvalo, kým by ste sa dostali na okraj vesmíru?",
+      "after": "Predstavte si, že by ste mohli ísť autom kolmo nahor bežnou diaľničnou rýchlosťou. Ako dlho by vám približne trvalo, kým by ste sa dostali na okraj vesmíru?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "1f57ec27-358f-4300-bf63-9a6b84e9daa5",
+      "status_before": "approved",
+      "before": "Plechová konzerva bola patentovaná v roku 1810. Približne ako dlho ľudia čakali, kým niekto patentoval samostatný otvárač na konzervy?",
+      "after": "Plechová konzerva bola patentovaná v roku 1810. Ako dlho ľudia približne čakali, kým niekto patentoval samostatný otvárač na konzervy?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "efb5b47b-2744-46a4-8c35-fc554aaf519f",
+      "status_before": "approved",
+      "before": "V ktorom roku Francúzsko naposledy použilo gilotínu na popravu väzňa?",
+      "after": "V ktorom roku Francúzsko naposledy použilo gilotínu na popravu väzňa?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "eac3f074-49d2-4c5c-be4e-a303554ca7eb",
+      "status_before": "approved",
+      "before": "Sova nedokáže pohybovať očami v očných jamkách, a tak otáča celú hlavu. Približne o koľko stupňov dokáže otočiť hlavu?",
+      "after": "Sova nedokáže pohybovať očami v očných jamkách, a tak otáča celú hlavu. Približne o koľko stupňov dokáže otočiť hlavu?",
+      "unchanged": true,
+      "status_after": "approved"
+    },
+    {
+      "question_id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+      "status_before": "approved",
+      "before": "Dávno predtým, než sa dotkla stromu, vynašli motorovú pílu v 80. rokoch 18. storočia dvaja škótski lekári, aby urýchlili aký lekársky zákrok?",
+      "after": "Dávno predtým, než sa dotkla stromu, vynašli motorovú pílu v 80. rokoch 18. storočia dvaja škótski lekári. Aký lekársky zákrok ňou chceli urýchliť?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+      "status_before": "rejected",
+      "before": "Kasový trhák Obsession z roku 2026, jeden z najziskovejších filmov všetkých čias, sa vyrobil s rozpočtom najbližším ktorej sume?",
+      "after": "Kasový trhák Obsession z roku 2026 je jedným z najziskovejších filmov všetkých čias. Ktorej sume sa najviac približoval rozpočet, s ktorým sa tento film vyrobil?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "4c85408e-1f93-4433-8b92-fea18014eee7",
+      "status_before": "rejected",
+      "before": "Takmer každý jazyk nazýva čaj buď nejako ako „te“ (ako v angličtine, francúzštine či nemčine), alebo nejako ako „ča“ či „čaj“ (ako v ruštine, arabčine, slovenčine alebo hindčine). Obe formy pochádzajú z Číny, tak prečo svet skončil presne s dvoma verziami tohto slova?",
+      "after": "Takmer každý jazyk nazýva čaj buď podobne ako „te“ (ako v angličtine, francúzštine či nemčine), alebo podobne ako „ča“ či „čaj“ (ako v ruštine, arabčine, slovenčine alebo hindčine). Obe podoby pochádzajú z Číny. Prečo sa teda vo svete ustálili práve dve verzie tohto slova?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "c0846fe2-9fec-49d4-9194-de17dea3d46a",
+      "status_before": "rejected",
+      "before": "Keď Sovietske Rusko v roku 1918 konečne prešlo zo starého juliánskeho kalendára, táto zmena zo dňa na deň pohltila takmer dva týždne. Obyvatelia išli spať 31. januára — a na aký dátum sa prebudili?",
+      "after": "Keď Sovietske Rusko v roku 1918 konečne prešlo zo starého juliánskeho kalendára, táto zmena zo dňa na deň pohltila takmer dva týždne. Obyvatelia išli spať 31. januára. Aký dátum bol v kalendári, keď sa prebudili?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "6fa83da7-962f-4b09-bd22-0f271a8efa7f",
+      "status_before": "approved",
+      "before": "Rybár dlhochvostý lieta každý rok z Arktídy do Antarktídy a späť. Je za svoj približne 30-ročný život celková prejdená vzdialenosť bližšie k jednému obletu Zeme, k jednej ceste na Mesiac, alebo k trom cestám na Mesiac a späť?",
+      "after": "Rybár dlhochvostý lieta každý rok z Arktídy do Antarktídy a späť a dožíva sa približne 30 rokov. Čomu sa najviac blíži celková vzdialenosť, ktorú za svoj život preletí: jednému obletu Zeme, jednej ceste na Mesiac, alebo trom cestám na Mesiac a späť?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "29bbdeb7-fa1e-4aae-8f13-6b10fc18ebc6",
+      "status_before": "rejected",
+      "before": "Približne koľko by vážila jedna čajová lyžička hmoty z neutrónovej hviezdy?",
+      "after": "Koľko by približne vážila jedna čajová lyžička hmoty z neutrónovej hviezdy?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "84c82f2c-4f8b-4cf6-b156-185c67cc143c",
+      "status_before": "rejected",
+      "before": "Orchidey vanilky rástli v európskych kolóniách výborne, ale mimo Mexika nevydali ani jeden struk, kým v roku 1841 dvanásťročný zotročený chlapec na ostrove Réunion neprišiel na to, ako ručne urobiť čo?",
+      "after": "Orchidey vanilky rástli v európskych kolóniách výborne, ale mimo Mexika nevydali ani jeden struk. Zmenilo sa to až v roku 1841, keď na to prišiel dvanásťročný zotročený chlapec na ostrove Réunion. Čo s kvetmi vanilky sa naučil robiť ručne?",
+      "status_after": "rejected"
+    },
+    {
+      "question_id": "a822f59d-63e6-51ac-b878-7d26e683941a",
+      "status_before": "rejected",
+      "before": "V úplnej tme hlbokého mora sa maličký samček ktorej ryby zahryzne do oveľa väčšej samičky a natrvalo zrastie s jej telom — takže dožije len ako pripojená zásobáreň spermií?",
+      "after": "V úplnej tme hlbokého mora sa maličký samček istej ryby zahryzne do oveľa väčšej samičky a natrvalo zrastie s jej telom, takže dožije len ako pripojená zásobáreň spermií. O akú rybu ide?",
+      "status_after": "approved"
+    },
+    {
+      "question_id": "2b85eece-f972-4e3e-bdc2-b8fc82d91333",
+      "status_before": "rejected",
+      "before": "Skôr než s tým mali čokoľvek spoločné paradajky, pôvodný \"kečup\" zo 17. storočia, ktorý si európski námorníci priniesli z juhovýchodnej Ázie, bola fermentovaná omáčka vyrobená hlavne z čoho?",
+      "after": "Skôr než s tým mali čokoľvek spoločné paradajky, pôvodný \"kečup\" zo 17. storočia, ktorý si európski námorníci priniesli z juhovýchodnej Ázie, bol fermentovanou omáčkou. Z čoho sa táto omáčka vyrábala hlavne?",
+      "status_after": "rejected"
+    }
+  ]
+}

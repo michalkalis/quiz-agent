@@ -9,7 +9,7 @@
 # geopandas, cartopy, matplotlib, deepl) live in the `scripts` extra, which the
 # image does not install. Base images are pinned by digest.
 
-FROM python:3.11.17-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce AS builder
+FROM python:3.11.17-slim-trixie@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.24@sha256:3af4716e991d6956a41e573eab705d0ee08500cd829ed30293eb8472f372c65a /uv /bin/uv
 
@@ -31,7 +31,7 @@ COPY packages/shared packages/shared
 RUN uv pip install --system --no-deps --compile-bytecode ./packages/shared
 
 # Production stage
-FROM python:3.11.17-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce
+FROM python:3.11.17-slim-trixie@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
 
 # Unprivileged runtime user (#207 task 207.24); no volume, so no root step.
 RUN useradd --system --uid 10001 --create-home --shell /usr/sbin/nologin app

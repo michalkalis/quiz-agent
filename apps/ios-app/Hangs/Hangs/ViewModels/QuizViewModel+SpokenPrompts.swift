@@ -169,17 +169,3 @@ extension QuizViewModel {
         }
     }
 }
-
-/// #235 F3: the "hear it" buttons whose read can fail: the result's
-/// explanation, the recap's whole summary, one recap row.
-enum ReadAloudTarget: Equatable {
-    case explanation
-    case recapSummary
-    case recapEntry(Int)
-}
-
-/// What one "hear it" read managed: something played, a clip could not be had.
-struct ReadAloudOutcome {
-    var played = false
-    var failed = false
-}

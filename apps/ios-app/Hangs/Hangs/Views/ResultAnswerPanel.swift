@@ -146,7 +146,7 @@ struct ReadAloudFailureNote: View {
     var body: some View {
         Text("Can't read it aloud right now.")
             .font(.hangsCaption)
-            .foregroundColor(Theme.Hangs.Colors.error)
+            .foregroundStyle(Theme.Hangs.Colors.error)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityIdentifier(identifier)
     }

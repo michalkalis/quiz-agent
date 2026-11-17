@@ -32,14 +32,14 @@ Ukrajinčina všade, kde je dnes sk/cs/en: appka, otázky, hlas (čítanie aj po
 
 | Oblasť | Náročnosť | Poznámka |
 |---|---|---|
-| Server: jazyk, čísla, radové číslovky, písmená A–Г, spätné hlášky, denná výzva (3 tvary množného čísla) | stredná | ~10 miest so zoznamom sk/cs/en |
+| Server: jazyk, čísla, radové číslovky, slová pre možnosti 1–4, spätné hlášky, denná výzva (3 tvary množného čísla) | stredná | ~10 miest so zoznamom sk/cs/en |
 | Otázky: preklad + natívne + brány kvality | **veľká** | najväčšia časť; cyrilika v kontrolách, ochrana pred ruštinou |
 | Vlastné balíky (zadanie, štýl domu, domáca krajina) | stredná | |
 | Appka: 731 textov, písmo, povely, odpovede v cyrilike, snímky | stredná až veľká | párovanie odpovedí je dnes len pre latinku |
 | Web, App Store, nákupy, snímky obchodu | malá až stredná | prevažne mechanické + preklad |
 | Overenie: rodený hovorca, testy, zariadenie | stredná | závisí od času hovorcu |
 
-Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpoznávanie povelov a písmen A–Г na zariadení, písmo.
+Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpoznávanie povelov a možností 1–4 na zariadení, písmo.
 
 ## Úlohy
 
@@ -58,7 +58,7 @@ Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpozn
 - [ ] **231.8 Web** — `/uk/` (texty, 3 právne stránky, tematické stránky s ukrajinskými adresami, ukážka hlasu), hreflang a mapa stránok sa doplnia samé.
 - [ ] **231.9 App Store a nákupy** — ukrajinský popis, názov, podnadpis, kľúčové slová, What's New, snímky s ukrajinskými nadpismi, názvy nákupov a predplatného, TestFlight texty; dostupnosť v obchode Ukrajina a ceny (Apple prepočíta automaticky, **úprava ceny pre Ukrajinu = rozhodnutie foundera**). Nahrá sa s najbližšou verziou.
 - [ ] **231.10 Overenie rodeným hovorcom** — jedna stránka: texty appky (podľa obrazoviek), App Store, web, právne, 50 otázok, ukážky hlasu; pripomienky → opravy.
-- [ ] **231.11 Test celku** — simulátor: celý kvíz po ukrajinsky, prepnutie jazyka, vlastný balík, denná výzva; hra spolu: hostiteľ uk + hosť sk v miestnosti aj na diaľku; zariadenie (TestFlight na požiadanie): povely, odpovede hlasom a A–Г, hovorí rodený hovorca. Potom zapnúť uk na serveri.
+- [ ] **231.11 Test celku** — simulátor: celý kvíz po ukrajinsky, prepnutie jazyka, vlastný balík, denná výzva; hra spolu: hostiteľ uk + hosť sk v miestnosti aj na diaľku; zariadenie (TestFlight na požiadanie): povely, odpovede hlasom a možnosti 1–4, hovorí rodený hovorca. Potom zapnúť uk na serveri.
 - [ ] **231.12 Marketing (neskôr, samostatné rozhodnutie)** — ukrajinské sociálne siete, ASO pre ukrajinský obchod.
 
 ## Poradie a závislosti

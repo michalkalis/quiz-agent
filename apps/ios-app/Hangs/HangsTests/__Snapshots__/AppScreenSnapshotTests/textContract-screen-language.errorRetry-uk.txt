@@ -3,7 +3,7 @@
 No internet connection
 Check your Wi-Fi or mobile data and try again.
 Спробуй ще раз
-Додому
+На головну
 # identifiers
 error.root
 error.icon

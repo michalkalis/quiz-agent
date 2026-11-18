@@ -2,7 +2,7 @@
 ОЙ
 Quiz ended
 This quiz is no longer active. Start a new quiz.
-Додому
+На головну
 # identifiers
 error.root
 error.icon

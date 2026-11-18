@@ -1,0 +1,58 @@
+# texts
+Kvíz
+S dětmi
+Režim
+Témata pro 7–9
+LEGO
+10 otázek
+LEGO
+Minecraft
+10 otázek
+Minecraft
+Ako sa čo vyrába
+10 otázek
+Ako sa čo vyrába
+Superschopnosti zvierat
+10 otázek
+Superschopnosti zvierat
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+Slovenčina
+4–6
+7–9
+10–12
+Věk
+7–9
+LEGO
+Minecraft
+Ako sa čo vyrába
+Superschopnosti zvierat
+Téma
+LEGO
+trubbo
+Odpovídáš ty, děti hádají s tebou.
+Start s dětmi
+# identifiers
+home.mode
+home.mode.quiz
+home.mode.family
+home.familyDeck
+home.familyDeck.previous
+home.familyDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home.band.menu
+home.band.kids_4_6
+home.band.kids_7_9
+home.band.kids_10_12
+home.topic.menu
+home.topic.family-lego
+home.topic.family-minecraft
+home.topic.family-how-things-are-made
+home.topic.family-animal-superpowers
+home.family.adultAnswers
+home.startFamily

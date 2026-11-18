@@ -1,0 +1,48 @@
+# texts
+Kvíz
+S deťmi
+Režim
+Témy pre 10–12
+Harry Potter
+10 otázok
+Harry Potter
+Špióni a šifry
+10 otázok
+Špióni a šifry
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+Slovenčina
+4–6
+7–9
+10–12
+Vek
+10–12
+Harry Potter
+Špióni a šifry
+Téma
+Harry Potter
+trubbo
+Odpovedáš ty, deti hádajú s tebou.
+Štart s deťmi
+# identifiers
+home.mode
+home.mode.quiz
+home.mode.family
+home.familyDeck
+home.familyDeck.previous
+home.familyDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home.band.menu
+home.band.kids_4_6
+home.band.kids_7_9
+home.band.kids_10_12
+home.topic.menu
+home.topic.family-harry-potter
+home.topic.family-spies-and-codes
+home.family.adultAnswers
+home.startFamily

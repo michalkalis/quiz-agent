@@ -1,0 +1,17 @@
+# texts
+Pro jaký věk?
+Odpovídáš ty, děti hádají s tebou.
+4–6
+Ano, ne nebo jedna ze dvou
+7–9
+Krátké otázky, odpověď hlasem
+10–12
+Delší otázky, odpověď hlasem
+Věk si zapamatuju. Změníš ho na Úvodu.
+# identifiers
+family.band.sheet
+family.band.close
+family.band.adultAnswers
+family.band.kids_4_6
+family.band.kids_7_9
+family.band.kids_10_12

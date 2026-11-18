@@ -44,6 +44,8 @@ extension AppScreen {
             await makeSharedQuiz()
         case .profile, .profileNewPlayer, .profileLoadFailed, .allStats:
             await makeProfile()
+        case .homeFamily46, .homeFamily79, .homeFamily1012, .familyBandSheet:
+            await makeFamily()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

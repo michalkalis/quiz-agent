@@ -7,6 +7,7 @@ import {Audio, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfi
 import {COPY} from './copy';
 import {Monkey} from './Monkey';
 import {FONT, INK, INK2, OK, SURF} from './theme';
+import {VOICE_RATE} from './timing';
 import type {ExplainStyle, ExplainTrack, ReelQuestion, TimedWord} from './types';
 
 const CARD = {background: SURF, borderRadius: 44, boxShadow: '0 22px 44px rgba(17,18,22,.18)'} as const;
@@ -149,7 +150,7 @@ export const ExplainPhase: React.FC<{
 		<>
 			{track.audio ? (
 				<Sequence from={whyFrame}>
-					<Audio src={staticFile(track.audio)} />
+					<Audio src={staticFile(track.audio)} playbackRate={VOICE_RATE} />
 				</Sequence>
 			) : null}
 			<div style={{display: 'flex', flexDirection: 'column', gap: 36}}>

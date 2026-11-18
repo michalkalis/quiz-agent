@@ -15,7 +15,7 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {bundle} from '@remotion/bundler';
 import {renderMedia, renderStill, selectComposition} from '@remotion/renderer';
-import {HOOK_SOLO_MS, LEAD_MS, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
+import {HOOK_SOLO_MS, LEAD_MS, atVoiceRate, eyeOpenAt, reelTimeline, roundTimeline} from '../src/timing';
 import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, ReelQuestion, ReelStyle, RoundProps, TimedWord} from '../src/types';
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
@@ -118,6 +118,10 @@ async function stageAudio(raw: QuestionInput): Promise<string | null> {
 }
 
 const WORD_MS = 320; // silent reading pace when there is no voice
+/** A clip's length as it plays in the video (VOICE_RATE). */
+const playedMs = (file: string) => atVoiceRate(audioDurationMs(file));
+/** Word times measured on a clip, moved to the moment the faster voice says them. */
+const playedWords = (words: TimedWord[]) => words.map((w) => ({...w, startMs: atVoiceRate(w.startMs)}));
 const PART_PAUSE_MS = 500; // silent pace: a breath between explanation parts
 
 /** The whole explanation in parts, timed to its app clip, or at reading pace without one. */
@@ -144,7 +148,7 @@ async function explainTrack(raw: QuestionInput, q: ReelQuestion): Promise<Explai
 	const file = path.join(PUBLIC_AUDIO_DIR, path.basename(audio));
 	await ensureWhisper();
 	const {words} = await timeWords(file, q.language, flat);
-	return {audio, words, parts: indexed, ms: audioDurationMs(file)};
+	return {audio, words: playedWords(words), parts: indexed, ms: playedMs(file)};
 }
 
 type QuestionTrack = Pick<ReelProps, 'audio' | 'words' | 'questionMs' | 'optionsAtMs' | 'optionAtMs'>;
@@ -181,14 +185,14 @@ async function questionTrack(raw: QuestionInput, q: ReelQuestion): Promise<Quest
 	// Plus the end of the clip, so the last option stops being marked when the voice stops.
 	const offsets = q.options.length ? [...optionStarts(spoken, raw.question.length, q.options), spoken.length] : [];
 	const {words, optionsAtMs, extraMs} = await timeWords(file, q.language, displayWords, share, {text: spoken, offsets});
-	return {audio, words, questionMs: audioDurationMs(file) + 400, optionsAtMs, optionAtMs: extraMs};
+	return {audio, words: playedWords(words), questionMs: playedMs(file) + 400, optionsAtMs: atVoiceRate(optionsAtMs), optionAtMs: extraMs.map(atVoiceRate)};
 }
 
 /** A clip staged under public/ with its length, or none. */
 function clipTrack(b64: string | null | undefined): {audio: string | null; ms: number} {
 	if (!b64) return {audio: null, ms: 900};
 	const audio = stageBytes(Buffer.from(b64, 'base64'));
-	return {audio, ms: audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
+	return {audio, ms: playedMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
 }
 
 /** A round's answer clip without its "Question two:" (`cli/trim.ts`); the whole clip if no cut point is found. */
@@ -200,7 +204,7 @@ function roundAnswerTrack(b64: string | null | undefined, id: string): {audio: s
 		console.warn(`! ${id}: no pause after the question number found, the answer clip keeps it`);
 		return whole;
 	}
-	return {audio, ms: audioDurationMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
+	return {audio, ms: playedMs(path.join(PUBLIC_AUDIO_DIR, path.basename(audio)))};
 }
 
 const NO_EXPLAIN: ExplainTrack = {audio: null, words: [], parts: [], ms: 0};

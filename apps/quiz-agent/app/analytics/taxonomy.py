@@ -169,6 +169,15 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "rejected_count",
         }
     ),
+    # #236: the "S deťmi" mode on Home. band = the content setting
+    # (kids_4_6 | kids_7_9 | kids_10_12), never a person's age; topic = the
+    # family-* topic key. first_time = the band sheet on the first flip.
+    "family_mode_changed": frozenset({"enabled"}),
+    "family_band_selected": frozenset({"band", "first_time"}),
+    "family_topic_selected": frozenset({"band", "topic"}),
+    "family_topic_empty": frozenset({"band", "topic"}),
+    # action = other_topic | home, on the end-of-round screen of a band round.
+    "family_round_end_action": frozenset({"action"}),
     "voice_experiment_guard": frozenset(
         {"flag", "reason", "from_route", "to_route", "exp_gen"}
     ),

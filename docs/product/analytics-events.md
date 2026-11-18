@@ -48,6 +48,11 @@
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |
 | `together_opened` | the Together tab comes on screen (#216.2); with `room_created` / `room_joined` it shows how many who look at the tab go on to play | — |
 | `pack_topic_checked` | the topic check before a custom pack order answered (#233); one per check sent to the server | `verdict` (ok / softened / blocked / error; error = the check failed and the order went on) |
+| `family_mode_changed` | the "Kvíz / S deťmi" switch on Home was flipped (#236) | `enabled` (true / false) |
+| `family_band_selected` | an age band was chosen in the "S deťmi" mode (#236); the band is a content setting, never a person's age | `band` (kids_4_6 / kids_7_9 / kids_10_12), `first_time` (the sheet on the first flip) |
+| `family_topic_selected` | a topic card was chosen in the "S deťmi" mode (#236) | `band`, `topic` (family-* key) |
+| `family_topic_empty` | a round could not start because the topic had no questions; Home hid the topic (#236) | `band`, `topic` |
+| `family_round_end_action` | what the player tapped at the end of a round with kids (#236) | `action` (other_topic / home) |
 | `shared_quiz_pasted` | the first-launch "quiz from a friend?" paste button was used (#232) | `outcome` (opened / not_a_link) |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
 | `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |

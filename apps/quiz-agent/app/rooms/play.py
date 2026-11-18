@@ -18,6 +18,7 @@ from quiz_shared.models.session import QuizSession
 from quiz_shared.utils.text_normalization import normalize_text
 
 from ..evaluation.evaluator import UNMATCHED
+from ..quiz.errors import JudgeUnavailable
 from ..quiz.flow import FlowResult, QuizFlowService
 from ..serializers import session_translation, translated_question_view
 from ..session.manager import SessionManager
@@ -116,7 +117,12 @@ class RoomPlay:
                 raise RoomError(409, "Time is up")
             rnd.answers[you.participant_id] = RoomAnswer(answer=text.strip(), at=at)
             if rounds.all_answered(session, rnd):
-                await self._grade(session, rnd)
+                try:
+                    await self._grade(session, rnd)
+                except JudgeUnavailable:
+                    # The answer is in either way; nothing was graded yet, so
+                    # the next poll closes the question once the judge answers.
+                    logger.warning("Room grading deferred for session %s", session_id)
             await self.sessions.update_session(session)
 
     async def away(self, room_id: str, subject_id: str, question_id: str) -> None:

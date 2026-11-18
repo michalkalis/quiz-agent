@@ -152,6 +152,9 @@ class RoomService:
             session.mode = "multiplayer"
             session.room_code = room.room_id
             session.room_game = game or RoomGame()
+            # The app's session starts with 30 minutes and nothing in a room
+            # extends it; a game lives as long as its room.
+            session.expires_at = max(session.expires_at, room.expires_at)
             # One picture on several phones is not in the first version.
             session.include_images = False
             await self.sessions.update_session(session)

@@ -26,6 +26,7 @@ from ..monitoring.provider_alerts import (
 )
 from .voices import (
     ELEVENLABS_CYRILLIC_MODEL,
+    ELEVENLABS_CYRILLIC_STABILITY,
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
     ELEVENLABS_OUTPUT_FORMAT,
@@ -127,6 +128,13 @@ class ElevenLabsTTSProvider:
         """The language is in the text: Cyrillic means Ukrainian (#231)."""
         return self.cyrillic_model if _CYRILLIC_RE.search(text) else self.model
 
+    def payload_for(self, text: str) -> dict:
+        """Request body; Ukrainian also pins v3 to its most stable setting."""
+        payload = {"text": text, "model_id": self.model_for(text)}
+        if _CYRILLIC_RE.search(text):
+            payload["voice_settings"] = {"stability": ELEVENLABS_CYRILLIC_STABILITY}
+        return payload
+
     async def synthesize(self, text: str, voice: str) -> bytes:
         api_key = self.api_key
         if not api_key:
@@ -137,7 +145,7 @@ class ElevenLabsTTSProvider:
                 f"{ELEVENLABS_TTS_URL}/{voice}",
                 params={"output_format": ELEVENLABS_OUTPUT_FORMAT},
                 headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-                json={"text": text, "model_id": self.model_for(text)},
+                json=self.payload_for(text),
                 timeout=ELEVENLABS_TIMEOUT_SECONDS,
             )
 

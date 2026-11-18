@@ -39,6 +39,10 @@ ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
 # voice read all of them right (blind test 2026-11-18). v3 takes ~3.5 s per
 # question instead of ~1.6 s, so it stays scoped to Cyrillic text.
 ELEVENLABS_CYRILLIC_MODEL = "eleven_v3"
+# v3 at its default ("Natural") read 2 of 11 Ukrainian questions in what a
+# native speaker heard as a different voice; "Robust" (1.0) kept all 11 the same
+# voice (round 4, 2026-11-18).
+ELEVENLABS_CYRILLIC_STABILITY = 1.0
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
 # Static feedback phrases organized by evaluation result

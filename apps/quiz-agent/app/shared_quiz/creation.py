@@ -57,6 +57,13 @@ class ShareCreation:
         session = await self.sessions.get_session(session_id)
         if session is None or session.user_id != subject_id:
             raise ShareError(404, "not_found", "Session not found or expired")
+        if session.age_band:
+            # #236: the snapshot re-reads the ids through the ordinary serving
+            # filters, which never return a band question, so the link would
+            # lose its questions and the friend would get a different quiz.
+            raise ShareError(
+                409, "family_not_shareable", "A round with kids cannot be shared"
+            )
         if session.shared_quiz_id and not session.daily_challenge_date:
             # Forwarding a quiz a friend sent: the same link, never a new one.
             share = await self.store.by_id(session.shared_quiz_id)

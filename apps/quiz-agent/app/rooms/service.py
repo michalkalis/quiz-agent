@@ -116,7 +116,12 @@ class RoomService:
                 if room is not None:
                     return room, session
             if session.is_solo_only:
-                raise RoomError(422, "The daily challenge is solo only")
+                raise RoomError(
+                    422,
+                    "A round with kids is solo only"
+                    if session.age_band
+                    else "The daily challenge is solo only",
+                )
             if session.pack_id and not await self._pack_ready(session, allow_pack):
                 raise RoomError(422, "Only a finished pack can be played together")
             if session.phase != SessionPhase.IDLE:

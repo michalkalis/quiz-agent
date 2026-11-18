@@ -193,6 +193,9 @@ def test_house_style_v2_uk_carries_the_native_speaker_phrasing_fixes(
     assert "«Яка столиця Австралії?»" in body
     assert "«Хто написав «Кобзар»?»" in body
     assert "Не будуй питання через «є» з орудним відмінком" in body
+    # Round 3 (2026-11-18): decorative detail lists and a vague event name.
+    assert "Без декоративних переліків яскравих деталей" in body
+    assert "перемогу в Лізі чемпіонів 2003 року" in body
 
 
 def test_house_style_v1_home_country_is_ukraine() -> None:

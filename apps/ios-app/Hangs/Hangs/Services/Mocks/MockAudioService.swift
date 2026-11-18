@@ -149,6 +149,17 @@ import os
             setupPlaybackOnlySessionCallCount += 1
         }
 
+        /// False mirrors launch with voice commands off (#237): the session is
+        /// still the system default, which has no mic input, so the real
+        /// engine reads a 0 Hz format and refuses to start.
+        var hasRecordingSession = true
+        var ensureRecordingSessionCallCount = 0
+
+        func ensureRecordingSession() throws {
+            ensureRecordingSessionCallCount += 1
+            hasRecordingSession = true
+        }
+
         /// Counts deactivations so the scene-phase teardown tests can assert the
         /// session is released only when idle (never under in-flight TTS).
         var deactivateSessionCallCount = 0
@@ -295,7 +306,7 @@ import os
         private(set) var streamingChunkHandler: PCMChunkHandler?
 
         func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
-            if shouldFailRecording || !sessionActive {
+            if shouldFailRecording || !sessionActive || !hasRecordingSession {
                 throw AudioError.recordingFailed
             }
             // Single-engine invariant (#109): refuse a second concurrent start,

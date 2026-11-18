@@ -96,6 +96,7 @@ struct PaywallView: View {
                     .frame(minHeight: viewport.size.height, alignment: .top)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
                     // #102 finding 4: RC confirmed the purchase but the server
                     // `/usage` mirror hasn't caught up yet — show "finishing
@@ -250,11 +251,11 @@ struct PaywallView: View {
     private var limitMessage: String {
         if let limit = limitError {
             if !limit.upgradeAvailable {
-                return String(localized: "You've used all 1,000 Trubbo Plus questions this month.", comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+                return String(localized: "You've used all 1,000 Trubbo Plus questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
             }
-            return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", comment: "Paywall subtitle when the monthly free-question limit is known")
+            return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "1,000 questions a month", comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
+        return String(localized: "1,000 questions a month", bundle: .interface, locale: .interface, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
     }
 
     // MARK: - Plan picker
@@ -291,7 +292,7 @@ struct PaywallView: View {
 
             if let pack = storeManager.offerings?.pack {
                 if subscriptionOffered {
-                    Text("or top up without subscribing")
+                    Text("or buy questions without subscribing")
                         .font(.hangsCaption)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                         .multilineTextAlignment(.center)
@@ -569,6 +570,7 @@ struct PaywallView: View {
                 .frame(minHeight: viewport.size.height)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -666,8 +668,8 @@ private struct CountdownPill: View {
 
     private var text: String {
         isSubscriber
-            ? String(localized: "Questions reset in \(timeRemaining)", comment: "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets")
-            : String(localized: "Free questions reset in \(timeRemaining)", comment: "Countdown pill: time until free questions reset")
+            ? String(localized: "Questions reset in \(timeRemaining)", bundle: .interface, locale: .interface, comment: "Countdown pill for a Trubbo Plus subscriber: time until the monthly allowance resets")
+            : String(localized: "Free questions reset in \(timeRemaining)", bundle: .interface, locale: .interface, comment: "Countdown pill: time until free questions reset")
     }
 
     private func updateCountdown() {

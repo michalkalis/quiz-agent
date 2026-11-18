@@ -32,7 +32,8 @@ final class TextDictation: ObservableObject {
     /// Set when the cap auto-stops a dictation, so the UI can say why.
     @Published private(set) var didHitDictationCap = false
     /// The last recording brought no text back (offline, server error, or
-    /// nothing intelligible), so the UI can say so instead of staying silent.
+    /// nothing intelligible) or the mic would not start, so the UI can say so
+    /// instead of staying silent.
     @Published private(set) var didFailTranscription = false
 
     /// Hard cap for one dictation. Injectable so tests drive the auto-stop.
@@ -111,6 +112,7 @@ final class TextDictation: ObservableObject {
         pcm.withLock { $0 = Data() }
 
         do {
+            try voice.audioService.ensureRecordingSession()
             await voice.audioService.prepareForRecording()
 
             // Re-check after the await: a quiz timer under the sheet could have
@@ -133,6 +135,7 @@ final class TextDictation: ObservableObject {
         } catch {
             voice.audioService.stopStreamingRecording()
             micState = .idle
+            didFailTranscription = true
             Logger.stt.warning("⚠️ Text dictation failed to start: \(error, privacy: .public)")
         }
     }

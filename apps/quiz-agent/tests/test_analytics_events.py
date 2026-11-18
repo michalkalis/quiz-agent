@@ -34,7 +34,11 @@ from app.analytics.recorder import (  # noqa: E402
     app_version_var,
     drain_pending,
 )
-from app.analytics.taxonomy import MAX_STRING_LEN, clean_properties  # noqa: E402
+from app.analytics.taxonomy import (  # noqa: E402
+    CLIENT_EVENTS,
+    MAX_STRING_LEN,
+    clean_properties,
+)
 from app.api import deps  # noqa: E402
 from app.api.routes import analytics as analytics_routes  # noqa: E402
 from app.auth.identity import AuthSubject  # noqa: E402
@@ -89,6 +93,157 @@ async def test_only_allowlisted_scalar_properties_survive():
         },
     )
     assert cleaned == {"source": "x" * MAX_STRING_LEN, "count": 3, "flag": True}
+
+
+async def test_recap_telemetry_keys_are_kept_and_unlisted_ones_still_dropped():
+    # #213.1: the recap needs the player's local time of day and answer speed;
+    # without these keys the server would silently drop them.
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"],
+        {"timezone": "Europe/Bratislava", "city": "Bratislava"},
+    )
+    assert ctx == {"timezone": "Europe/Bratislava"}
+    sub = clean_properties(
+        CLIENT_EVENTS["answer_submitted"], {"latency_ms": 4200, "transcript": "x"}
+    )
+    assert sub == {"latency_ms": 4200}
+
+
+async def test_profile_opened_keeps_only_the_account_flag():
+    # #213.4: measures whether players open the new Profile tab, split by
+    # signed in or not; nothing else about the player may ride along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["profile_opened"], {"has_account": True, "name": "Michal"}
+    )
+    assert cleaned == {"has_account": True}
+
+
+async def test_together_opened_is_accepted_and_carries_nothing():
+    # #216.2: counts how many open the Together tab, to compare with the
+    # games created and joined; an unknown name would be dropped silently.
+    assert "together_opened" in CLIENT_EVENTS
+    cleaned = clean_properties(
+        CLIENT_EVENTS["together_opened"], {"name": "Michal", "wifi": "home"}
+    )
+    assert cleaned == {}
+
+
+async def test_app_and_server_agree_on_the_client_event_list():
+    # The app keeps its own copy of this allowlist and tests against it. When
+    # the two drift, the server silently drops what the app sends and the
+    # numbers just never show up (#233: every topic-check event was lost).
+    import re
+    from pathlib import Path
+
+    swift = (
+        Path(__file__).resolve().parents[3]
+        / "apps/ios-app/Hangs/HangsTests/AnalyticsEventsTests.swift"
+    )
+    if not swift.exists():
+        pytest.skip("iOS sources not in this checkout")
+    table = swift.read_text().split("backendClientEvents", 1)[1].split("\n]\n", 1)[0]
+    app_copy = {
+        name: frozenset(re.findall(r'"([a-z_]+)"', keys))
+        for name, keys in re.findall(
+            r'^    "([a-z_]+)": \[(.*?)\],?$', table, re.M | re.S
+        )
+    }
+    assert app_copy, "could not read the app's copy of the list"
+    for name, keys in app_copy.items():
+        assert name in CLIENT_EVENTS, f"the app sends {name}, the server drops it"
+        assert keys <= CLIENT_EVENTS[name], (
+            f"{name}: the server drops {keys - CLIENT_EVENTS[name]}"
+        )
+
+
+async def test_recap_events_keep_only_progress_and_kind():
+    # #213.5: tells whether players watch their recap to the end and share
+    # it; the recap's contents (cards, player type) must not leak into events.
+    viewed = clean_properties(
+        CLIENT_EVENTS["recap_viewed"],
+        {"kind": "month", "slides_seen": 4, "slides_total": 7, "player_type": "x"},
+    )
+    assert viewed == {"kind": "month", "slides_seen": 4, "slides_total": 7}
+    shared = clean_properties(
+        CLIENT_EVENTS["recap_shared"], {"kind": "first", "cards": "x"}
+    )
+    assert shared == {"kind": "first"}
+
+
+async def test_room_settings_changed_keeps_only_which_rule_and_where():
+    # #213.8: shows which game-together rules hosts change and whether from the
+    # lobby or mid-game; the room and its players must not ride along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["room_settings_changed"],
+        {
+            "setting": "thinking_seconds",
+            "value": "45",
+            "surface": "in_game",
+            "room_id": "r_1",
+        },
+    )
+    assert cleaned == {
+        "setting": "thinking_seconds",
+        "value": "45",
+        "surface": "in_game",
+    }
+
+
+async def test_home_category_events_keep_only_the_step_and_the_entry_point():
+    # #224.6: shows whether players flip through categories on the deck or open
+    # the picker instead, and from where; nothing about the player rides along.
+    stepped = clean_properties(
+        CLIENT_EVENTS["home_category_stepped"],
+        {"direction": "next", "input": "tap", "to": "history", "name": "Michal"},
+    )
+    assert stepped == {"direction": "next", "input": "tap", "to": "history"}
+    opened = clean_properties(
+        CLIENT_EVENTS["home_category_picker_opened"],
+        {"source": "deck_button", "selection": ["a", "b"]},
+    )
+    assert opened == {"source": "deck_button"}
+
+
+async def test_quick_game_events_keep_only_the_mode():
+    # #224.8: compares skipping and finishing in the quick quiz with the
+    # normal flow, and whether the switch gets used; nothing else rides along.
+    skipped = clean_properties(
+        CLIENT_EVENTS["question_skipped"], {"quick": True, "question_id": "q1"}
+    )
+    assert skipped == {"quick": True}
+    changed = clean_properties(
+        CLIENT_EVENTS["quick_game_changed"], {"enabled": False, "name": "x"}
+    )
+    assert changed == {"enabled": False}
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"], {"quick_game": True, "city": "Bratislava"}
+    )
+    assert ctx == {"quick_game": True}
+
+
+async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
+    # #237: how many players turn commands on, from the onboarding or the quiz
+    # listen bar, and how many then refuse speech recognition; nothing about
+    # the device or the quiz rides along.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_commands_turned_on"],
+        {"source": "listen_bar", "result": "denied", "language": "sk"},
+    )
+    assert cleaned == {"source": "listen_bar", "result": "denied"}
+
+
+async def test_sign_in_prompt_events_keep_only_kind_and_outcome():
+    # #217.4: how many buyers of each kind (Plus, credit, custom pack) save their
+    # purchase by signing in; nothing about the purchase or the account rides along.
+    shown = clean_properties(
+        CLIENT_EVENTS["sign_in_prompt_shown"], {"kind": "custom_pack", "pack": "x"}
+    )
+    assert shown == {"kind": "custom_pack"}
+    result = clean_properties(
+        CLIENT_EVENTS["sign_in_prompt_result"],
+        {"kind": "credit", "outcome": "signed_in", "email": "a@b.c"},
+    )
+    assert result == {"kind": "credit", "outcome": "signed_in"}
 
 
 async def test_server_emit_never_raises_without_db_or_for_unknown_names():

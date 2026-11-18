@@ -12,6 +12,13 @@
 # to the session queue, and the same WorkerSettings runs on mba on the
 # subscription. Not an always-on machine: we would pay 7 days for ~1 h of work.
 #
+# Hetzner (#222 — moving the backend to Hetzner): with the repo variable
+# BACKEND_HOST=hetzner the same job runs on the server instead, as a one-off
+# `pack-topup` container (1 GB) from the deployed image, through the deploy
+# key's forced command (infra/hetzner/deploy-ssh.sh `topup`, which also caps
+# spend at $15). After the cutover the Fly app only forwards, so the Fly path
+# would find no web machine.
+#
 # Switch: the scheduled run is a no-op until the repo variable
 # FRESH_TOPUP_ENABLED is 'true' (founder approval, task 202.6). A manual run
 # (workflow_dispatch) always works and defaults to a dry run.
@@ -69,6 +76,7 @@ jobs:
       SCHEDULED: ${{ github.event_name == 'schedule' }}
     steps:
       - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
+        if: vars.BACKEND_HOST != 'hetzner'
 
       - name: Validate inputs
         run: |
@@ -76,8 +84,28 @@ jobs:
           [[ "$COUNT" =~ ^[0-9]{1,3}$ ]] || { echo "bad count: $COUNT"; exit 1; }
           [[ "$MAX_USD" =~ ^[0-9]{1,2}(\.[0-9]{1,2})?$ ]] || { echo "bad max_usd: $MAX_USD"; exit 1; }
 
+      - name: Run the top-up on the Hetzner server
+        if: vars.BACKEND_HOST == 'hetzner'
+        env:
+          DEPLOY_KEY: ${{ secrets.HETZNER_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.HETZNER_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' 'Host hetzner' '  HostName 2.31.163.95' '  User trubbo' \
+            '  IdentityFile ~/.ssh/deploy' '  IdentitiesOnly yes' '  ServerAliveInterval 60' > ~/.ssh/config
+          mode=write
+          [ "$DRY_RUN" = "true" ] && mode=dry
+          [ "$SCHEDULED" = "true" ] && mode=cron
+          # Same log file as the Fly path, so the summary and artifact steps below work unchanged.
+          set -o pipefail
+          ssh hetzner topup "$LANGS" "$COUNT" "$MAX_USD" "$mode" 2>&1 | tee machine.log
+
       # The image and region of the app's current web machine = what is deployed.
       - name: Resolve current image and region
+        if: vars.BACKEND_HOST != 'hetzner'
         run: |
           flyctl machines list --app "$APP" --json > machines.json
           image=$(jq -r '[.[] | select(.config.metadata.fly_process_group == "web")][0].config.image // empty' machines.json)
@@ -93,6 +121,7 @@ jobs:
       # No env pins on the command: app secrets win over them. The job pins its own roles
       # (app/corpus/fresh_pins.py) and refuses to start on any difference.
       - name: Start the top-up machine
+        if: vars.BACKEND_HOST != 'hetzner'
         run: |
           args=(--languages "$LANGS" --count "$COUNT" --max-usd "$MAX_USD")
           [ "$DRY_RUN" = "true" ] && args+=(--dry-run)
@@ -111,6 +140,7 @@ jobs:
           echo $! > logs.pid
 
       - name: Wait for the run to finish (max 2 h)
+        if: vars.BACKEND_HOST != 'hetzner'
         run: |
           for _ in $(seq 1 240); do
             flyctl machines list --app "$APP" --json > machines.json
@@ -138,7 +168,7 @@ jobs:
           cat tail.log
 
       - name: Run summary
-        if: always() && env.MACHINE_ID != ''
+        if: always() && (env.MACHINE_ID != '' || vars.BACKEND_HOST == 'hetzner')
         run: |
           # Strip flyctl's "<time> app[<id>] <region> [info]" prefix, keep the block.
           extract() {
@@ -160,7 +190,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the machine log
-        if: always() && env.MACHINE_ID != ''
+        if: always() && (env.MACHINE_ID != '' || vars.BACKEND_HOST == 'hetzner')
         uses: actions/upload-artifact@v7
         with:
           name: fresh-topup-machine-log

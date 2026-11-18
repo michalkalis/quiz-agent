@@ -61,7 +61,7 @@ struct AnswerOption: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
+        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", bundle: .interface, locale: .interface, comment: "Accessibility label for a multiple-choice option: letter and answer text"))
         .accessibilityIdentifier("mcq.option.\(key)")
     }
 
@@ -226,7 +226,7 @@ struct AnswerTile: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", comment: "Accessibility label for a multiple-choice option: letter and answer text"))
+        .accessibilityLabel(String(localized: "Option \(badgeText): \(value)", bundle: .interface, locale: .interface, comment: "Accessibility label for a multiple-choice option: letter and answer text"))
         .accessibilityIdentifier("mcq.option.\(key)")
     }
 

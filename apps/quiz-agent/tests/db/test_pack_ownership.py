@@ -95,3 +95,37 @@ async def test_owner_passes_non_owner_and_unknown_pack_denied(factory):
         assert exc2.value.status_code == 404
     finally:
         await _cleanup(factory, order_id)
+
+
+@pytest.mark.asyncio
+async def test_pack_share_is_owner_only_and_never_grants_the_pack(factory):
+    """#232: a pack link reads its snapshotted questions through the link
+    alone; it must not turn the friend into an owner. Sharing needs the real
+    owner, and afterwards the session gate still answers 404 to the friend."""
+    from app.shared_quiz.store import SharedQuizStore
+
+    owner = f"owner-{uuid.uuid4().hex[:12]}"
+    pack_id, order_id = await _seed_owned_pack(factory, owner)
+    try:
+        async with factory() as s:
+            await s.execute(
+                text(
+                    "UPDATE question_packs SET generation_status = 'complete', "
+                    "name = 'Techno' WHERE id = :pid"
+                ),
+                {"pid": pack_id},
+            )
+            await s.commit()
+        store = SharedQuizStore(factory)
+        assert await store.owned_pack(str(pack_id), owner) == {
+            "name": "Techno",
+            "language": "en",
+            "status": "complete",
+        }
+        assert await store.owned_pack(str(pack_id), "friend") is None
+        assert await store.owned_pack("not-a-uuid", owner) is None
+        with pytest.raises(HTTPException) as exc:
+            await _require_pack_ownership(str(pack_id), "friend", factory)
+        assert exc.value.status_code == 404
+    finally:
+        await _cleanup(factory, order_id)

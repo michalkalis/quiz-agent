@@ -23,6 +23,7 @@ from ..evaluation.spelling import collapse_spelling
 from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
+from ..rooms.rounds import open_round
 from ..session.manager import SessionManager
 from ..tts.number_normalization import normalize_numbers_for_tts
 from ..tts.spoken_text import spoken_question_text
@@ -164,10 +165,13 @@ class QuizFlowService:
         translation_service: Any,
         analytics: Optional[AnalyticsRecorder] = None,
         daily_challenge: Any = None,
+        shared_quiz: Any = None,
     ):
         self.analytics = analytics or AnalyticsRecorder()
         # #205 DailyChallengeService; None without a database.
         self.daily_challenge = daily_challenge
+        # #232 SharedQuizService (records shared-quiz results); None without DB.
+        self.shared_quiz = shared_quiz
         self.session_manager = session_manager
         self.input_parser = input_parser
         self.question_retriever = question_retriever
@@ -234,6 +238,7 @@ class QuizFlowService:
                 participant_id=participant_id,
                 include_audio=include_audio,
                 result=FlowResult(),
+                route=route,
             )
 
         result = FlowResult()
@@ -280,6 +285,7 @@ class QuizFlowService:
         )
         if result.crowd is not None:
             session.last_evaluation.crowd = result.crowd.model_dump()
+        session.question_results[evaluated_question_id] = result.evaluation.result
         self.analytics.emit(
             "answer_evaluated",
             subject_id=session.user_id,
@@ -314,6 +320,7 @@ class QuizFlowService:
             await self.session_manager.update_session(session)
             self._emit_completed(session, "max_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
             return result
@@ -373,6 +380,7 @@ class QuizFlowService:
             await self.session_manager.update_session(session)
             self._emit_completed(session, "no_more_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
@@ -451,6 +459,7 @@ class QuizFlowService:
                 )
                 await self.session_manager.update_session(session)
                 self._emit_completed(session, "no_more_questions")
+                await self.shared_finish(session)
                 result.quiz_finished = True
                 result.message = "No more questions available"
                 return result
@@ -475,10 +484,6 @@ class QuizFlowService:
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
 
-        # Record usage (#95, #205: skipped for pack and daily sessions — see check above)
-        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
-            await self.usage_tracker.record_question(session.user_id)
-
         # Resolve the next question's text ONCE (stem + options + explanation +
         # answer) and persist the record: /question, /question/audio and the next
         # evaluation all read it instead of resolving again. Pre-translated
@@ -493,7 +498,22 @@ class QuizFlowService:
         )
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record
-        await self.session_manager.update_session(session)
+        open_round(session, translated_q_dict)  # #212.2: no-op outside a room
+        stored = await self.session_manager.update_session(session)
+
+        # Record usage (#95, #205: skipped for pack and daily sessions — see check
+        # above) only once the advance is stored (#235.6): a request killed in
+        # between (deploy, cancellation) must not leave a charge behind for an
+        # answer the session never recorded — the app's retry grades it again
+        # and would be charged a second time. Nor is a question charged whose
+        # session expired meanwhile (``False``): it can never be played.
+        if (
+            stored is not False
+            and self.usage_tracker
+            and session.user_id
+            and not session.is_quota_exempt
+        ):
+            await self.usage_tracker.record_question(session.user_id)
 
         result.next_question_dict = translated_q_dict
 
@@ -783,6 +803,16 @@ class QuizFlowService:
             await self.daily_challenge.finish(session)
         except Exception as e:
             logger.error("Daily challenge finish not recorded: %s", e, exc_info=True)
+
+    async def shared_finish(self, session: QuizSession) -> None:
+        """#232: record a finished shared quiz's result(s). A failure only
+        loses the comparison row — never the finish itself."""
+        if not (session.shared_quiz_id and self.shared_quiz):
+            return
+        try:
+            await self.shared_quiz.finish(session)
+        except Exception as e:
+            logger.error("Shared quiz result not recorded: %s", e, exc_info=True)
 
     async def _correct_answer_display(
         self,

@@ -135,7 +135,7 @@ struct QuestionListenBar: View {
     var size: ListenBar.Size = .full
     var language: CommandLanguage = .english
 
-    /// #185 track F: the recording has heard the driver ("Capturing…").
+    /// #185 track F: the recording has heard the driver ("Hearing you…").
     var speechHeard: Bool = false
 
     /// #185 track F: the live mic level the bar breathes with while listening.
@@ -146,6 +146,12 @@ struct QuestionListenBar: View {
     var answerRemaining: Int? = nil
 
     var onDismiss: (() -> Void)? = nil
+
+    /// #237: the commands control while commands wait on the permission
+    /// (`QuizViewModel.commandsAccessory(for:)`), and its two actions.
+    var commandsAccessory: ListenBar.CommandsAccessory? = nil
+    var onTurnOnCommands: (() -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
 
     private var words: [String] {
         guard showsWords else { return [] }
@@ -164,7 +170,10 @@ struct QuestionListenBar: View {
             speechHeard: speechHeard,
             inputLevel: inputLevel,
             answerRemaining: answerRemaining,
-            onDismiss: phase.isDismissable ? onDismiss : nil
+            onDismiss: phase.isDismissable ? onDismiss : nil,
+            commandsAccessory: commandsAccessory,
+            onTurnOnCommands: onTurnOnCommands,
+            onOpenSettings: onOpenSettings
         )
     }
 }

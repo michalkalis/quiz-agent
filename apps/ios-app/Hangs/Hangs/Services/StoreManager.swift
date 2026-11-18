@@ -19,13 +19,17 @@ import Foundation
 import os
 
 /// Pinned RC / App Store identifiers (issue #93 D-ids). Seed migration `0005`
-/// and the RC offering both hardcode these exact strings.
+/// and the RC offering both hardcode these exact strings. The product ids are
+/// the ones StoreKit reports in this app: `beta.`-prefixed in Trubbo Beta
+/// (#234, `BetaApp.storeProductID`).
 enum StoreProduct {
     /// Subscription product id (RC's built-in `.monthly` offering accessor
     /// resolves this by billing period, not by this string).
-    static let monthlySubId = "com.carquiz.unlimited.monthly"
+    static let monthlySubId = BetaApp.storeProductID("com.carquiz.unlimited.monthly")
     /// Consumable pack (+100 questions, never expires).
-    static let packId = "com.carquiz.pack.questions100"
+    static let packId = BetaApp.storeProductID("com.carquiz.pack.questions100")
+    /// How many questions the consumable pack adds.
+    static let packQuestionCount = 100
     /// The RC *package* identifier in the `default` offering for the pack
     /// (the sub is looked up via `.monthly`, the pack needs its custom
     /// package identifier — issue #93 Session 0 provisioning).
@@ -92,7 +96,8 @@ final class StoreManager: ObservableObject {
     /// now shows an active entitlement (subscription OR pack credits) —
     /// `restorePurchases()` uses this to detect a pack-only recovery, since
     /// consumable packs never flip `isPurchased` (issue #102 finding 3).
-    var onPurchaseSuccess: (@MainActor () async -> Bool)?
+    /// nil = the server could not be reached (#235 F6).
+    var onPurchaseSuccess: (@MainActor () async -> Bool?)?
 
     private let purchaseService: PurchaseService
     /// #51 product analytics — see `StoreManager+Analytics`.
@@ -163,7 +168,7 @@ final class StoreManager: ObservableObject {
                     // activate (RC product↔entitlement mapping or store-side
                     // failure). Silent success here was the founder's
                     // re-prompt loop — fail loud instead (#96 P1).
-                    let message = String(localized: "The purchase went through but didn't activate. Try Restore purchases — if that doesn't help, contact support.", comment: "Paywall error when a subscription purchase completes without activating the entitlement")
+                    let message = String(localized: "The purchase went through but didn't activate. Try Restore purchases — if that doesn't help, contact support.", bundle: .interface, locale: .interface, comment: "Paywall error when a subscription purchase completes without activating the entitlement")
                     purchaseError = message
                     purchaseState = .failed(message: message)
                     SentryLog.error("purchase success without entitlement", category: .quiz, attributes: ["product": productID])
@@ -244,18 +249,25 @@ final class StoreManager: ObservableObject {
             // The bridge reports whether the server mirror now shows an
             // active entitlement (subscription OR credits) — the only signal
             // that can see pack credits, since `isPurchased` never reflects them.
-            let recoveredViaServer = await onPurchaseSuccess?() ?? false
-            if isPurchased || recoveredViaServer {
+            let serverVerdict: Bool? = if let onPurchaseSuccess { await onPurchaseSuccess() } else { false }
+            if isPurchased || serverVerdict == true {
                 // Either the subscription itself came back, or the server
                 // reconciliation surfaced something (pack credits, or a
                 // subscription webhook that landed after the SDK check) —
                 // either way this is a real recovery, not a no-op (#96 P1).
                 purchaseState = .success(productID: nil)
+            } else if serverVerdict == nil {
+                // #235 F6: the store found nothing and the server, the only
+                // one that knows a question pack, did not answer. "Nothing to
+                // restore" would be wrong; Restore can be tapped again.
+                let message = String(localized: "Couldn't connect. Try again.", bundle: .interface, locale: .interface, comment: "Paywall: restore could not reach the server that knows question packs")
+                purchaseError = message
+                purchaseState = .failed(message: message)
             } else {
                 purchaseState = .nothingToRestore
             }
         } catch {
-            let message = String(localized: "Failed to restore purchases", comment: "Paywall error shown when restoring previous purchases failed")
+            let message = String(localized: "Failed to restore purchases", bundle: .interface, locale: .interface, comment: "Paywall error shown when restoring previous purchases failed")
             purchaseError = message
             purchaseState = .failed(message: message)
         }

@@ -97,10 +97,12 @@ class _Planner:
         self.names = names
         self.raises = raises
         self.calls: list[tuple[str, str, int]] = []
+        self.kwargs: list[dict[str, Any]] = []
         self.release: asyncio.Event | None = None
 
-    async def propose_subthemes(self, request: str, language: str, count: int):
+    async def propose_subthemes(self, request: str, language: str, count: int, **kw):
         self.calls.append((request, language, count))
+        self.kwargs.append(kw)
         if self.release is not None:
             await self.release.wait()
         if self.raises:
@@ -129,7 +131,7 @@ class _Store:
         return []
 
 
-def _ctx(target: int = 30) -> OrderContext:
+def _ctx(target: int = 30, audience: str | None = None) -> OrderContext:
     return OrderContext(
         order_id=uuid.uuid4(),
         prompt="Harry Potter",
@@ -137,6 +139,7 @@ def _ctx(target: int = 30) -> OrderContext:
         target_count=target,
         theme="Harry Potter",
         direct_generation=True,
+        audience=audience,
     )
 
 
@@ -194,6 +197,7 @@ async def test_round_one_whole_topic_then_subtheme_quotas_fill_the_pack() -> Non
     await _run(_walk(gen, planner, persist=persist), ctx)
 
     assert planner.calls == [("Harry Potter", "en", 9)]  # once per order
+    assert planner.kwargs == [{}]  # #236: an adult call carries no band
     assert gen.calls[0]["count"] == 1 and gen.calls[0]["topics"] == WHOLE_TOPIC
     later = gen.calls[1:]
     assert all(len(c["topics"]) == 1 and c["topics"][0] in SUBTHEMES for c in later)
@@ -374,6 +378,7 @@ async def test_only_the_customer_worker_opts_in(monkeypatch: pytest.MonkeyPatch)
     )
     assert offline._generation_stage._customer_order is False
     assert offline._dedup_stage._in_pack_cosine is False
+    assert offline._composition_stage._customer_order is False
 
     worker = next(
         s
@@ -391,6 +396,8 @@ async def test_only_the_customer_worker_opts_in(monkeypatch: pytest.MonkeyPatch)
     )
     assert worker._generation_stage._customer_order is True
     assert worker._dedup_stage._in_pack_cosine is True
+    # Founder 2026-11-18: no per-topic cap on a customer pack.
+    assert worker._composition_stage._customer_order is True
 
 
 @pytest.mark.usefixtures("subthemes_on")
@@ -466,3 +473,64 @@ def test_allocate_takes_the_largest_remaining_quota_first() -> None:
     # B owes 3, C owes 4 → C first; anything beyond the plan is whole-topic.
     assert subthemes.allocate(plan, done, 5) == [("C", 4), ("A", 1)]
     assert subthemes.allocate(plan, done, 12) == [("C", 4), ("A", 3), ("B", 3), (None, 2)]
+
+
+# --- #236: a child-band pack spreads over many small sub-themes ----------------
+# Second trial 2026-11-17: "Harry Potter through the real world: owls, potion
+# chemistry, real models for creatures and places" (10-12, 4 questions) came
+# back 3 of 4 about owls. The adult 3-4 shape gave the 3 questions after
+# round 1 to ONE sub-theme, the first angle the request named. The kids
+# prompt's rule is that no two questions feel like siblings.
+
+ANGLES = ["owls", "potion chemistry", "real models for creatures", "filming places"]
+
+
+@pytest.fixture
+def kids_check_passes(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app import kids_check
+
+    async def keep_all(questions, band):
+        return questions, {"length": 0, "theme": 0}
+
+    monkeypatch.setattr(kids_check, "filter_questions", keep_all)
+
+
+@pytest.mark.usefixtures("subthemes_on", "kids_check_passes")
+async def test_small_child_pack_gives_every_named_angle_its_own_question() -> None:
+    gen, planner = _Generator(), _Planner(names=ANGLES)
+    ctx = _ctx(4, audience="kids_10_12")
+
+    await _run(_walk(gen, planner), ctx)
+
+    # Three sub-themes for the three questions after round 1, and the
+    # planner is told the band.
+    assert planner.calls == [("Harry Potter", "en", 3)]
+    assert planner.kwargs == [{"audience": "kids_10_12"}]
+    assert len(ctx.questions) == 4
+    counts = _counts(ctx)
+    assert counts.pop(None) == 1  # round 1, whole topic
+    assert counts == {"owls": 1, "potion chemistry": 1, "real models for creatures": 1}
+
+
+@pytest.mark.usefixtures("subthemes_on", "kids_check_passes")
+async def test_child_pack_never_puts_more_than_two_questions_on_one_subtheme() -> None:
+    gen, planner = _Generator(), _Planner()
+    ctx = _ctx(10, audience="kids_7_9")
+
+    await _run(_walk(gen, planner), ctx)
+
+    assert planner.calls == [("Harry Potter", "en", 7)]  # ceil(10 / 1.5)
+    assert len(ctx.questions) == 10
+    counts = _counts(ctx)
+    assert counts.pop(None) == 1
+    assert sum(counts.values()) == 9 and max(counts.values()) <= 2
+    assert all(c["count"] <= subthemes.CHILD_MAX_QUOTA for c in gen.calls[1:])
+
+
+@pytest.mark.parametrize("target", range(4, 31))
+def test_child_quota_split_is_one_to_two_and_sums_to_the_budget(target: int) -> None:
+    band = "kids_4_6"
+    names = (SUBTHEMES * 4)[: subthemes.subtheme_count(target, band)]
+    quotas = [p["quota"] for p in subthemes.split_quotas(names, target - 1, band)]
+    assert sum(quotas) == target - 1
+    assert set(quotas) <= {1, 2}

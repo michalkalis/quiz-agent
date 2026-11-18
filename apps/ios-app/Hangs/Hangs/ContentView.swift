@@ -21,7 +21,7 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showOnboarding: Bool
     @State private var showOnboardingReplay = false
-    // #58 §9: contextual sign-in sheet after purchase/restore (decision 10).
+    // #58 §9 / #217.4: contextual sign-in sheet after every purchase (decision 10).
     @StateObject private var signInPrompt: SignInPromptCoordinator
     // #108C: keeps the screen awake for the duration of an active quiz.
     // Injectable so tests assert against a spy, never the real UIApplication.
@@ -29,37 +29,67 @@ struct ContentView: View {
     // #109: in-app feedback. Built at tap time with a screenshot of the
     // current screen + a snapshot of the quiz state; drives the feedback sheet.
     @State private var feedbackPresentation: FeedbackPresentation?
+    /// #212: the game together on screen, nil when none.
+    @State private var room: RoomViewModel?
+    /// #216.2: the Together tab's room until the player hosts or joins.
+    @State private var togetherRoom: RoomViewModel?
+    /// Shows the Together tab while the server switch is on.
+    @ObservedObject private var appConfig: AppConfigStore
+    /// #232: a friend's quiz link waiting to start.
+    @ObservedObject private var sharedQuiz: SharedQuizInbox
 
     init(appState: AppState) {
-        _viewModel = StateObject(wrappedValue: appState.sharedQuizViewModel())
+        let quizViewModel = appState.sharedQuizViewModel()
+        _viewModel = StateObject(wrappedValue: quizViewModel)
+        _appConfig = ObservedObject(wrappedValue: appState.appConfig)
+        _sharedQuiz = ObservedObject(wrappedValue: appState.sharedQuizInbox)
         _dailyChallenge = StateObject(wrappedValue: DailyChallengeViewModel(network: appState.networkService))
         _onboardingVM = StateObject(wrappedValue: OnboardingViewModel(
             audioService: appState.audioService,
             persistenceStore: appState.persistenceStore,
-            analytics: appState.analytics
+            analytics: appState.analytics,
+            // #237: the coordinator raises the speech-recognition prompt, reports
+            // the answer and re-arms the listener once commands are ready.
+            enableCommands: { [weak quizViewModel] in
+                await quizViewModel?.enableVoiceCommands(source: .onboarding)
+            }
         ))
         _showOnboarding = State(initialValue: !appState.persistenceStore.hasCompletedOnboarding)
-        var showsSignInPromptAtLaunch = false
+        var signInPromptAtLaunch: SignInPromptPurchase?
         #if DEBUG
             // `--ui-test-signin-prompt`: present the #58 §9 contextual sign-in
             // sheet directly — it is otherwise reachable only through a real
             // StoreKit purchase, which the sim can't perform.
-            showsSignInPromptAtLaunch = CommandLine.arguments.contains("--ui-test-signin-prompt")
+            if CommandLine.arguments.contains("--ui-test-signin-prompt") { signInPromptAtLaunch = .plus }
         #endif
         _signInPrompt = StateObject(wrappedValue: SignInPromptCoordinator(
             persistenceStore: appState.persistenceStore,
-            isPresented: showsSignInPromptAtLaunch
+            analytics: appState.analytics,
+            presented: signInPromptAtLaunch
         ))
     }
 
     var body: some View {
-        if showOnboarding {
-            OnboardingView(viewModel: onboardingVM)
-                .onChange(of: onboardingVM.isComplete) { _, complete in
-                    if complete { showOnboarding = false }
-                }
-        } else {
-            mainContent
+        Group {
+            if showOnboarding {
+                OnboardingView(viewModel: onboardingVM)
+                    .onChange(of: onboardingVM.isComplete) { _, complete in
+                        if complete { showOnboarding = false }
+                    }
+            } else {
+                mainContent
+            }
+        }
+        // #232: a friend's link opens even over the first launch's onboarding.
+        .onReceive(sharedQuiz.$token) { token in
+            // @Published delivers before the new value is stored.
+            if token != nil { Task { openPendingSharedQuiz() } }
+        }
+        .onChange(of: appConfig.sharedQuizEnabled) { _, _ in openPendingSharedQuiz() }
+        // #232: the first launch asks iOS (no paste alert) whether a link waits.
+        .task(id: appConfig.sharedQuizEnabled) {
+            guard appConfig.sharedQuizEnabled else { return }
+            await sharedQuiz.checkClipboard()
         }
     }
 
@@ -111,58 +141,186 @@ struct ContentView: View {
         navModel.orderFlowPresented = true
     }
 
+    private func openRoom(invite: RoomInvite?) {
+        guard room == nil else { return }
+        let game = appState.makeRoomViewModel(for: viewModel)
+        room = game
+        // A join link over the Together tab: its search stops under the game.
+        togetherRoom = nil
+        if let invite { Task { await game.join(invite) } }
+    }
+
+    /// #216.2: the player hosted or joined on the Together tab; the game takes
+    /// the full screen and the tab starts over when it closes.
+    private func openTogetherGame(_ game: RoomViewModel) {
+        guard room == nil else { return }
+        room = game
+        togetherRoom = nil
+    }
+
+    /// A fresh room each time the Together tab shows, so a game always uses
+    /// the solo settings of that moment.
+    private func freshTogetherRoom() {
+        togetherRoom = appState.makeRoomViewModel(for: viewModel)
+    }
+
+    private func roomClosed() {
+        if navModel.selectedTab == .together { freshTogetherRoom() }
+        offerPendingSignInPrompt()
+    }
+
+    /// #217.4: the sign-in prompt never covers another screen; it shows once
+    /// no paywall, order flow, game together or quiz is up. `quizState` is
+    /// passed by the state observer, which runs before the new value is stored.
+    private func isAtRestForSignInPrompt(quizState: QuizState) -> Bool {
+        !viewModel.showPaywall && !navModel.orderFlowPresented && room == nil && quizState == .idle
+    }
+
+    private func signInPromptPurchaseCompleted(_ purchase: SignInPromptPurchase) {
+        signInPrompt.purchaseCompleted(purchase, canPresentNow: isAtRestForSignInPrompt(quizState: viewModel.quizState))
+    }
+
+    private func offerPendingSignInPrompt(quizState: QuizState? = nil) {
+        guard isAtRestForSignInPrompt(quizState: quizState ?? viewModel.quizState) else { return }
+        signInPrompt.presentPendingIfAny()
+    }
+
+    /// #217.4: the order sheet closed. A custom pack the server accepted (so
+    /// it already sits on this phone's identity, and a sign-in moves it to
+    /// the account) is offered for saving now, or after the quiz the sheet
+    /// may have just started.
+    private func orderFlowDismissed() {
+        if let purchase = appState.orderPackViewModel.takeAcceptedPaidOrder() {
+            signInPrompt.purchaseCompleted(purchase, canPresentNow: false)
+        }
+        offerPendingSignInPrompt()
+    }
+
+    private func signInPromptFinished(_ outcome: SignInPromptOutcome) {
+        signInPrompt.finish(outcome)
+        if outcome == .signedIn {
+            Task { await appState.reloadAfterSignIn() }
+        }
+    }
+
+    private func openPendingInvite() {
+        // #217: Together is hidden in the App Store build: keep the link
+        // unopened. The config is still the permissive default on a cold
+        // launch, so it opens once the fetch turns the switch on.
+        if appConfig.multiplayerHiddenByChannel { return }
+        guard room == nil, viewModel.quizScreen == .home, let invite = appState.roomInvites.take() else { return }
+        openRoom(invite: invite)
+    }
+
+    /// #232: a friend's link starts its quiz at once, without the onboarding
+    /// (it stays for the next launch); the mic is asked for at the start, as
+    /// for every quiz. Waits while the switch is off (the config may still be
+    /// the launch default), a game together is up or a quiz runs.
+    private func openPendingSharedQuiz() {
+        guard appConfig.sharedQuizEnabled, room == nil, viewModel.quizState == .idle,
+              let token = sharedQuiz.take() else { return }
+        showOnboarding = false
+        viewModel.beginSharedQuiz(token: token)
+    }
+
+    /// The pushed screens, the same on both tabs' stacks.
+    @ViewBuilder
+    private func routeDestination(_ route: AppRoute) -> some View {
+        switch route {
+        case .settings:
+            SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
+        case .myPacks:
+            MyPacksView(
+                viewModel: appState.myPacksViewModel,
+                onPlayPack: playPack,
+                createPack: MyPacksCreatePack(
+                    orderViewModel: appState.orderPackViewModel,
+                    appConfig: appState.appConfig,
+                    defaultLanguage: viewModel.settings.language
+                )
+            )
+        case .allStats:
+            ProfileStatsView(viewModel: appState.profileViewModel)
+        #if DEBUG
+            case .debugLog:
+                DebugLogView()
+        #endif
+        }
+    }
+
     @ViewBuilder
     private var mainContent: some View {
-        ZStack {
-            // Main navigation content
-            NavigationStack(path: $navModel.path) {
-                Group {
-                    switch viewModel.quizScreen {
-                    case .home:
-                        HomeView(
-                            viewModel: viewModel,
-                            myPacks: appState.myPacksViewModel,
-                            appConfig: appState.appConfig,
-                            dailyChallenge: dailyChallenge,
-                            onCreatePack: presentOrderFlow
-                        )
-                    case .question:
-                        QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
-                    case .result:
-                        ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
-                    case .setRecap:
-                        SetRecapView(viewModel: viewModel)
-                    case .completion:
-                        CompletionView(viewModel: viewModel)
-                    case .dailyEnd:
-                        DailyRoundEndView(viewModel: viewModel)
-                    case let .error(model):
-                        ErrorView(viewModel: viewModel, model: model)
-                    }
-                }
-                .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
-                // #111: single route table for the root stack's push chain —
-                // replaces the 4 imperative NavigationLink destinations.
-                .navigationDestination(for: AppRoute.self) { route in
-                    switch route {
-                    case .settings:
-                        SettingsView(viewModel: viewModel, onReplayOnboarding: replayOnboarding)
-                    case .myPacks:
-                        MyPacksView(
-                            viewModel: appState.myPacksViewModel,
-                            onPlayPack: playPack,
-                            createPack: MyPacksCreatePack(
-                                orderViewModel: appState.orderPackViewModel,
+        // #213.4 (founder 2026-10-28, bar B): Play and Profile; #216.2 (founder
+        // 2026-10-30, variant B) Together between them. The quiz runs on Play
+        // and hides the tab bar, so it keeps the full screen.
+        TabView(selection: $navModel.selectedTab) {
+            Tab("Play", systemImage: "play.circle", value: AppTab.play) {
+                NavigationStack(path: $navModel.path) {
+                    Group {
+                        switch viewModel.quizScreen {
+                        case .home:
+                            HomeView(
+                                viewModel: viewModel,
+                                myPacks: appState.myPacksViewModel,
                                 appConfig: appState.appConfig,
-                                defaultLanguage: viewModel.settings.language
+                                dailyChallenge: dailyChallenge,
+                                sharedQuiz: sharedQuiz,
+                                onCreatePack: presentOrderFlow
                             )
-                        )
-                    #if DEBUG
-                        case .debugLog:
-                            DebugLogView()
-                    #endif
+                        case .question:
+                            QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .result:
+                            ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .setRecap:
+                            SetRecapView(viewModel: viewModel)
+                        case .completion:
+                            CompletionView(viewModel: viewModel)
+                        case .dailyEnd:
+                            DailyRoundEndView(viewModel: viewModel)
+                        case let .error(model):
+                            ErrorView(viewModel: viewModel, model: model)
+                        }
+                    }
+                    .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
+                    .toolbar(viewModel.quizScreen.showsTabBar ? .visible : .hidden, for: .tabBar)
+                    // #111: single route table for the root stack's push chain —
+                    // replaces the 4 imperative NavigationLink destinations.
+                    .navigationDestination(for: AppRoute.self, destination: routeDestination)
+                }
+            }
+            .accessibilityIdentifier("tab.play")
+
+            if appConfig.multiplayerEnabled {
+                Tab("Together", systemImage: "person.2", value: AppTab.together) {
+                    ZStack {
+                        Theme.Hangs.Colors.bg.ignoresSafeArea()
+                        if let togetherRoom {
+                            TogetherTabView(viewModel: togetherRoom, onGameOpened: openTogetherGame)
+                                .id(togetherRoom.id)
+                        }
                     }
                 }
+                .accessibilityIdentifier("tab.together")
+            }
+
+            Tab("Profile", systemImage: "person.crop.circle", value: AppTab.profile) {
+                NavigationStack(path: $navModel.profilePath) {
+                    ProfileView(viewModel: appState.profileViewModel, isPlus: viewModel.usageInfo?.isPlus) {
+                        PlanSection(viewModel: viewModel)
+                    }
+                    .navigationDestination(for: AppRoute.self, destination: routeDestination)
+                }
+            }
+            .accessibilityIdentifier("tab.profile")
+        }
+        // #216 (founder 2026-10-30) had the bar shrink to the Play button on scroll;
+        // #224 (founder 2026-11-02): it stays full. iOS has no "shrink a bit" mode.
+        .tabBarMinimizeBehavior(.never)
+        .onChange(of: navModel.selectedTab) { _, tab in
+            if tab == .profile { appState.profileViewModel.tabOpened() }
+            if tab == .together, room == nil {
+                freshTogetherRoom()
+                togetherRoom?.tabOpened()
             }
         }
         // #108C: keep the screen awake for the duration of an active quiz —
@@ -190,7 +348,7 @@ struct ContentView: View {
                     if complete { showOnboardingReplay = false }
                 }
         }
-        .sheet(isPresented: $viewModel.showPaywall, onDismiss: signInPrompt.paywallDismissed) {
+        .sheet(isPresented: $viewModel.showPaywall, onDismiss: { offerPendingSignInPrompt() }) {
             PaywallView(
                 storeManager: appState.storeManager,
                 limitError: viewModel.quotaLimitError,
@@ -200,7 +358,7 @@ struct ContentView: View {
         // #138 create-pack sheet, opened from Home or Settings. Presented here at
         // the root (not inside a pushed screen) so both entries share one
         // presentation; quiz-start teardown clears the flag via `navModel`.
-        .sheet(isPresented: $navModel.orderFlowPresented) {
+        .sheet(isPresented: $navModel.orderFlowPresented, onDismiss: orderFlowDismissed) {
             OrderPackFlowView(
                 viewModel: appState.orderPackViewModel,
                 voice: appState.makeFeedbackVoice(for: viewModel),
@@ -211,11 +369,12 @@ struct ContentView: View {
                 onClose: { navModel.orderFlowPresented = false }
             )
         }
-        .sheet(isPresented: $signInPrompt.isPresented) {
-            ContextualSignInSheet(authService: appState.authService) {
-                signInPrompt.isPresented = false
-            }
-            .presentationDetents([.height(520)])
+        .sheet(item: $signInPrompt.presented, onDismiss: signInPrompt.sheetDismissed) { purchase in
+            ContextualSignInSheet(
+                purchase: purchase,
+                authService: appState.authService,
+                onFinish: signInPromptFinished
+            )
             .presentationDragIndicator(.visible)
         }
         // `.onReceive` subscribes to the publisher directly — the old
@@ -228,7 +387,13 @@ struct ContentView: View {
         // contextual sign-in prompt when Premium turns on.
         .onReceive(appState.storeManager.$isPurchased.removeDuplicates()) { isPurchased in
             guard isPurchased else { return }
-            signInPrompt.premiumActivated(whilePaywallShown: viewModel.showPaywall)
+            signInPromptPurchaseCompleted(.plus)
+        }
+        // #217.4: question credit never flips `isPurchased`; its purchase
+        // outcome is the signal.
+        .onReceive(appState.storeManager.$purchaseState.removeDuplicates()) { state in
+            guard let purchase = SignInPromptPurchase.credit(after: state) else { return }
+            signInPromptPurchaseCompleted(purchase)
         }
         // #111: the sole teardown path — entering `.startingQuiz` (from
         // `.idle`, or `.error` once #110's retry transition lands) clears the
@@ -246,10 +411,50 @@ struct ContentView: View {
         // (found via RS-pack-nav-start, #111 T4).
         .onReceive(viewModel.$quizState) { newState in
             navModel.handleQuizStateChange(newState)
+            offerPendingSignInPrompt(quizState: newState)
+            // #232: the paste row is for before the first quiz only.
+            if newState == .startingQuiz { sharedQuiz.quizStarted() }
         }
         .sheet(item: $feedbackPresentation) { presentation in
             FeedbackView(viewModel: presentation.viewModel)
         }
+        .fullScreenCover(item: $room, onDismiss: roomClosed) { room in
+            RoomFlowView(
+                viewModel: room,
+                packs: appState.myPacksViewModel,
+                onShowPlans: {
+                    self.room = nil
+                    viewModel.showPaywall = true
+                },
+                onClose: { self.room = nil }
+            )
+        }
+        // #212: a join link opens the game once Home is on screen (never over
+        // a solo quiz in progress).
+        .onReceive(appState.roomInvites.$invite) { invite in
+            // @Published delivers before the new value is stored: take it on
+            // the next main-actor turn.
+            if invite != nil { Task { openPendingInvite() } }
+        }
+        .onChange(of: viewModel.quizScreen) { _, _ in
+            openPendingInvite()
+            openPendingSharedQuiz()
+        }
+        // #232: the comparison of the sender's own link or an already played one.
+        .sheet(item: $viewModel.sharedQuizComparison) { play in
+            SharedQuizResultsSheet(network: viewModel.networkService, token: play.token)
+        }
+        // #232: a link that cannot be played (gone, nothing playable).
+        .alert(
+            viewModel.sharedQuizNotice ?? "",
+            isPresented: Binding(
+                get: { viewModel.sharedQuizNotice != nil },
+                set: { if !$0 { viewModel.dismissSharedQuizNotice() } }
+            )
+        ) {
+            Button("OK", role: .cancel) { viewModel.dismissSharedQuizNotice() }
+        }
+        .onChange(of: appConfig.multiplayerHiddenByChannel) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
         // Mounted here, on the root, because `startNewQuiz` has 9 call sites
         // (Home, voice "start", Play Again, error-retry…) and all of them must
@@ -300,7 +505,7 @@ struct ContentView: View {
             Text("You've played every question in this pack.")
         }
         // #197: the one-time beta question about sending answer recordings.
-        .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.path.isEmpty))
+        .modifier(AnswerRecordingConsentPrompt(isOnHome: viewModel.quizScreen == .home && navModel.isHomeOnTop))
         .environmentObject(navModel)
     }
 }

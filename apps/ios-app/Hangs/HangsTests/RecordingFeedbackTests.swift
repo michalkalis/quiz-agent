@@ -4,7 +4,7 @@
 //
 //  #185 track F (car test 2026-09-23, finding 4b; founder pick F2 "Lišta
 //  dýcha"): while the driver answers, the question screen's listen bar must say
-//  which phase the recording is in — "Listening…" → "Capturing…" →
+//  which phase the recording is in — "Listening…" → "Hearing you…" →
 //  "Processing…" — and glow with the live mic level, and a gentle tone must mark
 //  the moment speech is first heard. In the car nothing on screen said whether
 //  the mic heard anything at all, so the driver could not tell a deaf detector
@@ -38,7 +38,7 @@ struct ListenBarRecordingStatusTests {
             #expect(throws: Never.self) { try tree.find(text: "Listening…") }
             #expect(throws: Never.self) { try tree.find(text: "Say your answer") }
             #expect(throws: (any Error).self, "no speech was heard yet") {
-                try tree.find(text: "Capturing…")
+                try tree.find(text: "Hearing you…")
             }
         }
     }
@@ -46,10 +46,10 @@ struct ListenBarRecordingStatusTests {
     /// WHY: the car finding — the driver could not tell whether the mic heard
     /// him. Once speech is detected the bar must SAY so, and say how it ends,
     /// so nobody keeps talking to fill a silence the app is waiting for.
-    @Test("speech heard: \"Capturing…\" and how the recording will end")
+    @Test("speech heard: \"Hearing you…\" and how the recording will end")
     func capturing() async throws {
         try await host(ListenBar(mode: .answer(.mcq), speechHeard: true)) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "Capturing…") }
+            #expect(throws: Never.self) { try tree.find(text: "Hearing you…") }
             #expect(throws: Never.self) { try tree.find(text: "I'll stop when you go quiet") }
             #expect(throws: (any Error).self, "the status must move on, not stack") {
                 try tree.find(text: "Listening…")
@@ -93,7 +93,7 @@ struct ListenBarRecordingStatusTests {
     @Test("a stale speech flag cannot make the in-flight bar claim it is capturing")
     func speechFlagIgnoredOutsideAnswerMode() async throws {
         try await host(ListenBar(mode: .evaluating, speechHeard: true)) { tree in
-            #expect(throws: (any Error).self) { try tree.find(text: "Capturing…") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Hearing you…") }
         }
     }
 

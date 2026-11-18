@@ -40,6 +40,7 @@ struct HomeCategoryPicker: View {
             .padding(.top, Theme.Hangs.Spacing.xl)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
         .safeAreaBar(edge: .bottom) { doneButton }
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .presentationDragIndicator(.hidden)

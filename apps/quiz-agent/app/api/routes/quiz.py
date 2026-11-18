@@ -37,6 +37,7 @@ from ...session.manager import SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...rating.feedback import FeedbackService
 from ...usage.tracker import UsageTracker
+from ...usage.ai_grading_cap import bind_ai_grading
 from ...usage.caps import UsageCaps, answer_attempts
 from ...config import get_settings
 from ...tts.service import TTSService
@@ -44,6 +45,7 @@ from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...quiz.resubmission import reanswers_finished_session
 from ...tts.spoken_text import spoken_question_text
 from ...rate_limit import limiter
+from ...rooms.rounds import open_round
 from quiz_shared.models.phase import SessionPhase
 from quiz_shared.models.submit import AudioInfo
 
@@ -257,6 +259,7 @@ async def start_quiz(
             )
             session.current_question_text = translated_question_dict["question"]
             session.current_question_translation = translation_record
+            open_round(session, translated_question_dict)  # #212.2: rooms only
             session.transition(to=SessionPhase.ASKING, caller="routes.start_quiz")
             await session_manager.update_session(session)
             analytics.emit(
@@ -347,6 +350,7 @@ async def submit_input(
                 1,
                 get_settings().daily_cap_answer_attempts,
             )
+            bind_ai_grading(usage_caps, subject.subject_id or session.user_id)
             flow_result = await quiz_flow.process_answer(
                 session=session,
                 answer_text=body.input,

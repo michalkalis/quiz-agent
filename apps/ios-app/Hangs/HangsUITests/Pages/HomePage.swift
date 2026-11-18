@@ -14,6 +14,11 @@ struct HomePage {
         app.buttons["home.startQuiz"]
     }
 
+    /// While a start is in flight, Start turns into this Cancel control.
+    var cancelStartButton: XCUIElement {
+        app.buttons["home.cancelStart"]
+    }
+
     /// "Create your own pack" — opens the same order sheet as Settings.
     var createPackButton: XCUIElement {
         app.buttons["home.createPack"]

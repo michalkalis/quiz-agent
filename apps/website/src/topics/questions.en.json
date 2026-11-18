@@ -1,0 +1,1387 @@
+{
+ "road-trip": [
+  {
+   "id": "857d72af-f71b-4217-a39c-afea7b0fbde1",
+   "q": "In the classic back-seat game where you playfully punch your neighbour the moment you spot a certain car, which car model are you looking for?",
+   "a": "Volkswagen Beetle",
+   "story": "The game is called Punch Buggy or Slug Bug because the Beetle was nicknamed the 'Bug'. Its rounded shape was unmistakable, and millions were on the road, so there was always someone to hit.",
+   "source": "https://en.wikipedia.org/wiki/Car-spotting_game"
+  },
+  {
+   "id": "8a14bdba-6658-448e-8d74-8728cf3f4c06",
+   "q": "In the classic trucker radio phrase 'ten-four, good buddy', what does 'ten-four' actually mean?",
+   "a": "Message received",
+   "story": "'Ten-four' is one of the 'ten-codes' invented for police radio in the 1930s to keep crackly transmissions short. Truckers adopted the codes, and the CB craze of the 1970s made 'ten-four' famous worldwide.",
+   "source": "https://en.wikipedia.org/wiki/Ten-code"
+  },
+  {
+   "id": "6bc97034-9f15-425b-99cb-e0732750a34c",
+   "q": "Truckers on CB radio call highway police 'bears'. The nickname comes from the troopers' wide-brimmed hats, which look like the one worn by which famous cartoon mascot who warns about forest fires?",
+   "a": "Smokey Bear",
+   "story": "American state troopers often wear the same flat-brimmed campaign hat as Smokey Bear, so to truckers a patrol car became a 'bear', and a police officer hiding with a speed gun became a 'bear in the air' when the officer was in a plane.",
+   "source": "https://en.wikipedia.org/wiki/List_of_CB_slang"
+  },
+  {
+   "id": "9f539cda-feb4-4d18-8c07-5147a94c4435",
+   "q": "One red dashboard warning light looks like a little genie's lamp with a single drop falling from its spout. What object is it really a picture of?",
+   "a": "An oil can",
+   "story": "It's an old-fashioned oil can, and it means your engine has lost oil pressure. Unlike most lights, this one means pull over and switch off the engine straight away.",
+   "source": "https://library.peoplespharmacy.com/oil-light-look-like"
+  },
+  {
+   "id": "25cb0df8-d4af-4640-89b9-ee0e30dc75fc",
+   "q": "On the first frosty morning of the year, your tyre pressure warning light comes on, yet none of your tyres has a puncture. What has switched it on?",
+   "a": "The cold air",
+   "story": "Cold air contracts, so tyre pressure drops by roughly 0.1 bar for every 10 °C fall in temperature, which can be enough to trip the sensor. The light often goes off again once driving warms the tyres up, but it's still worth topping them up.",
+   "source": "https://clickondetroit.com/automotive/2019/01/31/why-your-tire-pressure-warning-light-turns-on-during-cold-weather"
+  },
+  {
+   "id": "3097bdb2-d0b3-422c-b512-170a9a241296",
+   "q": "Reading a book in a moving car can make you feel sick because your eyes say you're sitting still, while another part of your body says you're moving. Which part?",
+   "a": "Inner ear",
+   "story": "The balance organs deep in your inner ear feel every bump and turn, and when your eyes disagree, the brain gets confused and you feel sick. Looking out at the horizon lets your eyes confirm what your ears already know.",
+   "source": "https://www.scientificamerican.com/article/why-does-reading-in-a-mov"
+  },
+  {
+   "id": "f32924aa-366b-482c-be75-d347d594e5ee",
+   "q": "The word 'nausea' comes from an Ancient Greek word for a means of transport. Which one?",
+   "a": "Ship",
+   "story": "The Greek 'naus' meant ship, the same root as 'nautical', so nausea literally means seasickness. Sailors had the feeling long before anyone got carsick.",
+   "source": "https://en.wiktionary.org/wiki/nausea"
+  },
+  {
+   "id": "4b346999-aae8-42be-901a-6f3445d8d458",
+   "q": "The car brand Volvo is a real word in Latin. What does it mean?",
+   "a": "I roll",
+   "story": "Volvo is Latin for 'I roll'. It's the same root as 'revolve', and the name first belonged to a ball-bearing company before it ended up on cars.",
+   "source": "https://www2020.theautochannel.com/news/2005/06/24/134657.html"
+  },
+  {
+   "id": "6c092e37-4af3-4f82-97ef-0cc2f4dfc208",
+   "q": "The classic Volkswagen hippie bus, the original camper-van icon, was still being built brand-new until 2013. In which country?",
+   "a": "Brazil",
+   "story": "Brazil's Kombi outlived German production by decades and was only stopped when new laws made airbags and anti-lock brakes compulsory, which the old design could not take.",
+   "source": "https://en.wikipedia.org/wiki/Volkswagen_Type_2"
+  },
+  {
+   "id": "56b53537-f817-43c5-9554-64f3bbc001b5",
+   "q": "Cars from one European country carry the oval sticker 'CH', which comes from the country's official name in Latin. Which country is it?",
+   "a": "Switzerland",
+   "story": "CH stands for Confoederatio Helvetica, the Swiss Confederation. Switzerland chose Latin so it wouldn't have to pick between German, French, Italian and Romansh, and you'll see the same CH in its web addresses ending in .ch.",
+   "source": "https://www.carvolution.com/en/magazine/ch-sticker"
+  },
+  {
+   "id": "38e6b0f8-ab57-4e03-bd5b-6b32590ba97f",
+   "q": "The Italian surname Ferrari, now famous for sports cars, originally described a man's trade. Which trade?",
+   "a": "Blacksmith",
+   "story": "Ferrari comes from 'ferro', Italian for iron, so the world's most glamorous car brand is really Mr. Smith. It's the Italian cousin of Schmidt, Kovář and Kowalski.",
+   "source": "https://en.wikipedia.org/wiki/Ferrari_(surname)"
+  },
+  {
+   "id": "47049a19-40af-40ee-8ddf-964df5670c91",
+   "q": "High heels weren't invented for fashion. They began as practical footwear for men doing which activity?",
+   "a": "Horse riding",
+   "story": "Persian cavalrymen wore heels so their feet would stay locked in the stirrups while they stood up to shoot arrows. European noblemen later copied the look, and only after that did heels become a women's fashion.",
+   "source": "https://www.today.com/today/amp/tdna100969"
+  },
+  {
+   "id": "9e0334f6-496f-419c-9726-18ca2adf9592",
+   "q": "The word 'gym' comes from an ancient Greek word describing how athletes trained. What did that word mean?",
+   "a": "Naked",
+   "story": "'Gymnasium' comes from the Greek 'gymnos', meaning naked, because Greek athletes exercised in the nude. A dress code your local gym has firmly abandoned.",
+   "source": "https://www.etymonline.com/word/gym"
+  },
+  {
+   "id": "534619bc-1c4c-4602-9e94-d344087e590f",
+   "q": "When someone fakes sadness, we say they're crying the tears of which animal?",
+   "a": "Crocodile",
+   "story": "Medieval travellers claimed crocodiles weep while devouring their victims. Scientists later filmed alligators and caimans eating and found their eyes really do water, though from the effort of chewing, not regret.",
+   "source": "https://en.wikipedia.org/wiki/Crocodile_tears"
+  },
+  {
+   "id": "0843fba6-416c-47ec-8a4a-03c1014de63a",
+   "q": "When you bang your 'funny bone', the tingling shoots down into your hand. Which finger usually feels it most?",
+   "a": "Little finger",
+   "story": "The funny bone isn't a bone at all. It's the ulnar nerve, lying almost bare at the elbow, and that nerve supplies your little finger and half of your ring finger.",
+   "source": "https://assh.org/handcare/blog/what-is-the-funny-bone"
+  },
+  {
+   "id": "ed1c2fb7-db96-468c-9073-1e35517d9927",
+   "q": "Which night-singing insect works as a living thermometer, because it chirps faster the warmer the evening gets?",
+   "a": "Cricket",
+   "story": "Crickets are cold-blooded, so their muscles speed up as the air warms. Count the chirps of a snowy tree cricket in 25 seconds, divide by three, add four, and you get roughly the temperature in Celsius.",
+   "source": "https://en.wikipedia.org/wiki/Dolbear%27s_law"
+  },
+  {
+   "id": "6fc452f1-a479-40ce-8c1f-523a4e2599ed",
+   "q": "When a frightened cat puffs its tail up like a bottle brush, tiny muscles are pulling its hairs upright. The very same reflex happens to you. What do you call it when it happens on your skin?",
+   "a": "Goosebumps",
+   "story": "In furry animals this reflex makes them look bigger to a threat and traps warm air in the fur. We've lost most of our fur, so all we get is a skin full of little bumps, which is why fear and cold both give you goosebumps.",
+   "source": "https://en.wikipedia.org/wiki/Goose_bumps"
+  },
+  {
+   "id": "47fc4fe4-b825-453d-9983-8ad3c38f6c28",
+   "q": "When France wins a big match, fans sometimes shout 'Cocorico!' It's the French version of which animal's call, an animal that is also a national symbol of France?",
+   "a": "Rooster",
+   "story": "Cocorico is how a French rooster crows, and since the Gallic rooster is a national emblem, crowing like one has become a way for the French to celebrate.",
+   "source": "https://en.wikipedia.org/wiki/Gallic_rooster"
+  },
+  {
+   "id": "5bc4d047-918c-4013-b807-bdc7f8ec6d77",
+   "q": "The 'lady' in the name ladybird, or ladybug, honours one specific woman. Who is she?",
+   "a": "The Virgin Mary",
+   "story": "Medieval farmers called it 'Our Lady's bird' and linked its red wings to Mary's cloak and its seven spots to her seven sorrows. German still calls it Marienkäfer, 'Mary's beetle'.",
+   "source": "https://en.wikipedia.org/wiki/Coccinellidae"
+  },
+  {
+   "id": "0891e411-68b8-472b-bf09-5014542f9a2d",
+   "q": "When your cat ignores a slice of cake, it isn't being polite. Which of the basic tastes can cats not detect at all?",
+   "a": "Sweet",
+   "story": "Cats carry a broken copy of the gene for the sweet-taste receptor, so sugar tastes of nothing to them. A pure meat-eater never needed that sense.",
+   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1183522/"
+  }
+ ],
+ "for-the-whole-family": [
+  {
+   "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+   "q": "The toy brand name LEGO is squeezed together from two Danish words meaning what?",
+   "a": "Play well",
+   "story": "Founder Ole Kirk Christiansen took it from the Danish phrase 'leg godt', which simply means 'play well'.",
+   "source": "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
+  },
+  {
+   "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+   "q": "The puzzle cube invented by architecture professor Ernő Rubik in 1974 came from which country?",
+   "a": "Hungary",
+   "story": "Rubik built it in Budapest as a teaching aid for spatial thinking and reportedly took a month to solve his own creation.",
+   "source": "https://en.wikipedia.org/wiki/Ern%C5%91_Rubik"
+  },
+  {
+   "id": "035077c2-f271-4f2a-846c-1459ef636270",
+   "q": "On a standard six-sided die, the numbers on any two opposite faces always add up to what?",
+   "a": "Seven",
+   "story": "One sits opposite six, two opposite five and three opposite four, so every pair of opposite faces totals seven.",
+   "source": "https://mathworld.wolfram.com/Dice.html"
+  },
+  {
+   "id": "f0f21f14-4afe-4b47-84d3-35feeac2d283",
+   "q": "The Statue of Liberty is famously green, but it didn't start out that way. What colour was it when it was new?",
+   "a": "Shiny copper brown",
+   "story": "Her skin is made of copper, so she began the colour of a new penny. Decades of weather turned her green, and that green layer now protects the metal underneath.",
+   "source": "https://www.snopes.com/fact-check/statue-liberty-different-color/"
+  },
+  {
+   "id": "c0c7c98c-dbd8-4336-af1f-3ee9ba83078b",
+   "q": "Which large African animal spends its days half-submerged in rivers and oozes a reddish fluid from its skin that works as its own natural sunscreen?",
+   "a": "Hippopotamus",
+   "story": "Hippos secrete a red-orange liquid, long mistaken for 'blood sweat', whose pigments absorb ultraviolet light and may even help fight germs. It is a built-in sunscreen for an animal with almost no hair.",
+   "source": "https://en.wikipedia.org/wiki/Hipposudoric_acid"
+  },
+  {
+   "id": "8d1342f7-9efc-5d2b-b50f-629e352581ec",
+   "q": "When you mix baking soda with vinegar and it fizzes up dramatically, which gas is being released in all those bubbles?",
+   "a": "Carbon dioxide",
+   "story": "The acid in vinegar reacts with sodium bicarbonate to release carbon dioxide, the very same gas that makes cakes and bread rise in the oven.",
+   "source": "https://en.wikipedia.org/wiki/Sodium_bicarbonate"
+  },
+  {
+   "id": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "q": "Count the seconds between a lightning flash and its thunder, then divide by three. What does the result tell you?",
+   "a": "Distance to the lightning in kilometres",
+   "story": "Light reaches you almost instantly, but sound travels at about 340 metres per second, so it needs roughly three seconds to cover one kilometre. Dividing the delay by three gives the distance to the strike in kilometres. Dividing by five gives it in miles.",
+   "source": "https://en.wikipedia.org/wiki/Thunder"
+  },
+  {
+   "id": "57a74702-596b-4fc5-bc9e-3ca3d232d2c4",
+   "q": "A wingsuit has fabric stretched between the arms and legs, copying a small gliding mammal. Which animal gives the suit its popular nickname?",
+   "a": "Flying squirrel",
+   "story": "Flying squirrels glide by spreading a furry skin flap between their wrists and ankles, and wingsuits copy that design so closely that pilots call them squirrel suits. One leading wingsuit brand is even named Squirrel.",
+   "source": "https://en.wikipedia.org/wiki/Wingsuit_flying"
+  },
+  {
+   "id": "143fd90d-c56c-4896-b932-91d36a900723",
+   "q": "Australia's lyrebird is such a brilliant mimic that it has been recorded copying the sound of which loud power tool heard in its forest?",
+   "a": "Chainsaw",
+   "story": "Lyrebirds weave whatever they hear into their courtship songs, and in forests near logging that includes a near-perfect chainsaw. They've also been heard copying camera shutters and car alarms.",
+   "source": "https://a-z-animals.com/articles/the-unbelievable-voice-of-the-superb-lyrebird/"
+  },
+  {
+   "id": "c21a097e-996d-43ec-905f-5df496864848",
+   "q": "Some birdseed is coated in hot chilli powder. The birds can't feel the heat at all, but one furry garden raider hates it. Which animal is the chilli meant to keep away?",
+   "a": "Squirrels",
+   "story": "Mammals have a pain receptor that capsaicin switches on, but the bird version simply ignores it. That's probably no accident: birds swallow chilli seeds whole and spread them far and wide.",
+   "source": "https://www.audubon.org/magazine/hot-take-seems-birds-can-taste-spice-after-all"
+  },
+  {
+   "id": "51dc169d-df9f-4ca9-82a7-fb6b95e912b0",
+   "q": "Geocachers have a nickname, borrowed from a famous series of children's books, for ordinary passers-by who know nothing about the game and might stumble on a hidden cache. What is it?",
+   "a": "Muggles",
+   "story": "Like Harry Potter's wizards, geocachers try to keep their world hidden from non-magical folk. A cache that a curious stranger finds and throws away is said to have been 'muggled'.",
+   "source": "https://en.wikipedia.org/wiki/Geocaching"
+  },
+  {
+   "id": "b28580ef-0d5a-4402-8ef9-d8c78d20699f",
+   "q": "Long before pumpkins, people in Ireland and Scotland carved Halloween lanterns out of a different vegetable. Which one?",
+   "a": "Turnip",
+   "story": "Hollowed-out turnips with scary faces were the first jack-o'-lanterns. Irish and Scottish emigrants in America switched to pumpkins because they were bigger and far easier to carve.",
+   "source": "https://en.wikipedia.org/wiki/Jack-o'-lantern"
+  },
+  {
+   "id": "a0a22732-4384-4c03-8ffe-047b784d42e4",
+   "q": "Monopoly grew out of an older board game that was invented as a warning. What was it meant to warn players about?",
+   "a": "Greedy landlords",
+   "story": "Its creator, Lizzie Magie, wanted players to feel how rent makes landowners rich and leaves everyone else broke. The way every Monopoly game ends was the lesson, not just the fun.",
+   "source": "https://en.wikipedia.org/wiki/The_Landlord's_Game"
+  },
+  {
+   "id": "e7ca74f9-4c9e-43fc-8954-434015c2fe84",
+   "q": "The chess word 'checkmate' comes from Persian. Which chess piece is named in its first half?",
+   "a": "The king",
+   "story": "'Shah mat' is Persian for 'the king is helpless'. So every time you say 'check', you are really saying 'king', and the word 'chess' itself comes from the same root.",
+   "source": "https://www.etymonline.com/word/checkmate"
+  },
+  {
+   "id": "d743dc60-dc25-4f1c-a1fe-26f20b947510",
+   "q": "A bungee cord is not really a rope. Its core is a thick bundle of hundreds of thin strands of which stretchy material?",
+   "a": "Rubber",
+   "story": "The cord is basically a huge bundle of rubber bands, so it can stretch to several times its resting length. That stretch spreads the stop over many metres, which is why it feels like a bounce instead of a jolt.",
+   "source": "https://en.wikipedia.org/wiki/Bungee_cord"
+  },
+  {
+   "id": "f30607ef-bf42-4deb-9107-8078a4eca141",
+   "q": "Why does a street sound so strangely hushed right after a fresh, fluffy snowfall?",
+   "a": "Snow absorbs sound",
+   "story": "Fresh snow is mostly air trapped between ice crystals, so it soaks up sound like the foam on a recording studio wall. Once it melts and refreezes into a hard crust, it reflects sound and the hush is gone.",
+   "source": "https://accuweather.com/en/weather-news/why-does-it-become-so-quiet-after-a-fresh-snowfall/352439"
+  },
+  {
+   "id": "6847233b-1d18-4e76-b7a9-36108fe1c5e8",
+   "q": "When we 'propose a toast', the name comes from something people once actually dropped into their wine or ale. What was it?",
+   "a": "A piece of toasted bread",
+   "story": "In earlier centuries a slice of spiced toast was floated in a drink to add flavour, and possibly to soak up some of the sediment. The drink honouring someone took its name from that soggy slice.",
+   "source": "https://www.etymonline.com/word/toast"
+  },
+  {
+   "id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+   "q": "After six months floating on the International Space Station, astronauts return to Earth with up to five extra centimetres of something they quickly lose again. Five centimetres of what?",
+   "a": "Height",
+   "story": "Without gravity squashing the spine, the discs between the vertebrae expand and astronauts stretch out, until Earth's pull compresses them back to normal within weeks.",
+   "source": "https://www.nasa.gov/image-article/spinal-ultrasound-investigation/"
+  },
+  {
+   "id": "0866035d-3792-4421-bbff-4ad5f378ca1f",
+   "q": "A housewarming party was once exactly what it sounds like. Before central heating, what did guests traditionally bring to the new home?",
+   "a": "Firewood",
+   "story": "Guests brought wood and lit fires in every hearth of the empty house, both to warm it and to drive out the evil spirits thought to lurk there. A bottle of wine is the modern stand-in for that armful of logs.",
+   "source": "https://en.wikipedia.org/wiki/Housewarming_party"
+  },
+  {
+   "id": "effbbbe5-2b0e-44af-806c-530ad199bc46",
+   "q": "The shiny glaze on a coffee mug isn't paint or varnish. When it melts onto the clay in a hot kiln, it becomes a thin layer of what familiar material?",
+   "a": "Glass",
+   "story": "Glaze is mostly silica, the same stuff as window glass, and in the kiln it melts and fuses to the clay. That's why a glazed mug is waterproof and can be cleaned so easily.",
+   "source": "https://www.canada.ca/en/conservation-institute/services/preventive-conservation/guidelines-collections/ceramics-glass-preventive-conservation.html"
+  }
+ ],
+ "general-knowledge": [
+  {
+   "id": "4b56db5e-f0c3-4005-9970-b690c4935515",
+   "q": "The very first product ever scanned by a barcode reader at a supermarket checkout cost just 67 cents. What was it?",
+   "a": "Chewing gum",
+   "story": "It was a pack of Wrigley's Juicy Fruit gum at a supermarket in Troy, Ohio. That pack of gum is now on display at the Smithsonian.",
+   "source": "https://www.westporttechmuseum.com/blogs/techtastic/today-in-tech-history-june-26th-1974-the-first-upc-marked-product-is-scanned-at-retail-checkout"
+  },
+  {
+   "id": "805b0c1b-d509-4ef0-9d95-3e584f925d75",
+   "q": "Super Glue was discovered by accident while chemists were trying to make see-through plastic for one part of a gun. Which part?",
+   "a": "The sight",
+   "story": "The chemicals stuck to everything they touched, so the researchers threw the idea out. Years later the same chemist realised that the 'flaw' was a superb product.",
+   "source": "https://www.todayifoundout.com/index.php/2011/08/super-glue-was-invented-by-accident-twice/"
+  },
+  {
+   "id": "51db3704-0de3-45dd-8880-f6eb21f20cfd",
+   "q": "The sticky notes covering office monitors exist because a chemist at the company 3M failed at making what?",
+   "a": "A super-strong glue",
+   "story": "Spencer Silver was trying to make an extra-strong adhesive and ended up with one so weak it could be peeled off and stuck back again. It sat unused for years until a colleague wanted bookmarks that wouldn't fall out of his hymn book.",
+   "source": "https://en.wikipedia.org/wiki/Spencer_Silver"
+  },
+  {
+   "id": "79cf2923-86e4-4751-9826-1e71451495b7",
+   "q": "A Viennese mechanic who made tools for surgeons invented the snow globe by accident. What was he actually trying to improve?",
+   "a": "Operating room lamp",
+   "story": "Erwin Perzy put a water-filled glass globe in front of a light and added tiny particles to boost its glare. The flakes drifted down like snow, and his family in Vienna still makes snow globes over a century later.",
+   "source": "https://www.smithsonianmag.com/innovation/how-an-experiment-to-amplify-light-in-hospital-operating-rooms-led-to-the-accidental-invention-of-the-snow-globe-180985742/"
+  },
+  {
+   "id": "32d2800b-87cd-49a2-adbe-dd7547c00653",
+   "q": "A grinning selfie taken in an Indonesian jungle in 2011 sparked years of legal fights over who owns the copyright. Who, or what, actually pressed the shutter?",
+   "a": "A macaque monkey",
+   "story": "A crested macaque grabbed a wildlife photographer's camera and snapped itself. US authorities later ruled that a photo taken by an animal can't be copyrighted by anyone.",
+   "source": "https://en.wikipedia.org/wiki/Monkey_selfie_copyright_dispute"
+  },
+  {
+   "id": "62ca5ee9-9215-430d-8258-7fe4937a0b1d",
+   "q": "The lightweight folding baby buggy was invented by a British engineer who had earlier designed the folding landing gear of which famous Second World War fighter plane?",
+   "a": "Spitfire",
+   "story": "Owen Maclaren made his buggy from light aluminium tubing and used the same thinking that folded a fighter's wheels into its wings. He came up with it after watching his daughter wrestle a heavy pram while travelling with his grandchild.",
+   "source": "https://en.wikipedia.org/wiki/Owen_Finlay_Maclaren"
+  },
+  {
+   "id": "bfb01c59-3e8c-487f-a065-d64d55107459",
+   "q": "Hat makers in the 1800s were famous for trembling and acting strangely, which gave us the phrase 'mad as a hatter'. Which toxic metal in their workshops was to blame?",
+   "a": "Mercury",
+   "story": "Hatters brushed a mercury solution onto animal fur to make it mat into felt, and years of breathing the fumes poisoned their nervous systems. Doctors even called the tremors 'hatter's shakes'.",
+   "source": "https://en.wikipedia.org/wiki/Mad_as_a_hatter"
+  },
+  {
+   "id": "aecc6756-15f5-42a6-ab9d-cf7ed584380f",
+   "q": "Many coins have tiny ridges around their edge. They are not there for grip. What were they originally meant to stop people from doing?",
+   "a": "Shaving metal off them",
+   "story": "When coins were real gold and silver, crooks would trim slivers off the edges and melt them down, and a ridged rim made any clipping instantly visible. Isaac Newton himself championed the idea while running England's Royal Mint.",
+   "source": "https://en.wikipedia.org/wiki/Reeding"
+  },
+  {
+   "id": "7e2bab90-6897-4db0-b0e7-724ee2ef4b85",
+   "q": "Japan's bullet trains used to make a loud boom when they shot out of tunnels. Engineers fixed it by copying the beak of a bird that dives from air into water with barely a splash. Which bird?",
+   "a": "Kingfisher",
+   "story": "The kingfisher's long, wedge-shaped beak lets it slice from thin air into dense water almost silently. Copying it made the 500 Series Shinkansen quieter, faster and more energy-efficient.",
+   "source": "https://en.wikipedia.org/wiki/500_Series_Shinkansen"
+  },
+  {
+   "id": "5977476e-7ea7-43d3-b65c-c9df170d1bf7",
+   "q": "The clocks on GPS satellites tick slightly faster than clocks on Earth, so engineers correct them using a theory by which famous scientist?",
+   "a": "Albert Einstein",
+   "story": "Relativity makes satellite clocks gain about 38 millionths of a second a day. Left uncorrected, your sat nav would drift off by roughly 10 kilometres every single day.",
+   "source": "https://iaps.info/?p=9486"
+  },
+  {
+   "id": "d4beca5c-8b95-406a-b2f5-74cfc0ed2b7d",
+   "q": "Blue jeans feel completely American, but their name comes from the old French name of an Italian port city, where the tough cotton cloth was made. Which city?",
+   "a": "Genoa",
+   "story": "The French called Genoa 'Gênes', and cloth from there became 'jean' in English. As a bonus, 'denim' comes from 'de Nîmes', meaning 'from Nîmes' in France.",
+   "source": "https://en.wikipedia.org/wiki/Jeans"
+  },
+  {
+   "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+   "q": "Hardly any national flag uses the colour purple. What's the historical reason?",
+   "a": "Purple dye was too expensive",
+   "story": "For centuries purple dye came from thousands of crushed sea snails and cost more than gold, so it was reserved for royalty. Today only a handful of flags, such as Dominica's parrot, show any purple at all.",
+   "source": "https://en.wikipedia.org/wiki/Purple"
+  },
+  {
+   "id": "06636d40-7a1b-4423-9c03-8fa820963b81",
+   "q": "Early spell-checkers didn't recognise the word 'cooperation' without a hyphen, so they swapped it for a Californian place name, and it slipped into official UN and EU documents. Which town, the home of Apple, was it?",
+   "a": "Cupertino",
+   "story": "The old dictionaries only knew 'co-operation' with a hyphen, and 'Cupertino' was the closest match they had. The mistake was so common that it is now called the 'Cupertino effect'.",
+   "source": "https://mentalfloss.com/article/32294/cupertino-effect-11-spell-check-errors-made-it-press"
+  },
+  {
+   "id": "942f6919-0fca-4ead-ae6c-3743cea9e541",
+   "q": "Look at the little pull tab on almost any zipper and you will often find the same three letters stamped on it, the initials of one Japanese company. What are those three letters?",
+   "a": "YKK",
+   "story": "YKK stands for Yoshida Kōgyō Kabushiki-gaisha, roughly 'Yoshida Industries Company', and this one Japanese firm makes about half of all the zippers in the world.",
+   "source": "https://en.wikipedia.org/wiki/YKK"
+  },
+  {
+   "id": "7fd1997e-108c-4a15-9b2d-c41042f1834f",
+   "q": "The classic barber's pole has red and white stripes. Centuries ago, barbers did more than cut hair. What did the red stripe originally stand for?",
+   "a": "Blood",
+   "story": "Barbers once doubled as surgeons and performed bloodletting, so the red stood for blood and the white for the bandages. Patients even gripped a pole during the procedure to make their veins stand out.",
+   "source": "https://en.wikipedia.org/wiki/Barber%27s_pole"
+  },
+  {
+   "id": "60c63d18-cf04-48f4-b4d7-00ab2c4bc89f",
+   "q": "Which button-up knitted jacket is named after the British earl who led the doomed Charge of the Light Brigade?",
+   "a": "Cardigan",
+   "story": "The 7th Earl of Cardigan and his officers wore knitted wool waistcoats in the Crimean War, and his fame turned his title into a wardrobe staple. The same war gave us the balaclava, named after a battle there.",
+   "source": "https://en.wikipedia.org/wiki/Cardigan_(sweater)"
+  },
+  {
+   "id": "89e5a659-bdf9-4213-85d8-640436203fff",
+   "q": "The mild British exclamation 'blimey' is a worn-down version of a much harsher oath. What did the speaker originally ask God to do to them?",
+   "a": "Blind them",
+   "story": "'Blimey' comes from 'God blind me', so every surprised Londoner is technically cursing their own eyesight. Over time the dangerous part got mumbled away until only a polite little gasp was left.",
+   "source": "https://en.wiktionary.com/wiki/blimey"
+  },
+  {
+   "id": "c79b9955-c4b0-4214-aa83-6236fb6fec64",
+   "q": "Rembrandt's famous painting 'The Night Watch' got its name because it looks so dark. But what time of day does it actually show?",
+   "a": "Daytime",
+   "story": "The scene is set in daylight. Layers of varnish darkened over the centuries until people assumed it was night, and the nickname stuck.",
+   "source": "https://en.wikipedia.org/wiki/The_Night_Watch"
+  },
+  {
+   "id": "12bbe09b-e5a5-4f4b-b6e4-c94cc5eda19e",
+   "q": "Under a nightclub's ultraviolet light, a glass of tonic water glows an eerie blue. Which bitter ingredient, once taken to fight malaria, makes it shine?",
+   "a": "Quinine",
+   "story": "Quinine fluoresces naturally under UV light, so any drink made with real tonic water glows blue. The gin was originally added to make the anti-malaria medicine easier to swallow.",
+   "source": "https://en.wikipedia.org/wiki/Tonic_water"
+  },
+  {
+   "id": "3cddd7c7-84df-4448-aca6-0efe2d3967ee",
+   "q": "Today it describes a self-employed designer or writer, but Walter Scott coined this word for a medieval knight whose weapon could be hired by any lord. What is the word?",
+   "a": "Freelance",
+   "story": "In Ivanhoe, Scott wrote of 'free lances', mercenary knights whose lances were sworn to no master. So every freelancer today is, in spirit, a knight for hire.",
+   "source": "https://en.wikipedia.org/wiki/Freelancer"
+  }
+ ],
+ "movies-and-tv": [
+  {
+   "id": "12a0cb9b-8769-4712-b2a7-0f006f635f1d",
+   "q": "In Disney's The Lion King, the wise baboon mentor Rafiki has a name that is an ordinary Swahili word. What does it mean?",
+   "a": "Friend",
+   "story": "'Rafiki' simply means friend in Swahili. The same language gave the film 'Hakuna Matata', which roughly means 'no worries'.",
+   "source": "https://en.wikipedia.org/wiki/Rafiki_(film)"
+  },
+  {
+   "id": "677d9e04-431c-4e61-af62-3f2b1e09fa85",
+   "q": "Rowan Atkinson's almost wordless Mr. Bean is loved all over the world. Which classic small British car does he drive, once even steering it from an armchair strapped to its roof?",
+   "a": "Mini",
+   "story": "Bean's lime-green Mini with its black bonnet became almost a co-star. It is padlocked shut and battles a little blue three-wheeler that always ends up on its side.",
+   "source": "https://en.wikipedia.org/wiki/Do-It-Yourself_Mr._Bean"
+  },
+  {
+   "id": "aa1b113e-0cc3-441b-88be-c29daf7ad754",
+   "q": "Which 1990s sitcom made the word 'regifting' famous, in an episode where a dentist passes on a label maker he was given?",
+   "a": "Seinfeld",
+   "story": "Elaine catches the dentist Tim Whatley handing her own present on to Jerry and labels him a 'regifter'. The word caught on and is now in major dictionaries.",
+   "source": "https://en.wikipedia.org/wiki/The_Label_Maker"
+  },
+  {
+   "id": "6172d7e0-1ac3-4909-ac61-1c83284049b3",
+   "q": "In Breaking Bad, chemistry teacher Walter White takes a criminal alias borrowed from a famous German physicist. That physicist is best known for a principle named after what?",
+   "a": "Uncertainty",
+   "story": "The alias is Heisenberg, after Werner Heisenberg's uncertainty principle. It suits a man whose true identity the police can never be sure of.",
+   "source": "https://looper.com/1254107/breaking-bad-why-heisenberg-walter-whites-moniker-why-mattered"
+  },
+  {
+   "id": "3b05e760-bd95-4cb9-853c-3e59c40f345a",
+   "q": "Which space-fleet TV series let its characters swear constantly on air by inventing the curse word 'frak'?",
+   "a": "Battlestar Galactica",
+   "story": "Because 'frak' wasn't a real word, censors couldn't touch it, so the crew could say it in nearly every episode. It became so popular that fans still use it as a real-world polite curse.",
+   "source": "https://www.syfy.com/syfy-wire/what-is-frak-history-of-battlestar-galactica-curse-word"
+  },
+  {
+   "id": "3e42c90e-ea30-4c45-adad-49011773869a",
+   "q": "Alan Rickman had never appeared in a feature film until, at 41, he played a suave villain holding a Los Angeles skyscraper hostage. Which 1988 action movie was it?",
+   "a": "Die Hard",
+   "story": "Rickman was a Royal Shakespeare Company stage actor with no film credits when he was cast as Hans Gruber, and the role launched his Hollywood career overnight.",
+   "source": "https://en.wikipedia.org/wiki/Hans_Gruber"
+  },
+  {
+   "id": "d51d048f-791d-42d0-8c21-5430ce568288",
+   "q": "The Lion King's carefree song 'Hakuna Matata' takes its title from a real phrase meaning 'no worries' in which African language?",
+   "a": "Swahili",
+   "story": "Swahili is spoken across East Africa, including Kenya and Tanzania, whose savannas inspired the film's setting.",
+   "source": "https://en.wikipedia.org/wiki/Hakuna_matata"
+  },
+  {
+   "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+   "q": "Which actor was working as a carpenter before being cast as Han Solo in the original Star Wars?",
+   "a": "Harrison Ford",
+   "story": "Ford said he was quite surprised to be offered the part. His carpentry skills reportedly helped him land studio work where he was noticed.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+   "q": "The first draft script for which blockbuster vampire saga featured its heroine as a star athlete being chased by the FBI on jet skis?",
+   "a": "Twilight",
+   "story": "Director Catherine Hardwicke binned that action-movie draft, which she said had nothing to do with the book, and steered the film back to the moody romance that launched a billion-dollar franchise.",
+   "source": "https://www.eonline.com/photos/29542/30-surprising-secrets-about-the-twilight-franchise-revealed"
+  },
+  {
+   "id": "cd124130-c9dd-5c66-9a8f-1863cef6be1d",
+   "q": "Which film took home more Academy Awards: James Cameron's Titanic or the 1959 epic Ben-Hur?",
+   "a": "Neither, they tied",
+   "story": "Both epics won exactly eleven Oscars, so Titanic could only tie the record Ben-Hur had held for almost forty years, even while topping the US box office for fifteen straight weeks and earning over two point one billion dollars.",
+   "source": "https://www.britannica.com/biography/James-Cameron"
+  },
+  {
+   "id": "560adff6-69b4-48eb-aa9a-87584f02741a",
+   "q": "Which 1995 film was the first full-length feature made entirely with computer animation?",
+   "a": "Toy Story",
+   "story": "Pixar's debut feature took roughly four years to make and turned a cowboy doll and a space ranger into the start of a new era in animation.",
+   "source": "https://www.oscars.org/collection-highlights/toy-story"
+  },
+  {
+   "id": "3b139bd6-4848-4ed4-9ded-1f5aef48ae11",
+   "q": "In the Pixar film Finding Nemo, what kind of fish are Nemo and his father Marlin?",
+   "a": "Clownfish",
+   "story": "Clownfish live among the stinging tentacles of sea anemones, which is exactly where the film's family makes its home.",
+   "source": "https://en.wikipedia.org/wiki/Finding_Nemo"
+  },
+  {
+   "id": "fa6213a5-12b7-4694-a10d-9ba0bca13a61",
+   "q": "The mechanical shark in Steven Spielberg's Jaws was given a friendly first-name nickname on set, borrowed from Spielberg's lawyer. What was the shark called?",
+   "a": "Bruce",
+   "story": "Bruce broke down so often in the salt water that Spielberg was forced to keep the shark off screen, which made the film far scarier.",
+   "source": "https://www.newsweek.com/bruce-last-jaws-shark-got-his-name-spielbergs-lawyer-1549616"
+  },
+  {
+   "id": "d9693724-a2e4-4257-84cf-a00bbc3b13f6",
+   "q": "Two years before Marlon Brando famously refused his Best Actor Oscar for The Godfather, another actor had already turned his down, won for playing a Second World War general. Who was he?",
+   "a": "George C. Scott",
+   "story": "Scott called the Oscars a 'two-hour meat parade' and declined the award for Patton in 1971, becoming the first actor ever to refuse one.",
+   "source": "https://en.wikipedia.org/wiki/43rd_Academy_Awards"
+  },
+  {
+   "id": "88a8c7ba-b81a-450d-88f8-bfe75d141150",
+   "q": "For decades, film and TV makers often avoided showing characters sing 'Happy Birthday to You', or cut it off after a line. What was the reason?",
+   "a": "It was under copyright",
+   "story": "A music publisher claimed to own the song and charged fees for using it, earning around 2 million dollars a year. In 2015 a US judge ruled that the claim was invalid, and the song has been free to sing ever since.",
+   "source": "https://en.wikipedia.org/wiki/Happy_Birthday_to_You"
+  }
+ ],
+ "music": [
+  {
+   "id": "590cb1c4-b836-4ba9-a50b-05a9a8414e60",
+   "q": "Paul McCartney had the tune for 'Yesterday' long before the words. Until the real lyrics came, he sang it under a placeholder title named after a breakfast dish. What was that title?",
+   "a": "Scrambled Eggs",
+   "story": "McCartney dreamed the melody and, fearing he'd stolen it, sang 'Scrambled eggs, oh my baby how I love your legs' for months until 'Yesterday' finally arrived.",
+   "source": "https://www.esquiremag.ph/culture/music/beatles-yesterday-history-a1926-20190913-lfrm"
+  },
+  {
+   "id": "16a8b0b8-3dcb-4373-b0f4-fa282cedfd3c",
+   "q": "Michael Jackson's 1983 hit 'Beat It' features a blistering guitar solo by a famous rock guitarist who was not credited on the album and reportedly did it for free. Who was he?",
+   "a": "Eddie Van Halen",
+   "story": "Producer Quincy Jones invited him in, and he recorded the solo in a couple of takes while his own band was out of town, asking nothing in return.",
+   "source": "https://www.etonline.com/how-eddie-van-halens-uncredited-guitar-solo-on-michael-jacksons-beat-it-came-to-be-154293"
+  },
+  {
+   "id": "da500a5a-96a3-4c13-93bd-e548c5a4a2c2",
+   "q": "Nirvana's breakthrough hit 'Smells Like Teen Spirit' got its title from a phrase a friend scrawled on Kurt Cobain's wall. Without Cobain realising it, the phrase referred to a brand of which everyday product?",
+   "a": "Deodorant",
+   "story": "Kathleen Hanna wrote that Kurt smelled like Teen Spirit, the deodorant his girlfriend wore, and Cobain took it as a revolutionary slogan.",
+   "source": "https://en.wikipedia.org/wiki/Teen_Spirit_(deodorant)"
+  },
+  {
+   "id": "93b8897b-892d-5934-bc8e-1e479141a950",
+   "q": "In December 1965, two Gemini 6 astronauts smuggled a harmonica and sleigh bells aboard and played the first musical instruments in space. Which song did they perform?",
+   "a": "Jingle Bells",
+   "story": "Wally Schirra and Tom Stafford first radioed mission control about a mysterious 'object' on a polar trajectory, piloted, they said, by someone in a red suit, then broke into 'Jingle Bells' as a Christmas joke.",
+   "source": "https://en.wikipedia.org/wiki/Gemini_6A"
+  },
+  {
+   "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+   "q": "When MTV went on air for the very first time in August 1981, it deliberately opened with a Buggles song whose title predicted exactly what the channel would do to an older medium. What was the song?",
+   "a": "Video Killed the Radio Star",
+   "story": "MTV chose it as a cheeky mission statement, the very first clip on the first music-video channel declared that video had killed the radio star.",
+   "source": "https://en.wikipedia.org/wiki/Video_Killed_the_Radio_Star"
+  },
+  {
+   "id": "66f94e4c-c854-4a86-84aa-bcdddbfcf88a",
+   "q": "Whitney Houston's giant 1992 ballad 'I Will Always Love You' was written and first recorded in the early 1970s by which country singer?",
+   "a": "Dolly Parton",
+   "story": "Parton wrote it as a farewell to her mentor Porter Wagoner, and Houston's version for The Bodyguard turned it into one of the best-selling singles ever.",
+   "source": "https://en.wikipedia.org/wiki/I_Will_Always_Love_You"
+  },
+  {
+   "id": "044bf206-2137-5061-b83b-765bb3b74805",
+   "q": "For Live Aid in 1985, David Bowie recorded a UK chart-topping duet cover of 'Dancing in the Street' with which fellow rock legend?",
+   "a": "Mick Jagger",
+   "story": "The video premiered at Live Aid and the single topped the UK chart while reaching number seven in the US; the two stars were actually close friends for over four decades.",
+   "source": "https://www.grunge.com/2234771/best-david-bowie-collabs-every-music-fan-should-know"
+  },
+  {
+   "id": "2b1f9c75-d047-4cc8-94b9-e828ec5d2669",
+   "q": "Which rock and roll legend had a stillborn identical twin, born 35 minutes before him, whom he later called his original bodyguard?",
+   "a": "Elvis Presley",
+   "story": "Elvis believed his twin brother Jesse was a spiritual guide throughout his life.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "a3a16b87-5768-40ce-bd49-f3dac14ea2dd",
+   "q": "The word 'piano' is short for a longer Italian name that boasted the instrument could do something a harpsichord couldn't: play both soft and what?",
+   "a": "Loud",
+   "story": "Its full name, 'pianoforte', literally means 'soft-loud', because pressing the keys harder made it louder. A harpsichord plucks its strings at the same volume however hard you press.",
+   "source": "https://en.wikipedia.org/wiki/Piano"
+  },
+  {
+   "id": "f9179df8-7cae-4355-a03f-c08360f7cf6b",
+   "q": "If you blow into a kazoo the way you'd blow a whistle, almost nothing happens. What do you actually have to do into it to make it buzz?",
+   "a": "Hum",
+   "story": "A kazoo only buzzes when you hum or sing into it, because your voice makes its thin membrane vibrate. So the tune is really coming from you, and the kazoo just adds the buzz.",
+   "source": "https://www.madehow.com/Volume-4/Kazoo.html"
+  },
+  {
+   "id": "f47a4df7-e17e-4ab1-a22f-2b38e34463b2",
+   "q": "A famous punk zine drew three guitar chords and wrote: 'This is a chord, this is another, this is a third.' What did it tell the reader to do next?",
+   "a": "Form a band",
+   "story": "That was the whole lesson: three chords and you're ready to start a band. It became the slogan for punk's do-it-yourself attitude.",
+   "source": "https://tumblr.austinkleon.com/tagged/chords"
+  },
+  {
+   "id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+   "q": "David Bowie's eyes famously looked like two different colours. What actually caused this illusion?",
+   "a": "A permanently dilated pupil",
+   "story": "His eyeball was scratched in a fight with a friend, leaving one pupil permanently dilated. Both eyes are actually the same colour.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "f4bddbc0-d3f4-47c1-b3b7-b018cdc2ac29",
+   "q": "Singer Ronnie James Dio made the 'metal horns' hand sign famous at concerts. He said he learned it from his Italian grandmother, who used it to protect herself from what?",
+   "a": "The evil eye",
+   "story": "In Italy the 'corna' gesture has long been a charm against the malocchio, the evil eye. Dio simply carried his grandmother's superstition onto the stage, and a whole genre copied him.",
+   "source": "https://en.wikipedia.org/wiki/Sign_of_the_horns"
+  },
+  {
+   "id": "d7e2f0e2-6b8f-4171-b691-c9ce9af954e9",
+   "q": "In the word 'karaoke', the Japanese 'kara' means 'empty'. The 'oke' part is a clipped borrowing of which English word?",
+   "a": "Orchestra",
+   "story": "Karaoke literally means 'empty orchestra'. The band is all there on the backing track, and the only thing missing is the singer, which is you.",
+   "source": "https://en.wikipedia.org/wiki/Karaoke"
+  },
+  {
+   "id": "f1271480-d31f-4f23-9582-ff13d305055a",
+   "q": "Researchers at the University of Reading found a cheap, everyday trick that helps get rid of a song stuck in your head. It involves keeping your mouth busy. What is it?",
+   "a": "Chewing gum",
+   "story": "Chewing keeps busy the same jaw and 'inner voice' machinery you use to silently sing along. That makes it harder for your brain to keep replaying the tune.",
+   "source": "https://reading.ac.uk/news-archive/press-releases/pr631000.html"
+  },
+  {
+   "id": "8612134e-3b69-4774-ae57-2f80f34d494f",
+   "q": "For decades, nearly every club DJ booth had a pair of Technics turntables. Technics is a brand of which big Japanese electronics company, better known for TVs and household appliances?",
+   "a": "Panasonic",
+   "story": "Technics belongs to Panasonic, formerly called Matsushita. Its SL-1200 was first sold as a home hi-fi deck in the 1970s, before DJs adopted it and turned it into the world's most famous DJ turntable.",
+   "source": "https://en.wikipedia.org/wiki/Technics_(brand)"
+  },
+  {
+   "id": "da8efc8b-4521-5128-91dc-77f393653515",
+   "q": "Which Scottish band grew so sick of their own 1994 mega-hit 'Love Is All Around', the theme from Four Weddings and a Funeral, that after 15 weeks at UK Number One they deliberately stopped producing the single?",
+   "a": "Wet Wet Wet",
+   "story": "After fifteen consecutive weeks on top, the band deleted the single themselves to halt its run, in the CD era you could actually stop pressing a hit to push fans toward the album instead.",
+   "source": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+   "id": "ef267f5b-b7eb-43a6-a29e-06dbae4f6ac5",
+   "q": "PSY's 2012 horse-dance hit 'Gangnam Style' was the first YouTube video to reach a billion views. Gangnam is a wealthy district of which city?",
+   "a": "Seoul",
+   "story": "The song pokes fun at the flashy lifestyle of Seoul's richest neighbourhood. It was the moment K-pop went truly global.",
+   "source": "https://blog.youtube/news-and-events/ytvev/"
+  },
+  {
+   "id": "d0a7917d-dbd7-40e8-8173-8e9f92fe8c0b",
+   "q": "The song often called the very first goth rock record announces the death of the actor best known for playing which famous vampire?",
+   "a": "Dracula",
+   "story": "The 1979 Bauhaus single is 'Bela Lugosi's Dead', a tribute to the Hungarian-born star of the 1931 film Dracula. Goth music was born mourning a movie vampire.",
+   "source": "https://en.wikipedia.org/wiki/Bela_Lugosi%27s_Dead"
+  },
+  {
+   "id": "153946ad-bab1-430f-804a-8d26e6b02c2a",
+   "q": "The London club night often called the birthplace of goth, opened in 1982, was named after which superhero's secret hideout?",
+   "a": "Batman",
+   "story": "It was called the Batcave, and its regulars, with their big black hair and pale makeup, became the template for goth club style around the world.",
+   "source": "https://en.wikipedia.org/wiki/Batcave_(club)"
+  }
+ ],
+ "sports": [
+  {
+   "id": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+   "q": "James Naismith's first basketball hoops, nailed to a gym balcony in 1891, were containers originally meant for which fruit?",
+   "a": "Peaches",
+   "story": "Naismith nailed two peach baskets to the balcony railing, and since they still had bottoms, someone had to fetch the ball out after every score.",
+   "source": "https://www.history.com/articles/how-a-canadian-invented-basketball"
+  },
+  {
+   "id": "1923aede-e959-4c54-b94e-c03a6c8b3a5c",
+   "q": "For the first half of the 20th century, you could win an official Olympic medal without breaking a sweat. What kind of competition did you have to enter?",
+   "a": "Art",
+   "story": "From 1912 to 1948 the Olympics awarded medals for sport-inspired painting, sculpture, music, literature and architecture. The founder of the modern Games, Pierre de Coubertin, even won a gold for a poem he entered under a pseudonym.",
+   "source": "https://en.wikipedia.org/wiki/Art_competitions_at_the_Olympic_Games"
+  },
+  {
+   "id": "de1c3405-c8ac-4749-8562-7fae91c77695",
+   "q": "In the mid-1970s a severe drought hit California, and skateboarders suddenly gained a whole new kind of place to ride. What was it?",
+   "a": "Empty swimming pools",
+   "story": "Water restrictions left backyard pools drained, and skaters carved their curved walls. That is how vertical skating was born, and it eventually led to the half-pipe.",
+   "source": "https://en.wikipedia.org/wiki/Z-Boys"
+  },
+  {
+   "id": "57ceaede-c264-5627-9049-0dc65b66d3da",
+   "q": "The last Olympic gold medals made of solid gold were handed out in 1912. Ever since, they've been made almost entirely of a different metal, with just a few grams of gold plating on top. Which metal?",
+   "a": "Silver",
+   "story": "Modern Olympic gold medals must be at least 92.5 percent silver, coated with roughly six grams of pure gold, melted down, today's 'gold' is worth far less than its glory suggests.",
+   "source": "https://en.wikipedia.org/wiki/Olympic_medal"
+  },
+  {
+   "id": "cad1388a-0a98-4144-8018-d281b5416f13",
+   "q": "Football referees show a yellow card for a warning and a red card for a sending-off. Which everyday sight gave a referee the idea for this colour system?",
+   "a": "Traffic lights",
+   "story": "Referee Ken Aston was stopped at a traffic light when he realised it already told everyone 'caution' and 'stop'. That mattered because players and referees from different countries often couldn't understand each other's spoken warnings.",
+   "source": "https://en.wikipedia.org/wiki/Penalty_card"
+  },
+  {
+   "id": "9d5650ec-5354-4588-84be-21c7ae7aaf27",
+   "q": "Tennis balls were white for about a hundred years before the official switch to bright yellow. Who was the change mainly meant to help?",
+   "a": "Television viewers",
+   "story": "Studies showed that white balls were hard to follow on colour TV, so the governing body adopted 'optic yellow' to make them easier for viewers to see. Wimbledon held out with white balls until 1986.",
+   "source": "https://en.wikipedia.org/wiki/Tennis_ball"
+  },
+  {
+   "id": "dd0f2261-23f0-4c1b-9939-fa423eefb99b",
+   "q": "Mavericks, California's most feared big-wave spot, is named after one of the first to swim out there. Maverick wasn't a person, though. What was Maverick?",
+   "a": "A dog",
+   "story": "Maverick was a white German Shepherd who swam out after his owner and friends. The wave that has since humbled the world's best surfers still carries the dog's name.",
+   "source": "https://en.wikipedia.org/wiki/Mavericks_Beach"
+  },
+  {
+   "id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+   "q": "Instead of champagne, what drink does the winner of the Indianapolis 500 traditionally down in victory lane?",
+   "a": "Milk",
+   "story": "The custom began in 1936 when winner Louis Meyer asked for buttermilk, and today drivers even pre-register whether they want whole, two percent or skimmed.",
+   "source": "https://www.indianapolismotorspeedway.com/history/where-tradition-never-stops/milk"
+  },
+  {
+   "id": "57da0e17-7f87-432b-833c-b97f590e9557",
+   "q": "The 'ollie', the basic hop every snowboarder learns first, was invented in a different board sport. Which one?",
+   "a": "Skateboarding",
+   "story": "A Florida skater, Alan 'Ollie' Gelfand, invented the move in the late 1970s and it was named after his nickname. Snowboarders borrowed it, along with much of their trick vocabulary.",
+   "source": "https://www.guinnessworldrecords.com/world-records/107042-first-skateboard-ollie"
+  },
+  {
+   "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+   "q": "The marathon's oddly precise distance of 42.195 kilometres dates from the 1908 London Olympics, when the course was stretched so the race could start on the lawn of which royal residence?",
+   "a": "Windsor Castle",
+   "story": "The route ran from Windsor Castle to the royal box at White City Stadium, and that royal convenience later became the official marathon distance worldwide.",
+   "source": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon"
+  },
+  {
+   "id": "6bc8edd0-d43e-4afc-828d-b28658112e30",
+   "q": "Which team event, today mostly seen at school sports days and village fairs, awarded Olympic medals at every Games from 1900 to 1920?",
+   "a": "Tug of war",
+   "story": "Teams of eight pulled a rope for Olympic gold, and in 1908 a City of London police team famously won after a dispute about their heavy boots.",
+   "source": "https://en.wikipedia.org/wiki/List_of_Olympic_medalists_in_tug_of_war"
+  },
+  {
+   "id": "2bf1fb8d-106c-4b44-a63b-eaee9147d74b",
+   "q": "After falling out with his brother Adi in the 1940s, Rudolf Dassler founded which sportswear brand, still based in the same small German town as Adidas?",
+   "a": "Puma",
+   "story": "The feud split the town of Herzogenaurach so deeply that locals reportedly checked which shoes a stranger was wearing before speaking to them.",
+   "source": "https://en.wikipedia.org/wiki/Rudolf_Dassler"
+  },
+  {
+   "id": "008a8939-4ffe-4f1a-b0da-c60ae5e54325",
+   "q": "In snooker, what score is a maximum break, achieved by potting every red with a black and then clearing all the colours?",
+   "a": "147",
+   "story": "Fifteen reds paired with fifteen blacks give 120, and the six colours add 27 more, so the perfect frame is worth 147.",
+   "source": "https://en.wikipedia.org/wiki/Maximum_break"
+  },
+  {
+   "id": "28b6dfe0-85f9-4b37-9af5-13b45909bb72",
+   "q": "On a standard pub dartboard, the 20 sits at the top. Which two low numbers sit right beside it, so a slightly wayward throw is punished?",
+   "a": "1 and 5",
+   "story": "The board's layout is designed to reward accuracy, so a dart that just misses the 20 scores only 1 or 5. Aim a fraction off a treble 20 and you can drop from 60 points to 3.",
+   "source": "https://en.wikipedia.org/wiki/Darts"
+  },
+  {
+   "id": "f13ecaac-a5ae-4d59-9660-165b7f36fbce",
+   "q": "In darts, the highest finish you can make with three darts is 170. That's two treble twenties and then one more dart. Where does that last dart have to land?",
+   "a": "The bullseye",
+   "story": "Two treble twenties make 120, leaving exactly 50, and the bullseye is worth 50 and counts as a double, so it can legally end the game. Darts fans call this finish 'the big fish'.",
+   "source": "https://dartcounter.net/darts-manual/darts-checkout-guide"
+  },
+  {
+   "id": "e159eaf3-f943-47dd-8db3-2f3eb9656f45",
+   "q": "Which is the only country to have played at every men's football World Cup since the first one in 1930?",
+   "a": "Brazil",
+   "story": "Brazil has never failed to qualify, while heavyweights like Germany, Italy and Argentina have all missed at least one tournament.",
+   "source": "https://copaamerica.com/en/news/ecuador-brazil-world-cup-qualifiers-all-results"
+  },
+  {
+   "id": "1696975f-e6c4-4d5c-b43d-7ebae366548f",
+   "q": "The oldest international trophy in sport, first won in 1851 and still contested today, is awarded in which sport?",
+   "a": "Sailing",
+   "story": "The America's Cup was first won by the yacht America off the Isle of Wight in 1851, decades before the first modern Olympics or the first football World Cup.",
+   "source": "https://en.wikipedia.org/wiki/America's_Cup"
+  },
+  {
+   "id": "604641f9-d036-4d87-b420-7d76acc72dde",
+   "q": "Why did the designer of the Olympic symbol choose exactly those colours: blue, yellow, black, green and red rings on a white background?",
+   "a": "Every national flag contains one",
+   "story": "Pierre de Coubertin picked those six colours because every country's flag uses at least one of them, so every nation could see itself in the symbol. Many people think each colour stands for a continent, but no colour was ever officially tied to a particular continent.",
+   "source": "https://en.wikipedia.org/wiki/Olympic_symbols"
+  },
+  {
+   "id": "43d27e52-99c4-4aef-abdd-06a4e60d8f9a",
+   "q": "The stuntman who skydived dressed as the Queen at the London 2012 Olympics also made the first wingsuit landing without opening a parachute. What did he crash-land onto?",
+   "a": "Cardboard boxes",
+   "story": "Gary Connery glided down from a helicopter and slammed into a runway of about 18,600 empty cardboard boxes, which crumpled one after another to soak up his speed. He walked away unhurt.",
+   "source": "https://en.wikipedia.org/wiki/Gary_Connery"
+  },
+  {
+   "id": "a44a78a1-c5fc-4307-afb6-40e684fb4ca4",
+   "q": "Snowboarders who ride with their right foot forward are nicknamed after a Disney character who surfed that way in a 1930s cartoon. Which character?",
+   "a": "Goofy",
+   "story": "In the 1937 short 'Hawaiian Holiday', Goofy rides a surfboard right foot forward, so surfers adopted 'goofy' for that stance and snowboarders kept it. Left foot forward is simply called 'regular'.",
+   "source": "https://www.surfertoday.com/surfing/where-does-the-term-goofy-footed-surfer-come-from"
+  }
+ ],
+ "food": [
+  {
+   "id": "4462e4c4-3fab-4928-bce8-a18471b5b576",
+   "q": "Ketchup's name comes from a sauce sold in southern China centuries ago, but that original sauce had no tomatoes in it. What was it made from?",
+   "a": "Fermented fish",
+   "story": "The Hokkien 'kê-tsiap' was a salty fish brine. European traders took the name home, tried versions with mushrooms and walnuts, and Americans only settled on tomato in the 1800s.",
+   "source": "https://en.wikipedia.org/wiki/Ketchup"
+  },
+  {
+   "id": "da07d994-c050-449d-8894-9e20a40b51b7",
+   "q": "Kellogg's corn flakes were not first made as a treat. They were invented as deliberately bland food for the residents of what kind of place?",
+   "a": "A sanitarium",
+   "story": "They were made at the Battle Creek Sanitarium in Michigan. Doctor John Harvey Kellogg believed plain, bland food helped calm the passions of his patients, and his brother later added sugar and turned the flakes into a business.",
+   "source": "https://en.wikipedia.org/wiki/Corn_flakes"
+  },
+  {
+   "id": "dc52f16f-993f-4885-811f-a129c5c352dd",
+   "q": "The man who invented conveyor-belt sushi got the idea in the 1950s by watching a production line in a factory. What was that factory making?",
+   "a": "Beer",
+   "story": "Yoshiaki Shiraishi watched bottles gliding along a conveyor at an Asahi brewery and thought plates of sushi could travel the same way. He opened the first sushi-go-round in Osaka in 1958.",
+   "source": "https://en.wikipedia.org/wiki/Conveyor_belt_sushi"
+  },
+  {
+   "id": "00e29bed-accf-461e-826a-31e0c8520828",
+   "q": "The world's most famous restaurant star ratings are awarded by a guide that was launched in 1900 to sell which product?",
+   "a": "Tyres",
+   "story": "The Michelin brothers gave the guide away free to French motorists, hoping that more driving would wear out more tyres.",
+   "source": "https://en.wikipedia.org/wiki/Michelin_Guide"
+  },
+  {
+   "id": "36473869-173e-4d62-be01-bd427cde8ecc",
+   "q": "An Italian bank famously accepts wheels of which cheese as collateral for loans, ageing them in its own vaults until the debt is repaid?",
+   "a": "Parmigiano-Reggiano",
+   "story": "Credito Emiliano lends to producers against their wheels, which gain value as they age, and sells them off if a loan goes bad.",
+   "source": "https://edition.cnn.com/2026/05/02/food/italy-cheese-bank-parmigiano-reggiano-intl"
+  },
+  {
+   "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+   "q": "Until New Zealand exporters rebranded it in 1959, the kiwifruit was sold under what name?",
+   "a": "Chinese gooseberry",
+   "story": "The plant is native to China, and exporters wanted a friendlier, more New Zealand-sounding name, so they borrowed the national bird.",
+   "source": "https://nzhistory.govt.nz/chinese-gooseberry-becomes-kiwifruit"
+  },
+  {
+   "id": "7ca24fd8-e9ee-43d7-8737-276f2c22a12c",
+   "q": "Which savoury red drink do airline passengers order far more often in the air than on the ground, partly because engine noise makes it taste better?",
+   "a": "Tomato juice",
+   "story": "Loud cabin noise dulls sweet and salty flavours but boosts umami, the savoury taste tomatoes are packed with. So at 10,000 metres tomato juice tastes richer than it does at home.",
+   "source": "https://news.cornell.edu/node/284419"
+  },
+  {
+   "id": "72e2d072-14b6-4569-966f-6814063b35c4",
+   "q": "A goatherd in Ethiopia noticed his goats leaping about with energy after chewing red berries from a bush. What drink does this legend claim to explain?",
+   "a": "Coffee",
+   "story": "The legend of Kaldi the goatherd is the traditional origin story of coffee. Ethiopia is the plant's native home, and the goats' 'dancing' supposedly led monks to brew the berries to stay awake during prayers.",
+   "source": "https://en.wikipedia.org/wiki/Kaldi"
+  },
+  {
+   "id": "d0bd27d5-d0f6-4adf-9bbe-7f140f3be374",
+   "q": "When posing for a photo, English speakers say 'cheese' to force a smile. In South Korea, people often say the name of a different food instead. Which one?",
+   "a": "Kimchi",
+   "story": "Both words end in the same 'ee' sound, which stretches the lips into a grin. So Korea's favourite fermented cabbage doubles as a camera cue.",
+   "source": "https://www.staradvertiser.com/2012/03/28/breaking-news/kimchi-tops-cheese-at-nuclear-summit/"
+  },
+  {
+   "id": "5c7b8a83-f03f-44a5-a922-a7f06f18f7ed",
+   "q": "The ice cream name Häagen-Dazs looks Scandinavian, but it was made up and means nothing at all. In which city was the brand actually born?",
+   "a": "New York",
+   "story": "Häagen-Dazs was invented by a couple in the Bronx, New York. They picked a nonsense name with a Danish look because it sounded old-world and luxurious.",
+   "source": "https://en.wikipedia.org/wiki/Häagen-Dazs"
+  },
+  {
+   "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+   "q": "Bananas are very slightly radioactive, thanks to the naturally radioactive isotope of which chemical element they are famously rich in?",
+   "a": "Potassium",
+   "story": "A tiny fraction of natural potassium is the radioactive isotope potassium-40, the effect is so well known that physicists jokingly measure small radiation doses in 'banana equivalent doses'.",
+   "source": "https://en.wikipedia.org/wiki/Banana_equivalent_dose"
+  },
+  {
+   "id": "db0de7e1-6edb-40ec-b93f-f979bc8490b8",
+   "q": "Broccoli, cauliflower, kale and Brussels sprouts look nothing alike, yet farmers bred every one of them from the same single wild plant. Which vegetable is that plant the wild form of?",
+   "a": "Cabbage",
+   "story": "They are all one species, wild cabbage. Breeders simply favoured different parts: big flower heads for broccoli and cauliflower, leaves for kale, and side buds for Brussels sprouts.",
+   "source": "https://en.wikipedia.org/wiki/Brassica_oleracea"
+  },
+  {
+   "id": "87945219-e3b1-4b97-afa2-f3fd5ff8d296",
+   "q": "If you swap the ham in eggs Benedict for spinach, the dish takes its name from which Italian city?",
+   "a": "Florence",
+   "story": "It becomes eggs Florentine. In classic French cooking, 'à la florentine' has long meant 'served with spinach', a nod to Florence.",
+   "source": "https://en.wikipedia.org/wiki/Eggs_Benedict"
+  },
+  {
+   "id": "a4d5809f-e9b3-40c5-a0e9-8d2d899f7c33",
+   "q": "In the 1950s, a small Irish company called Tayto found a way to add seasoning to crisps in the factory, and launched the world's first flavoured crisp. Which two-ingredient flavour was it?",
+   "a": "Cheese and onion",
+   "story": "Before that, crisps were sold plain, often with a little twist of salt in the bag for you to sprinkle yourself. Tayto's founder, Joe 'Spud' Murphy, changed the snack aisle forever, and companies around the world later licensed his method.",
+   "source": "https://en.wikipedia.org/wiki/Joe_Murphy_(inventor)"
+  },
+  {
+   "id": "81fd9220-d556-4ee9-a0f9-84a0c920ccab",
+   "q": "Which nut grows dangling beneath a juicy, pear-shaped fruit and is never sold in its shell, because that shell contains an irritant related to the one in poison ivy?",
+   "a": "Cashew",
+   "story": "Cashew trees are in the same botanical family as poison ivy and mango, and the shell must be roasted or steamed off before the nut can be touched safely.",
+   "source": "https://www.scientificamerican.com/article/what-do-cashews-mangoes-and-poison-ivy-have-in-common/"
+  },
+  {
+   "id": "7c63ba2d-f501-4564-bb50-40b37597fb2f",
+   "q": "The English word 'lord' comes from an old phrase meaning 'keeper of the...' what?",
+   "a": "Loaf",
+   "story": "Old English 'hlāford' meant 'loaf-ward', the man who controlled the household's bread. 'Lady' began as 'hlǣfdīge', the 'loaf-kneader'.",
+   "source": "https://en.wiktionary.org/wiki/lord"
+  },
+  {
+   "id": "6f2d36ce-2800-4c09-863a-b0817b627ceb",
+   "q": "Which spice, the most expensive in the world by weight, is picked by hand from the stigmas of a crocus flower?",
+   "a": "Saffron",
+   "story": "Each flower yields just three threads, so it takes roughly 150,000 blooms to make a single kilogram.",
+   "source": "https://en.wikipedia.org/wiki/Saffron_trade"
+  },
+  {
+   "id": "ad9cc263-cb80-4bc7-bafc-9f690bee08ba",
+   "q": "A jar of honey can sit in the cupboard for years without going off, because any germ that lands in it quickly loses something it cannot live without. What does the honey pull out of it?",
+   "a": "Water",
+   "story": "Honey is so packed with sugar and so low in water that it pulls moisture out of bacteria and moulds by osmosis and dries them out to death. Jam and salted fish keep for the same reason.",
+   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8071826/"
+  },
+  {
+   "id": "a9450d1e-fc0c-40fe-af28-b2af439c6f19",
+   "q": "The cappuccino is named after the brown hooded robes worn by which order of monks?",
+   "a": "Capuchin friars",
+   "story": "The milky-brown coffee matched the colour of the Capuchins' habits. The capuchin monkey got its name from the same friars, thanks to its brown, hood-like fur.",
+   "source": "https://en.wikipedia.org/wiki/Cappuccino"
+  },
+  {
+   "id": "06ed82ff-744d-4bda-a299-795df9af5fbd",
+   "q": "Orchids are usually grown just to look at, but one of them gives us a flavour found in ice cream, cakes and cola. Which flavour comes from the dried seed pod of an orchid?",
+   "a": "Vanilla",
+   "story": "Vanilla comes from a climbing orchid. Outside its native Mexico, almost every flower has to be pollinated by hand, which is why real vanilla is so expensive.",
+   "source": "https://www.britannica.com/plant/vanilla"
+  }
+ ],
+ "nature-animals-space": [
+  {
+   "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+   "q": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?",
+   "a": "Wombat",
+   "story": "The cubes form thanks to uneven elasticity in the wombat's intestines, and the flat-sided pellets don't roll away, handy for marking territory on rocks and logs.",
+   "source": "https://en.wikipedia.org/wiki/Wombat_feces"
+  },
+  {
+   "id": "44d03d27-b56d-4714-a212-ffb8c259d53c",
+   "q": "Pigs love wallowing in mud, but not because they're dirty. They hardly do something that we humans rely on to cool down. What is it?",
+   "a": "Sweat",
+   "story": "Pigs have almost no working sweat glands, so wet mud cools them as it evaporates and also acts as sunscreen. The saying 'sweating like a pig' gets it completely backwards.",
+   "source": "https://en.wikipedia.org/wiki/Wallowing"
+  },
+  {
+   "id": "718f1648-8742-4a96-9ac5-53b3d28c7b4d",
+   "q": "Those little 'seeds' dotted over the outside of a strawberry aren't really seeds. Botanically, what is each one?",
+   "a": "A tiny fruit",
+   "story": "Each speck is an achene, a complete little fruit with its own seed inside. The juicy red part we eat is just the swollen base of the flower.",
+   "source": "https://www.livescience.com/planet-earth/plants/why-do-strawberries-have-seeds-on-the-outside"
+  },
+  {
+   "id": "42a1cdba-429b-424e-8c13-c1e45d2580f5",
+   "q": "A bullfighter's cape is red, but bulls can't even tell red from green. So what is it about the cape that actually makes the bull charge?",
+   "a": "Its movement",
+   "story": "Bulls charge at whatever is moving, and in tests they went for blue and white capes just as eagerly. The cape is red mostly for the audience, and because it hides bloodstains.",
+   "source": "https://www.scienceabc.com/nature/animals/do-bulls-really-hate-red-colour-blind.html"
+  },
+  {
+   "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+   "q": "A giraffe's neck can be over two metres long, yet it contains exactly the same number of neck vertebrae as yours. How many is that?",
+   "a": "Seven",
+   "story": "Almost all mammals, from mice to giraffes, have exactly seven neck vertebrae, a giraffe's are just stretched to around 25 centimetres each.",
+   "source": "https://en.wikipedia.org/wiki/Cervical_vertebrae"
+  },
+  {
+   "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+   "q": "An octopus's blue blood is pumped around its body by an unusual number of hearts. How many does it have?",
+   "a": "Three",
+   "story": "Two hearts push blood through the gills while a third serves the rest of the body, and that main heart actually stops beating when the octopus swims, which is why it usually prefers to crawl.",
+   "source": "https://en.wikipedia.org/wiki/Octopus"
+  },
+  {
+   "id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+   "q": "One colourful crustacean strikes so fast that its punch creates bubbles of boiling water and has been known to crack aquarium glass. Name it.",
+   "a": "Mantis shrimp",
+   "story": "The mantis shrimp's club accelerates like a bullet, reaching around 80 km/h in a few thousandths of a second. The strike is so fast it creates cavitation bubbles that collapse with a flash of heat and light.",
+   "source": "https://en.wikipedia.org/wiki/Mantis_shrimp"
+  },
+  {
+   "id": "4b02a61f-5e84-4438-9dd0-25a68fd458b4",
+   "q": "The bird that lays the biggest egg compared to its own body, about a fifth of its weight, is the national symbol of which country?",
+   "a": "New Zealand",
+   "story": "It's the kiwi. Its egg is so large that the female eats more than usual for weeks beforehand, and an X-ray of her near laying time shows the egg filling most of her body.",
+   "source": "https://www.guinnessworldrecords.com/world-records/83111-largest-bird-egg-relative-to-body-size"
+  },
+  {
+   "id": "ed6a0428-cc95-4d0c-97ad-69508831394c",
+   "q": "The world's largest single flower grows nearly a metre wide in the rainforests of Southeast Asia. To lure the flies that pollinate it, what does it smell like?",
+   "a": "Rotting meat",
+   "story": "Rafflesia is nicknamed the 'corpse flower' because it reeks of decaying flesh, which tricks carrion flies into visiting. Stranger still, it has no leaves, stem or roots at all and lives as a parasite inside a jungle vine.",
+   "source": "https://en.wikipedia.org/wiki/Rafflesia_arnoldii"
+  },
+  {
+   "id": "2afd8615-478a-4849-bb71-e411679e221c",
+   "q": "Apart from apes and monkeys, one animal has fingerprints so similar to ours that experts struggle to tell them apart, even under a microscope. It lives on eucalyptus leaves. Which animal is it?",
+   "a": "Koala",
+   "story": "Koalas evolved fingerprints completely independently of us, most likely to grip branches and handle leaves, and they're so close to human prints that people joke they could confuse a crime scene.",
+   "source": "https://pbs.org/wgbh/nova/article/koala-fingerprints/"
+  },
+  {
+   "id": "6709c973-546b-40c4-89dd-5410df8e326b",
+   "q": "A newborn Dalmatian puppy is missing the one feature the breed is famous for. What is it missing?",
+   "a": "Its spots",
+   "story": "Dalmatian puppies are born pure white, and their spots only start appearing after about two weeks. So a real litter would look nothing like the cartoon.",
+   "source": "https://www.dogster.com/lifestyle/are-dalmatians-born-with-their-spots/"
+  },
+  {
+   "id": "949d87b6-e997-4062-aac9-911ef8525213",
+   "q": "Sea otters have a loose pocket of skin under each front leg. Besides food, what tool does an otter often keep in there?",
+   "a": "A rock",
+   "story": "Otters float on their backs, put the rock on their chest and smash clams and sea urchins against it, and many keep the same favourite rock for a long time.",
+   "source": "https://en.wikipedia.org/wiki/Sea_otter"
+  },
+  {
+   "id": "cc7082a3-d9e9-49b7-8d5c-8e65785c7d4e",
+   "q": "This single planet is so vast it could swallow all seven other planets of the solar system and still have space left over. Which planet is it?",
+   "a": "Jupiter",
+   "story": "Jupiter is the largest planet; the other seven planets would fit inside just 70 percent of its volume.",
+   "source": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+   "id": "d6ae2464-80b1-4933-b0c2-daa831429d4c",
+   "q": "Which planet is so light for its size that it would float if you could find a bathtub big enough?",
+   "a": "Saturn",
+   "story": "Saturn is mostly hydrogen and helium, with an average density of only about 0.7 grams per cubic centimetre, lower than water.",
+   "source": "https://coolcosmos.ipac.caltech.edu/ask/113-Can-Saturn-really-float-on-water-"
+  },
+  {
+   "id": "003963e3-d826-46c4-8ee8-4fcad4325532",
+   "q": "The word 'galaxy' comes from an Ancient Greek word for an everyday drink. Which drink?",
+   "a": "Milk",
+   "story": "The Greeks saw the pale band across the night sky as spilled milk, and called it 'galaxias' from 'gala', meaning milk. That is also why we still call our home galaxy the Milky Way.",
+   "source": "https://www.merriam-webster.com/wordplay/word-history-of-galaxy"
+  },
+  {
+   "id": "99b44897-59cd-4b88-a5d6-5109b16dc0d3",
+   "q": "From the ground a rainbow always looks like an arch, but pilots flying above the rain sometimes see it as what shape?",
+   "a": "A full circle",
+   "story": "A rainbow is really a ring of light centred on the spot directly opposite the sun, and on the ground the earth simply blocks the bottom half. So there is no end of the rainbow, and no pot of gold either.",
+   "source": "https://en.wikipedia.org/wiki/Rainbow"
+  },
+  {
+   "id": "0cde91bd-bc32-40be-97d0-4fadf8a55c2a",
+   "q": "More than half of the 206 bones in an adult human are packed into just two paired body parts. Which two?",
+   "a": "Hands and feet",
+   "story": "Each hand has 27 bones and each foot has 26, so together they account for 106 of the 206, more than the rest of the body combined.",
+   "source": "https://en.wikipedia.org/wiki/List_of_bones_of_the_human_skeleton"
+  },
+  {
+   "id": "aff65266-da25-44a0-bbd0-50d8380f402b",
+   "q": "Between a fifth and a third of people have an inherited reflex that makes them do something odd when they step out of a dark building into bright sunshine. What do they do?",
+   "a": "Sneeze",
+   "story": "It's called the photic sneeze reflex. Scientists think signals from the eyes' sudden response to light spill over onto the nerve that triggers sneezing.",
+   "source": "https://en.wikipedia.org/wiki/Photic_sneeze_reflex"
+  },
+  {
+   "id": "58c69ecf-ae5a-40fe-8435-e7bb22a05ad3",
+   "q": "The smallest bone in the human body is shaped like a tiny stirrup. In which part of the body is it found?",
+   "a": "The ear",
+   "story": "The stapes in the middle ear is only about 3 millimetres long and passes sound vibrations from the eardrum to the inner ear.",
+   "source": "https://en.wikipedia.org/wiki/Stapes"
+  },
+  {
+   "id": "53254cae-6201-450a-afcf-ef6bddea7fb5",
+   "q": "Astronauts returning from spacewalks report a surprising smell clinging to their suits, often likened to which seared food?",
+   "a": "Burnt steak",
+   "story": "Returning crews describe a metallic, seared-meat odour after spacewalks, thought to come from high-energy reactions on the suits; some compare it to burnt steak or welding fumes.",
+   "source": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  }
+ ],
+ "history": [
+  {
+   "id": "3e8a8e41-4719-4b6d-8675-ba843ab8c066",
+   "q": "Which future Roman leader, kidnapped by pirates as a young man, reportedly complained that his ransom was set too low, then had his captors crucified once he was freed?",
+   "a": "Julius Caesar",
+   "story": "Plutarch says the pirates asked for twenty talents and Caesar insisted on fifty, then raised ships after his release, captured the pirates and had them executed as he had promised.",
+   "source": "https://www.britannica.com/story/the-time-julius-caesar-was-captured-by-pirates"
+  },
+  {
+   "id": "6ec076b9-e941-4c87-8b1a-49e2ab0db828",
+   "q": "Which former US president, campaigning for a return to office in 1912, was shot in the chest in Milwaukee and insisted on delivering his speech before going to hospital?",
+   "a": "Theodore Roosevelt",
+   "story": "The bullet was slowed by his folded fifty-page speech and a steel glasses case in his pocket, and he spoke for about ninety minutes with blood spreading across his shirt.",
+   "source": "https://en.wikipedia.org/wiki/Attempted_assassination_of_Theodore_Roosevelt"
+  },
+  {
+   "id": "496b3405-50aa-4315-bbca-8d3e85dada58",
+   "q": "Which scientist, famous for his laws of motion, spent the last three decades of his life running England's Royal Mint and personally hunting down counterfeiters?",
+   "a": "Isaac Newton",
+   "story": "Newton became Warden of the Mint in 1696, went undercover in taverns to gather evidence, and sent the notorious forger William Chaloner to the gallows.",
+   "source": "https://www.royalmintmuseum.org.uk/journal/people/isaac-newton/"
+  },
+  {
+   "id": "7ac04474-3a5c-4197-aaff-392666f8271b",
+   "q": "Real Viking warriors never wore horned helmets. Which kind of 19th-century stage show gave them their horns?",
+   "a": "Opera",
+   "story": "Costumes for Wagner's Ring cycle in 1876 put horns on Norse heroes, and the image stuck. Archaeologists have never found a single horned helmet from the Viking Age.",
+   "source": "https://ingebretsens-blog.com/wp-content/uploads/2018/07/51267328-frank-invention-of-horned-helmet.pdf"
+  },
+  {
+   "id": "c2e3d05c-6e26-4630-95bf-c6f06915f313",
+   "q": "In the 1850s, Emperor Napoleon III reportedly served his most honoured guests with cutlery made of a rare metal, while lesser guests had to settle for gold. What metal was it?",
+   "a": "Aluminium",
+   "story": "Before the Hall-Héroult electrolysis process was developed in 1886, extracting aluminium from ore was so difficult that it cost more than gold. The peak of the Washington Monument was capped with it as a luxury material in 1884, just before the price collapsed.",
+   "source": "https://en.wikipedia.org/wiki/History_of_aluminium"
+  },
+  {
+   "id": "1513e8bb-cecd-46ff-b6bc-cf023639b64e",
+   "q": "During the Second World War, people in occupied Norway pinned a humble office item to their coats as a silent protest. Wearing one could get you arrested. What was it?",
+   "a": "A paper clip",
+   "story": "The paper clip stood for 'holding together' against the occupiers, and the idea of a Norwegian paper-clip inventor made it a source of national pride. In 1989 Norway built a giant paper clip statue near Oslo to honour it.",
+   "source": "https://gizmodo.com/how-the-humble-paperclip-became-a-secret-world-war-ii-s-1276972660"
+  },
+  {
+   "id": "762a3bf6-c659-4c9c-bff6-934f3dd11a64",
+   "q": "The first powered vacuum cleaners in London around 1901 were too big to fit inside a house. They stood in the street with long hoses fed through the windows. What pulled them from house to house?",
+   "a": "Horses",
+   "story": "Hubert Cecil Booth's machine, nicknamed 'Puffing Billy', was a horse-drawn, engine-powered monster. Rich households hired it as a service, and it was so noisy that it reportedly frightened passing horses.",
+   "source": "https://en.wikipedia.org/wiki/Hubert_Cecil_Booth"
+  },
+  {
+   "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+   "q": "In 1952, which world-famous physicist was offered the presidency of Israel and politely turned it down?",
+   "a": "Albert Einstein",
+   "story": "The offer came from Prime Minister David Ben-Gurion after the first president died, and Einstein replied that he lacked the aptitude for dealing with people and official functions.",
+   "source": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+  },
+  {
+   "id": "a39eb9e9-f42f-4702-a051-674e6f220940",
+   "q": "Before rubber erasers existed, artists and schoolchildren rubbed out pencil marks with something you would normally find on the kitchen table. What was it?",
+   "a": "Bread",
+   "story": "Soft, slightly damp bread lifted the graphite off the paper. When Joseph Priestley noticed around 1770 that a new tree gum did the job better, the material was named for what it did: 'rubber', because it rubbed out.",
+   "source": "https://en.wikipedia.org/wiki/Eraser"
+  },
+  {
+   "id": "d25873f2-0d6d-590b-b3ba-6898327e78da",
+   "q": "When the Mona Lisa vanished from the Louvre in 1911, French police hauled in a young Spanish-born painter living in Paris for questioning as a suspect. Who was he?",
+   "a": "Pablo Picasso",
+   "story": "Picasso was questioned because he had previously bought sculptures stolen from the Louvre; the real thief turned out to be Vincenzo Peruggia, a former Louvre worker who hid the painting in his flat for two years.",
+   "source": "https://en.wikipedia.org/wiki/Mona_Lisa"
+  },
+  {
+   "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+   "q": "In the 1630s, the Dutch Republic experienced history's most famous speculative bubble, when a single rare bulb could briefly cost as much as a grand Amsterdam canal house. Which flower drove the frenzy?",
+   "a": "The tulip",
+   "story": "At the peak of tulip mania, exotic striped varieties like Semper Augustus changed hands for fortunes, until the market collapsed almost overnight in February 1637.",
+   "source": "https://en.wikipedia.org/wiki/Tulip_mania"
+  },
+  {
+   "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+   "q": "Contrary to legend, the pyramid builders of Giza were not slaves but paid workers. Alongside bread, what drink made up a core part of their daily rations?",
+   "a": "Beer",
+   "story": "Egyptian beer was thick, mildly alcoholic and nutritious, practically liquid bread, and workers received it daily, making it as much food and payment as refreshment.",
+   "source": "https://aeraweb.org/feeding-pyramid-workers/"
+  },
+  {
+   "id": "22156a55-156c-4081-93b5-6f6473e8990c",
+   "q": "When a Paris hairdresser invented the bob haircut in 1909, he claimed his inspiration was a medieval French heroine burned at the stake. Who?",
+   "a": "Joan of Arc",
+   "story": "The hairdresser Antoine cited Joan of Arc, making the 15th-century saint an unlikely fashion icon.",
+   "source": "https://www.youtube.com/watch?v=Oqf7eJPILHs"
+  },
+  {
+   "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+   "q": "Founded in Kyoto in 1889 to make handmade playing cards, which Japanese company went on to become one of the biggest names in video games?",
+   "a": "Nintendo",
+   "story": "Nintendo spent decades selling hanafuda playing cards, and even tried taxis and instant rice, before striking gold with video games in the 1970s and 80s.",
+   "source": "https://en.wikipedia.org/wiki/Nintendo"
+  },
+  {
+   "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
+   "q": "In Britain and its colonies, the day after 2 September 1752 was officially 14 September 1752. Why did eleven days simply disappear from the calendar?",
+   "a": "Switch from Julian to Gregorian calendar",
+   "story": "Britain adopted the Gregorian calendar with the Calendar (New Style) Act 1750, catching up with most of Catholic Europe, which had switched back in 1582. The older Julian calendar counted every fourth year as a leap year without exception, so it drifted about three days every four centuries against the solar year. By 1752 the gap had grown to eleven days, so Parliament ordered them dropped in one jump: people went to bed on 2 September and woke up on 14 September. The same act also moved the start of the legal year from 25 March to 1 January.",
+   "source": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
+  },
+  {
+   "id": "cb0b2955-edbe-4705-8b74-00207b246159",
+   "q": "Mansa Musa, often called the richest man who ever lived, ruled which West African empire in the fourteenth century?",
+   "a": "Mali",
+   "story": "His 1324 pilgrimage to Mecca gave away so much gold along the way that the metal's price in Cairo reportedly slumped for years afterwards.",
+   "source": "https://en.wikipedia.org/wiki/Mansa_Musa"
+  },
+  {
+   "id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+   "q": "Long before it ever touched a tree, the chainsaw was invented in the 1780s by two Scottish doctors to speed up what medical procedure?",
+   "a": "Childbirth",
+   "story": "The first chainsaw was a small hand-cranked chain of teeth used to cut through the pelvic bone when a baby was stuck during delivery, a procedure called symphysiotomy. It replaced a knife and saw, and only much later was the idea scaled up for cutting wood.",
+   "source": "https://en.wikipedia.org/wiki/Chainsaw"
+  },
+  {
+   "id": "0a539a89-4048-472f-8e7c-e536439a4258",
+   "q": "The world's oldest continuously operating university was founded in the year 859 by a woman named Fatima al-Fihri. In which country is it?",
+   "a": "Morocco",
+   "story": "The University of al-Qarawiyyin in Fez, Morocco, is recognised by UNESCO and Guinness as the oldest continuously operating degree-granting university, predating Bologna by over two centuries.",
+   "source": "https://www.guinnessworldrecords.com/world-records/oldest-university"
+  },
+  {
+   "id": "9015951b-446e-4752-8b33-e22f747a3f12",
+   "q": "The wireless technology that pairs your phone with your car is named after a tenth-century king of which country?",
+   "a": "Denmark",
+   "story": "Harald Bluetooth united Danish tribes, so engineers borrowed his name for a standard meant to unite devices, and the logo merges his runic initials.",
+   "source": "https://www.bluetooth.com/about-us/bluetooth-origin/"
+  },
+  {
+   "id": "5fc99873-4e67-4a6f-86df-b9549fff1f83",
+   "q": "Captain James Cook took several tonnes of one fermented food on his voyages to keep his sailors from getting scurvy. What was it?",
+   "a": "Sauerkraut",
+   "story": "Fermented cabbage keeps for months at sea and still has some vitamin C. Cook got his reluctant crew to eat it by serving it at the officers' table first, so the sailors decided it must be a treat.",
+   "source": "https://hekint.org/2021/06/17/plague-of-the-sea-and-the-spoyle-of-mariners-a-brief-history-of-fermented-cabbage-as-antiscorbutic/"
+  }
+ ],
+ "geography-and-travel": [
+  {
+   "id": "21245520-3c1b-4c70-bc37-a9cbe570426b",
+   "q": "Point Nemo in the South Pacific is the spot in the ocean farthest from any land, about 2,700 kilometres in every direction. When a ship passes through, the nearest other humans are often not on land or sea at all. Where are they?",
+   "a": "On the International Space Station",
+   "story": "The station orbits only about 400 kilometres up, so when it passes overhead its crew are far closer to Point Nemo than anyone on shore.",
+   "source": "https://www.snopes.com/fact-check/point-ocean-closest-human-astronaut/"
+  },
+  {
+   "id": "c1b7d837-800b-459b-bb64-53be50a6e192",
+   "q": "The Canary Islands weren't named after the little yellow bird. The bird was named after the islands. So which animal did the islands' name originally come from?",
+   "a": "Dogs",
+   "story": "The Romans called them 'Canariae Insulae', the Islands of the Dogs, from the Latin 'canis', after the big dogs found there. That's why dogs, not birds, appear on the islands' coat of arms.",
+   "source": "https://en.wikipedia.org/wiki/Canary_Islands"
+  },
+  {
+   "id": "2e07a0da-244b-4251-be7b-cf2181a15cf8",
+   "q": "Rio de Janeiro means 'River of January', yet the city has no big river. What did the Portuguese sailors who named it actually mistake for a river?",
+   "a": "A bay",
+   "story": "In January 1502 the sailors took the narrow entrance of Guanabara Bay for the mouth of a large river. The mistaken name has stuck for over five centuries.",
+   "source": "https://en.wikipedia.org/wiki/Rio_de_Janeiro"
+  },
+  {
+   "id": "c2e3ae03-be39-406f-969f-b812948409da",
+   "q": "Early explorers were sure a South American land was full of one precious metal, so they named it after that metal's Latin name, and the country still carries it today. Which metal is hidden inside the name 'Argentina'?",
+   "a": "Silver",
+   "story": "Argentina comes from the Latin 'argentum', the same word behind silver's chemical symbol Ag. The great silver riches the explorers dreamed of never really turned up there.",
+   "source": "https://en.wikipedia.org/wiki/Etymology_of_Argentina"
+  },
+  {
+   "id": "0ec6c0d0-e6cf-433c-bb91-fa8b8de90031",
+   "q": "Which independent kingdom shares its entire land border with South Africa and no other country?",
+   "a": "Lesotho",
+   "story": "Lesotho is one of only three countries in the world completely enclosed by a single neighbour, alongside Vatican City and San Marino inside Italy.",
+   "source": "https://en.wikipedia.org/wiki/Lesotho"
+  },
+  {
+   "id": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+   "q": "France's longest land border isn't with any European country at all. Which country is it shared with?",
+   "a": "Brazil",
+   "story": "French Guiana in South America is a full part of France, and its border with Brazil runs about 730 kilometres, longer than France's border with Spain. So in a sense, Brazil is France's biggest neighbour.",
+   "source": "https://en.wikipedia.org/wiki/France–Brazil_border"
+  },
+  {
+   "id": "086f9a1c-c0b8-49a8-9585-8ee857bd94fe",
+   "q": "Only one US state has a genuine royal palace, built for a real king and queen. Which state is it?",
+   "a": "Hawaii",
+   "story": "Hawaii was an independent kingdom until 1893, and ʻIolani Palace in Honolulu was the home of its last monarchs. It even had electric lights before the White House did.",
+   "source": "https://www.nps.gov/places/iolanipalace.htm"
+  },
+  {
+   "id": "902b92e9-00ff-434d-9c1c-6480a5cef852",
+   "q": "Venice's grand palaces and churches stand on millions of what, driven deep into the mud of the lagoon?",
+   "a": "Wooden piles",
+   "story": "Venice rests on a forest of wooden stakes, and many of them have stood for centuries. Sealed underwater in oxygen-poor mud, the wood is protected from the microbes that would otherwise rot it.",
+   "source": "https://www.britannica.com/technology/How-Was-Venice-Built-on-Water"
+  },
+  {
+   "id": "05ccc8c8-568e-4f1b-9ea5-16574253baf6",
+   "q": "Which river passes through or along the borders of ten different countries, more than any other river in the world?",
+   "a": "Danube",
+   "story": "From Germany's Black Forest to the Black Sea, the Danube touches ten countries and flows through four capitals: Vienna, Bratislava, Budapest and Belgrade.",
+   "source": "https://www.britannica.com/place/Danube-River"
+  },
+  {
+   "id": "1264b939-b97d-4d92-a1ad-322e7be0c62e",
+   "q": "Which country has the longest coastline of any nation on Earth?",
+   "a": "Canada",
+   "story": "Canada's coastline runs to roughly 200,000 kilometres, mostly because its Arctic archipelago is made up of thousands of islands with wildly indented shores.",
+   "source": "https://www.worldatlas.com/oceans/countries-with-the-longest-coastline.html"
+  },
+  {
+   "id": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+   "q": "The world's largest island is a self-governing territory of which European kingdom?",
+   "a": "Denmark",
+   "story": "Greenland is more than fifty times the size of Denmark itself, yet it remains part of the Danish realm with its own home-rule government.",
+   "source": "https://commonslibrary.parliament.uk/research-briefings/cbp-10234/"
+  },
+  {
+   "id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+   "q": "Measured from its base on the sea floor to its summit, which Hawaiian volcano is taller than Mount Everest?",
+   "a": "Mauna Kea",
+   "story": "Only about 4,200 metres of it stand above the sea, but the volcano rises more than 10,000 metres from the ocean floor, over a kilometre more than Everest.",
+   "source": "https://mossandfog.com/mauna-kea-not-mount-everest-is-the-tallest-mountain-from-base-to-summit/"
+  },
+  {
+   "id": "190315b3-4a51-4ae4-bb69-b6cc0415ab98",
+   "q": "Which single lake, in Siberia, holds roughly one fifth of all the unfrozen fresh water on the Earth's surface?",
+   "a": "Lake Baikal",
+   "story": "At over 1,600 metres, it is the deepest lake on Earth, so it stores more fresh water than all five North American Great Lakes combined.",
+   "source": "https://whc.unesco.org/en/list/754/"
+  },
+  {
+   "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+   "q": "Which continent contains more sovereign countries than any other?",
+   "a": "Africa",
+   "story": "Africa has 54 internationally recognised countries, comfortably ahead of Europe and Asia.",
+   "source": "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent"
+  },
+  {
+   "id": "e2d80f64-7d4a-4e3e-add3-b1df969f6fcd",
+   "q": "One Nordic capital's name means 'smoky bay', because early settlers mistook the steam from its hot springs for smoke. Which city is it?",
+   "a": "Reykjavík",
+   "story": "In Icelandic, 'reykur' means smoke and 'vík' means bay. Today those same hot springs heat most of the city's homes.",
+   "source": "https://en.wikipedia.org/wiki/Reykjavík"
+  },
+  {
+   "id": "7dc96fea-ee84-4ad6-ad27-26269cf70887",
+   "q": "Legend says the Aztecs built their capital where they saw an eagle perched on a cactus, eating a snake. That scene is now on a national flag. Which capital city stands on that spot today?",
+   "a": "Mexico City",
+   "story": "Mexico City was built on top of the Aztec capital Tenochtitlan, which stood on an island in a lake. The eagle, cactus and snake from the founding legend sit in the middle of the Mexican flag.",
+   "source": "https://about.jstor.org/?p=12395"
+  },
+  {
+   "id": "62451cc9-9347-4fa8-bc96-82353ca6b96a",
+   "q": "Mozambique's flag shows a farmer's hoe and an open book, plus a third object you won't find on any other national flag. What is it?",
+   "a": "An AK-47 rifle",
+   "story": "The Kalashnikov stands for defence and the armed struggle for independence, with the hoe for agriculture and the book for education. Proposals to remove the rifle have come up several times, but it is still on the flag.",
+   "source": "https://en.wikipedia.org/wiki/Flag_of_Mozambique"
+  },
+  {
+   "id": "f551eca2-6c5e-44f5-b03a-d3147315cadd",
+   "q": "Only one US state shares a land border with exactly one other state. Which state is it?",
+   "a": "Maine",
+   "story": "Maine, in the far north-east corner, is boxed in by Canada and the Atlantic, so New Hampshire is its only US neighbour. Alaska and Hawaii don't count, because they border no states at all.",
+   "source": "https://en.wikipedia.org/wiki/Maine"
+  },
+  {
+   "id": "7ec55a24-3fec-4322-86d9-99e93ca3d61e",
+   "q": "Wine corks are cut from the bark of an oak that grows in warm, dry Mediterranean land, and the bark is peeled off every nine years without cutting the tree down. Which country produces about half of the world's cork?",
+   "a": "Portugal",
+   "story": "Portugal's cork oak forests supply around half of all the world's cork. The tree is so valued there that it is protected by law and cutting one down without permission is illegal.",
+   "source": "https://amorimcork.com/en/media-center/news/apcors-201819-yearbook-highlights-the-continuing-strong-export-growth-of-cork-stoppers/258"
+  },
+  {
+   "id": "913dd84f-e408-4441-85b4-7f57bd2b08ad",
+   "q": "Mount Everest's summit sits exactly on the border between Nepal and which other country?",
+   "a": "China",
+   "story": "The northern side of Everest lies in Tibet, which is part of China, and climbers can reach the top from either the Nepalese or the Chinese side.",
+   "source": "https://www.britannica.com/place/Mount-Everest"
+  }
+ ]
+}

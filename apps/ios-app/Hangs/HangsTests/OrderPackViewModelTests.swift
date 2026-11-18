@@ -77,6 +77,7 @@ private func payingViewModel(
         clock: clock
     )
     vm.prompt = prompt
+    vm.selectDifficulty(.medium)
     vm.advanceToSummary()
     return vm
 }
@@ -97,10 +98,84 @@ struct OrderPackViewModelTests {
 
     // MARK: - Validation bounds
 
+    // MARK: - Required difficulty (#224)
+
+    // WHY: generated packs came out too easy when the level was left to the
+    // model, so the buyer must choose one. A default would silently reintroduce
+    // that; the order must be blocked until a deliberate pick.
+    @Test("a valid topic alone is not enough: no difficulty, no order (#224)")
+    func difficultyIsRequired() {
+        let vm = makeOrderPackViewModel()
+        vm.prompt = "Space for kids"
+        #expect(vm.difficulty == nil, "no preselected difficulty")
+        #expect(!vm.isValid)
+        #expect(vm.isPromptValid)
+
+        vm.advanceToSummary()
+        #expect(vm.state == .editing, "the summary stays unreachable without a difficulty")
+
+        vm.selectDifficulty(.hard)
+        #expect(vm.isValid)
+        vm.advanceToSummary()
+        #expect(vm.state == .confirming)
+    }
+
+    @Test("the chosen difficulty travels in the order request (#224)")
+    func difficultyReachesTheRequest() async {
+        let service = MockPackOrderService()
+        let vm = makeOrderPackViewModel(service: service)
+        vm.prompt = "Space for kids"
+        vm.selectDifficulty(.hard)
+        vm.advanceToSummary()
+
+        await vm.submit()
+
+        #expect(service.capturedIntents.first?.difficulty == .hard)
+    }
+
+    // WHY: "Mix" is a deliberate choice, not the absence of one. It must unlock
+    // the order like any level, yet send nothing: the backend reads an absent
+    // difficulty as the mixed batch.
+    @Test("every one of the four choices unlocks the order; none is preselected (#224)",
+          arguments: PackDifficulty.allCases)
+    func anyChoiceUnlocksTheOrder(_ level: PackDifficulty) {
+        let vm = makeOrderPackViewModel()
+        vm.prompt = "Space for kids"
+        #expect(!vm.isValid)
+
+        vm.selectDifficulty(level)
+
+        #expect(vm.isValid)
+    }
+
+    @Test("Mix is chosen explicitly and the order carries it as a mixed batch (#224)")
+    func mixedIsAnExplicitChoice() async {
+        let service = MockPackOrderService()
+        let vm = makeOrderPackViewModel(service: service)
+        vm.prompt = "Space for kids"
+        vm.selectDifficulty(.mixed)
+        vm.advanceToSummary()
+        #expect(vm.state == .confirming)
+        #expect(vm.difficulty == .mixed, "the summary shows Mix, not a blank row")
+
+        await vm.submit()
+
+        #expect(service.capturedIntents.first?.difficulty == .mixed)
+    }
+
+    @Test("a new order starts with no difficulty picked (#224)")
+    func newOrderForgetsDifficulty() async {
+        let vm = payingViewModel()
+        await vm.submit()
+        vm.prepareForPresentation(defaultLanguage: "sk")
+        #expect(vm.difficulty == nil)
+    }
+
     @Test("a one-character prompt is valid — the 10-char floor is gone (#138)")
     func shortPromptIsValid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "a"
+        vm.selectDifficulty(.medium)
         #expect(vm.isValid)
     }
 
@@ -108,6 +183,7 @@ struct OrderPackViewModelTests {
     func emptyPromptIsInvalid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = ""
+        vm.selectDifficulty(.medium)
         #expect(!vm.isValid)
     }
 
@@ -115,6 +191,7 @@ struct OrderPackViewModelTests {
     func whitespacePromptIsInvalid() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "   \n  "
+        vm.selectDifficulty(.medium)
         #expect(!vm.isValid)
     }
 
@@ -122,6 +199,7 @@ struct OrderPackViewModelTests {
     func promptAtCeiling() {
         let vm = makeOrderPackViewModel()
         vm.prompt = String(repeating: "a", count: 1000)
+        vm.selectDifficulty(.medium)
         #expect(vm.isValid)
     }
 
@@ -129,6 +207,16 @@ struct OrderPackViewModelTests {
     func promptTooLong() {
         let vm = makeOrderPackViewModel()
         vm.prompt = String(repeating: "a", count: 1001)
+        vm.selectDifficulty(.medium)
+        #expect(!vm.isValid)
+    }
+
+    @Test("emoji count as the server counts them — no paid order refused for length")
+    func promptCountsScalars() {
+        let vm = makeOrderPackViewModel()
+        // 600 flags look like 600 characters but are 1200 scalars to the server.
+        vm.prompt = String(repeating: "🇸🇰", count: 600)
+        #expect(vm.trimmedPromptCount == 1200)
         #expect(!vm.isValid)
     }
 
@@ -138,6 +226,7 @@ struct OrderPackViewModelTests {
     func summaryRequiresValidPrompt() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "  "
+        vm.selectDifficulty(.medium)
 
         vm.advanceToSummary()
 
@@ -148,6 +237,7 @@ struct OrderPackViewModelTests {
     func summaryAndBackBeforePurchase() {
         let vm = makeOrderPackViewModel()
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.medium)
 
         vm.advanceToSummary()
         #expect(vm.state == .confirming)
@@ -164,6 +254,7 @@ struct OrderPackViewModelTests {
         let service = MockPackOrderService()
         let vm = makeOrderPackViewModel(service: service)
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.medium)
 
         await vm.submit() // still .editing
 
@@ -296,11 +387,11 @@ struct OrderPackViewModelTests {
     // number — when StoreKit can't answer.
     @Test("the summary price comes from StoreKit, and is absent when it can't load")
     func priceLoadsFromPurchaseService() async {
-        let priced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"))
+        let priced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(prices: [.thirty: "8,99 €"]))
         await priced.loadPrice()
         #expect(priced.packPrice == "8,99 €")
 
-        let unpriced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(displayPrice: nil))
+        let unpriced = makeOrderPackViewModel(purchaseService: MockPackPurchaseService(prices: [:]))
         await unpriced.loadPrice()
         #expect(unpriced.packPrice == nil)
     }
@@ -1000,6 +1091,90 @@ struct OrderPackViewModelTests {
         await pumpUntil({ if case .polling = vm.state { true } else { false } }, "create never handed over to the poll")
         expectNoRouteBackToForm(vm, "a paid order")
 
+        vm.stop()
+        await task.value
+    }
+}
+
+/// #217.4: the sign-in prompt after a custom pack. It may appear only once the
+/// server accepted the paid order: only then does the order sit on this
+/// phone's identity, which a sign-in moves to the account. Before that (a
+/// cancelled sheet, a failed create) there is nothing to keep, and an admin
+/// test order was never bought.
+@Suite("OrderPackViewModel — sign-in prompt after a pack (#217.4)")
+@MainActor
+struct OrderPackSignInPromptTests {
+    @Test("a paid, accepted order is offered once, as the pack the app shows")
+    func acceptedPaidOrder() async {
+        let vm = payingViewModel(adminKeyAvailable: false)
+
+        await vm.submit()
+
+        let delivered = OrderSnapshot.mockDelivered
+        #expect(vm.takeAcceptedPaidOrder() == .customPack(
+            name: delivered.displayTitle,
+            questionCount: delivered.targetCount,
+            colorKey: delivered.colorKey
+        ))
+        #expect(vm.takeAcceptedPaidOrder() == nil, "one prompt per order")
+    }
+
+    @Test("nothing is offered when the order never reached the server")
+    func createFailed() async {
+        let service = MockPackOrderService(createResult: .failure(.init()))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("nothing is offered when the payment sheet was cancelled")
+    func paymentCancelled() async {
+        let purchase = MockPackPurchaseService(purchaseResult: .failure(.cancelled))
+        let vm = payingViewModel(purchaseService: purchase, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("a Debug admin order was never bought and is not offered")
+    func adminOrder() async {
+        let vm = payingViewModel(adminKeyAvailable: true)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    @Test("a refunded order is not offered: there is nothing left to keep")
+    func refundedOrder() async {
+        let service = MockPackOrderService(getResult: .success(.mockRefunded))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false)
+
+        await vm.submit()
+
+        #expect(vm.takeAcceptedPaidOrder() == nil)
+    }
+
+    /// Closed while still generating: the snapshot's own title, count and
+    /// colour key (the order id until the pack exists), as Home shows it.
+    @Test("an order closed while generating is offered with its live snapshot")
+    func stillGenerating() async {
+        let clock = TestClock<Duration>()
+        let service = MockPackOrderService(getResult: .success(.mockPending))
+        let vm = payingViewModel(service: service, adminKeyAvailable: false, clock: AnyClock(clock))
+
+        let task = Task { await vm.submit() }
+        await pumpUntil({ if case .polling(.some) = vm.state { true } else { false } }, "create never handed over to the poll")
+
+        let pending = OrderSnapshot.mockPending
+        #expect(vm.takeAcceptedPaidOrder() == .customPack(
+            name: pending.displayTitle,
+            questionCount: pending.targetCount,
+            colorKey: pending.colorKey
+        ))
         vm.stop()
         await task.value
     }

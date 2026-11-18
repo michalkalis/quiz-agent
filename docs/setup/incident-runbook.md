@@ -13,6 +13,8 @@ Jedna stránka na prvých 15 minút výpadku. Podrobnosti sú v odkazovaných n�
 | GitHub e-mail o zlyhanom behu `prod-monitor` | zdravie oboch API, visiace objednávky, heartbeat workera, aj keď **padol celý región cdg** (vtedy nemá kto poslať `[Trubbo ALERT]`) | ~30 min až 4 h |
 | GitHub issue `deploy-failed` (e-mail) | `backend-deploy.yml` zastal na stagingu alebo prode | hneď |
 | Sentry (org `missinghue`, projekt `carquiz`) | pády appky, chyby a varovania backendu (Sentry Logs 30 dní) | bonus, nie alarm |
+| Sentry e-mail „Production problem“ | nový alebo vrátený problém backendu, výpadok (uptime koreňa quiz-agent-api každú minútu, cron monitory) alebo skok chýb > 25 za 5 min; pády iOS nie | ~3 min |
+| Issue v súkromnom `trubbo-triage` (#218 — pády a spätná väzba automaticky) | nový problém zo Sentry, hlásenie z TestFlightu a spätná väzba z appky, s rozborom od Claude. Opravu spustí founder štítkom `oprav` (alebo komentárom `/oprav`), výsledok je PR v `quiz-agent`. Lavína hlásení: prepínač `triage_bridge_enabled` na `false` ([app-switches](app-switches.md)) | do 15 min |
 
 Mechanika alarmov: `packages/shared/quiz_shared/ops_alerts.py`, `.github/workflows/prod-monitor.yml`. Gmail filter na `[Trubbo ALERT]` = dôležité (founder krok v #207).
 
@@ -34,6 +36,8 @@ Všetko cez `PUT /api/v1/admin/app-switches`, príkazy a hodnoty v [app-switches
 - **Oznam** (`notice_sk` / `notice_cs` / `notice_en`): pri každom výpadku, ktorý používateľ cíti dlhšie ako ~10 min.
 - **Objednávky stop** (`orders_enabled: false`): keď nebeží generovanie balíčkov, DB alebo platby. Existujúce objednávky bežia ďalej.
 - **Minimálna verzia** (`min_version_app_store` / `min_version_testflight`): keď je chyba v konkrétnom builde a oprava je už v App Store / TestFlight.
+- **Odporúčaná verzia** (`recommended_version_*`, #214 — odporúčaná aktualizácia a údržba): nová verzia je vonku a chceme hráčov jemne posunúť, bez blokovania.
+- **Údržba** (`maintenance_enabled` + `maintenance_*`): kvíz by aj tak zlyhal (migrácia, výpadok providera, rozbité otázky); spolu s oznamom pre staršie buildy.
 - Automatické poistky, ktoré netreba prepínať: záložný hlas pri dennom strope ElevenLabs, záložný hodnotiteľ odpovedí na priamom OpenAI, prepnutie embeddingov z OpenRouter na OpenAI pri kritickom kredite (príde v maile).
 - Celé AI na kanonických providerov: Fly secret `LLM_GATEWAY=direct` na oboch appkách (reštartuje stroj, preto až keď prepínače nestačia), pozri `.claude/rules/backend.md`.
 

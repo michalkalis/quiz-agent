@@ -50,6 +50,11 @@ struct HangsPrimaryButton: View {
     /// button sharing its row with another, where a wrapped title broke the
     /// word ("Po-tvr-ď").
     var singleLineTitle: Bool = false
+    /// #224: `false` = hug the content and centre, with `contentInset` on each
+    /// side, for a main action that sits above the floating tab bar and should
+    /// not out-span it.
+    var fillsWidth: Bool = true
+    var contentInset: CGFloat = Theme.Hangs.Spacing.md
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -127,9 +132,9 @@ struct HangsPrimaryButton: View {
                 }
             }
             .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : label)
-            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.horizontal, contentInset)
             .padding(.vertical, Theme.Hangs.Spacing.xs)
-            .frame(maxWidth: .infinity, minHeight: height)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: height)
             .background(
                 ZStack(alignment: .leading) {
                     // Lift on the capsule only, never on the title (#194 B2).

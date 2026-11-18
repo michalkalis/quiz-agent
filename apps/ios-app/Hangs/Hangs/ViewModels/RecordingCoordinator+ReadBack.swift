@@ -47,9 +47,11 @@ extension RecordingCoordinator {
 
         let spoken = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !spoken.isEmpty, !isMuted() else {
+            readBackText = nil
             armConfirmationTail()
             return
         }
+        readBackText = text
 
         // Self-hearing guard (#119/#149): no live input tap under app TTS.
         stopSilenceDetectionListening()

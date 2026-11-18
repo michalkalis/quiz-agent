@@ -17,6 +17,13 @@ for, generated (LLM cost spent), and then permanently unplayable/unlistable.
 Requires the admin key or a bearer JWT matching the order's `user_id` — the
 Phase-1 unauthenticated read is closed (#95).
 
+Both reads show what generation cost us (`llm_cost_usd`, `search_cost_cents`,
+`job.total_cost_cents`, and `job.error`, whose budget cut-off text quotes the
+cents spent) only to a valid admin key (#217 task 217.3). A pack owner gets
+null / 0 instead: the fields stay in the schema because shipped iOS builds
+decode them (non-optional ints), but our cost of goods is not the buyer's
+business.
+
 `POST /v1/orders/{order_id}/retry` accepts the same bearer identity as the
 read above, in addition to the StoreKit JWS and the admin key (#146 Option B):
 a consumable's proof cannot be re-read once finished, so proof-only
@@ -32,14 +39,14 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -49,13 +56,17 @@ from sse_starlette.sse import EventSourceResponse
 from arq.connections import ArqRedis
 
 from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
+from quiz_shared.store_ids import BETA_BUNDLE_ID, canonical_product_id
+from quiz_shared.utils.user_text import clean_user_text
 
-from ... import app_switches, order_budget
+from ... import app_switches, order_budget, pack_reuse, topic_check
+from ...audience import Audience
 from ...config import Settings, get_settings
 from ...db.models.job import GenerationJob, attempt_job_id
 from ...db.models.order import GenerationOrder
 from ...db.models.pack import QuestionPack
 from ...db.session import AsyncSessionLocal, get_session
+from ...rate_limit import limiter
 from ...sse import event_stream
 from ...storekit import (
     AppleJWSVerifier,
@@ -67,6 +78,7 @@ from ...storekit.jws_cache import verify_jws_cached
 from ...storekit.revocation import assert_not_revoked
 from ..deps import (
     admin_key_presented,
+    admin_key_valid,
     check_admin_key,
     get_arq_pool,
     get_jws_verifier,
@@ -115,6 +127,42 @@ class CreateOrderRequest(BaseModel):
     # comes near the cap.
     category: Optional[str] = Field(default=None, max_length=64)
     theme: Optional[str] = Field(default=None, max_length=64)
+    # #224 224.3: difficulty the buyer picked (the app requires it; generated
+    # packs came out too easy). Optional so builds shipped before the picker
+    # keep working (NULL = mixed batch, today's behaviour).
+    difficulty: Optional[Literal["easy", "medium", "hard"]] = None
+    # #236 236.1: who the pack is written for — a content setting, never a
+    # person's age. Optional so shipped builds keep working (None = adults,
+    # today's pack).
+    audience: Optional[Audience] = None
+
+    # Before the length guard, so a paste padded with invisible characters is
+    # judged (and stored, and shown back) by what the player actually sees.
+    @field_validator("prompt")
+    @classmethod
+    def _drop_invisible_characters(cls, value: str) -> str:
+        return clean_user_text(value)
+
+
+class TopicCheckRequest(BaseModel):
+    """#233: the order form's text, checked before the player pays."""
+
+    prompt: str
+    language: str
+    # #236: a child band checks with the stricter child tier.
+    audience: Optional[Audience] = None
+
+    # Judged by what the player sees, exactly like `CreateOrderRequest`.
+    @field_validator("prompt")
+    @classmethod
+    def _drop_invisible_characters(cls, value: str) -> str:
+        return clean_user_text(value)
+
+
+class TopicCheckResponse(BaseModel):
+    # Plain string (not an enum) so the response contract stays expand-only.
+    # ok | softened | blocked; anything unknown a client treats as ok.
+    verdict: str
 
 
 class OrderCreatedResponse(BaseModel):
@@ -152,6 +200,11 @@ class OrderSnapshotResponse(BaseModel):
     # Additive and nullable so older clients keep decoding. Only ever served
     # to the order's owner (or the admin key), like the rest of the snapshot.
     prompt: Optional[str] = None
+    # #224 224.3: plain string (not an enum) so the response contract stays
+    # expand-only. None = mixed batch.
+    difficulty: Optional[str] = None
+    # #236: plain string, expand-only like `difficulty`. None = adults.
+    audience: Optional[str] = None
     created_at: datetime
     delivered_at: Optional[datetime]
     pack_id: Optional[uuid.UUID]
@@ -164,8 +217,8 @@ class OrderSnapshotResponse(BaseModel):
     # already-playable pack (pack_id set, status still in_progress);
     # `complete` / `failed` once it stops. None without a pack.
     pack_generation_status: Optional[str] = None
-    # Measured spend (#95 decision 5); fine to expose while prod is
-    # founder-only — hide behind the admin key before real users.
+    # Measured spend (#95 decision 5). Admin key only (#217 task 217.3):
+    # everyone else gets None / 0, see `_order_snapshot`.
     llm_cost_usd: Optional[Decimal]
     search_cost_cents: int
     # #103 F4c: set on terminal failure (_handle_failure / the sweep) so a
@@ -293,9 +346,89 @@ def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
     return messages["en"]
 
 
+# Shown verbatim by shipped builds, like the paused message. The date is when
+# the oldest order in the window ages out, i.e. when the next one is allowed.
+_TESTER_CAP_REACHED = {
+    "sk": "Týždenný limit testovacích balíkov je vyčerpaný. Ďalší sa dá vytvoriť od {date}.",
+    "cs": "Týdenní limit testovacích balíčků je vyčerpaný. Další půjde vytvořit od {date}.",
+    "en": "You've used this week's test packs. You can create the next one on {date}.",
+}
+_EN_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+_TESTER_CAP_WINDOW = timedelta(days=7)
+
+
+def _tester_cap_detail(accept_language: Optional[str], next_allowed: datetime) -> str:
+    """The cap message in the first of sk/cs/en the client accepts."""
+    lang = "en"
+    for part in (accept_language or "").split(","):
+        code = part.split(";")[0].strip().split("-")[0].lower()
+        if code in _TESTER_CAP_REACHED:
+            lang = code
+            break
+    if lang == "en":
+        date = f"{_EN_MONTHS[next_allowed.month - 1]} {next_allowed.day}"
+    else:
+        date = f"{next_allowed.day}. {next_allowed.month}"
+    return _TESTER_CAP_REACHED[lang].format(date=date)
+
+
+async def _tester_cap_next_allowed(
+    session: AsyncSession, user_id: str, cap: int
+) -> Optional[datetime]:
+    """When this account may order again, or None if it is under the cap.
+
+    Counts the account's Sandbox (TestFlight) orders in the last 7 days.
+    """
+    since = datetime.now(timezone.utc) - _TESTER_CAP_WINDOW
+    stmt = (
+        select(GenerationOrder.created_at)
+        .where(
+            GenerationOrder.user_id == user_id,
+            GenerationOrder.storekit_environment == "Sandbox",
+            GenerationOrder.created_at > since,
+        )
+        .order_by(GenerationOrder.created_at.desc())
+        .limit(cap)
+    )
+    recent = (await session.execute(stmt)).scalars().all()
+    if len(recent) < cap:
+        return None
+    # The cap-th newest order is the one whose aging out frees a slot.
+    oldest = recent[-1]
+    if oldest.tzinfo is None:
+        oldest = oldest.replace(tzinfo=timezone.utc)
+    return oldest + _TESTER_CAP_WINDOW
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+
+@router.post("/topic-check", response_model=TopicCheckResponse)
+@limiter.limit("20/minute")
+async def check_order_topic(
+    request: Request,
+    body: TopicCheckRequest,
+    user_id: Annotated[str, Depends(require_user)],
+) -> TopicCheckResponse:
+    """#233: sort the order text into ok / softened / blocked before payment.
+
+    Same length bounds as `create_order`, so a text the order would refuse is
+    never checked. Fails open (`ok`): see `app.topic_check`.
+    """
+    prompt = body.prompt.strip()
+    if not (1 <= len(prompt) <= 1000):
+        raise HTTPException(
+            status_code=422,
+            detail="prompt must be between 1 and 1000 characters (after stripping whitespace)",
+        )
+    verdict, failed = await topic_check.check_topic(prompt, audience=body.audience)
+    logger.info(
+        "topic check verdict=%s failed=%s language=%s audience=%s",
+        verdict, failed, body.language, body.audience,
+    )
+    return TopicCheckResponse(verdict=verdict)
 
 
 @router.post("", status_code=202, response_model=OrderCreatedResponse)
@@ -345,7 +478,11 @@ async def create_order(
             raise HTTPException(status_code=401, detail=str(exc)) from exc
         verified_tx = tx
 
-        # 2. Cross-check body vs JWS payload
+        # 2. Cross-check body vs JWS payload. The verifier already mapped the
+        # JWS product to the live catalog id (#234: the beta app buys
+        # `beta.pack_30`); map the body's StoreKit id the same way, by the
+        # VERIFIED bundle, and carry the live id from here on.
+        body.product_id = canonical_product_id(tx.bundle_id, body.product_id)
         if body.transaction_id != tx.transaction_id or body.product_id != tx.product_id:
             _report_verified_reject(
                 verified_tx,
@@ -360,6 +497,9 @@ async def create_order(
                 status_code=400,
                 detail=f"admin orders must use a {_ADMIN_TX_PREFIX!r}-prefixed transaction_id",
             )
+        # The founder's beta build names its products `beta.…` (#234). An admin
+        # order moves no money, so the live id is taken as-is.
+        body.product_id = canonical_product_id(BETA_BUNDLE_ID, body.product_id)
     else:
         raise HTTPException(
             status_code=401,
@@ -403,6 +543,20 @@ async def create_order(
         _report_verified_reject(verified_tx, "orders_paused", detail)
         raise HTTPException(status_code=503, detail=detail)
 
+    # 5c. Tester weekly cap. Sandbox purchases are free for TestFlight testers
+    # but generation is not, so each account gets a few packs a week. After
+    # the idempotency check so a replay still gets its 200; the device keeps
+    # the Sandbox proof and spends it once a slot frees up.
+    cap = settings.tester_weekly_pack_cap
+    if cap > 0 and verified_tx is not None and verified_tx.environment == "Sandbox":
+        next_allowed = await _tester_cap_next_allowed(session, user_id, cap)
+        if next_allowed is not None:
+            logger.info("tester weekly pack cap reached user=%s cap=%d", user_id, cap)
+            raise HTTPException(
+                status_code=429,
+                detail=_tester_cap_detail(request.headers.get("accept-language"), next_allowed),
+            )
+
     # 6. Insert order + job
     order = GenerationOrder(
         user_id=user_id,
@@ -413,6 +567,9 @@ async def create_order(
         target_count=target_count,
         category=body.category,
         theme=body.theme,
+        difficulty=body.difficulty,
+        audience=body.audience,
+        prompt_key=pack_reuse.prompt_key(body.prompt),
         # From the verified JWS only, never the request body: it decides
         # whether the mba backup (Claude subscription) may generate this order.
         storekit_environment=verified_tx.environment if verified_tx else None,
@@ -464,6 +621,14 @@ async def create_order(
             raise
         return _idempotent_replay_response(existing)  # type: ignore[return-value]
 
+    # 6b. #225: another player's finished pack for the same prompt, language,
+    # difficulty and audience (#236) → deliver a copy now, no generation run. Falls through to
+    # the enqueue on no match or any failure.
+    if await pack_reuse.try_reuse(session, order, job, settings):
+        return OrderCreatedResponse(
+            order_id=order.id, status=order.status, created_at=order.created_at
+        )
+
     # 7. Enqueue ARQ — after commit so the worker can read the row.
     # #103 F4a: a Redis blip here used to leave the order 'pending' forever
     # (replay just returns it, and retry needs 'failed' — a 409). Mark it
@@ -499,7 +664,9 @@ async def create_order(
     return OrderCreatedResponse(order_id=order.id, status=order.status, created_at=order.created_at)
 
 
-def _job_snapshot(job: Optional[GenerationJob]) -> Optional[JobSnapshotResponse]:
+def _job_snapshot(
+    job: Optional[GenerationJob], show_costs: bool
+) -> Optional[JobSnapshotResponse]:
     if job is None:
         return None
     return JobSnapshotResponse(
@@ -507,8 +674,10 @@ def _job_snapshot(job: Optional[GenerationJob]) -> Optional[JobSnapshotResponse]
         status=job.status,
         progress=job.progress,
         retry_count=job.retry_count,
-        total_cost_cents=job.total_cost_cents,
-        error=job.error,
+        total_cost_cents=job.total_cost_cents if show_costs else 0,
+        # Admin-only too: the budget cut-off message quotes the cents spent,
+        # and other errors are raw exception reprs. No client reads it.
+        error=job.error if show_costs else None,
         updated_at=job.updated_at,
     )
 
@@ -518,7 +687,10 @@ def _order_snapshot(
     job: Optional[GenerationJob],
     actual_count: Optional[int] = None,
     pack_generation_status: Optional[str] = None,
+    *,
+    show_costs: bool,
 ) -> OrderSnapshotResponse:
+    """Serialize an order. `show_costs` is True only for a valid admin key."""
     return OrderSnapshotResponse(
         order_id=order.id,
         status=order.status,
@@ -528,21 +700,25 @@ def _order_snapshot(
         category=order.category,
         theme=order.theme,
         prompt=order.prompt,
+        difficulty=order.difficulty,
+        audience=order.audience,
         created_at=order.created_at,
         delivered_at=order.delivered_at,
         pack_id=order.pack_id,
         actual_count=actual_count,
         pack_generation_status=pack_generation_status,
-        llm_cost_usd=order.llm_cost_usd,
-        search_cost_cents=order.search_cost_cents,
+        llm_cost_usd=order.llm_cost_usd if show_costs else None,
+        search_cost_cents=order.search_cost_cents if show_costs else 0,
         refund_eligible=order.refund_eligible,
-        job=_job_snapshot(job),
+        job=_job_snapshot(job, show_costs),
     )
 
 
 @router.get("", response_model=OrderListResponse)
 async def list_orders(
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
     subject: Annotated[str, Depends(require_user)],
 ) -> OrderListResponse:
     """List the caller's own orders, newest first (#95 "My packs").
@@ -578,12 +754,16 @@ async def list_orders(
             for row in (await session.execute(pack_stmt)).all()
         }
 
+    # The bearer authorises the list; an admin key is only an optional extra
+    # that unlocks the cost fields, so a wrong one is ignored, not a 401.
+    show_costs = admin_key_valid(request, settings)
     return OrderListResponse(
         orders=[
             _order_snapshot(
                 o,
                 jobs_by_id.get(o.job_id),
                 *packs_by_id.get(o.pack_id, (None, None)),
+                show_costs=show_costs,
             )
             for o in orders
         ]
@@ -638,7 +818,9 @@ async def get_order(
         if pack_row is not None:
             actual_count, pack_generation_status = pack_row
 
-    return _order_snapshot(order, job, actual_count, pack_generation_status)
+    return _order_snapshot(
+        order, job, actual_count, pack_generation_status, show_costs=is_admin
+    )
 
 
 @router.post("/{order_id}/retry", status_code=202, response_model=OrderCreatedResponse)

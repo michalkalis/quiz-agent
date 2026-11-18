@@ -1,0 +1,22 @@
+# texts
+PROFIL
+Tvoje meno
+Michal
+Tvoje meno
+Michal
+Tvoj M10
+Celkom
+312 otázok
+3 h 20 min
+Silná stránka
+Geography & World
+82 % správne
+Kedy hráš
+Večer
+najčastejšie v nedeľu
+# identifiers
+profile.settings
+profile.account
+profile.name
+profile.recap
+profile.allStats

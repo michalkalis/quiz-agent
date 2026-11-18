@@ -31,6 +31,9 @@ class Participant(BaseModel):
 
     # Multiplayer
     is_host: bool = Field(False, description="Host controls quiz flow")
+    color: Optional[str] = Field(
+        None, description="Player colour in a multiplayer room (#212), e.g. #ff6b2c"
+    )
     joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:

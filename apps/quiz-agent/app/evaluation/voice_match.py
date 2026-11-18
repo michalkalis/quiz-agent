@@ -54,7 +54,17 @@ def fold(text: str) -> str:
     every spoken-answer comparison runs on this form.
     """
     decomposed = unicodedata.normalize("NFKD", text.casefold())
-    stripped = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    kept: list[str] = []
+    for ch in decomposed:
+        if unicodedata.combining(ch):
+            # Ukrainian й and ї are letters of their own (#231): keep the mark
+            # on a Cyrillic base so "й"/"и" and "ї"/"і" never merge into
+            # distinct-word collisions. Every other mark is stripped as before.
+            if ch in "\u0306\u0308" and kept and kept[-1] in "иі":
+                kept.append(ch)
+            continue
+        kept.append(ch)
+    stripped = unicodedata.normalize("NFC", "".join(kept))
     return " ".join(re.sub(r"[\W_]+", " ", stripped).split())
 
 

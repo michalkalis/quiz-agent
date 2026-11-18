@@ -79,9 +79,11 @@ struct IconVocabularyTests {
     @Test("the result screen's hear-it glyph is the outline speaker")
     func resultHearItIsOutlineSpeaker() async throws {
         let panel = ResultAnswerPanel(
+            questionStem: "Which European state has no army?",
             answerLabel: "the answer",
             answerText: "Liechtenstein",
             isRecap: false,
+            isCorrect: false,
             explanation: "It has had no standing army since 1868.",
             onHearIt: {}
         )

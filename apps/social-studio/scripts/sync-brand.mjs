@@ -2,7 +2,7 @@
 // this app: Rethink Sans into public/brand/, the mascot master split into a
 // static body and the animated eyes. Runs on `npm install`; both outputs are
 // gitignored so the website files stay the only copy in git.
-import {copyFileSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -34,4 +34,12 @@ writeFileSync(
 		`export const MASCOT_BODY = ${JSON.stringify(inner.slice(0, cut))};\n` +
 		`export const MASCOT_FACE = ${JSON.stringify(inner.slice(nose))};\n`,
 );
+// Pinned launch reel: the App Store screenshots (fastlane) and Apple's badge (website).
+const shots = path.resolve(app, '../ios-app/Hangs/fastlane/screenshots');
+for (const lang of ['en', 'sk', 'cs']) {
+	mkdirSync(path.join(app, 'public/store', lang), {recursive: true});
+	for (const f of readdirSync(path.join(shots, lang))) copyFileSync(path.join(shots, lang, f), path.join(app, 'public/store', lang, f));
+}
+copyFileSync(path.join(site, 'app-store-badge.svg'), path.join(app, 'public/store/app-store-badge.svg'));
+
 console.log('social-studio: brand assets synced');

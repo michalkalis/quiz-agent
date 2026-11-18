@@ -20,13 +20,13 @@ from quiz_shared.models.session import QuizSession
 
 from ..db.base import utcnow
 from ..db.models import (
-    AnonymousIdentity,
     DailyChallengeAnswer,
     DailyChallengePlay,
     DailyChallengeSet,
 )
 from ..retrieval.question_retriever import QuestionRetriever
 from ..serializers import correct_option_key
+from ..shared_quiz.store import person_ids
 from . import copy
 from .rules import (
     MAX_SPOKEN_LINES,
@@ -166,6 +166,14 @@ class DailyChallengeService:
             await db.commit()
         if regrade and play.finished_at is not None:
             await self._finish(play.id, rescore=True)
+
+    async def knew_by_question(self, subject_id: str, day: date) -> Dict[str, bool]:
+        """question_id → knew it, over the person's whole play of ``day``
+        (#232 shared quiz marks: a challenge resumed in a second session
+        still has every answer here)."""
+        async with self._sm() as db:
+            play = await self._play(db, subject_id, day)
+        return await self._answers(play.id) if play is not None else {}
 
     async def finish(self, session: QuizSession) -> None:
         play = await self._session_play(session)
@@ -352,23 +360,7 @@ class DailyChallengeService:
         anonymous id was signed in to, and that account's other anonymous ids.
         Sign-in moves plays to the account and sign-out returns the device to
         its anon id, so a one-per-day guard on one id alone could be replayed."""
-        ids = {subject_id}
-        upgraded = (
-            await db.execute(
-                select(AnonymousIdentity.upgraded_to_user_id).where(
-                    AnonymousIdentity.anon_id == subject_id
-                )
-            )
-        ).scalar_one_or_none()
-        owner = upgraded or subject_id
-        ids.add(owner)
-        linked = await db.execute(
-            select(AnonymousIdentity.anon_id).where(
-                AnonymousIdentity.upgraded_to_user_id == owner
-            )
-        )
-        ids.update(linked.scalars())
-        return sorted(ids)
+        return await person_ids(db, subject_id)
 
     async def _play(
         self, db: AsyncSession, subject_id: str, day: date

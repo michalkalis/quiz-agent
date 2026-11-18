@@ -25,6 +25,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 # overrides an existing var) so a developer's real key can never turn a unit
 # test into a paid API call; Anthropic-route tests set a placeholder explicitly.
 os.environ["ANTHROPIC_API_KEY"] = ""
+# #218: the same for the triage bridge, or a local test run sends real
+# repository_dispatch events and fills the private triage repo with fake issues.
+for _var in (
+    "GITHUB_TRIAGE_DISPATCH_TOKEN",
+    "SENTRY_TRIAGE_TOKEN",
+    "ASC_WEBHOOK_SECRET",
+):
+    os.environ[_var] = ""
 
 try:
     from dotenv import load_dotenv
@@ -114,3 +122,13 @@ async def db_sessionmaker() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
         await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_query_embed_cache():
+    """A vector remembered by one test must not hide a slow/failing provider in the next."""
+    from app.retrieval.question_retriever import clear_query_embed_cache
+
+    clear_query_embed_cache()
+    yield
+    clear_query_embed_cache()

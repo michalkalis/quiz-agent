@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Trubbo: test schránky</title>
+<style>
+  body { font: 17px/1.45 -apple-system, system-ui, sans-serif; margin: 0; padding: 24px 16px; background: #fff; color: #111; }
+  main { max-width: 420px; margin: 0 auto; display: grid; gap: 14px; }
+  h1 { font-size: 22px; margin: 0; }
+  button { font: inherit; padding: 14px; border-radius: 12px; border: 0; background: #111; color: #fff; }
+  button.alt { background: #e8e8ea; color: #111; }
+  #out { padding: 12px; border-radius: 12px; background: #f3f3f5; white-space: pre-wrap; font-size: 15px; }
+  input { font: inherit; padding: 12px; border-radius: 12px; border: 1px solid #ccc; }
+  small { color: #666; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Test schránky (#232 — zdieľanie kvízu)</h1>
+  <small>Interná skúšobná stránka, po teste ju zmažem.</small>
+  <div id="out">Prehliadač: …</div>
+  <button id="copy">1. Len skopírovať</button>
+  <input id="paste" placeholder="2. Sem ťukni, podrž a daj Vložiť">
+  <button id="store" class="alt">3. Skopírovať a otvoriť App Store</button>
+</main>
+<script>
+  const LINK = "https://trubbo.app/play?s=TEST232";
+  const out = document.getElementById("out");
+  const ua = navigator.userAgent;
+  const app = /Instagram/.test(ua) ? "Instagram" : /FBAN|FBAV|FB_IAB|MESSENGER/i.test(ua) ? "Facebook/Messenger" : /WhatsApp/i.test(ua) ? "WhatsApp" : /CriOS/.test(ua) ? "Chrome" : /Safari/.test(ua) ? "Safari" : "iný (vnútorný prehliadač?)";
+  out.textContent = "Prehliadač: " + app;
+  function legacyCopy() {
+    const t = document.createElement("textarea");
+    t.value = LINK; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, LINK.length);
+    const ok = document.execCommand("copy"); t.remove(); return ok;
+  }
+  async function copy() {
+    try { await navigator.clipboard.writeText(LINK); return "áno (moderný spôsob)"; }
+    catch (e) { try { return legacyCopy() ? "áno (starší spôsob)" : "NIE"; } catch (e2) { return "NIE (" + e2 + ")"; } }
+  }
+  document.getElementById("copy").addEventListener("click", async () => {
+    out.textContent = "Prehliadač: " + app + "\nSkopírované: " + await copy();
+  });
+  document.getElementById("paste").addEventListener("input", (e) => {
+    out.textContent += "\nVložené: " + (e.target.value === LINK ? "správny odkaz ✓" : "„" + e.target.value + "“");
+  });
+  document.getElementById("store").addEventListener("click", async () => {
+    out.textContent = "Prehliadač: " + app + "\nSkopírované: " + await copy();
+    setTimeout(() => { location.href = "https://apps.apple.com/sk/app/trubbo/id6762482437"; }, 400);
+  });
+</script>
+</body>
+</html>

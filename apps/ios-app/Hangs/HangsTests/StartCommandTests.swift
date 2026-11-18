@@ -108,21 +108,6 @@ struct StartCommandTests {
         }
     }
 
-    @Test("Home (idle): 'start' begins the quiz even with the question flag OFF")
-    func startOnHomeBeginsQuiz() async {
-        await withMainSerialExecutor {
-            let (vm, _) = makeStartVM()
-            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false // question flag OFF…
-            vm.quizState = .idle                   // …still starts the quiz on Home
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
-
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
-
-            await pumpUntil({ vm.quizState != .idle }, turns: 2000, "start on Home did not begin the quiz")
-            #expect(vm.quizState != .idle)
-        }
-    }
-
     @Test("NO instant mic-open: a TTS finish arms the think window, not the mic (P1)")
     func noAutoMicOpen() async {
         let (vm, audio) = makeStartVM()

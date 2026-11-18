@@ -102,12 +102,22 @@ extension VoiceCommandCoordinator {
 
     // MARK: - Echo guard
 
-    /// `normalized` with every word of the read removed, or `nil` when no read
+    /// What the app itself just said into this window, or `nil` when no echo
+    /// guard applies: the question over a kept read, or — car test 2026-10-30 —
+    /// the answer the sheet read back. Car speakers on Bluetooth media have no
+    /// echo cancellation and sound on after the phone finished the clip, so the
+    /// sheet's listener heard "Skipped." and took it for a new answer.
+    func echoGuardText(on screen: VoiceCommandScreen) -> String? {
+        if isUnderEchoGuard { return textBeingRead() }
+        return screen == .confirmation ? answerReadBack() : nil
+    }
+
+    /// `normalized` with every word of `read` removed, or `nil` when no read
     /// text is known. Stripping rather than rejecting the whole transcript:
     /// with leaky echo cancellation a command said over the read arrives
     /// merged into echo residue ("…ktorý napísal preskoč").
-    func strippingReadWords(_ normalized: String) -> String? {
-        guard let read = textBeingRead(), !read.isEmpty else { return nil }
+    func strippingReadWords(_ normalized: String, read: String?) -> String? {
+        guard let read, !read.isEmpty else { return nil }
         let readWords = Set(VoiceCommandMatcher.normalize(read, language: commandLanguage).split(separator: " "))
         // Cancel words survive: a question with "nie" in it must not swallow
         // the "nie" that aborts a skip said over the read.

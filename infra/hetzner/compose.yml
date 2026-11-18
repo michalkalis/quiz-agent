@@ -1,0 +1,125 @@
+# Trubbo backend on one Hetzner VPS (#222 — moving the backend to Hetzner).
+# Run from this directory on the server: docker compose up -d --build
+# Secrets live in ./env/*.env on the server only (never in git); see README.md.
+
+name: trubbo
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    env_file: env/caddy.env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 128m
+    logging: *logging
+    depends_on: [quiz-agent, pack-web]
+
+  # pgvector + barman-cloud: WAL to R2 for point-in-time recovery (postgres/).
+  # Settings in postgres/trubbo.conf, R2 access in env/wal.env (pull-env.sh).
+  postgres:
+    build: { context: postgres }
+    image: trubbo/postgres:local
+    restart: unless-stopped
+    env_file: [env/postgres.env, env/wal.env]
+    environment:
+      POSTGRES_DB: quiz_pack
+      POSTGRES_USER: postgres
+    command: ["postgres", "-c", "config_file=/etc/postgresql/trubbo.conf"]
+    shm_size: 256m
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/trubbo.conf:/etc/postgresql/trubbo.conf:ro
+    # 127.0.0.1 only: reachable from the server itself / SSH tunnels (mba worker), never the internet.
+    ports: ["127.0.0.1:5432:5432"]
+    mem_limit: 1g
+    oom_score_adj: -900 # under memory pressure the kernel kills an app container, not the database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d quiz_pack"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    logging: *logging
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    env_file: env/redis.env
+    command: ["sh", "-c", "exec redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction --requirepass \"$$REDIS_PASSWORD\""]
+    volumes: [redis_data:/data]
+    ports: ["127.0.0.1:6379:6379"]
+    mem_limit: 192m
+    oom_score_adj: -500
+    logging: *logging
+
+  quiz-agent:
+    build: { context: ../.., dockerfile: apps/quiz-agent/Dockerfile }
+    image: trubbo/quiz-agent:local
+    restart: unless-stopped
+    env_file: env/quiz-agent.env
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: 640m
+    # Like Fly's kill_timeout = 30 (#207.20): an in-flight answer (STT + judge)
+    # finishes on deploy instead of being killed after Compose's default 10 s.
+    stop_grace_period: 30s
+    logging: *logging
+
+  pack-web:
+    build: { context: ../.., dockerfile: apps/quiz-pack-api/Dockerfile }
+    image: trubbo/quiz-pack-api:local
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    env_file: env/quiz-pack-api.env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    mem_limit: 640m
+    stop_grace_period: 30s
+    logging: *logging
+
+  # Processes paid generation orders. Behind a profile so a rehearsal stack on a
+  # copied prod DB never re-runs real orders on paid keys: start with --profile worker.
+  pack-worker:
+    image: trubbo/quiz-pack-api:local
+    profiles: ["worker"]
+    restart: unless-stopped
+    command: ["arq", "app.worker.WorkerSettings"]
+    env_file: env/quiz-pack-api.env
+    healthcheck:
+      disable: true # the image's check polls the web port; the worker's liveness is its Sentry check-in
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    mem_limit: 640m
+    stop_grace_period: 30s
+    logging: *logging
+
+  # Weekly fresh-question top-up (fresh-topup.yml -> deploy-ssh.sh topup), a
+  # one-off container like Fly's `machine run --vm-memory 1024`. First in line
+  # for the OOM killer, so a runaway run can never take down gameplay.
+  pack-topup:
+    image: trubbo/quiz-pack-api:local
+    profiles: ["topup"]
+    restart: "no"
+    env_file: env/quiz-pack-api.env
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: 1g
+    oom_score_adj: 500
+    logging: *logging
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pg_data:
+  redis_data:

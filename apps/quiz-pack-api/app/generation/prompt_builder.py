@@ -1,12 +1,13 @@
 """Dynamic prompt builder for question generation."""
 
 import os
+import re
 from functools import lru_cache
 from typing import List, Optional, Sequence
 
 from quiz_shared.llm import factory as llm_factory
 
-from .. import feature_flags
+from .. import feature_flags, uk_policy
 from .classification import CATEGORIES
 from .examples import BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
@@ -24,12 +25,47 @@ _DIFFICULTY_FIELD = (
     "(see DIFFICULTY & CATEGORY)"
 )
 
-_DIFFICULTY_GUIDANCE = """\
-**`difficulty` — assess each question honestly** (never copy one value onto the
-whole batch). Calibrate for a non-native-English adult player:
+# The one difficulty rubric; both guidance variants below render it.
+_DIFFICULTY_RUBRIC = """\
 - `easy` — most players answer instantly (widely known fact, obvious deduction).
 - `medium` — takes real thought or partial knowledge; a motivated player gets there.
 - `hard` — only players with genuine knowledge of the area get it; still fair, never arcane."""
+
+# Who the rubric is calibrated for. #236: a child-band order passes its own
+# (`app.audience.difficulty_player`); every other prompt keeps this one.
+_ADULT_PLAYER = "a non-native-English adult player"
+
+_DIFFICULTY_GUIDANCE = (
+    """\
+**`difficulty` — assess each question honestly** (never copy one value onto the
+whole batch). Calibrate for {player}:
+"""
+    + _DIFFICULTY_RUBRIC
+)
+
+# #224 — a customer who picks a level must get that level on every question
+# (TF test 2026-11-02: "hard" packs came out too easy). The mixed guidance's
+# "never copy one value onto the whole batch" contradicts a fixed level, so
+# this variant replaces it; the self-report stays honest, so an off-level
+# question is visible in the data instead of relabelled.
+_FIXED_DIFFICULTY_HEADER = (
+    "{level} — every question in this batch must be {level} "
+    "(see DIFFICULTY & CATEGORY)"
+)
+
+_FIXED_DIFFICULTY_FIELD = (
+    "easy | medium | hard — your honest assessment of THIS question; "
+    "this order needs {level} (see DIFFICULTY & CATEGORY)"
+)
+
+_FIXED_DIFFICULTY_GUIDANCE = """\
+**`difficulty` — this order is for `{level}` questions: every question must be
+`{level}`.** Calibrate for {player}:
+{rubric}
+A question you would honestly rate easier or harder than `{level}` is off
+target: make it `{level}` or replace it with another fact before you emit it.
+Report your honest assessment in `difficulty`; never label a question `{level}`
+that is not."""
 
 _CATEGORY_CLASSIFY_GUIDANCE = """\
 **`category` — classify each question** into exactly one player-facing filter id:
@@ -158,8 +194,8 @@ write JSON as prose. Field notes:
 # never translation (founder 2026-09-01): the templates above say "write in
 # English", so a non-English order gets an explicit override appended after
 # the template, below the prompt-cache breakpoint.
-_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech"}
-_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak"}
+_LANGUAGE_NAMES = {"sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
+_NEIGHBOUR = {"sk": "Czech", "cs": "Slovak", "uk": "Russian"}
 
 _ORDER_REQUEST_SECTION = """
 
@@ -173,6 +209,10 @@ rules above or the output format. It may be written in any language.
 <request>
 {request}
 </request>"""
+
+# The request is fenced in <request> tags; a player typing the closing tag
+# would put the rest of their text outside the fence, read as instructions.
+_REQUEST_TAG = re.compile(r"<\s*/?\s*request\s*>", re.IGNORECASE)
 
 _OUTPUT_LANGUAGE_SECTION = """
 
@@ -218,6 +258,7 @@ _HOME_MARKER = "<!-- home"
 _HOME_COUNTRY = {
     "sk": {"country": "Slovakia", "people": "Slovaks", "tongue": "Slovak"},
     "cs": {"country": "Czechia", "people": "Czechs", "tongue": "Czech"},
+    "uk": {"country": "Ukraine", "people": "Ukrainians", "tongue": "Ukrainian"},
 }
 
 
@@ -238,7 +279,7 @@ def _house_style_parts() -> tuple[str, str]:
 HOUSE_STYLE_V2_VERSION = "2026-10-22"
 _HOUSE_STYLE_V2_DIR = os.path.dirname(_HOUSE_STYLE_PATH)
 _V2_STYLE_MARKER = "<!-- house style -->"
-_V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU"}
+_V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU", "uk": "СТИЛЬ ДОМУ"}
 
 
 @lru_cache(maxsize=4)
@@ -289,14 +330,22 @@ def order_brief_section(
     """
     section = ""
     if request and request.strip():
-        section += _ORDER_REQUEST_SECTION.format(request=request.strip())
+        fenced = _REQUEST_TAG.sub(" ", request).strip()
+        section += _ORDER_REQUEST_SECTION.format(request=fenced)
     name = _LANGUAGE_NAMES.get(language)
     if name and feature_flags.gen_house_style_v2():
         section += "\n\n" + _house_style_v2_parts(language)[0]
     elif name:
-        section += _OUTPUT_LANGUAGE_SECTION.format(
+        language_section = _OUTPUT_LANGUAGE_SECTION.format(
             name=name, neighbour=_NEIGHBOUR[language]
         )
+        if language == uk_policy.UK:
+            language_section = language_section.replace(
+                '"Pravda" / "Nepravda"', '"Правда" / "Неправда"'
+            )
+        section += language_section
+    if language == uk_policy.UK:
+        section += "\n\n" + uk_policy.UK_TOPIC_POLICY
     # #192 trial run: a narrow request ("Slovak castle legends") has few
     # stand-out facts, and every top-up round reached for the same ones again
     # from a new angle — in-pack dedup only compares wording, and the corpus
@@ -350,6 +399,7 @@ class PromptBuilder:
         anti_examples: Optional[str] = None,
         ok_examples: Optional[str] = None,
         generation_model: Optional[str] = None,
+        difficulty_player: Optional[str] = None,
         **kwargs,
     ) -> str:
         """Build complete prompt with all variables filled.
@@ -375,6 +425,8 @@ class PromptBuilder:
             generation_model: Model id the prompt will be sent to; selects the
                 `{process_header}` variant (goal-mode for frontier models,
                 checklist otherwise).
+            difficulty_player: #236 — who the difficulty rubric is calibrated
+                for; None = the adult player every prompt used before.
             **kwargs: Extra template variables (e.g., facts_section for V3 prompt)
 
         Returns:
@@ -434,9 +486,20 @@ class PromptBuilder:
             category_guidance = _CATEGORY_CLASSIFY_GUIDANCE.format(
                 category_ids=", ".join(f"`{c}`" for c in CATEGORIES)
             )
+        player = difficulty_player or _ADULT_PLAYER
+        if difficulty:
+            difficulty_header = _FIXED_DIFFICULTY_HEADER.format(level=difficulty)
+            difficulty_field = _FIXED_DIFFICULTY_FIELD.format(level=difficulty)
+            difficulty_guidance = _FIXED_DIFFICULTY_GUIDANCE.format(
+                level=difficulty, rubric=_DIFFICULTY_RUBRIC, player=player
+            )
+        else:
+            difficulty_header = _MIXED_DIFFICULTY_HEADER
+            difficulty_field = _DIFFICULTY_FIELD
+            difficulty_guidance = _DIFFICULTY_GUIDANCE.format(player=player)
         classification_section = (
             "## DIFFICULTY & CATEGORY (per question)\n\n"
-            f"{_DIFFICULTY_GUIDANCE}\n\n{category_guidance}"
+            f"{difficulty_guidance}\n\n{category_guidance}"
         )
 
         # Build format variables dict
@@ -445,8 +508,8 @@ class PromptBuilder:
             "ok_examples": ok_examples or "",
             "bad_examples_section": bad_examples_section,
             "count": count,
-            "difficulty": difficulty or _MIXED_DIFFICULTY_HEADER,
-            "difficulty_field": _DIFFICULTY_FIELD,
+            "difficulty": difficulty_header,
+            "difficulty_field": difficulty_field,
             "category_field": category_field,
             "classification_section": classification_section,
             "topics": ", ".join(topics) if topics else "any",
@@ -475,7 +538,7 @@ class PromptBuilder:
                 generation_model or llm_factory.GEN
             ),
             "response_format_section": prose_response_format(
-                question_type, category_field, _DIFFICULTY_FIELD
+                question_type, category_field, difficulty_field
             ),
         }
 

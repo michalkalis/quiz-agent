@@ -88,6 +88,7 @@ jobs:
   staging:
     name: Staging
     needs: [plan, test]
+    if: vars.BACKEND_HOST != 'hetzner' # Hetzner has no staging stack: prod deploys straight after the tests
     runs-on: ubuntu-latest
     timeout-minutes: 40
     environment:
@@ -119,8 +120,12 @@ jobs:
 
   production:
     name: Production
-    needs: [plan, staging]
-    if: github.ref == 'refs/heads/main'
+    needs: [plan, test, staging]
+    # Fly: after a green staging (as before). Hetzner: staging is skipped, so gate on the tests.
+    if: >-
+      !cancelled() && github.ref == 'refs/heads/main' &&
+      ((vars.BACKEND_HOST != 'hetzner' && needs.staging.result == 'success') ||
+      (vars.BACKEND_HOST == 'hetzner' && needs.test.result == 'success'))
     runs-on: ubuntu-latest
     timeout-minutes: 40
     environment:
@@ -130,16 +135,45 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # 1.6
+        if: vars.BACKEND_HOST != 'hetzner'
         with:
           version: ${{ env.FLYCTL_VERSION }}
 
+      # Hetzner (#222): one SSH forced command builds, migrates and swaps on the
+      # server (infra/hetzner/deploy-ssh.sh). After cutover the Fly apps only
+      # forward, so no app code goes to Fly in this mode.
+      - name: Deploy to Hetzner
+        if: vars.BACKEND_HOST == 'hetzner' && (needs.plan.outputs.quiz_agent == 'true' || needs.plan.outputs.quiz_pack_api == 'true')
+        env:
+          DEPLOY_KEY: ${{ secrets.HETZNER_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.HETZNER_KNOWN_HOSTS }}
+          DO_AGENT: ${{ needs.plan.outputs.quiz_agent }}
+          DO_PACK: ${{ needs.plan.outputs.quiz_pack_api }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' 'Host hetzner' '  HostName 2.31.163.95' '  User trubbo' \
+            '  IdentityFile ~/.ssh/deploy' '  IdentitiesOnly yes' > ~/.ssh/config
+          services=""
+          [ "$DO_AGENT" = true ] && services="quiz-agent"
+          [ "$DO_PACK" = true ] && services="${services:+$services,}pack"
+          ssh hetzner deploy "$GITHUB_SHA" "$services"
+      - name: Smoke quiz-pack-api (Hetzner)
+        if: vars.BACKEND_HOST == 'hetzner' && needs.plan.outputs.quiz_pack_api == 'true'
+        run: infra/deploy/smoke.sh quiz-pack-api https://pack.trubbo.app
+      - name: Smoke quiz-agent-api (Hetzner)
+        if: vars.BACKEND_HOST == 'hetzner' && needs.plan.outputs.quiz_agent == 'true'
+        run: infra/deploy/smoke.sh quiz-agent https://api.trubbo.app
+
       - name: Deploy quiz-pack-api
-        if: needs.plan.outputs.quiz_pack_api == 'true'
+        if: vars.BACKEND_HOST != 'hetzner' && needs.plan.outputs.quiz_pack_api == 'true'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_PACK_API }}
         run: flyctl deploy -c apps/quiz-pack-api/fly.toml --yes
       - name: Smoke quiz-pack-api
-        if: needs.plan.outputs.quiz_pack_api == 'true'
+        if: vars.BACKEND_HOST != 'hetzner' && needs.plan.outputs.quiz_pack_api == 'true'
         run: infra/deploy/smoke.sh quiz-pack-api https://quiz-pack-api.fly.dev
       # Custom packs run on the Fly worker (#207): it has no HTTP check, so a
       # deploy can "succeed" with the worker crash-looping. Require its
@@ -149,19 +183,20 @@ jobs:
         if: needs.plan.outputs.quiz_pack_api == 'true'
         env:
           ADMIN_KEY: ${{ secrets.QUIZ_PACK_ADMIN_API_KEY }}
+          PACK_URL: ${{ vars.BACKEND_HOST == 'hetzner' && 'https://pack.trubbo.app' || 'https://quiz-pack-api.fly.dev' }}
         run: |
           deployed_at=$(date +%s)
           for attempt in 1 2 3 4; do
             sleep 45
             age=$(curl -fsS --retry 2 --retry-all-errors --retry-delay 10 --max-time 60 \
               -H "X-Admin-Key: ${ADMIN_KEY}" \
-              https://quiz-pack-api.fly.dev/api/v1/admin/worker/heartbeat \
+              "${PACK_URL}/api/v1/admin/worker/heartbeat" \
               | python3 -c 'import json,sys; print(json.load(sys.stdin)["heartbeat_age_s"])') || age=None
             since=$(( $(date +%s) - deployed_at ))
             echo "attempt $attempt: worker heartbeat ${age} s old, deploy finished ${since} s ago"
             if [ "$age" != "None" ] && [ "${age%.*}" -lt "$since" ]; then exit 0; fi
           done
-          echo "::error::Fly pack worker has no fresh heartbeat after deploy (fly status -a quiz-pack-api)"
+          echo "::error::Fly pack worker has no fresh heartbeat after deploy (Fly: fly status -a quiz-pack-api; Hetzner: docker compose ps pack-worker)"
           exit 1
       - name: Mark quiz-pack-api deployed
         if: needs.plan.outputs.quiz_pack_api == 'true'
@@ -170,12 +205,12 @@ jobs:
           git push -f origin refs/tags/deployed/quiz-pack-api
 
       - name: Deploy quiz-agent-api
-        if: needs.plan.outputs.quiz_agent == 'true'
+        if: vars.BACKEND_HOST != 'hetzner' && needs.plan.outputs.quiz_agent == 'true'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_TOKEN_QUIZ_AGENT }}
         run: flyctl deploy -c apps/quiz-agent/fly.toml --yes
       - name: Smoke quiz-agent-api
-        if: needs.plan.outputs.quiz_agent == 'true'
+        if: vars.BACKEND_HOST != 'hetzner' && needs.plan.outputs.quiz_agent == 'true'
         run: infra/deploy/smoke.sh quiz-agent https://quiz-agent-api.fly.dev
       - name: Mark quiz-agent deployed
         if: needs.plan.outputs.quiz_agent == 'true'

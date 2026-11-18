@@ -24,9 +24,9 @@ import Testing
 private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
-    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point"],
+    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game"],
     "quiz_abandoned": ["questions_answered", "phase"],
-    "answer_submitted": ["input_mode", "question_id", "is_retry"],
+    "answer_submitted": ["input_mode", "question_id", "is_retry", "latency_ms"],
     "voice_capture_failed": ["reason", "question_id"],
     "answer_captured": [
         "question_id", "is_retry", "auto_test", "src_neural_vad", "src_aec", "src_front_mic",
@@ -37,18 +37,34 @@ private let backendClientEvents: [String: Set<String>] = [
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
+    "voice_commands_turned_on": ["source", "result"],
     "paywall_viewed": ["source"],
-    "purchase_result": ["product_id", "kind", "outcome"],
+    "purchase_result": ["product_id", "kind", "outcome", "question_count"],
     "restore_result": ["outcome"],
+    "sign_in_prompt_shown": ["kind"],
+    "sign_in_prompt_result": ["kind", "outcome"],
+    "profile_opened": ["has_account"],
+    "recap_viewed": ["kind", "slides_seen", "slides_total"],
+    "recap_shared": ["kind"],
+    "together_opened": [],
+    "room_settings_changed": ["setting", "value", "surface"],
+    "room_pause_changed": ["paused", "question"],
+    "room_guest_read_aloud": ["on", "via"],
+    "home_category_stepped": ["direction", "input", "to"],
+    "home_category_picker_opened": ["source"],
+    "quick_game_changed": ["enabled"],
+    "question_skipped": ["quick"],
+    "pack_topic_checked": ["verdict"],
+    "shared_quiz_pasted": ["outcome"],
 ]
 
 /// One instance of every case, with every optional property present.
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
-    .onboardingFinished(outcome: .micGranted, step: "permission"),
-    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home),
+    .onboardingFinished(outcome: .commandsOn, step: "commands"),
+    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
-    .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false),
+    .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
     .answerCaptured(AnswerCapturedReport(
         questionId: "q_001", isRetry: false, autoTest: true,
@@ -62,9 +78,24 @@ private let everyEvent: [AnalyticsEvent] = [
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
+    .voiceCommandsTurnedOn(source: .listenBar, result: .granted),
     .paywallViewed(source: .quota),
-    .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success),
+    .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success, questionCount: 30),
     .restoreResult(outcome: .nothingToRestore),
+    .signInPromptShown(kind: .customPack),
+    .signInPromptResult(kind: .credit, outcome: .signedIn),
+    .profileOpened(hasAccount: true),
+    .recapShared(kind: "month"),
+    .togetherOpened,
+    .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
+    .roomPauseChanged(paused: true, question: 3),
+    .roomGuestReadAloud(on: true, via: "link"),
+    .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
+    .homeCategoryPickerOpened(source: .deckButton),
+    .quickGameChanged(enabled: true),
+    .questionSkipped(quick: true),
+    .packTopicChecked(verdict: "blocked"),
+    .sharedQuizPasted(outcome: .notALink),
 ]
 
 @MainActor
@@ -163,11 +194,12 @@ struct QuizAnalyticsTests {
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }
         #expect(context.count == 1)
-        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint) = context.first?.event else {
+        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _) = context.first?.event else {
             Issue.record("no quiz_context")
             return
         }
         #expect(entryPoint == .pack)
+        #expect(timezone == TimeZone.current.identifier, "analytics occurred_at is UTC; local time of day needs the zone (#213.1)")
         #expect(voiceCommandsEnabled == false)
         #expect(context.first?.sessionId == vm.currentSession?.id, "joins the server's quiz_started")
     }
@@ -359,12 +391,13 @@ struct PurchaseAnalyticsTests {
             analytics: analytics
         )
         vm.prompt = "Dinosaurs"
+        vm.selectDifficulty(.medium)
         vm.advanceToSummary()
 
         await vm.submit()
 
         #expect(analytics.events == [.purchaseResult(
-            productId: StoreKitPackPurchaseService.productId, kind: .customPack, outcome: .cancelled
+            productId: "pack_30", kind: .customPack, outcome: .cancelled, questionCount: 30
         )])
     }
 }
@@ -391,24 +424,6 @@ struct AppLifecycleAnalyticsTests {
 
         #expect(analytics.events == [.appOpened(launch: .cold), .appOpened(launch: .foreground)])
         #expect(analytics.flushCount == 2, "queued events go out every time the app leaves")
-    }
-
-    @Test("onboarding_finished says how and where it ended")
-    func onboardingOutcomes() async {
-        let analytics = MockAnalyticsClient()
-        let audio = MockAudioService()
-        let skipped = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), analytics: analytics)
-        skipped.continueWithoutMic()
-
-        let granted = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), analytics: analytics)
-        granted.advance()
-        granted.advance()
-        await granted.requestMicPermission()
-
-        #expect(analytics.events == [
-            .onboardingFinished(outcome: .skipped, step: "welcome"),
-            .onboardingFinished(outcome: .micGranted, step: "permission"),
-        ])
     }
 }
 
@@ -465,5 +480,91 @@ struct LiveAnalyticsClientTests {
         client.flush()
         for _ in 0 ..< 20 { await Task.yield() }
         #expect(network.postedAnalyticsBatches.count == LiveAnalyticsClient.maxAttempts, "a dropped batch is not re-queued")
+    }
+}
+
+@Suite("#213.1 answer latency")
+@MainActor
+struct AnswerLatencyTests {
+    private func makeTracker() -> (AnswerLatencyTracker, TestClock<Duration>) {
+        let clock = TestClock()
+        return (AnswerLatencyTracker(clock: AnyClock(clock)), clock)
+    }
+
+    @Test("event properties carry latency_ms only when known")
+    func eventCarriesLatency() {
+        let known = AnalyticsEvent.answerSubmitted(inputMode: .tap, questionId: "q", isRetry: false, latencyMs: 2300)
+        #expect(known.properties["latency_ms"] == .int(2300))
+        let unknown = AnalyticsEvent.answerSubmitted(inputMode: .tap, questionId: "q", isRetry: true)
+        #expect(unknown.properties["latency_ms"] == nil, "unknown start is omitted, never sent as 0")
+    }
+
+    @Test("quiz_context carries the IANA timezone")
+    func contextCarriesTimezone() {
+        let event = AnalyticsEvent.quizContext(
+            audioRoute: .speaker, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava"
+        )
+        #expect(event.properties["timezone"] == .string("Europe/Bratislava"))
+    }
+
+    @Test("a tap is measured from the window opening to the submit moment")
+    func tapLatency() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(3200))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 3200)
+    }
+
+    @Test("a voice answer ends at speech onset, not at submit")
+    func voiceLatencyUsesOnset() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000)) // recording runs 1000..6000 ms
+        await clock.advance(by: .milliseconds(5000))
+        tracker.noteSpeechOnset(durationMs: 5000, firstSpeechMs: 1500)
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: true) == 2500)
+    }
+
+    @Test("a voice answer without a measured onset falls back to the submit moment")
+    func voiceWithoutOnset() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(4000))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: true) == 4000)
+    }
+
+    @Test("paused time is excluded")
+    func pausedTimeExcluded() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        tracker.setPaused(true)
+        await clock.advance(by: .milliseconds(30000))
+        tracker.setPaused(false)
+        await clock.advance(by: .milliseconds(500))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 1500)
+    }
+
+    @Test("a retry, an unopened window and another question's window report nothing")
+    func unknownStartIsOmitted() async {
+        let (tracker, clock) = makeTracker()
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == nil, "tap mid-read")
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(100))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: true, voice: false) == nil, "retry")
+        tracker.openWindow(questionId: "q1")
+        tracker.openWindow(questionId: "q2")
+        await clock.advance(by: .milliseconds(100))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == nil, "wrong question")
+    }
+
+    @Test("re-arming the think timer does not restart the window")
+    func openIsIdempotent() async {
+        let (tracker, clock) = makeTracker()
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        tracker.openWindow(questionId: "q1")
+        await clock.advance(by: .milliseconds(1000))
+        #expect(tracker.consumeLatencyMs(questionId: "q1", isRetry: false, voice: false) == 2000)
     }
 }

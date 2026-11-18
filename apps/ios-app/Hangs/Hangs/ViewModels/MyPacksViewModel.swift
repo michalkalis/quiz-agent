@@ -137,7 +137,7 @@ final class MyPacksViewModel: ObservableObject {
             _ = try await service.retryOrder(id: orderId, paymentProof: nil)
         } catch {
             retryErrorMessage = (error as? LocalizedError)?.errorDescription
-                ?? String(localized: "Couldn't restart this pack. Please try again.", comment: "Shown when retrying a failed custom-pack order from My packs did not reach the server")
+                ?? String(localized: "Couldn't restart this pack. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when retrying a failed custom-pack order from My packs did not reach the server")
             return
         }
         await refresh()

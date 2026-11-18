@@ -12,12 +12,15 @@ attempt budget stopped it, each re-drive another paid attempt on prod.
 The verdict comes only from what the error itself says, the HTTP status the
 provider answered with. Anything without one (our own pipeline errors, judge
 outages, connection drops) stays retryable, so today's retry behaviour is
-unchanged for every failure this module does not positively recognise.
+unchanged for every failure this module does not positively recognise. One
+exception by type: the #236 kids check's judge, which retries itself first.
 """
 
 from __future__ import annotations
 
 from tavily import errors as tavily_errors
+
+from app.kids_check import KidsJudgeUnavailable
 
 # Client errors that a retry of the same request cannot fix. The 4xx codes
 # left out are the ones that mean "try again": 408 timeout, 409 conflict,
@@ -75,6 +78,10 @@ def non_retryable_reason(exc: BaseException) -> str | None:
     an HTTP status decides (a 5xx wrapped around a 401 is retryable).
     """
     for err in _chain(exc):
+        # #236: the kids check already retried its judge; another paid
+        # generation attempt would only meet the same outage.
+        if isinstance(err, KidsJudgeUnavailable):
+            return "kids check judge unavailable after retries"
         if isinstance(err, _NON_RETRYABLE_TYPES):
             return f"{type(err).__name__} (provider key, plan or request rejected)"
         status = _http_status(err)

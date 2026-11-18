@@ -4,7 +4,7 @@ hlas
 Hlasové příkazy
 Ovládej kvíz hlasem, bez klepání
 
-Hlasové nápovědy
+Nápověda příkazů
 Zobrazovat hlasové příkazy, které můžeš říct
 
 Rozpoznávání řeči
@@ -29,12 +29,7 @@ Jazyk kvízu
 English
 Jazyk kvízu
 English
-Otázky, odpovědi a hlas
-Jazyk aplikace
-English
-Jazyk aplikace
-English
-Tlačítka, popisky a nastavení
+Otázky, hlas i celá aplikace
 kvíz
 0s
 10s
@@ -68,9 +63,9 @@ Automatický posun
 Pauza na výsledku před další otázkou
 After each question
 At the end of the quiz
-Odhalení odpovědí
+Kdy ukázat odpovědi
 After each question
-Odhalení odpovědí
+Kdy ukázat odpovědi
 After each question
 zvuková odezva
 Číst nahlas
@@ -139,7 +134,6 @@ settings-language-menu
 settings.language.en
 settings.language.sk
 settings.language.cs
-settings-app-language-row
 settings-thinking-time-menu
 settings.thinkingTime.0
 settings.thinkingTime.10

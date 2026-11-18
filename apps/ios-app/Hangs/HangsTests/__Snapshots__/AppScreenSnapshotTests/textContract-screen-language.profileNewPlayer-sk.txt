@@ -1,0 +1,17 @@
+# texts
+PROFIL
+Tvoje meno
+Múdra sova
+Tvoje meno
+Múdra sova
+37
+z 60
+Tvoj prvý prehľad
+Ešte 23 otázok
+Ešte 1 deň hrania
+# identifiers
+profile.settings
+profile.account
+profile.name
+profile.firstRecap
+profile.allStats

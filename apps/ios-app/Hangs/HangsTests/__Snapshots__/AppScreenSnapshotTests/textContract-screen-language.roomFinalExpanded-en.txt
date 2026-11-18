@@ -1,0 +1,44 @@
+# texts
+Winner
+Michal
+2 of 2 correct
+1.
+M
+Michal (you)
+2
+2.
+J
+Jana
+1
+Jana: left Trubbo during 1 question
+Only you see this.
+Questions
+1
+Which planet has the most known moons?
+Saturn
+M
+Michal
+Saturn
+J
+Jana
+Saturn
+2
+What is the capital of Australia?
+Canberra
+M
+Michal
+Canberra
+J
+Jana
+Sydney
+Done
+# identifiers
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.away
+room.final.round.1
+room.final.round.1.answers
+room.final.round.2
+room.final.round.2.answers
+room.done

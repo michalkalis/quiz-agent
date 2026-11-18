@@ -40,6 +40,7 @@ enum TaskKey: Hashable, Sendable {
     case confirmationSpeechHold // #185 5.1: bound on how long speech may hold the countdown
     case inputLevel // #185 track F: the mic level the listen bar breathes with
     case quizEndPrompt // #188 G1/G3: the error / set-end line, then that screen's command window
+    case quickSkipNote // #224.8: the "Skipped, correct: X" note leaves by itself
     case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
 }
 
@@ -77,6 +78,11 @@ final class TaskBag {
             task.cancel()
         }
         tasks.removeAll()
+    }
+
+    /// The task registered under `key`, finished or not.
+    func task(for key: TaskKey) -> Task<Void, Never>? {
+        tasks[key]
     }
 
     /// Test/diagnostics hook: whether a task is currently registered under

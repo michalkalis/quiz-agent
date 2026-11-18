@@ -56,7 +56,7 @@ final class AudioDeviceState: ObservableObject {
         if let device = audioService.currentInputDevice {
             return device.name
         }
-        return String(localized: "Automatic", comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
+        return String(localized: "Automatic", bundle: .interface, locale: .interface, comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
     }
 
     /// Current audio mode, derived from persisted settings
@@ -363,7 +363,7 @@ final class AudioDeviceState: ObservableObject {
                 // microphone only in call mode) and nothing else republishes them.
                 refreshAudioDevices()
             } catch {
-                setErrorMessage(String(localized: "Failed to switch audio mode: \(error.localizedDescription)", comment: "Inline error when switching audio output mode fails; placeholder is the underlying error"))
+                setErrorMessage(String(localized: "Failed to switch audio mode: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when switching audio output mode fails; placeholder is the underlying error"))
 
                 Logger.audio.error("❌ Error switching audio mode: \(error, privacy: .public)")
             }
@@ -411,7 +411,7 @@ final class AudioDeviceState: ObservableObject {
 
             Logger.audio.info("🎤 Set preferred input device: \(device?.name ?? "Automatic", privacy: .public)")
         } catch {
-            setErrorMessage(String(localized: "Failed to set audio device: \(error.localizedDescription)", comment: "Inline error when selecting a preferred input device fails; placeholder is the underlying error"))
+            setErrorMessage(String(localized: "Failed to set audio device: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when selecting a preferred input device fails; placeholder is the underlying error"))
 
             Logger.audio.error("❌ Error setting preferred input device: \(error, privacy: .public)")
         }

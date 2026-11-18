@@ -122,10 +122,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// (and Home "start") stays intact.
     var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
 
-    /// Founder-overridable flag: arm the command listener on the idle Home
-    /// screen so spoken "start" begins the quiz. Read by `HomeView.onAppear`.
-    var voiceStartOnHomeEnabled: Bool = Config.voiceHomeStartEnabled
-
     /// Observation hook / test seam (77.5): fired when a screen-scoped command
     /// is recognized, BEFORE it is routed to an action.
     var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
@@ -313,9 +309,17 @@ final class VoiceCommandCoordinator: ObservableObject {
     let isReadingQuestionAloud: @MainActor () -> Bool
     /// #208.7: what the read says (question + options), for the echo guard.
     let textBeingRead: @MainActor () -> String?
+    /// Car test 2026-10-30: the answer the open sheet read back aloud, for the
+    /// sheet's echo guard (`echoGuardText`).
+    let answerReadBack: @MainActor () -> String?
     /// #208.7: a skip said during the read stops the read — the driver hears
     /// that it worked, and the undo window is not spent under the question.
     let stopQuestionRead: @MainActor () async -> Void
+
+    /// #237: the player turned commands on and the live listener (started
+    /// without a transcriber) must be rebuilt once they are ready. Written
+    /// only by +Permission.
+    var rearmsListenerWhenCommandsReady = false
 
     /// Long-lived observer of `commandAvailabilityUpdates`. Deliberately NOT in
     /// `taskBag` (quiz-scoped, cleared by `resetState`) — availability changes
@@ -359,6 +363,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         isReadingQuestionAloud: @escaping @MainActor () -> Bool = { false },
         textBeingRead: @escaping @MainActor () -> String? = { nil },
+        answerReadBack: @escaping @MainActor () -> String? = { nil },
         stopQuestionRead: @escaping @MainActor () async -> Void = {}
     ) {
         self.silenceDetectionService = silenceDetectionService
@@ -395,6 +400,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.trackAnalytics = trackAnalytics
         self.isReadingQuestionAloud = isReadingQuestionAloud
         self.textBeingRead = textBeingRead
+        self.answerReadBack = answerReadBack
         self.stopQuestionRead = stopQuestionRead
 
         // Seed + observe recognizer availability (see `commandAvailability`).
@@ -408,6 +414,7 @@ final class VoiceCommandCoordinator: ObservableObject {
             for await availability in availabilityStream {
                 guard let self, !Task.isCancelled else { break }
                 self.commandAvailability = availability
+                self.noteCommandAvailabilityChanged()
             }
         }
     }

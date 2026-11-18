@@ -17,6 +17,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -42,6 +43,13 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     theme: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # #224 224.3: buyer-chosen difficulty (easy|medium|hard). NULL = mixed
+    # batch (orders from before the picker / older app builds).
+    difficulty: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    # #236 236.1: who the pack is written for (`app.audience`): adults or a
+    # child band. A content setting, never a person's age. NULL = builds
+    # before the choice, the same pack as "adults".
+    audience: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     target_count: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(16), nullable=False)
     # #157 (D4): server-side generation-mode switch. Set only by internal
@@ -115,6 +123,15 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
     search_cost_cents: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
+    # #225: match key for reusing a finished pack (hash of the normalized
+    # prompt, `app.pack_reuse.prompt_key`) and the original order a reused
+    # pack was copied from (NULL = generated for this order).
+    prompt_key: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    reused_from_order_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("generation_orders.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -126,7 +143,17 @@ class GenerationOrder(Base, UUIDPrimaryKeyMixin):
             name="ck_orders_generation_mode",
         ),
         CheckConstraint(
+            "difficulty IS NULL OR difficulty IN ('easy','medium','hard')",
+            name="ck_orders_difficulty",
+        ),
+        CheckConstraint(
+            "audience IS NULL OR audience IN "
+            "('adults','kids_4_6','kids_7_9','kids_10_12')",
+            name="ck_orders_audience",
+        ),
+        CheckConstraint(
             "storekit_environment IS NULL OR storekit_environment IN ('Sandbox','Production')",
             name="ck_orders_storekit_environment",
         ),
+        Index("ix_orders_prompt_key", "prompt_key", "language"),
     )

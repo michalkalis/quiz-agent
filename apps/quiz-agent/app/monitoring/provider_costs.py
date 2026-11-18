@@ -4,9 +4,9 @@
 key (OpenRouter, ElevenLabs). These three do not, so each is read through an
 admin/org credential and turned into the same ``ProviderBalance`` rows:
 
-- Anthropic: the monthly API credit from the Max plan (``ANTHROPIC_CREDIT_USD``
-  between ``ANTHROPIC_CREDIT_START`` and ``_EXPIRES``, as ``credit_gate`` uses
-  it) minus the organisation's real spend from the Cost API (Admin key).
+- Anthropic: the monthly API credit from the Max plan (``CREDIT_USD`` between
+  ``CREDIT_START`` and ``CREDIT_EXPIRES`` in ``quiz_shared.llm.credit_gate``)
+  minus the organisation's real spend from the Cost API (Admin key).
   Running low or about to expire = warning. Outside a credit period only the
   month's spend is shown: a prepaid balance is not readable by any API.
 - OpenAI: this month's spend from the organisation Costs API (Admin key)
@@ -25,6 +25,7 @@ import os
 from datetime import UTC, date, datetime
 
 import httpx
+from quiz_shared.llm import credit_gate
 from quiz_shared.llm.credit_gate import COST_REPORT_URL
 
 from ..config import Settings
@@ -56,11 +57,6 @@ def _error(provider: str, unit: str, exc: Exception) -> ProviderBalance:
     return ProviderBalance(
         provider=provider, unit=unit, status="error", detail=describe_error(exc)
     )
-
-
-def _env_date(name: str) -> date | None:
-    raw = (os.getenv(name) or "").strip()
-    return date.fromisoformat(raw) if raw else None
 
 
 async def anthropic_spent_usd(
@@ -96,10 +92,10 @@ async def anthropic(
         return _unconfigured("anthropic", "usd", "ANTHROPIC_ADMIN_KEY not set")
     today = today or datetime.now(UTC).date()
     try:
-        start = _env_date("ANTHROPIC_CREDIT_START")
-        expires = _env_date("ANTHROPIC_CREDIT_EXPIRES")
-        budget = float(os.getenv("ANTHROPIC_CREDIT_USD") or 200)
-        active = start is not None and expires is not None and start <= today < expires
+        start = credit_gate.CREDIT_START
+        expires = credit_gate.CREDIT_EXPIRES
+        budget = credit_gate.CREDIT_USD
+        active = start <= today < expires
         since = start if active else today.replace(day=1)
         spent = await anthropic_spent_usd(client, admin_key, since)
     except Exception as exc:  # noqa: BLE001 — best-effort by design

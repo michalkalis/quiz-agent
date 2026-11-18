@@ -15,7 +15,7 @@ from typing import Optional
 from ..config import get_settings
 from .cache import TTSCache
 from .remote_cache import R2AudioStore
-from .providers import TTSProvider, build_provider
+from .providers import PRIMARY_TTS_TIMEOUT_S, TTSProvider, build_provider
 from .voices import STATIC_FEEDBACK
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,12 @@ def _resolve_provider(
     """
     if name is None or not name.strip() or name.strip().lower() == "none":
         return None
-    return build_provider(name, model=_model_for(name, settings), voice=voice)
+    return build_provider(
+        name,
+        model=_model_for(name, settings),
+        voice=voice,
+        cyrillic_model=settings.elevenlabs_tts_model_cyrillic,
+    )
 
 
 class TTSBudgetExceeded(Exception):
@@ -295,9 +300,22 @@ class TTSService:
                 if self.fallback is None:
                     raise TTSBudgetExceeded()
                 raise RuntimeError("daily TTS budget exhausted")
-            return await self._synthesize_with(
+            primary = self._synthesize_with(
                 self.provider, text, primary_voice, use_cache, billing
             )
+            if self.fallback is None:
+                return await primary
+            # #235: a slow primary hands over to the backup instead of
+            # outlasting the app's wait. The cut-off attempt is cancelled, so
+            # it neither bills nor fills the cache; letting it finish in the
+            # background would keep a synthesis slot busy while the backup
+            # needs one, exactly when the primary is struggling.
+            try:
+                return await asyncio.wait_for(primary, PRIMARY_TTS_TIMEOUT_S)
+            except TimeoutError:
+                raise RuntimeError(
+                    f"no audio within {PRIMARY_TTS_TIMEOUT_S:g} s"
+                ) from None
         except TTSBudgetExceeded:
             raise
         except Exception as primary_error:
@@ -472,7 +490,7 @@ class TTSService:
 
         Called on server startup to ensure instant feedback playback. Skipped
         for phrases already on disk, so the real cost is paid once per provider
-        per cache volume: ~100–250 ElevenLabs credits (0.4–1 credit/char by plan) or ~$0.005 on
+        per cache volume: ~50 ElevenLabs credits (~240 chars at 0.2 credit/char on v4 Turbo) or ~$0.005 on
         OpenAI. Note that an ephemeral cache dir turns "once" into "every
         deploy" — see `TTS_CACHE_DIR`.
 

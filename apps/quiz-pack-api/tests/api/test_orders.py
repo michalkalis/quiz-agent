@@ -109,6 +109,55 @@ async def test_create_order_happy_path_202(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("difficulty", ["easy", "medium", "hard", None])
+async def test_create_order_persists_buyer_difficulty(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    difficulty: str | None,
+) -> None:
+    """The picked level is stored on the order and echoed by the snapshot
+    (#224 — generated packs were too easy). Omitted = NULL = mixed batch, so
+    app builds shipped before the picker keep ordering."""
+    body = _valid_body()
+    if difficulty is not None:
+        body["difficulty"] = difficulty
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": make_jws(), **BEARER}
+    )
+    assert resp.status_code == 202, resp.text
+    order_id = uuid.UUID(resp.json()["order_id"])
+
+    test_session.expire_all()
+    order = (
+        await test_session.execute(
+            select(GenerationOrder).where(GenerationOrder.id == order_id)
+        )
+    ).scalars().first()
+    assert order is not None
+    assert order.difficulty == difficulty
+
+    snap = await client.get(f"/v1/orders/{order_id}", headers=BEARER)
+    assert snap.status_code == 200, snap.text
+    assert snap.json()["difficulty"] == difficulty
+
+
+@pytest.mark.asyncio
+async def test_create_order_unknown_difficulty_422(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    arq_mock: MagicMock,
+) -> None:
+    """Off-vocabulary levels are refused at the edge, never reach the prompt."""
+    body = {**_valid_body(), "difficulty": "impossible"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": make_jws(), **BEARER}
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("order_queue_name", ["quiz-pack:session"])
 async def test_create_order_enqueues_on_configured_queue(
     client: httpx.AsyncClient,
@@ -232,6 +281,61 @@ async def test_create_order_unknown_product_400_is_reported(
         tx_id in m and "pack_99" in m and "unknown_product_id" in m
         for m in sentry_messages
     ), sentry_messages
+
+
+@pytest.mark.asyncio
+async def test_beta_app_order_is_created_for_the_live_pack(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+) -> None:
+    """#234: the beta app buys `beta.pack_30` and sends that id in the body.
+    The order must be the live `pack_30` (30 questions), stored under the live
+    id that pricing, reconcile and analytics key on."""
+    tx_id = "tx-beta-pack-30"
+    jws = make_jws(
+        payload_overrides={
+            "transactionId": tx_id,
+            "productId": "beta.pack_30",
+            "bundleId": "com.missinghue.hangs.beta",
+        }
+    )
+    body = _valid_body(tx_id=tx_id, product_id="beta.pack_30")
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202, resp.text
+
+    test_session.expire_all()
+    order = (
+        await test_session.execute(
+            select(GenerationOrder).where(GenerationOrder.transaction_id == tx_id)
+        )
+    ).scalar_one()
+    assert order.product_id == "pack_30"
+    assert order.target_count == 30
+
+
+@pytest.mark.asyncio
+async def test_beta_product_id_from_the_live_app_is_refused(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+) -> None:
+    """#234: the `beta.` prefix is only honoured for the beta bundle. The same
+    id from the live app is an unknown product: no order, no generation."""
+    tx_id = "tx-beta-on-live"
+    jws = make_jws(
+        payload_overrides={"transactionId": tx_id, "productId": "beta.pack_30"}
+    )
+    body = _valid_body(tx_id=tx_id, product_id="beta.pack_30")
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 400
+    assert "unknown product_id" in resp.json()["detail"]
+    test_session.expire_all()
+    assert (await test_session.execute(select(GenerationOrder))).scalars().all() == []
 
 
 @pytest.mark.asyncio
@@ -451,6 +555,30 @@ async def test_create_order_prompt_too_long_422(
     )
     assert resp.status_code == 422
     assert "prompt" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_create_order_stores_prompt_without_invisible_characters(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+) -> None:
+    """A bidi override makes the order list show a prompt that reads differently
+    from what generation gets; the stored prompt must be what the player sees."""
+    tx_id = "tx-prompt-invisible"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "prompt": "Slovak \u202ecastles\x00\n90s"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202
+    order = (
+        await test_session.execute(
+            select(GenerationOrder).where(GenerationOrder.transaction_id == tx_id)
+        )
+    ).scalar_one()
+    assert order.prompt == "Slovak castles\n90s"
 
 
 @pytest.mark.asyncio

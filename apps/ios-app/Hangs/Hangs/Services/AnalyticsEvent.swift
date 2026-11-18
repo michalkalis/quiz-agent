@@ -16,18 +16,56 @@ import Foundation
 enum AnalyticsEvent: Equatable {
     case appOpened(launch: AppLaunchKind)
     case onboardingFinished(outcome: OnboardingOutcome, step: String)
-    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint)
+    /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
+    /// time of day a player plays at needs it (#213.1).
+    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false)
     case quizAbandoned(questionsAnswered: Int, phase: String)
-    case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool)
+    /// `latencyMs` (#213.1): time to start answering; nil = unknown, key left out.
+    case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool, latencyMs: Int? = nil)
     case voiceCaptureFailed(reason: VoiceCaptureFailure, questionId: String?)
     /// #204.9: one recorded answer and the voice settings it ran with.
     case answerCaptured(AnswerCapturedReport)
     /// #204.9: the app turned an experiment arm off on this device.
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
     case voiceCommand(command: VoiceCommand, phase: String)
+    /// #237: the player turned voice commands on — where, and what iOS
+    /// answered the speech-recognition request.
+    case voiceCommandsTurnedOn(source: VoiceCommandsSource, result: VoiceCommandsPermissionResult)
     case paywallViewed(source: PaywallSource)
-    case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome)
+    /// `questionCount`: the custom pack's size (#228.6); nil for every other kind.
+    case purchaseResult(productId: String, kind: PurchaseKind, outcome: PurchaseResultOutcome, questionCount: Int? = nil)
     case restoreResult(outcome: RestoreOutcome)
+    /// #217.4: the sign-in prompt after a purchase came on screen, and how it closed.
+    case signInPromptShown(kind: SignInPromptKind)
+    case signInPromptResult(kind: SignInPromptKind, outcome: SignInPromptOutcome)
+    /// #213.4: the Profile tab came on screen.
+    case profileOpened(hasAccount: Bool)
+    /// #213.5: the share sheet opened on the recap (#216.3: on its Profile card).
+    case recapShared(kind: String)
+    /// #216.2: the Together tab came on screen.
+    case togetherOpened
+    /// #232: the player changed their name in the Profile.
+    case playerNameChanged
+    /// #213.8: the host changed a rule of a game together; `value` as sent
+    /// ("round", "45", "true").
+    /// #224.4: the host stayed on a reveal (paused) or let the game go on.
+    case roomPauseChanged(paused: Bool, question: Int)
+    /// #230.2: a guest switched reading aloud on their own phone on or off; `via` is nearby, qr or link.
+    case roomGuestReadAloud(on: Bool, via: String)
+    /// #224.6: a step on the Home category deck; `to` is the category id or "all".
+    case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
+    /// #224.6: the multi-category picker opened, from the deck's button or the pill.
+    case homeCategoryPickerOpened(source: CategoryPickerSource)
+    /// #224.8: the Home "Quick quiz" switch was flipped.
+    case quickGameChanged(enabled: Bool)
+    /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
+    case questionSkipped(quick: Bool)
+    /// #233: the custom pack topic check before payment; `verdict` is
+    /// ok / softened / blocked, or "error" when the check could not run.
+    case packTopicChecked(verdict: String)
+    /// #232: the first-launch "quiz link from a friend?" Paste button was used.
+    case sharedQuizPasted(outcome: SharedQuizPasteOutcome)
+    case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
         switch self {
@@ -40,9 +78,25 @@ enum AnalyticsEvent: Equatable {
         case .answerCaptured: "answer_captured"
         case .voiceExperimentGuard: "voice_experiment_guard"
         case .voiceCommand: "voice_command"
+        case .voiceCommandsTurnedOn: "voice_commands_turned_on"
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
         case .restoreResult: "restore_result"
+        case .signInPromptShown: "sign_in_prompt_shown"
+        case .signInPromptResult: "sign_in_prompt_result"
+        case .profileOpened: "profile_opened"
+        case .recapShared: "recap_shared"
+        case .togetherOpened: "together_opened"
+        case .playerNameChanged: "player_name_changed"
+        case .roomSettingsChanged: "room_settings_changed"
+        case .roomPauseChanged: "room_pause_changed"
+        case .roomGuestReadAloud: "room_guest_read_aloud"
+        case .homeCategoryStepped: "home_category_stepped"
+        case .homeCategoryPickerOpened: "home_category_picker_opened"
+        case .quickGameChanged: "quick_game_changed"
+        case .questionSkipped: "question_skipped"
+        case .packTopicChecked: "pack_topic_checked"
+        case .sharedQuizPasted: "shared_quiz_pasted"
         }
     }
 
@@ -53,19 +107,22 @@ enum AnalyticsEvent: Equatable {
             [("launch", .string(launch.rawValue))]
         case let .onboardingFinished(outcome, step):
             [("outcome", .string(outcome.rawValue)), ("step", .string(step))]
-        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint):
+        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame):
             [
                 ("audio_route", .string(audioRoute.rawValue)),
                 ("voice_commands_enabled", .bool(voiceCommandsEnabled)),
                 ("entry_point", .string(entryPoint.rawValue)),
+                ("timezone", .string(timezone)),
+                ("quick_game", .bool(quickGame)),
             ]
         case let .quizAbandoned(questionsAnswered, phase):
             [("questions_answered", .int(questionsAnswered)), ("phase", .string(phase))]
-        case let .answerSubmitted(inputMode, questionId, isRetry):
+        case let .answerSubmitted(inputMode, questionId, isRetry, latencyMs):
             [
                 ("input_mode", .string(inputMode.rawValue)),
                 ("question_id", questionId.map { .string($0) }),
                 ("is_retry", .bool(isRetry)),
+                ("latency_ms", latencyMs.map { .int($0) }),
             ]
         case let .voiceCaptureFailed(reason, questionId):
             [("reason", .string(reason.rawValue)), ("question_id", questionId.map { .string($0) })]
@@ -81,16 +138,47 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .voiceCommand(command, phase):
             [("command", .string(command.rawValue)), ("phase", .string(phase))]
+        case let .voiceCommandsTurnedOn(source, result):
+            [("source", .string(source.rawValue)), ("result", .string(result.rawValue))]
         case let .paywallViewed(source):
             [("source", .string(source.rawValue))]
-        case let .purchaseResult(productId, kind, outcome):
+        case let .purchaseResult(productId, kind, outcome, questionCount):
             [
                 ("product_id", .string(productId)),
                 ("kind", .string(kind.rawValue)),
                 ("outcome", .string(outcome.rawValue)),
+                ("question_count", questionCount.map { .int($0) }),
             ]
         case let .restoreResult(outcome):
             [("outcome", .string(outcome.rawValue))]
+        case let .signInPromptShown(kind):
+            [("kind", .string(kind.rawValue))]
+        case let .signInPromptResult(kind, outcome):
+            [("kind", .string(kind.rawValue)), ("outcome", .string(outcome.rawValue))]
+        case let .profileOpened(hasAccount):
+            [("has_account", .bool(hasAccount))]
+        case let .recapShared(kind):
+            [("kind", .string(kind))]
+        case .togetherOpened, .playerNameChanged:
+            []
+        case let .roomPauseChanged(paused, question):
+            [("paused", .bool(paused)), ("question", .int(question))]
+        case let .roomGuestReadAloud(on, via):
+            [("on", .bool(on)), ("via", .string(via))]
+        case let .homeCategoryStepped(direction, input, to):
+            [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
+        case let .homeCategoryPickerOpened(source):
+            [("source", .string(source.rawValue))]
+        case let .quickGameChanged(enabled):
+            [("enabled", .bool(enabled))]
+        case let .questionSkipped(quick):
+            [("quick", .bool(quick))]
+        case let .packTopicChecked(verdict):
+            [("verdict", .string(verdict))]
+        case let .sharedQuizPasted(outcome):
+            [("outcome", .string(outcome.rawValue))]
+        case let .roomSettingsChanged(setting, value, surface):
+            [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }
         return pairs.reduce(into: [:]) { result, pair in
             if let value = pair.1 { result[pair.0] = value }
@@ -116,18 +204,53 @@ nonisolated enum AnalyticsValue: Encodable, Equatable, Sendable {
 
 // MARK: - Property values
 
+/// #232: what the pasted text was.
+enum SharedQuizPasteOutcome: String {
+    case opened
+    case notALink = "not_a_link"
+}
+
+/// How a Home category deck step was made.
+enum CategoryStepInput: String {
+    case tap
+    case voiceover
+}
+
+/// Where the multi-category picker was opened from on Home.
+enum CategoryPickerSource: String {
+    case deckButton = "deck_button"
+    case pill
+}
+
 enum AppLaunchKind: String {
     case cold
     case foreground
 }
 
+/// #237: the onboarding is Microphone → Voice commands. `mic_granted` and
+/// `skipped` belong to the older three-page flow (builds before #237).
 enum OnboardingOutcome: String {
-    case micGranted = "mic_granted"
+    /// The mic was refused; the player left from the denied page.
     case micDenied = "mic_denied"
-    /// "Maybe later" on the permission page — the mic stays undecided.
+    /// "Maybe later" on the microphone page — the mic stays undecided.
     case micLater = "mic_later"
-    /// "Skip" before the permission page was reached.
-    case skipped
+    /// Mic allowed, then "Turn on commands" (whatever iOS answered — see
+    /// `voice_commands_turned_on`).
+    case commandsOn = "commands_on"
+    /// Mic allowed, then "Not now" on the commands page.
+    case commandsLater = "commands_later"
+}
+
+/// #237: where the player turned voice commands on.
+enum VoiceCommandsSource: String {
+    case onboarding
+    case listenBar = "listen_bar"
+}
+
+/// #237: what iOS answered the speech-recognition request.
+enum VoiceCommandsPermissionResult: String {
+    case granted
+    case denied
 }
 
 enum QuizEntryPoint: String {
@@ -195,6 +318,8 @@ enum VoiceCaptureFailure: String {
 enum PaywallSource: String {
     case quota
     case home
+    /// #216.3: the plan card on the Profile tab.
+    case profile
     case settings
     case completion
 }
@@ -216,4 +341,30 @@ enum RestoreOutcome: String {
     case success
     case nothingToRestore = "nothing_to_restore"
     case failed
+}
+
+/// #217.4: what the sign-in prompt was shown for.
+enum SignInPromptKind: String {
+    case plus
+    case credit
+    case customPack = "custom_pack"
+}
+
+/// #217.4: how the sign-in prompt closed. A swipe down counts as dismissed.
+enum SignInPromptOutcome: String {
+    case signedIn = "signed_in"
+    case dismissed
+}
+
+/// #213.8: which rule of a game together changed.
+enum RoomSettingKind: String {
+    case revealMode = "reveal_mode"
+    case thinkingSeconds = "thinking_seconds"
+    case readsAloud = "reads_aloud"
+}
+
+/// #213.8: where the host changed it: before the start or during the game.
+enum RoomSettingsSurface: String {
+    case lobby
+    case inGame = "in_game"
 }

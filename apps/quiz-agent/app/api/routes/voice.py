@@ -45,6 +45,7 @@ from ...quiz.errors import InvalidSubmission, QuestionUnavailable
 from ...quiz.flow import QuizFlowService, elapsed_ms
 from ...quiz.resubmission import reanswers_finished_session
 from ...config import get_settings
+from ...usage.ai_grading_cap import bind_ai_grading
 from ...usage.caps import STT_SECONDS, UsageCaps, answer_attempts, recording_seconds
 from ...rate_limit import limiter
 from quiz_shared.utils.text_normalization import normalize_text
@@ -358,7 +359,7 @@ async def transcribe_and_submit(
 
                 transcribed_text = transcription_result.text
                 user_text_log.info(
-                    "Transcribed: '%s' (no_speech=%.2f, logprob=%.2f)",
+                    "Transcribed: %r (no_speech=%.2f, logprob=%.2f)",
                     transcribed_text,
                     transcription_result.no_speech_prob,
                     transcription_result.avg_logprob,
@@ -397,6 +398,7 @@ async def transcribe_and_submit(
                         return None
 
                 # Delegate to shared quiz flow
+                bind_ai_grading(usage_caps, cap_subject)
                 flow_result = await quiz_flow.process_answer(
                     session=session,
                     answer_text=transcribed_text,

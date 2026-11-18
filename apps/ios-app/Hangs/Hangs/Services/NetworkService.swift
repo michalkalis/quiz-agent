@@ -82,6 +82,30 @@ protocol NetworkServiceProtocol: Sendable {
     /// usual `/sessions/{id}/start`, or no session when today's challenge is
     /// already played (the state then carries the result).
     func startDailyChallenge(date: String, language: String) async throws -> DailyStartResult
+    /// #232: `POST /shared-quizzes` — a link to the caller's finished quiz
+    /// (`sessionId`) or finished pack (`packId`). `displayName` is the name the
+    /// comparison shows (the one from a game together), nil = "Player N".
+    func createSharedQuiz(sessionId: String?, packId: String?, displayName: String?) async throws -> SharedQuizCreated
+    /// #232: `POST /shared-quizzes/{token}/start` — the friend's session.
+    func startSharedQuiz(token: String, displayName: String?) async throws -> SharedQuizStart
+    /// #232: `GET /shared-quizzes/{token}/results` — the comparison as the
+    /// server filters it for this viewer.
+    func sharedQuizResults(token: String) async throws -> SharedQuizResults
+}
+
+/// #232: test doubles that never share answer like the server with the switch off.
+extension NetworkServiceProtocol {
+    func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func startSharedQuiz(token _: String, displayName _: String?) async throws -> SharedQuizStart {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func sharedQuizResults(token _: String) async throws -> SharedQuizResults {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -99,7 +123,7 @@ actor NetworkService: NetworkServiceProtocol {
         return "\(version) (\(build))"
     }()
 
-    private let baseURL: URL
+    let baseURL: URL
     private let session: URLSession
     /// Server-trusted anonymous identity (#60). When present, every request
     /// carries `Authorization: Bearer <access>` and a 401 triggers a
@@ -161,7 +185,7 @@ actor NetworkService: NetworkServiceProtocol {
     private nonisolated func breadcrumbRequest(method: String, endpoint: String) {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
-        crumb.data = ["method": method, "endpoint": endpoint]
+        crumb.setData(["method": method, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -169,7 +193,7 @@ actor NetworkService: NetworkServiceProtocol {
         let level: SentryLevel = (200 ... 299).contains(status) ? .info : .warning
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
-        crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
+        crumb.setData(["status": status, "bytes": bytes, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -200,7 +224,7 @@ actor NetworkService: NetworkServiceProtocol {
     // submitTextInput; plain decode for getUsage/transcribeDictation) so this
     // stays off the main actor and no decode is dragged onto it implicitly.
 
-    private func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
+    func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
         breadcrumbRequest(method: request.httpMethod ?? "?", endpoint: endpointPath)
 
         let (data, response) = try await sendAuthorized(request)
@@ -259,6 +283,14 @@ actor NetworkService: NetworkServiceProtocol {
         {
             logHTTPError(endpoint: endpointPath, status: 409, code: coded.detail.code)
             throw NetworkError.packExhausted
+        }
+
+        // #232: a shared quiz that cannot be created or started; the code
+        // decides what the player is told. A 404 also means the switch is off.
+        if endpointPath.hasPrefix("/api/v1/shared-quizzes"), [404, 409].contains(httpResponse.statusCode) {
+            let code = (try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data))?.detail.code
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: code)
+            throw NetworkError.sharedQuizUnavailable(SharedQuizUnavailable(statusCode: httpResponse.statusCode, code: code))
         }
 
         guard (200 ... 299).contains(httpResponse.statusCode) else {
@@ -1007,30 +1039,34 @@ enum NetworkError: LocalizedError {
     /// HTTP 409 `pack_exhausted` (#200): every question of the pack is in the
     /// start's exclusions. Not a failure — the pack can start over.
     case packExhausted
+    /// HTTP 404/409 from a shared-quiz route (#232).
+    case sharedQuizUnavailable(SharedQuizUnavailable)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return String(localized: "Invalid server response", comment: "Network error: server returned a malformed response")
+            return String(localized: "Invalid server response", bundle: .interface, locale: .interface, comment: "Network error: server returned a malformed response")
         case .invalidURL:
-            return String(localized: "Invalid URL", comment: "Network error: the request URL could not be built")
+            return String(localized: "Invalid URL", bundle: .interface, locale: .interface, comment: "Network error: the request URL could not be built")
         case let .decodingError(error):
-            return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Network error: response body could not be decoded; placeholder is the underlying error")
+            return String(localized: "Failed to decode response: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Network error: response body could not be decoded; placeholder is the underlying error")
         case let .serverError(_, message):
             // Server-provided message, already localized by the backend — do not wrap.
             return message
         case .quotaLimitReached:
-            return String(localized: "Free question limit reached", comment: "Network error: user hit the free monthly question quota")
+            return String(localized: "Free question limit reached", bundle: .interface, locale: .interface, comment: "Network error: user hit the free monthly question quota")
         case .sessionNotFound:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:
-            return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
+            return String(localized: "The quiz moved on to another question", bundle: .interface, locale: .interface, comment: "Network error: the answer was submitted for a question the session is no longer on")
         case .answerNotCaptured:
-            return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
+            return String(localized: "I didn't catch your answer, please try again.", bundle: .interface, locale: .interface, comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
         case .sessionFinished:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .packExhausted:
-            return String(localized: "You've played every question in this pack.", comment: "A custom pack has nothing left this phone has not played")
+            return String(localized: "You've played every question in this pack.", bundle: .interface, locale: .interface, comment: "A custom pack has nothing left this phone has not played")
+        case let .sharedQuizUnavailable(reason):
+            return reason.message
         }
     }
 }

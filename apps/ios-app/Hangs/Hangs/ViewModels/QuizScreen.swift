@@ -19,6 +19,12 @@ enum QuizScreen: Equatable {
     /// #205: the daily challenge's own round end (score, the crowd, best hit).
     case dailyEnd
     case error(AppErrorModel)
+
+    /// The root tab bar shows only over Home: every quiz screen takes the full
+    /// screen and carries its own close or home control. ContentView reads it,
+    /// and the navigation sequences (#235.3) check their rule against it, so
+    /// the two cannot drift apart.
+    var showsTabBar: Bool { self == .home }
 }
 
 extension QuizViewModel {

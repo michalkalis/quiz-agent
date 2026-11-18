@@ -1,4 +1,4 @@
-"""Crowd lines in sk/cs/en (#205). Short, no filler, no dashes (founder decision 3).
+"""Crowd lines in sk/cs/uk/en (#205). Short, no filler, no dashes (founder decision 3).
 
 Display lines go on the result strip, the round end and the Home card; spoken
 lines are appended to the feedback utterance, so they spell "percent" out and
@@ -16,11 +16,13 @@ NBSP = " "
 
 
 def _lang(language: str) -> str:
-    return language if language in ("sk", "cs") else "en"
+    return language if language in ("sk", "cs", "uk") else "en"
 
 
 def _count_verb(language: str, k: int) -> str:
     """Past "knew" agreeing with a number of people ("Vedel 1", "Vedeli 2", "Vedelo 5")."""
+    if language == "uk":
+        return "Знав" if k == 1 else "Знали"
     if language == "sk":
         return "Vedel" if k == 1 else "Vedeli" if 2 <= k <= 4 else "Vedelo"
     return "Věděl" if k == 1 else "Věděli" if 2 <= k <= 4 else "Vědělo"
@@ -28,6 +30,8 @@ def _count_verb(language: str, k: int) -> str:
 
 def _percent_verb(language: str, p: int) -> str:
     """Past "knew" agreeing with "percento / percentá / percent"."""
+    if language == "uk":
+        return "Знали"
     if language == "sk":
         return "Vedeli" if 2 <= p <= 4 else "Vedelo"
     return "Věděla" if 2 <= p <= 4 else "Vědělo"
@@ -38,7 +42,30 @@ def _percent_word(language: str, p: int) -> str:
         return "percento" if p == 1 else "percentá" if 2 <= p <= 4 else "percent"
     if language == "cs":
         return "procento" if p == 1 else "procenta" if 2 <= p <= 4 else "procent"
+    if language == "uk":
+        return uk_plural(p, "відсоток", "відсотки", "відсотків")
     return "percent"
+
+
+def uk_plural(n: int, one: str, few: str, many: str) -> str:
+    """Ukrainian noun form after a number: 1, 21 → one; 2–4, 22–24 → few;
+    0, 5–20, 25–30 and 11–14 → many."""
+    if n % 10 == 1 and n % 100 != 11:
+        return one
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return few
+    return many
+
+
+def uk_from(n: int) -> str:
+    """Ukrainian "із" before a number ("із дев'яти"); "зі" before 100–199
+    ("зі ста")."""
+    return "зі" if 100 <= n <= 199 else "із"
+
+
+def uk_players(n: int) -> str:
+    """ "гравця" after "із 1 / із 21", otherwise "гравців" (genitive after "із N")."""
+    return uk_plural(n, "гравця", "гравців", "гравців")
 
 
 def cs_from(n: int) -> str:
@@ -66,13 +93,16 @@ def sk_from(n: int) -> str:
 
 
 def _of(language: str, n: int) -> str:
+    if language == "uk":
+        return uk_from(n)
     return cs_from(n) if language == "cs" else sk_from(n)
 
 
 FIRST = {
-    "sk": "Dnes si prvý.",
-    "cs": "Dnes jsi první.",
-    "en": "You're first today.",
+    "sk": "Dnes nikto nehral pred tebou.",
+    "cs": "Dnes nikdo nehrál před tebou.",
+    "uk": "Сьогодні до тебе ніхто не грав.",
+    "en": "Nobody played before you today.",
 }
 
 
@@ -100,6 +130,7 @@ def rare_text(crowd: Crowd, language: str) -> str:
         return {
             "sk": "Nikto iný to nevedel.",
             "cs": "Nikdo jiný to nevěděl.",
+            "uk": "Ніхто інший цього не знав.",
             "en": "Nobody else knew that.",
         }[lang]
     if lang == "en":
@@ -108,6 +139,10 @@ def rare_text(crowd: Crowd, language: str) -> str:
             if crowd.uses_percent
             else f"Only {k} of {n} knew that."
         )
+    if lang == "uk":
+        if crowd.uses_percent:
+            return f"Це знали лише {p}{NBSP}%."
+        return f"Це {_count_verb(lang, k).lower()} лише {k} {_of(lang, n)} {n}."
     only = "len" if lang == "sk" else "jen"
     if crowd.uses_percent:
         return f"{_percent_verb(lang, p)} to {only} {p}{NBSP}%."
@@ -117,6 +152,11 @@ def rare_text(crowd: Crowd, language: str) -> str:
 _HARD = {
     "sk": ["Väčšina to nevie.", "Na tomto padá väčšina.", "Toto väčšina nedá."],
     "cs": ["Většina to neví.", "Na tomhle padá většina.", "Tohle většina nedá."],
+    "uk": [
+        "Більшість цього не знає.",
+        "На цьому спотикається більшість.",
+        "Це більшості не під силу.",
+    ],
     "en": [
         "Most people miss this one.",
         "This one trips up most players.",
@@ -139,6 +179,14 @@ def spoken_line(kind: CrowdKind, crowd: Crowd, language: str, variant: int) -> s
     if lang == "en":
         amount = f"{p} percent" if crowd.uses_percent else f"{k} of {n}"
         return f"Just {amount} got that." if alt else f"Only {amount} knew that."
+    if lang == "uk":
+        if crowd.uses_percent:
+            verb, amount = "знали", f"{p} {_percent_word(lang, p)}"
+        else:
+            verb, amount = _count_verb(lang, k).lower(), f"{k} {_of(lang, n)} {n}"
+        if alt:
+            return f"Лише {amount} це {verb}."
+        return f"Це {verb} лише {amount}."
     only = "Len" if lang == "sk" else "Jen"
     if crowd.uses_percent:
         verb, amount = _percent_verb(lang, p), f"{p} {_percent_word(lang, p)}"
@@ -165,6 +213,7 @@ def rank_text(standing: Standing, language: str) -> Optional[str]:
         return {
             "sk": f"Najlepšie skóre {sk_from(n + 1)} {n + 1} hráčov.",
             "cs": f"Nejlepší skóre {cs_from(n + 1)} {n + 1} hráčů.",
+            "uk": f"Найкращий результат {uk_from(n + 1)} {n + 1} {uk_players(n + 1)}.",
             "en": f"Best score of {n + 1} players.",
         }[lang]
     if n >= 20:
@@ -172,11 +221,13 @@ def rank_text(standing: Standing, language: str) -> Optional[str]:
         return {
             "sk": f"Lepšie skóre ako {p}{NBSP}% {sk_from(n)} {n} hráčov.",
             "cs": f"Lepší než {p}{NBSP}% {cs_from(n)} {n} hráčů.",
+            "uk": f"Кращий результат, ніж у {p}{NBSP}% {uk_from(n)} {n} {uk_players(n)}.",
             "en": f"Better than {p}% of {n} players.",
         }[lang]
     return {
         "sk": f"Lepšie skóre ako {b} {sk_from(n)} {n} hráčov.",
         "cs": f"Lepší než {b} {cs_from(n)} {n} hráčů.",
+        "uk": f"Кращий результат, ніж у {b} {uk_from(n)} {n} {uk_players(n)}.",
         "en": f"Better than {b} of {n} players.",
     }[lang]
 
@@ -192,4 +243,9 @@ def comparison_text(standing: Standing, language: str) -> Optional[str]:
         return rank
     if standing.score >= standing.total:
         return None
-    return {"sk": "Ťažká výzva.", "cs": "Těžká výzva.", "en": "Tough challenge."}[lang]
+    return {
+        "sk": "Ťažká výzva.",
+        "cs": "Těžká výzva.",
+        "uk": "Складний виклик.",
+        "en": "Tough challenge.",
+    }[lang]

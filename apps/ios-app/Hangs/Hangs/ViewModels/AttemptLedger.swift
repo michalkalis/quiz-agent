@@ -14,6 +14,7 @@
 //  result that lost ownership is dropped and reported to Sentry, never applied.
 //
 
+import Clocks
 import Foundation
 import os
 
@@ -44,6 +45,8 @@ final class AttemptLedger {
     private(set) var current: AttemptID = .none
     private var sequence = 0
     let recorder: QuizFlightRecorder
+    /// #213.1: shared with the recording side, like the retry bookkeeping below.
+    let latency: AnswerLatencyTracker
 
     /// The façade's state label, for the recorder and the Sentry attributes.
     /// Assigned by the façade once it exists (the ledger is built first).
@@ -57,8 +60,9 @@ final class AttemptLedger {
     /// asserts when it proves a late result was dropped rather than applied.
     private(set) var droppedPaths: [String] = []
 
-    init(recorder: QuizFlightRecorder = .shared) {
+    init(recorder: QuizFlightRecorder = .shared, clock: AnyClock<Duration> = .continuous) {
         self.recorder = recorder
+        latency = AnswerLatencyTracker(clock: clock)
     }
 
     // MARK: - Attempts

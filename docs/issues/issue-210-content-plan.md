@@ -41,9 +41,9 @@ Mon 5 Seconds · Tue Road Trip Round · Wed A, B or C · Thu How it plays (or fo
 
 ## Hooks (rotate; never invented percentages, no instructions to the viewer)
 
-EN: You've got 5 seconds. · Answer before the monkey does. · One question. No googling. · Road trip round, part N.
-SK: Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvíz na cestu, N. diel.
-CS: Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvíz na cestu, N. díl.
+EN: You've got 5 seconds. · Answer before the monkey does. · One question. No googling. · Quiz round, part N.
+SK: Máš 5 sekúnd. · Odpovedz skôr ako opička. · Jedna otázka, bez googlenia. · Kvízové kolo, N. diel.
+CS: Máš 5 vteřin. · Odpověz dřív než opička. · Jedna otázka, bez googlení. · Kvízové kolo, N. díl.
 
 ## Profile bio (founder pick 2026-10-22, split 2026-10-23)
 

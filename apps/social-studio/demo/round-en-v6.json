@@ -1,0 +1,263 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round6.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"segments": [
+		{
+			"from": 0.0,
+			"to": 5.467
+		},
+		{
+			"from": 5.5,
+			"to": 7.034
+		},
+		{
+			"from": 7.067,
+			"to": 9.834
+		},
+		{
+			"from": 9.867,
+			"to": 11.534
+		},
+		{
+			"from": 11.567,
+			"to": 12.834
+		},
+		{
+			"from": 12.867,
+			"to": 29.5
+		}
+	],
+	"taps": [
+		{
+			"t": 6.73,
+			"x": 270,
+			"y": 2388
+		},
+		{
+			"t": 12.917,
+			"x": 864,
+			"y": 2349
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.0,
+			"to": 5.466666666666667,
+			"x": 603,
+			"y": 1920,
+			"scale": 1.25
+		},
+		{
+			"from": 5.5,
+			"to": 7.033,
+			"x": 507,
+			"y": 2388,
+			"scale": 1.25
+		},
+		{
+			"from": 7.067,
+			"to": 9.833,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 9.867,
+			"to": 11.533,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 11.567,
+			"to": 12.833,
+			"x": 604,
+			"y": 1503,
+			"scale": 1.25
+		},
+		{
+			"from": 12.867,
+			"to": 13.117,
+			"x": 864,
+			"y": 2352,
+			"scale": 1.25
+		},
+		{
+			"from": 13.617,
+			"to": 15.517,
+			"x": 382,
+			"y": 939,
+			"scale": 1.25
+		},
+		{
+			"from": 15.517,
+			"to": 17.117,
+			"x": 603,
+			"y": 1080,
+			"scale": 1.25
+		},
+		{
+			"from": 17.117,
+			"to": 22.569,
+			"x": 603,
+			"y": 645,
+			"scale": 1.5
+		},
+		{
+			"from": 22.569,
+			"to": 25.929,
+			"x": 603,
+			"y": 960,
+			"scale": 1.35
+		},
+		{
+			"from": 25.929,
+			"to": 29.5,
+			"x": 603,
+			"y": 990,
+			"scale": 1.25
+		}
+	],
+	"highlights": [
+		{
+			"from": 0.8,
+			"to": 5.467,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 5.5,
+			"to": 7.033,
+			"x": 48,
+			"y": 2304,
+			"w": 918,
+			"h": 168
+		},
+		{
+			"from": 7.067,
+			"to": 9.833,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 9.867,
+			"to": 11.533,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 11.567,
+			"to": 12.833,
+			"x": 72,
+			"y": 1344,
+			"w": 1065,
+			"h": 318
+		},
+		{
+			"from": 12.867,
+			"to": 13.117,
+			"x": 615,
+			"y": 2271,
+			"w": 498,
+			"h": 162
+		},
+		{
+			"from": 13.617,
+			"to": 15.517,
+			"x": 90,
+			"y": 846,
+			"w": 585,
+			"h": 186
+		}
+	],
+	"audio": [
+		{
+			"t": 0.31,
+			"src": "demo/rec/n-q-island.mp3"
+		},
+		{
+			"t": 7.387,
+			"src": "demo/rec/n-player-denmark.mp3"
+		},
+		{
+			"t": 13.417,
+			"src": "demo/rec/n-correct-denmark.mp3"
+		},
+		{
+			"t": 17.417,
+			"src": "demo/rec/n-g-local.mp3"
+		},
+		{
+			"t": 22.869,
+			"src": "demo/rec/n-g-reveal.mp3"
+		},
+		{
+			"t": 26.229,
+			"src": "demo/rec/n-g-custom.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.0,
+			"to": 5.5,
+			"text": "Trubbo reads the question out loud",
+			"kind": "step"
+		},
+		{
+			"from": 5.5,
+			"to": 9.867,
+			"text": "Think, then say or type your answer",
+			"kind": "step"
+		},
+		{
+			"from": 9.867,
+			"to": 13.317,
+			"text": "Trubbo checks your answer",
+			"kind": "step"
+		},
+		{
+			"from": 13.317,
+			"to": 17.317,
+			"text": "And explains the result",
+			"kind": "step"
+		},
+		{
+			"from": 17.317,
+			"to": 22.769,
+			"text": "Local multiplayer",
+			"kind": "step"
+		},
+		{
+			"from": 22.769,
+			"to": 26.129,
+			"text": "See who answered what",
+			"kind": "step"
+		},
+		{
+			"from": 26.129,
+			"to": 29.533,
+			"text": "Custom quizzes on any topic",
+			"kind": "step"
+		},
+		{
+			"from": 8.217,
+			"to": 9.867,
+			"text": "Denmark!",
+			"kind": "player"
+		}
+	],
+	"endCard": true,
+	"endWord": "Free.",
+	"endAudio": "demo/rec/n-g-free.mp3"
+}

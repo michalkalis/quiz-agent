@@ -3,7 +3,7 @@
 //  HangsTests
 //
 //  #194 phase A2: pixel + text-contract coverage for the screens the hero suite
-//  does not freeze — Settings, Onboarding (all four pages), Completion (with and
+//  does not freeze — Settings, Onboarding (all three pages), Completion (with and
 //  without the upsell card), the set recap, the answer confirmation sheet, the
 //  order-pack flow, the contextual sign-in sheet and the error screen. The
 //  redesign (#194, "Sklo nad kartami") restyles every one of them; a baseline
@@ -33,17 +33,22 @@ import ViewInspector
 @MainActor
 enum AppScreen: String, CaseIterable {
     case settings
-    case onboardingWelcome, onboardingFeatures, onboardingPermission, onboardingDenied
+    case onboardingPermission, onboardingCommands, onboardingDenied
     case completion, completionUpsell
     case setRecap
     case confirmTranscribing, confirmTranscript
     case orderForm, orderSummary, orderPreparing, orderReadyGenerating, orderReady, orderFailed
-    case signInIdle, signInSigningIn, signInFailed
+    case signInIdle, signInSigningIn, signInFailed, signInCredit, signInPack
     case errorRetry, errorGoHome, errorDismiss
     case paywallPack, paywallAllowanceSpent, paywallOffline
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
     case myPacks, myPacksLoadFailed
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
+    case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
+    case profile, profileNewPlayer, profileLoadFailed, allStats
+    case recapShareImage
+    /// #232: share a quiz by link (1A send card, 4A ranking, 3 paste row, 5A picker).
+    case completionShare, sharedQuizRanking, homeSharedPaste, roomContentPicker
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for
@@ -115,7 +120,7 @@ struct AppScreenSnapshotTests {
             .environment(\.colorScheme, .dark)
             .preferredColorScheme(.dark)
         let strategy: Snapshotting<AnyView, UIImage> = .image(
-            precision: 0.99,
+            precision: 0.9995,
             perceptualPrecision: 0.98,
             layout: .fixed(width: SnapshotBaseline.width, height: screen.height),
             traits: UITraitCollection(traitsFrom: [
@@ -145,7 +150,7 @@ struct AppScreenSnapshotTests {
         assertSnapshot(
             of: AnyView(light.dynamicTypeSize(.large)),
             as: .image(
-                precision: 0.99,
+                precision: 0.9995,
                 perceptualPrecision: 0.98,
                 layout: .fixed(width: SnapshotBaseline.width, height: screen.height),
                 traits: UITraitCollection(traitsFrom: [

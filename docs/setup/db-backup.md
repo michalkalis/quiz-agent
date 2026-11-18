@@ -36,6 +36,12 @@ Druhá vrstva vedľa nočného dumpu: postgres-flex (barman-cloud 3.10 v našom 
 - **Stráž** (quiz-agent ops watch, `app/monitoring/wal_watch.py`): e-mail pri zlyhaní archivácie alebo keď 15 min nič neodišlo, pri `pg_wal` > 500 MB; pri > 1,5 GB sama vypne archiváciu (`archive_command = '/bin/true'`), aby sa disk nezaplnil, a pošle „PITR gap“. **Návrat po oprave R2/tokenu:** `ALTER SYSTEM RESET archive_command` + `SELECT pg_reload_conf()` (bez reštartu), potom `flexctl backup create`. Vyskúšané 2026-10-16 na skúšobnej kópii aj bez reštartu.
 - **Týždenná skúška obnovy:** workflow `quiz-pack-db PITR restore verify` v súkromnom repe (pondelky 06:17 UTC + ručne). Obnoví najnovšiu base + celý WAL bežným barman-cloud (bez Fly) do Postgres 17 + pgvector a overí, že posledný heartbeat workera je ≤ 10 min pred štartom a `questions` > 1000. Token len na čítanie (`PITR_R2_RO_*` secrets, `PITR_*` variables). Ručný beh s `server` = prázdny adresár musí zlyhať (červený test, overené).
 
+**Hetzner (#222 — presun backendu na Hetzner):** rovnaký bucket, vlastné meno barman servera `trubbo-prod` (archív sa počas týždňa návratu nebije s Fly `quiz-pack-db`).
+- Obraz [`infra/hetzner/postgres/`](../../infra/hetzner/postgres/): pgvector + `barman-cli-cloud` z PGDG; nastavenia v `trubbo.conf` (`archive_timeout` 300 s), prístup k R2 v `env/wal.env` (z Fly `S3_ARCHIVE_CONFIG` cez `pull-env.sh`, nový kľúč netreba).
+- Base backup každú noc po dumpe: `backup.yml` → `ssh hetzner-db basebackup` (`backup-ssh.sh`), drží sa 7 dní. Ručne na serveri: `SSH_ORIGINAL_COMMAND=basebackup ~/trubbo/bin/backup-ssh.sh`.
+- Stráž `wal_watch` funguje bez zmeny: `ALTER SYSTEM` má prednosť pred `trubbo.conf`. **Návrat po oprave R2:** `docker compose exec postgres psql -U postgres -c "ALTER SYSTEM RESET archive_command" -c "SELECT pg_reload_conf()"`, potom base backup.
+- Týždenná skúška obnovy po prepnutí: premenná `PITR_SERVER_NAME=trubbo-prod`. Obnova berie barman-cloud z PGDG (nie z pip): verzia 3.10 nevie čítať zálohy z 3.20. Overené lokálne 2026-11-03: obnova k času T aj po koniec archívu.
+
 **Obnova k času T** (skript `scripts/pitr-restore.sh` v súkromnom repe; bez Fly, rovnaká cesta ako odchod do iného regiónu/Hetzneru):
 
 1. Potrebuješ token na čítanie (R2 → API tokens, alebo secrets zo súkromného repa) a Docker.

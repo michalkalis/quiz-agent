@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trubbo: quiz from a friend</title>
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-itunes-app" content="app-id=6762482437">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#E8EAEE;--ink:#111216;--ink2:#3F4350;--btn:#111216;--btn-ink:#FFFFFF}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1014;--ink:#F2F3F5;--ink2:#C3C6CF;--btn:#F2F3F5;--btn-ink:#111216}}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;padding:16px;box-sizing:border-box}
+main{max-width:420px}
+h1{font-size:36px;font-weight:900;letter-spacing:-.03em;margin:0 0 12px}
+p{color:var(--ink2);font-size:18px;margin:8px 0 24px}
+p.topic{color:var(--ink);font-weight:700;margin-bottom:8px}
+p.topic:empty{display:none}
+p.hint{font-size:16px;margin:16px 0 0}
+a.get{display:inline-block;background:var(--btn);color:var(--btn-ink);font-weight:700;font-size:18px;text-decoration:none;border-radius:28px;padding:16px 28px}
+section+section{margin-top:40px}
+</style>
+</head>
+<body>
+<main>
+  <!-- Opened only without Trubbo installed: with the app, iOS opens the link in it (universal link, #232).
+       The button copies this page's link, so the app can pick the quiz up after the install. -->
+  <section lang="en">
+    <h1>A friend sent you a quiz</h1>
+    <p class="topic"></p>
+    <p>Play the same questions and compare your scores.</p>
+    <a class="get" href="https://apps.apple.com/app/id6762482437">Get Trubbo on the App Store</a>
+    <p class="hint">After installing, tap the link again.</p>
+  </section>
+  <section lang="sk">
+    <h1>Kamarát ti poslal kvíz</h1>
+    <p class="topic"></p>
+    <p>Zahraj si tie isté otázky a porovnaj si výsledok.</p>
+    <a class="get" href="https://apps.apple.com/sk/app/trubbo/id6762482437">Stiahni z App Store</a>
+    <p class="hint">Po inštalácii ťukni na odkaz ešte raz.</p>
+  </section>
+  <section lang="cs">
+    <h1>Kamarád ti poslal kvíz</h1>
+    <p class="topic"></p>
+    <p>Zahraj si stejné otázky a porovnej si výsledek.</p>
+    <a class="get" href="https://apps.apple.com/cz/app/trubbo/id6762482437">Stáhni z App Store</a>
+    <p class="hint">Po instalaci klepni na odkaz ještě jednou.</p>
+  </section>
+</main>
+<script>
+(function () {
+  // Show the visitor's language first; the others stay below (like join.html).
+  var lang = (navigator.language || "en").slice(0, 2);
+  var mine = document.querySelector('section[lang="' + lang + '"]');
+  if (mine) mine.parentNode.insertBefore(mine, mine.parentNode.firstChild);
+
+  var T = {
+    en: { daily: "A friend sent you a daily challenge", topic: "Topic: ",
+          cats: { "science-nature": "Science & Nature", "history": "History", "geography-world": "Geography & World", "movies-music": "Movies & Music", "sports": "Sports", "food-everyday": "Food & Everyday Life", "entertainment": "Entertainment" } },
+    sk: { daily: "Kamarát ti poslal dennú výzvu", topic: "Téma: ",
+          cats: { "science-nature": "Veda a príroda", "history": "História", "geography-world": "Geografia a svet", "movies-music": "Film a hudba", "sports": "Šport", "food-everyday": "Jedlo a bežný život", "entertainment": "Zábava" } },
+    cs: { daily: "Kamarád ti poslal denní výzvu", topic: "Téma: ",
+          cats: { "science-nature": "Věda a příroda", "history": "Historie", "geography-world": "Zeměpis a svět", "movies-music": "Film a hudba", "sports": "Sport", "food-everyday": "Jídlo a běžný život", "entertainment": "Zábava" } }
+  };
+  var token = new URLSearchParams(location.search).get("s") || "";
+  var valid = /^[A-Za-z0-9_-]{8,64}$/.test(token);
+
+  // What the quiz is (kind and topic). Any failure, or 404 while the feature
+  // is off, keeps the generic "a friend sent you a quiz".
+  if (valid && window.fetch) {
+    fetch("https://api.trubbo.app/api/v1/shared-quizzes/" + token)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (quiz) {
+        if (!quiz) return;
+        document.querySelectorAll("section[lang]").forEach(function (s) {
+          var t = T[s.getAttribute("lang")];
+          if (quiz.kind === "daily") s.querySelector("h1").textContent = t.daily;
+          var topic = quiz.kind === "pack" ? quiz.title
+            : (quiz.categories || []).map(function (c) { return t.cats[c]; }).filter(Boolean).join(", ");
+          if (topic) s.querySelector(".topic").textContent = t.topic + topic;
+        });
+      })
+      .catch(function () {});
+  }
+
+  // Copy this page's link, then open the App Store. After the install the app
+  // finds the link on the clipboard and opens the same quiz.
+  function legacyCopy(text) {
+    var t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+    try { document.execCommand("copy"); } catch (e) {}
+    t.remove();
+  }
+  function copy(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+    }
+    legacyCopy(text);
+    return Promise.resolve();
+  }
+  document.querySelectorAll("a.get").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      if (!valid) return;
+      e.preventDefault();
+      copy(location.href).then(function () {
+        setTimeout(function () { location.href = a.href; }, 300);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

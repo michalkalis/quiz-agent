@@ -21,6 +21,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -211,6 +212,12 @@ class User(Base):
     apple_refresh_token_encrypted: Mapped[bytes | None] = mapped_column(
         LargeBinary, nullable=True
     )
+    # The Sign in with Apple client (app bundle id) that obtained that refresh
+    # token (#234: App Store app or beta app). Apple only honours a revoke from
+    # the same client. NULL = the primary client (every pre-#234 row).
+    apple_refresh_token_client_id: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -351,6 +358,7 @@ class AnalyticsEvent(Base):
     __tablename__ = "analytics_events"
     __table_args__ = (
         Index("ix_analytics_events_name_occurred", "name", "occurred_at"),
+        Index("ix_analytics_events_subject_occurred", "subject_id", "occurred_at"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -363,7 +371,7 @@ class AnalyticsEvent(Base):
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
-    subject_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    subject_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
     # "server" (emitted by this API) or "ios" (posted by the app).
     source: Mapped[str] = mapped_column(Text, nullable=False)
@@ -567,6 +575,31 @@ class QuizSessionRow(Base):
     )
 
 
+class MultiplayerRoom(Base):
+    """A same-room game (#212 — multiplayer): how guests find the host's quiz
+    session. The game itself (participants, scores) lives in the session.
+
+    ``join_token`` is the secret in the QR code / shared link. ``net_v4`` and
+    ``net_v6`` are the host's network keys (exact IPv4, IPv6 /64 prefix) that
+    ``nearby`` matches so a guest on the same Wi-Fi finds the game without
+    typing anything."""
+
+    __tablename__ = "multiplayer_rooms"
+
+    room_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    session_id: Mapped[str] = mapped_column(Text, nullable=False)
+    host_subject_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    join_token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    net_v4: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    net_v6: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
 class CoordinationLease(Base):
     """A short, expiring claim on a name, shared by all machines.
 
@@ -641,3 +674,132 @@ class OpsHeartbeat(Base):
 
     name: Mapped[str] = mapped_column(Text, primary_key=True)
     seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PlayerRecap(Base):
+    """A stored recap snapshot (#213.3): created lazily once, never recomputed.
+
+    ``period_start`` is a local calendar date (first: the day the threshold was
+    met, month: ``YYYY-MM-01``, year: ``YYYY-01-01``), not an instant, so
+    travelling across timezones cannot create a second row for one period.
+    ``kind`` is plain text so a new recap kind needs no migration.
+    """
+
+    __tablename__ = "player_recaps"
+    __table_args__ = (
+        UniqueConstraint(
+            "subject_id", "kind", "period_start", name="uq_player_recaps_period"
+        ),
+        Index("ix_player_recaps_subject_id", "subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    period_start: Mapped[date] = mapped_column(Date, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class SharedQuiz(Base):
+    """A quiz a player sent by link (#232 — share a quiz by link).
+
+    Created only on request, from the sender's own session or owned finished
+    pack: ``question_ids`` (play order) is what the server itself served the
+    sender, already filtered to rows any recipient could get. Holds no answer
+    text. ``token`` is the unguessable link id; ``kind`` is round | daily |
+    pack. The sender's result sits here so the ranking needs no other row.
+    """
+
+    __tablename__ = "shared_quizzes"
+    __table_args__ = (
+        Index("ux_shared_quizzes_token", "token", unique=True),
+        Index("ix_shared_quizzes_sender", "sender_subject_id"),
+        # One link per sender per quiz, so a double tap cannot make two: per
+        # session for a round / daily, per pack for a pack (play once per pack).
+        Index(
+            "ux_shared_quizzes_sender_session",
+            "sender_subject_id",
+            "source_session_id",
+            unique=True,
+            postgresql_where="source_session_id IS NOT NULL AND pack_id IS NULL",
+        ),
+        Index(
+            "ux_shared_quizzes_sender_pack",
+            "sender_subject_id",
+            "pack_id",
+            unique=True,
+            postgresql_where="pack_id IS NOT NULL",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    token: Mapped[str] = mapped_column(Text, nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    language: Mapped[str] = mapped_column(Text, nullable=False)
+    question_ids: Mapped[list] = mapped_column(JSONB, nullable=False)
+    pack_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), nullable=True
+    )
+    challenge_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    topic: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sender_subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    sender_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sender_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sender_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # #232.2b: per question of ``question_ids`` (same order) true / false /
+    # null (not played). NULL: shared before marks were kept, or a pack shared
+    # without playing it.
+    sender_marks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class SharedQuizResult(Base):
+    """One person's play of a shared quiz (#232). Created when the play starts
+    (a pack link is played once per person, checked at that point) and given
+    its score at the first finish; later replays never change it, so the
+    ranking cannot be skewed by playing again."""
+
+    __tablename__ = "shared_quiz_results"
+    __table_args__ = (
+        UniqueConstraint(
+            "shared_quiz_id", "subject_id", name="uq_shared_quiz_results_person"
+        ),
+        Index("ix_shared_quiz_results_subject_id", "subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    shared_quiz_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("shared_quizzes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    display_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # #232.2b: like ``SharedQuiz.sender_marks``, for this person's play.
+    marks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

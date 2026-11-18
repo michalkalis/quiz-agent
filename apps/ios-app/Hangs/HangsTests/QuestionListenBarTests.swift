@@ -139,7 +139,7 @@ struct QuestionListenBarRenderTests {
             #expect(throws: Never.self) { try tree.find(text: "Reading the question") }
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(throws: Never.self) { try chips.find(text: "„zopakuj“") }
-            #expect(throws: Never.self) { try chips.find(text: "„preskoč“") }
+            #expect(throws: Never.self) { try chips.find(text: "„ďalšia“") }
             #expect(throws: (any Error).self, "start would cut the read off mid-sentence") {
                 try chips.find(text: "„štart“")
             }
@@ -156,7 +156,7 @@ struct QuestionListenBarRenderTests {
             let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
             #expect(try seconds.text().string() == "32 s")
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            for word in ["„štart“", "„zopakuj“", "„preskoč“"] {
+            for word in ["„štart“", "„zopakuj“", "„ďalšia“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
             }
         }
@@ -314,7 +314,7 @@ struct QuestionViewListenBarPresenceTests {
             let tree = try view.inspect()
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(throws: Never.self) { try chips.find(text: "“start”") }
-            #expect(throws: Never.self) { try chips.find(text: "“skip”") }
+            #expect(throws: Never.self) { try chips.find(text: "“next”") }
         }
     }
 

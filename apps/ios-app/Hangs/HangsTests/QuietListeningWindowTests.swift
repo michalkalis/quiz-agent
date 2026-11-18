@@ -41,16 +41,31 @@ struct QuietListeningWindowTests {
         #expect(audio.setupQuietListeningSessionCallCount == 0)
     }
 
-    @Test("arming the window on Home applies the quiet session, never the quiz session")
-    func homeWindowArmsQuietSession() async {
+    /// WHY (#224): Home has buttons only — it must not open the mic or touch the
+    /// audio session, so other apps' audio is never interrupted by opening Trubbo.
+    @Test("Home opens no window: no listener, no session")
+    func homeOpensNoWindow() async {
         let (vm, silence, audio) = makeQuietWindowVM()
         vm.quizState = .idle
 
         await vm.voiceCommandCoordinator.syncCommandListenerWindow()
 
-        #expect(audio.setupQuietListeningSessionCallCount == 1, "Home listening must run under the mixable session")
+        #expect(audio.setupQuietListeningSessionCallCount == 0)
+        #expect(audio.setupAudioSessionCallCount == 0)
+        #expect(!silence.isListening)
+    }
+
+    @Test("arming the set-end window applies the quiet session, never the quiz session")
+    func setEndWindowArmsQuietSession() async {
+        let (vm, silence, audio) = makeQuietWindowVM()
+        vm.quizState = .finished
+        vm.quizEndCommandsArmed = true
+
+        await vm.voiceCommandCoordinator.syncCommandListenerWindow()
+
+        #expect(audio.setupQuietListeningSessionCallCount == 1, "set-end listening must run under the mixable session")
         #expect(audio.setupAudioSessionCallCount == 0, "the ducking quiz session on Home is the #136 bug")
-        #expect(silence.isListening, "quiet session must not cost Home its voice commands (decision B, not fallback A)")
+        #expect(silence.isListening, "quiet session must not cost the set end its voice commands (decision B, not fallback A)")
     }
 
     @Test("arming an in-quiz window leaves the session untouched")

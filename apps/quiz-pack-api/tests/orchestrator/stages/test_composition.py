@@ -22,6 +22,12 @@ Why these scenarios:
   questions, and the top-up loop re-ran the paid judge/verify/score pipeline
   chasing the unreachable remainder. The override must lift exactly that cap
   and nothing else, and its absence must leave the scaled cap untouched.
+- `TestCustomerOrderTopicCap`: founder 2026-11-18 — a customer orders one
+  pack on one topic ("LEGO") and the model labels nearly every question with
+  that topic, so the cap counted the order itself and threw away finished,
+  paid questions (found in #236 trials). A customer pack of any audience
+  keeps them; corpus batches keep the cap, the #167 override still binds,
+  and the T/F rarity rule is untouched.
 """
 
 from __future__ import annotations
@@ -225,6 +231,74 @@ class TestPerTopicCapOverride:
 
         assert result.info["tf_cap"] == 2
         assert result.info["tf_cap_dropped"] == 2
+        assert [q.id for q in ctx.questions] == ["q_1", "q_2"]
+
+
+class TestCustomerOrderTopicCap:
+    """Founder 2026-11-18 — no per-topic cap on a customer-ordered pack."""
+
+    @staticmethod
+    def _one_topic_pack(audience: str | None = None) -> OrderContext:
+        # What a single-topic custom order produces: every whole-topic
+        # question carries the order's own topic label.
+        ctx = _ctx(
+            [_question(i, topic="LEGO") for i in range(1, 11)], target_count=10
+        )
+        ctx.audience = audience
+        return ctx
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("audience", [None, "adults"])
+    async def test_single_topic_adult_customer_pack_keeps_every_question(
+        self, audience
+    ):
+        """The cap of 2 would leave 2 of 10 paid questions and send the
+        top-up loop after the rest, round after round, on the same topic."""
+        ctx = self._one_topic_pack(audience)
+
+        result = await CompositionStage(customer_order=True).run(ctx, _NullSink())
+
+        assert len(ctx.questions) == 10
+        assert result.info["topic_cap"] is None
+        assert result.info["topic_cap_dropped"] == 0
+
+    @pytest.mark.asyncio
+    async def test_corpus_batch_is_still_capped(self):
+        """The shared library still needs the cap: a corpus batch has no
+        sub-theme plan, so the cap is its only guard against monotony."""
+        ctx = self._one_topic_pack()
+
+        result = await CompositionStage(customer_order=False).run(ctx, _NullSink())
+
+        assert result.info["topic_cap"] == 2
+        assert [q.id for q in ctx.questions] == ["q_1", "q_2"]
+
+    @pytest.mark.asyncio
+    async def test_explicit_override_still_binds_on_a_customer_order(self):
+        """An operator's `--per-topic-cap` is deliberate (e.g. a CLI blind
+        test with `--customer-order`), so it wins over the customer default."""
+        ctx = self._one_topic_pack()
+
+        result = await CompositionStage(per_topic_cap=3, customer_order=True).run(
+            ctx, _NullSink()
+        )
+
+        assert result.info["topic_cap"] == 3
+        assert [q.id for q in ctx.questions] == ["q_1", "q_2", "q_3"]
+
+    @pytest.mark.asyncio
+    async def test_customer_order_keeps_the_tf_cap(self):
+        """Only the topic cap is lifted: T/F stays a rarity in a customer pack."""
+        tf_options = {"a": "True", "b": "False"}
+        questions = [
+            _question(i, topic="LEGO", possible_answers=tf_options, correct_answer="a")
+            for i in range(1, 5)
+        ]
+        ctx = _ctx(questions, target_count=30)
+
+        result = await CompositionStage(customer_order=True).run(ctx, _NullSink())
+
+        assert result.info["tf_cap"] == 2
         assert [q.id for q in ctx.questions] == ["q_1", "q_2"]
 
 

@@ -64,38 +64,59 @@ extension SilenceDetectionService {
         // transcriber hears — commands had to be shouted in the car. Speech is
         // detected on the tap instead (EnergyVAD, +VAD.swift). A SpeechDetector
         // needs a transcriber beside it (CARQUIZ-3); a transcriber alone is fine.
-        let session = transcriberEngine.makeSession()
-        let detector = Self.makeSpeechDetector()
-        speechDetectorPaired = detector != nil
-        let modules: [any SpeechModule] = [session.module] + (detector.map { [$0] } ?? [])
+        //
+        // #237: without the speech-recognition permission no transcriber is
+        // built — it could not hear a command, and a failing analyzer would
+        // overwrite the permission state the listen bar's "Turn on" button
+        // reads. The engine then runs answer-only: the tap still feeds the
+        // answer recording and the speech detection (EnergyVAD / neural VAD),
+        // neither of which ever depended on the recognizer.
+        let runsTranscriber = Self.runsCommandTranscriber(authorizationStatusProvider())
+        speechDetectorPaired = false
+        var session: CommandTranscriberSession?
+        var detector: SpeechDetector?
+        var analyzer: SpeechAnalyzer?
+        let analyzerFormat: AVAudioFormat
+        if runsTranscriber {
+            let transcriberSession = transcriberEngine.makeSession()
+            let speechDetector = Self.makeSpeechDetector()
+            speechDetectorPaired = speechDetector != nil
+            let modules: [any SpeechModule] = [transcriberSession.module] + (speechDetector.map { [$0] } ?? [])
 
-        let analyzer = SpeechAnalyzer(modules: modules)
-        self.analyzer = analyzer
+            let speechAnalyzer = SpeechAnalyzer(modules: modules)
+            self.analyzer = speechAnalyzer
 
-        // Vocabulary biasing (#120): fed ONLY to an engine that declares the
-        // capability — DictationTranscriber honors contextual strings,
-        // SpeechTranscriber ignores them (adapter returns nil; no call at all).
-        // Failure is non-fatal: an unbiased recognizer still recognizes, so log
-        // and continue rather than degrade to buttons.
-        if let vocabulary = transcriberEngine.contextualStrings {
-            let context = AnalysisContext()
-            context.contextualStrings = [.general: vocabulary]
-            do {
-                try await analyzer.setContext(context)
-            } catch {
-                SentryLog.warn(
-                    "contextual strings rejected",
-                    category: .voice,
-                    attributes: ["error": error.localizedDescription, "count": vocabulary.count]
-                )
+            // Vocabulary biasing (#120): fed ONLY to an engine that declares the
+            // capability — DictationTranscriber honors contextual strings,
+            // SpeechTranscriber ignores them (adapter returns nil; no call at all).
+            // Failure is non-fatal: an unbiased recognizer still recognizes, so log
+            // and continue rather than degrade to buttons.
+            if let vocabulary = transcriberEngine.contextualStrings {
+                let context = AnalysisContext()
+                context.contextualStrings = [.general: vocabulary]
+                do {
+                    try await speechAnalyzer.setContext(context)
+                } catch {
+                    SentryLog.warn(
+                        "contextual strings rejected",
+                        category: .voice,
+                        attributes: ["error": error.localizedDescription, "count": vocabulary.count]
+                    )
+                }
             }
-        }
 
-        guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: modules
-        ) else {
-            markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
-            return
+            guard let bestFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
+                compatibleWith: modules
+            ) else {
+                markCommandsUnavailable(reason: "No compatible audio format for SpeechAnalyzer")
+                return
+            }
+            session = transcriberSession
+            detector = speechDetector
+            analyzer = speechAnalyzer
+            analyzerFormat = bestFormat
+        } else {
+            analyzerFormat = Self.answerOnlyFormat
         }
 
         // #204: before the engine exists, like the other suspensions above.
@@ -182,14 +203,20 @@ extension SilenceDetectionService {
         // Fail loud (#77): a swallowed throw here was the silent death of both
         // VAD and voice commands on device. Cancellation (normal teardown via
         // stopListening) is not a failure.
-        analyzerTask = Task { [weak self] in
-            do {
-                try await analyzer.start(inputSequence: inputSequence)
-            } catch is CancellationError {
-                // normal stopListening() teardown
-            } catch {
-                self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
+        if let analyzer {
+            analyzerTask = Task { [weak self] in
+                do {
+                    try await analyzer.start(inputSequence: inputSequence)
+                } catch is CancellationError {
+                    // normal stopListening() teardown
+                } catch {
+                    self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
+                }
             }
+        } else {
+            // #237 answer-only engine: nobody reads the analyzer input, so it
+            // must not buffer the whole window's audio.
+            continuation.finish()
         }
 
         // NOTE: SpeechDetector delivers results on its own queue; route back to
@@ -216,20 +243,22 @@ extension SilenceDetectionService {
         // from the transcriber stream flips `commandAvailability` (fail-loud,
         // #77) and ends the loop — VAD is unaffected and the app degrades to the
         // manual mic-button/tap flow rather than crashing.
-        transcriptionTask = Task { [weak self] in
-            do {
-                for try await transcript in session.transcripts {
-                    guard let self, !Task.isCancelled else { break }
-                    guard !transcript.text.isEmpty else { continue }
-                    await MainActor.run { [weak self] in
-                        self?.handleEngineTranscript(transcript)
+        if let session {
+            transcriptionTask = Task { [weak self] in
+                do {
+                    for try await transcript in session.transcripts {
+                        guard let self, !Task.isCancelled else { break }
+                        guard !transcript.text.isEmpty else { continue }
+                        await MainActor.run { [weak self] in
+                            self?.handleEngineTranscript(transcript)
+                        }
                     }
-                }
-            } catch is CancellationError {
-                // normal stopListening() teardown
-            } catch {
-                await MainActor.run { [weak self] in
-                    self?.markCommandsUnavailable(reason: "Command transcriber failed: \(error.localizedDescription)")
+                } catch is CancellationError {
+                    // normal stopListening() teardown
+                } catch {
+                    await MainActor.run { [weak self] in
+                        self?.markCommandsUnavailable(reason: "Command transcriber failed: \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -284,9 +313,26 @@ extension SilenceDetectionService {
                 "vpMode": voiceProcessing.mode.rawValue,
                 "sessionMode": VoiceProcessingPolicy.modeName(AVAudioSession.sharedInstance().mode),
                 "speechDetector": VADTuning.commandGateSensitivity?.rawValue ?? "off",
+                "transcriber": runsTranscriber, // #237: false = answer-only (no permission)
             ]
         )
     }
+
+    /// #237: whether a listening window builds the command transcriber at all.
+    /// Pure, like `shouldStartEngine`: the engine cannot run headlessly, so
+    /// the rule that keeps answers independent of the permission is tested
+    /// here.
+    nonisolated static func runsCommandTranscriber(_ status: SFSpeechRecognizerAuthorizationStatus) -> Bool {
+        status == .authorized
+    }
+
+    /// #237: the tap's target format when no transcriber runs (no
+    /// speech-recognition permission) — 16 kHz mono 16-bit, what the
+    /// transcriber itself asks for on a wideband route, and the rate the
+    /// answer upload and the neural VAD expect.
+    nonisolated static let answerOnlyFormat = AVAudioFormat(
+        commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false
+    )!
 
     /// The optional command-gate SpeechDetector (`VADTuning.commandGateSensitivity`).
     private static func makeSpeechDetector() -> SpeechDetector? {

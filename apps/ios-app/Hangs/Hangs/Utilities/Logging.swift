@@ -79,6 +79,14 @@ enum VoiceTelemetryContext {
     }
 }
 
+extension Breadcrumb {
+    /// Sentry 9 deprecates the `data` setter; this keeps the call sites one-liners.
+    /// Merges key by key, so it replaces values the same way assignment did on a fresh crumb.
+    nonisolated func setData(_ values: [String: Any]) {
+        for (key, value) in values { setData(value: value, key: key) }
+    }
+}
+
 /// Adds a Sentry breadcrumb when the SDK is running; no-op otherwise.
 /// Keeps scattered call sites free of `SentrySDK.isEnabled` checks so simulator builds
 /// (where Sentry is intentionally off) don't emit "SDK is disabled" warnings.

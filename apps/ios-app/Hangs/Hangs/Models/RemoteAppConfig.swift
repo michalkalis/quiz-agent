@@ -41,6 +41,24 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// also in `permissive`: a missing key must never show a card whose
     /// endpoints answer 404.
     let dailyChallengeEnabled: Bool
+    /// #214: builds below this get a dismissible "new version" card on Home.
+    let recommendedVersionAppStore: String?
+    let recommendedVersionTestflight: String?
+    /// #214: a full-screen maintenance message over the whole app. Off unless
+    /// the server says on; the message is optional (default copy otherwise).
+    let maintenanceEnabled: Bool
+    let maintenanceMessage: Notice?
+    /// #212: the Together button on Home (same-room multiplayer). Off unless
+    /// the server says on, also in `permissive`: the room endpoints answer 404
+    /// while the server switch is off.
+    let multiplayerEnabled: Bool
+    /// #217: the App Store build shows Together only when this is also on
+    /// (TestFlight builds ignore it). Off unless the server says on.
+    let multiplayerEnabledAppStore: Bool
+    /// #232: share a quiz by link (send, open, paste, compare, a pack in a
+    /// game together). Off unless the server says on, also in `permissive`:
+    /// the shared-quiz endpoints answer 404 while the server switch is off.
+    let sharedQuizEnabled: Bool
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -57,6 +75,13 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case notice
         case voiceExperiment = "voice_experiment"
         case dailyChallengeEnabled = "daily_challenge_enabled"
+        case recommendedVersionAppStore = "recommended_version_app_store"
+        case recommendedVersionTestflight = "recommended_version_testflight"
+        case maintenanceEnabled = "maintenance_enabled"
+        case maintenanceMessage = "maintenance_message"
+        case multiplayerEnabled = "multiplayer_enabled"
+        case multiplayerEnabledAppStore = "multiplayer_enabled_app_store"
+        case sharedQuizEnabled = "shared_quiz_enabled"
     }
 
     init(
@@ -65,7 +90,14 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         ordersEnabled: Bool,
         notice: Notice?,
         voiceExperiment: VoiceExperimentConfig? = nil,
-        dailyChallengeEnabled: Bool = false
+        dailyChallengeEnabled: Bool = false,
+        recommendedVersionAppStore: String? = nil,
+        recommendedVersionTestflight: String? = nil,
+        maintenanceEnabled: Bool = false,
+        maintenanceMessage: Notice? = nil,
+        multiplayerEnabled: Bool = false,
+        multiplayerEnabledAppStore: Bool = false,
+        sharedQuizEnabled: Bool = false
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -73,6 +105,13 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.notice = notice
         self.voiceExperiment = voiceExperiment
         self.dailyChallengeEnabled = dailyChallengeEnabled
+        self.recommendedVersionAppStore = recommendedVersionAppStore
+        self.recommendedVersionTestflight = recommendedVersionTestflight
+        self.maintenanceEnabled = maintenanceEnabled
+        self.maintenanceMessage = maintenanceMessage
+        self.multiplayerEnabled = multiplayerEnabled
+        self.multiplayerEnabledAppStore = multiplayerEnabledAppStore
+        self.sharedQuizEnabled = sharedQuizEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -84,5 +123,12 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         // Never the reason the rest of the config is lost.
         voiceExperiment = try? container.decodeIfPresent(VoiceExperimentConfig.self, forKey: .voiceExperiment)
         dailyChallengeEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .dailyChallengeEnabled)) ?? false
+        recommendedVersionAppStore = try? container.decodeIfPresent(String.self, forKey: .recommendedVersionAppStore)
+        recommendedVersionTestflight = try? container.decodeIfPresent(String.self, forKey: .recommendedVersionTestflight)
+        maintenanceEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .maintenanceEnabled)) ?? false
+        maintenanceMessage = try? container.decodeIfPresent(Notice.self, forKey: .maintenanceMessage)
+        multiplayerEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabled)) ?? false
+        multiplayerEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabledAppStore)) ?? false
+        sharedQuizEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .sharedQuizEnabled)) ?? false
     }
 }

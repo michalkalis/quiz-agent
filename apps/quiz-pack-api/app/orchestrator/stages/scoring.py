@@ -57,6 +57,7 @@ import logging
 import sentry_sdk
 
 from app import feature_flags
+from app.audience import is_child
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.scoring import craft_guards
@@ -197,12 +198,17 @@ class ScoringStage:
         # direct-mode source, and TopUpStage reuses this same instance.
         self._casual_checker = casual_checker
 
-    async def _casual_verdicts(self, questions: list) -> dict[str, CasualVerdict]:
+    async def _casual_verdicts(
+        self, questions: list, audience: str | None = None
+    ) -> dict[str, CasualVerdict]:
         """Verdicts for the questions the check covers; failures are omitted.
 
         Fail-open inside a fail-closed stage: a checker error keeps the
-        question and never counts toward ``judge_failures``.
+        question and never counts toward ``judge_failures``. A child-band
+        ``audience`` (#236) is judged for that band; an adult call is made
+        exactly as before.
         """
+        band = {"audience": audience} if is_child(audience) else {}
         if self._casual_checker is None:
             return {}
         covered = [
@@ -215,7 +221,7 @@ class ScoringStage:
 
         async def _one(q):
             async with semaphore:
-                return await self._casual_checker.check(q, floor)
+                return await self._casual_checker.check(q, floor, **band)
 
         results = await asyncio.gather(
             *(_one(q) for q in covered), return_exceptions=True
@@ -235,6 +241,9 @@ class ScoringStage:
 
         judges_on = self._scorer is not None
         scores_by_id: dict = {}
+        # #236: a child-band pack is judged for its band (same judges, quorum
+        # and gate); an adult call carries no audience, exactly as before.
+        band = {"audience": ctx.audience} if is_child(ctx.audience) else {}
         if judges_on:
             payload = [
                 {
@@ -247,7 +256,7 @@ class ScoringStage:
                 }
                 for q in ctx.questions
             ]
-            results = await self._scorer.score_batch(payload)
+            results = await self._scorer.score_batch(payload, **band)
             scores_by_id = {
                 r.get("id"): r.get("model_scores", [])
                 for r in results
@@ -271,7 +280,7 @@ class ScoringStage:
         tf_excess = set(craft_guards.tf_imbalance_excess(tf_items))
 
         casual_mode = feature_flags.casual_player_gate()
-        casual_verdicts = await self._casual_verdicts(ctx.questions)
+        casual_verdicts = await self._casual_verdicts(ctx.questions, ctx.audience)
 
         kept: list = []
         dropped = 0

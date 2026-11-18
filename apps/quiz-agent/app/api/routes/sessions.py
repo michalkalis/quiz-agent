@@ -204,6 +204,12 @@ async def extend_session(
     require_session_ownership(
         await session_manager.get_session(session_id), subject, session_id=session_id
     )  # #144
+    # #235.6: a zero/negative value used to expire the game it was meant to
+    # extend (and answer 500), a huge one overflowed the date (500). Checked
+    # here, not as a schema bound, so the published contract stays as it is;
+    # the app always sends 30. Same ceiling as a new session's ``ttl_minutes``.
+    if not 1 <= minutes <= 120:
+        raise HTTPException(status_code=400, detail="minutes must be 1 to 120")
     success = await session_manager.extend_session(session_id, minutes)
     if not success:
         raise HTTPException(status_code=404, detail="Session not found")

@@ -23,8 +23,8 @@
 //  was charged, so it returns to the summary rather than a dead-end error.
 //
 
-import Combine
 import Clocks
+import Combine
 import Foundation
 import os
 
@@ -54,6 +54,11 @@ final class OrderPackViewModel: ObservableObject {
     /// good one-word topics ("Bratislava").
     static let maxPromptLength = 1000
 
+    /// Hard cap on what the field holds. Above `maxPromptLength` so a paste
+    /// that runs a little long stays editable (red counter, Order disabled)
+    /// instead of being cut silently; a huge paste can't bloat the field.
+    static let maxPromptInputLength = 2 * maxPromptLength
+
     /// Consecutive `getOrder` failures tolerated before the poll gives up with
     /// `.failed`. A transient network/timeout blip on cellular must NOT dead-end a
     /// paid order that is still generating server-side — a false failure strands
@@ -77,6 +82,16 @@ final class OrderPackViewModel: ObservableObject {
 
     @Published var prompt: String = ""
 
+    /// Required level for the pack (#224, 224.3). Deliberately nil until the
+    /// buyer picks one — generated packs came out too easy, so there is no
+    /// default; `isValid` stays false while this is nil.
+    @Published private(set) var difficulty: PackDifficulty?
+
+    /// Who the pack is written for (#236, 236.1). Adults unless the buyer picks
+    /// a child band; a default, so it never holds the order back. Kept across
+    /// orders like the prompt it belongs to.
+    @Published private(set) var audience: PackAudience = .adults
+
     /// Wire language of the ordered pack. Written only through
     /// `selectLanguage(_:)` so the view model can tell an explicit user choice
     /// from the value it preselects out of the global quiz language.
@@ -84,11 +99,27 @@ final class OrderPackViewModel: ObservableObject {
 
     @Published private(set) var state: OrderState = .editing
 
-    /// Localized App Store price of the pack product (`Product.displayPrice`),
-    /// shown on the payment summary. Nil until it loads — and it stays nil
-    /// (row hidden) when StoreKit can't answer, because a guessed price is
-    /// worse than none.
-    @Published private(set) var packPrice: String?
+    /// #228.6: the pack size being bought; 30 unless the buyer picks 10.
+    @Published private(set) var size: PackSize = .standard
+
+    /// Localized App Store price per pack size (`Product.displayPrice`). Empty
+    /// until it loads; a size StoreKit can't answer for stays absent, because
+    /// a guessed price is worse than none.
+    @Published private(set) var packPrices: [PackSize: String] = [:]
+
+    /// True while an unspent, already-paid proof waits (an interrupted earlier
+    /// order). It is spent before any new charge, so it decides the size.
+    @Published private(set) var isSizeFixedByPendingPurchase = false
+
+    /// #233: the topic check for `checkedPrompt` is running / came back.
+    @Published private(set) var isCheckingTopic = false
+    @Published private(set) var topicVerdict: TopicVerdict?
+    /// The trimmed text `topicVerdict` belongs to: an edit makes it stale, so
+    /// the blocked notice goes away as soon as the player changes the topic.
+    private var checkedPrompt: String?
+    /// The audience `topicVerdict` was given for: a child band is checked at a
+    /// stricter tier (#236), so switching it asks again.
+    private var checkedAudience: PackAudience?
 
     private let service: PackOrderServiceProtocol
     private let purchaseService: PackPurchaseServiceProtocol
@@ -105,6 +136,10 @@ final class OrderPackViewModel: ObservableObject {
     /// retry of THAT order (`POST /v1/orders/{id}/retry`), never a second paid
     /// create — the backend caps manual retries at 3.
     private(set) var orderId: String?
+
+    /// #217.4: the paid order the backend accepted that the sign-in prompt has
+    /// not offered yet: its id and the topic as typed.
+    private var acceptedPaidOrder: (orderId: String, topic: String, size: PackSize)?
 
     /// The StoreKit proof the current order was created with (nil = Debug admin
     /// order). Kept in memory after the durable pending slot is cleared, because
@@ -161,14 +196,35 @@ final class OrderPackViewModel: ObservableObject {
         pollTask?.cancel()
     }
 
-    /// True when the trimmed prompt is non-empty and within the server ceiling.
-    var isValid: Bool {
-        (1...Self.maxPromptLength).contains(trimmedPromptCount)
+    /// The price of the size being bought, shown on the summary and its button.
+    /// Nil hides the price row: StoreKit didn't answer.
+    var packPrice: String? {
+        packPrices[size]
     }
 
-    /// Live character count of the trimmed prompt (for the counter UI).
+    /// The 10 | 30 switch shows only once StoreKit sells `pack_10` (the guard
+    /// until App Store Connect approves it), and never over a pending paid
+    /// order, whose size is already settled. Hidden = exactly the 30-only
+    /// summary of before.
+    var offersSizeChoice: Bool {
+        packPrices[.ten] != nil && !isSizeFixedByPendingPurchase
+    }
+
+    /// True when the trimmed prompt is non-empty and within the server ceiling.
+    var isPromptValid: Bool {
+        (1 ... Self.maxPromptLength).contains(trimmedPromptCount)
+    }
+
+    /// The order can proceed: a valid topic AND a chosen difficulty (#224).
+    var isValid: Bool {
+        isPromptValid && difficulty != nil
+    }
+
+    /// Live character count of the trimmed prompt (for the counter UI), in
+    /// Unicode scalars like the server's check: counted as characters, a
+    /// prompt with emoji could pass here and be refused after the purchase.
     var trimmedPromptCount: Int {
-        prompt.trimmingCharacters(in: .whitespacesAndNewlines).count
+        prompt.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count
     }
 
     /// #182: the snapshot to offer "Start quiz" for. A pack becomes playable at
@@ -253,11 +309,20 @@ final class OrderPackViewModel: ObservableObject {
         orderLanguages()
     }
 
-    /// Load the pack price for the summary. Kept once loaded; a failed load
-    /// leaves it nil so the next summary visit tries again.
+    /// Load the pack prices for the summary. Kept once every size has one; a
+    /// missing size (a failed load, or `pack_10` not on sale yet) is asked for
+    /// again on the next summary visit.
     func loadPrice() async {
-        guard packPrice == nil else { return }
-        packPrice = await purchaseService.displayPrice()
+        guard packPrices.count < PackSize.allCases.count else { return }
+        packPrices = await purchaseService.displayPrices()
+    }
+
+    /// Explicit size pick (summary switch). Only before paying, and only for a
+    /// size the switch offers.
+    func selectSize(_ newSize: PackSize) {
+        guard state == .confirming, offersSizeChoice,
+              newSize == .standard || packPrices[newSize] != nil else { return }
+        size = newSize
     }
 
     /// Explicit user language pick (form menu).
@@ -266,10 +331,68 @@ final class OrderPackViewModel: ObservableObject {
         hasChosenLanguage = true
     }
 
+    /// Explicit difficulty pick (form buttons).
+    func selectDifficulty(_ level: PackDifficulty) {
+        difficulty = level
+    }
+
+    /// Explicit audience pick (form buttons, #236).
+    func selectAudience(_ choice: PackAudience) {
+        audience = choice
+    }
+
+    /// #233: the form's "Continue". Checks the topic before the summary (and
+    /// so before any payment): `blocked` keeps the player on the form,
+    /// `softened` shows a note on the summary. A failed check lets them through.
+    /// The form locks its inputs while the check runs; should the text or the
+    /// audience still change meanwhile, the verdict belongs to the old values,
+    /// so the new ones are checked before anything advances (#236).
+    func continueFromForm() async {
+        guard state == .editing, isValid, !isCheckingTopic else { return }
+        while true {
+            let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+            let audience = audience
+            guard isValid, checkedPrompt != text || checkedAudience != audience else { break }
+            isCheckingTopic = true
+            let verdict: TopicVerdict
+            do {
+                verdict = try await service.checkTopic(prompt: text, language: language, audience: audience)
+                analytics.track(.packTopicChecked(verdict: verdict.rawValue))
+            } catch {
+                verdict = .ok
+                analytics.track(.packTopicChecked(verdict: "error"))
+            }
+            isCheckingTopic = false
+            topicVerdict = verdict
+            checkedPrompt = text
+            checkedAudience = audience
+        }
+        guard !isTopicBlocked else { return }
+        advanceToSummary()
+    }
+
+    /// #233: the current text was checked and must not become a pack.
+    var isTopicBlocked: Bool { verdict(for: .blocked) }
+
+    /// #233: the current text passed, but its questions will be toned down.
+    var isTopicSoftened: Bool { verdict(for: .softened) }
+
+    private func verdict(for wanted: TopicVerdict) -> Bool {
+        topicVerdict == wanted
+            && checkedPrompt == prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+            && checkedAudience == audience
+    }
+
     /// Form → payment summary. Guarded on `.editing` so it can never re-enter
     /// the pre-purchase flow from a submitted order.
     func advanceToSummary() {
         guard state == .editing, isValid else { return }
+        if let pending = purchaseService.pendingProof().flatMap({ PackSize(productId: $0.productId) }) {
+            size = pending
+            isSizeFixedByPendingPurchase = true
+        } else {
+            isSizeFixedByPendingPurchase = false
+        }
         state = .confirming
     }
 
@@ -331,6 +454,27 @@ final class OrderPackViewModel: ObservableObject {
         }
     }
 
+    /// #217.4: the paid order the backend accepted since the last call, as the
+    /// sign-in prompt shows it. Only after acceptance does the order sit on this
+    /// phone's identity, which a sign-in then moves to the account. Nil when
+    /// there is none, for a Debug admin order, and for an order that can never
+    /// be delivered (refunded, retry budget spent): there is nothing to keep.
+    func takeAcceptedPaidOrder() -> SignInPromptPurchase? {
+        guard let accepted = acceptedPaidOrder else { return nil }
+        acceptedPaidOrder = nil
+        if case .failed(_, retryable: false) = state, orderId == nil { return nil }
+        let snapshot: OrderSnapshot? = switch state {
+        case let .polling(snapshot): snapshot
+        case let .delivered(snapshot): snapshot
+        default: nil
+        }
+        return .customPack(
+            name: snapshot?.displayTitle ?? accepted.topic,
+            questionCount: snapshot?.targetCount ?? accepted.size.questionCount,
+            colorKey: snapshot?.colorKey ?? accepted.orderId
+        )
+    }
+
     /// Cancel any in-flight polling. NOT called on sheet dismissal — the user
     /// closing the "Preparing" sheet is not a cancellation, and the pack must
     /// keep arriving behind it.
@@ -347,6 +491,10 @@ final class OrderPackViewModel: ObservableObject {
         orderPaymentProof = nil
         pendingIntent = nil
         hasChosenLanguage = false
+        // The level is chosen per order, never carried over (#224); the size
+        // starts from 30 again.
+        difficulty = nil
+        size = .standard
         language = supportedLanguage(defaultLanguage)
         // The prompt text is deliberately kept — reordering a variation of the
         // last topic is the common case, and retyping it is pure friction.
@@ -387,11 +535,16 @@ final class OrderPackViewModel: ObservableObject {
         // content is unchanged from the last attempt — a retry after a create
         // that never landed. Any change to the fields is a genuinely new
         // intent, so it mints a fresh key rather than reusing a stale one.
+        let orderSize = proof.flatMap { PackSize(productId: $0.productId) } ?? size
         let intent: PackOrderIntent
         if let pending = pendingIntent,
            pending.prompt == trimmedPrompt,
            pending.language == language,
-           pending.paymentProof == proof {
+           pending.difficulty == difficulty,
+           pending.audience == audience,
+           pending.size == orderSize,
+           pending.paymentProof == proof
+        {
             intent = pending
         } else {
             // #138 dropped the category/theme inputs (meaningless even to the
@@ -402,6 +555,9 @@ final class OrderPackViewModel: ObservableObject {
                 language: language,
                 category: nil,
                 theme: nil,
+                difficulty: difficulty,
+                audience: audience,
+                size: orderSize,
                 paymentProof: proof
             )
         }
@@ -424,6 +580,7 @@ final class OrderPackViewModel: ObservableObject {
             // The backend accepted the order — the purchase is spent. (Guarded
             // so a Debug admin order can never discard a real unspent proof.)
             purchaseService.clearPendingProof()
+            acceptedPaidOrder = (created.orderId, trimmedPrompt, intent.size)
         }
 
         await poll(orderId: created.orderId)
@@ -477,9 +634,10 @@ final class OrderPackViewModel: ObservableObject {
         if let pending = purchaseService.pendingProof() {
             return pending
         }
+        let size = size
         do {
-            let proof = try await purchaseService.purchase()
-            trackPackPurchase(.success)
+            let proof = try await purchaseService.purchase(size)
+            trackPackPurchase(.success, size: size)
             return proof
         } catch {
             let outcome: PurchaseResultOutcome = switch error as? PackPurchaseError {
@@ -487,16 +645,17 @@ final class OrderPackViewModel: ObservableObject {
             case .pending: .pending
             default: .failed
             }
-            trackPackPurchase(outcome)
+            trackPackPurchase(outcome, size: size)
             throw error
         }
     }
 
-    private func trackPackPurchase(_ outcome: PurchaseResultOutcome) {
+    private func trackPackPurchase(_ outcome: PurchaseResultOutcome, size: PackSize) {
         analytics.track(.purchaseResult(
-            productId: StoreKitPackPurchaseService.productId,
+            productId: size.productId,
             kind: .customPack,
-            outcome: outcome
+            outcome: outcome,
+            questionCount: size.questionCount
         ))
     }
 
@@ -510,13 +669,15 @@ final class OrderPackViewModel: ObservableObject {
             // and never resolve the "Building your pack…" spinner. Stop and hand the
             // user off to My packs; any generation still runs server-side.
             if clock.now >= deadline {
-                state = .failed(String(localized: "Still working — check My packs later.", comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
+                state = .failed(String(localized: "Still working — check My packs later.", bundle: .interface, locale: .interface, comment: "Shown when the foreground poll for a custom-pack order runs past its time budget; generation continues server-side and the pack appears in My packs when done"), retryable: false)
                 return
             }
 
             let snapshot: OrderSnapshot
             do {
                 snapshot = try await service.getOrder(id: orderId)
+                // Stopped while the reply was on its way: the watch is over (#235.2).
+                guard !Task.isCancelled else { return }
                 consecutiveErrors = 0 // any success clears the transient-error run
             } catch {
                 // Transient-error tolerance: a single network/timeout blip on
@@ -549,8 +710,8 @@ final class OrderPackViewModel: ObservableObject {
                 if !snapshot.isRetryable { clearRetainedOrderCredentials() }
                 state = .failed(
                     snapshot.isRetryable
-                        ? String(localized: "Pack generation failed. Please try again.", comment: "Shown when a custom-pack order ends in the failed state and can be retried")
-                        : String(localized: "This order was refunded.", comment: "Shown when a custom-pack order ended refunded — there is nothing left to retry"),
+                        ? String(localized: "Pack generation failed. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when a custom-pack order ends in the failed state and can be retried")
+                        : String(localized: "This order was refunded.", bundle: .interface, locale: .interface, comment: "Shown when a custom-pack order ended refunded — there is nothing left to retry"),
                     retryable: snapshot.isRetryable
                 )
                 return
@@ -567,6 +728,6 @@ final class OrderPackViewModel: ObservableObject {
 
     private static func message(for error: Error) -> String {
         (error as? LocalizedError)?.errorDescription
-            ?? String(localized: "Something went wrong. Please try again.", comment: "Generic custom-pack order error fallback")
+            ?? String(localized: "Something went wrong. Please try again.", bundle: .interface, locale: .interface, comment: "Generic custom-pack order error fallback")
     }
 }

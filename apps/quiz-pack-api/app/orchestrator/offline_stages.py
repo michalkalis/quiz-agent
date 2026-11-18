@@ -25,6 +25,7 @@ from quiz_shared.llm import factory as llm_factory
 
 from app import feature_flags
 from app.db.models import GenerationOrder
+from app.orchestrator.context import CLI_PRODUCT_ID
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.stages import (
     AnswerabilityStage,
@@ -36,7 +37,11 @@ from app.orchestrator.stages import (
     TopUpStage,
     VerificationStage,
 )
-from app.orchestrator.stages.dedup import AsyncDuplicateFinder, DedupStage
+from app.orchestrator.stages.dedup import (
+    IN_PACK_JUDGE_MAX_CALLS,
+    AsyncDuplicateFinder,
+    DedupStage,
+)
 from app.orchestrator.stages.grayzone_judge import DEFAULT_MAX_CALLS, GrayZoneJudge
 from app.orchestrator.stages.strictness import Strictness, parse_strictness
 
@@ -75,7 +80,7 @@ def build_order(args: argparse.Namespace) -> GenerationOrder:
     return GenerationOrder(
         id=uuid.uuid4(),
         transaction_id=f"cli-{uuid.uuid4().hex[:12]}",
-        product_id="pack_cli",
+        product_id=CLI_PRODUCT_ID,
         prompt=prompt,
         category=args.category,
         theme=args.theme,
@@ -102,6 +107,14 @@ def build_grayzone_judge() -> GrayZoneJudge | None:
     return GrayZoneJudge(
         max_calls=max_calls if max_calls is not None else DEFAULT_MAX_CALLS
     )
+
+
+def build_in_pack_judge() -> GrayZoneJudge | None:
+    """Customer orders (worker and ``--customer-order``): the same-fact judge
+    for pairs inside one pack, with its own per-order budget."""
+    if not feature_flags.pack_same_fact_judge():
+        return None
+    return GrayZoneJudge(max_calls=IN_PACK_JUDGE_MAX_CALLS)
 
 
 def build_strictness() -> Strictness:
@@ -210,8 +223,8 @@ def build_stages(
     ``forced_topics`` pins the sourced topic set; ``facts_file`` replaces
     sourcing entirely with a previously dumped fact set.
     ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
-    (#167); ``None`` keeps today's scaled default, so the worker/API path —
-    which never sets it — stays byte-identical.
+    (#167); ``None`` keeps the stage's default (the scaled cap; none on a
+    customer order), which is all the worker/API path ever uses.
     ``floor_fraction`` overrides TopUpStage's shortfall floor (#195); ``None``
     keeps the 80% default the worker uses.
 
@@ -233,7 +246,9 @@ def build_stages(
     #203 203.9 ``customer_order`` (``--customer-order``, default ``False`` =
     every corpus run unchanged): build the run as the worker builds a paid
     order — ``GenerationStage(customer_order=True)`` (sub-themes when
-    ``PACK_SUBTHEMES`` is on), the worker's plain ``DedupStage`` (+ in-pack
+    ``PACK_SUBTHEMES`` is on), ``CompositionStage(customer_order=True)`` (no
+    per-topic cap unless ``per_topic_cap`` is set), the worker's plain
+    ``DedupStage`` (+ in-pack
     cosine under the same flag, none of the #170 corpus levers) and, when
     ``PACK_BATCH_SCHEDULE`` is not ``0``, the worker's incremental round walk.
     Without ``persist`` the rounds go to an in-memory stand-in, so a blind
@@ -314,11 +329,16 @@ def build_stages(
         # Worker parity (`tasks._build_stages`): no #170 corpus levers.
         strictness = None
         dedup = DedupStage(
-            dedup_store, None, in_pack_cosine=feature_flags.pack_subthemes()
+            dedup_store,
+            None,
+            in_pack_cosine=feature_flags.pack_subthemes(),
+            in_pack_judge=build_in_pack_judge(),
         )
     else:
         dedup = build_dedup_stage(dedup_store, None, strictness)
-    composition = CompositionStage(per_topic_cap=per_topic_cap)
+    composition = CompositionStage(
+        per_topic_cap=per_topic_cap, customer_order=customer_order
+    )
     # #135 D10 — early round-trip answerability check between dedup and
     # verification, behind the same flag the worker honours.
     answerability = (
@@ -359,6 +379,9 @@ def build_stages(
                 composition_stage=composition,
                 persist_stage=pack_store,
                 batch_schedule=batch_schedule,
+                max_rounds=feature_flags.pack_topup_extra_rounds(),
+                max_ask=feature_flags.pack_max_ask(),
+                time_budget_s=feature_flags.pack_topup_time_budget_s(),
                 **({} if floor_fraction is None else {"floor_fraction": floor_fraction}),
             ),
         ]

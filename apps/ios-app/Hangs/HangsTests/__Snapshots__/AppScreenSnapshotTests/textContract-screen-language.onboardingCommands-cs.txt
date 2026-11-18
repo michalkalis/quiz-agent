@@ -1,0 +1,25 @@
+# texts
+trubbo
+“next”
+“repeat”
+“start”
+HLASOVÉ PŘÍKAZY
+Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
+iPhone se tě zeptá na rozpoznávání řeči. Odpovídat hlasem můžeš i bez příkazů.
+“next”
+“repeat”
+“start”
+HLASOVÉ PŘÍKAZY
+Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
+iPhone se tě zeptá na rozpoznávání řeči. Odpovídat hlasem můžeš i bez příkazů.
+Zapni příkazy
+Teď ne
+# identifiers
+onboarding.root
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.pageIndicator
+onboarding.enableCommands
+onboarding.commandsNotNow

@@ -4,13 +4,15 @@
 //
 //  Home — #194 C1 "Sklo nad kartami" (canvas R-Home), sections reordered by
 //  the founder on 2026-10-13 (canvas "Home: poradie a plán", A + C + P1):
-//  the quiz (category deck and its three setting pills), my packs, your plan,
-//  each under the same section label; the slim command bar and Start stay
-//  pinned at the bottom.
+//  the quiz (category deck and its three setting pills) and my packs under
+//  the same section label (#216.3: your plan moved to Profile); the slim
+//  command bar and Start stay pinned at the bottom. #216.2 (founder 2026-10-30, P2): the logo is the
+//  navigation bar's large title; on scroll the system swaps it for the
+//  inline title "Play" (a `.title` logo item showed at rest too, so none).
+//  Start is a bar over the content, which scrolls under it.
 //
 
 import SwiftUI
-import UIKit
 
 struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -27,99 +29,76 @@ struct HomeView: View {
     /// #205: today's daily challenge. Nil (inspector tests, previews) — or the
     /// server switch off — renders Home without the card.
     var dailyChallenge: DailyChallengeViewModel?
+    /// #232: a friend's quiz link; nil (inspector tests, previews) renders Home
+    /// without the first-launch paste row.
+    var sharedQuiz: SharedQuizInbox?
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 0) {
-            HangsBrandRow {
-                NavigationLink(value: AppRoute.settings) {
-                    navChipVisual(icon: "gearshape")
+        ScrollView {
+            VStack(spacing: Theme.Hangs.Spacing.xl) {
+                // #232: the first launch's "quiz link from a friend?" row.
+                if let appConfig, let sharedQuiz {
+                    HomeSharedQuizPasteRow(inbox: sharedQuiz, appConfig: appConfig)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "Settings", comment: "Accessibility label for the settings navigation button"))
-                .accessibilityIdentifier("home.moreSettings")
-            }
 
-            ScrollView {
-                VStack(spacing: Theme.Hangs.Spacing.xl) {
-                    // #205.4: the daily challenge opens the page, above the quiz.
-                    if let appConfig, let dailyChallenge {
-                        HomeDailyChallengeSection(
-                            appConfig: appConfig,
-                            viewModel: dailyChallenge,
-                            language: Language.selectable(viewModel.settings.language).id,
-                            isStarting: viewModel.isStartingDailyChallenge,
-                            isStartDisabled: viewModel.quizState == .startingQuiz,
-                            onPlay: startDailyChallenge
-                        )
-                    }
-
-                    if let appConfig {
-                        AppNoticeBanner(store: appConfig)
-                    }
-
-                    quizSection
-
-                    // #141: pick-and-play entry for owned custom packs, plus
-                    // the always-on "Create your own pack" row.
-                    if let myPacks {
-                        HomePacksSection(
-                            viewModel: myPacks,
-                            createPack: createPackEntry,
-                            quizStart: packQuizStart,
-                            onPlayPack: startPack
-                        )
-                    }
-
-                    planSection
-
-                    // #96 P3: the "Image questions" toggle is hidden until
-                    // image content ships (founder, 2026-07-12). Wiring
-                    // stays; only the UI is gated behind a Config flag.
-                    if Config.imageQuestionsToggleVisible {
-                        HangsCard { imageQuestionsRow }
-                    }
+                // #205.4: the daily challenge opens the page, above the quiz.
+                if let appConfig, let dailyChallenge {
+                    HomeDailyChallengeSection(
+                        appConfig: appConfig,
+                        viewModel: dailyChallenge,
+                        language: Language.selectable(viewModel.settings.language).id,
+                        isStarting: viewModel.isStartingDailyChallenge,
+                        isStartDisabled: viewModel.quizState == .startingQuiz,
+                        onPlay: startDailyChallenge
+                    )
                 }
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.vertical, Theme.Hangs.Spacing.sm)
-            }
-            .scrollBounceBehavior(.basedOnSize)
 
-            // #77/#96 P2: listening indicator above the primary action — visible
-            // only while the Home command window is armed. #131 Track F: the one
-            // shared `ListenBar`, slim here — Home's command never changes and
-            // the screen has content to show.
-            if viewModel.commandListenerHint != nil {
-                ListenBar(
-                    mode: .command,
-                    feedback: viewModel.voiceFeedbackPhase,
-                    recognizingWord: viewModel.recognizingWord,
-                    commandHint: viewModel.voiceHintWords,
-                    size: .slim,
-                    language: viewModel.commandLanguage
-                )
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.top, Theme.Hangs.Spacing.xxs)
-                .transition(.opacity)
-            }
+                if let appConfig {
+                    UpdateAvailableCard(store: appConfig)
+                    AppNoticeBanner(store: appConfig)
+                }
 
-            startQuizButton
-                .padding(.horizontal, Theme.Hangs.Spacing.md)
-                .padding(.top, Theme.Hangs.Spacing.sm)
-                .padding(.bottom, Theme.Hangs.Spacing.sm)
+                quizSection
+
+                // #141: pick-and-play entry for owned custom packs, plus
+                // the always-on "Create your own pack" row.
+                if let myPacks {
+                    HomePacksSection(
+                        viewModel: myPacks,
+                        createPack: createPackEntry,
+                        quizStart: packQuizStart,
+                        onSendPack: sendPackAction,
+                        onPlayPack: startPack
+                    )
+                }
+
+                // #96 P3: the "Image questions" toggle is hidden until
+                // image content ships (founder, 2026-07-12). Wiring
+                // stays; only the UI is gated behind a Config flag.
+                if Config.imageQuestionsToggleVisible {
+                    HangsCard { imageQuestionsRow }
+                }
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.vertical, Theme.Hangs.Spacing.sm)
         }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaBar(edge: .bottom) { bottomBar }
+        .toolbar {
+            ToolbarItem(placement: .largeTitle) {
+                HangsBrandMark()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .navigationTitle("Play")
+        .navigationBarTitleDisplayMode(.large)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
-            // #77: arm the on-device English command listener on Home (idle) so
-            // spoken "start" begins the quiz. Founder-overridable (default ON);
-            // nothing leaves the device.
-            if viewModel.voiceStartOnHomeEnabled {
-                viewModel.refreshCommandWindow()
-            }
         }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
@@ -130,6 +109,13 @@ struct HomeView: View {
                 includeLocalQuestions: $viewModel.settings.includeLocalQuestions
             )
         }
+    }
+
+    /// The Start button; Home has no voice commands (#224).
+    private var bottomBar: some View {
+        startQuizButton
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .padding(.vertical, Theme.Hangs.Spacing.sm)
     }
 
     /// The pack whose start is running spins: the start request names it
@@ -145,6 +131,17 @@ struct HomeView: View {
         viewModel.beginQuizStart(pack: pack)
     }
 
+    /// #232: "Send to a friend" in a finished pack's menu, with the switch on.
+    private var sendPackAction: ((OrderSnapshot) -> Void)? {
+        guard appConfig?.sharedQuizEnabled == true else { return nil }
+        return sendPack
+    }
+
+    private func sendPack(_ order: OrderSnapshot) {
+        guard let packId = order.packId else { return }
+        viewModel.sendPack(packId: packId)
+    }
+
     private func startDailyChallenge(_ day: DailyChallengeDay) {
         viewModel.beginDailyChallenge(day: day)
     }
@@ -158,7 +155,15 @@ struct HomeView: View {
 
     private var quizSection: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-            sectionLabel("Quiz")
+            HStack(alignment: .firstTextBaseline) {
+                sectionLabel("Quiz")
+                Spacer(minLength: Theme.Hangs.Spacing.sm)
+                // #224.6 (canvas C4): the deck steps one category per tap, so
+                // the multi-select picker gets its own entry beside the label.
+                if !dynamicTypeSize.isAccessibilitySize {
+                    chooseSeveralButton
+                }
+            }
             // The deck now opens the page, so it gets a fixed height instead
             // of whatever the content left: it overlapped the pills and lost
             // its bottom under Start once packs filled the screen.
@@ -166,23 +171,37 @@ struct HomeView: View {
                 HomeCategoryDeck(
                     selectedCategories: viewModel.settings.categories,
                     title: viewModel.settings.categoryDisplayName(),
-                    questionCount: viewModel.settings.numberOfQuestions
+                    questionCount: viewModel.settings.numberOfQuestions,
+                    onStep: { viewModel.stepCategory($0, input: $1) }
                 )
                 .frame(height: Metrics.deckHeight)
                 // The fanned back cards turn on their bottom edge, so one
-                // corner dips below the frame.
-                .padding(.bottom, Theme.Hangs.Spacing.lg)
+                // corner dips below the cards: the page dots' gap holds it.
             }
             settingPills
+            quickGameRow
         }
     }
 
-    private var planSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-            sectionLabel("your plan")
-                .accessibilityIdentifier("home.planLabel")
-            freePlanCard
+    /// #224.8 (canvas D2): "Quick quiz" under the pickers. Off = today's flow.
+    private var quickGameRow: some View {
+        HangsCard {
+            HangsToggleRow(
+                label: "Quick quiz",
+                subtitle: "After \"Next\": next question, no explanation",
+                isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
+            )
         }
+        .accessibilityIdentifier("home.quickGame")
+    }
+
+    private var chooseSeveralButton: some View {
+        HangsGhostButton(title: "Choose several", icon: "checklist") {
+            viewModel.categoryPickerOpened(from: .deckButton)
+            showingCategoryPicker = true
+        }
+        .fixedSize()
+        .accessibilityIdentifier("home.categories.chooseSeveral")
     }
 
     private func sectionLabel(_ text: LocalizedStringKey) -> some View {
@@ -191,8 +210,9 @@ struct HomeView: View {
     }
 
     private enum Metrics {
-        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256).
-        static let deckHeight: CGFloat = 256
+        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256) plus
+        /// the page dots under it.
+        static let deckHeight: CGFloat = 256 + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)
@@ -224,122 +244,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Plan / entitlement card (#87 · #123 Track B)
-
-    // The adaptive balance card (Variant A): one surface, one whole-card tap
-    // target, six visuals derived from UsageInfo — free · free+credits ·
-    // subscriber · subscriber+credits · grace · expired (rendered by
-    // `HomePlanCard`). The tap destination forks by state: family A (free /
-    // free+credits / expired) opens the paywall; family B (active / grace)
-    // opens the manage-subscription surface.
-    // #123 Track A: the slot is never silently blank — while /usage is still
-    // in flight it shows a loading placeholder instead of disappearing.
-    @ViewBuilder
-    private var freePlanCard: some View {
-        if let usage = viewModel.usageInfo {
-            if HomePlanCard.state(for: usage).isManageSurface {
-                Button {
-                    openManageSubscriptions()
-                } label: {
-                    HomePlanCard(usage: usage)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home.planManageButton")
-            } else {
-                Button {
-                    viewModel.presentPaywall(source: .home)
-                } label: {
-                    HomePlanCard(usage: usage)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home.freePlanUpgradeButton")
-            }
-        } else if viewModel.usageLoadState == .failed {
-            // Fetch failed with nothing cached (typically a Fly cold start) —
-            // show a lightweight retry placeholder instead of silently
-            // vanishing (#FIX2, CLAUDE.md Rule #2 fail-loud).
-            freePlanCardUnavailable
-        } else {
-            // #123: still loading (the launch/foreground fetch hasn't
-            // resolved yet).
-            freePlanCardLoading
-        }
-    }
-
-    /// Manage-subscription destination for an active/grace subscriber (#123
-    /// Track B). The standard App Store account-subscriptions URL is the
-    /// simplest reliable surface: it's one hop and needs no live UIWindowScene,
-    /// unlike StoreKit's `AppStore.showManageSubscriptions(in:)`.
-    private func openManageSubscriptions() {
-        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
-        UIApplication.shared.open(url)
-    }
-
-    // Shown only while /usage's launch/foreground fetch is still in flight and
-    // nothing is cached yet (#123 Track A). Holds the loaded card's full
-    // scaffold — a number-height spinner row, then an empty meter beside a
-    // skeleton meta line — so the slot doesn't jump when /usage resolves into
-    // the loaded (or failed) state.
-    private var freePlanCardLoading: some View {
-        HangsCard(padding: HomePlanCardMetrics.padding) {
-            VStack(alignment: .leading, spacing: HomePlanCardMetrics.rowGap) {
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
-                    Text(verbatim: "00")
-                        .font(.hangsTitle)
-                        .hidden()
-                        .overlay(alignment: .leading) {
-                            ProgressView().tint(Theme.Hangs.Colors.muted)
-                        }
-                    Text("Loading your plan…")
-                        .font(.hangsBodyLG)
-                        .foregroundStyle(Theme.Hangs.Colors.muted)
-                }
-                HomePlanMeterRow(meter: HomePlanMeter(segments: [])) {
-                    Text(verbatim: "resets in 13 days")
-                        .font(.hangsCaption)
-                        .hidden()
-                        .overlay(alignment: .leading) {
-                            Capsule().fill(Theme.Hangs.Colors.track)
-                        }
-                        .accessibilityIdentifier("home.planLoadingSkeleton")
-                }
-            }
-        }
-        .accessibilityIdentifier("home.freePlanLoading")
-    }
-
-    // Shown only when /usage failed to load and there is nothing cached — a
-    // tap re-fetches. Reuses the plan card surface; no new design system.
-    private var freePlanCardUnavailable: some View {
-        Button {
-            Task { await viewModel.refreshUsage() }
-        } label: {
-            HangsCard(padding: HomePlanCardMetrics.padding) {
-                HStack(spacing: Theme.Hangs.Spacing.xs) {
-                    Image(systemName: "bolt.slash")
-                        .font(.hangsCaption.weight(.semibold))
-                        .foregroundStyle(Theme.Hangs.Colors.muted)
-                        .accessibilityHidden(true)
-                    Text("Couldn't load your plan")
-                        .font(.hangsBodyLG)
-                        .foregroundStyle(Theme.Hangs.Colors.ink)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    HStack(spacing: Theme.Hangs.Spacing.xxs) {
-                        Text("Retry")
-                            .font(.hangsLabel)
-                        Image(systemName: "arrow.clockwise")
-                            .font(.hangsCaption.weight(.bold))
-                            .accessibilityHidden(true)
-                    }
-                    .foregroundStyle(Theme.Hangs.Colors.actionText)
-                    .fixedSize()
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home.freePlanRetryButton")
-    }
-
     /// Fraction of the free quota still available (drives the track fill).
     static func quotaFraction(_ usage: UsageInfo) -> Double {
         guard let remaining = usage.remaining, let limit = usage.questionsLimit,
@@ -354,16 +258,16 @@ struct HomeView: View {
         guard let reset = usage.resetDate else { return nil }
         let seconds = reset.timeIntervalSince(now)
         guard seconds > 3600 else {
-            return String(localized: "resets soon", comment: "Home quota card: free questions reset in under an hour")
+            return String(localized: "resets soon", bundle: .interface, locale: .interface, comment: "Home quota card: free questions reset in under an hour")
         }
         if seconds >= 86400 {
             let days = Int((seconds / 86400).rounded(.up))
             return days == 1
-                ? String(localized: "resets in 1 day", comment: "Home quota card: one day until the free-question reset")
-                : String(localized: "resets in \(days) days", comment: "Home quota card: days until the free-question reset")
+                ? String(localized: "resets in 1 day", bundle: .interface, locale: .interface, comment: "Home quota card: one day until the free-question reset")
+                : String(localized: "resets in \(days) days", bundle: .interface, locale: .interface, comment: "Home quota card: days until the free-question reset")
         }
         let hours = Int((seconds / 3600).rounded(.up))
-        return String(localized: "resets in \(hours) hours", comment: "Home quota card: hours until the free-question reset")
+        return String(localized: "resets in \(hours) hours", bundle: .interface, locale: .interface, comment: "Home quota card: hours until the free-question reset")
     }
 
     // MARK: - Setting pills (#194 C1, was the config card)
@@ -436,6 +340,7 @@ struct HomeView: View {
 
     private var categoriesButton: some View {
         Button {
+            viewModel.categoryPickerOpened(from: .pill)
             showingCategoryPicker = true
         } label: {
             HomeSettingPill(
@@ -456,17 +361,6 @@ struct HomeView: View {
             isOn: $viewModel.settings.includeImageQuestions
         )
         .accessibilityIdentifier("home-image-questions-toggle")
-    }
-
-    // MARK: - Nav chip visual (used inside NavigationLink label)
-
-    private func navChipVisual(icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(Theme.Hangs.Colors.ink)
-            .frame(width: 44, height: 44)
-            // #194 B2: same glass circle as `HangsNavChip`.
-            .glassEffect(.regular.interactive(), in: Circle())
     }
 }
 

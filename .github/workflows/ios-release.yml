@@ -22,7 +22,7 @@ on:
         required: false
         default: "0"
       store:
-        description: "App Store variant (#209): every TestFlight tester surface compiled off. Only for App Review; production only; never sent to the external beta group"
+        description: "App Store variant (#209): uploads to the live app Trubbo (com.missinghue.hangs) with every tester surface compiled off. Off = the TestFlight build, which goes to the separate app Trubbo Beta (com.missinghue.hangs.beta, #234). Production only"
         type: boolean
         required: false
         default: false
@@ -149,6 +149,11 @@ jobs:
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
           BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
           # #209: YES compiles the APP_STORE condition in (Shared.xcconfig).
+          # #234: it also picks the app — production YES → Trubbo
+          # (com.missinghue.hangs), production NO → Trubbo Beta
+          # (com.missinghue.hangs.beta). The Fastfile derives bundle id, match
+          # profile and export map from it and numbers the build past the
+          # newest TestFlight build of both apps, so the tag below stays unique.
           APP_STORE_VARIANT: ${{ inputs.store && 'YES' || 'NO' }}
         # environment input picks the lane: staging → beta (Hangs-Staging), production → release (Hangs-Prod).
         run: bundle exec fastlane ios ${{ inputs.environment == 'production' && 'release' || 'beta' }}

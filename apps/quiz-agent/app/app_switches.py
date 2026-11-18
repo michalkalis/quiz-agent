@@ -33,9 +33,31 @@ CACHE_SECONDS = 60.0
 READ_TIMEOUT_SECONDS = 1.0
 NOTICE_MAX_CHARS = 300
 
-VERSION_KEYS = ("min_version_app_store", "min_version_testflight")
-NOTICE_KEYS = ("notice_sk", "notice_cs", "notice_en")
-KEYS = (*VERSION_KEYS, "orders_enabled", *NOTICE_KEYS)
+VERSION_KEYS = (
+    "min_version_app_store",
+    "min_version_testflight",
+    "recommended_version_app_store",
+    "recommended_version_testflight",
+)
+NOTICE_KEYS = (
+    "notice_sk",
+    "notice_cs",
+    "notice_en",
+    "maintenance_sk",
+    "maintenance_cs",
+    "maintenance_en",
+    "notice_uk",
+    "maintenance_uk",
+)
+BOOL_KEYS = (
+    "orders_enabled",
+    "maintenance_enabled",
+    "multiplayer_enabled_app_store",
+    "triage_bridge_enabled",
+    "pack_reuse_enabled",
+    "shared_quiz_enabled",
+)
+KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
 
 _cache: tuple[float, dict[str, str | None]] | None = None
 _lock = asyncio.Lock()
@@ -56,9 +78,9 @@ def encode(key: str, value: Any) -> str | None:
     """
     if key not in KEYS:
         raise ValueError(f"unknown switch {key!r}")
-    if key == "orders_enabled":
+    if key in BOOL_KEYS:
         if not isinstance(value, bool):
-            raise ValueError("orders_enabled must be true or false")
+            raise ValueError(f"{key} must be true or false")
         return "true" if value else "false"
     if value is None:
         return None
@@ -82,6 +104,25 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "notice_sk": settings.app_notice_sk,
         "notice_cs": settings.app_notice_cs,
         "notice_en": settings.app_notice_en,
+        "notice_uk": settings.app_notice_uk,
+        # #214: DB-only switches (flipped live during a release or an
+        # incident, never through a restarting env change); off by default.
+        "recommended_version_app_store": None,
+        "recommended_version_testflight": None,
+        "maintenance_enabled": False,
+        # #217: Together stays hidden in the App Store build until switched on.
+        "multiplayer_enabled_app_store": False,
+        # #218: events to the private triage repo; on unless switched off.
+        "triage_bridge_enabled": True,
+        # #225: quiz-pack-api copies a finished pack for an identical order;
+        # on unless switched off (its env `PACK_REUSE_ENABLED` is the default).
+        "pack_reuse_enabled": True,
+        # #232: share a quiz by link; off until the founder has tested it.
+        "shared_quiz_enabled": False,
+        "maintenance_sk": None,
+        "maintenance_cs": None,
+        "maintenance_en": None,
+        "maintenance_uk": None,
     }
 
 
@@ -89,8 +130,14 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
     """Env values with every DB override applied on top."""
     out = env_values(settings)
     for key, raw in overrides.items():
-        if key == "orders_enabled":
+        if key in ("orders_enabled", "triage_bridge_enabled", "pack_reuse_enabled"):
             out[key] = raw != "false"
+        elif key in (
+            "maintenance_enabled",
+            "multiplayer_enabled_app_store",
+            "shared_quiz_enabled",
+        ):
+            out[key] = raw == "true"
         elif key in out:
             out[key] = raw
     return out
@@ -122,6 +169,12 @@ async def cached_overrides(sessionmaker) -> dict[str, str | None]:
             value = stale
         _cache = (time.monotonic() + CACHE_SECONDS, value)
         return value
+
+
+async def is_on(settings: Settings, sessionmaker, key: str) -> bool:
+    """One boolean switch as ``/app-config`` serves it (cached, fail open to
+    the env value) — for server features gated by the same switch (#232)."""
+    return bool(effective(settings, await cached_overrides(sessionmaker))[key])
 
 
 async def write(

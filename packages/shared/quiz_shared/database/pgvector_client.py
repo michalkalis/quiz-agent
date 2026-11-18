@@ -259,6 +259,15 @@ class PgvectorQuestionStore:
         self._session_factory = session_factory
         self._embedder = embedder
 
+    def with_embedder(self, embedder: Embedder) -> PgvectorQuestionStore:
+        """The same database (one engine, one pool) with another embedder.
+
+        #235: the voice-quiz lookup bounds its query embedding tightly, while
+        the admin writes sharing this store keep the long default."""
+        return PgvectorQuestionStore(
+            session_factory=self._session_factory, embedder=embedder
+        )
+
     # ── Writes ─────────────────────────────────────────────────────────
 
     async def add(self, question: Question) -> bool:
@@ -424,6 +433,62 @@ class PgvectorQuestionStore:
         async with self._session_factory() as session:
             result = await session.execute(stmt)
             return int(result.scalar_one())
+
+    async def fresh_public_entertainment(
+        self, language: str, limit: int
+    ) -> List[Dict[str, Any]]:
+        """#223 — this week's fresh entertainment questions for the public site.
+
+        Read-only. The row set is what the App Store app may serve (approved,
+        no custom pack, unexpired, embedded, text) narrowed to the #195 fresh
+        boost window, plus what a public page needs on top: an https source and
+        a non-empty explanation. sk/cs show only native rows of that language;
+        en also takes legacy NULL-language rows. Newest first.
+        """
+        t = questions_table
+        if language == "en":
+            lang_clause = or_(t.c.language == "en", t.c.language.is_(None))
+        else:
+            lang_clause = t.c.language == language
+        stmt = (
+            select(
+                t.c.id,
+                t.c.question,
+                t.c.correct_answer,
+                t.c.headline_answer,
+                t.c.explanation,
+                t.c.source_url,
+                t.c.created_at,
+            )
+            .where(
+                t.c.review_status == "approved",
+                t.c.pack_id.is_(None),
+                or_(t.c.expires_at.is_(None), t.c.expires_at > func.now()),
+                t.c.embedding.is_not(None),
+                t.c.type == "text",
+                t.c.category == "entertainment",
+                t.c.boost_until > func.now(),
+                lang_clause,
+                t.c.source_url.like("https://%"),
+                func.length(func.trim(func.coalesce(t.c.explanation, ""))) > 0,
+            )
+            .order_by(t.c.created_at.desc(), t.c.id)
+            .limit(limit)
+        )
+        async with self._session_factory() as session:
+            rows = (await session.execute(stmt)).all()
+        return [
+            {
+                "id": str(r.id),
+                "question": r.question,
+                "correct_answer": r.correct_answer,
+                "headline_answer": r.headline_answer,
+                "explanation": r.explanation,
+                "source_url": r.source_url,
+                "created_at": r.created_at,
+            }
+            for r in rows
+        ]
 
     async def pack_generation_status(self, pack_id: str) -> Optional[str]:
         """`question_packs.generation_status` for a custom pack, or None when

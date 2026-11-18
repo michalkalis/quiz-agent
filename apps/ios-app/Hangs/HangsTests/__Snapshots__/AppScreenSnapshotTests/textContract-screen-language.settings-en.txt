@@ -4,7 +4,7 @@ voice
 Voice commands
 Control the quiz by voice, without tapping
 
-Voice hints
+Command hints
 Show the voice commands you can say
 
 Speech recognition
@@ -29,12 +29,7 @@ Quiz language
 English
 Quiz language
 English
-Questions, answers and voice
-App language
-English
-App language
-English
-Buttons, labels and settings
+Questions, voice and the whole app
 quiz
 0s
 10s
@@ -68,9 +63,9 @@ Auto-advance delay
 Pause on the result before the next question
 After each question
 At the end of the quiz
-Answer reveal
+When to show answers
 After each question
-Answer reveal
+When to show answers
 After each question
 audio feedback
 Read aloud
@@ -139,7 +134,6 @@ settings-language-menu
 settings.language.en
 settings.language.sk
 settings.language.cs
-settings-app-language-row
 settings-thinking-time-menu
 settings.thinkingTime.0
 settings.thinkingTime.10

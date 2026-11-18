@@ -30,11 +30,27 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
             "parse_ms",
             "judge_ms",
             "feedback_tts_ms",
+            # #212.2: graded in a multiplayer room
+            "multiplayer",
+            "room_id",
         }
     ),
     "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
     "transcription_failed": frozenset({"reason", "question_id"}),
+    # #212.5: game together. Under the host (created, finished) or the
+    # guest (joined; via = nearby | qr | link).
+    "room_created": frozenset({"room_id"}),
+    "room_joined": frozenset({"room_id", "via"}),
+    "room_finished": frozenset({"room_id", "reason", "players", "questions_asked"}),
+    # #232.2: the host's finished custom pack became a game together.
+    "room_with_pack": frozenset({"room_id"}),
+    # #232: share a quiz by link. kind = round | daily | pack; opened under the
+    # player who starts it (source app) or anonymously from the website's play
+    # page (source web); finished once per session that recorded a result.
+    "quiz_shared": frozenset({"kind", "language", "question_count"}),
+    "shared_quiz_opened": frozenset({"kind", "source"}),
+    "shared_quiz_finished": frozenset({"kind", "players", "questions_asked"}),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}
     ),
@@ -44,14 +60,63 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
 CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "app_opened": frozenset({"launch"}),
     "onboarding_finished": frozenset({"outcome", "step"}),
-    "quiz_context": frozenset({"audio_route", "voice_commands_enabled", "entry_point"}),
+    "quiz_context": frozenset(
+        {
+            "audio_route",
+            "voice_commands_enabled",
+            "entry_point",
+            "timezone",
+            # #224.8: the quick quiz was on when the quiz started
+            "quick_game",
+        }
+    ),
     "quiz_abandoned": frozenset({"questions_answered", "phase"}),
-    "answer_submitted": frozenset({"input_mode", "question_id", "is_retry"}),
+    "answer_submitted": frozenset(
+        {"input_mode", "question_id", "is_retry", "latency_ms"}
+    ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
+    # #237: the player turned voice commands on (source = onboarding |
+    # listen_bar) and what iOS answered the speech-recognition request
+    # (result = granted | denied).
+    "voice_commands_turned_on": frozenset({"source", "result"}),
     "paywall_viewed": frozenset({"source"}),
-    "purchase_result": frozenset({"product_id", "kind", "outcome"}),
+    # #228.6: question_count = the custom pack size bought (10 | 30).
+    "purchase_result": frozenset({"product_id", "kind", "outcome", "question_count"}),
     "restore_result": frozenset({"outcome"}),
+    # #217.4: the sign-in prompt after a purchase came on screen (kind = plus |
+    # credit | custom_pack), and how it closed (signed_in | dismissed).
+    "sign_in_prompt_shown": frozenset({"kind"}),
+    "sign_in_prompt_result": frozenset({"kind", "outcome"}),
+    # #213.4: the Profile tab came on screen.
+    "profile_opened": frozenset({"has_account"}),
+    # #213.5: a recap story closed (how far the player got) and its share
+    # sheet opened.
+    "recap_viewed": frozenset({"kind", "slides_seen", "slides_total"}),
+    "recap_shared": frozenset({"kind"}),
+    # #216.2: the Together tab came on screen.
+    "together_opened": frozenset(),
+    # #232: the player changed their name in the Profile (the name friends see
+    # in a game together and in a shared quiz).
+    "player_name_changed": frozenset(),
+    # #232: the first-launch "quiz from a friend?" paste button was used
+    # (outcome = opened | not_a_link).
+    "shared_quiz_pasted": frozenset({"outcome"}),
+    # #233: the topic check before a custom pack order answered
+    # (verdict = ok | softened | blocked | error).
+    "pack_topic_checked": frozenset({"verdict"}),
+    # #213.8: the host changed a rule of a game together (lobby or in game).
+    "room_settings_changed": frozenset({"setting", "value", "surface"}),
+    # #224.4: the host stayed on a reveal (paused) or let the game go on.
+    "room_pause_changed": frozenset({"paused", "question"}),
+    "room_guest_read_aloud": frozenset({"on", "via"}),
+    # #224.6: a step on the Home category deck (to = category id or "all"), and
+    # the multi-category picker opening (deck_button | pill).
+    "home_category_stepped": frozenset({"direction", "input", "to"}),
+    "home_category_picker_opened": frozenset({"source"}),
+    # #224.8: the quick-game switch on Home, and every skip with its mode.
+    "quick_game_changed": frozenset({"enabled"}),
+    "question_skipped": frozenset({"quick"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
         {

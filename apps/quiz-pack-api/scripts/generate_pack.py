@@ -441,7 +441,8 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "#203 203.9: generate the way the worker builds a paid custom "
             "pack: customer-order flag (sub-themes + in-pack cosine when "
-            "PACK_SUBTHEMES=1), worker dedup, and the PACK_BATCH_SCHEDULE "
+            "PACK_SUBTHEMES=1), worker dedup, no per-topic cap unless "
+            "--per-topic-cap is set, and the PACK_BATCH_SCHEDULE "
             "round walk. With --dry-run nothing is written. Off by default."
         ),
     )

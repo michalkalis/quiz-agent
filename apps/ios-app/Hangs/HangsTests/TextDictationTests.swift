@@ -178,6 +178,39 @@ struct TextDictationTests {
         #expect(network.capturedDictationUploads.isEmpty)
     }
 
+    // Bug 2026-11-18: with voice commands off (#237, the default since), Home
+    // never set up a recording session, so Dictate did nothing at all.
+    @Test("dictation records even when no quiz or command listener set up the mic session")
+    func recordsWithoutPriorRecordingSession() async {
+        await withMainSerialExecutor {
+            let (dictation, network, audio) = makeDictation()
+            audio.hasRecordingSession = false
+            network.dictationTranscript = "space for kids"
+            var prompt = ""
+
+            await dictation.start(languageCode: "sk") { prompt = TextDictation.appending($0, to: prompt) }
+            #expect(dictation.isDictating, "tapping Dictate must start recording")
+            #expect(audio.ensureRecordingSessionCallCount == 1)
+            audio.emitStreamingChunk(dictationChunk)
+            await dictation.stop()
+
+            #expect(prompt == "space for kids")
+        }
+    }
+
+    @Test("a mic that won't start says so instead of doing nothing")
+    func failedStartIsShown() async {
+        let (dictation, network, audio) = makeDictation()
+        audio.shouldFailRecording = true
+
+        await dictation.start(languageCode: "sk") { _ in Issue.record("nothing was recorded") }
+
+        #expect(dictation.micState == .idle)
+        #expect(dictation.didFailTranscription, "the form must show a hint, not stay silent")
+        #expect(!dictation.micButtonDisabled, "the player can try again or type")
+        #expect(network.capturedDictationUploads.isEmpty)
+    }
+
     @Test("no shared voice services means no mic at all")
     func unavailableWithoutVoice() {
         #expect(!TextDictation(voice: nil, networkService: nil).isAvailable)

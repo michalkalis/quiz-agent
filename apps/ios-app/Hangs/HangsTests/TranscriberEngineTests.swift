@@ -162,12 +162,14 @@ struct SlovakCommandGrammarTests {
     func slovakCommandsRoute() {
         // Raw transcripts as a Slovak recognizer would render them — normalize
         // folds the diacritics before matching.
-        #expect(VoiceCommandMatcher.match(transcript: "Štart", on: .home, language: .slovak) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Štart", on: .question, language: .slovak) == .start)
+        #expect(VoiceCommandMatcher.match(transcript: "Ďalšia", on: .question, language: .slovak) == .skip)
+        // The old words stay as hidden synonyms (muscle memory, #224).
         #expect(VoiceCommandMatcher.match(transcript: "Preskoč", on: .question, language: .slovak) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "vynechaj", on: .question, language: .slovak) == .skip)
         #expect(VoiceCommandMatcher.match(transcript: "Zopakuj", on: .question, language: .slovak) == .repeatQuestion)
-        #expect(VoiceCommandMatcher.match(transcript: "Ďalej", on: .result, language: .slovak) == .next)
-        #expect(VoiceCommandMatcher.match(transcript: "pokračuj", on: .result, language: .slovak) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "Ďalej", on: .noAnswer, language: .slovak) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "pokračuj", on: .noAnswer, language: .slovak) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "Znova", on: .confirmation, language: .slovak) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "potvrď", on: .confirmation, language: .slovak) == .ok)
         #expect(VoiceCommandMatcher.match(transcript: "Stop", on: .confirmation, language: .slovak) == .stop)
@@ -185,7 +187,7 @@ struct SlovakCommandGrammarTests {
         // covered in VoiceCommandLexiconParityTests; every other screen keeps
         // them inert.
         for phrase in ["áno", "dobre", "hej", "jasné", "no", "tak", "no tak", "áno áno", "dobre dobre"] {
-            for screen: VoiceCommandScreen in [.home, .question, .result] {
+            for screen: VoiceCommandScreen in [.question, .noAnswer] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .slovak) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -197,7 +199,7 @@ struct SlovakCommandGrammarTests {
     @Test("precision: ordinary Slovak sentences are rejected by the content-token cap")
     func slovakSentencesAreInert() {
         for phrase in ["to bolo dobré", "poď ďalej ideme", "no tak to preskočíme neskôr"] {
-            for screen: VoiceCommandScreen in [.question, .confirmation, .result] {
+            for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .slovak) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -215,14 +217,26 @@ struct SlovakCommandGrammarTests {
         #expect(VoiceCommandMatcher.match(transcript: "preskoč túto otázku", on: .question, language: .slovak) == nil)
     }
 
+    /// WHY (#224): "ďalšia" (skip) and "ďalej" (next) share a stem. On the
+    /// question screen only skip exists, so "ďalej" must not skip there; on the
+    /// no-answer sheet both are valid and each must resolve, not collide.
+    @Test("'ďalšia' skips and 'ďalej' does not steal it, and vice versa")
+    func slovakNextVersusSkipWords() {
+        #expect(VoiceCommandMatcher.match(transcript: "ďalej", on: .question, language: .slovak) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "ďalšia", on: .noAnswer, language: .slovak) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "ďalej", on: .noAnswer, language: .slovak) == .next)
+        // "dal" ("he gave") is an everyday word, not a half-heard "ďalšia".
+        #expect(VoiceCommandMatcher.match(transcript: "dal", on: .question, language: .slovak) == nil)
+    }
+
     @Test("volatile floor holds for Slovak: near-miss fires only from a final")
     func slovakVolatileFloor() {
         // One edit on "preskoc" ("preskok" — a real Slovak noun, 'a jump').
         // Skip is final-only anyway, so probe the floor on a benign command:
         // "dalej" vs "dale" (one edit, 0.8): passes the 0.72 final floor,
         // fails the 0.85 volatile floor.
-        #expect(VoiceCommandMatcher.match(transcript: "dale", on: .result, isFinal: true, language: .slovak) == .next)
-        #expect(VoiceCommandMatcher.match(transcript: "dale", on: .result, isFinal: false, language: .slovak) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "dale", on: .noAnswer, isFinal: true, language: .slovak) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "dale", on: .noAnswer, isFinal: false, language: .slovak) == nil)
     }
 
     @Test("undo-abort accepts the Slovak no-word 'nie' (fail-safe direction only)")
@@ -236,14 +250,14 @@ struct SlovakCommandGrammarTests {
 
     @Test("driver-facing strings are language-scoped: hints and spoken words")
     func slovakDisplayStrings() {
-        #expect(VoiceCommandLexicon.hint(on: .home, language: .slovak).contains("štart"))
-        #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("preskoč"))
-        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .slovak) == "preskoč")
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("štart"))
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("ďalšia"))
+        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .slovak) == "ďalšia")
         #expect(VoiceCommandLexicon.spokenWord(.next, language: .slovak) == "ďalej")
         // English is untouched (the default path — pinned explicitly here, and
         // implicitly by every pre-#120 test that omits the language argument).
-        #expect(VoiceCommandLexicon.hint(on: .home, language: .english) == #"Say "start""#)
-        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .english) == "skip")
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .english) == #"Say "start" or "next""#)
+        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .english) == "next")
     }
 }
 

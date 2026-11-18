@@ -1,0 +1,44 @@
+# texts
+Vyhráva
+Michal
+Správne 2 z 2
+1.
+M
+Michal (ty)
+2
+2.
+J
+Jana
+1
+Jana: mimo Trubba počas 1 otázky
+Vidíš to len ty.
+Otázky
+1
+Which planet has the most known moons?
+Saturn
+M
+Michal
+Saturn
+J
+Jana
+Saturn
+2
+What is the capital of Australia?
+Canberra
+M
+Michal
+Canberra
+J
+Jana
+Sydney
+Hotovo
+# identifiers
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.away
+room.final.round.1
+room.final.round.1.answers
+room.final.round.2
+room.final.round.2.answers
+room.done

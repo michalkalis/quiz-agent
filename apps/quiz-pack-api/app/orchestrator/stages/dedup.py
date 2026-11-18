@@ -39,6 +39,15 @@ Two independent checks, either of which is enough to drop a question:
   ``PACK_SUBTHEMES`` only)** — the question's embedding against every question
   already in the pack and earlier batchmates, same threshold as the corpus
   check. Embeddings live in ``ctx.pack_embeddings`` (memory only).
+- **In-pack same-fact judge (``in_pack_judge``, customer orders)** — the
+  gray-zone judge's pairwise "same fact?" verdict, asked of each new question
+  against its ``IN_PACK_JUDGE_NEIGHBOURS`` nearest questions already in the
+  pack, with no cosine floor. One customer pack is one topic, so every pair
+  sits close on cosine and a true/false statement of a fact ("...and you
+  could really drive it. True or false?") shares few words and only part of
+  its meaning with the open question it answers; neither word overlap nor a
+  threshold separates them (2026-11-18 LEGO kids pack). "yes" drops the later
+  question; an outage, a parse failure or a spent budget keeps it.
 
 The dropped count is published via `StageResult.info["dropped"]` so SSE
 clients see the filter activity, mirroring `VerificationStage`'s shape.
@@ -55,6 +64,7 @@ ctx.pack_id`) belongs inside the store's query implementation, not here.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import math
@@ -84,6 +94,12 @@ DEFAULT_IN_BATCH_JACCARD_THRESHOLD = 0.60
 # 0.39/0.46/0.52, noisiest non-dup pair 0.21 → 0.35 keeps a wide margin both
 # ways.
 DEFAULT_FACT_JACCARD_THRESHOLD = 0.35
+# In-pack same-fact judge: pairs asked per new question (its nearest earlier
+# pack questions by cosine), and the per-order call budget. Two neighbours,
+# because a true/false rewording need not be the single nearest; 150 calls
+# covers a 30-pack's ~60 candidates (about $0.09 at most on DEDUP_JUDGE).
+IN_PACK_JUDGE_NEIGHBOURS = 2
+IN_PACK_JUDGE_MAX_CALLS = 150
 
 # #192: letters of any alphabet, so Slovak/Czech words keep their diacritic
 # letters ("[a-z0-9]+" cut "čokoláda" into "okol", "d", "a"). ASCII text
@@ -177,8 +193,16 @@ class DedupStage:
         qa_cosine_threshold: float = DEFAULT_QA_COSINE_THRESHOLD,
         grayzone_judge: GrayZoneJudge | None = None,
         in_pack_cosine: bool = False,
+        in_pack_judge: GrayZoneJudge | None = None,
     ) -> None:
         self._store = question_store
+        # Customer orders only (worker, `--customer-order`): see module doc.
+        self._in_pack_judge = in_pack_judge
+        if in_pack_judge is not None and not hasattr(question_store, "embed"):
+            raise ValueError(
+                "DedupStage: in_pack_judge is set but the question store has no "
+                "embed() — the same-fact judge would silently never run"
+            )
         # #203 203.9 change 4 (worker only, PACK_SUBTHEMES): the corpus check
         # never sees the pack's own questions (pack rows carry no embedding),
         # and concurrent sub-theme calls cannot see each other. ON, every
@@ -260,11 +284,16 @@ class DedupStage:
         }
         if self._in_pack_cosine:
             reasons["in_pack_cosine"] = 0
+        if self._in_pack_judge is not None:
+            reasons["in_pack_judge"] = 0
+        embed = self._in_pack_cosine or self._in_pack_judge is not None
         kept_embeddings: list[tuple[list[float], float]] = []  # (vector, norm)
+        # Aligned with `kept`, for the in-pack judge: each kept row's vector
+        # (None after an embedding outage) and its index in `ctx.questions`.
+        kept_vectors: list[tuple[list[float], float] | None] = []
+        kept_index: list[int] = []
         for index, q in enumerate(ctx.questions):
-            embedding = (
-                await self._pack_embedding(ctx, q) if self._in_pack_cosine else None
-            )
+            embedding = await self._pack_embedding(ctx, q) if embed else None
             verdict, pair = await self._cosine_verdict(
                 q, self._cosine_for(q), embedding
             )
@@ -306,7 +335,11 @@ class DedupStage:
             # pack (any round) or an earlier batchmate. A persisted question
             # (#182 locked prefix) is never dropped — it may be mid-play.
             vector = _with_norm(embedding)
-            if vector is not None and index >= ctx.locked_count:
+            if (
+                self._in_pack_cosine
+                and vector is not None
+                and index >= ctx.locked_count
+            ):
                 threshold = self._cosine_for(q)
                 similarity = max(
                     (_cosine(vector, k) for k in kept_embeddings), default=0.0
@@ -393,7 +426,17 @@ class DedupStage:
                 kept_fact_keys.add(fact_key)
             if vector is not None:
                 kept_embeddings.append(vector)
+            kept_vectors.append(vector)
+            kept_index.append(index)
 
+        if self._in_pack_judge is not None:
+            judged_out = await self._judge_in_pack(
+                ctx, kept, kept_vectors, kept_index, decisions
+            )
+            if judged_out:
+                fact_dropped += len(judged_out)
+                reasons["in_pack_judge"] += len(judged_out)
+                kept = [q for q in kept if q.id not in judged_out]
         ctx.questions = kept
         self.last_decisions = decisions
         judge = self._grayzone_judge
@@ -409,9 +452,97 @@ class DedupStage:
                 # #170 D7 — budget accounting; zeros when no judge is injected.
                 "grayzone_judge_calls": judge.calls if judge else 0,
                 "grayzone_judge_skipped": judge.skipped if judge else 0,
+                **(
+                    {
+                        "in_pack_judge_calls": self._in_pack_judge.calls,
+                        "in_pack_judge_skipped": self._in_pack_judge.skipped,
+                    }
+                    if self._in_pack_judge is not None
+                    else {}
+                ),
             },
             cost_cents=0,
         )
+
+    async def _judge_in_pack(
+        self,
+        ctx: OrderContext,
+        kept: list[Question],
+        vectors: list[tuple[list[float], float] | None],
+        indices: list[int],
+        decisions: list[dict[str, Any]],
+    ) -> set[str]:
+        """Ids of kept questions that test the same fact as an earlier one.
+
+        Each new question (not persisted, not cleared by an earlier run) is
+        put to the judge against its nearest earlier kept questions; the calls
+        run concurrently, so a round waits for one judge round-trip. The
+        earlier question wins: it may already be persisted, and with the
+        judge panel off (`JUDGE_GATE`, the worker default) there is no score
+        yet at this point, so generation order is the pack's only ranking. A
+        "yes" against a question that is itself dropped here still drops:
+        both repeat the same fact.
+        """
+        judge = self._in_pack_judge
+        assert judge is not None
+        jobs: list[tuple[Question, Question, float]] = []
+        judged: list[Question] = []
+        for pos, q in enumerate(kept):
+            vector = vectors[pos]
+            if indices[pos] < ctx.locked_count or q.id in ctx.same_fact_cleared:
+                continue
+            judged.append(q)
+            if vector is None:  # embedding outage: kept, like every outage
+                continue
+            nearest = sorted(
+                (
+                    (_cosine(vector, v), earlier)
+                    for earlier, v in zip(kept[:pos], vectors[:pos])
+                    if v is not None
+                ),
+                key=lambda pair: pair[0],
+                reverse=True,
+            )[:IN_PACK_JUDGE_NEIGHBOURS]
+            jobs += [(q, earlier, score) for score, earlier in nearest]
+
+        async def verdict(q: Question, earlier: Question, score: float) -> bool | None:
+            try:
+                return await judge.same_fact(q, earlier, score)
+            except Exception:  # an outage never drops
+                logger.warning(
+                    "DedupStage in-pack judge failed for id=%s vs id=%s — kept",
+                    q.id,
+                    earlier.id,
+                    exc_info=True,
+                )
+                return None
+
+        verdicts = await asyncio.gather(*(verdict(*job) for job in jobs))
+        dropped: dict[str, Question] = {}
+        for (q, earlier, score), same in zip(jobs, verdicts):
+            if same and q.id not in dropped:
+                dropped[q.id] = earlier
+                logger.warning(
+                    "DedupStage in-pack judge dropped id=%s (same fact as id=%s, "
+                    "cosine %.3f)",
+                    q.id,
+                    earlier.id,
+                    score,
+                )
+        # Every question looked at here and kept is final, whatever the reason
+        # (a "no", no verdict, no vector): a re-run never re-judges it.
+        ctx.same_fact_cleared.update(q.id for q in judged if q.id not in dropped)
+        for row in decisions:
+            if row["id"] in dropped and row["kept"]:
+                match = dropped[row["id"]]
+                row.update(
+                    kept=False,
+                    reason="in_pack_judge",
+                    match_id=match.id,
+                    match_question=match.question,
+                    score=None,
+                )
+        return set(dropped)
 
     async def _pack_embedding(
         self, ctx: OrderContext, question: Question

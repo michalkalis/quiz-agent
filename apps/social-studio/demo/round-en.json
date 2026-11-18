@@ -1,0 +1,42 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round2.mp4",
+	"recordingSize": {"w": 1206, "h": 2622},
+	"category": "science-nature",
+	"segments": [
+		{"from": 0.35, "to": 3.75},
+		{"from": 4.4, "to": 7.4},
+		{"from": 8.0, "to": 9.5},
+		{"from": 10.0, "to": 15.7},
+		{"from": 15.8, "to": 18.0},
+		{"from": 18.5, "to": 21.5},
+		{"from": 22.0, "to": 25.25}
+	],
+	"taps": [
+		{"t": 17.36, "x": 603, "y": 1872}
+	],
+	"zooms": [
+		{"from": 4.4, "to": 7.4, "x": 603, "y": 2200, "scale": 1.3},
+		{"from": 8.0, "to": 9.5, "x": 603, "y": 1800, "scale": 1.15},
+		{"from": 10.7, "to": 15.7, "x": 603, "y": 1250, "scale": 1.5},
+		{"from": 15.8, "to": 18.0, "x": 603, "y": 1650, "scale": 1.15},
+		{"from": 22.2, "to": 25.25, "x": 603, "y": 760, "scale": 1.2}
+	],
+	"audio": [
+		{"t": 0.518, "src": "demo/rec/q-enamel.mp3"},
+		{"t": 5.406, "src": "demo/rec/player-tooth-enamel.mp3"},
+		{"t": 10.14, "src": "demo/rec/correct-enamel.mp3"},
+		{"t": 18.645, "src": "demo/rec/correct-true.mp3"},
+		{"t": 22.501, "src": "demo/rec/round-done.mp3"}
+	],
+	"captions": [
+		{"from": 0.35, "to": 3.75, "text": "Reads.", "kind": "title"},
+		{"from": 4.4, "to": 9.5, "text": "Listens.", "kind": "title"},
+		{"from": 5.456, "to": 7.4, "text": "Tooth enamel", "kind": "player"},
+		{"from": 10.0, "to": 15.7, "text": "Explains.", "kind": "title"},
+		{"from": 15.8, "to": 21.5, "text": "Or tap.", "kind": "title"},
+		{"from": 22.0, "to": 25.25, "text": "Scores.", "kind": "title"}
+	],
+	"endCard": true,
+	"endWord": "Free."
+}

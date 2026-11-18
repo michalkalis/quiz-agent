@@ -1,11 +1,30 @@
 # texts
-trubbo
 Kvíz
-History
-Science & Nature
-Geography & World
+Vyber více
+All Categories
 10 otázek
 All Categories
+Science & Nature
+10 otázek
+Science & Nature
+History
+10 otázek
+History
+Geography & World
+10 otázek
+Geography & World
+Movies & Music
+10 otázek
+Movies & Music
+Sports
+10 otázek
+Sports
+Food & Everyday Life
+10 otázek
+Food & Everyday Life
+Entertainment
+10 otázek
+Entertainment
 English
 Slovenčina
 Čeština
@@ -16,26 +35,19 @@ Medium
 Hard
 Random
 Obtížnost
-Medium
+Random
 Kategorie
 All Categories
-tvůj plán
-118
-otázek k dispozici
-Více
-118
-otázek k dispozici
-Více
-118
-otázek k dispozici
-Více
-18 měsíčně zdarma
-100 kreditů z balíčku
-resets in 13 days · credits never expire
-resets in 13 days · credits never expire
+Rychlý kvíz
+Po „Další“ hned další otázka, bez vysvětlení
+
+trubbo
 Start
 # identifiers
-home.moreSettings
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk
@@ -46,19 +58,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planLegend
-home.freePlanReset
-home.freePlanReset
+home.quickGame
 home.startQuiz

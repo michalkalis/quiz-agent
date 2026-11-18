@@ -1,11 +1,30 @@
 # texts
-trubbo
 Kvíz
-History
-Science & Nature
-Geography & World
+Vyber více
+All Categories
 10 otázek
 All Categories
+Science & Nature
+10 otázek
+Science & Nature
+History
+10 otázek
+History
+Geography & World
+10 otázek
+Geography & World
+Movies & Music
+10 otázek
+Movies & Music
+Sports
+10 otázek
+Sports
+Food & Everyday Life
+10 otázek
+Food & Everyday Life
+Entertainment
+10 otázek
+Entertainment
 English
 Slovenčina
 Čeština
@@ -16,24 +35,19 @@ Medium
 Hard
 Random
 Obtížnost
-Medium
+Random
 Kategorie
 All Categories
-tvůj plán
-Trubbo Plus
-obnova selhala
-Oprav platbu
-Trubbo Plus
-obnova selhala
-Oprav platbu
-Trubbo Plus
-obnova selhala
-Oprav platbu
-Aktualizuj způsob platby
-Aktualizuj způsob platby
+Rychlý kvíz
+Po „Další“ hned další otázka, bez vysvětlení
+
+trubbo
 Start
 # identifiers
-home.moreSettings
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk
@@ -44,18 +58,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.planManageButton
-home.freePlanCard
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planName
-home.planStatusPill
-home.planManageCTA
-home.planMeta
-home.planMeta
+home.quickGame
 home.startQuiz

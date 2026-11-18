@@ -9,6 +9,103 @@
 //
 
 @preconcurrency import Foundation
+import SwiftUI
+
+// MARK: - Difficulty
+
+/// The level a buyer picks for a custom pack (#224, 224.3). `mixed` is the
+/// fourth, equally explicit choice: no fixed level, the generator's own
+/// easy/medium/hard spread. It sends no `difficulty`, which is exactly what the
+/// backend treats as a mixed batch (NULL), so no backend change is needed.
+nonisolated enum PackDifficulty: String, CaseIterable, Identifiable, Sendable {
+    case easy
+    case medium
+    case hard
+    case mixed
+
+    var id: String { rawValue }
+
+    /// Value for `CreateOrderRequest.difficulty` (`easy|medium|hard`); nil for
+    /// `mixed`, which is sent as an absent field.
+    var wireValue: String? {
+        self == .mixed ? nil : rawValue
+    }
+
+    /// Label key for `Text`, so it follows the view's locale like every other
+    /// string on the order screens.
+    var label: LocalizedStringKey {
+        switch self {
+        case .easy: "Easy"
+        case .medium: "Medium"
+        case .hard: "Hard"
+        case .mixed: "Mixed"
+        }
+    }
+}
+
+// MARK: - Audience (#236)
+
+/// Who a custom pack is written for (#236, 236.1). A content setting on the
+/// order ("questions for 7 to 9"), never a fact about the player: it is not
+/// stored on the account and never sent to analytics as a player property.
+/// Adults is the default, so unlike difficulty it never blocks the order.
+nonisolated enum PackAudience: String, CaseIterable, Identifiable, Sendable {
+    case adults
+    case kids4to6 = "kids_4_6"
+    case kids7to9 = "kids_7_9"
+    case kids10to12 = "kids_10_12"
+
+    var id: String { rawValue }
+
+    var isChild: Bool { self != .adults }
+
+    /// Value for the `audience` request field; nil for adults, which the
+    /// server reads exactly like a build before the choice, so an adult order
+    /// stays byte-for-byte today's request.
+    var wireValue: String? {
+        isChild ? rawValue : nil
+    }
+
+    var label: LocalizedStringKey {
+        switch self {
+        case .adults: "Adults"
+        case .kids4to6: "Kids 4–6"
+        case .kids7to9: "Kids 7–9"
+        case .kids10to12: "Kids 10–12"
+        }
+    }
+}
+
+// MARK: - Topic check (#233)
+
+/// Verdict of `POST /v1/orders/topic-check`, asked before the player pays.
+/// `softened`: the questions will be toned down; `blocked`: pick another topic.
+nonisolated enum TopicVerdict: String, Sendable {
+    case ok, softened, blocked
+}
+
+nonisolated struct TopicCheckRequest: Encodable, Sendable {
+    let prompt: String
+    let language: String
+    /// #236: a child band checks the topic at the stricter child tier.
+    var audience: PackAudience = .adults
+
+    enum CodingKeys: String, CodingKey {
+        case prompt, language, audience
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(prompt, forKey: .prompt)
+        try container.encode(language, forKey: .language)
+        try container.encodeIfPresent(audience.wireValue, forKey: .audience)
+    }
+}
+
+/// `verdict` is a plain string on the wire; an unknown value reads as `.ok`.
+nonisolated struct TopicCheckResponse: Decodable, Sendable {
+    let verdict: String
+}
 
 // MARK: - Create order request
 
@@ -22,6 +119,11 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
     let targetCount: Int
     let category: String?
     let theme: String?
+    /// Optional on the wire (older servers/clients omit it); the order form
+    /// always sends one.
+    var difficulty: PackDifficulty? = nil
+    /// #236: sent only for a child band (`PackAudience.wireValue`).
+    var audience: PackAudience = .adults
 
     enum CodingKeys: String, CodingKey {
         case transactionId = "transaction_id"
@@ -31,6 +133,8 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         case targetCount = "target_count"
         case category
         case theme
+        case difficulty
+        case audience
     }
 
     func encode(to encoder: Encoder) throws {
@@ -42,6 +146,8 @@ nonisolated struct CreateOrderRequest: Encodable, Sendable {
         try container.encode(targetCount, forKey: .targetCount)
         try container.encodeIfPresent(category, forKey: .category)
         try container.encodeIfPresent(theme, forKey: .theme)
+        try container.encodeIfPresent(difficulty?.wireValue, forKey: .difficulty)
+        try container.encodeIfPresent(audience.wireValue, forKey: .audience)
     }
 }
 
@@ -63,22 +169,36 @@ nonisolated struct PackOrderIntent: Equatable, Sendable {
     let language: String
     let category: String?
     let theme: String?
+    /// Buyer-chosen level (#224); nil only for callers that predate the picker.
+    let difficulty: PackDifficulty?
+    /// #236: who the pack is written for.
+    let audience: PackAudience
     /// StoreKit proof authorising this order; nil = Debug admin path.
     let paymentProof: PackPaymentProof?
+    /// #228.6: the pack size ordered. With a proof it is the size that proof
+    /// paid for, whatever was asked: the server sizes the pack from the
+    /// receipt's product, so the intent can never disagree with it.
+    let size: PackSize
 
     init(
         prompt: String,
         language: String,
         category: String?,
         theme: String?,
+        difficulty: PackDifficulty? = nil,
+        audience: PackAudience = .adults,
+        size: PackSize = .standard,
         paymentProof: PackPaymentProof? = nil,
         idempotencyKey: String = "admin-\(UUID().uuidString)"
     ) {
         self.idempotencyKey = paymentProof?.transactionId ?? idempotencyKey
+        self.size = paymentProof.flatMap { PackSize(productId: $0.productId) } ?? size
         self.prompt = prompt
         self.language = language
         self.category = category
         self.theme = theme
+        self.difficulty = difficulty
+        self.audience = audience
         self.paymentProof = paymentProof
     }
 }
@@ -135,6 +255,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     /// added don't send it; a `var` with a default so the mocks' memberwise
     /// inits stay as they are.
     var prompt: String? = nil
+    /// #236: `kids_4_6` / `kids_7_9` / `kids_10_12`, `adults`, or null (an
+    /// order from a build before the choice: an adult pack). Kept raw like
+    /// `status`, so an unknown future band never breaks a row.
+    var audience: String? = nil
 
     var id: String { orderId }
 
@@ -168,6 +292,7 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         case actualCount = "actual_count"
         case packGenerationStatus = "pack_generation_status"
         case prompt
+        case audience
     }
 
     /// #198.4: the pack's colour key — its pack id once one exists, the order
@@ -193,6 +318,10 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
     var isStillGenerating: Bool {
         isPlayable && (packGenerationStatus == "generating" || !isTerminal)
     }
+
+    /// #232: every question is made, so the pack can be sent to a friend or
+    /// played together (the server refuses a pack still being made).
+    var isFinishedPack: Bool { isPlayable && !isStillGenerating }
 
     /// #200: the questions the pack holds once generation is over: what was
     /// persisted (`actual_count`), the ordered count when the server did not
@@ -230,13 +359,13 @@ nonisolated struct OrderSnapshot: Decodable, Identifiable, Sendable, Equatable {
         // Queued and generating read the same to the player (#188 G14): one
         // word on Home and in the pack list.
         case "pending", "in_progress":
-            String(localized: "Preparing", comment: "Custom-pack order status: queued or being generated, not playable yet")
+            String(localized: "Preparing", bundle: .interface, locale: .interface, comment: "Custom-pack order status: queued or being generated, not playable yet")
         case "delivered":
-            String(localized: "Delivered", comment: "Custom-pack order status: pack generated and playable")
+            String(localized: "Delivered", bundle: .interface, locale: .interface, comment: "Custom-pack order status: pack generated and playable")
         case "failed":
-            String(localized: "Failed", comment: "Custom-pack order status: generation failed")
+            String(localized: "Failed", bundle: .interface, locale: .interface, comment: "Custom-pack order status: generation failed")
         case "refunded":
-            String(localized: "Refunded", comment: "Custom-pack order status: the order was refunded")
+            String(localized: "Refunded", bundle: .interface, locale: .interface, comment: "Custom-pack order status: the order was refunded")
         default:
             status
         }

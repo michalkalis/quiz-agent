@@ -36,6 +36,9 @@ QUIZ_LANGUAGES: tuple[str, ...] = (
     "pl",
     "hu",
     "ro",
+    # #231: known to the data model; not servable until SERVABLE_QUIZ_LANGUAGES
+    # / PACK_ORDER_LANGUAGES list it (defaults below stay en,sk,cs).
+    "uk",
 )
 
 # DD14: quiz sessions default to the three languages with an approved corpus.

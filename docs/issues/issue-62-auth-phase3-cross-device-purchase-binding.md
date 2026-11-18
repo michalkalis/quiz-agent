@@ -1,6 +1,6 @@
 # Issue #62 — Auth Phase 3: Cross-Device + Full Purchase Binding
 
-**Triage:** enhancement · ready-for-human (auth + IAP receipt verification — maker≠checker)
+**Triage:** enhancement · wontfix — zlúčené do #217 — verejné vydanie v App Store (2026-11-01, 217.2)
 **Reversibility:** c · StoreKit V2 receipt binding + optional passkeys/magic-link recovery — **NOT blind-overnight eligible** (payment + auth; human-reviewed).
 **Status:** Spun off 2026-06-17 from #58 research §6 Phase 3. Phase 3 of 3 — post-MVP hardening. **Depends on #61 + #50.**
 

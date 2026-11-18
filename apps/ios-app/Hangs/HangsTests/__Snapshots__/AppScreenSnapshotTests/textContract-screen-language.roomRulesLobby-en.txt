@@ -1,0 +1,26 @@
+# texts
+Game rules
+Done
+Answer time
+15 s
+30 s
+45 s
+60 s
+Custom
+Answer time
+Read questions aloud
+
+After each question
+At the end of the quiz
+When to show answers
+At the end of the quiz
+When to show answers
+At the end of the quiz
+Applies to all players. Your solo settings stay as they are.
+# identifiers
+room.rules.done
+room.rules.sheet.time
+room.rules.sheet.readsAloud
+room.rules.sheet.reveal
+room.rules.sheet.reveal.question
+room.rules.sheet.reveal.round

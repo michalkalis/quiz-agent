@@ -4,7 +4,8 @@ The local disk cache (``TTSCache``) becomes a per-machine L1 on the ephemeral
 rootfs; this is the durable L2. Every synthesized question and static feedback
 clip is written here, so a fresh machine (deploy, second machine, host move)
 serves cached questions with zero ElevenLabs calls — those credits are scarce
-(Starter plan, no top-up) and ~185 credits per first read of a question.
+(Starter plan, no top-up) and ~90 credits per first read of a question
+(Eleven v4 Turbo; ~185 on Multilingual v2 before 2026-10-26).
 
 Env (Fly secrets on ``quiz-agent-api``): ``TTS_R2_ENDPOINT`` (the company
 Cloudflare account's S3 endpoint), ``TTS_R2_ACCESS_KEY_ID`` /

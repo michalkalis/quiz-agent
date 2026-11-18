@@ -54,6 +54,10 @@ def stem_matches(a: str, b: str) -> bool:
     """
     if not a or not b:
         return False
+    if a == b:
+        # Short words ("bol", "už") never reach the 4-letter stem bar, yet an
+        # identical word is plainly the same word.
+        return True
     shared = 0
     for char_a, char_b in zip(a, b):
         if char_a != char_b:

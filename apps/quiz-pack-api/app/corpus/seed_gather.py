@@ -35,7 +35,7 @@ from typing import Any
 
 from quiz_shared.llm import factory as llm_factory
 
-from app import llm_usage
+from app import llm_usage, uk_policy
 from app.corpus.fresh_brief import AUDIENCE, freshness_window
 from app.sourcing.openai_web_search_source import (
     _anthropic_text_and_urls,
@@ -59,7 +59,7 @@ HAIKU_LONG_PROMPT_TOKENS = 100_000
 DIGEST_MAX_LINES = 120
 DIGEST_MAX_CHARS = 60_000  # ~15k tokens at ~4 characters per token
 
-WIKI_LANGUAGE = {"en": "English", "sk": "Slovak", "cs": "Czech"}
+WIKI_LANGUAGE = {"en": "English", "sk": "Slovak", "cs": "Czech", "uk": "Ukrainian"}
 _SCENE = {
     "en": (
         "global entertainment (film, TV and streaming, music, video games, viral "
@@ -76,6 +76,11 @@ _SCENE = {
         "hits, films and moments people in Czechia talked about), plus world "
         "mega-hits well known in Czechia. Skip the Slovak scene unless it is "
         "genuinely shared."
+    ),
+    "uk": (
+        "mostly the Ukrainian scene (Ukrainian celebrities, TV shows, music, "
+        "domestic hits, films and moments people in Ukraine talked about), plus "
+        "world mega-hits well known in Ukraine. Skip the Russian scene entirely."
     ),
 }
 
@@ -124,7 +129,7 @@ ModelCall = Callable[[list[dict]], Awaitable[Any]]
 
 
 def build_gather_prompt(lang: str, today: date, ideas: list[str]) -> str:
-    return _PROMPT.format(
+    prompt = _PROMPT.format(
         today=today.isoformat(),
         audience=AUDIENCE[lang],
         scene=_SCENE[lang],
@@ -132,6 +137,7 @@ def build_gather_prompt(lang: str, today: date, ideas: list[str]) -> str:
         wiki=WIKI_LANGUAGE[lang],
         ideas="\n".join(ideas) or "- (none available today)",
     )
+    return prompt + "\n\n" + uk_policy.UK_TOPIC_POLICY if lang == "uk" else prompt
 
 
 async def _default_call(messages: list[dict]) -> Any:

@@ -21,9 +21,20 @@ import SwiftUI
 enum AppRoute: Hashable {
     case settings
     case myPacks
+    /// #216.3: every stat card, behind the Profile's "All stats" row.
+    case allStats
     #if DEBUG
         case debugLog
     #endif
+}
+
+/// #213.4: the tabs of the root tab bar (#216.2 added Together). The quiz
+/// runs on Play; the tab bar hides while it does.
+enum AppTab: Hashable {
+    case play
+    /// #216.2: games together; only while the server switch is on.
+    case together
+    case profile
 }
 
 /// Owns the navigation surface for ContentView's root stack: the pushed
@@ -38,6 +49,12 @@ final class NavigationModel: ObservableObject {
     /// mounted.
     @Published var path: [AppRoute] = []
 
+    /// #213.4: the Profile tab's own pushed stack (Settings, My packs).
+    @Published var profilePath: [AppRoute] = []
+
+    /// #213.4: the tab on screen.
+    @Published var selectedTab: AppTab = .play
+
     /// The #138 create-pack modal. It lives here rather than in SettingsView's
     /// `@State` for the same reason the old OrderProgress flag did: quiz-start
     /// teardown has to be able to collapse it in the SAME step that empties the
@@ -45,11 +62,19 @@ final class NavigationModel: ObservableObject {
     /// covering the fresh QuestionView.
     @Published var orderFlowPresented = false
 
-    /// Resets the whole nav surface — pushed path + the order sheet — in one
-    /// step, so no in-between state is ever observable.
+    /// Resets the whole nav surface — both pushed paths + the order sheet —
+    /// in one step, so no in-between state is ever observable. A quiz started
+    /// from the Profile (a pack in My packs, a spoken "start") plays on Play.
     func clearAll() {
         path = []
+        profilePath = []
         orderFlowPresented = false
+        selectedTab = .play
+    }
+
+    /// Home is on screen: the Play tab with nothing pushed.
+    var isHomeOnTop: Bool {
+        selectedTab == .play && path.isEmpty
     }
 
     /// Reactive teardown seam: called from ContentView's
@@ -58,8 +83,19 @@ final class NavigationModel: ObservableObject {
     /// predecessor (`.idle` today; `.error` too once #110's retry transition
     /// lands). QuizState's Equatable compares cases only (associated values
     /// ignored), so plain `==` already matches `.error(...)` correctly here.
+    ///
+    /// The start itself stays on Home with the tab bar up, so the player can
+    /// walk to another tab while a slow server answers. Every state after it
+    /// shows a quiz screen that hides the tab bar, so the quiz (or its error
+    /// screen) must not arrive behind a tab the player cannot leave.
     func handleQuizStateChange(_ new: QuizState) {
-        guard new == .startingQuiz else { return }
-        clearAll()
+        switch new {
+        case .startingQuiz:
+            clearAll()
+        case .idle:
+            break
+        default:
+            if selectedTab != .play { selectedTab = .play }
+        }
     }
 }

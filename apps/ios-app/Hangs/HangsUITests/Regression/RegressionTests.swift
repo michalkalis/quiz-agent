@@ -85,7 +85,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
     //
     // Scenario: from askingQuestion state, record and say the correct answer, confirm via the confirmation sheet, and assert the result
-    // screen shows the CORRECT verdict ("NAILED IT.") plus the continue button.
+    // screen shows the CORRECT verdict ("Nailed it") plus the continue button.
     //
     // Regression guarded: STT→processAnswer→showingResult pipeline for correct
     // answers, verdict included. Asserting only `result.continue` (as this
@@ -129,18 +129,18 @@ final nonisolated class RegressionTests: XCTestCase {
         // verdict band says the answer was right.
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertVerdictContains("NAILED IT.")
+        result.assertVerdictContains("Nailed it")
     }
 
     // MARK: - RS-incorrect
 
     //
     // Scenario: same flow as RS-correct but launched with "--ui-test-incorrect"
-    // so the mock returns an incorrect evaluation. Assert the hero text contains
-    // "MISSED" (the incorrect-branch headline).
+    // so the mock returns an incorrect evaluation. Assert the verdict label says
+    // "Missed" (the incorrect-branch verdict).
     //
     // Regression guarded: incorrect-answer branch of showingResult renders the
-    // "MISSED\nIT." hero.
+    // "Missed" verdict label.
 
     @MainActor
     func testRSIncorrect() async throws {
@@ -171,7 +171,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertHeroContains("MISSED")
+        result.assertVerdictContains("Missed")
     }
 
     // MARK: - RS-long
@@ -384,7 +384,7 @@ final nonisolated class RegressionTests: XCTestCase {
     //
     // Scenario: reach the full #95 custom-pack depth — Home→Settings→order
     // sheet (form→summary→pay→delivered) — then start the quiz from there,
-    // once via the "Start quiz" CTA and once via voice "start". Assert
+    // via the "Start quiz" CTA (Home has no voice "start" any more, #224). Assert
     // QuestionView is the clean visible root (no Settings screen and no order
     // modal covering it) and the back-stack is empty.
     //
@@ -398,12 +398,10 @@ final nonisolated class RegressionTests: XCTestCase {
     @MainActor
     func testRSPackNavStart() async throws {
         try await runPackNavStartPass(startVia: .ctaButton)
-        try await runPackNavStartPass(startVia: .voiceCommand)
     }
 
     private enum PackNavStartTrigger {
         case ctaButton
-        case voiceCommand
     }
 
     /// Drives Home→Settings→order sheet (delivered) from a fresh
@@ -422,8 +420,7 @@ final nonisolated class RegressionTests: XCTestCase {
         settings.openCreatePack()
         settings.submitOrder()
 
-        // Both triggers need the order delivered first — voice "start" must
-        // fire from the same depth as the CTA, not merely once submitted.
+        // The CTA only exists once the order is delivered.
         XCTAssertTrue(
             settings.startQuizButton.waitForExistence(timeout: 10),
             "RS-pack-nav-start: orderProgress.startQuiz not found — order did not reach .delivered"
@@ -432,8 +429,6 @@ final nonisolated class RegressionTests: XCTestCase {
         switch trigger {
         case .ctaButton:
             settings.startQuizFromProgress()
-        case .voiceCommand:
-            try await client.sendCommand("start")
         }
 
         let question = QuestionPage(app: app)

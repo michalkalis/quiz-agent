@@ -96,7 +96,7 @@ actor QuestionRatingService: QuestionRatingServiceProtocol {
         if let decoded = try? JSONDecoder().decode(RatingDetailError.self, from: data) {
             return decoded.detail
         }
-        return String(localized: "The rating service returned an error. Please try again.", comment: "Fallback message when the ratings API returns a non-2xx response we can't parse")
+        return String(localized: "The rating service returned an error. Please try again.", bundle: .interface, locale: .interface, comment: "Fallback message when the ratings API returns a non-2xx response we can't parse")
     }
 }
 
@@ -114,9 +114,9 @@ enum QuestionRatingError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return String(localized: "Invalid response from the rating service", comment: "Rating error: malformed server response")
+            return String(localized: "Invalid response from the rating service", bundle: .interface, locale: .interface, comment: "Rating error: malformed server response")
         case .unauthorized:
-            return String(localized: "Your session expired. Please sign in again to continue.", comment: "Rating error: the request was still unauthorized after a token refresh")
+            return String(localized: "Your session expired. Please sign in again to continue.", bundle: .interface, locale: .interface, comment: "Rating error: the request was still unauthorized after a token refresh")
         case let .server(message):
             // Server-provided message — already human-readable, do not wrap.
             return message

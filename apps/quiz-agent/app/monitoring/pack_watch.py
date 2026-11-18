@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 PING_STALE_S = 180.0
 WORKER_DOWN_ALERT_S = 1800.0
-PACK_API_HEALTH = "https://quiz-pack-api.fly.dev/health"
+_PACK_API_HEALTH_DEFAULT = "https://quiz-pack-api.fly.dev/health"
 PACK_API_EVERY_S = 1800.0
 PACK_API_FAILS_TO_ALERT = 2
 WORKER_HEARTBEAT = "pack worker"
@@ -107,7 +107,10 @@ async def check_worker(book: AlertBook, now: float) -> None:
 
 async def check_pack_api(client: httpx.AsyncClient, book: AlertBook) -> None:
     try:
-        r = await client.get(PACK_API_HEALTH, timeout=60.0)  # cold start allowed
+        r = await client.get(
+            os.getenv("PACK_API_HEALTH_URL") or _PACK_API_HEALTH_DEFAULT,
+            timeout=60.0,
+        )  # cold start allowed
         r.raise_for_status()
         pack_watch.pack_api_fails = 0
         await book.update("quiz-pack-api", None)

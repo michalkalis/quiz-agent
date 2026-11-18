@@ -20,9 +20,9 @@ enum AnswerRevealMode: String, Codable, CaseIterable, Identifiable, Sendable {
     var displayName: String {
         switch self {
         case .perQuestion:
-            return String(localized: "After each question", comment: "Answer reveal setting: today's per-question result screen")
+            return String(localized: "After each question", bundle: .interface, locale: .interface, comment: "Answer reveal setting: today's per-question result screen")
         case .endOfSet:
-            return String(localized: "At the end of the set", comment: "Answer reveal setting: deferred reveal, one recap after the last question")
+            return String(localized: "At the end of the set", bundle: .interface, locale: .interface, comment: "Answer reveal setting: deferred reveal, one recap after the last question")
         }
     }
 }
@@ -113,6 +113,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// they stay visible until the driver turns them off.
     var voiceHintsEnabled: Bool?
 
+    /// #224.8 "Quick quiz" (canvas D2, founder 2026-11-03). OFF = today's flow.
+    /// ON: skipping a question goes straight to the next one, with a brief
+    /// note of the right answer instead of a result screen.
+    var quickGame: Bool
+
     /// The one rule for whether the command words are shown: an explicit Settings
     /// choice wins, otherwise they are shown.
     static func voiceHintsVisible(override: Bool?) -> Bool {
@@ -139,7 +144,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         includeLocalQuestions: Bool = true,
         voiceCommandsEnabled: Bool = true,
         answerRevealMode reveal: AnswerRevealMode = .perQuestion,
-        voiceHintsEnabled: Bool? = nil
+        voiceHintsEnabled: Bool? = nil,
+        quickGame: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -159,9 +165,21 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.voiceCommandsEnabled = voiceCommandsEnabled
         answerRevealMode = reveal
         self.voiceHintsEnabled = voiceHintsEnabled
+        self.quickGame = quickGame
     }
 
     // MARK: - Default Configuration
+
+    /// Nothing saved yet: the quiz — and with it the whole app (founder
+    /// 2026-10-30, `InterfaceLanguage`) — starts in the phone's language when
+    /// it is offered. Otherwise a Slovak phone would open an English app.
+    static func firstLaunch(phoneLanguage: String?) -> QuizSettings {
+        var settings = QuizSettings.default
+        if let phoneLanguage {
+            settings.language = Language.selectable(phoneLanguage).id
+        }
+        return settings
+    }
 
     /// Default settings matching app defaults
     static let `default` = QuizSettings(
@@ -169,7 +187,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         audioMode: "media",
         numberOfQuestions: 10,
         categories: [],
-        difficulty: "medium",
+        difficulty: Config.defaultDifficulty,
         autoAdvanceDelay: 8,
         thinkingTime: 10,
         preferredInputDeviceId: nil,
@@ -229,6 +247,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerRevealMode = (try? container.decodeIfPresent(AnswerRevealMode.self, forKey: .answerRevealMode)).flatMap { $0 } ?? .perQuestion
         // #174: absent = automatic (first quizzes only) — never a persisted "on".
         voiceHintsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceHintsEnabled)
+        // #224.8: absent = off, today's flow.
+        quickGame = try container.decodeIfPresent(Bool.self, forKey: .quickGame) ?? false
     }
 
     // MARK: - Validation Helpers
@@ -263,9 +283,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         case 0:
             return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
         case 1:
-            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", comment: "Fallback category display name when the category id is unrecognized")
+            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
         default:
-            return String(localized: "\(categories.count) selected", comment: "Home category picker value when several categories are selected; placeholder is the count")
+            return String(localized: "\(categories.count) selected", bundle: .interface, locale: .interface, comment: "Home category picker value when several categories are selected; placeholder is the count")
         }
     }
 

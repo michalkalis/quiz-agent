@@ -3,11 +3,8 @@
 //  Hangs
 //
 //  #205.5: how the other players did on this question, on the result card of
-//  a daily challenge. Founder decision 2 (2026-10-15): always one place,
-//  directly under the answer sticker, on a right and a wrong answer alike.
-//  One compact row on the sticker's white plate, so the zero-scroll result
-//  layout (#127) keeps its room: the server's sentence, then a thin meter of
-//  how many of the others knew it ("Dnes si prvý." has nothing to measure).
+//  a daily challenge. #224 (canvas B1b): one quiet line in the card's bottom
+//  row, left of the source link, sentence and meter in the muted text colour.
 //
 
 import SwiftUI
@@ -17,32 +14,20 @@ struct CrowdStripRow: View {
 
     private enum Metrics {
         /// Design slot: the meter is a short gauge beside the sentence.
-        static let meterWidth: CGFloat = 56
+        static let meterWidth: CGFloat = 40
         static let meterHeight: CGFloat = 4
-        /// The plate is white in both modes, so the meter's track is the
-        /// plate's ink at the `track` token's strength, not `track` itself.
-        static let trackOpacity = 0.14
     }
 
     var body: some View {
         HStack(spacing: Theme.Hangs.Spacing.xs) {
             Text(verbatim: strip.text)
                 .font(.hangsCaption.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(2)
             if let fraction = strip.knewFraction {
                 meter(fraction)
             }
         }
-        .foregroundStyle(Theme.Hangs.Category.chipText)
-        .padding(.horizontal, Theme.Hangs.Spacing.sm)
-        .padding(.vertical, Theme.Hangs.Spacing.xxs)
-        .background(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.chip, style: .continuous)
-                .fill(Theme.Hangs.Category.chipFill)
-        )
-        .fixedSize(horizontal: false, vertical: true)
+        .foregroundStyle(Theme.Hangs.Colors.muted)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: strip.text))
         .accessibilityIdentifier("result.crowd")
@@ -50,11 +35,11 @@ struct CrowdStripRow: View {
 
     private func meter(_ fraction: Double) -> some View {
         Capsule()
-            .fill(Theme.Hangs.Category.chipText.opacity(Metrics.trackOpacity))
+            .fill(Theme.Hangs.Colors.track)
             .frame(width: Metrics.meterWidth, height: Metrics.meterHeight)
             .overlay(alignment: .leading) {
                 Capsule()
-                    .fill(Theme.Hangs.Category.chipText)
+                    .fill(Theme.Hangs.Colors.muted)
                     .frame(width: Metrics.meterWidth * fraction)
             }
             .accessibilityIdentifier("result.crowd.meter")
@@ -68,6 +53,6 @@ struct CrowdStripRow: View {
             CrowdStripRow(strip: CrowdStrip(kind: .first, text: "Dnes si prvý.", others: 0, knew: 0))
         }
         .padding(16)
-        .background(Theme.Hangs.Category.correct.fill)
+        .background(Theme.Hangs.Colors.bgCard)
     }
 #endif

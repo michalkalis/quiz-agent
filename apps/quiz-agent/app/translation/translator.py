@@ -30,6 +30,7 @@ LANGUAGE_NAMES = {
     "pl": "Polish",
     "hu": "Hungarian",
     "ro": "Romanian",
+    "uk": "Ukrainian",
 }
 
 

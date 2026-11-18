@@ -1,18 +1,12 @@
 # texts
-HOTOVO
-konečné skóre
+Geography & World
 7.5
 z 10
-Správne
-7
-Nesprávne
-3
-Preskočené
-0
+Správne 7 · Vedľa 3 · Preskočené 0
 Míňajú sa ti otázky zadarmo
 Tento mesiac ti zostáva 4 otázok zadarmo.
 Získaj Trubbo Plus
-VÝSLEDOK KVÍZU · Geography & World
+Otázky
 Question 1 of the round?
 Answer 1
 Question 2 of the round?
@@ -39,9 +33,9 @@ Hraj znova
 Úvod
 # identifiers
 completion.close
-completion.cards
 completion.score
 completion.breakdown
+completion.cards
 completion.upsell
 recap.row.1
 recap.row.2

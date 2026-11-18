@@ -15,7 +15,7 @@ import argparse
 import sys
 
 import asc_store_upload as up
-from asc_audit import BUNDLE_ID, get
+from asc_audit import BUNDLE_ID, exact_bundle, get
 
 
 def add_tester(app_id: str, email: str, first: str, last: str, group_name: str) -> None:
@@ -58,7 +58,7 @@ def main() -> int:
     args = ap.parse_args()
     up.APPLY = args.apply
     print("APPLY" if args.apply else "DRY RUN (pass --apply to write)")
-    app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
+    app_id = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)["data"][0]["id"]
     add_tester(app_id, args.email.strip().lower(), args.first_name, args.last_name, args.group)
     return 0
 

@@ -1,0 +1,346 @@
+//
+//  MockRoomService.swift
+//  Hangs
+//
+//  #212: a scripted room for unit tests, UI tests and previews: two questions
+//  (A–D, then typed), one more player who always answers, the server's
+//  reveal and ranking. The host side starts through `beginGame()` (wired to
+//  the mock network's start); a guest's host is driven by `hostStarts()` and
+//  `hostMovesOn()`.
+//
+
+#if DEBUG
+    import Foundation
+
+    @MainActor
+    final class MockRoomService: RoomServiceProtocol {
+        struct SettingsCall: Equatable {
+            var revealMode: RoomState.RevealMode?
+            var thinkingSeconds: Int?
+            var readsAloud: Bool?
+        }
+
+        struct Script {
+            var question: Question
+            var correctKey: String
+            var correctAnswer: String
+            var otherAnswer: String
+        }
+
+        var nearby: [NearbyRoom] = []
+        var createError: Error?
+        var joinError: Error?
+        /// When set, every poll fails with it (connection loss, a removed player's 404).
+        var stateError: Error?
+        var revealMode: RoomState.RevealMode = .question
+        var thinkingSeconds = 30
+        var readsAloud = true
+        /// #224: more guests already in the lobby (a full room fits one screen).
+        var extraGuests: [String] = []
+        /// #232 (5A): nobody joins the new room (the host can still pick its content).
+        var hostAlone = false
+        /// When set, `updateSettings` fails with it (the host's change is undone).
+        var settingsError: Error?
+        /// Every `updateSettings` call, for asserting what the host sent.
+        private(set) var settingsCalls: [SettingsCall] = []
+        private(set) var awayReports: [String] = []
+        private(set) var answers: [String] = []
+        private(set) var removed: [String] = []
+        private(set) var openCalls = 0
+        private(set) var pauseCalls: [Bool] = []
+        private var holding = false
+        private(set) var joinNames: [String] = []
+        /// #235.2: hold any call in flight or put it on a bad network.
+        let conditions = MockCallConditions<MockRoomCall>()
+
+        private var role: RoomViewModel.Role?
+        private var players: [RoomState.Player] = []
+        private var status: RoomState.Status = .lobby
+        private var version = 1
+        private var index = -1
+        private var phase: RoomState.Round.Phase = .reading
+        private var roundAnswers: [String: String] = [:]
+        private var closed: [RoomState.Round] = []
+        private var finishedReason: String?
+
+        let script: [Script] = [
+            Script(
+                question: MockRoomService.question(
+                    id: "mq1",
+                    text: "Which planet has the most known moons?",
+                    options: ["a": "Jupiter", "b": "Saturn", "c": "Uranus", "d": "Neptune"]
+                ),
+                correctKey: "b",
+                correctAnswer: "Saturn",
+                otherAnswer: "b"
+            ),
+            Script(
+                question: MockRoomService.question(id: "mq2", text: "What is the capital of Australia?", options: nil),
+                correctKey: "canberra",
+                correctAnswer: "Canberra",
+                otherAnswer: "Sydney"
+            ),
+        ]
+
+        static let roomId = "r_mock"
+        static let token = "mock-token"
+        static let otherId = "p_other"
+        static let youId = "p_you"
+
+        // MARK: - RoomServiceProtocol
+
+        func createRoom(
+            sessionId: String,
+            hostName: String,
+            revealMode: RoomState.RevealMode,
+            thinkingSeconds: Int,
+            readsAloud: Bool
+        ) async throws -> RoomCreated {
+            try await conditions.simulateNetwork(.createRoom)
+            if let createError { throw createError }
+            role = .host
+            self.revealMode = revealMode
+            self.thinkingSeconds = thinkingSeconds
+            self.readsAloud = readsAloud
+            players = [
+                .init(participantId: Self.youId, displayName: hostName, color: "#ff6b2c", isHost: true, score: 0),
+            ]
+            if !hostAlone {
+                players += [.init(participantId: Self.otherId, displayName: "Jana", color: "#7a5cff", isHost: false, score: 0)]
+                    + extraGuests.enumerated().map { offset, name in
+                        .init(participantId: "p_guest\(offset)", displayName: name, color: "#2fb67c", isHost: false, score: 0)
+                    }
+            }
+            bump()
+            return RoomCreated(roomId: Self.roomId, joinToken: Self.token, sessionId: sessionId)
+        }
+
+        func nearbyRooms() async throws -> [NearbyRoom] {
+            try await conditions.simulateNetwork(.nearbyRooms)
+            return nearby
+        }
+
+        func joinRoom(_: RoomInvite, displayName: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.joinRoom)
+            if let joinError { throw joinError }
+            joinNames.append(displayName)
+            if role == nil {
+                role = .guest
+                players = [
+                    .init(participantId: Self.otherId, displayName: "Michal", color: "#ff6b2c", isHost: true, score: 0),
+                    .init(participantId: Self.youId, displayName: displayName, color: "#a3e635", isHost: false, score: 0),
+                ]
+            } else if let i = players.firstIndex(where: { $0.participantId == Self.youId }) {
+                let you = players[i]
+                players[i] = .init(participantId: you.participantId, displayName: displayName, color: you.color, isHost: false, score: you.score)
+            }
+            bump()
+            return state(full: true)
+        }
+
+        func removePlayer(roomId _: String, participantId: String) async throws {
+            try await conditions.simulateNetwork(.removePlayer)
+            removed.append(participantId)
+            players.removeAll { $0.participantId == participantId && !$0.isHost }
+            bump()
+        }
+
+        func roomState(roomId _: String, since: Int?) async throws -> RoomState {
+            try await conditions.simulateNetwork(.roomState)
+            if let stateError { throw stateError }
+            return state(full: since != version)
+        }
+
+        func openQuestion(roomId _: String, questionId _: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.openQuestion)
+            openCalls += 1
+            if phase == .reading {
+                phase = .answering
+                bump()
+            }
+            return state(full: true)
+        }
+
+        func updateSettings(
+            roomId _: String,
+            revealMode: RoomState.RevealMode?,
+            thinkingSeconds: Int?,
+            readsAloud: Bool?
+        ) async throws -> RoomState {
+            try await conditions.simulateNetwork(.updateSettings)
+            settingsCalls.append(SettingsCall(revealMode: revealMode, thinkingSeconds: thinkingSeconds, readsAloud: readsAloud))
+            if let settingsError { throw settingsError }
+            if revealMode != nil, status != .lobby {
+                throw NetworkError.serverError(statusCode: 409, message: "The game has started")
+            }
+            if let revealMode { self.revealMode = revealMode }
+            if let thinkingSeconds { self.thinkingSeconds = thinkingSeconds }
+            if let readsAloud { self.readsAloud = readsAloud }
+            bump()
+            return state(full: true)
+        }
+
+        func answer(roomId _: String, questionId _: String, answer: String) async throws -> RoomState {
+            try await conditions.simulateNetwork(.answer)
+            guard phase == .reading || phase == .answering, roundAnswers[Self.youId] == nil else {
+                throw NetworkError.serverError(statusCode: 409, message: "Already answered")
+            }
+            answers.append(answer)
+            roundAnswers[Self.youId] = answer
+            // The other player always has answered by then: the question closes.
+            roundAnswers[Self.otherId] = script[index].otherAnswer
+            close()
+            return state(full: true)
+        }
+
+        func reportAway(roomId _: String, questionId: String) async throws {
+            try await conditions.simulateNetwork(.reportAway)
+            awayReports.append(questionId)
+        }
+
+        func setPaused(roomId _: String, paused: Bool) async throws -> RoomState {
+            try await conditions.simulateNetwork(.setPaused)
+            guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Nothing to pause") }
+            pauseCalls.append(paused)
+            holding = paused
+            bump()
+            return state(full: true)
+        }
+
+        func nextQuestion(roomId _: String) async throws -> RoomState {
+            // Like URLSession: a cancelled task's request never arrives.
+            try Task.checkCancellation()
+            try await conditions.simulateNetwork(.nextQuestion)
+            guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Players are still answering") }
+            advance()
+            return state(full: true)
+        }
+
+        // MARK: - Driving the script
+
+        /// The game starts (the host's `/sessions/{id}/start`).
+        func beginGame() {
+            guard status == .lobby else { return }
+            status = .playing
+            advance()
+        }
+
+        /// A guest's host starts the game and reads the first question.
+        func hostStarts() {
+            beginGame()
+            phase = .answering
+            bump()
+        }
+
+        /// A guest's host moves on after a reveal.
+        func hostMovesOn() {
+            guard phase == .revealed else { return }
+            advance()
+            if status == .playing { phase = .answering }
+            bump()
+        }
+
+        /// A guest's host stays on the reveal (or resumes).
+        func hostPauses(_ paused: Bool) {
+            guard phase == .revealed else { return }
+            holding = paused
+            bump()
+        }
+
+        private func advance() {
+            if index + 1 >= script.count {
+                status = .finished
+                finishedReason = "max_questions"
+            } else {
+                index += 1
+                phase = .reading
+                roundAnswers = [:]
+            }
+            holding = false
+            bump()
+        }
+
+        private func close() {
+            let item = script[index]
+            for (pid, answer) in roundAnswers where answer.lowercased() == item.correctKey {
+                if let i = players.firstIndex(where: { $0.participantId == pid }) {
+                    let p = players[i]
+                    players[i] = .init(participantId: p.participantId, displayName: p.displayName, color: p.color, isHost: p.isHost, score: p.score + 1)
+                }
+            }
+            phase = .revealed
+            closed.append(currentRound(revealed: true))
+            bump()
+        }
+
+        private func bump() { version += 1 }
+
+        // MARK: - State
+
+        private func currentRound(revealed: Bool) -> RoomState.Round {
+            let item = script[index]
+            return RoomState.Round(
+                questionId: item.question.id,
+                number: index + 1,
+                questionText: item.question.question,
+                phase: phase,
+                remainingMs: phase == .answering ? 20000 : (phase == .revealed ? 0 : nil),
+                answered: Array(roundAnswers.keys).sorted(),
+                yourAnswer: roundAnswers[Self.youId],
+                correctAnswer: revealed ? item.correctAnswer : nil,
+                explanation: revealed ? "Mock explanation." : nil,
+                results: revealed ? roundAnswers.sorted { $0.key < $1.key }.map { pid, answer in
+                    let right = answer.lowercased() == item.correctKey
+                    return RoomState.Result(participantId: pid, answer: answer, result: right ? "correct" : "incorrect", points: right ? 1 : 0)
+                } : nil,
+                paused: holding && phase == .revealed ? true : nil
+            )
+        }
+
+        private func state(full: Bool) -> RoomState {
+            guard full else {
+                return RoomState(
+                    roomId: Self.roomId, version: version, changed: false, status: nil, you: nil, isHost: nil,
+                    questionNumber: nil, maxQuestions: nil, players: nil, revealMode: nil, thinkingSeconds: nil,
+                    readsAloud: nil, question: nil, round: nil,
+                    finishedReason: nil, ranking: nil, rounds: nil, away: nil
+                )
+            }
+            let finished = status == .finished
+            let ranked = players.sorted { $0.score > $1.score }
+            return RoomState(
+                roomId: Self.roomId,
+                version: version,
+                changed: true,
+                status: status,
+                you: Self.youId,
+                isHost: role == .host,
+                questionNumber: index + 1,
+                maxQuestions: script.count,
+                players: players,
+                revealMode: revealMode,
+                thinkingSeconds: thinkingSeconds,
+                readsAloud: readsAloud,
+                question: index >= 0 ? script[index].question : nil,
+                round: index >= 0 ? currentRound(revealed: phase == .revealed) : nil,
+                finishedReason: finishedReason,
+                ranking: finished ? ranked.enumerated().map { i, p in
+                    RoomState.Rank(participantId: p.participantId, rank: i + 1, score: p.score, correctCount: Int(p.score))
+                } : nil,
+                rounds: finished ? closed : nil,
+                away: finished && role == .host ? [RoomState.Away(participantId: Self.otherId, questions: 1)] : nil
+            )
+        }
+
+        private static func question(id: String, text: String, options: [String: String]?) -> Question {
+            var json: [String: Any] = [
+                "id": id, "question": text, "difficulty": "medium", "topic": "mock", "category": "science-nature",
+                "type": options == nil ? "text" : "text_multichoice",
+            ]
+            if let options { json["possible_answers"] = options }
+            let data = (try? JSONSerialization.data(withJSONObject: json)) ?? Data()
+            // swiftlint:disable:next force_try
+            return try! JSONDecoder().decode(Question.self, from: data)
+        }
+    }
+#endif

@@ -76,8 +76,8 @@ extension QuizViewModel {
             URLError(.timedOut),
             context: .submission,
             fallbackMessage: isSkip
-                ? String(localized: "Failed to skip question", comment: "Error prefix when skipping a question fails; error detail is appended")
-                : String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended")
+                ? String(localized: "Failed to skip question", bundle: .interface, locale: .interface, comment: "Error prefix when skipping a question fails; error detail is appended")
+                : String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting an answer fails; error detail is appended")
         )
     }
 }

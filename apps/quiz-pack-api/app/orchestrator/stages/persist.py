@@ -66,7 +66,10 @@ class PersistStage:
 
     async def run(self, ctx: OrderContext, sink: ProgressSink) -> StageResult:
         async with self._session_factory() as session:
-            order = await session.get(GenerationOrder, ctx.order_id)
+            # Locked like persist_batch: the pack copies the order's owner.
+            order = await session.get(
+                GenerationOrder, ctx.order_id, with_for_update=True
+            )
             if order is None:
                 raise LookupError(f"GenerationOrder {ctx.order_id} not found")
 
@@ -154,7 +157,21 @@ class PersistStage:
         the moment the pack becomes playable. `actual_count` tracks the live
         number of persisted questions."""
         async with self._session_factory() as session:
-            order = await session.get(GenerationOrder, ctx.order_id)
+            # #217.2: the new pack copies `order.user_id`, and sign-in in
+            # quiz-agent (`rekey_purchases`) moves both from the anon id to the
+            # account: orders first, then packs. Locking the order row here
+            # closes the gap between reading the owner and committing the pack.
+            # Either sign-in already updated the order (this read waits for its
+            # commit and sees the account id) or sign-in's order update waits
+            # for this commit, and its packs statement then sees the new pack.
+            # Chosen over re-keying packs through `order_id` at sign-in: that
+            # only heals at the next sign-in, a pack committed just after one
+            # would stay on the anon id until then. The lock is held for one
+            # short batch write and only ever blocks a sign-in of this order's
+            # owner.
+            order = await session.get(
+                GenerationOrder, ctx.order_id, with_for_update=True
+            )
             if order is None:
                 raise LookupError(f"GenerationOrder {ctx.order_id} not found")
             pack = None

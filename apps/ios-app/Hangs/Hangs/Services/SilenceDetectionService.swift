@@ -69,12 +69,28 @@ enum SpeechActivityEvent: Sendable, Equatable {
 enum VoiceCommandAvailability: Sendable, Equatable {
     /// Not yet determined (prepareAssets hasn't finished).
     case unknown
+    /// #237: speech recognition was never asked for. Commands stay off until
+    /// the player turns them on (onboarding or the listen bar); nothing asks
+    /// on its own.
+    case permissionNeeded
+    /// #237: speech recognition is denied or restricted; only iOS Settings
+    /// can turn commands on now.
+    case permissionDenied
     /// en-US model assets are being downloaded/installed.
     case installingAssets
     /// Recognizer assets installed — commands can work.
     case ready
     /// Commands cannot work; the app is button-only. Reason is human-readable.
     case unavailable(reason: String)
+
+    /// #237: commands wait on the speech-recognition permission (never asked,
+    /// or refused) — the states only the player can change.
+    var awaitsPermission: Bool {
+        switch self {
+        case .permissionNeeded, .permissionDenied: true
+        case .unknown, .installingAssets, .ready, .unavailable: false
+        }
+    }
 }
 
 /// One transcriber result on the command path, carrying its own finality.
@@ -169,8 +185,16 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
 
     /// #175: make the command recognizer match the quiz language. No-op when
     /// it already does; deferred (retried at the next window) while a
-    /// listening window is open. Called before every window start.
+    /// listening window is open. Called before every window start. Never
+    /// raises the speech-recognition prompt (#237).
     func setCommandEngine(_ selection: CommandEngineSelection) async
+
+    /// #237: the player asked for voice commands. Raises the system
+    /// speech-recognition prompt only while it was never answered, and returns
+    /// whether recognition is allowed. Allowed starts preparing the on-device
+    /// model without waiting for it (`commandAvailability` reports
+    /// `.installingAssets` → `.ready`); refused lands in `.permissionDenied`.
+    func enableCommands() async -> Bool
 
     /// Signal whether TTS is currently playing (enables barge-in detection).
     func setTTSPlaybackActive(_ active: Bool)
@@ -382,16 +406,27 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
     /// a stub so the decision logic can run without the system prompt (#105).
     /// Internal, not `private` — consumed by the +Assets sibling-file extension.
+    /// #237: called ONLY from `enableCommands()`, i.e. after the player asked.
     let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
+
+    /// #237: the current speech-recognition status, read without prompting.
+    /// Launch, a language switch and every listening window read this one.
+    let authorizationStatusProvider: () -> SFSpeechRecognizerAuthorizationStatus
+
+    /// #237: the model preparation `enableCommands()` started, so a second tap
+    /// while it runs does not start a second download.
+    var assetPreparationTask: Task<Void, Never>?
 
     init(
         clock: AnyClock<Duration> = .continuous,
         authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil,
+        authorizationStatusProvider: (() -> SFSpeechRecognizerAuthorizationStatus)? = nil,
         engine: CommandTranscriberAdapter? = nil,
         selection: CommandEngineSelection = .speechEnglish
     ) {
         self.clock = clock
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
+        self.authorizationStatusProvider = authorizationStatusProvider ?? { SFSpeechRecognizer.authorizationStatus() }
         let resolvedEngine = engine ?? selection.makeAdapter()
         transcriberEngine = resolvedEngine
         // Stamp the process-wide engine/locale telemetry tags (#120): every
@@ -415,9 +450,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // MARK: - Authorization + assets
 
     //
-    // requestAuthorizationAndPrepareAssets() / prepareAssets() /
-    // markCommandsUnavailable() — the #105 permission flow and the #77/#120
-    // engine-asset preparation — live in SilenceDetectionService+Assets.swift.
+    // prepareCommandsIfAuthorized() / enableCommands() / prepareAssets() /
+    // markCommandsUnavailable() — the #105/#237 permission flow and the
+    // #77/#120 engine-asset preparation — live in SilenceDetectionService+Assets.swift.
 
     // MARK: - Lifecycle
 

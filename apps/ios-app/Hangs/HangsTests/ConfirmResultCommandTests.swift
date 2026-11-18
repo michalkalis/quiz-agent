@@ -184,33 +184,22 @@ struct ConfirmResultCommandTests {
 
     // MARK: - Result
 
-    @Test("'next' on the result screen advances")
-    func nextAdvances() async {
+    /// WHY (#224, founder TF 2026-11-02): the result is read with a button and
+    /// the auto-advance countdown; a listener there only confused. A spoken
+    /// "next" / "ok" must find no window and leave the result where it is.
+    @Test("the result screen has no command window, so a stray command is inert")
+    func resultHasNoCommandWindow() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeVM()
             vm.quizState = makeResultState()
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .result)
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
-
-            await waitForAudioSettle({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "next did not advance")
-            if case .showingResult = vm.quizState {
-                Issue.record("still on the result screen after 'next'")
-            }
-        }
-    }
-
-    @Test("'ok' also advances on the result screen")
-    func okAlsoAdvances() async {
-        await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
-            vm.quizState = makeResultState()
-
             vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
 
-            await waitForAudioSettle({ vm.voiceCommandCoordinator.currentCommandScreen != .result }, "ok did not advance on result")
-            if case .showingResult = vm.quizState {
-                Issue.record("still on the result screen after 'ok'")
+            guard case .showingResult = vm.quizState else {
+                Issue.record("a command advanced the result screen")
+                return
             }
         }
     }
@@ -432,9 +421,8 @@ struct ConfirmationPauseTests {
     }
 
     /// WHY (#131 Track D regression): the sheet pause and the result screen's
-    /// STAY pill now share one flag. STAY must keep meaning only "don't
-    /// auto-advance" — the driver still says "ďalej" to move on, so the command
-    /// window has to stay open there.
+    /// STAY pill share one flag. STAY must keep meaning only "don't
+    /// auto-advance"; it never touches the microphone (the result has none, #224).
     @Test("the result-screen STAY pill still only holds auto-advance")
     func resultStayKeepsListening() async {
         await withMainSerialExecutor {
@@ -444,10 +432,7 @@ struct ConfirmationPauseTests {
             vm.pauseQuiz()
 
             #expect(vm.isPaused, "STAY sets the shared pause flag")
-            #expect(
-                vm.voiceCommandCoordinator.currentCommandScreen == .result,
-                "STAY must not take the microphone — 'ďalej' has to keep working"
-            )
+            #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "the result never listens")
             await vm.quizTimersController.startAutoAdvanceCountdown(duration: 8, audioDuration: 0)
             #expect(vm.autoAdvanceCountdown == 0, "auto-advance stays held while paused")
         }

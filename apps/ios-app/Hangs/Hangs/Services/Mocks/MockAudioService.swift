@@ -143,6 +143,23 @@ import os
             setupQuietListeningSessionCallCount += 1
         }
 
+        var setupPlaybackOnlySessionCallCount = 0
+
+        func setupPlaybackOnlySession() throws {
+            setupPlaybackOnlySessionCallCount += 1
+        }
+
+        /// False mirrors launch with voice commands off (#237): the session is
+        /// still the system default, which has no mic input, so the real
+        /// engine reads a 0 Hz format and refuses to start.
+        var hasRecordingSession = true
+        var ensureRecordingSessionCallCount = 0
+
+        func ensureRecordingSession() throws {
+            ensureRecordingSessionCallCount += 1
+            hasRecordingSession = true
+        }
+
         /// Counts deactivations so the scene-phase teardown tests can assert the
         /// session is released only when idle (never under in-flight TTS).
         var deactivateSessionCallCount = 0
@@ -221,6 +238,14 @@ import os
             }
             isPlaying = true
             onPlaybackStarted?()
+            if holdsPlaybackUntilStopped {
+                // A clip that never ends by itself: only `stopPlayback()` ends it
+                // (CancellationError, as from the real service). No real-time wait.
+                let continued = await withCheckedContinuation { stoppableClip = $0 }
+                isPlaying = false
+                guard continued else { throw CancellationError() }
+                return 3.0
+            }
             try await Task.sleep(nanoseconds: playbackDurationNs)
             if isPlaybackPaused {
                 let continued = await withCheckedContinuation { heldClip = $0 }
@@ -233,6 +258,11 @@ import os
         /// #200: a clip a pause is holding. `playOpusAudio` stays suspended in
         /// it until `resumePlayback()` continues it, or `stopPlayback()` ends
         /// it — its caller then gets `CancellationError`, as from the real service.
+        /// A test that needs a clip still playing when the user acts: it stays
+        /// in flight until `stopPlayback()`, with no timer to race.
+        var holdsPlaybackUntilStopped = false
+        private var stoppableClip: CheckedContinuation<Bool, Never>?
+
         private(set) var isPlaybackPaused = false
         private var heldClip: CheckedContinuation<Bool, Never>?
 
@@ -264,6 +294,8 @@ import os
         func stopPlayback() async {
             stopPlaybackCallCount += 1
             isPlaying = false
+            stoppableClip?.resume(returning: false)
+            stoppableClip = nil
             if isPlaybackPaused { releaseHeldClip(continuing: false) }
         }
 
@@ -274,7 +306,7 @@ import os
         private(set) var streamingChunkHandler: PCMChunkHandler?
 
         func startStreamingRecording(onChunk: @escaping PCMChunkHandler) async throws {
-            if shouldFailRecording || !sessionActive {
+            if shouldFailRecording || !sessionActive || !hasRecordingSession {
                 throw AudioError.recordingFailed
             }
             // Single-engine invariant (#109): refuse a second concurrent start,

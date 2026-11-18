@@ -5,7 +5,8 @@
 //  Server-side switches for shipped builds (#193 task 193.9 — beta hardening):
 //  a forced update below a minimum version, pausing custom-pack orders, and a
 //  short notice on Home, all changed with a backend env update instead of an
-//  app release.
+//  app release. #214 adds an optional update nudge on Home and a full-screen
+//  maintenance message.
 //
 //  Fails open by design: until a fetch succeeds the app runs on
 //  `RemoteAppConfig.permissive`, and a failed fetch keeps whatever was last
@@ -22,16 +23,20 @@ final class AppConfigStore: ObservableObject {
 
     @Published private(set) var config: RemoteAppConfig = .permissive
     @Published private var dismissedNotice: String?
+    @Published private var dismissedRecommendedVersion: String?
 
     private static let dismissedNoticeKey = "dismissedAppNotice"
+    private static let dismissedRecommendedVersionKey = "dismissedRecommendedVersion"
 
     private let fetch: Fetch
     private let defaults: UserDefaults
     private let appVersion: String
-    private let languageCode: String
+    private let interfaceLanguage: () -> String
+    private var languageCode: String { interfaceLanguage() }
 
     /// The channel decides which minimum applies and where "update" leads.
     let isTestFlight: Bool
+    private let isAppStoreBuild: Bool
 
     var updateRequired: Bool {
         let minimum = isTestFlight ? config.minVersionTestflight : config.minVersionAppStore
@@ -39,10 +44,36 @@ final class AppConfigStore: ObservableObject {
         return AppVersion.isOlder(appVersion, than: minimum)
     }
 
+    /// #214: a newer version is recommended and the player has not dismissed
+    /// the card for that version. Never alongside the forced update.
+    var updateRecommended: Bool {
+        guard !updateRequired, let recommended = recommendedVersion else { return false }
+        return recommended != dismissedRecommendedVersion && AppVersion.isOlder(appVersion, than: recommended)
+    }
+
+    /// #214: the full-screen maintenance message is up. The forced update wins,
+    /// it is the only way out for a build the server no longer supports.
+    var maintenance: Bool { config.maintenanceEnabled && !updateRequired }
+
+    /// The server's maintenance text in the UI language; nil = default copy.
+    var maintenanceMessage: String? { config.maintenanceMessage?.text(for: languageCode) }
+
     var ordersEnabled: Bool { config.ordersEnabled }
+
+    /// #212: the Together button on Home. #217: in the App Store build it also
+    /// needs its own switch, so the feature can stay hidden from the public
+    /// until the founder and close friends have tested it.
+    var multiplayerEnabled: Bool { config.multiplayerEnabled && !multiplayerHiddenByChannel }
+
+    /// #217: this is the App Store build and Together is not switched on for
+    /// it. Join links are dropped too, so a link cannot open the hidden feature.
+    var multiplayerHiddenByChannel: Bool { isAppStoreBuild && !config.multiplayerEnabledAppStore }
 
     /// #204.9: the voice-settings experiment, read when a quiz round starts.
     var voiceExperiment: VoiceExperimentConfig? { config.voiceExperiment }
+
+    /// #232: share a quiz by link; every surface of it hides while off.
+    var sharedQuizEnabled: Bool { config.sharedQuizEnabled }
 
     /// The notice to show on Home, nil once the player dismissed this text.
     /// A new text from the server shows again.
@@ -56,19 +87,25 @@ final class AppConfigStore: ObservableObject {
         defaults: UserDefaults = .standard,
         appVersion: String = AppVersion.current,
         isTestFlight: Bool = BuildChannel.isTestFlight(),
-        languageCode: String = Bundle.main.preferredLocalizations.first ?? "en"
+        isAppStoreBuild: Bool = BuildChannel.isAppStoreBuild,
+        languageCode: @autoclosure @escaping () -> String = InterfaceLanguage.code
     ) {
         self.fetch = fetch
         self.defaults = defaults
         self.appVersion = appVersion
         self.isTestFlight = isTestFlight
-        self.languageCode = languageCode
+        self.isAppStoreBuild = isAppStoreBuild
+        interfaceLanguage = languageCode
         #if DEBUG
             // UI tests run on a long-lived simulator: a notice dismissed in one
             // run must not hide it from the next.
-            if UITestSupport.isUITesting { defaults.removeObject(forKey: Self.dismissedNoticeKey) }
+            if UITestSupport.isUITesting {
+                defaults.removeObject(forKey: Self.dismissedNoticeKey)
+                defaults.removeObject(forKey: Self.dismissedRecommendedVersionKey)
+            }
         #endif
         dismissedNotice = defaults.string(forKey: Self.dismissedNoticeKey)
+        dismissedRecommendedVersion = defaults.string(forKey: Self.dismissedRecommendedVersionKey)
     }
 
     /// Best-effort fetch at launch and on every return to the foreground.
@@ -80,10 +117,32 @@ final class AppConfigStore: ObservableObject {
         }
     }
 
+    /// #214: while the maintenance screen is up, check the server again every
+    /// `interval` so the app continues on its own (the player may be driving
+    /// and cannot tap). Returns once maintenance is off or the caller cancels.
+    func recheckUntilMaintenanceEnds(every interval: Duration = .seconds(30)) async {
+        while maintenance, !Task.isCancelled {
+            try? await Task.sleep(for: interval)
+            guard !Task.isCancelled else { return }
+            await refresh()
+        }
+    }
+
     func dismissNotice() {
         guard let text = config.notice?.text(for: languageCode) else { return }
         dismissedNotice = text
         defaults.set(text, forKey: Self.dismissedNoticeKey)
+    }
+
+    /// Hides the update card until the server recommends a newer version.
+    func dismissUpdate() {
+        guard let recommended = recommendedVersion else { return }
+        dismissedRecommendedVersion = recommended
+        defaults.set(recommended, forKey: Self.dismissedRecommendedVersionKey)
+    }
+
+    private var recommendedVersion: String? {
+        isTestFlight ? config.recommendedVersionTestflight : config.recommendedVersionAppStore
     }
 
     /// Short timeout: this runs at launch and must never hold anything up.
@@ -107,14 +166,19 @@ final class AppConfigStore: ObservableObject {
     #if DEBUG
         /// Launch arguments that show each state on the simulator without a
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
-        /// `--app-config-notice`; any `--ui-test-daily-*` flag turns the #205
-        /// daily challenge on.
+        /// `--app-config-notice`, `--app-config-update-recommended`,
+        /// `--app-config-maintenance` (#214), `--app-config-multiplayer` (#212); any `--ui-test-daily-*` flag
+        /// turns the #205 daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
             let ordersOff = arguments.contains("--app-config-orders-off")
             let notice = arguments.contains("--app-config-notice")
+            let recommended = arguments.contains("--app-config-update-recommended")
+            let maintenance = arguments.contains("--app-config-maintenance")
             let daily = DailyChallengeFixtures.isActive(arguments)
-            guard update || ordersOff || notice || daily else { return nil }
+            let multiplayer = arguments.contains("--app-config-multiplayer")
+            let sharedQuiz = arguments.contains("--app-config-shared-quiz")
+            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -124,7 +188,12 @@ final class AppConfigStore: ObservableObject {
                     cs: "Dnes od 22:00 probíhá údržba. Kvíz může být krátce nedostupný.",
                     en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable."
                 ) : nil,
-                dailyChallengeEnabled: daily
+                dailyChallengeEnabled: daily,
+                recommendedVersionAppStore: recommended ? "999" : nil,
+                recommendedVersionTestflight: recommended ? "999" : nil,
+                maintenanceEnabled: maintenance,
+                multiplayerEnabled: multiplayer,
+                sharedQuizEnabled: sharedQuiz
             )
         }
     #endif

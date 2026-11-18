@@ -14,6 +14,7 @@ on:
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
       - 'scripts/lint-carplay-isolation.py'
+      - 'scripts/lint-interface-language.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
@@ -27,6 +28,7 @@ on:
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
       - 'scripts/lint-carplay-isolation.py'
+      - 'scripts/lint-interface-language.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
@@ -47,8 +49,9 @@ jobs:
     # Switch to the GA macOS image once it ships Xcode 27.
     runs-on: xcode-27
     # A cold build (~11 min), unit tests (~6 min) and the RS XCUITest suite (~14 min, #180 track D) no longer fit in 30.
-    # The xcode-27 preview image runs the whole job in 42–46 min, so 45 cut a green run off.
-    timeout-minutes: 60
+    # The xcode-27 preview image ran the whole job in 42–46 min, so 45 cut a green run off;
+    # by 2026-11-15 green runs took 52–56 min and 60 cancelled one with no failing test.
+    timeout-minutes: 90
 
     steps:
       - name: Checkout code
@@ -83,6 +86,11 @@ jobs:
       # Store) must carry no CarPlay flag, entitlement or scene.
       - name: Guard CarPlay isolation
         run: python3 scripts/lint-carplay-isolation.py
+
+      # Founder 2026-10-30: the whole app speaks the quiz language; text built
+      # in code reads it only through `bundle: .interface, locale: .interface`.
+      - name: Lint interface language
+        run: python3 scripts/lint-interface-language.py
 
       # #188: colors, font sizes, spacing and radii come from Theme.swift; the
       # baseline lists pre-#188 values and may only shrink.

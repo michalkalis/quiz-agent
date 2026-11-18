@@ -27,10 +27,18 @@ ELEVENLABS_VOICES: Dict[str, str] = {
 
 ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
 
-# `eleven_multilingual_v2` is the quality tier and the one the founder approved
-# for Slovak. `eleven_flash_v2_5` is half the credits and much lower latency but
-# weaker on non-English pronunciation — switch via `ELEVENLABS_TTS_MODEL`.
-ELEVENLABS_DEFAULT_MODEL = "eleven_multilingual_v2"
+# `eleven_v4_turbo` is half the price of `eleven_multilingual_v2` ($40 vs $80
+# per 1M characters) and the founder heard no real difference in the 2026-10-26
+# blind test (sk/cs/en, docs/research/tts-provider-alternatives-2026-10-25.md).
+# `eleven_flash_v2_5` failed earlier on non-English pronunciation. The cache key
+# is (text, voice), so audio made by v2 keeps playing; roll back via
+# `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`.
+ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
+# #231: Ukrainian (the only Cyrillic quiz language) reads on `eleven_v3`. A native
+# speaker heard v4 Turbo misplace stress in 4 of 5 questions; v3 with the same
+# voice read all of them right (blind test 2026-11-18). v3 takes ~3.5 s per
+# question instead of ~1.6 s, so it stays scoped to Cyrillic text.
+ELEVENLABS_CYRILLIC_MODEL = "eleven_v3"
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
 # Static feedback phrases organized by evaluation result

@@ -17,6 +17,8 @@ extension AppScreen {
         case .completion: await Self.completion(remaining: 18)
         // Four left is inside the upsell threshold (`upsellRemaining` <= 5).
         case .completionUpsell: await Self.completion(remaining: 4)
+        // #232 (1A): the switch on, so the round end offers "Send to a friend".
+        case .completionShare: await Self.completion(remaining: 18, sharedQuiz: true)
         case .setRecap: await Self.setRecap()
         case .confirmTranscribing: Self.confirmation(isProcessing: true, transcript: "", onCancel: {})
         case .confirmTranscript: Self.confirmation(isProcessing: false, transcript: "Paris, I think. Or maybe Lyon.")
@@ -31,8 +33,15 @@ extension AppScreen {
 
     /// #198: a real round of ten — seven right across the categories, three
     /// missed — so the round's cards and the answer list show as in the app.
-    private static func completion(remaining: Int) async -> AnyView {
-        let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
+    private static func completion(remaining: Int, sharedQuiz: Bool = false) async -> AnyView {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            clock: AnyClock(TestClock()),
+            sharedQuizEnabled: { sharedQuiz }
+        )
         let taxonomy = Theme.Hangs.Category.taxonomy
         await fillLedger(vm, rounds: (1 ... 10).map { number -> Round in
             let missed = number % 3 == 0

@@ -40,7 +40,7 @@ nonisolated enum Config {
 
     static func legalPageURL(
         _ page: String,
-        languageCode: String = Bundle.main.preferredLocalizations.first ?? "en"
+        languageCode: String = InterfaceLanguage.code
     ) -> URL {
         let prefix = ["sk", "cs"].contains(languageCode) ? "/\(languageCode)" : ""
         return URL(string: "https://trubbo.app\(prefix)/\(page)")!
@@ -74,8 +74,9 @@ nonisolated enum Config {
     /// Default number of questions per quiz
     static let defaultQuestions = 10
 
-    /// Default quiz difficulty
-    static let defaultDifficulty = "medium"
+    /// Default quiz difficulty: a mix, each question's level picked by the
+    /// server (#216, founder 2026-10-30).
+    static let defaultDifficulty = "random"
 
     /// Session expiry time in minutes (should match backend TTL)
     static let sessionTTLMinutes = 30
@@ -92,28 +93,32 @@ nonisolated enum Config {
     static let questionCountOptions = [5, 10, 15, 20]
 
     /// Available difficulty options for quiz settings
-    static let difficultyOptions = [
-        ("easy", String(localized: "Easy", comment: "Quiz difficulty option")),
-        ("medium", String(localized: "Medium", comment: "Quiz difficulty option")),
-        ("hard", String(localized: "Hard", comment: "Quiz difficulty option")),
-        ("random", String(localized: "Random", comment: "Quiz difficulty option: pick difficulty at random")),
-    ]
+    static var difficultyOptions: [(String, String)] {
+        [
+            ("easy", String(localized: "Easy", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("medium", String(localized: "Medium", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("hard", String(localized: "Hard", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("random", String(localized: "Random", bundle: .interface, locale: .interface, comment: "Quiz difficulty option: pick difficulty at random")),
+        ]
+    }
 
     /// Available category options for quiz settings (nil = All Categories)
     /// Interest-based taxonomy (2026-08 revamp) — mirrors the backend
     /// `CATEGORY_TAXONOMY` in `apps/quiz-agent/app/api/admin.py`. Age is a
     /// separate axis (`ageAppropriateOptions`); fandom/themed content lives in
     /// packs, not here. Backend filters on whatever id is sent.
-    static let categoryOptions: [(id: String?, display: String)] = [
-        (nil, String(localized: "All Categories", comment: "Quiz category option: no category filter")),
-        ("science-nature", String(localized: "Science & Nature", comment: "Quiz category option")),
-        ("history", String(localized: "History", comment: "Quiz category option")),
-        ("geography-world", String(localized: "Geography & World", comment: "Quiz category option")),
-        ("movies-music", String(localized: "Movies & Music", comment: "Quiz category option")),
-        ("sports", String(localized: "Sports", comment: "Quiz category option")),
-        ("food-everyday", String(localized: "Food & Everyday Life", comment: "Quiz category option")),
-        ("entertainment", String(localized: "Entertainment", comment: "Quiz category option")),
-    ]
+    static var categoryOptions: [(id: String?, display: String)] {
+        [
+            (nil, String(localized: "All Categories", bundle: .interface, locale: .interface, comment: "Quiz category option: no category filter")),
+            ("science-nature", String(localized: "Science & Nature", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("history", String(localized: "History", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("geography-world", String(localized: "Geography & World", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("movies-music", String(localized: "Movies & Music", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("sports", String(localized: "Sports", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("food-everyday", String(localized: "Food & Everyday Life", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("entertainment", String(localized: "Entertainment", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+        ]
+    }
 
     /// Human-readable (localized) name for a taxonomy category id; nil for
     /// anything else (#198: a raw id like "general" or "adults" must never
@@ -221,18 +226,22 @@ nonisolated enum Config {
     /// (so tests can flip it without a global).
     static let voiceStartCommandEnabled: Bool = true
 
-    /// Founder-overridable build/settings flag: arm the command listener on the idle
-    /// Home screen so spoken "start" begins the quiz. Default ON. On-device English
-    /// command recognition only — nothing leaves the device. Copied into
-    /// `VoiceCommandCoordinator.voiceStartOnHomeEnabled` per instance.
-    static let voiceHomeStartEnabled: Bool = true
-
     // MARK: - Freemium
 
     /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by
     /// design — safe to embed in the client; entitlement is still resolved
     /// server-side via the backend's RevenueCat secret key + webhook mirror.
-    static let revenueCatPublicSDKKey = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+    static var revenueCatPublicSDKKey: String {
+        BetaApp.isBetaBuild ? revenueCatPublicSDKKeyBeta : revenueCatPublicSDKKeyLive
+    }
+
+    static let revenueCatPublicSDKKeyLive = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+
+    /// #234 — Trubbo Beta is its own iOS app in the same RevenueCat project,
+    /// with its own public key; its `beta.` products hang off the same
+    /// `unlimited` entitlement and offering.
+    /// RevenueCat app "Trubbo Beta (TestFlight)" (app411663fe8f), created 2026-11-14.
+    static let revenueCatPublicSDKKeyBeta = "appl_YDuzXLReVxhTTmWTWKCkoWPYpMJ"
 
     // MARK: - Sentry
 

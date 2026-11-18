@@ -16,13 +16,14 @@ extension AppScreen {
     func makeFlow() async -> AnyView {
         switch self {
         case .settings: Self.settings()
-        case .onboardingWelcome: await Self.onboarding(advances: 0)
-        case .onboardingFeatures: await Self.onboarding(advances: 1)
-        case .onboardingPermission: await Self.onboarding(advances: 2)
-        case .onboardingDenied: await Self.onboarding(advances: 2, micDenied: true)
+        case .onboardingPermission: await Self.onboarding(micAnswer: nil)
+        case .onboardingCommands: await Self.onboarding(micAnswer: true)
+        case .onboardingDenied: await Self.onboarding(micAnswer: false)
         case .signInIdle: Self.signIn(.idle)
         case .signInSigningIn: Self.signIn(.signingIn)
         case .signInFailed: Self.signIn(.failed)
+        case .signInCredit: Self.signIn(.idle, purchase: .credit(questionCount: 100))
+        case .signInPack: Self.signIn(.idle, purchase: .customPack(name: "Harry Potter", questionCount: 30, colorKey: "order-1"))
         case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed:
             await makeOrder()
         case .paywallPack, .paywallAllowanceSpent, .paywallOffline:
@@ -35,6 +36,14 @@ extension AppScreen {
             await makePacksLoadFailed()
         case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed:
             await makeDaily()
+        case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomQuestionHost, .roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomFinalExpanded, .roomRules, .roomRulesLobby, .roomLobbyHostFull:
+            await makeRoom()
+        case .recapShareImage:
+            makeRecapShareImage()
+        case .sharedQuizRanking, .homeSharedPaste, .roomContentPicker:
+            await makeSharedQuiz()
+        case .profile, .profileNewPlayer, .profileLoadFailed, .allStats:
+            await makeProfile()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }
@@ -58,24 +67,24 @@ extension AppScreen {
 
     // MARK: Onboarding
 
-    /// `advances` walks welcome → features → permission; `micDenied` then answers
-    /// the permission request with "no", which lands on the denied page.
-    private static func onboarding(advances: Int, micDenied: Bool = false) async -> AnyView {
+    /// #237: the microphone page (`micAnswer` nil), or the page the mic
+    /// answer leads to — commands when allowed, the denied page when not.
+    private static func onboarding(micAnswer: Bool?) async -> AnyView {
         let audio = MockAudioService()
-        audio.micPermissionResult = !micDenied
-        let vm = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore())
-        for _ in 0 ..< advances { vm.advance() }
-        if micDenied { await vm.requestMicPermission() }
+        audio.micPermissionResult = micAnswer ?? true
+        let vm = OnboardingViewModel(audioService: audio, persistenceStore: MockPersistenceStore(), enableCommands: {})
+        if micAnswer != nil { await vm.requestMicPermission() }
         return AnyView(OnboardingView(viewModel: vm))
     }
 
     // MARK: Contextual sign-in
 
-    private static func signIn(_ phase: ContextualSignInSheet.Phase) -> AnyView {
+    private static func signIn(_ phase: ContextualSignInSheet.Phase, purchase: SignInPromptPurchase = .plus) -> AnyView {
         AnyView(ContextualSignInSheet(
+            purchase: purchase,
             authService: AuthService(baseURL: Config.apiBaseURL),
             initialPhase: phase,
-            onDismiss: {}
+            onFinish: { _ in }
         ))
     }
 
@@ -89,7 +98,7 @@ extension AppScreen {
         let service = MockPackOrderService(getResult: .success(orderSnapshot))
         let vm = OrderPackViewModel(
             service: service,
-            purchaseService: MockPackPurchaseService(displayPrice: "8,99 €"),
+            purchaseService: MockPackPurchaseService(prices: [.ten: "3,49 €", .thirty: "8,99 €"]),
             adminKeyAvailable: { true },
             // Pinned to the server default, and no live fetch: the menu must not
             // depend on what the test host happens to have cached.
@@ -100,12 +109,15 @@ extension AppScreen {
         vm.prompt = "Famous bridges of the world and the engineers who built them"
         switch self {
         case .orderForm:
+            // The required-choice state: nothing picked, Continue disabled (#224).
             break
         case .orderSummary:
+            vm.selectDifficulty(.medium)
             vm.advanceToSummary()
             // Loaded up front: the summary's own `.task` load isn't awaited by a snapshot.
             await vm.loadPrice()
         default:
+            vm.selectDifficulty(.medium)
             vm.advanceToSummary()
             // Fire-and-forget: `submit()` only returns once the order is terminal,
             // and the parked poll never gets there. Retained by the VM's `pollTask`.

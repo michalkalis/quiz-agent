@@ -28,6 +28,9 @@ from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
+from app.orchestrator.stages.dedup import IN_PACK_JUDGE_MAX_CALLS
+from app.orchestrator.stages.grayzone_judge import GrayZoneJudge
+from app.orchestrator.stages.language_fix import LanguageFixStage
 from app.orchestrator.stages.persist import fail_pack_in_session
 from app.orchestrator.stages import (
     AnswerabilityStage,
@@ -119,6 +122,12 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         ctx["question_store"],
         ctx.get("gold_standard_path"),
         in_pack_cosine=feature_flags.pack_subthemes(),  # #203 203.9 change 4
+        # Same-fact pairs inside the pack (one call per pair, per-order budget).
+        in_pack_judge=(
+            GrayZoneJudge(max_calls=IN_PACK_JUDGE_MAX_CALLS)
+            if feature_flags.pack_same_fact_judge()
+            else None
+        ),
     )
     answerability = None
     if feature_flags.answerability_check() and ctx.get("answerability_checker"):
@@ -132,7 +141,8 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         stages.append(answerability)
     # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right after
     # scoring, so judge scores decide which questions survive each cap.
-    composition = CompositionStage()
+    # A customer order has no per-topic cap (founder 2026-11-18).
+    composition = CompositionStage(customer_order=True)
     batch_schedule = feature_flags.pack_batch_schedule()
     if batch_schedule:
         # #182 incremental delivery: sourcing once, then scheduled rounds
@@ -150,6 +160,12 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
                 composition_stage=composition,
                 persist_stage=PersistStage(session_factory),
                 batch_schedule=batch_schedule,
+                max_rounds=feature_flags.pack_topup_extra_rounds(),
+                max_ask=feature_flags.pack_max_ask(),
+                time_budget_s=feature_flags.pack_topup_time_budget_s(),
+                language_stage=(
+                    LanguageFixStage() if feature_flags.pack_language_fix() else None
+                ),
             ),
         ]
     stages += [
@@ -350,7 +366,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             tracker, usage_before, generator, fetch_usage=False
         )
         await _handle_failure(
-            ctx, order_uuid, order_id, sink, exc, attempt_cost_cents=attempt_cost
+            ctx, order_uuid, order_id, sink, exc,
+            attempt_cost_cents=attempt_cost, cancelled=True,
         )
         raise
     except Exception as exc:
@@ -410,6 +427,7 @@ async def _handle_failure(
     sink: DBProgressSink | None,
     exc: Exception,
     attempt_cost_cents: int = 0,
+    cancelled: bool = False,
 ) -> None:
     """Mark job (and order on final retry) failed; publish failure event.
 
@@ -504,7 +522,12 @@ async def _handle_failure(
                 },
             )
             scope.set_context("step_log_tail", {"steps": step_log_tail})
-            sentry_sdk.capture_exception(exc)
+            # A cancel (worker shutdown on deploy/machine restart, or ARQ
+            # job_timeout) on a non-final attempt is retried by ARQ or the
+            # sweep, so the order is not lost: warn. The final attempt still
+            # reports as an error — that one ends refund-eligible.
+            level = "warning" if cancelled and not is_final else "error"
+            sentry_sdk.capture_exception(exc, level=level)
 
         if sink is not None:
             await sink.publish(

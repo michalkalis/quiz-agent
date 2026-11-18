@@ -24,6 +24,7 @@ from app.orchestrator.stages import (
     VerificationStage,
 )
 from app.orchestrator.stages.dedup import DedupStage
+from app.verification import answerability
 from quiz_shared.llm import factory as llm_factory
 
 
@@ -106,7 +107,7 @@ def test_answerability_model_is_passed_only_when_given(monkeypatch) -> None:
         return stage._checker._model
 
     default = checker_model()
-    assert default == llm_factory.ANSWERABILITY
+    assert default == answerability.CHECK_MODEL  # #228.3 checker default
     assert checker_model(answerability_model="claude-haiku-5-5") == "claude-haiku-5-5"
     monkeypatch.setenv("ANSWERABILITY_MODEL", "env-model")
     assert checker_model() == "env-model"  # env flag still applies when unpinned

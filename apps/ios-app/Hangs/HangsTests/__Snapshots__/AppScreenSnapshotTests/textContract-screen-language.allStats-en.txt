@@ -1,0 +1,34 @@
+# texts
+In total
+312 questions
+3 hr, 20 min
+Strong suit
+Geography & World
+82% correct
+Room to grow
+Sports
+41% correct
+Where you play
+In the car
+64% of quizzes
+When you play
+In the evening
+mostly on Sundays
+Typical quiz
+6.5 min
+10 questions
+Your progress
++12 points
+at the same difficulty
+Best streak
+9 in a row
+correct answers
+# identifiers
+profile.card.totals
+profile.card.best_category
+profile.card.weakest_category
+profile.card.where
+profile.card.when
+profile.card.typical_game
+profile.card.improvement
+profile.card.best_streak

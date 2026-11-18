@@ -151,7 +151,7 @@ struct VoiceHearingFeedbackTests {
 
     @Test("The caption quotes the command word in the command language")
     func captionLanguage() {
-        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .english) == "\"skip\"…")
-        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak) == "„preskoč“…")
+        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .english) == "\"next\"…")
+        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak) == "„ďalšia“…")
     }
 }

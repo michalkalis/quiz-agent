@@ -74,7 +74,7 @@ from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 from .config import get_settings
 from .session.manager import SessionManager
 from .input.parser import InputParser
-from .retrieval.question_retriever import QuestionRetriever
+from .retrieval.question_retriever import QuestionRetriever, embed_query
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
@@ -84,6 +84,7 @@ from .usage.caps import UsageCaps
 from .usage.elevenlabs_budget import ElevenLabsBudget
 from .usage.tracker import UsageTracker
 from .api import rest, admin
+from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
@@ -197,7 +198,11 @@ async def lifespan(app: FastAPI):
             leases=LeaseStore(shared_sm),
         )
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(question_store=async_pgvector)
+        # #235: the serve path bounds its query embedding (slow API → an
+        # unranked pick); admin writes on `async_pgvector` keep the long default.
+        question_retriever = QuestionRetriever(
+            question_store=async_pgvector.with_embedder(embed_query)
+        )
         answer_evaluator = AnswerEvaluator()
         # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(
@@ -372,7 +377,37 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.daily_challenge = daily_challenge
-    app.state.quiz_flow = QuizFlowService(
+    # #232: share a quiz by link (needs the database for shares and results).
+    shared_quiz = None
+    if auth_sessionmaker is not None:
+        from .shared_quiz.service import SharedQuizService
+        from .shared_quiz.store import SharedQuizStore
+
+        shared_quiz = SharedQuizService(
+            SharedQuizStore(auth_sessionmaker),
+            session_manager,
+            question_retriever,
+            daily_challenge,
+            analytics,
+        )
+    app.state.shared_quiz = shared_quiz
+    # #212: same-room multiplayer rooms; tickets are signed with the auth
+    # secret, so rooms exist only where sign-in does.
+    rooms = None
+    if token_service is not None and settings.auth_jwt_secret:
+        from .rooms.network import NetTickets
+        from .rooms.service import RoomService
+        from .rooms.store import PostgresRoomStore
+
+        rooms = RoomService(
+            session_manager,
+            PostgresRoomStore(shared_sm),
+            NetTickets(settings.auth_jwt_secret),
+            analytics,
+            pack_status=question_retriever.pack_status,
+        )
+    app.state.rooms = rooms
+    app.state.quiz_flow = quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,
         question_retriever=question_retriever,
@@ -382,7 +417,12 @@ async def lifespan(app: FastAPI):
         translation_service=translation_service,
         analytics=analytics,
         daily_challenge=daily_challenge,
+        shared_quiz=shared_quiz,
     )
+    if rooms is not None:
+        from .rooms.play import RoomPlay
+
+        rooms.play = RoomPlay(session_manager, rooms.store, quiz_flow)
     logger.info("API dependencies configured")
 
     # Start background tasks
@@ -502,6 +542,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Admin-Key", "Authorization"],
 )
+
+# #232.3: the website's play page reads the public shared-quiz preview.
+app.middleware("http")(shared_quiz_routes.website_cors)
 
 # Include API routes
 app.include_router(rest.router)

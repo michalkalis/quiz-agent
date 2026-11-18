@@ -124,7 +124,10 @@ extension QuizState {
 final class QuizViewModel: ObservableObject {
     // MARK: - Published State
 
-    @Published var quizState: QuizState = .idle
+    @Published var quizState: QuizState = .idle {
+        // #235 F3: a "can't be read" note belongs to the screen it was shown on.
+        didSet { if quizState != oldValue, readAloudFailure != nil { readAloudFailure = nil } }
+    }
     @Published var currentQuestion: Question? {
         // #186 step 1: entering a question starts its first attempt — anything
         // still in flight for the previous question loses ownership here.
@@ -135,6 +138,9 @@ final class QuizViewModel: ObservableObject {
     }
 
     @Published var currentSession: QuizSession?
+    /// #224.8: the right answer of the question a quick quiz just skipped,
+    /// shown briefly on the next one (`QuizViewModel+QuickGame`).
+    @Published var quickSkipNote: String?
     /// #200: the custom pack the latest start asked for, nil for the shared
     /// library. Kept from the start request, not the created session, so a
     /// start that failed before its session existed still retries the same
@@ -153,6 +159,15 @@ final class QuizViewModel: ObservableObject {
     /// the rules it changes are listed on `DailyRound`. Set by the start,
     /// cleared by the next start and by every return Home.
     @Published var activeDaily: DailyRound?
+    /// #232: set while the round plays (or just played) a quiz from a friend's
+    /// link; its round end shows the comparison. Cleared like `activeDaily`.
+    @Published var activeShare: SharedQuizPlay?
+    /// #232: a link that could not be played (already played, gone); Home
+    /// shows it once. The start never reaches the error screen for it.
+    @Published var sharedQuizNotice: String?
+    /// #232: the comparison of a link this player cannot play again (the
+    /// sender's own link, a friend's already played one); Home shows it.
+    @Published var sharedQuizComparison: SharedQuizPlay?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -191,6 +206,10 @@ final class QuizViewModel: ObservableObject {
     /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
     /// does not set this (it replaces the summary via the shared task key).
     @Published var isNarratingRecap: Bool = false
+    /// #235 F3: the "hear it" whose read could not be fetched; its screen
+    /// says so next to the button. Cleared by the next read that plays and
+    /// by any screen change (`quizState`).
+    @Published var readAloudFailure: ReadAloudTarget?
     /// Test seam (#200): the recap reads itself aloud on appear. Auto-record,
     /// which used to gate that, is always on now — a test that freezes the
     /// recap screen turns this off instead. Production never assigns it.
@@ -291,7 +310,7 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// #185 track F: the answer recording has heard the driver speak — the
-    /// listen bar says "Capturing…" instead of "Listening…" from here on.
+    /// listen bar says "Hearing you…" instead of "Listening…" from here on.
     var isHearingAnswer: Bool {
         quizState == .recording && recordingCoordinator.speechDetectedDuringAutoRecord
     }
@@ -378,7 +397,10 @@ final class QuizViewModel: ObservableObject {
     /// `QuizTimersController.isPaused`.
     var isPaused: Bool {
         get { quizTimersController.isPaused }
-        set { quizTimersController.isPaused = newValue }
+        set {
+            attemptLedger.latency.setPaused(newValue)
+            quizTimersController.isPaused = newValue
+        }
     }
 
     // MARK: - Voice Commands — forwarded to VoiceCommandCoordinator (#113 T3)
@@ -398,10 +420,6 @@ final class QuizViewModel: ObservableObject {
     /// Release diagnostics (#96 P2) — see `VoiceCommandCoordinator.lastRecognizedCommand`
     /// (SettingsView diagnostics row).
     var lastRecognizedCommand: VoiceCommand? { voiceCommandCoordinator.lastRecognizedCommand }
-
-    /// Home voice-start flag — see `VoiceCommandCoordinator.voiceStartOnHomeEnabled`
-    /// (HomeView.onAppear).
-    var voiceStartOnHomeEnabled: Bool { voiceCommandCoordinator.voiceStartOnHomeEnabled }
 
     /// "LISTENING FOR COMMANDS" indicator hint — see
     /// `VoiceCommandCoordinator.commandListenerHint` (ListenBar call sites).
@@ -758,6 +776,9 @@ final class QuizViewModel: ObservableObject {
     /// `AppConfigStore`), and the store that assigns it per quiz round.
     let voiceExperimentConfig: @MainActor () -> VoiceExperimentConfig?
     let voiceExperiment: VoiceExperimentStore
+    /// #232: the server switch for sharing a quiz by link (AppState reads it
+    /// from `AppConfigStore`); every sharing surface hides while it is off.
+    let sharedQuizEnabled: @MainActor () -> Bool
 
     /// #197: sends saved car recordings to the backend; kicked, never awaited.
     let answerRecordingUploader: AnswerRecordingUploading?
@@ -855,9 +876,11 @@ final class QuizViewModel: ObservableObject {
         analytics: AnalyticsClient = NoopAnalyticsClient(),
         answerRecordingUploader: AnswerRecordingUploading? = nil,
         voiceExperimentConfig: @escaping @MainActor () -> VoiceExperimentConfig? = { nil },
-        voiceExperiment: VoiceExperimentStore = .shared
+        voiceExperiment: VoiceExperimentStore = .shared,
+        sharedQuizEnabled: @escaping @MainActor () -> Bool = { false }
     ) {
         self.networkService = networkService
+        self.sharedQuizEnabled = sharedQuizEnabled
         self.analytics = analytics
         self.voiceExperimentConfig = voiceExperimentConfig
         self.voiceExperiment = voiceExperiment
@@ -868,7 +891,7 @@ final class QuizViewModel: ObservableObject {
         self.clock = clock
         // The app keeps one black box; the #186 sequence harness gives each run
         // its own so a failing seed prints only its own input trail.
-        attemptLedger = AttemptLedger(recorder: flightRecorder)
+        attemptLedger = AttemptLedger(recorder: flightRecorder, clock: clock)
         // #113 T1: the entitlement/usage/paywall slice lives in its own child;
         // its init fires the launch reconcile (#102 finding 1) — single-flight,
         // bounded backoff, failure logged only (server stays source of truth).
@@ -980,6 +1003,7 @@ final class QuizViewModel: ObservableObject {
                 // #208.7: a skip said over the read stops it; its tail must not
                 // start the think window under the pending skip.
                 guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
+                self.attemptLedger.latency.openWindow(questionId: self.currentQuestion?.id)
                 self.quizTimersController.startThinkingTimeCountdown(
                     readingPause: afterSilentRead ? self.silentReadingPause : .zero
                 )
@@ -1054,6 +1078,10 @@ final class QuizViewModel: ObservableObject {
                 guard let question = self?.currentQuestion else { return nil }
                 return ([question.question] + (question.possibleAnswers.map { Array($0.values) } ?? []))
                     .joined(separator: " ")
+            },
+            answerReadBack: { [weak self] in
+                guard let recording = self?.recordingCoordinator, recording.showAnswerConfirmation else { return nil }
+                return recording.readBackText
             },
             stopQuestionRead: { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
         )
@@ -1168,10 +1196,11 @@ final class QuizViewModel: ObservableObject {
         language: String? = nil,
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
+        shared: String? = nil,
         skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, skipAvailabilityCheck: skipAvailabilityCheck)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, shared: shared, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1190,12 +1219,15 @@ final class QuizViewModel: ObservableObject {
     /// re-open the alert it just answered.
     /// `daily` (#205) plays that day's challenge: the server picks the
     /// questions and hands back the session (or, already played, the result).
+    /// `shared` (#232) plays the quiz behind a friend's link token: the server
+    /// builds the session from the link's questions.
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
         language: String? = nil,
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
+        shared: String? = nil,
         skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
@@ -1210,7 +1242,9 @@ final class QuizViewModel: ObservableObject {
 
         let entryPoint = QuizEntryPoint(packId: pack?.packId, startedFrom: quizState)
         guard transition(to: .startingQuiz) else { return }
-        activePack = daily == nil ? pack : nil
+        activePack = daily == nil && shared == nil ? pack : nil
+        activeShare = shared.map { SharedQuizPlay(token: $0) }
+        sharedQuizNotice = nil
         packRestartOffer = nil
         errorMessage = nil
         #if DEBUG
@@ -1231,7 +1265,7 @@ final class QuizViewModel: ObservableObject {
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, daily == nil, !skipAvailabilityCheck,
+        if pack == nil, daily == nil, shared == nil, !skipAvailabilityCheck,
            let shortfall = await probeQuestionShortfall(
                requestedCount: quizMaxQuestions,
                difficulty: quizDifficulty,
@@ -1252,14 +1286,14 @@ final class QuizViewModel: ObservableObject {
             // play continues with the next unplayed questions; the library
             // excludes the global history.
             // #205: the server fixes the daily set, so it excludes nothing.
-            let excludedIds = daily != nil ? []
+            let excludedIds = daily != nil || shared != nil ? []
                 : pack.map { persistenceStore.playedPackQuestionIds(packId: $0.packId) }
                 ?? persistenceStore.getExclusionList()
 
             // #205: the daily start comes first. Already played today, it
             // returns the result and no session: the round end shows it, and
             // nothing below (audio session, mic) is touched.
-            var dailySession: QuizSession?
+            var serverSession: QuizSession?
             if let daily {
                 let result = try await withTransientStartRetry {
                     try await networkService.startDailyChallenge(date: daily.isoDate, language: quizLanguage)
@@ -1269,7 +1303,31 @@ final class QuizViewModel: ObservableObject {
                     transition(to: .finished)
                     return
                 }
-                dailySession = session
+                serverSession = session
+            }
+            // #232: the friend's session from the link. Played already (a
+            // pack plays once) or gone: Home says so, no error screen.
+            if let shared {
+                // #235 F7: the sender's own link opens its comparison. Asked
+                // under the start's spinner, so Home shows it and Cancel at once.
+                if await isOwnSharedQuiz(token: shared) {
+                    try Task.checkCancellation()
+                    activeShare = nil
+                    sharedQuizComparison = SharedQuizPlay(token: shared)
+                    transition(to: .idle)
+                    return
+                }
+                try Task.checkCancellation()
+                let result = try await withTransientStartRetry {
+                    try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName))
+                }
+                // Cancelled while the answer was on its way: stay on Home (#235.2).
+                try Task.checkCancellation()
+                activeShare?.kind = result.kind
+                guard let session = result.session else {
+                    throw NetworkError.sharedQuizUnavailable(.alreadyPlayed)
+                }
+                serverSession = session
             }
 
             Logger.quiz.debug("🎮 Excluding \(excludedIds.count, privacy: .public) previously seen questions")
@@ -1325,8 +1383,8 @@ final class QuizViewModel: ObservableObject {
             // (`TransientRetry.retryWindow`) and sessions expire, so the risk is
             // accepted.
             let session: QuizSession
-            if let dailySession {
-                session = dailySession
+            if let serverSession {
+                session = serverSession
             } else {
                 session = try await withTransientStartRetry {
                     try await networkService.createSession(
@@ -1419,7 +1477,18 @@ final class QuizViewModel: ObservableObject {
                 return
             }
 
-            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", comment: "Quiz could not be started; error detail is appended"))
+            if let shared, case let .sharedQuizUnavailable(reason)? = error as? NetworkError {
+                activeShare = nil
+                if reason == .alreadyPlayed {
+                    sharedQuizComparison = SharedQuizPlay(token: shared)
+                } else {
+                    sharedQuizNotice = reason.message
+                }
+                transition(to: .idle)
+                return
+            }
+
+            await handleError(error, context: .initialization, fallbackMessage: String(localized: "Failed to start quiz", bundle: .interface, locale: .interface, comment: "Quiz could not be started; error detail is appended"))
 
             Logger.quiz.error("❌ Error starting quiz: \(error, privacy: .public)")
         }
@@ -1602,7 +1671,7 @@ final class QuizViewModel: ObservableObject {
                 // confirmed the user is entitled — ask them to retry instead.
                 // (setError transitions to .error directly from the in-flight state.)
                 setError(
-                    message: String(localized: "Your subscription just synced — please try again.", comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
+                    message: String(localized: "Your subscription just synced. Please try again.", bundle: .interface, locale: .interface, comment: "Shown after a 429 quota error self-resolves via entitlement resync; user should retry their last action"),
                     context: context
                 )
             } else {
@@ -1661,7 +1730,7 @@ final class QuizViewModel: ObservableObject {
     /// Post-purchase/restore sync — see `EntitlementReconciler.notifyPremiumPurchased`.
     /// (`StoreManager` relies on the returned entitlement flag.)
     @discardableResult
-    func notifyPremiumPurchased() async -> Bool {
+    func notifyPremiumPurchased() async -> Bool? {
         await entitlementReconciler.notifyPremiumPurchased()
     }
 
@@ -1811,7 +1880,7 @@ final class QuizViewModel: ObservableObject {
             errorMessage = nil
         default:
             // Fallback to starting new quiz — the same pack, if it was one (#200).
-            await startNewQuiz(pack: activePack, daily: activeDaily?.day)
+            await startNewQuiz(pack: activePack, daily: activeDaily?.day, shared: activeShare?.token)
         }
     }
 
@@ -1820,6 +1889,8 @@ final class QuizViewModel: ObservableObject {
     @discardableResult
     func retryFromErrorScreen() -> Task<Void, Never> {
         if shouldRetryWithNewSession {
+            // #232: a failed start from a link tries the same link again.
+            if let activeShare { return beginQuizStart(shared: activeShare.token) }
             return playAgain()
         }
         return Task { await retryLastOperation() }
@@ -1859,7 +1930,7 @@ final class QuizViewModel: ObservableObject {
         voiceCommandCoordinator.abortSkipUndoWindow()
 
         guard let sessionId = currentSession?.id else {
-            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
+            errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -1935,7 +2006,7 @@ final class QuizViewModel: ObservableObject {
                 "error": String(describing: error),
             ])
             guard attemptLedger.owns(attempt, "mcqSubmit.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting an answer fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting an answer fails; error detail is appended"))
         }
     }
 
@@ -1949,7 +2020,7 @@ final class QuizViewModel: ObservableObject {
         defer { isSubmittingAnswer = false }
 
         guard let sessionId = currentSession?.id else {
-            errorMessage = String(localized: "No active session", comment: "Inline error: no quiz session is currently active")
+            errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
         }
 
@@ -1958,6 +2029,15 @@ final class QuizViewModel: ObservableObject {
         let attempt = attemptLedger.begin("submit.text")
         attemptLedger.markAnswerSent() // #186: a sent answer is final
         recordingCoordinator.cancelRetryPrompt()
+
+        // A pause HOLDS the question read (#200). An answer ends the pause
+        // without play, so the held clip must end with it — else the advance
+        // that started that read stays suspended and "Next" is ignored on the
+        // result (found by the sequence harness once the result stopped
+        // listening, #224).
+        if audioDeviceState.heldQuestionReadOut != nil {
+            await audioDeviceState.stopAnyPlayingAudio()
+        }
 
         // #79: a voice answer may be in flight with the confirmation sheet about
         // to appear. Dismiss the sheet + auto-confirm up front so the typed
@@ -2031,7 +2111,7 @@ final class QuizViewModel: ObservableObject {
             )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to resubmit answer", bundle: .interface, locale: .interface, comment: "Error prefix when resubmitting an edited answer fails; error detail is appended"))
 
             Logger.network.error("❌ Error resubmitting answer: \(error, privacy: .public)")
         }
@@ -2071,6 +2151,7 @@ final class QuizViewModel: ObservableObject {
         // on (the state is the single-flight token, as in submitMCQAnswer).
         guard transition(to: .skipping) else { return }
         errorMessage = nil
+        trackAnalytics(.questionSkipped(quick: settings.quickGame))
 
         // Stop any playing question audio immediately
         await audioDeviceState.stopAnyPlayingAudio()
@@ -2099,7 +2180,7 @@ final class QuizViewModel: ObservableObject {
             await handleQuizResponse(response, owner: attempt)
         } catch {
             guard attemptLedger.owns(attempt, "skip.error") else { return }
-            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", comment: "Error prefix when skipping a question fails; error detail is appended"))
+            await handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to skip question", bundle: .interface, locale: .interface, comment: "Error prefix when skipping a question fails; error detail is appended"))
 
             Logger.quiz.error("❌ Error skipping question: \(error, privacy: .public)")
         }
@@ -2137,7 +2218,7 @@ final class QuizViewModel: ObservableObject {
             // Errors here mean the session may still be live on the backend (e.g. a timeout).
             // Surface a banner so the user knows server-side cleanup may not have happened and
             // can retry; do not silently drop a possibly-live session.
-            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
+            errorMessage = String(localized: "Failed to end quiz: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when ending the quiz fails; placeholder is the underlying error")
 
             Logger.quiz.error("❌ Error ending quiz: \(error, privacy: .public)")
         }
@@ -2180,7 +2261,7 @@ final class QuizViewModel: ObservableObject {
     /// Resume a saved session
     func resumeSession() async {
         guard persistenceStore.currentSessionId != nil else {
-            errorMessage = String(localized: "No saved session found", comment: "Inline error: no previously saved quiz session exists to resume")
+            errorMessage = String(localized: "No saved session found", bundle: .interface, locale: .interface, comment: "Inline error: no previously saved quiz session exists to resume")
             return
         }
 
@@ -2278,6 +2359,7 @@ final class QuizViewModel: ObservableObject {
     /// waits a silent reading pause first (`silentReadingPause`).
     func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
+        attemptLedger.latency.openWindow(questionId: currentQuestion?.id)
         quizTimersController.startThinkingTimeCountdown(
             resumingAt: heldSeconds,
             readingPause: afterSilentRead ? silentReadingPause : .zero
@@ -2334,7 +2416,7 @@ final class QuizViewModel: ObservableObject {
         guard let evaluation = response.evaluation else {
             Logger.quiz.error("❌ No evaluation in response, cannot show result")
             setError(
-                message: String(localized: "Could not evaluate your answer. Please try again.", comment: "Shown when the server response contained no evaluation"),
+                message: String(localized: "Could not evaluate your answer. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when the server response contained no evaluation"),
                 context: .submission
             )
             return
@@ -2352,7 +2434,7 @@ final class QuizViewModel: ObservableObject {
         // The associated value bundles question + evaluation together,
         // making it impossible to show stale/mismatched data
         guard let question = currentQuestion else {
-            setError(message: String(localized: "No question to evaluate", comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
+            setError(message: String(localized: "No question to evaluate", bundle: .interface, locale: .interface, comment: "Inline error: result arrived but there is no current question to pair it with"), context: .general)
             return
         }
 
@@ -2416,7 +2498,11 @@ final class QuizViewModel: ObservableObject {
         // isProcessingResponse through the next question's TTS would drop a
         // fast tap-answer on that question.
         let resultOwner = currentAttempt
-        if answerRevealMode == .endOfSet {
+        // #224.8: a quick quiz's skip has no interstitial either: the same
+        // immediate advance, plus a brief note of the right answer.
+        let quickSkip = quickGameSkips(evaluation)
+        if answerRevealMode == .endOfSet || quickSkip {
+            if quickSkip { showQuickSkipNote(evaluation.correctAnswer) }
             taskBag.add(Task { [weak self] in
                 guard let self, self.attemptLedger.ownsQuestion(resultOwner, "deferredAdvance") else { return }
                 await self.advanceToNextQuestionOrFinish()
@@ -2427,8 +2513,8 @@ final class QuizViewModel: ObservableObject {
         // IMPORTANT: Show result screen BEFORE playing audio
         // This ensures ResultView is visible when audio starts playing
         transition(to: .showingResult(question: question, evaluation: evaluation))
-        // #77 (77.5): result window — re-arm the command listener for "next"/"ok"
-        // (Session 4 routes them) on top of auto-advance.
+        // #224: the result screen has no command window (buttons + auto-advance
+        // only); this refresh tears the previous question's listener down.
         refreshCommandWindow()
 
         // 59.7 Bug B: start the auto-advance countdown immediately so the countdown bar is
@@ -2636,7 +2722,7 @@ final class QuizViewModel: ObservableObject {
                     await handleError(
                         error,
                         context: .submission,
-                        fallbackMessage: String(localized: "Couldn't load the next question", comment: "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended")
+                        fallbackMessage: String(localized: "Couldn't load the next question", bundle: .interface, locale: .interface, comment: "Error prefix when polling for the next question of a still-generating pack keeps failing; error detail is appended")
                     )
                     return
                 }
@@ -2717,12 +2803,14 @@ final class QuizViewModel: ObservableObject {
         // Release audio session so Spotify/podcasts resume full volume after
         // the quiz is torn down (resetToHome / endQuiz / paywall reset).
         audioService.deactivateSession()
+        quickSkipNote = nil
         currentQuestion = nil
         currentSession = nil // also zeroes the derived score/questionsAnswered (T7)
         sessionCorrectCount = 0
         sessionIncorrectCount = 0
         recapEntries = []
         activeDaily = nil
+        activeShare = nil
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil

@@ -35,6 +35,30 @@ def token() -> str:
 
 HEADERS = {"Authorization": f"Bearer {token()}"}
 
+# Product texts live on versions (ASC API 4.4+); the per-product localization endpoints go away in early 2027.
+VERSIONS = {  # product kind -> (list path, version resource type)
+    "inAppPurchases": ("https://api.appstoreconnect.apple.com/v2/inAppPurchases/{}/versions", "inAppPurchaseVersions"),
+    "subscriptions": ("/subscriptions/{}/versions", "subscriptionVersions"),
+    "subscriptionGroups": ("/subscriptionGroups/{}/versions", "subscriptionGroupVersions"),
+}
+
+
+def latest_version(kind: str, product_id: str) -> dict | None:
+    """Newest version of an IAP, subscription or subscription group (None when it has none)."""
+    res = get(VERSIONS[kind][0].format(product_id), limit=50)
+    if "_error" in res:
+        raise SystemExit(f"  !! versions of {kind}/{product_id}: {res}")
+    return max(res.get("data", []), key=lambda v: v["attributes"]["version"], default=None)
+
+
+def version_localizations(kind: str, version: dict | None) -> list[dict]:
+    if not version:
+        return []
+    res = get(f"/{VERSIONS[kind][1]}/{version['id']}/localizations", limit=50)
+    if "_error" in res:
+        raise SystemExit(f"  !! localizations of {VERSIONS[kind][1]}/{version['id']}: {res}")
+    return res.get("data", [])
+
 
 def get(path: str, **params):
     url = path if path.startswith("http") else f"{BASE}{path}"
@@ -68,9 +92,16 @@ def prices_with_points(payload, rel_point: str):
     return out
 
 
+def exact_bundle(resp: dict, bundle_id: str) -> dict:
+    """`filter[bundleId]` also matches longer IDs (com.x.hangs → com.x.hangs.beta, #234), so keep only the exact app."""
+    if isinstance(resp.get("data"), list):
+        resp["data"] = [a for a in resp["data"] if a.get("attributes", {}).get("bundleId") == bundle_id]
+    return resp
+
+
 def main() -> int:
     report: dict = {}
-    apps = get("/apps", **{"filter[bundleId]": BUNDLE_ID, "fields[apps]": "name,bundleId,primaryLocale,sku,contentRightsDeclaration"})
+    apps = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID, "fields[apps]": "name,bundleId,primaryLocale,sku,contentRightsDeclaration"}), BUNDLE_ID)
     if "_error" in apps or not apps.get("data"):
         print(json.dumps({"apps": apps}, indent=1))
         return 1
@@ -113,9 +144,11 @@ def main() -> int:
     for iap in iaps.get("data", []):
         row = attrs(iap)
         iid = iap["id"]
-        loc = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{iid}/inAppPurchaseLocalizations")
-        row["localizations"] = [attrs(l) for l in loc.get("data", [])]
-        sched = get(f"/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
+        ver = latest_version("inAppPurchases", iid)
+        row["version"] = attrs(ver) if ver else None
+        row["localizations"] = [attrs(l) for l in version_localizations("inAppPurchases", ver)]
+        v2 = BASE.replace("/v1", "/v2")  # these relationships exist only on the v2 path
+        sched = get(f"{v2}/inAppPurchases/{iid}/iapPriceSchedule", include="baseTerritory")
         if "_error" not in sched and sched.get("data"):
             sid = sched["data"]["id"]
             row["baseTerritory"] = (sched["data"].get("relationships", {}).get("baseTerritory", {}).get("data") or {}).get("id")
@@ -125,9 +158,9 @@ def main() -> int:
             row["automaticPrices_watch"] = prices_with_points(auto, "inAppPurchasePricePoint")
         else:
             row["priceSchedule"] = sched
-        shot = get(f"/inAppPurchases/{iid}/appStoreReviewScreenshot")
+        shot = get(f"{v2}/inAppPurchases/{iid}/appStoreReviewScreenshot")
         row["reviewScreenshot"] = attrs(shot["data"]).get("assetDeliveryState") if shot.get("data") else shot.get("_error", "none")
-        av = get(f"/inAppPurchases/{iid}/inAppPurchaseAvailability", include="availableTerritories", limit=200)
+        av = get(f"{v2}/inAppPurchases/{iid}/inAppPurchaseAvailability", include="availableTerritories")
         row["availability"] = {"availableInNewTerritories": av.get("data", {}).get("attributes", {}).get("availableInNewTerritories"), "territoryCount": len(av.get("included", []))} if "_error" not in av else av
         report["inAppPurchases"].append(row)
 
@@ -137,15 +170,17 @@ def main() -> int:
     for g in groups.get("data", []):
         grow = attrs(g)
         gid = g["id"]
-        gl = get(f"/subscriptionGroups/{gid}/subscriptionGroupLocalizations")
-        grow["localizations"] = [attrs(l) for l in gl.get("data", [])]
+        gver = latest_version("subscriptionGroups", gid)
+        grow["version"] = attrs(gver) if gver else None
+        grow["localizations"] = [attrs(l) for l in version_localizations("subscriptionGroups", gver)]
         subs = get(f"/subscriptionGroups/{gid}/subscriptions", limit=20)
         grow["subscriptions"] = []
         for s in subs.get("data", []):
             srow = attrs(s)
             sid = s["id"]
-            sl = get(f"/subscriptions/{sid}/subscriptionLocalizations")
-            srow["localizations"] = [attrs(l) for l in sl.get("data", [])]
+            sver = latest_version("subscriptions", sid)
+            srow["version"] = attrs(sver) if sver else None
+            srow["localizations"] = [attrs(l) for l in version_localizations("subscriptions", sver)]
             pr = get(f"/subscriptions/{sid}/prices", include="subscriptionPricePoint,territory", limit=200, **{"filter[territory]": ",".join(TERRITORIES)})
             srow["prices_watch"] = prices_with_points(pr, "subscriptionPricePoint")
             pr_all = get(f"/subscriptions/{sid}/prices", limit=200)

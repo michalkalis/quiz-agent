@@ -497,6 +497,27 @@ def pack_batch_schedule() -> tuple[int, ...]:
     return sizes
 
 
+def pack_max_ask() -> int:
+    """#228: most questions one customer round may ask the generator for when
+    it over-asks to cover the gates' losses. Env ``PACK_MAX_ASK`` (default 16)."""
+    return _int_env("PACK_MAX_ASK", default=16)
+
+
+def pack_topup_extra_rounds() -> int:
+    """#228: customer-pack rounds allowed beyond the ones the batch schedule
+    needs (was a fixed 2). Env ``PACK_TOPUP_EXTRA_ROUNDS`` (default 4)."""
+    return _int_env("PACK_TOPUP_EXTRA_ROUNDS", default=4)
+
+
+def pack_topup_time_budget_s() -> float:
+    """#228: no new customer round starts after this many seconds, so a slow
+    order ends on what it has (the floor check decides) instead of being
+    killed mid-round by ``STAGE_TIMEOUT_SECONDS``. Env
+    ``PACK_TOPUP_TIME_BUDGET_S``; default 80 % of the stage timeout."""
+    stage_timeout = float(os.getenv("STAGE_TIMEOUT_SECONDS", "1200") or 1200)
+    return float(_int_env("PACK_TOPUP_TIME_BUDGET_S", default=int(stage_timeout * 0.8)))
+
+
 def pack_subthemes() -> bool:
     """#203 203.9 changes 2 + 4: split a customer pack into narrow sub-themes
     (3-4 questions each) and drop a question whose embedding cosine to one
@@ -507,3 +528,28 @@ def pack_subthemes() -> bool:
     until the founder's blind round; OFF is behaviour-identical to before.
     """
     return _truthy(os.getenv("PACK_SUBTHEMES"))
+
+
+def pack_same_fact_judge() -> bool:
+    """Customer packs: the gray-zone judge's pairwise "same fact?" verdict
+    between each new question and its nearest questions already in the pack
+    (`DedupStage(in_pack_judge=...)`). Default ON: without it nothing stops a
+    true/false rewording of a question already in the pack (2026-11-18 LEGO
+    kids pack). Read only by the customer worker and ``--customer-order``;
+    ``PACK_SAME_FACT_JUDGE=0`` turns it off."""
+    return _default_on(os.getenv("PACK_SAME_FACT_JUDGE"))
+
+
+def pack_language_fix() -> bool:
+    """Custom packs: before each round is saved, the #211 naturalness check
+    (with a pack note: names, punctuation, answer and explanation) fixes
+    wording, spelling, names and punctuation of sk/cs/uk questions, all
+    audiences. Every proposed edit is recorded on the question
+    (``provenance.extra.text_edits``) and counted in the round's step_log
+    entry. Founder 2026-11-18: on for all custom packs, after a measured run
+    (28 trial questions: 9 fixed, no number or answer changed, about $0.20
+    per pack of 30). On by default; ``PACK_LANGUAGE_FIX=0`` is the rollback
+    lever and is behaviour-identical to before the step existed.
+    Read only by the customer-pack worker (``app/worker/tasks.py``).
+    """
+    return _default_on(os.getenv("PACK_LANGUAGE_FIX"))

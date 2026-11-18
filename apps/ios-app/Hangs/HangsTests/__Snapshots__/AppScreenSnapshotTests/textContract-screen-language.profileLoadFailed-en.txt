@@ -1,0 +1,5 @@
+# texts
+Couldn't load your stats
+Retry
+# identifiers
+profile.statsRetry

@@ -22,6 +22,10 @@ struct HangsApp: App {
         #if CARPLAY
             CarPlaySceneDelegate.appState = appState
         #endif
+        #if DEBUG
+            UITestSupport.roomInvites = appState.roomInvites
+            UITestSupport.sharedQuizInbox = appState.sharedQuizInbox
+        #endif
 
         // Skip Sentry on simulator — only real-device debug + release builds report.
         // Simulator runs are noisy (hot reloads, repeated launches) and would burn through quota.
@@ -43,8 +47,8 @@ struct HangsApp: App {
             options.sendDefaultPii = false
             options.beforeSend = Self.scrubEvent
 
-            // Structured Logs (experimental in sentry-cocoa 8.x; moves to options.enableLogs in 9.0)
-            options.experimental.enableLogs = true
+            // Structured Logs (top-level option since sentry-cocoa 9.0)
+            options.enableLogs = true
 
             // #109: our own in-app feedback UI (feedback chip + Settings row →
             // FeedbackView) replaces Sentry's shake widget so there is exactly one
@@ -77,12 +81,17 @@ struct HangsApp: App {
                 ContentView(appState: appState)
                     .environmentObject(appState)
             }
+                .environment(\.locale, appState.interfaceLocale)
                 // #188 G9: past accessibility3 a single word ("Slovenčina",
                 // "Automaticky") no longer fits a row even stacked and breaks
                 // mid-word. A screen may set a lower cap of its own.
                 .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .onOpenURL { url in
                     Logger.quiz.info("📱 onOpenURL: \(url.absoluteString, privacy: .public)")
+                    // #212: a game invite (QR code or shared link).
+                    if appState.roomInvites.receive(url) { return }
+                    // #232: a friend's quiz link.
+                    if appState.sharedQuizInbox.receive(url) { return }
                     #if DEBUG
                     Task { @MainActor in
                         await UITestSupport.handleTestURL(url)
@@ -160,7 +169,7 @@ struct HangsApp: App {
                     data[key] = "[REDACTED]"
                     mutated = true
                 }
-                if mutated { crumb.data = data }
+                if mutated { crumb.setData(data) }
             }
         }
 

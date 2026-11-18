@@ -164,9 +164,12 @@ extension AudioDeviceState {
     /// One question clip: download, then play — unless a pause took hold of
     /// this read while it downloaded (#200). Then it never starts
     /// (`CancellationError`), and play reads the question again.
+    /// #235.2: the same when the player moved on while it downloaded (a tap to
+    /// answer, an option, mute): a late clip would read the question into the
+    /// open mic or over the result.
     private func playQuestionClip(from urlString: String, generation: Int) async throws {
         let audioData = try await networkService.downloadAudio(from: urlString)
-        guard heldQuestionReadOut != generation else { throw CancellationError() }
+        guard heldQuestionReadOut != generation, isAskingQuestion(), !isMuted() else { throw CancellationError() }
         _ = try await audioService.playOpusAudio(audioData)
     }
 

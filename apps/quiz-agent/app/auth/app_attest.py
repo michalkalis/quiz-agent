@@ -26,6 +26,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import struct
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from cbor2 import loads as cbor_decode
@@ -67,11 +68,12 @@ class AppAttestService:
         sessionmaker: async_sessionmaker[AsyncSession],
         challenge_store: ChallengeStore,
         *,
-        app_id: str,
+        app_id: str | Sequence[str],
         environment: str = "development",
         root_ca: bytes | None = None,
     ) -> None:
-        if not app_id:
+        app_ids = (app_id,) if isinstance(app_id, str) else tuple(app_id)
+        if not app_ids or not all(app_ids):
             raise RuntimeError("APP_ATTEST_APP_ID must be set to verify App Attest.")
         if environment not in self._ENV_CANDIDATES:
             raise RuntimeError(
@@ -80,7 +82,12 @@ class AppAttestService:
             )
         self._sessionmaker = sessionmaker
         self._challenges = challenge_store
-        self._app_id = app_id
+        # #234: "<TeamID>.<BundleID>" of every app we serve (App Store app and
+        # the TestFlight-only beta app); a device may attest as any of them.
+        self._app_ids = app_ids
+        self._rp_id_hashes = frozenset(
+            hashlib.sha256(a.encode()).digest() for a in app_ids
+        )
         self._root_ca = root_ca  # None → pyattest's bundled, pinned Apple root CA
         self._candidates = self._ENV_CANDIDATES[environment]
 
@@ -128,21 +135,24 @@ class AppAttestService:
         attest = None
         environment = None
         last_exc: PyAttestException | None = None
-        for production, env_label in self._candidates:
-            config = AppleConfig(
-                key_id=key_id,
-                app_id=self._app_id,
-                production=production,
-                root_ca=self._root_ca,
-            )
-            candidate = Attestation(attestation, challenge.encode(), config)
-            try:
-                await candidate.verify()
-            except PyAttestException as exc:
-                last_exc = exc
-                continue
-            attest, environment = candidate, env_label
-            break
+        for app_id in self._app_ids:
+            for production, env_label in self._candidates:
+                config = AppleConfig(
+                    key_id=key_id,
+                    app_id=app_id,
+                    production=production,
+                    root_ca=self._root_ca,
+                )
+                candidate = Attestation(attestation, challenge.encode(), config)
+                try:
+                    await candidate.verify()
+                except PyAttestException as exc:
+                    last_exc = exc
+                    continue
+                attest, environment = candidate, env_label
+                break
+            if attest is not None:
+                break
         if attest is None:
             raise AppAttestError("attestation failed verification") from last_exc
 
@@ -210,11 +220,9 @@ class AppAttestService:
             if row is None:
                 raise AppAttestError("unknown attest key")
 
-            # rpId: the first 32 bytes of authData are SHA-256(app_id).
-            if (
-                authenticator_data[:32]
-                != hashlib.sha256(self._app_id.encode()).digest()
-            ):
+            # rpId: the first 32 bytes of authData are SHA-256(app_id), for one
+            # of our configured apps.
+            if authenticator_data[:32] not in self._rp_id_hashes:
                 raise AppAttestError("rpId mismatch")
 
             # Signature over SHA-256(authData ‖ SHA-256(challenge)).
@@ -260,6 +268,6 @@ def build_app_attest_service(
     return AppAttestService(
         sessionmaker,
         challenge_store,
-        app_id=settings.app_attest_app_id,
+        app_id=settings.app_attest_app_ids,
         environment=settings.app_attest_environment,
     )

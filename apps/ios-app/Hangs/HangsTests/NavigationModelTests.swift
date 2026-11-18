@@ -108,4 +108,72 @@ struct NavigationModelTests {
 
         #expect(nav.orderFlowPresented)
     }
+
+    // WHY (#213.4): a pack started from Profile → My packs (or a spoken
+    // "start" while the Profile is open) runs on the Play tab, where the quiz
+    // screens live. If the teardown left the Profile selected, the quiz would
+    // run behind a tab the player cannot see, with the tab bar still showing.
+    @Test("entering .startingQuiz returns to Play and empties the Profile stack")
+    func startingQuizFromProfileReturnsToPlay() {
+        let nav = NavigationModel()
+        nav.selectedTab = .profile
+        nav.profilePath = [.settings, .myPacks]
+
+        nav.handleQuizStateChange(.startingQuiz)
+
+        #expect(nav.selectedTab == .play)
+        #expect(nav.profilePath.isEmpty)
+    }
+
+    // WHY (founder, build 87, slow connection): a quiz start stays on Home
+    // with the tab bar up while the server answers, so the player can walk to
+    // another tab meanwhile. Every screen after the start hides the tab bar,
+    // so a quiz (or its error screen) that arrives behind another tab leaves
+    // the player with no bar and no way back but killing the app.
+    @Test(
+        "a quiz that leaves Home behind another tab brings the player to Play",
+        arguments: [
+            QuizState.askingQuestion,
+            .awaitingQuestion,
+            .finished,
+            .error(message: "offline", context: .general),
+        ]
+    )
+    func quizArrivingBehindAnotherTabReturnsToPlay(arrived: QuizState) {
+        let nav = NavigationModel()
+        nav.handleQuizStateChange(.startingQuiz)
+        nav.selectedTab = .together
+
+        nav.handleQuizStateChange(arrived)
+
+        #expect(nav.selectedTab == .play)
+    }
+
+    // WHY: the start control is cancellable; a cancelled start returns to
+    // `.idle`, where Home and the tab bar stand, so the player stays put.
+    @Test("a cancelled start leaves the player on the tab they walked to")
+    func cancelledStartKeepsTab() {
+        let nav = NavigationModel()
+        nav.handleQuizStateChange(.startingQuiz)
+        nav.selectedTab = .together
+
+        nav.handleQuizStateChange(.idle)
+
+        #expect(nav.selectedTab == .together)
+    }
+
+    // WHY (#213.4): the one-time recording consent question asks on Home; it
+    // must not pop up over the Profile tab or a pushed screen.
+    @Test("Home counts as on top only on the Play tab with nothing pushed")
+    func homeOnTop() {
+        let nav = NavigationModel()
+        #expect(nav.isHomeOnTop)
+
+        nav.selectedTab = .profile
+        #expect(!nav.isHomeOnTop)
+
+        nav.selectedTab = .play
+        nav.path = [.myPacks]
+        #expect(!nav.isHomeOnTop)
+    }
 }

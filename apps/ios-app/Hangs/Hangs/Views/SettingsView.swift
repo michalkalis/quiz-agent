@@ -138,7 +138,7 @@ struct SettingsView: View {
         .alert("Delete account?", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
-                account.deleteAccount(auth: appState.authService, onIdentityChanged: appState.myPacksViewModel.reset)
+                account.deleteAccount(auth: appState.authService, onIdentityChanged: appState.identityChanged)
             }
         } message: {
             Text("This permanently removes your data, history, and Trubbo Plus access. This can't be undone.")
@@ -196,7 +196,7 @@ struct SettingsView: View {
             // #174 five-quiz expiry is gone — it hid them from the one person who
             // still needed them). The row reads the effective state.
             HangsToggleRow(
-                label: "Voice hints",
+                label: "Command hints",
                 subtitle: "Show the voice commands you can say",
                 isOn: Binding(
                     get: { viewModel.showsVoiceHints },
@@ -263,41 +263,17 @@ struct SettingsView: View {
                 }
             } label: {
                 HangsConfigRow(
-                    // "Current language" read as the APP language — this is the
-                    // quiz content/voice language (founder batch 2026-07-12).
+                    // Founder 2026-10-30: one language for everything — the
+                    // interface follows it too (`InterfaceLanguage`).
                     label: "Quiz language",
                     value: Language.selectable(viewModel.settings.language).nativeName,
-                    subtitle: "Questions, answers and voice",
+                    subtitle: "Questions, voice and the whole app",
                     action: {}
                 )
                 .allowsHitTesting(false)
             }
             .accessibilityIdentifier("settings-language-menu")
-
-            hairline
-
-            // #130: the interface language is a separate, much smaller list
-            // (English + Slovak). iOS already owns that picker per app, so we
-            // only mirror the current value and deep-link to it instead of
-            // duplicating a second picker in-app.
-            HangsConfigRow(
-                label: "App language",
-                value: Self.appLanguageDisplayName,
-                subtitle: "Buttons, labels and settings"
-            ) {
-                if let url = URL(string: "app-settings:") {
-                    openURL(url)
-                }
-            }
-            .accessibilityIdentifier("settings-app-language-row")
         }
-    }
-
-    /// Native name of the localization iOS actually resolved for the app bundle,
-    /// which is what the user sees in the interface — not `settings.language`.
-    private static var appLanguageDisplayName: String {
-        let code = Bundle.main.preferredLocalizations.first ?? Language.default.id
-        return Language.forCode(String(code.prefix(2)))?.nativeName ?? Language.default.nativeName
     }
 
     // MARK: - Session group (#68, founder decision 6 Variant A)
@@ -353,7 +329,7 @@ struct SettingsView: View {
                 }
             } label: {
                 HangsConfigRow(
-                    label: "Answer reveal",
+                    label: "When to show answers",
                     value: viewModel.settings.answerRevealMode.displayName,
                     action: {}
                 )
@@ -391,12 +367,12 @@ struct SettingsView: View {
 
     /// "10s"; 0 stays literal ("0s" = record immediately for thinking time).
     private static func secondsDisplay(_ seconds: Int) -> String {
-        String(localized: "\(seconds)s", comment: "Seconds value in session settings, e.g. 10s")
+        String(localized: "\(seconds)s", bundle: .interface, locale: .interface, comment: "Seconds value in session settings, e.g. 10s")
     }
 
     /// "10 questions" per the approved frame.
     private static func questionCountDisplay(_ count: Int) -> String {
-        String(localized: "\(count) questions", comment: "Questions-per-session value in session settings")
+        String(localized: "\(count) questions", bundle: .interface, locale: .interface, comment: "Questions-per-session value in session settings")
     }
 
     private var audioFeedbackGroup: some View {
@@ -518,7 +494,7 @@ struct SettingsView: View {
                     showsChevron: false,
                     labelColor: Theme.Hangs.Colors.error
                 ) {
-                    account.signOut(auth: appState.authService, onIdentityChanged: appState.myPacksViewModel.reset)
+                    account.signOut(auth: appState.authService, onIdentityChanged: appState.identityChanged)
                 }
                 .accessibilityIdentifier("account.signOut")
 
@@ -563,18 +539,18 @@ struct SettingsView: View {
             // #123 Track A: previously the literal "Free" — briefly told a
             // subscriber they were on the free plan. Read as loading, not as
             // a (possibly wrong) answer.
-            return String(localized: "Loading…", comment: "Settings subscription row value before usage has loaded")
+            return String(localized: "Loading…", bundle: .interface, locale: .interface, comment: "Settings subscription row value before usage has loaded")
         }
         if usage.isPlus {
             guard let remaining = usage.remaining, let limit = usage.questionsLimit else {
                 return "Trubbo Plus"
             }
-            return String(localized: "Trubbo Plus · \(remaining) of \(limit) left", comment: "Settings subscription row value: Trubbo Plus with remaining monthly questions")
+            return String(localized: "Trubbo Plus · \(remaining) of \(limit) left", bundle: .interface, locale: .interface, comment: "Settings subscription row value: Trubbo Plus with remaining monthly questions")
         }
         if usage.creditBalance > 0 {
-            return String(localized: "Free · \(usage.creditBalance) credits", comment: "Settings subscription row value: free plan with pack credits remaining")
+            return String(localized: "Free · \(usage.creditBalance) credits", bundle: .interface, locale: .interface, comment: "Settings subscription row value: free plan with pack credits remaining")
         }
-        return String(localized: "Free · \(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) left", comment: "Settings subscription row value: free plan with remaining monthly questions")
+        return String(localized: "Free · \(usage.remaining ?? 0) of \(usage.questionsLimit ?? 0) left", bundle: .interface, locale: .interface, comment: "Settings subscription row value: free plan with remaining monthly questions")
     }
 
     private var aboutGroup: some View {
@@ -730,22 +706,25 @@ struct SettingsView: View {
         // #130: these are String-typed, so they need explicit localization —
         // bare literals here stayed English in a Slovak interface.
         if !viewModel.settings.voiceCommandsEnabled {
-            return String(localized: "Off", comment: "Voice-command status: the feature is switched off")
+            return String(localized: "Off", bundle: .interface, locale: .interface, comment: "Voice-command status: the feature is switched off")
         }
         // Read the view-model's observable mirror (not the service's plain
         // property) so this row live-updates when the recognizer flips to
         // `.ready` after the model finishes installing (#96 S2).
         let base: String
         switch viewModel.commandAvailability {
-        case .unknown: base = String(localized: "Checking…", comment: "Voice-command status: availability is being determined")
-        case .installingAssets: base = String(localized: "Installing…", comment: "Voice-command status: on-device recognizer assets are downloading")
-        case .ready: base = String(localized: "Ready", comment: "Voice-command status: recognizer is ready")
-        case .unavailable: base = String(localized: "Unavailable", comment: "Voice-command status: recognizer could not start")
+        case .unknown: base = String(localized: "Checking…", bundle: .interface, locale: .interface, comment: "Voice-command status: availability is being determined")
+        case .permissionNeeded: base = String(localized: "Not turned on", bundle: .interface, locale: .interface, comment: "Voice-command status: speech recognition was never allowed; the player can turn commands on from the quiz listen bar")
+        case .permissionDenied: base = String(localized: "No permission", bundle: .interface, locale: .interface, comment: "Voice-command status: speech recognition is denied in iOS Settings")
+        case .installingAssets: base = String(localized: "Installing…", bundle: .interface, locale: .interface, comment: "Voice-command status: on-device recognizer assets are downloading")
+        case .ready: base = String(localized: "Ready", bundle: .interface, locale: .interface, comment: "Voice-command status: recognizer is ready")
+        case .unavailable: base = String(localized: "Unavailable", bundle: .interface, locale: .interface, comment: "Voice-command status: recognizer could not start")
         }
         if let last = viewModel.lastRecognizedCommand {
             let word = VoiceCommandLexicon.spokenWord(last, language: viewModel.commandLanguage)
             return String(
                 localized: "\(base) · heard \"\(word)\"",
+                bundle: .interface, locale: .interface,
                 comment: "Voice-command status with the last recognized command word appended"
             )
         }
@@ -790,7 +769,7 @@ struct SettingsView: View {
             // #208.7: the command listener stays up through the question read.
             HangsToggleRow(
                 label: "Commands while the question is read",
-                subtitle: "\"Repeat\" and \"skip\" work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume",
+                subtitle: "\"Repeat\" and \"next\" work while the question is read, on the iPhone speaker or a hands-free call route. The question then plays at call volume",
                 isOn: Binding(
                     get: { diagnostics.commandsDuringReading },
                     set: diagnostics.setCommandsDuringReading

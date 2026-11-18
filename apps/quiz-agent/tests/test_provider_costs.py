@@ -17,6 +17,7 @@ from datetime import date
 
 import httpx
 import pytest
+from quiz_shared.llm import credit_gate
 from app.config import Settings
 from app.monitoring import provider_costs as pc
 from httpx import MockTransport, Response
@@ -34,9 +35,10 @@ def _client(handler) -> httpx.AsyncClient:
 @pytest.fixture(autouse=True)
 def _env(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_ADMIN_KEY", "sk-ant-admin-secret")
-    monkeypatch.setenv("ANTHROPIC_CREDIT_START", "2026-10-09")
-    monkeypatch.setenv("ANTHROPIC_CREDIT_EXPIRES", "2026-11-06")
-    monkeypatch.setenv("ANTHROPIC_CREDIT_USD", "200")
+    # The period is committed code now; tests pin their own.
+    monkeypatch.setattr(credit_gate, "CREDIT_START", date(2026, 10, 9))
+    monkeypatch.setattr(credit_gate, "CREDIT_EXPIRES", date(2026, 11, 6))
+    monkeypatch.setattr(credit_gate, "CREDIT_USD", 200.0)
     monkeypatch.setenv("OPENAI_ADMIN_KEY", "sk-admin-secret")
     monkeypatch.setenv("FLY_METRICS_TOKEN", "FlyV1 fm2_secret")
 

@@ -52,6 +52,9 @@ async def test_customer_order_flag_plans_subthemes_on_the_worker_walk(
     monkeypatch.delenv("PACK_BATCH_SCHEDULE", raising=False)
     argv = ["--dry-run"] + (["--customer-order"] if customer_order else [])
     topup = _built_walk(argv)
+    # Founder 2026-11-18: the CLI customer walk drops the per-topic cap, as
+    # the worker does; a corpus walk keeps it.
+    assert topup._composition_stage._customer_order is customer_order
 
     gen, planner = _Generator(), _Planner()
     topup._generation_stage._generator = gen

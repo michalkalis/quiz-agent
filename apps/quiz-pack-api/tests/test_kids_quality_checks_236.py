@@ -264,28 +264,18 @@ def test_adult_tf_cap_is_unchanged(band) -> None:
     assert info["tf_cap"] == 1 and len(ctx.questions) == 1
 
 
-def _compose_one_topic(band: str | None) -> tuple[OrderContext, dict]:
-    # A single-topic custom pack: the model labels every whole-topic question
-    # with the order's topic.
-    qs = [_q(text=f"Which LEGO fact {i}?", topic="LEGO") for i in range(5)]
-    ctx = _ctx(band, qs, target=10)
-    return ctx, asyncio.run(CompositionStage().run(ctx, _Sink())).info
-
-
 @pytest.mark.parametrize("band", BANDS)
 def test_child_pack_keeps_paid_questions_sharing_the_order_topic_label(band) -> None:
     # Second trial 2026-11-17: "dropped ... topic='LEGO' over per-topic cap 2".
     # The label is the order's own topic, so the cap threw away paid
     # questions without measuring any spread; the sub-theme plan does that.
-    ctx, info = _compose_one_topic(band)
+    # A child pack is always a customer order (the worker); since 2026-11-18
+    # no customer pack has a topic cap (adult cases: test_composition.py).
+    qs = [_q(text=f"Which LEGO fact {i}?", topic="LEGO") for i in range(5)]
+    ctx = _ctx(band, qs, target=10)
+    info = asyncio.run(CompositionStage(customer_order=True).run(ctx, _Sink())).info
     assert len(ctx.questions) == 5
     assert info["topic_cap"] is None and info["topic_cap_dropped"] == 0
-
-
-@pytest.mark.parametrize("band", [None, "adults"])
-def test_adult_topic_cap_is_unchanged(band) -> None:
-    ctx, info = _compose_one_topic(band)
-    assert info["topic_cap"] == 2 and len(ctx.questions) == 2
 
 
 # --- 6. the kids prompt steers to the child's world -----------------------------

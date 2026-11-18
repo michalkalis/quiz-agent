@@ -15,7 +15,7 @@
    "en-US": "First public beta. Please try:\n• A whole quiz by voice, also with background noise\n• Answering in your own words and the voice commands: start, ok, next, repeat, skip\n• Your own pack on a topic you like: Settings › Create a pack\n• Purchases: free test purchases, nothing is charged\n\nWrong or unclear question? Tap ⋯ › Rate question. Anything else: Settings › Send feedback, or take a screenshot and send it through TestFlight.",
    "sk": "Prvá verejná beta. Vyskúšaj prosím:\n• Celý kvíz hlasom, aj s hlukom v pozadí\n• Odpovede vlastnými slovami a hlasové povely: štart, ok, ďalej, zopakuj, preskoč\n• Vlastný balík na tému, ktorá ťa baví: Nastavenia › Vytvor balík\n• Nákupy: sú testovacie, nič sa nezaplatí\n\nZlá alebo nejasná otázka? Ťukni na ⋯ › Ohodnoť otázku. Všetko ostatné: Nastavenia › Odošli spätnú väzbu, alebo urob screenshot a pošli ho cez TestFlight.",
    "cs": "První veřejná beta. Vyzkoušej prosím:\n• Celý kvíz hlasem, i s hlukem v pozadí\n• Odpovědi vlastními slovy a hlasové povely: start, ok, dál, zopakuj, přeskoč\n• Vlastní balíček na téma, které tě baví: Nastavení › Vytvoř balíček\n• Nákupy: jsou testovací, nic se nezaplatí\n\nŠpatná nebo nejasná otázka? Ťukni na ⋯ › Ohodnoť otázku. Všechno ostatní: Nastavení › Odešli zpětnou vazbu, nebo udělej screenshot a pošli ho přes TestFlight.",
-   "uk": "Перша публічна бета. Спробуй, будь ласка:\n• Цілу вікторину голосом, також із шумом на фоні\n• Відповіді своїми словами та голосові команди: старт, добре, далі, повтори, пропусти\n• Власний пакет на тему, яка тобі цікава: Налаштування › Створи пакет\n• Покупки: вони тестові, гроші не списуються\n\nНеправильне чи незрозуміле питання? Торкнися ⋯ › Оціни питання. Усе інше: Налаштування › Надіслати відгук, або зроби знімок екрана й надішли його через TestFlight."
+   "uk": "Перша публічна бета. Спробуй, будь ласка:\n• Цілу вікторину голосом, також із шумом на фоні\n• Відповіді своїми словами та голосові команди: старт, добре, далі, повтори, пропусти\n• Власний набір на тему, яка тобі цікава: Налаштування › Створи набір\n• Покупки: вони тестові, гроші не списуються\n\nНеправильне чи незрозуміле питання? Торкнися ⋯ › Оціни питання. Усе інше: Налаштування › Надішли відгук, або зроби знімок екрана й надішли його через TestFlight."
   }
  },
  "in_app_purchases": {
@@ -66,7 +66,7 @@
     "100 otázek navíc, které nikdy nevyprší"
    ],
    "uk": [
-    "Пакет зі 100 питань",
+    "Набір зі 100 питань",
     "100 додаткових питань, які ніколи не згорають"
    ]
   },
@@ -88,7 +88,7 @@
     "30 otázek na téma, které si vybereš"
    ],
    "uk": [
-    "Власний пакет, 30 питань",
+    "Власний набір, 30 питань",
     "30 питань на тему, яку вибереш ти"
    ]
   },
@@ -110,7 +110,7 @@
     "10 otázek na téma, které si vybereš"
    ],
    "uk": [
-    "Власний пакет, 10 питань",
+    "Власний набір, 10 питань",
     "10 питань на тему, яку вибереш ти"
    ]
   }

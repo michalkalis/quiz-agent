@@ -105,53 +105,53 @@
 	"segments": [
 		{
 			"from": 0,
-			"to": 5.06
+			"to": 9.01
 		},
 		{
-			"from": 5.06,
-			"to": 7.96
+			"from": 9.01,
+			"to": 11.91
 		},
 		{
-			"from": 7.96,
-			"to": 17.01
+			"from": 11.91,
+			"to": 20.96
 		},
 		{
-			"from": 17.01,
-			"to": 24.117
+			"from": 20.96,
+			"to": 28.067
 		}
 	],
 	"zooms": [
 		{
-			"from": 0.9,
-			"to": 5.06,
+			"from": 0.6,
+			"to": 9.01,
 			"x": 603,
-			"y": 1390,
+			"y": 1225,
 			"scale": 1.5
 		},
 		{
-			"from": 5.06,
-			"to": 7.96,
+			"from": 9.01,
+			"to": 11.91,
 			"x": 603,
 			"y": 751,
 			"scale": 1.5
 		},
 		{
-			"from": 7.96,
-			"to": 14.56,
+			"from": 11.91,
+			"to": 18.51,
 			"x": 603,
 			"y": 1866,
 			"scale": 1.5
 		},
 		{
-			"from": 14.56,
-			"to": 17.01,
+			"from": 18.51,
+			"to": 20.96,
 			"x": 603,
 			"y": 1977,
 			"scale": 1.5
 		},
 		{
-			"from": 17.01,
-			"to": 24.117,
+			"from": 20.96,
+			"to": 28.067,
 			"x": 603,
 			"y": 829,
 			"scale": 1.5
@@ -160,254 +160,276 @@
 	"audio": [
 		{
 			"t": 0.2,
-			"src": "demo/rec/hp/norm/sk-n4.mp3"
+			"src": "demo/rec/hp/norm/sk-n4d.mp3"
 		},
 		{
-			"t": 5.31,
+			"t": 9.26,
 			"src": "demo/rec/hp/norm/sk-n5.mp3"
 		},
 		{
-			"t": 8.21,
+			"t": 12.16,
 			"src": "demo/rec/hp/norm/sk-app-q.mp3"
 		},
 		{
-			"t": 17.36,
+			"t": 21.31,
 			"src": "demo/rec/hp/norm/sk-app-ok.mp3"
 		},
 		{
-			"t": 19.85,
+			"t": 23.8,
 			"src": "demo/rec/hp/norm/sk-n6.mp3"
 		},
 		{
-			"t": 14.86,
+			"t": 4.34,
+			"src": "demo/rec/hp/norm/sk-topic.mp3"
+		},
+		{
+			"t": 18.81,
 			"src": "demo/rec/hp/norm/sk-player.mp3"
+		}
+	],
+	"taps": [
+		{
+			"t": 2.06,
+			"x": 1063,
+			"y": 1014
+		},
+		{
+			"t": 5.81,
+			"x": 1083,
+			"y": 1014
 		}
 	],
 	"captions": [
 		{
 			"from": 0.2,
-			"to": 2.32,
-			"text": "Napíš, o čom chceš hrať.",
+			"to": 2.12,
+			"text": "Povedz, o čom chceš hrať.",
 			"kind": "said",
 			"words": [
 				{
-					"w": "Napíš,",
+					"w": "Povedz,",
 					"t": 0.2
 				},
 				{
 					"w": "o",
-					"t": 0.84
+					"t": 0.76
 				},
 				{
 					"w": "čom",
-					"t": 1.0
+					"t": 0.84
 				},
 				{
 					"w": "chceš",
-					"t": 1.24
+					"t": 1.12
 				},
 				{
 					"w": "hrať.",
-					"t": 1.56
+					"t": 1.52
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 2.32,
-			"to": 4.76,
+			"from": 2.12,
+			"to": 4.24,
 			"text": "Napríklad Harry Potter.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Napríklad",
-					"t": 2.32
+					"t": 2.12
 				},
 				{
 					"w": "Harry",
-					"t": 3.32
+					"t": 3.0
 				},
 				{
 					"w": "Potter.",
-					"t": 3.72
+					"t": 3.32
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 5.31,
-			"to": 6.27,
+			"from": 4.29,
+			"to": 5.877,
+			"text": "Harry Potter",
+			"kind": "player"
+		},
+		{
+			"from": 9.26,
+			"to": 10.22,
 			"text": "O pár minút",
 			"kind": "said",
 			"words": [
 				{
 					"w": "O",
-					"t": 5.31
+					"t": 9.26
 				},
 				{
 					"w": "pár",
-					"t": 5.47
+					"t": 9.42
 				},
 				{
 					"w": "minút",
-					"t": 5.71
+					"t": 9.66
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 6.27,
-			"to": 7.91,
+			"from": 10.22,
+			"to": 11.86,
 			"text": "máš kvíz hotový.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "máš",
-					"t": 6.27
+					"t": 10.22
 				},
 				{
 					"w": "kvíz",
-					"t": 6.59
+					"t": 10.54
 				},
 				{
 					"w": "hotový.",
-					"t": 6.95
+					"t": 10.9
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 8.21,
-			"to": 10.17,
+			"from": 12.16,
+			"to": 14.12,
 			"text": "Ktorý obyčajný vták môže",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Ktorý",
-					"t": 8.21
+					"t": 12.16
 				},
 				{
 					"w": "obyčajný",
-					"t": 8.61
+					"t": 12.56
 				},
 				{
 					"w": "vták",
-					"t": 9.37
+					"t": 13.32
 				},
 				{
 					"w": "môže",
-					"t": 9.81
+					"t": 13.76
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 10.17,
-			"to": 12.71,
+			"from": 14.12,
+			"to": 16.66,
 			"text": "zabiť baziliska vlastným hlasom?",
 			"kind": "said",
 			"words": [
 				{
 					"w": "zabiť",
-					"t": 10.17
+					"t": 14.12
 				},
 				{
 					"w": "baziliska",
-					"t": 10.53
+					"t": 14.48
 				},
 				{
 					"w": "vlastným",
-					"t": 11.21
+					"t": 15.16
 				},
 				{
 					"w": "hlasom?",
-					"t": 11.81
+					"t": 15.76
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 15.8,
-			"to": 16.977,
+			"from": 19.75,
+			"to": 20.927,
 			"text": "Kohút!",
 			"kind": "player"
 		},
 		{
-			"from": 17.36,
-			"to": 18.4,
+			"from": 21.31,
+			"to": 22.35,
 			"text": "Správne!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Správne!",
-					"t": 17.36
+					"t": 21.31
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 18.4,
-			"to": 19.8,
+			"from": 22.35,
+			"to": 23.75,
 			"text": "Je to kohút.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Je",
-					"t": 18.4
+					"t": 22.35
 				},
 				{
 					"w": "to",
-					"t": 18.56
+					"t": 22.51
 				},
 				{
 					"w": "kohút.",
-					"t": 18.76
+					"t": 22.71
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 19.85,
-			"to": 21.77,
+			"from": 23.8,
+			"to": 25.72,
 			"text": "Ku každej odpovedi dostaneš",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Ku",
-					"t": 19.85
+					"t": 23.8
 				},
 				{
 					"w": "každej",
-					"t": 19.97
+					"t": 23.92
 				},
 				{
 					"w": "odpovedi",
-					"t": 20.41
+					"t": 24.36
 				},
 				{
 					"w": "dostaneš",
-					"t": 21.13
+					"t": 25.08
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 21.77,
-			"to": 24.117,
+			"from": 25.72,
+			"to": 28.067,
 			"text": "aj krátke vysvetlenie.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "aj",
-					"t": 21.77
+					"t": 25.72
 				},
 				{
 					"w": "krátke",
-					"t": 21.93
+					"t": 25.88
 				},
 				{
 					"w": "vysvetlenie.",
-					"t": 22.37
+					"t": 26.32
 				}
 			],
 			"karaoke": true
@@ -415,19 +437,19 @@
 	],
 	"marks": [
 		{
-			"from": 1.2,
-			"to": 4.86,
-			"x": 48,
-			"y": 1194,
-			"w": 1110,
-			"h": 393,
+			"from": 7.61,
+			"to": 8.81,
+			"x": 47,
+			"y": 1105,
+			"w": 1115,
+			"h": 312,
 			"r": 40,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 5.36,
-			"to": 7.86,
+			"from": 9.31,
+			"to": 11.81,
 			"x": 350,
 			"y": 488,
 			"w": 492,
@@ -437,8 +459,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 8.16,
-			"to": 10.12,
+			"from": 12.11,
+			"to": 14.07,
 			"x": 92,
 			"y": 1716,
 			"w": 883,
@@ -448,8 +470,8 @@
 			"hold": true
 		},
 		{
-			"from": 10.12,
-			"to": 11.76,
+			"from": 14.07,
+			"to": 15.71,
 			"x": 89,
 			"y": 1817,
 			"w": 802,
@@ -465,8 +487,8 @@
 			"hold": true
 		},
 		{
-			"from": 11.76,
-			"to": 12.61,
+			"from": 15.71,
+			"to": 16.56,
 			"x": 90,
 			"y": 1918,
 			"w": 309,
@@ -481,8 +503,8 @@
 			}
 		},
 		{
-			"from": 14.86,
-			"to": 16.96,
+			"from": 18.81,
+			"to": 20.91,
 			"x": 38,
 			"y": 2134,
 			"w": 1130,
@@ -492,8 +514,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 17.31,
-			"to": 19.8,
+			"from": 21.26,
+			"to": 23.75,
 			"x": 91,
 			"y": 689,
 			"w": 346,
@@ -503,8 +525,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 19.85,
-			"to": 24.117,
+			"from": 23.8,
+			"to": 28.067,
 			"x": 93,
 			"y": 1063,
 			"w": 908,

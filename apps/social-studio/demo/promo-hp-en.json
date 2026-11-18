@@ -121,53 +121,53 @@
 	"segments": [
 		{
 			"from": 0,
-			"to": 4.6
+			"to": 9.05
 		},
 		{
-			"from": 4.6,
-			"to": 7.66
+			"from": 9.05,
+			"to": 12.11
 		},
 		{
-			"from": 7.66,
-			"to": 17.19
+			"from": 12.11,
+			"to": 21.64
 		},
 		{
-			"from": 17.19,
-			"to": 23.577
+			"from": 21.64,
+			"to": 28.027
 		}
 	],
 	"zooms": [
 		{
-			"from": 0.9,
-			"to": 4.6,
+			"from": 0.6,
+			"to": 9.05,
 			"x": 603,
-			"y": 1390,
+			"y": 1225,
 			"scale": 1.5
 		},
 		{
-			"from": 4.6,
-			"to": 7.66,
+			"from": 9.05,
+			"to": 12.11,
 			"x": 603,
 			"y": 750,
 			"scale": 1.5
 		},
 		{
-			"from": 7.66,
-			"to": 14.74,
+			"from": 12.11,
+			"to": 19.19,
 			"x": 603,
 			"y": 1867,
 			"scale": 1.5
 		},
 		{
-			"from": 14.74,
-			"to": 17.19,
+			"from": 19.19,
+			"to": 21.64,
 			"x": 603,
 			"y": 1977,
 			"scale": 1.5
 		},
 		{
-			"from": 17.19,
-			"to": 23.577,
+			"from": 21.64,
+			"to": 28.027,
 			"x": 603,
 			"y": 837,
 			"scale": 1.5
@@ -176,299 +176,325 @@
 	"audio": [
 		{
 			"t": 0.2,
-			"src": "demo/rec/hp/norm/en-n4.mp3"
+			"src": "demo/rec/hp/norm/en-n4d.mp3"
 		},
 		{
-			"t": 4.85,
+			"t": 9.3,
 			"src": "demo/rec/hp/norm/en-n5.mp3"
 		},
 		{
-			"t": 7.91,
+			"t": 12.36,
 			"src": "demo/rec/hp/norm/en-app-q.mp3"
 		},
 		{
-			"t": 17.54,
+			"t": 21.99,
 			"src": "demo/rec/hp/norm/en-app-ok.mp3"
 		},
 		{
-			"t": 20.03,
+			"t": 24.48,
 			"src": "demo/rec/hp/norm/en-n6.mp3"
 		},
 		{
-			"t": 15.04,
+			"t": 4.34,
+			"src": "demo/rec/hp/norm/en-topic.mp3"
+		},
+		{
+			"t": 19.49,
 			"src": "demo/rec/hp/norm/en-player.mp3"
+		}
+	],
+	"taps": [
+		{
+			"t": 2.06,
+			"x": 1047,
+			"y": 1011
+		},
+		{
+			"t": 5.85,
+			"x": 1072,
+			"y": 1011
 		}
 	],
 	"captions": [
 		{
 			"from": 0.2,
-			"to": 2.04,
-			"text": "Type what you want to play.",
+			"to": 2.2,
+			"text": "Just say what you want to play.",
 			"kind": "said",
 			"words": [
 				{
-					"w": "Type",
+					"w": "Just",
 					"t": 0.2
 				},
 				{
+					"w": "say",
+					"t": 0.6
+				},
+				{
 					"w": "what",
-					"t": 0.52
+					"t": 0.84
 				},
 				{
 					"w": "you",
-					"t": 0.76
+					"t": 1.0
 				},
 				{
 					"w": "want",
-					"t": 0.92
+					"t": 1.16
 				},
 				{
 					"w": "to",
-					"t": 1.04
+					"t": 1.32
 				},
 				{
 					"w": "play.",
-					"t": 1.16
+					"t": 1.56
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 2.04,
-			"to": 4.28,
+			"from": 2.2,
+			"to": 4.24,
 			"text": "Harry Potter, for example.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Harry",
-					"t": 2.04
+					"t": 2.2
 				},
 				{
 					"w": "Potter,",
-					"t": 2.36
+					"t": 2.52
 				},
 				{
 					"w": "for",
-					"t": 2.96
+					"t": 3.12
 				},
 				{
 					"w": "example.",
-					"t": 3.08
+					"t": 3.24
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 4.85,
-			"to": 5.97,
+			"from": 4.29,
+			"to": 5.917,
+			"text": "Harry Potter",
+			"kind": "player"
+		},
+		{
+			"from": 9.3,
+			"to": 10.42,
 			"text": "In a few minutes",
 			"kind": "said",
 			"words": [
 				{
 					"w": "In",
-					"t": 4.85
+					"t": 9.3
 				},
 				{
 					"w": "a",
-					"t": 5.01
+					"t": 9.46
 				},
 				{
 					"w": "few",
-					"t": 5.09
+					"t": 9.54
 				},
 				{
 					"w": "minutes",
-					"t": 5.41
+					"t": 9.86
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 5.97,
-			"to": 7.61,
+			"from": 10.42,
+			"to": 12.06,
 			"text": "your quiz is ready.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "your",
-					"t": 5.97
+					"t": 10.42
 				},
 				{
 					"w": "quiz",
-					"t": 6.37
+					"t": 10.82
 				},
 				{
 					"w": "is",
-					"t": 6.61
+					"t": 11.06
 				},
 				{
 					"w": "ready.",
-					"t": 6.77
+					"t": 11.22
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 7.91,
-			"to": 10.15,
+			"from": 12.36,
+			"to": 14.6,
 			"text": "In Harry Potter, which farm",
 			"kind": "said",
 			"words": [
 				{
 					"w": "In",
-					"t": 7.91
+					"t": 12.36
 				},
 				{
 					"w": "Harry",
-					"t": 8.07
+					"t": 12.52
 				},
 				{
 					"w": "Potter,",
-					"t": 8.47
+					"t": 12.92
 				},
 				{
 					"w": "which",
-					"t": 9.35
+					"t": 13.8
 				},
 				{
 					"w": "farm",
-					"t": 9.67
+					"t": 14.12
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 10.15,
-			"to": 10.83,
+			"from": 14.6,
+			"to": 15.28,
 			"text": "bird can kill",
 			"kind": "said",
 			"words": [
 				{
 					"w": "bird",
-					"t": 10.15
+					"t": 14.6
 				},
 				{
 					"w": "can",
-					"t": 10.39
+					"t": 14.84
 				},
 				{
 					"w": "kill",
-					"t": 10.63
+					"t": 15.08
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 10.83,
-			"to": 12.89,
+			"from": 15.28,
+			"to": 17.34,
 			"text": "the basilisk with its call?",
 			"kind": "said",
 			"words": [
 				{
 					"w": "the",
-					"t": 10.83
+					"t": 15.28
 				},
 				{
 					"w": "basilisk",
-					"t": 11.03
+					"t": 15.48
 				},
 				{
 					"w": "with",
-					"t": 11.71
+					"t": 16.16
 				},
 				{
 					"w": "its",
-					"t": 11.83
+					"t": 16.28
 				},
 				{
 					"w": "call?",
-					"t": 12.07
+					"t": 16.52
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 15.567,
-			"to": 17.157,
+			"from": 20.017,
+			"to": 21.607,
 			"text": "A rooster!",
 			"kind": "player"
 		},
 		{
-			"from": 17.54,
-			"to": 18.5,
+			"from": 21.99,
+			"to": 22.95,
 			"text": "Correct!",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Correct!",
-					"t": 17.54
+					"t": 21.99
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 18.5,
-			"to": 19.98,
+			"from": 22.95,
+			"to": 24.43,
 			"text": "It's the rooster.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "It's",
-					"t": 18.5
+					"t": 22.95
 				},
 				{
 					"w": "the",
-					"t": 18.7
+					"t": 23.15
 				},
 				{
 					"w": "rooster.",
-					"t": 18.9
+					"t": 23.35
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 20.03,
-			"to": 21.31,
+			"from": 24.48,
+			"to": 25.76,
 			"text": "Every answer comes",
 			"kind": "said",
 			"words": [
 				{
 					"w": "Every",
-					"t": 20.03
+					"t": 24.48
 				},
 				{
 					"w": "answer",
-					"t": 20.43
+					"t": 24.88
 				},
 				{
 					"w": "comes",
-					"t": 20.99
+					"t": 25.44
 				}
 			],
 			"karaoke": true
 		},
 		{
-			"from": 21.31,
-			"to": 23.577,
+			"from": 25.76,
+			"to": 28.027,
 			"text": "with a short explanation.",
 			"kind": "said",
 			"words": [
 				{
 					"w": "with",
-					"t": 21.31
+					"t": 25.76
 				},
 				{
 					"w": "a",
-					"t": 21.43
+					"t": 25.88
 				},
 				{
 					"w": "short",
-					"t": 21.55
+					"t": 26.0
 				},
 				{
 					"w": "explanation.",
-					"t": 21.87
+					"t": 26.32
 				}
 			],
 			"karaoke": true
@@ -476,19 +502,19 @@
 	],
 	"marks": [
 		{
-			"from": 1.2,
-			"to": 4.4,
-			"x": 48,
-			"y": 1194,
-			"w": 1110,
-			"h": 393,
+			"from": 7.65,
+			"to": 8.85,
+			"x": 47,
+			"y": 1105,
+			"w": 1115,
+			"h": 312,
 			"r": 40,
 			"style": "glow",
 			"alpha": 0.6
 		},
 		{
-			"from": 4.9,
-			"to": 7.56,
+			"from": 9.35,
+			"to": 12.01,
 			"x": 350,
 			"y": 487,
 			"w": 491,
@@ -498,8 +524,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 7.86,
-			"to": 10.1,
+			"from": 12.31,
+			"to": 14.55,
 			"x": 92,
 			"y": 1718,
 			"w": 901,
@@ -509,8 +535,8 @@
 			"hold": true
 		},
 		{
-			"from": 10.1,
-			"to": 11.78,
+			"from": 14.55,
+			"to": 16.23,
 			"x": 90,
 			"y": 1818,
 			"w": 939,
@@ -526,8 +552,8 @@
 			"hold": true
 		},
 		{
-			"from": 11.78,
-			"to": 12.79,
+			"from": 16.23,
+			"to": 17.24,
 			"x": 90,
 			"y": 1918,
 			"w": 271,
@@ -542,8 +568,8 @@
 			}
 		},
 		{
-			"from": 15.04,
-			"to": 17.14,
+			"from": 19.49,
+			"to": 21.59,
 			"x": 38,
 			"y": 2134,
 			"w": 1129,
@@ -553,8 +579,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 17.49,
-			"to": 19.98,
+			"from": 21.94,
+			"to": 24.43,
 			"x": 92,
 			"y": 697,
 			"w": 396,
@@ -564,8 +590,8 @@
 			"alpha": 0.6
 		},
 		{
-			"from": 20.03,
-			"to": 23.577,
+			"from": 24.48,
+			"to": 28.027,
 			"x": 91,
 			"y": 1064,
 			"w": 1017,

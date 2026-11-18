@@ -110,6 +110,47 @@ async def test_a_lost_start_answer_does_not_use_up_the_pack_play(client, app):  
     assert again.json()["detail"]["code"] == "already_played"
 
 
+async def test_a_restart_waits_for_an_answer_being_graded(client, app):  # noqa: F811
+    """An answer graded on the first session while the friend opens the link
+    again: the friend must never both hear the graded answer and get a fresh
+    counted play of the same questions. The answer routes hold the session
+    lock until the grade is written, so the restart waits for it, sees the
+    answer and is refused."""
+    token = (await _share(client, "owner", pack_id=PACK))["token"]
+    sessions = app.state.session_manager
+    old_id = (await _session(app, await _start(client, token, "friend"))).session_id
+    real_lock, real_get = sessions.session_lock, sessions.get_session
+    wants_lock, read_old = asyncio.Event(), asyncio.Event()
+
+    def spy_lock(session_id, **kw):
+        if session_id == old_id:
+            wants_lock.set()
+        return real_lock(session_id, **kw)
+
+    async def spy_get(session_id):
+        found = await real_get(session_id)
+        if session_id == old_id:
+            read_old.set()
+        return found
+
+    async with real_lock(old_id):  # the answer route, grading on S1
+        sessions.session_lock, sessions.get_session = spy_lock, spy_get
+        restart = asyncio.create_task(_start(client, token, "friend"))
+        # Held call, no clock: the restart either queues for S1's lock or
+        # (unlocked) has already read S1 before the grade below lands.
+        waits = [asyncio.create_task(e.wait()) for e in (wants_lock, read_old)]
+        await asyncio.wait(waits, return_when=asyncio.FIRST_COMPLETED)
+        for w in waits:
+            w.cancel()
+        graded = await real_get(old_id)
+        graded.question_results["p1"] = "correct"
+        assert await sessions.update_session(graded)
+    resp = await restart
+    assert resp.status_code == 409, resp.text
+    assert resp.json()["detail"]["code"] == "already_played"
+    assert (await real_get(old_id)).question_results == {"p1": "correct"}
+
+
 def _fail_once(real):
     calls = []
 

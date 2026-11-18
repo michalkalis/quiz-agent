@@ -18,7 +18,7 @@ from quiz_shared.models.session import QuizSession
 from ..config import get_settings
 from ..db.models import SharedQuiz
 from ..retrieval.question_retriever import QuestionRetriever
-from ..session.manager import SessionManager
+from ..session.manager import SessionBusy, SessionManager
 from .creation import ShareCreation, ShareError, player_score
 from .marks import aligned, known_in_session
 from .ranking import RankedPlayer, rank
@@ -139,16 +139,23 @@ class SharedQuizService(ShareCreation):
         self, share: SharedQuiz, subject_id: str, session: QuizSession
     ) -> bool:
         """This person's play of this link, not answered yet, now runs in
-        ``session``; the old session goes so one play stays one session."""
+        ``session``; the old session goes so one play stays one session.
+        Under the old session's lock, which the answer routes hold until the
+        grade is written: an answer being graded is seen (refused), and an
+        answer arriving later finds no session (404)."""
         old_id = await self.store.open_play(share, subject_id)
         if old_id is None:
             return False
-        old = await self.sessions.get_session(old_id)
-        if old is None or old.question_results:
+        try:
+            async with self.sessions.session_lock(old_id):
+                old = await self.sessions.get_session(old_id)
+                if old is None or old.question_results:
+                    return False
+                if not await self.store.move_play(share.id, old_id, session.session_id):
+                    return False
+                await self.sessions.delete_session(old_id)
+        except SessionBusy:  # still grading after the lease wait: it was played
             return False
-        if not await self.store.move_play(share.id, old_id, session.session_id):
-            return False
-        await self.sessions.delete_session(old_id)
         return True
 
     async def _start_daily(

@@ -37,6 +37,7 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 | WAL archive status | `docker compose exec postgres psql -U postgres -c 'select * from pg_stat_archiver'` |
 | Base backup now | `SSH_ORIGINAL_COMMAND=basebackup ~/trubbo/bin/backup-ssh.sh` |
 | Copy the DB Fly ↔ Hetzner (laptop) | `infra/hetzner/db-copy.sh compare\|fly-to-hetzner\|hetzner-to-fly` |
+| Social posts on time | cron `5 * * * * ~/trubbo/bin/social-publish-trigger.sh` starts the social-publish workflow hourly (GitHub's own schedule lags hours); token in `env/github-dispatch.env` |
 | Prod tunnel for mba tools (laptop) | `infra/hetzner/local-prod-env.sh hetzner\|fly` |
 
 ## Client IP

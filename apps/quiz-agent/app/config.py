@@ -168,11 +168,12 @@ class Settings(BaseSettings):
     # #218.7: AI (LLM) answer gradings per player per UTC day. Not a 429: past it
     # that player's answers are graded by the fast deterministic path only.
     daily_cap_ai_gradings: int = 300
-    # #207 (207.13): service-wide ElevenLabs credits per UTC day (Starter = 30k
-    # a month, ~420/day average so far). Past it, new speech uses the OpenAI
-    # voice/recogniser until midnight UTC, so one bad day cannot spend the
-    # month. 0 disables.
-    elevenlabs_daily_credit_budget: int = 5000
+    # #207 (207.13): service-wide ElevenLabs credits per UTC day. Past it, new
+    # speech uses the OpenAI voice/recogniser until midnight UTC, so one bad day
+    # cannot spend the month. 0 disables. Founder 2026-11-18: 20k, since the
+    # ElevenLabs grant (~33M credits a year, ~90k a day) replaced the 30k-a-month
+    # Starter plan and 5k was used up by evening, so players got the backup voice.
+    elevenlabs_daily_credit_budget: int = 20000
     elevenlabs_tts_model: str = "eleven_v4_turbo"
     # #231: model for Cyrillic (Ukrainian) text, see tts/voices.py.
     elevenlabs_tts_model_cyrillic: str = "eleven_v3"

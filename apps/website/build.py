@@ -45,8 +45,10 @@ STORE = {
 }
 BETA = "https://testflight.apple.com/join/qvbqMh1k"
 FONT_FILES = ["calistoga-latin.woff2", "calistoga-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2", "rethink-sans-latin.woff2"]
-STATIC = [*FONT_FILES, "funnel-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "robots.txt", "404.html", "CNAME", "join.html", "play.html", "clip-test.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
+STATIC = [*FONT_FILES, "funnel-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "og-play.png", "og-join.png", "robots.txt", "404.html", "CNAME", "clip-test.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
 
+# Pages a shared link lands on without the app (#232 quiz, #212 game invite), with src/link-page.js inlined.
+LINK_PAGES = ["play.html", "join.html"]
 KEY = re.compile(r"\{\{\s*([a-z0-9_.]+)\s*\}\}")
 DASH = re.compile(r"[–—]| - | -$|^- ")
 TAG = re.compile(r"<[^>]+>")
@@ -183,6 +185,14 @@ Publisher: missinghue s.r.o., Prague. Contact: hi@trubbo.app
 """
 
 
+def link_page(name: str) -> str:
+    """play.html or join.html with the shared copy-then-App-Store script (src/link-page.js) inlined."""
+    page = (SRC / name).read_text("utf-8")
+    if page.count("{{gen.link_page_js}}") != 1:
+        raise ValueError(f"{name}: needs exactly one {{{{gen.link_page_js}}}}")
+    return page.replace("{{gen.link_page_js}}", (SRC / "link-page.js").read_text("utf-8").strip())
+
+
 def strings_pass(page: str, lang: str, strings: dict, used: set) -> str:
     """Pass 2: visible strings. Keys ending in _html may carry inline markup; the rest is escaped."""
 
@@ -305,10 +315,12 @@ def main() -> int:
     for name in STATIC:
         (OUT / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(SRC / name, OUT / name)
+    for name in LINK_PAGES:
+        (OUT / name).write_text(link_page(name), "utf-8")
     # #234: Trubbo Beta invites on /beta/join (its own universal link path, see the AASA); without the app the
     # link lands on the same page as /join.
     (OUT / "beta").mkdir(exist_ok=True)
-    shutil.copy2(SRC / "join.html", OUT / "beta" / "join.html")
+    (OUT / "beta" / "join.html").write_text(link_page("join.html"), "utf-8")
     # "Hear the question" recordings, one per language (src/audio/question-<lang>.mp3); the page falls back to
     # the browser's voice while one is missing.
     if (SRC / "audio").is_dir():

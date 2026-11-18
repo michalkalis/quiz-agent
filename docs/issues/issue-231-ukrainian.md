@@ -1,7 +1,7 @@
 # #231 — Ukrajinčina ako štvrtý jazyk
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-18 hlas vybraný a nasadený (eleven_v3), písmo Manrope, pravidlá formulácií v štýle domu; skúška štýlu 11 otázok (zadarmo cez predplatné, `docs/testing/runs/uk-style-2026-11-18/`) čaká na rodeného hovorcu; predtým čakalo výber písma (founder) a posúdenie čítania (rodený hovorca) — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
+**Status:** 2026-11-18 overenie hotové (hlas, písmo, štýl otázok); stavba vo vlnách nižšie, kontrola priamo v appke cez TestFlight — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
 **Founder:** 2026-11-08 „pridaj ukrajinčinu do appky, na všetko, tak ako cz, sk a en“
 
 ## Cieľ
@@ -43,33 +43,30 @@ Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpozn
 
 ## Úlohy
 
-- [~] **231.0 Overenie rizík pred stavbou** (2026-11-17) — výsledky na nahrávkach z umelého hlasu (ElevenLabs, aktuálny hlas), [stránka na posúdenie](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ):
-  - [x] (a) Apple diktovanie `uk-UA` na Macu (macOS 27, rovnaké nastavenie ako appka): **9/9 povelov** (старт, далі, повтори, пропусти, ще раз, добре, стоп, пауза, додому) aj možnosti один–чотири (prídu ako číslice 1–4). Model sa stiahol sám. Odpovede typu „Канберра“ diktovanie pokazí, ale odpovede prepisuje server. iPhone s iOS 26 a skutočný hlas → 231.11.
-  - [x] (b) Čítanie aktuálnym hlasom (rodený hovorca, 2026-11-17): **2 z 5 zle** (1, 5), 2 dobre, 3 a 4 zlý dôraz/intonácia → aktuálny hlas na ukrajinčinu nestačí; ďalej kolo 2 s inými hlasmi a modelmi naslepo.
-  - [x] Kolo 2 naslepo (2026-11-18): **hlas 5 = ten istý hlas na modeli eleven_v3 prečítal všetko na jednotku** → ukrajinčina (cyrilika) ide na eleven_v3, sk/cs/en ostávajú na v4 Turbo (PR #841, nasadené). v3 trvá ~3,5 s na otázku namiesto ~1,6 s. Chemické značky po „символ/позначка“ sa čítajú školsky (Fe → ферум).
-  - [x] (c) Prepis odpovedí na serveri: produkčný model **9/9 bez chyby** (mená, čísla, veta, один–чотири); záložný Scribe 8/9 (Канберра → latinkou „Canberra“).
-  - [x] (d) Písmo: **founder vybral B Manrope** (2026-11-17), len pre ukrajinčinu.
-  - Formulácie otázok (rodený hovorca 11-17): ukážky 1 a 2 neprirodzené, kalky „Яке місто є столицею…“ → „Яка столиця…“, „Хто є автором збірки…“ → „Хто написав…“; 3 a 5 v poriadku. **Pilot 231.3 zatiaľ nie**, najprv pravidlá prirodzených formulácií a bezplatná skúška štýlu.
+- [x] **231.0 Overenie rizík** (2026-11-17/18, [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)) — Apple diktovanie `uk-UA` 9/9 povelov a один–чотири (Mac; iPhone v 231.11); prepis odpovedí na serveri 9/9; písmo **Manrope** (len uk); hlas: rodený hovorca naslepo vybral **ten istý hlas na eleven_v3** (PR #841), pri stabilite 1.0 znie rovnako pri každej otázke (kolo 4, PR #855); Fe → „ферум“. Formulácie: kalky „є столицею“, „є автором“, dramatické výpočty detailov, nepresná udalosť → pravidlá v štýle domu uk (PR #824, #852); skúška štýlu 11 natívnych otázok zadarmo cez predplatné (`docs/testing/runs/uk-style-2026-11-18/`) dobrá. Známe obmedzenie: ojedinelý zlý prízvuk (му́тні); knižnica na prízvuky ho tiež netrafí → riešiť zoznamom opráv až podľa nálezov v appke.
 - [x] **231.1 Server základ (vypnutý)** (2026-11-17, PR #821, nasadené) — `uk` v zoznamoch jazykov, čísla, percentá, radové číslovky a roky („у тисяча дев'ятсот шістдесят дев'ятому році“), mesiace, možnosti 1–4, hláskovanie, spätné hlášky, denná výzva (3 tvary množného čísla), oznámenie v `/app-config`. Servírovanie uk vypnuté. Rodený hovorca v 231.10 overí: roky a dátumy, „Знав/Знали“, spätné hlášky.
 - [x] **231.2 Otázky: brány kvality pre ukrajinčinu** (2026-11-17, PR #824) — odpovedateľnosť a prirodzenosť s uk, skloňovanie, kontrola ruských písmen a slov, slovník pojmov uk, pravidlo tém (vojna od 2014, politika, Rusko = vyradiť), domáca krajina Ukrajina, štýl domu uk s pravidlami prirodzených formulácií (spätná väzba 11-17). Týždenný beh uk NEspúšťa, len cez `--languages uk`.
-- [ ] **231.3 Otázky: pilot** — 25 preložených univerzálnych + 25 natívnych ukrajinských (7/10 domáca scéna = Ukrajina, recept #211) → brány → vzorka 50 na posúdenie rodenému hovorcovi v jednej stránke. Odhad nákladov pred spustením (pilot do ~$5).
-- [ ] **231.4 Otázky: plná dávka** — po schválení pilotu cieľ ~1 000+ schválených (aby kategórie nemali diery): preklad univerzálnych en otázok dávkou (rádovo jednotky dolárov) + natívne dávky (rádovo desiatky dolárov) → **suma na súhlas foundera vopred**; uk v týždennom dopĺňaní zábavy (#202). Len schválené do App Store.
+- [—] **231.3 Pilot** — zrušené (founder 2026-11-18: ďalej neiterovať ukážky, kvalita sa skontroluje priamo v appke).
+- [ ] **231.4 Otázky: dávka** — natívne ukrajinské otázky na predplatnom (zadarmo, `generate_pack --dry-run`, recept zo skúšky štýlu), 2 na tému, témy polovica ručne a polovica od modelu; prvá dávka ~200 z mesačného API kreditu k predplatnému (founder 2026-11-18), zvyšok do ~600 po kontrole v appke; cez všetky kategórie, 7/10 Ukrajina; duplicity v dávke preč (`run_dups.py`); import so strojovým schválením cez brány. Preklad univerzálnych en otázok len ak natívne nepokryjú kategórie (najprv uk podpora v prekladovom nástroji). Potom uk v týždennom dopĺňaní zábavy (#202) so súhlasom foundera na sumu.
 - [ ] **231.5 Vlastné balíky po ukrajinsky** — názov jazyka, ochrana pred ruštinou, štýl domu uk, nadpisy; zdroje z ukrajinskej Wikipédie; overiť opätovné použitie balíka (#225) s jazykom uk.
 - [ ] **231.6 Appka** — uk v projekte; 731 textov + 2 systémové; vybrané písmo pre cyriliku; povely po ukrajinsky (štart, ok, ďalej, znova, zopakuj, preskoč, stop, pauza, domov; výplňové slová так, ну, добре…), nápovedy a tlačidlá v rozkazovacom tvare; párovanie odpovedí 1–4 (MCQ sa číta číslami „Один… Чотири“ ako sk/cs, nie písmenami) a čísel v cyrilike (dnes len latinka bez diakritiky; pozor: й a ї sa nesmú zlúčiť s и a і); dátumy, mená hráčov, právne odkazy na /uk/; analytika jazyka existuje (overiť). Testy: zrkadlo sk/cs testov povelov, pixelové snímky uk.
 - [ ] **231.7 Kontrola textov** — štýl textov pre uk (tykanie „ти“ ako sk/cs, právne texty „ви“, bez pomlčiek), automatická kontrola textov rozšírená o uk (ruské písmená, vykanie), plná kontrola iným modelom ako pri #226.
 - [ ] **231.8 Web** — `/uk/` (texty, 3 právne stránky, tematické stránky s ukrajinskými adresami, ukážka hlasu), hreflang a mapa stránok sa doplnia samé.
 - [ ] **231.9 App Store a nákupy** — ukrajinský popis, názov, podnadpis, kľúčové slová, What's New, snímky s ukrajinskými nadpismi, názvy nákupov a predplatného, TestFlight texty; dostupnosť v obchode Ukrajina a ceny (Apple prepočíta automaticky, **úprava ceny pre Ukrajinu = rozhodnutie foundera**). Nahrá sa s najbližšou verziou.
-- [ ] **231.10 Overenie rodeným hovorcom** — jedna stránka: texty appky (podľa obrazoviek), App Store, web, právne, 50 otázok, ukážky hlasu; pripomienky → opravy.
+- [ ] **231.10 Overenie rodeným hovorcom v appke** — prejde TestFlight build po ukrajinsky: texty appky, otázky počas hrania, čítanie; k tomu App Store texty, web a právne texty na jednej stránke; pripomienky → opravy.
 - [ ] **231.11 Test celku** — simulátor: celý kvíz po ukrajinsky, prepnutie jazyka, vlastný balík, denná výzva; hra spolu: hostiteľ uk + hosť sk v miestnosti aj na diaľku; zariadenie (TestFlight na požiadanie): povely, odpovede hlasom a možnosti 1–4, hovorí rodený hovorca. Potom zapnúť uk na serveri.
 - [ ] **231.12 Marketing (neskôr, samostatné rozhodnutie)** — ukrajinské sociálne siete, ASO pre ukrajinský obchod.
 
-## Poradie a závislosti
+## Poradie (od 2026-11-18)
 
-231.0 → (231.1 ‖ 231.6 ‖ 231.8 ‖ 231.9) → 231.2 → 231.3 → 231.4 ‖ 231.5 → 231.7 → 231.10 → 231.11.
-Jazyk ide naostro až po 231.11 vypínačom na serveri; dovtedy sú hotové časti skryté.
+Founder 2026-11-18: ukážky už neiterovať, stavať všetko a skontrolovať priamo v appke.
+
+1. **Vlna 1 súbežne:** 231.6 appka (najväčšia, jeden iOS worker s vlastným simulátorom) ‖ 231.7 + 231.8 + 231.9 texty, web, App Store (worker bez iOS) ‖ 231.4 dávka otázok na predplatnom (beží na pozadí).
+2. **Vlna 2:** 231.5 vlastné balíky; server ukazuje uk len buildom, ktoré ju poznajú (staré buildy nesmú vidieť jazyk bez textov), plus TestFlight.
+3. **Kontrola v appke:** TestFlight build na požiadanie foundera → founder a rodený hovorca prejdú appku (231.10 + 231.11), opravy podľa nálezov.
+4. **Zapnutie:** uk naostro vypínačom na serveri + App Store texty s najbližšou verziou.
 
 ## Otvorené
 
 - Cena predplatného a balíkov v ukrajinskom obchode (pri 231.9).
-- Písmo pre cyriliku (pri 231.0 d, varianty na výber).
-- Kto je rodený hovorca a koľko času mu môže founder vziať (pri 231.3).
+- Koľko času môže rodený hovorca venovať kontrole v appke (pri 231.10).

@@ -239,6 +239,11 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
                     "process_order skipped superseded attempt order_id=%s arq_job_id=%s "
                     "order_status=%s", order_id, arq_job_id, order.status,
                 )
+                if order.status == "refunded":
+                    # #240: nothing adds questions to a refunded order again,
+                    # so its partly filled pack must stop saying 'generating'.
+                    await fail_pack_in_session(session, order)
+                    await session.commit()
                 return
             if job is not None:
                 verdict = order_budget.evaluate(order, job)

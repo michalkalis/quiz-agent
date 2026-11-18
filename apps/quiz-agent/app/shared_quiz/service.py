@@ -78,6 +78,9 @@ class SharedQuizService(ShareCreation):
         share = await self.store.by_token(token)
         if share is None:
             raise ShareError(404, "not_found", "Shared quiz not found")
+        if share.kind == "pack" and share.pack_id is not None:
+            # #240: links sent before the refund stop working too.
+            await self._refuse_refunded(share.pack_id)
         is_sender = share.sender_subject_id in await self.store.person_ids(subject_id)
         self._emit(
             "shared_quiz_opened", subject_id, None, kind=share.kind, source="app"

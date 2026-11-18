@@ -100,10 +100,14 @@ class FakeStore(SharedQuizStore):
     SQL is the session gate's (tests/db/test_pack_ownership.py)."""
 
     packs: dict = {}
+    refunded: set = set()
 
     async def owned_pack(self, pack_id, subject_id):
         pack = self.packs.get(pack_id)
         return pack if pack and pack["owner"] == subject_id else None
+
+    async def pack_refunded(self, pack_id):
+        return str(pack_id) in self.refunded
 
 
 @pytest_asyncio.fixture
@@ -115,6 +119,7 @@ async def app(db_sessionmaker, monkeypatch):
     retriever = FakeRetriever()
     sessions = SessionManager()
     daily = DailyChallengeService(db_sessionmaker, retriever)
+    FakeStore.refunded = set()
     FakeStore.packs = {
         PACK: {
             "owner": "owner",
@@ -305,6 +310,43 @@ async def test_only_the_owner_shares_a_pack_and_only_when_finished(client, app):
         "/api/v1/shared-quizzes", json={"pack_id": PACK}, headers=_h("owner")
     )
     assert resp.status_code == 409
+
+
+async def test_a_refunded_pack_is_played_by_nobody(client, app):
+    """#240 (founder 2026-11-18): after Apple refunds a custom pack nobody
+    plays it — links already sent stop working and no new link can be made.
+    The refusal reuses the code live builds already show as "This quiz can't
+    be played any more." instead of a dead end."""
+    share = await _share(client, "owner", pack_id=PACK)
+    FakeStore.refunded.add(PACK)
+
+    resp = await _start(client, share["token"], "friend")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+
+    # A new link: neither from the pack nor from a pack round played before.
+    resp = await client.post(
+        "/api/v1/shared-quizzes", json={"pack_id": PACK}, headers=_h("owner")
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+    played = await _finished(app, "owner", ["p1", "p2"], pack_id=PACK)
+    resp = await client.post(
+        "/api/v1/shared-quizzes",
+        json={"session_id": played.session_id},
+        headers=_h("owner"),
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+
+
+async def test_a_refund_of_another_pack_changes_nothing(client, app):
+    """#240: only the refunded pack is blocked; a pack that was not refunded
+    keeps its links working."""
+    FakeStore.refunded.add("22222222-2222-2222-2222-222222222222")
+    share = await _share(client, "owner", pack_id=PACK)
+
+    assert (await _start(client, share["token"], "friend")).status_code == 200
 
 
 async def _daily_share(client, app, day):

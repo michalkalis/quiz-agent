@@ -349,6 +349,8 @@ async def candidates():
         "q.provenance->'extra'->'topicality'->>'tier' as topicality, "
         "(select avg(r.score / r.scale_max) from ratings r where r.question_id = q.id::text) as rating "
         "from questions q where q.review_status = 'approved' "
+        # #236: a question written for a child band is not ordinary content.
+        "and q.age_band is null "
         "and (q.expires_at is null or q.expires_at > now() + interval '14 days')"
     )
     s3, bucket = s3_client(), os.environ["TTS_R2_BUCKET"]

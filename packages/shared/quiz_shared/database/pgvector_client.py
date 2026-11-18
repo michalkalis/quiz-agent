@@ -141,6 +141,9 @@ questions_table = Table(
     Column("boost_until", DateTime(timezone=True), nullable=True),
     # #206 — country a local question is tied to (NULL = universal).
     Column("local_scope", String(8), nullable=True),
+    # #236 — child band the question is written for (NULL = ordinary). The
+    # retriever keeps NULL-band rows only, unless a session asks for a band.
+    Column("age_band", String(16), nullable=True),
     Column("explanation", Text, nullable=True),
     Column("media_url", Text, nullable=True),
     Column("image_subtype", String(32), nullable=True),
@@ -463,6 +466,9 @@ class PgvectorQuestionStore:
             .where(
                 t.c.review_status == "approved",
                 t.c.pack_id.is_(None),
+                # #236: a question written for a child band is not an
+                # ordinary public question.
+                t.c.age_band.is_(None),
                 or_(t.c.expires_at.is_(None), t.c.expires_at > func.now()),
                 t.c.embedding.is_not(None),
                 t.c.type == "text",
@@ -764,6 +770,7 @@ def _question_to_row_dict(
         "freshness_tag": q.freshness_tag,
         "boost_until": _ensure_utc(q.boost_until),
         "local_scope": q.local_scope,
+        "age_band": q.age_band,
         "explanation": q.explanation,
         "media_url": q.media_url,
         "image_subtype": q.image_subtype,
@@ -826,6 +833,7 @@ def _row_to_question(row: Any) -> Question:
         # `.get`, not `[...]`: legacy dict rows never carried the column (#195).
         boost_until=row.get("boost_until") if hasattr(row, "get") else None,
         local_scope=row.get("local_scope") if hasattr(row, "get") else None,
+        age_band=row.get("age_band") if hasattr(row, "get") else None,
         explanation=row["explanation"],
         media_url=row["media_url"],
         image_subtype=row["image_subtype"],

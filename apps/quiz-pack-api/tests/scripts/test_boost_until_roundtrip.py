@@ -93,3 +93,23 @@ def test_local_scope_survives_orm_and_pgvector_paths() -> None:
     assert _row_to_question(as_row).local_scope == "sk"
     legacy = {k: v for k, v in as_row.items() if k != "local_scope"}
     assert _row_to_question(legacy).local_scope is None
+
+
+def test_age_band_survives_importer_orm_and_pgvector_paths(tmp_path: Path) -> None:
+    """#236: the live retriever keeps banded rows out of the ordinary quiz by
+    `age_band`; a seam that drops it would turn a child question into an
+    ordinary one, silently. The importer is how section content will land."""
+    path = tmp_path / "kids.json"
+    path.write_text(json.dumps([_row("q_kids", age_band="kids_7_9")]))
+    (q,) = _load_questions([path], "pending_review")
+    assert q.age_band == "kids_7_9"
+
+    q = q.model_copy(update={"id": "7c9e6679-7425-40de-944b-e07fc1f90ae7"})
+    row = question_to_row(q)
+    assert _row_to_insert_dict(row)["age_band"] == "kids_7_9"
+    assert row_to_question(row).age_band == "kids_7_9"
+    as_row = _question_to_row_dict(q, embedding=None)
+    assert as_row["age_band"] == "kids_7_9"
+    assert _row_to_question(as_row).age_band == "kids_7_9"
+    legacy = {k: v for k, v in as_row.items() if k != "age_band"}
+    assert _row_to_question(legacy).age_band is None

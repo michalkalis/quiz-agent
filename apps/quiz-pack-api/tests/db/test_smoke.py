@@ -55,11 +55,11 @@ def test_alembic_upgrade_head_is_idempotent() -> None:
     assert "Running upgrade" not in second.stderr
     assert "Running upgrade" not in second.stdout
     # And current revision should match head.
-    # Head pin — bump this when a migration is added (#206 question
-    # local_scope, on top of the order storekit environment b207e5a0c1d2).
+    # Head pin — bump this when a migration is added (#236 question
+    # age_band, on top of the order audience ba16b5c4cec9).
     # It is what makes "at head" mean the head THIS build expects, not merely
     # "some revision".
-    assert "ba16b5c4cec9" in (current.stdout + current.stderr)
+    assert "c236a0b1d2e3" in (current.stdout + current.stderr)
     # First run is allowed to be a no-op too (DB may already be at head from a
     # prior pytest invocation), so we don't assert on it — its purpose is only
     # to guarantee the DB is at head before the second-run idempotency check.

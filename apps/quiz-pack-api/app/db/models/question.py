@@ -120,6 +120,10 @@ class QuestionRow(Base, UUIDPrimaryKeyMixin):
     # NULL = universal / not labelled yet. Read by the live retriever's
     # "skip local questions" filter.
     local_scope: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    # #236 — child age band the question is written for (migration
+    # c236a0b1d2e3); NULL = an ordinary question. Not `age_appropriate`.
+    # The live retriever serves a banded row only to a session of that band.
+    age_band: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
 
     # Fields not in the schema sketch but present in Pydantic `Question`.
     # Kept as plain columns so round-trip is value-equal without leaning on
@@ -261,6 +265,7 @@ def question_to_row(q: Question) -> QuestionRow:
         freshness_tag=q.freshness_tag,
         boost_until=_ensure_utc(q.boost_until),
         local_scope=q.local_scope,
+        age_band=q.age_band,
         created_by=q.created_by,
         reviewed_by=q.reviewed_by,
         reviewed_at=_ensure_utc(q.reviewed_at),
@@ -332,6 +337,7 @@ def row_to_question(row: QuestionRow) -> Question:
         freshness_tag=row.freshness_tag,
         boost_until=row.boost_until,
         local_scope=row.local_scope,
+        age_band=row.age_band,
         created_by=row.created_by,
         reviewed_by=row.reviewed_by,
         reviewed_at=row.reviewed_at,

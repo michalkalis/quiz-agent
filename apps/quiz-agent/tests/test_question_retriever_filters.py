@@ -438,3 +438,36 @@ def test_pack_session_ignores_skip_local_questions():
     filters = _retriever()._build_metadata_filters("medium", session)
 
     assert "local_scope" not in filters
+
+
+def test_ordinary_session_keeps_only_unbanded_rows():
+    # #236: a question written for a child band must never reach an ordinary
+    # session, and every session is ordinary unless it asks for a band (old
+    # builds never do). `None` is the store's IS NULL, like `pack_id`.
+    session = QuizSession(session_id="s", current_difficulty="medium", language="sk")
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert "age_band" in filters and filters["age_band"] is None
+
+
+def test_band_session_asks_for_exactly_its_band():
+    session = QuizSession(
+        session_id="s", current_difficulty="medium", language="sk", age_band="kids_7_9"
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert filters["age_band"] == "kids_7_9"
+
+
+def test_pack_session_ignores_age_band():
+    # A child-band pack (#236 task 236.1) is the closed set the player paid
+    # for: its rows carry the band, and the pack must still play in full.
+    session = QuizSession(
+        session_id="s", current_difficulty="medium", language="sk", pack_id="pack-1"
+    )
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert "age_band" not in filters

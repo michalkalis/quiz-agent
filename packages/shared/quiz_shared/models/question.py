@@ -14,6 +14,11 @@ from pydantic import (
 )
 
 
+# #236 — the child age bands a question can be WRITTEN for (`Question.age_band`).
+# Same strings as the custom-pack order's `audience` (quiz-pack-api
+# `app/audience.py`, a test keeps the two equal).
+AGE_BANDS: tuple[str, ...] = ("kids_4_6", "kids_7_9", "kids_10_12")
+
 QuestionType = Literal["text", "text_multichoice", "audio", "image", "video"]
 _ALLOWED_QUESTION_TYPES: frozenset[str] = frozenset(
     {"text", "text_multichoice", "audio", "image", "video"}
@@ -148,6 +153,17 @@ class Question(BaseModel):
     age_appropriate: Optional[str] = Field(
         None,
         description="Minimum recommended age band: 'all' | '8+' | '12+' | '16+'. None = unrated (legacy).",
+    )
+    # #236 — NOT `age_appropriate`: that says "suitable from this age", this
+    # says "written for this child band" (vocabulary, length, shape). The
+    # ordinary quiz and the daily challenge never serve a row that carries one;
+    # only a session that asks for exactly this band does.
+    age_band: Optional[str] = Field(
+        None,
+        description=(
+            "Child age band the question is written for: 'kids_4_6' | "
+            "'kids_7_9' | 'kids_10_12' (AGE_BANDS). None = an ordinary question."
+        ),
     )
     language: Optional[str] = Field(
         None,

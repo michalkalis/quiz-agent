@@ -9,7 +9,7 @@ import asyncpg
 
 url = os.environ["DATABASE_URL"].replace("postgresql+asyncpg://", "postgresql://").replace("postgres+asyncpg://", "postgresql://")
 COMMON = "q.id::text, q.category, q.subtopic, q.topic, q.tags, q.difficulty, q.type, q.local_scope, q.age_appropriate, q.source_url, q.freshness_tag, q.expires_at::text"
-SERVABLE = "q.review_status='approved' AND q.pack_id IS NULL AND (q.expires_at IS NULL OR q.expires_at > now()) AND q.embedding IS NOT NULL AND q.type IN ('text','text_multichoice')"
+SERVABLE = "q.review_status='approved' AND q.pack_id IS NULL AND q.age_band IS NULL AND (q.expires_at IS NULL OR q.expires_at > now()) AND q.embedding IS NOT NULL AND q.type IN ('text','text_multichoice')"
 async def main():
   c = await asyncpg.connect(url)
   async with c.transaction(readonly=True):

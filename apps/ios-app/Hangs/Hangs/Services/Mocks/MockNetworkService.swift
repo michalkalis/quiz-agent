@@ -240,6 +240,7 @@ import os
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
+            if let ageBand, let familyScript { return familyScript.session(band: ageBand, size: maxQuestions) }
             guard let session = mockSession else {
                 throw NetworkError.invalidResponse
             }
@@ -248,6 +249,8 @@ import os
 
         /// #236: the `age_band` of the most recent `createSession` (nil = not a family round).
         var capturedAgeBand: String?
+        /// #236, UI-test mode: a scripted family round (see +Family).
+        var familyScript: FamilyMockScript?
         /// #236: what `familyTopics` answers (the server with the switch off by default).
         var stubbedFamilyTopics = FamilyTopicsResponse(bands: [])
         var familyTopicsCallCount = 0
@@ -287,6 +290,7 @@ import os
             try await simulateNetwork(.startQuiz)
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
+            if let scripted = familyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -400,6 +404,7 @@ import os
                 throw NetworkError.invalidResponse
             }
             if let scripted = dailyScript?.answer(sessionId: sessionId, input: input) { return scripted }
+            if let scripted = familyScript?.answer(sessionId: sessionId, input: input) { return scripted }
             guard let response = mockTextInputResponse ?? mockResponse else {
                 throw NetworkError.invalidResponse
             }

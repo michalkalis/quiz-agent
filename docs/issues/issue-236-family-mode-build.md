@@ -9,7 +9,7 @@
 
 Rodič prepne Úvod na „S deťmi“, vyberie vek a tému a zahrá s dieťaťom kolo bez časového limitu, bez skóre a bez drámy po omyle. Na konci vidia, čo sa dozvedeli. Bežný kvíz, denná výzva, štatistiky rodiča a staré buildy sa nezmenia.
 
-**Hotovo, keď:** na TestFlight builde sa dá zahrať kolo v každom pásme aspoň na dvoch témach v slovenčine; zahraná téma sa hrá ďalej s opakovaním a poznámkou „Už ste hrali, opakujeme“; štatistiky rodiča kolo nezapočítajú; vypnutý vypínač na serveri režim úplne skryje a starý build dostane presne to isté čo dnes.
+**Hotovo, keď:** na TestFlight builde sa dá zahrať kolo v každom pásme aspoň na dvoch témach v slovenčine; zahraná téma sa hrá ďalej s opakovaním; štatistiky rodiča kolo nezapočítajú; vypnutý vypínač na serveri režim úplne skryje a starý build dostane presne to isté čo dnes.
 
 ## Rozhodnutia foundera (2026-11-18)
 
@@ -28,10 +28,7 @@ Rodič prepne Úvod na „S deťmi“, vyberie vek a tému a zahrá s dieťaťom
 - **Úvod.** Hore prepínač „Kvíz | S deťmi“. V režime: nadpis „Témy pre 4–6“, vejár tém daného veku, pod ním Jazyk kvízu · Vek · Téma, tlačidlo „Štart s deťmi“ a nad ním veta, že odpovedá dospelý (návrh „Odpovedáš ty, deti hádajú s tebou.“, znenie cez kontrolu textov). Denná výzva, rýchla hra a „Vyber viac“ sa v režime neukazujú. Vlastné balíky ostávajú, Úvod je časť pre rodiča.
 - **Prvé prepnutie** otvorí výber veku (F1) s tou istou vetou o dospelom. Potom sa vek mení v stĺpci Vek. Appka si pamätá režim, vek aj poslednú tému pre každý vek.
 - **Témy:** vpredu záľuby a hry, všeobecné témy v menšine (pilot z 236.4, Obsah). Téma sa ukáže, keď má v danom jazyku aspoň jedno celé kolo. Bez tém v jazyku sa prepínač neukáže.
-- **Otázka.** Bez odpočítavania. Mikrofón sa zapne ťuknutím alebo povelom ako dnes. Pre 4–6 dve veľké tlačidlá.
-- **Po odpovedi.** Správne aj nesprávne: správna odpoveď a „Prečo“, bez prečiarknutia, bez červenej, bez odkazu na zdroj, bez série. Ďalej až na „Ďalšia“ (ťuknutie alebo povel), aby sa stihli porozprávať.
-- **Opakovanie.** Keď kolo obsahuje už hrané otázky, na prvej otázke sa raz ukáže „Už ste hrali, opakujeme“.
-- **Koniec kola.** „Toto ste sa dozvedeli“: otázky so správnymi odpoveďami, bez skóre, bez ponuky predplatného. Tlačidlá „Iná téma“ a „Úvod“.
+- **V hre** (zmenené 2026-11-18, „V hre“ nižšie): dnešná otázka, výsledok a koniec kola bez úprav pre deti; rodič ovláda kolo ako bežný kvíz.
 - **Nedá sa:** poslať kolo odkazom, hrať ho v Hre spolu. Tlačidlá sa v režime neukazujú.
 
 ## Technické voľby (s dôvodom)
@@ -88,15 +85,11 @@ Rodič prepne Úvod na „S deťmi“, vyberie vek a tému a zahrá s dieťaťom
   - `difficultyMenu` v `settingPills` nahradí menu Vek (`home.band.menu`, `home.band.<id>`); tretí stĺpec ukáže tému;
   - `startQuizButton` → „Start with kids“ / „Štart s deťmi“ (`home.startFamily`), štart cez `beginQuizStart()` s pásmom a témou a s preskočením kontroly počtu pred štartom (`QuizViewModel.swift:1193`, `:1268`; `createSession` v `Services/NetworkService.swift:331`);
   - v režime skryté: `HomeDailyChallengeSection`, `quickGameRow`, „Vyber viac“. Rýchla hra sa pre kolo s deťmi nepoužije (preskakuje vysvetlenie, `QuizViewModel+QuickGame.swift`).
-- **V hre** (varianty dnešných obrazoviek, žiadny paralelný tok):
-  - `QuizTimersController`: v kole s deťmi sa nespustí odpočet na rozmyslenie, odpočet nahrávania ani automatický posun z výsledku (`:126`, `:357`); nahrávanie ukončí ticho ako dnes;
-  - `QuestionView`: poznámka „Už ste hrali, opakujeme“ pri `repeats` na prvej otázke; `MCQOptionPicker` (`Views/Components/MCQOptionPicker.swift`) pri pásme 4–6 a dvoch možnostiach veľké tlačidlá na celú šírku, hlas počúva ako pri dnešnom výbere z možností. Otázky 4–6 sú `text_multichoice` s dvoma možnosťami, žiadny nový typ;
-  - `ResultView` / `ResultAnswerPanel`: pokojný variant bez červenej a prečiarknutia, bez `HangsSourceLink` (mantinel 3), bez série;
-  - koniec: trasa `.learned` v `Views/RoundCompleteView.swift` nad dnešným zoznamom odpovedí, bez skóre, bez `completionUpsell` a bez zdieľania; tlačidlá `family.end.otherTopic`, `family.end.home`.
+- **V hre: dnešné obrazovky bez zmeny (rozhodnutie foundera 2026-11-18).** „celkovo netreba meniť ui/ux kvôli detským témam. aj tak to bude ovládať rodič. ak by sa časom ukázalo, že to hrajú deti, tak môžeme zmeniť“; k dvom veľkým tlačidlám: „ani jedno, použije sa existujúce ui“. Kolo s deťmi ide cez dnešnú otázku, výsledok a koniec kola. **Vypadlo z A2:** vypnutie odpočtov, automatického posunu a potvrdenia, poznámka „Už ste hrali, opakujeme“, pokojný výsledok bez zdroja a prečiarknutia, dve veľké tlačidlá 4–6, koniec „Toto ste sa dozvedeli“ a udalosť `family_round_end_action` v appke (server ju v zozname udalostí nechá). **Ostalo:** overenie, že kolo prejde dnešnými obrazovkami (6 otázok pre 4–6, 10 inak, aj s `repeats`), Play Again hrá to isté kolo, koniec kola neponúka odkaz (server ho pre kolo s deťmi odmietne), RS-44.
 - **Hlas a ťukanie:** povely ostávajú; dve veľké tlačidlá sú hlavná cesta pre 4–6. Ak skúška 236.7 ukáže, že hlas nestačí, pásmo 4–6 vypne mikrofón jednou podmienkou v `QuizViewModel+Family.swift`.
 - **Texty:** sk/cs/en v `Localizable.xcstrings` (ukrajinčina v katalógu appky ešte nie je, príde s #231 — ukrajinčina ako štvrtý jazyk). Pravidlá `docs/design/copy-style.md` (tykanie, rodovo neutrálne, rozkazovací spôsob tlačidiel, „Ďalšia“ pre ďalšiu otázku oproti „Ďalej“, bez pomlčiek ako interpunkcie, rozsah „4–6“ dovolený), CI `copy-review`. Názvy tém v katalógu servera prejdú tou istou kontrolou ručne v PR.
 - **Prístupnosť:** identifikátory na každom prvku (`scripts/lint-a11y-ids.py`); VoiceOver číta vek „4 až 6 rokov“; dve tlačidlá aspoň 64 bodov vysoké; pri veľkom písme sa stĺpce skladajú pod seba ako dnes; vejár rešpektuje obmedzenie pohybu.
-- **Analytika (`Services/AnalyticsEvent.swift`, test `AnalyticsEventsTests.swift`):** `family_mode_changed {enabled}`, `family_band_selected {band, first_time}`, `family_topic_selected {band, topic}`, `family_topic_empty {band, topic}`, `family_round_end_action {action: other_topic | home}`; dohraté kolo cez `quiz_completed` s `age_band`.
+- **Analytika (`Services/AnalyticsEvent.swift`, test `AnalyticsEventsTests.swift`):** `family_mode_changed {enabled}`, `family_band_selected {band, first_time}`, `family_topic_selected {band, topic}`, `family_topic_empty {band, topic}`; dohraté kolo cez `quiz_completed` s `age_band`.
 - **Testy:** unit testy `QuizViewModel` s `TestClock` (odpočty sa nespustia ani po dnešnej hranici 10 s, žiadny automatický posun, kontrola počtu pred štartom sa nevolá, poznámka pri `repeats`, 409 skryje tému bez nového dopytu, obnova kola s pásmom); `FamilySettings`; snímky `AppScreen` (`HangsTests/AppScreenSnapshotTests.swift`): Úvod v režime pre každé pásmo, prvé prepnutie, otázka 4–6, výsledok po omyle, koniec kola × sk/cs/en; Page Object `HangsUITests/Pages/HomePage.swift`, RS scenár „kolo s deťmi“ (`docs/testing/regression-scenarios.md`), `RSAppConfigTests` pre vypnutý vypínač.
 
 ## Obsah: bez otázok je režim prázdny
@@ -125,7 +118,7 @@ Rodič prepne Úvod na „S deťmi“, vyberie vek a tému a zahrá s dieťaťom
 | C1 | Obsah: `audience` v korpuse, kontroly importéra, vynechanie v pokrytí, uloženie skóre sudcov, pilot ~120 sk otázok ako `pending_review` | S1 nasadené pred importom | founder hrá na TestFlight builde po A1 |
 | C2 | Schvaľovanie: dôvod `kids_borderline`, dávka slepého hodnotenia, skript párov a povýšenia, kalibrácia prahu na pilote | C1 | founder hodnotí dávku na webe |
 | A1 | Appka: prepínač, výber veku, veta o dospelom, témy vo vejári, Vek namiesto Náročnosti, „Štart s deťmi“, preskočenie kontroly počtu pred štartom, presun znova zahranej otázky na koniec histórie, uloženie, skrytie dennej výzvy a rýchlej hry; hra na dnešných obrazovkách | S1 nasadené | **prvý TestFlight build na požiadanie** |
-| A2 | Appka: bez odpočtov a automatického posunu, poznámka o opakovaní, pokojný výsledok bez zdroja, dve veľké tlačidlá 4–6, „Toto ste sa dozvedeli“, bez ponuky a zdieľania | A1 zlúčené (spoločný stav režimu) | **TestFlight build, hlavný test foundera** |
+| A2 | Appka: kolo s deťmi cez dnešné obrazovky hry (rozhodnutie foundera 2026-11-18, „V hre“), bez odkazu na konci kola, RS-44 | A1 zlúčené (spoločný stav režimu) | **TestFlight build, hlavný test foundera** |
 | R | Vydanie: skúška hlasu s deťmi (236.7), texty a súkromie (236.2, Texty a súlad), plný obsah schválený cez C2, RS scenár, zapnutie `family_mode_enabled_app_store` | všetko | App Store |
 
 Paralelne samostatní workeri: S1 ∥ S2 ∥ C1 na začiatku; C2 ∥ A1; A2 po A1. Každý vo vlastnom worktree, iOS s vlastným simulátorom a DerivedData. Serverové kroky nečakajú na build appky a nasadzujú sa po zlúčení (`backend-deploy.yml`); vypínače ostávajú vypnuté, kým founder nepovie.

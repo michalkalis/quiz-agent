@@ -299,6 +299,7 @@ class QuizFlowService:
                 "route": route,
                 "is_regrade": False,
                 "question_index": len(session.asked_question_ids),
+                "age_band": session.age_band,
                 **(stage_ms or {}),
             },
         )
@@ -403,6 +404,7 @@ class QuizFlowService:
                     session.participants[0].score if session.participants else 0.0
                 ),
                 "is_pack": bool(session.pack_id),
+                "age_band": session.age_band,
             },
         )
 

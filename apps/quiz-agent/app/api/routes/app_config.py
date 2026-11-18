@@ -80,6 +80,12 @@ class AppConfigResponse(BaseModel):
     maintenance_message: Optional[AppNotice] = None
     # #232: offer "send to a friend" and open shared-quiz links. DB switch, off.
     shared_quiz_enabled: bool = False
+    # #236: family mode „S deťmi“ (DB switches, off). TestFlight builds read
+    # ``family_mode_enabled``; the App Store build needs both. The app hides
+    # the mode in the listed App Store countries (StoreKit alpha-3 codes).
+    family_mode_enabled: bool = False
+    family_mode_enabled_app_store: bool = False
+    family_mode_hidden_storefronts: list[str] = Field(default_factory=list)
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
@@ -107,6 +113,9 @@ async def get_app_config(
         maintenance_enabled=switches["maintenance_enabled"],
         maintenance_message=maintenance_message,
         shared_quiz_enabled=switches["shared_quiz_enabled"],
+        family_mode_enabled=switches["family_mode_enabled"],
+        family_mode_enabled_app_store=switches["family_mode_enabled_app_store"],
+        family_mode_hidden_storefronts=switches["family_mode_hidden_storefronts"],
     )
     return JSONResponse(
         _without_blank_uk(config.model_dump(mode="json")),

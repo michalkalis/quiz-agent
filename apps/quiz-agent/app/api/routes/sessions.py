@@ -21,6 +21,9 @@ from ..session_auth import require_session_ownership
 from ...auth.identity import AuthSubject, resolve_session_subject
 from ...auth.tokens import TokenService
 from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
+from ...config import get_settings
+from ...family.rounds import build_channel, check_family_request
+from ...family.topics import ROUND_SIZE
 from ...session.manager import SessionManager
 from ...rate_limit import limiter
 
@@ -113,6 +116,20 @@ async def create_session(
     # ``except`` would otherwise turn the 404 into a 500.
     max_questions = body.max_questions
     language = body.language
+    difficulty = body.difficulty
+    include_images = body.include_images
+    family_topic = None
+    if body.age_band:
+        # #236 family round: one topic of the band; the server, not the
+        # client, sets the round size, any difficulty within the band and
+        # no images. Checked before the pack (a family round never is one)
+        # and outside the try below, which would turn a 4xx into a 500.
+        family_topic = await check_family_request(
+            body, build_channel(request.headers), get_settings(), auth_sessionmaker
+        )
+        max_questions = ROUND_SIZE[body.age_band]
+        difficulty = "random"
+        include_images = False
     if body.pack_id:
         # #200 (founder, 2026-10-12): a pack plays as many questions as the
         # client's "questions per quiz" setting asks for — never more than the
@@ -129,13 +146,13 @@ async def create_session(
     try:
         session = await session_manager.create_session(
             max_questions=max_questions,
-            difficulty=body.difficulty,
+            difficulty=difficulty,
             user_id=subject.subject_id,
             mode=body.mode,
             ttl_minutes=body.ttl_minutes,
         )
         session.language = language
-        session.include_images = body.include_images
+        session.include_images = include_images
         session.skip_local_questions = body.skip_local_questions
         # TestFlight builds may see pending_review questions (founder rule,
         # 2026-08-28); the value is whitelisted so a garbage header can never
@@ -159,6 +176,12 @@ async def create_session(
         # retriever + quota bypass). Set last so it is authoritative.
         if body.pack_id:
             session.pack_id = body.pack_id
+        if family_topic:
+            # The topic rides on ``category`` too, so quiz_started carries it
+            # (a ``family-`` prefix keeps these rounds out of player stats).
+            session.age_band = body.age_band
+            session.category = family_topic
+            session.preferred_categories = [family_topic]
         await session_manager.update_session(session)
         return session_to_response(session)
     except Exception as e:

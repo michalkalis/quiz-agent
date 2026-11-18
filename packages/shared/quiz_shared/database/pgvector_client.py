@@ -437,6 +437,25 @@ class PgvectorQuestionStore:
             result = await session.execute(stmt)
             return int(result.scalar_one())
 
+    async def grouped_counts(
+        self, columns: Sequence[str], filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[tuple, int]:
+        """Unexpired rows matching ``filters``, counted per value of
+        ``columns`` in one GROUP BY (#236 family topics: per band + topic)."""
+        cols = [questions_table.c[name] for name in columns]
+        stmt = select(*cols, func.count()).group_by(*cols)
+        for clause in _build_where(filters or {}):
+            stmt = stmt.where(clause)
+        stmt = stmt.where(
+            or_(
+                questions_table.c.expires_at.is_(None),
+                questions_table.c.expires_at > func.now(),
+            )
+        )
+        async with self._session_factory() as session:
+            rows = (await session.execute(stmt)).all()
+        return {tuple(row[:-1]): int(row[-1]) for row in rows}
+
     async def fresh_public_entertainment(
         self, language: str, limit: int
     ) -> List[Dict[str, Any]]:

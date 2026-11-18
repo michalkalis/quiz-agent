@@ -24,7 +24,7 @@ extension AppScreen {
         case .signInFailed: Self.signIn(.failed)
         case .signInCredit: Self.signIn(.idle, purchase: .credit(questionCount: 100))
         case .signInPack: Self.signIn(.idle, purchase: .customPack(name: "Harry Potter", questionCount: 30, colorKey: "order-1"))
-        case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed:
+        case .orderForm, .orderSummary, .orderPreparing, .orderReadyGenerating, .orderReady, .orderFailed, .orderStillPreparing:
             await makeOrder()
         case .paywallPack, .paywallAllowanceSpent, .paywallOffline:
             await makePaywall()
@@ -120,6 +120,8 @@ extension AppScreen {
             // Loaded up front: the summary's own `.task` load isn't awaited by a snapshot.
             await vm.loadPrice()
         default:
+            // #240: the foreground budget is spent at once, the pack never finishes.
+            if self == .orderStillPreparing { vm.pollTimeoutSeconds = 0 }
             vm.selectDifficulty(.medium)
             vm.advanceToSummary()
             // Fire-and-forget: `submit()` only returns once the order is terminal,
@@ -135,7 +137,7 @@ extension AppScreen {
 
     private var orderSnapshot: OrderSnapshot {
         switch self {
-        case .orderPreparing: .mockPending
+        case .orderPreparing, .orderStillPreparing: .mockPending
         case .orderReadyGenerating: .mockGenerating
         case .orderFailed: .mockFailed
         default: .mockDelivered

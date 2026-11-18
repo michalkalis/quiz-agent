@@ -6,6 +6,9 @@ name: social-publish
 # matching Facebook Page (210.11, scripts/fb_pages.py). Red run = a post failed
 # or missed its window. After a disable/enable GitHub may stop firing the
 # schedule until the file changes; then edit the cron line to re-register it.
+# GitHub fires this schedule only every 4-9 h, so the Hetzner server starts the
+# run on time every hour (infra/hetzner/social-publish-trigger.sh); this stays
+# as the fallback.
 
 on:
   schedule:

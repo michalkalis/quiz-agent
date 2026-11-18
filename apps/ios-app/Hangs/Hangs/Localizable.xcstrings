@@ -1681,6 +1681,12 @@
             "state" : "translated",
             "value" : "%1$lld. %2$@, body: %3$lld"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld. %2$@, бали: %3$lld"
+          }
         }
       }
     },
@@ -2072,6 +2078,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Správna odpoveď, ktorú vedelo málo ľudí, má viac bodov, až 100."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правильна відповідь, яку знали небагато людей, дає більше балів, до 100."
           }
         }
       }
@@ -4251,6 +4263,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nepodarilo sa odobrať. Skús znova."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прибрати. Спробуй ще раз."
           }
         }
       }
@@ -12001,6 +12019,12 @@
             "state" : "translated",
             "value" : "Odober z partie"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прибери з компанії"
+          }
         }
       }
     },
@@ -12017,6 +12041,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odobrať z partie?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прибрати з компанії?"
           }
         }
       }
@@ -12194,6 +12224,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pošli výzvu kamarátovi. Kto si ju zahrá, bude s tebou v tabuľke celý týždeň."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надішли виклик другові. Хто його зіграє, буде з тобою в таблиці весь тиждень."
           }
         }
       }
@@ -15534,6 +15570,12 @@
             "state" : "translated",
             "value" : "V tabuľke sa už navzájom neuvidíte."
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У таблиці ви більше не бачитимете одне одного."
+          }
         }
       }
     },
@@ -18319,6 +18361,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tvoja partia tento týždeň"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "твоя компанія цього тижня"
           }
         }
       }

@@ -1,7 +1,7 @@
 # trubbo.app website
 
-Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`. Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…` variants; the iOS app and the App Store listing link to these URLs.
-No framework, no external requests. Three self-hosted web fonts, all SIL OFL (licenses in `calistoga-OFL.txt`, `funnel-OFL.txt`, `rethink-sans-OFL.txt`): Calistoga for headings and the demo question (founder 2026-11-03), Rethink Sans ExtraBold for the "trubbo" logo like the app's wordmark, Funnel Sans for everything else. Each page is one self-contained HTML file.
+Static landing page in four languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`, Ukrainian at `/uk/` (#231). Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…`, `/uk/…` variants; the iOS app and the App Store listing link to these URLs.
+No framework, no external requests. Three self-hosted web fonts, all SIL OFL (licenses in `calistoga-OFL.txt`, `funnel-OFL.txt`, `rethink-sans-OFL.txt`): Calistoga for headings and the demo question (founder 2026-11-03), Rethink Sans ExtraBold for the "trubbo" logo like the app's wordmark, Funnel Sans for everything else. Neither has Cyrillic, so Ukrainian letters fall through to Manrope (Cyrillic subset only, `manrope-OFL.txt`), the app's font for Ukrainian. Each page is one self-contained HTML file.
 
 The main call to action is the App Store listing (id 6762482437, local storefront on `/sk/` and `/cs/`, Smart App Banner in Safari); the public TestFlight beta is the secondary link. Both URLs live in `build.py` (`STORE`, `BETA`).
 
@@ -14,7 +14,7 @@ The main call to action is the App Store listing (id 6762482437, local storefron
 | `src/app-store-badge.svg` | Apple's official "Download on the App Store" badge. |
 | `src/audio/question-<lang>.mp3` | Optional. Trubbo's own voice reading the demo question; while a file is missing, "Hear the question" uses the browser's voice. |
 | `src/footer.html` | Footer partial shared by the landing page and the legal pages. |
-| `src/strings/en.json`, `sk.json`, `cs.json` | All visible text, one file per language, same keys. |
+| `src/strings/en.json`, `sk.json`, `cs.json`, `uk.json` | All visible text, one file per language, same keys. |
 | `src/legal.html`, `src/legal/<page>.<lang>.html` | Legal page shell and the legal texts (privacy, terms, support), one file per page and language. Written as plain HTML; the `<h1>` becomes the page title. Built to `public/<page>.html`, which GitHub Pages serves at `/<page>`. |
 | `src/rethink-sans-*` | Rethink Sans, the app's font. Not used by the site; kept here because the website is the brand source for `apps/social-studio` (`sync-brand.mjs`) and `scripts/brand/mascot_assets.py`. |
 | `src/*.png`, `src/*.woff2`, `src/favicon.svg`, `src/robots.txt` | Static files copied as is. |
@@ -26,7 +26,7 @@ The main call to action is the App Store listing (id 6762482437, local storefron
 
 ## Edit text
 
-1. Change the value in all three `src/strings/*.json` files (keys must match across languages).
+1. Change the value in all `src/strings/*.json` files (keys must match across languages).
 2. Run `python3 apps/website/build.py`.
 3. Commit `src/` and `public/` together.
 

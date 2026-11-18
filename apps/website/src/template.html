@@ -42,8 +42,8 @@
   --bg:#FFFFFF;--ink:#111214;--ink2:#4B4F5A;--line:rgba(17,18,20,.12);--soft:#F4F5F7;--link:#1A2FC4;
   --blue:#2C45F5;--orange:#FF6B2C;--green:#3FE0AE;--yellow:#FFD23F;--purple:#7A5CFF;--rose:#C2255F;
   --btn:#111214;--btn-ink:#FFFFFF;--deck-sh:0 30px 60px rgba(17,18,20,.18);
-  --display:"Calistoga","Funnel Sans",-apple-system,system-ui,sans-serif;
-  --font:"Funnel Sans",-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
+  --display:"Calistoga","Funnel Sans","Manrope",-apple-system,system-ui,sans-serif;
+  --font:"Funnel Sans","Manrope",-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0F1014;--ink:#F2F3F5;--ink2:#B9BDC7;--line:rgba(255,255,255,.12);--soft:#1C1D23;--link:#8C9BFF;
@@ -290,7 +290,7 @@ footer address{font-style:normal;margin-top:12px}
   var speak = function () {
     if (!('speechSynthesis' in window)) return stop();
     var u = new SpeechSynthesisUtterance(document.querySelector('.front .q').textContent);
-    u.lang = { sk: 'sk-SK', cs: 'cs-CZ', en: 'en-US' }[lang] || lang;
+    u.lang = { sk: 'sk-SK', cs: 'cs-CZ', en: 'en-US', uk: 'uk-UA' }[lang] || lang;
     u.onend = u.onerror = stop;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);

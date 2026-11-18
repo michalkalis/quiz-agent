@@ -9,6 +9,7 @@
 <link rel="alternate" hreflang="en" href="https://trubbo.app/questions/fresh/">
 <link rel="alternate" hreflang="sk" href="https://trubbo.app/sk/otazky/cerstve/">
 <link rel="alternate" hreflang="cs" href="https://trubbo.app/cs/otazky/cerstve/">
+<link rel="alternate" hreflang="uk" href="https://trubbo.app/uk/pytannia/svizhi/">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="apple-itunes-app" content="app-id=6762482437">
@@ -35,13 +36,14 @@
 @font-face{font-family:"Funnel Sans";font-style:normal;font-weight:300 800;font-display:swap;src:url(/funnel-sans-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Funnel Sans";font-style:normal;font-weight:300 800;font-display:swap;src:url(/funnel-sans-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Rethink Sans";font-style:normal;font-weight:400 800;font-display:swap;src:url(/rethink-sans-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;src:url(/manrope-cyrillic.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 :root{
   color-scheme:light dark;
   --bg:#FFFFFF;--ink:#111214;--ink2:#4B4F5A;--line:rgba(17,18,20,.12);--soft:#F4F5F7;--link:#1A2FC4;
   --blue:#2C45F5;--orange:#FF6B2C;--green:#3FE0AE;--yellow:#FFD23F;--purple:#7A5CFF;--rose:#C2255F;
   --btn:#111214;--btn-ink:#FFFFFF;
-  --display:"Calistoga","Funnel Sans",-apple-system,system-ui,sans-serif;
-  --font:"Funnel Sans",-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
+  --display:"Calistoga","Funnel Sans","Manrope",-apple-system,system-ui,sans-serif;
+  --font:"Funnel Sans","Manrope",-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0F1014;--ink:#F2F3F5;--ink2:#B9BDC7;--line:rgba(255,255,255,.12);--soft:#1C1D23;--link:#8C9BFF;
@@ -122,7 +124,7 @@ footer address{font-style:normal;margin-top:12px}
 <div class="wrap">
   <header class="top">
     <a class="brand" href="/cs/" aria-label="Trubbo"><img src="/mascot.svg" width="29" height="33" alt=""><span>trubbo</span></a>
-    <nav class="lang" aria-label="Jazyk"><a href="/questions/fresh/" hreflang="en" lang="en">EN</a><a href="/sk/otazky/cerstve/" hreflang="sk" lang="sk">SK</a><a href="/cs/otazky/cerstve/" hreflang="cs" lang="cs" aria-current="page">CS</a></nav>
+    <nav class="lang" aria-label="Jazyk"><a href="/questions/fresh/" hreflang="en" lang="en">EN</a><a href="/sk/otazky/cerstve/" hreflang="sk" lang="sk">SK</a><a href="/cs/otazky/cerstve/" hreflang="cs" lang="cs" aria-current="page">CS</a><a href="/uk/pytannia/svizhi/" hreflang="uk" lang="uk">UK</a></nav>
     <a class="btn" href="https://apps.apple.com/cz/app/trubbo/id6762482437?pt=119419107&amp;ct=web_cs_cerstve&amp;mt=8">Stáhni Trubbo</a>
   </header>
   <main>

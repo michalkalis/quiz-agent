@@ -1,4 +1,4 @@
-"""Question topic pages (#223): /questions/<slug>/, /sk/otazky/<slug>/, /cs/otazky/<slug>/ and a hub per language.
+"""Question topic pages (#223): /questions/<slug>/, /sk/otazky/<slug>/, /cs/otazky/<slug>/, /uk/pytannia/<slug>/ and a hub per language.
 
 Texts: src/topics/<lang>.json. Questions: src/topics/questions.<lang>.json, a snapshot of approved,
 sourced questions from production made by tools/topic_snapshot.py. Topics pair up across languages by
@@ -16,8 +16,8 @@ from pathlib import Path
 
 import fresh
 
-LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}
-DIRS = {"en": "questions", "sk": "otazky", "cs": "otazky"}
+LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/", "uk": "/uk/"}
+DIRS = {"en": "questions", "sk": "otazky", "cs": "otazky", "uk": "pytannia"}
 COLORS = ["blue", "orange", "green", "purple", "yellow", "rose"]
 PT = "119419107"  # App Store Connect provider token for campaign links (ct=web_<lang>_<slug>)
 
@@ -227,6 +227,8 @@ def home(src: Path, lang: str) -> tuple[str, str]:
     texts, questions = load(src, lang)
     path = hub(lang)
     nav = f'<a class="qnav" href="{path}">{esc(texts["nav"])}</a>'
+    if not any(t.get("home") for t in texts["topics"]):  # #231: no uk questions published yet
+        return nav, ""
     cards = "".join(
         f'<li><a class="topic" href="{path}{t["slug"]}/">{esc(t["about"][:1].upper() + t["about"][1:])}</a>'
         f'<p class="hq">{esc(q["q"])}</p><details><summary>{esc(texts["reveal"])}</summary>'

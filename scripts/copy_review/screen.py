@@ -21,10 +21,10 @@ ROOT = Path(__file__).resolve().parents[2]
 STYLE = (ROOT / "docs/design/copy-style.md").read_text(encoding="utf-8").split("## Review procedure")[0]
 CHUNK = 40
 
-PROMPT = """You are a native Slovak and Czech UX copy editor with excellent English.
+PROMPT = """You are a native Slovak, Czech and Ukrainian UX copy editor with excellent English.
 Below are the user-facing strings of one screen of "Trubbo", an iOS trivia quiz
 you play by voice (often hands-free, e.g. while driving). Each row has the
-English source, the Slovak (sk) and Czech (cs) texts, a developer comment and
+English source, the Slovak (sk), Czech (cs) and Ukrainian (uk) texts, a developer comment and
 the Swift file it is used in. Texts are written by an AI, so look for what a
 native speaker would notice.
 
@@ -38,7 +38,7 @@ inconsistent terms on the same screen. This is a recall-first screen: when in
 doubt, flag it. Do not flag rows that are fine.
 
 Return a JSON array, one object per problem:
-{{"id": "<row id>", "lang": "en|sk|cs", "rule": "<rule number or 'style'>",
+{{"id": "<row id>", "lang": "en|sk|cs|uk", "rule": "<rule number or 'style'>",
   "issue": "<one short sentence in English>", "suggestion": "<replacement text>"}}
 Return [] when everything is fine.
 
@@ -84,7 +84,7 @@ def main(rows_path: str, out: str, model: str = "gemini-3.8-flash") -> None:
     rows = [json.loads(line) for line in Path(rows_path).read_text(encoding="utf-8").splitlines()]
     rows = [r for r in rows if not r["stale"]]
     ids = {r["id"] for r in rows}
-    fields = ("id", "en", "sk", "cs", "comment", "files")
+    fields = ("id", "en", "sk", "cs", "uk", "comment", "files")
 
     def run(group):
         payload = json.dumps([{k: r[k] for k in fields} for r in group], ensure_ascii=False, indent=0)

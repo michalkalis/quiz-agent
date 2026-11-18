@@ -53,6 +53,44 @@ class UkrainianChecks(unittest.TestCase):
         self.assertIn(5, rules("uk", "Київ — столиця України"))
         self.assertNotIn(5, rules("uk", "Варіанти 1–4"))
 
+    def test_lowercase_formal_address_is_flagged(self):
+        for text in ("Якщо ви не бачиш кнопку", "Ми надішлемо вам лист"):
+            self.assertIn(1, rules("uk", text), text)
+        self.assertNotIn(1, rules("uk", "Якщо ти не бачиш кнопку"))
+        self.assertNotIn(1, rules("uk", "Вашингтон — не столиця"))  # a city, not «ваш»
+        self.assertNotIn(1, rules("uk", "Ми надішлемо вам лист", legal=True))  # rule 21: legal «ви»
+
+    def test_short_plural_imperatives_are_flagged(self):
+        for text in ("Дайте доступ до мікрофона", "Ідіть далі"):
+            self.assertIn(1, rules("uk", text), text)
+
+    def test_third_person_verb_is_not_an_imperative(self):
+        self.assertNotIn(1, rules("uk", "Стоїть на паузі"))
+
+    def test_infinitive_button_is_flagged_but_not_running_text_or_questions(self):
+        self.assertIn(22, rules("uk", "Підтвердити"))
+        self.assertIn(22, rules("uk", "Видалити акаунт"))
+        for text in ("Підтверди", "Пропусти", "Спробуй ще раз", "Видалити акаунт?", "Видали мої дані",
+                     "Можна підтвердити відповідь голосом"):
+            self.assertNotIn(22, rules("uk", text), text)
+
+    def test_russian_words_without_russian_letters_are_errors(self):
+        for text in ("Настройки", "Начать игру", "Киев"):
+            self.assertTrue(errors("uk", text), text)
+        self.assertEqual(errors("uk", "Налаштування"), [])
+        self.assertEqual(errors("uk", "Київ"), [])
+
+    def test_quiz_run_is_a_viktoryna_not_a_session(self):
+        flags = check(row(uk="Почати сесію"))
+        self.assertIn(7, {f["rule"] for f in flags if f["lang"] == "uk"})
+        self.assertNotIn(7, {f["rule"] for f in check(row(uk="Почати вікторину")) if f["lang"] == "uk"})
+        self.assertNotIn(7, {f["rule"] for f in check(row(uk="Сесія закінчилась. Увійди ще раз.")) if f["lang"] == "uk"})
+
+    def test_contrast_tail_in_ukrainian(self):
+        self.assertIn(12, rules("uk", "Це вікторина, а не іспит"))
+        self.assertIn(12, rules("uk", "Не лише для авто"))
+        self.assertNotIn(12, rules("uk", "Це вікторина для дороги"))
+
     def test_sk_cs_formal_checks_unchanged(self):
         self.assertIn(1, rules("sk", "Skúste znova"))
         self.assertIn(1, rules("cs", "Váš výsledek"))

@@ -25,7 +25,7 @@ Súvisí: [#205 — Denná výzva: hráč proti davu](../issues/issue-205-daily-
 2. **Karta na Home s vianočným balíkom** pre tých, čo nehrajú denne (bežný kvíz z vianočnej témy).
 3. **Jednodňové špeciály:** Mikuláš 6. 12., Silvester 31. 12., Traja králi 6. 1.
 
-**Kalendár do februára 2027:** 1. advent 29. 11. · Mikuláš 6. 12. · Štedrý deň 24. 12. · Silvester 31. 12. · Traja králi 6. 1. · MS v zjazdovom lyžovaní 1.–14. 2. ([FIS](https://fis-ski.com/alpine-skiing/news/2024-25/fis-alpine-world-ski-championships-2027-in-crans-montana-confirmed)) · Valentín 14. 2. · MS v biatlone približne 10.–21. 2. (zdroje sa líšia). Hokejové MS sú až v máji.
+**Kalendár do februára 2027:** 17. 11. Deň boja za slobodu a demokraciu (SK aj CZ, tento rok premeškaný) · 1. advent 29. 11. · Mikuláš 6. 12. · Štedrý deň 24. 12. · Silvester 31. 12. · Traja králi 6. 1. · MS v zjazdovom lyžovaní 1.–14. 2. ([FIS](https://fis-ski.com/alpine-skiing/news/2024-25/fis-alpine-world-ski-championships-2027-in-crans-montana-confirmed)) · Valentín 14. 2. · MS v biatlone približne 10.–21. 2. (zdroje sa líšia). Hokejové MS sú až v máji.
 
 **Riziká:** otázky o tradíciách a histórii, nie o aktuálnych správach či výsledkoch (rýchlo zastarajú a ťažko sa overujú); SK a CZ Vianoce sa líšia (Ježiško, kapor, rozprávky), teda natívne sady, nie preklady; 24 dní × 5 otázok × 3 jazyky = ~360 otázok, na budúci rok nové; žiadny obsah za paywallom; náboženstvo podať kultúrne a fakticky.
 
@@ -46,6 +46,13 @@ Súvisí: [#205 — Denná výzva: hráč proti davu](../issues/issue-205-daily-
 3. **Body za zriedkavosť** ako v Ponore: kto vedel, čo ostatní nie, dostane viac. Máme to už napoly („najvzácnejší zásah“) a znižuje to hodnotu podvádzania (vygooglená odpoveď je bežná).
 
 **Podvádzanie a malá komunita:** hlasová odpoveď s časovým limitom sťaží googlenie; žiadne peňažné výhry; ukladať čas odpovede a podozrivo rýchle správne odpovede len označiť. Ligu ukázať až pri 2+ členoch, umožniť tichý režim (vidím len svoje poradie), nikdy „posledný“.
+
+## Rozhodnutia foundera (2026-11-18)
+
+- Denná výzva najprv **len pre betu** (founder ju otestuje), text súkromia hneď; prvý hráč = „Prvý výsledok dňa.“
+- Sezónne témy **operatívne a po malých krokoch**, žiadny mesačný adventný plán; „dajme už teraz niečo“ a podľa výsledkov ďalej.
+- Sviatky a udalosti (napr. 17. november) využívať aj na **príspevky na sociálne siete**, aby ľudia objavili naše účty. Otázky o histórii a tradíciách, nie o politike.
+- Súťaž s kamarátmi: founder chcel návrhy na výber → [návrhy A/B/C](https://claude.ai/artifact/RkMrXQ8LhGmcvQdHdBJDzp).
 
 ## Navrhované poradie (najrýchlejšie k hráčom)
 

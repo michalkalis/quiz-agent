@@ -22,6 +22,8 @@
 | `quiz_shared` | a player creates a "play my quiz" link (#232); not when the same session or pack is shared again (same link back) | `kind` (round / daily / pack), `language`, `question_count` |
 | `shared_quiz_opened` | a shared-quiz link is opened: in the app when the player starts it (under that player), or on the website's play page (anonymous) | `kind`, `source` (app / web) |
 | `shared_quiz_finished` | a session started from a shared link finishes and records a result (#232); once per session, under the player (or host of a game together) | `kind`, `players` (results recorded), `questions_asked` |
+| `daily_crew_viewed` | the week's crew table loads at the end of the daily challenge (#239) | `members` (people besides the player; 0 = no crew yet) |
+| `daily_crew_member_removed` | the player takes one person out of their daily crew (#239) | none |
 | `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 
 ## App events (posted to `POST /api/v1/analytics/events` — only what the server cannot see)

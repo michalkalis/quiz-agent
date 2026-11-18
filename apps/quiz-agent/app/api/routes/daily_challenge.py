@@ -11,22 +11,26 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, Field
 
 from quiz_shared.languages import servable_quiz_languages
 
+from ...analytics.recorder import AnalyticsRecorder
 from ...auth.identity import AuthSubject
 from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
+from ...daily_challenge.crew import CrewNotFound, DailyCrewService
 from ...daily_challenge.gate import daily_challenge_on
-from ...daily_challenge.schemas import DailyChallengeState
+from ...daily_challenge.schemas import DailyChallengeState, DailyCrew
 from ...daily_challenge.service import DailyChallengeService, DailySetUnavailable
 from ...rate_limit import limiter
 from ...session.manager import SessionManager
 from ..deps import (
     SessionResponse,
+    get_analytics,
     get_auth_sessionmaker,
     get_daily_challenge,
+    get_daily_crew,
     get_session_manager,
     require_auth_or_grace,
     session_to_response,
@@ -147,3 +151,54 @@ async def start_daily_challenge(
         state=await svc.state(subject.subject_id, language, day),
         session=session_to_response(session),
     )
+
+
+@router.get("/daily-challenge/crew", response_model=DailyCrew)
+@limiter.limit("60/minute")
+async def get_daily_crew_table(
+    request: Request,
+    date_: str = Query(alias="date"),
+    language: str = Query(),
+    service: Optional[DailyChallengeService] = Depends(get_daily_challenge),
+    crew: Optional[DailyCrewService] = Depends(get_daily_crew),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+    sessionmaker=Depends(get_auth_sessionmaker),
+    analytics: AnalyticsRecorder = Depends(get_analytics),
+) -> DailyCrew:
+    """#239 the week's crew: everyone the player swapped a daily link with,
+    by rarity points from Monday to ``date``. Empty ``members`` = no crew."""
+    await _require(request, sessionmaker, service, subject)
+    if crew is None:
+        raise HTTPException(status_code=503, detail="Daily challenge unavailable")
+    table = await crew.crew(
+        subject.subject_id, _parse_day(date_), _check_language(language)
+    )
+    analytics.emit(
+        "daily_crew_viewed",
+        subject_id=subject.subject_id,
+        properties={"members": max(0, len(table.members) - 1)},
+    )
+    return table
+
+
+@router.delete("/daily-challenge/crew/{member_id}", status_code=204)
+@limiter.limit("10/minute")
+async def remove_daily_crew_member(
+    request: Request,
+    member_id: str = Path(max_length=64),
+    service: Optional[DailyChallengeService] = Depends(get_daily_challenge),
+    crew: Optional[DailyCrewService] = Depends(get_daily_crew),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+    sessionmaker=Depends(get_auth_sessionmaker),
+    analytics: AnalyticsRecorder = Depends(get_analytics),
+) -> Response:
+    """#239 take one person out of the crew; both stop seeing each other."""
+    await _require(request, sessionmaker, service, subject)
+    if crew is None:
+        raise HTTPException(status_code=503, detail="Daily challenge unavailable")
+    try:
+        await crew.remove(subject.subject_id, member_id)
+    except CrewNotFound:
+        raise HTTPException(status_code=404, detail="Not in your crew")
+    analytics.emit("daily_crew_member_removed", subject_id=subject.subject_id)
+    return Response(status_code=204)

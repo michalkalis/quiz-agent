@@ -56,3 +56,30 @@ class DailyChallengeState(BaseModel):
     status: Literal["not_played", "in_progress", "played"]
     total: int = Field(description="Questions in the challenge")
     summary: Optional[DailySummary] = None
+
+
+class DailyCrewMember(BaseModel):
+    """One row of the week's crew table (#239)."""
+
+    member_id: Optional[str] = Field(
+        default=None,
+        description="Opaque id to remove this person; null on the player's own row",
+    )
+    name: Optional[str] = Field(
+        default=None, description="Their name in the app; null on the player's own row"
+    )
+    points: int = Field(description="Rarity points from Monday to the given date")
+    today: int = Field(description="Rarity points on the given date")
+    days: int = Field(description="Days played this week")
+    place: int = Field(default=0, description="1 = most points; equal points share it")
+    is_you: bool = False
+
+
+class DailyCrew(BaseModel):
+    """Everyone the player swapped a daily link with who is in this week (#239).
+    Empty ``members`` = no crew yet (the app shows how one forms)."""
+
+    week_start: str = Field(description="Monday of the week, YYYY-MM-DD")
+    members: List[DailyCrewMember] = Field(
+        description="Best first, the player included; empty when no crew"
+    )

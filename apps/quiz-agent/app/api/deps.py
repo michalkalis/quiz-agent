@@ -796,6 +796,11 @@ def get_daily_challenge(request: Request):
     return getattr(request.app.state, "daily_challenge", None)
 
 
+def get_daily_crew(request: Request):
+    """#239 the daily crew; None without a database."""
+    return getattr(request.app.state, "daily_crew", None)
+
+
 def get_shared_quiz(request: Request):
     """#232 SharedQuizService (None without a database)."""
     return getattr(request.app.state, "shared_quiz", None)

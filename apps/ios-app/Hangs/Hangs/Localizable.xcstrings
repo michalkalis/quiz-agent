@@ -1229,6 +1229,23 @@
         }
       }
     },
+    "%lld. %@, points: %lld" : {
+      "comment" : "#239 accessibility label of a crew table row: place, name, points this week",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld. %2$@, body: %3$lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld. %2$@, body: %3$lld"
+          }
+        }
+      }
+    },
     "%lldd %lldh" : {
       "comment" : "Compact time remaining: days and hours (e.g. 12d 4h)",
       "localizations" : {
@@ -1504,6 +1521,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kvíz v Trubbu"
+          }
+        }
+      }
+    },
+    "A right answer few people knew scores more, up to 100 points." : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správná odpověď, kterou vědělo málo lidí, má víc bodů, až 100."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správna odpoveď, ktorú vedelo málo ľudí, má viac bodov, až 100."
           }
         }
       }
@@ -3058,6 +3092,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpoveď sa nepodarilo vyhodnotiť. Skús to znova."
+          }
+        }
+      }
+    },
+    "Could not remove. Try again." : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepodařilo se odebrat. Zkus to znovu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepodarilo sa odobrať. Skús znova."
           }
         }
       }
@@ -8742,6 +8793,40 @@
         }
       }
     },
+    "Remove from crew" : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odeber z party"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odober z partie"
+          }
+        }
+      }
+    },
+    "Remove from your crew?" : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrat z party?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odobrať z partie?"
+          }
+        }
+      }
+    },
     "RESUME" : {
       "localizations" : {
         "cs" : {
@@ -8856,6 +8941,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky."
+          }
+        }
+      }
+    },
+    "Send the challenge to a friend. Whoever plays it is in your crew table all week." : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli výzvu kamarádovi. Kdo si ji zahraje, bude s tebou v tabulce celý týden."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pošli výzvu kamarátovi. Kto si ju zahrá, bude s tebou v tabuľke celý týždeň."
           }
         }
       }
@@ -11190,6 +11292,23 @@
       },
       "comment" : "#232: the viewer's own row in the comparison"
     },
+    "You will no longer see each other in the table." : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V tabulce se už navzájem neuvidíte."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V tabuľke sa už navzájom neuvidíte."
+          }
+        }
+      }
+    },
     "You've already played this quiz." : {
       "localizations" : {
         "sk" : {
@@ -13241,6 +13360,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kredit je zatiaľ len v tomto telefóne. Po prihlásení cez Apple ti zostane aj na novom telefóne či po preinštalovaní."
+          }
+        }
+      }
+    },
+    "your crew this week" : {
+      "comment" : "Denná výzva: partia (#239)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoje parta tento týden"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tvoja partia tento týždeň"
           }
         }
       }

@@ -80,3 +80,19 @@ class Standing:
     @property
     def beat_everyone(self) -> bool:
         return self.others > 0 and self.beaten == self.others
+
+
+# #239 rarity points (founder 2026-11-18): a correct answer everyone knew is
+# worth COMMON_POINTS, one nobody else knew up to RARE_POINTS.
+COMMON_POINTS = 10
+RARE_POINTS = 100
+
+
+def rarity_points(answered: int, knew_count: int) -> int:
+    """Points for one correct answer, from everyone who answered that question
+    that day (the player included, so a lone player gets the common points and
+    a tiny crowd never swings to the extremes). Recomputed live as others play."""
+    if answered <= 0:
+        return COMMON_POINTS
+    share = min(1.0, knew_count / answered)
+    return round(COMMON_POINTS + (RARE_POINTS - COMMON_POINTS) * (1 - share))

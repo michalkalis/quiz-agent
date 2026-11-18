@@ -390,3 +390,32 @@ async def test_public_preview_shows_no_questions_and_needs_no_login(client, app)
         f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
     )
     assert "access-control-allow-origin" not in results.headers
+
+
+async def test_beta_build_opens_a_daily_link_as_its_own_daily_before_launch(
+    client, app, monkeypatch
+):
+    """#239: with the daily challenge on for beta builds only, a beta friend
+    who opens a daily link gets their own daily (so the crew forms), while a
+    store build still gets a round of the same five."""
+    monkeypatch.setenv("DAILY_CHALLENGE_ENABLED", "false")
+    today = datetime.now(timezone.utc).date()
+    token, set_ids = await _daily_share(client, app, today)
+
+    async def overrides(_sessionmaker):
+        return {"shared_quiz_enabled": "true", "daily_challenge_beta_min_build": "87"}
+
+    monkeypatch.setattr(app_switches, "cached_overrides", overrides)
+    ua = "Hangs/{} CFNetwork/3826.500.111 Darwin/25.0.0"
+
+    async def start(subject, build):
+        return await client.post(
+            f"/api/v1/shared-quizzes/{token}/start",
+            json={},
+            headers={**_h(subject), "User-Agent": ua.format(build)},
+        )
+
+    beta = await _session(app, await start("beta-friend", 89))
+    store = await _session(app, await start("store-friend", 86))
+    assert beta.daily_challenge_date == today.isoformat()
+    assert store.daily_challenge_date is None and store.fixed_question_ids == set_ids

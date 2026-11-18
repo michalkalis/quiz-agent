@@ -19,6 +19,7 @@ from ... import app_switches
 from ...auth.identity import AuthSubject
 from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
 from ...config import get_settings
+from ...daily_challenge.gate import daily_challenge_on
 from ...db.models import SharedQuiz
 from ...rate_limit import limiter
 from ...shared_quiz.ranking import RankedPlayer
@@ -175,6 +176,8 @@ async def start_share(
             if request.headers.get("X-Build-Channel") == "testflight"
             else None,
             capabilities=parse_capabilities(request.headers.get(CAPABILITIES_HEADER)),
+            # #239: a beta build gets the friend's daily before the launch too.
+            daily_on=await daily_challenge_on(request, get_auth_sessionmaker(request)),
         )
     except ShareError as e:
         _raise(e)

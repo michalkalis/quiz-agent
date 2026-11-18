@@ -82,8 +82,13 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     ),
 }
 
-# Posted by the app — only what the server cannot observe itself.
-CLIENT_EVENTS: dict[str, frozenset[str]] = {
+# #240.9: keys every app event may carry. build_channel = app_store |
+# testflight | debug, so store players are never read next to testers.
+CLIENT_COMMON_PROPERTIES = frozenset({"build_channel"})
+
+# Posted by the app — only what the server cannot observe itself. Each event
+# also allows CLIENT_COMMON_PROPERTIES (merged into CLIENT_EVENTS below).
+_CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "app_opened": frozenset({"launch"}),
     "onboarding_finished": frozenset({"outcome", "step"}),
     "quiz_context": frozenset(
@@ -96,7 +101,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "quick_game",
         }
     ),
-    "quiz_abandoned": frozenset({"questions_answered", "phase"}),
+    # #240.9: reason = end_quiz | end_with_results | error_screen; question =
+    # the 1-based question on screen.
+    "quiz_abandoned": frozenset({"questions_answered", "phase", "reason", "question"}),
     "answer_submitted": frozenset(
         {"input_mode", "question_id", "is_retry", "latency_ms"}
     ),
@@ -179,6 +186,14 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "mic_data_source",
             "mic_polar_pattern",
             "rejected_count",
+            # #240.9: trigger = auto | tap | voice_command | retry | rerecord |
+            # barge_in; mic_open_delay_ms = question answerable → mic open;
+            # peak_db = loudest level (dBFS); mic_permission = granted |
+            # denied | undetermined.
+            "trigger",
+            "mic_open_delay_ms",
+            "peak_db",
+            "mic_permission",
         }
     ),
     # #236: the "S deťmi" mode on Home. band = the content setting
@@ -193,6 +208,10 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     "voice_experiment_guard": frozenset(
         {"flag", "reason", "from_route", "to_route", "exp_gen"}
     ),
+}
+
+CLIENT_EVENTS: dict[str, frozenset[str]] = {
+    name: keys | CLIENT_COMMON_PROPERTIES for name, keys in _CLIENT_EVENT_KEYS.items()
 }
 
 # Property values are short scalars only: a long string is either a bug or free

@@ -22,7 +22,11 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, update
 
-from app.analytics.taxonomy import CLIENT_EVENTS, clean_properties
+from app.analytics.taxonomy import (
+    CLIENT_COMMON_PROPERTIES,
+    CLIENT_EVENTS,
+    clean_properties,
+)
 from app.api.routes import app_config as app_config_routes
 from app.api.routes import voice_experiment as voice_experiment_routes
 from app.db.models import AnalyticsEvent, VoiceExperimentArm
@@ -40,6 +44,8 @@ CONTRACT_ANSWER_CAPTURED = {
     "speech_ms", "end_delay_ms", "duration_ms",
     "voice_processing", "ec_enabled", "aec_applicable", "front_mic_applicable",
     "mic_data_source", "mic_polar_pattern", "rejected_count",
+    # #240.9: who opened the mic, how soon, how loud, mic permission.
+    "trigger", "mic_open_delay_ms", "peak_db", "mic_permission",
 }  # fmt: skip
 START = datetime.now(timezone.utc) - timedelta(days=7)
 
@@ -65,10 +71,11 @@ async def _config(sessionmaker) -> dict:
 
 
 async def test_taxonomy_keeps_exactly_the_contract_keys():
-    assert CLIENT_EVENTS["answer_captured"] == CONTRACT_ANSWER_CAPTURED
+    common = CLIENT_COMMON_PROPERTIES
+    assert CLIENT_EVENTS["answer_captured"] == CONTRACT_ANSWER_CAPTURED | common
     assert CLIENT_EVENTS["voice_experiment_guard"] == {
         "flag", "reason", "from_route", "to_route", "exp_gen",
-    }  # fmt: skip
+    } | common  # fmt: skip
     props = {k: 1 for k in CONTRACT_ANSWER_CAPTURED} | {"transcript": "my words"}
     assert set(clean_properties(CLIENT_EVENTS["answer_captured"], props)) == (
         CONTRACT_ANSWER_CAPTURED

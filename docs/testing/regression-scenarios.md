@@ -1029,6 +1029,31 @@ visible); POST `/shared/open?text=rs33-shared-quiz`; X → "End Quiz".
 
 ---
 
+## RS-44: A round with kids plays through the existing game screens
+
+**Type:** XCUITest (`RSFamilyRoundTests`). #236 (family section „S deťmi“);
+founder 2026-11-18: the game keeps its existing UI for a family round.
+
+**Hypothesis:** a round started from „S deťmi“ asks for the band's round
+(6 questions for 4–6, 10 otherwise), plays through the ordinary question,
+result and round end screens (also when the start says it `repeats` played
+questions), offers no "Send to a friend" (the server refuses to share a
+round with kids), and Play Again replays the family round.
+
+**Steps:** (a) launch with `--app-config-family --ui-test-family-repeats
+--app-config-shared-quiz`; tap the "With kids" segment of `home.mode`,
+`family.band.kids_4_6`, `home.startFamily`; tap `mcq.option.a` on each of
+6 questions, continuing from each result; tap `completion.playAgain`.
+(b) launch with `--app-config-family`, pick `family.band.kids_7_9`, skip 10
+questions, tap `completion.home`.
+
+**Asserts:** `question.counter` reads `1/6` (a), `1/10` (b), and `1/6` again
+after Play Again with choices on screen (an adult round would bring the adult
+mock question); `completion.playAgain` and `completion.home` present,
+`completion.sendToFriend` absent; back Home `home.startFamily`. App alive.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.

@@ -44,6 +44,24 @@ struct HomePage {
         app.buttons["home.daily.open"]
     }
 
+    /// #236: "Štart s deťmi", Home's start in the family mode.
+    var startFamilyButton: XCUIElement {
+        app.buttons["home.startFamily"]
+    }
+
+    /// #236: the "With kids" half of the mode switch. A segment of a
+    /// segmented picker may not carry its tag's identifier, so the second
+    /// segment of `home.mode` stands in for it.
+    var familyModeSegment: XCUIElement {
+        let tagged = app.buttons["home.mode.family"]
+        return tagged.exists ? tagged : app.segmentedControls["home.mode"].buttons.element(boundBy: 1)
+    }
+
+    /// #236: an age band in the first-flip sheet ("kids_4_6").
+    func familyBand(_ band: String) -> XCUIElement {
+        app.buttons["family.band.\(band)"]
+    }
+
     /// The "Create your own pack" row closes the packs card, below the deck
     /// and the pills (Home order since 2026-10-13), so on a phone it starts
     /// off screen: scroll Home until it is there.

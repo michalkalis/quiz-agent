@@ -64,6 +64,18 @@ struct SharedQuizFlowTests {
         #expect(vm.shareableRoundSessionId == nil)
     }
 
+    // #236: the server answers 409 `family_not_shareable` to a round with
+    // kids, so the round end's "Send to a friend" card would be a button that
+    // always fails. Play Again and Home stay the round end's actions.
+    @Test("switch on: a finished round with kids offers no link")
+    func familyRoundOffersNoLink() {
+        let (vm, _) = makeViewModel(enabled: true)
+        var session = Fixtures.makeQuizSession(id: "s_family")
+        session.ageBand = "kids_4_6"
+        vm.currentSession = session
+        #expect(vm.shareableRoundSessionId == nil)
+    }
+
     @Test("the switch is off unless the server says otherwise")
     func configDefaultsOff() throws {
         let config = try JSONDecoder().decode(RemoteAppConfig.self, from: Data(#"{"orders_enabled": true}"#.utf8))

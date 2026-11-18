@@ -9,6 +9,7 @@ Proper RAG Implementation:
 
 import asyncio
 import logging
+from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Callable, List, Optional, Sequence, TypeVar
 import random
@@ -49,20 +50,47 @@ class QueryEmbeddingUnavailable(Exception):
     """The query could not be embedded in time (slow or failed API)."""
 
 
+# Query texts are few and repeat (topic + difficulty + language per lookup), so
+# a text embedded once is remembered: the player never waits on the provider
+# again for it. Bounded LRU so free-form texts (custom topics) cannot grow
+# memory without limit. Only successful vectors are stored, never failures.
+QUERY_EMBED_MODEL = "text-embedding-3-small"
+QUERY_EMBED_CACHE_MAX = 4096
+_query_embed_cache: "OrderedDict[tuple[str, str], List[float]]" = OrderedDict()
+
+
+def clear_query_embed_cache() -> None:
+    _query_embed_cache.clear()
+
+
 async def embed_query(text: str) -> List[float]:
     """Embedder for the next-question lookup: one bounded attempt, no retries.
 
     Ranking is a nicety, the question is not: a retry here would only spend
     the time the player is waiting, so any failure goes to the unranked pick.
+    A text seen before is answered from memory without calling the provider.
     """
+    key = (QUERY_EMBED_MODEL, text)
+    cached = _query_embed_cache.get(key)
+    if cached is not None:
+        _query_embed_cache.move_to_end(key)
+        return cached
     try:
-        return await asyncio.wait_for(
-            generate_embedding_async(text, max_retries=0), QUERY_EMBED_TIMEOUT_S
+        vector = await asyncio.wait_for(
+            generate_embedding_async(text, model=QUERY_EMBED_MODEL, max_retries=0),
+            QUERY_EMBED_TIMEOUT_S,
         )
     except Exception as e:
         raise QueryEmbeddingUnavailable(
             str(e) or f"no embedding within {QUERY_EMBED_TIMEOUT_S:g} s"
         ) from e
+    # Concurrent misses for one text may both call the provider; both store the
+    # same complete vector, so the race is harmless.
+    _query_embed_cache[key] = vector
+    _query_embed_cache.move_to_end(key)
+    while len(_query_embed_cache) > QUERY_EMBED_CACHE_MAX:
+        _query_embed_cache.popitem(last=False)
+    return vector
 
 
 def pick_weight(q: Question, now: datetime) -> float:

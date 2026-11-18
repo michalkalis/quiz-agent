@@ -121,7 +121,9 @@ async def test_slow_embedding_gives_up_after_one_short_attempt(api):
         await asyncio.wait_for(embed_query("history question"), GUARD_S)
 
     # One attempt, and the SDK's own retries are switched off for it.
-    assert slow.calls == [{"max_retries": 0}]
+    assert slow.calls == [
+        {"model": retriever_module.QUERY_EMBED_MODEL, "max_retries": 0}
+    ]
 
 
 async def test_failed_embedding_is_not_retried_on_the_hot_path(api):

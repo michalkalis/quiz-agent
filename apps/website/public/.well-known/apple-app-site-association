@@ -2,16 +2,17 @@
   "applinks": {
     "details": [
       {
+        "appIDs": ["KAGWHPZZFQ.com.missinghue.hangs.beta"],
+        "components": [
+          { "/": "/beta/join", "?": { "t": "?*" }, "comment": "Trubbo Beta (#234): its own invite path, so a link never opens the other app" },
+          { "/": "/play", "?": { "s": "?*" }, "comment": "Quiz shared by link (#232) in Trubbo Beta too (#240.9). Listed before the App Store app: the first match wins, so a phone with both apps opens it in the beta" }
+        ]
+      },
+      {
         "appIDs": ["KAGWHPZZFQ.com.missinghue.hangs"],
         "components": [
           { "/": "/join", "?": { "t": "?*" }, "comment": "Hra spolu invite (#212): QR code and shared link" },
           { "/": "/play", "?": { "s": "?*" }, "comment": "Quiz shared by link (#232)" }
-        ]
-      },
-      {
-        "appIDs": ["KAGWHPZZFQ.com.missinghue.hangs.beta"],
-        "components": [
-          { "/": "/beta/join", "?": { "t": "?*" }, "comment": "Trubbo Beta (#234): its own invite path, so a link never opens the other app" }
         ]
       }
     ]

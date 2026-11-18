@@ -1,0 +1,62 @@
+# texts
+Вікторина
+Вибери кілька
+All Categories
+10 питання
+All Categories
+Science & Nature
+10 питання
+Science & Nature
+History
+10 питання
+History
+Geography & World
+10 питання
+Geography & World
+Movies & Music
+10 питання
+Movies & Music
+Sports
+10 питання
+Sports
+Food & Everyday Life
+10 питання
+Food & Everyday Life
+Entertainment
+10 питання
+Entertainment
+English
+Slovenčina
+Čeština
+Мова вікторини
+English
+Easy
+Medium
+Hard
+Random
+Складність
+Random
+Категорії
+All Categories
+Швидка вікторина
+Після «Пропусти» одразу наступне питання, без пояснення
+
+trubbo
+Старт
+# identifiers
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home-categories-menu
+home.quickGame
+home.startQuiz

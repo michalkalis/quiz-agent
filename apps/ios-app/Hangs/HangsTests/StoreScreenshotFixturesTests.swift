@@ -18,6 +18,7 @@ struct StoreScreenshotFixturesTests {
             ("en", "Which planet has the shortest day in the Solar System?", "Space for kids: planets, rockets and astronauts"),
             ("sk", "Ktorá planéta má najkratší deň v slnečnej sústave?", "Vesmír pre deti: planéty, rakety a astronauti"),
             ("cs", "Která planeta má nejkratší den ve Sluneční soustavě?", "Vesmír pro děti: planety, rakety a astronauti"),
+            ("uk", "Яка планета має найкоротший день у Сонячній системі?", "Космос для дітей: планети, ракети й астронавти"),
         ]
     )
     func contentFollowsQuizLanguage(language: String, question: String, topic: String) {
@@ -31,18 +32,20 @@ struct StoreScreenshotFixturesTests {
         #expect(StoreScreenshotFixtures.openQuestion(content, language: language).category == "science-nature")
     }
 
-    @Test("No store screenshot mentions Russia (founder rule for the public listing)", arguments: ["en", "sk", "cs"])
+    @Test("No store screenshot mentions Russia (founder rule for the public listing)", arguments: ["en", "sk", "cs", "uk"])
     func fixturesNeverMentionRussia(language: String) {
         let c = StoreScreenshotFixtures.content(forQuizLanguage: language)
         let all = ([c.mcqQuestion, c.mcqExplanation, c.openQuestion, c.openExplanation] + c.mcqOptions).joined(separator: " ")
         #expect(!all.localizedCaseInsensitiveContains("Russia"))
         #expect(!all.localizedCaseInsensitiveContains("Rusko"))
+        #expect(!all.localizedCaseInsensitiveContains("Росі"))
     }
 
-    @Test("sk and cs never fall back to English content")
+    @Test("sk, cs and uk never fall back to English content")
     func localizedContentDiffersFromEnglish() {
         let en = StoreScreenshotFixtures.content(forQuizLanguage: "en")
         #expect(StoreScreenshotFixtures.content(forQuizLanguage: "sk") != en)
         #expect(StoreScreenshotFixtures.content(forQuizLanguage: "cs") != en)
+        #expect(StoreScreenshotFixtures.content(forQuizLanguage: "uk") != en)
     }
 }

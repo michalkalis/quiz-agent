@@ -1,0 +1,6 @@
+# texts
+Не вдалося завантажити твої набори
+Спробуй ще раз
+# identifiers
+myPacks.loadFailed
+myPacks.retryLoad

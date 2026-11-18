@@ -53,8 +53,16 @@ nonisolated enum SnapshotBaseline {
 }
 
 nonisolated enum HeroLanguage: String, CaseIterable {
-    case en, sk, cs
+    case en, sk, cs, uk
     var locale: Locale { Locale(identifier: rawValue) }
+
+    /// #231: the content face follows the interface language (Manrope for
+    /// Ukrainian, `Theme.Hangs.Fonts`), which `\.locale` alone cannot reach.
+    /// sk/cs/en keep the process default, so their baselines stay untouched.
+    /// Undo with `InterfaceLanguage.set(nil)` once the snapshot is taken.
+    func applyInterfaceFace() {
+        InterfaceLanguage.set(self == .uk ? rawValue : nil)
+    }
 }
 
 // MARK: - Screens
@@ -218,6 +226,8 @@ struct HeroScreenSnapshotTests {
         arguments: HeroScreen.allCases, HeroLanguage.allCases
     )
     func pixels(screen: HeroScreen, language: HeroLanguage) async {
+        language.applyInterfaceFace()
+        defer { InterfaceLanguage.set(nil) }
         // Pinned, not inherited: the app ships dark-first and the CI simulator
         // boots in light mode with whatever text size the image left behind.
         let view = await screen.make()

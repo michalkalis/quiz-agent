@@ -23,7 +23,7 @@ struct HangsBrandMark: View {
         HStack(spacing: 6) {
             TrubboMark(height: size * 1.3)
             Text(verbatim: "trubbo")
-                .font(Theme.Hangs.Fonts.content(size, weight: .heavy))
+                .font(Theme.Hangs.Fonts.wordmark(size))
                 .tracking(-size * 0.03)
                 .foregroundStyle(color)
                 .lineLimit(1)

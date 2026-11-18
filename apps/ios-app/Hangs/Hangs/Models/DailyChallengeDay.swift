@@ -3,8 +3,8 @@
 //  Hangs
 //
 //  #205: the day a daily challenge belongs to — the device's local calendar
-//  date, sent to the server as `YYYY-MM-DD` and shown as "15. 10." (sk, cs)
-//  or "Oct 15" (en).
+//  date, sent to the server as `YYYY-MM-DD` and shown as "15. 10." (sk, cs),
+//  "15 жовтня" (uk) or "Oct 15" (en).
 //
 
 import Foundation
@@ -15,6 +15,11 @@ nonisolated struct DailyChallengeDay: Equatable, Sendable {
     let day: Int
 
     private static let englishMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    /// #231: Ukrainian names the month in the genitive after the day ("18 листопада").
+    private static let ukrainianMonths = [
+        "січня", "лютого", "березня", "квітня", "травня", "червня",
+        "липня", "серпня", "вересня", "жовтня", "листопада", "грудня",
+    ]
 
     init(year: Int, month: Int, day: Int) {
         self.year = year
@@ -43,10 +48,11 @@ nonisolated struct DailyChallengeDay: Equatable, Sendable {
         value < 10 ? "0\(value)" : "\(value)"
     }
 
-    /// "15. 10." in Slovak and Czech, "Oct 15" otherwise.
+    /// "15. 10." in Slovak and Czech, "15 жовтня" in Ukrainian, "Oct 15" otherwise.
     func label(languageCode: String) -> String {
         switch languageCode {
         case "sk", "cs": "\(day). \(month)."
+        case "uk": "\(day) \(Self.ukrainianMonths[month - 1])"
         default: "\(Self.englishMonths[month - 1]) \(day)"
         }
     }

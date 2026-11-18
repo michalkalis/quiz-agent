@@ -1,0 +1,11 @@
+# texts
+ОЙ
+Action cancelled
+Your submission was interrupted. Try answering again.
+Закрий
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.dismiss

@@ -1,0 +1,13 @@
+# texts
++100
+питань
+Збережи кредит
+Кредит поки що тільки на цьому телефоні. Увійди через Apple, і він залишиться з тобою на новому телефоні чи після перевстановлення.
+Може, пізніше
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

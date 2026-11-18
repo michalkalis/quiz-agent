@@ -1,0 +1,5 @@
+# texts
+Маєш посилання на вікторину від друга?
+# identifiers
+home.sharedQuiz.paste
+home.sharedQuiz.dismiss

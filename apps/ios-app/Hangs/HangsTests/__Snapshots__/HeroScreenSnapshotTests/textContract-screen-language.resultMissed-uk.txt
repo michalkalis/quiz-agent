@@ -1,0 +1,34 @@
+# texts
+0/10
+Geography & World
+Мимо
+What is the capital of France?
+правильна відповідь
+Paris
+твоя відповідь: Somewhere on the Rhône, I think Lyon or maybe Marseille
+чому
+послухай
+Paris has been the capital of France since the 10th century.
+джерело
+Далі
+ЗАЛИШСЯ
+Налаштування
+# identifiers
+question.progress
+question.counter
+question.category
+result.verdict
+result.question
+result.answer
+result.said
+result.hearIt
+result.explanation
+result.metaRow
+result.source
+result.continue
+result.stayHere
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

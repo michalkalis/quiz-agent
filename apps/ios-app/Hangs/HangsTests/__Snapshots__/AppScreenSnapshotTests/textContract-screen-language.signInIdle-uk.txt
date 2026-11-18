@@ -1,0 +1,12 @@
+# texts
+Trubbo Plus
+Збережи Plus
+Після входу Trubbo Plus прив'яжеться до твого акаунта Apple. Він лишиться з тобою на новому телефоні або після перевстановлення.
+Може, пізніше
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

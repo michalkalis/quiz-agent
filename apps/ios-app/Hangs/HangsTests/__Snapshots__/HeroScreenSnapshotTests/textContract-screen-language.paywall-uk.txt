@@ -1,0 +1,29 @@
+# texts
+Trubbo Plus
+You've used all 30 free questions this month.
+Free questions reset in 
+Trubbo Plus
+1 000 питань на місяць за €4.99
+або докупи питання без підписки
+Набір із 100 питань
+Разова покупка · без терміну дії
+€2.99
+Оформи Trubbo Plus за €4.99 / місяць
+Віднови покупки
+Поновлюється автоматично, доки ти її не скасуєш. Скасувати можна будь-коли в Налаштуваннях.
+Політика конфіденційності
+·
+Умови використання
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall.countdownPill
+paywall-plan-monthly
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.legal
+paywall.privacyPolicy
+paywall.termsOfUse

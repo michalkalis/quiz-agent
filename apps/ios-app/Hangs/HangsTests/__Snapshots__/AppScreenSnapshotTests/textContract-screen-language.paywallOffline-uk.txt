@@ -1,0 +1,11 @@
+# texts
+МАГАЗИН
+НЕДОСТУПНИЙ
+Пропозицію зараз не вдалося завантажити. Перевір з'єднання і спробуй ще раз.
+Спробуй ще раз
+# identifiers
+paywall-close-x-button
+paywall.offline.icon
+paywall.offline.headline
+paywall.offline.subtitle
+paywall-offline-retry-button

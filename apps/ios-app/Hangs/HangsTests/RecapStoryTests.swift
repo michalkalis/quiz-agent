@@ -86,6 +86,7 @@ struct RecapStoryTests {
         #expect(october.monthName(locale: Locale(identifier: "sk")) == "október")
         #expect(october.monthName(locale: Locale(identifier: "cs")) == "říjen")
         #expect(october.monthName(locale: Locale(identifier: "en")) == "October")
+        #expect(october.monthName(locale: Locale(identifier: "uk")) == "жовтень")
     }
 
     @Test("the newest known recap becomes the card; showing it tells the server once")

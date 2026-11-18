@@ -1,0 +1,17 @@
+# texts
+ПРОФІЛЬ
+Твоє ім'я
+Múdra sova
+Твоє ім'я
+Múdra sova
+37
+з 60
+Твій перший підсумок
+Ще 23 питання
+Ще 1 день гри
+# identifiers
+profile.settings
+profile.account
+profile.name
+profile.firstRecap
+profile.allStats

@@ -1,0 +1,22 @@
+# texts
+Правила гри
+Готово
+Час на відповідь
+15 s
+30 s
+45 s
+60 s
+Власний
+Час на відповідь
+Читати питання вголос
+
+Коли показувати відповіді
+At the end of the quiz
+Коли показувати відповіді
+At the end of the quiz
+Зміни діють з наступного питання. Коли показувати відповіді, можна змінити лише до початку гри.
+# identifiers
+room.rules.done
+room.rules.sheet.time
+room.rules.sheet.readsAloud
+room.rules.sheet.reveal

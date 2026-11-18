@@ -1,0 +1,13 @@
+# texts
+Harry Potter
+30 питання
+Збережи набір
+Набір поки що тільки на цьому телефоні. Увійди через Apple, і він залишиться з тобою на новому телефоні чи після перевстановлення.
+Може, пізніше
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

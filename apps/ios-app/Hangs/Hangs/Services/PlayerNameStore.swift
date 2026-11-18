@@ -60,6 +60,7 @@ struct PlayerNameStore {
         let names = switch languageCode {
         case "sk": skNames
         case "cs": csNames
+        case "uk": ukNames
         default: enNames
         }
         return names[pick(names.count)]
@@ -72,6 +73,10 @@ struct PlayerNameStore {
     private static let csNames = [
         "Rychlý gepard", "Moudrá sova", "Veselý delfín", "Tichá liška",
         "Odvážný tygr", "Bystrá veverka", "Klidný medvěd", "Hravá vydra",
+    ]
+    private static let ukNames = [
+        "Швидкий гепард", "Мудра сова", "Веселий дельфін", "Тиха лисиця",
+        "Сміливий тигр", "Кмітлива білка", "Спокійний ведмідь", "Грайлива видра",
     ]
     private static let enNames = [
         "Swift Cheetah", "Wise Owl", "Happy Dolphin", "Quiet Fox",

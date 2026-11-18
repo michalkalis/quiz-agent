@@ -1,0 +1,32 @@
+# texts
+Гра разом
+Ти в грі
+Peťo
+Торкнися імені, щоб його змінити.
+У кімнаті
+M
+Michal
+P
+Peťo
+Правила від ведучого
+Коли показувати відповіді
+After each question
+Коли показувати відповіді
+After each question
+Час на відповідь
+30 s
+Час на відповідь
+30 s
+Питання читає
+the host's phone
+Питання читає
+the host's phone
+Чекаємо, поки ведучий почне гру
+# identifiers
+room.close
+room.lobby.rename
+room.rules.guest
+room.rules.guest.reveal
+room.rules.guest.time
+room.rules.guest.readsAloud
+room.lobby.waiting

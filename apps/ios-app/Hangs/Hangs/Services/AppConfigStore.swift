@@ -225,7 +225,8 @@ final class AppConfigStore: ObservableObject {
                 notice: notice ? RemoteAppConfig.Notice(
                     sk: "Dnes od 22:00 prebieha údržba. Kvíz môže byť krátko nedostupný.",
                     cs: "Dnes od 22:00 probíhá údržba. Kvíz může být krátce nedostupný.",
-                    en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable."
+                    en: "Maintenance tonight from 22:00. Quizzes may be briefly unavailable.",
+                    uk: "Сьогодні з 22:00 технічні роботи. Вікторина може бути недоступна недовго."
                 ) : nil,
                 dailyChallengeEnabled: daily,
                 recommendedVersionAppStore: recommended ? "999" : nil,

@@ -1,0 +1,25 @@
+# texts
+Категорії
+All Categories
+Science & Nature
+History
+Geography & World
+Movies & Music
+Sports
+Food & Everyday Life
+Entertainment
+Локальні питання
+Наприклад, автобусні маршрути твого міста чи місцева карткова гра
+
+Готово
+# identifiers
+home.category.all
+home.category.science-nature
+home.category.history
+home.category.geography-world
+home.category.movies-music
+home.category.sports
+home.category.food-everyday
+home.category.entertainment
+home.categories.localQuestions
+home.categories.done

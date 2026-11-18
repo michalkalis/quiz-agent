@@ -25,11 +25,11 @@ struct LanguagePickerTests {
 
     // MARK: - Filtering
 
-    @Test("The display catalogue keeps all ten codes — only the offer list narrows")
+    @Test("The display catalogue keeps all eleven codes — only the offer list narrows")
     func testDisplayCatalogueIsUnfiltered() {
         // Hiding a language must not lose its name: a stored 'de' still has to
         // render somewhere, and re-enabling it is an env flip, not a build.
-        #expect(Language.supportedLanguages.count == 10)
+        #expect(Language.supportedLanguages.count == 11)
         #expect(Language.forCode("de")?.nativeName == "Deutsch")
     }
 
@@ -38,6 +38,23 @@ struct LanguagePickerTests {
         // Server order deliberately scrambled: the menu order is ours.
         let offered = Language.selectableLanguages(in: ["cs", "en", "sk"])
         #expect(offered.map(\.id) == ["en", "sk", "cs"])
+    }
+
+    /// WHY (#231): Ukrainian goes live by a server switch only after the native
+    /// speaker approved it. Until the server lists it, no picker may offer it,
+    /// and a phone set to Ukrainian starts in English; once listed, it shows
+    /// under its own name right after Czech.
+    @Test("Ukrainian is offered only once the server lists it")
+    func ukrainianFollowsTheServer() {
+        #expect(!LanguageAvailability.fallbackQuizCodes.contains("uk"))
+        #expect(!LanguageAvailability.fallbackPackOrderCodes.contains("uk"))
+        #expect(!Language.selectableLanguages(in: LanguageAvailability.fallbackQuizCodes).map(\.id).contains("uk"))
+        #expect(Language.selectable("uk", in: Language.selectableLanguages(in: ["en", "sk", "cs"])).id == "en")
+
+        let live = Language.selectableLanguages(in: ["uk", "en", "sk", "cs"])
+        #expect(live.map(\.id) == ["en", "sk", "cs", "uk"])
+        #expect(Language.forCode("uk")?.nativeName == "Українська")
+        #expect(Language.selectable("uk", in: live).id == "uk")
     }
 
     @Test("An unusable server list falls back to the default rather than emptying the menu")

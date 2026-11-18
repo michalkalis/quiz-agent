@@ -273,6 +273,7 @@
 				en,
 				sk,
 				cs,
+				uk,
 				Base,
 			);
 			mainGroup = 5004B4912EF874800068C8D1;

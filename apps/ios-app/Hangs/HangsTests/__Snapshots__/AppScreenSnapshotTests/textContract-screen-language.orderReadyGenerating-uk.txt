@@ -1,0 +1,10 @@
+# texts
+5
+Твій набір готовий до гри
+Готово питань: 5 з 30. Решта генерується, поки ти граєш.
+Почни вікторину
+Закрий
+# identifiers
+orderPack.readyCount
+orderProgress.startQuiz
+orderPack.closeButton

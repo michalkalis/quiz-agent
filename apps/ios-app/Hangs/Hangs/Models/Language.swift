@@ -22,6 +22,7 @@ struct Language: Identifiable, Hashable, Sendable {
             Language(id: "en", name: String(localized: "English", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "English"),
             Language(id: "sk", name: String(localized: "Slovak", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Slovenčina"),
             Language(id: "cs", name: String(localized: "Czech", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Čeština"),
+            Language(id: "uk", name: String(localized: "Ukrainian", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Українська"),
             Language(id: "de", name: String(localized: "German", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Deutsch"),
             Language(id: "fr", name: String(localized: "French", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Français"),
             Language(id: "es", name: String(localized: "Spanish", bundle: .interface, locale: .interface, comment: "Language name (exonym)"), nativeName: "Español"),

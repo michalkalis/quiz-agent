@@ -1,0 +1,22 @@
+# texts
+Власний набір · 30 питання
+Famous bridges of the world and the engineers who built them
+Мова вікторини
+English
+Складність
+Середня
+Кількість питань
+10
+30
+Кількість питань
+Ціна
+8,99 €
+Після оплати замовлення вже не можна скасувати. Створення набору платне і починається одразу.
+Оплати 8,99 € і створи набір
+# identifiers
+orderPack.summaryPrompt
+orderPack.summaryDifficulty
+orderPack.size
+orderPack.price
+orderPack.noCancelNotice
+orderPack.pay

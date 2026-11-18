@@ -1,0 +1,23 @@
+# texts
+Trubbo Plus
+You've used all 1,000 Trubbo Plus questions this month.
+Questions reset in 
+Набір із 100 питань
+Разова покупка · без терміну дії
+€2.99
+Купи набір із 100 питань за €2.99
+Віднови покупки
+Політика конфіденційності
+·
+Умови використання
+# identifiers
+paywall-close-x-button
+paywall.icon
+paywall.headline
+paywall.subtitle
+paywall.countdownPill
+paywall-plan-pack
+paywall-purchase-button
+paywall-restore-button
+paywall.privacyPolicy
+paywall.termsOfUse

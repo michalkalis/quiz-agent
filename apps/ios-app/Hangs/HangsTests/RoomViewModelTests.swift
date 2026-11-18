@@ -512,6 +512,8 @@ struct RoomSupportTests {
         #expect(PlayerNameStore.cleaned(String(repeating: "a", count: 40))?.count == PlayerNameStore.maxLength)
         #expect(PlayerNameStore.automaticName(languageCode: "sk", pick: { _ in 0 }) == "Rýchly gepard")
         #expect(PlayerNameStore.automaticName(languageCode: "en", pick: { _ in 0 }) == "Swift Cheetah")
+        // #231: a Ukrainian interface names a guest in Ukrainian.
+        #expect(PlayerNameStore.automaticName(languageCode: "uk", pick: { _ in 0 }) == "Швидкий гепард")
     }
 
     @Test("A game together never has voice or picture questions")

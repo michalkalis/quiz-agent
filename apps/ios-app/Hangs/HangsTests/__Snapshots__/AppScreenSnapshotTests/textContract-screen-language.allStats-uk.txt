@@ -1,0 +1,34 @@
+# texts
+Усього
+312 питання
+3 год, 20 хв
+Сильна сторона
+Geography & World
+82 % правильно
+Є куди рости
+Sports
+41 % правильно
+Де граєш
+В авто
+64 % вікторин
+Коли граєш
+Увечері
+найчастіше в неділю
+Типова вікторина
+6,5 хв
+10 питання
+Твій прогрес
++12 пункту
+за однакової складності
+Найдовша серія
+9 поспіль
+правильних відповідей
+# identifiers
+profile.card.totals
+profile.card.best_category
+profile.card.weakest_category
+profile.card.where
+profile.card.when
+profile.card.typical_game
+profile.card.improvement
+profile.card.best_streak

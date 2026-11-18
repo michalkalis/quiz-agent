@@ -13,21 +13,71 @@
 //  selection (C4) keeps the fan of its picks and leaves it on the first tap.
 //  For VoiceOver it is one adjustable element instead of two half-taps.
 //
+//  #236: in family mode the same deck steps through the age band's topics
+//  (`HomeDeckCard.topics`), one topic per round, never a multi-selection.
+//
 
 import SwiftUI
 
 struct HomeCategoryDeck: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Selected category ids; empty = all categories.
+    @State private var lift: HomeCategoryCycleCards.Lift?
+    @State private var liftTask: Task<Void, Never>?
+
+    /// The cycle the deck steps through.
+    let cards: [HomeDeckCard]
+    /// Index of the front card in `cards`.
+    let front: Int
+    /// Selected category ids; more than one fans the picks (categories only).
     let selectedCategories: [String]
-    /// The front card's title: the same value the Categories pill shows.
+    /// The front card's title: the same value the pill under the deck shows.
     let title: String
     let questionCount: Int
+    /// What VoiceOver calls the deck ("Categories", "Topic").
+    let label: LocalizedStringKey
+    /// The deck's identifier; its halves add `.previous` / `.next`.
+    let identifier: String
     /// A tap on the left / right half (or VoiceOver decrement / increment).
     let onStep: (CategoryCycle.Direction, CategoryStepInput) -> Void
 
-    @State private var lift: HomeCategoryCycleCards.Lift?
-    @State private var liftTask: Task<Void, Never>?
+    /// The category deck as before #236.
+    init(
+        selectedCategories: [String],
+        title: String,
+        questionCount: Int,
+        onStep: @escaping (CategoryCycle.Direction, CategoryStepInput) -> Void
+    ) {
+        self.init(
+            cards: HomeDeckCard.categories,
+            front: CategoryCycle.position(of: selectedCategories),
+            selectedCategories: selectedCategories,
+            title: title,
+            questionCount: questionCount,
+            label: "Categories",
+            identifier: "home.categoryDeck",
+            onStep: onStep
+        )
+    }
+
+    init(
+        cards: [HomeDeckCard],
+        front: Int,
+        selectedCategories: [String] = [],
+        title: String,
+        questionCount: Int,
+        label: LocalizedStringKey,
+        identifier: String,
+        onStep: @escaping (CategoryCycle.Direction, CategoryStepInput) -> Void
+    ) {
+        self.cards = cards
+        self.front = front
+        self.selectedCategories = selectedCategories
+        self.title = title
+        self.questionCount = questionCount
+        self.label = label
+        self.identifier = identifier
+        self.onStep = onStep
+    }
 
     private var isMultiSelection: Bool { selectedCategories.count > 1 }
 
@@ -38,7 +88,8 @@ struct HomeCategoryDeck: View {
                     fan.transition(.opacity)
                 } else {
                     HomeCategoryCycleCards(
-                        front: CategoryCycle.position(of: selectedCategories),
+                        cards: cards,
+                        front: front,
                         questionCount: questionCount,
                         lift: lift
                     )
@@ -51,7 +102,7 @@ struct HomeCategoryDeck: View {
             dots
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Categories"))
+        .accessibilityLabel(Text(label))
         .accessibilityValue(Text(verbatim: title))
         .accessibilityAdjustableAction { direction in
             switch direction {
@@ -60,7 +111,7 @@ struct HomeCategoryDeck: View {
             @unknown default: break
             }
         }
-        .accessibilityIdentifier("home.categoryDeck")
+        .accessibilityIdentifier(identifier)
     }
 
     // MARK: - Stepping
@@ -71,10 +122,10 @@ struct HomeCategoryDeck: View {
         HStack(spacing: 0) {
             Color.clear.contentShape(.rect)
                 .onTapGesture { step(.previous) }
-                .accessibilityIdentifier("home.categoryDeck.previous")
+                .accessibilityIdentifier("\(identifier).previous")
             Color.clear.contentShape(.rect)
                 .onTapGesture { step(.next) }
-                .accessibilityIdentifier("home.categoryDeck.next")
+                .accessibilityIdentifier("\(identifier).next")
         }
     }
 
@@ -90,16 +141,17 @@ struct HomeCategoryDeck: View {
             }
             return
         }
-        let order = CategoryCycle.order
-        let current = order[CategoryCycle.position(of: selectedCategories, in: order)]
-        let target = CategoryCycle.stepped(from: selectedCategories, direction, in: order).first
+        guard !cards.isEmpty else { return }
+        let delta = direction == .next ? 1 : -1
+        let current = cards[front].id
+        let target = cards[(front + delta + cards.count) % cards.count].id
         let moving = direction == .next ? current : target
         // Springs, not timing curves: the settle spring is retargeted while the
         // card is still flying out and keeps its speed, so the two halves read
         // as one arc. An ease-out first half stopped the card dead at the side
         // before the second half pulled it back (stutter, founder 2026-11-16).
         withAnimation(.spring(duration: Metrics.outDuration, bounce: 0)) {
-            lift = .init(id: moving ?? HomeCategoryCycleCards.allID, direction: direction)
+            lift = .init(id: moving, direction: direction)
             onStep(direction, input)
         }
         liftTask = Task { @MainActor in
@@ -113,8 +165,8 @@ struct HomeCategoryDeck: View {
     /// multi-selection owns the deck (no single position).
     private var dots: some View {
         HangsPageIndicator(
-            pageCount: CategoryCycle.order.count,
-            currentPage: CategoryCycle.position(of: selectedCategories)
+            pageCount: cards.count,
+            currentPage: front
         )
         .opacity(isMultiSelection ? 0 : 1)
         .frame(height: Metrics.dotsHeight)
@@ -187,6 +239,38 @@ struct HomeCategoryDeck: View {
     }
 
     private typealias Metrics = DeckMetrics
+}
+
+/// One card of the deck's cycle.
+struct HomeDeckCard {
+    let id: String
+    let name: String
+    /// The card's colours; nil = the white "All categories" card with the strip.
+    let style: Theme.Hangs.Category.Style?
+
+    /// All categories, then each category (`CategoryCycle.order`).
+    static var categories: [HomeDeckCard] {
+        Config.categoryOptions.map { option in
+            HomeDeckCard(
+                id: option.id ?? HomeCategoryCycleCards.allID,
+                name: option.display,
+                style: option.id.map { Theme.Hangs.Category.style(for: $0) }
+            )
+        }
+    }
+
+    /// #236: a band's topics, coloured round the category palette in list
+    /// order so neighbours in the fan never share a colour.
+    static func topics(_ topics: [FamilyTopic]) -> [HomeDeckCard] {
+        let palette = Theme.Hangs.Category.taxonomy
+        return topics.enumerated().map { index, topic in
+            HomeDeckCard(
+                id: topic.key,
+                name: topic.name,
+                style: Theme.Hangs.Category.style(for: palette[index % palette.count])
+            )
+        }
+    }
 }
 
 enum DeckMetrics {

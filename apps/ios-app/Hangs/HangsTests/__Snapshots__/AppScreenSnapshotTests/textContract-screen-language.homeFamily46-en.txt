@@ -1,0 +1,53 @@
+# texts
+Quiz
+With kids
+Mode
+Topics for 4–6
+Dinosaury
+6 questions
+Dinosaury
+Fuj, ale pravda
+6 questions
+Fuj, ale pravda
+Tvoje telo
+6 questions
+Tvoje telo
+English
+Slovenčina
+Čeština
+Quiz language
+Slovenčina
+4–6
+7–9
+10–12
+Age
+4–6
+Dinosaury
+Fuj, ale pravda
+Tvoje telo
+Topic
+Dinosaury
+trubbo
+You answer, the kids guess along with you.
+Start with kids
+# identifiers
+home.mode
+home.mode.quiz
+home.mode.family
+home.familyDeck
+home.familyDeck.previous
+home.familyDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home.band.menu
+home.band.kids_4_6
+home.band.kids_7_9
+home.band.kids_10_12
+home.topic.menu
+home.topic.family-dinosaurs
+home.topic.family-gross-but-true
+home.topic.family-your-body
+home.family.adultAnswers
+home.startFamily

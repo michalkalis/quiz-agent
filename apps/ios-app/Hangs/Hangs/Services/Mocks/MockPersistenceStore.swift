@@ -58,7 +58,7 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
     // MARK: - Question History
 
     func addQuestionId(_ id: String) {
-        guard !askedQuestionIds.contains(id) else { return }
+        askedQuestionIds.removeAll { $0 == id }
         askedQuestionIds.append(id)
         if askedQuestionIds.count > PersistenceStore.historyWindow {
             askedQuestionIds.removeFirst(askedQuestionIds.count - PersistenceStore.historyWindow)
@@ -71,6 +71,18 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     func getExclusionList() -> [String] {
         return askedQuestionIds
+    }
+
+    // MARK: - Family mode (#236)
+
+    var familySettings = FamilySettings()
+
+    func loadFamilySettings() -> FamilySettings {
+        familySettings
+    }
+
+    func saveFamilySettings(_ settings: FamilySettings) {
+        familySettings = settings
     }
 
     // MARK: - Pack progress (#200)

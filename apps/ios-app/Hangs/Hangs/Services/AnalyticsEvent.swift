@@ -65,6 +65,15 @@ enum AnalyticsEvent: Equatable {
     case packTopicChecked(verdict: String)
     /// #232: the first-launch "quiz link from a friend?" Paste button was used.
     case sharedQuizPasted(outcome: SharedQuizPasteOutcome)
+    /// #236: the Home switch "Kvíz | S deťmi" changed the mode.
+    case familyModeChanged(enabled: Bool)
+    /// #236: an age band was picked; `firstTime` = the first-flip sheet. The
+    /// band is the round's content setting, never a property of the player.
+    case familyBandSelected(band: FamilyBand, firstTime: Bool)
+    /// #236: a topic was picked on the deck or in the Téma menu.
+    case familyTopicSelected(band: FamilyBand, topic: String)
+    /// #236: `/start` answered `family_topic_empty`; Home hid the topic.
+    case familyTopicEmpty(band: FamilyBand, topic: String)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -97,6 +106,10 @@ enum AnalyticsEvent: Equatable {
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
         case .sharedQuizPasted: "shared_quiz_pasted"
+        case .familyModeChanged: "family_mode_changed"
+        case .familyBandSelected: "family_band_selected"
+        case .familyTopicSelected: "family_topic_selected"
+        case .familyTopicEmpty: "family_topic_empty"
         }
     }
 
@@ -177,6 +190,12 @@ enum AnalyticsEvent: Equatable {
             [("verdict", .string(verdict))]
         case let .sharedQuizPasted(outcome):
             [("outcome", .string(outcome.rawValue))]
+        case let .familyModeChanged(enabled):
+            [("enabled", .bool(enabled))]
+        case let .familyBandSelected(band, firstTime):
+            [("band", .string(band.rawValue)), ("first_time", .bool(firstTime))]
+        case let .familyTopicSelected(band, topic), let .familyTopicEmpty(band, topic):
+            [("band", .string(band.rawValue)), ("topic", .string(topic))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

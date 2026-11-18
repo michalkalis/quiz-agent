@@ -1593,6 +1593,74 @@
         }
       }
     },
+    "Age" : {
+      "comment" : "#236 family mode „S deťmi“: Home pill caption, replaces Difficulty",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Věk"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vek"
+          }
+        }
+      }
+    },
+    "Ages 10 to 12" : {
+      "comment" : "#236 family mode „S deťmi“: VoiceOver name of the 10–12 age band",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 až 12 let"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 až 12 rokov"
+          }
+        }
+      }
+    },
+    "Ages 4 to 6" : {
+      "comment" : "#236 family mode „S deťmi“: VoiceOver name of the 4–6 age band",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 až 6 let"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 až 6 rokov"
+          }
+        }
+      }
+    },
+    "Ages 7 to 9" : {
+      "comment" : "#236 family mode „S deťmi“: VoiceOver name of the 7–9 age band",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 až 9 let"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7 až 9 rokov"
+          }
+        }
+      }
+    },
     "ANSWER BY VOICE" : {
       "extractionState" : "stale",
       "comment" : "A title for a page that describes how to use Trubbo to answer questions by voice.",
@@ -5205,6 +5273,23 @@
         }
       }
     },
+    "I'll remember the age. You can change it on Home." : {
+      "comment" : "#236 family mode „S deťmi“: age sheet footnote",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Věk si zapamatuju. Změníš ho na Úvodu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vek si zapamätám. Zmeníš ho na Úvode."
+          }
+        }
+      }
+    },
     "I'll stop when you go quiet" : {
       "comment" : "Listen bar caption under \"Capturing…\" — the recording ends by itself on silence (#185 F2)",
       "localizations" : {
@@ -5893,6 +5978,23 @@
         }
       }
     },
+    "Longer questions, answer by voice" : {
+      "comment" : "#236 family mode „S deťmi“ age sheet: what 10–12 questions look like",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delší otázky, odpověď hlasem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dlhšie otázky, odpoveď hlasom"
+          }
+        }
+      }
+    },
     "Looking for games on this Wi-Fi…" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -6124,6 +6226,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vedľa. Správna odpoveď: %@."
+          }
+        }
+      }
+    },
+    "Mode" : {
+      "comment" : "#236 family mode „S deťmi“: name of the Home switch Quiz | With kids (VoiceOver)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim"
           }
         }
       }
@@ -8979,6 +9098,23 @@
       },
       "comment" : "#232: share this quiz as a link"
     },
+    "Short questions, answer by voice" : {
+      "comment" : "#236 family mode „S deťmi“ age sheet: what 7–9 questions look like",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krátké otázky, odpověď hlasem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krátke otázky, odpoveď hlasom"
+          }
+        }
+      }
+    },
     "Some words in your topic are rude or for adults only. We'll make the pack, but the questions will be toned down." : {
       "comment" : "Order summary (#233): the topic passed the check but its questions will be toned down",
       "extractionState" : "manual",
@@ -9010,6 +9146,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rozpoznávanie reči je vypnuté"
+          }
+        }
+      }
+    },
+    "Start with kids" : {
+      "comment" : "#236 family mode „S deťmi“: Home Start button in the family mode",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start s dětmi"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Štart s deťmi"
           }
         }
       }
@@ -11155,6 +11308,57 @@
         }
       }
     },
+    "This topic has no questions in your quiz language yet." : {
+      "comment" : "#236 family mode „S deťmi“: the chosen topic has no question in the quiz language",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toto téma zatím nemá otázky v jazyce kvízu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto téma zatiaľ nemá otázky v jazyku kvízu."
+          }
+        }
+      }
+    },
+    "Topic" : {
+      "comment" : "#236 family mode „S deťmi“: Home pill caption and deck name, replaces Categories",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téma"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téma"
+          }
+        }
+      }
+    },
+    "Topics for %@" : {
+      "comment" : "#236 family mode „S deťmi“: Home section label; placeholder is the age band such as 4–6",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Témata pro %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Témy pre %@"
+          }
+        }
+      }
+    },
     "Turn on" : {
       "comment" : "Listen bar button: turns voice commands on (asks for speech recognition)",
       "localizations" : {
@@ -11224,6 +11428,23 @@
         }
       }
     },
+    "What age?" : {
+      "comment" : "#236 family mode „S deťmi“: age sheet title",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro jaký věk?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pre aký vek?"
+          }
+        }
+      }
+    },
     "What we play" : {
       "localizations" : {
         "sk" : {
@@ -11275,6 +11496,40 @@
         }
       }
     },
+    "With kids" : {
+      "comment" : "#236 family mode „S deťmi“: Home switch segment",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S dětmi"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S deťmi"
+          }
+        }
+      }
+    },
+    "Yes, no or one of two" : {
+      "comment" : "#236 family mode „S deťmi“ age sheet: what 4–6 questions look like",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ano, ne nebo jedna ze dvou"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Áno, nie alebo jedna z dvoch"
+          }
+        }
+      }
+    },
     "You" : {
       "localizations" : {
         "sk" : {
@@ -11291,6 +11546,23 @@
         }
       },
       "comment" : "#232: the viewer's own row in the comparison"
+    },
+    "You answer, the kids guess along with you." : {
+      "comment" : "#236 family mode „S deťmi“: line that the adult is the one who answers (Home and age sheet)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovídáš ty, děti hádají s tebou."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovedáš ty, deti hádajú s tebou."
+          }
+        }
+      }
     },
     "You will no longer see each other in the table." : {
       "comment" : "Denná výzva: partia (#239)",

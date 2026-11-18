@@ -8,6 +8,8 @@
 //  from the back out in front (previous); `HomeCategoryDeck` drives that
 //  with `lift`. With Reduce Motion every card sits in the front slot and
 //  only fades.
+//  #236: the cards come from outside (`HomeDeckCard`): the categories, or in
+//  family mode the age band's topics.
 //
 
 import SwiftUI
@@ -22,18 +24,17 @@ struct HomeCategoryCycleCards: View {
     static let allID = "all"
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Index of the front card in `CategoryCycle.order`.
+    let cards: [HomeDeckCard]
+    /// Index of the front card in `cards`.
     let front: Int
     let questionCount: Int
     let lift: Lift?
 
     var body: some View {
-        let options = Config.categoryOptions
         ZStack {
-            ForEach(Array(options.enumerated()), id: \.offset) { index, option in
-                let id = option.id ?? Self.allID
-                let pose = pose(for: index, id: id, count: options.count)
-                card(id: id, name: option.display, isFront: index == front)
+            ForEach(Array(cards.enumerated()), id: \.offset) { index, card in
+                let pose = pose(for: index, id: card.id, count: cards.count)
+                self.card(card, isFront: index == front)
                     .rotationEffect(pose.angle, anchor: .bottom)
                     .offset(x: pose.offset)
                     .opacity(pose.opacity)
@@ -90,9 +91,10 @@ struct HomeCategoryCycleCards: View {
 
     /// The front card names the round (title, question count, colour strip for
     /// All); the cards behind carry the category as an overline only.
-    private func card(id: String, name: String, isFront: Bool) -> some View {
-        let isAll = id == Self.allID
-        let style = isAll ? nil : Theme.Hangs.Category.style(for: id)
+    private func card(_ card: HomeDeckCard, isFront: Bool) -> some View {
+        let name = card.name
+        let style = card.style
+        let isAll = style == nil
         return VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
                 Text(verbatim: name)

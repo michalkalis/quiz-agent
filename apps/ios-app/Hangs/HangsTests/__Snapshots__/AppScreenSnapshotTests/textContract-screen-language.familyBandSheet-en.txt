@@ -1,0 +1,17 @@
+# texts
+What age?
+You answer, the kids guess along with you.
+4–6
+Yes, no or one of two
+7–9
+Short questions, answer by voice
+10–12
+Longer questions, answer by voice
+I'll remember the age. You can change it on Home.
+# identifiers
+family.band.sheet
+family.band.close
+family.band.adultAnswers
+family.band.kids_4_6
+family.band.kids_7_9
+family.band.kids_10_12

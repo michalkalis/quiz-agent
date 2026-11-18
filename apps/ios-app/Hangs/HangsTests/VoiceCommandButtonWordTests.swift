@@ -40,7 +40,7 @@ private let buttonTitles: [ButtonTitle] = [
     ButtonTitle(button: "Again", screen: .noAnswer, expected: .again, sk: "Znova", cs: "Znovu", en: "Again", uk: "Ще раз"),
     ButtonTitle(button: "Next (skip)", screen: .noAnswer, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next", uk: "Пропусти"),
     ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again", uk: "Спробуй ще раз"),
-    ButtonTitle(button: "Go Home", screen: .error, expected: .stop, sk: "Na úvod", cs: "Na úvod", en: "Go Home", uk: "Додому"),
+    ButtonTitle(button: "Go Home", screen: .error, expected: .stop, sk: "Na úvod", cs: "Na úvod", en: "Go Home", uk: "На головну"),
     ButtonTitle(button: "Dismiss", screen: .error, expected: .stop, sk: "Zavri", cs: "Zavři", en: "Dismiss", uk: "Закрий"),
     ButtonTitle(button: "Play Again", screen: .setEnd, expected: .again, sk: "Hraj znova", cs: "Hraj znovu", en: "Play Again", uk: "Зіграй ще раз"),
     ButtonTitle(button: "Home", screen: .setEnd, expected: .home, sk: "Úvod", cs: "Úvod", en: "Home", uk: "Додому"),
@@ -105,8 +105,8 @@ struct VoiceCommandButtonWordTests {
         let heads: [String] = switch language {
         case .english: ["go"]
         case .slovak, .czech: ["na", "za", "No na!"]
-        // "до" opens "додому", "за" opens "закрий"; "Ну до!" is conversation.
-        case .ukrainian: ["до", "за", "Ну до!"]
+        // "на" opens "На головну", "до" "Додому", "за" "Закрий"; "Ну на!" is conversation.
+        case .ukrainian: ["на", "до", "за", "Ну на!"]
         }
         for head in heads {
             for screen in [VoiceCommandScreen.error, .setEnd] {

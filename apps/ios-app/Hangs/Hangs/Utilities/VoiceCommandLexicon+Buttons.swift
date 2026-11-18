@@ -34,8 +34,9 @@ extension VoiceCommandLexicon {
         case (.error, .stop, .english): return ["gohome", "dismiss"]
         case (.error, .stop, .slovak): return ["nauvod", "uvod", "zavri"]
         case (.error, .stop, .czech): return ["nauvod", "uvod", "zavri"]
-        // uk "Go Home" reads "Додому", the set-end screen's own home word.
-        case (.error, .stop, .ukrainian): return ["додому", "закрий"]
+        // uk "Go Home" reads "На головну", so the home word «додому» stays
+        // inert here like everywhere outside the quiz end.
+        case (.error, .stop, .ukrainian): return ["наголовну", "головну", "закрий"]
         // The set-end "Home" button reads "Úvod" in sk / cs.
         case (.setEnd, .home, .english): return ["gohome"]
         case (.setEnd, .home, .slovak), (.setEnd, .home, .czech): return ["uvod", "nauvod"]
@@ -55,7 +56,7 @@ extension VoiceCommandLexicon {
         case .czech:
             return [(["zkus", "znovu"], "zkusznovu"), (["hraj", "znovu"], "hrajznovu"), (["na", "uvod"], "nauvod")]
         case .ukrainian:
-            return [(["спробуй", "ще", "раз"], "спробуйщераз"), (["зіграй", "ще", "раз"], "зіграйщераз")]
+            return [(["спробуй", "ще", "раз"], "спробуйщераз"), (["зіграй", "ще", "раз"], "зіграйщераз"), (["на", "головну"], "наголовну")]
         }
     }
 
@@ -65,7 +66,7 @@ extension VoiceCommandLexicon {
         case .english: return ["answer", "try again", "play again", "go home", "home", "dismiss"]
         case .slovak: return ["odpovedz", "skús znova", "hraj znova", "na úvod", "úvod", "zavri"]
         case .czech: return ["odpověz", "zkus znovu", "hraj znovu", "na úvod", "úvod", "zavři"]
-        case .ukrainian: return ["відповідай", "спробуй ще раз", "зіграй ще раз", "додому", "закрий"]
+        case .ukrainian: return ["відповідай", "спробуй ще раз", "зіграй ще раз", "на головну", "додому", "закрий"]
         }
     }
 }

@@ -115,7 +115,7 @@ class _Backup:
     name = "openai"
     default_voice = "nova"
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(self, text: str, voice: str, style=None) -> bytes:
         return b"backup-audio"
 
 

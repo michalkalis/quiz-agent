@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -177,6 +177,20 @@ class Settings(BaseSettings):
     # #231: model for Cyrillic (Ukrainian) text, see tts/voices.py.
     elevenlabs_tts_model_cyrillic: str = "eleven_v3"
     openai_tts_model: str = "tts-1"
+    # Founder 2026-11-18, after listening to George on Flash v2.5: "v appke en
+    # 1,1x a sk/cz 1,07x". v4 Turbo ignores `speed`, hence the model per
+    # language; sk/cs also name their language so Flash does not guess it.
+    # Keys: `model` (ElevenLabs), `speed` (both providers), `language_code`
+    # (ElevenLabs). A styled language gets its own cache keys, so the old clips
+    # stay in R2: rollback is `TTS_LANGUAGE_STYLES={}` (JSON), which makes the
+    # old v4 Turbo clips play again. Unlisted languages (uk on v3) are untouched.
+    tts_language_styles: dict[str, dict[str, Any]] = Field(
+        default_factory=lambda: {
+            "en": {"model": "eleven_flash_v2_5", "speed": 1.1},
+            "sk": {"model": "eleven_flash_v2_5", "speed": 1.07, "language_code": "sk"},
+            "cs": {"model": "eleven_flash_v2_5", "speed": 1.07, "language_code": "cs"},
+        }
+    )
     # Answer transcription (#208.1): OpenAI is the only answer recogniser
     # (ElevenLabs Scribe left the answer path after the 2026-10-16 replay).
     # Set to "whisper-1" to roll back to the pre-#184 model.

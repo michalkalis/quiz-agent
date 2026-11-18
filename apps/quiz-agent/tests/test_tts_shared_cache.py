@@ -31,7 +31,7 @@ class CountingProvider:
         self.calls: list[str] = []
         self.delay = delay
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(self, text: str, voice: str, style=None) -> bytes:
         self.calls.append(text)
         await asyncio.sleep(self.delay)
         return b"ID3audio-" + text.encode()

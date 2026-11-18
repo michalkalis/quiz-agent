@@ -52,7 +52,7 @@ class CountingProvider:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(self, text: str, voice: str, style=None) -> bytes:
         self.calls.append(text)
         return b"audio-bytes"
 

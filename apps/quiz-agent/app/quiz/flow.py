@@ -109,7 +109,9 @@ def prefetch_question_audio(
         return
 
     tts_text = normalize_numbers_for_tts(question_text, language)
-    task = asyncio.create_task(tts_service.synthesize_question(tts_text))
+    task = asyncio.create_task(
+        tts_service.synthesize_question(tts_text, language=language)
+    )
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
     task.add_done_callback(_log_prefetch_outcome)
@@ -764,7 +766,9 @@ class QuizFlowService:
             # in the session language ("tisícdeväťstoosemnásť", "prvého mája"),
             # or the fallback voice reads "1918" in English inside Slovak text.
             tts_text = normalize_numbers_for_tts(feedback_text, language)
-            return await self.tts_service.synthesize(text=tts_text, use_cache=True)
+            return await self.tts_service.synthesize(
+                text=tts_text, use_cache=True, language=language
+            )
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None

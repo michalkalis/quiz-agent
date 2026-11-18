@@ -35,7 +35,7 @@ class HangingProvider:
         self.cancelled = 0
         self.release = asyncio.Event()
 
-    async def synthesize(self, text, voice):
+    async def synthesize(self, text, voice, style=None):
         self.calls.append(text)
         try:
             await self.release.wait()
@@ -50,7 +50,7 @@ class FastProvider:
         self.name, self.default_voice = name, voice
         self.calls: list[str] = []
 
-    async def synthesize(self, text, voice):
+    async def synthesize(self, text, voice, style=None):
         self.calls.append(text)
         return f"{self.name}-audio".encode()
 

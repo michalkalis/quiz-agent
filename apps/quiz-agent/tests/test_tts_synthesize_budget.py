@@ -29,7 +29,7 @@ class FakeProvider:
         self.name, self.default_voice = name, voice
         self.calls = []
 
-    async def synthesize(self, text, voice):
+    async def synthesize(self, text, voice, style=None):
         self.calls.append(text)
         return f"{self.name}-audio".encode()
 

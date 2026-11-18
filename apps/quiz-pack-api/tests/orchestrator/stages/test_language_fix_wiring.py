@@ -77,9 +77,10 @@ class _Store:
 
 
 @pytest.mark.parametrize(
-    "flag, expected", [(None, type(None)), ("1", LanguageFixStage)]
+    "flag, expected",
+    [(None, LanguageFixStage), ("1", LanguageFixStage), ("0", type(None))],
 )
-def test_worker_adds_the_fix_only_with_the_flag(
+def test_worker_adds_the_fix_unless_switched_off(
     flag: str | None, expected: type, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from app.worker.tasks import _build_stages

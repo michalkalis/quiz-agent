@@ -536,8 +536,10 @@ def pack_language_fix() -> bool:
     wording, spelling, names and punctuation of sk/cs/uk questions, all
     audiences. Every proposed edit is recorded on the question
     (``provenance.extra.text_edits``) and counted in the round's step_log
-    entry. Founder 2026-11-18: on if it is cheap. ``False`` by default; OFF
-    is behaviour-identical to before (``PACK_LANGUAGE_FIX=1`` turns it on).
+    entry. Founder 2026-11-18: on for all custom packs, after a measured run
+    (28 trial questions: 9 fixed, no number or answer changed, about $0.20
+    per pack of 30). On by default; ``PACK_LANGUAGE_FIX=0`` is the rollback
+    lever and is behaviour-identical to before the step existed.
     Read only by the customer-pack worker (``app/worker/tasks.py``).
     """
-    return _truthy(os.getenv("PACK_LANGUAGE_FIX"))
+    return _default_on(os.getenv("PACK_LANGUAGE_FIX"))

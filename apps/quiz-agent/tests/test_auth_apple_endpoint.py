@@ -8,7 +8,8 @@ just a 200:
   signing out → fresh anon → signing back in can never reset the daily limit
   (sum, not max);
 - the upgrade is **idempotent** (a replayed call never double-counts);
-- an anon already claimed by a *different* account is rejected (409);
+- an anon already claimed by a *different* account is left alone: the new
+  Apple ID gets its own account and nothing is folded into it (#240);
 - a bad Apple identity token is rejected (401) and never creates an account;
 - the returned JWT's subject is ``users.id`` (the durable account anchor), and
 - Apple's refresh token is stored **encrypted at rest** (F1/F2), or null when
@@ -444,61 +445,30 @@ async def test_repeat_call_with_same_anon_is_idempotent_no_double_count(
 # ── Guards: anon already claimed, bad token, missing bearer, unconfigured ────
 
 
-async def test_anon_already_upgraded_to_another_account_is_rejected_409(
+async def test_second_apple_id_on_a_shared_device_gets_its_own_clean_account(
     client, keypair, db_sessionmaker
 ):
-    """An anon already folded into account A cannot then be folded into a new
-    account B — and B must not be created (the whole call rolls back)."""
+    """#240 (founder 2026-11-18): after A signs out, the device is back on the
+    anon linked to A. Person B signing in on it must get in (no 409 they can
+    never get past) with an account of their own: nothing of the device's anon
+    is folded into B, and A's account and link stay exactly as they were. B
+    starting with a fresh free quota is the accepted trade-off."""
     anon_id, bearer = await _make_anon(db_sessionmaker)
+    await _seed_usage(db_sessionmaker, anon_id, 7)
     r1 = await _call_apple(client, keypair, sub="apple.sub.A", bearer=bearer)
     assert r1.status_code == 200, r1.text
+    user_a = r1.json()["anon_id"]
 
     r2 = await _call_apple(client, keypair, sub="apple.sub.B", bearer=bearer)
-    assert r2.status_code == 409
-    assert await _get_user(db_sessionmaker, "apple.sub.B") is None  # rolled back
 
-
-async def test_conflict_409_fires_before_the_code_exchange(db_sessionmaker, keypair):
-    """#91 item 5: the merge conflict is deterministic — retrying can never
-    succeed — so it must be detected BEFORE ``exchange_authorization_code``
-    consumes Apple's single-use code. Pin that ordering: the 409 attempt makes
-    zero calls to Apple's token endpoint."""
-    limiter.reset()
-    exchange_calls: list[httpx.Request] = []
-
-    def counting_handler(req: httpx.Request) -> httpx.Response:
-        exchange_calls.append(req)
-        return httpx.Response(
-            200,
-            json={
-                "access_token": "a",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "refresh_token": APPLE_REFRESH,
-            },
-        )
-
-    app = _make_app(db_sessionmaker, keypair.public_key())
-    app.state.apple_oauth_client = AppleOAuthClient(
-        team_id=TEAM_ID,
-        client_id=AUDIENCE,
-        key_id=KEY_ID,
-        private_key=_P8,
-        http_client=httpx.AsyncClient(transport=httpx.MockTransport(counting_handler)),
-    )
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
-        anon_id, bearer = await _make_anon(db_sessionmaker)
-        r1 = await _call_apple(c, keypair, sub="apple.sub.pre.A", bearer=bearer)
-        assert r1.status_code == 200, r1.text
-        calls_after_first = len(exchange_calls)
-        assert calls_after_first == 1
-
-        r2 = await _call_apple(c, keypair, sub="apple.sub.pre.B", bearer=bearer)
-        assert r2.status_code == 409
-        assert len(exchange_calls) == calls_after_first  # no code burned
-        assert await _get_user(db_sessionmaker, "apple.sub.pre.B") is None
+    assert r2.status_code == 200, r2.text
+    user_b = r2.json()["anon_id"]
+    assert user_b not in (user_a, anon_id)
+    assert str((await _get_user(db_sessionmaker, "apple.sub.B")).id) == user_b
+    assert await _usage_today(db_sessionmaker, user_b) is None  # nothing folded
+    assert await _usage_today(db_sessionmaker, user_a) == 7  # A untouched
+    anon = await _get_anon(db_sessionmaker, anon_id)
+    assert anon.upgraded_to_user_id == user_a  # still A's device anon
 
 
 async def test_invalid_identity_token_is_rejected_401_and_creates_no_account(

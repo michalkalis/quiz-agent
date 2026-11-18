@@ -68,7 +68,6 @@ from ...voice.sample_erasure import VoiceSampleErasureFailed, erase_voice_sample
 from ...voice.sample_storage import VoiceSampleStorage, get_voice_sample_storage
 from ...usage.account_merge import (
     merge_anonymous_identity,
-    precheck_merge_conflict,
     upsert_apple_user,
 )
 
@@ -264,16 +263,7 @@ async def apple_sign_in(
     # there is simply nothing to merge.
     anon_id = _anon_subject_for_merge(request, token_service)
 
-    # 2) Pre-check the merge conflict BEFORE the code exchange (#91 item 5): the
-    #    409 below in merge_anonymous_identity is deterministic — no retry can
-    #    ever succeed — so raising it only after the exchange burns a single-use
-    #    Apple code per attempt for a guaranteed failure. Everything the check
-    #    needs (anon row + apple_sub) is already available here.
-    if anon_id is not None:
-        async with sessionmaker() as session:
-            await precheck_merge_conflict(session, anon_id, apple_sub)
-
-    # 3) Exchange the authorization code immediately — Apple voids it after ~5 min
+    # 2) Exchange the authorization code immediately — Apple voids it after ~5 min
     #    (F10). Capture Apple's refresh token (it is not always present).
     # The verified `aud` names the app this sign-in came from (#234: App Store
     # app or beta app); Apple binds the code and its refresh token to it.

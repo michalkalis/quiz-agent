@@ -34,6 +34,7 @@ import boto3
 from app.client_capabilities import ANSWER_CODES, OPTION_LABELS
 from app.tts.cache import TTSCache
 from app.tts.number_normalization import normalize_numbers_for_tts
+from app.tts.service import primary_cache_voice
 from app.tts.spoken_text import spoken_question_text
 from app.tts.voices import ELEVENLABS_VOICES, VOICE_PROFILES
 from botocore.config import Config
@@ -59,8 +60,21 @@ def spoken_candidates(text, options, lang):
         )
 
 
+def voices_for(lang):
+    """Cache-key voices, newest first: the app voice in the language's current
+    style (model + speed, TTS_LANGUAGE_STYLES), then every voice before styles."""
+    current = primary_cache_voice(VOICES[0], lang)
+    return ([current] if current != VOICES[0] else []) + VOICES
+
+
 def clip_keys(text, options, lang):
-    for spoken in spoken_candidates(text, options, lang):
+    spoken_texts = list(spoken_candidates(text, options, lang))
+    voices = voices_for(lang)
+    # The current style's clip first, for every text the app may have read.
+    for voice in voices[: len(voices) - len(VOICES)]:
+        for spoken in spoken_texts:
+            yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
+    for spoken in spoken_texts:
         for voice in VOICES:
             yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
@@ -70,7 +84,7 @@ def text_keys(text, lang):
     past 1000 characters, which no approved explanation reaches), or a round
     reel's answer."""
     spoken = normalize_numbers_for_tts(text or "", lang)
-    for voice in VOICES:
+    for voice in voices_for(lang):
         yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
 
@@ -292,8 +306,10 @@ async def ensure(qid, lang, question_only=False, answer_number=None):
         voice = tts.provider.default_voice
         for what, audio_field, text_field, spoken in todo:
             billing = TTSBilling()
-            audio = await tts.synthesize(text=spoken, use_cache=True, billing=billing)
-            key = tts._remote_key(spoken, voice)
+            audio = await tts.synthesize(
+                text=spoken, use_cache=True, billing=billing, language=out["language"]
+            )
+            key = tts.remote_key_for(spoken, out["language"], voice)
             if await tts.remote.get(key) is None:
                 return {
                     "error": f"{qid}: {what} clip made but not found in R2 under {key}"

@@ -38,7 +38,7 @@ class FakeProvider:
         self._fails = fails
         self.calls: list[tuple[str, str]] = []
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(self, text: str, voice: str, style=None) -> bytes:
         self.calls.append((text, voice))
         if self._fails:
             raise RuntimeError(f"{self.name} quota exhausted")
@@ -268,7 +268,7 @@ class GatedProvider(FakeProvider):
         super().__init__(*args, **kwargs)
         self.release = asyncio.Event()
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(self, text: str, voice: str, style=None) -> bytes:
         self.calls.append((text, voice))
         await self.release.wait()
         return self._audio

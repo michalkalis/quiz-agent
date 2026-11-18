@@ -173,3 +173,25 @@ async def test_spent_budget_refuses_realtime_tokens(monkeypatch):
         resp = await c.post("/api/v1/elevenlabs/token")
     assert resp.status_code == 503
     assert "token" not in resp.json()
+
+
+async def test_a_rerecord_batch_does_not_push_players_onto_the_fallback(
+    db_sessionmaker,
+):
+    """Re-recording the cache after a voice change spends many days of budget
+    at once (founder 2026-11-18, faster voice). Left out of today's spend, the
+    budget keeps guarding what players spend, and nothing else."""
+    from app.usage.elevenlabs_budget import exclude_from_today
+
+    meter, now, clock = Meter(10_000), [_T0], [0.0]
+    budget = _budget(db_sessionmaker, meter, now, clock)
+    assert not await budget.exhausted()
+
+    meter.used += 20 * BUDGET  # the batch
+    await exclude_from_today(db_sessionmaker, 20 * BUDGET, meter.used, _T0.date())
+    clock[0] += 61
+    assert not await budget.exhausted()
+
+    meter.used += BUDGET  # players still count
+    clock[0] += 61
+    assert await budget.exhausted()

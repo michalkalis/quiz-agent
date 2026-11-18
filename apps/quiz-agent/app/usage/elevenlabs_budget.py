@@ -145,3 +145,32 @@ class ElevenLabsBudget:
                 budget,
             )
         self._exhausted = exhausted
+
+
+async def exclude_from_today(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    credits: int,
+    used_now: int,
+    today: date | None = None,
+) -> None:
+    """Leave a deliberate batch's spend out of today's budget.
+
+    Re-recording the question cache after a voice change spends many days of
+    budget in an hour; counted, it would put every player on the OpenAI voice
+    until midnight UTC. Moving the day's starting reading up by what the batch
+    spent keeps the budget guarding player spend only, with no restart. No
+    reading yet today: ``used_now`` (which already holds the batch) becomes it.
+    """
+    today = today or datetime.now(UTC).date()
+    async with sessionmaker() as session:
+        await session.execute(
+            pg_insert(UsageCounter)
+            .values(
+                subject_id=_SUBJECT, usage_date=today, metric=_METRIC, amount=used_now
+            )
+            .on_conflict_do_update(
+                index_elements=["subject_id", "usage_date", "metric"],
+                set_={"amount": UsageCounter.amount + credits},
+            )
+        )
+        await session.commit()

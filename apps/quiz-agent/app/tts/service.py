@@ -16,7 +16,7 @@ from ..config import get_settings
 from .cache import TTSCache
 from .remote_cache import R2AudioStore
 from .providers import PRIMARY_TTS_TIMEOUT_S, TTSProvider, build_provider
-from .voices import STATIC_FEEDBACK
+from .voices import STATIC_FEEDBACK, SpeechStyle, cache_voice, speech_style
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,26 @@ def _resolve_provider(
     )
 
 
+def _style_model(provider: TTSProvider, style: SpeechStyle) -> Optional[str]:
+    """The model that reads a styled language: the style's model is an
+    ElevenLabs one, the OpenAI backup keeps its own."""
+    if provider.name == "elevenlabs" and style.model:
+        return style.model
+    return getattr(provider, "model", None)
+
+
+def primary_cache_voice(voice: str, language: Optional[str], settings=None) -> str:
+    """Cache-key voice of an ElevenLabs primary clip in ``language``, without
+    building a service: lets read-only tools (social-studio's
+    fetch_question.py) find the clip the app plays. Must match
+    ``TTSService._cache_voice`` for the primary."""
+    settings = settings or get_settings()
+    style = speech_style(language, settings.tts_language_styles)
+    if style is None:
+        return voice
+    return cache_voice(voice, style.model or settings.elevenlabs_tts_model, style)
+
+
 class TTSBudgetExceeded(Exception):
     """Billed primary is over budget and there is no fallback provider."""
 
@@ -182,12 +202,22 @@ class TTSService:
                 settings,
             )
 
+        # Per-language model/speed (`TTS_LANGUAGE_STYLES`, founder 2026-11-18).
+        self.styles = dict(settings.tts_language_styles or {})
+
         # Static feedback is namespaced by provider so flipping `TTS_PROVIDER`
-        # cannot serve yesterday's voice out of a warm cache.
+        # cannot serve yesterday's voice out of a warm cache. The phrases are
+        # English, so the English style joins the namespace: a new speed
+        # records them anew (at startup) instead of replaying the old reading.
+        namespace = self.provider.name
+        en_style = self.style_for("en")
+        if en_style is not None:
+            namespace = self._cache_voice(self.provider, namespace, en_style)
+            namespace = namespace.replace(":", "-")
         self.cache = TTSCache(
             cache_dir=cache_dir or settings.tts_cache_dir,
             max_size_mb=max_cache_mb or settings.tts_cache_max_mb,
-            provider=self.provider.name,
+            provider=namespace,
         )
         self._semaphore = asyncio.Semaphore(max_concurrent)
         # Single-flight: identical (text, voice) requests in flight share one
@@ -216,6 +246,7 @@ class TTSService:
         voice: Optional[str] = None,
         use_cache: bool = True,
         billing: Optional[TTSBilling] = None,
+        language: Optional[str] = None,
     ) -> bytes:
         """Synthesize text to speech with caching, failing over to the backup.
 
@@ -226,6 +257,8 @@ class TTSService:
             text: Text to synthesize (any language)
             voice: Voice id/name (default: the active provider's default)
             use_cache: Whether to use cache (default: True)
+            language: Quiz language; picks its style (model, speed) when one is
+                configured. None = the voice as before styles.
 
         Returns:
             Audio bytes in MP3 format
@@ -239,6 +272,7 @@ class TTSService:
             raise ValueError("Text cannot be empty")
 
         primary_voice = voice or self.provider.default_voice
+        style = self.style_for(language)
         if await self._primary_paused():
             # Same path as a user over their own budget: cached primary audio
             # is still free to serve, anything new goes to the fallback.
@@ -248,20 +282,42 @@ class TTSService:
         # (or seed one for) callers who are allowed the primary voice.
         if not use_cache or (billing and not billing.allow_primary):
             return await self._synthesize_failover(
-                text, primary_voice, use_cache, billing
+                text, primary_voice, use_cache, billing, style
             )
 
-        key = (text, primary_voice)
+        key = (text, self._cache_voice(self.provider, primary_voice, style))
         task = self._in_flight.get(key)
         if task is None:
             task = asyncio.create_task(
-                self._synthesize_failover(text, primary_voice, use_cache, billing)
+                self._synthesize_failover(
+                    text, primary_voice, use_cache, billing, style
+                )
             )
             self._in_flight[key] = task
             task.add_done_callback(self._forget_in_flight(key))
         # Shielded: a caller that goes away (client disconnect) must not cancel
         # the shared synthesis under the other waiters — or the cache warm-up.
         return await asyncio.shield(task)
+
+    def style_for(self, language: Optional[str]) -> Optional[SpeechStyle]:
+        return speech_style(language, self.styles)
+
+    @staticmethod
+    def _cache_voice(
+        provider: TTSProvider, voice: str, style: Optional[SpeechStyle]
+    ) -> str:
+        """Voice part of the cache key for ``provider`` reading in ``style``."""
+        if style is None:
+            return voice
+        return cache_voice(voice, _style_model(provider, style), style)
+
+    def remote_key_for(
+        self, text: str, language: Optional[str], voice: Optional[str] = None
+    ) -> str:
+        """R2 key of the primary voice's clip of ``text`` in ``language``."""
+        voice = voice or self.provider.default_voice
+        style = self.style_for(language)
+        return self._remote_key(text, self._cache_voice(self.provider, voice, style))
 
     async def _primary_paused(self) -> bool:
         """The service spent today's ElevenLabs budget (#207.13). Never pauses
@@ -286,22 +342,27 @@ class TTSService:
         primary_voice: str,
         use_cache: bool,
         billing: Optional[TTSBilling] = None,
+        style: Optional[SpeechStyle] = None,
     ) -> bytes:
         """Primary provider, then the fallback — one synthesis, no coalescing."""
         try:
             if billing and not billing.allow_primary:
                 # Over budget: already-cached primary audio is free to serve,
                 # anything that would cost credits goes to the fallback.
+                primary_key = self._cache_voice(self.provider, primary_voice, style)
                 cached = (
-                    await self._cached_audio(text, primary_voice) if use_cache else None
+                    await self._cached_audio(text, primary_key) if use_cache else None
                 )
+                if not cached and use_cache and style is not None:
+                    # George at the old speed beats the fallback voice.
+                    cached = await self._cached_audio(text, primary_voice)
                 if cached:
                     return cached
                 if self.fallback is None:
                     raise TTSBudgetExceeded()
                 raise RuntimeError("daily TTS budget exhausted")
             primary = self._synthesize_with(
-                self.provider, text, primary_voice, use_cache, billing
+                self.provider, text, primary_voice, use_cache, billing, style
             )
             if self.fallback is None:
                 return await primary
@@ -333,7 +394,11 @@ class TTSService:
             )
             try:
                 return await self._synthesize_with(
-                    self.fallback, text, self.fallback.default_voice, use_cache
+                    self.fallback,
+                    text,
+                    self.fallback.default_voice,
+                    use_cache,
+                    style=style,
                 )
             except Exception as fallback_error:
                 raise RuntimeError(
@@ -349,28 +414,31 @@ class TTSService:
         voice: str,
         use_cache: bool,
         billing: Optional[TTSBilling] = None,
+        style: Optional[SpeechStyle] = None,
     ) -> bytes:
         """Cache lookup → synthesis → volume boost → cache store, for one backend.
 
         The cache key is (text, voice) and voices never collide across vendors
         (ElevenLabs uses opaque ids, OpenAI uses names like "nova"), so primary
         and fallback audio coexist in one cache without shadowing each other.
+        A styled language adds its model and speed to the voice part.
         """
+        key_voice = self._cache_voice(provider, voice, style)
         if use_cache:
-            cached = await self._cached_audio(text, voice)
+            cached = await self._cached_audio(text, key_voice)
             if cached:
                 return cached
 
-        lease = await self._claim_synthesis(text, voice) if use_cache else None
+        lease = await self._claim_synthesis(text, key_voice) if use_cache else None
         if lease is False:
             # Another machine is synthesizing this exact audio right now:
             # wait for its upload instead of paying the provider twice.
-            shared = await self._await_remote(text, voice)
+            shared = await self._await_remote(text, key_voice)
             if shared:
                 return shared
         try:
             async with self._semaphore:
-                audio_data = await provider.synthesize(text, voice)
+                audio_data = await provider.synthesize(text, voice, style)
             if billing is not None and provider is self.provider:
                 billing.billed_chars = len(text)
 
@@ -379,7 +447,7 @@ class TTSService:
 
             # Cache result (cache the boosted version)
             if use_cache:
-                await self._store_audio(text, voice, audio_data)
+                await self._store_audio(text, key_voice, audio_data)
         finally:
             if isinstance(lease, tuple):
                 await self._release_synthesis(*lease)
@@ -518,6 +586,7 @@ class TTSService:
                     audio_data = await self.synthesize(
                         text=phrase,
                         use_cache=False,  # Don't cache in LRU, goes to static
+                        language="en",
                     )
 
                     # Store in static cache (+ the shared R2 copy, #207.20)
@@ -568,7 +637,10 @@ class TTSService:
         self.cache._save_metadata()
 
     async def synthesize_question(
-        self, question_text: str, voice: Optional[str] = None
+        self,
+        question_text: str,
+        voice: Optional[str] = None,
+        language: Optional[str] = None,
     ) -> bytes:
         """Synthesize quiz question with caching.
 
@@ -576,9 +648,12 @@ class TTSService:
 
         Args:
             question_text: Question text (any language)
-            voice: Voice name (default: "nova")
+            voice: Voice name (default: the active provider's default)
+            language: Quiz language (picks its speech style)
 
         Returns:
             Audio bytes in MP3 format
         """
-        return await self.synthesize(text=question_text, voice=voice, use_cache=True)
+        return await self.synthesize(
+            text=question_text, voice=voice, use_cache=True, language=language
+        )

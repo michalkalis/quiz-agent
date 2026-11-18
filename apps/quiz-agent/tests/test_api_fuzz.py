@@ -99,12 +99,14 @@ class _Parser:
 
 
 class _TTS:
-    async def synthesize(self, text, voice=None, use_cache=True, billing=None):
+    async def synthesize(
+        self, text, voice=None, use_cache=True, billing=None, language=None
+    ):
         if not text.strip():
             raise ValueError("Text cannot be empty")
         return b"audio"
 
-    async def synthesize_question(self, question_text):
+    async def synthesize_question(self, question_text, language=None):
         return b"audio"
 
     async def get_feedback_audio(self, result, variant=None):

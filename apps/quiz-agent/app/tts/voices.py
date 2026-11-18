@@ -3,7 +3,8 @@
 Defines voice configurations and pre-generated feedback audio content.
 """
 
-from typing import Dict, List
+from dataclasses import dataclass
+from typing import Any, Dict, List, Mapping, Optional
 
 # Voice profiles for different use cases (OpenAI TTS — the backup provider)
 VOICE_PROFILES: Dict[str, str] = {
@@ -30,9 +31,11 @@ ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
 # `eleven_v4_turbo` is half the price of `eleven_multilingual_v2` ($40 vs $80
 # per 1M characters) and the founder heard no real difference in the 2026-10-26
 # blind test (sk/cs/en, docs/research/tts-provider-alternatives-2026-10-25.md).
-# `eleven_flash_v2_5` failed earlier on non-English pronunciation. The cache key
-# is (text, voice), so audio made by v2 keeps playing; roll back via
-# `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`.
+# The unstyled cache key is (text, voice), so audio made by v2 keeps playing;
+# roll back via `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`. Since 2026-11-18
+# en/sk/cs read on `eleven_flash_v2_5` with a speed (`TTS_LANGUAGE_STYLES`,
+# config.py): v4 Turbo ignores `speed`, and Flash given `language_code`
+# passed the founder's listening test that it failed without one.
 ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
 # #231: Ukrainian (the only Cyrillic quiz language) reads on `eleven_v3`. A native
 # speaker heard v4 Turbo misplace stress in 4 of 5 questions; v3 with the same
@@ -44,6 +47,46 @@ ELEVENLABS_CYRILLIC_MODEL = "eleven_v3"
 # voice (round 4, 2026-11-18).
 ELEVENLABS_CYRILLIC_STABILITY = 1.0
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
+
+
+@dataclass(frozen=True)
+class SpeechStyle:
+    """How one quiz language is read (`TTS_LANGUAGE_STYLES`, config.py).
+
+    ``model`` is the ElevenLabs model for that language (the OpenAI backup keeps
+    its own model), ``speed`` applies to both providers, ``language_code`` is
+    sent to ElevenLabs so Flash does not guess the language from the text.
+    """
+
+    model: Optional[str] = None
+    speed: Optional[float] = None
+    language_code: Optional[str] = None
+
+
+def speech_style(
+    language: Optional[str], styles: Mapping[str, Mapping[str, Any]]
+) -> Optional[SpeechStyle]:
+    """The configured style of a quiz language; None = the voice as before."""
+    raw = styles.get((language or "").strip().lower())
+    if not raw:
+        return None
+    speed = raw.get("speed")
+    return SpeechStyle(
+        model=raw.get("model") or None,
+        speed=float(speed) if speed is not None else None,
+        language_code=raw.get("language_code") or None,
+    )
+
+
+def cache_voice(voice: str, model: Optional[str], style: Optional[SpeechStyle]) -> str:
+    """The voice part of a cache key: the voice alone for unstyled speech (the
+    key every clip had before styles), else voice + model + speed, so a faster
+    or other-model reading never replays the old clip and the old clip stays
+    in R2 for a rollback."""
+    if style is None:
+        return voice
+    return f"{voice}:{model}:{style.speed or 1.0:g}"
+
 
 # Static feedback phrases organized by evaluation result
 # These will be pre-generated on server startup for instant playback

@@ -57,6 +57,8 @@ extension RoomViewModel {
         let correctCount: Int
         /// #224.5: every player's answer to this question, in player order.
         let rows: [RevealRow]
+        /// #240.9: the judge could not check it; it counts for nobody.
+        var isCancelled = false
     }
 
     func name(of participantId: String) -> String {
@@ -139,7 +141,8 @@ extension RoomViewModel {
                 yourAnswer: (mine?.answer ?? round.yourAnswer).map { answerText($0, questionId: round.questionId) },
                 youWereRight: mine?.isCorrect ?? false,
                 correctCount: correctCount(in: round),
-                rows: revealRows(for: round)
+                rows: revealRows(for: round),
+                isCancelled: round.isCancelled
             )
         }
     }

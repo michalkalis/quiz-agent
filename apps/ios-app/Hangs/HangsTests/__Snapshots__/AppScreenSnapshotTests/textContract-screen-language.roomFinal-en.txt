@@ -11,6 +11,21 @@ Michal (you)
 J
 Jana
 1
+Awards
+J
+Fastest right answer
+Jana
+2.3 s, question 1
+Fastest right answer
+Jana
+2.3 s, question 1
+M
+Nobody else knew
+Michal
+Question 2
+Nobody else knew
+Michal
+Question 2
 Jana: left Trubbo during 1 question
 Only you see this.
 Questions
@@ -20,13 +35,19 @@ Saturn
 2
 What is the capital of Australia?
 Canberra
+Play again
+Share
 Done
 # identifiers
 room.close
 room.final.winner
 room.final.rank.1
 room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
 room.final.away
 room.final.round.1
 room.final.round.2
+room.playAgain
+room.final.share
 room.done

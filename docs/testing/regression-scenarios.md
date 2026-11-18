@@ -745,13 +745,13 @@ next); a stalled step would leave every phone on one question.
 
 **Steps:** launch with `--app-config-multiplayer`; tap the Together tab (`tab.together`),
 `room.host`; give a name if asked; pick `room.rules.reveal` →
-`room.rules.reveal.question` (#213.8: the default reveals at the end);
+`room.rules.reveal.question` (#240.9: now also the default);
 `room.start`; tap option B; `room.next`;
 type "Canberra" and send; `room.next`; `room.done`.
 
 **Asserts:** `room.qr` and `room.player.p_other` in the lobby; `room.reveal.answer`
-after each question; `room.final.winner` is the host; `room.final.away`
-present; back on Home. App alive.
+after each question; `room.final.winner` is the host; `room.final.away`,
+`room.final.award.fastest`, `room.playAgain` and `room.final.share` present (#240.9); back on Home. App alive.
 
 ---
 
@@ -823,8 +823,8 @@ and a guest sees the host's rules without any control to change them.
 `room.rules.time.45`. Relaunch; POST `/room/join?text=mock-token` to the
 test listener.
 
-**Asserts:** `room.rules.reveal` reads "At the end of the quiz",
-`room.rules.time` "30 s", `room.rules.readsAloud` present; after the pick
+**Asserts:** `room.rules.reveal` reads "After each question",
+`room.rules.time` "15 s" (#240.9 defaults), `room.rules.readsAloud` present; after the pick
 `room.rules.time` reads "45 s". Guest: `room.rules.guest` present;
 `room.rules.reveal`, `room.rules.time`, `room.rules.readsAloud` absent. App
 alive (both launches).

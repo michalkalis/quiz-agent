@@ -11,9 +11,9 @@ Answer time
 Read questions aloud
 
 When to show answers
-At the end of the quiz
+After each question
 When to show answers
-At the end of the quiz
+After each question
 Changes apply from the next question. When to show answers can only be changed before the game.
 # identifiers
 room.rules.done

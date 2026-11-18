@@ -282,21 +282,25 @@ struct SharedQuizFlowTests {
         #expect(model.screen == .lobby)
     }
 
-    @Test("once someone joined, the content stays")
-    func guestLocksContent() async {
+    // #240.9: a guest in the lobby no longer locks the content (the room
+    // moves with them, RoomEndgameTests); a game under way still does.
+    @Test("once the game started, the content stays")
+    func startedGameLocksContent() async {
         let rooms = MockRoomService()
         let network = Fixtures.makeFullMockNetwork()
+        network.onStartQuiz = { [rooms] in rooms.beginGame() }
         let model = RoomViewModel(
             rooms: rooms, network: network, audio: MockAudioService(), solo: .default, deviceId: "d",
             accountName: "Michal", clock: AnyClock(TestClock()), packsEnabled: { true }
         )
         await model.beginHosting()
         defer { model.stopAll() }
+        await model.startGame()
 
         await model.play(.pack(id: "p1", title: "Bridges"))
 
         #expect(!model.canChangeContent)
         #expect(model.content == .home)
-        #expect(network.endSessionCallCount == 0)
+        #expect(rooms.moves == [nil])
     }
 }

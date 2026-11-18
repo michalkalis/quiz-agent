@@ -45,6 +45,8 @@ enum AppScreen: String, CaseIterable {
     case myPacks, myPacksLoadFailed
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
     case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
+    /// #240.9: reading and grading in progress, a cancelled question, a guest at the end, the ranking picture.
+    case roomQuestionReading, roomQuestionGrading, roomRevealCancelled, roomFinalGuest, roomRankingShareImage
     case profile, profileNewPlayer, profileLoadFailed, allStats
     case recapShareImage
     /// #232: share a quiz by link (1A send card, 4A ranking, 3 paste row, 5A picker).

@@ -50,6 +50,9 @@ private let backendClientEvents: [String: Set<String>] = [
     "room_settings_changed": ["setting", "value", "surface"],
     "room_pause_changed": ["paused", "question"],
     "room_guest_read_aloud": ["on", "via"],
+    // #240.9 game together endgame. Added to the server allowlist in its own backend PR.
+    "room_closed": ["reason", "players", "questions"],
+    "room_ranking_shared": ["role", "players"],
     "home_category_stepped": ["direction", "input", "to"],
     "home_category_picker_opened": ["source"],
     "quick_game_changed": ["enabled"],
@@ -95,6 +98,8 @@ private let everyEvent: [AnalyticsEvent] = [
     .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .inGame),
     .roomPauseChanged(paused: true, question: 3),
     .roomGuestReadAloud(on: true, via: "link"),
+    .roomClosed(reason: .finished, players: 3, questions: 10),
+    .roomRankingShared(role: "host", players: 3),
     .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
     .homeCategoryPickerOpened(source: .deckButton),
     .quickGameChanged(enabled: true),

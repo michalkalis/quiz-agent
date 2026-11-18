@@ -53,9 +53,12 @@ extension RoomViewModel {
     ) async {
         guard isHost, !isSavingSettings else { return }
         let old = settings
+        let oldChoices = settingsStore.loadChoices()
+        var choices = oldChoices
+        choices.pick(setting, from: new)
         let surface: RoomSettingsSurface = state?.status == .playing ? .inGame : .lobby
         settings = new
-        settingsStore.save(new)
+        settingsStore.save(choices)
         if let roomId = created?.roomId {
             isSavingSettings = true
             defer { isSavingSettings = false }
@@ -63,7 +66,7 @@ extension RoomViewModel {
                 try apply(await send(roomId))
             } catch {
                 settings = old
-                settingsStore.save(old)
+                settingsStore.save(oldChoices)
                 errorMessage = Self.genericMessage
                 return
             }

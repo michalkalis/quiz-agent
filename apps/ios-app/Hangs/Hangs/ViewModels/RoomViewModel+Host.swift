@@ -73,8 +73,9 @@ extension RoomViewModel {
         }
     }
 
-    /// A fresh session with the room's content, made a room.
-    func createRoom(hostName name: String) async throws -> RoomCreated {
+    /// A fresh session with the room's content, made a room. #240.9: with
+    /// `moving`, the host's room moves onto it with everyone in it.
+    func createRoom(hostName name: String, moving roomId: String? = nil) async throws -> RoomCreated {
         let session = try await network.createSession(
             maxQuestions: solo.numberOfQuestions,
             difficulty: solo.difficulty,
@@ -91,7 +92,8 @@ extension RoomViewModel {
             hostName: name,
             revealMode: settings.revealMode,
             thinkingSeconds: settings.thinkingSeconds,
-            readsAloud: settings.readsAloud
+            readsAloud: settings.readsAloud,
+            movingRoomId: roomId
         )
     }
 
@@ -113,9 +115,10 @@ extension RoomViewModel {
         if settings.readsAloud { prepareReadAloudAudio() }
         do {
             // A pack plays its own questions; the solo history does not apply.
+            // #240.9: a game after another one in this room skips its questions.
             let response = try await network.startQuiz(
                 sessionId: created.sessionId,
-                excludedQuestionIds: content.packId == nil ? excludedQuestionIds() : []
+                excludedQuestionIds: content.packId == nil ? excludedQuestionIds() + questionsById.keys.sorted() : []
             )
             questionAudioPath = response.audio?.questionUrl
             await refresh()

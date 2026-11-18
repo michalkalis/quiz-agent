@@ -29,6 +29,10 @@ struct RoomPage {
     var winner: XCUIElement { app.descendants(matching: .any)["room.final.winner"] }
     var awayNote: XCUIElement { app.descendants(matching: .any)["room.final.away"] }
     var doneButton: XCUIElement { app.buttons["room.done"] }
+    /// #240.9: the host's "Play again", the ranking picture and the awards.
+    var playAgainButton: XCUIElement { app.buttons["room.playAgain"] }
+    var shareButton: XCUIElement { app.buttons["room.final.share"] }
+    func award(_ kind: String) -> XCUIElement { app.descendants(matching: .any)["room.final.award.\(kind)"] }
     /// #224: the lobby's one-line rules row; it opens the rules sheet.
     var lobbyRules: XCUIElement { app.buttons["room.lobby.rules"] }
     var rulesReveal: XCUIElement { app.buttons["room.rules.sheet.reveal"] }

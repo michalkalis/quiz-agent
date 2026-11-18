@@ -25,6 +25,9 @@ struct RoomQuestionView: View {
                         secondsLeft: viewModel.secondsLeft(),
                         fullSeconds: viewModel.state?.thinkingSeconds
                     )
+                    if let progress = viewModel.readingProgress() {
+                        readingBar(progress)
+                    }
                     if let question = viewModel.question {
                         RoomQuestionCard(
                             question: question,
@@ -111,6 +114,12 @@ struct RoomQuestionView: View {
                 Text("The others see it after the question.")
                     .font(.hangsCaption)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
+                if !viewModel.answeredNames.isEmpty {
+                    Text("Answered: \(viewModel.answeredNames.formatted(.list(type: .and, width: .narrow)))")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .accessibilityIdentifier("room.answer.answeredBy")
+                }
             }
             .padding(Theme.Hangs.Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,9 +128,31 @@ struct RoomQuestionView: View {
         .accessibilityIdentifier("room.answer.locked")
     }
 
+    /// #240.9: the answer time starts after reading; the bar shows it moving.
+    /// The header already says "after reading" next to the seconds, so the bar
+    /// carries no caption of its own (one more line clipped the question at
+    /// large text).
+    private func readingBar(_ progress: Double) -> some View {
+        HangsProgressBar(progress: progress)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Answer time starts after reading"))
+            .accessibilityIdentifier("room.question.readingProgress")
+    }
+
     @ViewBuilder
     private func footer(_ round: RoomState.Round) -> some View {
-        if round.yourAnswer == nil, viewModel.secondsLeft() == 0 {
+        if viewModel.isGrading {
+            // #240.9: everyone answered; the answers are being checked.
+            Label {
+                Text("Checking the answers…")
+            } icon: {
+                ProgressView()
+            }
+            .font(.hangsLabel)
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("room.question.grading")
+        } else if round.yourAnswer == nil, viewModel.secondsLeft() == 0 {
             Text("Time's up")
                 .font(.hangsLabel)
                 .foregroundStyle(Theme.Hangs.Colors.muted)

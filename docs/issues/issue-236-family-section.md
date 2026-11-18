@@ -74,6 +74,7 @@ Rozhodnutia foundera 2026-11-18:
 
 ### 236.4 Obsah
 
+- **Pilot 2026-11-18 (20 otázok, 4 balíky) a verdikt foundera:** 10–12 Špióni a šifry „super“; 7–9 Ako sa čo vyrába „vcelku ok“; 7–9 Jedlo ako veda „ok, ale trochu nudné“; 4–6 Tvoje telo „príliš očividné a príliš detsky napísané“, vysvetlenie „prečo“ sa mu páči. Z toho: (1) všeobecné témy majú byť v ponuke v menšine, viac ťahajú aktuálne záľuby a hry (Minecraft, LEGO, Roblox, Pokémon, futbal); founder si tým nie je istý, overiť na skutočných rodičoch; (2) pre 4–6 sa nepýtať na to, čo dieťa určite vie, radšej na prekvapivý dôvod ako výber z dvoch, a písať obyčajnými slovami bez zdrobnenín (v zadaní od tejto zmeny); (3) otázka zaujímavá aj pre dospelého nevadí, pásmo ju drží mimo bežného kvízu.
 - Founder 2026-11-17 schválil celý zoznam 30 tém z rešerše (telo a zmysly, fuj ale pravda, jedlo ako veda, veci doma, ako sa čo vyrába, značky a hry cez skutočný svet, rekordy, „dalo by sa to?“, peniaze, špióni, optické klamy, superschopnosti zvierat, dinosaury, vesmír cez dieťa, zvuky a smiešne slová).
 - Lákavé témy podľa foundera (2026-11-15): menej bežné a zo života dieťaťa, napríklad Harry Potter, LEGO, jedlo, veci z každého dňa, čo niečo naučia; „fuj, ale pravda“ o tele pre najmenších. Známe značky a príbehy cez skutočný svet okolo nich (ako vzniká kocka, kde sa nakrúcalo), nie cez dej.
 - Témy na štart: zvieratá, rozprávky a večerníčky, vesmír, ľudské telo, príroda, šport, jedlo, Slovensko a Česko. Miestne témy natívne v sk/cs, ostatné podľa bežného postupu korpusu.

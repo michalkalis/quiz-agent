@@ -151,6 +151,18 @@ def test_child_band_uses_the_kids_prompt(gen, band) -> None:
     assert "{" not in prompt.split("## Response Format")[0]
 
 
+def test_youngest_band_is_told_simple_is_not_obvious_and_no_baby_talk(gen) -> None:
+    # Founder on the pilot (2026-11-18): the 4-6 questions were too obvious
+    # ("deti vedia, že ich nebolia vlasy, tam nie je nad čím rozmýšľať") and
+    # written too childishly; the "why" was the part worth keeping. Only the
+    # youngest band gets this note.
+    small, *_ = _build(gen, "kids_4_6")
+    older, *_ = _build(gen, "kids_7_9")
+    for phrase in ("Simple is not the same as obvious", "not baby talk"):
+        assert phrase in small
+        assert phrase not in older
+
+
 def test_band_and_difficulty_are_separate_axes(gen) -> None:
     # "hard" for 4-6 must stay a 4-6 question, not become a 10-12 one.
     hard_small, *_ = _build(gen, "kids_4_6", difficulty="hard")

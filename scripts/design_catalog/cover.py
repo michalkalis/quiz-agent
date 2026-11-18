@@ -70,7 +70,7 @@ def read_brand(root: Path) -> Brand:
         el.tag = el.tag.rpartition("}")[2]
     lockup = _block((root / LOCKUP).read_text(encoding="utf-8"), "struct HangsBrandMark")
     size = _num(_one(r"var size: CGFloat = ([\d.]+)", lockup, LOCKUP).group(1))
-    fn, weight = _one(r"\.font\(Theme\.Hangs\.Fonts\.(\w+)\(size, weight: \.(\w+)\)\)", lockup, LOCKUP).groups()
+    fn, weight = _one(r"\.font\(Theme\.Hangs\.Fonts\.(\w+)\(size(?:, weight: \.(\w+))?\)\)", lockup, LOCKUP).groups()
     font = FontResolver(root, (root / THEME).read_text(encoding="utf-8")).resolve(fn, size, weight)
     return Brand(
         word=_one(r'Text\(verbatim: "([^"]+)"\)', lockup, LOCKUP).group(1),

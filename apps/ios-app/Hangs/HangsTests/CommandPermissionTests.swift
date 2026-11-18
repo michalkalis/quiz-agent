@@ -280,7 +280,10 @@ struct CommandsBarAccessoryTests {
                                 availability: availability, voiceCommandsEnabled: enabled,
                                 showsHints: hints, micDenied: micDenied, phaseHasCommands: hasCommands
                             )
-                            let expected: ListenBar.CommandsAccessory? = if enabled, hints, !micDenied, hasCommands {
+                            // #240: a denied mic is said wherever the words would be, whatever the switches.
+                            let expected: ListenBar.CommandsAccessory? = if hasCommands, micDenied {
+                                .micOff
+                            } else if enabled, hints, hasCommands {
                                 switch availability {
                                 case .permissionNeeded: .turnOn
                                 case .installingAssets: .preparing
@@ -312,7 +315,7 @@ struct CommandsBarAccessoryTests {
         vm.settings.voiceHintsEnabled = true
 
         audio.micPermissionStatus = .denied
-        #expect(vm.commandsAccessory(for: .readingQuestion) == nil, "commands need the mic")
+        #expect(vm.commandsAccessory(for: .readingQuestion) == .micOff, "#240: the mic is off, and the bar says so with Settings")
         audio.micPermissionStatus = .granted
 
         silence.commandAvailability = .permissionDenied

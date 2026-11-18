@@ -129,6 +129,24 @@ extension QuizViewModel {
         }
     }
 
+    /// #240 (walkthrough 2/2): Settings opened during a question was torn
+    /// away: the think window ran out behind the sheet, the mic opened on its
+    /// own, and the "Nothing heard" sheet replaced Settings mid-edit. Opening
+    /// it holds the question with this same pause; closing it goes on where it
+    /// stopped. Only before the mic opens: a live recording and the answer
+    /// sheet are left as they are. A pause the player chose stays theirs.
+    func holdQuestionForSettings() {
+        guard !isPaused, quizState == .askingQuestion else { return }
+        enterPause()
+        isHeldBySettings = isPaused
+    }
+
+    func releaseQuestionAfterSettings() {
+        guard isHeldBySettings else { return }
+        isHeldBySettings = false
+        exitPause()
+    }
+
     /// The toolbar's single pause/resume control (and the spoken "pauza").
     func togglePause() {
         attemptLedger.record(.tap, "pause") // #186 step 2: replayable black box

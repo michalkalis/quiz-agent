@@ -332,6 +332,8 @@ enum VoiceCaptureFailure: String {
     case sttTimeout = "stt_timeout"
     case sttCommitFailed = "stt_commit_failed"
     case recorderFailed = "recorder_failed"
+    /// #240: the microphone is refused in iOS Settings, so no recording was started.
+    case micDenied = "mic_denied"
 }
 
 enum PaywallSource: String {

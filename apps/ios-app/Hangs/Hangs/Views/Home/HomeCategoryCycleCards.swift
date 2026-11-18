@@ -24,6 +24,8 @@ struct HomeCategoryCycleCards: View {
     static let allID = "all"
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// #240: the cards follow the quiz language the moment it changes.
+    @Environment(\.locale) private var locale
     let cards: [HomeDeckCard]
     /// Index of the front card in `cards`.
     let front: Int
@@ -92,7 +94,7 @@ struct HomeCategoryCycleCards: View {
     /// The front card names the round (title, question count, colour strip for
     /// All); the cards behind carry the category as an overline only.
     private func card(_ card: HomeDeckCard, isFront: Bool) -> some View {
-        let name = card.name
+        let name = card.name(in: locale)
         let style = card.style
         let isAll = style == nil
         return VStack(alignment: .leading, spacing: 0) {

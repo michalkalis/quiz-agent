@@ -21,6 +21,8 @@ import SwiftUI
 
 struct HomeCategoryDeck: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// #240: the fan names its cards in the screen's language.
+    @Environment(\.locale) private var locale
     @State private var lift: HomeCategoryCycleCards.Lift?
     @State private var liftTask: Task<Void, Never>?
 
@@ -202,7 +204,7 @@ struct HomeCategoryDeck: View {
 
     private func backCard(_ id: String) -> some View {
         let style = Theme.Hangs.Category.style(for: id)
-        return Text(verbatim: Config.categoryDisplayName(for: id) ?? "")
+        return Text(verbatim: Config.categoryDisplayName(for: id, locale: locale) ?? "")
             .textCase(.uppercase)
             .font(.hangsOverline)
             .lineLimit(1)
@@ -247,6 +249,11 @@ struct HomeDeckCard {
     let name: String
     /// The card's colours; nil = the white "All categories" card with the strip.
     let style: Theme.Hangs.Category.Style?
+    /// #240: a category card's name, resolved in the locale the card is drawn
+    /// in: `name` was built in the language of the moment and stayed English
+    /// after a switch to Slovak or Czech. nil = `name` as given (family topics
+    /// come from the server in the quiz language).
+    var nameResource: LocalizedStringResource? = nil
 
     /// All categories, then each category (`CategoryCycle.order`).
     static var categories: [HomeDeckCard] {
@@ -254,9 +261,16 @@ struct HomeDeckCard {
             HomeDeckCard(
                 id: option.id ?? HomeCategoryCycleCards.allID,
                 name: option.display,
-                style: option.id.map { Theme.Hangs.Category.style(for: $0) }
+                style: option.id.map { Theme.Hangs.Category.style(for: $0) },
+                nameResource: Config.categoryNameResource(for: option.id)
             )
         }
+    }
+
+    func name(in locale: Locale) -> String {
+        guard var resource = nameResource else { return name }
+        resource.locale = locale
+        return String(localized: resource)
     }
 
     /// #236: a band's topics, coloured round the category palette in list

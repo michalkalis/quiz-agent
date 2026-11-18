@@ -158,6 +158,9 @@ struct ListenBar: View {
         case preparing
         /// Refused: a "Settings" button into iOS Settings.
         case openSettings
+        /// #240: the microphone itself is refused, so no answer can be
+        /// heard: the same "Settings" button, and a note that says so.
+        case micOff
     }
 
     /// #132 Track B — the think-phase window this bar is counting down. The fill
@@ -278,6 +281,7 @@ struct ListenBar: View {
         case .turnOn: Text("Commands are off")
         case .preparing: Text("Preparing commands…")
         case .openSettings: Text("Speech recognition is off")
+        case .micOff: Text("Microphone is off for Trubbo")
         case nil: nil
         }
     }
@@ -782,6 +786,9 @@ struct ListenBar: View {
         case .openSettings:
             commandsButton(title: "Settings", icon: "gearshape.fill", action: onOpenSettings)
                 .accessibilityIdentifier("listen-bar.openSettings")
+        case .micOff:
+            commandsButton(title: "Settings", icon: "gearshape.fill", action: onOpenSettings)
+                .accessibilityIdentifier("listen-bar.openMicSettings")
         case .preparing:
             ProgressView()
                 .controlSize(.small)

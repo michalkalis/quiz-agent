@@ -108,6 +108,7 @@ class TopUpStage:
         max_ask: int = DEFAULT_MAX_ASK,
         time_budget_s: float | None = None,
         clock: Callable[[], float] = time.monotonic,
+        language_stage=None,
     ) -> None:
         # #170 D6 — the same per-category profile DedupStage consults, so the
         # spent-fact filter and the dedup content check read ONE value (the
@@ -146,6 +147,9 @@ class TopUpStage:
         self._max_ask = max(1, max_ask)
         self._time_budget_s = time_budget_s
         self._clock = clock
+        # PACK_LANGUAGE_FIX: incremental walk only — fixes each round's tail
+        # right before it is persisted (saved questions never change).
+        self._language_stage = language_stage
 
     def _batch_size(self, round_index: int, resumed: bool) -> int:
         # A resumed attempt already has a playable prefix — skip the ramp.
@@ -176,6 +180,7 @@ class TopUpStage:
         rounds: int,
         asked: int | None = None,
         survived: int | None = None,
+        language_fix: dict | None = None,
     ) -> None:
         """One `round` step per persisted batch so the order's step log / SSE
         (and the client's progress bar via `job.progress`) track how many
@@ -186,6 +191,9 @@ class TopUpStage:
             # #228 analytics: per-round yield, to tune the ask from real orders.
             info["asked"] = asked
             info["survived"] = survived
+        if language_fix:
+            # The round's language-fix counts, kept in generation_jobs.step_log.
+            info["language_fix"] = language_fix
         event_id = await sink.start_step("round", info=info)
         await sink.finish_step("round", event_id, info=info)
         await sink.publish(
@@ -310,12 +318,26 @@ class TopUpStage:
                     # Asked for extra on purpose; the pack holds what was bought.
                     surplus += len(ctx.questions) - target
                     ctx.questions = ctx.questions[:target]
+                # PACK_LANGUAGE_FIX: the unsaved tail only, right before it is saved.
+                language_fix = None
+                if (
+                    self._language_stage is not None
+                    and len(ctx.questions) > ctx.locked_count
+                ):
+                    language_fix = (
+                        await _run_substage(self._language_stage, ctx, sink)
+                    ).info
                 new_tail = ctx.questions[ctx.locked_count:]
                 if new_tail:
                     pack = await self._persist_stage.persist_batch(ctx, new_tail)
                     ctx.locked_count = len(ctx.questions)
                     await self._emit_round(
-                        sink, ctx, rounds, asked=shortfall, survived=max(survived, 0)
+                        sink,
+                        ctx,
+                        rounds,
+                        asked=shortfall,
+                        survived=max(survived, 0),
+                        language_fix=language_fix,
                     )
             logger.info(
                 "TopUpStage round=%d shortfall=%d now=%d/%d",

@@ -528,3 +528,16 @@ def pack_subthemes() -> bool:
     until the founder's blind round; OFF is behaviour-identical to before.
     """
     return _truthy(os.getenv("PACK_SUBTHEMES"))
+
+
+def pack_language_fix() -> bool:
+    """Custom packs: before each round is saved, the #211 naturalness check
+    (with a pack note: names, punctuation, answer and explanation) fixes
+    wording, spelling, names and punctuation of sk/cs/uk questions, all
+    audiences. Every proposed edit is recorded on the question
+    (``provenance.extra.text_edits``) and counted in the round's step_log
+    entry. Founder 2026-11-18: on if it is cheap. ``False`` by default; OFF
+    is behaviour-identical to before (``PACK_LANGUAGE_FIX=1`` turns it on).
+    Read only by the customer-pack worker (``app/worker/tasks.py``).
+    """
+    return _truthy(os.getenv("PACK_LANGUAGE_FIX"))

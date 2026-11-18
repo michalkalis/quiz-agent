@@ -28,6 +28,7 @@ from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
+from app.orchestrator.stages.language_fix import LanguageFixStage
 from app.orchestrator.stages.persist import fail_pack_in_session
 from app.orchestrator.stages import (
     AnswerabilityStage,
@@ -153,6 +154,9 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
                 max_rounds=feature_flags.pack_topup_extra_rounds(),
                 max_ask=feature_flags.pack_max_ask(),
                 time_budget_s=feature_flags.pack_topup_time_budget_s(),
+                language_stage=(
+                    LanguageFixStage() if feature_flags.pack_language_fix() else None
+                ),
             ),
         ]
     stages += [

@@ -111,7 +111,7 @@ struct HomeCategoryCycleCards: View {
             }
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             Text(verbatim: name)
-                .font(.hangsTitle)
+                .font(.hangsHeading)
                 .lineLimit(3)
                 .minimumScaleFactor(0.6)
                 .opacity(isFront ? 1 : 0)
@@ -129,7 +129,7 @@ struct HomeCategoryCycleCards: View {
         }
         .foregroundStyle(style?.text ?? Theme.Hangs.Colors.ink)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(Theme.Hangs.Spacing.lg)
+        .padding(Theme.Hangs.Spacing.md)
         .deckCardShape(fill: style?.fill ?? Theme.Hangs.Colors.bgCard)
         .animation(.easeInOut(duration: 0.3), value: isFront)
     }

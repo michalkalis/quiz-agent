@@ -210,9 +210,8 @@ struct HomeView: View {
     }
 
     private enum Metrics {
-        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256) plus
-        /// the page dots under it.
-        static let deckHeight: CGFloat = 256 + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
+        /// The deck's card height plus the page dots under it.
+        static let deckHeight: CGFloat = DeckMetrics.cardSize.height + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)

@@ -157,7 +157,7 @@ struct HomeCategoryDeck: View {
             .minimumScaleFactor(0.7)
             .foregroundStyle(style.text)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(Theme.Hangs.Spacing.lg)
+            .padding(Theme.Hangs.Spacing.md)
             .deckCardShape(fill: style.fill)
     }
 
@@ -169,7 +169,7 @@ struct HomeCategoryDeck: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             Text(verbatim: title)
-                .font(.hangsTitle)
+                .font(.hangsHeading)
                 .lineLimit(3)
                 .minimumScaleFactor(0.6)
             Spacer(minLength: Theme.Hangs.Spacing.xs)
@@ -182,7 +182,7 @@ struct HomeCategoryDeck: View {
             .clipShape(Capsule())
         }
         .foregroundStyle(Theme.Hangs.Colors.ink)
-        .padding(Theme.Hangs.Spacing.lg)
+        .padding(Theme.Hangs.Spacing.md)
         .deckCardShape(fill: Theme.Hangs.Colors.bgCard)
     }
 
@@ -190,7 +190,7 @@ struct HomeCategoryDeck: View {
 }
 
 enum DeckMetrics {
-    static let dotsGap: CGFloat = 18
+    static let dotsGap: CGFloat = 12
     static let dotsHeight: CGFloat = 8
     /// First half of a step: the moving card travels out to the side. The
     /// settle starts at `retargetDelay`, well before the out spring would come
@@ -199,9 +199,10 @@ enum DeckMetrics {
     static let retargetDelay = 0.17
     static let settleDuration = 0.45
     static let fadeDuration = 0.2
-    static let sideOffset: CGFloat = 132
-    /// Canvas card: 196 × 256, scaled down to the space Home has left.
-    static let cardSize = CGSize(width: 196, height: 256)
+    static let sideOffset: CGFloat = 98
+    /// Canvas card ("lower fan", founder 2026-11-18): 146 × 186, ~30 % below
+    /// the first 196 × 256, so more of Home fits above Start.
+    static let cardSize = CGSize(width: 146, height: 186)
     static let stripHeight: CGFloat = 8
     static let frontAngle = Angle.degrees(2)
     /// Back to front: the canvas fan (rotation about the bottom edge, x shift).
@@ -220,7 +221,7 @@ extension View {
         aspectRatio(DeckMetrics.cardSize, contentMode: .fit)
             .frame(maxWidth: DeckMetrics.cardSize.width, maxHeight: DeckMetrics.cardSize.height)
             .background(
-                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cta, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
                     .fill(fill)
                     .hangsShadow(Theme.Hangs.Shadow.raised)
             )

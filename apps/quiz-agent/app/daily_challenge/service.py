@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import func, select, update
@@ -74,7 +74,11 @@ class DailyChallengeService:
 
         candidates = await self._retriever.daily_candidates(language)
         ids = pick_daily_set(
-            candidates, language=language, seed=f"{language}:{day}", used_ids=used_ids
+            candidates,
+            language=language,
+            seed=f"{language}:{day}",
+            used_ids=used_ids,
+            now=datetime.now(UTC),
         )
         if len(ids) < SET_SIZE:
             raise DailySetUnavailable(f"{language} {day}: {len(ids)} questions")

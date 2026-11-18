@@ -10,6 +10,7 @@ per player). Reuses the private scratch database of the stock-count tests.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -44,3 +45,22 @@ async def test_only_rows_every_player_is_served_alike(store):  # noqa: F811
     sk = {q.id for q in await retriever.daily_candidates("sk")}
     # English rows have no stored Slovak translation here → only the native row.
     assert sk == {rows["sk_native"].id}
+
+
+async def test_timely_rows_reach_the_candidates_however_small_the_sample(store):  # noqa: F811
+    """Why: the day's timely place can only be filled if the handful of
+    currently boosted rows is among the candidates; a random sample of a big
+    corpus would miss them. A permanent boost is not a current topic."""
+    for _ in range(6):
+        assert await store.upsert(_question(category="history")) is True
+    hot = _question(boost_until=datetime.now(UTC) + timedelta(days=7))
+    ended = _question(boost_until=datetime.now(UTC) - timedelta(days=1))
+    forever = _question(boost_until=datetime(9999, 1, 1, tzinfo=UTC))
+    for q in (hot, ended, forever):
+        assert await store.upsert(q) is True
+    retriever = QuestionRetriever(question_store=store)
+
+    for _ in range(5):
+        drawn = [q.id for q in await retriever.daily_candidates("en", n=1)]
+        assert hot.id in drawn
+        assert len(drawn) == len(set(drawn)) <= 2

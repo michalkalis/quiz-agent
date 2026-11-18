@@ -82,6 +82,9 @@ class OrderContext:
     # #203 203.9 change 4: question id → question embedding, in memory only
     # (pack rows are persisted without embeddings), for the in-pack cosine.
     pack_embeddings: dict[str, list[float]] = field(default_factory=dict)
+    # Ids the in-pack same-fact judge already let through. Never judged again,
+    # so a later round cannot drop a question an earlier round accepted.
+    same_fact_cleared: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         if self.pack_target is None:

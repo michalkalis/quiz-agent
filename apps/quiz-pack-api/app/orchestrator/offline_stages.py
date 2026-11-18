@@ -37,7 +37,11 @@ from app.orchestrator.stages import (
     TopUpStage,
     VerificationStage,
 )
-from app.orchestrator.stages.dedup import AsyncDuplicateFinder, DedupStage
+from app.orchestrator.stages.dedup import (
+    IN_PACK_JUDGE_MAX_CALLS,
+    AsyncDuplicateFinder,
+    DedupStage,
+)
 from app.orchestrator.stages.grayzone_judge import DEFAULT_MAX_CALLS, GrayZoneJudge
 from app.orchestrator.stages.strictness import Strictness, parse_strictness
 
@@ -103,6 +107,14 @@ def build_grayzone_judge() -> GrayZoneJudge | None:
     return GrayZoneJudge(
         max_calls=max_calls if max_calls is not None else DEFAULT_MAX_CALLS
     )
+
+
+def build_in_pack_judge() -> GrayZoneJudge | None:
+    """Customer orders (worker and ``--customer-order``): the same-fact judge
+    for pairs inside one pack, with its own per-order budget."""
+    if not feature_flags.pack_same_fact_judge():
+        return None
+    return GrayZoneJudge(max_calls=IN_PACK_JUDGE_MAX_CALLS)
 
 
 def build_strictness() -> Strictness:
@@ -317,7 +329,10 @@ def build_stages(
         # Worker parity (`tasks._build_stages`): no #170 corpus levers.
         strictness = None
         dedup = DedupStage(
-            dedup_store, None, in_pack_cosine=feature_flags.pack_subthemes()
+            dedup_store,
+            None,
+            in_pack_cosine=feature_flags.pack_subthemes(),
+            in_pack_judge=build_in_pack_judge(),
         )
     else:
         dedup = build_dedup_stage(dedup_store, None, strictness)

@@ -16,10 +16,20 @@ DASH = re.compile(r"(?<![0-9A-Z])[—–]|[—–](?![0-9A-Z])|\s-\s")  # ranges
 FORMAL = {
     "sk": re.compile(r"\b(Vy|Vás|Vám|Vami|Váš|Vaš\w+|vaš\w+|váš)\b"),
     "cs": re.compile(r"\b(Vy|Vás|Vám|Vámi|Váš|Vaš\w+|vaš\w+|váš)\b"),
+    "uk": re.compile(r"\b(Ви|Вас|Вам|Вами|Ваш\w*|ваш\w*)\b"),  # #231: «ти» except legal pages
 }
-# Plural imperative as the first word ("Skúste", "Zkuste", "Zadajte").
-FORMAL_IMPERATIVE = re.compile(r"^(\w{3,}(?:ajte|ejte|ujte|ite|íte|ete|ste|te))\b")
+# Plural imperative as the first word ("Skúste", "Zkuste", "Zadajte", "Спробуйте", "Натисніть").
+FORMAL_IMPERATIVE = {
+    "sk": re.compile(r"^(\w{3,}(?:ajte|ejte|ujte|ite|íte|ete|ste|te))\b"),
+    "cs": re.compile(r"^(\w{3,}(?:ajte|ejte|ujte|ite|íte|ete|ste|te))\b"),
+    "uk": re.compile(r"^(\w{3,}(?:йте|іть|їть|ьте))\b"),
+}
 WRONG_SCRIPT = {"sk": re.compile(r"[řůě]"), "cs": re.compile(r"[äôľĺŕ]")}
+# #231: Russian letters never occur in Ukrainian, and a Latin lookalike inside a
+# Cyrillic word (Latin "i" for "і") breaks search and the voice. Always errors.
+RUSSIAN = re.compile(r"[ыэъёЫЭЪЁ]")
+MIXED_SCRIPT = re.compile(r"\w*(?:[а-яіїєґА-ЯІЇЄҐ][a-zA-Z]|[a-zA-Z][а-яіїєґА-ЯІЇЄҐ])\w*")
+LANGS = ("en", "sk", "cs", "uk")
 CONTRAST_TAIL = re.compile(r",\s(nie|ne|not)\s\w|\bnielen\b|\bnejen\b|\bnot (just|only)\b", re.IGNORECASE)
 STOCK_WORDS = re.compile(
     r"\b(seamless\w*|elevate\w*|unleash\w*|delve\w*|effortless\w*|immersive|vibrant|game-changer|"
@@ -41,38 +51,54 @@ def placeholders(value) -> list[str]:
     return sorted(re.sub(r"\d+\$", "", p) for p in found)
 
 
+def text_flags(lang: str, text: str, legal: bool = False) -> list[tuple[int, str, bool]]:
+    """(rule, note, error) for one text; shared by app rows and other copy (store, web).
+
+    Legal pages are formal by design (copy-style rule 1), so no address checks there.
+    """
+    found = []
+    if DASH.search(text):
+        found.append((5, f"dash: {text!r}", False))
+    if lang in FORMAL and not legal:
+        if FORMAL[lang].search(text):
+            found.append((1, f"formal address: {text!r}", False))
+        m = FORMAL_IMPERATIVE[lang].match(text)
+        if m:
+            found.append((1, f"possible plural imperative {m.group(1)!r}", False))
+    if lang in WRONG_SCRIPT and WRONG_SCRIPT[lang].search(text):
+        found.append((8, f"letters of the other language: {text!r}", False))
+    if lang == "uk":  # copy-style rule 24
+        if RUSSIAN.search(text):
+            found.append((24, f"Russian letter {RUSSIAN.search(text).group(0)!r}: {text!r}", True))
+        if MIXED_SCRIPT.search(text):
+            found.append((24, f"Latin and Cyrillic in one word {MIXED_SCRIPT.search(text).group(0)!r}", True))
+    if CONTRAST_TAIL.search(text):
+        found.append((12, f"contrast tail: {text!r}", False))
+    if STOCK_WORDS.search(text):
+        found.append((15, f"stock word {STOCK_WORDS.search(text).group(0)!r}", False))
+    if "Hangs" in text:
+        found.append((7, "code name in text", False))
+    return found
+
+
 def check(row: dict) -> list[dict]:
     flags = []
 
-    def flag(lang, rule, note):
-        flags.append({"id": row["id"], "lang": lang, "rule": rule, "note": note, "source": "check"})
+    def flag(lang, rule, note, error=False):
+        flags.append({"id": row["id"], "lang": lang, "rule": rule, "note": note, "source": "check", "error": error})
 
     en_ph = placeholders(row["en"])
-    for lang in ("en", "sk", "cs"):
-        value = row[lang]
+    for lang in LANGS:
+        value = row.get(lang)
         if value is None:
             flag(lang, 8, "missing translation")
             continue
         for text in texts(value):
-            if DASH.search(text):
-                flag(lang, 5, f"dash: {text!r}")
-            if lang in FORMAL and FORMAL[lang].search(text):
-                flag(lang, 1, f"formal address: {text!r}")
-            if lang in FORMAL:
-                m = FORMAL_IMPERATIVE.match(text)
-                if m:
-                    flag(lang, 1, f"possible plural imperative {m.group(1)!r}")
-            if lang in WRONG_SCRIPT and WRONG_SCRIPT[lang].search(text):
-                flag(lang, 8, f"letters of the other language: {text!r}")
+            for rule, note, error in text_flags(lang, text):
+                flag(lang, rule, note, error)
             together = "#212" in row["comment"] or "Hra spolu" in row["comment"]  # multiplayer is a game
             if TERMS.search(text) and not together and "vypršala" not in text and "vypršela" not in text:
                 flag(lang, 7, f"term: {TERMS.search(text).group(0)!r}")
-            if CONTRAST_TAIL.search(text):
-                flag(lang, 12, f"contrast tail: {text!r}")
-            if STOCK_WORDS.search(text):
-                flag(lang, 15, f"stock word {STOCK_WORDS.search(text).group(0)!r}")
-            if "Hangs" in text:
-                flag(lang, 7, "code name in text")
         if lang != "en":
             if placeholders(value) != en_ph:
                 flag(lang, 11, f"placeholders {placeholders(value)} vs en {en_ph}")
@@ -94,7 +120,10 @@ def main(rows_path: str, out: str) -> None:
     by_rule: dict[int, int] = {}
     for f in flags:
         by_rule[f["rule"]] = by_rule.get(f["rule"], 0) + 1
-    print(f"{len(flags)} flags on {len({f['id'] for f in flags})} rows; by rule {dict(sorted(by_rule.items()))} → {out}")
+    errors = sum(f["error"] for f in flags)
+    print(f"{len(flags)} flags on {len({f['id'] for f in flags})} rows ({errors} errors); by rule {dict(sorted(by_rule.items()))} → {out}")
+    if errors:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

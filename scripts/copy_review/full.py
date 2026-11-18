@@ -20,11 +20,11 @@ ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "apps/ios-app/Hangs/Hangs"
 WEB = ROOT / "apps/website/src"
 STORE = ROOT / "apps/ios-app/Hangs/fastlane/metadata"
-LANGS = ("en", "sk", "cs")
+LANGS = ("en", "sk", "cs", "uk")  # uk (#231): skipped where its files do not exist yet
 PILOT_CALLS = 64  # pilot run 2026-11-04 stopped at its $0.95 cap after 64 of 71 calls
 
-HEAD = """You are a senior native Slovak and native Czech localization reviewer
-(LQA, MQM method) with excellent English. You review player-facing texts of
+HEAD = """You are a senior native Slovak, native Czech and native Ukrainian
+localization reviewer (LQA, MQM method) with excellent English. You review player-facing texts of
 "Trubbo", an iOS trivia quiz played by voice, often hands-free. The texts
 were written by another AI.
 
@@ -45,7 +45,7 @@ differs between languages, wrong term, rule violation, unclear text. Taste
 alone is not a finding. Quote the exact current text and give the exact full
 replacement.
 
-Return JSON: {{"findings": [{{"id": "<item id>", "lang": "en|sk|cs",
+Return JSON: {{"findings": [{{"id": "<item id>", "lang": "en|sk|cs|uk",
  "category": "accuracy|grammar|fluency|terminology|style|rule",
  "rule": "<house rule number or null>", "severity": "minor|major|critical",
  "issue": "<one sentence in English>", "quote": "<exact current text>",
@@ -88,7 +88,7 @@ def app_jobs(run: Path, pilot: Path) -> list[dict]:
             chunk = set(ids[i : i + 30])
             near = {j for j, r in enumerate(group) if r["id"] in chunk for j in range(j - 3, j + 4)}
             ctx = group if len(group) <= 60 else [r for j, r in enumerate(group) if j in near]
-            jobs.append(rows_job(f"iOS app screen {screen}", [{k: r[k] for k in FIELDS} for r in ctx], ids[i : i + 30]))
+            jobs.append(rows_job(f"iOS app screen {screen}", [{k: r.get(k) for k in (*FIELDS, "uk")} for r in ctx], ids[i : i + 30]))
     return jobs
 
 
@@ -104,10 +104,17 @@ def store_job() -> dict:
     items = []
     for field in ("name", "subtitle", "promotional_text", "description", "keywords", "release_notes"):
         item = {"id": f"store:{field}", "comment": f"App Store {field}" + (f", max {limits[field]} characters" if field in limits else "")}
-        for lang, folder in (("en", "en-US"), ("en-GB", "en-GB"), ("sk", "sk"), ("cs", "cs")):
-            item[lang] = (STORE / folder / f"{field}.txt").read_text(encoding="utf-8").strip()
+        for lang, folder in (("en", "en-US"), ("en-GB", "en-GB"), ("sk", "sk"), ("cs", "cs"), ("uk", "uk")):
+            if (STORE / folder).is_dir():
+                item[lang] = (STORE / folder / f"{field}.txt").read_text(encoding="utf-8").strip()
         items.append(item)
-    return rows_job("App Store listing (en-US = en, en-GB, sk, cs); keywords are comma-separated search terms", items, [i["id"] for i in items])
+    return rows_job("App Store listing (en-US = en, en-GB, sk, cs, uk); keywords are comma-separated search terms", items, [i["id"] for i in items])
+
+
+def existing(pattern: Path) -> dict[str, Path]:
+    """{lang: path} for the languages whose file exists ("{lang}" in the pattern)."""
+    paths = {lang: Path(str(pattern).format(lang=lang)) for lang in LANGS}
+    return {lang: p for lang, p in paths.items() if p.exists()}
 
 
 def all_jobs(run: Path, pilot: Path) -> list[dict]:
@@ -116,11 +123,12 @@ def all_jobs(run: Path, pilot: Path) -> list[dict]:
         src = (APP / f"Utilities/{name}.swift").read_text(encoding="utf-8")
         jobs.append(doc_job(f"Swift source {name}.swift: texts the app SPEAKS aloud (TTS) or shows as voice-command hints, per language", src, f'"{name}:<line number>"'))
     jobs.append(store_job())
-    jobs.append(keyed_job("Website trubbo.app landing page strings (keys ending _html may contain markup)", {lang: WEB / f"strings/{lang}.json" for lang in LANGS}))
-    jobs.append(keyed_job("Website question topic pages: page chrome strings; keys differ by language where slugs are localized", {lang: WEB / f"topics/{lang}.json" for lang in LANGS}))
+    jobs.append(keyed_job("Website trubbo.app landing page strings (keys ending _html may contain markup)", existing(WEB / "strings/{lang}.json")))
+    jobs.append(keyed_job("Website question topic pages: page chrome strings; keys differ by language where slugs are localized", existing(WEB / "topics/{lang}.json")))
     for page in ("support", "terms", "privacy"):
-        text = "\n\n".join(f"=== {lang} ===\n" + (WEB / f"legal/{page}.{lang}.html").read_text(encoding="utf-8") for lang in LANGS)
-        jobs.append(doc_job(f"Website legal page '{page}' in en, sk, cs (language quality only; do not change legal meaning)", text, f'"legal:{page}"'))
+        pages = existing(WEB / f"legal/{page}.{{lang}}.html")
+        text = "\n\n".join(f"=== {lang} ===\n" + path.read_text(encoding="utf-8") for lang, path in pages.items())
+        jobs.append(doc_job(f"Website legal page '{page}' in {', '.join(pages)} (language quality only; formal address is correct here; do not change legal meaning)", text, f'"legal:{page}"'))
     return jobs
 
 

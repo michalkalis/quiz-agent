@@ -1,17 +1,17 @@
-# Copy style — Trubbo user-facing texts (sk · cs · en)
+# Copy style — Trubbo user-facing texts (sk · cs · en · uk)
 
 Source of truth for every text a player sees or hears: `Localizable.xcstrings`, `InfoPlist.xcstrings`, voice hints and spoken prompts (`VoiceCommandLexicon+Display.swift`, spoken-prompt literals), notifications. Checked automatically by the `copy-review` job in `.github/workflows/claude-review.yml` on every PR that touches these files (subscription token, no API credits). Founder decisions: 2026-09-24 (voice lexicon parity), 2026-09-29 (#189 — TF feedback 2026-09-29: „kvíz“ term, gender-neutral address, automated check instead of manual review).
 
 ## Rules (a violation is a finding)
 
-1. **Address:** informal singular. sk/cs „ty“, never „vy“ / „Vy“.
+1. **Address:** informal singular. sk/cs „ty“, never „vy“ / „Vy“; uk «ти», never «ви» / «Ви». Legal texts (privacy, terms, support pages) are the exception: formal in sk/cs/uk.
 2. **Gender-neutral toward the player** where it reads naturally: „Tvoja odpoveď“, not „Povedal si“; restructure „si vyčerpal“, „aby si mohol“. The app talking about itself may stay masculine („Nerozumel som“).
 3. **Buttons and actions in the imperative:** sk „Štart, Potvrď, Znova, Zruš“, cs „Start, Potvrď, Znovu, Zruš“, en "Start, Confirm, Again, Cancel". Two different "next" actions (#224, 2026-11-03): moving on to the next question (former „Preskoč“) is sk „Ďalšia“, cs „Další“, en "Next" (button and voice command); continuing after a result is sk „Ďalej“, cs „Dál“. Do not swap them. Never the infinitive („Potvrdiť“, „Skryť lištu“). Running text that names a button uses its exact current label.
 4. **Voice hints** quote the exact command words of that screen in the quiz language („Povedz „potvrď“, „znova“ alebo novú odpoveď“); every quoted word must be a valid command, in all three languages at once.
 5. **No dashes as punctuation** (—, –, or a spaced -). Use a comma, period or colon. Hyphens inside words and number ranges are fine.
-6. **Counts use xcstrings plural variants** (sk/cs one/few/many/other, en one/other). Never a single form such as „o %lld dní“ or "%lld questions".
+6. **Counts use xcstrings plural variants** (sk/cs/uk one/few/many/other, en one/other). Never a single form such as „o %lld dní“ or "%lld questions".
 7. **Terms:** one quiz run is „kvíz“ (cs „kvíz“, en "quiz"), not „relácia“ / „hra“ / "session" / "game"; exception: login expiry „Relácia vypršala. Prihlás sa znova.“ Product name „Trubbo“, never the code name. One word per concept across screens; when two compete, the existing majority wins and the PR says so.
-8. **Language integrity:** cs rows are real Czech, sk rows real Slovak, en natural English; the three say the same thing.
+8. **Language integrity:** cs rows are real Czech, sk rows real Slovak, uk rows real Ukrainian, en natural English; all say the same thing.
 9. **Natural, short:** no literal calques from English; buttons fit on one line (about 16 characters), hint and pill lines about 45.
 10. **Spoken texts** (TTS) read naturally aloud: no symbols, abbreviations or quote marks the voice would pronounce.
 11. **Placeholders** (`%@`, `%lld`, `%1$@`) keep their count and order in every language.
@@ -36,6 +36,17 @@ Founder, 2026-11-08: these apply to every Trubbo text, also App Store, web, soci
     ✗ „Po zodpovedaní otázky dostaneš vysvetlenie v jednej či dvoch vetách.“ → ✓ „Odpovieš. Trubbo ti povie, či je to správne, a prečo.“
 20. **No prices on social media** (founder, 2026-11-09): posts, captions, video narration, pinned comments and profile bios never state a price or amount (€, $, „za X €“). Prices change; the App Store shows the current one. „Zadarmo v App Store“ is not a price and stays fine.
     ✗ „Vlastný balík za 6,99 €“ → ✓ „Vlastný balík na tému, ktorú si vyberieš“
+
+### Ukrainian (uk, #231)
+
+Main audience: the Ukrainian App Store. Rules 1 to 20 apply. Rule 5 matters most here: Ukrainian school typography puts a dash where a verb is left out («Київ — столиця»); rephrase with a verb or a comma instead. In addition:
+
+21. **Address:** «ти» in app, store, web and social copy («Твоя відповідь», «Грай з друзями»); legal pages use «ви» (lowercase, as in sk/cs legal), never the capitalised «Ви / Вас / Ваш» of letters.
+22. **Buttons in the informal imperative:** «Старт», «Підтверди», «Ще раз», «Скасуй», «Спробуй». Never the plural or polite form («Підтвердіть», «Спробуйте») and never the infinitive («Підтвердити»).
+23. **Counts:** plural variants one/few/many/other («1 питання», «2 питання», «5 питань»); never one fixed form.
+24. **No Russian:** the letters ы, э, ъ, ё never appear; no Russian words or Russian spellings of names; apostrophe in «м'ята», «п'ять». No Latin lookalike letters inside a Cyrillic word (Latin i, a, o, e, c, p).
+25. **Natural Ukrainian, no calques:** avoid bookish «є + орудний» («є столицею», «є автором») and nouns where a verb fits; say «Яка столиця…», «Хто написав…». A quiz run is «вікторина»; the product name stays «Trubbo».
+26. **Topics:** no war since 2014, no current politics, no relations with Russia, also not as heroic stories (#231 founder decision).
 
 ## Review procedure
 

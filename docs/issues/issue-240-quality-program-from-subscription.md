@@ -1,7 +1,7 @@
 # #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 audit hotový (24 nálezov; PR #872–#874 a #878 nasadené, všetky 4 vysoké opravené, 18 stredných čaká); prechody appkou čiastočne; posudok zábavnosti hotový, čaká na rozhodnutia foundera; hlavné zistenie: noví hráči z App Store nedohrajú kolo, hlas ich „nepočuje“
+**Status:** 2026-11-18 večer: founder schválil všetky návrhy z posudku zábavnosti („so všetkým súhlasím, pusti sa do toho“); beží časť 240.9; audit: 15 z 24 nálezov opravených a nasadených (PR #872–#874, #878, #882–#884, #886), appka v PR #888
 **Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 
@@ -119,3 +119,23 @@ Príčina odmietnutých odpovedí (rozbor len čítaním): (1) hráč mlčal, k�
 Chýbajúce meranie: stav mikrofónu a spúšťač nahrávania pri odpovedi, dôvod a miesto odchodu z kola, štart a koniec hry spolu s dôvodom, príchod cez odkaz, kanál buildu na každej udalosti, `pack_id` pri kole z balíka.
 
 Ďalšie kroky čakajú na rozhodnutia foundera (poradie v posudku, časť „Čo by som spravil“).
+
+### 240.9 — Schválené zmeny z posudku (founder 2026-11-18 večer)
+
+Founder: „pozrel som artefakt… so všetkým, čo navrhuješ, súhlasím. Pusti sa do toho. Ideálne aby si pracoval bez prerušenia… radšej skontrolujem všetko v TF beta verzii… bolo by super, keby mám ráno hotový beta build v TF.“
+
+Rozhodnutia: denná výzva s partiou pre App Store **až s verziou 1.3** (dnešným App Store buildom sa prepínače nemenia) · ranný build do Trubbo Beta sa spustí, **až keď budú hotové všetky otvorené zmeny appky ostatných session** (#231 — ukrajinčina PR #860 a #862, #236 — rodinná sekcia PR #887) · Nastavenia počas otázky pozastavia odpočet (ruší pravidlo z 2026-07-06) · vrátený balík je zablokovaný všetkým · druhé Apple ID dostane vlastný čistý účet.
+
+Bez ďalších otázok: voľby pri vzhľade a hodnotách robí agent, každý PR ich vypíše v časti „Decisions made“, founder ich posúdi v bete. Žiadne prepínače pre živé App Store buildy, žiadne platené služby.
+
+| Vetva | Obsah | Stav |
+|---|---|---|
+| A — prvá minúta (appka) | zakázaný mikrofón, Nastavenia, hláška nákupu, názvy kategórií | PR #888 |
+| B — hlas a sólo kolo (appka) | mikrofón hneď po otázke a jasné „teraz hovor“, mlčanie bez výčitky a bez dvojitého pokusu, kratšie čakania, séria, veta na konci, posledný verdikt pri limite, nálezy auditu 14 a 15, meranie (spúšťač nahrávania, stav mikrofónu, dôvod odchodu) | po zlúčení A |
+| C — Hra spolu (server + appka) | odhalenie po otázke predvolené, čas 15 s, viditeľný stav čítania a hodnotenia, oznam zrušenej otázky, koniec s „Ešte raz“, obrázkom poradia a oceneniami, vibrácia pri odhalení, meranie štartu a konca hry | beží |
+| D — odkazy (web) | náhľad odkazu v chate, pozvánka do miestnosti prežije inštaláciu, odkazy otvára aj Trubbo Beta | beží |
+| E — server | nálezy auditu 20 a 21, dôvod odmietnutia prepisu v meraní | beží |
+| F — zdieľanie a drobnosti (appka) | odkaz na obrázku prehľadu, vloženie celej správy, nálezy auditu 7, 8, 17, 18, 23, 24, čísla dennej výzvy stoja, prázdna partia, výber veku detí skrytý, čakanie na balík, starší prehľad | po B alebo C |
+| G — nasadenie | skript nasadenia nezávislý od spojenia | potom |
+
+Poradie zlučovania appky: po jednom, každý ďalší sa zosúladí s hlavnou vetvou (texty a snímky). Potom kompilácia Release, build do Trubbo Beta, overenie v TestFlighte. Zvyšok programu (240.3 stráže prístupnosti, 240.5 bezpečnosť, 240.6 robot-hráč) až po builde.

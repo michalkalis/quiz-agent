@@ -51,6 +51,10 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     "quiz_shared": frozenset({"kind", "language", "question_count"}),
     "shared_quiz_opened": frozenset({"kind", "source"}),
     "shared_quiz_finished": frozenset({"kind", "players", "questions_asked"}),
+    # #239: the daily crew. viewed = the week's table was loaded (members =
+    # people in it besides the player); removed = one person taken out.
+    "daily_crew_viewed": frozenset({"members"}),
+    "daily_crew_member_removed": frozenset(),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}
     ),

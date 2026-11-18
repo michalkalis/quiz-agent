@@ -204,6 +204,17 @@ import os
         /// (five questions, crowd strips, the result once it is played).
         var dailyScript: DailyMockScript?
 
+        // MARK: #239 daily crew (see +Daily)
+
+        /// What `fetchDailyCrew` returns; nil = no crew yet (empty members).
+        var stubbedDailyCrew: DailyCrew?
+        /// When set, `fetchDailyCrew` throws this.
+        var fetchDailyCrewError: Error?
+        var fetchDailyCrewCallCount = 0
+        /// When set, `removeDailyCrewMember` throws this.
+        var removeDailyCrewMemberError: Error?
+        var removedDailyCrewMemberIds: [String] = []
+
         func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions

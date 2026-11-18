@@ -8,6 +8,17 @@ few knew this one
 Libanon
 Ktorá krajina má na vlajke cédrový strom?
 Vedel to len 1 z 3.
+your crew this week
+1.
+Peter
+240
+2.
+Jana (you)
+185
+3.
+Mama
+90
+A right answer few people knew scores more, up to 100 points.
 Share
 Home
 Share
@@ -19,6 +30,10 @@ daily.tiles
 daily.score
 daily.comparison
 daily.bestHit
+daily.crew
+daily.crew.member
+daily.crew.you
+daily.crew.member
 daily.share
 daily.home
 daily.share

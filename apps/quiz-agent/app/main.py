@@ -88,6 +88,7 @@ from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
+from .daily_challenge.crew import DailyCrewService
 from .daily_challenge.service import DailyChallengeService
 from .monitoring.ops_watch import LatencyMiddleware
 
@@ -377,6 +378,10 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.daily_challenge = daily_challenge
+    # #239: the daily crew (who you swapped a daily link with, this week).
+    app.state.daily_crew = (
+        DailyCrewService(auth_sessionmaker) if auth_sessionmaker is not None else None
+    )
     # #232: share a quiz by link (needs the database for shares and results).
     shared_quiz = None
     if auth_sessionmaker is not None:

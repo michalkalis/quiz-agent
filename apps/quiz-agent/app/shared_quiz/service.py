@@ -71,7 +71,10 @@ class SharedQuizService(ShareCreation):
         name: Optional[str] = None,
         build_channel: Optional[str] = None,
         capabilities: Sequence[str] = (),
+        daily_on: Optional[bool] = None,
     ) -> StartOutcome:
+        """``daily_on``: whether this player gets the daily challenge (the
+        route's beta gate, #239); None falls back to the server-wide switch."""
         share = await self.store.by_token(token)
         if share is None:
             raise ShareError(404, "not_found", "Shared quiz not found")
@@ -81,7 +84,9 @@ class SharedQuizService(ShareCreation):
         )
         probe = self._session(share, subject_id, build_channel, capabilities)
         if share.kind == "daily" and _still_open(share.challenge_date):
-            outcome = await self._start_daily(share, subject_id, probe, is_sender, name)
+            outcome = await self._start_daily(
+                share, subject_id, probe, is_sender, name, daily_on
+            )
             if outcome is not None:
                 return outcome
         ids = [
@@ -135,13 +140,16 @@ class SharedQuizService(ShareCreation):
         probe: QuizSession,
         is_sender: bool,
         name: Optional[str],
+        daily_on: Optional[bool] = None,
     ) -> Optional[StartOutcome]:
         """A daily that can still be played: the friend's own daily challenge
         (same five questions, it counts as their attempt and in the crowd
         numbers). Decided by the server, never by a date the app sends, so
         today's questions are never replayed as a round next to the crowd.
         None → no daily challenge here (no DB or switch off): a shared round."""
-        if self.daily is None or not get_settings().daily_challenge_enabled:
+        if daily_on is None:
+            daily_on = get_settings().daily_challenge_enabled
+        if self.daily is None or not daily_on:
             return None
         play, remaining = await self.daily.begin(
             subject_id, share.language, share.challenge_date

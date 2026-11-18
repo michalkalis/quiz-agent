@@ -91,9 +91,15 @@ protocol NetworkServiceProtocol: Sendable {
     /// #232: `GET /shared-quizzes/{token}/results` — the comparison as the
     /// server filters it for this viewer.
     func sharedQuizResults(token: String) async throws -> SharedQuizResults
+    /// #239: `GET /daily-challenge/crew` — everyone the player swapped a
+    /// daily link with, by rarity points this week. Empty = no crew yet.
+    func fetchDailyCrew(date: String, language: String) async throws -> DailyCrew
+    /// #239: `DELETE /daily-challenge/crew/{member_id}` — both stop seeing
+    /// each other in the table.
+    func removeDailyCrewMember(memberId: String) async throws
 }
 
-/// #232: test doubles that never share answer like the server with the switch off.
+/// #232/#239: test doubles that never share answer like the server with the switch off.
 extension NetworkServiceProtocol {
     func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
         throw NetworkError.sharedQuizUnavailable(.notFound)
@@ -105,6 +111,15 @@ extension NetworkServiceProtocol {
 
     func sharedQuizResults(token _: String) async throws -> SharedQuizResults {
         throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    /// #239: like the server with the daily challenge off.
+    func fetchDailyCrew(date _: String, language _: String) async throws -> DailyCrew {
+        throw NetworkError.serverError(statusCode: 404, message: "Daily challenge is off")
+    }
+
+    func removeDailyCrewMember(memberId _: String) async throws {
+        throw NetworkError.serverError(statusCode: 404, message: "Daily challenge is off")
     }
 }
 

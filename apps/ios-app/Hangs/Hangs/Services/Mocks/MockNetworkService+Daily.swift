@@ -37,6 +37,25 @@ import Foundation
                 session: session
             )
         }
+
+        func fetchDailyCrew(date: String, language _: String) async throws -> DailyCrew {
+            fetchDailyCrewCallCount += 1
+            try await simulateNetwork(.fetchDailyCrew)
+            if let fetchDailyCrewError { throw fetchDailyCrewError }
+            return stubbedDailyCrew ?? DailyCrew(weekStart: date, members: [])
+        }
+
+        /// Like the server: the person leaves the table (and the places are
+        /// the server's to recompute on the next fetch).
+        func removeDailyCrewMember(memberId: String) async throws {
+            try await simulateNetwork(.removeDailyCrewMember)
+            if let removeDailyCrewMemberError { throw removeDailyCrewMemberError }
+            removedDailyCrewMemberIds.append(memberId)
+            if let crew = stubbedDailyCrew {
+                let left = crew.members.filter { $0.memberId != memberId }
+                stubbedDailyCrew = DailyCrew(weekStart: crew.weekStart, members: left.count > 1 ? left : [])
+            }
+        }
     }
 
     /// One scripted daily challenge (UI-test mock graph). `playedMarks` set =

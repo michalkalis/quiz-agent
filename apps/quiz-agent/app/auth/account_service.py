@@ -28,6 +28,7 @@ from ..db.models import (
     AnalyticsEvent,
     AnonymousIdentity,
     DailyChallengePlay,
+    DailyCrewRemoval,
     DailyUsage,
     Feedback,
     PlayerRecap,
@@ -229,7 +230,7 @@ async def erase_anonymous(session: AsyncSession, anon_id: str) -> None:
 
 async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -> None:
     """Delete feedback, analytics events, recap snapshots, daily challenge plays (their answers
-    cascade) and shared quizzes / results, and unlink pack orders for each id. A deleted play drops out of
+    cascade) shared quizzes / results and crew removals, and unlink pack orders for each id. A deleted play drops out of
     that day's crowd numbers too."""
     await session.execute(
         delete(AnalyticsEvent).where(AnalyticsEvent.subject_id.in_(subject_ids))
@@ -248,6 +249,13 @@ async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -
     )
     await session.execute(
         delete(SharedQuizResult).where(SharedQuizResult.subject_id.in_(subject_ids))
+    )
+    # #239: crew removals, both who they removed and who removed them.
+    await session.execute(
+        delete(DailyCrewRemoval).where(
+            DailyCrewRemoval.subject_id.in_(subject_ids)
+            | DailyCrewRemoval.removed_subject_id.in_(subject_ids)
+        )
     )
     for subject_id in subject_ids:
         await _unlink_pack_orders(session, subject_id)

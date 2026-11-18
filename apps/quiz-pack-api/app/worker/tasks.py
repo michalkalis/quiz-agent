@@ -244,6 +244,9 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
                 verdict = order_budget.evaluate(order, job)
                 if not verdict.ok:
                     order_budget.mark_exhausted(order, job, verdict)
+                    # #240: a partly filled pack (#182) must stop saying
+                    # 'generating', or players wait on it forever.
+                    await fail_pack_in_session(session, order)
                     step_log_tail = list(job.step_log or [])[-10:]
                     await session.commit()
                     order_budget.report_breach(order_id, verdict, step_log_tail)
@@ -317,13 +320,17 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
         cost_cents = stage_cost_cents + search_cost_cents + llm_cost_cents
 
         async with session_factory() as session:
-            order = await session.get(GenerationOrder, order_uuid)
+            # #240: locked and re-read, because an App Store refund can land
+            # while the pack generates — a refunded purchase buys nothing, so
+            # it must never be turned back into a delivered order.
+            order = await session.get(GenerationOrder, order_uuid, with_for_update=True)
             job = await session.get(GenerationJob, job_id)
             if order is None or job is None:
                 raise LookupError(f"order/job missing after generation: {order_id}")
-            order.status = "delivered"
+            if order.status != "refunded":
+                order.status = "delivered"
+                order.delivered_at = _now()
             order.pack_id = pack.id
-            order.delivered_at = _now()
             order.llm_cost_usd = llm_cost_usd
             order.search_cost_cents = search_cost_cents
             job.status = "done"
@@ -443,7 +450,8 @@ async def _handle_failure(
 
     try:
         async with session_factory() as session:
-            order = await session.get(GenerationOrder, order_uuid)
+            # Locked so a refund committed mid-run is seen (#240, below).
+            order = await session.get(GenerationOrder, order_uuid, with_for_update=True)
             if order is None:
                 return
             job = await session.get(GenerationJob, order.job_id)
@@ -487,8 +495,11 @@ async def _handle_failure(
             # is only enforceable because failures pay into this total too.
             job.cumulative_cost_cents = job.cumulative_cost_cents + attempt_cost_cents
             if is_final:
-                order.status = "failed"
-                order.refund_eligible = True
+                # #240: Apple already refunded a 'refunded' order; flagging it
+                # refund_eligible would owe the customer a second refund.
+                if order.status != "refunded":
+                    order.status = "failed"
+                    order.refund_eligible = True
                 # #182: a partially delivered pack stays playable with what it
                 # has, but the live backend must stop waiting for more.
                 await fail_pack_in_session(session, order)

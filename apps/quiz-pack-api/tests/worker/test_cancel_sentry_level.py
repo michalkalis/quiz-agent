@@ -34,7 +34,7 @@ class _StubSession:
     async def __aexit__(self, *_exc: Any) -> None:
         return None
 
-    async def get(self, model: Any, _key: Any) -> Any:
+    async def get(self, model: Any, _key: Any, **_options: Any) -> Any:
         return self._rows["order" if model is tasks.GenerationOrder else "job"]
 
     async def commit(self) -> None:

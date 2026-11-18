@@ -429,6 +429,52 @@ async def test_sweep_force_fails_order_past_the_spend_ceiling(
 
 
 @pytest.mark.asyncio
+async def test_sweep_budget_cut_off_fails_the_partly_filled_pack(
+    engine: AsyncEngine, session: AsyncSession
+) -> None:
+    """#240 (audit round 2): a player may already be playing the first
+    questions of a pack that is still filling (#182). When the budget cut-off
+    ends its order, the pack must stop saying 'generating', or the live backend
+    keeps the player on "preparing the next question" forever."""
+    order_id, _ = await _make_stuck_in_progress(
+        session,
+        age=IN_PROGRESS_STUCK_TIMEOUT + timedelta(seconds=5),
+        retry_count=1,
+        cumulative_cost_cents=order_budget.spend_ceiling_cents("pack_10"),
+    )
+    order = await session.get(GenerationOrder, order_id)
+    pack = QuestionPack(
+        order_id=order.id,
+        prompt=order.prompt,
+        language=order.language,
+        target_count=order.target_count,
+        actual_count=4,
+        generation_status="generating",
+    )
+    session.add(pack)
+    await session.flush()
+    order.pack_id = pack.id
+    pack_id = pack.id
+    await session.commit()
+    # Committing the order touched nothing on the job, so it stays stale.
+
+    ctx: Dict[str, Any] = {
+        "redis": FakeArqPool(fail=False),
+        "session_factory": _session_factory(engine),
+    }
+
+    await sweep_stuck_orders(ctx)
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    refreshed_pack = await session.get(QuestionPack, pack_id)
+    assert (order.status, order.refund_eligible) == ("failed", True)
+    assert refreshed_pack.generation_status == "failed"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
 async def test_sweep_leaves_pending_on_enqueue_failure(
     engine: AsyncEngine, session: AsyncSession
 ) -> None:

@@ -781,6 +781,133 @@ async def test_attempt_past_the_ceiling_is_refused_before_spending(
 
 
 @pytest.mark.asyncio
+async def test_ceiling_refusal_fails_the_partly_filled_pack(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#240 (audit round 2): an ARQ retry refused at the budget gate ends the
+    order, so the pack a player may already be playing (#182) must stop saying
+    'generating' — otherwise the live backend waits on it forever."""
+    import sentry_sdk
+
+    monkeypatch.setattr(sentry_sdk, "capture_message", lambda *a, **kw: None)
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    order = await session.get(GenerationOrder, order_id)
+    pack = QuestionPack(
+        order_id=order_id,
+        prompt=order.prompt,
+        language=order.language,
+        target_count=order.target_count,
+        actual_count=1,
+        generation_status="generating",
+    )
+    session.add(pack)
+    await session.flush()
+    order.pack_id = pack.id
+    pack_id = pack.id
+    await session.execute(
+        text("UPDATE generation_jobs SET cumulative_cost_cents = :c WHERE id = :id"),
+        {"c": order_budget.spend_ceiling_cents("pack_10"), "id": job_id},
+    )
+    await session.commit()
+
+    from app.worker.tasks import process_order
+
+    await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert (order.status, order.refund_eligible) == ("failed", True)
+    assert (await session.get(QuestionPack, pack_id)).generation_status == "failed"
+
+    await _cleanup(session, order_id)
+
+
+async def _refund(engine: AsyncEngine, order_id: uuid.UUID) -> None:
+    """What an App Store REFUND notification does to the order (revocation.py
+    `_revoke_grants`), committed from its own connection mid-run."""
+    async with engine.begin() as conn:
+        await conn.execute(
+            text("UPDATE generation_orders SET status = 'refunded' WHERE id = :id"),
+            {"id": order_id},
+        )
+
+
+@pytest.mark.asyncio
+async def test_refund_during_a_run_is_never_overwritten_by_delivery(
+    engine: AsyncEngine,
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#240 (audit round 2): Apple refunded the purchase while its pack was
+    still generating. A refunded purchase buys nothing, forever — the run that
+    finishes afterwards must not turn the order back into a delivered pack
+    (playable in My packs, and a #225 reuse source)."""
+    from app.worker import tasks
+
+    order_id, _ = await _create_order_and_job(session, target_count=3)
+    real_run = tasks.PackGenerator.run
+
+    async def run_then_refund(self, order):  # type: ignore[no-untyped-def]
+        pack = await real_run(self, order)
+        await _refund(engine, order_id)
+        return pack
+
+    monkeypatch.setattr(tasks.PackGenerator, "run", run_then_refund)
+
+    await tasks.process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "refunded"
+    assert order.delivered_at is None
+
+    await _cleanup(session, order_id)
+
+
+class _RefundThenBoomSourcer:
+    """Sourcer double: the refund lands mid-run, then the attempt dies."""
+
+    def __init__(self, engine: AsyncEngine, order_id: uuid.UUID) -> None:
+        self._engine, self._order_id = engine, order_id
+
+    async def gather_facts(self, *_args: Any, **_kwargs: Any) -> None:
+        await _refund(self._engine, self._order_id)
+        raise RuntimeError("boom after the refund")
+
+
+@pytest.mark.asyncio
+async def test_refund_during_a_run_is_never_turned_into_a_refund_we_owe(
+    engine: AsyncEngine,
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#240 (audit round 2): Apple already refunded this purchase. If the
+    attempt then fails for good, the order must stay 'refunded' and must not
+    be flagged refund_eligible — that flag tells the operator we owe a refund,
+    and paying it would refund the customer twice."""
+    order_id, _ = await _create_order_and_job(session, target_count=3)
+    worker_ctx["job_try"] = WorkerSettings.max_tries  # the final attempt
+    worker_ctx["fact_sourcer"] = _RefundThenBoomSourcer(engine, order_id)
+
+    from app.worker.tasks import process_order
+
+    with pytest.raises(RuntimeError):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert (order.status, order.refund_eligible) == ("refunded", False)
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
 async def test_superseded_attempt_never_runs_a_second_pipeline(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],

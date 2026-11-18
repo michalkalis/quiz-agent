@@ -174,6 +174,8 @@ class Settings(BaseSettings):
     # month. 0 disables.
     elevenlabs_daily_credit_budget: int = 5000
     elevenlabs_tts_model: str = "eleven_v4_turbo"
+    # #231: model for Cyrillic (Ukrainian) text, see tts/voices.py.
+    elevenlabs_tts_model_cyrillic: str = "eleven_v3"
     openai_tts_model: str = "tts-1"
     # Answer transcription (#208.1): OpenAI is the only answer recogniser
     # (ElevenLabs Scribe left the answer path after the 2026-10-16 replay).

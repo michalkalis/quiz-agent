@@ -34,6 +34,11 @@ ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
 # is (text, voice), so audio made by v2 keeps playing; roll back via
 # `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`.
 ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
+# #231: Ukrainian (the only Cyrillic quiz language) reads on `eleven_v3`. A native
+# speaker heard v4 Turbo misplace stress in 4 of 5 questions; v3 with the same
+# voice read all of them right (blind test 2026-11-18). v3 takes ~3.5 s per
+# question instead of ~1.6 s, so it stays scoped to Cyrillic text.
+ELEVENLABS_CYRILLIC_MODEL = "eleven_v3"
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
 # Static feedback phrases organized by evaluation result

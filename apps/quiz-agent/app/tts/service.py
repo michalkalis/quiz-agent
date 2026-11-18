@@ -98,7 +98,12 @@ def _resolve_provider(
     """
     if name is None or not name.strip() or name.strip().lower() == "none":
         return None
-    return build_provider(name, model=_model_for(name, settings), voice=voice)
+    return build_provider(
+        name,
+        model=_model_for(name, settings),
+        voice=voice,
+        cyrillic_model=settings.elevenlabs_tts_model_cyrillic,
+    )
 
 
 class TTSBudgetExceeded(Exception):

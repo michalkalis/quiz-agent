@@ -161,7 +161,38 @@ _AMPERSAND_RE = re.compile(r"\s&\s")
 _AND_WORD = {"sk": "a", "cs": "a", "uk": "і"}
 
 
+# #231: a chemical symbol after "символ…/позначк…" is read the way Ukrainian
+# school reads it (native speaker 2026-11-18: "Fe" came out as "еф і"; "ферум"
+# makes the question obvious). Only after those words, so "C" or "O" elsewhere
+# (a grade, a name) is never touched.
+_UK_ELEMENT_READINGS = {
+    "H": "аш", "He": "гелій", "Li": "літій", "C": "це", "N": "ен", "O": "о",
+    "F": "фтор", "Ne": "неон", "Na": "натрій", "Mg": "магній", "Al": "алюміній",
+    "Si": "силіцій", "P": "пе", "S": "ес", "Cl": "хлор", "Ar": "аргон",
+    "K": "калій", "Ca": "кальцій", "Ti": "титан", "Cr": "хром", "Mn": "манган",
+    "Fe": "ферум", "Co": "кобальт", "Ni": "нікол", "Cu": "купрум", "Zn": "цинк",
+    "Br": "бром", "Ag": "аргентум", "Sn": "станум", "Sb": "стибій", "I": "йод",
+    "W": "вольфрам", "Pt": "платина", "Au": "аурум", "Hg": "гідраргірум",
+    "Pb": "плюмбум", "Ra": "радій", "U": "уран", "Pu": "плутоній",
+}  # fmt: skip
+_UK_ELEMENT_RE = re.compile(
+    r"\b(символ\w*|позначк\w*|позначенн\w*)(\s+)([A-Z][a-z]?)(?![\w-])", re.IGNORECASE
+)
+
+
+def _spell_uk_elements(text: str) -> str:
+    def read(match: re.Match) -> str:
+        reading = _UK_ELEMENT_READINGS.get(match.group(3))
+        if reading is None:
+            return match.group(0)
+        return f"{match.group(1)}{match.group(2)}{reading}"
+
+    return _UK_ELEMENT_RE.sub(read, text)
+
+
 def _spell_symbols(text: str, language: str) -> str:
+    if language == "uk":
+        text = _spell_uk_elements(text)
     for symbol, word in _SYMBOL_WORDS[language].items():
         text = re.sub(rf"\s*{re.escape(symbol)}\s*", f" {word} ", text).strip()
     # Only a free-standing "&" ("Tom & Jerry"); "AT&T" stays a name.

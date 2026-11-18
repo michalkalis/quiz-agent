@@ -55,7 +55,11 @@ from sse_starlette.sse import EventSourceResponse
 
 from arq.connections import ArqRedis
 
-from quiz_shared.languages import QUIZ_LANGUAGES, pack_order_languages
+from quiz_shared.languages import (
+    QUIZ_LANGUAGES,
+    is_dark_language,
+    pack_order_languages,
+)
 from quiz_shared.store_ids import BETA_BUNDLE_ID, canonical_product_id
 from quiz_shared.utils.user_text import clean_user_text
 
@@ -256,6 +260,14 @@ def _validate_guards(body: CreateOrderRequest) -> None:
             detail=f"language must be one of {sorted(QUIZ_LANGUAGES)}",
         )
     orderable = pack_order_languages()
+    if is_dark_language(body.language, orderable):
+        # #231: no build offers it, so nothing needs the soft phase; and an
+        # accepted order is generated and paid for.
+        raise HTTPException(
+            status_code=422,
+            detail=f"language {body.language!r} is not orderable "
+            f"(orderable: {', '.join(orderable)})",
+        )
     if body.language not in orderable:
         logger.warning(
             "Pack ordered in non-orderable language %r (orderable: %s); "

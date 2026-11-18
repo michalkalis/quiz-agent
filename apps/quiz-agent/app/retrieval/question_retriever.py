@@ -16,6 +16,7 @@ import random
 
 logger = logging.getLogger(__name__)
 
+from quiz_shared.languages import NATIVE_ONLY_LANGUAGES
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
@@ -633,7 +634,14 @@ class QuestionRetriever:
         # non-English session, whose English wordplay breaks in translation. A
         # native row's wordplay is in its own language, so that guard skips it.
         english_rows = {"language": {"$in_or_null": ["en"]}}
-        if session.language and session.language != "en":
+        if session.language in NATIVE_ONLY_LANGUAGES:
+            # #231: no English row, translated or not. Stored approved
+            # translations are not offered here either: the filter dict has no
+            # cheap, exact way to say "has one" (the serve path reads the
+            # translation table, `approved_languages` is only a derived index),
+            # and a mismatch would fall through to a live machine translation.
+            filters["language"] = session.language
+        elif session.language and session.language != "en":
             english_rows["language_dependent"] = False
             filters["$or"] = [english_rows, {"language": session.language}]
         else:

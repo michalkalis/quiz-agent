@@ -496,6 +496,43 @@ async def test_create_order_language_de_accepted(
 
 
 @pytest.mark.asyncio
+async def test_create_order_language_uk_rejected_until_listed(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """#231 — Ukrainian as a fourth language: uk stays dark until it is listed.
+
+    Unlike de, no installed build offers uk, so the soft "accept with a warning"
+    phase has nothing to protect; accepting it would generate (and bill for) a
+    Ukrainian pack while the language is supposed to be completely off. Listing
+    it in PACK_ORDER_LANGUAGES must open it with no code change.
+    """
+    monkeypatch.delenv("PACK_ORDER_LANGUAGES", raising=False)
+    tx_id = "tx-lang-uk-dark"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "language": "uk"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 422
+    assert "uk" in resp.json()["detail"]
+    test_session.expire_all()
+    assert (await test_session.execute(select(GenerationOrder))).scalars().all() == []
+
+    monkeypatch.setenv("PACK_ORDER_LANGUAGES", "en,sk,cs,uk")
+    tx_id = "tx-lang-uk-listed"
+    jws = make_jws(payload_overrides={"transactionId": tx_id})
+    body = {**_valid_body(tx_id=tx_id), "language": "uk"}
+    resp = await client.post(
+        "/v1/orders", json=body, headers={"X-StoreKit-JWS": jws, **BEARER}
+    )
+    assert resp.status_code == 202
+
+
+@pytest.mark.asyncio
 async def test_create_order_prompt_one_char_accepted(
     client: httpx.AsyncClient,
     make_jws: JWSFactory,

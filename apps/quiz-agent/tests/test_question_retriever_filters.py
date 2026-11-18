@@ -471,3 +471,38 @@ def test_pack_session_ignores_age_band():
     filters = _retriever()._build_metadata_filters("medium", session)
 
     assert "age_band" not in filters
+
+
+def _lang_filters(language: str) -> dict:
+    session = QuizSession(
+        session_id="sess_test", current_difficulty="medium", language=language
+    )
+    return _retriever()._build_metadata_filters("medium", session)
+
+
+def test_ukrainian_session_gets_only_native_rows():
+    """#231: no Ukrainian translation is stored or approved, so an English row
+    served to a Ukrainian player would be a live machine translation with no
+    Russian check, no Ukrainian topic policy and no human approval. Native-only
+    means a plain language equality, with no English branch at all."""
+    filters = _lang_filters("uk")
+
+    assert filters["language"] == "uk"
+    assert "$or" not in filters
+    assert "language_dependent" not in filters
+
+
+def test_en_sk_cs_filters_are_exactly_as_before_231():
+    """The hot path for the three live languages must not move: English and
+    legacy rows (+ native rows for sk/cs), language-dependent ones excluded
+    outside English."""
+    english = {"language": {"$in_or_null": ["en"]}}
+    assert _lang_filters("en")["language"] == english["language"]
+    assert "$or" not in _lang_filters("en")
+    for lang in ("sk", "cs"):
+        filters = _lang_filters(lang)
+        assert filters["$or"] == [
+            {"language": {"$in_or_null": ["en"]}, "language_dependent": False},
+            {"language": lang},
+        ]
+        assert "language" not in filters

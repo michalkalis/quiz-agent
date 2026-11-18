@@ -120,3 +120,18 @@ async def test_limit_is_passed_through():
     _, retriever = await _get([], "?language=cs&limit=20")
 
     assert retriever.calls == [("cs", 20)]
+
+
+async def test_unlisted_language_is_404_and_never_queried(monkeypatch):
+    """#231: the feed needs no login, so a language that is not servable yet
+    (uk) must not reach the public website through it, and the store is never
+    asked. Listing it in SERVABLE_QUIZ_LANGUAGES opens it with no code change."""
+    monkeypatch.delenv("SERVABLE_QUIZ_LANGUAGES", raising=False)
+    resp, retriever = await _get([_row()], "?language=uk")
+    assert resp.status_code == 404
+    assert retriever.calls == []
+
+    monkeypatch.setenv("SERVABLE_QUIZ_LANGUAGES", "en,sk,cs,uk")
+    resp, retriever = await _get([_row()], "?language=uk")
+    assert resp.status_code == 200
+    assert retriever.calls == [("uk", 10)]

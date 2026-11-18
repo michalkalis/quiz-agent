@@ -24,8 +24,10 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Every code the app has ever offered (#138). Additive only.
-QUIZ_LANGUAGES: tuple[str, ...] = (
+# The ten codes every build shipped before the gate existed (#138). Installed
+# builds still offer them all, so a request in one that is not listed is
+# accepted with a warning rather than rejected (#168).
+LEGACY_QUIZ_LANGUAGES: tuple[str, ...] = (
     "en",
     "sk",
     "cs",
@@ -36,10 +38,32 @@ QUIZ_LANGUAGES: tuple[str, ...] = (
     "pl",
     "hu",
     "ro",
-    # #231: known to the data model; not servable until SERVABLE_QUIZ_LANGUAGES
-    # / PACK_ORDER_LANGUAGES list it (defaults below stay en,sk,cs).
-    "uk",
 )
+
+# Every code the app has ever offered. Additive only.
+# #231: "uk" is known to the data model but, unlike the legacy codes, no build
+# offers it, so it is dark until SERVABLE_QUIZ_LANGUAGES / PACK_ORDER_LANGUAGES
+# list it (defaults below stay en,sk,cs).
+QUIZ_LANGUAGES: tuple[str, ...] = (*LEGACY_QUIZ_LANGUAGES, "uk")
+
+# Languages served ONLY from rows written natively in them (plus stored,
+# approved translations). Every other non-English language may fall back to an
+# English row translated live by an LLM at serve time; that is acceptable for
+# sk/cs, which have verified stored translations. Ukrainian has none (the
+# translation tool supports only sk and cs), so a live translation would reach
+# the player with no Russian-language check, no Ukrainian topic policy and no
+# human approval. A language leaves this set when the translation tool supports it.
+NATIVE_ONLY_LANGUAGES: frozenset[str] = frozenset({"uk"})
+
+
+def is_dark_language(code: str, listed: tuple[str, ...]) -> bool:
+    """True for a language no installed build offers that is not listed yet.
+
+    Such a request must be refused (422), unlike a legacy code, which is only
+    warned about. Once the env list includes the code this is False.
+    """
+    return code in QUIZ_LANGUAGES and code not in LEGACY_QUIZ_LANGUAGES and code not in listed
+
 
 # DD14: quiz sessions default to the three languages with an approved corpus.
 _DEFAULT_SERVABLE_QUIZ = "en,sk,cs"

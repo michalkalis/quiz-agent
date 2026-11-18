@@ -63,7 +63,10 @@ def test_uk_can_be_enabled_by_env_alone(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_public_fresh_questions_accepts_uk():
+async def test_public_fresh_questions_accepts_uk_once_listed(monkeypatch):
+    # #231: the feed serves uk only after SERVABLE_QUIZ_LANGUAGES lists it
+    # (dark by default, see test_public_fresh_questions_route).
+    monkeypatch.setenv("SERVABLE_QUIZ_LANGUAGES", "en,sk,cs,uk")
     class Retriever:
         calls: list = []
 

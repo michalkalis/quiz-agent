@@ -95,7 +95,6 @@ private func expectNoRouteBackToForm(_ vm: OrderPackViewModel, _ what: String) {
 @MainActor
 @Suite("OrderPackViewModel")
 struct OrderPackViewModelTests {
-
     // MARK: - Validation bounds
 
     // MARK: - Required difficulty (#224)
@@ -463,7 +462,7 @@ struct OrderPackViewModelTests {
 
         let task = Task { await vm.submit() }
         await pumpUntil({
-            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+            if case let .polling(snapshot?) = vm.state { snapshot.isPlayable } else { false }
         }, "an in_progress order with a pack must be playable while the poll runs")
         await clock.advance(by: .seconds(1))
         await task.value
@@ -482,7 +481,7 @@ struct OrderPackViewModelTests {
 
         let task = Task { await vm.submit() }
         await pumpUntil({
-            if case .polling(let snapshot?) = vm.state { snapshot.isPlayable } else { false }
+            if case let .polling(snapshot?) = vm.state { snapshot.isPlayable } else { false }
         }, "the generating snapshot never became the playable polling state")
         let playable = vm.playableSnapshot
         vm.stop()
@@ -517,7 +516,7 @@ struct OrderPackViewModelTests {
 
         await vm.submit()
 
-        guard case .delivered(let snapshot) = vm.state else {
+        guard case let .delivered(snapshot) = vm.state else {
             Issue.record("expected .delivered, got \(vm.state)")
             return
         }
@@ -587,7 +586,7 @@ struct OrderPackViewModelTests {
 
         await vm.submit()
 
-        guard case .delivered(let snapshot) = vm.state else {
+        guard case let .delivered(snapshot) = vm.state else {
             Issue.record("expected .delivered after retrying a transient error, got \(vm.state)")
             return
         }
@@ -613,9 +612,10 @@ struct OrderPackViewModelTests {
 
     // An order stuck in in_progress (suspended worker, dropped job) would poll at
     // 1 Hz forever and never resolve the "Building your pack…" spinner. The overall
-    // deadline must surface a soft `.failed` — the copy points the user at My packs
-    // because generation may still be running server-side (not a hard failure).
-    @Test("the poll deadline surfaces a soft .failed instead of spinning forever on a stuck order")
+    // deadline ends the wait on `.stillPreparing`: generation may still be running
+    // server-side, so it must not read as a failure (#240, 240.9: the player
+    // landed on "Something went wrong" with a pack that was still coming).
+    @Test("the poll deadline ends on 'still preparing', never on a failure")
     func pollDeadlineSurfacesFailure() async {
         let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
         let vm = payingViewModel(service: service)
@@ -626,17 +626,8 @@ struct OrderPackViewModelTests {
 
         await vm.submit()
 
-        guard case .failed(let message, let retryable) = vm.state else {
-            Issue.record("expected .failed from the deadline, got \(vm.state)")
-            return
-        }
-        // Assert it's the deadline's soft copy, not a generic error — the message
-        // is what tells the user the pack is still coming.
-        #expect(message == String(localized: "Still working — check My packs later."))
-        // WHY (review finding 2): the order is still pending/in_progress
-        // server-side, and the backend's retry endpoint 409s anything that isn't
-        // `failed`. Offering "Try again" here would hand the user a raw 409.
-        #expect(retryable == false, "a timed-out (still generating) order must not offer a retry")
+        #expect(vm.state == .stillPreparing, "a pack still being made ended as \(vm.state)")
+        #expect(vm.orderId != nil, "the paid order must stay addressable")
     }
 
     // WHY (review finding 2): the flag is not decoration — `retry()` itself must
@@ -652,10 +643,7 @@ struct OrderPackViewModelTests {
 
         #expect(service.retryOrderCallCount == 0)
         #expect(service.createOrderCallCount == 1, "and certainly no second paid order")
-        guard case .failed(_, retryable: false) = vm.state else {
-            Issue.record("expected the non-retryable failure to survive retry(), got \(vm.state)")
-            return
-        }
+        #expect(vm.state == .stillPreparing, "retry() changed the still-preparing state to \(vm.state)")
     }
 
     // WHY (review finding 1): THE double-charge door. Payment succeeded and the
@@ -670,8 +658,8 @@ struct OrderPackViewModelTests {
         vm.pollTimeoutSeconds = 5 // runs out the budget in five shipped 1 s iterations
 
         await vm.submit() // the never-terminal order exhausts the poll budget
-        guard case .failed = vm.state else {
-            Issue.record("expected .failed from the deadline, got \(vm.state)")
+        guard vm.state == .stillPreparing else {
+            Issue.record("expected .stillPreparing from the deadline, got \(vm.state)")
             return
         }
         let paidOrderId = vm.orderId
@@ -703,7 +691,7 @@ struct OrderPackViewModelTests {
         vm.pollTimeoutSeconds = 0 // budget already spent when the poll starts
 
         await vm.submit()
-        guard case .failed(_, retryable: false) = vm.state else {
+        guard vm.state == .stillPreparing else {
             Issue.record("expected the soft timeout, got \(vm.state)")
             return
         }
@@ -718,9 +706,9 @@ struct OrderPackViewModelTests {
     }
 
     // WHY: a resumed poll that times out again must land back on the same honest
-    // non-retryable failure — not a retryable one whose "Try again" the backend
+    // "still preparing", not a retryable failure whose "Try again" the backend
     // would 409, and not a reset form that would charge again.
-    @Test("a resumed poll that times out again returns to the non-retryable failure")
+    @Test("a resumed poll that times out again returns to 'still preparing'")
     func reopenAfterTimeoutCanTimeOutAgain() async {
         let service = MockPackOrderService(getResult: .success(.mockPending)) // never terminal
         let purchase = MockPackPurchaseService()
@@ -732,9 +720,7 @@ struct OrderPackViewModelTests {
 
         vm.prepareForPresentation(defaultLanguage: "sk")
 
-        await pumpUntil({
-            if case .failed(_, retryable: false) = vm.state { true } else { false }
-        }, "expected the soft timeout again, got \(vm.state)")
+        await pumpUntil({ vm.state == .stillPreparing }, "expected the soft timeout again, got \(vm.state)")
         #expect(vm.orderId == paidOrderId)
         #expect(purchase.purchaseCallCount == 1)
         #expect(service.createOrderCallCount == 1)
@@ -787,8 +773,8 @@ struct OrderPackViewModelTests {
     @Test("retry on an existing order re-enqueues it instead of creating a second paid order")
     func retryUsesBackendRetryWhenOrderExists() async {
         let service = MockPackOrderService(getResults: [
-            .success(.mockFailed),   // first poll: the order failed
-            .success(.mockDelivered) // after the retry: it delivers
+            .success(.mockFailed), // first poll: the order failed
+            .success(.mockDelivered), // after the retry: it delivers
         ])
         let vm = payingViewModel(service: service)
 
@@ -815,7 +801,7 @@ struct OrderPackViewModelTests {
     func retryCarriesTheOriginalPaymentProof() async {
         let service = MockPackOrderService(getResults: [
             .success(.mockFailed),
-            .success(.mockDelivered)
+            .success(.mockDelivered),
         ])
         let purchase = MockPackPurchaseService()
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
@@ -1017,7 +1003,7 @@ struct OrderPackViewModelTests {
         let vm = payingViewModel(service: service, purchaseService: purchase, adminKeyAvailable: false)
 
         await vm.submit() // pays, then create fails → proof stays pending
-        await vm.retry()  // must spend the SAME proof, not purchase again
+        await vm.retry() // must spend the SAME proof, not purchase again
 
         #expect(purchase.purchaseCallCount == 1)
         #expect(service.capturedIntents.count == 2)

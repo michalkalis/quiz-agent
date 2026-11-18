@@ -49,4 +49,11 @@ enum RecapCopy {
             Text("Your \(recap.monthName(locale: locale) ?? "")", comment: "Recap title with the month name, e.g. Your October")
         }
     }
+
+    /// #240: the line the story picture travels with, so the friend has
+    /// something to tap: what Trubbo is, then the site in the quiz language.
+    static var shareMessage: String {
+        let line = String(localized: "Try Trubbo, the quiz you play by voice.", bundle: .interface, locale: .interface, comment: "#240: text sent with the profile recap picture; the trubbo.app address follows on its own line")
+        return line + "\n" + Config.homePageURL().absoluteString
+    }
 }

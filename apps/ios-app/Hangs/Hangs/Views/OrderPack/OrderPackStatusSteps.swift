@@ -2,7 +2,8 @@
 //  OrderPackStatusSteps.swift
 //  Hangs
 //
-//  Post-purchase states of the #138 order sheet: Preparing, Ready, Failed.
+//  Post-purchase states of the #138 order sheet: Preparing, Still preparing,
+//  Ready, Failed.
 //  None of them offers a route back to the form — the order is paid for.
 //  "Close"/"Got it"/X dismiss the sheet WITHOUT cancelling: generation keeps
 //  running and the pack lands in My packs either way, which is exactly what the
@@ -59,6 +60,45 @@ struct OrderPackPreparingStep: View {
     }
 }
 
+/// `.stillPreparing` — the foreground wait ran out but the pack is still being
+/// made (#240, 240.9). It must not read as a failure: it says the pack is on
+/// its way and where it will appear, and closing is the whole action.
+struct OrderPackStillPreparingStep: View {
+    let onClose: () -> Void
+
+    var body: some View {
+        VStack(spacing: Theme.Hangs.Spacing.lg) {
+            PackMiniDeck(label: "", style: Theme.Hangs.Category.style(forPack: nil), size: .hero)
+                .overlay {
+                    Image(systemName: "clock")
+                        .font(.hangsTitle)
+                        .foregroundStyle(Theme.Hangs.Category.style(forPack: nil).text)
+                        .accessibilityHidden(true)
+                }
+                .padding(.top, Theme.Hangs.Spacing.lg)
+
+            VStack(spacing: Theme.Hangs.Spacing.sm) {
+                Text("Still preparing your pack")
+                    .font(.hangsTitle)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+                Text("It is taking longer than usual. When it's ready, you'll find it in My packs.")
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("orderPack.stillPreparing")
+
+            HangsPrimaryButton(title: "Got it", action: onClose)
+                .accessibilityIdentifier("orderPack.gotIt")
+        }
+    }
+}
+
 /// `.delivered` — the pack exists; play it now or find it in My packs later.
 /// Since #182 it is also the screen for a pack that is playable but still
 /// growing: the first batch is enough to start, and the rest is written while
@@ -82,7 +122,7 @@ struct OrderPackReadyStep: View {
                 style: Theme.Hangs.Category.style(forPack: packId),
                 size: .hero
             )
-                .padding(.top, Theme.Hangs.Spacing.lg)
+            .padding(.top, Theme.Hangs.Spacing.lg)
 
             VStack(spacing: Theme.Hangs.Spacing.sm) {
                 Image(systemName: "checkmark.circle.fill")
@@ -123,10 +163,10 @@ struct OrderPackReadyStep: View {
 /// `.failed`. A retryable failure offers "Try again", which re-runs the order
 /// that was already paid for (backend retry), never a second charge.
 ///
-/// The soft poll timeout is NOT retryable: the order is still pending/
-/// in_progress server-side, so the retry endpoint would 409 and dump raw
-/// backend text on the user (review finding 2). There the only honest action is
-/// to close — the pack keeps generating and lands in My packs.
+/// A refunded order or a spent retry budget is NOT retryable: the retry
+/// endpoint would refuse and dump raw backend text on the user (review
+/// finding 2). There the only honest action is to close. (A poll that ran out
+/// of time is no failure at all: `OrderPackStillPreparingStep`.)
 struct OrderPackFailedStep: View {
     let message: String
     var isRetryable: Bool = true
@@ -179,12 +219,7 @@ struct OrderPackFailedStep: View {
                     onClose: {}
                 )
                 OrderPackFailedStep(message: "Pack generation failed.", onRetry: {}, onClose: {})
-                OrderPackFailedStep(
-                    message: "Still working — check My packs later.",
-                    isRetryable: false,
-                    onRetry: {},
-                    onClose: {}
-                )
+                OrderPackStillPreparingStep(onClose: {})
             }
             .padding(20)
         }

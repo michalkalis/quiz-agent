@@ -6,10 +6,11 @@
 //  tiles, the score, how the player compares with today's crowd, and LAST
 //  of the round the best hit (the rarest question they knew); the week's
 //  crew table (#239) follows it. Every crowd sentence is the server's, shown
-//  as sent; the screen never says "worse than". The numbers
-//  are fetched again whenever the screen shows, so they fill in as others
-//  play. No Play Again (one challenge a day) and no upsell; Share sends the
-//  tiles and the score without the answers (#205.6).
+//  as sent; the screen never says "worse than". The numbers stay as they were
+//  when the screen opened, since numbers changing under the player's eyes
+//  confused (#240, 240.9); only what is still missing is fetched, and the next
+//  opening shows the new numbers. No Play Again (one challenge a day) and no
+//  upsell; Share sends the tiles and the score without the answers (#205.6).
 //
 
 import SwiftUI
@@ -114,9 +115,9 @@ struct DailyRoundEndView: View {
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("daily.end")
-        .task { await refresh() }
+        .task { await loadMissing() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await refresh() } }
+            if phase == .active { Task { await loadMissing() } }
         }
     }
 
@@ -268,9 +269,11 @@ struct DailyRoundEndView: View {
         .accessibilityIdentifier("daily.home")
     }
 
-    private func refresh() async {
-        async let state: Void = daily.refresh(day: round.day, language: round.language)
-        async let table: Void = crew.refresh(day: round.day, language: round.language)
+    /// What the screen could not show yet (opened before the server's summary,
+    /// a failed fetch); what it shows already stays.
+    private func loadMissing() async {
+        async let state: Void = daily.loadIfMissing(day: round.day, language: round.language)
+        async let table: Void = crew.loadIfMissing(day: round.day, language: round.language)
         _ = await (state, table)
     }
 

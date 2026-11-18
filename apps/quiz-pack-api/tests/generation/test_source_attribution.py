@@ -212,3 +212,41 @@ def test_citation_integrity_keeps_url_matching_a_sourced_fact() -> None:
     stripped = gen._enforce_citation_integrity([q], [_ROMAN, _OCEAN])
     assert stripped == 0
     assert q.source_url == "https://example.test/roman-army"
+
+
+# --- #231 — Ukrainian as a fourth language: Cyrillic must tokenise ----------
+
+_LISOVA = Fact(
+    text="Леся Українка написала драму-феєрію «Лісова пісня» у 1911 році.",
+    source_url="https://uk.wikipedia.org/wiki/Лісова_пісня",
+    excerpt="Лісова пісня Леся Українка драма-феєрія 1911",
+    topic="Література",
+)
+_BORSCH = Fact(
+    text="Борщ готують із буряка, капусти та картоплі.",
+    source_url="https://uk.wikipedia.org/wiki/Борщ",
+    excerpt="борщ буряк капуста картопля",
+    topic="Кухня",
+)
+
+
+def test_content_tokens_latin_unchanged_and_cyrillic_tokenised() -> None:
+    """Why: the old `[a-z0-9]+` gave Cyrillic no tokens, so no Ukrainian question
+    ever matched its fact. ASCII input must tokenise exactly as before."""
+    assert _content_tokens("The Roman army 5000 soldiers, x-ray!") == {
+        "roman", "army", "5000", "soldiers", "ray",
+    }
+    tokens = _content_tokens("Хто написав «Лісову пісню»?")
+    assert "написав" in tokens and "лісову" in tokens
+    assert "хто" not in tokens  # Ukrainian stopword
+
+
+def test_best_matching_fact_matches_ukrainian_question() -> None:
+    """Why: without a match the question inherits a sibling fact's URL marked
+    `unmatched_fallback` — a wrong citation on a Ukrainian pack."""
+    q = _q(
+        "Хто написав драму-феєрію «Лісова пісня»?",
+        answer="Леся Українка",
+        excerpt="Лісова пісня Леся Українка",
+    )
+    assert _generator()._best_matching_fact(q, [_BORSCH, _LISOVA]) is _LISOVA

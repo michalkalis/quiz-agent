@@ -22,7 +22,7 @@ _SURPRISE_MARKERS = frozenset(
         "earliest", "unique", "record", "extinct", "banned",
     }
 )
-_WORD_RE = re.compile(r"[a-z]+")
+_WORD_RE = re.compile(r"[^\W\d_]+")  # letters of any alphabet (#231)
 _SURPRISE_BASELINE = 4.0  # plain recall facts land just under "surprise ≥ 5"
 _MARKER_BONUS = 1.5
 _MAX_MARKERS = 3  # cap so one loud fact can't dominate purely on adjectives

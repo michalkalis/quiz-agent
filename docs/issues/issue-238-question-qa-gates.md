@@ -7,13 +7,13 @@
 **Stav k 2026-11-18:** nič nepostavené. Founder 2026-11-18: ďalšia úloha PO vydaní verzie 1.3. (Číslo bolo pôvodne 212, zmenené na 238, lebo 212 patrí „Hra spolu (multiplayer)".) Čo už je na `main` (plán to nenavrhuje znova; F1–F6 dopĺňajú len diery pod tým):
 - Fact-check s webom (#166 — fact-check provider, `verification/fact_verifier.py`): dnes overuje dvojicu otázka–odpoveď, nie vysvetlenie (diera P1 platí).
 - Kontrola prirodzenosti sk/cs (#211 — prirodzené sk/cs otázky, hotové) + preklad-verifikácia (`translation_verification/`) + jazyková oprava zákazkových balíkov (`orchestrator/stages/language_fix.py`, PR #836, #840 zapnutá predvolene).
-- Deterministické brány (#163 — brány pred kritika, `gates-v1` v `corpus/importer.py`, `scoring/machine_approval.py`, `scoring/craft_guards.py`) a kontrola zodpovedateľnosti (`verification/answerability.py`).
+- Deterministické brány (#163 — brány pred kritika; #177 — strojové schválenie, `gates-v1` v `corpus/importer.py`, `scoring/machine_approval.py`, `scoring/craft_guards.py`) a kontrola zodpovedateľnosti (`verification/answerability.py`).
 - Kontrola témy zákazkového balíka pred platbou (#233 — kontrola témy, `topic_check.py`) a vek pri detskom balíku (#236 — rodinná sekcia, `kids_check.py`); #843 — zákazkové balíky nenechajú dve otázky na tom istom fakte.
 - Brány vedia po ukrajinsky (#231 — ukrajinčina, PR #824).
 
 **Status:** 2026-10-26 founder schválil plán s rozpočtom **do 50 $** na prvú etapu; potom spolu overíme a ďalšie skupiny otázok pôjdu postupne (po súhlase s nákladom; Max kredit vypršal 2026-11-06). Výsledky prekontrolovania najprv ako prehľad, stav otázok sa mení až po founderovom súhlase.
 
-**Created:** 2026-10-25 · Súvisí: #210 (kontrola obsahu pre Instagram našla 18 chýb), #166 (fact-check provider), #211 (kontrola prirodzenosti sk/cs), #203 (gates-v1)
+**Created:** 2026-10-25 · Súvisí: #210 (kontrola obsahu pre Instagram našla 18 chýb), #166 (fact-check provider), #211 (kontrola prirodzenosti sk/cs), #177 (strojové schválenie, gates-v1)
 
 **Podklad:** `docs/research/question-qa-root-cause-2026-10-25.md` (vetva `feat/210-reel-redo`) — 18 potvrdených chýb, príčiny s odkazmi do kódu, rozsah v prod.
 

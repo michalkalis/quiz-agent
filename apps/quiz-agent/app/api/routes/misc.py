@@ -222,7 +222,10 @@ async def get_question_availability(
     if usage_tracker is not None and subject.subject_id:
         usage = await usage_tracker.get_usage(subject.subject_id)
         if usage["questions_limit"] is not None:
-            quota = usage["remaining"] + usage["credit_balance"]
+            # A refund clawback can leave the balance negative; the quota gate
+            # treats <= 0 as "no credits" and still serves the free allowance,
+            # so the probe must not subtract the debt from it (#240).
+            quota = usage["remaining"] + max(0, usage["credit_balance"])
             if quota <= available and quota < body.requested_count:
                 available, limited_by = quota, "quota"
 

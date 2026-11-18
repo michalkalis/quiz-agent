@@ -339,6 +339,27 @@ async def test_enough_quota_stays_silent(client, store, usage_tracker):
     assert response.json()["limited_by"] is None
 
 
+async def test_refund_debt_never_blocks_the_free_allowance(
+    client, store, usage_tracker
+):
+    """WHY (#240 — audit round 2): a pack refund claws back the whole pack, so
+    the credit balance can go negative. The quota gate treats a balance of 0 or
+    less as "no credits" and still serves the free monthly allowance; the probe
+    must agree, or the player with 30 free questions left sees "Only -50 free
+    questions left" with Cancel as the only button, every month."""
+    store.count.return_value = 50
+    usage_tracker.get_usage.return_value = _usage(remaining=30, credits=-80)
+
+    response = await _ask(client, requested_count=10)
+
+    assert response.json() == {
+        "available": 50,
+        "requested": 10,
+        "sufficient": True,
+        "limited_by": None,
+    }
+
+
 async def test_route_declares_the_shared_auth_dependency():
     """WHY: structural, not behavioural — ``LEGACY_USER_ID_GRACE`` still lets
     bearer-less calls through, so the only durable guard against this becoming

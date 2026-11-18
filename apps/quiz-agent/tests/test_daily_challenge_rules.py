@@ -61,9 +61,9 @@ def test_partially_correct_counts_as_knowing():
         ("cs", Crowd(50, 7), "Vědělo 14 %."),
         ("en", Crowd(3, 2), "2 of 3 knew."),
         ("en", Crowd(100, 14), "14% knew."),
-        ("sk", Crowd(0, 0), "Dnes nikto nehral pred tebou."),
-        ("cs", Crowd(0, 0), "Dnes nikdo nehrál před tebou."),
-        ("en", Crowd(0, 0), "Nobody played before you today."),
+        ("sk", Crowd(0, 0), "Prvý výsledok dňa."),
+        ("cs", Crowd(0, 0), "První výsledek dne."),
+        ("en", Crowd(0, 0), "First result today."),
     ],
 )
 def test_strip_counts_below_twenty_percent_from_twenty(language, crowd, text):
@@ -154,9 +154,6 @@ def test_rank_uses_percent_from_twenty_players_and_best_of_when_beating_all():
 
 
 def test_first_player_and_perfect_tie():
-    assert (
-        copy.comparison_text(Standing(0, 0, 3, 5), "sk")
-        == "Dnes nikto nehral pred tebou."
-    )
+    assert copy.comparison_text(Standing(0, 0, 3, 5), "sk") == "Prvý výsledok dňa."
     # A perfect score tied with everyone is not a "tough challenge".
     assert copy.comparison_text(Standing(4, 0, 5, 5), "sk") is None

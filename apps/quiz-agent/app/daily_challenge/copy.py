@@ -99,10 +99,10 @@ def _of(language: str, n: int) -> str:
 
 
 FIRST = {
-    "sk": "Dnes nikto nehral pred tebou.",
-    "cs": "Dnes nikdo nehrál před tebou.",
-    "uk": "Сьогодні до тебе ніхто не грав.",
-    "en": "Nobody played before you today.",
+    "sk": "Prvý výsledok dňa.",
+    "cs": "První výsledek dne.",
+    "uk": "Перший результат дня.",
+    "en": "First result today.",
 }
 
 

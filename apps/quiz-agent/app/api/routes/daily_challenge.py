@@ -18,13 +18,14 @@ from quiz_shared.languages import servable_quiz_languages
 
 from ...auth.identity import AuthSubject
 from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
-from ...config import get_settings
+from ...daily_challenge.gate import daily_challenge_on
 from ...daily_challenge.schemas import DailyChallengeState
 from ...daily_challenge.service import DailyChallengeService, DailySetUnavailable
 from ...rate_limit import limiter
 from ...session.manager import SessionManager
 from ..deps import (
     SessionResponse,
+    get_auth_sessionmaker,
     get_daily_challenge,
     get_session_manager,
     require_auth_or_grace,
@@ -66,10 +67,13 @@ def _check_language(language: str) -> str:
     return language
 
 
-def _require(
-    service: Optional[DailyChallengeService], subject: AuthSubject
+async def _require(
+    request: Request,
+    sessionmaker,
+    service: Optional[DailyChallengeService],
+    subject: AuthSubject,
 ) -> DailyChallengeService:
-    if not get_settings().daily_challenge_enabled:
+    if not await daily_challenge_on(request, sessionmaker):
         raise HTTPException(status_code=404, detail="Daily challenge is off")
     if service is None:
         raise HTTPException(status_code=503, detail="Daily challenge unavailable")
@@ -86,9 +90,10 @@ async def get_daily_challenge_state(
     language: str = Query(),
     service: Optional[DailyChallengeService] = Depends(get_daily_challenge),
     subject: AuthSubject = Depends(require_auth_or_grace),
+    sessionmaker=Depends(get_auth_sessionmaker),
 ) -> DailyChallengeState:
     """The Home card and round end: played or not, and the live crowd numbers."""
-    svc = _require(service, subject)
+    svc = await _require(request, sessionmaker, service, subject)
     try:
         return await svc.state(
             subject.subject_id, _check_language(language), _parse_day(date_)
@@ -106,10 +111,11 @@ async def start_daily_challenge(
     service: Optional[DailyChallengeService] = Depends(get_daily_challenge),
     subject: AuthSubject = Depends(require_auth_or_grace),
     session_manager: SessionManager = Depends(get_session_manager),
+    sessionmaker=Depends(get_auth_sessionmaker),
 ) -> DailyStartResponse:
     """One attempt per player per date: a finished challenge comes back as its
     result; an interrupted one resumes with the questions not yet answered."""
-    svc = _require(service, subject)
+    svc = await _require(request, sessionmaker, service, subject)
     day = _parse_day(body.date)
     language = _check_language(body.language)
     try:

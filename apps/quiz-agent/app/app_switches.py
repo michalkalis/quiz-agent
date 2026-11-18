@@ -57,7 +57,10 @@ BOOL_KEYS = (
     "pack_reuse_enabled",
     "shared_quiz_enabled",
 )
-KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS)
+# #205: lowest app build number that sees the daily challenge before it is on
+# for everyone (see ``daily_challenge.gate``); null = no beta preview.
+BUILD_KEYS = ("daily_challenge_beta_min_build",)
+KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS, *BUILD_KEYS)
 
 _cache: tuple[float, dict[str, str | None]] | None = None
 _lock = asyncio.Lock()
@@ -91,6 +94,8 @@ def encode(key: str, value: Any) -> str | None:
         return None
     if key in VERSION_KEYS and not _VERSION_RE.fullmatch(text):
         raise ValueError(f"{key} must look like 1.2 or 1.2.3, got {text!r}")
+    if key in BUILD_KEYS and not text.isdigit():
+        raise ValueError(f"{key} must be a build number like 87, got {text!r}")
     if key in NOTICE_KEYS and len(text) > NOTICE_MAX_CHARS:
         raise ValueError(f"{key} is longer than {NOTICE_MAX_CHARS} characters")
     return text
@@ -119,6 +124,7 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "pack_reuse_enabled": True,
         # #232: share a quiz by link; off until the founder has tested it.
         "shared_quiz_enabled": False,
+        "daily_challenge_beta_min_build": None,
         "maintenance_sk": None,
         "maintenance_cs": None,
         "maintenance_en": None,

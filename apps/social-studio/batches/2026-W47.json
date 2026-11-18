@@ -343,7 +343,7 @@
     "title": "True or false: the word 'emoji' is derived from the word 'emotion'.",
     "description": "True or false: the word 'emoji' is derived from the word 'emotion'.\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #geography #didyouknow"
    },
-   "voice": "app voice: question + answer",
+   "voice": "social voice: question + answer",
    "questions": [
     {
      "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
@@ -364,7 +364,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.jpg"
    ],
-   "tiktok_buffer": "6afc21cde5d943745edf996d"
+   "tiktok_buffer": "6afe1c4049e7044385b26e68"
   },
   {
    "key": "fri-ig_en",
@@ -383,7 +383,7 @@
     "title": "Can you get 5 out of 5? Hardly any national flag uses the colour purple. What's the historical…",
     "description": "Can you get 5 out of 5?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #food"
    },
-   "voice": "app voice: questions + answers",
+   "voice": "social voice: questions + answers",
    "questions": [
     {
      "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
@@ -437,7 +437,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.jpg"
    ],
-   "tiktok_buffer": "6afe12fb0a1fb75cd417c177"
+   "tiktok_buffer": "6afe1c414cec3cf024f1a566"
   },
   {
    "key": "fri-ig_skcz",
@@ -453,7 +453,7 @@
    ],
    "caption": "Trafíš všetkých päť?\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Zadarmo v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #popkultúra",
    "youtube": null,
-   "voice": "app voice: questions + answers",
+   "voice": "social voice: questions + answers",
    "questions": [
     {
      "id": "b6b5e315-eb80-47ae-bd29-e653881df319",
@@ -507,7 +507,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.jpg"
    ],
-   "tiktok_buffer": "6afe12fca8bd8e4ffd19265d"
+   "tiktok_buffer": "6afe1c420801c920897b15f5"
   },
   {
    "key": "sat-ig_en",
@@ -672,7 +672,7 @@
     "title": "Can you get 3 out of 3? The word 'nausea' comes from an Ancient Greek word for a means of…",
     "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Free on the App Store, link in bio.\n\n#trivia #quiz #funfacts #popculture"
    },
-   "voice": "app voice: questions + answers",
+   "voice": "social voice: questions + answers",
    "questions": [
     {
      "id": "f32924aa-366b-482c-be75-d347d594e5ee",
@@ -708,7 +708,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.jpg"
    ],
-   "tiktok_buffer": "6afe12ffa8bd8e4ffd1927f8"
+   "tiktok_buffer": "6afe1c430801c920897b1646"
   },
   {
    "key": "sun-ig_skcz",
@@ -724,7 +724,7 @@
    ],
    "caption": "Trefíš všechny tři?\n\nKolik máš správně?\n\n#kvíz #kviz #popkultura #zajímavosti",
    "youtube": null,
-   "voice": "app voice: questions + answers",
+   "voice": "social voice: questions + answers",
    "questions": [
     {
      "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
@@ -760,7 +760,7 @@
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.mp4",
     "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.jpg"
    ],
-   "tiktok_buffer": "6afe13026fadb4be71172669"
+   "tiktok_buffer": "6afe1c44812588a40b451c4a"
   }
  ],
  "version": 2

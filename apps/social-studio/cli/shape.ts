@@ -26,6 +26,8 @@ export type QuestionInput = {
 	explanation_audio_b64?: string | null;
 	/** Round reels: the answer said by the app voice. */
 	answer_audio_b64?: string | null;
+	/** Prod rows: what the app reads (question with its options, explanation, a reel's answer), clip or not. */
+	app_texts?: {question: string; explanation?: string; answer?: string};
 	/** Prod rows: the question's source, shown on the approval page. */
 	source_url?: string | null;
 };

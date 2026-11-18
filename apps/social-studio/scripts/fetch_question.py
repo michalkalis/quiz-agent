@@ -1,4 +1,4 @@
-"""One approved question + its app voice clip, from prod.
+"""One approved question + its app voice clip (and the texts the app reads), from prod.
 
 Not run locally: the CLI pipes this file into the prod API machine
 (`ssh trubbo-prod "docker exec -i trubbo-quiz-agent-1 python - <id> <lang>"`), where the app
@@ -174,6 +174,7 @@ async def one(qid, lang, answer_number=None):
                 explanation_audio_b64=base64.b64encode(body).decode(),
                 explanation_spoken=spoken,
             )
+    out["app_texts"] = app_texts(out, lang, answer_number)
     out["answer_audio_b64"] = None
     if answer_number is not None:
         spoken, body = first_clip(
@@ -221,6 +222,27 @@ def display_answer(row):
 
 # What the shipped apps (1.0 beta and 1.1) send as X-Client-Capabilities.
 APP_CAPABILITIES = (ANSWER_CODES, OPTION_LABELS)
+
+
+def app_texts(row, lang, answer_number=None):
+    """What the app reads for this row, clip or not: the question (MCQ options
+    included, as GET /sessions/{id}/question/audio builds it), the "hear it"
+    explanation, and a reel's answer. The social videos voice these
+    themselves (cli/voice.ts, founder 2026-11-18)."""
+    session = SimpleNamespace(client_capabilities=APP_CAPABILITIES, language=lang)
+    texts = {
+        "question": normalize_numbers_for_tts(
+            spoken_question_text(row["question"], row["possible_answers"], session),
+            lang,
+        )
+    }
+    if row["explanation"] and len(row["explanation"]) <= 1000:
+        texts["explanation"] = normalize_numbers_for_tts(row["explanation"], lang)
+    if answer_number is not None:
+        texts["answer"] = normalize_numbers_for_tts(
+            answer_text(row, answer_number), lang
+        )
+    return texts
 
 
 async def elevenlabs_usage():

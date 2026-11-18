@@ -351,7 +351,7 @@ function main() {
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
 			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(slot.format === 'round' ? `${firstLine} ${questions[0].question}` : questions[0].question), description: text} : null,
-			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'app voice: questions + answers' : 'app voice: question + answer',
+			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'social voice: questions + answers' : 'social voice: question + answer',
 			questions,
 		});
 	}

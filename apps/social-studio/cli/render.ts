@@ -1,11 +1,12 @@
 // npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR] [--make-voice]
-//                    [--opening solo|fused|intro|plain] [--explain line|parts|captions]
+//                    [--opening solo|fused|intro|plain] [--explain line|parts|captions] [--app-clips]
 // npm run render -- --carousel <id,id,id> [--part N] [--lang en|sk|cs] [--out DIR]
 // npm run render -- --round <id,id,id> [--lang en|sk|cs] [--out DIR] [--make-voice] [--opening solo|fused]   (easiest first)
 //
-// Fetches approved rows read-only from prod (or reads a JSON file), reuses the
-// question's existing app voice clip if there is one (--make-voice: has the
-// app's own TTS on prod make a missing one, at most 5 a week), times
+// Fetches approved rows read-only from prod (or reads a JSON file), voices what
+// the app reads in the social voice (cli/voice.ts: George on Flash v2.5, faster
+// than the app; founder 2026-11-18). --app-clips: the app's own prod clips as
+// before (--make-voice: the app's TTS on prod makes a missing one), times
 // the caption words with local whisper.cpp, and renders mp4 + cover jpg (reels)
 // or jpg slides (carousel). Chrome = Remotion's own chrome-headless-shell.
 import {execFileSync} from 'node:child_process';
@@ -20,6 +21,7 @@ import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, Ree
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {cutAnswerNumber} from './trim';
+import {hasClip, ownClip} from './voice';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
 
 const {values, positionals} = parseArgs({
@@ -33,6 +35,8 @@ const {values, positionals} = parseArgs({
 		round: {type: 'string'},
 		part: {type: 'string', default: '1'},
 		'make-voice': {type: 'boolean', default: false},
+		// The app's own prod clips instead of the social voice (the old path, a fallback).
+		'app-clips': {type: 'boolean', default: false},
 		// Founder 2026-10-26: the hook alone first, then the question.
 		opening: {type: 'string', default: 'solo'},
 		explain: {type: 'string', default: 'card'},
@@ -68,7 +72,9 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	if (existsSync(cacheFile) && Date.now() - statSync(cacheFile).mtimeMs < ROW_CACHE_MS) {
 		const cached: QuestionInput = JSON.parse(readFileSync(cacheFile, 'utf8'));
 		const done = cached.audio_b64 && (questionOnly || cached.explanation_audio_b64 || !cached.explanation) && (!withAnswer || cached.answer_audio_b64);
-		if (done || !ensureAudio) return cached;
+		// The social voice needs the texts the app reads (rows cached before 2026-11-18 lack them).
+		const texts = cached.app_texts && (!withAnswer || cached.app_texts.answer !== undefined);
+		if (APP_CLIPS ? done || !ensureAudio : texts) return cached;
 	}
 	if (ensureAudio && voiceCharsLeft(ledger()) <= 0)
 		throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
@@ -91,10 +97,30 @@ function fetchFromProd(id: string, lang?: Language, ensureAudio = false, questio
 	return row;
 }
 
-function loadInput(arg: string, questionOnly = false, answerNumber?: number): QuestionInput {
+const APP_CLIPS = values['app-clips'];
+
+/** A row's clips replaced by the social voice reading the same texts (a carousel has no voice). */
+async function withOwnVoice(row: QuestionInput, id: string, questionOnly: boolean, answerNumber?: number): Promise<QuestionInput> {
+	const texts = row.app_texts;
+	if (!texts) throw new Error(`${id}: the row has no app_texts to voice`);
+	const todo: [keyof QuestionInput, string, string][] = [['audio_b64', 'question', texts.question]];
+	if (!questionOnly && texts.explanation) todo.push(['explanation_audio_b64', 'explanation', texts.explanation]);
+	if (answerNumber !== undefined && texts.answer) todo.push(['answer_audio_b64', 'answer', texts.answer]);
+	const out: QuestionInput = {...row, spoken_text: texts.question, audio_b64: null, explanation_audio_b64: null, answer_audio_b64: null};
+	for (const [field, what, text] of todo) {
+		if (!hasClip(text, row.language) && voiceCharsLeft(ledger()) < text.length) throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
+		const {bytes, made} = await ownClip(text, row.language);
+		if (made) logVoice({at: new Date().toISOString(), id, language: row.language, chars: made, what: `${what} (social voice)`});
+		(out as Record<string, unknown>)[field] = bytes.toString('base64');
+	}
+	return out;
+}
+
+async function loadInput(arg: string, questionOnly = false, answerNumber?: number): Promise<QuestionInput> {
 	if (arg.endsWith('.json')) return JSON.parse(readFileSync(path.resolve(arg), 'utf8'));
-	if (/^[0-9a-f-]{36}$/i.test(arg)) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly, answerNumber);
-	throw new Error(`expected a question id or a .json file, got "${arg}"`);
+	if (!/^[0-9a-f-]{36}$/i.test(arg)) throw new Error(`expected a question id or a .json file, got "${arg}"`);
+	if (APP_CLIPS || values.carousel) return fetchFromProd(arg, LANG, values['make-voice'] && !values.carousel, questionOnly, answerNumber);
+	return withOwnVoice(fetchFromProd(arg, LANG, false, questionOnly, answerNumber), arg, questionOnly, answerNumber);
 }
 
 /** Puts clip bytes under public/audio/ and returns their staticFile path. */
@@ -224,7 +250,8 @@ async function main() {
 	if (values.round) {
 		const ids = values.round.split(',').map((s) => s.trim());
 		// Every answer is read right after its question, then its explanation (founder 2026-10-29, 2026-11-16).
-		const raws = ids.map((id, k) => loadInput(id, true, k + 1));
+		const raws = [];
+		for (const [k, id] of ids.entries()) raws.push(await loadInput(id, true, k + 1));
 		const qs = raws.map((r) => ({...shapeQuestion(r), options: [], correctIndex: null}));
 		const items = [];
 		for (const [k, q] of qs.entries()) {
@@ -247,7 +274,7 @@ async function main() {
 		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, ${items.length} questions`);
 	} else if (values.carousel) {
 		const ids = values.carousel.split(',').map((s) => s.trim());
-		const qs = ids.map((id) => shapeQuestion(loadInput(id)));
+		const qs = (await Promise.all(ids.map((id) => loadInput(id)))).map(shapeQuestion);
 		const language = qs[0].language;
 		const part = Number(values.part);
 		const base = {language, part, questions: qs, index: 0};
@@ -266,7 +293,7 @@ async function main() {
 		// card: the answer is read, then its explanation (founder 2026-11-16).
 		// The clip opens with "Otázka číslo jedna:", cut off again like in a round:
 		// a bare first word gets the wrong language ("Vinica" read "vinika", 2026-11-16).
-		const raw = style.explain === 'card' ? loadInput(positionals[0], true, 1) : loadInput(positionals[0]);
+		const raw = style.explain === 'card' ? await loadInput(positionals[0], true, 1) : await loadInput(positionals[0]);
 		const q = shapeQuestion(raw);
 		const format = values.format ?? (q.options.length ? 'abc' : 'five');
 		if (format === 'abc' && !q.options.length) throw new Error('--format abc needs a question with options');
@@ -288,7 +315,8 @@ async function main() {
 			name: `${format}-${q.language}-${slug(q.id)}`,
 			coverMs,
 		});
-		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, voice: ${props.audio ? 'app clip' : 'none'}, ${style.explain === 'card' ? `answer voice: ${props.answer.audio ? 'app clip' : 'none'}` : `explanation voice: ${props.explain.audio ? 'app clip' : 'none'}`}`);
+		const v = APP_CLIPS ? 'app clip' : 'social voice';
+		console.log(`  ${(timeline.totalMs / 1000).toFixed(1)} s, voice: ${props.audio ? v : 'none'}, ${style.explain === 'card' ? `answer voice: ${props.answer.audio ? v : 'none'}` : `explanation voice: ${props.explain.audio ? v : 'none'}`}`);
 	}
 
 	const serveUrl = await bundle({entryPoint: path.join(APP_DIR, 'src', 'index.ts')});

@@ -40,9 +40,9 @@ kvíz
 90s
 120s
 Čas na rozmyšlenou
-10s
+0s
 Čas na rozmyšlenou
-10s
+0s
 Pauza, než se zapne mikrofon
 5 questions
 10 questions

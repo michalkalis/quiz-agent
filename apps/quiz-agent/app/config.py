@@ -177,6 +177,12 @@ class Settings(BaseSettings):
     elevenlabs_tts_model: str = "eleven_v4_turbo"
     # #231: model for Cyrillic (Ukrainian) text, see tts/voices.py.
     elevenlabs_tts_model_cyrillic: str = "eleven_v3"
+    # #231: how long that slower model (~3.5 s a question vs ~1.6 s) may take
+    # before the backup voice speaks; Latin text keeps `PRIMARY_TTS_TIMEOUT_S`
+    # (6 s). 8 s is the top of the founder's 6–8 s range for the primary's share
+    # of the app's 10 s wait, so a long Ukrainian question rarely falls to a
+    # backup voice no native speaker has heard.
+    tts_primary_timeout_cyrillic_s: float = 8.0
     openai_tts_model: str = "tts-1"
     # Founder 2026-11-18, after listening to George on Flash v2.5: "v appke en
     # 1,1x a sk/cz 1,07x". v4 Turbo ignores `speed`, hence the model per

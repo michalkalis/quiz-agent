@@ -11,6 +11,7 @@ provider-agnostic — a provider here only turns text into MP3 bytes.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -27,6 +28,7 @@ from ..monitoring.provider_alerts import (
 from .voices import (
     ELEVENLABS_CYRILLIC_MODEL,
     ELEVENLABS_CYRILLIC_STABILITY,
+    ELEVENLABS_CYRILLIC_STABILITY_MODEL,
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
     ELEVENLABS_OUTPUT_FORMAT,
@@ -59,6 +61,11 @@ ELEVENLABS_TIMEOUT_SECONDS = 30.0
 # (`CLAUDE_TIMEOUT_S` in hot_path_llm). A healthy primary answers a question in
 # a second or two, so the limit only trips when it is truly slow.
 PRIMARY_TTS_TIMEOUT_S = 6.0
+
+
+def is_cyrillic(text: str) -> bool:
+    """Cyrillic text means Ukrainian (#231), the only Cyrillic quiz language."""
+    return bool(_CYRILLIC_RE.search(text))
 
 
 @runtime_checkable
@@ -135,15 +142,16 @@ class ElevenLabsTTSProvider:
     def model_for(self, text: str, style: Optional[SpeechStyle] = None) -> str:
         """The language is in the text: Cyrillic means Ukrainian (#231).
         Otherwise the language's style may name its own model."""
-        if _CYRILLIC_RE.search(text):
+        if is_cyrillic(text):
             return self.cyrillic_model
         return (style.model if style else None) or self.model
 
     def payload_for(self, text: str, style: Optional[SpeechStyle] = None) -> dict:
-        """Request body; Ukrainian also pins v3 to its most stable setting."""
-        payload = {"text": text, "model_id": self.model_for(text, style)}
+        """Request body; Ukrainian on v3 also pins v3's most stable setting."""
+        model = self.model_for(text, style)
+        payload = {"text": text, "model_id": model}
         voice_settings = {}
-        if _CYRILLIC_RE.search(text):
+        if is_cyrillic(text) and model == ELEVENLABS_CYRILLIC_STABILITY_MODEL:
             voice_settings["stability"] = ELEVENLABS_CYRILLIC_STABILITY
         if style and style.speed:
             voice_settings["speed"] = style.speed
@@ -152,6 +160,17 @@ class ElevenLabsTTSProvider:
         if style and style.language_code:
             payload["language_code"] = style.language_code
         return payload
+
+    def cache_variant(
+        self, text: str, style: Optional[SpeechStyle] = None
+    ) -> Optional[str]:
+        """What shapes Cyrillic audio besides (text, voice): the model and every
+        setting sent, so a change to any makes new clips instead of replaying
+        old ones (#231). None for Latin text keeps its cache keys unchanged."""
+        if not is_cyrillic(text):
+            return None
+        sent = {k: v for k, v in self.payload_for(text, style).items() if k != "text"}
+        return json.dumps(sent, sort_keys=True)
 
     async def synthesize(
         self, text: str, voice: str, style: Optional[SpeechStyle] = None

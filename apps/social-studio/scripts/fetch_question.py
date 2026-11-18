@@ -347,6 +347,9 @@ async def candidates():
         "q.question, q.possible_answers, q.local_scope, q.explanation, q.source_url, "
         "coalesce(q.headline_answer, q.correct_answer->>0, q.correct_answer#>>'{}') as answer, q.created_at::date::text as created, "
         "q.provenance->'extra'->'topicality'->>'tier' as topicality, "
+        # Tied to something people talk about now: a boost window that ends
+        # (#195 stores a permanent boost as 9999-01-01, which is not timely).
+        "coalesce(q.boost_until > now() and q.boost_until < '9000-01-01', false) as timely, "
         "(select avg(r.score / r.scale_max) from ratings r where r.question_id = q.id::text) as rating "
         "from questions q where q.review_status = 'approved' "
         # #236: a question written for a child band is not ordinary content.
@@ -379,6 +382,7 @@ async def candidates():
                 "local_scope": r["local_scope"],
                 "created": r["created"],
                 "topicality": r["topicality"],
+                "timely": r["timely"],
                 "rating": float(r["rating"]) if r["rating"] is not None else None,
                 "has_clip": any(
                     k in keys for _, k in clip_keys(r["question"], opts, r["language"])

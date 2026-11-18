@@ -32,6 +32,8 @@ T = TypeVar("T")
 # boost far above 2×. Reads a column the row already carries: no extra LLM or
 # DB round trip on the hot path.
 BOOST_WEIGHT = 2.0
+# #205: how many timely questions join the daily challenge candidates.
+DAILY_TIMELY_SAMPLE = 30
 
 # #232: pack rows never get approved, so these are the statuses that take one
 # out of a pack (same rule as quiz-pack-api's pack copy, #225 pack_reuse.py).
@@ -508,12 +510,25 @@ class QuestionRetriever:
         session = QuizSession(session_id="daily-challenge", language=language)
         filters = self._build_metadata_filters("random", session)
         filters.pop("difficulty")
+        fix_pending = await self._structure_fix_pending(session)
         rows = await self._store.sample(
-            filters=filters,
-            n_results=n,
-            excluded_ids=await self._structure_fix_pending(session),
+            filters=filters, n_results=n, excluded_ids=fix_pending
         )
-        rows = [q for q in rows if not q.is_expired()]
+        # Timely questions are a handful among thousands, so a random sample
+        # almost never holds one: fetch them on their own for the set's timely
+        # place (`pick_daily_set`). A permanent boost (9999-01-01) is not timely.
+        timely = await self._store.sample(
+            filters={
+                **filters,
+                "boost_until": {
+                    "$gt": datetime.now(timezone.utc),
+                    "$lt": datetime(9000, 1, 1, tzinfo=timezone.utc),
+                },
+            },
+            n_results=DAILY_TIMELY_SAMPLE,
+            excluded_ids=fix_pending + [q.id for q in rows],
+        )
+        rows = [q for q in rows + timely if not q.is_expired()]
         if language == "en":
             return rows
         english = [q.id for q in rows if q.language != language]

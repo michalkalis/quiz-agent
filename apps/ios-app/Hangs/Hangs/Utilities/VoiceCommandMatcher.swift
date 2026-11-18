@@ -383,15 +383,7 @@ enum VoiceCommandMatcher {
     /// the #184 phonetic fold, and join the #185 command phrases ("ešte raz")
     /// into one token.
     static func normalize(_ string: String, language: CommandLanguage = .english) -> String {
-        let folded = string.folding(
-            options: [.diacriticInsensitive, .caseInsensitive],
-            locale: Locale(identifier: "en_US_POSIX")
-        )
-        var scalars = String.UnicodeScalarView()
-        for scalar in folded.unicodeScalars {
-            scalars.append(CharacterSet.alphanumerics.contains(scalar) ? scalar : " ")
-        }
-        let tokens = String(scalars)
+        let tokens = TranscriptFolding.fold(string)
             .split(separator: " ")
             .map { phoneticFold(String($0), language: language) }
         return joinPhrases(tokens, language: language).joined(separator: " ")
@@ -426,7 +418,8 @@ enum VoiceCommandMatcher {
     /// ("retry" vs "retri" is not the failure we saw).
     static func phoneticFold(_ token: String, language: CommandLanguage) -> String {
         switch language {
-        case .english: return token
+        // #231: Ukrainian spelling distinctions (и/і, е/є) are real words.
+        case .english, .ukrainian: return token
         case .slovak, .czech: break
         }
         var result = ""

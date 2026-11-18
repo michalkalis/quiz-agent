@@ -218,6 +218,7 @@ struct OnboardingViewModelTests {
         #expect(OnboardingViewModel.commandWords(language: .slovak) == ["„ďalej“", "„zopakuj“", "„štart“"])
         #expect(OnboardingViewModel.commandWords(language: .czech) == ["„dál“", "„zopakuj“", "„start“"])
         #expect(OnboardingViewModel.commandWords(language: .english) == ["“next”", "“repeat”", "“start”"])
+        #expect(OnboardingViewModel.commandWords(language: .ukrainian) == ["«далі»", "«повтори»", "«старт»"])
     }
 
     @Test("onboarding_finished names how and on which page it ended")

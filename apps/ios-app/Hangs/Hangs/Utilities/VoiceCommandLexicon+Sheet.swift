@@ -7,7 +7,7 @@
 //  "nie, znova", "ešte raz" — so the sheet gets words no other screen has, the
 //  two-word phrases arrive as one token, and the words that usually START a
 //  longer sentence may only act once the recognizer has finished the sentence.
-//  Every table here has an entry for all three quiz languages
+//  Every table here has an entry for every quiz language
 //  (`VoiceCommandLexiconParityTests`).
 //
 
@@ -26,6 +26,7 @@ extension VoiceCommandLexicon {
         case (.english, .ok): return ["yes", "yeah"]
         case (.slovak, .ok): return ["ano", "hej"]
         case (.czech, .ok): return ["ano", "jo"]
+        case (.ukrainian, .ok): return ["так", "добре"]
         default: return []
         }
     }
@@ -61,6 +62,7 @@ extension VoiceCommandLexicon {
         case .english: return finalOnlyVariants(for: language).union(["wait"])
         case .slovak: return finalOnlyVariants(for: language).union(["pockaj"])
         case .czech: return finalOnlyVariants(for: language).union(["pockej"])
+        case .ukrainian: return finalOnlyVariants(for: language).union(["зачекай", "почекай"])
         }
     }
 
@@ -75,6 +77,7 @@ extension VoiceCommandLexicon {
         case .english: return ["no", "wrong"]
         case .slovak: return ["nie", "zle"]
         case .czech: return ["ne", "spatne"]
+        case .ukrainian: return ["ні", "неправильно"]
         }
     }
 
@@ -94,6 +97,8 @@ extension VoiceCommandLexicon {
             return [(["este", "raz"], "esteraz")]
         case .czech:
             return [(["jeste", "jednou"], "jestejednou")]
+        case .ukrainian:
+            return [(["ще", "раз"], "щераз")]
         }
     }
 

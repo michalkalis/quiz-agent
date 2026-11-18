@@ -135,6 +135,7 @@ struct EmptyAnswerRetryTests {
         #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Nezachytil som odpoveď, skús to znova.")
         #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Nezachytil jsem odpověď, zkus to znovu.")
         #expect(SpokenPrompt.didNotCatch.text(language: .english) == "I didn't catch your answer, please try again.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .ukrainian) == "Я не розчув відповіді, спробуй ще раз.")
     }
 
     /// WHY (founder 2026-09-24): the retry line is ALSO on screen, for the whole

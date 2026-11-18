@@ -9,7 +9,7 @@
 //  "Skús znova" / "Hraj znova" / "Na úvod") are added here. Screen-scoped, so
 //  a button word on one screen never fires a command on another — except the
 //  retry titles, which mean "znova" everywhere "znova" is a command. Every entry
-//  exists in sk / cs / en (`VoiceCommandButtonWordTests`).
+//  exists in sk / cs / en / uk (`VoiceCommandButtonWordTests`).
 //
 
 import Foundation
@@ -28,11 +28,14 @@ extension VoiceCommandLexicon {
         case (.question, .start, .english): return ["answer"]
         case (.question, .start, .slovak): return ["odpovedz"]
         case (.question, .start, .czech): return ["odpovez"]
+        case (.question, .start, .ukrainian): return ["відповідай"]
         // The error screen's "Go Home" / "Dismiss" both leave for Home — the
         // route its "stop" already takes.
         case (.error, .stop, .english): return ["gohome", "dismiss"]
         case (.error, .stop, .slovak): return ["nauvod", "uvod", "zavri"]
         case (.error, .stop, .czech): return ["nauvod", "uvod", "zavri"]
+        // uk "Go Home" reads "Додому", the set-end screen's own home word.
+        case (.error, .stop, .ukrainian): return ["додому", "закрий"]
         // The set-end "Home" button reads "Úvod" in sk / cs.
         case (.setEnd, .home, .english): return ["gohome"]
         case (.setEnd, .home, .slovak), (.setEnd, .home, .czech): return ["uvod", "nauvod"]
@@ -51,6 +54,8 @@ extension VoiceCommandLexicon {
             return [(["skus", "znova"], "skusznova"), (["hraj", "znova"], "hrajznova"), (["na", "uvod"], "nauvod")]
         case .czech:
             return [(["zkus", "znovu"], "zkusznovu"), (["hraj", "znovu"], "hrajznovu"), (["na", "uvod"], "nauvod")]
+        case .ukrainian:
+            return [(["спробуй", "ще", "раз"], "спробуйщераз"), (["зіграй", "ще", "раз"], "зіграйщераз")]
         }
     }
 
@@ -60,6 +65,7 @@ extension VoiceCommandLexicon {
         case .english: return ["answer", "try again", "play again", "go home", "home", "dismiss"]
         case .slovak: return ["odpovedz", "skús znova", "hraj znova", "na úvod", "úvod", "zavri"]
         case .czech: return ["odpověz", "zkus znovu", "hraj znovu", "na úvod", "úvod", "zavři"]
+        case .ukrainian: return ["відповідай", "спробуй ще раз", "зіграй ще раз", "додому", "закрий"]
         }
     }
 }

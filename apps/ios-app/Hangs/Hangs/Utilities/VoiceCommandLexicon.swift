@@ -31,7 +31,12 @@
 //  en "yes / yeah") confirm and "nie / zle / ešte raz" re-record, because the
 //  driver answers the sheet the way people answer a question. They stay filler
 //  everywhere else (`VoiceCommandLexicon+Sheet.swift`). Every lexicon change
-//  lands in sk / cs / en at once (`VoiceCommandLexiconParityTests`).
+//  lands in sk / cs / en / uk at once (`VoiceCommandLexiconParityTests`).
+//
+//  #231 added Ukrainian on the same design. Its words are the ones Apple
+//  dictation (uk_UA) recognised on the Mac (2026-11-17): старт, далі, повтори,
+//  пропусти, ще раз, добре, стоп, пауза, додому. The buttons carry the same
+//  words (Пропусти, Ще раз). Stored unfolded: Cyrillic is never diacritic-folded.
 //
 
 import Foundation
@@ -171,6 +176,20 @@ enum VoiceCommandLexicon {
         case (.czech, .stop): return ["stop", "pockej"]
         case (.czech, .pause): return ["pauza"]
         case (.czech, .home): return ["domu"]
+        // Ukrainian (#231). Latin "ok" too: dictation may write it either way.
+        case (.ukrainian, .start): return ["старт"]
+        case (.ukrainian, .ok): return ["ок", "окей", "ok", "okey", "підтверди"]
+        // Same benign no-answer-sheet-only hazard as Slovak "ďalej".
+        case (.ukrainian, .next): return ["далі", "продовжуй"]
+        // "ще раз" (the button) and "знову" (a hidden synonym); "ні" and
+        // "неправильно" act on a final only, like sk "nie" / "zle".
+        case (.ukrainian, .again): return ["щераз", "знову", "ні", "неправильно", "спробуйщераз", "зіграйщераз"]
+        case (.ukrainian, .repeatQuestion): return ["повтори"]
+        // The button reads "Пропусти"; "наступне" (sk "ďalšia") stays a synonym.
+        case (.ukrainian, .skip): return ["пропусти", "наступне", "наступна", "наступний"]
+        case (.ukrainian, .stop): return ["стоп", "зачекай", "почекай"]
+        case (.ukrainian, .pause): return ["пауза"]
+        case (.ukrainian, .home): return ["додому"]
         }
     }
 
@@ -211,6 +230,15 @@ enum VoiceCommandLexicon {
                 "no", "tak", "takze", "tedy", "teda", "proste", "prosim", "jen", "jeste",
                 "aha", "jo", "ano", "jasne", "dobre",
             ]
+        case .ukrainian:
+            // "так" (yes) and "добре" (fine) are what conversation is made of;
+            // they confirm on the answer sheet only (`confirmationOnlyVariants`).
+            // "ну" is the Ukrainian "no" particle, never a "no".
+            return [
+                "um", "uh", "ем", "е", "хм", "м",
+                "ну", "так", "отже", "тобто", "просто", "будь", "ласка", "лише", "тільки", "ще",
+                "ага", "угу", "добре", "гаразд", "ясно", "звісно",
+            ]
         }
     }
 
@@ -230,6 +258,7 @@ enum VoiceCommandLexicon {
         case .english: looseNoWords = ["no", "know", "cancel"]
         case .slovak: looseNoWords = ["nie", "no", "zrus"]
         case .czech: looseNoWords = ["ne", "no", "zrus"]
+        case .ukrainian: looseNoWords = ["ні", "скасуй"]
         }
         return Set(
             cancelWords.flatMap { variants(for: $0, language: language) } + looseNoWords
@@ -273,6 +302,12 @@ enum VoiceCommandLexicon {
                 "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
                 "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "další", "přeskoč", "vynech",
                 "stop", "počkej", "zruš", "pauza", "domů",
+            ]
+        case .ukrainian:
+            return [
+                "старт", "ок", "окей", "підтверди", "так", "добре", "далі", "продовжуй",
+                "ще раз", "знову", "ні", "неправильно", "повтори", "пропусти", "наступне",
+                "стоп", "зачекай", "почекай", "скасуй", "пауза", "додому",
             ]
         }
     }

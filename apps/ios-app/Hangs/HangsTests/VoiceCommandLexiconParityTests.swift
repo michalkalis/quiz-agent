@@ -17,7 +17,7 @@ import Foundation
 import Testing
 
 /// One founder intent, spoken in every quiz language. The initializer takes all
-/// three, so an intent cannot be added for one language only.
+/// four, so an intent cannot be added for one language only.
 private struct SpokenIntent {
     let name: String
     let screen: VoiceCommandScreen
@@ -25,39 +25,41 @@ private struct SpokenIntent {
     let sk: String
     let cs: String
     let en: String
+    let uk: String
 
     func phrase(_ language: CommandLanguage) -> String {
         switch language {
         case .slovak: sk
         case .czech: cs
         case .english: en
+        case .ukrainian: uk
         }
     }
 }
 
 private let sheetIntents: [SpokenIntent] = [
-    SpokenIntent(name: "yes", screen: .confirmation, expected: .ok, sk: "Áno", cs: "Ano", en: "Yes"),
-    SpokenIntent(name: "yeah", screen: .confirmation, expected: .ok, sk: "hej", cs: "jo", en: "yeah"),
-    SpokenIntent(name: "ok", screen: .confirmation, expected: .ok, sk: "ok", cs: "ok", en: "ok"),
-    SpokenIntent(name: "confirm", screen: .confirmation, expected: .ok, sk: "potvrď", cs: "potvrď", en: "confirm"),
-    SpokenIntent(name: "yes, confirm", screen: .confirmation, expected: .ok, sk: "Áno, potvrď.", cs: "Ano, potvrď.", en: "Yes, confirm."),
-    SpokenIntent(name: "no", screen: .confirmation, expected: .again, sk: "Nie.", cs: "Ne.", en: "No."),
-    SpokenIntent(name: "wrong", screen: .confirmation, expected: .again, sk: "zle", cs: "špatně", en: "wrong"),
-    SpokenIntent(name: "once more", screen: .confirmation, expected: .again, sk: "Ešte raz", cs: "Ještě jednou", en: "One more time"),
-    SpokenIntent(name: "again", screen: .confirmation, expected: .again, sk: "znova", cs: "znovu", en: "again"),
+    SpokenIntent(name: "yes", screen: .confirmation, expected: .ok, sk: "Áno", cs: "Ano", en: "Yes", uk: "Так"),
+    SpokenIntent(name: "yeah", screen: .confirmation, expected: .ok, sk: "hej", cs: "jo", en: "yeah", uk: "добре"),
+    SpokenIntent(name: "ok", screen: .confirmation, expected: .ok, sk: "ok", cs: "ok", en: "ok", uk: "ок"),
+    SpokenIntent(name: "confirm", screen: .confirmation, expected: .ok, sk: "potvrď", cs: "potvrď", en: "confirm", uk: "підтверди"),
+    SpokenIntent(name: "yes, confirm", screen: .confirmation, expected: .ok, sk: "Áno, potvrď.", cs: "Ano, potvrď.", en: "Yes, confirm.", uk: "Так, підтверди."),
+    SpokenIntent(name: "no", screen: .confirmation, expected: .again, sk: "Nie.", cs: "Ne.", en: "No.", uk: "Ні."),
+    SpokenIntent(name: "wrong", screen: .confirmation, expected: .again, sk: "zle", cs: "špatně", en: "wrong", uk: "неправильно"),
+    SpokenIntent(name: "once more", screen: .confirmation, expected: .again, sk: "Ešte raz", cs: "Ještě jednou", en: "One more time", uk: "Ще раз"),
+    SpokenIntent(name: "again", screen: .confirmation, expected: .again, sk: "znova", cs: "znovu", en: "again", uk: "знову"),
     // The car-test utterance: two content words, both "record again".
-    SpokenIntent(name: "no, again", screen: .confirmation, expected: .again, sk: "Nie, znova.", cs: "Ne, znovu.", en: "No, again."),
-    SpokenIntent(name: "stop", screen: .confirmation, expected: .stop, sk: "Stop", cs: "Stop", en: "Stop"),
-    SpokenIntent(name: "wait", screen: .confirmation, expected: .stop, sk: "počkaj", cs: "počkej", en: "wait"),
+    SpokenIntent(name: "no, again", screen: .confirmation, expected: .again, sk: "Nie, znova.", cs: "Ne, znovu.", en: "No, again.", uk: "Ні, ще раз."),
+    SpokenIntent(name: "stop", screen: .confirmation, expected: .stop, sk: "Stop", cs: "Stop", en: "Stop", uk: "Стоп"),
+    SpokenIntent(name: "wait", screen: .confirmation, expected: .stop, sk: "počkaj", cs: "počkej", en: "wait", uk: "зачекай"),
     // #224: the button word, and the old words as hidden synonyms. English
     // "next" is also the `.next` command, but the strict skip check wins.
-    SpokenIntent(name: "next = skip (no answer)", screen: .noAnswer, expected: .skip, sk: "ďalšia", cs: "další", en: "next"),
-    SpokenIntent(name: "old skip word (no answer)", screen: .noAnswer, expected: .skip, sk: "preskoč", cs: "přeskoč", en: "skip"),
-    SpokenIntent(name: "again (no answer)", screen: .noAnswer, expected: .again, sk: "znova", cs: "znovu", en: "again"),
-    SpokenIntent(name: "no (no answer)", screen: .noAnswer, expected: .again, sk: "nie", cs: "ne", en: "no"),
+    SpokenIntent(name: "next = skip (no answer)", screen: .noAnswer, expected: .skip, sk: "ďalšia", cs: "další", en: "next", uk: "пропусти"),
+    SpokenIntent(name: "old skip word (no answer)", screen: .noAnswer, expected: .skip, sk: "preskoč", cs: "přeskoč", en: "skip", uk: "наступне"),
+    SpokenIntent(name: "again (no answer)", screen: .noAnswer, expected: .again, sk: "znova", cs: "znovu", en: "again", uk: "ще раз"),
+    SpokenIntent(name: "no (no answer)", screen: .noAnswer, expected: .again, sk: "nie", cs: "ne", en: "no", uk: "ні"),
 ]
 
-@Suite("#185 sheet vocabulary — sk / cs / en parity")
+@Suite("#185 sheet vocabulary — sk / cs / en / uk parity")
 struct VoiceCommandLexiconParityTests {
     /// WHY: the founder's 5.3 words must work in the language the quiz is in —
     /// a lexicon change made for Slovak only would leave a Czech or English
@@ -96,17 +98,22 @@ struct VoiceCommandLexiconParityTests {
     /// fail-safe direction.
     @Test("no voice cancel on the sheet, in any language", arguments: CommandLanguage.allCases)
     func noVoiceCancel(_ language: CommandLanguage) {
-        let cancel = language == .english ? "cancel" : "zruš"
+        let cancel = switch language {
+        case .english: "cancel"
+        case .slovak, .czech: "zruš"
+        case .ukrainian: "скасуй"
+        }
         #expect(VoiceCommandMatcher.match(transcript: cancel, on: .confirmation, language: language) == nil)
         #expect(VoiceCommandLexicon.isCancelWord(VoiceCommandMatcher.normalize(cancel), language: language))
-        #expect(VoiceCommandLexicon.spokenWord(.stop, language: language) == "stop", "the hold word is 'stop'")
+        let hold = language == .ukrainian ? "стоп" : "stop"
+        #expect(VoiceCommandLexicon.spokenWord(.stop, language: language) == hold, "the hold word is 'stop'")
     }
 
     /// WHY: on the no-answer sheet confirming the empty field IS a skip, and in
     /// the car "potvrď" skipped the question there. The skip must be asked for.
     @Test("confirm words do nothing on the no-answer sheet", arguments: CommandLanguage.allCases)
     func confirmIsNotSkip(_ language: CommandLanguage) {
-        for word in ["ok", language == .english ? "confirm" : "potvrď", language == .english ? "yes" : "ano"] {
+        for word in [sheetIntents[2].phrase(language), sheetIntents[3].phrase(language), sheetIntents[0].phrase(language)] {
             #expect(VoiceCommandMatcher.match(transcript: word, on: .noAnswer, language: language) == nil, "\(language) '\(word)'")
         }
     }
@@ -117,7 +124,7 @@ struct VoiceCommandLexiconParityTests {
     func yesWordsStayFillerElsewhere(_ language: CommandLanguage) {
         let yes = sheetIntents[0].phrase(language)
         #expect(VoiceCommandMatcher.match(transcript: yes, on: .question, language: language) == nil)
-        let skip = language == .english ? "yeah, skip" : "\(sheetIntents[1].phrase(language)), \(language == .czech ? "přeskoč" : "preskoč")"
+        let skip = "\(sheetIntents[1].phrase(language)), \(sheetIntents[13].phrase(language))"
         #expect(VoiceCommandMatcher.match(transcript: skip, on: .question, language: language) == .skip, "\(language) '\(skip)'")
     }
 
@@ -130,6 +137,7 @@ struct VoiceCommandLexiconParityTests {
         case .slovak: ["Nie, to bol Paríž", "áno, znova", "nie áno"]
         case .czech: ["Ne, to byla Praha", "ano, znovu", "ne ano"]
         case .english: ["No, it was Paris", "yes, again", "no yes"]
+        case .ukrainian: ["Ні, це був Київ", "так, ще раз", "ні так"]
         }
         for sentence in sentences {
             #expect(VoiceCommandMatcher.match(transcript: sentence, on: .confirmation, language: language) == nil, "'\(sentence)'")
@@ -141,8 +149,8 @@ struct VoiceCommandLexiconParityTests {
     /// open sentences and must act early — it lost the race in the car.
     @Test("sentence-opening words wait for the final; 'again' words do not", arguments: CommandLanguage.allCases)
     func finalOnlyWords(_ language: CommandLanguage) {
-        let no = language == .english ? "no" : (language == .czech ? "ne" : "nie")
-        let again = language == .czech ? "znovu" : (language == .english ? "again" : "znova")
+        let no = sheetIntents[15].phrase(language)
+        let again = VoiceCommandLexicon.spokenWord(.again, language: language)
         #expect(VoiceCommandMatcher.match(transcript: no, on: .confirmation, isFinal: false, language: language) == nil)
         #expect(VoiceCommandMatcher.match(transcript: no, on: .confirmation, isFinal: true, language: language) == .again)
         #expect(VoiceCommandMatcher.match(transcript: again, on: .confirmation, isFinal: false, language: language) == .again)
@@ -160,6 +168,11 @@ struct VoiceCommandLexiconParityTests {
         switch language {
         case .english:
             #expect(bare == .again)
+        case .ukrainian:
+            // "ну" is the Ukrainian "no" particle: filler that often agrees.
+            #expect(VoiceCommandMatcher.match(transcript: "Ну.", on: .confirmation, language: language) == nil)
+            #expect(VoiceCommandMatcher.match(transcript: "ну, підтверди", on: .confirmation, language: language) == .ok)
+            #expect(VoiceCommandMatcher.match(transcript: "ну", on: .noAnswer, language: language) == nil)
         case .slovak, .czech:
             #expect(bare == nil, "\(language) 'no' is filler, not 'again'")
             #expect(VoiceCommandMatcher.match(transcript: "no, potvrď", on: .confirmation, language: language) == .ok)
@@ -176,7 +189,7 @@ struct VoiceCommandLexiconParityTests {
     func hints(_ language: CommandLanguage) {
         let sheet = VoiceCommandLexicon.hint(on: .confirmation, language: language)
         #expect(sheet.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))
-        #expect(!sheet.contains("zruš") && !sheet.contains("cancel"))
+        #expect(!sheet.contains("zruš") && !sheet.contains("cancel") && !sheet.contains("скасуй"))
         let noAnswer = VoiceCommandLexicon.hint(on: .noAnswer, language: language)
         #expect(noAnswer.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))
         #expect(noAnswer.contains(VoiceCommandLexicon.spokenWord(.skip, language: language)))
@@ -191,11 +204,12 @@ struct VoiceCommandLexiconParityTests {
     /// on.
     @Test("confirmation hint quotes the confirm and again button words, each a valid sheet command", arguments: CommandLanguage.allCases)
     func confirmationHintQuotesButtonWords(_ language: CommandLanguage) {
-        let confirmButton = language == .english ? "confirm" : "potvrď"
+        let confirmButton = sheetIntents[3].phrase(language)
         let againButton: String = switch language {
         case .english: "again"
         case .slovak: "znova"
         case .czech: "znovu"
+        case .ukrainian: "ще раз"
         }
         let hint = VoiceCommandLexicon.hint(on: .confirmation, language: language).lowercased()
         for word in [confirmButton, againButton] {

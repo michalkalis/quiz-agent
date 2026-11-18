@@ -9,7 +9,11 @@ import sentry_sdk
 from fastapi import Depends, Request
 from pydantic import BaseModel, Field, field_validator
 from quiz_shared.database.question_store import QuestionStore
-from quiz_shared.languages import QUIZ_LANGUAGES, servable_quiz_languages
+from quiz_shared.languages import (
+    QUIZ_LANGUAGES,
+    is_dark_language,
+    servable_quiz_languages,
+)
 from quiz_shared.models.participant import Participant
 from quiz_shared.models.question import AGE_BANDS, PublicQuestion
 from quiz_shared.models.session import QuizSession
@@ -121,6 +125,8 @@ class CreateSessionRequest(BaseModel):
 
         * outside ``QUIZ_LANGUAGES`` → 422. No shipped build can send such a
           code, so it is a bug or a probe either way.
+        * known but not yet offered by any build (``uk``, #231) and not in
+          ``SERVABLE_QUIZ_LANGUAGES`` → 422.
         * known but not in ``SERVABLE_QUIZ_LANGUAGES`` (de/fr/es/it/pl/hu/ro
           today) → **accepted**, with a WARNING and a Sentry breadcrumb naming
           the code. Every installed build still offers all ten languages, so
@@ -131,6 +137,11 @@ class CreateSessionRequest(BaseModel):
         if code not in QUIZ_LANGUAGES:
             raise ValueError(f"language must be one of {', '.join(QUIZ_LANGUAGES)}")
         servable = servable_quiz_languages()
+        if is_dark_language(code, servable):
+            # #231: no build offers it, so there is nothing to keep working.
+            raise ValueError(
+                f"language {code!r} is not available (available: {', '.join(servable)})"
+            )
         if code not in servable:
             logger.warning(
                 "Session requested non-servable quiz language %r (servable: %s); "

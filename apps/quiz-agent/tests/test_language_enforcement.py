@@ -138,3 +138,22 @@ def test_three_letter_code_rejected():
     """The old pattern rejected these on shape; the new check must too."""
     with pytest.raises(ValidationError):
         CreateSessionRequest(language="eng")
+
+
+@pytest.mark.asyncio
+async def test_ukrainian_session_rejected_until_listed(app, monkeypatch):
+    """#231 — Ukrainian as a fourth language must be completely dark.
+
+    Unlike de, no installed build offers uk, so there is no legacy client to
+    keep alive; accepting it would start a full Ukrainian quiz while the env
+    list claims the language is off. Listing it must open it with no code change.
+    """
+    monkeypatch.delenv("SERVABLE_QUIZ_LANGUAGES", raising=False)
+    response = await _create_session(app, "uk")
+    assert response.status_code == 422, response.text
+    assert "uk" in response.text
+
+    monkeypatch.setenv("SERVABLE_QUIZ_LANGUAGES", "en,sk,cs,uk")
+    response = await _create_session(app, "uk")
+    assert response.status_code == 201, response.text
+    assert response.json()["language"] == "uk"

@@ -238,7 +238,7 @@ async function main() {
 		const props: RoundProps = {items, hookIndex: 0, opening: values.opening as Opening};
 		const timeline = roundTimeline(
 			items.map((it) => it.questionMs),
-			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
+			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.explanation.length})),
 			props.opening === 'solo' ? HOOK_SOLO_MS : 0,
 		);
 		let coverMs = props.opening === 'solo' ? SOLO_COVER_MS : timeline.steps[0].cdStart - 200;

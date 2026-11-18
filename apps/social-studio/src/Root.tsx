@@ -85,7 +85,7 @@ const roundMetadata: CalculateMetadataFunction<RoundProps> = ({props}) => ({
 	durationInFrames: Math.ceil(
 		(roundTimeline(
 			props.items.map((it) => it.questionMs),
-			props.items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.why.length})),
+			props.items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.explanation.length})),
 			props.opening === 'solo' ? HOOK_SOLO_MS : 0,
 		).totalMs /
 			1000) *

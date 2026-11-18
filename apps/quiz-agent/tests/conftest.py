@@ -122,3 +122,13 @@ async def db_sessionmaker() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
         await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_query_embed_cache():
+    """A vector remembered by one test must not hide a slow/failing provider in the next."""
+    from app.retrieval.question_retriever import clear_query_embed_cache
+
+    clear_query_embed_cache()
+    yield
+    clear_query_embed_cache()

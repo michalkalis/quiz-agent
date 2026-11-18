@@ -52,7 +52,9 @@ protocol PersistenceStoreProtocol: Sendable {
 
     /// Remember a served library question. Keeps only the newest
     /// `PersistenceStore.historyWindow` ids: the oldest drop off silently,
-    /// because no cap may ever block playing (#200).
+    /// because no cap may ever block playing (#200). A question played again
+    /// moves to the end (#236): the list is ordered by LAST play, which is
+    /// what a family round repeats by (oldest first).
     func addQuestionId(_ id: String)
 
     /// Clear all question history
@@ -61,6 +63,13 @@ protocol PersistenceStoreProtocol: Sendable {
     /// Get list of question IDs for exclusion (alias for askedQuestionIds)
     /// - Returns: Array of question IDs to exclude
     func getExclusionList() -> [String]
+
+    // MARK: - Family mode (#236)
+
+    /// The family mode as last left; defaults when nothing (readable) is saved.
+    func loadFamilySettings() -> FamilySettings
+
+    func saveFamilySettings(_ settings: FamilySettings)
 
     // MARK: - Pack progress (#200)
 
@@ -112,6 +121,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let packProgressKey = "pack_played_question_ids"
     private let statsKey = "quiz_stats"
     private let signInPromptCountKey = "sign_in_prompt_shown_count"
+    private let familySettingsKey = "family_settings"
 
     /// How many library question ids the history keeps (#200, founder
     /// 2026-10-12). Only an exclusion list: older ids may come back, which is
@@ -254,7 +264,10 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     func addQuestionId(_ id: String) {
         var history = askedQuestionIds
-        guard !history.contains(id) else { return }
+        if let index = history.firstIndex(of: id) {
+            guard index != history.count - 1 else { return }
+            history.remove(at: index)
+        }
 
         history.append(id)
         if history.count > Self.historyWindow {
@@ -275,6 +288,20 @@ final class PersistenceStore: PersistenceStoreProtocol {
         let history = askedQuestionIds
         Logger.persistence.debug("📦 PersistenceStore: Retrieved \(history.count, privacy: .public) excluded question IDs")
         return history
+    }
+
+    // MARK: - Family mode (#236)
+
+    func loadFamilySettings() -> FamilySettings {
+        guard let data = userDefaults.data(forKey: familySettingsKey),
+              let settings = try? JSONDecoder().decode(FamilySettings.self, from: data)
+        else { return FamilySettings() }
+        return settings
+    }
+
+    func saveFamilySettings(_ settings: FamilySettings) {
+        guard let data = try? JSONEncoder().encode(settings) else { return }
+        userDefaults.set(data, forKey: familySettingsKey)
     }
 
     // MARK: - Pack progress (#200)

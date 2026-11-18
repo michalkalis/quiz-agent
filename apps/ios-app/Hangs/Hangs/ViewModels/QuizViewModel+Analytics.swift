@@ -22,7 +22,7 @@ extension QuizViewModel {
             voiceCommandsEnabled: settings.voiceCommandsEnabled,
             entryPoint: entryPoint,
             timezone: TimeZone.current.identifier,
-            quickGame: settings.quickGame
+            quickGame: settings.quickGame && !isFamilySession
         ))
     }
 

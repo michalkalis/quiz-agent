@@ -21,9 +21,10 @@ extension QuizViewModel {
     /// the shared library, which dropped a driver out of the pack they chose.
     /// A failed daily challenge start (#205) retries the daily challenge; its
     /// round end offers no Play Again, and a played day answers with its result.
+    /// A family round (#236) plays the same topic again.
     @discardableResult
     func playAgain() -> Task<Void, Never> {
-        beginQuizStart(pack: activePack, daily: activeDaily?.day)
+        beginQuizStart(pack: activePack, daily: activeDaily?.day, family: activeFamily)
     }
 
     /// "Start over" on the played-through alert: forget the pack's progress,

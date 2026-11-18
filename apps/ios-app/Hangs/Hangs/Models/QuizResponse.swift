@@ -29,6 +29,9 @@ struct QuizResponse: Codable, Sendable {
     /// voice answer (only when the submit asked for it with `read_back=true`).
     /// Absent = synthesize it with `POST /tts/synthesize` as before.
     let readBack: ReadBackAudio?
+    /// #236: `/start` of a family round only — true when the round replays
+    /// questions played before (the topic ran out of new ones).
+    let repeats: Bool?
 
     enum CodingKeys: String, CodingKey {
         case success
@@ -41,6 +44,7 @@ struct QuizResponse: Codable, Sendable {
         case awaitingQuestion = "awaiting_question"
         case crowd
         case readBack = "read_back"
+        case repeats
     }
 
     init(
@@ -53,7 +57,8 @@ struct QuizResponse: Codable, Sendable {
         audio: AudioInfo?,
         awaitingQuestion: Bool = false,
         crowd: CrowdStrip? = nil,
-        readBack: ReadBackAudio? = nil
+        readBack: ReadBackAudio? = nil,
+        repeats: Bool? = nil
     ) {
         self.success = success
         self.message = message
@@ -65,6 +70,7 @@ struct QuizResponse: Codable, Sendable {
         self.awaitingQuestion = awaitingQuestion
         self.crowd = crowd
         self.readBack = readBack
+        self.repeats = repeats
     }
 
     /// Hand-written so a missing `awaiting_question` decodes as `false` — the
@@ -84,6 +90,7 @@ struct QuizResponse: Codable, Sendable {
         crowd = try? container.decodeIfPresent(CrowdStrip.self, forKey: .crowd)
         // #208.3: an optional speed-up — an unreadable one falls back to TTS.
         readBack = try? container.decodeIfPresent(ReadBackAudio.self, forKey: .readBack)
+        repeats = try? container.decodeIfPresent(Bool.self, forKey: .repeats)
     }
 }
 

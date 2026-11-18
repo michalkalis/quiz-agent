@@ -55,7 +55,10 @@ PACK_PRODUCTS = frozenset({"pack_10", "pack_20", "pack_30", "pack_50"})
 ADMIN_TX_PREFIX = "admin-"
 _SOURCE_COLUMNS = (
     "transaction_id, user_id, product_id, prompt, category, theme, "
-    "target_count, language, generation_mode, created_at"
+    "target_count, language, generation_mode, created_at, "
+    # What the buyer chose (#224 difficulty, #236 audience) and the #225 reuse
+    # key: a rebuilt kids' order must not regenerate as an adult pack (#240).
+    "audience, difficulty, prompt_key"
 )
 
 
@@ -229,6 +232,9 @@ async def _recreate(
         target_count=row["target_count"],
         language=row["language"],
         generation_mode=row["generation_mode"],
+        audience=row["audience"],
+        difficulty=row["difficulty"],
+        prompt_key=row["prompt_key"],
         # Apple's verified record, as on the original order (#207 207.5).
         storekit_environment=tx.environment,
         status="pending",

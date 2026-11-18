@@ -19,6 +19,21 @@ def test_ukrainian_text_reads_on_v3_everything_else_stays_on_the_default():
     assert provider.model_for("What is the capital of Australia?") == "eleven_v4_turbo"
 
 
+def test_ukrainian_requests_pin_the_stable_voice_setting_others_are_unchanged():
+    """At v3's default two of eleven Ukrainian questions sounded like another
+    voice (native speaker, round 4). sk/cs/en requests must stay byte-identical."""
+    provider = ElevenLabsTTSProvider(model="eleven_v4_turbo")
+    assert provider.payload_for("Яка столиця Австралії?") == {
+        "text": "Яка столиця Австралії?",
+        "model_id": "eleven_v3",
+        "voice_settings": {"stability": 1.0},
+    }
+    assert provider.payload_for("Aké je hlavné mesto Austrálie?") == {
+        "text": "Aké je hlavné mesto Austrálie?",
+        "model_id": "eleven_v4_turbo",
+    }
+
+
 def test_service_wires_the_cyrillic_model_from_settings():
     settings = SimpleNamespace(
         elevenlabs_tts_model="eleven_v4_turbo",

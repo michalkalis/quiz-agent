@@ -1,7 +1,7 @@
 # #235 — Testy mimo bezproblémového priebehu (pomalá sieť, výpadky, prerušenia)
 
-**Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 hotové 235.1 (prepínač zlej siete v testoch, PR #802) a 235.3 (navigácia ako pravidlo: náhodné sledy overujú, že hráč má vždy cestu von; bez opravy z PR #799 chybu nájdu sami); ďalej 235.2 (tabuľka tok × podmienka); dve chyby z buildu 87 opravené vopred (PR #798 pád pri prvom spustení, PR #799 zmiznutá spodná lišta)
+**Triage:** enhancement · done
+**Status:** 2026-11-18 HOTOVÉ. Všetkých sedem krokov zlúčených: 235.1 prepínač zlej siete v testoch (PR #802), 235.2 tabuľka tok × podmienka (PR #817, PR #825), 235.3 pravidlo navigácie (PR #808), 235.4 skutočné volania systému (PR #816), 235.5 regresné scenáre RS-35 až RS-43 (PR #823), 235.6 server (PR #815), 235.7 pravidlo do kontroly PR (PR #814). Rozhodnutia foundera 2026-11-17: F3 až F7 opravené (PR #831), F1 a F2 ostávajú; pomalý hlas a pomalé vyhľadávanie otázky opravené a nasadené (PR #827). Sledovať: ako často sa spúšťa záložný hlas (limit 6 s nie je podložený meraním).
 **Founder:** 2026-11-15 „aby neboli testy len na happy paths, ale zahrnovali aj edge cases, pomalé pripojenie a podobne“
 
 ## Prečo

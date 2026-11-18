@@ -1,7 +1,7 @@
 # #236 — Rodinná sekcia „S deťmi“
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-15 plán uznaný (SOUND 0.8); 236.1 hotové na serveri (PR #803) aj vo formulári appky (PR #806, vyjde s ďalším buildom); kontroly kvality posudzujú detský balík očami dieťaťa daného pásma (PR #807, naživo); druhá skúška 2026-11-17: „vcelku zábavné“, pridané pravidlo o veľkých číslach (PR #818); ďalej 236.2 texty a 236.3 návrh obrazoviek sekcie
+**Status:** 2026-11-18: 236.1 hotové a naživo vrátane doladení z druhej skúšky (šírka tém PR #830, limit tém PR #837, jazyková oprava PR #836/#840, rovnaký fakt PR #843); 236.3 smer vybratý (B, režim na Úvode); ďalej izolácia otázok s pásmom na serveri, nižší vejár na Úvode, potom pilot obsahu a sekcia v appke
 **Founder:** 2026-11-15 „do kvízu by sa veľmi hodila trochu viac separátna sekcia pre deti … ide skôr o to, aby rodičia mohli hrať s deťmi. Hlavne mať detské témy, možno deliť podľa veku.“
 
 ## Prečo
@@ -63,7 +63,14 @@ Pravidlá návrhu, ktoré z toho plynú:
 
 ### 236.3 Návrh obrazoviek
 
-Varianty na Design plátne, founder vyberie pred kódom: karta „S deťmi“ na domovskej obrazovke → výber veku → témy → hra. V hre: bez časového limitu, miernejšia reakcia na zlú odpoveď, kratšie otázky.
+Plátno: https://claude.ai/artifact/RaPirQB58rKk4qws7Pjsos (smery A/B/C, rad „V hre“, sekcia „B · rozpracované“).
+
+Rozhodnutia foundera 2026-11-18:
+- **Smer B, režim na Úvode:** prepínač „Kvíz | S deťmi“ hore na Úvode zmení Úvod na rodinnú verziu; balíček ukazuje témy a namiesto náročnosti je vek. Žiadna nová záložka.
+- **Appka si režim pamätá** aj po zavretí (proti môjmu odporúčaniu otvárať vždy v bežnom kvíze). Zapnutý režim preto musí byť na Úvode zreteľný: prepínač a tlačidlo „Štart s deťmi“.
+- **Nižší vejár kategórií** na Úvode v oboch režimoch (karty asi o 30 % menšie, výška z ~300 na ~200 bodov); pás kariet zamietnutý. Ide von samostatne ako zmena Úvodu.
+- **Témy podľa pásma**, kolo vždy na jednu tému. Návrh rozdelenia: 4–6 Tvoje telo; Fuj, ale pravda; Veci doma; Superschopnosti zvierat; Dinosaury; Zvuky a smiešne slová. 7–9 Tvoje telo; Fuj, ale pravda; Jedlo ako veda; Ako sa čo vyrába; Superschopnosti zvierat; LEGO; Minecraft; Rekordy; Dinosaury. 10–12 Jedlo ako veda; Dalo by sa to?; Rekordy; Harry Potter; Minecraft; Vesmír; Špióni a šifry.
+- V hre: bez časového limitu; po zlej odpovedi len správna odpoveď a „Prečo“; 4–6 dve veľké tlačidlá; „na pokec“ na vlastnej karte s tlačidlom „Ďalšia“; koniec kola „Toto ste sa dozvedeli“ bez skóre. Prvé prepnutie otvorí voľbu veku, potom sa vek mení v stĺpci „Vek“.
 
 ### 236.4 Obsah
 

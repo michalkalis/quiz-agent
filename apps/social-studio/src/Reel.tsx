@@ -106,7 +106,7 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 							) : null}
 							{now >= revealStart && style.explain === 'line' ? <Reveal q={q} appear={enter(revealStart, 16)} variant={variant} startFrame={f(revealStart, fps)} /> : null}
 							{now >= revealStart && style.explain === 'card' ? (
-								<AnswerReveal q={q} text={q.explanation} appear={enter(revealStart, 16)} why={enter(whyStart, 20)} startFrame={f(revealStart, fps)} />
+								<AnswerReveal q={q} appear={enter(revealStart, 16)} why={enter(whyStart, 20)} startFrame={f(revealStart, fps)} />
 							) : null}
 							{now >= revealStart && style.explain !== 'line' && style.explain !== 'card' ? (
 								<ExplainPhase

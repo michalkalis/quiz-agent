@@ -31,10 +31,10 @@ struct OrderPackFailedStepTests {
         }
     }
 
-    @Test("a still-working timeout exposes NO retry — only a close action")
+    @Test("a non-retryable failure (refunded) exposes NO retry — only a close action")
     func nonRetryableHidesRetry() throws {
         let view = OrderPackFailedStep(
-            message: "Still working — check My packs later.",
+            message: "This order was refunded.",
             isRetryable: false,
             onRetry: {},
             onClose: {}
@@ -47,5 +47,26 @@ struct OrderPackFailedStepTests {
         #expect(throws: Never.self) {
             try tree.find(viewWithAccessibilityIdentifier: "orderPack.gotIt")
         }
+    }
+}
+
+@MainActor
+@Suite("OrderPack still preparing (#240)")
+struct OrderPackStillPreparingStepTests {
+    // WHY (#240, 240.9): after about three minutes of waiting the player
+    // landed on "Something went wrong", "cannot be retried" while the pack
+    // was still being made. The screen must say it is on its way, where it
+    // will appear, and give one way back.
+    @Test("a pack still being made reads as on its way, with My packs and one way back, no retry")
+    func stillPreparingIsNoFailure() throws {
+        let view = OrderPackStillPreparingStep(onClose: {})
+        let tree = try view.inspect()
+        #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "orderPack.stillPreparing") }
+        #expect(throws: Never.self) { try tree.find(text: "Still preparing your pack") }
+        #expect(throws: Never.self) {
+            try tree.find(text: "It is taking longer than usual. When it's ready, you'll find it in My packs.")
+        }
+        #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "orderPack.gotIt") }
+        #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "orderPack.retry") }
     }
 }

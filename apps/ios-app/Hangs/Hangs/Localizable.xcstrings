@@ -7759,6 +7759,23 @@
         }
       }
     },
+    "It is taking longer than usual. When it's ready, you'll find it in My packs." : {
+      "comment" : "#240: under 'Still preparing your pack'; My packs is the packs list where the finished pack appears",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trvá to déle než obvykle. Až bude hotový, najdeš ho v Mých balíčcích."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trvá to dlhšie ako zvyčajne. Keď bude hotový, nájdeš ho v Mojich balíkoch."
+          }
+        }
+      }
+    },
     "Italian" : {
       "comment" : "Language name (exonym)",
       "localizations" : {
@@ -12789,6 +12806,23 @@
         }
       }
     },
+    "Still preparing your pack" : {
+      "comment" : "#240: title when the wait for a custom pack runs past the foreground budget while the pack is still being made",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvůj balíček se ještě připravuje"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tvoj balík sa ešte pripravuje"
+          }
+        }
+      }
+    },
     "That's not a quiz link. Tap the link in the message again." : {
       "localizations" : {
         "sk" : {
@@ -15768,6 +15802,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Теми для %@"
+          }
+        }
+      }
+    },
+    "Try Trubbo, the quiz you play by voice." : {
+      "comment" : "#240: text sent with the profile recap picture; the trubbo.app address follows on its own line",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zkus Trubbo, kvíz, který hraješ hlasem."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skús Trubbo, kvíz, ktorý hráš hlasom."
           }
         }
       }

@@ -5,7 +5,7 @@
 //  #205 — daily challenge: the state of one day's challenge as the server
 //  computes it (played or not, the crowd numbers). The Home card asks for
 //  today on every appearance; the daily round end asks for the day it played
-//  whenever it is on screen, so the numbers fill in as others play.
+//  only while it has nothing to show, so its numbers stay put while open (#240).
 //
 //  A failed fetch keeps the last state of the same day and language; with
 //  none, the card offers the challenge to play (the start then retries).
@@ -84,6 +84,13 @@ final class DailyChallengeViewModel: ObservableObject {
     private func dayMayHaveChanged() async {
         guard followsToday, let language, DailyChallengeDay(now(), calendar: calendar) != day else { return }
         await refreshToday(language: language)
+    }
+
+    /// The daily round end: the challenge of `day` once, unless it already
+    /// shows one (the start brought it, or an earlier fetch).
+    func loadIfMissing(day: DailyChallengeDay, language: String) async {
+        guard state == nil || day != self.day || language != self.language else { return }
+        await refresh(day: day, language: language)
     }
 
     /// The challenge of `day` in `language`. A different day or language

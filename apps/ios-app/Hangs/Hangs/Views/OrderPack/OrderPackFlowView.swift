@@ -49,7 +49,7 @@ struct OrderPackFlowView: View {
                         OrderPackSummaryStep(viewModel: viewModel)
                     case .submitting:
                         OrderPackPreparingStep(progress: nil, onDismiss: onClose)
-                    case .polling(let snapshot):
+                    case let .polling(snapshot):
                         // #182: the first batch makes the pack playable long
                         // before the order is delivered — offer "Start quiz"
                         // right there. The poll keeps running behind this
@@ -63,9 +63,11 @@ struct OrderPackFlowView: View {
                                 onDismiss: onClose
                             )
                         }
-                    case .delivered(let snapshot):
+                    case let .delivered(snapshot):
                         readyStep(snapshot)
-                    case .failed(let message, let retryable):
+                    case .stillPreparing:
+                        OrderPackStillPreparingStep(onClose: onClose)
+                    case let .failed(message, retryable):
                         OrderPackFailedStep(
                             message: message,
                             isRetryable: retryable,
@@ -143,7 +145,7 @@ struct OrderPackFlowView: View {
         switch viewModel.state {
         case .editing: return "New pack"
         case .confirming: return "Summary"
-        case .submitting, .polling, .delivered: return "Your pack"
+        case .submitting, .polling, .stillPreparing, .delivered: return "Your pack"
         case .failed: return "Something went wrong"
         }
     }

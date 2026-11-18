@@ -32,12 +32,14 @@ nonisolated enum SharedQuizLink {
         return token
     }
 
-    /// The token of pasted text that is exactly such a link (surrounding
-    /// whitespace allowed); a message with more text around it is not one.
+    /// The token of the first such link in pasted text: the bare link, or
+    /// the whole message a friend sent ("Play my quiz… " and the link), as
+    /// players copy whatever the chat lets them (#240).
     static func token(fromPasted text: String) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.contains(where: \.isWhitespace), let url = URL(string: trimmed) else { return nil }
-        return token(from: url)
+        text.split(whereSeparator: \.isWhitespace).lazy
+            .compactMap { URL(string: String($0)) }
+            .compactMap(token(from:))
+            .first
     }
 
     private static func isToken(_ value: String) -> Bool {

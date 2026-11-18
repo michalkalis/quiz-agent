@@ -46,6 +46,13 @@ nonisolated enum Config {
         return URL(string: "https://trubbo.app\(prefix)/\(page)")!
     }
 
+    /// The brand site's home page in the app's UI language: trubbo.app (en),
+    /// trubbo.app/sk/, trubbo.app/cs/ (`LANGS` in apps/website/build.py).
+    static func homePageURL(languageCode: String = InterfaceLanguage.code) -> URL {
+        let path = ["sk", "cs"].contains(languageCode) ? "/\(languageCode)/" : ""
+        return URL(string: "https://trubbo.app\(path)")!
+    }
+
     /// API version prefix
     ///
     /// Read from Info.plist which gets populated from xcconfig files

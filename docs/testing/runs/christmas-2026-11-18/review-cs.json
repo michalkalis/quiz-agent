@@ -1,0 +1,261 @@
+{
+  "keep": [
+    "159187d4-3d99-418f-ba03-16c5f0133a1d",
+    "4065c0bb-6ce5-42aa-96fd-fb11dc3be414",
+    "12dc01f7-73f5-4a65-88ed-1e9eb122e90a",
+    "9109646c-9a66-495e-bf8e-53606f0d3283",
+    "273f656b-f43d-4df5-afee-628a6e9b9588",
+    "a7c4523e-1bf2-4307-acf9-9d80144aba80",
+    "e4570207-704e-46cb-ac45-d94c88590313",
+    "cb5fae49-cf32-4d34-9dcd-41e41ade3767",
+    "8c552038-f3a1-40cc-b275-af2067f0a5f2",
+    "111dbb44-0fc3-4d06-902f-640a0d9e76cb",
+    "b8ce1a8e-6e7d-4334-8f95-4a8b60aafd45",
+    "d0d07960-4729-47fc-8a6a-8cb04780aabe",
+    "68dd0df0-4185-46df-b688-40146fa1dafe",
+    "d725aeff-1cae-44b1-9650-9200469db3ca",
+    "105af38e-e2ad-45e1-8e9a-323be0ecb6a6",
+    "fccfc7dd-9d3f-4ae3-92b4-cda090355c51",
+    "c86f9ed3-eb72-49bb-b207-8a877e19e54b",
+    "732a2512-131c-4332-9db6-afb54535fc60",
+    "9f483488-6f33-4117-bc45-5491c6c820d9",
+    "1191380d-f9b1-459d-b7f7-300ea87a4917",
+    "b3fdcb75-a1fa-4ca7-a49b-68ab09b3dd93",
+    "b8eb51f5-be70-43d2-9556-1a25c062f5e8"
+  ],
+  "drop": [
+    {
+      "id": "322ecd75-e66d-45ab-86dc-69f397c1a84a",
+      "why": "Duplicate of live cs question (biskup Mikuláš, Myra -> Turecko)."
+    },
+    {
+      "id": "23591fef-3fc6-4368-bfce-58377d2c816b",
+      "why": "Open 'why' answer is hard to grade by voice; source is a bare gallery page with an English paraphrase."
+    },
+    {
+      "id": "1d9bf697-5e00-477c-a24d-5e7de6aefeee",
+      "why": "Same vánočka-jumping superstition as 111dbb44, which is better worded and verbatim-sourced; this one's source was never fetched."
+    },
+    {
+      "id": "f70f03f3-d9b5-49f0-a5d5-2fc480a8486f",
+      "why": "Answer 'do roka zemře' jars with the festive mood; the set already has four Christmas Eve superstitions."
+    },
+    {
+      "id": "f71bc996-aa1f-43ca-9225-fc232782fdd2",
+      "why": "Wording gives the answer away ('linecké' -> Linec); source URL is a non-canonical wikipedia.com link."
+    },
+    {
+      "id": "ba3ba27f-7f5d-47e6-a572-4a2f8cdcecc0",
+      "why": "Guinness record fact (records can change) and a free-form record answer is hard to grade by voice."
+    },
+    {
+      "id": "749a019d-e0e6-472f-a420-dc9a1f895e27",
+      "why": "Disputed: the source says Trávníček denies the accent reason; the explanation also names the wrong dubbing actor (Svoboda, not Svojtka)."
+    },
+    {
+      "id": "ec8cdbd0-3c4c-429e-a480-23e0161ec163",
+      "why": "Duplicate of live cs question (Popelka staircase, Moritzburg -> Německo)."
+    },
+    {
+      "id": "d52df48b-7364-4c04-a3a0-22e00f582520",
+      "why": "Names Boží Dar, the answer of kept b3fdcb75; two Boží Dar questions in one set is one too many."
+    }
+  ],
+  "fix": [
+    {
+      "id": "12dc01f7-73f5-4a65-88ed-1e9eb122e90a",
+      "field": "question",
+      "new": "Než se kapr stal hlavním vánočním jídlem, jedla se na venkově na Štědrý den často postní kuba. Ze kterých dvou hlavních surovin se dělá?",
+      "why": "cs Wikipedia says kuba was mainly a midday Štědrý den dish, not the evening supper."
+    },
+    {
+      "id": "12dc01f7-73f5-4a65-88ed-1e9eb122e90a",
+      "field": "source_excerpt",
+      "new": "Kuba je tradiční české postní jídlo, jehož základem jsou kroupy a houby (zejména stroček trubkovitý). Podává se především jako polední jídlo na Štědrý den.",
+      "why": "Excerpt was a summary, not a quote; replaced with verbatim cs Wikipedia text."
+    },
+    {
+      "id": "9109646c-9a66-495e-bf8e-53606f0d3283",
+      "field": "source_url",
+      "new": "https://www.novinky.cz/clanek/vanoce-stedrovecerni-lidove-zvyky-k-nam-doputovaly-ze-stredoveku-40215029",
+      "why": "Quiz page is a weak source; Novinky states the custom directly."
+    },
+    {
+      "id": "9109646c-9a66-495e-bf8e-53606f0d3283",
+      "field": "source_excerpt",
+      "new": "Objeví-li se hvězdička, znamená to štěstí, kříž značí smrt nebo vážné onemocnění.",
+      "why": "Verbatim excerpt from the new source."
+    },
+    {
+      "id": "9109646c-9a66-495e-bf8e-53606f0d3283",
+      "field": "alternative_answers",
+      "new": [
+        "hvězdička",
+        "hvězda",
+        "aby byla vidět hvězda",
+        "aby jádřinec tvořil hvězdu",
+        "kvůli hvězdičce",
+        "kvůli hvězdě",
+        "aby vyšla hvězdička"
+      ],
+      "why": "Add common spoken variants with 'hvězda'."
+    },
+    {
+      "id": "9109646c-9a66-495e-bf8e-53606f0d3283",
+      "field": "explanation",
+      "new": "Když jablko rozkrojíte napříč, jádřinec vytvoří pěticípou hvězdičku, a ta věští zdraví na celý rok. Křížek naopak věští nemoc.",
+      "why": "Typo 'věstí' -> 'věští'."
+    },
+    {
+      "id": "a7c4523e-1bf2-4307-acf9-9d80144aba80",
+      "field": "alternative_answers",
+      "new": [
+        "horníci",
+        "horník",
+        "havíři",
+        "havířů",
+        "dělostřelců",
+        "dělostřelci",
+        "pyrotechniků",
+        "pyrotechnici"
+      ],
+      "why": "Barbora is also patron of artillerymen and pyrotechnicians, both correct answers to 'nebezpečné povolání'."
+    },
+    {
+      "id": "a7c4523e-1bf2-4307-acf9-9d80144aba80",
+      "field": "source_url",
+      "new": "https://cs.wikipedia.org/wiki/Svatá_Barbora",
+      "why": "Wikipedia first; old excerpt was English paraphrase of a trade article."
+    },
+    {
+      "id": "a7c4523e-1bf2-4307-acf9-9d80144aba80",
+      "field": "source_excerpt",
+      "new": "je proto patronka havířů, dělostřelců, pyrotechniků, architektů, matematiků a dalších rizikových povolání",
+      "why": "Verbatim cs Wikipedia."
+    },
+    {
+      "id": "e4570207-704e-46cb-ac45-d94c88590313",
+      "field": "source_url",
+      "new": "https://www.novinky.cz/clanek/vanoce-stedrovecerni-lidove-zvyky-k-nam-doputovaly-ze-stredoveku-40215029",
+      "why": "Old excerpt was a paraphrased search summary."
+    },
+    {
+      "id": "e4570207-704e-46cb-ac45-d94c88590313",
+      "field": "source_excerpt",
+      "new": "Pokud bota míří špičkou ke dveřím, dívka může očekávat svatbu a odchod z domu.",
+      "why": "Verbatim excerpt from the new source."
+    },
+    {
+      "id": "cb5fae49-cf32-4d34-9dcd-41e41ade3767",
+      "field": "alternative_answers",
+      "new": [
+        "aby nesjela",
+        "aby se nesesunula",
+        "aby se nesvezla",
+        "aby držela pohromadě",
+        "aby se cop nesvezl",
+        "aby nespadla",
+        "aby se nerozpadla",
+        "aby držela tvar",
+        "drží patra copu"
+      ],
+      "why": "The source's own verb 'aby nesjela' and 'aby se nesvezla' were missing."
+    },
+    {
+      "id": "68dd0df0-4185-46df-b688-40146fa1dafe",
+      "field": "source_url",
+      "new": "https://cs.wiktionary.org/wiki/novina",
+      "why": "Kiwix mirror on a private domain is a weak source."
+    },
+    {
+      "id": "68dd0df0-4185-46df-b688-40146fa1dafe",
+      "field": "source_excerpt",
+      "new": "novina: nová zpráva nebo událost",
+      "why": "Verbatim cs Wiktionary meaning."
+    },
+    {
+      "id": "68dd0df0-4185-46df-b688-40146fa1dafe",
+      "field": "alternative_answers",
+      "new": [
+        "zpráva",
+        "zprávy",
+        "novinka",
+        "novinky",
+        "zvěst",
+        "dobrou zprávu",
+        "radostnou zvěst",
+        "novinu",
+        "novou zprávu"
+      ],
+      "why": "Plural spoken variants 'zprávy', 'novinky' missing."
+    },
+    {
+      "id": "d725aeff-1cae-44b1-9650-9200469db3ca",
+      "field": "source_url",
+      "new": "https://cs.wikipedia.org/wiki/Mrazík",
+      "why": "cs Wikipedia states the bear head exactly (en source says Ivan turns into a bear)."
+    },
+    {
+      "id": "d725aeff-1cae-44b1-9650-9200469db3ca",
+      "field": "source_excerpt",
+      "new": "Přihlížející Dědeček Hříbeček v ten samý moment promění Ivanovu hlavu v medvědí.",
+      "why": "Verbatim cs Wikipedia."
+    },
+    {
+      "id": "fccfc7dd-9d3f-4ae3-92b4-cda090355c51",
+      "field": "source_url",
+      "new": "https://cs.wikipedia.org/wiki/Adventní_věnec",
+      "why": "Wikipedia first instead of a US Catholic blog."
+    },
+    {
+      "id": "fccfc7dd-9d3f-4ae3-92b4-cda090355c51",
+      "field": "source_excerpt",
+      "new": "V některých tradicích se růžová svíčka nazývá Gaudete, podle latinského slova pro „radujte se“. Tato růžová svíčka se obvykle nazývá „pastýřská“ a představuje radost.",
+      "why": "Verbatim cs Wikipedia."
+    },
+    {
+      "id": "c86f9ed3-eb72-49bb-b207-8a877e19e54b",
+      "field": "source_url",
+      "new": "https://cs.wikipedia.org/wiki/Adventní_věnec",
+      "why": "Czech Wikipedia states the cartwheel directly."
+    },
+    {
+      "id": "c86f9ed3-eb72-49bb-b207-8a877e19e54b",
+      "field": "source_excerpt",
+      "new": "Tradici adventního věnce založil v Hamburku německý protestantský teolog Johann Hinrich Wichern (1808–1881). V roce 1839 vyrobil předchůdce dnešních adventních věnců ze starého dřevěného kola.",
+      "why": "Verbatim cs Wikipedia."
+    },
+    {
+      "id": "732a2512-131c-4332-9db6-afb54535fc60",
+      "field": "source_url",
+      "new": "https://cs.wikipedia.org/wiki/Trdelník",
+      "why": "cs article covers both the Skalica origin and the 'staročeský' marketing label, which is what the question tests."
+    },
+    {
+      "id": "732a2512-131c-4332-9db6-afb54535fc60",
+      "field": "source_excerpt",
+      "new": "Za člověka, který ve Skalici trdelníky zpopularizoval, je považován sedmihradský kuchař hraběte Gvadániho. … označení „staročeský trdelník“ je často považováno za pouhý marketingový trik.",
+      "why": "Old excerpt covered only the origin, not the 'not old Prague' claim."
+    },
+    {
+      "id": "1191380d-f9b1-459d-b7f7-300ea87a4917",
+      "field": "alternative_answers",
+      "new": [
+        "perličky",
+        "skleněné perle",
+        "perle",
+        "foukané perličky",
+        "foukané perle",
+        "skleněné korálky",
+        "korálky"
+      ],
+      "why": "UNESCO name uses 'perle'; spoken 'perle' / 'skleněné perle' missing."
+    },
+    {
+      "id": "b8eb51f5-be70-43d2-9556-1a25c062f5e8",
+      "field": "source_excerpt",
+      "new": "Samotného dárce obdarované děti nikdy neměly vidět, maximálně jim jeho odchod zahlásil zvoneček.",
+      "why": "Excerpt was an English paraphrase; verbatim Czech from the same article."
+    }
+  ]
+}

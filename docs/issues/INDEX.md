@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 238 | [Brány kvality otázok + prekontrolovanie fondu](issue-238-question-qa-gates.md) | enhancement · ready-for-agent | `[ ]` #238 | 2026-10-25: 18 chýb v schválených (#210); celá otázka proti stiahnutému zdroju, latka 0,9, jazyk sk/cs všetkých polí pred schválením, schválenie viazané na text; prekontrolovanie 145+316+96 najprv; schválené 10-26; 11-18 founder: po vydaní 1.3, nič nepostavené, etapa 1 (~50 $) skutočný náklad = súhlas pred behom |
 | 237 | [Povolenie povelov na požiadanie + nový onboarding](issue-237-voice-permission-onboarding.md) | enhancement · done | `[x]` #237 | 2026-11-18: hotové PR #832; okno reči len na požiadanie (onboarding, lišta), onboarding Mikrofón → Príkazy |
 | 236 | [Rodinná sekcia „S deťmi“](issue-236-family-section.md) | enhancement · ready-for-agent | `[~]` #236 | 2026-11-15: 3 pásma, „na pokec“ hneď; mimo Kids Category, rámovanie na rodiča; 236.1 hotové: server (PR #803), formulár appky (PR #806), kontroly očami dieťaťa (PR #807); druhá skúška 11-17 „vcelku zábavné“ + pravidlo o veľkých číslach (PR #818); ďalej texty (236.2) a návrh obrazoviek sekcie (236.3) |
 | 235 | [Testy mimo bezproblémového priebehu](issue-235-tests-beyond-happy-path.md) | enhancement · done | `[x]` #235 | 2026-11-18: všetkých sedem krokov zlúčených (PR #798–#831), serverové opravy nasadené |

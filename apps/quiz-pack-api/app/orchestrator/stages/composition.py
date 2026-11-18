@@ -7,7 +7,8 @@ were true/false. Founder-approved rules, enforced here with zero LLM calls:
 - **Topic cap** — at most 2 questions per (normalized) topic per 30-pack,
   scaled as ``max(1, ceil(2 * target / 30))`` for other sizes. Overridable
   per run via the constructor (``--per-topic-cap`` on the CLI, #167) for
-  batches with a deliberately small locked topic set.
+  batches with a deliberately small locked topic set. A child-band pack
+  (#236) has no topic cap.
 - **True/false cap** — at most 2 T/F questions per 30-pack, same scaling.
   A child-band pack (#236) uses `CHILD_PER_30_TF_CAP` instead.
 
@@ -91,8 +92,17 @@ class CompositionStage:
         # topics (#153 sourcing rule), so a cap of 1 on a small pack would
         # mathematically guarantee a shortfall. T/F has no such risk (the
         # format is substitutable), so its floor stays 1.
+        # #236: no topic cap on a child-band pack (always one customer
+        # order on one topic). The model labels nearly every whole-topic
+        # question with the order's topic ("LEGO"), so the cap counted the
+        # order, not a sub-subject: in the second trial it threw away paid
+        # questions ("dropped ... topic='LEGO' over per-topic cap 2"), and
+        # it never sees sub-theme questions at all (#203 203.9, below).
+        # Spread across a child pack comes from its sub-theme plan.
         topic_cap = (
-            self._per_topic_cap
+            None
+            if is_child(ctx.audience)
+            else self._per_topic_cap
             if self._per_topic_cap is not None
             else _scaled_cap(PER_30_TOPIC_CAP, target, floor=2)
         )
@@ -143,7 +153,11 @@ class CompositionStage:
                     tf_count += 1
                 kept_indices.append(index)
                 continue
-            if topic and topic_counts.get(topic, 0) >= topic_cap:
+            if (
+                topic
+                and topic_cap is not None
+                and topic_counts.get(topic, 0) >= topic_cap
+            ):
                 topic_dropped += 1
                 logger.warning(
                     "CompositionStage dropped id=%s topic=%r over per-topic "

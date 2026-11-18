@@ -36,6 +36,7 @@ from typing import Any, Protocol
 
 from quiz_shared.models.question import GenerationProvenance, Question
 
+from app.audience import is_child
 from app.orchestrator.context import OrderContext
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,16 @@ logger = logging.getLogger(__name__)
 QUESTIONS_PER_SUBTHEME = 3.5
 MIN_QUOTA = 3
 MAX_QUOTA = 4
+
+# #236 (second trial 2026-11-17): a child-band pack follows the kids prompt's
+# "Range" rule (no two questions feel like siblings), so its sub-themes carry
+# 1-2 questions each, about two sub-themes per three questions. The adult 3-4
+# shape put every question after round 1 of a 4-question "Harry Potter
+# through the real world: owls, potion chemistry, ..." pack on the first
+# sub-theme (`budget // MIN_QUOTA` = 1 used): 3 of 4 were about owls.
+CHILD_QUESTIONS_PER_SUBTHEME = 1.5
+CHILD_MIN_QUOTA = 1
+CHILD_MAX_QUOTA = 2
 # Sub-theme generation calls of one round run concurrently, a few at a time
 # (a round of 8 is two or three calls).
 SUBTHEME_CONCURRENCY = 3
@@ -54,7 +65,7 @@ PLAN_KEY = "subtheme_plan"
 
 class SubthemeProposer(Protocol):
     async def propose_subthemes(
-        self, request: str, language: str, count: int
+        self, request: str, language: str, count: int, audience: str | None = None
     ) -> list[str] | None: ...
 
 
@@ -62,8 +73,16 @@ class SubthemeProposer(Protocol):
 Call = tuple[str | None, int]
 
 
-def subtheme_count(pack_target: int) -> int:
-    return max(1, math.ceil(pack_target / QUESTIONS_PER_SUBTHEME))
+def _shape(audience: str | None) -> tuple[float, int, int]:
+    """(questions per sub-theme, min quota, max quota) for the order's band."""
+    if is_child(audience):
+        return CHILD_QUESTIONS_PER_SUBTHEME, CHILD_MIN_QUOTA, CHILD_MAX_QUOTA
+    return QUESTIONS_PER_SUBTHEME, MIN_QUOTA, MAX_QUOTA
+
+
+def subtheme_count(pack_target: int, audience: str | None = None) -> int:
+    per, _, _ = _shape(audience)
+    return max(1, math.ceil(pack_target / per))
 
 
 def stamp_of(question: Question) -> str | None:
@@ -82,17 +101,20 @@ def stamp(questions: Sequence[Question], name: str, plan: list[dict[str, Any]]) 
         )
 
 
-def split_quotas(names: Sequence[str], budget: int) -> list[dict[str, Any]]:
+def split_quotas(
+    names: Sequence[str], budget: int, audience: str | None = None
+) -> list[dict[str, Any]]:
     """Spread ``budget`` evenly over as many sub-themes as keep every quota at
-    3 or more, each capped at 4. When the planner returned too few names the
-    cap leaves part of the budget unplanned; that part is generated on the
-    whole topic (see ``allocate``)."""
+    3 or more, each capped at 4 (a child band: 1 or more, capped at 2). When
+    the planner returned too few names the cap leaves part of the budget
+    unplanned; that part is generated on the whole topic (see ``allocate``)."""
     if budget <= 0 or not names:
         return []
-    used = max(1, min(len(names), budget // MIN_QUOTA))
+    _, min_quota, max_quota = _shape(audience)
+    used = max(1, min(len(names), budget // min_quota))
     base, extra = divmod(budget, used)
     return [
-        {"name": name, "quota": min(MAX_QUOTA, base + (1 if i < extra else 0))}
+        {"name": name, "quota": min(max_quota, base + (1 if i < extra else 0))}
         for i, name in enumerate(names[:used])
     ]
 
@@ -169,9 +191,15 @@ async def round_calls(
         else:
             if size < pack_target:
                 # More rounds follow: plan them while this one generates.
+                # #236: only a child-band call carries the band, so an adult
+                # call stays exactly as before.
+                band = {"audience": ctx.audience} if is_child(ctx.audience) else {}
                 ctx.subtheme_task = asyncio.create_task(
                     planner.propose_subthemes(
-                        request, ctx.language, subtheme_count(pack_target)
+                        request,
+                        ctx.language,
+                        subtheme_count(pack_target, ctx.audience),
+                        **band,
                     )
                 )
             return [(None, size)]
@@ -191,6 +219,6 @@ def _plan_from(
         )
         return []
     unstamped = sum(1 for q in ctx.questions if stamp_of(q) is None)
-    plan = split_quotas(names, pack_target - unstamped)
+    plan = split_quotas(names, pack_target - unstamped, ctx.audience)
     logger.info("subthemes order_id=%s plan=%s", ctx.order_id, plan)
     return plan

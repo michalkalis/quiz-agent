@@ -82,6 +82,34 @@ async def test_a_failed_start_does_not_use_up_the_pack_play(client, app):  # noq
     assert (await _session(app, resp)).fixed_question_ids == ["p1", "p2"]
 
 
+async def test_a_lost_start_answer_does_not_use_up_the_pack_play(client, app):  # noqa: F811
+    """The app retries a start whose answer it lost (timeout, a dropped
+    network, Cancel on the spinner), and Try Again opens the link once more.
+    Until the friend answered a question they have not played the pack, so a
+    repeat must hand them the pack, never "already played" for a quiz they
+    never heard. Their first answer is where the one play is spent."""
+    token = (await _share(client, "owner", pack_id=PACK))["token"]
+    sessions = app.state.session_manager
+    lost = await _session(app, await _start(client, token, "friend"))
+    # Even the session start went through before its answer was lost.
+    lost.asked_question_ids = ["p1"]
+    lost.phase = SessionPhase.AWAITING_ANSWER
+    await sessions.update_session(lost)
+
+    retry = await _start(client, token, "friend")
+    assert retry.status_code == 200, retry.text
+    played = await _session(app, retry)
+    assert played.fixed_question_ids == ["p1", "p2"] and played.phase == "idle"
+    # One play still: the lost session is gone, not a second copy to play.
+    assert await sessions.get_session(lost.session_id) is None
+
+    played.question_results["p1"] = "correct"
+    await sessions.update_session(played)
+    again = await _start(client, token, "friend")
+    assert again.status_code == 409
+    assert again.json()["detail"]["code"] == "already_played"
+
+
 def _fail_once(real):
     calls = []
 

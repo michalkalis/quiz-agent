@@ -8,7 +8,7 @@ import secrets
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -120,11 +120,17 @@ class SharedQuizStore:
             return await db.get(SharedQuiz, uuid.UUID(str(share_id)))
 
     async def begin_play(
-        self, share: SharedQuiz, subject_id: str, name: Optional[str], *, once: bool
+        self,
+        share: SharedQuiz,
+        subject_id: str,
+        name: Optional[str],
+        *,
+        once: bool,
+        session_id: Optional[str] = None,
     ) -> bool:
-        """Note that this person started the share. ``once`` (a pack): False
-        when this person — under any of their ids — already started this pack
-        through any link."""
+        """Note that this person started the share (in ``session_id``).
+        ``once`` (a pack): False when this person — under any of their ids —
+        already started this pack through any link."""
         async with self._sm() as db:
             ids = await person_ids(db, subject_id)
             if (
@@ -146,12 +152,39 @@ class SharedQuizStore:
                     shared_quiz_id=share.id,
                     subject_id=subject_id,
                     display_name=name,
+                    session_id=session_id,
                     started_at=utcnow(),
                 )
                 .on_conflict_do_nothing()
             )
             await db.commit()
             return bool(inserted.rowcount) or not once
+
+    async def open_play(self, share: SharedQuiz, subject_id: str) -> Optional[str]:
+        """The session this person's unfinished play of this share runs in."""
+        async with self._sm() as db:
+            found = await self._row(db, share.id, await person_ids(db, subject_id))
+            if found is None or found.finished_at is not None:
+                return None
+            return found.session_id
+
+    async def move_play(
+        self, share_id: uuid.UUID, old_session_id: str, new_session_id: str
+    ) -> bool:
+        """Move an unfinished play to a new session, unless it moved or
+        finished meanwhile (a concurrent start or finish wins)."""
+        async with self._sm() as db:
+            moved = await db.execute(
+                update(SharedQuizResult)
+                .where(
+                    SharedQuizResult.shared_quiz_id == share_id,
+                    SharedQuizResult.session_id == old_session_id,
+                    SharedQuizResult.finished_at.is_(None),
+                )
+                .values(session_id=new_session_id)
+            )
+            await db.commit()
+            return bool(moved.rowcount)
 
     async def release_play(self, share_id: uuid.UUID, subject_id: str) -> None:
         """Undo an unfinished ``begin_play`` whose session could not be made."""

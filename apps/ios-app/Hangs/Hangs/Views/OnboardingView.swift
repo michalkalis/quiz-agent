@@ -3,9 +3,9 @@
 //  Hangs
 //
 //  Onboarding flow bound to OnboardingViewModel (52.5 state machine).
-//  Pages: Welcome (gkeCn) · Features (hTdkE) · Mic Access (haWJM) · Denied (COHnz).
-//  #52 task 52.13. #194 C7: "Sklo nad kartami" restyle (canvas Bg-Onboarding,
-//  Bg-Features, Bg-Mic, Bg-MicDenied).
+//  #237 (founder pick 2026-11-17, canvas A4 + A3): Microphone → Voice
+//  commands, plus the mic-denied page. #194 C7: "Sklo nad kartami" restyle
+//  (canvas Bg-Mic, Bg-MicDenied).
 //
 
 import SwiftUI
@@ -13,6 +13,7 @@ import SwiftUI
 struct OnboardingView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @Environment(\.openURL) private var openURL
+    @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,54 +42,48 @@ struct OnboardingView: View {
     @ViewBuilder
     private var page: some View {
         switch viewModel.page {
-        case .welcome: welcomePage
-        case .features: featuresPage
-        case .permission: permissionPage
+        case .microphone: microphonePage
+        case .commands: commandsPage
         case .permissionDenied: deniedPage
         }
     }
 
     // #194 C7: each page is one category-colour card with the page's glyph
-    // (canvas Bg-Onboarding / Bg-Mic / Bg-MicDenied), then a left-aligned
-    // title and text. Static: the illustration does not loop.
-    private var welcomePage: some View {
-        illustratedPage(
-            title: "ANSWER BY VOICE",
-            text: "Trubbo reads questions aloud and listens for your answers. No tapping needed during a quiz."
-        ) {
-            illustrationCard(categoryId: "geography-world") { style in
-                VStack(spacing: Theme.Hangs.Spacing.xl) {
-                    glyphDisc(systemName: "mic.fill", glyph: style.text, disc: style.text.opacity(0.18))
-                    soundBars(color: style.text)
-                }
-            }
-        }
-        .accessibilityIdentifier("onboarding.welcome")
-    }
-
-    private var featuresPage: some View {
-        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
-            textBlock(title: "HANDS-FREE", text: "Perfect for driving, cooking, or walking.")
-                .padding(.top, Theme.Hangs.Spacing.md)
-
-            featuresCard
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .accessibilityIdentifier("onboarding.features")
-    }
-
-    private var permissionPage: some View {
+    // (canvas Bg-Mic / Bg-MicDenied), then a left-aligned title and text.
+    // Static: the illustration does not loop.
+    /// #237: the first page, so it carries the AI services disclosure (#209).
+    private var microphonePage: some View {
         illustratedPage(
             title: "MIC ACCESS",
-            text: "Trubbo needs microphone access to hear your voice answers. You can also type answers as a fallback."
+            text: "Trubbo needs microphone access to hear your answers. You can also type them."
         ) {
             illustrationCard(categoryId: "movies-music") { style in
                 glyphDisc(systemName: "mic.fill", glyph: style.fill, disc: Theme.Hangs.Category.chipFill)
             }
+        } footer: {
+            aiDisclosure
         }
         .accessibilityIdentifier("onboarding.permission")
+    }
+
+    /// #237 (canvas A3): what a command is, shown with three real ones, and
+    /// that iOS will ask about speech recognition next.
+    private var commandsPage: some View {
+        illustratedPage(
+            title: "VOICE COMMANDS",
+            text: "Say “next” and you don't have to touch the phone. Handy when your hands are full."
+        ) {
+            illustrationCard(categoryId: "science-nature") { style in
+                commandsIllustration(glyph: style.text)
+            }
+        } footer: {
+            Label("Your iPhone will ask about speech recognition. You can answer by voice without commands.", systemImage: "info.circle")
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("onboarding.speechRecognitionNote")
+        }
+        .accessibilityIdentifier("onboarding.commands")
     }
 
     private var deniedPage: some View {
@@ -107,16 +102,20 @@ struct OnboardingView: View {
 
     private func illustratedPage(
         title: LocalizedStringKey,
-        text: LocalizedStringKey,
-        @ViewBuilder illustration: () -> some View
+        text: LocalizedStringKey?,
+        @ViewBuilder illustration: () -> some View,
+        @ViewBuilder footer: () -> some View = { EmptyView() }
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: Theme.Hangs.Spacing.md)
             illustration()
                 .frame(maxWidth: .infinity)
             Spacer(minLength: Theme.Hangs.Spacing.xl)
-            textBlock(title: title, text: text)
-                .padding(.horizontal, Theme.Hangs.Spacing.sm)
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.lg) {
+                textBlock(title: title, text: text)
+                footer()
+            }
+            .padding(.horizontal, Theme.Hangs.Spacing.sm)
             Spacer(minLength: Theme.Hangs.Spacing.md)
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -148,84 +147,54 @@ struct OnboardingView: View {
             .background(Circle().fill(disc))
     }
 
-    /// Five static bars: the "it listens" mark under the welcome mic.
-    private func soundBars(color: Color) -> some View {
-        HStack(spacing: Theme.Hangs.Spacing.xxs) {
-            ForEach(Metrics.bars.indices, id: \.self) { index in
-                Capsule()
-                    .fill(color)
-                    .frame(width: Metrics.barWidth, height: Metrics.bars[index])
+    /// Three command words on white plates, staggered left → centre → right
+    /// (canvas A3), under the "listening" waveform. The words follow the
+    /// interface language, which is the quiz language and so the command one.
+    private func commandsIllustration(glyph: Color) -> some View {
+        let words = OnboardingViewModel.commandWords(
+            language: .forQuizLanguage(locale.language.languageCode?.identifier ?? "en")
+        )
+        let alignments: [Alignment] = [.leading, .center, .trailing]
+        return VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: "waveform")
+                .font(.hangsHeading)
+                .foregroundStyle(glyph)
+            ForEach(Array(words.enumerated()), id: \.offset) { index, word in
+                Text(verbatim: word)
+                    .font(.hangsHeading)
+                    .foregroundStyle(Theme.Hangs.Category.chipText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, Theme.Hangs.Spacing.md)
+                    .padding(.vertical, Theme.Hangs.Spacing.xs)
+                    .background(Capsule().fill(Theme.Hangs.Category.chipFill))
+                    .frame(maxWidth: .infinity, alignment: alignments[index % alignments.count])
             }
         }
+        .padding(Theme.Hangs.Spacing.xl)
     }
 
-    private func textBlock(title: LocalizedStringKey, text: LocalizedStringKey) -> some View {
+    private func textBlock(title: LocalizedStringKey, text: LocalizedStringKey? = nil) -> some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
             Text(title)
                 .font(.hangsDisplaySM)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .hangsHeadlineFit()
                 .accessibilityAddTraits(.isHeader)
-            Text(text)
-                .font(.hangsBodyLG)
-                .foregroundStyle(Theme.Hangs.Colors.muted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Features card
-
-    /// #194 C7 (canvas Bg-Features): the four command tips as cards in
-    /// category colours, the last one plain — the buttons that always work.
-    private var featuresCard: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
-            ForEach(OnboardingFeature.all.indices, id: \.self) { index in
-                featureRow(OnboardingFeature.all[index])
-            }
-        }
-    }
-
-    private func featureRow(_ feature: OnboardingFeature) -> some View {
-        let style = feature.categoryId.map { Theme.Hangs.Category.style(for: $0) }
-        let text = style?.text ?? Theme.Hangs.Colors.ink
-        return HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
-            Image(systemName: feature.icon)
-                .font(.hangsLabel)
-                .frame(width: Metrics.featureIcon, height: Metrics.featureIcon)
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.chip, style: .continuous)
-                        .fill(text.opacity(0.14))
-                )
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                Text(feature.title)
-                    .font(.hangsLabel)
-                Text(feature.description)
-                    .font(.hangsBody)
-                    .opacity(0.9)
+            if let text {
+                Text(text)
+                    .font(.hangsBodyLG)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .foregroundStyle(text)
-        .padding(Theme.Hangs.Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                .fill(style?.fill ?? Theme.Hangs.Colors.bgCard)
-                .strokeBorder(style == nil ? Theme.Hangs.Colors.hairline : Color.clear)
-        )
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private enum Metrics {
         /// Canvas illustration card (294 × 276) and the glyph disc on it.
         static let cardSize = CGSize(width: 294, height: 276)
         static let disc: CGFloat = 120
-        static let barWidth: CGFloat = 5
-        static let bars: [CGFloat] = [12, 22, 30, 22, 12]
-        static let featureIcon: CGFloat = 40
     }
 
     // MARK: - Bottom controls
@@ -250,20 +219,48 @@ struct OnboardingView: View {
         .padding(.bottom, Theme.Hangs.Spacing.sm)
     }
 
+    /// #209 (App Review guideline 5.1.2(i)): before first use, name the AI
+    /// services that process the player's spoken answers and typed pack topics.
+    /// Kept to one short line; the provider list lives in the linked privacy
+    /// policy and in the full notice in Settings. #237: it sits on the
+    /// microphone page (the first one) above both of its buttons, so Allow and
+    /// Maybe later are the consent (`OnboardingViewModel` records it).
+    private var aiDisclosure: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+            Text("Your answers and pack topics are processed by third-party AI services. By continuing, you agree.")
+                .font(.hangsCaption)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("onboarding.aiDisclosure")
+
+            Button("Privacy Policy") {
+                openURL(Config.privacyPolicyURL)
+            }
+            .font(.hangsCaption.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .accessibilityIdentifier("onboarding.privacyPolicy")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     @ViewBuilder
     private var primaryButton: some View {
         switch viewModel.page {
-        case .welcome, .features:
-            HangsPrimaryButton(title: "Continue", icon: "arrow.right") {
-                viewModel.advance()
-            }
-            .accessibilityIdentifier("onboarding.continue")
-
-        case .permission:
+        case .microphone:
             HangsPrimaryButton(title: "Allow Microphone", icon: "mic.fill") {
                 Task { await viewModel.requestMicPermission() }
             }
             .accessibilityIdentifier("onboarding.allowMic")
+
+        case .commands:
+            HangsPrimaryButton(
+                title: "Turn on commands",
+                icon: "waveform",
+                isLoading: viewModel.isEnablingCommands
+            ) {
+                Task { await viewModel.turnOnCommands() }
+            }
+            .accessibilityIdentifier("onboarding.enableCommands")
 
         case .permissionDenied:
             HangsPrimaryButton(title: "Open Settings", icon: "gearshape.fill") {
@@ -278,17 +275,18 @@ struct OnboardingView: View {
     @ViewBuilder
     private var secondaryButton: some View {
         switch viewModel.page {
-        case .welcome, .features:
-            HangsSecondaryButton(title: "Skip") {
-                viewModel.continueWithoutMic()
-            }
-            .accessibilityIdentifier("onboarding.skip")
-
-        case .permission:
+        case .microphone:
             HangsSecondaryButton(title: "Maybe later") {
                 viewModel.continueWithoutMic()
             }
             .accessibilityIdentifier("onboarding.maybeLater")
+
+        case .commands:
+            HangsSecondaryButton(title: "Not now") {
+                viewModel.skipCommands()
+            }
+            .disabled(viewModel.isEnablingCommands)
+            .accessibilityIdentifier("onboarding.commandsNotNow")
 
         case .permissionDenied:
             HangsSecondaryButton(title: "Type answers instead", icon: "keyboard") {
@@ -299,41 +297,18 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Feature data
-
-private struct OnboardingFeature {
-    let icon: String
-    /// Card colour (#194 C7); nil = the plain white card.
-    let categoryId: String?
-    let title: LocalizedStringKey
-    let description: LocalizedStringKey
-
-    // Command-education card (#96 P2, adopted from pen `hTdkE`): the post-diagnosis
-    // onboarding-2 content that teaches the English-only, screen-scoped command
-    // grammar — the founder's discoverability gap. Buttons remain the fallback.
-    static let all: [OnboardingFeature] = [
-        .init(icon: "mic.fill", categoryId: "geography-world", title: #"Say "start""#, description: #"Say "start" after a question, or tap Answer, to begin answering."#),
-        .init(icon: "checklist", categoryId: "science-nature", title: "Five simple words", description: "start · ok · next · repeat · skip. That's the whole command set."),
-        .init(icon: "globe", categoryId: "sports", title: "English by default", description: "Commands are spoken in English by default — Slovak command words can be enabled in Settings."),
-        .init(icon: "hand.tap.fill", categoryId: nil, title: "Buttons always work", description: "Every command also has an on-screen button. Voice is optional."),
-    ]
-}
-
 #if DEBUG
-    #Preview("Welcome") {
-        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
-        OnboardingView(viewModel: vm)
+    #Preview("Microphone") {
+        OnboardingView(viewModel: OnboardingViewModel(
+            audioService: MockAudioService(), persistenceStore: MockPersistenceStore(), enableCommands: {}
+        ))
     }
 
-    #Preview("Features") {
-        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
-        vm.advance()
-        return OnboardingView(viewModel: vm)
-    }
-
-    #Preview("Permission") {
-        let vm = OnboardingViewModel(audioService: MockAudioService(), persistenceStore: MockPersistenceStore())
-        vm.advance(); vm.advance()
+    #Preview("Commands") {
+        let vm = OnboardingViewModel(
+            audioService: MockAudioService(), persistenceStore: MockPersistenceStore(), enableCommands: {}
+        )
+        Task { await vm.requestMicPermission() }
         return OnboardingView(viewModel: vm)
     }
 #endif

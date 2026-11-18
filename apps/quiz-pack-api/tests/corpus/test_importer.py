@@ -208,6 +208,57 @@ async def test_boost_until_reaches_the_db_row_dict(
     assert question_to_row(questions[0]).boost_until == UNTIL
 
 
+class _StubLocalScope:
+    """Labels every row it is given as Slovak-local; records what it saw."""
+
+    def __init__(self) -> None:
+        self.seen: list[str] = []
+
+    async def label(self, questions, batch_size=25):
+        from app.generation.local_scope_classifier import LocalScope, apply_local_scope
+
+        for q in questions:
+            self.seen.append(q.id)
+            apply_local_scope(q, LocalScope(scope="sk", reason="Bratislava MHD"))
+        return len(questions)
+
+
+@pytest.mark.asyncio
+async def test_new_rows_are_labelled_local_before_insert(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#206: every corpus writer goes through this importer, so this is where a
+    new question gets its "local" label — without it, a player who switched
+    local questions off would still get every newly generated one. A row that
+    already carries a verdict (labelled JSON) is not classified twice."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("LOCAL_SCOPE_CLASSIFICATION", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(
+        lib, "_embed_batch", lambda client, texts: [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+    )
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    already = _clean("q_done", language="sk")
+    already["generation_metadata"]["extra"]["local_scope"] = {"scope": None, "reason": "x"}
+    questions = lib.parse_questions(
+        [_clean("q_mhd", language="sk"), already], lib.AUTO_REVIEW_STATUS
+    )
+    stub = _StubLocalScope()
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True, local_scope_classifier=stub
+    )
+
+    assert stub.seen == [_id("q_mhd")]
+    assert result.local_scope_labelled == 1
+    by_id = {str(r["id"]): r for r in captured}
+    assert by_id[_id("q_mhd")]["local_scope"] == "sk"
+    assert by_id[_id("q_mhd")]["provenance"]["extra"]["local_scope"]["scope"] == "sk"
+    assert by_id[_id("q_done")]["local_scope"] is None
+
+
 @pytest.mark.asyncio
 async def test_execute_without_openai_key_raises_and_writes_nothing(
     fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
@@ -279,6 +330,99 @@ async def test_cli_dry_run_output_shape_is_unchanged(
     assert "no_source_url" in out
     assert "Inserted:" not in out
     assert fake_db.statements == []
+
+
+class _StubNaturalness:
+    """Flags every row it is given; records what it saw."""
+
+    def __init__(self) -> None:
+        self.seen: list[str] = []
+
+    async def label(self, questions, batch_size=20):
+        from app.generation.naturalness_check import Naturalness, apply_naturalness
+
+        for q in questions:
+            self.seen.append(q.id)
+            apply_naturalness(
+                q, Naturalness(ok=False, problems=[{"kind": "calque", "quote": "x"}], rewrite="y")
+            )
+        return len(questions)
+
+
+@pytest.mark.asyncio
+async def test_new_sk_cs_rows_get_the_naturalness_label_before_insert(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#211: the importer is the one write point of every corpus writer, so a
+    new native sk/cs row is checked here without a manual step. English rows
+    and rows already checked are not sent; the question text is stored as
+    generated (the verdict is a label, the founder decides on rewrites)."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("NATURALNESS_CHECK", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    monkeypatch.setattr(
+        lib, "_embed_batch", lambda client, texts: [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+    )
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    already = _clean("q_cs_done", language="cs")
+    already["generation_metadata"]["extra"]["naturalness"] = {"ok": True}
+    questions = lib.parse_questions(
+        [_clean("q_sk", language="sk"), _clean("q_en"), already], lib.AUTO_REVIEW_STATUS
+    )
+    original = questions[0].question
+    stub = _StubNaturalness()
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True, naturalness_checker=stub
+    )
+
+    assert stub.seen == [_id("q_sk")]
+    assert result.naturalness_checked == 1
+    by_id = {str(r["id"]): r for r in captured}
+    assert by_id[_id("q_sk")]["provenance"]["extra"]["naturalness"]["ok"] is False
+    assert by_id[_id("q_sk")]["question"] == original
+
+
+@pytest.mark.asyncio
+async def test_autofix_stores_the_rewrite_embedded_from_the_new_text(
+    fake_db: _FakeEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """#211 211.4: founder 2026-10-23 chose auto-fix for new sk/cs rows after
+    the blind pairs (rewrite 15/20). With NATURALNESS_AUTOFIX the flagged row
+    goes in with the rewrite, the original stays in provenance for audit, and
+    the vectors embed the text players get, not the replaced one."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setenv("NATURALNESS_CHECK", "1")
+    monkeypatch.setenv("NATURALNESS_AUTOFIX", "1")
+    monkeypatch.setattr(lib, "OpenAI", lambda: object())
+    embedded: list[str] = []
+
+    def _fake_embed(client, texts):
+        embedded.extend(texts)
+        return [[0.1] * lib.EMBEDDING_DIM for _ in texts]
+
+    monkeypatch.setattr(lib, "_embed_batch", _fake_embed)
+    captured: list[dict] = []
+    real = lib._row_to_insert_dict
+    monkeypatch.setattr(lib, "_row_to_insert_dict", lambda row: captured.append(real(row)) or captured[-1])
+
+    questions = lib.parse_questions(
+        [_clean("q_sk", language="sk"), _clean("q_en")], lib.AUTO_REVIEW_STATUS
+    )
+    original = questions[0].question
+    result = await lib.import_questions(
+        questions, database_url_or_engine=fake_db, execute=True,
+        naturalness_checker=_StubNaturalness(),
+    )
+
+    assert result.naturalness_rewritten == 1
+    row = {str(r["id"]): r for r in captured}[_id("q_sk")]
+    assert row["question"] == "y"
+    verdict = row["provenance"]["extra"]["naturalness"]
+    assert (verdict["original_question"], verdict["applied_by"]) == (original, "import")
+    assert "y" in embedded and original not in embedded
 
 
 @pytest.mark.asyncio

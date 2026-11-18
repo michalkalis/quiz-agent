@@ -41,6 +41,7 @@
 		</dict>
 #endif
 	</dict>
+#ifdef DEBUG
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -52,6 +53,7 @@
 			</array>
 		</dict>
 	</array>
+#endif
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -74,7 +76,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Trubbo uses the microphone to hear your spoken quiz answers and voice commands.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Voice commands let you control the quiz hands-free. Recognition happens on your device.</string>
+	<string>Lets you control the quiz with voice commands like “next”. Recognition stays on your device.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>RethinkSans-SemiBold.ttf</string>

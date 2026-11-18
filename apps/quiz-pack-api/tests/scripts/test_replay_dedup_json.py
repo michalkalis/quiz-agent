@@ -80,7 +80,7 @@ async def test_replay_reproduces_the_original_stage_decisions(
 ) -> None:
     """Same input + same switches ⇒ the same kept/dropped/reason per candidate
     as a direct `DedupStage` run, and the file carries the switches verbatim."""
-    monkeypatch.delenv("DEDUP_GRAYZONE_JUDGE", raising=False)
+    monkeypatch.setenv("DEDUP_GRAYZONE_JUDGE", "0")
     monkeypatch.setenv("DEDUP_STRICTNESS_PER_CATEGORY", "entertainment=cosine:0.92")
     path = _write(tmp_path)
     out = tmp_path / "replay.json"
@@ -110,7 +110,7 @@ async def test_replay_reproduces_the_original_stage_decisions(
     assert [(d["id"], d["kept"], d["reason"]) for d in payload["decisions"]] == expected
     assert payload["info"]["kept"] == 2 and payload["info"]["dropped"] == 2
     assert payload["env"]["DEDUP_STRICTNESS_PER_CATEGORY"] == "entertainment=cosine:0.92"
-    assert payload["env"]["DEDUP_GRAYZONE_JUDGE"] is None
+    assert payload["env"]["DEDUP_GRAYZONE_JUDGE"] == "0"
     assert replay_store.calls == original_store.calls
 
 

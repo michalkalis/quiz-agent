@@ -84,7 +84,7 @@ struct VoiceCommandFuzzyMatchTests {
     @Test("'star' does not start the quiz from a volatile hypothesis (#119 guard)")
     func starDoesNotStartFromVolatile() {
         #expect(VoiceCommandMatcher.jaroWinkler("star", "start") > 0.9, "the premise: JW loves this pair")
-        #expect(VoiceCommandMatcher.match(transcript: "star", on: .home, isFinal: false) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "star", on: .question, isFinal: false) == nil)
     }
 
     /// WHY the JW term is scoped to SHORTER-than-variant tokens: at equal
@@ -96,7 +96,7 @@ struct VoiceCommandFuzzyMatchTests {
     func sameLengthNearMissStaysRejected() {
         #expect(VoiceCommandMatcher.jaroWinkler("skib", "skip") > 0.8, "the premise: JW would accept it")
         #expect(VoiceCommandMatcher.match(transcript: "skib", on: .question, isFinal: true) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "nekst", on: .result, isFinal: true) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "nekst", on: .noAnswer, isFinal: true) == nil)
     }
 
     /// WHY a shared HEAD is required too: Jaro-Winkler divides matches by the

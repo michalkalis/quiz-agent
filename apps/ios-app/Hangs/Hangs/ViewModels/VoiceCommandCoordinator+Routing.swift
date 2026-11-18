@@ -35,8 +35,11 @@ extension VoiceCommandCoordinator {
         // The final result IS the utterance boundary, whatever happens below
         // (window closed / unmatched / suppressed) — the latch must never
         // outlive the utterance it belongs to.
+        // #208.7: what the utterance turned out to be, for its one log line.
+        var utteranceOutcome = "unmatched"
         defer {
             if transcript.isFinal {
+                flushUtteranceLog(screen: currentCommandScreen, outcome: utteranceOutcome)
                 endUtterance()
                 noteFinalProcessedForFeedback() // #122 follow-up: utterance over, cue stale
             }
@@ -59,6 +62,10 @@ extension VoiceCommandCoordinator {
         // number, measured off-device and confirmed here. -1 == first transcript
         // of the utterance (no interval), never a real measurement.
         let sincePrevMs = noteTranscriptArrival()
+        // #208.7: an utterance that BEGAN over the read stays under the echo
+        // guard to its final, which can arrive after the read ended.
+        if sincePrevMs == nil { utteranceBeganDuringRead = listensThroughQuestionRead }
+        noteUtteranceTranscript()
 
         // #119 volatile stability (see `noteVolatileTranscript`): recorded for
         // EVERY volatile, including the ones dropped below, so the baseline is
@@ -74,6 +81,7 @@ extension VoiceCommandCoordinator {
         supersedePendingSettle(normalized: normalized, isFinal: transcript.isFinal, tokens: tokens)
 
         guard let screen = currentCommandScreen else {
+            utteranceOutcome = "windowClosed"
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 SentryLog.info(
                     "voice cmd transcript dropped — window closed",
@@ -86,6 +94,31 @@ extension VoiceCommandCoordinator {
             return
         }
 
+        // #208.7 echo guard (+Reading): the read's words are stripped before
+        // matching. Nothing left = the app heard itself; drop it silently.
+        let underEchoGuard = isUnderEchoGuard
+        let echoText = echoGuardText(on: screen)
+        var matchText = transcript.text
+        var guardedNormalized = normalized
+        if let stripped = strippingReadWords(normalized, read: echoText) {
+            let keepsCancelWord = stripped.split(separator: " ")
+                .contains { VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
+            guard keepsCancelWord || VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
+                utteranceLog.echoDrops += 1
+                utteranceOutcome = "echo"
+                // The sheet keeps the listener's audio per utterance: the
+                // echo's audio must not open the driver's next answer.
+                if screen == .confirmation, transcript.isFinal { noteConfirmationUtteranceEnded(.noise) }
+                return
+            }
+            matchText = stripped
+            guardedNormalized = stripped
+        }
+        // #208.7 backup "hearing": words arrived while the bar still said nothing.
+        if VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage) {
+            noteTranscriptHeardForFeedback()
+        }
+
         // #185 5.1 (founder 2026-09-24): on the answer sheet anything that is
         // not a command is a NEW answer. Two duties here, the rest is the
         // recording side's: (1) any content-bearing speech holds the countdown,
@@ -94,7 +127,7 @@ extension VoiceCommandCoordinator {
         // out to be. Declared after the `endUtterance` defer, so it runs BEFORE
         // the latch is cleared.
         let onAnswerSheet = screen == .confirmation
-        let hasContent = VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage)
+        let hasContent = VoiceCommandMatcher.hasContentTokens(guardedNormalized, language: commandLanguage)
         var spokenAnswer: String?
         defer {
             if onAnswerSheet, transcript.isFinal {
@@ -113,7 +146,7 @@ extension VoiceCommandCoordinator {
         // NOT in the question screen's normal command set, so this must be
         // checked BEFORE the matcher (which would otherwise drop it).
         if pendingSkipWindow != nil {
-            let cancelTokens = normalized.split(separator: " ").map(String.init)
+            let cancelTokens = guardedNormalized.split(separator: " ").map(String.init)
             if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 noteMatchedForFeedback() // #122: visual twin of the ack earcon
@@ -130,12 +163,16 @@ extension VoiceCommandCoordinator {
         // guesses of a guess would multiply the false-fire surface that #119's
         // stability gate exists to bound.
         var matched = VoiceCommandMatcher.match(
-            transcript: transcript.text, on: screen, isFinal: transcript.isFinal,
+            transcript: matchText, on: screen, isFinal: transcript.isFinal,
             language: commandLanguage
         )
         var viaAlternative = false
         if matched == nil, transcript.isFinal {
-            for alternative in transcript.alternatives {
+            let alternatives = echoText != nil
+                ? transcript.alternatives.compactMap { alternative in
+                    strippingReadWords(VoiceCommandMatcher.normalize(alternative, language: commandLanguage), read: echoText)
+                } : transcript.alternatives
+            for alternative in alternatives {
                 if let fromAlternative = VoiceCommandMatcher.match(
                     transcript: alternative, on: screen, isFinal: true, language: commandLanguage
                 ) {
@@ -146,13 +183,19 @@ extension VoiceCommandCoordinator {
             }
         }
 
+        // #208.7: over the read only repeat / skip route — "start" would
+        // open the answer mic under the rest of the sentence.
+        if let command = matched, listensThroughQuestionRead, !Self.readingCommands.contains(command) {
+            matched = nil
+        }
+
         guard let command = matched else {
             // #185 5.1: a finished non-command utterance on the answer sheet is
             // the driver's new answer — understood, so no "didn't get that" glow.
             let isNewAnswer = onAnswerSheet && transcript.isFinal && hasContent && !commandFiredThisUtterance
             if isNewAnswer {
                 spokenAnswer = transcript.text
-            } else {
+            } else if !underEchoGuard { // over the read, a miss is most likely the app's own voice
                 // #122: the "heard you, didn't understand" glow — throttled inside.
                 noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
             }
@@ -167,6 +210,7 @@ extension VoiceCommandCoordinator {
             return
         }
 
+        utteranceOutcome = "suppressed"
         if let suppression = suppressionReason(
             for: command, on: screen, isFinal: transcript.isFinal, isStableVolatile: isStableVolatile
         ) {
@@ -202,6 +246,7 @@ extension VoiceCommandCoordinator {
             return
         }
 
+        utteranceOutcome = "matched"
         fireCommand(
             command, on: screen, text: normalized, heard: transcript.text,
             path: transcript.isFinal ? .finalResult : .volatileRepeat,
@@ -284,10 +329,6 @@ extension VoiceCommandCoordinator {
             return
         }
         switch (screen, command) {
-        // Home — spoken "start" begins the quiz.
-        case (.home, .start):
-            Task { [weak self] in await self?.startNewQuiz() }
-
         // Question — hands-free START recovery (P4a, founder-overridable flag).
         case (.question, .start):
             guard voiceStartOnQuestionEnabled else { return }
@@ -299,8 +340,14 @@ extension VoiceCommandCoordinator {
         case (.question, .repeatQuestion):
             Task { [weak self] in await self?.repeatQuestion() }
 
-        // Question — skip via the ~2.5 s undo-window (commit / abort).
+        // Question — skip via the ~2.5 s undo-window (commit / abort). #208.7:
+        // said over the read, the read stops first — that the read stops is
+        // how the driver hears it worked (the ack tone stays muted under the
+        // question, `emitEarcon`).
         case (.question, .skip):
+            if listensThroughQuestionRead {
+                Task { [weak self] in await self?.stopQuestionRead() }
+            }
             beginSkipUndoWindow()
 
         // Confirmation sheet — on top of the 5 s auto-confirm + buttons.
@@ -325,10 +372,6 @@ extension VoiceCommandCoordinator {
         // toolbar's play button is the way back.
         case (.question, .pause), (.confirmation, .pause):
             pauseQuiz()
-
-        // Result — advance (on top of auto-advance + button).
-        case (.result, .next), (.result, .ok):
-            continueToNext()
 
         // #188 G1: the error screen — retry like its primary button, or leave.
         case (.error, .again):

@@ -168,3 +168,48 @@ async def test_subthemes_none_on_failure_or_empty_request(
     # Nothing to split → no model call at all.
     assert await planner.propose_subthemes("  ", "en", 9) is None
     assert planner._client.ainvoke.await_count == 1
+
+
+# --- #236: a child-band pack's sub-themes ------------------------------------
+# Second trial 2026-11-17: "Harry Potter through the real world: owls, potion
+# chemistry, real models for creatures and places" came back 3 of 4 about owls.
+# A child pack's planner must ask for small sub-themes and cover every angle
+# the request names; the adult planner prompt must not move a byte.
+
+# sha256 of the adult sub-theme prompt rendered by origin/main 61fe7bdc
+# (count=9, Slovak, "Harry Potter"), before the child wording existed.
+_ADULT_SUBTHEME_PROMPT_SHA = (
+    "0d1c10270ab72ad0bae57588a95f2574afa198828421bd193909448e27aadb66"
+)
+
+
+async def _subtheme_prompt(monkeypatch: pytest.MonkeyPatch, **kw) -> str:
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    planner = TopicPlanner()
+    planner._client = _fake_client('["a", "b", "c"]')
+    await planner.propose_subthemes("Harry Potter", "sk", 9, **kw)
+    return planner._client.ainvoke.call_args.args[0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("kw", [{}, {"audience": None}, {"audience": "adults"}])
+async def test_adult_subtheme_prompt_is_unchanged(
+    monkeypatch: pytest.MonkeyPatch, kw
+) -> None:
+    import hashlib
+
+    prompt = await _subtheme_prompt(monkeypatch, **kw)
+    assert hashlib.sha256(prompt.encode()).hexdigest() == _ADULT_SUBTHEME_PROMPT_SHA
+
+
+@pytest.mark.asyncio
+async def test_child_subtheme_prompt_asks_for_small_subthemes_covering_every_angle(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    prompt = await _subtheme_prompt(monkeypatch, audience="kids_10_12")
+    # The quota the plan really gives a child pack (1-2), not the adult 3-4:
+    # told "3 to 4 on each", a planner proposes broad sub-themes like "owls".
+    assert "the pack gets 1 to 2 questions on each" in prompt
+    assert "3 to 4" not in prompt
+    assert "a child aged 10-12" in prompt
+    assert "cover every one of them" in prompt

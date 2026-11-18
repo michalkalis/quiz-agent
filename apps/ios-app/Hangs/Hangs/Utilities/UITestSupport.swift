@@ -4,12 +4,13 @@
 //
 //  Active only in DEBUG builds when launched with `--ui-test`.
 //  Wires deterministic mock services and exposes a registry so the
-//  hangs-test:// URL scheme handler can drive STT events programmatically
-//  without real audio input.
+//  hangs-test:// URL scheme handler can inject a spoken answer, a voice
+//  command or an audio interruption without real audio input.
 //
 
 #if DEBUG
 
+    import Clocks
     import Foundation
     import Network
     import os
@@ -21,9 +22,30 @@
             CommandLine.arguments.contains("--ui-test")
         }
 
-        /// Live mock STT registered by `makeMockServices()`. The URL-scheme handler
-        /// uses this to inject events into the running ViewModel.
-        private static var mockSTT: MockElevenLabsSTTService?
+        /// The live mocks registered by `makeMockServices()`. A spoken answer is
+        /// injected through them (#208.8): the "mic" delivers a short clip and
+        /// the end of speech, and the "server" hears the injected transcript.
+        private static var mockNetwork: MockNetworkService?
+        private static var mockRooms: MockRoomService?
+        /// #235.5: calls held since launch (`--ui-test-network-hold`).
+        private static var launchHolds: [NetworkHold] = []
+        /// #212: where a test's join link lands, as if the player opened it.
+        weak static var roomInvites: RoomInviteInbox?
+        /// #232: where `shared/open` delivers a quiz link.
+        weak static var sharedQuizInbox: SharedQuizInbox?
+        /// #213.8: the host's game-together rules, emptied once per launch so
+        /// every RS run starts from the defaults (a test's change never leaks).
+        static let roomSettingsDefaults: UserDefaults = {
+            let name = "ui-test-room-settings"
+            let defaults = UserDefaults(suiteName: name) ?? .standard
+            defaults.removePersistentDomain(forName: name)
+            return defaults
+        }()
+
+        private static var mockSilence: MockSilenceDetectionService?
+        /// `/recording/interrupt` drives a phone call through it, along the
+        /// same routing the real `AudioService` uses.
+        private static var mockAudio: MockAudioService?
 
         /// Live command sink registered by `AppState.sharedQuizViewModel()` when
         /// `--ui-test` is active (issue #111 T3). Routes a transcript straight into
@@ -43,7 +65,7 @@
             audio: AudioServiceProtocol,
             persistence: PersistenceStoreProtocol,
             silence: SilenceDetectionServiceProtocol,
-            stt: ElevenLabsSTTServiceProtocol?
+            rooms: RoomServiceProtocol
         ) {
             let network = MockNetworkService()
             network.mockSession = QuizResponse.previewStartQuiz.session
@@ -55,6 +77,8 @@
             } else {
                 network.mockTextInputResponse = QuizResponse.previewAnswerCorrect
             }
+
+            SharedQuizFixtures.configure(network)
 
             if CommandLine.arguments.contains("--ui-test-paywall") {
                 network.createSessionError = NetworkError.quotaLimitReached(QuotaLimitError(
@@ -90,11 +114,28 @@
             if CommandLine.arguments.contains("--ui-test-plan-loading") {
                 // Never-resolving /usage → the card holds its loading placeholder
                 // so the loading→loaded frame-stability can be verified.
-                network.getUsageGate = { try? await Task.sleep(for: .seconds(600)) }
+                network.gates[.getUsage] = { try? await Task.sleep(for: .seconds(600)) }
             }
 
             // #205: the daily challenge flags (DailyChallengeFixtures).
             DailyChallengeFixtures.configure(network)
+            // #235.1: a bad network (`--ui-test-network slow` etc., see
+            // MockNetworkService+Conditions).
+            network.applyLaunchNetworkCondition()
+            // #235.5: `--ui-test-network-hold <name,name>` keeps those calls in
+            // flight from launch until `/network/release`, however long the
+            // test runner takes to reach the screen (a fixed delay can run out
+            // while XCUITest waits for the app to idle).
+            if let index = CommandLine.arguments.firstIndex(of: "--ui-test-network-hold"),
+               index + 1 < CommandLine.arguments.count
+            {
+                launchHolds = CommandLine.arguments[index + 1].split(separator: ",").map { name in
+                    guard let call = MockNetworkCall(rawValue: String(name)) else {
+                        preconditionFailure("--ui-test-network-hold: unknown call \(name)")
+                    }
+                    return network.hold(call)
+                }
+            }
 
             let audio = MockAudioService()
             let persistence = MockPersistenceStore()
@@ -133,8 +174,8 @@
             // taps and field typing; the timer fires before they can land.
             seededSettings.autoConfirmEnabled = false
             // #200: auto-record is always on, so the think window is what opens
-            // the mic under UI test (recording is then driven by injected STT
-            // events). Voice scenarios keep the 30 s the retired answer timer
+            // the mic under UI test (recording is then driven by an injected
+            // spoken answer). Voice scenarios keep the 30 s the retired answer timer
             // gave them — they tap Record well inside it.
             // MCQ: a short window so recording auto-starts within ~1s (no mic
             // button in redesigned UI). #125: the long-stem MCQ fixture needs an
@@ -173,9 +214,6 @@
                 }
             }
 
-            let stt = MockElevenLabsSTTService()
-            mockSTT = stt
-
             // Silence mock seeded `.unavailable`: keeps the command-listener hint
             // (and, before #179 D1, the ListenBar itself) hidden exactly as the
             // old `nil` service did — a default `.ready` mock would arm the
@@ -190,19 +228,66 @@
                 silence.commandAvailability = .unavailable(reason: "UI-test mock")
             }
 
+            // #212: a scripted room. The host's start goes through the mock
+            // network; a guest's host is driven by `hangs-test://room/...`.
+            let rooms = MockRoomService()
+            network.onStartQuiz = { [rooms] in rooms.beginGame() }
+            if CommandLine.arguments.contains("--ui-test-room-nearby") {
+                rooms.nearby = [NearbyRoom(roomId: MockRoomService.roomId, hostName: "Michal", hostColor: "#ff6b2c", playerCount: 1)]
+            }
+            if CommandLine.arguments.contains("--ui-test-room-full") {
+                rooms.extraGuests = ["Peťo", "Zuzka"]
+            }
+            if CommandLine.arguments.contains("--ui-test-room-round") {
+                rooms.revealMode = .round
+            }
+
+            mockNetwork = network
+            mockSilence = silence
+            mockAudio = audio
+            mockRooms = rooms
+
             Logger.quiz.info("🧪 UITestSupport: mock services wired (autoConfirmEnabled=false)")
-            return (network, audio, persistence, silence, stt)
+            return (network, audio, persistence, silence, rooms)
         }
 
-        /// Inject an arbitrary STT event into the live mock STT.
-        /// Returns false if no mock has been registered (e.g., not in UI test mode).
+        /// #213.4: the Profile's stat cards: a seasoned player, or with
+        /// `--ui-test-profile-new` one on the way to the first recap.
+        static func makeMockPlayerStats() -> PlayerStatsServiceProtocol {
+            let isNew = CommandLine.arguments.contains("--ui-test-profile-new")
+            return MockPlayerStatsService(
+                results: [.success(isNew ? .mockNewPlayer : .mockSeasoned)],
+                recaps: [.success(isNew ? [] : [.mockOctober])]
+            )
+        }
+
+        /// The player says `text` into the open answer recording (#208.8). The
+        /// real batch path runs: the capture receives half a second of audio,
+        /// the VAD reports the end of speech, the coordinator uploads the WAV,
+        /// and the mock server hears `text` and grades it. Returns false —
+        /// the seam fails loudly — when no answer recording is armed.
         @discardableResult
-        static func injectSTTEvent(_ event: STTEvent) async -> Bool {
-            guard let stt = mockSTT else {
-                Logger.quiz.error("🧪 UITestSupport: injectSTTEvent called but no mock STT is registered")
+        static func injectSpokenAnswer(_ text: String) async -> Bool {
+            guard let network = mockNetwork, let silence = mockSilence else {
+                Logger.quiz.error("🧪 UITestSupport: injectSpokenAnswer called but no mocks are registered")
                 return false
             }
-            await stt.injectEvent(event)
+            // The capture arms a few hops after the probe reads `recording`
+            // (engine start, detector session): wait for it, bounded.
+            var waitedMs = 0
+            while !(silence.isAnswerCaptureActive && silence.isAnswerDetectionActive), waitedMs < 3000 {
+                try? await Task.sleep(for: .milliseconds(50))
+                waitedMs += 50
+            }
+            guard silence.isAnswerCaptureActive else {
+                Logger.quiz.error("🧪 UITestSupport: injectSpokenAnswer found no armed answer recording")
+                return false
+            }
+            network.nextVoiceTranscript = text
+            silence.simulateSilenceEvent(.speechStarted)
+            // 0.5 s of 16 kHz 16-bit silence: past the "nothing captured" floor.
+            silence.simulateAnswerAudio(Data(count: Int(silence.answerAudioSampleRate)))
+            silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.0))
             return true
         }
 
@@ -225,13 +310,52 @@
             return true
         }
 
+        /// #235.5: the network changes mid-run, so a scenario can lose it and
+        /// get it back. `profile` is a `--ui-test-network` profile (3 s for
+        /// slow / dropped) or `clear`; `calls` names the mock calls it hits.
+        /// Without `calls` it hits every call and the game together's polls,
+        /// which fail with the error the profile throws (a poll cannot be
+        /// slowed). An unknown name answers 404, as at launch.
+        private static func changeNetworkCondition(profile: String, calls names: String?) async -> Bool {
+            guard let mockNetwork, let mockRooms else { return false }
+            var condition: NetworkCondition?
+            if profile != "clear" {
+                guard let parsed = NetworkCondition(profile: profile, delay: .seconds(3)) else { return false }
+                condition = parsed
+            }
+            guard let names else {
+                mockNetwork.setNetworkCondition(condition)
+                do {
+                    try await condition?.apply(clock: AnyClock(ImmediateClock()))
+                    mockRooms.stateError = nil
+                } catch {
+                    mockRooms.stateError = error
+                }
+                return true
+            }
+            let calls = names.split(separator: ",").compactMap { MockNetworkCall(rawValue: String($0)) }
+            guard calls.count == names.split(separator: ",").count else { return false }
+            mockNetwork.setNetworkCondition(condition, for: calls)
+            return true
+        }
+
         /// Route a `hangs-test://` URL to the appropriate mock action.
         ///
         /// Supported URLs:
-        /// - `hangs-test://stt/partial?text=foo`   → `STTEvent.partialTranscript("foo")`
-        /// - `hangs-test://stt/committed?text=foo` → `STTEvent.committedTranscript("foo")`
-        /// - `hangs-test://stt/connected`          → `STTEvent.connected`
-        /// - `hangs-test://stt/disconnect?msg=x`   → `STTEvent.disconnected(error)`
+        /// - `hangs-test://stt/committed?text=foo` → the player answers "foo" into
+        ///   the open recording (`injectSpokenAnswer`; the path name predates #208.8)
+        /// - `hangs-test://stt/connected`          → readiness ping, no effect
+        /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
+        ///   call) hits the recording
+        /// - `hangs-test://room/join?text=<token>` → the join link opens (#212)
+        /// - `hangs-test://shared/open?text=<token>` → a friend's quiz link opens (#232)
+        /// - `hangs-test://room/start`, `hangs-test://room/next` → a guest's host
+        ///   starts the scripted game / moves on (#212)
+        /// - `hangs-test://network/condition?text=<profile>&calls=<name,name>` →
+        ///   the network changes while the app runs (#235.5); `text=clear`
+        ///   brings it back (`changeNetworkCondition`)
+        /// - `hangs-test://network/release` → the calls held since launch
+        ///   (`--ui-test-network-hold`) answer (#235.5)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
@@ -251,22 +375,37 @@
             Logger.quiz.info("🧪 UITestSupport: handling URL host=\(host, privacy: .public) path=\(path, privacy: .public)")
 
             switch (host, path) {
-            case ("stt", "/partial"):
-                await injectSTTEvent(.partialTranscript(text))
-                return true
             case ("stt", "/committed"):
-                await injectSTTEvent(.committedTranscript(text))
-                return true
+                return await injectSpokenAnswer(text)
             case ("stt", "/connected"):
-                await injectSTTEvent(.connected)
                 return true
-            case ("stt", "/disconnect"):
-                let msg = queryItems.first(where: { $0.name == "msg" })?.value
-                let err: Error? = msg.map { ElevenLabsSTTError.serverError($0) }
-                await injectSTTEvent(.disconnected(err))
+            case ("recording", "/interrupt"):
+                guard let mockAudio else { return false }
+                mockAudio.simulateInterruptionBegan()
                 return true
             case ("command", "/send"):
                 return await handleCommand(text)
+            case ("room", "/join"):
+                guard let roomInvites, let link = URL(string: "\(RoomInvite.joinPageURL())?t=\(text)") else { return false }
+                return roomInvites.receive(link)
+            case ("shared", "/open"):
+                guard let sharedQuizInbox else { return false }
+                return sharedQuizInbox.receive(SharedQuizLink.url(token: text))
+            case ("room", "/start"):
+                guard let mockRooms else { return false }
+                mockRooms.hostStarts()
+                return true
+            case ("room", "/next"):
+                guard let mockRooms else { return false }
+                mockRooms.hostMovesOn()
+                return true
+            case ("network", "/condition"):
+                let calls = queryItems.first(where: { $0.name == "calls" })?.value
+                return await changeNetworkCondition(profile: text, calls: calls)
+            case ("network", "/release"):
+                guard !launchHolds.isEmpty else { return false }
+                launchHolds.forEach { $0.release() }
+                return true
             default:
                 Logger.quiz.error("🧪 UITestSupport: unrecognized URL \(url.absoluteString, privacy: .public)")
                 return false
@@ -274,7 +413,7 @@
         }
 
         /// Bind a tiny HTTP server on `127.0.0.1:9999` that translates incoming
-        /// requests into the same mock-STT events as the `hangs-test://` URL
+        /// requests into the same mock actions as the `hangs-test://` URL
         /// scheme. Workaround for the iOS 26.3 simulator LaunchServices bug
         /// (`kLSApplicationNotFoundErr`) which drops custom URL scheme delivery.
         /// Idempotent — calling twice is a no-op.

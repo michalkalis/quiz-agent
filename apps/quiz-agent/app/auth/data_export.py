@@ -1,7 +1,8 @@
 """The personal-data trail for the GDPR export (Art. 15/20, #193 — beta hardening).
 
 Reads what ``erase_account`` / ``erase_anonymous`` remove or unlink — in-app
-feedback, analytics events, custom pack orders and daily challenge plays — for every subject id the
+feedback, analytics events, custom pack orders, daily challenge plays and shared
+quizzes with their results — for every subject id the
 person used (the account plus its linked anonymous ids, or just the anon). Sign-in
 does not re-key these rows, so pre-sign-in data only shows up under the anon ids.
 
@@ -23,6 +24,9 @@ from ..db.models import (
     DailyChallengeAnswer,
     DailyChallengePlay,
     Feedback,
+    PlayerRecap,
+    SharedQuiz,
+    SharedQuizResult,
     VoiceSample,
 )
 
@@ -34,7 +38,92 @@ async def export_trail(session: AsyncSession, subject_ids: list[str]) -> dict:
         "pack_orders": await _pack_orders(session, subject_ids),
         "voice_samples": await _voice_samples(session, subject_ids),
         "daily_challenges": await _daily_challenges(session, subject_ids),
+        "player_recaps": await _player_recaps(session, subject_ids),
+        "shared_quizzes": await _shared_quizzes(session, subject_ids),
+        "shared_quiz_results": await _shared_quiz_results(session, subject_ids),
     }
+
+
+async def _shared_quizzes(session: AsyncSession, subject_ids: list[str]) -> list[dict]:
+    """#232 quizzes the person sent by link, with their own result. Friends'
+    results on them are the friends' data and stay out."""
+    rows = (
+        (
+            await session.execute(
+                select(SharedQuiz)
+                .where(SharedQuiz.sender_subject_id.in_(subject_ids))
+                .order_by(SharedQuiz.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        {
+            "token": r.token,
+            "kind": r.kind,
+            "language": r.language,
+            "title": r.title,
+            "question_count": len(r.question_ids),
+            "created_at": r.created_at,
+            "display_name": r.sender_name,
+            "score": r.sender_score,
+            "total": r.sender_total,
+        }
+        for r in rows
+    ]
+
+
+async def _shared_quiz_results(
+    session: AsyncSession, subject_ids: list[str]
+) -> list[dict]:
+    """#232 the person's own plays of quizzes friends sent them."""
+    rows = (
+        await session.execute(
+            select(SharedQuizResult, SharedQuiz.kind, SharedQuiz.language)
+            .join(SharedQuiz, SharedQuizResult.shared_quiz_id == SharedQuiz.id)
+            .where(SharedQuizResult.subject_id.in_(subject_ids))
+            .order_by(SharedQuizResult.started_at)
+        )
+    ).all()
+    return [
+        {
+            "kind": kind,
+            "language": language,
+            "display_name": r.display_name,
+            "score": r.score,
+            "total": r.total,
+            "started_at": r.started_at,
+            "finished_at": r.finished_at,
+        }
+        for r, kind, language in rows
+    ]
+
+
+async def _player_recaps(session: AsyncSession, subject_ids: list[str]) -> list[dict]:
+    """#213.3 stored recap snapshots (their payload is derived from the events)."""
+    rows = (
+        (
+            await session.execute(
+                select(PlayerRecap)
+                .where(PlayerRecap.subject_id.in_(subject_ids))
+                .order_by(PlayerRecap.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        {
+            "kind": r.kind,
+            "period_start": r.period_start,
+            "created_at": r.created_at,
+            "seen_at": r.seen_at,
+            "schema_version": r.schema_version,
+            "payload": r.payload,
+        }
+        for r in rows
+    ]
 
 
 async def _daily_challenges(

@@ -15,43 +15,19 @@ Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.ym
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 
+import asc_iap_mirror as mirror
 import asc_store_upload as up
-import requests
-from asc_audit import BASE, BUNDLE_ID, get
+from asc_audit import BASE, BUNDLE_ID, exact_bundle, get, latest_version
 
 V2 = BASE.replace("/v1", "/v2")
 SHOTS = up.FL / "iap_review"
 
 
 def upload_review_screenshot(iap: dict) -> None:
-    pid = iap["attributes"]["productId"]
-    cur = get(f"{V2}/inAppPurchases/{iap['id']}/appStoreReviewScreenshot")
-    if cur.get("data"):
-        state = (cur["data"]["attributes"].get("assetDeliveryState") or {}).get("state")
-        print(f"    existing screenshot: {state}")
-        if state == "COMPLETE":
-            return
-        up.send("DELETE", f"/inAppPurchaseAppStoreReviewScreenshots/{cur['data']['id']}")  # stale upload blocks a new one (409)
-    f = SHOTS / f"{pid}.png"
-    if not f.exists():
-        raise SystemExit(f"  !! {pid}: no review screenshot in ASC and none at {f}")
-    data = f.read_bytes()
-    res = up.send("POST", "/inAppPurchaseAppStoreReviewScreenshots", {"data": {
-        "type": "inAppPurchaseAppStoreReviewScreenshots", "attributes": {"fileName": f.name, "fileSize": len(data)},
-        "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap["id"]}}}}})
-    if not up.APPLY:
-        return
-    for op in res["data"]["attributes"]["uploadOperations"]:
-        hdrs = {h["name"]: h["value"] for h in op.get("requestHeaders", [])}
-        requests.request(op["method"], op["url"], headers=hdrs, data=data[op["offset"]: op["offset"] + op["length"]], timeout=120).raise_for_status()
-    sid = res["data"]["id"]
-    up.send("PATCH", f"/inAppPurchaseAppStoreReviewScreenshots/{sid}", {"data": {
-        "type": "inAppPurchaseAppStoreReviewScreenshots", "id": sid,
-        "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
+    mirror.upload_review_screenshot(up, "inAppPurchase", iap, SHOTS / f"{iap['attributes']['productId']}.png")
 
 
 def main() -> int:
@@ -61,7 +37,7 @@ def main() -> int:
     args = ap.parse_args()
     up.APPLY = args.apply
     print("APPLY" if up.APPLY else "DRY RUN (pass --apply to write)")
-    app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
+    app_id = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)["data"][0]["id"]
     wanted = set(json.loads((up.FL / "store_copy.json").read_text())["in_app_purchases"]) - {"subscription_group"}
 
     print("iap review screenshots")
@@ -69,8 +45,11 @@ def main() -> int:
     for p in iaps:
         print(f"  {p['attributes']['productId']}: {p['attributes']['state']}")
         upload_review_screenshot(p)
-    subs = [s for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20)["data"]
-            for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20)["data"] if s["attributes"]["productId"] in wanted]
+    subs, groups = [], []
+    for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20)["data"]:
+        mine = [s for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20)["data"] if s["attributes"]["productId"] in wanted]
+        subs += mine
+        groups += [g] if mine else []
 
     print("build")
     ver = up.editable_version(app_id)
@@ -92,16 +71,18 @@ def main() -> int:
             "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": rs_id}},
             "appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver["id"]}}}}})
 
-    print("in-app purchases")
-    for p in iaps:
-        if p["attributes"]["state"] in ("READY_TO_SUBMIT", "MISSING_METADATA"):
-            up.send("POST", "/inAppPurchaseSubmissions", {"data": {"type": "inAppPurchaseSubmissions",
-                    "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": p["id"]}}}}})
-    for s in subs:
-        print(f"  {s['attributes']['productId']}: {s['attributes']['state']}")
-        if s["attributes"]["state"] == "READY_TO_SUBMIT":
-            up.send("POST", "/subscriptionSubmissions", {"data": {"type": "subscriptionSubmissions",
-                    "relationships": {"subscription": {"data": {"type": "subscriptions", "id": s["id"]}}}}})
+    print("in-app purchases")  # each product rides along as its pending version (ASC API 4.4+)
+    products = [("inAppPurchases", "inAppPurchaseVersion", p) for p in iaps] + \
+               [("subscriptionGroups", "subscriptionGroupVersion", g) for g in groups] + \
+               [("subscriptions", "subscriptionVersion", s) for s in subs]
+    for kind, rel, prod in products:
+        ver = latest_version(kind, prod["id"])
+        state = ver["attributes"]["state"] if ver else "none"
+        print(f"  {prod['attributes'].get('productId') or prod['attributes'].get('referenceName')}: version {state}")
+        if state in up.PRODUCT_EDITABLE - {"READY_FOR_REVIEW"}:  # READY_FOR_REVIEW = already in a submission
+            up.send("POST", "/reviewSubmissionItems", {"data": {"type": "reviewSubmissionItems", "relationships": {
+                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": rs_id}},
+                rel: {"data": {"type": ver["type"], "id": ver["id"]}}}}})
 
     print("submit")
     up.send("PATCH", f"/reviewSubmissions/{rs_id}", {"data": {"type": "reviewSubmissions", "id": rs_id, "attributes": {"submitted": True}}})

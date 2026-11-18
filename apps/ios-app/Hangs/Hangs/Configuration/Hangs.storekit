@@ -18,7 +18,7 @@
       "type" : "Consumable"
     },
     {
-      "displayPrice" : "8.99",
+      "displayPrice" : "6.99",
       "familyShareable" : false,
       "internalID" : "4D2E8A61-7B3C-4F95-9E1A-2C6B8D0F5E73",
       "localizations" : [
@@ -30,6 +30,21 @@
       ],
       "productID" : "pack_30",
       "referenceName" : "Custom pack 30",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3.49",
+      "familyShareable" : false,
+      "internalID" : "9C3F1B72-5E8D-4A06-B4D2-7E1A3C9F0B58",
+      "localizations" : [
+        {
+          "description" : "A custom quiz pack of 10 questions on your topic",
+          "displayName" : "Custom pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "pack_10",
+      "referenceName" : "Custom pack 10",
       "type" : "Consumable"
     }
   ],

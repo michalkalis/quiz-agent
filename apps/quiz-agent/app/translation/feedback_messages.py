@@ -24,6 +24,13 @@ FEEDBACK_MESSAGES = {
         "partially_incorrect": "Částečně nesprávně.",
         "skipped": "Přeskočeno.",
     },
+    "uk": {  # Ukrainian
+        "correct": "Правильно!",
+        "incorrect": "Неправильно.",
+        "partially_correct": "Частково правильно.",
+        "partially_incorrect": "Частково неправильно.",
+        "skipped": "Пропущено.",
+    },
     "de": {  # German
         "correct": "Richtig!",
         "incorrect": "Falsch.",
@@ -102,6 +109,13 @@ CORRECT_ANSWER_TEMPLATES = {
         "partially_correct": "Částečně správně. Správná odpověď je {answer}.",
         "partially_incorrect": "Částečně nesprávně. Správná odpověď je {answer}.",
         "skipped": "Přeskočeno. Správná odpověď je {answer}.",
+    },
+    "uk": {  # Ukrainian
+        "correct": "Правильно! Відповідь: {answer}.",
+        "incorrect": "Неправильно. Правильна відповідь: {answer}.",
+        "partially_correct": "Частково правильно. Правильна відповідь: {answer}.",
+        "partially_incorrect": "Частково неправильно. Правильна відповідь: {answer}.",
+        "skipped": "Пропущено. Правильна відповідь: {answer}.",
     },
     "de": {  # German
         "correct": "Richtig! Die Antwort ist {answer}.",

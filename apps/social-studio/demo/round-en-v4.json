@@ -1,0 +1,312 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round4.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"segments": [
+		{
+			"from": 0.0,
+			"to": 1.9
+		},
+		{
+			"from": 1.933,
+			"to": 7.4
+		},
+		{
+			"from": 7.433,
+			"to": 8.967
+		},
+		{
+			"from": 9.0,
+			"to": 11.767
+		},
+		{
+			"from": 11.8,
+			"to": 13.467
+		},
+		{
+			"from": 13.5,
+			"to": 14.767
+		},
+		{
+			"from": 14.8,
+			"to": 19.434
+		},
+		{
+			"from": 19.467,
+			"to": 27.634
+		}
+	],
+	"taps": [
+		{
+			"t": 1.4,
+			"x": 603,
+			"y": 2250
+		},
+		{
+			"t": 8.663,
+			"x": 270,
+			"y": 2388
+		},
+		{
+			"t": 14.85,
+			"x": 864,
+			"y": 2349
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.7,
+			"to": 1.8996666666666666,
+			"x": 603,
+			"y": 2250,
+			"scale": 1.2
+		},
+		{
+			"from": 1.933,
+			"to": 4.483,
+			"x": 607,
+			"y": 1792,
+			"scale": 1.25
+		},
+		{
+			"from": 4.483,
+			"to": 7.4,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 7.433,
+			"to": 8.967,
+			"x": 507,
+			"y": 2388,
+			"scale": 1.25
+		},
+		{
+			"from": 9.0,
+			"to": 11.767,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 11.8,
+			"to": 13.467,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 13.5,
+			"to": 14.767,
+			"x": 604,
+			"y": 1503,
+			"scale": 1.25
+		},
+		{
+			"from": 14.8,
+			"to": 15.05,
+			"x": 864,
+			"y": 2352,
+			"scale": 1.25
+		},
+		{
+			"from": 15.55,
+			"to": 17.45,
+			"x": 382,
+			"y": 939,
+			"scale": 1.25
+		},
+		{
+			"from": 17.45,
+			"to": 19.433666666666664,
+			"x": 603,
+			"y": 1200,
+			"scale": 1.2
+		},
+		{
+			"from": 19.467,
+			"to": 21.292,
+			"x": 603,
+			"y": 1500,
+			"scale": 1.2
+		},
+		{
+			"from": 21.292,
+			"to": 22.942,
+			"x": 603,
+			"y": 900,
+			"scale": 1.2
+		},
+		{
+			"from": 22.942,
+			"to": 25.192,
+			"x": 603,
+			"y": 1050,
+			"scale": 1.2
+		},
+		{
+			"from": 25.192,
+			"to": 26.342,
+			"x": 603,
+			"y": 900,
+			"scale": 1.2
+		},
+		{
+			"from": 26.342,
+			"to": 27.633,
+			"x": 603,
+			"y": 900,
+			"scale": 1.2
+		}
+	],
+	"highlights": [
+		{
+			"from": 1.933,
+			"to": 4.483,
+			"x": 90,
+			"y": 1605,
+			"w": 1035,
+			"h": 375
+		},
+		{
+			"from": 4.483,
+			"to": 7.4,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 7.433,
+			"to": 8.967,
+			"x": 48,
+			"y": 2304,
+			"w": 918,
+			"h": 168
+		},
+		{
+			"from": 9.0,
+			"to": 11.767,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 11.8,
+			"to": 13.467,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 13.5,
+			"to": 14.767,
+			"x": 72,
+			"y": 1344,
+			"w": 1065,
+			"h": 318
+		},
+		{
+			"from": 14.8,
+			"to": 15.05,
+			"x": 615,
+			"y": 2271,
+			"w": 498,
+			"h": 162
+		},
+		{
+			"from": 15.55,
+			"to": 17.45,
+			"x": 90,
+			"y": 846,
+			"w": 585,
+			"h": 186
+		}
+	],
+	"audio": [
+		{
+			"t": 2.163,
+			"src": "demo/rec/q-island.mp3"
+		},
+		{
+			"t": 9.2,
+			"src": "demo/rec/player-denmark.mp3"
+		},
+		{
+			"t": 15.3,
+			"src": "demo/rec/correct-denmark.mp3"
+		},
+		{
+			"t": 19.617,
+			"src": "demo/rec/nar-together.mp3"
+		},
+		{
+			"t": 23.042,
+			"src": "demo/rec/nar-packs.mp3"
+		},
+		{
+			"t": 25.292,
+			"src": "demo/rec/nar-fun.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 1.933,
+			"to": 7.433,
+			"text": "Trubbo reads the question out loud",
+			"kind": "step"
+		},
+		{
+			"from": 7.433,
+			"to": 11.8,
+			"text": "Think, then say or type your answer",
+			"kind": "step"
+		},
+		{
+			"from": 11.8,
+			"to": 15.25,
+			"text": "Trubbo checks your answer",
+			"kind": "step"
+		},
+		{
+			"from": 15.25,
+			"to": 19.467,
+			"text": "And shows the result with a fun fact",
+			"kind": "step"
+		},
+		{
+			"from": 19.467,
+			"to": 22.942,
+			"text": "Play together in one room",
+			"kind": "step"
+		},
+		{
+			"from": 22.942,
+			"to": 25.192,
+			"text": "Order a quiz on any topic",
+			"kind": "step"
+		},
+		{
+			"from": 25.192,
+			"to": 27.667,
+			"text": "Fun questions, not school trivia",
+			"kind": "step"
+		},
+		{
+			"from": 10.15,
+			"to": 11.8,
+			"text": "Denmark!",
+			"kind": "player"
+		}
+	],
+	"endCard": true,
+	"endWord": "Free.",
+	"endAudio": "demo/rec/nar-free.mp3"
+}

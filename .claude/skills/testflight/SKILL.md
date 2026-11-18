@@ -12,19 +12,26 @@ Triggers the `ios-release.yml` GitHub Actions workflow which:
 1. Runs on `xcode-27` (GitHub Xcode 27 image) with Xcode 27.0
 2. Uses fastlane `match` (read-only) to import the distribution cert from `carquiz-certs` repo into an isolated keychain
 3. Runs `fastlane ios beta` (staging) or `fastlane ios release` (production) — archives, exports IPA, uploads to TestFlight
-4. Auto-increments build number based on latest TestFlight build
+4. Auto-increments the build number past the latest TestFlight build of BOTH apps (one counter, so `ios/<version>-b<build>` tags stay unique)
 5. Uploads IPA + dSYM as workflow artifacts (14-day retention) for Sentry symbolication
 
-**Bundle ID:** `com.missinghue.hangs` · **App name in TestFlight:** `hangs`
+## Two apps (#234 — Trubbo Beta)
 
-## Two environments, one TestFlight app (#101 env separation)
+| Build | App in ASC / TestFlight | Bundle ID | Home-screen name |
+|---|---|---|---|
+| TestFlight build (`store` off, the default) | **Trubbo Beta** | `com.missinghue.hangs.beta` | Trubbo Beta (orange BETA band on the icon) |
+| App Store variant (`-f store=true`) | **Trubbo** | `com.missinghue.hangs` | Trubbo |
+
+Both can sit on one phone. The live app's TestFlight holds only App Store builds, for the check before submission. The beta's groups (Founder, family+friends) get every build automatically. Fastlane derives bundle id, match profile and export map from `APP_STORE_VARIANT`; a beta build refuses to start while `Config.revenueCatPublicSDKKeyBeta` is the placeholder. Catalog/price changes go to both apps (`docs/setup/release-flow.md`).
+
+## Two environments (#101 env separation, staging deprecated)
 
 | `environment` input | Lane | Scheme/config | APIs | Home-screen name |
 |---|---|---|---|---|
-| `staging` | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | **Trubbo Beta** |
-| `production` (default) | `release` | `Hangs-Prod` / `Release-Prod` | prod `*.fly.dev` | **Trubbo** |
+| `staging` | `beta` | `Hangs-Staging` / `Release-Staging` | `*-staging.fly.dev` | live bundle id, never built |
+| `production` (default) | `release` | `Hangs-Prod` / `Release-Prod` | prod | see the two apps above |
 
-Both upload to the SAME TestFlight app (same bundle id) — only one can be installed at a time; the tester picks the build in TestFlight (Previous Builds) and the home-screen label says which one is on the device. Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Don't propose staging builds (founder 2026-10-08).
+Default to **production** — founder decision 2026-07-30 (staging deprecated until App Store launch; its backend is frozen at the 2026-07-31 deploy and its corpus is stale, so a staging build reproduces long-fixed bugs — see #174). Don't propose staging builds (founder 2026-10-08).
 
 **Purchases:** TestFlight always uses the StoreKit sandbox, and prod honours sandbox purchases (`RC_ALLOWED_ENVIRONMENT` = `PRODUCTION,SANDBOX`, `apps/quiz-agent/app/config.py`), so the money path is tested on the production build.
 
@@ -117,10 +124,10 @@ If a build ever shows **"Missing Compliance"** (e.g. the Info.plist key got lost
 
 ```bash
 cd apps/ios-app/Hangs
-PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH" bundle exec fastlane ios set_compliance
+PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH" bundle exec fastlane ios set_compliance bundle_id:com.missinghue.hangs.beta   # or com.missinghue.hangs
 ```
 
-This uses Spaceship ConnectAPI to PATCH `usesNonExemptEncryption=false` on the latest build. It's idempotent — no-op if already declared.
+This uses Spaceship ConnectAPI to PATCH `usesNonExemptEncryption=false` on the latest build of that app. It's idempotent — no-op if already declared.
 
 **Before running it, confirm the declaration is still accurate:** no custom crypto algorithms were added since last review (grep for `CommonCrypto`, `CryptoKit`, third-party crypto libs). If any custom encryption exists, the correct answer may be `true`, which requires a US government export compliance classification — stop and ask the user.
 

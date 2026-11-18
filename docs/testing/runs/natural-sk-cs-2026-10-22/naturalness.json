@@ -1,0 +1,359 @@
+{
+ "3a9b84a4-7359-497a-a4d1-19a109d06c46": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "bccd1787-8e0c-49c7-b577-f8346b4d6c0a": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "f6501e17-33a6-4eb9-a806-4c74e50cef1a": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "e436c752-8ad9-4ad5-a1d3-a5c9e0a87805": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "grammar",
+    "quote": "vezou opření o"
+   },
+   {
+    "kind": "unnatural",
+    "quote": "kovové ráhno"
+   }
+  ],
+  "rewrite": "Lyžařský vlek, na kterém se dva lyžaři vezou opřeni o kovovou tyč ve tvaru obráceného písmene T, dostal lidový název podle předmětu z lodi. Jak mu říkáme?",
+  "model": "claude-opus-5-5"
+ },
+ "4aae0078-099d-413c-ba25-41d0a9e25ca2": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "i když auta a lidé jsou venku dál"
+   }
+  ],
+  "rewrite": "Po vydatném sněžení je venku zvláštní ticho, i když auta jezdí a lidé chodí dál. Čím to je?",
+  "model": "claude-opus-5-5"
+ },
+ "7274617a-0724-4bfc-8586-d478a7d1d641": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "tovární linky"
+   }
+  ],
+  "rewrite": "Techno, hudba strojů a bušících beatů, se nezrodilo v Berlíně, ale v americkém městě, které proslavily automobilky a montážní linky. O které město jde?",
+  "model": "claude-opus-5-5"
+ },
+ "0d0692dc-4aa7-422c-9cbc-dc560fec7606": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "e86ddd4f-f601-4231-b300-2e5e8268eaf4": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "Jaké úplně první zboží na světě kdy prošlo pokladnou díky načtení čárového kódu?"
+   }
+  ],
+  "rewrite": "Pípnutí u pokladny dnes slyšíme tisíckrát denně. Jaké zboží jako úplně první na světě načetli u pokladny podle čárového kódu?",
+  "model": "claude-opus-5-5"
+ },
+ "6c334ce3-530f-4ebb-9887-2f57a0c6cb02": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "057efb6b-60ed-4709-b5b6-bd2ac7149056": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "36e3ae1f-44ac-4bf5-9319-7251ba0f2a3e": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "omáčka toho jména"
+   }
+  ],
+  "rewrite": "Slovo kečup jsme převzali z angličtiny a ta si ho vypůjčila z jižní Číny. Z čeho se tamní původní omáčka s tímhle názvem vyráběla?",
+  "model": "claude-opus-5-5"
+ },
+ "9eda17f9-0b6b-4009-bacb-f1e83c3765d6": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "87803af4-cdcb-4873-97b6-cc26ca9f7f07": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "3e5fd1d5-5531-4da7-996c-baa25342f3dd": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "Čo ukryté vo vnútri"
+   },
+   {
+    "kind": "unnatural",
+    "quote": "s hlasným puknutím praskne"
+   }
+  ],
+  "rewrite": "Čo je ukryté vo vnútri kukuričného zrnka, že pri zahriatí hlasno pukne a zmení sa na pukanec?",
+  "model": "claude-opus-5-5"
+ },
+ "8188ff00-87be-4ccf-9283-c33d21c84867": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "empty_hook",
+    "quote": "napríklad pod Rysmi"
+   }
+  ],
+  "rewrite": "Na vysokohorskej chate sa vajce natvrdo varí dlhšie ako doma v nížine, hoci voda v hrnci rovnako bublá. Prečo?",
+  "model": "claude-opus-5-5"
+ },
+ "59614d2f-6989-4504-9ba1-f25c4f2af8bd": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "sa v ňom kráča úplne potichu"
+   }
+  ],
+  "rewrite": "V treskúcom mraze sneh pod topánkami vŕzga, no pri teplote okolo nuly sa po ňom chodí úplne potichu. Čo sa v tom mrazivom snehu deje, že tak vŕzga?",
+  "model": "claude-opus-5-5"
+ },
+ "34f3f22c-b6c6-4013-9bba-5acad1f6c294": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "dal základ štýlu acid house"
+   }
+  ],
+  "rewrite": "Japonský prístroj Roland TB-303, ktorého bublavý, kvákavý zvuk položil základy acid housu, mal pôvodne verne napodobňovať jeden obyčajný hudobný nástroj. Ktorý?",
+  "model": "claude-opus-5-5"
+ },
+ "409297ff-5a1e-447a-b32a-8921537f0a69": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "95d8cafa-c5ff-41be-b9ba-9b45d84d2cbf": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "ktorý pri pokladni načítali čiarovým kódom"
+   }
+  ],
+  "rewrite": "Úplne prvý tovar na svete, ktorému pri pokladni načítali čiarový kód, bola drobnosť, akú dodnes nájdete hneď vedľa pokladničného pásu. Čo to bolo?",
+  "model": "claude-opus-5-5"
+ },
+ "30d3718f-05dc-4e17-b683-1b9918d9e552": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "bd0b4548-b4ab-4dd4-97b7-7aec88dc0bfd": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "786498ed-05b2-4afc-9c22-ee4d908eb447": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "26fe9014-7d55-4b9a-94ed-a87e2d409417": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "d19a7613-0242-46d8-a42b-f6317dfae529": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "18a4f944-b7ac-4fdb-9efd-f245cd603a96": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "7af9d609-b2ce-4708-b8ff-4adf14492328": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "bc632ad3-1d26-4b04-94a7-844e83e193ef": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "grammar",
+    "quote": "dřív letěli"
+   }
+  ],
+  "rewrite": "Skokani na lyžích dřív létali s lyžemi těsně u sebe. Když je Švéd Jan Boklöv začal roztahovat do písmene V, rozhodčí mu za ošklivý styl strhávali body. Proč ho přesto brzy začali napodobovat všichni?",
+  "model": "claude-opus-5-5"
+ },
+ "4756a37c-dd3a-4d4b-96fe-903af3568e9a": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "grammar",
+    "quote": "Za kterého člena kapely ji měla zastoupit?"
+   }
+  ],
+  "rewrite": "Malá stříbrná krabička Roland TB-303 dala svým kvákavým zvukem vzniknout acid housu. Japonci ji přitom vyráběli pro úplně obyčejné muzikanty jako náhradu za jednoho člena kapely. Za kterého?",
+  "model": "claude-opus-5-5"
+ },
+ "4bd8fe86-829b-42a8-b8cb-4d8aaff933a1": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "31b06cd7-26d1-4057-ae24-29763e85e2eb": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "3012a38a-2a24-40b2-b11f-1b9513bc54fc": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "94672408-2686-4044-9b7f-4f6af9686596": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "cb1f0404-c817-45b4-b07b-dc9119d957ea": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "7886a6ed-2983-4be7-b63f-d256dfa9eacc": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "2b19c1db-d520-4d32-aa10-35f6d1d512cb": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "grammar",
+    "quote": "urazit"
+   }
+  ],
+  "rewrite": "Ak si v Maďarsku štrngnete pivom, niektorí Maďari sa môžu uraziť. Podľa legendy si pivom kedysi štrngali rakúski dôstojníci, aby oslávili istú udalosť po potlačení maďarskej revolúcie. Akú?",
+  "model": "claude-opus-5-5"
+ },
+ "ec35b856-5aed-4680-a0aa-2dbc66a14b1d": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "zaváraniny po zaváraní"
+   },
+   {
+    "kind": "unnatural",
+    "quote": "Čo vznikne vo vnútri pohára, že sa to stane?"
+   }
+  ],
+  "rewrite": "Keď zaváraniny vychladnú, viečka jedno po druhom cvaknú a prehnú sa dovnútra. Čo v pohári vznikne, že sa to stane?",
+  "model": "claude-opus-5-5"
+ },
+ "3dbb7b59-6e67-43b2-9b82-b33b68953a66": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "bb2c919b-f281-4523-b6f9-13da137a0eb1": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "4ea3a2c1-c9e8-478b-b20f-a803843672c4": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "e24717d1-d15a-445a-acbc-10062ee2ab9e": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "25949aa2-9068-44c3-a979-c4699f9092f0": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "bd4401c2-d49e-46e3-aa06-4c4233a9341c": {
+  "ok": false,
+  "problems": [
+   {
+    "kind": "unnatural",
+    "quote": "prvýkrát pípla pokladňa pri čiarovom kóde"
+   }
+  ],
+  "rewrite": "Keď v roku 1974 v jednom americkom supermarkete prvýkrát pípla pokladňa pri skenovaní čiarového kódu, na páse ležala drobnosť, ktorú dodnes nájdete pri každej pokladni. Čo to bolo?",
+  "model": "claude-opus-5-5"
+ },
+ "424c04be-0315-4953-931b-daa47ed1b412": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "b90999f3-47bd-47b5-8c60-a7752e55a233": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ },
+ "4808cc2a-e52c-425f-812f-02ce6c172c4a": {
+  "ok": true,
+  "problems": [],
+  "rewrite": null,
+  "model": "claude-opus-5-5"
+ }
+}

@@ -69,7 +69,6 @@ struct ConfirmationSheetVoiceTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -258,7 +257,7 @@ struct ConfirmationSheetVoiceTests {
         let (vm, silence, network) = makeVM(clock: TestClock())
         await openSheet(vm, silence)
         let gate = Gate()
-        network.submitVoiceAnswerGate = { await gate.wait() }
+        network.gates[.submitVoiceAnswer] = { await gate.wait() }
         network.mockResponse = response(answer: "Curling")
 
         silence.simulateAnswerAudio(Data(count: 16000))

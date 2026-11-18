@@ -11,7 +11,7 @@ paths: ["apps/quiz-agent/**", "apps/quiz-pack-api/**", "packages/shared/**"]
 - UUID4 session IDs; accounts via Sign in with Apple + App Attest (`app/auth/`)
 
 ### AI Integration
-- **Transcription:** ElevenLabs Scribe v2 batch, OpenAI fallback (`stt_fallback_model`) — `app/voice/`
+- **Transcription:** OpenAI `gpt-transcribe` only (`stt_model`; #208 removed Scribe from the answer path) — `app/voice/`
 - **Evaluation:** `EVAL_MODEL`, default Claude Haiku 5.5 (`app/evaluation/evaluator.py`)
 - **TTS:** ElevenLabs primary, OpenAI TTS as live fallback — `app/tts/providers.py`
 - **RAG:** Postgres + pgvector for semantic question retrieval (voice-quiz read path cut over 2026-05-28, #36 task 2.20)
@@ -21,6 +21,7 @@ All LLM calls go through `quiz_shared.llm.factory`. Call sites ask it for a clie
 - `LLM_GATEWAY=direct` (default) — canonical provider endpoints, today's behavior. This is the rollback lever.
 - `LLM_GATEWAY=openrouter` — chat + embeddings + Gemini verification + Claude scoring all route through OpenRouter on one key/balance.
 - `LLM_GATEWAY=session` — **dev-only (#169 — session gateway)**: every chat role runs on the Claude Code subscription via `claude -p` (`session:<fable|opus|sonnet|haiku>` ids, `quiz_shared/llm/session_cli.py`); non-Claude ids map to a Claude tier by class (table in `factory.session_model_for`, override `LLM_SESSION_MAP`). Embeddings/audio/image stay on OpenAI. Transport only — prompts, parsers, guards and feature flags are unchanged, so the API pipeline remains the source of truth. Never set on Fly. Requires `claude auth status` = claude.ai login, or `oauth_token` + `firstParty` (cloud sessions); API-key auth is refused.
+- `LLM_GATEWAY=mixed` — **offline runs on the Anthropic API credit**: behaves as `openrouter` (non-Claude models, embeddings, judges via OpenRouter) but Claude ids must go to the Anthropic API; fails loud at the first call if `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is missing. Not for Fly.
 
 - **Claude ids (#196 — AI calls to the direct Anthropic API):** any `claude-*` / `anthropic/claude-…` chat id goes straight to the Anthropic API (`ChatAnthropic`; `quiz_shared/llm/anthropic_route.py`) whenever `ANTHROPIC_API_KEY` is set and the gateway isn't `session` — under either gateway. No key → the gateway route above. `bedrock:`/`session:` ids keep their routes.
 
@@ -60,6 +61,8 @@ When updating shared models, verify iOS still builds (`/verify-api`).
 - Include session state in responses (iOS needs to know if expired)
 
 ## Deployment
+
+Normal path: the **Backend Deploy** workflow (`.github/workflows/backend-deploy.yml`, #207): full Backend CI → staging → smoke → prod → smoke, quiz-pack-api before quiz-agent, `deployed/<app>` tags mark what prod runs. Run it with `gh workflow run backend-deploy.yml --ref main` (add `--ref <branch>` to rehearse a branch on staging only). The `/deploy` skill (laptop) is the manual emergency path. Backend CI's `Backend CI gate` job is a required PR check.
 
 Known Fly.io pitfalls (Dockerfile dep drift, volume mounts): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.
 

@@ -21,8 +21,8 @@ final nonisolated class RSPaywallTests: XCTestCase {
     /// branch. The offline branch is a FAIL here on purpose: it means products
     /// did not load, and every purchase/restore scenario below is then blind.
     @MainActor
-    private func reachPurchasablePaywall(_ scenario: String) -> (XCUIApplication, PaywallPage) {
-        let app = RSFlow.launch(["--ui-test-paywall"])
+    private func reachPurchasablePaywall(_ scenario: String, _ extra: [String] = []) -> (XCUIApplication, PaywallPage) {
+        let app = RSFlow.launch(["--ui-test-paywall"] + extra)
         let home = HomePage(app: app)
         home.assertVisible()
         home.tapStartQuiz()
@@ -92,6 +92,58 @@ final nonisolated class RSPaywallTests: XCTestCase {
         XCTAssertTrue(landed, "RS-21: paywall never reached its success/activating branch after the purchase")
         XCTAssertFalse(app.descendants(matching: .any)["paywall.purchaseError"].exists, "RS-21: paywall.purchaseError shown after a confirmed purchase")
         RSFlow.assertAlive(app, "RS-21")
+    }
+
+    // MARK: RS-39 — A failed purchase says so and grants nothing
+
+    // Regression guarded (#235.5): when the store reports a failure the
+    // paywall must say so on the same sheet and stay usable (buy again, or
+    // close); it must not claim success, and the free wall must still stand.
+    @MainActor
+    func testRS39FailedPurchaseSaysSoAndGrantsNothing() {
+        let (app, paywall) = reachPurchasablePaywall("RS-39", ["--ui-test-purchase-fail"])
+
+        paywall.purchaseButton.tap()
+
+        let error = app.descendants(matching: .any)["paywall.purchaseError"]
+        XCTAssertTrue(error.waitForExistence(timeout: 10), "RS-39: no paywall.purchaseError after a failed purchase")
+        assertNothingGranted(app, paywall, "RS-39")
+    }
+
+    // MARK: RS-40 — A cancelled purchase returns to the paywall quietly
+
+    // Regression guarded (#235.5): closing the store sheet is the player's
+    // choice, not a failure. The paywall comes back as it was, with no error
+    // scare and no entitlement.
+    @MainActor
+    func testRS40CancelledPurchaseReturnsQuietly() {
+        let (app, paywall) = reachPurchasablePaywall("RS-40", ["--ui-test-purchase-cancel"])
+
+        paywall.purchaseButton.tap()
+
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: paywall.purchaseButton)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 10), .completed, "RS-40: the purchase CTA never came back after the cancel")
+        XCTAssertFalse(app.descendants(matching: .any)["paywall.purchaseError"].exists, "RS-40: a cancel was shown as an error")
+        assertNothingGranted(app, paywall, "RS-40")
+    }
+
+    /// The paywall is still usable and nothing was unlocked: no success branch,
+    /// the CTA can be tapped again, and after ✕ the free wall comes back on the
+    /// next start.
+    @MainActor
+    private func assertNothingGranted(_ app: XCUIApplication, _ paywall: PaywallPage, _ scenario: String) {
+        XCTAssertFalse(app.descendants(matching: .any)["paywall.success.headline"].exists, "\(scenario): the paywall claimed success")
+        XCTAssertFalse(app.descendants(matching: .any)["paywall.activating.headline"].exists, "\(scenario): the paywall is activating a purchase that did not happen")
+        XCTAssertTrue(paywall.purchaseButton.isEnabled, "\(scenario): the purchase CTA is disabled, the paywall is stuck")
+        XCTAssertTrue(paywall.closeButton.isHittable, "\(scenario): no way out of the paywall")
+
+        paywall.tapClose()
+        let home = HomePage(app: app)
+        home.assertVisible()
+        home.tapStartQuiz()
+        XCTAssertTrue(paywall.purchaseButton.waitForExistence(timeout: 15), "\(scenario): the free wall is gone, an entitlement was granted")
+        XCTAssertFalse(QuestionPage(app: app).questionText.exists, "\(scenario): a quiz started past the free wall")
+        RSFlow.assertAlive(app, scenario)
     }
 
     /// Confirms the StoreKit Testing purchase sheet if one shows up within a

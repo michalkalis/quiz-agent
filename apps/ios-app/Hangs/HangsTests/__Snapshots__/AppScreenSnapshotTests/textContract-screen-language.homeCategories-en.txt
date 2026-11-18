@@ -8,6 +8,9 @@ Movies & Music
 Sports
 Food & Everyday Life
 Entertainment
+Local questions
+For example, a city's bus routes or a local card game
+
 Done
 # identifiers
 home.category.all
@@ -18,4 +21,5 @@ home.category.movies-music
 home.category.sports
 home.category.food-everyday
 home.category.entertainment
+home.categories.localQuestions
 home.categories.done

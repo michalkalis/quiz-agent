@@ -1,6 +1,9 @@
 # Fly.io configuration for Quiz Agent API
 app = "quiz-agent-api"
 primary_region = "cdg"
+# #207.20: let an in-flight submit (STT + judge) finish on deploy instead of
+# being SIGKILLed after Fly's default 5 s with its session lease held.
+kill_timeout = 30
 
 # Build from repository root to access monorepo packages
 # Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.toml
@@ -13,32 +16,43 @@ primary_region = "cdg"
 # the boot-time migration-head check never meets a behind database.
 [deploy]
   release_command = "alembic upgrade head"
+  # #207.20 step 6 ($0 variant, founder 2026-10-16: second machine after the
+  # beta): without a volume a single machine can deploy bluegreen — the new
+  # machine boots and passes its health check before traffic moves and the
+  # old one stops, so a deploy no longer drops ~18 s of requests. A secret
+  # change still restarts in place: stage it (`fly secrets set --stage`) and
+  # let the next deploy apply it.
+  strategy = "bluegreen"
 
 [env]
   # Drives Sentry env labeling and the production-only startup SECURITY
   # warnings (warn_if_insecure_production) — without it prod boots as
   # "development" and every prod-only check is silently skipped (#65).
   ENVIRONMENT = "production"
-  # #193: daily provider credit check (OpenRouter, ElevenLabs) → Sentry alert
-  # when a balance runs low. Off by default so tests/dev make no calls.
+  # #193/#207: hourly provider credit check (OpenRouter, ElevenLabs; Anthropic,
+  # OpenAI, Fly when their admin credentials are set) → e-mail when a
+  # balance runs low or the check fails. Off by default so tests/dev make no calls.
   PROVIDER_BALANCE_CHECK_ENABLED = "true"
+  # #207: every 5 min — disk / memory / DB connections / response time, and
+  # every minute the pack worker's ping → e-mail alert (Fly numbers need the
+  # FLY_METRICS_TOKEN secret, mail needs ALERT_SMTP_PASSWORD, the worker watch
+  # OPS_PING_TOKEN). Dedupe state is a Postgres row (#207.20), so deploys
+  # don't re-send.
+  OPS_WATCH_ENABLED = "true"
+  ALERT_EMAIL_TO = "michal.kalis@gmail.com"
   # #199: daily question-stock check (per language x category, fresh
   # entertainment per language) -> Sentry alert before questions run out.
   QUESTION_STOCK_CHECK_ENABLED = "true"
   # #205: daily challenge. Off until the founder turns it on ("true").
   DAILY_CHALLENGE_ENABLED = "false"
-  # Park the TTS audio cache on the mounted volume. The default
-  # (`./data/tts_cache`) resolves against WORKDIR /app, i.e. container-local
-  # storage — so every deploy would re-buy the whole cache from ElevenLabs,
-  # whose credits are metered and shared with realtime STT.
-  TTS_CACHE_DIR = "/data/tts_cache"
-  # Same reason for the two SQLite stores: their defaults (`./data/*.db`) also
-  # resolve against WORKDIR /app, and with min_machines_running = 0 the rootfs
-  # is recreated on every idle wake — not just every deploy. Unpinned, ratings
-  # + persisted sessions are wiped and the claude-opus-5 translation cache is
-  # re-paid each cold start.
-  TRANSLATION_CACHE_URL = "sqlite:////data/translations.db"
-  RATINGS_DATABASE_URL = "sqlite:////data/ratings.db"
+  # #212 same-room multiplayer: on since 2026-10-29 for the founder's first
+  # TestFlight build with it; older builds have no Spolu code at all.
+  MULTIPLAYER_ENABLED = "true"
+  # #207.20: no volume. The TTS disk cache (./data/tts_cache on the machine's
+  # own disk) is only a per-machine L1; every clip lives in the private R2
+  # bucket (TTS_R2_* secrets), so a new machine re-downloads, never re-buys.
+  # Sessions, ratings, translations and alert state are in Postgres.
+  TTS_CACHE_MAX_MB = "500"
 
 [[services]]
   protocol = "tcp"
@@ -67,10 +81,6 @@ primary_region = "cdg"
     timeout = "10s"
     method = "GET"
     path = "/api/v1/health"
-
-[[mounts]]
-  source = "quiz_agent_data"
-  destination = "/data"
 
 # Prod runs 512MB (set via `fly scale`, not its toml); 256MB default fails the
 # boot health check — pin it here so redeploys keep parity.

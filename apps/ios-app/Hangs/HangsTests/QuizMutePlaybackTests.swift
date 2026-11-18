@@ -30,8 +30,7 @@ struct QuizMutePlaybackTests {
             networkService: network,
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: silence,
-            sttService: nil
+            silenceDetectionService: silence
         )
         return (vm, audio)
     }

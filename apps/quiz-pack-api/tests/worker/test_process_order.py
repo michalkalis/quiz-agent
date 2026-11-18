@@ -32,6 +32,7 @@ import sys
 import uuid
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, Iterator, List
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -434,6 +435,103 @@ async def test_failure_non_final_retry(
     job = await session.get(GenerationJob, job_id)
     assert job.status == "failed"
     assert job.retry_count == 1
+
+    await _cleanup(session, order_id)
+
+
+# ── #207: non-retryable failures ──────────────────────────────────────────────
+
+
+class _RaisingSourcer:
+    """FactSourcer double that raises a given provider error."""
+
+    def __init__(self, exc: Exception) -> None:
+        self._exc = exc
+
+    async def gather_facts(self, *_args: Any, **_kwargs: Any) -> None:
+        raise self._exc
+
+
+def _provider_error(cls: type, code: int) -> Exception:
+    import httpx
+
+    request = httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions")
+    return cls("provider said no", response=httpx.Response(code, request=request), body=None)
+
+
+@pytest.mark.asyncio
+async def test_non_retryable_failure_is_terminal_on_first_attempt(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#207 drill finding: a rejected key (401) on the FIRST attempt must end
+    the order failed + refund_eligible at once. Left 'in_progress', the sweep
+    re-drove it every ~20 min, a paid attempt each time, until the attempt
+    budget stopped it; a paying customer's order must not burn money on a
+    failure no retry can fix."""
+    import openai
+
+    from app.worker.sweep import sweep_stuck_orders
+    from app.worker.tasks import process_order
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    worker_ctx["job_try"] = 1  # far from the end of the ARQ sequence / budget
+    worker_ctx["fact_sourcer"] = _RaisingSourcer(
+        _provider_error(openai.AuthenticationError, 401)
+    )
+
+    with pytest.raises(openai.AuthenticationError):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "failed"
+    # The refund alert (worker watch) and the admin attention endpoint key on this.
+    assert order.refund_eligible is True
+    job = await session.get(GenerationJob, job_id)
+    assert job.status == "failed"
+    assert job.retry_count == 1, "one attempt spent, not the whole budget"
+    assert job.error.startswith("non-retryable"), job.error
+
+    # And the sweep, even once the job looks long dead, never re-drives it.
+    await session.execute(
+        text("UPDATE generation_jobs SET updated_at = now() - interval '2 hours' WHERE id = :id"),
+        {"id": job_id},
+    )
+    await session.commit()
+    pool = AsyncMock()
+    await sweep_stuck_orders({"redis": pool, "session_factory": worker_ctx["session_factory"]})
+    pool.enqueue_job.assert_not_awaited()
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
+async def test_transient_provider_failure_still_retries(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """The other half of #207: a provider 5xx / rate limit can pass, so the
+    order must stay recoverable (in_progress, not refunded) exactly as before."""
+    import openai
+
+    from app.worker.tasks import process_order
+
+    order_id, job_id = await _create_order_and_job(session, target_count=3)
+    worker_ctx["job_try"] = 1
+    worker_ctx["fact_sourcer"] = _RaisingSourcer(
+        _provider_error(openai.RateLimitError, 429)
+    )
+
+    with pytest.raises(openai.RateLimitError):
+        await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert order.status == "in_progress"
+    assert order.refund_eligible is False
 
     await _cleanup(session, order_id)
 

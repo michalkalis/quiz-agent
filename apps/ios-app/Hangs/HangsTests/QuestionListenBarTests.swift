@@ -36,17 +36,23 @@ struct QuestionListenPhaseTests {
     @Test("every quiz state maps to the same bar state for both question types",
           arguments: [ListenBar.AnswerKind.mcq, .open])
     func mappingIsIdenticalForBothQuestionTypes(kind: ListenBar.AnswerKind) {
-        func phase(_ state: QuizState, remaining: Int = 0, total: Int = 0) -> QuestionListenPhase? {
+        func phase(_ state: QuizState, remaining: Int = 0, total: Int = 0, reading: Bool = false) -> QuestionListenPhase? {
             QuestionListenPhase.current(
                 quizState: state,
                 answerWindowRemaining: remaining,
                 answerWindowTotal: total,
-                answerKind: kind
+                answerKind: kind,
+                isReadingQuestion: reading
             )
         }
 
         // 1 — the question is being read: no window has started draining yet.
-        #expect(phase(.askingQuestion) == .readingQuestion)
+        #expect(phase(.askingQuestion, reading: true) == .readingQuestion)
+        // #208 finding 1 (TF 2026-10-16): no window AND no read (muted, no clip,
+        // after a skip, a retry bridge) is NOT reading. The bar said "Reading the
+        // question" while nothing spoke; it shows the command bar without a fill.
+        #expect(phase(.askingQuestion) == .thinking(remaining: 0, total: 0))
+        #expect(phase(.askingQuestion)?.countdown == nil, "no window runs, so none may be drawn")
         // 2 — the think window drains (#132 B: as a fill inside the bar).
         #expect(phase(.askingQuestion, remaining: 12, total: 30) == .thinking(remaining: 12, total: 30))
         // 3 — the answer mic is open.
@@ -133,7 +139,7 @@ struct QuestionListenBarRenderTests {
             #expect(throws: Never.self) { try tree.find(text: "Reading the question") }
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(throws: Never.self) { try chips.find(text: "„zopakuj“") }
-            #expect(throws: Never.self) { try chips.find(text: "„preskoč“") }
+            #expect(throws: Never.self) { try chips.find(text: "„ďalšia“") }
             #expect(throws: (any Error).self, "start would cut the read off mid-sentence") {
                 try chips.find(text: "„štart“")
             }
@@ -150,7 +156,7 @@ struct QuestionListenBarRenderTests {
             let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
             #expect(try seconds.text().string() == "32 s")
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            for word in ["„štart“", "„zopakuj“", "„preskoč“"] {
+            for word in ["„štart“", "„zopakuj“", "„ďalšia“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
             }
         }
@@ -249,8 +255,7 @@ struct QuestionViewListenBarPresenceTests {
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: nil
+            silenceDetectionService: MockSilenceDetectionService()
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = question
@@ -266,6 +271,7 @@ struct QuestionViewListenBarPresenceTests {
           arguments: [Question.previewMCQ, Question.preview])
     func barIsPresentWhileTheQuestionIsRead(question: Question) async throws {
         let vm = await makeArmedViewModel(question: question)
+        vm.isPlayingQuestionTTS = true // #208: "reading" is claimed only while a read plays
         #expect(vm.answerWindowRemaining == 0, "precondition: the read is still running")
 
         let view = QuestionView(viewModel: vm)
@@ -308,7 +314,7 @@ struct QuestionViewListenBarPresenceTests {
             let tree = try view.inspect()
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(throws: Never.self) { try chips.find(text: "“start”") }
-            #expect(throws: Never.self) { try chips.find(text: "“skip”") }
+            #expect(throws: Never.self) { try chips.find(text: "“next”") }
         }
     }
 

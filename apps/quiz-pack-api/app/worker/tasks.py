@@ -28,6 +28,7 @@ from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
+from app.orchestrator.stages.language_fix import LanguageFixStage
 from app.orchestrator.stages.persist import fail_pack_in_session
 from app.orchestrator.stages import (
     AnswerabilityStage,
@@ -41,6 +42,8 @@ from app.orchestrator.stages import (
     VerificationStage,
 )
 from quiz_shared.llm import factory as llm_factory
+
+from .failure_class import non_retryable_reason
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +151,12 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
                 composition_stage=composition,
                 persist_stage=PersistStage(session_factory),
                 batch_schedule=batch_schedule,
+                max_rounds=feature_flags.pack_topup_extra_rounds(),
+                max_ask=feature_flags.pack_max_ask(),
+                time_budget_s=feature_flags.pack_topup_time_budget_s(),
+                language_stage=(
+                    LanguageFixStage() if feature_flags.pack_language_fix() else None
+                ),
             ),
         ]
     stages += [
@@ -348,7 +357,8 @@ async def process_order(ctx: Dict[str, Any], order_id: str) -> None:
             tracker, usage_before, generator, fetch_usage=False
         )
         await _handle_failure(
-            ctx, order_uuid, order_id, sink, exc, attempt_cost_cents=attempt_cost
+            ctx, order_uuid, order_id, sink, exc,
+            attempt_cost_cents=attempt_cost, cancelled=True,
         )
         raise
     except Exception as exc:
@@ -408,6 +418,7 @@ async def _handle_failure(
     sink: DBProgressSink | None,
     exc: Exception,
     attempt_cost_cents: int = 0,
+    cancelled: bool = False,
 ) -> None:
     """Mark job (and order on final retry) failed; publish failure event.
 
@@ -444,12 +455,24 @@ async def _handle_failure(
             # counted twice; the counter is deliberately conservative — it may
             # over-state lifetime attempts, never under-state them.
             effective_try = max(job.retry_count + 1, job_try)
-            # Two ways an attempt is the last one: this arq sequence is out of
+            # Three ways an attempt is the last one: this arq sequence is out of
             # tries (terminal for the order today — it is what makes /retry
-            # reachable), or the order has burned its whole lifetime budget.
-            is_final = job_try >= max_tries or effective_try >= order_budget.attempt_budget()
+            # reachable), the order has burned its whole lifetime budget, or
+            # #207: the failure cannot succeed on a retry (a rejected key, an
+            # invalid request). Left 'in_progress', the sweep would re-drive
+            # such an order every ~20 min, a paid attempt each time, until the
+            # budget stopped it; terminal now, it reaches the refund alert at
+            # once and /retry stays open for after the cause is fixed.
+            non_retryable = non_retryable_reason(exc)
+            is_final = (
+                job_try >= max_tries
+                or effective_try >= order_budget.attempt_budget()
+                or non_retryable is not None
+            )
             job.status = "failed"
-            job.error = repr(exc)
+            job.error = (
+                f"non-retryable ({non_retryable}): {exc!r}" if non_retryable else repr(exc)
+            )
             job.retry_count = effective_try
             # #145: record spend for the attempt that just died — the ceiling
             # is only enforceable because failures pay into this total too.
@@ -485,11 +508,17 @@ async def _handle_failure(
                     "job_try": job_try,
                     "effective_try": effective_try,
                     "is_final_attempt": is_final,
+                    "non_retryable": non_retryable,
                     "attempt_cost_cents": attempt_cost_cents,
                 },
             )
             scope.set_context("step_log_tail", {"steps": step_log_tail})
-            sentry_sdk.capture_exception(exc)
+            # A cancel (worker shutdown on deploy/machine restart, or ARQ
+            # job_timeout) on a non-final attempt is retried by ARQ or the
+            # sweep, so the order is not lost: warn. The final attempt still
+            # reports as an error — that one ends refund-eligible.
+            level = "warning" if cancelled and not is_final else "error"
+            sentry_sdk.capture_exception(exc, level=level)
 
         if sink is not None:
             await sink.publish(

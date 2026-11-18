@@ -16,6 +16,14 @@ crash-looped and pack generation was down).
   the stuck-order sweep re-drives anything lost), so AOF + single machine
   is deliberately good enough. Portable 1:1 to Hetzner later.
 
+## Loss drill (#207.20 step 7, 2026-10-16)
+
+Staging (DB 1): order placed via the admin path, `FLUSHDB` while its job was
+queued, worker started. The stuck-order sweep re-enqueued it 15 min after the
+job's last update (`process_order:<id>:1`, one execution, no duplicate) and
+again 20 min later (`:2`). Nothing durable lives only in Redis: the order and
+its job are Postgres rows. Repeat yearly or after a queue change.
+
 ## Redeploy / config change
 
 ```bash

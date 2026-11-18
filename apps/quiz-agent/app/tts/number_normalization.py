@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 _PERCENT_WORD = {
     "sk": "percent",
     "cs": "procent",
+    "uk": "відсотків",
 }
 
 # A run of digits possibly containing thousands/decimal separators
@@ -60,13 +61,123 @@ def _parse_number(token: str) -> float | int | None:
         return None
 
 
+# Slovak and Czech write the decimal point as a comma and group thousands with
+# a space (or a dot), so "30,126" is thirty point one two six, never thirty
+# thousand (founder bug 2026-11-16: the euro rate "30,126 korún" was read as
+# 30 126). Every sk/cs approved text with "d,ddd" was a decimal (7 of 7 on
+# 2026-11-16: the rate and the marathon's 42,195 km).
+_DECIMAL_COMMA_RE = re.compile(r"(?<![\d,.])(\d{1,3}(?:[ .]\d{3})*|\d+),(\d+)(?![\d,])")
+# The integer before "celá/celé/celých" agrees with it in the feminine.
+_FEMININE = {
+    "sk": {1: "jedna", 2: "dve"},
+    "cs": {1: "jedna", 2: "dvě"},
+}
+_ZERO = {"sk": "nula", "cs": "nula"}
+
+
+def _uk_plural(n: int) -> int:
+    """Ukrainian noun class: 0 = one (1, 21), 1 = few (2–4, 22–24), 2 = many
+    (0, 5–20, 25–30; 11–14 are many)."""
+    if n % 10 == 1 and n % 100 != 11:
+        return 0
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return 1
+    return 2
+
+
+def _uk_cardinal(n: int, num2words) -> str:
+    words = num2words(n, lang="uk")
+    # num2words says "одна тисяча"; speech says "тисяча".
+    return words[len("одна ") :] if words.startswith("одна тисяча") else words
+
+
+def _uk_feminine(words: str) -> str:
+    """ "двадцять один" → "двадцять одна", "два" → "дві" (last word only)."""
+    head, _, last = words.rpartition(" ")
+    last = {"один": "одна", "два": "дві"}.get(last, last)
+    return f"{head} {last}".strip()
+
+
+_UK_PLACE = {1: ("десята", "десятих"), 2: ("сота", "сотих"), 3: ("тисячна", "тисячних")}
+_UK_PERCENT_FORMS = ("відсоток", "відсотки", "відсотків")
+_UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)(,\d+)?\s?%")
+
+
+def _spell_decimal_uk(match: re.Match, num2words) -> str:
+    """ "3,14" → "три цілих чотирнадцять сотих", "3,05" → "три цілих п'ять
+    сотих" (the place word follows the digit count). More than three decimals
+    are read as one number."""
+    whole = int(re.sub(r"[ .]", "", match.group(1)))
+    digits = match.group(2).rstrip("0")
+    if not digits:
+        return _uk_cardinal(whole, num2words)
+    if _uk_plural(whole) == 0:
+        head = _uk_feminine(_uk_cardinal(whole, num2words)) + " ціла"
+    else:
+        head = f"{_uk_cardinal(whole, num2words)} цілих"
+    value = int(digits)
+    if len(digits) not in _UK_PLACE:
+        return f"{head} {_uk_cardinal(value, num2words)}"
+    one, other = _UK_PLACE[len(digits)]
+    amount = _uk_feminine(_uk_cardinal(value, num2words))
+    return f"{head} {amount} {one if _uk_plural(value) == 0 else other}"
+
+
+def _spell_percent_uk(match: re.Match) -> str:
+    """ "1%" → "1 відсоток", "3%" → "3 відсотки", "5%" → "5 відсотків",
+    "3,5%" → "3,5 відсотка" (the digits are spelled by the later pass)."""
+    if match.group(2):
+        return f"{match.group(1)}{match.group(2)} відсотка"
+    return f"{match.group(1)} {_UK_PERCENT_FORMS[_uk_plural(int(match.group(1)))]}"
+
+
+def _whole_word(n: int) -> str:
+    """celá (0, 1) / celé (2–4) / celých (5+), the same in sk and cs."""
+    if n in (0, 1):
+        return "celá"
+    return "celé" if 2 <= n <= 4 else "celých"
+
+
+def _spell_decimal_comma(match: re.Match, language: str, num2words) -> str:
+    whole = int(re.sub(r"[ .]", "", match.group(1)))
+    digits = match.group(2).rstrip("0")
+    head = _FEMININE[language].get(whole) or num2words(whole, lang=language)
+    if not digits:
+        return head
+    # Leading zeros are said ("3,05" → "tri celé nula päť"), the rest as one number.
+    zeros = len(digits) - len(digits.lstrip("0"))
+    tail = " ".join([_ZERO[language]] * zeros + [num2words(int(digits), lang=language)])
+    return f"{head} {_whole_word(whole)} {tail}"
+
+
+# Symbols the multilingual voice reads in English inside sk/cs text (founder
+# 2026-10-25: "Symbolu @ v e-mailu" was read "at"). Spelled out like digits.
+_SYMBOL_WORDS = {
+    "sk": {"@": "zavináč"},
+    "cs": {"@": "zavináč"},
+    "uk": {"@": "равлик"},
+}
+_AMPERSAND_RE = re.compile(r"\s&\s")
+_AND_WORD = {"sk": "a", "cs": "a", "uk": "і"}
+
+
+def _spell_symbols(text: str, language: str) -> str:
+    for symbol, word in _SYMBOL_WORDS[language].items():
+        text = re.sub(rf"\s*{re.escape(symbol)}\s*", f" {word} ", text).strip()
+    # Only a free-standing "&" ("Tom & Jerry"); "AT&T" stays a name.
+    return _AMPERSAND_RE.sub(f" {_AND_WORD[language]} ", text)
+
+
 def normalize_numbers_for_tts(text: str, language: str) -> str:
-    """Replace digit runs with spelled-out words for `language`.
+    """Replace digit runs (and a few symbols) with spelled-out words for `language`.
 
     Fail-safe: any error (unsupported language, unparsable token) leaves the
     affected token — or the whole text — unchanged.
     """
-    if language not in _PERCENT_WORD or not any(ch.isdigit() for ch in text):
+    if language not in _PERCENT_WORD:
+        return text
+    text = _spell_symbols(text, language)
+    if not any(ch.isdigit() for ch in text):
         return text
     try:
         from num2words import num2words
@@ -80,6 +191,8 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
         if value is None:
             return token
         try:
+            if language == "uk" and isinstance(value, int):
+                return _uk_cardinal(value, num2words)
             return num2words(value, lang=language)
         except NotImplementedError:
             return token
@@ -87,7 +200,17 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
     try:
         # Ordinals first (#200): "19. storočí" must become one declined word,
         # not the cardinal plus a sentence-end period ("devätnásť. storočí").
-        result = _NUMBER_RE.sub(spell, spell_ordinals(text, language))
+        text = spell_ordinals(text, language)
+        if language == "uk":
+            text = _UK_PERCENT_RE.sub(_spell_percent_uk, text)
+            text = _DECIMAL_COMMA_RE.sub(
+                lambda m: _spell_decimal_uk(m, num2words), text
+            )
+        else:
+            text = _DECIMAL_COMMA_RE.sub(
+                lambda m: _spell_decimal_comma(m, language, num2words), text
+            )
+        result = _NUMBER_RE.sub(spell, text)
         return result.replace("%", " " + _PERCENT_WORD[language]).replace("  ", " ")
     except Exception:
         logger.exception("TTS number normalization failed — using original text")

@@ -60,7 +60,7 @@ struct RerecordDuringSubmitTests {
         vm.quizState = .askingQuestion
 
         let gate = OneShotGate()
-        network.submitVoiceAnswerGate = { await gate.wait() }
+        network.gates[.submitVoiceAnswer] = { await gate.wait() }
 
         let submit = Task { await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2])) }
         await pumpUntil({ network.submitVoiceAnswerCallCount == 1 }, "the upload never reached the network")
@@ -141,7 +141,7 @@ struct RerecordDuringSubmitTests {
         // #184 track D: the sheet reads the answer back first and arms auto-confirm
         // AFTER the read-back; muted, the two happen together — which is what
         // this test is about.
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2]))
 

@@ -7,8 +7,10 @@ were true/false. Founder-approved rules, enforced here with zero LLM calls:
 - **Topic cap** — at most 2 questions per (normalized) topic per 30-pack,
   scaled as ``max(1, ceil(2 * target / 30))`` for other sizes. Overridable
   per run via the constructor (``--per-topic-cap`` on the CLI, #167) for
-  batches with a deliberately small locked topic set.
+  batches with a deliberately small locked topic set. A child-band pack
+  (#236) has no topic cap.
 - **True/false cap** — at most 2 T/F questions per 30-pack, same scaling.
+  A child-band pack (#236) uses `CHILD_PER_30_TF_CAP` instead.
 
 Runs after ``ScoringStage`` (in the main walk and inside every top-up round)
 so that when judge scores exist the caps keep each topic's/format's
@@ -26,6 +28,7 @@ import logging
 import math
 import re
 
+from app.audience import is_child
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.orchestrator.stages.subthemes import stamp_of
@@ -37,6 +40,19 @@ logger = logging.getLogger(__name__)
 # more than twice, and T/F stays a rarity rather than a default format.
 PER_30_TOPIC_CAP = 2
 PER_30_TF_CAP = 2
+
+# #236 (founder 2026-11-15): the T/F rarity rule is an adult taste call, and
+# in a 7-9 trial its cap of 1 per 10-pack dropped a good question. For a
+# child, "true or false?" read by a parent is a natural format, so it may
+# fill about a third of the pack (3 of 10). 4-6 has no cap: every question
+# there is two-option by design (`app.audience._SHAPE`), so a cap would only
+# throw away on-spec questions and buy top-up rounds. The T/F key-balance
+# guard (`craft_guards.tf_imbalance_excess`) still applies to every band.
+CHILD_PER_30_TF_CAP: dict[str, int | None] = {
+    "kids_4_6": None,
+    "kids_7_9": 9,
+    "kids_10_12": 9,
+}
 
 # #192: letters of any alphabet, so Slovak/Czech words keep their diacritic
 # letters ("[a-z0-9]+" cut "čokoláda" into "okol", "d", "a"). ASCII text
@@ -76,12 +92,27 @@ class CompositionStage:
         # topics (#153 sourcing rule), so a cap of 1 on a small pack would
         # mathematically guarantee a shortfall. T/F has no such risk (the
         # format is substitutable), so its floor stays 1.
+        # #236: no topic cap on a child-band pack (always one customer
+        # order on one topic). The model labels nearly every whole-topic
+        # question with the order's topic ("LEGO"), so the cap counted the
+        # order, not a sub-subject: in the second trial it threw away paid
+        # questions ("dropped ... topic='LEGO' over per-topic cap 2"), and
+        # it never sees sub-theme questions at all (#203 203.9, below).
+        # Spread across a child pack comes from its sub-theme plan.
         topic_cap = (
-            self._per_topic_cap
+            None
+            if is_child(ctx.audience)
+            else self._per_topic_cap
             if self._per_topic_cap is not None
             else _scaled_cap(PER_30_TOPIC_CAP, target, floor=2)
         )
-        tf_cap = _scaled_cap(PER_30_TF_CAP, target)
+        tf_per_30 = (
+            CHILD_PER_30_TF_CAP[ctx.audience]
+            if is_child(ctx.audience)
+            else PER_30_TF_CAP
+        )
+        # None = uncapped (4-6, see CHILD_PER_30_TF_CAP).
+        tf_cap = None if tf_per_30 is None else _scaled_cap(tf_per_30, target)
 
         # Judge-score order when available (mean of per-model overalls from
         # ctx.scores); stable sort keeps generation order otherwise, so the
@@ -122,7 +153,11 @@ class CompositionStage:
                     tf_count += 1
                 kept_indices.append(index)
                 continue
-            if topic and topic_counts.get(topic, 0) >= topic_cap:
+            if (
+                topic
+                and topic_cap is not None
+                and topic_counts.get(topic, 0) >= topic_cap
+            ):
                 topic_dropped += 1
                 logger.warning(
                     "CompositionStage dropped id=%s topic=%r over per-topic "
@@ -134,7 +169,7 @@ class CompositionStage:
                 craft_guards.true_false_key(q.correct_answer, q.possible_answers)
                 is not None
             )
-            if is_tf and tf_count >= tf_cap:
+            if is_tf and tf_cap is not None and tf_count >= tf_cap:
                 tf_dropped += 1
                 logger.warning(
                     "CompositionStage dropped id=%s over true/false cap %d",

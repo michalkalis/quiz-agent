@@ -4,10 +4,8 @@
 //
 //  RS-09 and RS-10 from docs/testing/regression-scenarios.md, frozen into
 //  XCUITest (#180 track D). Multiple choice: the voice path goes through the
-//  confirmation sheet prefilled with the matched option's VALUE (#171 track I,
-//  #45 D4); the tap path submits directly.
+//  confirmation sheet (#171 track I, #45 D4); the tap path submits directly.
 //
-
 import XCTest
 
 final nonisolated class RSMCQTests: XCTestCase {
@@ -18,26 +16,25 @@ final nonisolated class RSMCQTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    // MARK: RS-09 — MCQ voice answer is matched, confirmed, graded
+    // MARK: RS-09 — MCQ voice answer goes through confirmation
 
-    // Regression guarded: a committed transcript matching an option prefills the
-    // sheet with the option value (never the raw transcript) and shows the match
-    // as "B · Jupiter"; nothing is graded until Confirm. Tolerant matching
-    // (#171 I2) maps an inflected form the same way; an unmatched transcript
-    // prefills the raw text unchanged. One fresh launch per variant.
+    // Regression guarded: a spoken MCQ answer opens the confirmation sheet with
+    // exactly what the server heard (#208.8: the backend transcribes and grades;
+    // #185 track G — it places the answer among the options), the options stay
+    // on screen, and nothing is graded until Confirm. One fresh launch per
+    // variant: an option's text and a free answer.
     @MainActor
     func testRS09MCQVoiceAnswerGoesThroughConfirmation() async throws {
-        try await runMCQVoicePass(transcript: "Jupiter", expectAnswer: "Jupiter", expectMatch: true)
-        try await runMCQVoicePass(transcript: "Jupitera", expectAnswer: "Jupiter", expectMatch: true)
-        try await runMCQVoicePass(transcript: "something unrelated", expectAnswer: "something unrelated", expectMatch: false)
+        try await runMCQVoicePass(transcript: "Jupiter")
+        try await runMCQVoicePass(transcript: "something unrelated")
     }
 
     @MainActor
-    private func runMCQVoicePass(transcript: String, expectAnswer: String, expectMatch: Bool) async throws {
+    private func runMCQVoicePass(transcript: String) async throws {
         let tag = "RS-09 (\(transcript))"
         // The 5 s speech-start window is parked for this scenario: it injects the
-        // answer only after several queries, and on a slow runner the window's
-        // forced commit reached the sheet first (CI 2026-09-24).
+        // answer only after several queries, and on a slow runner the window
+        // closed first and ended the recording empty (CI 2026-09-24).
         let app = RSFlow.launch(["--ui-test-mcq", "--ui-test-park-speech-window"])
         let question = RSFlow.startMCQQuiz(app)
 
@@ -51,26 +48,16 @@ final nonisolated class RSMCQTests: XCTestCase {
             "\(tag): listen bar reads '\(caption)' — must say the option TEXT is accepted (#171 I3)"
         )
 
-        try await client.sendSTTEvent(path: "/stt/committed", text: transcript)
+        try await client.sendSpokenAnswer(transcript)
 
         let confirmation = ConfirmationPage(app: app)
         confirmation.waitForTranscript(timeout: 5, scenario: tag)
         // The a11y label carries a spoken prefix ("Your transcribed answer: …"),
-        // so the prefill is matched as the label's tail — exact, not contains,
-        // so "Jupitera" cannot pass as "Jupiter".
+        // so the prefill is matched as the label's tail.
         XCTAssertTrue(
-            confirmation.answer.label.hasSuffix(expectAnswer),
-            "\(tag): sheet reads '\(confirmation.answer.label)', expected it to end with '\(expectAnswer)'"
+            confirmation.answer.label.hasSuffix(transcript),
+            "\(tag): sheet reads '\(confirmation.answer.label)', expected it to end with '\(transcript)'"
         )
-        if expectMatch {
-            XCTAssertTrue(confirmation.matchedOption.exists, "\(tag): confirmation.matchedOption missing")
-            XCTAssertTrue(
-                confirmation.matchedOption.label.contains("Jupiter"),
-                "\(tag): matched option reads '\(confirmation.matchedOption.label)'"
-            )
-        } else {
-            XCTAssertFalse(confirmation.matchedOption.exists, "\(tag): an unmatched transcript claims a match")
-        }
         XCTAssertEqual(question.stateValue, "processing", "\(tag): nothing may be graded before Confirm")
         XCTAssertTrue(question.option("b").exists, "\(tag): options disappeared while the sheet is up")
 

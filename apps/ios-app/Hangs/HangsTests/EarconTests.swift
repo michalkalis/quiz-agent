@@ -25,8 +25,7 @@ private func makeVM() -> (QuizViewModel, MockEarconPlayer) {
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: MockAudioService(),
         persistenceStore: MockPersistenceStore(),
-        silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil
+        silenceDetectionService: MockSilenceDetectionService()
     )
     vm.currentSession = Fixtures.makeActiveSession()
     vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
@@ -69,7 +68,6 @@ struct EarconTests {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
             vm.quizState = .recording
-            vm.isStreamingSTT = false // batch path — no STT service in this VM
 
             await vm.recordingCoordinator.stopRecordingAndSubmit()
 

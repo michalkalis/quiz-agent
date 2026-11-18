@@ -4,7 +4,7 @@
 //
 //  Page Object for the Settings → Custom Pack flow (issue #111 T4, reworked
 //  for the #138 modal). Covers the full #95 pack-order depth used by
-//  RS-pack-nav-start: Home → Settings → order sheet (form → summary → pay →
+//  RS-pack-nav-start: Profile → Settings → order sheet (form → summary → pay →
 //  delivered). The order sheet is ONE modal now, not two pushed screens.
 //
 
@@ -16,19 +16,12 @@ struct SettingsPage {
     /// A valid order prompt: any non-empty topic up to 1000 chars (#138).
     static let validPrompt = "A quiz about the history of space exploration"
 
-    // MARK: - Home → Settings
+    // MARK: - Profile → Settings
 
-    var moreSettingsButton: XCUIElement {
-        app.buttons["home.moreSettings"]
-    }
-
-    /// Tap the Home "more settings" chip and wait for Settings to appear.
+    /// #213.4: Settings lives under the Profile tab's gear. Opens it and waits
+    /// for Settings to appear.
     func openSettings(timeout: TimeInterval = 5) {
-        XCTAssertTrue(
-            moreSettingsButton.waitForExistence(timeout: timeout),
-            "SettingsPage: home.moreSettings button not found"
-        )
-        moreSettingsButton.tap()
+        ProfilePage(app: app).openSettings(timeout: timeout)
         XCTAssertTrue(
             createPackButton.waitForExistence(timeout: timeout),
             "SettingsPage: packs.createPack not found after opening Settings"
@@ -68,6 +61,12 @@ struct SettingsPage {
         app.buttons["orderPack.submit"]
     }
 
+    /// Required difficulty choice on the form (#224); Continue stays disabled
+    /// until one is picked.
+    var mediumDifficultyButton: XCUIElement {
+        app.buttons["orderPack.difficulty.medium"]
+    }
+
     /// Summary step primary CTA ("Pay & create pack") — the point of no return.
     var payButton: XCUIElement {
         app.buttons["orderPack.pay"]
@@ -81,6 +80,12 @@ struct SettingsPage {
             promptField.waitForExistence(timeout: timeout),
             "SettingsPage: orderPack.prompt not found"
         )
+        // Pick the level first, while the keyboard is still down (#224).
+        XCTAssertTrue(
+            mediumDifficultyButton.waitForExistence(timeout: timeout),
+            "SettingsPage: orderPack.difficulty.medium not found"
+        )
+        mediumDifficultyButton.tap()
         promptField.tap()
         promptField.typeText(prompt)
         XCTAssertTrue(

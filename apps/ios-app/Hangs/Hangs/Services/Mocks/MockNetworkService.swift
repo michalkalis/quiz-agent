@@ -5,12 +5,15 @@
 //  Mock NetworkService for DEBUG builds (SwiftUI previews, UI-test mode).
 //
 
+import Clocks
 @preconcurrency import Foundation
 import os
 
 #if DEBUG
     @MainActor
     final class MockNetworkService: NetworkServiceProtocol {
+        /// #212: a game together starts with the host's session start.
+        var onStartQuiz: (() -> Void)?
         var mockSession: QuizSession?
         var mockResponse: QuizResponse?
         /// Optional override for `submitTextInput` so UI tests can return a
@@ -49,11 +52,14 @@ import os
         /// decrementing on each call — lets a test assert the #FIX2 bounded
         /// retry recovers (fails N times, then loads).
         var getUsageFailuresBeforeSuccess = 0
-        /// Optional hook awaited right after incrementing the call count, before
-        /// `getUsage` returns/throws — lets a test deterministically hold a
-        /// fetch in flight (no wall-clock race) to assert the #FIX2 single-flight
-        /// dedup (a launch fetch + an onAppear fetch must join, not fire twice).
-        var getUsageGate: (@Sendable () async -> Void)?
+        /// #235.1 (see +Conditions): awaited by every call once it is recorded,
+        /// before it answers — lets a test hold ANY call in flight with no
+        /// wall-clock race (`hold(_:)`, or a closure of its own).
+        var gates: [MockNetworkCall: @Sendable () async throws -> Void] = [:]
+        /// #235.1: the bad network each call runs on (none = instant and correct).
+        var networkConditions: [MockNetworkCall: NetworkCondition] = [:]
+        /// What a condition's delays sleep on: a `TestClock` in logic tests.
+        var networkClock: AnyClock<Duration> = .continuous
 
         // Capture properties for unit-test assertions (additive — no behaviour change)
         var capturedTextInputAudio: Bool?
@@ -69,6 +75,18 @@ import os
         var capturedVoiceAnswerQuestionId: String?
         /// #204.2: the rejected transcripts each voice upload carried, in order.
         var capturedVoiceAnswerRejectedTranscripts: [[String]] = []
+        /// #208.3: whether each voice upload asked for the read-back, in order.
+        var capturedVoiceAnswerReadBack: [Bool] = []
+        /// #208.8 UI-test seam: what the "server" heard in the NEXT voice
+        /// upload. Set by `UITestSupport` when a scenario injects a spoken
+        /// answer; the upload is then graded like a text answer and comes back
+        /// with this transcript as `evaluation.userAnswer`. Consumed once.
+        var nextVoiceTranscript: String?
+        /// #208.8 dictation: every uploaded clip and its language, in order, and
+        /// what the "server" hears (or the error it throws).
+        var capturedDictationUploads: [(bytes: Int, language: String)] = []
+        var dictationTranscript = "mock dictation"
+        var dictationError: Error?
         /// When set, `submitTextInput` throws this instead of returning — the
         /// sibling of `submitVoiceAnswerError`, so a test can inject a permanent
         /// failure (e.g. the #133 409 `question_mismatch`) on the text path
@@ -121,12 +139,6 @@ import os
         var textInputFailuresBeforeSuccess = 0
         var submitVoiceAnswerFailuresBeforeSuccess = 0
         var submitVoiceAnswerCallCount = 0
-        /// Optional hook awaited right after the call is recorded, before
-        /// `submitVoiceAnswer` returns/throws — lets a test hold a voice upload in
-        /// flight deterministically and interleave a Re-record / spoken "again" at
-        /// exactly the #133 V14 window, with no wall-clock race. Sibling of
-        /// `getUsageGate` / `syncEntitlementsGate`.
-        var submitVoiceAnswerGate: (@Sendable () async -> Void)?
         /// The transient failure those two counters throw.
         static let coldWakeError = NetworkError.serverError(statusCode: 503, message: "machine waking")
         /// Number of times `endSession` was invoked — for assertions that X actually
@@ -136,6 +148,10 @@ import os
         /// Last `includeImages` value passed to `createSession` — asserts the Home
         /// toggle actually reaches the session request (#68).
         var capturedIncludeImages: Bool?
+        /// Last `skipLocalQuestions` sent with `createSession` / the availability
+        /// probe — asserts the Categories switch reaches both requests (#206).
+        var capturedSkipLocalQuestions: Bool?
+        var capturedAvailabilitySkipLocalQuestions: Bool?
 
         /// Last `categories` value passed to `createSession` — asserts the Home
         /// multi-select actually reaches the session request (#82 item 4).
@@ -154,12 +170,19 @@ import os
         /// call — lets tests assert the #102 bounded-retry-with-backoff behavior
         /// (fails N times, then recovers).
         var syncEntitlementsFailuresBeforeSuccess = 0
-        /// Optional hook awaited right after incrementing the call count, before
-        /// `syncEntitlements` returns/throws — lets a test deterministically hold
-        /// a call in flight (no wall-clock race) to assert the #102 single-flight
-        /// dedup (launch + an immediate scene `.active` must not fire two
-        /// concurrent syncs).
-        var syncEntitlementsGate: (@Sendable () async -> Void)?
+
+        // MARK: #232 shared quiz (see +SharedQuiz)
+
+        /// What `createSharedQuiz` returns; nil = it throws `notFound`.
+        var stubbedShareCreated: SharedQuizCreated?
+        var createSharedQuizCalls: [(sessionId: String?, packId: String?, displayName: String?)] = []
+        /// What `startSharedQuiz` returns; nil = a session from `mockSession`.
+        var stubbedShareStart: SharedQuizStart?
+        var startSharedQuizError: Error?
+        var startSharedQuizCalls: [(token: String, displayName: String?)] = []
+        /// What `sharedQuizResults` returns; nil = it throws `notFound`.
+        var stubbedShareResults: SharedQuizResults?
+        var sharedQuizResultsCallCount = 0
 
         // MARK: #205 daily challenge (see +Daily)
 
@@ -181,7 +204,7 @@ import os
         /// (five questions, crowd strips, the result once it is played).
         var dailyScript: DailyMockScript?
 
-        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, packId: String?) async throws -> QuizSession {
+        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions
             capturedPackId = packId
@@ -192,7 +215,9 @@ import os
             // deterministically cancel from `onCreateSession` and observe the throw.
             try Task.checkCancellation()
             capturedIncludeImages = includeImages
+            capturedSkipLocalQuestions = skipLocalQuestions
             capturedCategories = categories
+            try await simulateNetwork(.createSession)
             if createSessionFailuresBeforeSuccess > 0 {
                 createSessionFailuresBeforeSuccess -= 1
                 throw URLError(.timedOut)
@@ -220,10 +245,12 @@ import os
         var capturedAvailabilityExcludedIds: [String]?
         var capturedAvailabilityRequestedCount: Int?
 
-        func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+        func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
             questionAvailabilityCallCount += 1
+            capturedAvailabilitySkipLocalQuestions = skipLocalQuestions
             capturedAvailabilityRequestedCount = requestedCount
             capturedAvailabilityExcludedIds = excludedQuestionIds
+            try await simulateNetwork(.questionAvailability)
             if let error = questionAvailabilityError { throw error }
             if let stubbed = stubbedAvailability { return stubbed }
             return QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
@@ -231,6 +258,8 @@ import os
 
         func startQuiz(sessionId: String, excludedQuestionIds: [String] = []) async throws -> QuizResponse {
             capturedStartQuizExcludedIds = excludedQuestionIds
+            onStartQuiz?()
+            try await simulateNetwork(.startQuiz)
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }
@@ -243,13 +272,14 @@ import os
             return response
         }
 
-        func submitVoiceAnswer(sessionId _: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse {
+        func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String], readBack: Bool) async throws -> QuizResponse {
             submitVoiceAnswerCallCount += 1
             capturedVoiceAnswerRejectedTranscripts.append(rejectedTranscripts)
+            capturedVoiceAnswerReadBack.append(readBack)
             capturedVoiceAnswerQuestionId = questionId
             capturedVoiceAnswerFileName = fileName
             capturedVoiceAnswerBytes = audioData.count
-            await submitVoiceAnswerGate?()
+            try await simulateNetwork(.submitVoiceAnswer)
             if submitVoiceAnswerFailuresBeforeSuccess > 0 {
                 submitVoiceAnswerFailuresBeforeSuccess -= 1
                 throw Self.coldWakeError
@@ -258,10 +288,42 @@ import os
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
+            if let transcript = nextVoiceTranscript {
+                nextVoiceTranscript = nil
+                return try await gradedVoiceResponse(
+                    transcript: transcript, sessionId: sessionId, questionId: questionId
+                )
+            }
             guard let response = mockResponse else {
                 throw NetworkError.invalidResponse
             }
             return response
+        }
+
+        /// The backend grades a voice upload exactly like the text of its
+        /// transcript and echoes that transcript as `evaluation.userAnswer`.
+        private func gradedVoiceResponse(transcript: String, sessionId: String, questionId: String?) async throws -> QuizResponse {
+            let graded = try await submitTextInput(sessionId: sessionId, input: transcript, audio: false, questionId: questionId)
+            guard let verdict = graded.evaluation else { return graded }
+            return QuizResponse(
+                success: graded.success,
+                message: graded.message,
+                session: graded.session,
+                currentQuestion: graded.currentQuestion,
+                evaluation: Evaluation(
+                    userAnswer: transcript,
+                    result: verdict.result,
+                    points: verdict.points,
+                    correctAnswer: verdict.correctAnswer,
+                    questionId: verdict.questionId,
+                    explanation: verdict.explanation,
+                    headlineAnswer: verdict.headlineAnswer
+                ),
+                feedbackReceived: graded.feedbackReceived,
+                audio: graded.audio,
+                awaitingQuestion: graded.awaitingQuestion,
+                crowd: graded.crowd
+            )
         }
 
         // MARK: - Feedback (#109) capture + control
@@ -285,6 +347,7 @@ import os
             capturedFeedbackScreenshot = screenshotPNG
             capturedFeedbackAudio = audioWAV
             capturedFeedbackLogs = logsText
+            try await simulateNetwork(.submitFeedback)
             if let feedbackError { throw feedbackError }
             if shouldFail { throw NetworkError.invalidResponse }
         }
@@ -294,6 +357,7 @@ import os
             capturedTextInputAudio = audio
             capturedTextInputInput = input
             capturedTextInputQuestionId = questionId
+            try await simulateNetwork(.submitTextInput)
             if let submitTextInputDelay {
                 try await Task.sleep(for: submitTextInputDelay)
             }
@@ -330,6 +394,7 @@ import os
         func nextQuestion(sessionId _: String, audio: Bool) async throws -> QuizResponse {
             nextQuestionCallCount += 1
             capturedNextQuestionAudio = audio
+            try await simulateNetwork(.nextQuestion)
             if !nextQuestionResults.isEmpty {
                 let index = min(nextQuestionCallCount - 1, nextQuestionResults.count - 1)
                 return try nextQuestionResults[index].get()
@@ -343,7 +408,11 @@ import os
             return response
         }
 
-        func downloadAudio(from _: String) async throws -> Data {
+        var downloadedAudioPaths: [String] = []
+
+        func downloadAudio(from path: String) async throws -> Data {
+            downloadedAudioPaths.append(path)
+            try await simulateNetwork(.downloadAudio)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -352,6 +421,7 @@ import os
 
         func endSession(sessionId _: String) async throws {
             endSessionCallCount += 1
+            try await simulateNetwork(.endSession)
             if let error = endSessionError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -359,34 +429,41 @@ import os
         }
 
         func extendSession(sessionId _: String, minutes _: Int) async throws {
+            try await simulateNetwork(.extendSession)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
         }
 
         func rateQuestion(sessionId _: String, rating _: Int) async throws {
+            try await simulateNetwork(.rateQuestion)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
         }
 
         func flagQuestion(sessionId _: String, reason _: String?) async throws {
+            try await simulateNetwork(.flagQuestion)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
         }
 
-        func fetchElevenLabsToken() async throws -> String {
+        func transcribeDictation(audioWAV: Data, language: String) async throws -> String {
+            capturedDictationUploads.append((audioWAV.count, language))
+            try await simulateNetwork(.transcribeDictation)
+            if let dictationError { throw dictationError }
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
-            return "mock-elevenlabs-token"
+            return dictationTranscript
         }
 
         /// #132 E recap narration: records each chunk so tests can assert what
         /// would have been spoken (and that nothing is spoken in per-question mode).
         func synthesizeSpeech(text: String, language _: String?) async throws -> Data {
             synthesizedTexts.append(text)
+            try await simulateNetwork(.synthesizeSpeech)
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
@@ -395,7 +472,7 @@ import os
 
         func getUsage() async throws -> UsageInfo {
             getUsageCallCount += 1
-            await getUsageGate?()
+            try await simulateNetwork(.getUsage)
             if getUsageFailuresBeforeSuccess > 0 {
                 getUsageFailuresBeforeSuccess -= 1
                 throw getUsageError ?? NetworkError.invalidResponse
@@ -426,7 +503,7 @@ import os
 
         func syncEntitlements() async throws {
             syncEntitlementsCallCount += 1
-            await syncEntitlementsGate?()
+            try await simulateNetwork(.syncEntitlements)
             if syncEntitlementsFailuresBeforeSuccess > 0 {
                 syncEntitlementsFailuresBeforeSuccess -= 1
                 throw syncEntitlementsError ?? NetworkError.invalidResponse
@@ -446,6 +523,7 @@ import os
 
         func postAnalyticsEvents(_ batch: AnalyticsBatch) async throws {
             postedAnalyticsBatches.append(batch)
+            try await simulateNetwork(.postAnalyticsEvents)
             if analyticsPostFailures > 0 {
                 analyticsPostFailures -= 1
                 throw NetworkError.invalidResponse

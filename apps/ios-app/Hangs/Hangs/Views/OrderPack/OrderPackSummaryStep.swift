@@ -9,7 +9,9 @@
 //
 //  The price row shows the App Store's localized price for the pack product;
 //  when StoreKit can't return it the row is hidden — inventing a number would
-//  be worse than showing none.
+//  be worse than showing none. #228.6 (founder's variant B): the 10 | 30
+//  switch sits in the card above the price, and only once StoreKit sells
+//  `pack_10`; without it the card is the 30-only summary of before.
 //
 
 import SwiftUI
@@ -21,7 +23,7 @@ struct OrderPackSummaryStep: View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
             HangsCard(padding: EdgeInsets(top: 18, leading: 18, bottom: 18, trailing: 18)) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HangsSectionLabel(text: "Custom pack · 30 questions")
+                    HangsSectionLabel(text: "Custom pack · \(viewModel.size.questionCount) questions")
 
                     Text(verbatim: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.hangsHeading)
@@ -39,6 +41,37 @@ struct OrderPackSummaryStep: View {
                             .foregroundStyle(Theme.Hangs.Colors.ink)
                     }
 
+                    if let level = viewModel.difficulty {
+                        HStack(spacing: Theme.Hangs.Spacing.xs) {
+                            Text("Difficulty")
+                                .font(.hangsBody)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                            Text(level.label)
+                                .font(.hangsBody.weight(.semibold))
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("orderPack.summaryDifficulty")
+                    }
+
+                    // #236: only a child band is named; an adult pack reads as before.
+                    if viewModel.audience.isChild {
+                        HStack(spacing: Theme.Hangs.Spacing.xs) {
+                            Text("Who it's for")
+                                .font(.hangsBody)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                            Text(viewModel.audience.label)
+                                .font(.hangsBody.weight(.semibold))
+                                .foregroundStyle(Theme.Hangs.Colors.ink)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("orderPack.summaryAudience")
+                    }
+
+                    if viewModel.offersSizeChoice {
+                        sizeRow
+                    }
+
                     if let price = viewModel.packPrice {
                         HStack(spacing: Theme.Hangs.Spacing.xs) {
                             Text("Price")
@@ -54,9 +87,12 @@ struct OrderPackSummaryStep: View {
                 }
             }
 
+            if viewModel.isTopicSoftened {
+                softenedNotice
+            }
             noticeBox
 
-            HangsPrimaryButton(title: "Pay & create pack", icon: "sparkles") {
+            HangsPrimaryButton(title: payTitle, icon: "sparkles") {
                 Task { await viewModel.submit() }
             }
             .accessibilityIdentifier("orderPack.pay")
@@ -64,12 +100,58 @@ struct OrderPackSummaryStep: View {
         .task { await viewModel.loadPrice() }
     }
 
+    private var payTitle: LocalizedStringKey {
+        if let price = viewModel.packPrice {
+            "Pay \(price) & create pack"
+        } else {
+            "Pay & create pack"
+        }
+    }
+
+    private var sizeRow: some View {
+        HStack(spacing: Theme.Hangs.Spacing.sm) {
+            Text("Number of questions")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Picker("Number of questions", selection: Binding(get: { viewModel.size }, set: viewModel.selectSize)) {
+                ForEach(PackSize.allCases, id: \.self) { size in
+                    Text(verbatim: "\(size.questionCount)").tag(size)
+                }
+            }
+            .pickerStyle(.segmented)
+            .fixedSize()
+            .accessibilityIdentifier("orderPack.size")
+        }
+    }
+
+    /// #233: the topic passed the check, but its questions will be toned down.
+    private var softenedNotice: some View {
+        HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
+            Image(systemName: "info.circle")
+                .font(.hangsBody.weight(.semibold))
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+            Text("Some words in your topic are rude or for adults only. We'll make the pack, but the questions will be toned down.")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(Theme.Hangs.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
+                .fill(Theme.Hangs.Colors.muted.opacity(0.10))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("orderPack.topicSoftened")
+    }
+
     private var noticeBox: some View {
         HStack(alignment: .top, spacing: Theme.Hangs.Spacing.sm) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.hangsBody.weight(.semibold))
                 .foregroundStyle(Theme.Hangs.Colors.warning)
-            Text("Once you pay, the order can't be cancelled. Pack generation is a premium paid service and starts immediately.")
+            Text("Once you pay, the order can't be cancelled. Pack generation is a paid service and starts immediately.")
                 .font(.hangsBody)
                 .foregroundStyle(Theme.Hangs.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
@@ -88,6 +170,7 @@ struct OrderPackSummaryStep: View {
     #Preview {
         let vm = OrderPackViewModel(service: MockPackOrderService())
         vm.prompt = "Space for kids"
+        vm.selectDifficulty(.hard)
         vm.advanceToSummary()
         return OrderPackSummaryStep(viewModel: vm)
             .padding(20)

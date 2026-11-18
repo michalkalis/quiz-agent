@@ -17,6 +17,9 @@
 //     blank, so nothing the driver does — tapping Record, saying "start",
 //     replaying, a state wobble — makes the number disappear.
 //
+//   - #224 (canvas E1): Answer and Type are equal labelled buttons side by side,
+//     Skip is an icon-only round control at the end.
+//
 //   - Track C — the footer row reads Record · Type · Skip. "Type answer instead"
 //     lost its floating slot in the audio strip and became a compact secondary
 //     button next to the other two.
@@ -42,6 +45,7 @@
 import SwiftUI
 
 struct QuestionVoiceFooter: View {
+    @Environment(\.openURL) private var openURL
     @ObservedObject var viewModel: QuizViewModel
 
     @Binding var showTextInput: Bool
@@ -55,7 +59,8 @@ struct QuestionVoiceFooter: View {
 
     /// #194 canvas: the footer shares the screen's 16pt edge.
     private static let gutter = Theme.Hangs.Spacing.md
-    /// Glyph size of the icon-only controls (keyboard, send).
+    private static let pairTypeCap = DynamicTypeSize.xLarge
+    /// Glyph size of the send control.
     private static let glyphSize: CGFloat = 17
     /// Bg-Typed: the typed answer reads larger than body text.
     private static let typedAnswerSize: CGFloat = 20
@@ -80,6 +85,11 @@ struct QuestionVoiceFooter: View {
                 EmptyAnswerRetryHint()
                     .padding(.horizontal, Self.gutter)
                     .transition(.opacity)
+            } else if viewModel.showsSpellingHint {
+                // #208.6: after a rejected transcript, before the next try.
+                AnswerSpellingHint()
+                    .padding(.horizontal, Self.gutter)
+                    .transition(.opacity)
             }
 
             // #179 D1: the docked bar, in whichever of the four states the quiz
@@ -98,7 +108,10 @@ struct QuestionVoiceFooter: View {
                     speechHeard: viewModel.isHearingAnswer,
                     inputLevel: viewModel.recordingInputLevel,
                     // #188 G11: the recording window, moved out of the Stop button.
-                    answerRemaining: viewModel.answerWindowRemaining
+                    answerRemaining: viewModel.answerWindowRemaining,
+                    commandsAccessory: viewModel.commandsAccessory(for: phase),
+                    onTurnOnCommands: turnOnCommands,
+                    onOpenSettings: openSystemSettings
                 )
                 .padding(.horizontal, Self.gutter)
                 .transition(.opacity)
@@ -117,6 +130,9 @@ struct QuestionVoiceFooter: View {
             typeButton
             skipButton
         }
+        // Answer and Type read as a pair, so both labels scale together: capped at
+        // the size where "Odpovedz" still fits beside "Napíš" without shrinking.
+        .dynamicTypeSize(...Self.pairTypeCap)
     }
 
     /// Manual override (54.3): `toggleRecording` starts recording immediately from
@@ -143,7 +159,8 @@ struct QuestionVoiceFooter: View {
             height: rowHeight,
             // #198 (canvas Bg-Question): Stop is pink while the mic is open,
             // matching the answer bar; "Answer" stays the ink action.
-            tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil
+            tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil,
+            singleLineTitle: true
         ) {
             Task { await viewModel.toggleRecording() }
         }
@@ -163,34 +180,34 @@ struct QuestionVoiceFooter: View {
         .accessibilityIdentifier(isRecording ? "question.stop" : "question.record")
     }
 
-    /// Typed-answer fallback (#54 task 54.18). #171 Track C1: icon-only. The words
-    /// "Type" / "Skip" sized these two buttons off the localized string, and in
-    /// Slovak ("Písať" / "Preskočiť" beside "Nahrávať") nothing was left for the
-    /// Record button — its seconds pill was what got clipped. A square glyph is the
-    /// same width in every language; the word survives as the accessibility label,
-    /// so VoiceOver still says "Type".
+    /// Typed-answer fallback (#54 task 54.18). #224 (canvas E1): the same weight as
+    /// the Answer button beside it, a labelled glass button, so typing is a
+    /// first-class way to answer and not a hidden icon.
     private var typeButton: some View {
         Button {
             showTextInput = true
             isTextFieldFocused.wrappedValue = true
         } label: {
-            iconChip("keyboard")
+            Label("Type", systemImage: "keyboard")
+                .font(.hangsButton)
+                .lineLimit(1)
+                .minimumScaleFactor(HangsButtonTitle.singleLineMinimumScale)
+                .foregroundColor(Theme.Hangs.Colors.ink)
+                .frame(maxWidth: .infinity)
+                .frame(height: rowHeight)
+                // Canvas E1: a visible pill, same height and width as Answer.
+                .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
+                .overlay(Capsule().strokeBorder(Theme.Hangs.Colors.subtleBorder, lineWidth: 1))
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .disabled(!canInteract || showTextInput)
         .opacity((canInteract && !showTextInput) ? 1 : 0.45)
-        .accessibilityLabel("Type")
         .accessibilityIdentifier("question.textInputToggle")
     }
 
-    /// #174 (founder 2026-09-09): the word is back — "Skip" IS the voice command,
-    /// and a driver learns it by reading the button. #171 had made this icon-only
-    /// because "Preskočiť" beside "Nahrávať" left the Record button no room; the
-    /// imperative pair ("Preskoč" beside "Štart") is short enough to share the row.
-    ///
-    /// #179 D3: and it is the SAME capsule the MCQ screen draws now — one shape
-    /// and one word for the escape hatch, at the 48pt height that keeps this row
-    /// reading as one strip.
+    /// #224 (canvas E1): icon only, its word is the accessibility label and the
+    /// voice command (#174). The same round control the MCQ screen draws (#179 D3).
     private var skipButton: some View {
         QuestionSkipButton(
             isSkipping: isSkipping,
@@ -199,19 +216,6 @@ struct QuestionVoiceFooter: View {
         ) {
             Task { await viewModel.skipQuestion() }
         }
-    }
-
-    /// The surface of the icon-only Type control: a circle as tall as the Record
-    /// button beside it, so the row still reads as one strip. (#179 D3 moved the
-    /// skip capsule out to `QuestionSkipButton`, which now owns its own chrome.)
-    private func iconChip(_ systemName: String) -> some View {
-        Image(systemName: systemName)
-            .font(.hangsBody(Self.glyphSize, weight: .semibold))
-            .foregroundColor(Theme.Hangs.Colors.ink)
-            .tint(Theme.Hangs.Colors.ink)
-            .frame(width: rowHeight, height: rowHeight)
-            // #194 B2: secondary controls are Liquid Glass.
-            .glassEffect(.regular.interactive(), in: Capsule())
     }
 
     // MARK: - Typed answer
@@ -227,6 +231,7 @@ struct QuestionVoiceFooter: View {
                 .accessibilityIdentifier("question.textField")
                 .submitLabel(.send)
                 .onSubmit(submitTypedAnswer)
+                .limitLength($textAnswer, to: TextInputLimit.answer)
                 .padding(.horizontal, Theme.Hangs.Spacing.lg)
                 .frame(maxWidth: .infinity, minHeight: rowHeight)
                 .background(Capsule().fill(Theme.Hangs.Colors.bgCard))
@@ -257,6 +262,16 @@ struct QuestionVoiceFooter: View {
         Task { await viewModel.resubmitAnswer(answer) }
     }
 
+    // MARK: - Commands (#237)
+
+    private func turnOnCommands() {
+        Task { await viewModel.turnOnVoiceCommandsFromListenBar() }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+    }
+
     // MARK: - Derived
 
     private var isRecording: Bool { viewModel.quizState == .recording }
@@ -267,7 +282,8 @@ struct QuestionVoiceFooter: View {
             quizState: viewModel.quizState,
             answerWindowRemaining: viewModel.answerWindowRemaining,
             answerWindowTotal: viewModel.answerWindowTotal,
-            answerKind: .open
+            answerKind: .open,
+            isReadingQuestion: viewModel.isReadingQuestion
         )
     }
 

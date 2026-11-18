@@ -16,10 +16,13 @@ import os
 from typing import Optional, Protocol, runtime_checkable
 
 import httpx
-
+import openai
 from quiz_shared.llm import factory as llm_factory
 
-from ..monitoring.provider_alerts import report_elevenlabs_refusal
+from ..monitoring.provider_alerts import (
+    report_elevenlabs_refusal,
+    report_openai_refusal,
+)
 from .voices import (
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
@@ -35,9 +38,21 @@ logger = logging.getLogger(__name__)
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
 # A long question plus network round-trip; ElevenLabs streams the whole clip
-# before returning, so this is generous on purpose (a timeout here trips the
-# fallback provider, which costs the user a slower first question, not silence).
+# before returning, so this is generous on purpose. With a backup configured
+# the primary is cut off sooner (`PRIMARY_TTS_TIMEOUT_S`); this full wait only
+# applies when nothing else could speak the text.
 ELEVENLABS_TIMEOUT_SECONDS = 30.0
+
+# #235: how long the primary voice may take before the backup voice speaks
+# instead. The app stops waiting for question audio after 10 s
+# (iOS `audioDownloadTimeout`), and a slow, not failed, ElevenLabs used to hold
+# the request for the whole 30 s above, so the player heard nothing. 6 s leaves
+# the backup (OpenAI tts-1, a question-length clip in a couple of seconds) about
+# 4 s plus the volume boost and cache write inside those 10 s. It is the same
+# split the answer path uses: Claude gets 6 s, its fallback the rest
+# (`CLAUDE_TIMEOUT_S` in hot_path_llm). A healthy primary answers a question in
+# a second or two, so the limit only trips when it is truly slow.
+PRIMARY_TTS_TIMEOUT_S = 6.0
 
 
 @runtime_checkable
@@ -62,13 +77,17 @@ class OpenAITTSProvider:
         self.default_voice = voice or OPENAI_DEFAULT_VOICE
 
     async def synthesize(self, text: str, voice: str) -> bytes:
-        response = await self.client.audio.speech.create(
-            model=self.model,
-            voice=voice,
-            input=text,
-            response_format=TTS_FORMAT,
-            speed=TTS_SPEED,
-        )
+        try:
+            response = await self.client.audio.speech.create(
+                model=self.model,
+                voice=voice,
+                input=text,
+                response_format=TTS_FORMAT,
+                speed=TTS_SPEED,
+            )
+        except openai.APIStatusError as exc:
+            report_openai_refusal("tts", exc)
+            raise
         return response.content
 
 

@@ -126,28 +126,6 @@ nonisolated enum VADTuning {
     /// (`VADIterator`: threshold 0.5, neg_threshold = threshold − 0.15).
     static let neuralSpeechOnsetProbability: Float = 0.5
     static let neuralSpeechReleaseProbability: Float = 0.35
-
-    // MARK: - ElevenLabs Scribe v2 Realtime streaming VAD
-
-    /// Silence (seconds) after which ElevenLabs commits the streaming transcript.
-    /// Source of truth for the value `Config.elevenLabsVadSilenceThresholdSecs`
-    /// forwards for back-compat.
-    static let elevenLabsVadSilenceThresholdSecs: Double = 1.5
-
-    /// Minimum speech (ms) ElevenLabs should see before treating audio as an
-    /// utterance — the streaming-side twin of `minSpeechDurationSecs`, rejecting
-    /// blips server-side.
-    static let elevenLabsMinSpeechDurationMs: Int = 300
-
-    /// Minimum silence (ms) ElevenLabs should require before a commit — the
-    /// streaming-side twin of the hangover.
-    ///
-    /// NOTE: `min_speech_duration_ms` / `min_silence_duration_ms` are sent as
-    /// query params on a best-effort basis; their exact names + acceptance are
-    /// confirmed on-device at 77.15. The streaming path already falls back to
-    /// Whisper batch on any WebSocket setup failure, so an unrecognised param
-    /// cannot strand the hot path.
-    static let elevenLabsMinSilenceDurationMs: Int = 1500
 }
 
 /// Pure STOP-on-silence decision, factored OUT of

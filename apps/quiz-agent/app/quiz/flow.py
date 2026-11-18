@@ -10,6 +10,8 @@ advance. Everything about a submit for a question that was ALREADY graded
 import asyncio
 import base64
 import logging
+import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -17,9 +19,11 @@ from ..analytics.recorder import AnalyticsRecorder
 from ..client_capabilities import ANSWER_CODES, has_capability
 from ..daily_challenge.schemas import CrowdStrip
 from ..evaluation.evaluator import UNMATCHED, AnswerEvaluator
+from ..evaluation.spelling import collapse_spelling
 from ..evaluation.mcq_matcher import match_option
 from ..input.parser import InputParser
 from ..retrieval.question_retriever import QuestionRetriever
+from ..rooms.rounds import open_round
 from ..session.manager import SessionManager
 from ..tts.number_normalization import normalize_numbers_for_tts
 from ..tts.spoken_text import spoken_question_text
@@ -30,6 +34,7 @@ from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 from quiz_shared.models.phase import SessionPhase
+from quiz_shared.sentry_privacy import user_text_log
 
 from .errors import (  # noqa: F401 — re-exported: routes and tests import from here
     AnswerUnmatched,
@@ -68,6 +73,10 @@ async def parse_answer_intents(
     Module-level so ``scripts/voice_replay.py`` (#197) replays recordings
     through exactly this path instead of a copy that could drift.
     """
+    if not display_question.possible_answers:
+        # #208.2: "V A H" / "pé á er í žet" -> one word before anything reads it.
+        # Not for MCQ, where single letters are option labels.
+        answer_text = collapse_spelling(answer_text)
     # Fast-path for literal "skip"
     if answer_text.strip().lower() == "skip":
         return [{"intent_type": "skip", "extracted_data": {}}]
@@ -133,6 +142,13 @@ class FlowResult:
     awaiting_question: bool = False
     # #205: the crowd strip of a daily-challenge answer (None = no strip).
     crowd: Optional[CrowdStrip] = None
+    # #208.3: the answer's read-back synthesis, started as soon as the parser
+    # extracted the answer so it runs alongside the judge (voice route only).
+    read_back_task: Optional["asyncio.Task[Optional[bytes]]"] = None
+
+
+def elapsed_ms(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
 
 
 class QuizFlowService:
@@ -149,10 +165,13 @@ class QuizFlowService:
         translation_service: Any,
         analytics: Optional[AnalyticsRecorder] = None,
         daily_challenge: Any = None,
+        shared_quiz: Any = None,
     ):
         self.analytics = analytics or AnalyticsRecorder()
         # #205 DailyChallengeService; None without a database.
         self.daily_challenge = daily_challenge
+        # #232 SharedQuizService (records shared-quiz results); None without DB.
+        self.shared_quiz = shared_quiz
         self.session_manager = session_manager
         self.input_parser = input_parser
         self.question_retriever = question_retriever
@@ -180,6 +199,9 @@ class QuizFlowService:
         next_question: Optional[Question] = None,
         submitted_question_id: Optional[str] = None,
         route: Optional[str] = None,
+        next_question_task: Optional["asyncio.Task[Optional[Question]]"] = None,
+        stage_ms: Optional[Dict[str, int]] = None,
+        read_back: Optional[Callable[[str], Awaitable[Optional[bytes]]]] = None,
     ) -> FlowResult:
         """Process a user's answer through the full quiz flow.
 
@@ -196,6 +218,13 @@ class QuizFlowService:
                 ``QuestionMismatch``.
             route: Which submit route carried the answer ("voice" | "text"),
                 for analytics only (#51).
+            next_question_task: #208.3 — the next-question retrieval already
+                running since before STT; awaited only when the session advances.
+            stage_ms: #208.3 — stage durations; the caller's (``stt_ms``) are
+                kept, ``parse_ms`` / ``judge_ms`` / ``feedback_tts_ms`` are
+                added, and all of them ride on ``answer_evaluated``.
+            read_back: #208.3 — synthesizes the extracted answer for the
+                confirmation read-back; started before the judge runs.
 
         Returns:
             FlowResult with evaluation, next question, audio info, etc.
@@ -209,6 +238,7 @@ class QuizFlowService:
                 participant_id=participant_id,
                 include_audio=include_audio,
                 result=FlowResult(),
+                route=route,
             )
 
         result = FlowResult()
@@ -231,6 +261,8 @@ class QuizFlowService:
             participant_id=participant_id,
             include_audio=include_audio,
             result=result,
+            stage_ms=stage_ms,
+            read_back=read_back,
         )
 
         # Ghost-question guard (#66): a non-answer intent (rating, explanation
@@ -253,6 +285,7 @@ class QuizFlowService:
         )
         if result.crowd is not None:
             session.last_evaluation.crowd = result.crowd.model_dump()
+        session.question_results[evaluated_question_id] = result.evaluation.result
         self.analytics.emit(
             "answer_evaluated",
             subject_id=session.user_id,
@@ -266,6 +299,7 @@ class QuizFlowService:
                 "route": route,
                 "is_regrade": False,
                 "question_index": len(session.asked_question_ids),
+                **(stage_ms or {}),
             },
         )
         await self._daily_record(
@@ -283,9 +317,10 @@ class QuizFlowService:
             session.transition(
                 to=SessionPhase.FINISHED, caller="flow.process_answer:max_questions"
             )
-            self.session_manager.update_session(session)
+            await self.session_manager.update_session(session)
             self._emit_completed(session, "max_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "Quiz completed!"
             return result
@@ -300,7 +335,7 @@ class QuizFlowService:
                 session.transition(
                     to=SessionPhase.FINISHED, caller="flow.process_answer:usage_limit"
                 )
-                self.session_manager.update_session(session)
+                await self.session_manager.update_session(session)
                 usage = await self.usage_tracker.get_usage(session.user_id)
                 self.analytics.emit(
                     "quota_hit",
@@ -329,6 +364,8 @@ class QuizFlowService:
                 return result
 
         # Get next question (use pre-fetched if available)
+        if next_question is None and next_question_task is not None:
+            next_question = await next_question_task
         if next_question is None:
             next_question = await self.question_retriever.get_next_question(session)
 
@@ -336,13 +373,14 @@ class QuizFlowService:
             if session.pack_id and await self.question_retriever.pack_is_generating(
                 session.pack_id
             ):
-                return self._await_question(session, result)
+                return await self._await_question(session, result)
             session.transition(
                 to=SessionPhase.FINISHED, caller="flow.process_answer:no_more_questions"
             )
-            self.session_manager.update_session(session)
+            await self.session_manager.update_session(session)
             self._emit_completed(session, "no_more_questions")
             await self._daily_finish(session)
+            await self.shared_finish(session)
             result.quiz_finished = True
             result.message = "No more questions available"
             return result
@@ -368,7 +406,9 @@ class QuizFlowService:
             },
         )
 
-    def _await_question(self, session: QuizSession, result: FlowResult) -> FlowResult:
+    async def _await_question(
+        self, session: QuizSession, result: FlowResult
+    ) -> FlowResult:
         """#182: park the session between questions while the pack fills.
 
         Phase stays `asking` with no current question — the same shape the
@@ -378,7 +418,7 @@ class QuizFlowService:
         session.current_question_id = None
         session.current_question_text = None
         session.current_question_translation = None
-        self.session_manager.update_session(session)
+        await self.session_manager.update_session(session)
         result.awaiting_question = True
         result.message = "Next question is being prepared"
         return result
@@ -417,14 +457,15 @@ class QuizFlowService:
                     to=SessionPhase.FINISHED,
                     caller="flow.resume_after_wait:no_more_questions",
                 )
-                self.session_manager.update_session(session)
+                await self.session_manager.update_session(session)
                 self._emit_completed(session, "no_more_questions")
+                await self.shared_finish(session)
                 result.quiz_finished = True
                 result.message = "No more questions available"
                 return result
             remaining = deadline - asyncio.get_running_loop().time()
             if remaining <= 0:
-                return self._await_question(session, result)
+                return await self._await_question(session, result)
             await asyncio.sleep(min(poll_interval, remaining))
 
     async def _advance_to_question(
@@ -443,10 +484,6 @@ class QuizFlowService:
         session.current_question_id = next_question.id
         session.asked_question_ids.append(next_question.id)
 
-        # Record usage (#95, #205: skipped for pack and daily sessions — see check above)
-        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
-            await self.usage_tracker.record_question(session.user_id)
-
         # Resolve the next question's text ONCE (stem + options + explanation +
         # answer) and persist the record: /question, /question/audio and the next
         # evaluation all read it instead of resolving again. Pre-translated
@@ -461,7 +498,22 @@ class QuizFlowService:
         )
         session.current_question_text = translated_q_dict["question"]
         session.current_question_translation = translation_record
-        self.session_manager.update_session(session)
+        open_round(session, translated_q_dict)  # #212.2: no-op outside a room
+        stored = await self.session_manager.update_session(session)
+
+        # Record usage (#95, #205: skipped for pack and daily sessions — see check
+        # above) only once the advance is stored (#235.6): a request killed in
+        # between (deploy, cancellation) must not leave a charge behind for an
+        # answer the session never recorded — the app's retry grades it again
+        # and would be charged a second time. Nor is a question charged whose
+        # session expired meanwhile (``False``): it can never be played.
+        if (
+            stored is not False
+            and self.usage_tracker
+            and session.user_id
+            and not session.is_quota_exempt
+        ):
+            await self.usage_tracker.record_question(session.user_id)
 
         result.next_question_dict = translated_q_dict
 
@@ -498,6 +550,8 @@ class QuizFlowService:
         participant_id: Optional[str],
         include_audio: bool,
         result: FlowResult,
+        stage_ms: Optional[Dict[str, int]] = None,
+        read_back: Optional[Callable[[str], Awaitable[Optional[bytes]]]] = None,
     ) -> IntentOutcome:
         """Parse ``answer_text`` and apply every intent it carries to session + result.
 
@@ -515,9 +569,12 @@ class QuizFlowService:
         # translation that fell back) → the original English question, unchanged.
         display_question = translated_question_view(question, translation)
 
+        timings = stage_ms if stage_ms is not None else {}
+        started = time.perf_counter()
         intents = await parse_answer_intents(
             answer_text, display_question, session.phase, self.input_parser
         )
+        timings["parse_ms"] = elapsed_ms(started)
 
         outcome = IntentOutcome()
 
@@ -535,13 +592,21 @@ class QuizFlowService:
                 # charged for. Empty string is the contract: iOS renders it as
                 # "said nothing", and the evaluator already grades it "skipped".
                 user_answer = extracted_data.get("answer") or ""
+                if read_back and user_answer.strip():
+                    task = asyncio.create_task(read_back(user_answer))
+                    # Strong ref: an unmatched MCQ raises past the caller's await.
+                    _prefetch_tasks.add(task)
+                    task.add_done_callback(_prefetch_tasks.discard)
+                    result.read_back_task = task
+                started = time.perf_counter()
                 eval_result, score_delta = await self.answer_evaluator.evaluate(
                     user_answer=user_answer,
                     question=display_question,
                     question_text=display_question.question,
                 )
+                timings["judge_ms"] = elapsed_ms(started)
                 if eval_result == UNMATCHED:
-                    logger.info(
+                    user_text_log.info(
                         "MCQ answer matched no option: heard=%r question=%s",
                         user_answer,
                         evaluated_question_id,
@@ -572,9 +637,11 @@ class QuizFlowService:
                 )
                 # Generate enhanced feedback audio
                 if include_audio and self.tts_service:
+                    started = time.perf_counter()
                     outcome.feedback_audio = await self._generate_feedback_audio(
                         eval_result, translated_correct, session.language, crowd_line
                     )
+                    timings["feedback_tts_ms"] = elapsed_ms(started)
 
                 # Update participant score
                 self._update_participant_score(session, participant_id, score_delta)
@@ -736,6 +803,16 @@ class QuizFlowService:
             await self.daily_challenge.finish(session)
         except Exception as e:
             logger.error("Daily challenge finish not recorded: %s", e, exc_info=True)
+
+    async def shared_finish(self, session: QuizSession) -> None:
+        """#232: record a finished shared quiz's result(s). A failure only
+        loses the comparison row — never the finish itself."""
+        if not (session.shared_quiz_id and self.shared_quiz):
+            return
+        try:
+            await self.shared_quiz.finish(session)
+        except Exception as e:
+            logger.error("Shared quiz result not recorded: %s", e, exc_info=True)
 
     async def _correct_answer_display(
         self,

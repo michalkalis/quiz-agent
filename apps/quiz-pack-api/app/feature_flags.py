@@ -144,6 +144,36 @@ def topicality_classification() -> bool:
     return _default_on(os.getenv("TOPICALITY_CLASSIFICATION"))
 
 
+def local_scope_classification() -> bool:
+    """Issue #206: label every question the corpus importer inserts with the
+    country it is tied to (``local_scope``), so "skip local questions" works
+    for new rows without a manual step.
+
+    ``True`` by default — founder 2026-10-15: new questions are labelled the
+    same way as the existing corpus. Set ``LOCAL_SCOPE_CLASSIFICATION=0`` to
+    import unlabelled; ``scripts/classify_local_scope.py`` picks those up.
+    """
+    return _default_on(os.getenv("LOCAL_SCOPE_CLASSIFICATION"))
+
+
+def naturalness_check() -> bool:
+    """#211: on import, check every new native sk/cs corpus row for calques and
+    empty home hooks and record the verdict (a label, never a gate). Default
+    on; ``NATURALNESS_CHECK=0`` imports unchecked and
+    ``scripts/check_naturalness.py`` picks those rows up later.
+    """
+    return _default_on(os.getenv("NATURALNESS_CHECK"))
+
+
+def naturalness_autofix() -> bool:
+    """#211 211.4: on import, replace a flagged sk/cs row's text with the
+    check's smallest-edit rewrite (the original stays in provenance). Founder
+    2026-10-23 chose auto-fix over label-only; OFF until the second blind
+    round of the stricter rewrites passes (``NATURALNESS_AUTOFIX=1``).
+    """
+    return _truthy(os.getenv("NATURALNESS_AUTOFIX"))
+
+
 def mcq_critique_telemetry() -> bool:
     """Lever D (Phase 4): run the self_critique judge over the MCQ sub-batch
     questions as **telemetry** — annotate each kept question with a
@@ -337,6 +367,16 @@ def gen_house_style() -> bool:
     return _truthy(os.getenv("GEN_HOUSE_STYLE"))
 
 
+def gen_house_style_v2() -> bool:
+    """#211: house style v2 — sk/cs written natively (examples from the
+    founder's 9-10 sk/cs ratings, no bolted-on home hook, no English calques)
+    and the "every part of the question earns its place" rule for all
+    languages. Also swaps the English output-language override for a native
+    sk/cs one. OFF until the founder's blind round (``GEN_HOUSE_STYLE_V2=1``).
+    """
+    return _truthy(os.getenv("GEN_HOUSE_STYLE_V2"))
+
+
 def best_of_n() -> bool:
     """#166: best-of-N over-generation + critique + pairwise duels, now OFF
     by default (duels already ruled out in D21 #164; critique added no signal
@@ -372,7 +412,7 @@ def judge_models() -> list[str] | None:
 # Read ONLY by the corpus CLI (`scripts/generate_pack.py`) and the replay
 # harness (`scripts/replay_dedup_json.py`). `app/worker/tasks.py` never reads
 # them, so a mis-set prod secret cannot change a customer pack (locked 3).
-# Every default is OFF; nothing here is enabled in prod.
+# Every default is OFF except the gray-zone judge (founder 2026-10-22).
 
 
 def coverage_steering() -> bool:
@@ -408,8 +448,13 @@ def dedup_strictness_per_category() -> str | None:
 def dedup_grayzone_judge() -> bool:
     """#170 D7: pairwise same-fact judge for cosine 0.70–0.85. Independent of
     `JUDGE_GATE` / the session-mode judge cut — it is a dedup verdict, not a
-    quality judge."""
-    return _truthy(os.getenv("DEDUP_GRAYZONE_JUDGE"))
+    quality judge.
+
+    Default ON (founder 2026-10-22): on the 2026-10-01 corpus batch it caught
+    50 of 80 hand-dropped duplicates the 0.85 cosine missed, plus 15 the
+    review had let through, with no wrong drop. ``DEDUP_GRAYZONE_JUDGE=0``
+    turns it off."""
+    return _default_on(os.getenv("DEDUP_GRAYZONE_JUDGE"))
 
 
 def grayzone_judge_max_calls() -> int | None:
@@ -452,6 +497,27 @@ def pack_batch_schedule() -> tuple[int, ...]:
     return sizes
 
 
+def pack_max_ask() -> int:
+    """#228: most questions one customer round may ask the generator for when
+    it over-asks to cover the gates' losses. Env ``PACK_MAX_ASK`` (default 16)."""
+    return _int_env("PACK_MAX_ASK", default=16)
+
+
+def pack_topup_extra_rounds() -> int:
+    """#228: customer-pack rounds allowed beyond the ones the batch schedule
+    needs (was a fixed 2). Env ``PACK_TOPUP_EXTRA_ROUNDS`` (default 4)."""
+    return _int_env("PACK_TOPUP_EXTRA_ROUNDS", default=4)
+
+
+def pack_topup_time_budget_s() -> float:
+    """#228: no new customer round starts after this many seconds, so a slow
+    order ends on what it has (the floor check decides) instead of being
+    killed mid-round by ``STAGE_TIMEOUT_SECONDS``. Env
+    ``PACK_TOPUP_TIME_BUDGET_S``; default 80 % of the stage timeout."""
+    stage_timeout = float(os.getenv("STAGE_TIMEOUT_SECONDS", "1200") or 1200)
+    return float(_int_env("PACK_TOPUP_TIME_BUDGET_S", default=int(stage_timeout * 0.8)))
+
+
 def pack_subthemes() -> bool:
     """#203 203.9 changes 2 + 4: split a customer pack into narrow sub-themes
     (3-4 questions each) and drop a question whose embedding cosine to one
@@ -462,3 +528,16 @@ def pack_subthemes() -> bool:
     until the founder's blind round; OFF is behaviour-identical to before.
     """
     return _truthy(os.getenv("PACK_SUBTHEMES"))
+
+
+def pack_language_fix() -> bool:
+    """Custom packs: before each round is saved, the #211 naturalness check
+    (with a pack note: names, punctuation, answer and explanation) fixes
+    wording, spelling, names and punctuation of sk/cs/uk questions, all
+    audiences. Every proposed edit is recorded on the question
+    (``provenance.extra.text_edits``) and counted in the round's step_log
+    entry. Founder 2026-11-18: on if it is cheap. ``False`` by default; OFF
+    is behaviour-identical to before (``PACK_LANGUAGE_FIX=1`` turns it on).
+    Read only by the customer-pack worker (``app/worker/tasks.py``).
+    """
+    return _truthy(os.getenv("PACK_LANGUAGE_FIX"))

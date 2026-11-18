@@ -60,7 +60,7 @@ def _flow(next_question=None, pack_generating: bool = False) -> QuizFlowService:
     retriever.get_next_question = AsyncMock(return_value=next_question)
     retriever.pack_is_generating = AsyncMock(return_value=pack_generating)
     return QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=MagicMock(),
         question_retriever=retriever,
         answer_evaluator=MagicMock(),

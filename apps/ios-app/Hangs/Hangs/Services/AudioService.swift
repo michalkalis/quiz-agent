@@ -64,6 +64,9 @@ protocol AudioServiceProtocol: AnyObject, Sendable {
 
     func setupAudioSession(mode: AudioMode) throws
     func setupQuietListeningSession() throws
+    /// #230.2: a guest's phone only plays the question. No microphone, mixable,
+    /// so it never interrupts a call or music that is already running.
+    func setupPlaybackOnlySession() throws
     func deactivateSession()
     /// #185 track C: undo the implicit `.voiceChat` a voice-processing engine
     /// leaves on the session — called while no command-listener engine is up
@@ -377,6 +380,17 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         Logger.audio.info("🎤 Audio session configured for quiet Home listening (mixable, no ducking)")
     }
 
+    func setupPlaybackOnlySession() throws {
+        let session = AVAudioSession.sharedInstance()
+        let configuration = SessionConfiguration(category: .playback, mode: .default, options: [.mixWithOthers])
+        resetMicCapture()
+        try session.setCategory(configuration.category, mode: configuration.mode, options: configuration.options)
+        appliedSessionConfiguration = configuration
+        try session.setActive(true)
+        registerSessionObservers()
+        Logger.audio.info("Audio session configured for playback only (mixable, no microphone)")
+    }
+
     /// Observe route changes (Bluetooth connect/disconnect) and session
     /// interruptions. Called from every session-configuration path
     /// (`setupAudioSession`, `setupQuietListeningSession`) — remove the previous
@@ -423,7 +437,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Logger.audio.error("❌ Failed to deactivate audio session: \(error.localizedDescription, privacy: .public)")
             let crumb = Breadcrumb(level: .error, category: "audio.session_deactivate")
             crumb.message = "setActive(false) failed"
-            crumb.data = ["error": error.localizedDescription]
+            crumb.setData(["error": error.localizedDescription])
             SentryBreadcrumb.add(crumb)
         }
     }
@@ -499,7 +513,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // candidate mechanisms for the founder's volume-drift report.
         let routeCrumb = Breadcrumb(level: .info, category: "audio.route_change")
         routeCrumb.message = "Audio route changed"
-        routeCrumb.data = ["reason": String(describing: reason)]
+        routeCrumb.setData(["reason": String(describing: reason)])
         SentryBreadcrumb.add(routeCrumb)
 
         switch reason {
@@ -603,20 +617,23 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                 // Interruption started - stop any active operations to prevent corruption.
                 // #67 Part A: route to the correct teardown. The streaming PCM path holds an
                 // AVAudioEngine that the batch stopRecording() never stops — misrouting it
-                // strands the recording after the call. Also notify the owner so the
-                // view model leaves .recording and resets streaming STT.
+                // strands the recording after the call.
                 switch AudioService.interruptionTeardown(
                     isStreaming: self.audioEngine != nil,
                     isRecording: self.isRecording
                 ) {
                 case .streaming:
                     self.stopStreamingRecording()
-                    self.onInterruptionBegan?()
                 case .batch:
                     _ = try? await self.stopRecording()
                 case .none:
                     break
                 }
+                // Notify the owner on EVERY interruption: the quiz answer records
+                // on the shared listener engine (#184), not on one of ours, and
+                // was left stranded in .recording when only the streaming branch
+                // notified (#208.8). The owner no-ops unless it is recording.
+                self.onInterruptionBegan?()
                 if self.isPlaying {
                     await self.stopPlayback()
                 }
@@ -634,7 +651,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
                         Logger.audio.error("❌ Failed to reactivate audio session after interruption: \(error.localizedDescription, privacy: .public)")
                         let crumb = Breadcrumb(level: .error, category: "audio.session_reactivate")
                         crumb.message = "setActive(true) failed after interruption ended"
-                        crumb.data = ["error": error.localizedDescription]
+                        crumb.setData(["error": error.localizedDescription])
                         SentryBreadcrumb.add(crumb)
                     }
                 } else {
@@ -814,7 +831,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Batch M4A recording started"
-        crumb.data = ["format": "m4a", "sample_rate": 16000]
+        crumb.setData(["format": "m4a", "sample_rate": 16000])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -855,10 +872,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         recordingStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Batch M4A recording stopped"
-        crumb.data = [
+        crumb.setData([
             "duration_ms": Int(duration * 1000),
             "bytes": data.count,
-        ]
+        ])
         SentryBreadcrumb.add(crumb)
 
         return data
@@ -975,7 +992,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Logger.audio.info("🎤 Streaming: hardware format settled after \(attempts, privacy: .public) attempts (\(elapsedMs, privacy: .public)ms)")
             let settleCrumb = Breadcrumb(level: .info, category: "audio.record_start")
             settleCrumb.message = "input format settled after \(elapsedMs)ms"
-            settleCrumb.data = ["attempts": attempts, "elapsed_ms": elapsedMs]
+            settleCrumb.setData(["attempts": attempts, "elapsed_ms": elapsedMs])
             SentryBreadcrumb.add(settleCrumb)
         case .success:
             break
@@ -1078,7 +1095,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let crumb = Breadcrumb(level: .info, category: "audio.record_start")
         crumb.message = "Streaming PCM recording started"
-        crumb.data = ["format": "pcm_s16le", "sample_rate": 16000]
+        crumb.setData(["format": "pcm_s16le", "sample_rate": 16000])
         SentryBreadcrumb.add(crumb)
         // #184 track A: queryable (structured) — the car test needs to slice
         // recordings by input route and voice-processing state, which the
@@ -1113,7 +1130,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         recordingStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.record_stop")
         crumb.message = "Streaming PCM recording stopped"
-        crumb.data = ["duration_ms": Int(duration * 1000)]
+        crumb.setData(["duration_ms": Int(duration * 1000)])
         SentryLog.info("answer recording stopped", category: .audio, attributes: [
             "path": "realtime",
             "durationMs": Int(duration * 1000),
@@ -1363,10 +1380,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         let startCrumb = Breadcrumb(level: .info, category: "audio.playback_start")
         startCrumb.message = "AVPlayer playback started"
-        startCrumb.data = [
+        startCrumb.setData([
             "bytes": data.count,
             "duration_s": Int(durationSeconds),
-        ]
+        ])
         SentryBreadcrumb.add(startCrumb)
 
         return try await withTaskCancellationHandler {
@@ -1492,10 +1509,10 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         playbackStartedAt = nil
         let crumb = Breadcrumb(level: .info, category: "audio.playback_end")
         crumb.message = "AVPlayer playback \(reason)"
-        crumb.data = [
+        crumb.setData([
             "duration_ms": Int(duration * 1000),
             "reason": reason,
-        ]
+        ])
         SentryBreadcrumb.add(crumb)
     }
 }
@@ -1531,19 +1548,19 @@ enum AudioError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noActiveRecording:
-            return String(localized: "No active recording", comment: "Audio error: stop was requested with no recording in progress")
+            return String(localized: "No active recording", bundle: .interface, locale: .interface, comment: "Audio error: stop was requested with no recording in progress")
         case .recordingFailed:
-            return String(localized: "Recording failed", comment: "Audio error: recording could not be completed")
+            return String(localized: "Recording failed", bundle: .interface, locale: .interface, comment: "Audio error: recording could not be completed")
         case .recordingTooShort:
-            return String(localized: "Recording too short or empty", comment: "Audio error: the captured audio was unusable")
+            return String(localized: "Recording too short or empty", bundle: .interface, locale: .interface, comment: "Audio error: the captured audio was unusable")
         case .playbackFailed:
-            return String(localized: "Playback failed", comment: "Audio error: audio could not be played back")
+            return String(localized: "Playback failed", bundle: .interface, locale: .interface, comment: "Audio error: audio could not be played back")
         case .permissionDenied:
-            return String(localized: "Microphone permission denied", comment: "Audio error: the user denied microphone access")
+            return String(localized: "Microphone permission denied", bundle: .interface, locale: .interface, comment: "Audio error: the user denied microphone access")
         case .invalidBase64:
-            return String(localized: "Invalid base64 audio data", comment: "Audio error: the audio payload could not be decoded")
+            return String(localized: "Invalid base64 audio data", bundle: .interface, locale: .interface, comment: "Audio error: the audio payload could not be decoded")
         case .deviceNotFound:
-            return String(localized: "Audio device not available", comment: "Audio error: the selected input/output device is gone")
+            return String(localized: "Audio device not available", bundle: .interface, locale: .interface, comment: "Audio error: the selected input/output device is gone")
         }
     }
 }

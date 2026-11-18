@@ -1,12 +1,12 @@
-"""GET /api/v1/admin/worker/heartbeat (#193 — beta hardening).
+"""GET /api/v1/admin/worker/heartbeat (#193 — beta hardening, #207 207.5).
 
-The prod-monitor GitHub Action fails (and so emails the founder) when the order
-queue is a session queue and its worker has no heartbeat. The incident behind
-it: the mba session worker died on a Redis drop and lay dead ~20 h, unseen,
-because no order was waiting. The tests pin what makes that alert trustworthy:
-it fires with zero orders when the worker is gone, it stays silent for a live
-worker, and it never alarms in Fly-worker mode (the Fly worker machine is
-stopped on purpose while the session queue is in use, and vice versa).
+The prod-monitor GitHub Action fails (and so emails the founder) when the
+worker consuming the order queue has no heartbeat. The incident behind it: the
+mba session worker died on a Redis drop and lay dead ~20 h, unseen, because no
+order was waiting. The tests pin what makes that alert trustworthy: it fires
+with zero orders when the worker is gone, it stays silent for a live worker,
+and (#207) the mba backup's heartbeat is reported apart from the Fly worker's,
+so a covering backup never hides a dead Fly worker.
 """
 
 from __future__ import annotations
@@ -17,7 +17,12 @@ import httpx
 import pytest_asyncio
 from app.api.deps import get_arq_pool
 from app.api.v1.admin_orders import router as admin_orders_router
-from app.config import WORKER_HEALTH_CHECK_INTERVAL_S, Settings, get_settings
+from app.config import (
+    BACKUP_HEALTH_CHECK_KEY,
+    WORKER_HEALTH_CHECK_INTERVAL_S,
+    Settings,
+    get_settings,
+)
 from arq.constants import default_queue_name
 from fastapi import FastAPI
 
@@ -64,7 +69,12 @@ async def test_dead_session_worker_reported_without_any_order(
     # The 2026-10-08 incident: nothing queued, worker gone — must still show.
     body = (await dead_session_worker.get(URL, headers=ADMIN)).json()
 
-    assert body == {"queue_name": SESSION_QUEUE, "session_queue": True, "heartbeat_age_s": None}
+    assert body == {
+        "queue_name": SESSION_QUEUE,
+        "session_queue": True,
+        "heartbeat_age_s": None,
+        "backup_heartbeat_age_s": None,
+    }
 
 
 async def test_live_session_worker_reports_its_heartbeat_age() -> None:
@@ -86,11 +96,24 @@ async def test_worker_on_old_hourly_heartbeat_still_counts_as_alive() -> None:
     assert body["heartbeat_age_s"] == 0
 
 
-async def test_fly_worker_mode_is_not_a_session_queue() -> None:
-    # Orders on ARQ's default queue go to the Fly worker; whether that machine
-    # runs is Fly's business, so the monitor must not treat "no key" as an alarm.
-    async with _client(default_queue_name, {}) as ac:
+async def test_dead_fly_worker_is_reported_even_while_the_backup_covers() -> None:
+    # #207: the Fly worker is primary. With it gone the backup may be keeping
+    # orders moving, but the founder must still hear the Fly worker is down —
+    # so the backup's heartbeat never stands in for the queue's own.
+    backup_ttl_ms = (WORKER_HEALTH_CHECK_INTERVAL_S + 1 - 5) * 1000
+    async with _client(default_queue_name, {BACKUP_HEALTH_CHECK_KEY: backup_ttl_ms}) as ac:
         body = (await ac.get(URL, headers=ADMIN)).json()
 
     assert body["queue_name"] == default_queue_name
     assert body["session_queue"] is False
+    assert body["heartbeat_age_s"] is None
+    assert body["backup_heartbeat_age_s"] == 5
+
+
+async def test_live_fly_worker_with_backup_down() -> None:
+    ttl_ms = (WORKER_HEALTH_CHECK_INTERVAL_S + 1 - 3) * 1000
+    async with _client(default_queue_name, {f"{default_queue_name}:health-check": ttl_ms}) as ac:
+        body = (await ac.get(URL, headers=ADMIN)).json()
+
+    assert body["heartbeat_age_s"] == 3
+    assert body["backup_heartbeat_age_s"] is None

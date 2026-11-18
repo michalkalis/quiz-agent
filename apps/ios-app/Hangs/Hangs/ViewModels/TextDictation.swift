@@ -2,16 +2,15 @@
 //  TextDictation.swift
 //  Hangs
 //
-//  Reusable "dictate into a text field" engine: the #109 feedback dictation
-//  without its WAV tee, as one object a form can own. Used by the custom-pack
-//  prompt; the feedback sheet and the rating panel still carry their own copies
-//  (same shape — candidates to move onto this).
+//  The one "dictate into a text field" engine: the feedback sheet, the rating
+//  panel and the custom-pack prompt all own one.
 //
-//  Runs on the SHARED `AudioService` + `ElevenLabsSTT` instances passed in via
-//  `FeedbackVoiceServices`, never fresh ones: a second AVAudioEngine is the
-//  #64/#77 crash class. Each VAD-committed segment is handed to `onSegment`, so
-//  the owner appends it to its own editable text and dictation keeps going
-//  until the user stops it.
+//  #208.8 (founder 2026-10-16: all speech-to-text goes through OpenAI on the
+//  server): record, then transcribe. The mic records 16 kHz mono PCM on the
+//  SHARED `AudioService` (never a fresh one: a second AVAudioEngine is the
+//  #64/#77 crash class); when the user stops (or the cap or an interruption
+//  does), the clip goes to `POST /voice/dictation` once and its text is handed
+//  to `onSegment`, so the owner appends it to its own editable text.
 //
 
 @preconcurrency import AVFoundation
@@ -28,19 +27,27 @@ final class TextDictation: ObservableObject {
     }
 
     @Published private(set) var micState: MicState = .idle
-    /// The in-flight (uncommitted) words, shown live while the user speaks.
-    @Published private(set) var partialTranscript: String = ""
+    /// The recording is with the server, being turned into text.
+    @Published private(set) var isTranscribing = false
     /// Set when the cap auto-stops a dictation, so the UI can say why.
     @Published private(set) var didHitDictationCap = false
+    /// The last recording brought no text back (offline, server error, or
+    /// nothing intelligible), so the UI can say so instead of staying silent.
+    @Published private(set) var didFailTranscription = false
 
     /// Hard cap for one dictation. Injectable so tests drive the auto-stop.
     var maxDictationSeconds: TimeInterval = Config.feedbackDictationCapSecs
 
     private let voice: FeedbackVoiceServices?
     private let networkService: NetworkServiceProtocol?
+    /// The PCM of the dictation in progress. The tap runs on an audio thread,
+    /// so it appends through a lock (serial tap: never contended).
+    private let pcm = OSAllocatedUnfairLock<Data>(initialState: Data())
+    private var languageCode = "en"
     private var onSegment: (String) -> Void = { _ in }
-    private var eventListenerTask: Task<Void, Never>?
+    private var onRecorded: (Data) -> Void = { _ in }
     private var capTask: Task<Void, Never>?
+    private var transcriptionTask: Task<Void, Never>?
     private var interruptionObserver: NSObjectProtocol?
 
     /// Nil `voice` (previews, snapshots, tests without audio) means no mic UI.
@@ -49,11 +56,11 @@ final class TextDictation: ObservableObject {
         self.networkService = networkService
     }
 
-    var isAvailable: Bool { voice?.sttService != nil && networkService != nil }
+    var isAvailable: Bool { voice != nil && networkService != nil }
     var isDictating: Bool { micState == .dictating }
     /// The quiz holds the shared mic — dictation stays blocked (single engine).
     var isBlockedByQuizRecording: Bool { voice?.isQuizRecording() ?? false }
-    var micButtonDisabled: Bool { isBlockedByQuizRecording || micState == .denied }
+    var micButtonDisabled: Bool { isBlockedByQuizRecording || micState == .denied || isTranscribing }
 
     /// Join a committed segment onto existing text with a single space.
     static func appending(_ segment: String, to text: String) -> String {
@@ -64,20 +71,30 @@ final class TextDictation: ObservableObject {
         return text + " " + segment
     }
 
-    func toggle(languageCode: String, onSegment: @escaping (String) -> Void) async {
+    func toggle(
+        languageCode: String,
+        onSegment: @escaping (String) -> Void,
+        onRecorded: @escaping (Data) -> Void = { _ in }
+    ) async {
         switch micState {
         case .dictating:
             await stop()
         case .idle, .denied:
-            await start(languageCode: languageCode, onSegment: onSegment)
+            await start(languageCode: languageCode, onSegment: onSegment, onRecorded: onRecorded)
         }
     }
 
-    /// Begin streaming dictation in `languageCode` on the shared services.
-    func start(languageCode: String, onSegment: @escaping (String) -> Void) async {
-        guard let voice, let sttService = voice.sttService, let networkService else { return }
+    /// Open the mic and record in `languageCode`. `onSegment` gets the text,
+    /// `onRecorded` the raw 16 kHz PCM of every finished recording (the
+    /// feedback report attaches it as the transcript's fallback).
+    func start(
+        languageCode: String,
+        onSegment: @escaping (String) -> Void,
+        onRecorded: @escaping (Data) -> Void = { _ in }
+    ) async {
+        guard let voice, networkService != nil else { return }
         // Single-engine guard: never open the mic while the quiz holds it.
-        guard !voice.isQuizRecording(), micState != .dictating else { return }
+        guard !voice.isQuizRecording(), micState != .dictating, !isTranscribing else { return }
 
         // Typing always works, so a denial only flips the mic to `.denied`.
         guard await voice.audioService.requestMicrophonePermission() else {
@@ -86,32 +103,27 @@ final class TextDictation: ObservableObject {
             return
         }
 
+        self.languageCode = languageCode
         self.onSegment = onSegment
-        partialTranscript = ""
+        self.onRecorded = onRecorded
         didHitDictationCap = false
+        didFailTranscription = false
+        pcm.withLock { $0 = Data() }
 
         do {
-            let token = try await networkService.fetchElevenLabsToken()
-            try await sttService.connect(token: token, languageCode: languageCode)
-            startEventListener(sttService)
-
             await voice.audioService.prepareForRecording()
 
-            // Re-check after the awaits: a quiz timer under the sheet could have
+            // Re-check after the await: a quiz timer under the sheet could have
             // taken the shared mic in that window.
             guard !voice.isQuizRecording() else {
-                eventListenerTask?.cancel()
-                eventListenerTask = nil
-                await sttService.disconnect()
-                partialTranscript = ""
                 micState = .idle
                 Logger.stt.info("🎙️ Text dictation aborted — quiz took the mic during setup")
                 return
             }
 
-            let stt = sttService
-            try await voice.audioService.startStreamingRecording { pcmData in
-                Task { try? await stt.sendAudioChunk(pcmData) }
+            let pcm = pcm
+            try await voice.audioService.startStreamingRecording { chunk in
+                pcm.withLock { $0.append(chunk) }
             }
 
             micState = .dictating
@@ -119,71 +131,58 @@ final class TextDictation: ObservableObject {
             registerInterruptionObserver()
             Logger.stt.info("🎙️ Text dictation started")
         } catch {
-            eventListenerTask?.cancel()
-            eventListenerTask = nil
             voice.audioService.stopStreamingRecording()
-            await sttService.disconnect()
-            partialTranscript = ""
             micState = .idle
             Logger.stt.warning("⚠️ Text dictation failed to start: \(error, privacy: .public)")
         }
     }
 
-    /// Force a final commit, hand it to the owner, release the shared mic.
-    /// No-op when not dictating, so every dismissal path can call it.
+    /// Release the mic, transcribe what was recorded and hand the text to the
+    /// owner. Returns once that text has landed, so a Send / Save right after
+    /// includes it. Safe to call from every dismissal path (no-op when idle).
     func stop() async {
-        guard let voice, micState == .dictating else { return }
+        if let voice, micState == .dictating {
+            capTask?.cancel()
+            capTask = nil
+            removeInterruptionObserver()
+            voice.audioService.stopStreamingRecording()
+            micState = .idle
+            Logger.stt.info("🎙️ Text dictation stopped")
 
-        capTask?.cancel()
-        capTask = nil
-        removeInterruptionObserver()
-
-        voice.audioService.stopStreamingRecording()
-        try? await voice.sttService?.commitAndClose()
-        await drainFinalCommit()
-
-        eventListenerTask?.cancel()
-        eventListenerTask = nil
-        await voice.sttService?.disconnect()
-
-        partialTranscript = ""
-        micState = .idle
-        Logger.stt.info("🎙️ Text dictation stopped")
+            let recorded = pcm.withLock { data in
+                defer { data = Data() }
+                return data
+            }
+            if !recorded.isEmpty {
+                onRecorded(recorded)
+                let wav = WavEncoder.wrapPCM16(recorded)
+                transcriptionTask = Task { [weak self] in await self?.transcribe(wav) }
+            }
+        }
+        await transcriptionTask?.value
     }
 
     // MARK: - Internal
 
-    private func startEventListener(_ sttService: ElevenLabsSTTServiceProtocol) {
-        eventListenerTask?.cancel()
-        // Fresh stream per dictation: the service is shared with the quiz, and
-        // cancelling a listener finishes its stream for good.
-        let stream = sttService.makeEventStream()
-        eventListenerTask = Task { [weak self] in
-            for await event in stream {
-                guard let self, !Task.isCancelled else { break }
-                switch event {
-                case let .partialTranscript(text):
-                    self.partialTranscript = text
-                case let .committedTranscript(text):
-                    self.onSegment(text)
-                    self.partialTranscript = ""
-                case .connected:
-                    break
-                case .disconnected:
-                    // Socket drop: stop the mic rather than stay stuck `.dictating`.
-                    self.abort()
-                    return
-                }
-            }
+    private func transcribe(_ wav: Data) async {
+        guard let networkService else { return }
+        isTranscribing = true
+        defer {
+            isTranscribing = false
+            transcriptionTask = nil
         }
-    }
-
-    /// Bounded wait so the forced-commit words land before the listener goes.
-    private func drainFinalCommit() async {
-        let deadline = Date().addingTimeInterval(1.0)
-        while Date() < deadline {
-            if partialTranscript.isEmpty { return }
-            try? await Task.sleep(for: .milliseconds(20))
+        do {
+            let text = try await networkService.transcribeDictation(audioWAV: wav, language: languageCode)
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                didFailTranscription = true
+                Logger.stt.info("🎙️ Dictation transcribed to nothing")
+            } else {
+                onSegment(trimmed)
+            }
+        } catch {
+            didFailTranscription = true
+            Logger.stt.warning("⚠️ Dictation transcription failed: \(error, privacy: .public)")
         }
     }
 
@@ -195,29 +194,15 @@ final class TextDictation: ObservableObject {
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled, self.micState == .dictating else { return }
             self.didHitDictationCap = true
-            // Detach first: stop() cancels capTask, and cancelling the task that
-            // is running it would turn the final drain into a busy spin.
+            // Detach first: stop() cancels capTask, the task running this.
             self.capTask = nil
             await self.stop()
         }
     }
 
-    /// Tear down without the graceful drain — socket drop or interruption.
-    private func abort() {
-        guard micState == .dictating else { return }
-        capTask?.cancel()
-        capTask = nil
-        eventListenerTask?.cancel()
-        eventListenerTask = nil
-        removeInterruptionObserver()
-        voice?.audioService.stopStreamingRecording()
-        partialTranscript = ""
-        micState = .idle
-        Logger.stt.warning("⚠️ Text dictation torn down (socket drop / interruption)")
-    }
-
     /// The shared `AudioService` reports interruptions only to `QuizViewModel`;
     /// without our own observer `micState` would be stranded `.dictating`.
+    /// What was recorded up to the interruption is still transcribed.
     private func registerInterruptionObserver() {
         guard interruptionObserver == nil else { return }
         interruptionObserver = NotificationCenter.default.addObserver(
@@ -228,7 +213,7 @@ final class TextDictation: ObservableObject {
             let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
             guard typeValue == AVAudioSession.InterruptionType.began.rawValue else { return }
             Task { @MainActor in
-                self?.abort()
+                await self?.stop()
             }
         }
     }

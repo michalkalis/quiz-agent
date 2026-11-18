@@ -4,23 +4,31 @@ on:
   push:
     # ralph/**: overnight-agent branches get a remote test run when pushed for
     # review, so a red branch is visible before it merges (#54 §54.8 item 1).
-    # release/**: beta line cut from main (redesign plan, issue #194); its PRs and pushes get the same checks.
-    branches: [main, 'ralph/**', 'release/**']
+    # hotfix/**: fix line cut from a store build tag (shared.md › Releases); release/**: archived 1.0 line.
+    branches: [main, 'ralph/**', 'release/**', 'hotfix/**']
     paths:
       - 'apps/ios-app/**'
+      # fastlane only runs in ios-release.yml; its gems are checked by fastlane-check.yml.
+      - '!apps/ios-app/Hangs/Gemfile*'
+      - '!apps/ios-app/Hangs/fastlane/**'
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
       - 'scripts/lint-carplay-isolation.py'
+      - 'scripts/lint-interface-language.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
   pull_request:
-    branches: [main, 'release/**']
+    branches: [main, 'release/**', 'hotfix/**']
     paths:
       - 'apps/ios-app/**'
+      # fastlane only runs in ios-release.yml; its gems are checked by fastlane-check.yml.
+      - '!apps/ios-app/Hangs/Gemfile*'
+      - '!apps/ios-app/Hangs/fastlane/**'
       - 'scripts/lint-a11y-ids.py'
       - 'scripts/lint-design-tokens.py'
       - 'scripts/lint-carplay-isolation.py'
+      - 'scripts/lint-interface-language.py'
       - 'scripts/design-token-baseline.txt'
       - 'scripts/design_catalog/**'
       - '.github/workflows/ios-ci.yml'
@@ -41,15 +49,16 @@ jobs:
     # Switch to the GA macOS image once it ships Xcode 27.
     runs-on: xcode-27
     # A cold build (~11 min), unit tests (~6 min) and the RS XCUITest suite (~14 min, #180 track D) no longer fit in 30.
-    # The xcode-27 preview image runs the whole job in 42–46 min, so 45 cut a green run off.
-    timeout-minutes: 60
+    # The xcode-27 preview image ran the whole job in 42–46 min, so 45 cut a green run off;
+    # by 2026-11-15 green runs took 52–56 min and 60 cancelled one with no failing test.
+    timeout-minutes: 90
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Cache SPM dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/Library/Caches/org.swift.swiftpm
           key: spm-${{ hashFiles('apps/ios-app/Hangs/Hangs.xcodeproj/project.pbxproj') }}
@@ -77,6 +86,11 @@ jobs:
       # Store) must carry no CarPlay flag, entitlement or scene.
       - name: Guard CarPlay isolation
         run: python3 scripts/lint-carplay-isolation.py
+
+      # Founder 2026-10-30: the whole app speaks the quiz language; text built
+      # in code reads it only through `bundle: .interface, locale: .interface`.
+      - name: Lint interface language
+        run: python3 scripts/lint-interface-language.py
 
       # #188: colors, font sizes, spacing and radii come from Theme.swift; the
       # baseline lists pre-#188 values and may only shrink.
@@ -121,7 +135,7 @@ jobs:
 
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-test-results
           path: apps/ios-app/Hangs/TestResults.xcresult
@@ -133,12 +147,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Set up Python and virtualenv
         # ubuntu-24.04's system Python (3.12) is externally managed (PEP 668), so
@@ -165,7 +179,7 @@ jobs:
           test -s "$GITHUB_WORKSPACE/openapi-current.json"  # fail loud if empty
 
       - name: Upload OpenAPI spec
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: openapi-spec-for-ios
           path: openapi-current.json

@@ -18,12 +18,6 @@ struct RecordingState {
     // Capture-scoped — dropped whenever the quiz leaves the
     // recording/processing pair (`resetCaptureState`).
 
-    /// Live transcript from ElevenLabs (updates as user speaks)
-    var liveTranscript: String = ""
-
-    /// Whether streaming STT is active
-    var isStreamingSTT: Bool = false
-
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
@@ -66,8 +60,6 @@ struct RecordingState {
 
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
-        liveTranscript = ""
-        isStreamingSTT = false
         speechDetectedDuringAutoRecord = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
@@ -129,6 +121,11 @@ struct ConfirmationState {
     /// transcribed — carries the answer it replaces, which comes back if the
     /// new one turns out to be nothing (or a command word).
     var spokenReplacement: SpokenReplacement?
+
+    /// Car test 2026-10-30: the answer this sheet last read back aloud, `nil`
+    /// when nothing was read (muted, empty). Its words are the app's own voice
+    /// to the sheet's listener — see RecordingCoordinator+ReadBackEcho.
+    var readBackText: String?
 
     /// Drop the whole subset atomically (T7 unified reset model).
     mutating func reset() { self = ConfirmationState() }

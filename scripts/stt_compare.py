@@ -45,7 +45,6 @@ sys.path.insert(0, str(ROOT / "packages" / "shared"))
 sys.path.insert(0, str(ROOT / "apps" / "quiz-agent"))
 
 
-
 def normalize(text: str) -> list[str]:
     text = text.lower()
     text = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
@@ -66,19 +65,34 @@ def wer(reference: str, hypothesis: str) -> float:
     return prev[-1] / len(ref)
 
 
+async def scribe_text(wav: bytes, name: str, language: str | None) -> str:
+    """ElevenLabs Scribe v2 batch, kept here as an A/B baseline only (#208.1 took
+    it off the app's answer path)."""
+    import httpx
+
+    data = {"model_id": "scribe_v2", "tag_audio_events": "false"}
+    if language:
+        data["language_code"] = language
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            "https://api.elevenlabs.io/v1/speech-to-text",
+            headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"]},
+            data=data,
+            files={"file": (name, wav)},
+        )
+    resp.raise_for_status()
+    return str(resp.json().get("text") or "").strip()
+
+
 async def run_provider(
     provider: str, wav: bytes, name: str, language: str | None
 ) -> str:
     # Imported here so `wer` stays importable without the backend env
     # (scripts/voice_replay.py and its tests reuse it).
-    from app.voice.scribe import ScribeBatchTranscriber
     from app.voice.transcriber import VoiceTranscriber
 
     if provider == "scribe":
-        result = await ScribeBatchTranscriber().transcribe(
-            wav, name, language=language, keyterms=[]
-        )
-        return result.text
+        return await scribe_text(wav, name, language)
     transcriber = VoiceTranscriber(model=provider)
     result = await transcriber._transcribe_openai(
         io.BytesIO(wav), name, prompt=None, language=language

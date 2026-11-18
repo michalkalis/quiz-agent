@@ -1,0 +1,122 @@
+{
+ "S1": {
+  "qid": "96359e39-abfb-4226-b4bf-348cb5f5e016",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Jaký údaj vám ukáže skoro každý mobil, když do klávesnice pro volání naťukáte hvězdičku, mřížku, nulu, šest, mřížku?"
+ },
+ "S2": {
+  "qid": "8faba77f-e9c8-4af3-8ec1-871d6d660731",
+  "arm": "v1-dropped",
+  "rewrite_side": "2",
+  "rewrite": "Na Kube štát zamestnáva ľudí, ktorí na krajnici zastavujú služobné autá a prikazujú vodičom zobrať čakajúcich stopárov. Ľudia ich volajú podľa farby uniformy. Akej?"
+ },
+ "S3": {
+  "qid": "59de1a14-68ed-43de-b809-221f304a33df",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Po dlouhé koupeli ve vaně máte svraštělé prsty. Nejde přitom o nasáklou kůži, vrásky totiž spouštějí nervy. K čemu nám podle vědců nejspíš slouží?"
+ },
+ "S4": {
+  "qid": "f4cce6fb-5705-4c9d-96f6-b34ce6735d5d",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Keď si v slovenskom meste zaobstaráte psa, musíte ho prihlásiť na obecnom úrade. Čo vám tam pre psa vydajú a čo musí potom nosiť na prechádzke?"
+ },
+ "S5": {
+  "qid": "9871a103-9479-4ac4-8928-fb7870125a61",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Jaký zpěvák, který s kapelou Framus Five natočil album Ostraka, získal na cenách Anděl v dubnu 2026 ocenění za Album roku i za Sólového interpreta roku?"
+ },
+ "S6": {
+  "qid": "f6104550-837a-4767-a835-460cbe30db1c",
+  "arm": "v1-dropped",
+  "rewrite_side": "2",
+  "rewrite": "Když na ulici potkáte kominíka, čeho byste se na jeho oblečení podle staré pověry měli chytit, aby vám přinesl štěstí?"
+ },
+ "S7": {
+  "qid": "f3b16521-2827-4f60-ac3b-00de387e7ff6",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Japonský novinár videl v roku 1984 na sci-fi zjazde v Los Angeles fanúšikov prezlečených za postavy. Spojil dve anglické slová do nového výrazu. Aké slovo vymyslel?"
+ },
+ "S8": {
+  "qid": "10a0404f-ef53-4da9-b76e-cc258ef10b31",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Koľko vody približne spotrebuje moderná umývačka riadu na jedno umytie plnej náplne?"
+ },
+ "S9": {
+  "qid": "7e9a02d0-ac1c-4d50-9763-c35aef5dd0bb",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Při jarním mytí oken radí zkušení uklízeči jednu věc, která zní obráceně: nemýt okna za krásného slunečného dne, ale raději, když je zataženo. Proč?"
+ },
+ "S10": {
+  "qid": "ba5bb9df-958f-4cc1-9f71-82965f0044d3",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Espresso z čerstvo pražených zŕn má navrchu hustú zlatistú penu, kým zo starej kávy je takmer bez peny. Ktorý plyn, uväznený v čerstvých zrnách, za tou penou stojí?"
+ },
+ "S11": {
+  "qid": "e7158bb4-43d9-40e5-bfcd-e59c059aee66",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Keď domáci kvások necháte dlhšie v chladničke bez kŕmenia, často sa na ňom vytvorí sivastá tekutina s ostrým, štipľavým pachom. Čo okrem vody obsahuje predovšetkým?"
+ },
+ "S12": {
+  "qid": "322c9340-1272-4375-b255-d02b8a171aa7",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Poslední den roku říkáme Silvestr podle jmenin, které na něj připadají. Jméno patří skutečnému muži, který zemřel 31. prosince roku 335. Jakou funkci tento muž zastával?"
+ },
+ "S13": {
+  "qid": "2b14c845-2db4-4101-a959-8a84ae0810ea",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Petřínská rozhledna je asi pětkrát menší než Eiffelova věž, která je jejím vzorem. Přesto ji v jedné věci díky kopci, na kterém stojí, předčí. V čem?"
+ },
+ "S14": {
+  "qid": "85efb889-3c08-4180-add2-3a0f29ee1f92",
+  "arm": "v1-dropped",
+  "rewrite_side": "1",
+  "rewrite": "Úhoř se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?"
+ },
+ "S15": {
+  "qid": "5e9200a0-0d3e-421e-9c5d-6021fef1c3c0",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Veľa ľudí sa bojí nechať mobil celú noc na nabíjačke. Batériu však oveľa viac a natrvalo poškodzuje niečo iné, čomu je mobil vystavený napríklad v zaparkovanom aute v lete. Čo to je?"
+ },
+ "S16": {
+  "qid": "9fb5941a-e4dc-4dcc-922f-e4b112dc8826",
+  "arm": "v2",
+  "rewrite_side": "1",
+  "rewrite": "Ktoré slovenské mesto pre neobvykle veľa kostolov a veží prezývajú „malý Rím“?"
+ },
+ "S17": {
+  "qid": "74f0f168-fe40-488c-8916-5709b6282985",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Pravda, nebo nepravda: Rytmus, na který se tančí na drum and bassových párty, z velké části vychází z pouhých několika sekund bubenického sóla jediné soulové písničky ze šedesátých let."
+ },
+ "S18": {
+  "qid": "43364cd3-dd2b-421e-ab6b-ccd3007f0a17",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Velikost H0, nejrozšířenější měřítko modelové železnice na světě, zmenšuje skutečnost sedmaosmdesátkrát. Jak vysoká je v ní zhruba figurka dospělého člověka?"
+ },
+ "S19": {
+  "qid": "768ff3fe-e78d-4ed2-ae75-0a4b2bc12dcf",
+  "arm": "v1-dropped",
+  "rewrite_side": "2",
+  "rewrite": "V telocvični aj v profesionálnom florbale drží hokejku každý hráč na ihrisku, až na jedného. Ktorý hráč podľa pravidiel hrá bez hokejky?"
+ },
+ "S20": {
+  "qid": "7d1707e6-f5be-47fa-a9ab-72d1d2bb99df",
+  "arm": "v2",
+  "rewrite_side": "2",
+  "rewrite": "Film Sám doma 2 beží na Vianoce v televízii takmer každý rok. Kevin v ňom na letisku nastúpi do zlého lietadla a ocitne sa sám v New Yorku. Kam na Vianoce letel zvyšok jeho rodiny?"
+ }
+}

@@ -1,0 +1,1422 @@
+{
+ "o-slovensku": [
+  {
+   "id": "f885e69f-2d94-4150-9163-5e6ea7df06a6",
+   "q": "Čarovnú Perinbabu, ktorá vytriasaním periny posiela na zem sneh, hrala v rozprávke z roku 1985 svetoznáma zahraničná herečka, manželka Federica Felliniho. Z ktorej krajiny pochádzala?",
+   "a": "Z Talianska",
+   "story": "Perinbabu hrala Talianka Giulietta Masina. Slovenská zimná rozprávka tak mala v hlavnej úlohe hviezdu talianskeho filmu.",
+   "source": "https://m.imdb.com/name/nm0556399"
+  },
+  {
+   "id": "7890fb00-dd4d-435c-8591-f6eb0c625e46",
+   "q": "Jeden z troch vrchov na slovenskom štátnom znaku predstavuje pohorie, ktoré dnes neleží na Slovensku. V ktorej krajine ho nájdeme?",
+   "a": "Maďarsko",
+   "story": "Trojvršie tradične predstavuje Tatru, Fatru a Mátru, a Mátra je pohorie na severe Maďarska s najvyšším maďarským vrchom Kékes. Dvojkríž na trojvrší preto nájdete aj na maďarskom štátnom znaku.",
+   "source": "https://en.wikipedia.org/wiki/Coat_of_arms_of_Slovakia"
+  },
+  {
+   "id": "d7612898-70df-42a0-b5a1-fddafe9f52b7",
+   "q": "Ktorý slovenský vrch sa v rokoch 1949 až 1959 oficiálne volal Stalinov štít?",
+   "a": "Gerlachovský štít",
+   "story": "Najvyšší vrch Slovenska dostal meno po sovietskom vodcovi v čase kultu osobnosti a pôvodný názov mu vrátili až po desiatich rokoch.",
+   "source": "https://sk.wikipedia.org/wiki/Gerlachovský_štít"
+  },
+  {
+   "id": "6b48afef-e8f9-4915-a360-d2bac2b4b821",
+   "q": "Samova ríša zo 7. storočia je prvým známym štátnym útvarom Slovanov na našom území. Jej zakladateľ Samo však Slovan nebol. Z ktorej ríše prišiel ako kupec?",
+   "a": "Z Franskej ríše",
+   "story": "Podľa Fredegarovej kroniky bol Samo franský kupec, ktorý pomohol Slovanom v boji proti Avarom a tí si ho zvolili za vládcu.",
+   "source": "https://en.wikipedia.org/wiki/Samo"
+  },
+  {
+   "id": "5b6eaa9b-5b8f-4dc0-b35a-459a4208e110",
+   "q": "Slovenský vynálezca Štefan Banič si v roku 1914 nechal v USA patentovať zariadenie, ktoré potom daroval americkej armáde. Čo vynašiel?",
+   "a": "Padák",
+   "story": "Baničov padák sa pripínal na telo ako dáždnikovitá konštrukcia a jeho patent je dnes jedným zo základných kameňov histórie záchrany pilotov.",
+   "source": "https://en.wikipedia.org/wiki/Štefan_Banič"
+  },
+  {
+   "id": "59c1b36b-7e75-4c32-917e-7fe220730c0f",
+   "q": "V slávnom filme Obchod na korze z roku 1965 dostane tesár Tóno Brtko v podaní Jozefa Kronera do správy obchodík starej židovskej vdovy. Čo sa v tomto obchodíku predávalo?",
+   "a": "Gombíky",
+   "story": "Pani Lautmannová mala malú galantériu s gombíkmi, ktorá takmer nič nezarábala. Brtko tak zo „zabraného“ obchodu nič nemal a nakoniec ho starú pani tajne živili susedia.",
+   "source": "https://en.wikipedia.org/wiki/The_Shop_on_Main_Street"
+  },
+  {
+   "id": "cfb918ea-8b34-45a4-a467-4435f11649d7",
+   "q": "Väčšina slovenských názvov dní v týždni má jednoduchý domáci pôvod: streda je stred týždňa, štvrtok štvrtý deň, piatok piaty. Jeden názov však prišiel až z hebrejčiny. Ktorý?",
+   "a": "Sobota",
+   "story": "Sobota pochádza cez grécke sabbaton z hebrejského šabat, teda sviatočného dňa odpočinku. Rovnaký koreň má aj anglické Sabbath či talianske sabato.",
+   "source": "https://en.wiktionary.org/wiki/sobota"
+  },
+  {
+   "id": "305224aa-bd7f-4e73-a5e8-330ee22a8533",
+   "q": "Pre Slováka je pivnica tmavá miestnosť pod domom na zemiaky a zaváraniny. Kam vás však v skutočnosti pozýva Čech, keď navrhne, že spolu zájdete do pivnice?",
+   "a": "Do krčmy",
+   "story": "Česká pivnice je hostinec, kde sa čapuje pivo. Pivnicu v slovenskom zmysle Česi volajú sklep.",
+   "source": "https://cnn.iprima.cz/pivnice-tag"
+  },
+  {
+   "id": "0910e36d-9ea8-4591-a28d-a141bd0871ee",
+   "q": "Bryndza je symbolom slovenskej kuchyne, no jej názov k nám priniesli valašskí pastieri. Z ktorého jazyka slovo bryndza pochádza?",
+   "a": "Z rumunčiny",
+   "story": "V rumunčine brânză neznamená nič zvláštne, je to jednoducho syr. Náš najslovenskejší syr sa teda vlastne volá „syr“.",
+   "source": "https://en.wikipedia.org/wiki/Bryndza"
+  },
+  {
+   "id": "feb10a2d-8a1c-4bca-a778-97c337d1bce5",
+   "q": "Kofola sa nezrodila v limonádovke, ale vo farmaceutickom podniku. Chemici tam hľadali, čo urobiť so zvyškami, ktoré vznikali pri spracovaní jednej obľúbenej suroviny. Akej?",
+   "a": "Káva",
+   "story": "Pri pražení kávy zostával nevyužitý kofeín. Z výskumu vznikol sirup Kofo a z neho v roku 1960 Kofola, takže jej názov má kávu doslova v sebe.",
+   "source": "https://en.wikipedia.org/wiki/Kofola"
+  },
+  {
+   "id": "8fda3f06-766c-4d9b-9da4-ae2997b5e56e",
+   "q": "Tatranky nesú meno po našich veľhorách, no značka, ktorá ich tradične vyrába, je pomenovaná podľa českého mesta. Podľa ktorého?",
+   "a": "Opava",
+   "story": "Tatranky patria pod značku Opavia, ktorá dostala meno podľa sliezskej Opavy. Najslávnejšia „slovenská“ oblátka je teda vlastne česká.",
+   "source": "https://en.wikipedia.org/wiki/Tatranky"
+  },
+  {
+   "id": "9faf2e1f-847f-45e6-97df-5eec226c2688",
+   "q": "Ktoré hlavné mesto na svete ako jediné susedí priamo s dvoma inými štátmi?",
+   "a": "Bratislava",
+   "story": "Bratislava hraničí s Rakúskom aj s Maďarskom. Z jej južných mestských častí sa dá na bicykli za chvíľu prejsť do dvoch cudzích krajín.",
+   "source": "https://en.wikipedia.org/wiki/Bratislava"
+  },
+  {
+   "id": "8c673282-dfa2-4ba0-bb3b-bb072f9d626f",
+   "q": "Keď Turci obsadili Budín, Uhorsko si muselo nájsť nové hlavné mesto. Ktoré mesto, dnes hlavné mesto iného štátu, ním zostalo vyše 200 rokov?",
+   "a": "Bratislava",
+   "story": "Prešporok bol hlavným mestom Uhorska a v Dóme svätého Martina korunovali uhorských kráľov. Preto má dóm na veži dodnes pozlátenú korunu.",
+   "source": "https://en.wikipedia.org/wiki/Bratislava"
+  },
+  {
+   "id": "a989319f-ca46-47a7-aa23-8316547ec9c5",
+   "q": "Mnohí Slováci videli svoje prvé anime už ako malé deti, a vôbec o tom nevedeli. Jeden obľúbený večerníček o zvedavej malej včele, ktorá ušla z úľa do sveta, totiž nakreslili japonskí animátori. Ako sa ten seriál volá?",
+   "a": "Včielka Maja",
+   "story": "Seriál z roku 1975 vznikol ako nemecko-japonská koprodukcia a kreslili ho v japonskom štúdiu, preto má Maja typické veľké anime oči. Podobne vznikli aj Vicky, malý Viking a Heidi.",
+   "source": "https://en.wikipedia.org/wiki/Maya_the_Honey_Bee"
+  },
+  {
+   "id": "47d11a7d-a86c-4a0d-bc78-5d0af6eea475",
+   "q": "Bratislavský Most SNP s reštauráciou UFO je ako jediný most na svete členom medzinárodnej federácie, do ktorej patrí aj parížska Eiffelovka či torontská CN Tower. Federácia čoho?",
+   "a": "Veľkých veží",
+   "story": "Vďaka pylónu s vyhliadkou UFO vo výške približne 85 metrov ho Svetová federácia veľkých veží prijala medzi seba. Je to jediný most v klube, ktorý inak tvoria najslávnejšie veže sveta.",
+   "source": "https://en.wikipedia.org/wiki/Most_SNP"
+  },
+  {
+   "id": "072e3177-9159-41fa-ac26-9a0bbe3ffdda",
+   "q": "Pri jednej bronzovej soche v starom meste v Bratislave stojí dopravná značka, pretože do nej autá opakovane narážali. Ako sa volá táto socha robotníka vykúkajúceho z kanála?",
+   "a": "Čumil",
+   "story": "Čumil je taký nízko, že ho vodiči jednoducho prehliadali a viackrát ho poškodili. Preto má dnes vlastnú značku s nápisom „Man at Work“.",
+   "source": "https://en.wikipedia.org/wiki/%C4%8Cumil_(statue)"
+  },
+  {
+   "id": "03776177-4f1e-42a9-bac5-78eac84ccda9",
+   "q": "Dnes vás po splave Váhu odvezie autobus aj s loďou. Prečo sa však starí pltníci z Liptova nemuseli so svojou plťou nijako vracať proti prúdu?",
+   "a": "Plť predali ako drevo",
+   "story": "Plť bola zároveň tovarom. Pltníci ju v cieli rozobrali, kmene predali a domov sa vrátili pešo.",
+   "source": "https://sita.sk/v-pieninach-odomkli-dunajec-pltnictvo-patri-k-regionu-uz-starocia-video/"
+  },
+  {
+   "id": "a478114b-8659-449c-8785-c4154d4f92be",
+   "q": "Fašiangy sa na Slovensku tradične končia žartovným pohrebom jedného hudobného nástroja. Ktorého?",
+   "a": "Basa",
+   "story": "Pochovávanie basy symbolizuje koniec zábavy a hudby, lebo cez pôst sa až do Veľkej noci netancovalo.",
+   "source": "https://www.teraz.sk/trenciansky-kraj/top-v-porube-pochovali-basu-na-obrade-ne/308505-clanok.html"
+  },
+  {
+   "id": "a4af55c5-9aec-4ef8-b315-e4c1d4dd3333",
+   "q": "Na ktorom hrade na severe Slovenska vznikli zábery k slávnemu nemeckému nemému hororu Nosferatu z roku 1922?",
+   "a": "Oravský hrad",
+   "story": "Hrad na skale nad Oravským Podzámkom poslúžil ako sídlo grófa Orloka, prvého filmového upíra, a dodnes sa tam konajú nočné prehliadky.",
+   "source": "https://en.wikipedia.org/wiki/Orava_Castle"
+  },
+  {
+   "id": "9b975b88-9e9d-4afb-afc0-29e14de1d362",
+   "q": "Rodičia ktorého svetoznámeho umelca pochádzali z rusínskej obce Miková na východnom Slovensku, takže jeho múzeum dnes stojí v neďalekých Medzilaborciach?",
+   "a": "Andy Warhol",
+   "story": "Rodina Varcholovcov odišla z Mikovej do Pittsburghu a ich syn Andy sa stal kráľom pop-artu, hoci sám Slovensko nikdy nenavštívil.",
+   "source": "https://www.muzeumaw.sk/en/article/history-of-the-museum"
+  }
+ ],
+ "filmy-a-serialy": [
+  {
+   "id": "041eb080-6694-4956-8ddc-37be0c599497",
+   "q": "V komédii Sám doma Kevin odplaší doručovateľa pizze aj zlodejov ukážkou zo starého čiernobieleho gangsterského filmu Angels with Filthy Souls. Čo je na tomto filme prekvapivé?",
+   "a": "V skutočnosti neexistuje",
+   "story": "Gangsterku natočili len pre Sám doma ako paródiu na staré filmy. Ako celý film nikdy nevznikla.",
+   "source": "https://www.snopes.com/fact-check/home-alone-fake-movie/"
+  },
+  {
+   "id": "fa6213a5-12b7-4694-a10d-9ba0bca13a61",
+   "q": "Mechanický žralok vo filme Stevena Spielberga Čeľuste dostal na pľaci priateľskú prezývku podľa krstného mena, požičanú od Spielbergovho právnika. Ako sa žralok volal?",
+   "a": "Bruce",
+   "story": "Bruce sa v slanej vode kazil tak často, že Spielberg musel žraloka držať mimo záberu, vďaka čomu bol film oveľa desivejší.",
+   "source": "https://www.newsweek.com/bruce-last-jaws-shark-got-his-name-spielbergs-lawyer-1549616"
+  },
+  {
+   "id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+   "q": "Thriller Alfreda Hitchcocka Psycho z roku 1960 je známy scénou v sprche, no zlomil aj druhé hollywoodske kúpeľňové tabu: údajne sa stal prvým veľkým americkým filmom, ktorý na plátne ukázal skutočné používanie jedného bežného zariadenia. Ktoré bežné zariadenie to bolo?",
+   "a": "Splachovací záchod",
+   "story": "Hollywoodske konvencie slušnosti držali záchody mimo obrazu celé desaťročia, takže záber na splachovanie, pri ktorom sa v deji likviduje dôkaz, divákov v roku 1960 naozaj znepokojil.",
+   "source": "https://en.wikipedia.org/wiki/Psycho_(1960_film)"
+  },
+  {
+   "id": "aa090ff9-9443-4260-8a8d-7c191893d751",
+   "q": "Meno zelenej obludy Shreka nie je vymyslené. Pochádza z jidiš a nemčiny, kde podobné slovo označuje istý pocit. Aký?",
+   "a": "Strach",
+   "story": "Nemecké Schreck a jidiš shrek znamenajú zľaknutie či hrôzu. Pre obludu, ktorej sa všetci boja, je to ideálne meno.",
+   "source": "https://en.wikipedia.org/wiki/Talk:Shrek/Archive_1"
+  },
+  {
+   "id": "cd124130-c9dd-5c66-9a8f-1863cef6be1d",
+   "q": "Ktorý film získal viac Oscarov: Titanic Jamesa Camerona alebo veľkofilm Ben-Hur z roku 1959?",
+   "a": "Ani jeden, majú rovnako",
+   "story": "Oba veľkofilmy získali presne jedenásť Oscarov, takže Titanic mohol rekord, ktorý Ben-Hur držal takmer štyridsať rokov, len vyrovnať, a to aj napriek tomu, že pätnásť týždňov po sebe viedol americké kiná a zarobil vyše dvoch celých jednej miliardy dolárov.",
+   "source": "https://www.britannica.com/biography/James-Cameron"
+  },
+  {
+   "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+   "q": "Ktorý herec pracoval ako stolár predtým, než ho obsadili do úlohy Hana Sola v pôvodných Hviezdnych vojnách?",
+   "a": "Harrison Ford",
+   "story": "Ford povedal, že ho dosť prekvapilo, keď mu tú rolu ponúkli. Jeho stolárske schopnosti mu vraj pomohli získať prácu v štúdiu, kde si ho všimli.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "394ab4d9-6f84-45e0-908c-f4015fe0b13a",
+   "q": "Filmová séria Piráti z Karibiku s Johnnym Deppom nevznikla podľa knihy ani komiksu. Jej predlohou bola atrakcia, na ktorej sa návštevníci vozia na loďkách pomedzi bábkových pirátov. Kde túto atrakciu otvorili?",
+   "a": "V Disneylande",
+   "story": "Atrakcia Pirates of the Caribbean sa otvorila v kalifornskom Disneylande v roku 1967, takmer štyridsať rokov pred prvým filmom. Ako jednu z posledných na nej ešte pracoval sám Walt Disney.",
+   "source": "https://en.wikipedia.org/wiki/Pirates_of_the_Caribbean_(attraction)"
+  },
+  {
+   "id": "67341d30-a8f9-43fb-8f33-9047597663fc",
+   "q": "Mr. Bean svoje malé zelené auto Mini nezamyká kľúčom ako ostatní ľudia. Čím ho zabezpečí?",
+   "a": "Visiacim zámkom",
+   "story": "Na dverách má pripevnený obyčajný visiaci zámok. Pre istotu si navyše so sebou berie aj volant.",
+   "source": "https://joeduffy.ie/mini/news/mr-beans-mini"
+  },
+  {
+   "id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+   "q": "Prvá verzia scenára jednej trhákovej upírskej ságy zobrazovala hrdinku ako špičkovú športovkyňu, ktorú na vodných skútroch prenasleduje FBI. O ktorú upírsku ságu ide?",
+   "a": "Twilight",
+   "story": "Režisérka Catherine Hardwicke tento akčný scenár zahodila, podľa nej nemal s knihou nič spoločné, a film nasmerovala späť k náladovej romanci, ktorá odštartovala miliardovú filmovú sériu.",
+   "source": "https://www.eonline.com/photos/29542/30-surprising-secrets-about-the-twilight-franchise-revealed"
+  },
+  {
+   "id": "ac600f2a-b3b3-4156-8e75-4454c9b4ddd4",
+   "q": "Počas lockdownu si pol sveta šľahalo instantnú kávu s cukrom na hustú penu. Tá káva je pomenovaná po kórejskom karamelovom cukríku. V ktorom slávnom seriáli z neho hráči ihlou vyrezávali tvary?",
+   "a": "Squid Game",
+   "story": "Šľahaná káva dostala meno dalgona podľa kórejského karamelového cukríka. O rok neskôr ho Squid Game preslávil po celom svete: kto pri vyrezávaní dáždnika cukrík zlomil, vypadol.",
+   "source": "https://en.wikipedia.org/wiki/Dalgona"
+  },
+  {
+   "id": "c65a16ad-8def-5e03-bb77-edcff209d1f8",
+   "q": "Ktorý herec získal v roku 2023 Oscara za najlepší mužský herecký výkon vo filme 'Veľryba' (The Whale), no zároveň si zahral v hranej komédii 'George z džungle' z roku 1997, kde sa hojdal na lianách v bedrovej rúške?",
+   "a": "Brendan Fraser",
+   "story": "Fraserov zmysel pre fyzickú komiku vo filme 'George z džungle' a v sérii 'Múmia' z neho v 90. rokoch urobil akčnú hviezdu, kým mu o desaťročia neskôr oceňovaná dramatická rola priniesla sošku Akadémie.",
+   "source": "https://www.britannica.com/biography/Brendan-Fraser"
+  },
+  {
+   "id": "3e42c90e-ea30-4c45-adad-49011773869a",
+   "q": "Alan Rickman sa až do svojich 41 rokov neobjavil v žiadnom celovečernom filme, kým si nezahral šarmantného zloducha, ktorý drží ako rukojemníka mrakodrap v Los Angeles. O ktorý akčný film z roku 1988 išlo?",
+   "a": "Smrtonosná pasca",
+   "story": "Rickman bol divadelným hercom Royal Shakespeare Company bez jediného filmového titulu, keď ho obsadili do úlohy Hansa Grubera, a táto rola mu zo dňa na deň naštartovala hollywoodsku kariéru.",
+   "source": "https://en.wikipedia.org/wiki/Hans_Gruber"
+  },
+  {
+   "id": "535d75ef-1475-4bf3-8caa-6b4cb7e95749",
+   "q": "Ktoré chorvátske prímorské mesto hralo v seriáli Hra o tróny hlavné mesto Siedmich kráľovstiev?",
+   "a": "Dubrovník",
+   "story": "Dubrovnícke hradby a schody sa stali Kráľovským prístavom. Vďaka seriálu sa toto mesto zaplnilo fanúšikmi až do takej miery, že muselo obmedziť počet turistov.",
+   "source": "https://gameofthrones.fandom.com/wiki/Filming_locations_(Game_of_Thrones)"
+  },
+  {
+   "id": "1d1d53cd-ef9f-4830-9642-8dbda67132c6",
+   "q": "Deti zo seriálu Stranger Things pomenujú tajomné monštrum podľa démona z hry Dungeons & Dragons, ktorú práve hrajú. Ako sa to monštrum volá?",
+   "a": "Demogorgon",
+   "story": "Demogorgon je v Dungeons & Dragons obávané knieža démonov už od sedemdesiatych rokov. Chlapci v seriáli si jeho meno jednoducho požičali z hracieho stola.",
+   "source": "https://www.mentalfloss.com/article/87800/otherworldly-history-demogorgon"
+  },
+  {
+   "id": "3b139bd6-4848-4ed4-9ded-1f5aef48ae11",
+   "q": "Akým druhom rýb sú Nemo a jeho otec Marlin v pixarovskom filme Hľadá sa Nemo?",
+   "a": "Klaun očkatý",
+   "story": "Ryby klauny žijú medzi pŕhlivými ramenami morských sasaniek, presne tam, kde má rodinka z filmu svoj domov.",
+   "source": "https://en.wikipedia.org/wiki/Finding_Nemo"
+  },
+  {
+   "id": "560adff6-69b4-48eb-aa9a-87584f02741a",
+   "q": "Ktorý film z roku 1995 bol prvým celovečerným filmom vytvoreným výhradne pomocou počítačovej animácie?",
+   "a": "Toy Story",
+   "story": "Debutový celovečerný film štúdia Pixar vznikal približne štyri roky a z kovbojskej bábiky a vesmírneho strážcu urobil začiatok novej éry animácie.",
+   "source": "https://www.oscars.org/collection-highlights/toy-story"
+  },
+  {
+   "id": "c2fdc05b-409b-4288-ad02-50490ce7ae8e",
+   "q": "Rozprávka Tri oriešky pre Popolušku vznikla ako koprodukcia. Vodný zámok, po ktorého schodoch Popoluška uteká z plesu a stratí črievičku, nestojí v Česku ani na Slovensku. V ktorej krajine stojí?",
+   "a": "Nemecko",
+   "story": "Je to zámok Moritzburg pri Drážďanoch v Sasku, ktorý každú zimu láka fanúšikov na výstavu o filme. Rozprávku natočili Česi spolu s vtedajšou NDR.",
+   "source": "https://www.denik.cz/film-a-televize/tri-orisky-pro-popelku-nataceni-mista-hrad.html"
+  },
+  {
+   "id": "7d1707e6-f5be-47fa-a9ab-72d1d2bb99df",
+   "q": "Film Sám doma 2 beží na Vianoce v televízii takmer každý rok. Kevin v ňom na letisku nastúpi do zlého lietadla a ocitne sa sám v New Yorku. Kam na Vianoce letel zvyšok jeho rodiny?",
+   "a": "Do Miami",
+   "story": "McCallisterovci leteli za teplom na Floridu do Miami. Do Paríža cestovali v prvom filme, keď Kevina zabudli doma.",
+   "source": "https://homealone.fandom.com/wiki/Home_Alone_2:_Lost_in_New_York"
+  },
+  {
+   "id": "c22b5dc1-439b-5c6b-beaa-dc20e11a7f0b",
+   "q": "V legendárnej scéne v sprche z thrilleru Alfreda Hitchcocka Psycho z roku 1960 vyzerala krv stekajúca do odtoku na čiernobielom filme desivo skutočne, v skutočnosti to však krv nebola. Aký sladký kuchynský produkt sa na ňu použil?",
+   "a": "Čokoládový sirup",
+   "story": "Na čiernobielom filme sa čokoládový sirup zobrazoval tmavšie a presvedčivejšie než filmová umelá krv, takže Hitchcockov štáb jednoducho lial do odtoku polevu na dezerty.",
+   "source": "https://en.wikipedia.org/wiki/Psycho_shower_scene"
+  },
+  {
+   "id": "a8f1db55-2223-48da-bb2b-c326f9e8b0a6",
+   "q": "Ruka Vec v netflixovom seriáli Wednesday nie je len počítačový trik. Hrá ju skutočný herec a kúzelník z rovnakej krajiny, v ktorej sa seriál nakrúcal. Z ktorej?",
+   "a": "Rumunsko",
+   "story": "Vec hrá rumunský kúzelník Victor Dorobantu v modrom kostýme a jeho telo potom triková dielňa vymaže. Prvá séria vznikla v okolí Bukurešti.",
+   "source": "https://www.romania-insider.com/netflix-wednesday-romanian-actor-thing-production-ireland-2024"
+  }
+ ],
+ "hudba": [
+  {
+   "id": "590cb1c4-b836-4ba9-a50b-05a9a8414e60",
+   "q": "Paul McCartney mal melódiu k piesni 'Yesterday' hotovú dávno pred textom. Kým prišli skutočné slová, spieval ju pod provizórnym názvom podľa raňajkového jedla. Ako znel ten názov?",
+   "a": "Scrambled Eggs",
+   "story": "McCartneymu sa melódia prisnila, a keďže sa bál, že ju niekomu podvedome ukradol, mesiace si k nej spieval 'Scrambled eggs, oh my baby how I love your legs', kým napokon neprišlo 'Yesterday'.",
+   "source": "https://www.esquiremag.ph/culture/music/beatles-yesterday-history-a1926-20190913-lfrm"
+  },
+  {
+   "id": "da500a5a-96a3-4c13-93bd-e548c5a4a2c2",
+   "q": "Prelomový hit skupiny Nirvana 'Smells Like Teen Spirit' dostal názov podľa vety, ktorú Kurtovi Cobainovi načmárala kamarátka na stenu. Cobain netušil, že tá veta odkazovala na značku istého bežného výrobku. Aký bežný výrobok to bol?",
+   "a": "Dezodorant",
+   "story": "Kathleen Hanna napísala, že Kurt vonia ako Teen Spirit, dezodorant, ktorý používala jeho priateľka, a Cobain to pochopil ako revolučný slogan.",
+   "source": "https://en.wikipedia.org/wiki/Teen_Spirit_(deodorant)"
+  },
+  {
+   "id": "bde931fe-4d53-4411-84b2-1714ed202c9d",
+   "q": "Ktorý svetoznámy britský rocker s chrapľavým hlasom si roky staval obrovskú modelovú železnicu s veľkomestom a mrakodrapmi a na turné si v hoteloch objednával izbu navyše, aby na nej mohol pracovať?",
+   "a": "Rod Stewart",
+   "story": "Rod Stewart staval svoje mesto inšpirované Amerikou zo štyridsiatych rokov vyše dvadsať rokov. Mrakodrapy vyrábal vlastnoručne, a keď ho v roku 2019 ukázal v modelárskom časopise, modelári boli úplne ohromení.",
+   "source": "https://www.collectors-club-of-great-britain.co.uk/News/sir-rod-stewart-reveals-model-railway-layout-after-26-years"
+  },
+  {
+   "id": "5928073d-1225-45e8-877c-b822082ffc82",
+   "q": "Najslávnejší metalový festival na svete sa koná v nemeckej dedine Wacken. Od roku 2017 má pod areálom vybudované kilometre podzemného potrubia, ktoré zásobuje stánky. Čo ním prúdi?",
+   "a": "Pivo",
+   "story": "Wacken má vlastný „pivovod“, takže pivo k výčapom netreba voziť cisternami. Desaťtisíce smädných metalistov sa tak obslúžia oveľa rýchlejšie.",
+   "source": "https://bbc.in/2t0Yipe"
+  },
+  {
+   "id": "f7c54f11-57fa-4b82-a63a-c3d32199b689",
+   "q": "Štvrtá séria seriálu Stranger Things v roku 2022 vrátila na vrchol svetových rebríčkov pieseň Running Up That Hill z roku 1985. Ktorá britská speváčka ju pôvodne naspievala?",
+   "a": "Kate Bush",
+   "story": "Pieseň zachraňuje Max pred zloduchom Vecnom a zrazu ju poznala celá nová generácia. Kate Bush tak po desaťročiach opäť dobyla rebríčky.",
+   "source": "https://boingboing.net/2022/06/09/kate-bushs-1985-hit-running-up-that-hill-back-on-the-charts-thanks-to-stranger-things-4.html"
+  },
+  {
+   "id": "e1998d5d-91c0-4331-b463-d384347f1742",
+   "q": "Slovensko sa na Eurovízii prvýkrát predstavilo v roku 1994. Ktorá rocková kapela, známa hitom Pravda víťazí, ho vtedy reprezentovala?",
+   "a": "Tublatanka",
+   "story": "Tublatanka spievala Nekonečnú pieseň a skončila až na 19. mieste. Slovensko potom na niekoľko rokov zo súťaže vypadlo.",
+   "source": "https://eurosong-contest.fandom.com/wiki/Nekone%C4%8Dn%C3%A1_piese%C5%88"
+  },
+  {
+   "id": "dc25a7bc-d4c3-4191-8031-285f02e17d15",
+   "q": "Pieseň, s ktorou speváčka Kristína reprezentovala Slovensko na Eurovízii 2010, nesie názov slovenského regiónu. Podľa ktorej rieky sa tento región volá?",
+   "a": "Hron",
+   "story": "Horehronie je oblasť okolo horného toku Hrona. Pieseň do finále Eurovízie nepostúpila, no doma sa stala jedným z najväčších hitov desaťročia.",
+   "source": "https://en.wikipedia.org/wiki/Horehronie"
+  },
+  {
+   "id": "426ac016-979c-4f54-91d9-2aa1134fe408",
+   "q": "Kapela Elán má známy hit o tanečnici zo slávneho slovenského folklórneho súboru. O ktorý súbor ide?",
+   "a": "Lúčnica",
+   "story": "Pieseň Tanečnica z Lúčnice patrí medzi najznámejšie hity Elánu. Lúčnica je zas najslávnejší slovenský folklórny súbor, ktorý vystupoval po celom svete.",
+   "source": "https://lyricstranslate.com/en/el%C3%A1n-tane%C4%8Dnice-z-l%C3%BA%C4%8Dnice-lyrics.html"
+  },
+  {
+   "id": "a1bc8d74-187e-4f52-8f25-690e2dea9c91",
+   "q": "Slávna slovenská pieseň Hej, Slováci má rovnakú melódiu ako štátna hymna jednej našej susednej krajiny. Ktorej?",
+   "a": "Poľsko",
+   "story": "Samo Tomášik napísal svoj text na melódiu poľskej piesne Mazurek Dąbrowského, ktorá sa neskôr stala poľskou hymnou. Ten istý nápev dlhé roky slúžil aj ako hymna Juhoslávie.",
+   "source": "https://en.wikipedia.org/wiki/Hej,_Slované"
+  },
+  {
+   "id": "14b1eeb0-f1d9-40ec-a415-5a4c27b46ecd",
+   "q": "Slávny Mendelssohnov Svadobný pochod, ktorý pustí takmer každý svadobný DJ, nevznikol pre kostol, ale ako hudba k divadelnej hre od Shakespeara. Ku ktorej?",
+   "a": "Sen noci svätojánskej",
+   "story": "Je to komédia o vílach a čarovnom nápoji lásky, v ktorej sa kráľovná víl zaľúbi do muža s oslou hlavou. Pochod v nej sprevádza trojitú svadbu na konci hry.",
+   "source": "https://en.wikipedia.org/wiki/Wedding_March_(Mendelssohn)"
+  },
+  {
+   "id": "8a79020d-adbd-4051-a97d-eb44f78e441a",
+   "q": "Tomorrowland je obrovský festival elektronickej hudby, ktorý sa každý júl koná počas dvoch víkendov. V ktorej krajine sa tento festival odohráva?",
+   "a": "Belgicko",
+   "story": "Festival je taký populárny, že je rozdelený do dvoch celých júlových víkendov, a fanúšikovia naň prilietajú zo všetkých kontinentov.",
+   "source": "https://faq.tomorrowland.com/hc/en-us/articles/4402621418132-Where-and-when-will-Tomorrowland-Belgium-2026-take-place"
+  },
+  {
+   "id": "b8375863-88a4-4d19-ac4d-7b044774afdd",
+   "q": "Najslávnejší bubnový motív, na ktorom vyrástol drum and bass, je pomenovaný po slove, ktorým sa končí takmer každá modlitba. Ako sa volá?",
+   "a": "Amen break",
+   "story": "Ide o pár sekúnd bubnového sóla zo soulovej skladby Amen, Brother od skupiny The Winstons z roku 1969. Patrí k najsamplovanejším nahrávkam v histórii, no kapela za to nedostala žiadne honoráre.",
+   "source": "https://en.wikipedia.org/wiki/Amen_break"
+  },
+  {
+   "id": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+   "q": "Po pôvodnom deväťtýždňovom kraľovaní na prvom mieste britského rebríčka v polovici 70. rokov zosadila skladbu Bohemian Rhapsody od Queen pieseň, ktorá má v názve jeden z najznámejších spievaných výkrikov Freddieho Mercuryho. Ktorá kapela zhodila Bohemian Rhapsody z vrcholu rebríčka?",
+   "a": "ABBA",
+   "story": "Išlo o pieseň Mamma Mia od ABBY, nahradila skladbu, v ktorej operná časť slávne kvíli „mamma mia, mamma mia, mamma mia, let me go“. Osud rebríčkov býva len zriedka takto poetický.",
+   "source": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+   "id": "720fdaf8-c018-4e8b-8a4c-e184f80e1cc7",
+   "q": "Oči Davida Bowieho povestne vyzerali, akoby mali dve rôzne farby. Čo v skutočnosti spôsobilo túto ilúziu?",
+   "a": "Trvalo rozšírená zrenica",
+   "story": "Pri bitke s kamarátom si poškriabal očnú buľvu, čo mu natrvalo rozšírilo jednu zrenicu. Obe oči má v skutočnosti rovnakú farbu.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "cafdd9e7-b886-479d-9c80-df20976ea34d",
+   "q": "Kto sa prehrabáva v starých platniach na slovenských blšákoch, nájde na albumoch Elánu či Karola Duchoňa najčastejšie logo bratislavského štátneho vydavateľstva, slovenského náprotivku pražského Supraphonu. Ako sa volalo?",
+   "a": "Opus",
+   "story": "Opus sídlil v Bratislave a v časoch socializmu vydával prakticky celú slovenskú populárnu aj vážnu hudbu, preto jeho platne dodnes zapĺňajú krabice na bleších trhoch.",
+   "source": "https://en.wikipedia.org/wiki/Opus_Records"
+  },
+  {
+   "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+   "q": "Keď MTV v auguste 1981 vysielala úplne po prvý raz, zámerne začala piesňou skupiny The Buggles, ktorej názov presne predpovedal, čo kanál urobí so starším médiom. Ktorá pieseň to bola?",
+   "a": "Video Killed the Radio Star",
+   "story": "MTV ju zvolila ako drzé vyhlásenie svojho poslania, úplne prvý klip na prvom hudobnom videokanáli oznámil, že video zabilo rozhlasovú hviezdu.",
+   "source": "https://en.wikipedia.org/wiki/Video_Killed_the_Radio_Star"
+  },
+  {
+   "id": "93b8897b-892d-5934-bc8e-1e479141a950",
+   "q": "V decembri 1965 prepašovali dvaja astronauti misie Gemini 6 na palubu ústnu harmoniku a rolničky a zahrali na prvých hudobných nástrojoch vo vesmíre. Ktorú pieseň zahrali?",
+   "a": "Jingle Bells",
+   "story": "Wally Schirra a Tom Stafford najprv vysielačkou oznámili riadiacemu stredisku, že vidia záhadný 'objekt' na polárnej dráhe, pilotovaný, ako povedali, niekým v červenom obleku, a potom ako vianočný žart spustili pieseň 'Jingle Bells'.",
+   "source": "https://en.wikipedia.org/wiki/Gemini_6A"
+  },
+  {
+   "id": "da8efc8b-4521-5128-91dc-77f393653515",
+   "q": "Ktorá škótska kapela sa tak veľmi presýtila vlastným megahitom 'Love Is All Around' z roku 1994, ústrednou piesňou filmu Štyri svadby a jeden pohreb, že po 15 týždňoch na prvom mieste britskej hitparády zámerne zastavila výrobu singlu?",
+   "a": "Wet Wet Wet",
+   "story": "Po pätnástich týždňoch v rade na vrchole hitparády kapela sama stiahla singel z predaja, aby zastavila jeho sériu, v ére CD sa dala výroba hitu naozaj zastaviť a fanúšikov tak nasmerovať radšej k albumu.",
+   "source": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+   "id": "66f94e4c-c854-4a86-84aa-bcdddbfcf88a",
+   "q": "Veľkú baladu Whitney Houston z roku 1992 'I Will Always Love You' napísala a prvýkrát nahrala začiatkom 70. rokov jedna country speváčka. Ktorá speváčka to bola?",
+   "a": "Dolly Parton",
+   "story": "Parton ju napísala ako rozlúčku so svojím mentorom Porterom Wagonerom a verzia Houston pre film Bodyguard z nej spravila jeden z najpredávanejších singlov všetkých čias.",
+   "source": "https://en.wikipedia.org/wiki/I_Will_Always_Love_You"
+  },
+  {
+   "id": "16a8b0b8-3dcb-4373-b0f4-fa282cedfd3c",
+   "q": "Hit Michaela Jacksona 'Beat It' z roku 1983 obsahuje strhujúce gitarové sólo slávneho rockového gitaristu, ktorý nebol uvedený v titulkoch albumu a údajne ho nahral zadarmo. Kto to bol?",
+   "a": "Eddie Van Halen",
+   "story": "Producent Quincy Jones ho pozval do štúdia a sólo nahral na pár pokusov, kým bola jeho vlastná kapela mimo mesta, pričom za to nič nežiadal.",
+   "source": "https://www.etonline.com/how-eddie-van-halens-uncredited-guitar-solo-on-michael-jacksons-beat-it-came-to-be-154293"
+  }
+ ],
+ "sport": [
+  {
+   "id": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+   "q": "James Naismith v roku 1891 pribil svoje prvé basketbalové koše na balkón telocvične. Na aké ovocie boli tieto nádoby pôvodne určené?",
+   "a": "Broskyne",
+   "story": "Naismith pribil na zábradlie balkóna dva košíky na broskyne, a keďže mali stále dno, po každom koši musel niekto loptu vybrať von.",
+   "source": "https://www.history.com/articles/how-a-canadian-invented-basketball"
+  },
+  {
+   "id": "f64f95b1-be85-417c-a672-0a92b03670a7",
+   "q": "Zakladateľ novodobých olympijských hier Pierre de Coubertin sám získal olympijskú zlatú medailu, hoci nebol športovec. Za čo ju dostal?",
+   "a": "Za báseň",
+   "story": "Na prvých olympiádach sa súťažilo aj v umení a Coubertin vyhral literárnu súťaž s básňou Óda na šport. Prihlásil ju pod vymysleným menom, aby nebolo jasné, že ide o organizátora.",
+   "source": "https://www.olympedia.org/editions/6/sports/LIT"
+  },
+  {
+   "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+   "q": "All England Club, dejisko Wimbledonského turnaja od roku 1877, bol v skutočnosti založený v roku 1868 pre úplne inú trávnikovú hru. Ktorá trávniková hra to bola?",
+   "a": "Kroket",
+   "story": "Vznikol ako All England Croquet Club a trávnikový tenis k nemu pribudol až o roky neskôr, kroket dodnes prežíva v úplnom oficiálnom názve areálu.",
+   "source": "https://en.wikipedia.org/wiki/All_England_Lawn_Tennis_and_Croquet_Club"
+  },
+  {
+   "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+   "q": "Líder Tour de France nosí žltý dres. Táto farba nebola zvolená kvôli viditeľnosti. Od čoho bola žltá farba dresu skopírovaná?",
+   "a": "Od papiera novín, ktoré preteky organizovali",
+   "story": "Preteky založili a organizovali športové noviny L'Auto, ktoré sa tlačili na žltom papieri, takže dres lídra sa v roku 1919 stal pohyblivou reklamou v rovnakom odtieni.",
+   "source": "https://www.smithsonianmag.com/history/original-tour-de-france-yellow-jersey-was-made-wool-180972664/"
+  },
+  {
+   "id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+   "q": "Aký nápoj namiesto šampanského tradične vypije víťaz Indianapolis 500 vo víťaznom kole?",
+   "a": "Mlieko",
+   "story": "Zvyk sa začal v roku 1936, keď si víťaz Louis Meyer vyžiadal cmar, a dnes sa jazdci dokonca vopred registrujú, či chcú plnotučné, dvojpercentné alebo odstredené mlieko.",
+   "source": "https://www.indianapolismotorspeedway.com/history/where-tradition-never-stops/milk"
+  },
+  {
+   "id": "624632be-5d98-47e5-832f-dd61dbebf368",
+   "q": "Až do roku 1920 bola olympijským športom aj disciplína, ktorú poznáte zo školských športových dní. Nepotrebujete na ňu loptu ani bránu, stačia dve družstvá a jeden hrubý povraz. O ktorú disciplínu ide?",
+   "a": "Preťahovanie lanom",
+   "story": "Preťahovanie lanom bolo na olympiádach v rokoch 1900 až 1920. V Londýne v roku 1908 obsadili všetky tri stupne víťazov britské policajné tímy.",
+   "source": "https://en.wikipedia.org/wiki/Tug_of_war_at_the_Summer_Olympics"
+  },
+  {
+   "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+   "q": "Zvláštne presná maratónska vzdialenosť 42,195 kilometra pochádza z olympijských hier v Londýne v roku 1908, keď sa trať predĺžila tak, aby preteky mohli odštartovať na trávniku kráľovského sídla. Na trávniku ktorého kráľovského sídla sa vtedy maratón odštartoval?",
+   "a": "Windsorský zámok",
+   "story": "Trasa viedla z Windsorského zámku ku kráľovskej lóži na štadióne White City, a toto kráľovské pohodlie sa neskôr stalo oficiálnou maratónskou vzdialenosťou na celom svete.",
+   "source": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon"
+  },
+  {
+   "id": "57ceaede-c264-5627-9049-0dc65b66d3da",
+   "q": "Posledné olympijské zlaté medaily z rýdzeho zlata sa rozdávali v roku 1912. Odvtedy sa vyrábajú takmer výlučne z iného kovu a navrchu majú len niekoľko gramov zlatej vrstvy. O ktorý kov ide?",
+   "a": "Striebro",
+   "story": "Moderné olympijské zlaté medaily musia obsahovať aspoň 92,5 percenta striebra a sú pokryté zhruba šiestimi gramami čistého zlata, po roztavení má dnešné „zlato“ oveľa nižšiu hodnotu, než by sa podľa jeho slávy zdalo.",
+   "source": "https://en.wikipedia.org/wiki/Olympic_medal"
+  },
+  {
+   "id": "ec671dd3-2ff6-48c9-875e-a30d2672cc58",
+   "q": "Niektoré košele majú na cípoch goliera malé gombíky. Vymysleli ich preto, lebo hráčom istého športu golier pri cvale na koni plieskal do tváre. O aký šport išlo?",
+   "a": "Pólo",
+   "story": "Pán Brooks z firmy Brooks Brothers videl anglických pólistov, ktorí mali golier pripnutý ku košeli, a tak začal šiť košele s gombíkmi na goliere. Firma ich dodnes volá „originálna pólo košeľa“.",
+   "source": "https://en.wikipedia.org/wiki/Polo_shirt"
+  },
+  {
+   "id": "99e9990e-1fa1-4cce-a1ec-33f6f011c7dc",
+   "q": "Padel si väčšina ľudí spája so Španielskom. V ktorej krajine však tento šport v skutočnosti vznikol?",
+   "a": "Mexiko",
+   "story": "Padel vymyslel v roku 1969 Enrique Corcuera na svojom pozemku v mexickom Acapulku. Do Španielska ho až neskôr priniesol jeho priateľ, princ Alfonso z Hohenlohe, a odtiaľ sa rozšíril do celej Európy.",
+   "source": "https://en.wikipedia.org/wiki/Padel"
+  },
+  {
+   "id": "2bf1fb8d-106c-4b44-a63b-eaee9147d74b",
+   "q": "Po rozkole so svojím bratom Adim v 40. rokoch 20. storočia založil Rudolf Dassler vlastnú značku športového oblečenia, ktorá dodnes sídli v tom istom malom nemeckom mestečku ako Adidas. Ako sa táto značka volá?",
+   "a": "Puma",
+   "story": "Rodinný spor rozdelil mesto Herzogenaurach tak hlboko, že miestni si vraj najprv pozreli, aké topánky má cudzinec na nohách, a až potom sa s ním dali do reči.",
+   "source": "https://en.wikipedia.org/wiki/Rudolf_Dassler"
+  },
+  {
+   "id": "45933f52-8e5c-4c81-a76a-122e10362f78",
+   "q": "Najzákladnejší skejterský trik, pri ktorom doska vyskočí do vzduchu spolu s jazdcom bez toho, aby sa jej dotkol rukami, je pomenovaný po prezývke svojho vynálezcu. Ako sa volá?",
+   "a": "Ollie",
+   "story": "Trik vymyslel na Floride koncom sedemdesiatych rokov Alan Gelfand, ktorého kamaráti volali Ollie. Jeho prezývku dnes denne vyslovujú skejteri v každom skateparku od Bratislavy po Košice.",
+   "source": "https://en.wikipedia.org/wiki/Ollie_(skateboarding)"
+  },
+  {
+   "id": "98409d6d-e85f-4942-a55b-e8ef4ac4a378",
+   "q": "V ktorom meste vybojovali slovenskí hokejisti v roku 2002 titul majstrov sveta, keď vo finále zdolali Rusko 4:3?",
+   "a": "Göteborg",
+   "story": "Finále sa hralo v hale Scandinavium v švédskom Göteborgu a víťazný gól strelil Peter Bondra necelé dve minúty pred koncom.",
+   "source": "https://en.wikipedia.org/wiki/2002_IIHF_World_Championship"
+  },
+  {
+   "id": "9ba9cbfb-9ec1-468c-8ee8-8b1fa21fec55",
+   "q": "Ktorí bratia-dvojičky získali pre Slovensko tri olympijské zlaté medaily za sebou, v rokoch 2000, 2004 a 2008, v jednej lodi vo vodnom slalome?",
+   "a": "Hochschornerovci",
+   "story": "Pavol a Peter Hochschornerovci vládli kategórii dvojkanoe tri olympiády po sebe a v Londýne 2012 pridali ešte bronz, čím sa stali najúspešnejšími slovenskými olympionikmi.",
+   "source": "https://en.wikipedia.org/wiki/Pavol_Hochschorner"
+  },
+  {
+   "id": "9e8ee79e-fcad-433f-958c-c0b8d84b7555",
+   "q": "Čo musí podľa známeho pokriku slovenských hokejových fanúšikov robiť každý, kto chce dokázať, že je Slovák?",
+   "a": "Skákať",
+   "story": "Pokrik znie „Kto neskáče, nie je Slovák!“, a preto pri ňom poskakujú celé tribúny aj fanzóny, od štadióna až po námestia.",
+   "source": "https://forum.wordreference.com/threads/all-slavic-languages-he-who-isnt-jumping-isnt-supporter-of-a-team-nation.1831749/"
+  },
+  {
+   "id": "0d888e1a-0dc1-47a1-863b-78888bbf987c",
+   "q": "Ultras Slovana Bratislava povzbudzujú svoj tím na štadióne, ktorého názov prezrádza, čo sa na tom mieste kedysi vyrábalo. Čo to bolo?",
+   "a": "Tehly",
+   "story": "Štadión stojí v lokalite Tehelné pole, ktorá dostala meno podľa tehelní, čo tu kedysi fungovali. Kotol Slovana tak dnes spieva tam, kde sa kedysi pálili tehly.",
+   "source": "https://stadiumdb.com/stadiums/svk/stadion_tehelne_pole"
+  },
+  {
+   "id": "008a8939-4ffe-4f1a-b0da-c60ae5e54325",
+   "q": "Koľko bodov má v snookri maximálny brejk, ktorý sa dosiahne potopením každej červenej s čiernou a následným vyčistením všetkých farieb?",
+   "a": "147",
+   "story": "Pätnásť červených v spojení s pätnástimi čiernymi dá 120 bodov a šesť farieb pridá ďalších 27, takže dokonalý frame má hodnotu 147.",
+   "source": "https://en.wikipedia.org/wiki/Maximum_break"
+  },
+  {
+   "id": "434c3cd4-df70-4756-9071-9a7af2ff3d57",
+   "q": "Nordic walking vznikol vo Fínsku ako letný tréning športovcov. Ktorý zimný šport takto trénovali bez snehu?",
+   "a": "Bežecké lyžovanie",
+   "story": "Fínski bežkári celé desaťročia cez leto chodili a behali do kopcov s palicami, aby nevyšli z formy. Pre bežných ľudí z toho fitness urobili Fíni až koncom deväťdesiatych rokov.",
+   "source": "https://en.wikipedia.org/wiki/Nordic_walking"
+  },
+  {
+   "id": "a94baf94-95f1-47e3-a3de-9f6289307343",
+   "q": "Keď si v squashovom centre vezmete profesionálnu loptičku s dvoma žltými bodkami, na začiatku sa od steny takmer neodrazí. Čo s ňou musíte urobiť, aby sa poriadne odrážala?",
+   "a": "Zahriať ju",
+   "story": "Hráči ju pred zápasom niekoľko minút udierajú, kým sa nezohreje. Vzduch vo vnútri sa pri tom roztiahne a guma zmäkne, takže loptička začne skákať. Čím je loptička pomalšia, tým dlhšie ju treba rozohrávať.",
+   "source": "https://decathlon.com.kw/products/sb-990-double-yellow-dot-squash-ball-twin-pack"
+  },
+  {
+   "id": "b7ea3f9d-3630-444f-b2e8-f9cf78234787",
+   "q": "Koľko titulov majstra sveta v cestných pretekoch s hromadným štartom vyhral Peter Sagan?",
+   "a": "Tri",
+   "story": "Sagan vyhral v rokoch 2015, 2016 a 2017 a ako prvý cyklista v histórii získal dúhový dres trikrát za sebou.",
+   "source": "https://www.sbs.com.au/news/article/2017/09/25/perfect-timing-sagan-slovakian-takes-third-straight-title"
+  }
+ ],
+ "jedlo": [
+  {
+   "id": "36473869-173e-4d62-be01-bd427cde8ecc",
+   "q": "Jedna talianska banka je známa tým, že prijíma ako záruku na úvery kolesá syra, ktoré necháva zrieť vo vlastných trezoroch, kým dlh nie je splatený. O aký syr ide?",
+   "a": "Parmigiano-Reggiano",
+   "story": "Credito Emiliano poskytuje výrobcom úvery zaručené ich kolesami syra, ktoré zrením naberajú na hodnote, a v prípade nesplácania ich predá.",
+   "source": "https://edition.cnn.com/2026/05/02/food/italy-cheese-bank-parmigiano-reggiano-intl"
+  },
+  {
+   "id": "00e29bed-accf-461e-826a-31e0c8520828",
+   "q": "Najznámejšie hviezdičkové hodnotenia reštaurácií na svete udeľuje sprievodca, ktorý vznikol v roku 1900, aby sa predával istý produkt. Aký produkt mal tento sprievodca pomôcť predávať?",
+   "a": "Pneumatiky",
+   "story": "Bratia Michelinovci rozdávali sprievodcu francúzskym motoristom zadarmo v nádeji, že čím viac budú jazdiť, tým viac pneumatík zodrú.",
+   "source": "https://en.wikipedia.org/wiki/Michelin_Guide"
+  },
+  {
+   "id": "a9115ca9-3023-4543-85a9-5601e69e5e20",
+   "q": "Red Bull je rakúska značka, ale jeho recept aj logo s dvoma býkmi sú prevzaté z lacného nápoja pre ázijských robotníkov a vodičov kamiónov. Z ktorej krajiny pochádza pôvodný nápoj?",
+   "a": "Thajsko",
+   "story": "Rakúšan Dietrich Mateschitz objavil v Thajsku nápoj Krating Daeng, čo znamená „červený gaur“, teda divý ázijský tur. Ten upravil pre európsky vkus a doslova preložil aj jeho názov.",
+   "source": "https://en.wikipedia.org/wiki/Red_Bull"
+  },
+  {
+   "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+   "q": "Pod akým názvom sa kiwi predávalo, kým ho novozélandskí vývozcovia v roku 1959 nepremenovali?",
+   "a": "Čínsky egreš",
+   "story": "Rastlina pochádza z Číny a vývozcovia chceli priateľskejší názov, ktorý by znel viac novozélandsky, tak si požičali meno národného vtáka.",
+   "source": "https://nzhistory.govt.nz/chinese-gooseberry-becomes-kiwifruit"
+  },
+  {
+   "id": "8b11db57-8915-4d38-bc02-b1ab046fa6f5",
+   "q": "Virálny recept z TikToku, kde sa celý blok syra feta zapečie s cherry paradajkami a zamieša s cestovinami, sa stal taký populárny, že feta v obchodoch zmizla z regálov. Recept ale nevznikol v Grécku ani v Taliansku, ale v severskej krajine saún a Santa Clausa. V ktorej?",
+   "a": "Fínsko",
+   "story": "Recept zverejnila fínska blogerka a doma sa mu hovorí uunifetapasta. Najprv vymietol fetu z fínskych supermarketov, až potom cez TikTok aj z obchodov po celom svete.",
+   "source": "https://www.today.com/today/amp/tdna206835"
+  },
+  {
+   "id": "e27bb25c-d1d4-41b0-8222-c218cc2aeefa",
+   "q": "Havajská pizza so šunkou a ananásom je takmer v každej pizzerii. Nevznikla však na Havaji ani v Taliansku. Vymyslel ju grécky prisťahovalec. V ktorej krajine?",
+   "a": "Kanada",
+   "story": "Sam Panopoulos ju začal piecť vo svojej reštaurácii v kanadskom Ontáriu. Názov dostala jednoducho podľa značky ananásovej konzervy, ktorú používal.",
+   "source": "https://en.wikipedia.org/wiki/Hawaiian_pizza"
+  },
+  {
+   "id": "64e45936-baac-4e48-866e-9b09398f9791",
+   "q": "Champagne je jednou z najchladnejších vinárskych oblastí Francúzska a tamojší vinári pôvodne považovali bublinky za chybu. Ako chladná klíma tieto bublinky vlastne náhodou vytvorila?",
+   "a": "Chlad zastavil kvasenie, na jar sa znova rozbehlo vo fľaši",
+   "story": "Jeseň v oblasti Champagne prichladla tak rýchlo, že kvasinky zaspali skôr, než stihli spotrebovať všetok cukor v hroznovej šťave. Vinári predpokladali, že kvasenie sa skončilo, a víno nafľašovali. Keď jar prehriala pivnice, kvasinky sa prebudili a pokračovali v kvasení vnútri zapečatených fliaš. Oxid uhličitý nemal kam uniknúť, a tak sa rozpustil vo víne ako bublinky, pričom tlak často roztrhal fľaše. Dlho sa to považovalo za chybu, kým sa šumivé víno nestalo módnym a proces sa nezačal zámerne riadiť.",
+   "source": "https://maisons-champagne.com/en/encyclopedias/champagne-guest-book/before-sparkling-champagne/effervescence/article/the-first-sparkling-wines"
+  },
+  {
+   "id": "bdd00890-58d0-43a3-af7c-62446683dedb",
+   "q": "Zelená pasta wasabi, ktorú dostanete k sushi v bežnom obchode, väčšinou vôbec nie je pravé wasabi. Na akej koreninovej zelenine je naozaj založená? Slováci ju poznajú najmä z Veľkej noci k šunke.",
+   "a": "Chren",
+   "story": "Pravé wasabi je drahé a po nastrúhaní stratí chuť za pár minút, preto sa namiesto neho používa chren s horčicou a zeleným farbivom. K sushi teda často jete to isté, čo máte na Veľkú noc k šunke, len zafarbené nazeleno.",
+   "source": "https://www.chowhound.com/2262138/is-japanese-and-american-wasabi-different/"
+  },
+  {
+   "id": "2fd013d9-8c01-4a71-82db-ad407c2fe0e2",
+   "q": "Dobrá správa pre každého, komu z paličiek padá sushi: nigiri sa podľa japonskej etikety pokojne smie jesť aj bez nich. Čím teda?",
+   "a": "Rukami",
+   "story": "Sushi vzniklo ako rýchle jedlo z pouličných stánkov a nigiri sa v Japonsku dodnes bežne je prstami. Kúsok sa do sójovej omáčky namáča rybou, nie ryžou, aby sa nerozpadol.",
+   "source": "https://www.foodrepublic.com/1459258/sushi-chopstick-etiquette-nigiri-sashimi"
+  },
+  {
+   "id": "595683cf-089b-4918-a997-4b464f015e87",
+   "q": "Na Slovensku si polievku pho dávame najčastejšie na obed. V ktorej časti dňa ju však tradične jedávajú vo Vietname?",
+   "a": "Na raňajky",
+   "story": "Vo Vietname je pho klasické raňajkové jedlo. Pouličné stánky ho začínajú variť za úsvitu a do obeda je vývar často vypredaný.",
+   "source": "https://en.wikipedia.org/wiki/Pho"
+  },
+  {
+   "id": "ea1b3e3e-0888-44fb-9fec-526e10947205",
+   "q": "Döner kebab si každý spája s Tureckom. Lenže ten klasický döner v chlebe, aký si dáte po žúre, preslávili až tureckí prisťahovalci v inej krajine. V ktorom meste?",
+   "a": "Berlín",
+   "story": "Na začiatku sedemdesiatych rokov ho v západnom Berlíne začali predávať v chlebe so šalátom a omáčkou ako rýchle jedlo do ruky. V Turecku sa dovtedy jedol najmä na tanieri.",
+   "source": "https://www.wikipedia.com/wiki/Kadir_Nurman"
+  },
+  {
+   "id": "551a291c-54d1-4f65-a749-a07ec447749f",
+   "q": "Znak @ v e-mailovej adrese voláme zavináč, lebo pripomína stočenú marinovanú rybu. Ktorú morskú rybu?",
+   "a": "Sleď",
+   "story": "Zavináč je zrolovaný filet zo sleďa, často s cibuľkou a uhorkou vnútri. Takže zakaždým, keď píšete e-mail, píšete aj malú rybu.",
+   "source": "https://benjamincongdon.me/blog/2020/08/23/Zavin%C3%A1%C4%8D-an-Onomatological-Adventure/"
+  },
+  {
+   "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+   "q": "Banány sú veľmi mierne rádioaktívne vďaka prirodzene rádioaktívnemu izotopu chemického prvku, na ktorý sú povestne bohaté. O ktorý prvok ide?",
+   "a": "Draslík",
+   "story": "Nepatrná časť prírodného draslíka je rádioaktívny izotop draslík-40, tento jav je taký známy, že fyzici žartom merajú malé dávky žiarenia v „banánových ekvivalentných dávkach“.",
+   "source": "https://en.wikipedia.org/wiki/Banana_equivalent_dose"
+  },
+  {
+   "id": "81fd9220-d556-4ee9-a0f9-84a0c920ccab",
+   "q": "Ktorý orech rastie zavesený pod šťavnatým, hruškovitým plodom a nikdy sa nepredáva v škrupine, pretože tá obsahuje dráždivú látku príbuznú tej, ktorá je v jedovatom brečtane?",
+   "a": "Kešu",
+   "story": "Kešu patrí do tej istej botanickej čeľade ako jedovatý brečtan a mango a škrupinu treba pred bezpečným dotykom s orieškom opražiť alebo odstrániť parou.",
+   "source": "https://www.scientificamerican.com/article/what-do-cashews-mangoes-and-poison-ivy-have-in-common/"
+  },
+  {
+   "id": "2191d78f-a56a-4020-8ee2-dedf725452d4",
+   "q": "Látka taurín, ktorú nájdete na plechovke takmer každého energetického nápoja, má meno odvodené z latinčiny. Podľa ktorého zvieraťa ju pomenovali?",
+   "a": "Býk",
+   "story": "Latinské „taurus“ znamená býk, rovnako ako znamenie Býka vo zverokruhu. Prvýkrát ho vedci získali z volskej žlče, no taurín v plechovkách sa dnes vyrába synteticky a so zvieratami nemá nič spoločné.",
+   "source": "https://en.wikipedia.org/wiki/Taurine"
+  },
+  {
+   "id": "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55",
+   "q": "V roku 1908 nemecká žena v domácnosti menom Melitta Bentzová vytrhla zo školského zošita svojho syna list pijavého papiera a prepichla dierky do mosadzného hrnca. Vynašla tak kuchynskú pomôcku, ktorá dodnes nesie jej meno. Akú kuchynskú pomôcku Melitta Bentzová vynašla?",
+   "a": "Kávový filter",
+   "story": "Melitta Bentzová mala dosť horkej kávy plnej usadeniny, a tak na scedenie nápoja použila savý pijavý papier. Papierový kávový filter si dala v tom istom roku patentovať a firma Melitta, ktorú založila v Drážďanoch, predáva filtre po celom svete dodnes.",
+   "source": "https://www.dpma.de/english/our_office/publications/ingeniouswomen/110jahrekaffeefilter/index.html"
+  },
+  {
+   "id": "37046825-9efe-4c1e-93a7-f695ecf91ba5",
+   "q": "Čokoláda, ktorú ste nechali v horúcom aute, po vychladnutí niekedy na povrchu zbelie. Nie je to pleseň. Čo je teda ten biely povlak?",
+   "a": "Kakaové maslo",
+   "story": "Teplo roztopí kakaové maslo, ktoré vystúpi na povrch a pri chladnutí znova stuhne do bielych kryštálikov. Čokoláda je úplne v poriadku, len sa jej trochu pokazil vzhľad.",
+   "source": "https://en.wikipedia.org/wiki/Chocolate_bloom"
+  },
+  {
+   "id": "c2313ca8-ee49-410a-8a31-603a34656dfd",
+   "q": "Papričky Carolina Reaper majú na Scovilleovej stupnici vyše milióna jednotiek. Koľko jednotiek má obyčajná zeleninová paprika, ktorú krájate do šalátu?",
+   "a": "Nula",
+   "story": "Zeleninová paprika patrí k rovnakému druhu ako mnohé čili, no vďaka jednému génu nevytvára žiadny kapsaicín. Na stupnici preto začína presne na nule.",
+   "source": "https://spice.alibaba.com/spice-basics/bell-pepper-heat-scale"
+  },
+  {
+   "id": "19652876-ff31-49c2-997a-a5ecf78a33a5",
+   "q": "Vyprážaný rezeň so zemiakovým šalátom je klasika slovenského nedeľného obeda. Ak by ste však v Rakúsku chceli predávať pravý viedenský rezeň, z akého mäsa musí byť?",
+   "a": "Teľacie",
+   "story": "Podľa rakúskych pravidiel smie mať názov Wiener Schnitzel len rezeň z teľacieho. Bravčový, ktorý poznáme z domu, sa tam musí volať inak, napríklad rezeň na viedenský spôsob.",
+   "source": "https://en.wikipedia.org/wiki/Wiener_schnitzel"
+  },
+  {
+   "id": "dbd0a4df-29d0-4804-bcf3-604b3b37646c",
+   "q": "Podľa mexických zákonov sa tequila smie destilovať len z jedného druhu istej rastliny. O ktorú rastlinu ide?",
+   "a": "Modrá agáve",
+   "story": "Vôbec nejde o kaktus; modrá agáve je pichľavá sukulentná rastlina, ktorej opečené srdce sa rozdrví a nechá skvasiť pred destiláciou.",
+   "source": "https://en.wikipedia.org/wiki/Tequila"
+  }
+ ],
+ "priroda-zvierata-vesmir": [
+  {
+   "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+   "q": "Ktorý hrabavý austrálsky vačkovec je jediným známym živočíchom, ktorý produkuje trus v tvare kocky?",
+   "a": "Vombat",
+   "story": "Kocky vznikajú vďaka nerovnomernej pružnosti vombatích čriev a bobky s plochými stenami sa neodkotúľajú, čo sa hodí pri značkovaní teritória na skalách a kmeňoch.",
+   "source": "https://en.wikipedia.org/wiki/Wombat_feces"
+  },
+  {
+   "id": "aa3f9d45-f03b-46c3-8898-11800a94d9f8",
+   "q": "Mesiac sa každý rok vzdiali od Zeme asi o 4 centimetre. Ktorá časť tvojho tela rastie takmer presne touto rýchlosťou?",
+   "a": "Nechty na rukách",
+   "story": "Laserové odrážače, ktoré na Mesiaci zanechali astronauti misií Apollo, ukazujú, že Mesiac sa vzďaľuje asi o 3,8 centimetra za rok, teda približne tak rýchlo, ako rastú nechty na rukách.",
+   "source": "https://www.nasa.gov/missions/laser-beams-reflected-between-earth-and-moon-boost-science/"
+  },
+  {
+   "id": "53254cae-6201-450a-afcf-ef6bddea7fb5",
+   "q": "Astronauti vracajúci sa z výstupov do otvoreného vesmíru hlásia prekvapivý zápach, ktorý im uľpieva na skafandroch. K akému opekanému jedlu ho často prirovnávajú?",
+   "a": "Spálený steak",
+   "story": "Posádky po návrate z výstupov do vesmíru opisujú kovový zápach pripomínajúci opekané mäso, ktorý zrejme pochádza z vysokoenergetických reakcií na skafandroch; niektorí ho prirovnávajú k spálenému steaku alebo k výparom pri zváraní.",
+   "source": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  },
+  {
+   "id": "bdf94088-210d-4e81-8ff8-c51da1b769ce",
+   "q": "Letný deň, muškáty na balkóne a pri nich sa vo vzduchu na mieste vznáša drobné stvorenie s dlhým zobáčikom, ktoré vyzerá presne ako kolibrík. Čo to v skutočnosti je?",
+   "a": "Lyšaj marinkový",
+   "story": "Kolibríky žijú voľne len v Amerike, takže na slovenskom balkóne ide vždy o motýľa, lyšaja marinkového. Krídlami máva tak rýchlo, že pri kvetoch počuteľne bzučí.",
+   "source": "https://lepidoptera.eu/show.php?id=168"
+  },
+  {
+   "id": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+   "q": "V roku 1971 prepašoval veliteľ misie Apollo 14 Alan Shepard na Mesiac upravenú hlavu palice a stal sa prvým človekom, ktorý tam hral istý šport. Aký šport to bol?",
+   "a": "Golf",
+   "story": "Shepard pripevnil hlavu šestky (six-iron) na nástroj na odber mesačných vzoriek a jednou rukou odpálil dve loptičky, žartoval, že tá druhá letela v slabej gravitácii „míle a míle“.",
+   "source": "https://en.wikipedia.org/wiki/Apollo_14"
+  },
+  {
+   "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+   "q": "Krk žirafy môže byť vyše dvoch metrov dlhý, no obsahuje presne rovnaký počet krčných stavcov ako ten tvoj. Koľko ich je?",
+   "a": "Sedem",
+   "story": "Takmer všetky cicavce, od myší po žirafy, majú presne sedem krčných stavcov, žirafe sú len natiahnuté na približne 25 centimetrov každý.",
+   "source": "https://en.wikipedia.org/wiki/Cervical_vertebrae"
+  },
+  {
+   "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+   "q": "Modrú krv chobotnice rozvádza po tele nezvyčajný počet sŕdc. Koľko ich má?",
+   "a": "Tri",
+   "story": "Dve srdcia ženú krv cez žiabre a tretie zásobuje zvyšok tela, a toto hlavné srdce prestáva biť, keď chobotnica pláva, preto sa zvyčajne radšej plazí.",
+   "source": "https://en.wikipedia.org/wiki/Octopus"
+  },
+  {
+   "id": "168ae470-2727-581f-b76f-a5080abd9a9e",
+   "q": "V roku 2021 uskutočnila malá helikoptéra NASA Ingenuity prvý motorový let na inej planéte, na Marse. Ako pocta bol na jej palube ukrytý kúsok látky z krídla veľkosti poštovej známky. Z ktorého priekopníckeho letadla tento kúsok látky pochádzal?",
+   "a": "Wright Flyer",
+   "story": "NASA pripevnila na Ingenuity kúsok látky z Flyera bratov Wrightovcov z roku 1903, takže stroj, ktorý dosiahol prvý let na Zemi, bol prítomný pri prvom lete na Marse.",
+   "source": "https://www.jpl.nasa.gov/images/pia24291-swatch-of-wright-brothers-flyer-1-attached-to-mars-helicopter/"
+  },
+  {
+   "id": "d6ae2464-80b1-4933-b0c2-daa831429d4c",
+   "q": "Ktorá planéta je na svoju veľkosť taká ľahká, že by plávala na vode, keby ste našli dostatočne veľkú vaňu?",
+   "a": "Saturn",
+   "story": "Saturn tvorí prevažne vodík a hélium a jeho priemerná hustota je len asi 0,7 gramu na kubický centimeter, teda nižšia než hustota vody.",
+   "source": "https://coolcosmos.ipac.caltech.edu/ask/113-Can-Saturn-really-float-on-water-"
+  },
+  {
+   "id": "0123e93e-26cc-4931-b34d-4ebbccbfcb33",
+   "q": "Slnko a Mesiac vyzerajú na našej oblohe takmer presne rovnako veľké vďaka pozoruhodnej náhode, v ktorej vystupuje rovnaké číslo. Aký zhruba faktor spája ich veľkosti a ich vzdialenosti?",
+   "a": "400-krát",
+   "story": "Slnko má asi 400-krát väčší priemer než Mesiac, ale je aj asi 400-krát ďalej, takže oba kotúče vyzerajú zo Zeme takmer rovnako.",
+   "source": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+   "id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+   "q": "Vedci navrhli, že planéta 55 Cancri e môže byť z veľkej časti tvorená drahým kameňom. Ktorý drahý kameň to je?",
+   "a": "Diamant",
+   "story": "55 Cancri e je superzem bohatá na uhlík, o ktorej sa predpokladá, že by mohla mať diamantové jadro; niektoré štúdie naznačujú, že až tretina jej hmotnosti by mohla byť tvorená diamantom.",
+   "source": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  },
+  {
+   "id": "81ab065c-212e-4dfd-a335-491977f869dc",
+   "q": "Ktorý chemický prvok bol prvýkrát objavený v slnečnom svetle v roku 1868, takmer tri desaťročia predtým, než ho niekto našiel na Zemi?",
+   "a": "Hélium",
+   "story": "Astronómovia si všimli neznámu žltú čiaru v spektre Slnka a pomenovali prvok po Héliovi, gréckom bohu slnka, 27 rokov predtým, než bol v roku 1895 objavený na Zemi.",
+   "source": "https://en.wikipedia.org/wiki/William_Ramsay"
+  },
+  {
+   "id": "ff3cf288-74f1-4378-b51f-dd0206e6795c",
+   "q": "Úhor, ktorý žije v európskych riekach a rybníkoch, sa v nich nikdy nenarodil. Vyliahol sa ďaleko za Atlantikom, pri Bermudách. Ako sa volá more, kam sa každý úhor vracia, aby sa rozmnožil?",
+   "a": "Sargasové more",
+   "story": "Larvy úhorov sa s morskými prúdmi unášajú tisíce kilometrov až k európskym brehom. Dospelý úhor sa po rokoch v sladkej vode vydá na rovnako dlhú cestu späť, aby sa v Sargasovom mori vytrel a uhynul.",
+   "source": "https://www.livescience.com/european-eel-spawning"
+  },
+  {
+   "id": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+   "q": "Po šiestich mesiacoch, ktoré strávili v beztiaži na Medzinárodnej vesmírnej stanici, sa astronauti vracajú na Zem až s piatimi centimetrami niečoho navyše, o čo však rýchlo zase prídu. Čoho majú astronauti po návrate až o päť centimetrov viac?",
+   "a": "Výška",
+   "story": "Keď gravitácia nestláča chrbticu, medzistavcové platničky sa roztiahnu a astronauti sa natiahnu, až kým ich príťažlivosť Zeme do niekoľkých týždňov nestlačí späť na normál.",
+   "source": "https://www.nasa.gov/image-article/spinal-ultrasound-investigation/"
+  },
+  {
+   "id": "ef7e42f6-30e4-4475-b78b-e70138c22953",
+   "q": "Arašidy jeme ako oriešky, no rastlina má zvláštny zvyk. Kvitne nad zemou, ale svoje struky nechá dozrieť niekde inde. Kde?",
+   "a": "Pod zemou",
+   "story": "Po odkvitnutí sa stopka kvetu predĺži, ohne sa k zemi a zavŕta sa do pôdy, kde struk dozrie. Preto arašid nie je orech, ale strukovina, rovnako ako hrach či fazuľa.",
+   "source": "https://en.wikipedia.org/wiki/Peanut"
+  },
+  {
+   "id": "0cde91bd-bc32-40be-97d0-4fadf8a55c2a",
+   "q": "Viac ako polovica z 206 kostí v tele dospelého človeka sa nachádza len v dvoch párových častiach tela. V ktorých dvoch?",
+   "a": "Ruky a nohy",
+   "story": "Každá ruka má 27 kostí a každá noha 26, takže spolu tvoria 106 z 206 kostí, teda viac než zvyšok tela dokopy.",
+   "source": "https://en.wikipedia.org/wiki/List_of_bones_of_the_human_skeleton"
+  },
+  {
+   "id": "aa18c64b-15c8-47dc-a5fa-770b5e7ec89b",
+   "q": "Naši predkovia mali na oblohe dve krásne svetlá: Zorničku, ktorá svieti nad ránom, a Večernicu, ktorá svieti po západe slnka. V skutočnosti ide o jedno a to isté nebeské teleso. Ktoré?",
+   "a": "Venuša",
+   "story": "Venuša obieha bližšie k Slnku ako Zem, preto ju nikdy neuvidíme o polnoci, len nízko nad obzorom ráno alebo večer. Po Mesiaci je to najjasnejší objekt nočnej oblohy.",
+   "source": "https://www.startitup.sk/?p=1028123"
+  },
+  {
+   "id": "5783843b-a7f1-467b-ba54-9eebd650f4d5",
+   "q": "Ktorý malý nočný návštevník záhrad si poradí aj s jedovatou vretenicou, pretože je voči jej jedu do veľkej miery odolný?",
+   "a": "Jež",
+   "story": "Jež má v krvi látky, ktoré oslabujú hadí jed, a vretenicu dokáže uhryznúť a zjesť. Pred jej zubami ho navyše chránia ostne.",
+   "source": "https://en.wikipedia.org/wiki/Erinacin"
+  },
+  {
+   "id": "d2a1a3fd-f6b5-4b76-85c1-cc1917a469d7",
+   "q": "Každý rok prekonajú milióny ton prachu Atlantik a prinesú fosfor, ktorý hnojí amazonský dažďový prales. Z ktorej púšte tento prach pochádza?",
+   "a": "Sahara",
+   "story": "Dážď neustále vyplavuje živiny z amazonskej pôdy a saharský prach prenesený cez oceán dopĺňa fosfor, o ktorý by prales inak prišiel.",
+   "source": "https://www.nasa.gov/centers-and-facilities/goddard/nasa-satellite-reveals-how-much-saharan-dust-feeds-amazons-plants/"
+  },
+  {
+   "id": "0e749807-09b4-4401-a97d-6c6a49b51622",
+   "q": "Astronauti sa na Slnko pozerajú z obežnej dráhy, nad zemskou atmosférou. Akú farbu má Slnko, keď ho vidia odtiaľ?",
+   "a": "Biele",
+   "story": "Slnko vyžaruje všetky viditeľné vlnové dĺžky zhruba rovnako, čo naše oči vnímajú ako bielu. Dole na zemi atmosféra rozptýli časť modrého svetla, a tak zostane žltkastý odtieň, aký sme si od detstva kreslili.",
+   "source": "https://www.spacecentre.nz/resources/faq/solar-system/sun/colour.html"
+  }
+ ],
+ "zemepis-a-cestovanie": [
+  {
+   "id": "21245520-3c1b-4c70-bc37-a9cbe570426b",
+   "q": "Point Nemo v južnom Tichom oceáne je miesto v oceáne najvzdialenejšie od akejkoľvek pevniny, asi 2 700 kilometrov každým smerom. Keď tadiaľ prepláva loď, najbližší ďalší ľudia často nie sú ani na pevnine, ani na mori. Kde sú?",
+   "a": "Na Medzinárodnej vesmírnej stanici",
+   "story": "Stanica obieha len asi 400 kilometrov nad Zemou, takže keď preletí ponad Point Nemo, jej posádka je k nemu oveľa bližšie než ktokoľvek na pobreží.",
+   "source": "https://www.snopes.com/fact-check/point-ocean-closest-human-astronaut/"
+  },
+  {
+   "id": "80ec52c8-e041-5353-9929-26faed681b8c",
+   "q": "Kanada a Dánsko takmer päťdesiat rokov viedli najzdvorilejší územný spor na svete, takzvanú whisky vojnu, tak, že si na malom neobývanom arktickom ostrove striedavo osádzali vlajky a nechávali tam fľaše alkoholu. Ako sa tento ostrov volá?",
+   "a": "Hansov ostrov",
+   "story": "V roku 2022 sa obe krajiny napokon dohodli, že si holé bralo rozdelia na polovicu, čím Kanada a Dánske kráľovstvo získali spoločnú pozemnú hranicu a skončila sa desaťročia trvajúca diplomacia vlajok a fliaš.",
+   "source": "https://en.wikipedia.org/wiki/Whisky_War"
+  },
+  {
+   "id": "85cad3c7-59ac-4e56-8718-bb7df65b5901",
+   "q": "Ktorý štát USA je najbližšie ku kontinentu Afrika?",
+   "a": "Maine",
+   "story": "Na glóbuse sa najkratšia spojnica zo Spojených štátov do Maroka začína na východnom cípe Maine, ktorý tak o niekoľko stoviek kilometrov predbehne Floridu.",
+   "source": "https://www.britannica.com/one-good-fact/what-us-state-is-closest-to-africa"
+  },
+  {
+   "id": "22564f0f-b6d8-503c-9133-4a53282e785f",
+   "q": "Vďaka ďalekým zámorským územiam siahajúcim od Tichého oceánu po Karibik sa jedna krajina rozprestiera cez dvanásť časových pásiem, čo je viac než ktorýkoľvek iný štát na Zemi. Ktorá krajina to je?",
+   "a": "Francúzsko",
+   "story": "Pevninské Francúzsko používa iba jedno časové pásmo, ale územia ako Francúzska Polynézia, Francúzska Guyana a Réunion zvyšujú celkový počet na dvanásť, čím predbieha aj Rusko, ktoré ich má jedenásť.",
+   "source": "https://en.wikipedia.org/wiki/List_of_time_zones_by_country"
+  },
+  {
+   "id": "47ca9a68-1f47-4cf7-963d-e1edc52ec2b5",
+   "q": "Keď Slováci hľadajú lacné letenky, často letia „z Viedne“. Viedenské letisko však v skutočnosti neleží vo Viedni. V ktorom meste sa nachádza?",
+   "a": "Schwechat",
+   "story": "Letisko leží v meste Schwechat v Dolnom Rakúsku, teda dokonca v inej spolkovej krajine ako Viedeň. Preto mu mnohí Rakúšania hovoria jednoducho „Schwechat“.",
+   "source": "https://en.wikipedia.org/wiki/Vienna_International_Airport"
+  },
+  {
+   "id": "805dc897-9e9d-4c42-9c7f-246cf3941343",
+   "q": "Názov ktorej obrovskej krajiny vznikol z indiánskeho slova, ktoré znamenalo obyčajnú dedinu či osadu?",
+   "a": "Kanada",
+   "story": "Domorodci ukazovali francúzskemu moreplavcovi Cartierovi svoju osadu „kanata“. Ten si myslel, že je to meno celého kraja, a tak druhú najväčšiu krajinu sveta dodnes volajú „dedina“.",
+   "source": "https://en.wikipedia.org/wiki/Name_of_Canada"
+  },
+  {
+   "id": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+   "q": "Ktorého európskeho kráľovstva je najväčší ostrov sveta samosprávnym územím?",
+   "a": "Dánsko",
+   "story": "Grónsko je viac ako päťdesiatnásobne väčšie než samotné Dánsko, no napriek tomu zostáva súčasťou Dánskeho kráľovstva s vlastnou samosprávnou vládou.",
+   "source": "https://commonslibrary.parliament.uk/research-briefings/cbp-10234/"
+  },
+  {
+   "id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+   "q": "Ktorá havajská sopka je vyššia ako Mount Everest, ak ju meriame od základne na morskom dne po vrchol?",
+   "a": "Mauna Kea",
+   "story": "Nad hladinou mora z nej vyčnieva len asi 4 200 metrov, ale sopka sa dvíha viac než 10 000 metrov od dna oceánu, teda o vyše kilometra viac ako Everest.",
+   "source": "https://mossandfog.com/mauna-kea-not-mount-everest-is-the-tallest-mountain-from-base-to-summit/"
+  },
+  {
+   "id": "0ec6c0d0-e6cf-433c-bb91-fa8b8de90031",
+   "q": "Ktoré nezávislé kráľovstvo susedí na celej svojej pozemnej hranici len s Juhoafrickou republikou a so žiadnou inou krajinou?",
+   "a": "Lesotho",
+   "story": "Lesotho je jednou z iba troch krajín na svete, ktoré sú úplne obklopené jediným susedom, spolu s Vatikánom a San Marínom vo vnútri Talianska.",
+   "source": "https://en.wikipedia.org/wiki/Lesotho"
+  },
+  {
+   "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+   "q": "Turisti v Londýne ukazujú na hodinovú vežu Westminsterského paláca a hovoria jej Big Ben. Čoho názov je však, presne povedané, Big Ben?",
+   "a": "Zvonu",
+   "story": "Big Ben je prezývka Veľkého zvonu, ktorý vo veži odbíja celé hodiny. Samotná veža bola v roku 2012 premenovaná na Alžbetinu vežu pri príležitosti diamantového jubilea kráľovnej.",
+   "source": "https://en.wikipedia.org/wiki/Big_Ben"
+  },
+  {
+   "id": "7481a4a3-1e73-488f-a49e-2c41a5f83a82",
+   "q": "Slovo pre konský povoz známy ako koč, ktoré neskôr dalo názov diaľkovým autobusom, pochádza z mena istej dediny. V ktorej krajine sa táto dedina nachádza?",
+   "a": "Maďarsko",
+   "story": "Vozy vyrábané v dedine Kocs v pätnástom storočí boli také obdivované, že sa slovo „kocsi“ rozšírilo do nemčiny, angličtiny, slovenčiny, češtiny a mnohých ďalších jazykov.",
+   "source": "https://en.wikipedia.org/wiki/Kocs"
+  },
+  {
+   "id": "8faba77f-e9c8-4af3-8ec1-871d6d660731",
+   "q": "Na Kube štát zamestnáva ľudí, ktorí na krajnici zastavujú služobné autá a prikazujú vodičom zobrať čakajúcich stopárov. Ľudia ich volajú podľa farby uniformy. Akej?",
+   "a": "Žltej",
+   "story": "Volajú ich „amarillos“, po španielsky „žltí“. Vďaka nim je stopovanie na Kube bežnou a takmer úradne organizovanou dopravou.",
+   "source": "https://csmonitor.com/2006/0824/p20s01-litr.html"
+  },
+  {
+   "id": "7d46d103-b030-4f5d-a777-007f84d45b08",
+   "q": "V Japonsku sa doma vyzujete a obujete si papuče, ako sme zvyknutí aj u nás. V jednej miestnosti však na vás čaká ešte samostatný pár papúč, ktorý z nej nesmiete vyniesť. Ktorá miestnosť to je?",
+   "a": "Záchod",
+   "story": "Pri dverách záchoda stoja špeciálne záchodové papuče, aby sa nečistota nerozniesla po byte. Kto v nich omylom vyjde do obývačky, spraví klasický trapas cudzinca.",
+   "source": "https://thedragontrip.com/blog/japan/the-backpackers-guide-to-etiquette-in-japan/"
+  },
+  {
+   "id": "65364ff0-e759-4bf6-9e56-52c2b0b55bf1",
+   "q": "Kým na Slovensku je na Štedrý večer kapor so šalátom, v ktorej ázijskej krajine si rodiny týždne vopred objednávajú vianočnú večeru z KFC?",
+   "a": "Japonsko",
+   "story": "Vďaka úspešnej reklamnej kampani KFC zo sedemdesiatych rokov sa vyprážané kura stalo v Japonsku vianočnou tradíciou. Pred pobočkami sa na Štedrý večer tvoria dlhé rady.",
+   "source": "https://view.asiae.co.kr/en/article/2022122313344230639"
+  },
+  {
+   "id": "fa6a8b07-e948-4953-8742-ec22bf6c95cb",
+   "q": "V ktorom poľskom meste sa po uliciach, pri lampách a na parapetoch skrývajú stovky malých bronzových trpaslíkov, ktorých turisti hľadajú ako poklad?",
+   "a": "Vroclav",
+   "story": "Trpaslíci odkazujú na hnutie Pomarančová alternatíva. Jeho členovia za komunizmu kreslili trpaslíkov na miesta, kde úrady zatreli protirežimné nápisy, a tak si z cenzúry robili žarty.",
+   "source": "https://en.wikipedia.org/wiki/Wroc%C5%82aw_Dwarfs"
+  },
+  {
+   "id": "35b0ccf3-6423-4123-9fb1-a8f93f95f545",
+   "q": "Dunaj drží svetový rekord: preteká cez viac hlavných miest ako ktorákoľvek iná rieka na svete. Cez koľko?",
+   "a": "Štyrmi",
+   "story": "Viedeň, Bratislava, Budapešť a Belehrad, všetky štyri ležia priamo na Dunaji a dve z nich, Viedeň a Bratislava, sú od seba len asi 55 kilometrov.",
+   "source": "https://worldatlas.com/articles/which-river-passes-through-most-national-capital-cities.html"
+  },
+  {
+   "id": "592defa3-cd6b-44db-82ac-ddefad17195e",
+   "q": "Ktoré hlavné mesto inej krajiny je k Bratislave najbližšie? Je to bližšie, než by ste čakali: pohodlne doňho dôjdete aj na bicykli.",
+   "a": "Viedeň",
+   "story": "Centrá Bratislavy a Viedne delí len asi 55 kilometrov. Ak nerátame Rím a Vatikán, sú to dve najbližšie hlavné mestá v Európe.",
+   "source": "https://cityextremes.com/city/bratislava-slovakia"
+  },
+  {
+   "id": "64903dc6-0aa3-4af5-a95d-f88159f57c24",
+   "q": "V Maďarsku sa platí forintmi. Názov tejto meny pochádza z mena jedného talianskeho mesta. Ktorého?",
+   "a": "Florencia",
+   "story": "Vo Florencii sa v stredoveku razila zlatá minca fiorino, ktorá platila po celej Európe. Uhorsko podľa nej pomenovalo vlastné mince, a tak sa dnes na Balatone platí menou nazvanou po Florencii.",
+   "source": "https://en.wikipedia.org/wiki/Hungarian_forint"
+  },
+  {
+   "id": "93de3b02-3b2f-475a-b2c2-643a8891830b",
+   "q": "Je jasná obloha, a predsa v Chorvátsku zrazu zavrú most na ostrov Krk a trajekty ostanú v prístave. Ako sa volá studený nárazový vietor, ktorý padá z hôr na pobrežie a spôsobuje to?",
+   "a": "Bura",
+   "story": "Bura sa rúti z Velebitu k moru a jej nárazy môžu presiahnuť 200 km/h. Pritom zvyčajne prináša azúrovú oblohu a nezvyčajne čistý vzduch.",
+   "source": "https://www.inyourpocket.com/croatia/rijeka/articles/bura"
+  },
+  {
+   "id": "190315b3-4a51-4ae4-bb69-b6cc0415ab98",
+   "q": "Ktoré jediné jazero na Sibíri obsahuje približne pätinu všetkej nezamrznutej sladkej vody na povrchu Zeme?",
+   "a": "Bajkalské jazero",
+   "story": "S hĺbkou vyše 1 600 metrov je to najhlbšie jazero na Zemi, takže obsahuje viac sladkej vody než všetkých päť severoamerických Veľkých jazier dohromady.",
+   "source": "https://whc.unesco.org/en/list/754/"
+  }
+ ],
+ "do-auta": [
+  {
+   "id": "1ed96a8c-c6e6-4f8a-b90f-2d32dfd885ed",
+   "q": "Bublinková fólia, ktorú s chuťou praskáme pri rozbaľovaní balíkov, pôvodne vôbec nemala slúžiť na balenie. Vynálezcovia ju chceli predávať ako módnu ozdobu bytov. Čo z nej malo byť?",
+   "a": "Tapeta",
+   "story": "Dvaja americkí inžinieri ju chceli lepiť na steny ako štruktúrovanú tapetu, no nikto o ňu nestál. Slávu jej priniesli až počítače, ktoré bolo treba bezpečne prepravovať.",
+   "source": "https://en.wikipedia.org/wiki/Bubble_wrap"
+  },
+  {
+   "id": "7ee0bf16-da88-4f16-8e4d-3cc4a2b9adfd",
+   "q": "Creeper, slávne zelené monštrum z Minecraftu, vznikol omylom. Autor hry pri modelovaní jedného zvieraťa zamenil výšku tela s jeho dĺžkou. Ktoré zviera chcel pôvodne vytvoriť?",
+   "a": "Prasa",
+   "story": "Namiesto dlhého prasaťa mu vyšla vysoká postavička na štyroch krátkych nožičkách. Notch ju nezahodil, prefarbil ju na zeleno a urobil z nej monštrum, ktoré vybuchuje.",
+   "source": "https://minecraft.wiki/w/Creeper"
+  },
+  {
+   "id": "35a66df5-be4f-4c88-bd7c-3eda142d6684",
+   "q": "Najdrahšia karta Pokémon na svete, predaná za milióny dolárov, sa nikdy nedala kúpiť v obchode. Japonský detský časopis ňou koncom 90. rokov odmenil víťazov súťaže. V čom súťažili?",
+   "a": "V kreslení",
+   "story": "Karta sa volá Pikachu Illustrator a existuje jej len niekoľko desiatok kusov. Youtuber Logan Paul za ňu zaplatil vyše päť miliónov dolárov a potom si ju zavesil na krk pri vstupe do wrestlingového ringu.",
+   "source": "https://www.guinnessworldrecords.com/world-records/782465-most-expensive-trading-card-sold-at-auction-overall"
+  },
+  {
+   "id": "9623de07-128e-47a9-82cc-50b0f2b651ba",
+   "q": "Na ukazovateli paliva v aute je vedľa ikonky benzínovej pumpy malá šípka alebo trojuholníček. Čo vodičovi prezrádza?",
+   "a": "Na ktorej strane tankovať",
+   "story": "Šípka ukazuje, na ktorej strane auta je uzáver nádrže, takže aj v požičanom aute zastavíte k stojanu správne.",
+   "source": "https://www.volvocars.com/us/support/car/v90/article/588830d089221b31c0a8015166485c00"
+  },
+  {
+   "id": "a9a33278-5bd0-4dd2-a0b6-b5227007352b",
+   "q": "Keď idete zájazdovým autobusom po diaľnici k moru, osobné autá vás neustále predbiehajú. Nie je to opatrnosťou vodiča: každý autobus v EÚ musí mať obmedzovač rýchlosti. Na koľko kilometrov za hodinu je nastavený?",
+   "a": "100 km/h",
+   "story": "Smernica EÚ prikazuje, aby obmedzovač autobusu nepustil rýchlejšie ako sto kilometrov za hodinu, aj keď autá smú na diaľnici ísť 130. Aj preto trvá cesta autobusom do Chorvátska dlhšie ako cesta autom.",
+   "source": "https://eur-lex.europa.eu/eli/dir/1992/6/2002-12-04/ita"
+  },
+  {
+   "id": "6dcd88eb-11d2-4e99-a75e-6f02e3fcbf39",
+   "q": "Keď niekto zmizne z oslavy bez rozlúčky, povieme, že odišiel po anglicky. Ako tomu však hovoria samotní Angličania?",
+   "a": "Po francúzsky",
+   "story": "Angličania tomu hovoria „French leave“, teda odchod po francúzsky. Francúzi zase vravia, že niekto odišiel po anglicky, takže každý zvaľuje nezdvorilosť na suseda.",
+   "source": "https://wordhistories.net/2016/11/16/french-leave/"
+  },
+  {
+   "id": "106ebfec-b3eb-4d0f-9b5f-8951a24de7ee",
+   "q": "Kým Chorvátsko neprešlo na euro, menili si Slováci pred dovolenkou peniaze na menu, ktorá sa volala rovnako ako lesná šelma, ktorej kožušiny kedysi slúžili ako platidlo. Ako sa tá mena volala?",
+   "a": "Kuna",
+   "story": "V stredoveku sa dane a obchody na území Chorvátska platili kožušinami z kún. Kuna bola vyrazená aj na chorvátskej päťkunovej minci.",
+   "source": "https://en.wikipedia.org/wiki/Croatian_kuna"
+  },
+  {
+   "id": "4f20ee42-41fb-4043-932b-6ec7c17beac4",
+   "q": "Paradajka je taká blízka príbuzná istej bežnej slovenskej plodiny, že ju na ňu možno naštepiť. Jedna rastlina potom rodí paradajky nad zemou a túto plodinu pod zemou. Ktorú?",
+   "a": "Zemiaky",
+   "story": "Paradajka aj zemiak patria do rovnakého rodu ľuľok, preto majú podobné listy aj kvety. Takáto „dvojrastlina“ sa dokonca predáva pod názvom TomTato.",
+   "source": "https://archive.saulibrary.edu.bd/handle/123456789/1100"
+  },
+  {
+   "id": "2732da8d-a082-4381-b2f3-8224bb584897",
+   "q": "Suchý zips vymyslel švajčiarsky inžinier po prechádzke so psom. Inšpirovalo ho niečo, čo mal pes zachytené v srsti a čo poznáme z každej lúky. Čo to bolo?",
+   "a": "Lopúch",
+   "story": "George de Mestral si pod mikroskopom prezrel plody lopúcha a zistil, že majú drobné háčiky, ktoré sa zachytia o každé očko v látke či srsti. Presne tak funguje suchý zips: háčiky na jednej strane, slučky na druhej.",
+   "source": "https://www.invent.org/blog/inventors/walk-in-the-woods-velcro"
+  },
+  {
+   "id": "2c337c57-66d7-4b2b-9da2-65cf1a153c87",
+   "q": "Počas veľkej zberateľskej horúčky okolo kartičiek Pokémon dospelí hromadne vykupovali detské menu v jednej sieti rýchleho občerstvenia. Nešlo im o jedlo, ale o balíčky kartičiek, ktoré boli v menu. O ktorú sieť išlo?",
+   "a": "McDonald's",
+   "story": "Happy Meal k 25. výročiu Pokémonov obsahoval špeciálne balíčky kartičiek, a tie sa hneď objavili na internete za mnohonásobok ceny menu. Niektoré reštaurácie preto začali obmedzovať, koľko detských menu si môže jeden človek kúpiť.",
+   "source": "https://www.nintendolife.com/news/2021/02/scalpers_and_collectors_buy_up_mcdonalds_pokemon_happy_meals"
+  },
+  {
+   "id": "d58cc581-4c8f-4f63-a052-a78ff5dec323",
+   "q": "Výrobky z IKEA nemajú číselné kódy, ale mená ako Billy či Poäng. Zakladateľ Ingvar Kamprad si totiž kódy nevedel zapamätať, lebo mal istú poruchu. Akú?",
+   "a": "Dyslexiu",
+   "story": "Kamprad bol dyslektik a mená sa mu pamätali oveľa ľahšie ako rady čísel. Preto dnes v obchode hľadáme Billy, a nie regál číslo 00263850.",
+   "source": "https://dyslexiahelp.umich.edu/success-story/ingvar-kamprad/"
+  },
+  {
+   "id": "b2e24665-5902-4152-932d-87deb37a5e4c",
+   "q": "Slovo Wi-Fi v skutočnosti nie je skratka. Vymyslela ho reklamná agentúra ako slovnú hračku na známy pojem zo sveta hudobných prehrávačov. Na aký?",
+   "a": "Hi-Fi",
+   "story": "Agentúra Interbrand chcela pre technológiu s názvom IEEE 802.11b chytľavejšie meno, a tak vzniklo Wi-Fi podľa Hi-Fi. Výklad „Wireless Fidelity“ si ľudia domysleli až dodatočne.",
+   "source": "https://www.tomsguide.com/features/think-you-know-what-wi-fi-stands-for-get-ready-for-a-surprise"
+  },
+  {
+   "id": "27c4174b-6f3f-4fc8-bcb4-1538aae082e8",
+   "q": "Pod nápisom Amazon na krabiciach je oranžová šípka, ktorá vyzerá ako úsmev. Od ktorého písmena po ktoré v názve vedie?",
+   "a": "Od A po Z",
+   "story": "Šípka vedie od A po Z, lebo Amazon chce predávať všetko od A po Z. Pritom začínal ako obyčajné internetové kníhkupectvo.",
+   "source": "https://turnerduckworth.com/work/amazon"
+  },
+  {
+   "id": "26670691-1f01-4c9b-bb21-4325b398d4f5",
+   "q": "V slávnom sci-fi románe Douglasa Adamsa o stopovaní naprieč vesmírom sa tvrdí, že jednu obyčajnú vec z domácnosti by mal mať stopár vždy pri sebe. Ktorú?",
+   "a": "Uterák",
+   "story": "Podľa knihy je uterák to najužitočnejšie, čo môže medzihviezdny stopár mať. Fanúšikovia preto každý rok 25. mája slávia Deň uteráka a nosia ho so sebou celý deň.",
+   "source": "https://hitchhikers.fandom.com/wiki/Towel"
+  },
+  {
+   "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+   "q": "Z ktorej krajiny pochádza hlavolamová kocka, ktorú v roku 1974 vynašiel profesor architektúry Ernő Rubik?",
+   "a": "Maďarsko",
+   "story": "Rubik ju zostrojil v Budapešti ako učebnú pomôcku na priestorové myslenie a svoj vlastný výtvor vraj vyriešil až po mesiaci.",
+   "source": "https://en.wikipedia.org/wiki/Ern%C5%91_Rubik"
+  },
+  {
+   "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+   "q": "Značka hračiek LEGO vznikla spojením dvoch dánskych slov. Čo znamenajú tieto dve dánske slová?",
+   "a": "Hraj sa dobre",
+   "story": "Zakladateľ Ole Kirk Christiansen ju prevzal z dánskeho spojenia „leg godt“, ktoré jednoducho znamená „hraj sa dobre“.",
+   "source": "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
+  },
+  {
+   "id": "eb1bbd6d-1e20-4eb7-b41d-0ec944fae3eb",
+   "q": "Smrtiaca kliatba Avada Kedavra podľa J. K. Rowlingovej súvisí so slovom, ktoré pozná každé dieťa z vystúpení kúzelníkov. O aké slovo ide?",
+   "a": "Abrakadabra",
+   "story": "Rowlingová povedala, že ide o starú aramejskú formulu, z ktorej vzniklo „abrakadabra“. V jej verzii však znamená zhruba „nech je to zničené“, takže z nevinného kúzelníckeho slova sa stala vražedná kliatba.",
+   "source": "https://www.todaytranslations.com/news/ten-harry-potter-spells-translated-into-english"
+  },
+  {
+   "id": "9b777926-415e-4f6c-b24f-463ffcb860f6",
+   "q": "Na aute aj na konci webových adries je Slovensko označené dvoma písmenami SK. Aké trojpísmenové označenie krajiny je však vytlačené v slovenskom pase?",
+   "a": "SVK",
+   "story": "V pasoch sa používajú medzinárodné trojpísmenové kódy krajín podľa normy ISO, preto tam stojí SVK. Rovnaký kód poznáte aj z výsledkových tabúľ na hokejových majstrovstvách.",
+   "source": "https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3"
+  },
+  {
+   "id": "2e679b47-fbb5-44d9-9484-04558a676c49",
+   "q": "Na Slovensku im bežne hovoríme „čínske polievky“. V ktorej krajine však instantné rezance v skutočnosti vymysleli?",
+   "a": "Japonsko",
+   "story": "Vymyslel ich Momofuku Ando, ktorý ich doma v kôlni vyvíjal pre firmu Nissin. Japonci ich v ankete dokonca vyhlásili za najlepší japonský vynález 20. storočia, pred karaoke aj walkmanom.",
+   "source": "https://en.wikipedia.org/wiki/Instant_noodles"
+  },
+  {
+   "id": "e4c116d3-89be-4c49-9409-84259902bbf6",
+   "q": "Hra Človeče, nehnevaj sa nie je európsky vynález, je to zjednodušená stáročná hra z ďalekej krajiny. Z ktorej? Pomôcka: tamojší panovník ju vraj hrával na nádvorí paláca a namiesto figúrok mal živých ľudí.",
+   "a": "Z Indie",
+   "story": "Pôvodná indická hra sa volá pačísi a Nemec Josef Friedrich Schmidt z nej začiatkom 20. storočia urobil Mensch ärgere Dich nicht, ktorú poznáme ako Človeče. Mogulský cisár Akbar mal vraj na nádvorí obrovskú hraciu plochu z dlaždíc, po ktorej sa namiesto figúrok presúvali ľudia.",
+   "source": "https://livehistoryindia.com/story/living-culture/ludos-indian-roots"
+  }
+ ],
+ "pre-celu-rodinu": [
+  {
+   "id": "7187048a-40f2-4a27-8c33-ac6b5bad69cb",
+   "q": "Na Štedrý večer sa podľa starého zvyku rozkrojí jablko naprieč, nie zhora nadol. Aký tvar jadrovníka v jeho strede veští zdravie na celý budúci rok?",
+   "a": "Hviezda",
+   "story": "Päťcípa hviezda znamená zdravie, kým krížik veští chorobu. Zdravé jablko rozkrojené naprieč však hviezdu ukáže takmer vždy, takže veštba vychádza väčšinou dobre.",
+   "source": "https://www.teraz.sk/slovensko/veci-na-stedrovecernom-stole-mali-v-mi/929468-clanok.html"
+  },
+  {
+   "id": "20af0ab1-47d3-4377-b62f-7eedeca973f0",
+   "q": "Imelo, ktoré na Vianoce vešiame nad dvere, nerastie v zemi, ale vysoko na konároch stromov. Kto mu tam semienka vynesie?",
+   "a": "Vtáky",
+   "story": "Vtáky, napríklad drozdy, zjedia lepkavé biele bobule a semienko potom vylúčia alebo si ho otrú z zobáka o konár, kde sa prilepí. Imelo potom zapustí korene priamo do dreva a ťahá zo stromu vodu.",
+   "source": "https://files.ibot.cas.cz/cevs/images/taxa/kvetena_cr/Viscum.pdf"
+  },
+  {
+   "id": "d51d048f-791d-42d0-8c21-5430ce568288",
+   "q": "Bezstarostná pieseň 'Hakuna Matata' z Levieho kráľa má názov podľa skutočného výrazu, ktorý znamená 'žiadne starosti'. V akom africkom jazyku má tento výraz takýto význam?",
+   "a": "Svahilčina",
+   "story": "Svahilčinou sa hovorí naprieč východnou Afrikou vrátane Kene a Tanzánie, ktorých savany inšpirovali prostredie filmu.",
+   "source": "https://en.wikipedia.org/wiki/Hakuna_matata"
+  },
+  {
+   "id": "6bb25426-f343-4fae-ac7f-d2d6f456ca99",
+   "q": "Slovo paradajka sme prevzali z rakúskej nemčiny. Pôvodne znamenalo jablko z akého miesta?",
+   "a": "Z raja",
+   "story": "Rakúšania volajú paradajku Paradeiser, čo je skrátený Paradiesapfel, teda rajské jablko. Preto Česi dodnes hovoria rajče.",
+   "source": "https://www.duden.de/rechtschreibung/Paradeiser"
+  },
+  {
+   "id": "cc0cce04-a452-424f-a3d3-4970e2e1f1ce",
+   "q": "Pizza Margherita, tá najjednoduchšia, má len paradajky, mozzarellu a bazalku. Podľa legendy tie tri farby neboli náhoda. Čo mali pripomínať?",
+   "a": "Taliansku vlajku",
+   "story": "Neapolský pizzar ju vraj upiekol na počesť kráľovnej Margherity Savojskej: červená, biela a zelená ako talianska trikolóra. Pizza potom dostala kráľovnino meno.",
+   "source": "https://en.wikipedia.org/wiki/Pizza_Margherita"
+  },
+  {
+   "id": "957e46a3-1683-4f28-962a-3fb0a9e5c625",
+   "q": "Názov čokolády Milka vznikol spojením dvoch nemeckých slov, ktoré označujú jej hlavné suroviny. Ktoré sú to suroviny?",
+   "a": "Mlieko a kakao",
+   "story": "Milka vznikla z nemeckých slov „Milch“, čiže mlieko, a „Kakao“. Preto má vo svojom znaku kravičku, a nie kakaovník.",
+   "source": "https://en.wikipedia.org/wiki/Milka"
+  },
+  {
+   "id": "399a4349-5477-4764-9323-b87f0d38e850",
+   "q": "V školskej jedálni ste určite jedli vtáčie mlieko. Z čoho sú tie biele nadýchané obláčiky, ktoré plávajú na vanilkovom mlieku?",
+   "a": "Z vyšľahaných bielkov",
+   "story": "Obláčiky sú vyšľahaný sneh z bielkov, ktorý sa krátko uvarí v mlieku. Zo žĺtkov sa potom zahustí samotný krém, takže sa využije celé vajce.",
+   "source": "https://cookslovak.com/2017/04/12/birds-milk/"
+  },
+  {
+   "id": "de1704b9-6d44-5803-88ff-ea9fd819236f",
+   "q": "Zrnká pukancov vybuchujú preto, lebo malé množstvo čohosi uzavretého v každom zrnku sa pri zahriatí náhle zmení na paru s vysokým tlakom. Čo to je?",
+   "a": "Voda",
+   "story": "Každé zrnko má vo svojej tvrdej šupke uzavretú trochu vlhkosti, pri približne 180 stupňoch Celzia je tlak pary taký vysoký, že šupka praskne a škrob vyhŕkne von ako nadýchaná pena.",
+   "source": "https://en.wikipedia.org/wiki/Popcorn"
+  },
+  {
+   "id": "c28f922e-8af5-444a-92a3-0f4b54ab8ed5",
+   "q": "Keď na ulici stretnete kominára, čoho sa podľa starej povery treba rýchlo chytiť, aby vám priniesol šťastie?",
+   "a": "Gombíka",
+   "story": "Niekde sa chytá gombík na kominárovej uniforme, inde si človek drží vlastný gombík, kým neuvidí niečo ďalšie, napríklad belasé auto. Výsledok má byť v oboch prípadoch rovnaký: kúsok kominárovho šťastia prejde aj na vás.",
+   "source": "https://www.kudyznudy.cz/aktuality/den-kominiku-cesta-za-kominy-ktere-vypraveji-pribe"
+  },
+  {
+   "id": "cb6885f9-0583-4d5e-854a-20ada5b0ad6d",
+   "q": "Ktorú drobnosť zo štedrovečerného stola si mnohí Slováci odložia do peňaženky, aby im celý rok nechýbali peniaze?",
+   "a": "Kapriu šupinu",
+   "story": "Okrúhla lesklá šupina pripomína malú mincu, a preto má podľa tradície do peňaženky prilákať ďalšie peniaze.",
+   "source": "https://www.startitup.sk/?p=1000129"
+  },
+  {
+   "id": "f5c21a5b-9d64-4910-8b54-d643787af029",
+   "q": "Anglický názov fakulty Bystrohlav je Ravenclaw a skrýva sa v ňom slovo havran. Aké zviera je však podľa kníh J. K. Rowlingovej na erbe tejto fakulty?",
+   "a": "Orol",
+   "story": "V knihách má Bystrohlav na erbe orla a do klubovne sa vchádza cez dvere s klopadlom v tvare orla. Havrana z neho urobili až filmy.",
+   "source": "https://www.harrypotter.com/house/ravenclaw"
+  },
+  {
+   "id": "bd8aa2d7-45e5-4a58-82db-48427f61fc70",
+   "q": "Dospelý bocian biely je takmer nemý, chýba mu poriadny hlas. Ako sa teda bociany na hniezde zdravia a dorozumievajú?",
+   "a": "Klepotaním zobákom",
+   "story": "Bocian zakloní hlavu dozadu a rýchlo cvaká zobákom, takže to znie ako drevená rapkáč. Hlasno pípať a syčať vedia len mláďatá.",
+   "source": "https://kent.wildwoodtrust.org/animals/white-stork/"
+  },
+  {
+   "id": "cc7082a3-d9e9-49b7-8d5c-8e65785c7d4e",
+   "q": "Táto jediná planéta je taká obrovská, že by pohltila všetkých sedem ostatných planét slnečnej sústavy a ešte by v nej zostalo miesto. O ktorú planétu ide?",
+   "a": "Jupiter",
+   "story": "Jupiter je najväčšia planéta; ostatných sedem planét by sa zmestilo do púhych 70 percent jeho objemu.",
+   "source": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+   "id": "58c69ecf-ae5a-40fe-8435-e7bb22a05ad3",
+   "q": "Najmenšia kosť v ľudskom tele má tvar malého strmeňa. V ktorej časti tela sa nachádza?",
+   "a": "V uchu",
+   "story": "Strmienok v strednom uchu má len asi 3 milimetre a prenáša zvukové vibrácie z ušného bubienka do vnútorného ucha.",
+   "source": "https://en.wikipedia.org/wiki/Stapes"
+  },
+  {
+   "id": "8d1342f7-9efc-5d2b-b50f-629e352581ec",
+   "q": "Keď zmiešaš sódu bikarbónu s octom a zmes prudko zašumí, aký plyn sa uvoľňuje vo všetkých tých bublinkách?",
+   "a": "Oxid uhličitý",
+   "story": "Kyselina v octe reaguje s hydrogenuhličitanom sodným a uvoľňuje oxid uhličitý, presne ten istý plyn, vďaka ktorému v rúre kysnú torty a chlieb.",
+   "source": "https://en.wikipedia.org/wiki/Sodium_bicarbonate"
+  },
+  {
+   "id": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "q": "Spočítaj sekundy medzi zábleskom blesku a zahrmením a vydeľ ich tromi. Čo ti výsledok povie?",
+   "a": "Vzdialenosť k blesku v kilometroch",
+   "story": "Svetlo k tebe dorazí takmer okamžite, ale zvuk sa šíri rýchlosťou približne 340 metrov za sekundu, takže na jeden kilometer potrebuje zhruba tri sekundy. Vydelením oneskorenia tromi dostaneš vzdialenosť k úderu v kilometroch. Vydelením piatimi ju dostaneš v míľach.",
+   "source": "https://en.wikipedia.org/wiki/Thunder"
+  },
+  {
+   "id": "f3b16521-2827-4f60-ac3b-00de387e7ff6",
+   "q": "Japonský novinár videl v roku 1984 na sci-fi zjazde v Los Angeles fanúšikov prezlečených za postavy. Spojil dve anglické slová do nového výrazu. Aké slovo vymyslel?",
+   "a": "Cosplay",
+   "story": "Nobujuki Takahaši spojil slová „costume“ a „play“, teda kostým a hra. Slovo sa ujalo najprv v Japonsku a s anime sa potom vrátilo do celého sveta, aj na Slovensko.",
+   "source": "https://en.wikipedia.org/wiki/Cosplay"
+  },
+  {
+   "id": "625ca209-6bf0-4d91-a2ae-328071a81d9f",
+   "q": "Danajský dar je dar, ktorý obdarovanému prinesie skazu. Ktorý slávny „darček“ z antického príbehu stojí za týmto výrazom?",
+   "a": "Trójsky kôň",
+   "story": "Danajci boli Gréci a ich drevený kôň plný vojakov priniesol Tróji zánik. Vergílius k tomu napísal slávnu vetu „Bojím sa Danajcov, aj keď nesú dary“.",
+   "source": "https://owad.de/word/a-greek-gift"
+  },
+  {
+   "id": "35017ad6-7fdb-4968-b285-28188e7d80f2",
+   "q": "Pohár medu v špajzi po pár mesiacoch zhustne a zbelie. Čo sa s ním v skutočnosti stalo?",
+   "a": "Skryštalizoval",
+   "story": "Med je presýtený roztok cukrov a glukóza z neho postupne vypadáva v podobe drobných kryštálikov. Nie je pokazený ani falšovaný, stačí ho jemne zohriať vo vodnom kúpeli do 40 °C a znova bude tekutý.",
+   "source": "https://savannahbee.com/blogs/honey-education-hub/why-honey-crystallizes"
+  },
+  {
+   "id": "c90959f3-224a-477e-ad33-59b1dc7f9da4",
+   "q": "Z prútov ktorého stromu sa na Slovensku tradične pletie veľkonočný korbáč?",
+   "a": "Vŕba",
+   "story": "Vŕba na jar pučí ako prvá, a tak podľa ľudovej viery jej pružné prúty preniesli na dievčatá zdravie a sviežosť na celý rok.",
+   "source": "https://sita.sk/slovensko/clanok/1051592-korbace-k-velkej-noci-pletie-uz-osemdesiat-rokov"
+  }
+ ],
+ "historia": [
+  {
+   "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+   "q": "Na rozdiel od legendy neboli stavitelia pyramíd v Gíze otroci, ale platení robotníci. Aký nápoj tvoril popri chlebe základnú súčasť ich denných prídelov?",
+   "a": "Pivo",
+   "story": "Egyptské pivo bolo husté, mierne alkoholické a výživné, prakticky tekutý chlieb, a robotníci ho dostávali každý deň, takže bolo rovnako jedlom a odmenou ako občerstvením.",
+   "source": "https://aeraweb.org/feeding-pyramid-workers/"
+  },
+  {
+   "id": "ccf69e83-8da0-453c-9012-057e87dd203a",
+   "q": "V máji 2010 uskutočnil programátor na Floride prvý zaznamenaný nákup skutočného tovaru za bitcoiny a zaplatil za neho desaťtisíc mincí. Čo si za ne kúpil?",
+   "a": "Dve pizze",
+   "story": "Fanúšikovia bitcoinu si 22. máj dodnes pripomínajú ako Bitcoin Pizza Day, keďže tých desaťtisíc mincí malo neskôr hodnotu stoviek miliónov dolárov.",
+   "source": "https://en.bitcoin.it/wiki/Laszlo_Hanyecz"
+  },
+  {
+   "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+   "q": "Kráľovná Alžbeta II. počas svojej vlády navštívila viac ako sto krajín, no nikdy pri sebe nemala doklad, ktorý musí mať každý iný britský cestovateľ. O aký doklad ide?",
+   "a": "Pas",
+   "story": "Britské pasy sa vydávajú v mene panovníka, takže kráľovná žiadny nepotrebovala, ostatní členovia kráľovskej rodiny vrátane princa Philipa však museli mať svoj pas ako všetci ostatní.",
+   "source": "https://www.royal.uk/encyclopedia/passports"
+  },
+  {
+   "id": "3e8a8e41-4719-4b6d-8675-ba843ab8c066",
+   "q": "Ktorý budúci rímsky vojvodca, ktorého ako mladíka uniesli piráti, sa údajne sťažoval, že výkupné za neho stanovili príliš nízko, a po oslobodení dal svojich únoscov ukrižovať?",
+   "a": "Július Caesar",
+   "story": "Plutarchos uvádza, že piráti žiadali dvadsať talentov, ale Caesar trval na päťdesiatich. Po oslobodení zhromaždil lode, pirátov zajal a nechal ich popraviť, ako im to sľúbil.",
+   "source": "https://www.britannica.com/story/the-time-julius-caesar-was-captured-by-pirates"
+  },
+  {
+   "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
+   "q": "V Británii a jej kolóniách nasledoval po 2. septembri 1752 oficiálne 14. september 1752. Prečo z kalendára jednoducho zmizlo jedenásť dní?",
+   "a": "Prechod z juliánskeho na gregoriánsky kalendár",
+   "story": "Británia prijala gregoriánsky kalendár zákonom Calendar (New Style) Act 1750 a dobehla tak väčšinu katolíckej Európy, ktorá prešla na nový kalendár už v roku 1582. Starší juliánsky kalendár počítal ako priestupný každý štvrtý rok bez výnimky, takže sa oproti slnečnému roku posúval približne o tri dni za štyri storočia. Do roku 1752 sa rozdiel zväčšil na jedenásť dní, a tak parlament nariadil vynechať ich naraz: ľudia si ľahli spať 2. septembra a zobudili sa 14. septembra. Ten istý zákon zároveň presunul začiatok právneho roka z 25. marca na 1. januára.",
+   "source": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
+  },
+  {
+   "id": "c2e3d05c-6e26-4630-95bf-c6f06915f313",
+   "q": "V 50. rokoch 19. storočia vraj cisár Napoleon III. podával svojim najváženejším hosťom jedlo s príbormi zo vzácneho kovu, zatiaľ čo menej významní hostia sa museli uspokojiť so zlatom. O aký kov išlo?",
+   "a": "Hliník",
+   "story": "Kým sa v roku 1886 nevyvinul Hallov-Héroultov elektrolytický proces, získavanie hliníka z rudy bolo také náročné, že stál viac ako zlato. Vrchol Washingtonovho monumentu ním bol v roku 1884 zakončený ako luxusným materiálom, tesne predtým, než sa jeho cena zrútila.",
+   "source": "https://en.wikipedia.org/wiki/History_of_aluminium"
+  },
+  {
+   "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+   "q": "Ktorému svetoznámemu fyzikovi ponúkli v roku 1952 post prezidenta Izraela, ktorý však zdvorilo odmietol?",
+   "a": "Albert Einstein",
+   "story": "Ponuku predložil premiér David Ben Gurion po smrti prvého prezidenta a Einstein odpovedal, že mu chýba vlohy na jednanie s ľuďmi a na oficiálne funkcie.",
+   "source": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+  },
+  {
+   "id": "496b3405-50aa-4315-bbca-8d3e85dada58",
+   "q": "Ktorý vedec, preslávený svojimi pohybovými zákonmi, strávil posledné tri desaťročia svojho života vedením anglickej Kráľovskej mincovne a osobne stopoval falšovateľov peňazí?",
+   "a": "Isaac Newton",
+   "story": "Newton sa stal správcom mincovne v roku 1696, v krčmách chodil v prestrojení zbierať dôkazy a neslávne známeho falšovateľa Williama Chalonera poslal na šibenicu.",
+   "source": "https://www.royalmintmuseum.org.uk/journal/people/isaac-newton/"
+  },
+  {
+   "id": "d0c1a81f-ee07-4e5c-a208-680b34e6380f",
+   "q": "Dávno pred mobilnými telefónmi bola fínska firma Nokia založená v roku 1865 ako mlyn. Aký materiál tento mlyn vyrábal?",
+   "a": "Papierovina (buničina)",
+   "story": "Nokia strávila prvé storočie výrobou buničiny, gumených čižiem a káblov, kým sa vôbec dostala k telefónom.",
+   "source": "https://en.wikipedia.org/wiki/History_of_Nokia"
+  },
+  {
+   "id": "b2e8d432-dae9-5ef6-afc0-f617c54ff9bb",
+   "q": "Ktorá japonská spoločnosť, založená v roku 1889 v Kjóte na výrobu ručne robených hracích kariet, sa neskôr stala jedným z najväčších mien vo svete videohier?",
+   "a": "Nintendo",
+   "story": "Nintendo desaťročia predávalo hracie karty hanafuda, a skúsilo dokonca aj taxislužbu či instantnú ryžu, kým v 70. a 80. rokoch nenašlo zlatú baňu vo videohrách.",
+   "source": "https://en.wikipedia.org/wiki/Nintendo"
+  },
+  {
+   "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+   "q": "V 30. rokoch 17. storočia zažila Holandská republika najslávnejšiu špekulatívnu bublinu v dejinách, keď jediná vzácna cibuľka mohla načas stáť toľko ako honosný dom pri amsterdamskom kanáli. Ktorý kvet vyvolal toto šialenstvo?",
+   "a": "Tulipán",
+   "story": "Na vrchole tulipánovej mánie sa exotické pruhované odrody ako Semper Augustus predávali za celé majetky, až kým trh vo februári 1637 takmer zo dňa na deň neskolaboval.",
+   "source": "https://en.wikipedia.org/wiki/Tulip_mania"
+  },
+  {
+   "id": "b4de4587-d85c-5087-80ed-d0c71b769753",
+   "q": "Skôr než sa v 50. rokoch dostala na pulty s hračkami, predávala sa mäkká modelovacia hmota Play-Doh na úplne iný účel v domácnosti. Na čo pôvodne slúžila?",
+   "a": "Na čistenie tapiet",
+   "story": "Táto hmota sa predávala na utieranie uhoľných sadzí z tapiet, a keď domácnosti prestali kúriť uhlím, upadajúca firma ju po tom, čo sa dopočula, že deti z nej rady modelujú, pretransformovala na detskú hračku.",
+   "source": "https://en.wikipedia.org/wiki/Play-Doh"
+  },
+  {
+   "id": "7336ab85-ed14-56f3-ae9e-08a36d8b0d90",
+   "q": "Analýza kostí gladiátorov pochovaných v Efeze ukazuje, že jedli prevažne rastlinnú stravu, v ktorej natoľko dominovala jedna obilnina, že im Rimania dali prezývku „hordearii“. Jedákov akej obilniny táto prezývka označuje?",
+   "a": "Jačmeň",
+   "story": "Gladiátori zďaleka nehodovali na mäse, objem naberali na jačmeni a fazuli, strava bohatá na sacharidy im pridala ochrannú vrstvu tuku a slovo „hordearii“ pochádza z hordeum, latinského pomenovania pre jačmeň.",
+   "source": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0110489"
+  },
+  {
+   "id": "9015951b-446e-4752-8b33-e22f747a3f12",
+   "q": "Bezdrôtová technológia, ktorá spája váš telefón s autom, je pomenovaná po kráľovi z desiateho storočia. Z ktorej krajiny pochádzal tento kráľ?",
+   "a": "Dánsko",
+   "story": "Harald Modrozub zjednotil dánske kmene, tak si inžinieri požičali jeho meno pre štandard, ktorý mal zjednotiť zariadenia, a logo spája jeho runové iniciály.",
+   "source": "https://www.bluetooth.com/about-us/bluetooth-origin/"
+  },
+  {
+   "id": "0a539a89-4048-472f-8e7c-e536439a4258",
+   "q": "Najstaršia nepretržite fungujúca univerzita na svete bola založená v roku 859 ženou menom Fátima al-Fihrí. V ktorej krajine sa nachádza?",
+   "a": "Maroko",
+   "story": "Univerzita al-Karavíjín vo Fez v Maroku je uznávaná organizáciou UNESCO aj Guinnessovou knihou rekordov ako najstaršia nepretržite fungujúca univerzita udeľujúca akademické tituly, vznikla o viac než dve storočia skôr než univerzita v Bologni.",
+   "source": "https://www.guinnessworldrecords.com/world-records/oldest-university"
+  },
+  {
+   "id": "9d26416e-9ac4-4723-9d3c-b98aeedc389e",
+   "q": "Dávno predtým, než sa dotkla stromu, vynašli motorovú pílu v 80. rokoch 18. storočia dvaja škótski lekári. Aký lekársky zákrok ňou chceli urýchliť?",
+   "a": "Pôrod",
+   "story": "Prvá motorová píla bola malá ručne kľukou poháňaná reťaz so zubami, ktorá slúžila na prerezanie panvovej kosti, keď dieťa pri pôrode uviazlo, tento zákrok sa nazýva symfyziotómia. Nahradila nôž a pílku a až oveľa neskôr sa táto myšlienka zväčšila na rezanie dreva.",
+   "source": "https://en.wikipedia.org/wiki/Chainsaw"
+  },
+  {
+   "id": "dfd6295c-2c27-4def-85b4-73b914bd183f",
+   "q": "Marie Curie je jediný človek v histórii, ktorý získal Nobelove ceny v dvoch rôznych vedách. V ktorých dvoch?",
+   "a": "Fyzika a chémia",
+   "story": "V roku 1903 sa podelila o cenu za fyziku za výskum rádioaktivity a v roku 1911 získala sama cenu za chémiu za objav polónia a rádia.",
+   "source": "https://www.nobelprize.org/prizes/facts/nobel-prize-facts/"
+  },
+  {
+   "id": "09cd6605-30cf-4ca5-9cb5-428717fb4cff",
+   "q": "Ktorá africká krajina vydala počas hyperinflačnej krízy v roku 2009 bankovku s nominálnou hodnotou sto biliónov dolárov?",
+   "a": "Zimbabwe",
+   "story": "V čase tlače mala bankovka hodnotu len niekoľkých amerických dolárov a krajina krátko nato opustila vlastnú menu.",
+   "source": "https://en.wikipedia.org/wiki/Zimbabwean_one_hundred_trillion_dollar_note"
+  },
+  {
+   "id": "ae368719-7318-526b-8690-015ceb92e54e",
+   "q": "Úplne prvé papierové bankovky v Európe vydala už v roku 1661 súkromná banka v krajine, ktorá sa dnes, dosť ironicky, snaží stať jednou z prvých úplne bezhotovostných spoločností na svete. O ktorú krajinu ide?",
+   "a": "Švédsko",
+   "story": "Stockholms Banco vytlačila prvé bankovky v Európe, no vzápätí ich vydala priveľa a do niekoľkých rokov skrachovala, a dnes väčšina švédskych obchodov a dokonca aj kostolov uprednostňuje karty a mobilné platby pred hotovosťou.",
+   "source": "https://en.wikipedia.org/wiki/Stockholms_Banco"
+  },
+  {
+   "id": "2ef7ff3a-9bb7-492b-93a3-761ad8a2da61",
+   "q": "Gettysburský prejav Abrahama Lincolna zaznel hneď po dvojhodinovej reči Edwarda Everetta. Ako dlho približne trvalo, kým Lincoln predniesol svoj vlastný prejav?",
+   "a": "Približne dve minúty",
+   "story": "Prejav má len približne 270 slov a podľa niektorých svedectiev fotograf ešte nestihol pripraviť aparát, kým si Lincoln opäť sadol.",
+   "source": "https://www.britannica.com/event/Gettysburg-Address"
+  }
+ ]
+}

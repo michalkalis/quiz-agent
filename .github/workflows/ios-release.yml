@@ -21,6 +21,11 @@ on:
         description: "Minimum build number (use to nudge past a stuck number reserved by Apple)"
         required: false
         default: "0"
+      store:
+        description: "App Store variant (#209): uploads to the live app Trubbo (com.missinghue.hangs) with every tester surface compiled off. Off = the TestFlight build, which goes to the separate app Trubbo Beta (com.missinghue.hangs.beta, #234). Production only"
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   # Prevent parallel release runs stepping on each other (match cert locks, build number races).
@@ -37,7 +42,8 @@ jobs:
     runs-on: xcode-27
     timeout-minutes: 45
     permissions:
-      contents: read
+      # write: the job tags the built commit (ios/<version>-b<build>) after upload.
+      contents: write
 
     env:
       # Consumed by Fastfile / Matchfile.
@@ -60,7 +66,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Guard — App Store variant is production only
+        # #209: the store build is the one App Review installs; a staging store
+        # build would point the reviewer at the staging backend.
+        if: inputs.store && inputs.environment != 'production'
+        run: |
+          echo "::error::store: true needs environment: production"
+          exit 1
 
       - name: Guard — required secrets present
         # Fail fast with a friendly message if any secret is missing, instead of leaking
@@ -91,7 +105,7 @@ jobs:
       - name: Configure SSH for match repo
         # webfactory/ssh-agent loads the deploy key into an ephemeral ssh-agent.
         # The key lives only in memory for the duration of the job.
-        uses: webfactory/ssh-agent@v0.10.0
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
           ssh-private-key: ${{ secrets.MATCH_DEPLOY_KEY }}
 
@@ -102,7 +116,7 @@ jobs:
           ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -134,13 +148,40 @@ jobs:
           # Override Matchfile to point at the isolated keychain on disk.
           MATCH_KEYCHAIN_NAME: ${{ env.KEYCHAIN_PATH }}
           BUILD_NUMBER_FLOOR: ${{ inputs.build_number_floor }}
+          # #209: YES compiles the APP_STORE condition in (Shared.xcconfig).
+          # #234: it also picks the app — production YES → Trubbo
+          # (com.missinghue.hangs), production NO → Trubbo Beta
+          # (com.missinghue.hangs.beta). The Fastfile derives bundle id, match
+          # profile and export map from it and numbers the build past the
+          # newest TestFlight build of both apps, so the tag below stays unique.
+          APP_STORE_VARIANT: ${{ inputs.store && 'YES' || 'NO' }}
         # environment input picks the lane: staging → beta (Hangs-Staging), production → release (Hangs-Prod).
         run: bundle exec fastlane ios ${{ inputs.environment == 'production' && 'release' || 'beta' }}
+
+      - name: Tag the built commit
+        # Every uploaded build gets a tag, so a hotfix branch can be cut from the
+        # exact commit a store version was built from (#207 — production readiness).
+        if: success()
+        run: |
+          set -euo pipefail
+          IPA=$(ls apps/ios-app/Hangs/build/*.ipa | head -1)
+          PLIST=$(mktemp)
+          unzip -p "$IPA" 'Payload/*.app/Info.plist' > "$PLIST"
+          VERSION=$(plutil -extract CFBundleShortVersionString raw "$PLIST")
+          BUILD=$(plutil -extract CFBundleVersion raw "$PLIST")
+          SUFFIX=${{ inputs.environment == 'production' && '""' || '"-staging"' }}
+          # #209: the App Store variant is tagged apart, never mistaken for a
+          # TestFlight build with tester surfaces.
+          if [ "${{ inputs.store }}" = "true" ]; then SUFFIX="${SUFFIX}-store"; fi
+          TAG="ios/${VERSION}-b${BUILD}${SUFFIX}"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+          echo "Tagged $GITHUB_SHA as $TAG"
 
       - name: Upload build artifacts
         # IPA + dSYM only — the dSYM is needed for Sentry symbolication.
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hangs-release
           path: |

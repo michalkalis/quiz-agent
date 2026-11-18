@@ -1,0 +1,45 @@
+name: social-publish
+
+# #210 (marketing on social networks), 210.5: the Instagram API has no
+# scheduling, so this hourly run publishes the approved posts whose slot has
+# passed (apps/social-studio/scripts/publish_due.py); reels also go to the
+# matching Facebook Page (210.11, scripts/fb_pages.py). Red run = a post failed
+# or missed its window. After a disable/enable GitHub may stop firing the
+# schedule until the file changes; then edit the cron line to re-register it.
+
+on:
+  schedule:
+    - cron: "13 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "publish (due posts), dry-run (list them) or check (tokens + quota)"
+        default: dry-run
+        type: choice
+        options: [publish, dry-run, check]
+
+concurrency:
+  group: social-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Publish due Instagram posts and Facebook Page reels
+        env:
+          IG_TOKEN_IG_EN: ${{ secrets.IG_TOKEN_IG_EN }}
+          IG_TOKEN_IG_SKCZ: ${{ secrets.IG_TOKEN_IG_SKCZ }}
+          FB_PAGE_TOKEN_EN: ${{ secrets.FB_PAGE_TOKEN_EN }}
+          FB_PAGE_TOKEN_SKCZ: ${{ secrets.FB_PAGE_TOKEN_SKCZ }}
+          MODE: ${{ inputs.mode || 'publish' }}
+        run: |
+          case "$MODE" in
+            publish) python apps/social-studio/scripts/publish_due.py ;;
+            *) python apps/social-studio/scripts/publish_due.py "--$MODE" ;;
+          esac

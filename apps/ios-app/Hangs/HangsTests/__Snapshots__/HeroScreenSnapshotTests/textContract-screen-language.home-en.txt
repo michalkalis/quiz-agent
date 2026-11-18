@@ -1,11 +1,30 @@
 # texts
-trubbo
 Quiz
-History
-Science & Nature
-Geography & World
+Choose several
+All Categories
 10 questions
 All Categories
+Science & Nature
+10 questions
+Science & Nature
+History
+10 questions
+History
+Geography & World
+10 questions
+Geography & World
+Movies & Music
+10 questions
+Movies & Music
+Sports
+10 questions
+Sports
+Food & Everyday Life
+10 questions
+Food & Everyday Life
+Entertainment
+10 questions
+Entertainment
 English
 Slovenčina
 Čeština
@@ -16,24 +35,19 @@ Medium
 Hard
 Random
 Difficulty
-Medium
+Random
 Categories
 All Categories
-your plan
-18
-of 30 free questions left
-Get Plus
-18
-of 30 free questions left
-Get Plus
-18
-of 30 free questions left
-Get Plus
-resets in 13 days
-resets in 13 days
+Quick quiz
+After "Next": next question, no explanation
+
+trubbo
 Start
 # identifiers
-home.moreSettings
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk
@@ -44,18 +58,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.freePlanReset
-home.freePlanReset
+home.quickGame
 home.startQuiz

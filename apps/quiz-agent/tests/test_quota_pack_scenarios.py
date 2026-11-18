@@ -76,7 +76,7 @@ def _flow(tracker: UsageTracker, next_qid: str) -> QuizFlowService:
     retriever.get = AsyncMock(return_value=_question("q_current"))
     retriever.get_next_question = AsyncMock(return_value=_question(next_qid))
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=retriever,
         answer_evaluator=MagicMock(),

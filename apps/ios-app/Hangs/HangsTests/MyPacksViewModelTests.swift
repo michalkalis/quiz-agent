@@ -296,7 +296,7 @@ struct MyPacksViewLoadingLayoutTests {
     @Test("the loading spinner spans the full content width, not a narrow strip")
     func spinnerFullWidth() throws {
         // Fresh view: isLoading starts true and .task hasn't run under inspection.
-        let view = MyPacksView(service: MockPackOrderService(), onPlayPack: { _ in })
+        let view = MyPacksView(viewModel: MyPacksViewModel(service: MockPackOrderService()), onPlayPack: { _ in })
         let progress = try view.inspect().find(ViewType.ProgressView.self)
         #expect(try progress.flexFrame().maxWidth == .infinity)
     }

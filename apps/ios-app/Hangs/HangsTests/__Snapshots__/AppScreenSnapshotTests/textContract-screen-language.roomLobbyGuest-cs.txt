@@ -1,0 +1,32 @@
+# texts
+Hra spolu
+Jsi ve hře
+Peťo
+Ťukni na jméno a změň si ho.
+V místnosti
+M
+Michal
+P
+Peťo
+Pravidla od hostitele
+Kdy ukázat odpovědi
+After each question
+Kdy ukázat odpovědi
+After each question
+Čas na odpověď
+30 s
+Čas na odpověď
+30 s
+Otázky čte
+the host's phone
+Otázky čte
+the host's phone
+Čeká se, až hostitel spustí hru
+# identifiers
+room.close
+room.lobby.rename
+room.rules.guest
+room.rules.guest.reveal
+room.rules.guest.time
+room.rules.guest.readsAloud
+room.lobby.waiting

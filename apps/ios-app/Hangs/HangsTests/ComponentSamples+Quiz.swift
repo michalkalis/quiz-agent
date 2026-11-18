@@ -48,6 +48,13 @@ nonisolated extension ComponentSample {
                 }
                 .frame(height: 180)
             },
+            // #224: the calm card the solo result sits on (neutral surface, category dot).
+            ComponentSample("deckCard.calmResult") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "sports"), categoryName: "Šport", isCalm: true) {
+                    Text(verbatim: "Jedenásť").font(.hangsDisplay(34))
+                }
+                .frame(height: 180)
+            },
             ComponentSample("deckCard.customPack") {
                 let pack = DeckIdentity(category: "general", packId: "pack-slovak-castles")
                 HangsDeckCard(style: pack.style, categoryName: pack.chipName) {
@@ -95,14 +102,51 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.thinkingDismissable") {
                 QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {})
             },
+            // #208.7: the founder's "hears me → processing" on the question
+            // screen, where the think caption used to hide both cues.
+            ComponentSample("questionListenBar.thinkingHearing") {
+                QuestionListenBar(phase: .thinking(remaining: 21, total: 30), feedback: .hearing, language: .slovak)
+            },
+            ComponentSample("questionListenBar.thinkingProcessing") {
+                QuestionListenBar(phase: .thinking(remaining: 20, total: 30), feedback: .recognizing, language: .slovak)
+            },
+            ComponentSample("questionListenBar.readingRecognizing") {
+                QuestionListenBar(phase: .readingQuestion, feedback: .recognizing,
+                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak),
+                                  language: .slovak)
+            },
+            ComponentSample("listenBar.commandProcessing") {
+                ListenBar(mode: .command, feedback: .recognizing, commandWords: ["skip", "repeat", "pause"])
+            },
             ComponentSample("questionListenBar.listeningMCQ") { QuestionListenBar(phase: .listening(.mcq)) },
             ComponentSample("questionListenBar.listeningCountdown") {
                 // With the ✕: the countdown and the ✕ each need their own room.
                 QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
             },
+            // #237 (canvas pick L1): commands wait on the speech-recognition
+            // permission — the bar's trailing control, with the ✕ beside it.
+            ComponentSample("questionListenBar.thinkingTurnOn") {
+                QuestionListenBar(phase: .thinking(remaining: 27, total: 30), language: .slovak, onDismiss: {},
+                                  commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
+            ComponentSample("questionListenBar.readingPreparing") {
+                QuestionListenBar(phase: .readingQuestion, language: .slovak, onDismiss: {}, commandsAccessory: .preparing)
+            },
+            ComponentSample("questionListenBar.readingOpenSettings") {
+                QuestionListenBar(phase: .readingQuestion, language: .slovak, onDismiss: {},
+                                  commandsAccessory: .openSettings, onOpenSettings: {})
+            },
+            ComponentSample("questionListenBar.readingTurnOn") {
+                QuestionListenBar(phase: .readingQuestion, commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
+            ComponentSample("questionListenBar.slimTurnOn") {
+                QuestionListenBar(phase: .thinking(remaining: 12, total: 30), size: .slim, language: .slovak,
+                                  onDismiss: {}, commandsAccessory: .turnOn, onTurnOnCommands: {})
+            },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },
+            ComponentSample("spellingHint.default") { AnswerSpellingHint() },
         ]
     }
 

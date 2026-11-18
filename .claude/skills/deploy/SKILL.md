@@ -10,6 +10,8 @@ argument-hint: "[backend|pack-api|both] [--skip-tests] [--dry-run]"
 
 Guided deployment with safety checks. Two deployable apps; every step below is keyed on the **target**.
 
+**This is the manual emergency path (#207).** The normal path is the **Backend Deploy** GitHub workflow (`gh workflow run backend-deploy.yml --ref main`): tests → staging → smoke → prod → smoke, alert issue on failure. Use this skill only when that workflow cannot run (GitHub Actions down, a hotfix that must skip staging). A deploy here does not move the `deployed/<app>` tags, so the next workflow run may redeploy the same code once (harmless). Post-deploy, `infra/deploy/smoke.sh <quiz-agent|quiz-pack-api> <URL>` is the same smoke test the workflow runs.
+
 ## Targets
 
 | Target (arg) | App dir | Fly app | Token env var (repo-root `.env`) | Health URL | Processes |
@@ -90,7 +92,7 @@ curl -s https://<Fly app>.fly.dev/docs | head -c 100
 fly status -a <Fly app>
 ```
 - Every process in the target's **Processes** column must exist on the new version. `app` / `web` scale to zero (`min_machines_running = 0`), so `stopped` right after a deploy is normal idle — the health check above auto-starts them and is the real signal. `worker` (`pack-api`) has no HTTP service and must be `started`; a missing or stopped `worker` is a failed deploy — report it, never a green.
-- **#172 — session worker beta exception:** while custom packs run on the session worker (Fly secret `ORDER_QUEUE_NAME=quiz-pack:session` set, see `docs/setup/session-worker-mba.md`), the Fly `worker` must be **stopped** again after every deploy (`fly machine stop <id> -a quiz-pack-api`) — a deploy restarts it. Check with `fly secrets list -a quiz-pack-api`; if the secret is present, stop the worker and report that instead of a failed deploy.
+- **#207 — Fly worker is primary:** custom packs run on the Fly `worker` (the mba backup on the same queue only steps in when it is down), so after every deploy `worker` must be `started`. Never stop it to "hand orders to mba"; the old session-queue mode (`ORDER_QUEUE_NAME=quiz-pack:session`) is retired and the worker refuses to boot with it. Optional check: `GET /api/v1/admin/worker/heartbeat` (header `X-Admin-Key`) shows `heartbeat_age_s` as a number within ~1 min of the deploy.
 
 ## Report
 

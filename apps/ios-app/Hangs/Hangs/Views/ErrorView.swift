@@ -38,12 +38,16 @@ struct ErrorView: View {
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
             .defaultScrollAnchor(.center)
 
             ctaStack
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
+        // A container keeps its children's own identifiers: without it
+        // `error.root` was stamped on Try Again and Go Home too (#235.5 RS-38).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("error.root")
     }
 
@@ -93,7 +97,7 @@ struct ErrorView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Theme.Hangs.Spacing.sm)
-                .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", comment: "Accessibility label for the error screen: error title and description"))
+                .accessibilityLabel(String(localized: "Error: \(model.title). \(model.description)", bundle: .interface, locale: .interface, comment: "Accessibility label for the error screen: error title and description"))
                 .accessibilityIdentifier("error.description")
         }
     }

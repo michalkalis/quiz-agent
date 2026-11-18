@@ -50,6 +50,7 @@ from typing import Optional
 
 from langchain_core.messages import HumanMessage
 
+from app import audience as order_audience
 from app import feature_flags
 from quiz_shared.llm import factory as llm_factory
 
@@ -418,6 +419,16 @@ def _gate_v2_prompt(
     )
 
 
+def _with_audience(prompt: str, audience: str | None) -> str:
+    """#236: a child-band prompt gains the band's judge lens after its opening
+    paragraph (which describes the adult player the lens replaces). Every
+    other prompt is returned as is: adult scoring stays byte-identical."""
+    if not order_audience.is_child(audience):
+        return prompt
+    head, rest = prompt.split("\n\n", 1)
+    return f"{head}\n\n{order_audience.judge_lens(audience)}\n\n{rest}"
+
+
 def _response_text(response) -> str:
     """Plain text of a LangChain chat response.
 
@@ -729,8 +740,12 @@ class MultiModelScorer:
         topic: str = "General",
         possible_answers: Optional[dict] = None,
         semaphore: Optional[asyncio.Semaphore] = None,
+        audience: str | None = None,
     ) -> list[dict]:
         """Score a single question with all judges, one dimension per call.
+
+        ``audience`` (#236): a child band re-aims every judge prompt at that
+        band (`_with_audience`); None / "adults" leaves them untouched.
 
         Returns list of {model_name, scores, overall_score, reasoning}. Every
         entry's ``scores`` dict carries ``answer_brevity`` (always) and
@@ -765,9 +780,12 @@ class MultiModelScorer:
                 else [GATE_V2_DIMENSION_KEYS]
             )
             cluster_prompts = [
-                _gate_v2_prompt(
-                    question, options_block, answer_text, difficulty, topic,
-                    dim_keys,
+                _with_audience(
+                    _gate_v2_prompt(
+                        question, options_block, answer_text, difficulty, topic,
+                        dim_keys,
+                    ),
+                    audience,
                 )
                 for dim_keys in clusters
             ]
@@ -796,14 +814,17 @@ class MultiModelScorer:
         else:
             dim_items = list(SCORING_DIMENSIONS.items())
             prompts = {
-                dim_key: _CONTEXT_HEADER.format(
-                    question=question,
-                    options_block=options_block,
-                    answer=answer_text,
-                    difficulty=difficulty,
-                    topic=topic,
-                    dim_title=spec["title"],
-                    dim_rubric=spec["rubric"],
+                dim_key: _with_audience(
+                    _CONTEXT_HEADER.format(
+                        question=question,
+                        options_block=options_block,
+                        answer=answer_text,
+                        difficulty=difficulty,
+                        topic=topic,
+                        dim_title=spec["title"],
+                        dim_rubric=spec["rubric"],
+                    ),
+                    audience,
                 )
                 for dim_key, spec in dim_items
             }
@@ -872,12 +893,15 @@ class MultiModelScorer:
         self,
         questions: list[dict],
         sql_client=None,
+        audience: str | None = None,
     ) -> list[dict]:
         """Score a batch of questions with all judges, concurrently.
 
         Args:
             questions: List of {id, question, correct_answer, difficulty, topic}
             sql_client: Optional SQLClient to persist scores
+            audience: #236 — the order's audience; a child band is judged
+                for that band (see `score_question`)
 
         Returns:
             List of {id, model_scores: [{model_name, scores, overall_score}]}
@@ -892,6 +916,7 @@ class MultiModelScorer:
                 topic=q.get("topic", "General"),
                 possible_answers=q.get("possible_answers"),
                 semaphore=semaphore,
+                audience=audience,
             )
             return {"id": q.get("id", "unknown"), "model_scores": scores}
 

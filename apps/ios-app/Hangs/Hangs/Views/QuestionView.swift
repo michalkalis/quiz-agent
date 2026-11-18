@@ -26,6 +26,7 @@ struct QuestionView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.hangsCardMotion) private var cardMotion
+    @Environment(\.openURL) private var openURL
     @State private var showEndQuizConfirmation = false
     @State private var showQuizSettings = false
     /// #173: the ⋯ menu's "Rate question" row presents the #155 panel from here
@@ -79,6 +80,7 @@ struct QuestionView: View {
         static let bodySize: CGFloat = 17
         static let captionSize: CGFloat = 15
     }
+
     @FocusState private var isTextFieldFocused: Bool
     /// #171 Track E: the answer just submitted for THIS question, echoed by the
     /// evaluating overlay. Written at each submit site the screen owns (tapped MCQ
@@ -105,6 +107,18 @@ struct QuestionView: View {
                 let compact = geo.size.height <= 700
                 VStack(spacing: 0) {
                     topChrome
+                    // #224.8: over the question, not in its layout, so it never
+                    // moves the stem or the answers.
+                    Color.clear.frame(height: 0)
+                        .overlay(alignment: .top) {
+                            if let note = viewModel.quickSkipNote {
+                                QuickSkipNote(correctAnswer: note)
+                                    .padding(.top, Theme.Hangs.Spacing.xs)
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+                        .zIndex(1)
+                        .animation(.easeInOut(duration: 0.25), value: viewModel.quickSkipNote)
 
                     if viewModel.quizState == .awaitingQuestion {
                         awaitingQuestionBody
@@ -162,8 +176,7 @@ struct QuestionView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         // #188 G9 (D9): the same bar the result screen draws.
         .quizToolbar(
-            // #173 Track A: the toolbar mute is quiz-scoped — it must show the
-            // EFFECTIVE mute, not the persisted Settings preference.
+            // #208: the toolbar mute writes the persisted preference (see `isAudioMuted`).
             isMuted: viewModel.isAudioMuted,
             isPaused: viewModel.isPaused,
             isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
@@ -204,7 +217,8 @@ struct QuestionView: View {
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
                 noAnswerCaptured: viewModel.noAnswerCaptured,
-                autoConfirmHeld: viewModel.isAutoConfirmHeld
+                autoConfirmHeld: viewModel.isAutoConfirmHeld,
+                showsSpellingHint: viewModel.showsSpellingHint
             )
             // #188 G9: the answer sheet is part of the quiz — same cap.
             .dynamicTypeSize(...QuizTypeSize.screenCap)
@@ -343,7 +357,7 @@ struct QuestionView: View {
                     .strokeBorder(Theme.Hangs.Colors.error.opacity(0.35), lineWidth: 1)
             )
             .padding(.horizontal, Metrics.gutter)
-            .accessibilityLabel(String(localized: "Error: \(error)", comment: "Accessibility label for the in-quiz error banner"))
+            .accessibilityLabel(String(localized: "Error: \(error)", bundle: .interface, locale: .interface, comment: "Accessibility label for the in-quiz error banner"))
             .accessibilityIdentifier("question.errorBanner")
     }
 
@@ -640,12 +654,24 @@ struct QuestionView: View {
                 speechHeard: viewModel.isHearingAnswer,
                 inputLevel: viewModel.recordingInputLevel,
                 answerRemaining: viewModel.answerWindowRemaining,
-                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) }
+                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) },
+                commandsAccessory: viewModel.commandsAccessory(for: phase),
+                onTurnOnCommands: turnOnCommands,
+                onOpenSettings: openSystemSettings
             )
             .padding(.horizontal, Metrics.gutter)
             .padding(.top, Metrics.blockGap)
             .transition(.opacity)
         }
+    }
+
+    /// #237: the listen bar's "Turn on" / "Settings".
+    private func turnOnCommands() {
+        Task { await viewModel.turnOnVoiceCommandsFromListenBar() }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
     }
 
     /// #179 D3: the shared skip capsule — same shape, same word as the voice

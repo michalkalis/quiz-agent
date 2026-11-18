@@ -1,0 +1,34 @@
+# texts
+Hra spolu
+1/2
+M
+Michal
+J
+Jana
+20 s
+na odpoveď
+SCIENCE & NATURE
+Which planet has the most known moons?
+A
+Jupiter
+B
+Saturn
+C
+Uranus
+D
+Neptune
+Ostatní uvidia tvoju odpoveď až po otázke.
+# identifiers
+room.close
+room.rules.open
+question.progress
+question.counter
+room.question.players
+room.question.timer
+question.category
+room.readAgain
+question.text
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d

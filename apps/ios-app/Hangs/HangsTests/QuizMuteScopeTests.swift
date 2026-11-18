@@ -2,12 +2,11 @@
 //  QuizMuteScopeTests.swift
 //  HangsTests
 //
-//  #173 Track A: mute has two scopes and they must not be the same flag.
-//  The in-quiz button silences the RUNNING quiz (`quizMuteOverride`, dropped at
-//  quiz start); the Settings "Sound" toggle is a persisted preference
-//  (`settings.isMuted`). Sharing one flag is what let a mute tapped mid-drive
-//  silence the first question of the next quiz — the founder's TF screenshot,
-//  2026-09-06, where the opening question played mute under a live countdown.
+//  #208 (founder decision 2026-10-16): muting read-aloud from the quiz header
+//  holds for the next quiz until the player changes it. This deliberately
+//  reverses #173 Track A, where the header button wrote a per-quiz override
+//  that quiz start dropped. The founder now mutes once (a passenger, a call)
+//  and expects the app to stay quiet, and Settings to show the same switch.
 //
 
 import Foundation
@@ -15,52 +14,49 @@ import Foundation
 import Testing
 
 @MainActor
-private func makeMuteTestViewModel() -> QuizViewModel {
+private func makeMuteTestViewModel(store: MockPersistenceStore = MockPersistenceStore()) -> QuizViewModel {
     QuizViewModel(
         networkService: Fixtures.makeFullMockNetwork(),
         audioService: MockAudioService(),
-        persistenceStore: MockPersistenceStore(),
+        persistenceStore: store,
         silenceDetectionService: MockSilenceDetectionService()
     )
 }
 
-@Suite("Mute scope — in-quiz button vs Settings preference (#173)")
+@Suite("Mute scope — header button is the persisted preference (#208)")
 @MainActor
 struct QuizMuteScopeTests {
-    /// The bug itself: the in-quiz button is a per-quiz decision, so starting a
-    /// quiz must clear it. The first question is the one a driver is least able
-    /// to recover from if it is silent — the countdown runs either way.
-    @Test("starting a quiz clears a mute left over from the previous one")
-    func quizStartClearsInQuizMute() async throws {
+    /// WHY: the founder decision itself. A mute that quietly turned itself back
+    /// on at the next quiz start is what the TF test 2026-10-16 reported.
+    @Test("a mute from the quiz header holds for the next quiz")
+    func headerMuteSurvivesQuizStart() async throws {
         let viewModel = makeMuteTestViewModel()
 
-        await viewModel.toggleMute() // what the in-quiz mute button calls
+        await viewModel.toggleMute() // what the quiz header button calls
         #expect(viewModel.isAudioMuted, "the button must silence the quiz it was tapped in")
-        #expect(viewModel.settings.isMuted == false, "…without writing the persisted preference")
 
         await viewModel.startNewQuiz()
 
-        #expect(viewModel.isAudioMuted == false, "the next quiz must start audible")
+        #expect(viewModel.isAudioMuted, "the next quiz must start muted until the player changes it")
     }
 
-    /// The other half of the founder decision (2026-09-07): the Settings "Sound"
-    /// toggle is a PREFERENCE. If quiz start cleared that too, a user who turned
-    /// sound off would have it turned back on for them at every single quiz.
-    @Test("a mute chosen in Settings survives quiz start")
-    func settingsMuteSurvivesQuizStart() async throws {
-        let viewModel = makeMuteTestViewModel()
-        viewModel.settings.isMuted = true // what the Settings toggle writes
+    /// WHY: Settings › Sound and the header are ONE switch now. If the header
+    /// wrote anything else, Settings would show sound on while the quiz is mute.
+    @Test("the header mute is what Settings shows, and it is saved")
+    func headerMuteWritesPersistedSetting() async throws {
+        let store = MockPersistenceStore()
+        let viewModel = makeMuteTestViewModel(store: store)
 
-        await viewModel.startNewQuiz()
+        await viewModel.toggleMute()
 
-        #expect(viewModel.isAudioMuted, "Settings outlives the quiz that started under it")
+        #expect(viewModel.settings.isMuted, "Settings › Sound must reflect the header mute")
+        await pumpUntil({ store.loadSettings().isMuted }, "the header mute must reach the saved settings")
     }
 
-    /// The override — not the persisted flag — is what the playback guards read:
-    /// an in-quiz UNmute has to beat a persisted mute, or the button would look
-    /// dead on a device whose Settings toggle is off.
-    @Test("the in-quiz button can unmute a quiz started under a persisted mute")
-    func inQuizUnmuteBeatsPersistedMute() async throws {
+    /// WHY: the way back has to work from the same button, or a player who
+    /// muted once is stuck digging through Settings.
+    @Test("the header button unmutes a quiz started under a saved mute, for good")
+    func headerUnmuteClearsPersistedMute() async throws {
         let viewModel = makeMuteTestViewModel()
         viewModel.settings.isMuted = true
         await viewModel.startNewQuiz()
@@ -68,6 +64,6 @@ struct QuizMuteScopeTests {
         await viewModel.toggleMute()
 
         #expect(viewModel.isAudioMuted == false)
-        #expect(viewModel.settings.isMuted, "the preference is untouched — the next quiz is quiet again")
+        #expect(viewModel.settings.isMuted == false, "the next quiz is audible again too")
     }
 }

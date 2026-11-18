@@ -1,0 +1,1394 @@
+{
+ "o-cesku": [
+  {
+   "id": "e8d2941c-f4fa-4049-bda7-75203b9ba67f",
+   "q": "Největší lisovna vinylových desek na světě nestojí v Americe ani v Británii. Ve které zemi ji najdeme?",
+   "a": "Česko",
+   "story": "Firma GZ Media v Loděnici u Berouna je největším výrobcem vinylů na světě. Desky odtud míří k velkým světovým vydavatelstvím, takže leckterá deska zahraniční hvězdy vznikla kousek od Prahy.",
+   "source": "https://www.analogplanet.com/content/analogplanet-tours-gz-media-worlds-largest-record-pressing-plant"
+  },
+  {
+   "id": "17a04a10-42d0-4090-a467-f2bd58ce3e06",
+   "q": "Ještě na jaře 1939 se v Čechách a na Moravě jezdilo vlevo, stejně jako dnes v Británii. Kdo nebo co tehdy přinutilo řidiče přejet ze dne na den doprava?",
+   "a": "Německá okupace",
+   "story": "Přechod doprava sice Československo plánovalo už dřív, ale nakonec ho narychlo provedli nacisté po obsazení země v březnu 1939. Jejich kolony jezdily vpravo a nechtěly se srážet s domácími řidiči.",
+   "source": "https://www.e15.cz/zahranicni/v-britanii-se-jezdi-vlevo-vite-proc-v-cesku-prechod-do-praveho-pruhu-urychlili-nemci-1328439"
+  },
+  {
+   "id": "5ac96e6d-8cd3-4ac2-ac72-339b7471e70c",
+   "q": "Písnička Jožin z bažin od Ivana Mládka vznikla v 70. letech, ale v roce 2008 se nečekaně stala virálním hitem v jedné sousední zemi, kde ji pak zpívaly davy na koncertech. Ve které?",
+   "a": "Polsko",
+   "story": "Video se bleskově šířilo polským internetem a Mládek pak v Polsku vyprodával koncerty. Jožin tam dodnes patří k nejznámějším českým písničkám.",
+   "source": "https://en.wikipedia.org/wiki/Jo%C5%BEin_z_ba%C5%BEin"
+  },
+  {
+   "id": "9baf6fad-356d-4bed-baa5-3ebf2fa186f6",
+   "q": "Vodovodní baterie nad umyvadlem má v češtině zdrobnělé jméno po jednom domácím zvířeti. Po kterém?",
+   "a": "Po kohoutovi",
+   "story": "Kohoutek je zdrobnělina od kohouta. Staré výpustě na sudech a nádržích mívaly rukojeť ve tvaru kohouta nebo jeho hřebínku a stejně tak Němci dodnes říkají kohoutku Hahn.",
+   "source": "https://cs.wiktionary.org/wiki/kohoutek"
+  },
+  {
+   "id": "f1afe80f-8ea1-47cc-bf37-a91f3a1d8666",
+   "q": "Nejhlubší známá zatopená propast na světě není v Mexiku ani v Karibiku, ale na Moravě. Nese jméno nedalekého města. Kterého?",
+   "a": "Hranice",
+   "story": "Jde o Hranickou propast. Podvodní robot do ní sjel přes čtyři sta metrů pod hladinu a dno stejně nenašel.",
+   "source": "https://en.wikipedia.org/wiki/Hranice_Abyss"
+  },
+  {
+   "id": "5bc442fb-d753-441b-a273-993218806d38",
+   "q": "Česku se říká střecha Evropy, protože řeky z něj téměř jen odtékají. Do kolika různých moří nakonec doteče voda, která naprší na české území?",
+   "a": "Do tří",
+   "story": "Labe ji nese do Severního moře, Odra do Baltu a Morava přes Dunaj až do Černého moře. Na hoře Klepý u Králického Sněžníku se dokonce dešťová voda dělí mezi všechna tři moře najednou, proto se jí říká Trojmořský vrch.",
+   "source": "https://csu.gov.cz/produkty/10n1-05-_2005-uzemi_a_podnebi___metodika"
+  },
+  {
+   "id": "682864b3-9356-46db-b496-06605e6df995",
+   "q": "Olomoucké tvarůžky se navzdory názvu nevyrábějí v Olomouci. Ve kterém městě na Hané vznikají?",
+   "a": "Loštice",
+   "story": "Výroba se v Lošticích drží už od devatenáctého století a město má dokonce vlastní Muzeum Olomouckých tvarůžků.",
+   "source": "https://www.kudyznudy.cz/aktuality/mesto-lostice-a-olomoucke-tvaruzky-chystaji-lostic"
+  },
+  {
+   "id": "4af0f85c-b11e-4480-99df-5b364fa6ad69",
+   "q": "Slovo brambory vzniklo z názvu německé země, odkud k nám tyto hlízy kdysi přišly. Která země to byla?",
+   "a": "Braniborsko",
+   "story": "Brambory k nám přicházely z Braniborska, a tak se jim říkalo braniborky, z čehož časem vznikly brambory. Na Moravě se proto dodnes drží jiné názvy, třeba kobzole nebo zemáky.",
+   "source": "https://en.wiktionary.org/wiki/brambor"
+  },
+  {
+   "id": "a4dd7c6b-f85a-4ac1-bd51-366d0ca849a7",
+   "q": "Obří hlava Franze Kafky u stanice metra Národní třída v Praze je složená z desítek vodorovných nerezových plátů. Co ty pláty neustále dělají?",
+   "a": "Otáčejí se",
+   "story": "Dvaačtyřicet plátů se otáčí každý jinak, takže se Kafkova tvář rozpadá a znovu skládá. Autor David Černý tak naráží na Kafkovu rozpolcenou osobnost.",
+   "source": "https://en.wikipedia.org/wiki/Head_of_Franz_Kafka"
+  },
+  {
+   "id": "d64dd39a-1a04-486b-85bd-babc5e248d68",
+   "q": "Jazykolam o třistatřiatřiceti stříbrných stříkačkách je pro cizince noční můrou. Obsahuje totiž hlásku, kterou kromě češtiny nemá skoro žádný jazyk na světě. Která hláska to je?",
+   "a": "Ř",
+   "story": "Hláska Ř je mezi jazyky světa mimořádně vzácná, a tak se ji cizinci učí celé měsíce. I české děti ji často zvládnou až jako jednu z posledních, třeba s pomocí logopeda.",
+   "source": "https://www.frontiersin.org/journals/communication/articles/10.3389/fcomm.2021.807995/epub"
+  },
+  {
+   "id": "40816a77-4738-4222-b65e-e7beb8a96ea9",
+   "q": "V Praze se jezdí tramvají, v Brně šalinou. To slovo vzniklo zkomolením nápisu, který kdysi býval na brněnských tramvajích. V jakém jazyce ten nápis byl?",
+   "a": "V němčině",
+   "story": "Na vozech stálo „elektrische Linie“, tedy elektrická linka. Z brněnského „elektrišelinie“ se časem zbylo jen „šalina“.",
+   "source": "https://en.wikipedia.org/wiki/Trams_in_Brno"
+  },
+  {
+   "id": "cb671820-d1bc-4944-9d97-fb7ca114acd3",
+   "q": "České bankovky nejsou stejně velké. Čím vyšší hodnota, tím je bankovka delší. Komu má tento rozdíl hlavně pomoct?",
+   "a": "Nevidomým a slabozrakým",
+   "story": "Délku bankovky lze změřit prsty, takže člověk, který nevidí, pozná její hodnotu i bez čtení. Pomáhají k tomu také hmatové značky vytištěné na papíře.",
+   "source": "https://www.cnb.cz/cs/bankovky-a-mince/bankovky/1000-kc"
+  },
+  {
+   "id": "1936da1a-dae7-498e-92fb-91a57f781436",
+   "q": "Slovo robot proslavila hra R.U.R. z roku 1920. Její autor ale sám přiznával, že slovo nevymyslel on. Kdo ho tedy vymyslel?",
+   "a": "Josef Čapek",
+   "story": "Karel Čapek chtěl umělé dělníky původně nazvat labory, ale bratr Josef, malíř, mu poradil slovo robot. Karel to později sám popsal v novinách.",
+   "source": "https://en.wikipedia.org/wiki/R.U.R."
+  },
+  {
+   "id": "487e3392-9798-4a79-b029-5bc06121ee8a",
+   "q": "V roce 1843 si ředitel místního cukrovaru Jakub Kryštof Rad nechal patentovat vynález, který dnes používá celý svět: kostkový cukr. Ve kterém městě na pomezí jižních Čech a Moravy ho dodnes připomíná kamenný pomník ve tvaru kostky?",
+   "a": "Dačice",
+   "story": "Před Radovým vynálezem se cukr prodával v homolích, které se musely pracně sekat. Dačice se tak staly rodištěm kostky cukru a dodnes se tím rády chlubí.",
+   "source": "https://www.turistika.cz/mista/dacice"
+  },
+  {
+   "id": "ccc323b7-c1ed-49a4-9989-ddff75c5d08d",
+   "q": "Z jaké dětské stavebnice sestavil Otto Wichterle přístroj, na kterém o Vánocích 1961 doma odlil první měkké kontaktní čočky?",
+   "a": "Merkur",
+   "story": "Přístroj poháněl dynamem z jízdního kola a z jeho odstředivého lití vznikla metoda, kterou se pak měkké čočky vyráběly ve velkém.",
+   "source": "https://www.kudyznudy.cz/ceska-nej/vedecke/kontaktni-cocky"
+  },
+  {
+   "id": "c5ceef8d-7c36-4008-94fa-c349ded66b4d",
+   "q": "Na vrcholu Sněžky stojí malá dřevěná stavba, nejvýše položená svého druhu v celém Česku. Dostanete tam razítko a odtud se vydá na cestu váš pohled domů. Co to je?",
+   "a": "Pošta",
+   "story": "Je to Česká poštovna ve výšce 1 603 metrů. Pohled z ní je nejvýše odeslaným pozdravem, jaký můžete v Česku poslat.",
+   "source": "https://www.novinky.cz/clanek/cestovani-postovna-na-snezce-prejde-pod-jizerky-40305664"
+  },
+  {
+   "id": "32573016-621e-46bf-ac4f-be723b851e96",
+   "q": "V jedné české firemní budově z třicátých let se dochovala ředitelská kancelář, která je zároveň výtahem a jezdí i s ředitelem mezi patry. Ve kterém městě ji najdete?",
+   "a": "Zlín",
+   "story": "Pojízdnou kancelář si nechal postavit Jan Antonín Baťa v takzvaném mrakodrapu, Budově 21, dnešním sídle Zlínského kraje. Mohl tak dohlížet na kterékoli oddělení, aniž by opustil svůj stůl.",
+   "source": "https://www.turistika.cz/mista/batuv-mrakodrap-21-budova/detail"
+  },
+  {
+   "id": "0cddb0b3-00c6-4d3c-8bc7-5b096314465c",
+   "q": "Nejvyšší bod Česka zná každý. Ale u které obce, kde Labe opouští republiku, leží s pouhými 115 metry nad mořem náš nejnižší bod?",
+   "a": "Hřensko",
+   "story": "Hřensko v Děčínském okrese je zároveň vstupní branou do Českého Švýcarska, takže nejnižší místo země leží kousek od Pravčické brány.",
+   "source": "https://www.kudyznudy.cz/ceska-nej/zemepisne/hrensko"
+  },
+  {
+   "id": "204a1da7-a74f-48cc-87cf-a538e35caf33",
+   "q": "V anketě Největší Čech v roce 2005 by podle počtu hlasů zvítězil Jára Cimrman, přesto byl z hodnocení vyřazen. Proč?",
+   "a": "Je smyšlená postava",
+   "story": "Génius Cimrman je výmysl Zdeňka Svěráka a Ladislava Smoljaka. Pravidla ankety připouštěla jen skutečné osobnosti, a tak vyhrál Karel IV.",
+   "source": "https://cesky.radio.cz/kdo-bude-nejvetsim-cechem-8098647"
+  },
+  {
+   "id": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+   "q": "Který hrdina českých večerníčků se v roce 2011 podíval do vesmíru na palubě amerického raketoplánu Endeavour?",
+   "a": "Krtek",
+   "story": "Plyšového Krtka vzal s sebou astronaut Andrew Feustel, jehož manželka má české kořeny, a Krtek tak strávil dva týdny na oběžné dráze.",
+   "source": "https://english.radio.cz/node/8565035"
+  }
+ ],
+ "filmy-a-serialy": [
+  {
+   "id": "700529fe-b0d1-4ca6-bd47-33e29fd1194f",
+   "q": "Pohádka Tři oříšky pro Popelku k Vánocům neodmyslitelně patří nejen v Česku. Ve které severské zemi ji televize vysílá každé Vánoce už od sedmdesátých let a je tam národní tradicí?",
+   "a": "Norsko",
+   "story": "Norové ji znají jako Tre nøtter til Askepott. Když ji televize NRK jednou chtěla vynechat, diváci se tak bouřili, že zůstala ve vysílání.",
+   "source": "https://sv.wikipedia.org/wiki/Askungen_och_de_tre_n%C3%B6tterna"
+  },
+  {
+   "id": "7ead8f3a-ee0d-5f43-8dc7-4b1bfb9ba871",
+   "q": "Thriller Psycho z roku 1960 od Alfreda Hitchcocka je proslulý scénou ve sprše. Prolomil však i druhé hollywoodské koupelnové tabu a údajně se stal prvním velkým americkým filmem, který na plátně ukázal skutečné používání jednoho běžného zařízení. O jaké běžné zařízení šlo?",
+   "a": "Splachovací záchod",
+   "story": "Hollywoodské konvence slušnosti držely záchody mimo plátno po desetiletí, takže záběr spláchnutí, při němž se v ději likvidují důkazy, diváky v roce 1960 skutečně znepokojil.",
+   "source": "https://en.wikipedia.org/wiki/Psycho_(1960_film)"
+  },
+  {
+   "id": "f6d2289b-2aa4-4e1b-a0a8-ecb04c5973bd",
+   "q": "Který herec pracoval jako truhlář, než dostal roli Hana Sola v původních Hvězdných válkách?",
+   "a": "Harrison Ford",
+   "story": "Ford řekl, že ho nabídka role dost překvapila. Jeho truhlářské dovednosti mu prý pomohly získat práci ve studiu, kde si ho všimli.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "560adff6-69b4-48eb-aa9a-87584f02741a",
+   "q": "Který film z roku 1995 byl prvním celovečerním snímkem vytvořeným výhradně počítačovou animací?",
+   "a": "Toy Story",
+   "story": "Debutový celovečerní film studia Pixar vznikal zhruba čtyři roky a díky kovbojské panence a vesmírnému strážci odstartoval novou éru animace.",
+   "source": "https://www.oscars.org/collection-highlights/toy-story"
+  },
+  {
+   "id": "3b139bd6-4848-4ed4-9ded-1f5aef48ae11",
+   "q": "Jakým druhem ryby jsou v pixarovském filmu Hledá se Nemo Nemo a jeho otec Marlin?",
+   "a": "Klaun očkatý",
+   "story": "Klauni očkatí žijí mezi žahavými chapadly mořských sasanek, což je přesně místo, kde má rodinka z filmu svůj domov.",
+   "source": "https://en.wikipedia.org/wiki/Finding_Nemo"
+  },
+  {
+   "id": "370bd6d1-9b49-4661-af33-d4fde066cfad",
+   "q": "Ve kterém slavném francouzském filmu hlavní hrdinka tajně pošle otcova zahradního trpaslíka na cesty po světě a otec pak dostává poštou jeho fotky u slavných památek?",
+   "a": "Amélie z Montmartru",
+   "story": "Amélie tak chtěla přimět svého zapšklého otce, aby sám konečně vyrazil na cesty. Žert s cestujícím trpaslíkem se po filmu stal populární i ve skutečnosti.",
+   "source": "https://en.wikipedia.org/wiki/Amélie"
+  },
+  {
+   "id": "8d446678-67e8-4cd5-9581-bcae75b8b7cb",
+   "q": "V seriálu Stranger Things hrají kluci ve sklepě Dungeons & Dragons a příšeru z jiného světa pojmenují podle mocného démona z téhle hry. Jak jí říkají?",
+   "a": "Demogorgon",
+   "story": "V D&D je Demogorgon démonický princ se dvěma hlavami připomínajícími paviána. Díky seriálu se z postavy, kterou znali jen hráči, stala jedna z nejslavnějších příšer současné popkultury.",
+   "source": "https://www.mentalfloss.com/article/87800/otherworldly-history-demogorgon"
+  },
+  {
+   "id": "545b5464-0473-449c-b146-47b3c505b977",
+   "q": "Jeden ze zakladatelů freerunningu, Francouz Sébastien Foucan, předvedl v jedné bondovce šílenou honičku po stavebních jeřábech. Který herec ho jako James Bond pronásledoval?",
+   "a": "Daniel Craig",
+   "story": "Šlo o Casino Royale z roku 2006, Craigovu první bondovku. Velká část filmu se točila v Česku a Karlovy Vary v něm hrály Černou Horu.",
+   "source": "https://commanderbond.net/3081/sebastien-foucan-hired-for-casino-royale.html"
+  },
+  {
+   "id": "c65a16ad-8def-5e03-bb77-edcff209d1f8",
+   "q": "Který herec získal v roce 2023 Oscara za nejlepší mužský herecký výkon ve filmu 'Velryba', ale hrál také v hrané komedii 'George z džungle' z roku 1997, kde se v bederní roušce houpal na lianách?",
+   "a": "Brendan Fraser",
+   "story": "Fraserovo nadání pro fyzickou komiku ve filmu 'George z džungle' a v sérii 'Mumie' z něj v 90. letech udělalo akční hvězdu, než mu o desítky let později vynesla akademické zlato ceněná dramatická role.",
+   "source": "https://www.britannica.com/biography/Brendan-Fraser"
+  },
+  {
+   "id": "fa6213a5-12b7-4694-a10d-9ba0bca13a61",
+   "q": "Mechanický žralok ve filmu Stevena Spielberga Čelisti dostal na place přátelskou přezdívku podle křestního jména Spielbergova právníka. Jak se žralok jmenoval?",
+   "a": "Bruce",
+   "story": "Bruce se ve slané vodě kazil tak často, že Spielberg byl nucen držet žraloka mimo obraz, což film učinilo mnohem děsivějším.",
+   "source": "https://www.newsweek.com/bruce-last-jaws-shark-got-his-name-spielbergs-lawyer-1549616"
+  },
+  {
+   "id": "c22b5dc1-439b-5c6b-beaa-dc20e11a7f0b",
+   "q": "V legendární scéně ve sprše z thrilleru Psycho Alfreda Hitchcocka z roku 1960 vypadala krev stékající do odpadu na černobílém filmu děsivě věrohodně. Jaký sladký kuchyňský výrobek to byl ve skutečnosti?",
+   "a": "Čokoládový sirup",
+   "story": "Na černobílém filmu vycházel čokoládový sirup tmavší a přesvědčivější než filmová umělá krev, a tak Hitchcockův štáb prostě lil do odpadu polevu na dezerty.",
+   "source": "https://en.wikipedia.org/wiki/Psycho_shower_scene"
+  },
+  {
+   "id": "cd124130-c9dd-5c66-9a8f-1863cef6be1d",
+   "q": "Který film získal více Oscarů: Titanic Jamese Camerona, nebo velkofilm Ben Hur z roku 1959?",
+   "a": "Ani jeden, mají jich stejně",
+   "story": "Oba velkofilmy získaly přesně jedenáct Oscarů, takže Titanic mohl rekord, který Ben Hur držel téměř čtyřicet let, pouze vyrovnat, a to i přesto, že patnáct týdnů v řadě vládl americkým kinům a vydělal přes dvě celé jedna miliardy dolarů.",
+   "source": "https://www.britannica.com/biography/James-Cameron"
+  },
+  {
+   "id": "956c4007-bd09-510b-b7c4-8c7556a155d9",
+   "q": "První verze scénáře k jedné slavné upírské filmové sáze líčila hlavní hrdinku jako hvězdnou sportovkyni, kterou na vodních skútrech pronásleduje FBI. O kterou filmovou ságu šlo?",
+   "a": "Twilight",
+   "story": "Režisérka Catherine Hardwicke tuto akční verzi scénáře zavrhla s tím, že s knihou neměla nic společného, a vrátila film zpět k náladové romanci, která odstartovala miliardovou filmovou sérii.",
+   "source": "https://www.eonline.com/photos/29542/30-surprising-secrets-about-the-twilight-franchise-revealed"
+  },
+  {
+   "id": "d51d048f-791d-42d0-8c21-5430ce568288",
+   "q": "Bezstarostná píseň 'Hakuna Matata' ze Lvího krále má název podle skutečného spojení, které znamená 'žádné starosti'. Ze kterého afrického jazyka toto spojení pochází?",
+   "a": "Svahilština",
+   "story": "Svahilština se používá ve východní Africe, včetně Keni a Tanzanie, jejichž savany inspirovaly prostředí filmu.",
+   "source": "https://en.wikipedia.org/wiki/Hakuna_matata"
+  },
+  {
+   "id": "0b49491a-a0bc-486f-b23a-6941ce36c0b5",
+   "q": "Který český zpěvák nazpíval německou úvodní píseň k seriálu Včelka Mája, kterou si dodnes broukají miliony Němců?",
+   "a": "Karel Gott",
+   "story": "Karel Gott nazpíval „Die Biene Maja“ v roce 1976 a v Německu patří k jeho nejznámějším písním. Němci mu přezdívali „zlatý hlas z Prahy“.",
+   "source": "https://en.wikipedia.org/wiki/Die_Biene_Maja_(song)"
+  },
+  {
+   "id": "bd5e0d88-f829-4450-b36b-603ae1cc195d",
+   "q": "Zasněžený zámek, kam Popelka ve Třech oříšcích pro Popelku přijíždí na ples, ve skutečnosti nestojí v Česku. Ve které zemi ho najdeme?",
+   "a": "Německo",
+   "story": "Je to zámek Moritzburg u Drážďan. Každou zimu se tam koná výstava věnovaná právě Popelce.",
+   "source": "https://www.novinky.cz/clanek/vase-zpravy-moritzburg-proslavila-pohadka-o-popelce-naleznete-zde-take-perovou-komnatu-nebo-jediny-sasky-majak-309601"
+  }
+ ],
+ "hudba": [
+  {
+   "id": "da500a5a-96a3-4c13-93bd-e548c5a4a2c2",
+   "q": "Průlomový hit skupiny Nirvana 'Smells Like Teen Spirit' získal svůj název podle nápisu, který Kurtu Cobainovi načmárala na zeď kamarádka. Cobain si to neuvědomil, ale nápis odkazoval na značku jednoho běžného výrobku. O jaký výrobek šlo?",
+   "a": "Deodorant",
+   "story": "Kathleen Hanna napsala, že Kurt voní po Teen Spirit, deodorantu, který používala jeho přítelkyně, a Cobain to pochopil jako revoluční heslo.",
+   "source": "https://en.wikipedia.org/wiki/Teen_Spirit_(deodorant)"
+  },
+  {
+   "id": "8db17675-9cab-40f6-8c59-9608656a514f",
+   "q": "Scratching, tedy rytmické posouvání desky pod jehlou tam a zpátky, prý vzniklo náhodou v pokoji jednoho dospívajícího DJe v Bronxu. Musel totiž rychle přidržet desku rukou, protože do pokoje vtrhl někdo, kdo nesnášel hlasitou hudbu. Kdo to byl?",
+   "a": "Jeho máma",
+   "story": "Grand Wizzard Theodore vypráví, že na něj máma křičela, ať to ztlumí. Zatímco ho kárala, posouval rukou deskou sem a tam a ten zvuk se mu zalíbil. Tak vznikl základ hip hopového DJingu.",
+   "source": "https://en.wikipedia.org/wiki/Grand_Wizzard_Theodore"
+  },
+  {
+   "id": "590cb1c4-b836-4ba9-a50b-05a9a8414e60",
+   "q": "Paul McCartney měl melodii k písni 'Yesterday' dávno před textem. Než vznikl skutečný text, zpíval ji pod provizorním názvem pojmenovaným podle snídaňového jídla. Jak zněl tento název?",
+   "a": "Míchaná vejce",
+   "story": "McCartney se mu melodie zdála ve snu, a protože se bál, že ji někomu ukradl, zpíval celé měsíce 'Scrambled eggs, oh my baby how I love your legs' ('Míchaná vejce, ach zlato, jak já miluju tvoje nohy'), než se konečně objevilo 'Yesterday'.",
+   "source": "https://www.esquiremag.ph/culture/music/beatles-yesterday-history-a1926-20190913-lfrm"
+  },
+  {
+   "id": "66f94e4c-c854-4a86-84aa-bcdddbfcf88a",
+   "q": "Obrovský hit Whitney Houston z roku 1992, balada 'I Will Always Love You', byl napsán a poprvé nahrán už na začátku 70. let. Která country zpěvačka tuto píseň napsala a poprvé nahrála?",
+   "a": "Dolly Parton",
+   "story": "Parton ji napsala jako rozloučení se svým mentorem Porterem Wagonerem a verze Whitney Houston pro film Bodyguard z ní udělala jeden z nejprodávanějších singlů všech dob.",
+   "source": "https://en.wikipedia.org/wiki/I_Will_Always_Love_You"
+  },
+  {
+   "id": "2b1f9c75-d047-4cc8-94b9-e828ec5d2669",
+   "q": "Která legenda rock and rollu měla mrtvě narozené jednovaječné dvojče, které přišlo na svět 35 minut před ním a které později označoval za svého původního osobního strážce?",
+   "a": "Elvis Presley",
+   "story": "Elvis věřil, že jeho dvojče Jesse mu bylo po celý život duchovním průvodcem.",
+   "source": "https://www.factinate.com/people/42-little-known-facts-famous-people"
+  },
+  {
+   "id": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+   "q": "Když v srpnu 1981 zahájila MTV úplně poprvé vysílání, záměrně začala písní skupiny The Buggles, jejíž název přesně předpověděl, co kanál udělá se starším médiem. O kterou píseň šlo?",
+   "a": "Video Killed the Radio Star",
+   "story": "MTV ji zvolila jako drzé prohlášení o svém poslání, vůbec první klip na první hudební videokanálu oznámil, že video zabilo rozhlasovou hvězdu.",
+   "source": "https://en.wikipedia.org/wiki/Video_Killed_the_Radio_Star"
+  },
+  {
+   "id": "a22a3ae5-255d-4723-a9af-1f4e797dc8f1",
+   "q": "Karel Gott vystoupil v roce 1968 na soutěži Eurovize. Kterou zemi tam zastupoval?",
+   "a": "Rakousko",
+   "story": "Československo se Eurovize neúčastnilo, a tak Gott zpíval v Londýně za Rakousko německy píseň Tausend Fenster od Uda Jürgense.",
+   "source": "https://en.wikipedia.org/wiki/Austria_in_the_Eurovision_Song_Contest_1968"
+  },
+  {
+   "id": "8a79020d-adbd-4051-a97d-eb44f78e441a",
+   "q": "Tomorrowland je obří festival elektronické hudby, který se koná každý červenec během dvou víkendů. Ve které zemi se tento festival odehrává?",
+   "a": "Belgie",
+   "story": "Festival je tak populární, že je rozdělen do dvou celých červencových víkendů, a fanoušci na něj létají ze všech kontinentů.",
+   "source": "https://faq.tomorrowland.com/hc/en-us/articles/4402621418132-Where-and-when-will-Tomorrowland-Belgium-2026-take-place"
+  },
+  {
+   "id": "790fa873-814c-4f57-ae50-7e83d56ea958",
+   "q": "Moshpity na Brutal Assaultu, největším českém metalovém festivalu, se točí uvnitř vojenské pevnosti z 18. století. Podle kterého panovníka se ta pevnost jmenuje?",
+   "a": "Josef II.",
+   "story": "Festival se koná v Josefově u Jaroměře, který dal postavit císař Josef II. Postavil i Terezín, ale ten pojmenoval po své matce Marii Terezii.",
+   "source": "https://www.kudyznudy.cz/akce/brutal-assault-1"
+  },
+  {
+   "id": "ef458c41-a541-42e1-8950-8ccf4aa7b157",
+   "q": "Než začne koncert, celý symfonický orchestr ladí podle jediného tónu, který zahraje jeden dechový nástroj. Který to je?",
+   "a": "Hoboj",
+   "story": "Hoboj má velmi stálé ladění a pronikavý zvuk, který je slyšet přes celý orchestr. Proto se všichni ladí podle jeho tónu A.",
+   "source": "https://www.rockfordsymphony.com/faqs/why-does-the-orchestra-tune-to-the-oboe"
+  },
+  {
+   "id": "afecd933-0fe3-4893-b332-46b046bff230",
+   "q": "Ve kterém městě složil Antonín Dvořák svou nejslavnější symfonii Z Nového světa?",
+   "a": "V New Yorku",
+   "story": "Dvořák tam v letech 1892 až 1895 řídil Národní konzervatoř a symfonie měla premiéru v Carnegie Hall v prosinci 1893.",
+   "source": "https://en.wikipedia.org/wiki/Symphony_No._9_(Dvo%C5%99%C3%A1k)"
+  },
+  {
+   "id": "13d0f6e8-8f72-4755-8708-b34baa04dd04",
+   "q": "Symfonická báseň Vltava je jen jednou částí Smetanova cyklu Má vlast. Z kolika částí se celý cyklus skládá?",
+   "a": "Šest",
+   "story": "Vyšehrad, Vltava, Šárka, Z českých luhů a hájů, Tábor a Blaník. Celý cyklus každoročně zahajuje festival Pražské jaro 12. května, v den výročí Smetanovy smrti.",
+   "source": "https://en.wikipedia.org/wiki/Má_vlast"
+  },
+  {
+   "id": "d437176e-7a03-4d46-8ef8-e9657e1166b3",
+   "q": "Česká hymna Kde domov můj poprvé zazněla v roce 1834 jako píseň v divadelní hře. Jak se ta hra jmenuje?",
+   "a": "Fidlovačka",
+   "story": "Ve hře Josefa Kajetána Tyla ji zpíval slepý houslista Mareš. Hudbu složil František Škroup a píseň byla populárnější než celá hra.",
+   "source": "https://en.wikipedia.org/wiki/Kde_domov_můj"
+  },
+  {
+   "id": "aa7589bd-a0cc-407f-820c-ea8c3b60d50c",
+   "q": "Punkový tanec pogo, při kterém lidé pod pódiem skáčou rovně nahoru a dolů a vrážejí do sebe, dostal jméno podle dětské hračky. Podle jaké?",
+   "a": "Skákací tyč",
+   "story": "Anglicky se jí říká pogo stick: je to pružinová tyč, na které se skáče jako klokan. Za vynálezce tance se často označuje Sid Vicious ze Sex Pistols.",
+   "source": "https://en.wikipedia.org/wiki/Pogo_(dance)"
+  },
+  {
+   "id": "d192e405-c28d-4d82-807f-bd48e943fae2",
+   "q": "Která česká lidovka z tanečních zábav obletěla svět pod anglickým názvem Beer Barrel Polka?",
+   "a": "Škoda lásky",
+   "story": "Vejvodovu polku hráli Glenn Miller i Andrews Sisters. Na konci druhé světové války ji zpívali vojáci po celém světě, aniž tušili, že pochází ze Zbraslavi.",
+   "source": "https://en.wikipedia.org/wiki/Beer_Barrel_Polka"
+  },
+  {
+   "id": "909b275d-7ebe-40f3-b483-c5b0c85e983c",
+   "q": "Strakonice zná každý díky motorkám ČZ a fezům. Které lidové hudební nástroje tam mají svůj mezinárodní festival a dokonce i slavného divadelního hrdinu od Josefa Kajetána Tyla?",
+   "a": "Dudy",
+   "story": "Strakonice jsou české hlavní město dud. Koná se tu Mezinárodní dudácký festival a odtud pochází i Švanda z Tylovy hry Strakonický dudák.",
+   "source": "https://www.geocaching.com/geocache/GC9P6KR"
+  },
+  {
+   "id": "d3d6c071-44a6-4f5a-a365-845a12a9216b",
+   "q": "Největší český teknival se jmenoval CzechTek. Samotné slovo teknival vzniklo spojením dvou známých slov. Kterých?",
+   "a": "Techno a festival",
+   "story": "Teknival je zkrátka technový festival. Psaní s „k“ pochází z free party scény ve Francii a Británii, kde se tomuto syrovému stylu říká tekno.",
+   "source": "https://en.wikipedia.org/wiki/Teknival"
+  },
+  {
+   "id": "16a8b0b8-3dcb-4373-b0f4-fa282cedfd3c",
+   "q": "Hit Michaela Jacksona z roku 1983 'Beat It' obsahuje strhující kytarové sólo od slavného rockového kytaristy, který nebyl uveden v titulcích alba a údajně to udělal zadarmo. Kdo to byl?",
+   "a": "Eddie Van Halen",
+   "story": "Producent Quincy Jones ho pozval do studia a on nahrál sólo na pár pokusů, zatímco jeho vlastní kapela byla mimo město, a nechtěl za to nic.",
+   "source": "https://www.etonline.com/how-eddie-van-halens-uncredited-guitar-solo-on-michael-jacksons-beat-it-came-to-be-154293"
+  },
+  {
+   "id": "da8efc8b-4521-5128-91dc-77f393653515",
+   "q": "Která skotská kapela měla svého vlastního megahitu z roku 1994 'Love Is All Around', ústřední písně z filmu Čtyři svatby a jeden pohřeb, tak plné zuby, že po 15 týdnech na prvním místě britské hitparády záměrně zastavila výrobu singlu?",
+   "a": "Wet Wet Wet",
+   "story": "Po patnácti týdnech v čele si kapela singl sama stáhla z prodeje, aby jeho jízdu zastavila, v éře CD se skutečně dalo přestat lisovat hit a nasměrovat fanoušky raději k albu.",
+   "source": "https://www.officialcharts.com/chart-news/the-songs-that-spent-the-longest-at-number-1__14522"
+  },
+  {
+   "id": "a7ee55ce-c7ce-4497-884b-1159ec5de6a3",
+   "q": "Polka zní jako ‚Polka z Polska', ale vznikla v Čechách. Od jakého obyčejného českého slova, které souvisí s jejím drobným krokem, se název nejčastěji odvozuje?",
+   "a": "Půlka",
+   "story": "Tanečníci dělají krátké poloviční kroky, a odtud podle nejrozšířenějšího výkladu ‚půlka'. Podle druhé teorie šlo o poctu Polákům po jejich povstání ve 30. letech 19. století.",
+   "source": "https://ct24.ceskatelevize.cz/clanek/kultura/polku-zrejme-vymyslela-ceska-sluzka-361823"
+  }
+ ],
+ "sport": [
+  {
+   "id": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+   "q": "James Naismith v roce 1891 přibil na balkon tělocvičny své první basketbalové koše. Byly to nádoby původně určené na ovoce. Na jaké ovoce byly tyto nádoby původně určené?",
+   "a": "Broskve",
+   "story": "Naismith přibil na zábradlí balkonu dva koše od broskví, a protože měly stále dno, musel po každém koši někdo míč vytáhnout ven.",
+   "source": "https://www.history.com/articles/how-a-canadian-invented-basketball"
+  },
+  {
+   "id": "dd48f18b-822e-4c7e-a631-ca90ec2a2f64",
+   "q": "Spoluzakladatel Nike Bill Bowerman hledal podrážku, která by na dráze lépe držela. Gumu proto nalil do kuchyňského spotřebiče své ženy. Do jakého?",
+   "a": "Vaflovač",
+   "story": "Ze zničeného vaflovače vznikla slavná „vaflová“ podrážka s čtverečkovaným vzorkem. Na ní Nike postavil jeden ze svých prvních hitů, model Waffle Trainer.",
+   "source": "https://history.com/this-day-in-history/nike-patent-waffle-sole-trainers-invented-in-waffle-iron"
+  },
+  {
+   "id": "46cd3c93-466b-4f86-b791-13294bf9ad16",
+   "q": "Jaký nápoj místo šampaňského tradičně vypije vítěz závodu Indianapolis 500 ve vítězném kruhu?",
+   "a": "Mléko",
+   "story": "Zvyk vznikl v roce 1936, kdy si vítěz Louis Meyer řekl o podmáslí, a dnes se jezdci dokonce předem registrují, zda chtějí plnotučné, polotučné (dvě procenta) nebo odtučněné mléko.",
+   "source": "https://www.indianapolismotorspeedway.com/history/where-tradition-never-stops/milk"
+  },
+  {
+   "id": "6bc8edd0-d43e-4afc-828d-b28658112e30",
+   "q": "Která týmová disciplína, dnes k vidění hlavně na školních sportovních dnech a vesnických slavnostech, rozdávala olympijské medaile na všech hrách od roku 1900 do roku 1920?",
+   "a": "Přetahování lanem",
+   "story": "Osmičlenná družstva přetahovala lano o olympijské zlato a v roce 1908 slavně zvítězil tým policistů z londýnské City po sporu o jejich těžké boty.",
+   "source": "https://en.wikipedia.org/wiki/List_of_Olympic_medalists_in_tug_of_war"
+  },
+  {
+   "id": "004ad87d-2d30-5387-8f15-d9326b5ab66e",
+   "q": "All England Club, dějiště wimbledonského turnaje od roku 1877, byl ve skutečnosti založen v roce 1868 kvůli úplně jiné hře na trávníku. O jakou hru šlo?",
+   "a": "Kroket",
+   "story": "Vznikl jako All England Croquet Club a trávníkový tenis k němu přibyl až o několik let později, kroket dodnes přežívá v plném oficiálním názvu areálu.",
+   "source": "https://en.wikipedia.org/wiki/All_England_Lawn_Tennis_and_Croquet_Club"
+  },
+  {
+   "id": "c0721e4a-298a-4fe8-ae31-ff8124c351c6",
+   "q": "Ve Wimbledonu musí tenisté hrát skoro celí v bílém. Pravidlo vzniklo už v 19. století. Co měla bílá barva skrýt?",
+   "a": "Pot",
+   "story": "Propocené skvrny na oblečení se ve viktoriánské Anglii považovaly za neslušné a na bílé látce jsou vidět nejméně. Proto i Kvitová a Vondroušová zvedaly wimbledonskou trofej v bílém.",
+   "source": "https://www.si.com/tennis/wimbledon-notoriously-strict-dress-code-players-fascinating-origin"
+  },
+  {
+   "id": "fd533f2a-2ce1-4b6b-9946-0e51b5a2e8d2",
+   "q": "Ester Ledecká na olympiádě v Pchjongčchangu 2018 vyhrála snowboardový paralelní obří slalom a k úžasu všech i jednu lyžařskou disciplínu, navíc na vypůjčených lyžích. Kterou?",
+   "a": "Super-G",
+   "story": "Vyhrála o jedinou setinu sekundy před Rakušankou Annou Veithovou na lyžích od Mikaely Shiffrinové. Stala se tak první ženou, která na jedné zimní olympiádě získala zlato ve dvou různých sportech.",
+   "source": "https://en.wikipedia.org/wiki/Ester_Ledecká"
+  },
+  {
+   "id": "906a921a-b216-442a-8bfe-15185f2e1a4b",
+   "q": "Kterou disciplínu běžel Emil Zátopek na olympiádě v Helsinkách roku 1952 poprvé v životě, a přesto v ní vyhrál?",
+   "a": "Maraton",
+   "story": "Ke zlatům na pět a deset kilometrů přidal i maratonské, a tento trojnásobný triumf na jedné olympiádě dodnes nikdo nezopakoval.",
+   "source": "https://en.wikipedia.org/wiki/Emil_Zátopek"
+  },
+  {
+   "id": "6f1b8bf3-b26e-43c5-94a3-d63ae4bd9702",
+   "q": "Základní skok na skateboardu, při kterém jezdec vyskočí i s prknem, aniž by ho chytil rukama, nese přezdívku floridského teenagera, který ho koncem 70. let vymyslel. Jak se ten skok jmenuje?",
+   "a": "Ollie",
+   "story": "Vynálezce se jmenoval Alan Gelfand a kamarádi mu říkali Ollie. Jeho přezdívka dnes zní na každém skateparku na světě.",
+   "source": "https://en.wikipedia.org/wiki/Alan_Gelfand"
+  },
+  {
+   "id": "e077522d-7fb7-4c7c-8aef-3c20e0b8b5ab",
+   "q": "Jedna z nejslavnějších surfařských vln v Evropě není u moře. Je to stojatá vlna na městské říčce Eisbach, na které surfaři léta jezdili přímo v centru. Ve kterém německém městě?",
+   "a": "Mnichov",
+   "story": "Vlna na Eisbachu se tvoří u mostu na okraji Anglické zahrady a voda tam proudí pořád proti surfaři, takže se dá „jezdit na místě“. Kolemjdoucí se na surfaře dívali přímo ze zábradlí.",
+   "source": "https://stadt.muenchen.de/news/eisbachwelle-wieder-zum-surfen-frei.html"
+  },
+  {
+   "id": "8a26c7f8-0661-4a1f-9237-5535b091e544",
+   "q": "Florbal se v českých tělocvičnách hraje tak dlouho, že ho spousta lidí považuje skoro za domácí sport. Ze které země ale moderní florbal se svými pravidly pochází?",
+   "a": "Švédsko",
+   "story": "Moderní florbal vznikl v 70. letech ve Švédsku, kde se mu říká innebandy. Dnes Švédové, Finové, Švýcaři a Češi patří k nejsilnějším florbalovým zemím světa.",
+   "source": "https://en.wikipedia.org/wiki/Floorball"
+  },
+  {
+   "id": "e159eaf3-f943-47dd-8db3-2f3eb9656f45",
+   "q": "Která země je jedinou, která hrála na každém mistrovství světa ve fotbale mužů od toho prvního v roce 1930?",
+   "a": "Brazílie",
+   "story": "Brazílii se vždy podařilo kvalifikovat, zatímco velmoci jako Německo, Itálie a Argentina alespoň jeden turnaj vynechaly.",
+   "source": "https://copaamerica.com/en/news/ecuador-brazil-world-cup-qualifiers-all-results"
+  },
+  {
+   "id": "5cb92722-870a-52c2-becc-083e45675cdf",
+   "q": "Podivně přesná maratonská vzdálenost 42,195 kilometru pochází z olympijských her v Londýně roku 1908, kdy byla trať prodloužena, aby závod mohl odstartovat na trávníku královského sídla. Které královské sídlo to bylo?",
+   "a": "Hrad Windsor",
+   "story": "Trasa vedla od hradu Windsor ke královské lóži na stadionu White City, a toto královské pohodlí se později stalo oficiální maratonskou vzdáleností po celém světě.",
+   "source": "https://en.wikipedia.org/wiki/Athletics_at_the_1908_Summer_Olympics_%E2%80%93_Men%27s_marathon"
+  },
+  {
+   "id": "57ceaede-c264-5627-9049-0dc65b66d3da",
+   "q": "Poslední olympijské zlaté medaile z čistého zlata se rozdávaly v roce 1912. Od té doby se vyrábějí téměř výhradně z jiného kovu a mají jen několikagramovou zlatou povrchovou vrstvu. O jaký kov jde?",
+   "a": "Stříbro",
+   "story": "Moderní olympijské zlaté medaile musí obsahovat alespoň 92,5 procenta stříbra a jsou pokryté asi šesti gramy čistého zlata, při roztavení by dnešní „zlato“ mělo cenu mnohem nižší, než by jeho sláva naznačovala.",
+   "source": "https://en.wikipedia.org/wiki/Olympic_medal"
+  },
+  {
+   "id": "0f015294-0b9c-4a69-a383-3f7b41bb76e4",
+   "q": "Vedoucí závodník Tour de France nosí žlutý dres. Jeho barva nebyla zvolena kvůli viditelnosti, ale byla okopírována. Podle čeho byla žlutá barva dresu okopírována?",
+   "a": "Podle papíru pořadatelských novin",
+   "story": "Závod založily a pořádaly sportovní noviny L'Auto, které se tiskly na žlutý papír, takže se dres vedoucího závodníka z roku 1919 stal pohyblivou reklamou ve stejném odstínu.",
+   "source": "https://www.smithsonianmag.com/history/original-tour-de-france-yellow-jersey-was-made-wool-180972664/"
+  },
+  {
+   "id": "2bf1fb8d-106c-4b44-a63b-eaee9147d74b",
+   "q": "Rudolf Dassler se ve 40. letech rozešel se svým bratrem Adim a založil vlastní značku sportovního oblečení, která dodnes sídlí ve stejném malém německém městě jako Adidas. Jak se tato značka jmenuje?",
+   "a": "Puma",
+   "story": "Spor rozdělil město Herzogenaurach tak hluboce, že si místní údajně nejdřív prohlédli, jaké boty má cizinec na nohou, a teprve pak s ním promluvili.",
+   "source": "https://en.wikipedia.org/wiki/Rudolf_Dassler"
+  },
+  {
+   "id": "11ebebbc-761d-4ca6-ac39-7559e16bbc93",
+   "q": "V Harrachově se pořádá závod Red Bull 400, ve kterém závodníci běží do kopce po skokanském můstku. Co znamená číslo 400 v jeho názvu?",
+   "a": "Délku trati v metrech",
+   "story": "Trať měří jen čtyři sta metrů, tedy jedno kolo na atletickém oválu. Protože ale vede až na vrchol můstku, nejstrmější úseky leckdo zdolává po čtyřech.",
+   "source": "https://en.wikipedia.org/wiki/Red_Bull_400"
+  },
+  {
+   "id": "28359125-fb21-47a7-98a9-1b18f404b4bc",
+   "q": "Na vesnickém fotbale zápas pískáním nekončí. Jak se žertem říká posezení hráčů a fanoušků v hospodě po utkání?",
+   "a": "Třetí poločas",
+   "story": "Dva poločasy se hrají na hřišti, ten třetí u piva, a často se při něm probírá víc než během zápasu. Podobný „třetí poločas“ znají i ragbisté po celém světě.",
+   "source": "https://cs.wiktionary.org/wiki/třetí_poločas"
+  },
+  {
+   "id": "ca3ceaac-3255-41ba-b453-187949a848b5",
+   "q": "Kdo vstřelil jediný gól ve finále olympijského hokejového turnaje v Naganu 1998 proti Rusku?",
+   "a": "Petr Svoboda",
+   "story": "Obránce Petr Svoboda trefil ve třetí třetině a Česko vyhrálo 1:0. Byl to jeho jediný gól na celém turnaji.",
+   "source": "https://en.wikipedia.org/wiki/Ice_hockey_at_the_1998_Winter_Olympics_%E2%80%93_Men%27s_tournament"
+  },
+  {
+   "id": "b56022d3-145e-4459-9548-f6bc1a3fb2e4",
+   "q": "Jaromír Jágr hraje celou kariéru s číslem 68. Na kterou historickou událost tím odkazuje?",
+   "a": "Okupace v roce 1968",
+   "story": "Číslo připomíná srpnovou invazi vojsk Varšavské smlouvy. Jágrův dědeček v témže roce zemřel ve vězení, kam se dostal jako sedlák odmítající kolektivizaci.",
+   "source": "https://en.wikipedia.org/wiki/Jaromír_Jágr"
+  }
+ ],
+ "jidlo": [
+  {
+   "id": "36473869-173e-4d62-be01-bd427cde8ecc",
+   "q": "Jedna italská banka proslule přijímá jako zástavu za úvěry bochníky sýra a nechává je zrát ve vlastních trezorech, dokud není dluh splacen. O který sýr se jedná?",
+   "a": "Parmigiano-Reggiano",
+   "story": "Credito Emiliano půjčuje výrobcům proti jejich bochníkům, které s postupným zráním získávají na hodnotě, a v případě nesplácení je rozprodá.",
+   "source": "https://edition.cnn.com/2026/05/02/food/italy-cheese-bank-parmigiano-reggiano-intl"
+  },
+  {
+   "id": "05296ad6-2be6-48ea-8fe5-4ed0a7ee7a84",
+   "q": "Většina proteinových nápojů, které se pijí v posilovnách, se vyrábí z tekuté zbytkové suroviny. Ta zbude při výrobě jedné obyčejné potraviny. Které?",
+   "a": "Sýr",
+   "story": "Je to syrovátka, která odteče při srážení mléka na sýr. Mlékárny ji dřív levně prodávaly jako krmivo pro prasata, dnes z ní kulturisté dělají drahé koktejly.",
+   "source": "https://en.wikipedia.org/wiki/Whey"
+  },
+  {
+   "id": "02a5fe1b-4296-4e3f-9a81-908db85e22fb",
+   "q": "Který francouzský výrobce automobilů vyrábí mlýnky na pepř už od 70. let 19. století a dodnes je prodává do restaurací?",
+   "a": "Peugeot",
+   "story": "Rodina Peugeotů začínala ve 40. letech 19. století s ocelovým nářadím a mlýnky na kávu, v roce 1874 přidala mlýnky na pepř a svůj první automobil postavila až o řadu let později.",
+   "source": "https://us.peugeot-saveurs.com/en_us/inspiration/history/"
+  },
+  {
+   "id": "63813a60-162c-4614-a666-849ab1d39793",
+   "q": "Než existovaly ledničky, muži v zimě vysekávali ze zamrzlých rybníků obrovské kvádry ledu a vozili je do hlubokých sklepů. Který podnik v obci jich spotřeboval zdaleka nejvíc?",
+   "a": "Pivovar",
+   "story": "Ležák potřebuje kvasit a zrát v chladu, proto si pivovary stavěly ledárny. Dobře uložený rybniční led v nich vydržel až do léta.",
+   "source": "https://www.kvasnyprumysl.cz/artkey/kpr-201407-0004_Historie_jundrovskych_ledaren_1_Od_zalozeni_ledaren_do_roku_1918.php"
+  },
+  {
+   "id": "d4b5806d-a905-493d-b858-671b2082136a",
+   "q": "Krabí tyčinky z běžného supermarketu většinou neobsahují skoro žádného kraba. Z čeho se hlavně vyrábějí?",
+   "a": "Z rybího masa",
+   "story": "Jde o surimi, tedy rozmělněné maso levných bílých ryb, nejčastěji tresky aljašské. Krabí chuť dodává aroma a červený proužek obarvení.",
+   "source": "https://energozrouti.cz/clanek/cesi-ji-jedi-ve-velkem-za-nizkou-cenou-teto-ryby-se-skryva-nechutna-pravda"
+  },
+  {
+   "id": "9969caa3-a747-4289-b8fd-3cbe8c4a6229",
+   "q": "Symbolu @ v e-mailu říkáme zavináč podle stočené naložené mořské ryby z lahůdek. O jakou rybu jde?",
+   "a": "Sleď",
+   "story": "Zavináč je stočený marinovaný sleď, často spíchnutý párátkem kolem okurky nebo cibule. Zakroucený tvar symbolu @ Čechům připomněl právě tuhle rybí ruličku.",
+   "source": "https://en.wikipedia.org/wiki/Rollmops"
+  },
+  {
+   "id": "0a4fd580-cb14-4cd2-95af-f26af33c12bc",
+   "q": "Pod jakým názvem se prodávalo kiwi, než ho novozélandští vývozci v roce 1959 přejmenovali?",
+   "a": "Čínský angrešt",
+   "story": "Rostlina pochází z Číny a vývozci chtěli přívětivější název, který by zněl více novozélandsky, a tak si vypůjčili jméno národního ptáka.",
+   "source": "https://nzhistory.govt.nz/chinese-gooseberry-becomes-kiwifruit"
+  },
+  {
+   "id": "00e29bed-accf-461e-826a-31e0c8520828",
+   "q": "Nejslavnější hvězdičkové hodnocení restaurací na světě uděluje průvodce, který byl založen v roce 1900. Jaký produkt měl tento průvodce pomáhat prodávat?",
+   "a": "Pneumatiky",
+   "story": "Bratři Michelinovi rozdávali průvodce francouzským motoristům zdarma v naději, že čím více budou jezdit, tím více pneumatik ojedou.",
+   "source": "https://en.wikipedia.org/wiki/Michelin_Guide"
+  },
+  {
+   "id": "b388a69e-91a6-4f87-8b09-1bceca1a5fd2",
+   "q": "Od roku 1971 zakazují Spojené státy dovoz tradičního skotského haggisu. Kvůli které surovině, kterou haggis obsahuje, je jeho dovoz zakázán?",
+   "a": "Ovčí plíce",
+   "story": "Americké potravinové předpisy zakazují plíce v jídle pro lidi, takže pravý haggis s ovčími plícemi nelze dovážet, i když se místně vyrábějí verze bez plic.",
+   "source": "https://news.northeastern.edu/2025/01/24/scottish-haggis-in-the-us/"
+  },
+  {
+   "id": "bfef93f1-f9e4-4e8a-8b62-e9482c0c4f55",
+   "q": "V roce 1908 vytrhla německá žena v domácnosti Melitta Bentzová list savého papíru ze školního sešitu svého syna, propíchala díry do mosazného hrnce a vynalezla tak kuchyňskou pomůcku, která dodnes nese její jméno. Jakou kuchyňskou pomůcku tehdy vynalezla?",
+   "a": "Kávový filtr",
+   "story": "Melitta Bentzová měla dost hořké kávy plné sedliny, a tak k přecezení nápoje použila savý papír. Ještě téhož roku si papírový kávový filtr nechala patentovat a firma Melitta, kterou založila v Drážďanech, prodává filtry po celém světě dodnes.",
+   "source": "https://www.dpma.de/english/our_office/publications/ingeniouswomen/110jahrekaffeefilter/index.html"
+  },
+  {
+   "id": "72e2d072-14b6-4569-966f-6814063b35c4",
+   "q": "Pastevec koz v Etiopii si všiml, že jeho kozy poskakují plné energie poté, co sežvýkaly červené plody z jednoho keře. Jaký nápoj má tato legenda podle vyprávění vysvětlovat?",
+   "a": "Káva",
+   "story": "Legenda o pastevci koz Kaldim je tradičním příběhem o původu kávy. Etiopie je domovinou této rostliny a „tanec“ koz prý přivedl mnichy k tomu, aby si z plodů připravovali nápoj a zůstali bdělí při modlitbách.",
+   "source": "https://en.wikipedia.org/wiki/Kaldi"
+  },
+  {
+   "id": "64e45936-baac-4e48-866e-9b09398f9791",
+   "q": "Champagne je jedna z nejchladnějších vinařských oblastí Francie a tamní vinaři původně považovali bublinky za vadu. Jak chladné klima ty bublinky vlastně nechtěně vytvořilo?",
+   "a": "Chlad zastavil kvašení, na jaře se znovu rozběhlo v lahvi",
+   "story": "Podzim v Champagni se ochladil tak rychle, že kvasinky usnuly dřív, než stačily spotřebovat všechen cukr v hroznové šťávě. Vinaři se domnívali, že kvašení skončilo, a víno stočili do lahví. Když jaro prohřálo sklepy, kvasinky se probudily a pokračovaly v kvašení uvnitř uzavřených lahví. Oxid uhličitý neměl kudy uniknout, a tak se rozpustil ve víně v podobě bublinek, přičemž tlak často lahve roztrhal. Dlouho se to považovalo za vadu, dokud se šumivé víno nestalo módním a proces se nezačal záměrně řídit.",
+   "source": "https://maisons-champagne.com/en/encyclopedias/champagne-guest-book/before-sparkling-champagne/effervescence/article/the-first-sparkling-wines"
+  },
+  {
+   "id": "6f2d36ce-2800-4c09-863a-b0817b627ceb",
+   "q": "Které koření, nejdražší na světě podle hmotnosti, se ručně sbírá z blizen květu krokusu?",
+   "a": "Šafrán",
+   "story": "Z každého květu se získají jen tři nitky, takže na jediný kilogram je potřeba zhruba 150 000 květů.",
+   "source": "https://en.wikipedia.org/wiki/Saffron_trade"
+  },
+  {
+   "id": "81fd9220-d556-4ee9-a0f9-84a0c920ccab",
+   "q": "Který ořech roste zavěšený pod šťavnatým plodem hruškovitého tvaru a nikdy se neprodává ve skořápce, protože ta obsahuje dráždivou látku příbuznou té v jedovatém břečťanu?",
+   "a": "Kešu",
+   "story": "Ledvinovník patří do stejné botanické čeledi jako jedovatý břečťan a mango a skořápku je nutné opražit nebo odpařit, teprve pak se dá ořech bezpečně vzít do ruky.",
+   "source": "https://www.scientificamerican.com/article/what-do-cashews-mangoes-and-poison-ivy-have-in-common/"
+  },
+  {
+   "id": "919447f6-770a-5500-8266-42f0f2079ac6",
+   "q": "Banány jsou velmi slabě radioaktivní díky přirozeně radioaktivnímu izotopu chemického prvku, na který jsou proslule bohaté. O který prvek jde?",
+   "a": "Draslík",
+   "story": "Nepatrná část přírodního draslíku připadá na radioaktivní izotop draslík-40, tento jev je natolik známý, že fyzici žertem měří malé dávky záření v „banánových ekvivalentních dávkách“.",
+   "source": "https://en.wikipedia.org/wiki/Banana_equivalent_dose"
+  },
+  {
+   "id": "2896283e-ab84-50e8-97db-f2f40f478531",
+   "q": "Známý kuchyňský trik říká, že tvrdé avokádo dozraje mnohem rychleji, když ho zavřete do papírového sáčku spolu s banánem. Funguje to proto, že dozrávající banány uvolňují plyn, který působí jako rostlinný hormon. Jak se tento plyn jmenuje?",
+   "a": "Ethylen",
+   "story": "Ethylen je v rostlinné říši signálem k dozrávání a ovocnářský průmysl tentýž plyn cíleně používá k dozrávání banánů a rajčat, která byla sklizena zelená.",
+   "source": "https://en.wikipedia.org/wiki/Ethylene_(plant_hormone)"
+  },
+  {
+   "id": "1becedad-3de9-4374-ab88-23a2930c194b",
+   "q": "Sýr, který nakládáme do oleje s cibulí a paprikou, nese jméno zvířete. Jeho bílá zimní kožešina zdobila pláště králů. O které zvíře jde?",
+   "a": "Hranostaj",
+   "story": "Hermelín je staré označení hranostaje a jeho bílé kožešiny. Sýr dostal jméno podle sněhobílé plísňové kůrky, která tu kožešinu připomíná.",
+   "source": "https://cs.wikipedia.org/wiki/Hermelín_(sýr)"
+  },
+  {
+   "id": "04862026-ac5a-41d1-ab2b-f37d5e87696d",
+   "q": "Svatomartinské víno se každoročně slavnostně otevírá 11. listopadu. V kolik hodin a minut přesně?",
+   "a": "V 11:11",
+   "story": "Jedenáctého jedenáctý v jedenáct jedenáct, aby se to dobře pamatovalo, a od té chvíle smějí vinaři mladé víno prodávat.",
+   "source": "https://www.e15.cz/magazin/svatomartinske-vino-se-otevira-11-11-v-11-11-1135920"
+  },
+  {
+   "id": "1dbbeb72-0842-4d63-bbd3-10ee04dd9025",
+   "q": "Jitrnice se nejmenují podle rána, i když to tak zní. Co ve staré češtině znamenalo slovo „jitra“, od kterého jejich název pochází?",
+   "a": "Játra",
+   "story": "Staročeské „jitra“ znamenalo játra a vnitřnosti, tedy přesně to, co se při zabijačce do jitrnic cpe. Slova jitrnice a játra jsou vlastně sourozenci.",
+   "source": "https://cs.wiktionary.org/wiki/jitrnice"
+  },
+  {
+   "id": "45fc1c13-bc35-4d09-928a-b68f0ae398e6",
+   "q": "Bílá káva, kterou jsme ve školní jídelně dostávali k snídani nebo ke svačině, se často vařila z náhražky Melta. Kávová zrna v ní nenajdete. Z čeho se hlavně vyrábí?",
+   "a": "Z praženého obilí",
+   "story": "Melta je obilná káva, hlavně z praženého ječmene a žita, k nimž se přidává čekanka. Proto ji bez obav dostávaly i děti, protože neobsahuje kofein.",
+   "source": "https://www.drmax.cz/kavoviny-melta-sypana-500-g"
+  }
+ ],
+ "priroda-zvirata-vesmir": [
+  {
+   "id": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+   "q": "Který australský hrabavý vačnatec je jediným známým zvířetem, které produkuje trus ve tvaru krychle?",
+   "a": "Vombat",
+   "story": "Krychličky vznikají díky nerovnoměrné pružnosti vombatích střev a bobky s plochými stěnami se nekutálejí pryč, což se hodí při značkování teritoria na kamenech a padlých kmenech.",
+   "source": "https://en.wikipedia.org/wiki/Wombat_feces"
+  },
+  {
+   "id": "d6ae2464-80b1-4933-b0c2-daa831429d4c",
+   "q": "Která planeta je na svou velikost tak lehká, že by plavala na vodě, kdybyste našli dost velkou vanu?",
+   "a": "Saturn",
+   "story": "Saturn je tvořen převážně vodíkem a heliem a jeho průměrná hustota je jen asi 0,7 gramu na krychlový centimetr, tedy nižší než hustota vody.",
+   "source": "https://coolcosmos.ipac.caltech.edu/ask/113-Can-Saturn-really-float-on-water-"
+  },
+  {
+   "id": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+   "q": "Jeden pestrobarevný korýš udeří tak rychle, že jeho úder vytváří bubliny vroucí vody a je známo, že dokáže prasknout sklo akvária. Jak se jmenuje?",
+   "a": "Strašek",
+   "story": "Kyjovitý úderník strašků zrychluje jako kulka a během několika tisícin sekundy dosáhne asi 80 km/h. Úder je tak rychlý, že vytváří kavitační bubliny, jejichž kolaps doprovází záblesk tepla a světla.",
+   "source": "https://en.wikipedia.org/wiki/Mantis_shrimp"
+  },
+  {
+   "id": "da35b347-9f3f-5a1f-995a-ce01066087fd",
+   "q": "Modrou krev chobotnice rozvádí po těle neobvyklý počet srdcí. Kolik jich má?",
+   "a": "Tři",
+   "story": "Dvě srdce ženou krev přes žábry a třetí zásobuje zbytek těla, a toto hlavní srdce přestává bít, když chobotnice plave, proto se obvykle raději plazí.",
+   "source": "https://en.wikipedia.org/wiki/Octopus"
+  },
+  {
+   "id": "65e3f927-dd6f-57ae-9908-a4224f7d0d45",
+   "q": "Krk žirafy může být přes dva metry dlouhý, a přesto obsahuje přesně stejný počet krčních obratlů jako ten váš. Kolik jich je?",
+   "a": "Sedm",
+   "story": "Téměř všichni savci, od myší po žirafy, mají přesně sedm krčních obratlů, žirafě jsou jen protažené na zhruba 25 centimetrů každý.",
+   "source": "https://en.wikipedia.org/wiki/Cervical_vertebrae"
+  },
+  {
+   "id": "1aa93807-323d-4a9f-a762-38cdc81a3fc4",
+   "q": "Který pták z našich lesů, jehož hlas zná každé dítě, si nikdy nestaví hnízdo a svá vajíčka podstrkuje jiným ptákům?",
+   "a": "Kukačka",
+   "story": "Sotva se mládě kukačky vylíhne, vyhodí z hnízda vajíčka svých nevlastních sourozenců. Drobní pěstouni pak krmí vetřelce, který brzy přeroste i je samotné.",
+   "source": "https://www.muzeumct.cz/images/pracovní_listy/Jako_vejce_vejci_-_SŠ.odpo.pdf"
+  },
+  {
+   "id": "71c1bc58-0cab-4afc-9b42-e5e8d6574421",
+   "q": "Rorýsi, kteří v létě s pištěním krouží nad paneláky, umějí v letu jíst, pít i spát. Co pak za zbytek roku, až deset měsíců v kuse, neudělají ani jednou?",
+   "a": "Nepřistanou",
+   "story": "Mladý rorýs, který vylétne z hnízda, často nepřistane, dokud si sám nezačne stavět hnízdo, a to může být i za dva roky. Rorýs taky skoro neumí odstartovat ze země, takže na zemi je bezmocný.",
+   "source": "https://www.sci.news/biology/common-swifts-stay-ten-months-air-04324.html"
+  },
+  {
+   "id": "85efb889-3c08-4180-add2-3a0f29ee1f92",
+   "q": "Úhoř se nikdy nerozmnožuje v Evropě. Aby se vytřel, plave tisíce kilometrů přes Atlantik. Do kterého moře?",
+   "a": "Sargasové moře",
+   "story": "Úhoři se třou v Sargasovém moři nedaleko Bermud a pak tam umírají. Jejich drobné larvy se nechají unášet proudy zpátky do Evropy, kde jejich rodiče žili.",
+   "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6501356"
+  },
+  {
+   "id": "685ecf96-8729-4e5c-a322-4151c8d22b32",
+   "q": "Klíště, kvůli kterému se po každé procházce lesem prohlížíme, ve skutečnosti vůbec není hmyz. Do které skupiny živočichů patří? Napoví vám počet jeho nohou.",
+   "a": "Pavoukovci",
+   "story": "Dospělé klíště má osm nohou stejně jako pavouk a patří mezi pavoukovce, konkrétně mezi roztoče. Hmyz má vždycky jen šest nohou.",
+   "source": "https://archiv.szu.cz/uploads/documents/czzp/seminare/2010/ochrana_pred_klistaty.pdf"
+  },
+  {
+   "id": "279b79a0-9bf6-42e1-9f34-dc7dec53e594",
+   "q": "Když vezmete slunéčko sedmitečné do dlaně, často po něm zůstane žlutá, hořce páchnoucí kapička. Co to ve skutečnosti je?",
+   "a": "Jeho krev",
+   "story": "Vyděšené slunéčko vytlačí z kloubů na nohou vlastní krev, tedy hemolymfu. Je hořká a jedovatá, takže ptáci si ho příště rozmyslí.",
+   "source": "https://www.prirodovedci.cz/zeptejte-se-prirodovedcu/10"
+  },
+  {
+   "id": "59de1a14-68ed-43de-b809-221f304a33df",
+   "q": "Po dlouhé koupeli ve vaně máte svraštělé prsty. Nejde přitom o nasáklou kůži, vrásky totiž spouštějí nervy. K čemu nám podle vědců nejspíš slouží?",
+   "a": "Lepší úchop ve vodě",
+   "story": "Vrásky fungují jako vzorek na pneumatice a odvádějí vodu, takže mokré věci tolik neklouzou. Při pokusu přendávali lidé se svraštělými prsty mokré kuličky rychleji. Kdo má nervy v prstu přerušené, ten se mu ve vodě vůbec nesvraští.",
+   "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8294484/"
+  },
+  {
+   "id": "cc7082a3-d9e9-49b7-8d5c-8e65785c7d4e",
+   "q": "Tato jediná planeta je tak obrovská, že by dokázala pohltit všech sedm ostatních planet sluneční soustavy a ještě by v ní zbylo místo. Která planeta to je?",
+   "a": "Jupiter",
+   "story": "Jupiter je největší planeta; ostatních sedm planet by se vešlo do pouhých 70 procent jeho objemu.",
+   "source": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+   "id": "ecebbbc2-b314-4ca4-9735-231f00a7d771",
+   "q": "Za úsvitu svítí na obloze Jitřenka, po západu Slunce Večernice. Ve skutečnosti jde o jedno a totéž těleso, a vůbec to není hvězda. Co to je?",
+   "a": "Venuše",
+   "story": "Venuše obíhá blíž ke Slunci než Země, a proto ji vidíme jen nízko nad obzorem ráno nebo večer. Po Měsíci je to nejjasnější těleso noční oblohy.",
+   "source": "https://www.astro.cz/userfiles/files/Tiskova_zprava_cam_za_prosinec%202018.pdf"
+  },
+  {
+   "id": "0123e93e-26cc-4931-b34d-4ebbccbfcb33",
+   "q": "Slunce a Měsíc vypadají na naší obloze téměř přesně stejně velké díky pozoruhodné shodě okolností, v níž vystupuje stejné číslo. Jaký zhruba faktor spojuje jejich velikosti a jejich vzdálenosti?",
+   "a": "400krát",
+   "story": "Slunce má asi 400krát větší průměr než Měsíc, ale je také asi 400krát dál, takže oba kotouče vypadají ze Země téměř stejně.",
+   "source": "https://www.astronomy.com/astronomy-for-beginners/20-unusual-space-facts"
+  },
+  {
+   "id": "aa3f9d45-f03b-46c3-8898-11800a94d9f8",
+   "q": "Měsíc se každý rok vzdálí od Země asi o 4 centimetry, což je téměř přesně stejná rychlost, jakou vám roste jedna část těla. Která část těla to je?",
+   "a": "Nehty",
+   "story": "Laserové odrážeče, které na Měsíci zanechali astronauti z programu Apollo, ukazují, že se Měsíc vzdaluje asi o 3,8 centimetru za rok, tedy zhruba stejně rychle, jako vám rostou nehty.",
+   "source": "https://www.nasa.gov/missions/laser-beams-reflected-between-earth-and-moon-boost-science/"
+  },
+  {
+   "id": "f12ff131-1ac4-4ab2-b38c-abc5407c1e1e",
+   "q": "Vědci navrhli, že planeta 55 Cancri e může být z velké části tvořena drahým kamenem. O který drahý kámen jde?",
+   "a": "Diamant",
+   "story": "55 Cancri e je na uhlík bohatá super-Země, o níž se předpokládá, že by mohla mít diamantové jádro; některé studie naznačují, že až třetina její hmotnosti by mohla být tvořena diamantem.",
+   "source": "https://www.jameswebbdiscovery.com/faqs/100-space-facts-that-will-blow-your-mind-updated-2025"
+  },
+  {
+   "id": "0e749807-09b4-4401-a97d-6c6a49b51622",
+   "q": "Jakou barvu má Slunce, když se na něj astronauti dívají z oběžné dráhy, nad zemskou atmosférou?",
+   "a": "Bílou",
+   "story": "Slunce vyzařuje všechny viditelné vlnové délky zhruba stejně, což naše oči vnímají jako bílou. Dole na zemi atmosféra rozptýlí část modrého světla, takže zůstane nažloutlý odstín, jakým jsme Slunce odmalička kreslili.",
+   "source": "https://www.spacecentre.nz/resources/faq/solar-system/sun/colour.html"
+  },
+  {
+   "id": "d3e90bd4-1eb3-4283-8e6d-45746e83dedb",
+   "q": "Astronauti na Mezinárodní vesmírné stanici vypadají, jako by byli beztížní, přestože gravitace je tam jen o něco slabší než na Zemi. Proč tedy plují?",
+   "a": "Jsou v neustálém volném pádu",
+   "story": "Stanice i všechno v ní padají kolem Země společně, jde o stejný efekt, jaký cítí parašutisté; gravitace na ISS je jen asi o 10 až 11 procent slabší než na povrchu.",
+   "source": "https://www.skyatnightmagazine.com/space-science/facts-about-astronomy-space"
+  },
+  {
+   "id": "0cde91bd-bc32-40be-97d0-4fadf8a55c2a",
+   "q": "Více než polovina z 206 kostí dospělého člověka se nachází jen ve dvou párových částech těla. Ve kterých dvou?",
+   "a": "Ruce a nohy",
+   "story": "Každá ruka má 27 kostí a každé chodidlo 26, takže dohromady tvoří 106 z 206 kostí, tedy více než zbytek těla dohromady.",
+   "source": "https://en.wikipedia.org/wiki/List_of_bones_of_the_human_skeleton"
+  },
+  {
+   "id": "5ef64574-5b54-4a64-8bf3-f8ebb1c74eac",
+   "q": "Jaká je nejtvrdší látka v lidském těle?",
+   "a": "Zubní sklovina",
+   "story": "Sklovina je asi z 96 procent tvořena minerály a je tvrdší než kost, na rozdíl od kosti však po obroušení už nedokáže znovu dorůst.",
+   "source": "https://en.wikipedia.org/wiki/Tooth_enamel"
+  }
+ ],
+ "zemepis-a-cestovani": [
+  {
+   "id": "80ec52c8-e041-5353-9929-26faed681b8c",
+   "q": "Téměř padesát let vedly Kanada a Dánsko nejzdvořilejší územní spor světa, takzvanou whisky válku. Střídaly se přitom ve vztyčování vlajek a zanechávání lahví alkoholu na malém neobydleném arktickém ostrově. Jak se tento ostrov jmenuje?",
+   "a": "Hansův ostrov",
+   "story": "V roce 2022 se obě země konečně dohodly, že si holou skálu rozdělí napůl, čímž Kanada a Dánské království získaly společnou pozemní hranici a skončila desetiletí diplomacie vlajek a lahví.",
+   "source": "https://en.wikipedia.org/wiki/Whisky_War"
+  },
+  {
+   "id": "85cad3c7-59ac-4e56-8718-bb7df65b5901",
+   "q": "Který americký stát leží nejblíže k africkému kontinentu?",
+   "a": "Maine",
+   "story": "Na glóbu začíná nejkratší spojnice mezi Spojenými státy a Marokem na východním cípu Maine, který tak o několik set kilometrů předčí Floridu.",
+   "source": "https://www.britannica.com/one-good-fact/what-us-state-is-closest-to-africa"
+  },
+  {
+   "id": "3d99c981-1422-4a4c-8e34-01cb402814c7",
+   "q": "Kdo jel autem do Dubrovníku, musel donedávna během pár minut dvakrát přes hranici, protože chorvatské pobřeží tam na krátkém úseku patří jinému státu. Kterému?",
+   "a": "Bosně a Hercegovině",
+   "story": "Kolem městečka Neum má Bosna a Hercegovina svůj jediný kousek moře. Od roku 2022 ho řidiči mohou objet po Pelješackém mostě a hranici vůbec nepřekročit.",
+   "source": "https://en.wikipedia.org/wiki/Pelje%C5%A1ac_Bridge"
+  },
+  {
+   "id": "1264b939-b97d-4d92-a1ad-322e7be0c62e",
+   "q": "Která země má nejdelší pobřeží ze všech států na Zemi?",
+   "a": "Kanada",
+   "story": "Pobřeží Kanady měří zhruba 200 000 kilometrů, především proto, že její arktické souostroví tvoří tisíce ostrovů s nesmírně členitými břehy.",
+   "source": "https://www.worldatlas.com/oceans/countries-with-the-longest-coastline.html"
+  },
+  {
+   "id": "9a98eab9-caf2-4946-9d5e-6d154712310c",
+   "q": "Který světadíl má více suverénních států než kterýkoli jiný?",
+   "a": "Afrika",
+   "story": "Afrika má 54 mezinárodně uznávaných států, což je pohodlně více než Evropa a Asie.",
+   "source": "https://en.wikipedia.org/wiki/List_of_sovereign_states_and_dependent_territories_by_continent"
+  },
+  {
+   "id": "05ccc8c8-568e-4f1b-9ea5-16574253baf6",
+   "q": "Která řeka protéká deseti různými zeměmi nebo tvoří jejich hranice, což je víc než kterákoli jiná řeka na světě?",
+   "a": "Dunaj",
+   "story": "Od německého Schwarzwaldu až k Černému moři se Dunaj dotýká deseti zemí a protéká čtyřmi hlavními městy: Vídní, Bratislavou, Budapeští a Bělehradem.",
+   "source": "https://www.britannica.com/place/Danube-River"
+  },
+  {
+   "id": "0ec6c0d0-e6cf-433c-bb91-fa8b8de90031",
+   "q": "Které nezávislé království má celou svou pozemní hranici s Jihoafrickou republikou a s žádnou jinou zemí?",
+   "a": "Lesotho",
+   "story": "Lesotho je jednou z pouhých tří zemí na světě, které jsou zcela obklopeny jediným sousedem, vedle Vatikánu a San Marina ležících uvnitř Itálie.",
+   "source": "https://en.wikipedia.org/wiki/Lesotho"
+  },
+  {
+   "id": "6bfc5679-0b64-4df4-a124-ee173948614f",
+   "q": "Lichtenštejnsko je jednou z pouhých dvou zemí, které jsou vnitrozemské a hraničí výhradně s dalšími vnitrozemskými státy. Který středoasijský stát je tím druhým?",
+   "a": "Uzbekistán",
+   "story": "Všech pět sousedů Uzbekistánu je samo vnitrozemských, takže jeho obyvatel musí překročit alespoň dvě hranice, aby se dostal k jakémukoli oceánu.",
+   "source": "https://www.worldatlas.com/articles/doubly-landlocked-countries.html"
+  },
+  {
+   "id": "190315b3-4a51-4ae4-bb69-b6cc0415ab98",
+   "q": "Které jediné jezero na Sibiři obsahuje zhruba pětinu veškeré nezamrzlé sladké vody na povrchu Země?",
+   "a": "Bajkal",
+   "story": "S hloubkou přes 1 600 metrů je to nejhlubší jezero na Zemi, takže zadržuje více sladké vody než všech pět severoamerických Velkých jezer dohromady.",
+   "source": "https://whc.unesco.org/en/list/754/"
+  },
+  {
+   "id": "50f7966d-4f05-4afd-b8d3-c4fdafdc403c",
+   "q": "Která havajská sopka je vyšší než Mount Everest, pokud se měří od základny na mořském dně až po vrchol?",
+   "a": "Mauna Kea",
+   "story": "Nad hladinu moře z ní vyčnívá jen asi 4 200 metrů, ale od dna oceánu se sopka zvedá do výšky přes 10 000 metrů, tedy o více než kilometr víc než Everest.",
+   "source": "https://mossandfog.com/mauna-kea-not-mount-everest-is-the-tallest-mountain-from-base-to-summit/"
+  },
+  {
+   "id": "3417458a-ac4b-4fc3-8d88-938921f0c798",
+   "q": "Slovo 'karanténa' pochází z benátského výrazu pro určitý počet dní, které musely lodě v dobách moru čekat na moři před přístavem. Kolik dní?",
+   "a": "Čtyřicet",
+   "story": "Benátské 'quarantena' znamená čtyřicet dní, což byla doba izolace nařízená připlouvajícím lodím ve čtrnáctém a patnáctém století.",
+   "source": "https://www.etymonline.com/word/quarantine"
+  },
+  {
+   "id": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+   "q": "Největší ostrov světa je samosprávným územím jednoho evropského království. O které království jde?",
+   "a": "Dánsko",
+   "story": "Grónsko je více než padesátkrát větší než samotné Dánsko, přesto zůstává součástí dánského království s vlastní samosprávnou vládou.",
+   "source": "https://commonslibrary.parliament.uk/research-briefings/cbp-10234/"
+  },
+  {
+   "id": "e339b2b2-c1e0-5784-8312-7312e09f2f92",
+   "q": "Turisté v Londýně ukazují na hodinovou věž Westminsterského paláce a říkají jí Big Ben. Čeho je ale Big Ben přesně vzato jméno?",
+   "a": "Zvonu",
+   "story": "Big Ben je přezdívka velkého zvonu, který ve věži odbíjí hodiny. Samotná věž byla v roce 2012 u příležitosti diamantového jubilea královny přejmenována na Alžbětinu věž.",
+   "source": "https://en.wikipedia.org/wiki/Big_Ben"
+  },
+  {
+   "id": "7481a4a3-1e73-488f-a49e-2c41a5f83a82",
+   "q": "Slovo pro koňský povoz, anglicky „coach“ (česky kočár), později dalo jméno i dálkovým autobusům. Pochází z názvu vesnice. Ve které zemi tato vesnice leží?",
+   "a": "Maďarsko",
+   "story": "Vozy vyráběné v patnáctém století ve vesnici Kocs byly tak obdivované, že se slovo „kocsi“ rozšířilo do němčiny, angličtiny, slovenštiny, češtiny a mnoha dalších jazyků.",
+   "source": "https://en.wikipedia.org/wiki/Kocs"
+  },
+  {
+   "id": "7912ba33-fff0-41cd-9fe3-58e9236250e0",
+   "q": "Slovo 'denim' je zkrácením francouzského spojení, které pojmenovává město, s nímž byla tato látka spojována. O které město jde?",
+   "a": "Nîmes",
+   "story": "Pevná látka byla známá jako 'serge de Nîmes' a poslední dvě slova prostě splynula v 'denim', zatímco slovo 'jeans' odkazuje na jiné město obchodující s látkami, na Janov.",
+   "source": "https://www.merriam-webster.com/dictionary/denim"
+  },
+  {
+   "id": "66c4b432-b59b-4de0-8ae1-e1097b1558d1",
+   "q": "Ve kterém městě v Bosně a Hercegovině skáčou místní odvážlivci pro turisty z kamenného mostu vysokého přes dvacet metrů do řeky?",
+   "a": "Mostar",
+   "story": "Ze Starého mostu přes řeku Neretvu se skáče už po staletí. Skokani obvykle nejdřív počkají, až jim turisté vyberou dost peněz, a teprve pak skočí.",
+   "source": "https://www.lonelyplanet.com/articles/mostar-bridge-diving-bosnia-hercegovina"
+  },
+  {
+   "id": "0288cfc4-8cd4-43de-a1e9-6f1e603b06ca",
+   "q": "Který chorvatský ostrov, kam se dá dojet autem po mostě, má název, jenž v češtině znamená část lidského těla?",
+   "a": "Krk",
+   "story": "Krk je jeden z největších ostrovů Jadranu a s pevninou ho spojuje Krčký most. Jeho název se tak hodí do slovní hry stejně dobře jako náš „strč prst skrz krk“.",
+   "source": "https://en.wikipedia.org/wiki/Krk"
+  },
+  {
+   "id": "b73797df-8aae-4fe5-ace9-4bcd71c8b5b6",
+   "q": "První komerční bungee jumping na světě začal na mostě nad řekou v zemi, kterou mnoho lidí zná jako filmovou Středozem. O jakou zemi jde?",
+   "a": "Nový Zéland",
+   "story": "Šlo o most přes řeku Kawarau u Queenstownu, ze kterého se skáče zhruba 43 metrů. Jeho provozovatel A. J. Hackett se předtím proslavil načerno provedeným skokem z Eiffelovy věže.",
+   "source": "https://en.wikipedia.org/wiki/Bungee_jumping"
+  },
+  {
+   "id": "edba7233-a419-4df7-96a1-1c99a8278ff0",
+   "q": "Únikové hry vznikly v Japonsku, ale první úniková hra v Evropě se otevřela v metropoli, kam mnoho Čechů jezdí na výlety do termálních lázní a k parlamentu na břehu Dunaje. Které město to je?",
+   "a": "Budapešť",
+   "story": "První evropskou únikovou hru, ParaPark, otevřeli v Budapešti a odtud se móda zamčených místností rychle rozšířila po celé Evropě, Česko nevyjímaje.",
+   "source": "https://www.atlasobscura.com/articles/inside-the-budapest-escape-room-that-started-the-worldwide-craze"
+  },
+  {
+   "id": "913dd84f-e408-4441-85b4-7f57bd2b08ad",
+   "q": "Vrchol Mount Everestu leží přesně na hranici mezi Nepálem a další zemí. O kterou zemi jde?",
+   "a": "Čína",
+   "story": "Severní strana Everestu leží v Tibetu, který je součástí Číny, a horolezci mohou na vrchol vystoupit z nepálské i z čínské strany.",
+   "source": "https://www.britannica.com/place/Mount-Everest"
+  }
+ ],
+ "do-auta": [
+  {
+   "id": "b27083a1-7f7f-4920-a138-ba3083a9dd8d",
+   "q": "Když se podíváte na gramofonovou desku, vidíte spoustu tenkých soustředných kroužků. Kolik drážek ale ve skutečnosti má jedna strana desky?",
+   "a": "Jednu",
+   "story": "Celá strana desky je jediná souvislá spirála, po které jehla putuje od okraje ke středu. Kdybyste ji natáhli, měřila by stovky metrů.",
+   "source": "https://en.wikipedia.org/wiki/Phonograph_record"
+  },
+  {
+   "id": "891db188-39cc-41f2-8850-4d23b0583444",
+   "q": "Kravatu přinesli do módy vojáci jednoho evropského národa, kteří si vázali šátky kolem krku. Jejich jméno se v názvu kravaty schovává dodnes. Kteří vojáci to byli?",
+   "a": "Chorvatští",
+   "story": "Chorvatští žoldnéři ve francouzských službách nosili uvázané šátky a Francouzi tomu začali říkat „à la croate“, tedy po chorvatsku. Z toho vzniklo „cravate“ a naše kravata.",
+   "source": "https://en.wikipedia.org/wiki/Necktie"
+  },
+  {
+   "id": "3ad24906-40ea-4862-a6f2-83fdfecdfe44",
+   "q": "Red Bull je původně thajský nápoj pro řidiče kamionů. Rakouský obchodník ho v Bangkoku ochutnal po dlouhém letu a zjistil, že mu pomáhá na jednu nepříjemnou cestovatelskou potíž. Na jakou?",
+   "a": "Jet lag",
+   "story": "Dietrich Mateschitz po letech vyprávěl, že mu thajský Krating Daeng spravil pásmovou nemoc. Výsledkem byl obchod s jeho thajským výrobcem a z toho vznikla celosvětová značka Red Bull.",
+   "source": "https://en.wikipedia.org/wiki/Red_Bull"
+  },
+  {
+   "id": "617b562a-a5fa-487a-bb52-6f0c63803cb4",
+   "q": "Kdo jezdil po staré dálnici D1, pamatuje si pravidelné „ťuk-ťuk, ťuk-ťuk“ pod koly. Co ten rytmus způsobovalo?",
+   "a": "Spáry mezi betonovými deskami",
+   "story": "Stará D1 byla poskládaná z betonových desek a kola přeskakovala spáry mezi nimi. Jak desky časem sedaly, každá spára byla cítit víc, dokud je modernizace nenahradila.",
+   "source": "https://ct24.ceskatelevize.cz/domaci/3355372-na-d1-se-na-rade-mist-olamuji-hrany-dilatacnich-spar-silnicari-budou-zadat-opravu-od"
+  },
+  {
+   "id": "cb1f902d-4359-4bd9-856f-5911d55027de",
+   "q": "Dálniční známce se často říká vinětka, podle francouzského slova vignette. Z názvu které rostliny to slovo pochází?",
+   "a": "Vinná réva",
+   "story": "Vignette znamenalo malý ornament z listů vinné révy, kterým se zdobily staré knihy. Později se tak začaly říkat i malé ozdobné nálepky, a nakonec i dálniční známce.",
+   "source": "https://www.etymonline.com/word/vignette"
+  },
+  {
+   "id": "8a81f852-cc5c-42ac-a2d3-6c6711612077",
+   "q": "Na palivoměru v autě je vedle ikonky benzínové pumpy malá šipka nebo trojúhelníček. Co vám ta šipka prozrazuje?",
+   "a": "Na které straně je nádrž",
+   "story": "Šipka ukazuje, na které straně auta je víčko nádrže, takže v půjčeném autě víte, ke kterému stojanu zajet. Klidně se teď podívejte na palubní desku.",
+   "source": "https://www.motor1.com/news/804101/what-fuel-gauge-arrow-means/"
+  },
+  {
+   "id": "6ed5919d-5ef0-4e96-80cb-d4b2d699f0cb",
+   "q": "Podle známého pravidla motoristů se vyplatí přezout na zimní pneumatiky, jakmile teplota venku klesne pod určitou hranici, i když vůbec nesněží. Kolik je to stupňů Celsia?",
+   "a": "7 °C",
+   "story": "Pod sedmi stupni letní guma tvrdne a ztrácí přilnavost, kdežto zimní směs zůstává měkká. Zimní pneumatiky proto brzdí lépe i na suché, studené silnici.",
+   "source": "https://www.denik.cz/cesko/letnigumy20080415/"
+  },
+  {
+   "id": "4948ed80-a2ec-4f44-9b4e-ec634ab172d0",
+   "q": "Rychlovlak Pendolino, který jezdí třeba z Prahy do Ostravy, má jméno podle italského slova pro kyvadlo. Co tenhle vlak dělá v zatáčkách?",
+   "a": "Naklání se",
+   "story": "Pendolino má naklápěcí vozové skříně, takže se v oblouku nakloní dovnitř podobně jako cyklista. Díky tomu může projet zatáčku rychleji a cestujícím se přitom nevylije káva.",
+   "source": "https://ekonomickydenik.cz/dvacet-let-pendolina-rychlostni-rekord-a-cekani-na-vhodnou-trat/"
+  },
+  {
+   "id": "3a3f9998-bbfd-4340-a1dd-5f03a0ad4113",
+   "q": "Většina náklaďáků stojí na rámu ze dvou podélných nosníků, ale Tatrovky mají uprostřed jedinou silnou rouru. Podle které části lidského těla se tomuto rámu říká?",
+   "a": "Páteř",
+   "story": "Páteřový rám je jedna centrální roura, ve které vedou i hnací hřídele, a na ní jsou výkyvné poloosy. Každé kolo se tak samo přizpůsobí terénu, a proto Tatrovky tak dobře zvládají pouště i bláto.",
+   "source": "https://trucker.cz/rubriky/truck/tatra-tatrovacka-koncepce_39505.html"
+  },
+  {
+   "id": "684c750d-3567-411e-adbb-abb22b9154c2",
+   "q": "Když letíte z Prahy do New Yorku, ukazuje mapa na obrazovce, že letadlo dělá velký oblouk na sever místo toho, aby letělo rovně. Přesto je to nejkratší cesta. Proč?",
+   "a": "Země je kulatá",
+   "story": "Na kulaté Zemi je nejkratší spojnice dvou míst takzvaná ortodroma a na ploché mapě vypadá jako oblouk. Natáhněte provázek mezi Prahou a New Yorkem na globusu a uvidíte, že vede přes Irsko a severní Atlantik.",
+   "source": "https://en.wikipedia.org/wiki/Great-circle_distance"
+  },
+  {
+   "id": "aa981142-3be1-43ca-9def-e7c18b5f0f7f",
+   "q": "Ploché krabice, ve kterých si z IKEA vozíme nábytek, prý vymyslel jeden zaměstnanec, když si nevěděl rady se stolem. Ten stůl se mu totiž nevešel… kam?",
+   "a": "Do auta",
+   "story": "Gillis Lundgren tehdy stolu prostě odšrouboval nohy, aby ho dostal do auta. Z té nouzovky se stal princip, na kterém IKEA stojí dodnes.",
+   "source": "https://www.dezeen.com/2013/07/22/ikea-revives-three-legged-diy-side-table/"
+  },
+  {
+   "id": "f02be594-795f-407b-a93a-895387472d23",
+   "q": "Bublinková fólie, kterou všichni tak rádi praskáme, původně neměla chránit zásilky. Vynálezci ji chtěli prodávat jako moderní ozdobu obývacích pokojů. Čím měla být?",
+   "a": "Tapetou",
+   "story": "Dva američtí inženýři ji vymysleli jako plastovou strukturovanou tapetu, kterou ale nikdo nechtěl. Slávu jí přineslo až balení počítačů IBM.",
+   "source": "https://en.wikipedia.org/wiki/Bubble_Wrap"
+  },
+  {
+   "id": "2dba3a9f-2bd9-48b7-9b8f-ffc0984db6a6",
+   "q": "Na klasické Rubikově kostce leží bílá stěna přesně naproti žluté. Která barva leží naproti červené?",
+   "a": "Oranžová",
+   "story": "Protilehlé stěny tvoří vždy dvojici podobných odstínů: bílá se žlutou, červená s oranžovou a modrá se zelenou. Právě proto se při skládání červená a oranžová tak snadno pletou.",
+   "source": "https://ruwix.com/the-rubiks-cube/japanese-western-color-schemes/"
+  },
+  {
+   "id": "83149d3b-42e8-4788-a654-8c400379403e",
+   "q": "Většina džínů má v pravé přední kapse ještě jednu malinkou kapsičku. K čemu byla původně určená?",
+   "a": "Na kapesní hodinky",
+   "story": "Dělníci a kovbojové v 19. století nosili kapesní hodinky a ty se jim v kapsičce nerozbily ani neztratily. Hodinky už v ní dnes nenosí skoro nikdo, ale kapsička zůstala.",
+   "source": "https://www.mentalfloss.com/article/75081/whats-purpose-teeny-pocket-pair-blue-jeans"
+  },
+  {
+   "id": "e93d9cad-a847-4dbd-b8c3-82948fba0eec",
+   "q": "Švýcarský inženýr se vrátil z procházky se psem a štvalo ho, kolik ostnatých plodů lopuchu mu zůstalo na kalhotách i v psí srsti. Prohlédl si je pod mikroskopem a vymyslel věc, kterou dnes máte na botách i bundách. Co to je?",
+   "a": "Suchý zip",
+   "story": "Plody lopuchu mají drobné háčky, které se zachytí na každé smyčce, a přesně tak funguje suchý zip. Obchodní název Velcro vznikl z francouzských slov pro samet a háček.",
+   "source": "https://www.wipo.int/en/web/ip-advantage/w/stories/the-velcro-ip-story"
+  },
+  {
+   "id": "22926d89-e4dc-431d-af4d-236cfee9139e",
+   "q": "Žlutý obličej, kterému z nosu fučí dva obláčky páry, posílá většina lidí, když zuří. Jaký pocit ale tomuto emoji dává jeho oficiální název ve standardu Unicode?",
+   "a": "Triumf",
+   "story": "Oficiálně se jmenuje „Face with Look of Triumph“, tedy obličej s triumfálním výrazem. V japonských komiksech totiž pára z nosu znamená vítězoslavné odfrknutí, ne vztek.",
+   "source": "https://codepoints.net/U+1F624"
+  },
+  {
+   "id": "218f5c87-e767-4d6a-9231-a947b84b0133",
+   "q": "Česko nemá moře, a přesto má dlouhodobě pronajatý kousek námořního přístavu v Německu, na řece, která teče z Krkonoš. Ve kterém městě?",
+   "a": "Hamburk",
+   "story": "Pronájem pochází z Versailleské smlouvy po první světové válce, aby se vnitrozemské Československo dostalo k moři. Jedna z přístavních nádrží se dodnes jmenuje Vltavský přístav, německy Moldauhafen.",
+   "source": "https://www.novinky.cz/clanek/ekonomika-cesko-muze-na-svem-uzemi-v-hamburku-ziskat-moderni-namorni-pristav-40275391"
+  },
+  {
+   "id": "bd028c47-d512-469b-9342-a4cfad36f008",
+   "q": "Slavné americké pivo Budweiser je pojmenované podle německého názvu jednoho českého krajského města. Kterého?",
+   "a": "České Budějovice",
+   "story": "Německy se Budějovicím říká Budweis a američtí pivovarníci si to jméno vypůjčili, aby jejich pivo znělo jako pravé české. Od té doby se s Budějovickým Budvarem soudí o značku už přes sto let.",
+   "source": "https://en.wikipedia.org/wiki/Budweiser"
+  },
+  {
+   "id": "ec16c9d1-5213-4fcc-b9c8-fc56bddbae24",
+   "q": "V testu z pravidel silničního provozu v autoškole můžete získat nejvýš 50 bodů. Kolik bodů musíte mít nejméně, abyste prošli?",
+   "a": "43",
+   "story": "Na chyby vám zbývá jen sedm bodů. Nejcennější otázky jsou za tři body, takže stačí pokazit dvě nebo tři z nich a zkouška je ztracená.",
+   "source": "https://core.palmknihy.cz/api/books/396115/preview.pdf"
+  },
+  {
+   "id": "2debd4f6-f38d-4e9c-9e43-e677f09fed0e",
+   "q": "Zakladatel IKEA Ingvar Kamprad dal výrobkům místo číselných kódů jména, protože se mu čísla při čtení pletla. Jakou poruchu měl?",
+   "a": "Dyslexii",
+   "story": "Jména si pamatoval mnohem snáz než čísla, a tak vznikl celý systém. Pohovky nesou jména švédských míst, postele norských a koberce dánských.",
+   "source": "https://dyslexiahelp.umich.edu/success-story/ingvar-kamprad/"
+  }
+ ],
+ "pro-celou-rodinu": [
+  {
+   "id": "be29cc5d-f01c-4227-b9cd-f425478f3218",
+   "q": "Burské oříšky nerostou na stromě ani na keři. Kde tedy dozrávají?",
+   "a": "Pod zemí",
+   "story": "Rostlina vykvete nad zemí, pak se stopka ohne a zavrtá mladý lusk do půdy. Burský oříšek totiž vůbec není ořech, ale luštěnina, příbuzná hrachu a fazolí.",
+   "source": "https://en.wikipedia.org/wiki/Peanut"
+  },
+  {
+   "id": "1bb74196-a01e-4247-b57d-096923d3ae67",
+   "q": "Jmelí, které si o Vánocích věšíme doma pro štěstí, nikdy nezapouští kořeny do země. Kde tedy roste?",
+   "a": "Na stromech",
+   "story": "Jmelí je poloparazit: kořeny zavrtá do větví hostitelského stromu a bere mu vodu a minerály, ale cukry si vyrábí samo. Lepkavá semínka mu na větve roznášejí ptáci.",
+   "source": "https://en.wikipedia.org/wiki/Viscum_album"
+  },
+  {
+   "id": "df63f985-b051-4760-a3af-72edad6a24bc",
+   "q": "Zívání je nakažlivé nejen mezi lidmi. Které domácí zvíře podle pokusů často samo zívne, když vidí zívat člověka?",
+   "a": "Pes",
+   "story": "Psi zívají výrazně častěji, když zívá jejich vlastní páníček, než když zívá cizí člověk. Vědci v tom vidí známku toho, jak silně se psi naladí na lidi, se kterými žijí.",
+   "source": "https://www.livescience.com/5093-dogs-catch-human-yawns.html"
+  },
+  {
+   "id": "8d1342f7-9efc-5d2b-b50f-629e352581ec",
+   "q": "Když smícháš jedlou sodu s octem a směs prudce zašumí, jaký plyn se uvolňuje ve všech těch bublinkách?",
+   "a": "Oxid uhličitý",
+   "story": "Kyselina v octě reaguje s hydrogenuhličitanem sodným a uvolňuje oxid uhličitý, tentýž plyn, díky kterému v troubě kynou koláče a chleba.",
+   "source": "https://en.wikipedia.org/wiki/Sodium_bicarbonate"
+  },
+  {
+   "id": "58c69ecf-ae5a-40fe-8435-e7bb22a05ad3",
+   "q": "Nejmenší kost v lidském těle má tvar malého třmínku. Ve které části těla se nachází?",
+   "a": "V uchu",
+   "story": "Třmínek ve středním uchu měří jen asi 3 milimetry a přenáší zvukové vibrace z ušního bubínku do vnitřního ucha.",
+   "source": "https://en.wikipedia.org/wiki/Stapes"
+  },
+  {
+   "id": "e87e8bf4-da8d-4cde-9669-8165b15a2d69",
+   "q": "Hurikán vzniká v Atlantiku. Jak by se nazývala úplně stejná bouře, kdyby vznikla v severozápadním Pacifiku, poblíž Japonska nebo Filipín?",
+   "a": "Tajfun",
+   "story": "Hurikány, tajfuny i cyklony jsou jedna a tatáž rotující tropická bouře a označení závisí čistě na tom, ve které oceánské oblasti vznikne.",
+   "source": "https://oceanservice.noaa.gov/facts/cyclone.html"
+  },
+  {
+   "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+   "q": "Název hračkářské značky LEGO vznikl složením dvou dánských slov. Co tato dvě slova znamenají?",
+   "a": "Hraj si dobře",
+   "story": "Zakladatel Ole Kirk Christiansen ho převzal z dánského spojení 'leg godt', které znamená prostě 'hraj si dobře'.",
+   "source": "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
+  },
+  {
+   "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+   "q": "V roce 1974 vynalezl profesor architektury Ernő Rubik hlavolam v podobě kostky. Ze které země tento hlavolam pochází?",
+   "a": "Maďarsko",
+   "story": "Rubik ji postavil v Budapešti jako učební pomůcku pro prostorové myšlení a údajně mu trvalo měsíc, než svůj vlastní výtvor složil.",
+   "source": "https://en.wikipedia.org/wiki/Ern%C5%91_Rubik"
+  },
+  {
+   "id": "035077c2-f271-4f2a-846c-1459ef636270",
+   "q": "Kolik vždy dají dohromady čísla na dvou protilehlých stěnách klasické šestistěnné hrací kostky?",
+   "a": "Sedm",
+   "story": "Jednička leží naproti šestce, dvojka naproti pětce a trojka naproti čtyřce, takže každá dvojice protilehlých stěn dá dohromady sedm.",
+   "source": "https://mathworld.wolfram.com/Dice.html"
+  },
+  {
+   "id": "f6fdf444-79f2-4ea8-a454-d4cc7d5a3815",
+   "q": "Jméno amerického Santa Clause vzniklo zkomolením nizozemského jména jednoho světce. Kterého?",
+   "a": "Svatý Mikuláš",
+   "story": "Nizozemci mu říkají Sinterklaas, tedy svatý Mikuláš. Jejich osadníci ho přivezli do dnešního New Yorku, takže Santa Claus je vlastně náš Mikuláš, jen bez čerta.",
+   "source": "https://www.pbs.org/newshour/world/from-st-nick-to-santa-to-kris-kringle-why-we-have-different-names-for-the-jolly-bringer-of-christmas-gifts"
+  },
+  {
+   "id": "99ff2444-d65e-4a48-a218-d66ce7864f61",
+   "q": "Hra Člověče, nezlob se vypadá jako typicky středoevropská rodinná zábava. Ve skutečnosti ale vychází ze starobylé hry z jedné vzdálené asijské země. Ze které?",
+   "a": "Indie",
+   "story": "Předlohou je indická hra pačísí, která se hrála na plánu ve tvaru kříže. Podle legendy ji mogulský císař Akbar hrál na nádvoří s živými lidmi místo figurek.",
+   "source": "https://cs.wikipedia.org/wiki/Člověče,_nezlob_se!"
+  },
+  {
+   "id": "9300de5e-166c-4cbc-b221-c2421129979c",
+   "q": "Tužky a pastelky Koh-i-noor z Českých Budějovic zná každé české dítě. Jméno ale dostaly po slavném předmětu, který dnes patří k britským korunovačním klenotům. Co to je?",
+   "a": "Diamant",
+   "story": "Koh-i-noor je jeden z nejslavnějších diamantů světa a jeho perské jméno znamená „hora světla“. Firma Hardtmuth tak chtěla naznačit, že její tužky jsou mezi tužkami tím nejvzácnějším klenotem.",
+   "source": "https://fountainpen.it/Hardtmuth/en"
+  },
+  {
+   "id": "5965f327-8b60-47d1-9a85-4c98da919495",
+   "q": "Kterou malou lesklou část kapra, která připomíná minci, si mnoho Čechů po štědrovečerní večeři schová do peněženky, aby jim celý rok nechyběly peníze?",
+   "a": "Šupinu",
+   "story": "Kapří šupina se nejdřív dává pod talíř a pak putuje do peněženky. Svým leskem a tvarem připomíná minci, a proto má přinášet peníze.",
+   "source": "https://cnn.iprima.cz/vanocni-cesta-kapr-na-taliri-supina-pod-nim-co-vse-se-poji-ke-stedrovecerni-veceri-52372"
+  },
+  {
+   "id": "842cea65-ddc8-4123-9c31-8ac40c1b1ca2",
+   "q": "Podle staré historky vytahovala dívka svého ctitele nahoru ke svému oknu. Když ho nechtěla, dala mu nádobu se slabým dnem a nápadník propadl. Jaké rčení o odmítnutí z toho vzniklo?",
+   "a": "Dostat košem",
+   "story": "Odmítnutý nápadník doslova propadl košem a zůstal dole pod oknem. Stejné rčení mají i Němci: „einen Korb geben“.",
+   "source": "https://en.wiktionary.org/wiki/dostat"
+  },
+  {
+   "id": "aaa774b2-09bd-4165-8dc9-fd259526729a",
+   "q": "Korunám se hovorově říká „kačky“. Z čeho tahle přezdívka vznikla?",
+   "a": "Ze zkratky Kč",
+   "story": "„Kačka“ vznikla z vyslovené zkratky Kč, tedy „ká-čé“. S kachnou nemá nic společného, i když to tak zní.",
+   "source": "https://en.numista.com/forum/topic158496.html"
+  },
+  {
+   "id": "63d5a200-9bfd-4066-9c59-d66f0cfe3b73",
+   "q": "Čerstvě upečené perníčky bývají tvrdé jako kámen. Kousek jakého ovoce se k nim přidává do plechovky, aby do Štědrého dne změkly?",
+   "a": "Jablko",
+   "story": "Med v perníkovém těstě silně přitahuje vlhkost, takže si ji perníčky postupně berou z jablka a změknou. Jablko je dobré občas vyměnit, aby nezačalo plesnivět.",
+   "source": "https://www.denik.cz/gastronomie/ihned-mekke-pernicky.html"
+  },
+  {
+   "id": "f6104550-837a-4767-a835-460cbe30db1c",
+   "q": "Když na ulici potkáte kominíka, čeho byste se na jeho oblečení podle staré pověry měli chytit, aby vám přinesl štěstí?",
+   "a": "Knoflíku",
+   "story": "Kdo se chytí kominíkova knoflíku a něco si přeje, tomu se to prý splní. Kominík byl symbolem štěstí proto, že čistý komín chránil dům před požárem.",
+   "source": "https://www.kudyznudy.cz/aktuality/den-kominiku-cesta-za-kominy-ktere-vypraveji-pribe"
+  },
+  {
+   "id": "455c5dfe-10f0-4ccb-8088-ff6475ac5d24",
+   "q": "Teplé slunečné dny na začátku podzimu nazýváme babí léto. Co poletuje vzduchem a dalo tomuto období jméno, protože to připomíná šedivé vlasy babiček?",
+   "a": "Pavučiny",
+   "story": "Za klidných podzimních dnů se mladí pavouci nechávají unášet větrem na stříbřitých vláknech a ta lidem připomínala šediny starých žen. Němci mají stejný obraz v názvu Altweibersommer, tedy „léto starých bab“.",
+   "source": "https://www.pocasiaradar.cz/zpravy-o-pocasi/fotogalerie-babiho-leta-podzimni-rana-plna-sedivych-vlasu--248849c0-248f-4659-b044-27c41027887f"
+  },
+  {
+   "id": "3c1ca1e4-f58b-4f14-9b4f-f9a720cd06c5",
+   "q": "Staré rčení říká, že dříví vás zahřeje dvakrát. Podruhé, když hoří v kamnech. Kdy poprvé?",
+   "a": "Při štípání",
+   "story": "Kdo si dříví sám naštípe, zapotí se dřív, než vůbec škrtne sirkou. Rčení se připisuje Henrymu Davidu Thoreauovi i Henrymu Fordovi.",
+   "source": "https://www.dumabyt.cz/rubriky/zahrada/pece-o-zahradu/drevo-zahreje-dvakrat_25740.html"
+  },
+  {
+   "id": "0eff9d96-ca85-45ce-9f36-df400f736ea2",
+   "q": "Slovo marioneta k nám přišlo z francouzštiny a skrývá se v něm zdrobnělina jednoho ženského jména. Kterého?",
+   "a": "Marie",
+   "story": "Francouzské „marionnette“ znamená doslova „malá Marion“, tedy Marenka. Podle rozšířeného výkladu jde o vzpomínku na figurky Panny Marie ze středověkých náboženských her.",
+   "source": "https://www.etymonline.com/word/marionette"
+  }
+ ],
+ "historie": [
+  {
+   "id": "c2e3d05c-6e26-4630-95bf-c6f06915f313",
+   "q": "V 50. letech 19. století prý císař Napoleon III. podával svým nejváženějším hostům příbory vyrobené ze vzácného kovu, zatímco méně významní hosté se museli spokojit se zlatem. O jaký kov šlo?",
+   "a": "Hliník",
+   "story": "Než byl v roce 1886 vyvinut elektrolytický Hall-Héroultův proces, bylo získávání hliníku z rudy tak obtížné, že stál více než zlato. V roce 1884 jím byl jako luxusním materiálem osazen vrchol Washingtonova monumentu, těsně předtím, než se cena zhroutila.",
+   "source": "https://en.wikipedia.org/wiki/History_of_aluminium"
+  },
+  {
+   "id": "7846077f-f818-5345-b503-f8ea8d37d7a4",
+   "q": "Na rozdíl od legend nebyli stavitelé pyramid v Gíze otroci, ale placení dělníci. Který nápoj tvořil vedle chleba základní součást jejich denních přídělů?",
+   "a": "Pivo",
+   "story": "Egyptské pivo bylo husté, mírně alkoholické a výživné, prakticky tekutý chléb, a dělníci ho dostávali denně, takže bylo stejně tak jídlem a mzdou jako občerstvením.",
+   "source": "https://aeraweb.org/feeding-pyramid-workers/"
+  },
+  {
+   "id": "58194b2f-5281-4c11-b0fb-7e94cc59cc25",
+   "q": "Za druhé světové války otiskly britské noviny Daily Telegraph křížovku. Lidé, kteří ji vyluštili za méně než dvanáct minut, pak dostali tajnou nabídku práce. Co měli dělat?",
+   "a": "Luštit šifry",
+   "story": "Někteří z nich skončili v Bletchley Parku, kde se prolamovaly německé šifry včetně Enigmy. Rychlé luštění tajenky tak byla vlastně přijímací zkouška.",
+   "source": "https://en.wikipedia.org/wiki/Women_in_Bletchley_Park"
+  },
+  {
+   "id": "62c8820c-b3ee-51b7-a09b-edcf29b147f1",
+   "q": "Ve 30. letech 17. století zažila Nizozemská republika nejslavnější spekulativní bublinu v dějinách, kdy jediná vzácná cibulka mohla krátce stát tolik co honosný amsterdamský dům na břehu kanálu. Která květina tuto horečku vyvolala?",
+   "a": "Tulipán",
+   "story": "Na vrcholu tulipánové horečky se exotické žíhané odrůdy jako Semper Augustus prodávaly za celá jmění, dokud trh v únoru 1637 téměř ze dne na den nezkolaboval.",
+   "source": "https://en.wikipedia.org/wiki/Tulip_mania"
+  },
+  {
+   "id": "41cf874c-14d3-4830-b8d0-2de8723c92b3",
+   "q": "V Británii a jejích koloniích následoval po 2. září 1752 oficiálně 14. září 1752. Proč z kalendáře prostě zmizelo jedenáct dní?",
+   "a": "Přechod z juliánského na gregoriánský kalendář",
+   "story": "Británie přijala gregoriánský kalendář zákonem Calendar (New Style) Act 1750 a dohnala tak většinu katolické Evropy, která přešla už v roce 1582. Starší juliánský kalendář počítal každý čtvrtý rok bez výjimky jako přestupný, takže se oproti slunečnímu roku posouval zhruba o tři dny za čtyři století. Do roku 1752 rozdíl narostl na jedenáct dní, a tak parlament nařídil vypustit je naráz: lidé šli spát 2. září a probudili se 14. září. Tentýž zákon také přesunul začátek právního roku z 25. března na 1. ledna.",
+   "source": "https://en.wikipedia.org/wiki/Calendar_(New_Style)_Act_1750"
+  },
+  {
+   "id": "496b3405-50aa-4315-bbca-8d3e85dada58",
+   "q": "Který vědec, proslulý svými pohybovými zákony, strávil poslední tři desetiletí svého života řízením anglické Královské mincovny a osobním lovem padělatelů?",
+   "a": "Isaac Newton",
+   "story": "Newton se stal dozorcem mincovny v roce 1696, v přestrojení chodil do hospod sbírat důkazy a nechal poslat na šibenici nechvalně známého padělatele Williama Chalonera.",
+   "source": "https://www.royalmintmuseum.org.uk/journal/people/isaac-newton/"
+  },
+  {
+   "id": "0a539a89-4048-472f-8e7c-e536439a4258",
+   "q": "Nejstarší nepřetržitě fungující univerzita na světě byla založena v roce 859 ženou jménem Fátima al-Fihrí. Ve které zemi se nachází?",
+   "a": "Maroko",
+   "story": "Univerzita al-Karavíjín ve městě Fés v Maroku je uznávána organizací UNESCO i Guinnessovou knihou rekordů jako nejstarší nepřetržitě fungující univerzita udělující akademické tituly, je o více než dvě století starší než univerzita v Boloni.",
+   "source": "https://www.guinnessworldrecords.com/world-records/oldest-university"
+  },
+  {
+   "id": "dc88edbd-72ac-4cf0-8030-ce1119e02a70",
+   "q": "Nejstarší centrální banka světa, založená v roce 1668, dnes financuje Nobelovu cenu za ekonomii. Kterému státu patří?",
+   "a": "Švédsko",
+   "story": "Riksbank je o 26 let starší než Bank of England a cenu za ekonomii vytvořila v roce 1968 u příležitosti svých 300. narozenin.",
+   "source": "https://www.riksbank.se/en-gb/about-the-riksbank/history/historical-timeline/1600-1699/sveriges-riksbank-is-founded/"
+  },
+  {
+   "id": "2ef7ff3a-9bb7-492b-93a3-761ad8a2da61",
+   "q": "Gettysburský projev Abrahama Lincolna zazněl hned po dvouhodinové řeči Edwarda Everetta. Jak dlouho zhruba trvalo přednesení Lincolnova vlastního projevu?",
+   "a": "Asi dvě minuty",
+   "story": "Projev má jen asi 270 slov a podle některých svědectví se fotograf ani nestihl připravit, než si Lincoln zase sedl.",
+   "source": "https://www.britannica.com/event/Gettysburg-Address"
+  },
+  {
+   "id": "d25873f2-0d6d-590b-b3ba-6898327e78da",
+   "q": "Když v roce 1911 zmizela z Louvru Mona Lisa, francouzská policie předvedla k výslechu jako podezřelého mladého malíře španělského původu žijícího v Paříži. Kdo to byl?",
+   "a": "Pablo Picasso",
+   "story": "Picasso byl vyslýchán, protože dříve koupil sochy ukradené z Louvru; skutečným zlodějem se ukázal být Vincenzo Peruggia, bývalý zaměstnanec Louvru, který obraz dva roky ukrýval ve svém bytě.",
+   "source": "https://en.wikipedia.org/wiki/Mona_Lisa"
+  },
+  {
+   "id": "cb0b2955-edbe-4705-8b74-00207b246159",
+   "q": "Mansa Músá je často označován za nejbohatšího člověka všech dob. Které západoafrické říši vládl ve čtrnáctém století?",
+   "a": "Mali",
+   "story": "Během své cesty do Mekky v roce 1324 rozdal po celé trase tolik zlata, že cena tohoto kovu v Káhiře podle dobových zpráv klesala ještě po mnoho let.",
+   "source": "https://en.wikipedia.org/wiki/Mansa_Musa"
+  },
+  {
+   "id": "09cd6605-30cf-4ca5-9cb5-428717fb4cff",
+   "q": "Která africká země vydala během hyperinflační krize v roce 2009 bankovku s nominální hodnotou sto bilionů dolarů?",
+   "a": "Zimbabwe",
+   "story": "V době tisku měla bankovka hodnotu jen několika amerických dolarů a země krátce poté svou vlastní měnu opustila.",
+   "source": "https://en.wikipedia.org/wiki/Zimbabwean_one_hundred_trillion_dollar_note"
+  },
+  {
+   "id": "ccf69e83-8da0-453c-9012-057e87dd203a",
+   "q": "V květnu 2010 provedl programátor na Floridě první zdokumentovaný nákup v reálném světě, který zaplatil bitcoiny. Zaplatil za něj deset tisíc mincí. Co si za ně koupil?",
+   "a": "Dvě pizzy",
+   "story": "Fanoušci bitcoinu dodnes slaví 22. květen jako Bitcoin Pizza Day, protože oněch deset tisíc mincí by později mělo hodnotu stovek milionů dolarů.",
+   "source": "https://en.bitcoin.it/wiki/Laszlo_Hanyecz"
+  },
+  {
+   "id": "b4de4587-d85c-5087-80ed-d0c71b769753",
+   "q": "Než se v 50. letech objevila v regálech s hračkami, prodávala se měkká modelovací hmota Play-Doh k úplně jinému účelu v domácnosti. K čemu původně sloužila?",
+   "a": "K čištění tapet",
+   "story": "Tato hmota se prodávala k setření uhelných sazí z tapet, a když domácnosti přestaly topit uhlím, přejmenovala ji upadající firma na dětskou hračku poté, co se doslechla, že si z ní děti rády modelují.",
+   "source": "https://en.wikipedia.org/wiki/Play-Doh"
+  },
+  {
+   "id": "7b908edd-c1b9-4efe-9583-3af6eee14dd7",
+   "q": "Kterému světoznámému fyzikovi byl v roce 1952 nabídnut úřad prezidenta Izraele, který zdvořile odmítl?",
+   "a": "Albert Einstein",
+   "story": "Nabídku předložil premiér David Ben Gurion poté, co zemřel první prezident, a Einstein odpověděl, že mu chybí schopnosti pro jednání s lidmi a pro výkon oficiálních funkcí.",
+   "source": "https://www.britannica.com/story/the-time-albert-einstein-was-asked-to-be-president-of-israel"
+  },
+  {
+   "id": "c469ab64-565d-56d5-9699-97e5951a1801",
+   "q": "Královna Alžběta II. navštívila během své vlády více než sto zemí, přesto nikdy neměla u sebe dokument, který musí mít každý jiný britský cestovatel. O jaký dokument jde?",
+   "a": "Cestovní pas",
+   "story": "Britské cestovní pasy se vydávají jménem panovníka, takže sama královna žádný nepotřebovala, ostatní členové královské rodiny včetně prince Philipa však museli mít svůj pas jako všichni ostatní.",
+   "source": "https://www.royal.uk/encyclopedia/passports"
+  },
+  {
+   "id": "d0c1a81f-ee07-4e5c-a208-680b34e6380f",
+   "q": "Dlouho před mobilními telefony byla finská firma Nokia založena v roce 1865 jako závod. Jaký materiál tento závod vyráběl?",
+   "a": "Papírovinu",
+   "story": "Nokia strávila své první století výrobou buničiny, gumových holínek a kabelů, než se vůbec dostala k telefonům.",
+   "source": "https://en.wikipedia.org/wiki/History_of_Nokia"
+  },
+  {
+   "id": "52110e08-6cd3-4c33-995e-c834b2dfea0e",
+   "q": "Husité používali ruční palnou zbraň s dlouhou úzkou hlavní. Pojmenovali ji podle hudebního nástroje, kterému se podobala, a z toho slova vzniklo anglické pistol i německé Pistole. Jak se ta husitská zbraň jmenovala?",
+   "a": "Píšťala",
+   "story": "Husitská píšťala se přes němčinu dostala do půlky Evropy jako pistole. Spolu s houfnicí, z níž vznikl anglický howitzer, patří mezi nejúspěšnější české vývozy do světových jazyků.",
+   "source": "https://en.wikipedia.org/wiki/Pistol"
+  },
+  {
+   "id": "e48c83dd-1986-4d34-bc32-fa34198e0c78",
+   "q": "Při druhé pražské defenestraci vyhodili místodržící z okna Pražského hradu z výšky asi patnácti metrů, a přesto přežili. Na co podle protestantů dopadli?",
+   "a": "Na hromadu hnoje",
+   "story": "Katolíci tvrdili, že pády zachytili andělé nebo Panna Marie. Protestanti se smáli, že je zachránil obyčejný hnůj v hradním příkopu.",
+   "source": "https://www.denik.cz/cesko/20070428prazkyhrad/"
+  },
+  {
+   "id": "7336ab85-ed14-56f3-ae9e-08a36d8b0d90",
+   "q": "Rozbor kostí gladiátorů pohřbených v Efezu ukazuje, že jedli převážně rostlinnou stravu. Jedna obilnina v ní dominovala natolik, že jim Římané přezdívali 'hordearii'. Jedlíky jaké obilniny tato přezdívka označovala?",
+   "a": "Ječmen",
+   "story": "Gladiátoři si zdaleka nedopřávali hostiny z masa, nabírali objem na ječmeni a fazolích. Strava bohatá na sacharidy vytvářela ochrannou vrstvu tuku a slovo 'hordearii' pochází z latinského hordeum, což znamená ječmen.",
+   "source": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0110489"
+  }
+ ]
+}

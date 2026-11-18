@@ -17,11 +17,33 @@ class TestSlovakNormalization:
             == "V roku tisícdeväťstošesťdesiatdeväť pristáli na Mesiaci."
         )
 
-    def test_comma_thousands_separator(self):
+    def test_comma_is_the_decimal_point(self):
+        # Founder bug 2026-11-16: "30,126 korún" (the euro rate) was read as
+        # thirty thousand. In sk/cs a comma is always the decimal point.
         assert (
-            normalize_numbers_for_tts("Má 24,000 rokov.", "sk")
-            == "Má dvadsaťštyritisíc rokov."
+            normalize_numbers_for_tts("Kurz bol 30,126 korún.", "sk")
+            == "Kurz bol tridsať celých stodvadsaťšesť korún."
         )
+
+    def test_trailing_decimal_zeros_are_not_said(self):
+        out = normalize_numbers_for_tts("Kurz 30,1260 koruny.", "sk")
+        assert out == "Kurz tridsať celých stodvadsaťšesť koruny."
+
+    def test_leading_decimal_zeros_are_said(self):
+        out = normalize_numbers_for_tts("Asi 3,05 litra.", "sk")
+        assert out == "Asi tri celé nula päť litra."
+
+    def test_whole_word_agrees_with_the_number(self):
+        assert normalize_numbers_for_tts("1,5 litra", "sk") == "jedna celá päť litra"
+        assert normalize_numbers_for_tts("2,5 litra", "sk") == "dve celé päť litra"
+
+    def test_marathon_distance(self):
+        out = normalize_numbers_for_tts("Maratón má 42,195 km.", "sk")
+        assert out == "Maratón má štyridsaťdva celých stodeväťdesiatpäť km."
+
+    def test_space_grouped_whole_part_with_decimals(self):
+        out = normalize_numbers_for_tts("Spolu 1 234,5 eura.", "sk")
+        assert out == "Spolu tisícdvestotridsaťštyri celých päť eura."
 
     def test_space_thousands_separator(self):
         assert (
@@ -31,7 +53,7 @@ class TestSlovakNormalization:
 
     def test_decimal_number(self):
         out = normalize_numbers_for_tts("Pí je približne 3,14.", "sk")
-        assert "tri celých štrnásť" in out
+        assert "tri celé štrnásť" in out
         assert "3,14" not in out
 
     def test_percent_becomes_word(self):
@@ -42,6 +64,16 @@ class TestSlovakNormalization:
         out = normalize_numbers_for_tts("Čísla 1969 a 12.", "sk")
         assert "tisícdeväťstošesťdesiatdeväť" in out
         assert "dvanásť" in out
+
+
+class TestCzechDecimals:
+    def test_comma_is_the_decimal_point(self):
+        out = normalize_numbers_for_tts("Měří 42,195 km.", "cs")
+        assert "čtyřicet dva celých sto devadesát pět" in out
+        assert "tisíc" not in out
+
+    def test_two_is_feminine(self):
+        assert normalize_numbers_for_tts("2,5 litru", "cs") == "dvě celé pět litru"
 
 
 class TestPassthrough:
@@ -175,3 +207,31 @@ class TestCardinalsStayAsTheyWere:
             == "Přibližně dvěstě tisíc"
         )
         assert normalize_numbers_for_tts("2 miliony", "cs") == "dva miliony"
+
+
+class TestSymbols:
+    """The voice reads "@" as English "at" inside sk/cs text; a question
+    about the Czech word "zavináč" then sounds broken (founder 2026-10-25)."""
+
+    def test_at_sign_spoken_in_czech(self):
+        assert (
+            normalize_numbers_for_tts("Symbolu @ v e-mailu říkáme zavináč.", "cs")
+            == "Symbolu zavináč v e-mailu říkáme zavináč."
+        )
+
+    def test_at_sign_spoken_in_slovak_inside_an_address(self):
+        assert normalize_numbers_for_tts("Píš na hi@trubbo.app", "sk") == (
+            "Píš na hi zavináč trubbo.app"
+        )
+
+    def test_free_standing_ampersand_becomes_and(self):
+        assert normalize_numbers_for_tts("Tom & Jerry", "cs") == "Tom a Jerry"
+
+    def test_ampersand_inside_a_name_is_kept(self):
+        assert normalize_numbers_for_tts("Firma AT&T", "sk") == "Firma AT&T"
+
+    def test_english_is_untouched(self):
+        # English voice reads "@" and "&" natively.
+        assert normalize_numbers_for_tts("Tom & Jerry @ home", "en") == (
+            "Tom & Jerry @ home"
+        )

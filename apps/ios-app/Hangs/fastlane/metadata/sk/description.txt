@@ -1,10 +1,10 @@
-Trubbo je vedomostný kvíz, ktorý hráš hlasom. Otázku ti prečíta, odpovieš nahlas vlastnými slovami a hneď vieš, či máš pravdu. Netreba ťukať ani čítať, takže ho môžeš hrať s priateľmi, s deťmi, pri varení aj na cestách.
+Trubbo je zábavný kvíz, ktorý hráš hlasom. Otázku ti prečíta, odpovieš nahlas vlastnými slovami a hneď vieš, či máš pravdu. Otázky počujú všetci okolo, takže odpovedať môže ktokoľvek, napríklad doma s partiou, s deťmi alebo cestou autom.
 
 AKO TO FUNGUJE
 • Každú otázku číta prirodzený hlas
 • Odpovedáš vlastnými slovami. Trubbo pochopí, čo myslíš, nielen presné znenie
 • Pri otázkach s možnosťami povedz odpoveď alebo jej číslo
-• Kvíz ovládaš hlasom: štart, ok, ďalej, zopakuj, preskoč
+• Kvíz ovládaš hlasom: štart, potvrď, ďalej, znova, ďalšia
 • Po každej odpovedi dostaneš krátke vysvetlenie a odkaz na zdroj
 
 VYBER SI KVÍZ
@@ -13,17 +13,18 @@ VYBER SI KVÍZ
 • Hraj po slovensky, česky alebo anglicky
 • Radšej píšeš? Každú odpoveď môžeš zadať aj na obrazovke
 
+OVERENÉ OTÁZKY
+AI chat si v kvíze vie vymýšľať a znie pritom isto. Trubbo každú otázku pred hrou overí podľa zdrojov na webe a čo neobstojí, vyradí. Pri každej odpovedi vidíš, odkiaľ fakt pochádza.
+
 VLASTNÝ BALÍK
-Napíš akúkoľvek tému, napríklad vesmír pre deti alebo hudba 90. rokov, a Trubbo ti pripraví balík 30 otázok. Prvé otázky môžeš hrať už o pár minút.
+Napíš akúkoľvek tému, napríklad vesmír pre deti alebo hudbu 90. rokov, a Trubbo ti pripraví balík 30 otázok. Aj tie overí podľa zdrojov. Prvé otázky môžeš hrať už o pár minút.
 
 ZADARMO ALEBO TRUBBO PLUS
 Každý mesiac 30 otázok zadarmo. Predplatné Trubbo Plus ti dá 1 000 otázok mesačne. Jednorazový balík 100 otázok nikdy nevyprší. Ceny vidíš v aplikácii ešte pred nákupom. Predplatné sa obnovuje automaticky, kým ho nezrušíš v nastaveniach Apple účtu.
 
-BEZPEČNOSŤ
-Ak hráš v aute, vodič by mal hrať iba hlasom. Počas jazdy nikdy neobsluhuj telefón a vždy dodržiavaj dopravné predpisy.
-
 DOBRÉ VEDIEŤ
-Otázky a vyhodnotenie odpovedí vznikajú s pomocou umelej inteligencie a môžu obsahovať chyby. Svoje údaje môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
+Hráš v aute? Jazdi opatrne.
+Otázky a vyhodnotenie odpovedí vznikajú s pomocou umelej inteligencie. Otázky overujeme podľa zdrojov, aj tak sa však výnimočne môže objaviť chyba. Svoje údaje môžeš kedykoľvek exportovať alebo vymazať v Nastaveniach.
 
 Zásady ochrany súkromia: https://trubbo.app/sk/privacy
 Podmienky používania: https://trubbo.app/sk/terms

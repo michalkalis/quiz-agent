@@ -15,8 +15,11 @@ import SwiftUI
 
 struct DailyRoundEndView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var viewModel: QuizViewModel
     @StateObject private var daily: DailyChallengeViewModel
+    /// #232 (daily text B): the same five questions as a link.
+    @StateObject private var share: SharedQuizShareModel
     private let round: DailyRound
 
     private enum Metrics {
@@ -38,6 +41,7 @@ struct DailyRoundEndView: View {
             day: round.day,
             state: round.state
         ))
+        _share = StateObject(wrappedValue: Self.shareModel(viewModel))
     }
 
     #if DEBUG
@@ -47,6 +51,7 @@ struct DailyRoundEndView: View {
             round = viewModel.activeDaily
                 ?? DailyRound(day: daily.day, language: viewModel.settings.language)
             _daily = StateObject(wrappedValue: daily)
+            _share = StateObject(wrappedValue: Self.shareModel(viewModel))
         }
     #endif
 
@@ -73,10 +78,18 @@ struct DailyRoundEndView: View {
                     if let bestHit = content.bestHit {
                         bestHitCard(bestHit)
                     }
+                    if let failure = share.failureMessage {
+                        Text(verbatim: failure)
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .accessibilityIdentifier("daily.shareFailed")
+                    }
                 }
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
                 .padding(.bottom, Theme.Hangs.Spacing.sm)
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
 
             footer
         }
@@ -113,7 +126,7 @@ struct DailyRoundEndView: View {
                 }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "Final score: \(String(content.score)) out of \(content.total)", comment: "Accessibility label for the final-score card"))
+            .accessibilityLabel(String(localized: "Final score: \(String(content.score)) out of \(content.total)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
             .accessibilityIdentifier("daily.score")
         }
     }
@@ -137,7 +150,7 @@ struct DailyRoundEndView: View {
     private func bestHitCard(_ hit: DailyBestHit) -> some View {
         HangsCard(padding: Self.cardPadding) {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                HangsSectionLabel(text: hit.rare ? "your rarest hit" : "your best hit")
+                HangsSectionLabel(text: hit.rare ? "few knew this one" : "your best answer")
                 Text(verbatim: hit.answer)
                     .font(.hangsTitle)
                     .foregroundStyle(Theme.Hangs.Colors.ink)
@@ -162,42 +175,72 @@ struct DailyRoundEndView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Hangs.Spacing.sm) {
-                shareButton
-                homeButton.frame(width: Metrics.homeWidth)
-            }
-            VStack(spacing: Theme.Hangs.Spacing.xs) {
-                shareButton
-                homeButton
+        // From the size where button titles wrap, the two stack: a 124pt Home
+        // beside Share would break "Home" mid-word (same rule as RoundCompleteView).
+        let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
+            shareButton
+            homeButton
+        }
+        return Group {
+            if HangsButtonTitle.wraps(at: dynamicTypeSize) {
+                stacked
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Hangs.Spacing.sm) {
+                        shareButton
+                        homeButton.frame(width: Metrics.homeWidth)
+                    }
+                    stacked
+                }
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)
     }
 
+    /// #232: with the switch on and this phone's daily session at hand, the
+    /// text carries a link to the same questions (made on the tap); else the
+    /// text alone, as before.
+    @ViewBuilder private var shareButton: some View {
+        if viewModel.shareableRoundSessionId != nil {
+            Button(action: shareWithLink) {
+                shareLabel(isCreating: share.isCreating)
+            }
+            .buttonStyle(.plain)
+            .disabled(share.isCreating)
+            .accessibilityIdentifier("daily.share")
+        } else {
+            ShareLink(item: content.shareText) {
+                shareLabel(isCreating: false)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("daily.share")
+        }
+    }
+
     /// The primary capsule's look on a `ShareLink` (a button cannot hold one).
-    private var shareButton: some View {
-        ShareLink(item: content.shareText) {
-            Label {
-                Text("Share")
-                    .font(.hangsButton)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            } icon: {
+    private func shareLabel(isCreating: Bool) -> some View {
+        Label {
+            Text("Share")
+                .font(.hangsButton)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        } icon: {
+            if isCreating {
+                ProgressView()
+                    .tint(Theme.Hangs.Colors.textOnAction)
+            } else {
                 Image(systemName: "square.and.arrow.up")
                     .font(.system(size: Metrics.shareIcon, weight: .semibold))
             }
-            .foregroundStyle(Theme.Hangs.Colors.textOnAction)
-            .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .frame(maxWidth: .infinity, minHeight: Metrics.buttonHeight)
-            .background(
-                Capsule().fill(Theme.Hangs.Colors.action)
-                    .hangsShadow(Theme.Hangs.Shadow.cta)
-            )
         }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("daily.share")
+        .foregroundStyle(Theme.Hangs.Colors.textOnAction)
+        .padding(.horizontal, Theme.Hangs.Spacing.md)
+        .frame(maxWidth: .infinity, minHeight: Metrics.buttonHeight)
+        .background(
+            Capsule().fill(Theme.Hangs.Colors.action)
+                .hangsShadow(Theme.Hangs.Shadow.cta)
+        )
     }
 
     private var homeButton: some View {
@@ -209,5 +252,18 @@ struct DailyRoundEndView: View {
 
     private func refresh() async {
         await daily.refresh(day: round.day, language: round.language)
+    }
+
+    private func shareWithLink() {
+        let content = content
+        share.send { content.shareText(link: $0.url) }
+    }
+
+    private static func shareModel(_ viewModel: QuizViewModel) -> SharedQuizShareModel {
+        SharedQuizShareModel(
+            network: viewModel.networkService,
+            source: viewModel.shareableRoundSessionId.map { .session($0) },
+            previewTopic: { _ in String(localized: "Daily challenge", bundle: .interface, locale: .interface, comment: "#232: share sheet preview title of a daily challenge link") }
+        )
     }
 }

@@ -19,11 +19,14 @@ from __future__ import annotations
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ...auth.identity import AuthSubject
+from ...config import get_settings
+from ...rate_limit import limiter
 from ...usage import rc_service
-from ..deps import get_auth_sessionmaker, require_auth_or_grace
+from ...usage.caps import ENTITLEMENT_SYNCS, DailyCapExceeded, UsageCaps
+from ..deps import get_auth_sessionmaker, get_usage_caps, require_auth_or_grace
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +34,12 @@ router = APIRouter()
 
 
 @router.post("/entitlements/sync")
+@limiter.limit("10/minute")
 async def sync_entitlements(
+    request: Request,
     subject: AuthSubject = Depends(require_auth_or_grace),
     sessionmaker=Depends(get_auth_sessionmaker),
+    usage_caps: UsageCaps = Depends(get_usage_caps),
 ):
     if not subject.authenticated or not subject.subject_id:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -45,6 +51,15 @@ async def sync_entitlements(
         raise HTTPException(status_code=503, detail="Usage persistence unavailable")
 
     account_id = subject.subject_id
+    # #207.13: every sync is a RevenueCat REST call on our project's shared rate
+    # limit. iOS treats sync as best effort (the webhook still lands), so a
+    # refused one costs a real player nothing.
+    try:
+        await usage_caps.consume(
+            account_id, ENTITLEMENT_SYNCS, 1, get_settings().daily_cap_entitlement_syncs
+        )
+    except DailyCapExceeded as exc:
+        raise exc.http_error() from exc
     try:
         snapshot = await rc_service.fetch_rc_subscriber(account_id, api_key=api_key)
         await rc_service.apply_sync_snapshot(sessionmaker, account_id, snapshot)

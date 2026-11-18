@@ -44,6 +44,24 @@ enum SilenceEvent: Sendable, Equatable {
     case silenceAfterSpeech(duration: TimeInterval)
 }
 
+/// #208.7 (founder, TF 2026-10-16: "from the moment I start saying a command
+/// it should show it hears me, then that it's processing"): the command bar's
+/// own speech edges. Finer than `SilenceEvent`, which only knows "started" and
+/// "the 0.8 s hangover elapsed": the bar must turn to "processing" as soon as
+/// the level drops, not a second later. Levels are dBFS of the band-limited
+/// meter (`InputLevelMeter`), for the per-utterance log only.
+enum SpeechActivityEvent: Sendable, Equatable {
+    /// The level held the onset margin above the floor (EnergyVAD, 7 dB / 60 ms).
+    case began(levelDb: Float, noiseFloorDb: Float?)
+    /// The level fell under the release margin; `speechSecs` is how long the
+    /// speech before it lasted, `peakDb` its loudest buffer.
+    case paused(speechSecs: TimeInterval, peakDb: Float)
+    /// Speech came back before the hangover elapsed (same utterance).
+    case resumed
+    /// The utterance is over: the hangover elapsed, or it was dropped as a blip.
+    case ended
+}
+
 /// Fail-loud availability of the on-device English voice-command transcriber
 /// (#77 device fix). Every failure that used to be swallowed (missing model
 /// assets, `analyzer.start` throw, nil audio format, transcriber stream error)
@@ -51,12 +69,28 @@ enum SilenceEvent: Sendable, Equatable {
 enum VoiceCommandAvailability: Sendable, Equatable {
     /// Not yet determined (prepareAssets hasn't finished).
     case unknown
+    /// #237: speech recognition was never asked for. Commands stay off until
+    /// the player turns them on (onboarding or the listen bar); nothing asks
+    /// on its own.
+    case permissionNeeded
+    /// #237: speech recognition is denied or restricted; only iOS Settings
+    /// can turn commands on now.
+    case permissionDenied
     /// en-US model assets are being downloaded/installed.
     case installingAssets
     /// Recognizer assets installed — commands can work.
     case ready
     /// Commands cannot work; the app is button-only. Reason is human-readable.
     case unavailable(reason: String)
+
+    /// #237: commands wait on the speech-recognition permission (never asked,
+    /// or refused) — the states only the player can change.
+    var awaitsPermission: Bool {
+        switch self {
+        case .permissionNeeded, .permissionDenied: true
+        case .unknown, .installingAssets, .ready, .unavailable: false
+        }
+    }
 }
 
 /// One transcriber result on the command path, carrying its own finality.
@@ -100,11 +134,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     // every listening window, and cancelling a `for await` permanently finishes
     // a shared AsyncStream — the dead-voice-commands P0.
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent>
-    /// The same VAD speech edges as `makeSilenceEventStream`, on a channel of
-    /// their own for the command bar's "hearing" cue (TF 2026-10-07). Separate
+    /// The VAD's speech edges for the command bar's "hearing" / "processing"
+    /// cues (TF 2026-10-07, #208.7), on a channel of their own. Separate
     /// because a channel serves ONE consumer (StreamChannel): sharing the
     /// silence channel would let the cue steal auto-stop from an answer.
-    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent>
+    func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent>
     func makeBargeInStream() -> AsyncStream<Void>
 
     /// English transcripts from the paired command transcriber (#77, task 77.5),
@@ -151,11 +185,27 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
 
     /// #175: make the command recognizer match the quiz language. No-op when
     /// it already does; deferred (retried at the next window) while a
-    /// listening window is open. Called before every window start.
+    /// listening window is open. Called before every window start. Never
+    /// raises the speech-recognition prompt (#237).
     func setCommandEngine(_ selection: CommandEngineSelection) async
+
+    /// #237: the player asked for voice commands. Raises the system
+    /// speech-recognition prompt only while it was never answered, and returns
+    /// whether recognition is allowed. Allowed starts preparing the on-device
+    /// model without waiting for it (`commandAvailability` reports
+    /// `.installingAssets` → `.ready`); refused lands in `.permissionDenied`.
+    func enableCommands() async -> Bool
 
     /// Signal whether TTS is currently playing (enables barge-in detection).
     func setTTSPlaybackActive(_ active: Bool)
+
+    /// #208.7: while the question is read with the listener kept up, the
+    /// detector must not take the app's own voice for speech — an echo would
+    /// hold it "speaking" through the read and the driver's first word after
+    /// it would raise no edge. Suspended, levels are still metered but no
+    /// edge is raised and the noise floor stays the cabin's; resuming starts
+    /// from silence. No effect on an answer recording.
+    func suspendSpeechEdges(_ suspended: Bool)
 
     /// #184 track B: the shared mic engine doubles as the ANSWER recorder. The
     /// batch answer path needs to know whether an engine is live (or coming up)
@@ -169,6 +219,12 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     /// while no engine runs. Recording metadata and route-change handling
     /// read it.
     var voiceProcessingStatus: VoiceProcessingStatus? { get }
+
+    /// #208.5: whether the next engine start may arm voice processing at all.
+    /// `false` under the quiet Home / set-end session, `true` under the quiz
+    /// session; the route policy still decides within the quiz. Read once per
+    /// engine start.
+    var voiceProcessingAllowed: Bool { get set }
 
     /// Sample rate of the 16-bit mono PCM the answer sink receives (the
     /// analyzer format: 16 kHz, or 8 kHz on a narrowband Bluetooth route).
@@ -189,14 +245,14 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // re-arm gets a fresh AsyncStream, so cancelling a replaced consumer can
     // never starve the current one. See StreamChannel.swift for the invariant.
     let silenceChannel = StreamChannel<SilenceEvent>()
-    let speechActivityChannel = StreamChannel<SilenceEvent>()
+    let speechActivityChannel = StreamChannel<SpeechActivityEvent>()
     let bargeInChannel = StreamChannel<Void>()
     let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
     let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
-    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent> { speechActivityChannel.makeStream() }
+    func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
@@ -235,6 +291,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// #185 track C — see the protocol. Written by the +Engine lifecycle.
     var voiceProcessingStatus: VoiceProcessingStatus?
 
+    /// #208.5 — see the protocol.
+    var voiceProcessingAllowed = true
+
     /// #184 track B — see the protocol. Set when the tap is installed.
     var answerAudioSampleRate: Double = 16000
 
@@ -268,6 +327,12 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var pendingFirstHypothesisSince: AnyClock<Duration>.Instant?
 
     var isTTSPlaybackActive = false
+
+    /// #208.7 — see `suspendSpeechEdges`. `lastLevelDb` / `utterancePeakDb`
+    /// feed the `SpeechActivityEvent` levels.
+    var speechEdgesSuspended = false
+    var lastLevelDb: Float = -160
+    var utterancePeakDb: Float = -160
 
     // MARK: Speech detection (#185 track A — the logic lives in +VAD.swift)
 
@@ -341,16 +406,27 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     /// status. Defaults to the real `SFSpeechRecognizer` dialog; tests inject
     /// a stub so the decision logic can run without the system prompt (#105).
     /// Internal, not `private` — consumed by the +Assets sibling-file extension.
+    /// #237: called ONLY from `enableCommands()`, i.e. after the player asked.
     let authorizationProvider: () async -> SFSpeechRecognizerAuthorizationStatus
+
+    /// #237: the current speech-recognition status, read without prompting.
+    /// Launch, a language switch and every listening window read this one.
+    let authorizationStatusProvider: () -> SFSpeechRecognizerAuthorizationStatus
+
+    /// #237: the model preparation `enableCommands()` started, so a second tap
+    /// while it runs does not start a second download.
+    var assetPreparationTask: Task<Void, Never>?
 
     init(
         clock: AnyClock<Duration> = .continuous,
         authorizationProvider: (() async -> SFSpeechRecognizerAuthorizationStatus)? = nil,
+        authorizationStatusProvider: (() -> SFSpeechRecognizerAuthorizationStatus)? = nil,
         engine: CommandTranscriberAdapter? = nil,
         selection: CommandEngineSelection = .speechEnglish
     ) {
         self.clock = clock
         self.authorizationProvider = authorizationProvider ?? Self.requestSystemAuthorization
+        self.authorizationStatusProvider = authorizationStatusProvider ?? { SFSpeechRecognizer.authorizationStatus() }
         let resolvedEngine = engine ?? selection.makeAdapter()
         transcriberEngine = resolvedEngine
         // Stamp the process-wide engine/locale telemetry tags (#120): every
@@ -374,9 +450,9 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // MARK: - Authorization + assets
 
     //
-    // requestAuthorizationAndPrepareAssets() / prepareAssets() /
-    // markCommandsUnavailable() — the #105 permission flow and the #77/#120
-    // engine-asset preparation — live in SilenceDetectionService+Assets.swift.
+    // prepareCommandsIfAuthorized() / enableCommands() / prepareAssets() /
+    // markCommandsUnavailable() — the #105/#237 permission flow and the
+    // #77/#120 engine-asset preparation — live in SilenceDetectionService+Assets.swift.
 
     // MARK: - Lifecycle
 

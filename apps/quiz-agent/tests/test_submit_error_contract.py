@@ -66,13 +66,13 @@ class _StubSessionManager:
         self._session = _session()
         self._lock = asyncio.Lock()
 
-    def get_session(self, session_id: str) -> QuizSession:
+    async def get_session(self, session_id: str) -> QuizSession:
         return self._session
 
-    def update_session(self, session: QuizSession) -> bool:
+    async def update_session(self, session: QuizSession) -> bool:
         return True
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
+    def session_lock(self, session_id: str, *, wait: bool = True) -> asyncio.Lock:
         return self._lock
 
 

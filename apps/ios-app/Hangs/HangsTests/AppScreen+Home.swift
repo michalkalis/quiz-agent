@@ -67,7 +67,7 @@ extension AppScreen {
     }
 
     private static func categories() -> AnyView {
-        AnyView(HomeCategoryPicker(categories: .constant(["geography-world", "history", "entertainment"])))
+        AnyView(HomeCategoryPicker(categories: .constant(["geography-world", "history", "entertainment"]), includeLocalQuestions: .constant(true)))
     }
 
     private static func usage(

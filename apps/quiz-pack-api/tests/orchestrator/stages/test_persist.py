@@ -30,6 +30,7 @@ Why these scenarios:
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 import sys
@@ -635,4 +636,39 @@ async def test_fail_pack_in_session_on_order_without_pack_is_a_noop(
         await fail_pack_in_session(s, live_order)  # must not raise
         await s.commit()
 
+    await _cleanup_order(session, order.id)
+
+
+@pytest.mark.asyncio
+async def test_first_batch_waits_for_a_sign_in_rekey_and_copies_the_account_owner(
+    session: AsyncSession,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """#217.2 race: sign-in (quiz-agent `rekey_purchases`) moves the order from
+    the anon id to the account in its own transaction. If the first batch read
+    `order.user_id` before that commit and created the pack afterwards, the pack
+    would stay on the anon id: invisible in My packs, unplayable after sign-in.
+    The persist locks the order row, so it waits for the sign-in and copies the
+    account id. Without the lock the pack lands on "anon-217"."""
+    order = await _make_order(session, target_count=5)
+    await session.execute(
+        text("UPDATE generation_orders SET user_id = 'anon-217' WHERE id = :oid"),
+        {"oid": order.id},
+    )
+    await session.commit()
+    ctx = _make_ctx(order, [])
+    stage = PersistStage(session_factory)
+
+    async with session_factory() as sign_in:  # uncommitted re-key holds the row
+        await sign_in.execute(
+            text("UPDATE generation_orders SET user_id = 'acct-217' WHERE id = :oid"),
+            {"oid": order.id},
+        )
+        persist = asyncio.create_task(stage.persist_batch(ctx, [_stub_question(0)]))
+        await asyncio.sleep(0.5)
+        assert not persist.done(), "persist must wait for the sign-in to commit"
+        await sign_in.commit()
+    pack = await asyncio.wait_for(persist, timeout=10)
+
+    assert pack.user_id == "acct-217"
     await _cleanup_order(session, order.id)

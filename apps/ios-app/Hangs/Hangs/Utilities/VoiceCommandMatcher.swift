@@ -238,10 +238,22 @@ enum VoiceCommandMatcher {
         let content = contentTokens(tokens, language: language, on: screen)
         guard content.count == 1, let token = content.first else { return false }
         let best = comparableVariants(for: .skip, on: screen, language: language, isFinal: isFinal)
-            .map { score(token, $0, isFinal: isFinal) }
+            .map { variant in
+                // #224: "další" / "ďalšia" begin like the everyday "dál", "dále",
+                // "dal" ("further", "he gave"). A shorter token earns the
+                // truncation credit only when it is the skip word missing its
+                // last letter; anything else is judged on edit distance alone.
+                let isCutOff = variant.hasPrefix(token) && variant.count - token.count <= Self.maxSkipTruncation
+                return token.count < variant.count && !isCutOff
+                    ? similarity(token, variant)
+                    : score(token, variant, isFinal: isFinal)
+            }
             .max() ?? 0
         return best >= skipFloor
     }
+
+    /// Letters a heard skip token may lack and still count as a cut-off skip word.
+    static let maxSkipTruncation = 1
 
     // MARK: - Scoring
 

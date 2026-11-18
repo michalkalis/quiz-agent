@@ -1,0 +1,178 @@
+<title>Prirodzené otázky: vzorka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of question cards, sticky progress bar on top; tap-first controls for phone use. */
+:root {
+  --bg: #f3f4f1;
+  --card: #ffffff;
+  --fg: #1b1d1a;
+  --muted: #646a62;
+  --line: #dde0d9;
+  --accent: #1f5f4a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --no: #8a3b2a;
+  --no-soft: #f3e1dc;
+  --font: "Rethink Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+    --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121411; --card: #1b1e1a; --fg: #e7eae4; --muted: #9aa196; --line: #2c312a;
+  --accent: #6fc3a2; --accent-ink: #0f1a15; --accent-soft: #1f3a30; --no: #e49a86; --no-soft: #3a2420;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 4rem; }
+header.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg);
+  padding-block: 0.75rem; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+header.bar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; flex: 1 1 auto; text-wrap: balance; }
+.progress { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.status { font-size: 0.85rem; color: var(--muted); width: 100%; }
+.status.bad { color: var(--no); }
+.intro { color: var(--muted); max-width: 62ch; margin-block: 1rem 1.5rem; }
+.list { display: grid; gap: 1rem; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+.q.done { border-color: var(--accent); }
+.meta { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.meta .lang { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; }
+.stem { font-size: 1.05rem; font-weight: 500; margin: 0; }
+.opts { margin: 0; padding-left: 1.2rem; color: var(--fg); }
+details summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details p { margin: 0.4rem 0 0; }
+.ans { font-weight: 700; }
+.row { display: grid; gap: 0.4rem; }
+.row label, .row .lbl { font-size: 0.85rem; color: var(--muted); }
+.scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; }
+.scale button, .yn button {
+  font: inherit; font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+  border-radius: 8px; padding-block: 0.55rem; cursor: pointer; min-width: 0;
+}
+.scale button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.yn { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.yn button[data-v="yes"][aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.yn button[data-v="no"][aria-pressed="true"] { background: var(--no-soft); border-color: var(--no); color: var(--fg); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea { font: inherit; width: 100%; min-height: 2.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 0.5rem; resize: vertical; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <h1>Prirodzené otázky: vzorka</h1>
+    <span class="progress" id="progress">0 / 0</span>
+    <span class="status" id="status">Pripájam úložisko…</span>
+  </header>
+  <p class="intro">Nové otázky po slovensky, česky aj anglicky, zamiešané a bez označenia. Pri každej najprv skús odpovedať, až potom si rozbaľ odpoveď. Potom daj zábavu 1 až 10 a označ, či bola šanca odpoveď vedieť alebo tipnúť a či otázka znie prirodzene. Ukladá sa hneď po ťuknutí.</p>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const ITEMS = [{"id": "R1", "lang": "sk", "question": "Tulipány sa do Európy dostali z Osmanskej ríše a spolu s nimi aj ich názov. Pochádza z tureckého slova pre vec, ktorú ľudia nosili na hlave a ktorej sa kvet tvarom podobá. Čo to bolo?", "answer": "turban", "options": [], "explanation": "Zatvorený kvet tulipánu Európanom pripomínal zamotaný turban. Samotní Turci však tulipán volajú úplne inak, a to lale."}, {"id": "R2", "lang": "sk", "question": "Úplne prvý tovar na svete, ktorý pri pokladni načítali čiarovým kódom, bola drobnosť, akú dodnes nájdete hneď vedľa pokladničného pásu. Čo to bolo?", "answer": "Žuvačky", "options": [], "explanation": "Bol to balíček žuvačiek Wrigley's Juicy Fruit v supermarkete v americkom Ohiu a dnes je vystavený v múzeu Smithsonian."}, {"id": "R3", "lang": "cs", "question": "Brambory se k nám dostaly v 18. století od severních sousedů. Po kterém německém území je česky pojmenováváme?", "answer": "Braniborsko", "options": [], "explanation": "Brambory jsou zkomolené „braniborské“ hlízy, tedy plodiny z Braniborska. Proto se jim v některých krajích říkalo „brambor“ nebo „bramboř“, zatímco jinde zůstaly „zemáky“ či „erteple“."}, {"id": "R4", "lang": "cs", "question": "Malá stříbrná krabička Roland TB-303 dala svým kvákavým zvukem vzniknout acid housu. Japonci ji přitom vyráběli pro úplně obyčejné muzikanty jako náhradu. Za kterého člena kapely ji měla zastoupit?", "answer": "baskytaristu", "options": [], "explanation": "TB-303 měla kytaristům hrát basový doprovod, jenže zněla jako robot a skoro nikdo ji nechtěl. Za pár drobných ji pak v bazarech skoupili chicagští DJové a z toho divného zvuku udělali celý nový žánr."}, {"id": "R5", "lang": "cs", "question": "Po vydatném sněžení je venku zvláštní ticho, i když auta a lidé jsou venku dál. Čím to je?", "answer": "Sníh pohlcuje zvuk", "options": [], "explanation": "Čerstvý prašan je z velké části vzduch uvězněný mezi krystalky, takže funguje jako akustická pěna v nahrávacím studiu. Jakmile sníh ztvrdne nebo namrzne, začne zvuk naopak odrážet a ticho zmizí."}, {"id": "R6", "lang": "sk", "question": "Japonský prístroj Roland TB-303, ktorého bublavý, kvákavý zvuk dal základ štýlu acid house, mal pôvodne verne napodobňovať jeden obyčajný hudobný nástroj. Ktorý?", "answer": "basová gitara", "options": [], "explanation": "Gitaristom mal nahradiť basáka pri cvičení, no znel tak umelo, že sa nepredával a skončil lacno v bazároch. Tam ho objavili chicagskí producenti, ktorí krútili gombíkmi počas hrania, a z tohto omylu vznikol acid house."}, {"id": "R7", "lang": "cs", "question": "Staré britské hospody mají nad dveřmi malovaný vývěsní štít, třeba s červeným lvem nebo korunou. Proč se hospody kdysi označovaly obrázkem, a ne jen nápisem?", "answer": "Lidé neuměli číst", "options": [], "explanation": "Většina středověkých hostů byla negramotná, takže si hospodu pamatovali podle obrázku. Král Richard II. dokonce v roce 1393 nařídil, že každý hostinec s pivem musí mít vývěsní štít, aby ho snadno našli královští ochutnávači piva."}, {"id": "R8", "lang": "sk", "question": "Techno ako hudobný štýl sa nezrodil v Európe, ale v americkom meste, ktoré celý svet poznal hlavne ako centrum výroby áut. O ktoré mesto ide?", "answer": "Detroit", "options": [], "explanation": "Trojica černošských mladíkov z Detroitu, inšpirovaná nemeckým Kraftwerkom, chcela hudbou zachytiť zvuk upadajúceho mesta strojov a montážnych liniek. Do Berlína techno prerazilo až neskôr, po páde Berlínskeho múru."}, {"id": "R9", "lang": "cs", "question": "Do berlínského klubu Berghain, nejslavnějšího techno klubu světa, se dostane jen málokdo. Když vás vyhazovač pustí dovnitř, mobil vám nechá, ale ještě s ním u vchodu něco udělá. Co?", "answer": "přelepí mu foťák", "options": [], "explanation": "Uvnitř se nesmí fotit, takže dostanete nálepku přes objektiv mobilu. Proto z klubu skoro neexistují fotky a o to víc legend se o něm vypráví."}, {"id": "R10", "lang": "en", "question": "Almost every curling stone used at the Winter Olympics is cut from granite taken from one small, uninhabited island. Which country is it in?", "answer": "Scotland", "options": [], "explanation": "The island is Ailsa Craig, off Scotland's west coast. Its granite is so dense it barely absorbs water, so the stones don't crack when the ice melts and refreezes on them."}, {"id": "R11", "lang": "en", "question": "The squelchy 'acid' sound of acid house comes from a small Roland box that flopped when it came out in the early 1980s. It was built so that guitarists practising alone could replace which band member?", "answer": "Bass player", "options": [], "explanation": "The TB-303 was meant to play polite bass lines, but it sounded nothing like a real bass. It ended up cheap in second-hand shops, where Chicago producers cranked its knobs and accidentally invented acid house."}, {"id": "R12", "lang": "cs", "question": "Ve slavném berlínském technoklubu Berghain vám ochranka u vchodu nechá mobil, ale jednu jeho část vám přelepí nálepkou. Kterou?", "answer": "Fotoaparát", "options": [], "explanation": "V Berghainu platí přísný zákaz focení, aby lidé mohli tančit celou noc, aniž by se druhý den objevili na sociálních sítích. Nálepka na objektivu se tak stala jedním ze symbolů klubu sídlícího v bývalé elektrárně."}, {"id": "R13", "lang": "en", "question": "The squelchy little Roland box that gave acid house its sound was originally a commercial flop. It was sold to musicians as a stand-in for which band member?", "answer": "The bass player", "options": [], "explanation": "The TB-303 was meant to give guitarists a realistic bass line to practise with, but it sounded nothing like a real bass. When Chicago producers twisted its knobs, that 'wrong' wobbling sound became acid house."}, {"id": "R14", "lang": "cs", "question": "Voda v hrnci při varu jen klidně bublá, ale mléko vám vyběhne přes okraj, sotva se otočíte. Co na mléce za to může?", "answer": "škraloup", "options": [], "explanation": "Z bílkovin se na hladině udělá blána, škraloup, a ten jako poklička zadrží páru. Bubliny pod ním nabírají v pěnu, až ho zvednou přes okraj. Proto pomáhá mléko míchat nebo položit do hrnce dřevěnou vařečku."}, {"id": "R15", "lang": "sk", "question": "Slovo alkohol pochádza z arabčiny, no pôvodne neoznačovalo nápoj, ale jemný čierny prášok. Na čo ho ľudia používali?", "answer": "Na líčenie očí", "options": [], "explanation": "Arabské al-kuhl bol prášok na zvýraznenie očí, dnes ho poznáme ako kajal. Alchymisti tak neskôr začali volať každú jemne vyčistenú „podstatu“, až napokon aj čistý lieh z vína."}, {"id": "R16", "lang": "sk", "question": "Keď zaváraniny po zaváraní vychladnú, viečka jedno po druhom cvaknú a prehnú sa dovnútra. Čo vznikne vo vnútri pohára, že sa to stane?", "answer": "podtlak", "options": [], "explanation": "Horúca para v pohári pri chladnutí skondenzuje na vodu a vzduch sa zmrští, takže vnútri ostane nižší tlak. Viečko potom zatlačí dovnútra obyčajný tlak vzduchu zvonka, a preto cvaknutie znamená, že pohár dobre tesní."}, {"id": "R17", "lang": "sk", "question": "Pivný tácok dnes kladieme pod pohár. Kam ho však pôvodne dávali hostia v nemeckých pivných záhradách?", "answer": "Navrch pohára", "options": [], "explanation": "Tácok slúžil ako pokrievka, aby do piva nepadali listy ani hmyz. Preto mu Nemci dodnes hovoria Bierdeckel, teda doslova „pivná pokrievka“."}, {"id": "R18", "lang": "en", "question": "Watch a freshly poured pint of Guinness settle and the bubbles near the glass seem to break a basic rule of fizzy drinks. What do they appear to do?", "answer": "Sink", "options": [], "explanation": "The bubbles rise up the middle of the glass, and the stout then flows back down along the sides, dragging the tiny nitrogen bubbles near the glass with it. That is why the cascade looks like it is falling."}, {"id": "R19", "lang": "en", "question": "The word 'shampoo' comes from Hindi, and when it first reached Britain it had nothing to do with washing hair. Which spa treatment did it originally mean?", "answer": "A massage", "options": [], "explanation": "The Hindi root means 'press' or 'knead'. Brighton's fashionable 'shampooing' baths offered vigorous body massages long before the word moved onto bottles of soap."}, {"id": "R20", "lang": "sk", "question": "Keď v roku 1974 v jednom americkom supermarkete prvýkrát pípla pokladňa pri čiarovom kóde, na páse ležala drobnosť, ktorú dodnes nájdete pri každej pokladni. Čo to bolo?", "answer": "žuvačky", "options": [], "explanation": "Bolo to balenie žuvačiek Juicy Fruit od firmy Wrigley's. Dnes ho vystavuje Smithsonov inštitút vo Washingtone ako historický predmet."}, {"id": "R21", "lang": "cs", "question": "Proč želé s kousky čerstvého ananasu neztuhne, kdežto s ananasem z plechovky ztuhne bez problémů?", "answer": "Enzym rozkládá želatinu", "options": [], "explanation": "Čerstvý ananas obsahuje enzym bromelain, který doslova rozštěpí bílkoviny želatiny. Při výrobě konzervy se ananas zahřeje a enzym se zničí. Stejný problém dělá i čerstvé kiwi nebo papája."}, {"id": "R22", "lang": "sk", "question": "V treskúcom mraze sneh pod topánkami vŕzga, no pri teplote okolo nuly sa v ňom kráča úplne potichu. Čo sa v tom mrazivom snehu deje, že vydáva taký zvuk?", "answer": "Lámu sa ľadové kryštáliky", "options": [], "explanation": "Pri silnom mraze, zhruba pod mínus desať stupňov, sa kryštáliky pod nohou nestihnú natopiť na tenkú vrstvičku vody, ktorá by ich premazala. Namiesto toho praskajú a trú sa o seba a tie tisíce drobných prasknutí počujeme ako vŕzganie."}, {"id": "R23", "lang": "sk", "question": "Keď sa v Amerike objavili prvé nákupné vozíky, nikto ich nechcel tlačiť. Mužom pripadali nemužné a ženám pripomínali detský kočík. Ako ich majiteľ obchodu napokon dostal medzi ľudí?", "answer": "Najal falošných zákazníkov", "options": [], "explanation": "Sylvan Goldman z Oklahomy zaplatil modelom, aby s vozíkmi chodili po obchode. Keď ľudia videli, že ich používajú iní, rýchlo sa pridali."}, {"id": "R24", "lang": "sk", "question": "Berghain v Berlíne považujú mnohí za najslávnejší techno klub sveta. Ľudia tam tancujú v obrovskej betónovej hale z čias východného Nemecka. Na čo slúžila táto budova pôvodne?", "answer": "elektráreň", "options": [], "explanation": "Berghain je bývalá východonemecká tepláreň, takže sa tam dnes tancuje pod stropom vysokým ako hala, kde kedysi stáli turbíny."}, {"id": "R25", "lang": "cs", "question": "Pípnutí u pokladny dnes slyšíme tisíckrát denně. Jaké úplně první zboží na světě kdy prošlo pokladnou díky načtení čárového kódu?", "answer": "Žvýkačky", "options": [], "explanation": "V roce 1974 v americkém Ohiu pokladní jako první načetla balíček žvýkaček Wrigley's Juicy Fruit. Dnes je vystavený ve Smithsonově muzeu ve Washingtonu."}, {"id": "R26", "lang": "sk", "question": "Tulipány sa do Európy dostali z Osmanskej ríše a ich meno pochádza z tureckého slova pre časť odevu, ktorú kvet tvarom pripomína. Ktorú?", "answer": "turban", "options": [], "explanation": "Turecké tülbent znamenalo turban a Európania tak nazvali kvet, ktorý vyzerá ako zamotaná pokrývka hlavy. Holandská tulipánová horúčka prišla až neskôr."}, {"id": "R27", "lang": "cs", "question": "Techno, hudba strojů a bušících beatů, se nezrodilo v Berlíně, ale v americkém městě, které proslavily automobilky a tovární linky. O které město jde?", "answer": "Detroit", "options": [], "explanation": "Mladí černošští producenti z Detroitu v polovině osmdesátých let tvrdili, že jejich chladný mechanický zvuk je hudbou automatizovaných továren, které je obklopovaly. Do Berlína se techno dostalo až potom a naplno tam vybuchlo po pádu zdi."}, {"id": "R28", "lang": "en", "question": "The rock at the very top of Mount Everest contains fossils of creatures that once lived where?", "answer": "On the sea floor", "options": [], "explanation": "Everest's summit is limestone that formed on an ancient ocean bed. India crashing into Asia then shoved it nearly 9 kilometres into the sky, so climbers are standing on fossil seashells."}, {"id": "R29", "lang": "en", "question": "Berghain in Berlin, maybe the world's most famous techno club, is a giant concrete hall that used to be an East German industrial building. What did the building do before the ravers moved in?", "answer": "Power station", "options": [], "explanation": "It was a heating and power plant that supplied energy to East Berlin, which is why the main dance floor has towering ceilings over 18 metres high. These days the building pumps out bass instead of electricity."}, {"id": "R30", "lang": "sk", "question": "V socialistickom Československu ste džínsy Levi's alebo Toblerone kúpili v Tuzexe. Korunami ste tam však nezaplatili. Čím ste platili?", "answer": "bonmi", "options": [], "explanation": "Tuzexové bony dostal len ten, kto mal zahraničnú menu, napríklad z práce v cudzine. Ostatní ich draho kupovali na ulici od vekslákov."}, {"id": "R31", "lang": "cs", "question": "Pravda, nebo nepravda: Chleba uložený v lednici okorá rychleji než chleba, který necháte v chlebníku.", "answer": "Pravda", "options": ["Pravda", "Nepravda"], "explanation": "Okorávání není vysychání, ale zpětná krystalizace škrobu, a ta probíhá nejrychleji právě při teplotách jako v lednici. Chleba proto raději zamrazte, mráz okorávání zastaví."}, {"id": "R32", "lang": "cs", "question": "Slovo kečup k nám doputovalo až z Asie. Tam ale znamenalo omáčku úplně bez rajčat. Z čeho ji vyráběli?", "answer": "z kvašených ryb", "options": [], "explanation": "Původní kê-tsiap byla slaná omáčka z kvašených ryb, podobná dnešní rybí omáčce z thajské kuchyně. Rajčata do ní přidali až Američané."}, {"id": "R33", "lang": "sk", "question": "Na vysokohorskej chate, napríklad pod Rysmi, sa vajce natvrdo varí dlhšie ako doma v nížine, hoci voda v hrnci rovnako bublá. Prečo?", "answer": "Nižší tlak vzduchu", "options": [], "explanation": "Pri nižšom tlaku vzduchu voda vrie skôr, vo výške okolo 2250 metrov už asi pri 92 °C, takže vajce sa varí v chladnejšej vode, než si myslíme."}, {"id": "R34", "lang": "cs", "question": "Úplně první zboží, které kdy pípnulo u pokladny díky čárovému kódu, koupili v jednom americkém supermarketu. Co to bylo? Nápověda: i dnes ho najdete vystavené přímo u pokladen.", "answer": "žvýkačky", "options": [], "explanation": "Bylo to balení žvýkaček Wrigley's Juicy Fruit. Dnes ho vystavuje Smithsonovo muzeum ve Washingtonu jako historickou památku."}, {"id": "R35", "lang": "en", "question": "Berlin's techno club Berghain is famous for turning away people at the door. Its huge concrete building in former East Berlin originally had what job?", "answer": "Power station", "options": [], "explanation": "Berghain sits inside a former East German heat and power plant. Its towering turbine hall now holds one of the world's most famous dance floors."}, {"id": "R36", "lang": "en", "question": "The granite for Olympic curling stones comes from one tiny, uninhabited island, home mostly to seabirds. Which country does that island belong to?", "answer": "Scotland", "options": [], "explanation": "It's Ailsa Craig, off Scotland's west coast. Its granite is so dense and water-resistant that teams from Canada to Japan all slide pieces of the same Scottish rock."}, {"id": "R37", "lang": "sk", "question": "Curlingový kameň váži takmer dvadsať kíl. Väčšina kameňov, ktoré vidíte na olympiáde, pochádza zo žuly z jedného malého neobývaného ostrova. Ku ktorej krajine ten ostrov patrí?", "answer": "Škótsko", "options": [], "explanation": "Ide o ostrov Ailsa Craig pri škótskom pobreží. Jeho hustá žula takmer neprepúšťa vodu, a preto sa na ľade nedrobí. Ostrov dnes obývajú hlavne kolónie morských vtákov."}, {"id": "R38", "lang": "en", "question": "Archaeologists opening ancient Egyptian tombs found pots of one food that was still safe to eat after about 3,000 years. Which food?", "answer": "Honey", "options": [], "explanation": "Honey has so little water and is so acidic that bacteria and moulds simply can't survive in it. If it goes cloudy or hard, that's just sugar crystallising, and gentle warming brings it back."}, {"id": "R39", "lang": "en", "question": "When the first shopping trolleys appeared in the 1930s, customers refused to use them. What did the inventor pay people to do to change their minds?", "answer": "Push trolleys around pretending to shop", "options": [], "explanation": "Sylvan Goldman hired models to wheel carts around his Oklahoma stores as fake shoppers. Men thought the carts were unmanly and women thought they looked like prams, until everyone else seemed to be using them."}, {"id": "R40", "lang": "cs", "question": "Když v Americe představili první nákupní vozíky, zákazníci o ně nestáli. Mužům připadaly zženštilé a ženy prohlásily, že už se něčeho podobného natlačily dost. Co jim vozík připomínal?", "answer": "dětský kočárek", "options": [], "explanation": "Vynálezce Sylvan Goldman si nakonec najal muže i ženy, kteří s vozíky jezdili po jeho obchodě a předstírali nákup. Teprve když to viděli u ostatních, začali vozíky brát i zákazníci."}, {"id": "R41", "lang": "sk", "question": "Čo ukryté vo vnútri kukuričného zrnka spôsobí, že pri zahriatí s hlasným puknutím praskne a zmení sa na pukanec?", "answer": "Voda", "options": [], "explanation": "Zrnko obsahuje asi 14 percent vody, ktorá sa pri zahriatí mení na paru, a tvrdá šupka ju drží ako malý tlakový hrniec, až kým nepraskne. Preto staré, vysušené zrnká často vôbec nepuknú."}, {"id": "R42", "lang": "cs", "question": "Britské hospody musely dlouhá léta zavírat zhruba v jedenáct večer. Pravidlo zavedla vláda za první světové války. Koho chtěla takhle udržet střízlivé?", "answer": "Dělníky ve zbrojovkách", "options": [], "explanation": "Vláda se bála, že opilí dělníci vyrobí méně granátů, a proto hospodám omezila otevírací dobu. Válečné opatření pak v Anglii vydrželo téměř celé století, výrazně se uvolnilo až v roce 2005."}, {"id": "R43", "lang": "en", "question": "When the shopping trolley was first introduced in the 1930s, shoppers refused to use it. Men found it unmanly, and women said it looked like a pram. What did the inventor hire people to do in his stores to change their minds?", "answer": "Push trolleys around shopping", "options": [], "explanation": "Sylvan Goldman paid models to wheel trolleys around his Oklahoma supermarkets, pretending to shop. Once people saw others using them, the trolley quickly became normal."}, {"id": "R44", "lang": "en", "question": "Shake an empty can of Guinness and you'll hear a little plastic ball rattling inside. Which gas does that ball release when the can is opened?", "answer": "Nitrogen", "options": [], "explanation": "The widget is pressurised with nitrogen and bursts it through the beer the moment you crack the can, recreating the creamy surge you get from a pub tap."}, {"id": "R45", "lang": "en", "question": "Many people store bread somewhere they think keeps it fresh, but that spot makes it go stale several times faster than leaving it on the counter. Which kitchen appliance is it?", "answer": "The refrigerator", "options": [], "explanation": "Staleness isn't drying out. It's starch recrystallising, and that happens fastest at fridge temperatures. The freezer, by contrast, almost stops it."}, {"id": "R46", "lang": "en", "question": "The word shampoo comes from Hindi. Originally it had nothing to do with washing. What did it mean you were doing to someone's head?", "answer": "Massaging it", "options": [], "explanation": "'Chāmpo' meant 'press' or 'knead', and 18th-century Britons used 'shampooing' for a full massage in Indian-style bathhouses. The soap came later."}, {"id": "R47", "lang": "en", "question": "When the word 'shampoo' first came into English from India, it had nothing to do with washing hair. What did it originally mean?", "answer": "A massage", "options": [], "explanation": "It comes from the Hindi 'chāmpo', meaning 'press' or 'knead'. In Brighton, Sake Dean Mahomed's shampooing baths offered massages, and he became 'Shampooing Surgeon' to King George IV."}, {"id": "R48", "lang": "cs", "question": "Lyžařský vlek, na kterém se dva lyžaři vezou opření o kovové ráhno ve tvaru obráceného písmene T, dostal lidový název podle předmětu z lodi. Jak mu říkáme?", "answer": "Kotva", "options": [], "explanation": "Obrácené T s tyčí připomíná lodní kotvu, a tak se mu říká kotva. Němci ho podobně znají jako Ankerlift."}, {"id": "R49", "lang": "sk", "question": "Keď sa povie techno, väčšina ľudí si predstaví Berlín. Tento štýl však vznikol v Amerike, v meste, ktoré bolo dovtedy známe hlavne výrobou áut. V ktorom?", "answer": "Detroit", "options": [], "explanation": "Traja kamaráti z detroitského predmestia Belleville spojili nemecký Kraftwerk s funkom a nazvali to techno. Mechanický rytmus vraj zodpovedal mestu tovární a montážnych liniek."}, {"id": "R50", "lang": "sk", "question": "Poliaci nemajú svoj najvyšší vrch celý pre seba. Ich najvyšší bod leží na tatranskom štíte, cez ktorý vedie hranica so Slovenskom. Ako sa ten štít volá?", "answer": "Rysy", "options": [], "explanation": "Hranica vedie cez severozápadný vrchol Rysov vo výške 2 499 metrov, takže turista tam môže stáť jednou nohou na Slovensku a druhou v Poľsku. Slovenský hlavný vrchol je pritom o niečo vyšší."}, {"id": "R51", "lang": "sk", "question": "Slovo kečup si Európa požičala z Ázie, no pôvodná omáčka s týmto menom nemala s paradajkami nič spoločné. Z čoho ju robili?", "answer": "z rýb", "options": [], "explanation": "Juhočínsky kê-tsiap bola kvasená rybacia omáčka podobná dnešnej vietnamskej. Paradajky do nej pridali až Američania v 19. storočí."}, {"id": "R52", "lang": "sk", "question": "Ak si v Maďarsku štrngnete pivom, niektorí Maďari sa môžu urazit. Podľa legendy si pivom kedysi štrngali rakúski dôstojníci, aby oslávili istú udalosť po potlačení maďarskej revolúcie. Akú?", "answer": "popravu maďarských generálov", "options": [], "explanation": "V Arade v roku 1849 popravili trinásť revolučných generálov a Maďari vraj prisahali, že pivom nebudú štrngať 150 rokov. Lehota vypršala v roku 1999, no veľa ľudí zvyk dodržiava dodnes."}, {"id": "R53", "lang": "cs", "question": "Zmrzlině na dřívku říkáme nanuk. Je to ve skutečnosti jméno hlavního hrdiny slavného němého filmu. Kdo ten hrdina byl?", "answer": "Eskymák", "options": [], "explanation": "Dokument Nanuk, člověk primitivní z roku 1922 sledoval život inuitského lovce a vyvolal takovou módu, že se po Nanukovi začaly jmenovat mražené pochoutky. U nás se jméno uchytilo natolik, že dnes už nikdo neví, že jde o člověka."}, {"id": "R54", "lang": "cs", "question": "Čárové kódy na výrobcích českých firem obvykle začínají stejným trojčíslím. Kterým?", "answer": "859", "options": [], "explanation": "Kód 859 patří české pobočce organizace GS1, sousední Slovensko má 858. Pozor, ten kód neprozrazuje, kde se výrobek vyrobil, ale v jaké zemi firma kód zaregistrovala."}, {"id": "R55", "lang": "cs", "question": "Slovo kečup jsme převzali z angličtiny a ta si ho vypůjčila z jižní Číny. Z čeho se tamní původní omáčka toho jména vyráběla?", "answer": "Z ryb", "options": [], "explanation": "Původní „kê-tsiap“ byla kvašená rybí omáčka, něco jako dnešní asijská rybí omáčka. Rajčata se do kečupu dostala až o staletí později v Americe."}, {"id": "R56", "lang": "cs", "question": "Tvrdé avokádo dozraje mnohem rychleji, když ho zavřete do papírového sáčku spolu s jablkem. Co jablko v sáčku vypouští, že to tak funguje?", "answer": "ethylen", "options": [], "explanation": "Jablko vypouští ethylen, plyn, kterým si ovoce samo dává povel ke zrání. V uzavřeném sáčku se ho nahromadí tolik, že popožene i avokádo."}, {"id": "R57", "lang": "en", "question": "A sealed can of Guinness has a small plastic ball rattling around inside. When you open the can, the ball shoots a gas into the beer to give it that creamy pub-style head. Which gas?", "answer": "Nitrogen", "options": [], "explanation": "The ball is called a widget, and it bursts nitrogen into the beer the moment the pressure drops. Nitrogen makes much smaller bubbles than the carbon dioxide in ordinary fizzy beer, which is where that smooth, creamy head comes from."}];
+const state = {};
+let db = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v; else if (k.startsWith("data-")) n.setAttribute(k, v); else n[k] = v;
+  }
+  for (const k of kids) n.append(k);
+  return n;
+}
+
+function setStatus(text, bad) {
+  const s = document.getElementById("status");
+  s.textContent = text;
+  s.classList.toggle("bad", !!bad);
+}
+
+function updateProgress() {
+  const done = ITEMS.filter(it => state[it.id] && state[it.id].fun && state[it.id].chance && state[it.id].natural).length;
+  document.getElementById("progress").textContent = done + " / " + ITEMS.length;
+  for (const it of ITEMS) {
+    const card = document.getElementById("card-" + it.id);
+    const r = state[it.id] || {};
+    card.classList.toggle("done", !!(r.fun && r.chance && r.natural));
+    card.querySelectorAll(".scale button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.v) === r.fun)));
+    card.querySelectorAll(".yn.chance button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.chance)));
+    card.querySelectorAll(".yn.natural button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === r.natural)));
+    const ta = card.querySelector("textarea");
+    if (document.activeElement !== ta) ta.value = r.note || "";
+  }
+}
+
+async function save(id, patch) {
+  state[id] = Object.assign({}, state[id], patch);
+  updateProgress();
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  try {
+    await db.collection("ratings").doc(id).set(state[id]);
+    setStatus("Uložené.");
+  } catch (e) {
+    setStatus("Uloženie zlyhalo: " + (e && e.message ? e.message : "neznáma chyba") + ". Skús ťuknúť znova.", true);
+  }
+}
+
+function render() {
+  const list = document.getElementById("list");
+  for (const it of ITEMS) {
+    const scale = el("div", { class: "scale" });
+    for (let v = 1; v <= 10; v++) {
+      const b = el("button", { type: "button", "data-v": String(v), ariaLabel: "Zábava " + v }, String(v));
+      b.addEventListener("click", () => save(it.id, { fun: v }));
+      scale.append(b);
+    }
+    const yn = el("div", { class: "yn chance" });
+    for (const [v, label] of [["yes", "Áno, šanca bola"], ["no", "Nie, bez šance"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { chance: v }));
+      yn.append(b);
+    }
+    const nat = el("div", { class: "yn natural" });
+    for (const [v, label] of [["yes", "Áno, prirodzene"], ["no", "Nie, divne"]]) {
+      const b = el("button", { type: "button", "data-v": v }, label);
+      b.addEventListener("click", () => save(it.id, { natural: v }));
+      nat.append(b);
+    }
+    const ta = el("textarea", { id: "note-" + it.id, placeholder: "Poznámka (nepovinné)" });
+    let timer = null;
+    ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(it.id, { note: ta.value }), 800); });
+
+    const opts = it.options && it.options.length ? el("ol", { class: "opts", type: "a" }, ...it.options.map(o => el("li", {}, o))) : "";
+    const reveal = el("details", {},
+      el("summary", {}, "Ukáž odpoveď"),
+      el("p", {}, el("span", { class: "ans" }, it.answer)),
+      it.explanation ? el("p", {}, it.explanation) : "");
+    list.append(el("article", { class: "q", id: "card-" + it.id },
+      el("div", { class: "meta" }, el("span", {}, it.id), el("span", { class: "lang" }, it.lang)),
+      el("p", { class: "stem" }, it.question),
+      opts,
+      reveal,
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Zábava"), scale),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Bola šanca vedieť alebo tipnúť?"), yn),
+      el("div", { class: "row" }, el("span", { class: "lbl" }, "Znie to ako od človeka, ktorý hovorí týmto jazykom?"), nat),
+      ta));
+  }
+  updateProgress();
+}
+
+render();
+(async () => {
+  try { db = window.claude ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setStatus("Úložisko nie je dostupné, hodnotenie sa neuloží. Otvor stránku prihlásený na claude.ai.", true); return; }
+  setStatus("Pripojené. Hodnotenie sa ukladá hneď.");
+  db.collection("ratings").onSnapshot(snap => {
+    for (const d of snap.docs) state[d.id] = Object.assign({}, d.data());
+    updateProgress();
+  }, () => setStatus("Spojenie s úložiskom sa prerušilo. Obnov stránku.", true));
+})();
+</script>

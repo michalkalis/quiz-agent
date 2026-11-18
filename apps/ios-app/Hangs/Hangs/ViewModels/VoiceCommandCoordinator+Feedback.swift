@@ -45,6 +45,7 @@ extension VoiceCommandCoordinator {
     /// A command fired, or a spoken cancel was accepted: light the teal glow.
     /// Called wherever `emitEarcon(.commandAck)` fires.
     func noteMatchedForFeedback() {
+        taskBag.cancel(.voiceProcessingCue)
         matchedGlowStartedAt = clock.now
         recognizingCommand = nil
         voiceFeedbackPhase = .matched
@@ -70,23 +71,102 @@ extension VoiceCommandCoordinator {
         scheduleGlowClear(after: unmatchedGlowDisplay)
     }
 
+    /// #208.7: one speech edge from the VAD (`SpeechActivityEvent`).
+    func noteSpeechActivity(_ event: SpeechActivityEvent) {
+        switch event {
+        case let .began(levelDb, noiseFloorDb):
+            noteUtteranceOnset(levelDb: levelDb, noiseFloorDb: noiseFloorDb)
+            noteSpeechStartedForFeedback()
+        case let .paused(speechSecs, peakDb):
+            noteUtterancePeak(peakDb)
+            noteSpeechPausedForFeedback(speechSecs: speechSecs)
+        case .resumed:
+            noteSpeechResumedForFeedback()
+        case .ended:
+            noteSpeechEndedForFeedback()
+        }
+    }
+
     /// #122 follow-up (TF 2026-10-07): the energy VAD heard speech start. Only
-    /// while a command window is armed and the app itself is silent, and only
-    /// from `.idle` (every other phase outranks it). A rejected blip emits no
-    /// end event, so it self-clears after `hearingGlowMaxDisplay`.
+    /// while a command window is armed and the app itself is silent. Lights
+    /// from `.idle`, and (#208.7) from a word-less "processing": the driver
+    /// started again before anything was decided. A rejected blip ends in
+    /// `.ended`; the clear timer is the backstop.
     func noteSpeechStartedForFeedback() {
         guard currentCommandScreen != nil, !isPlayingTTS() else { return }
-        guard voiceFeedbackPhase == .idle else { return }
+        guard voiceFeedbackPhase == .idle || isProcessingWithoutWord else { return }
+        taskBag.cancel(.voiceProcessingCue)
+        lastPausedSpeechSecs = 0
+        recognizingCommand = nil
         voiceFeedbackPhase = .hearing
         scheduleGlowClear(after: hearingGlowMaxDisplay)
     }
 
-    /// Speech ended without a decision yet: the "hearing" cue has nothing left
-    /// to say. Leaves recognizing/matched/unmatched alone.
-    func noteSpeechEndedForFeedback() {
+    /// #208.7: the transcriber produced words while the bar still said
+    /// nothing — the backup for speech too quiet for the level gate, and the
+    /// only "hearing" signal during a read (the level is the app's voice then).
+    /// Called only with text that survived the echo guard.
+    func noteTranscriptHeardForFeedback() {
+        guard currentCommandScreen != nil, voiceFeedbackPhase == .idle else { return }
+        voiceFeedbackPhase = .hearing
+        scheduleGlowClear(after: hearingGlowMaxDisplay)
+    }
+
+    /// #208.7: the level fell under the release margin. After
+    /// `processingHoldDelay` without the speech coming back, the bar says
+    /// "processing" — the recognizer's answer is ~1 s behind the voice, and
+    /// a bar that just goes quiet reads as "it did not hear me".
+    func noteSpeechPausedForFeedback(speechSecs: TimeInterval) {
         guard voiceFeedbackPhase == .hearing else { return }
-        taskBag.cancel(.voiceFeedbackGlow)
-        clearFeedbackGlow()
+        lastPausedSpeechSecs = speechSecs
+        guard speechSecs >= Self.processingMinSpeechSecs else { return }
+        let clock = clock
+        let delay = processingHoldDelay
+        let task = Task { [weak self] in
+            try? await clock.sleep(for: .seconds(delay))
+            guard let self, !Task.isCancelled else { return }
+            self.enterProcessingForFeedback()
+        }
+        taskBag.add(task, key: .voiceProcessingCue)
+    }
+
+    /// Speech came back inside the hangover: the same utterance goes on. A
+    /// "processing" the hold already showed was premature — back to hearing.
+    func noteSpeechResumedForFeedback() {
+        taskBag.cancel(.voiceProcessingCue)
+        guard isProcessingWithoutWord else { return }
+        voiceFeedbackPhase = .hearing
+        scheduleGlowClear(after: hearingGlowMaxDisplay)
+    }
+
+    /// Speech is over (hangover elapsed, or a blip was dropped). Real speech
+    /// with no decision yet goes to "processing" now if the hold has not
+    /// already put it there; a blip just clears "hearing".
+    func noteSpeechEndedForFeedback() {
+        taskBag.cancel(.voiceProcessingCue)
+        guard voiceFeedbackPhase == .hearing else { return }
+        if lastPausedSpeechSecs >= Self.processingMinSpeechSecs {
+            enterProcessingForFeedback()
+        } else {
+            taskBag.cancel(.voiceFeedbackGlow)
+            clearFeedbackGlow()
+        }
+    }
+
+    /// The blip bar for "processing": the VAD's own (`minSpeechDurationSecs`).
+    static let processingMinSpeechSecs: TimeInterval = VADTuning.minSpeechDurationSecs
+
+    /// "Processing" is `.recognizing` with no command word yet (the bar shows
+    /// the spinner). It ends on a match, a final, or `processingGlowMaxDisplay`.
+    var isProcessingWithoutWord: Bool {
+        voiceFeedbackPhase == .recognizing && recognizingCommand == nil
+    }
+
+    private func enterProcessingForFeedback() {
+        guard voiceFeedbackPhase == .hearing, currentCommandScreen != nil else { return }
+        recognizingCommand = nil
+        voiceFeedbackPhase = .recognizing
+        scheduleGlowClear(after: processingGlowMaxDisplay)
     }
 
     /// A transcript resolved to a command that is waiting (final / stability /
@@ -95,6 +175,7 @@ extension VoiceCommandCoordinator {
     /// unmatched; matched outranks it.
     func noteRecognizingForFeedback(_ command: VoiceCommand) {
         guard voiceFeedbackPhase != .matched else { return }
+        taskBag.cancel(.voiceProcessingCue)
         recognizingCommand = command
         voiceFeedbackPhase = .recognizing
         scheduleGlowClear(after: recognizingGlowMaxDisplay)
@@ -103,6 +184,7 @@ extension VoiceCommandCoordinator {
     /// A FINAL has been fully processed and nothing fired: the utterance is
     /// over, so a lingering hearing/recognizing cue would be stale.
     func noteFinalProcessedForFeedback() {
+        taskBag.cancel(.voiceProcessingCue)
         guard voiceFeedbackPhase == .hearing || voiceFeedbackPhase == .recognizing else { return }
         taskBag.cancel(.voiceFeedbackGlow)
         clearFeedbackGlow()
@@ -126,6 +208,7 @@ extension VoiceCommandCoordinator {
     /// cooldown deliberately survives — a reset must not re-open the throttle.
     func resetFeedbackGlow() {
         taskBag.cancel(.voiceFeedbackGlow)
+        taskBag.cancel(.voiceProcessingCue)
         clearFeedbackGlow()
     }
 

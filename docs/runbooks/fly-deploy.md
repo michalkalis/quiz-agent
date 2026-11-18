@@ -1,44 +1,42 @@
 # Fly.io Deployment Runbook — quiz-agent
 
-- **Production URL:** https://quiz-agent-api.fly.dev (Fly.io, 3GB persistent volume)
+- **Production URL:** https://quiz-agent-api.fly.dev (Fly.io, 1 machine, no volume, bluegreen deploys)
 - **Deploy:** `cd apps/quiz-agent && fly deploy`
 
 Read this before deploying or before changing `[[mounts]]` in `apps/quiz-agent/fly.toml`.
 
-## Pitfall 1: Dockerfile pip deps drift from pyproject.toml
+## Pitfall 1 (RETIRED 2026-10-16): Dockerfile pip deps drift from pyproject.toml
 
-`apps/quiz-agent/Dockerfile` (the one deploy uses — `fly deploy -c apps/quiz-agent/fly.toml`
-resolves `dockerfile="Dockerfile"` relative to the config file's dir) installs
-quiz-agent deps via a hardcoded `RUN pip install fastapi>=... uvicorn>=... ...`
-list, NOT from `apps/quiz-agent/pyproject.toml`. Any new dep added to
-`pyproject.toml` must also be added to the Dockerfile or prod startup will
-`ModuleNotFoundError`.
+Both Dockerfiles used to install a hand-copied `pip install ...` list, and a
+dep added only to `pyproject.toml` crash-looped prod (`slowapi`, `sentry-sdk`,
+`pydub`, `httpx` all drifted). Since #207 task 207.24 the images install from
+`uv.lock` (`uv export --locked --package <app>` + hashes) and CI installs the
+same lock, so what CI tests is what ships. What remains:
 
-History: `slowapi`, `sentry-sdk[fastapi]`, `pydub`, `httpx` have all silently
-drifted in the past — the next deploy after the change is when it's noticed.
-
-Long-term fix: replace the hardcoded list with `pip install /build/app` to
-read from pyproject directly. Shared package install must stay non-editable
-(`pip install /build/packages/shared`, not `-e`) for the multi-stage build to work.
+- Change a dependency in `pyproject.toml` → run `uv lock` and commit
+  `uv.lock`; an out-of-date lock fails CI and the image build (`--locked`).
+- quiz-pack-api script-only deps (gradio, geopandas, cartopy, matplotlib,
+  deepl) live in its `scripts` extra, which the image leaves out.
+- The app runs as the unprivileged `app` user (uid 10001). quiz-agent's
+  `docker-entrypoint.sh` chowns the root-owned `/data` volume at boot, then
+  drops privileges; `fly ssh console` still opens a root shell.
 
 ## Pitfall 2 (RETIRED 2026-07-07): CHROMA_PATH / mount mismatch
 
 ChromaDB was decommissioned in #41 (Phase B done 2026-07-07): `/data/chroma`
 wiped, `CHROMA_PATH` secret unset, code reads only Postgres/pgvector via
-`DATABASE_URL`. **The volume `vol_r1l5163d2gjekdz4` (`/data` mount) must
-stay** — it holds `tts_cache/`, `ratings.db` and `translations.db`. Questions
-live in pgvector; final Chroma backup:
+`DATABASE_URL`. Questions live in pgvector; final Chroma backup:
 `docs/archive/scripts-chroma/chroma_prod_full_backup_2026-07-07.json`.
 
-⚠️ The volume only holds those three because `[env]` in `fly.toml` /
-`fly.staging.toml` pins `TTS_CACHE_DIR`, `RATINGS_DATABASE_URL` and
-`TRANSLATION_CACHE_URL` to `/data`. Until 2026-07-30 the two SQLite vars were
-unpinned, so the code defaults (`./data/*.db`) resolved against WORKDIR `/app`
-and prod really wrote to container-local storage — with
-`min_machines_running = 0` that is discarded on every idle wake, not just every
-deploy (ratings + persisted sessions lost, opus-5 translation cache re-paid).
-Any new on-disk store needs the same treatment; verify after deploy with
-`fly ssh console -C 'ls -la /data'`.
+**No volume since step 6 of task 207.20 (resilience design, #207 — production readiness), 2026-10-16.** quiz-agent keeps no state on
+its machine: sessions, ratings, translations and alert state are in Postgres,
+TTS audio in the private R2 bucket `trubbo-tts-cache` (the local
+`./data/tts_cache` is a per-machine L1 only). That is what lets one machine
+deploy `bluegreen` with no request loss. Any new on-disk store must go to
+Postgres or R2, never the machine disk. The old prod volume
+`vol_v3gn898ylew5geo4` was destroyed 2026-10-19 after checking that every
+TTS clip (654) is in R2 and every translation (66) in Postgres; rollback to a
+volume is no longer possible.
 
 Historical note: the CHROMA_PATH/mount mismatch bit twice (2026-04-21,
 2026-05-03 — empty DB ~17h). If a `[[mounts]]` change ever breaks the

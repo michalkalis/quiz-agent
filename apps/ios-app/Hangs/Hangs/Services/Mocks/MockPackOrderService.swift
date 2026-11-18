@@ -22,6 +22,11 @@ import Clocks
 import Foundation
 import os
 
+/// #235.2: the service's calls, the key a test's hold or condition is attached to.
+enum MockPackOrderCall: String, CaseIterable, Sendable {
+    case createOrder, checkTopic, retryOrder, listOrders, getOrder
+}
+
 final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     private let createResult: Result<OrderCreatedResponse, PackFailure>
     private let getResult: Result<OrderSnapshot, PackFailure>
@@ -58,6 +63,16 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     /// Call counters so a test can prove WHICH endpoint "Try again" used — a
     /// retry of a paid order must never fall through to a second `createOrder`.
     private let createCalls = OSAllocatedUnfairLock(initialState: 0)
+    private let topicResult: Result<TopicVerdict, PackFailure>
+    private let topicCalls = OSAllocatedUnfairLock(initialState: 0)
+    /// Latency on `checkTopic` on `clock` (#236): a test holds the check open
+    /// to change the form under it.
+    private let topicDelaySeconds: Double
+    /// #233: how often the pre-payment topic check ran.
+    var topicCheckCallCount: Int { topicCalls.withLock { $0 } }
+    /// #236: the audience each topic check was asked for, in call order.
+    var capturedTopicAudiences: [PackAudience] { topicAudiences.withLock { $0 } }
+    private let topicAudiences = OSAllocatedUnfairLock<[PackAudience]>(initialState: [])
     private let retryCalls = OSAllocatedUnfairLock(initialState: 0)
     private let listCalls = OSAllocatedUnfairLock(initialState: 0)
 
@@ -72,6 +87,17 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     private let retryProofs = OSAllocatedUnfairLock<[PackPaymentProof?]>(initialState: [])
     private let listCallIndex = OSAllocatedUnfairLock(initialState: 0)
     private let intents = OSAllocatedUnfairLock<[PackOrderIntent]>(initialState: [])
+    #if DEBUG
+        /// #235.2: hold any call in flight or put it on a bad network.
+        let conditions = MockCallConditions<MockPackOrderCall>()
+    #endif
+
+    /// Every call passes here once it is recorded, before it answers.
+    private func simulateNetwork(_ call: MockPackOrderCall) async throws {
+        #if DEBUG
+            try await conditions.simulateNetwork(call)
+        #endif
+    }
 
     /// Boxed error so the whole config stays value-typed / Sendable.
     struct PackFailure: Error, Sendable {
@@ -90,8 +116,12 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         listResults: [Result<[OrderSnapshot], PackFailure>] = [],
         retryFailure: PackOrderError? = nil,
         listFailure: PackOrderError? = nil,
-        clock: AnyClock<Duration> = .continuous
+        clock: AnyClock<Duration> = .continuous,
+        topicResult: Result<TopicVerdict, PackFailure> = .success(.ok),
+        topicDelaySeconds: Double = 0
     ) {
+        self.topicResult = topicResult
+        self.topicDelaySeconds = topicDelaySeconds
         self.retryFailure = retryFailure
         self.listFailure = listFailure
         self.createDelaySeconds = createDelaySeconds
@@ -114,21 +144,34 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
     func createOrder(intent: PackOrderIntent) async throws -> OrderCreatedResponse {
         createCalls.withLock { $0 += 1 }
         intents.withLock { $0.append(intent) }
+        try await simulateNetwork(.createOrder)
         if createDelaySeconds > 0 {
             try await clock.sleep(for: .seconds(createDelaySeconds))
         }
         return try createResult.get()
     }
 
-    func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
+    func checkTopic(prompt _: String, language _: String, audience: PackAudience) async throws -> TopicVerdict {
+        topicCalls.withLock { $0 += 1 }
+        topicAudiences.withLock { $0.append(audience) }
+        try await simulateNetwork(.checkTopic)
+        if topicDelaySeconds > 0 {
+            try await clock.sleep(for: .seconds(topicDelaySeconds))
+        }
+        return try topicResult.get()
+    }
+
+    func retryOrder(id _: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse {
         retryCalls.withLock { $0 += 1 }
         retryProofs.withLock { $0.append(paymentProof) }
+        try await simulateNetwork(.retryOrder)
         if let retryFailure { throw retryFailure }
         return try retryResult.get()
     }
 
     func listOrders() async throws -> [OrderSnapshot] {
         listCalls.withLock { $0 += 1 }
+        try await simulateNetwork(.listOrders)
         if let listFailure { throw listFailure }
         guard !listResults.isEmpty else { return try listResult.get() }
         return try listCallIndex.withLock { index in
@@ -138,7 +181,8 @@ final class MockPackOrderService: PackOrderServiceProtocol, Sendable {
         }
     }
 
-    func getOrder(id: String) async throws -> OrderSnapshot {
+    func getOrder(id _: String) async throws -> OrderSnapshot {
+        try await simulateNetwork(.getOrder)
         // Per-call Result sequence (throw-then-succeed etc.) wins so a test can
         // inject a transient error mid-poll; clamps to the last element.
         if !getResults.isEmpty {

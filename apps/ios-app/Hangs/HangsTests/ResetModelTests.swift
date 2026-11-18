@@ -77,21 +77,19 @@ struct ResetModelTests {
 
     /// WHY: decision 8 — phase state must drop atomically when the quiz leaves
     /// the recording/processing pair, but an in-pair move (recording →
-    /// processing) must keep in-flight capture state or streaming submissions
-    /// would lose their transcript. Question-scoped fields must SURVIVE the
+    /// processing) must keep in-flight capture state or a submission would
+    /// lose what the recording learned. Question-scoped fields must SURVIVE the
     /// exit: the question audio URL is replayed from .showingResult
     /// ("read aloud" / voice "repeat").
     @Test("leaving the recording/processing pair drops phase-scoped state; question-scoped state survives")
     func leavingRecordingPairDropsPhaseState() async throws {
         let viewModel = Fixtures.makeViewModel()
         viewModel.quizState = .recording
-        viewModel.liveTranscript = "hello"
         viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = true
         viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
 
         // In-pair move: recording → processing must NOT reset.
         #expect(viewModel.transition(to: .processing))
-        #expect(viewModel.liveTranscript == "hello")
         #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord == true)
 
         viewModel.transcribedAnswer = "Paris"
@@ -101,7 +99,6 @@ struct ResetModelTests {
         // Leaving the pair: processing → askingQuestion drops the capture +
         // confirmation subsets…
         #expect(viewModel.transition(to: .askingQuestion))
-        #expect(viewModel.liveTranscript.isEmpty)
         #expect(viewModel.recordingCoordinator.speechDetectedDuringAutoRecord == false)
         #expect(viewModel.transcribedAnswer.isEmpty)
         #expect(viewModel.showAnswerConfirmation == false)
@@ -160,35 +157,57 @@ struct ResetModelTests {
     }
 
     /// WHY: the founder's exact TF trace — the answer window expires,
-    /// auto-record opens, ElevenLabs commits dead air on its own. Dead air must
-    /// take the same path as every other miss: the prompt and one re-record.
-    @Test("empty spontaneous commit during auto-record takes the retry path")
-    func emptyCommitDuringAutoRecordRetries() async throws {
-        let viewModel = Fixtures.makeViewModel()
-        viewModel.quizState = .recording
+    /// auto-record opens and captures dead air. Dead air must take the same
+    /// path as every other miss: the prompt and one re-record, never an upload.
+    @Test("dead air during auto-record takes the retry path")
+    func deadAirDuringAutoRecordRetries() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.quizState = .askingQuestion
+        await viewModel.recordingCoordinator.startRecording()
         viewModel.recordingCoordinator.setIsAutoRecording(true)
-        viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = false
+        viewModel.mockSilence?.simulateAnswerAudio(Data(count: 100)) // far under 0.2 s
 
-        await viewModel.recordingCoordinator.handleCommittedTranscript("")
+        await viewModel.recordingCoordinator.stopRecordingAndSubmit(reason: .noSpeechWindow)
 
+        #expect(mockNetwork.submitVoiceAnswerCallCount == 0, "dead air is not a transcription job")
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.isAutoRecording == false)
         #expect(viewModel.errorMessage == nil)
         #expect(viewModel.taskBag.contains(.emptyAnswerRetry), "the retry is armed")
     }
 
-    /// WHY: a spoken-but-lost answer (a content-bearing partial arrived, the
-    /// commit came back empty) does not fork from dead air — one predictable
-    /// path after every miss.
-    @Test("empty commit after detected speech takes the same path")
-    func emptyCommitAfterSpeechTakesSamePath() async throws {
-        let viewModel = Fixtures.makeViewModel()
-        viewModel.quizState = .recording
+    /// WHY: a spoken-but-lost answer (speech was heard, the server's transcript
+    /// came back empty) does not fork from dead air — one predictable path
+    /// after every miss.
+    @Test("an empty transcript after detected speech takes the same path")
+    func emptyTranscriptAfterSpeechTakesSamePath() async throws {
+        let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
+        let base = try #require(mockNetwork.mockResponse)
+        mockNetwork.mockResponse = QuizResponse(
+            success: true,
+            message: base.message,
+            session: base.session,
+            currentQuestion: base.currentQuestion,
+            evaluation: Evaluation(
+                userAnswer: "  ", result: .incorrect, points: 0, correctAnswer: "Expected Answer",
+                questionId: "q_001", explanation: nil
+            ),
+            feedbackReceived: [],
+            audio: nil
+        )
+        viewModel.currentSession = Fixtures.makeActiveSession()
+        viewModel.currentQuestion = Fixtures.makeQuestion()
+        viewModel.quizState = .askingQuestion
+        await viewModel.recordingCoordinator.startRecording()
         viewModel.recordingCoordinator.setIsAutoRecording(true)
         viewModel.recordingCoordinator.speechDetectedDuringAutoRecord = true
+        viewModel.mockSilence?.simulateAnswerAudio(Data(count: 16000))
 
-        await viewModel.recordingCoordinator.handleCommittedTranscript("")
+        await viewModel.recordingCoordinator.stopRecordingAndSubmit(reason: .vad)
 
+        #expect(mockNetwork.submitVoiceAnswerCallCount == 1)
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.errorMessage == nil)
         #expect(viewModel.taskBag.contains(.emptyAnswerRetry))

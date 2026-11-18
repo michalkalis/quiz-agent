@@ -27,10 +27,13 @@ ELEVENLABS_VOICES: Dict[str, str] = {
 
 ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
 
-# `eleven_multilingual_v2` is the quality tier and the one the founder approved
-# for Slovak. `eleven_flash_v2_5` is half the credits and much lower latency but
-# weaker on non-English pronunciation — switch via `ELEVENLABS_TTS_MODEL`.
-ELEVENLABS_DEFAULT_MODEL = "eleven_multilingual_v2"
+# `eleven_v4_turbo` is half the price of `eleven_multilingual_v2` ($40 vs $80
+# per 1M characters) and the founder heard no real difference in the 2026-10-26
+# blind test (sk/cs/en, docs/research/tts-provider-alternatives-2026-10-25.md).
+# `eleven_flash_v2_5` failed earlier on non-English pronunciation. The cache key
+# is (text, voice), so audio made by v2 keeps playing; roll back via
+# `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`.
+ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
 # Static feedback phrases organized by evaluation result

@@ -57,7 +57,7 @@ struct AttemptOwnershipTests {
         network.submitVoiceAnswerError = error
 
         let gate = UploadGate()
-        network.submitVoiceAnswerGate = { await gate.wait() }
+        network.gates[.submitVoiceAnswer] = { await gate.wait() }
         let submit = Task { await vm.recordingCoordinator.submitVoiceAnswer(audioData: Data([0x1, 0x2])) }
         await pumpUntil({ network.submitVoiceAnswerCallCount == 1 }, "the upload never reached the network")
         return (vm, network, gate, submit)
@@ -124,7 +124,7 @@ struct AttemptOwnershipTests {
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .processing
-        vm.quizMuteOverride = true // no read-back: the countdown arms once the mic is live (#185 5.2)
+        vm.settings.isMuted = true // no read-back: the countdown arms once the mic is live (#185 5.2)
         vm.recordingCoordinator.presentVoiceTranscript("Paris")
         await pumpUntil({ vm.taskBag.contains(.autoConfirm) }, "the countdown never armed")
 
@@ -199,45 +199,11 @@ struct AttemptOwnershipTests {
         let stale = vm.currentAttempt
         vm.attemptLedger.begin("test.newAttempt")
         vm.quizState = .processing
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         vm.recordingCoordinator.presentVoiceTranscript("Paris", owner: stale)
 
         #expect(vm.attemptLedger.invariantViolations == ["confirmation sheet belongs to the current attempt"])
-    }
-
-    /// WHY (RS-09 on CI, 2026-09-24): once a recording's forced commit has put
-    /// its transcript on the sheet, a committed transcript arriving LATER on
-    /// the same stream must never replace it — the sheet would otherwise show
-    /// (and grade) an answer the driver never confirmed.
-    @Test("a committed transcript arriving after the recording ended never replaces the sheet's transcript")
-    func lateCommittedTranscriptNeverReplacesSheet() async {
-        let stt = MockElevenLabsSTTService()
-        let vm = QuizViewModel(
-            networkService: Fixtures.makeFullMockNetwork(),
-            audioService: MockAudioService(),
-            persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: MockSilenceDetectionService(),
-            sttService: stt,
-            clock: AnyClock(TestClock())
-        )
-        vm.currentSession = Fixtures.makeActiveSession()
-        vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
-        vm.quizState = .askingQuestion
-        vm.quizMuteOverride = true
-
-        await vm.recordingCoordinator.startRecording()
-        await pumpUntil({ vm.isStreamingSTT }, "streaming never started")
-        await vm.recordingCoordinator.stopRecordingAndSubmit(reason: .noSpeechWindow) // forced commit → "Paris"
-        await pumpUntil({ vm.showAnswerConfirmation }, "the forced commit never reached the sheet")
-        #expect(vm.transcribedAnswer == "Paris")
-
-        await stt.injectEvent(.committedTranscript("Jupiter"))
-        await drainHops()
-
-        #expect(vm.transcribedAnswer == "Paris", "a late transcript replaced the one on the sheet")
-        #expect(vm.quizState == .processing)
-        #expect(vm.attemptLedger.invariantViolations.isEmpty)
     }
 
     /// WHY: the ownership checks must not cost the normal flow anything — a
@@ -252,13 +218,12 @@ struct AttemptOwnershipTests {
             networkService: network,
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: silence,
-            sttService: nil
+            silenceDetectionService: silence
         )
         vm.currentSession = Fixtures.makeActiveSession()
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_001")
         vm.quizState = .askingQuestion
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
 
         await vm.toggleRecording()
         silence.simulateAnswerAudio(Data(count: 16000))

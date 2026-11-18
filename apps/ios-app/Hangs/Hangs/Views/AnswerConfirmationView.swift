@@ -59,6 +59,9 @@ struct AnswerConfirmationView: View {
     /// coming up, the driver speaking, a spoken "stop") — a countdown of 0
     /// then means "waiting", not "ran out".
     var autoConfirmHeld: Bool = false
+    /// #208.6: the player already threw a transcript of this question away,
+    /// so the sheet says the answer can be spelled letter by letter.
+    var showsSpellingHint: Bool = false
 
     /// The driver TAPPED the pencil. Read `branch` / `isEditing` instead —
     /// evaluating outranks this, and this flag alone does not know that.
@@ -195,7 +198,7 @@ struct AnswerConfirmationView: View {
                             .frame(width: Metrics.chip, height: Metrics.chip)
                             .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
-                    .accessibilityLabel(String(localized: "Cancel editing", comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
+                    .accessibilityLabel(String(localized: "Cancel editing", bundle: .interface, locale: .interface, comment: "Accessibility label for the cancel-editing button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.editCancel")
                 } else {
                     Button {
@@ -207,7 +210,7 @@ struct AnswerConfirmationView: View {
                             .frame(width: Metrics.chip, height: Metrics.chip)
                             .background(Circle().fill(Theme.Hangs.Colors.bgInset))
                     }
-                    .accessibilityLabel(String(localized: "Edit answer", comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
+                    .accessibilityLabel(String(localized: "Edit answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the edit-answer button on the answer confirmation sheet"))
                     .accessibilityIdentifier("confirmation.edit")
                     .disabled(isEvaluating)
                     .opacity(isEvaluating ? 0.45 : 1)
@@ -232,7 +235,7 @@ struct AnswerConfirmationView: View {
                     // muted tone marks it as the app's report, not the driver's
                     // words. Confirm here submits "no answer".
                     HangsQuestionPrompt(
-                        text: String(localized: "Nothing heard", comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
+                        text: String(localized: "Nothing heard", bundle: .interface, locale: .interface, comment: "Answer confirmation sheet: shown in place of the transcript when the recording produced no text"),
                         barColor: Theme.Hangs.Colors.track,
                         textFont: .hangsDisplay(32, weight: .black),
                         textColor: Theme.Hangs.Colors.muted,
@@ -247,11 +250,16 @@ struct AnswerConfirmationView: View {
                         textColor: Theme.Hangs.Colors.ink,
                         minimumScaleFactor: 0.6
                     )
-                    .accessibilityLabel(String(localized: "Your transcribed answer: \(displayedAnswer)", comment: "Accessibility label reading back the user's transcribed answer"))
+                    .accessibilityLabel(String(localized: "Your transcribed answer: \(displayedAnswer)", bundle: .interface, locale: .interface, comment: "Accessibility label reading back the user's transcribed answer"))
                     .accessibilityIdentifier("confirmation.answer")
                 }
             }
             .frame(maxHeight: .infinity)
+
+            if showsSpellingHint, !isEditing, !isEvaluating {
+                AnswerSpellingHint()
+                    .padding(.top, Theme.Hangs.Spacing.sm)
+            }
 
             // #131 Track F: full ListenBar — confirmation is a quiz screen, and
             // its three commands need the words on their own line. #189: it
@@ -266,16 +274,27 @@ struct AnswerConfirmationView: View {
                     .transition(.opacity)
             }
 
-            // #174 B1: VERTICAL, and in this order. The half-width Confirm could
-            // not hold "Vyhodnocujem…" (2× the length of "Potvrdiť"), so the label
-            // shrank and truncated the moment the driver pressed it. Full width
-            // fits every localization at full size, and nothing moves between the
-            // two states because the row never re-splits.
+            // #208.6 (founder 2026-10-16): Again and Confirm side by side, the
+            // same size, Again on the left. Replaces #174 B1's vertical stack;
+            // a title that outgrows half the width scales down on one line at
+            // every text size (`singleLineTitle`), and nothing moves between
+            // the states because the row never re-splits.
             if showsNoAnswerChoice {
                 noAnswerChoice
                     .padding(.top, 14)
             } else {
-                VStack(spacing: Theme.Hangs.Spacing.xs) {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
+                    // #174: "Again" — the title IS the voice command (founder
+                    // 2026-09-09), so the action icon is a retry arrow.
+                    HangsSecondaryButton(title: "Again", icon: "arrow.counterclockwise", singleLineTitle: true) {
+                        editFocused = false
+                        onReRecord()
+                    }
+                    .accessibilityIdentifier("confirmation.reRecord")
+                    .disabled(isReRecordLocked || isEvaluating)
+                    // C2: 45 % is the mock's "this is not yours right now" tone.
+                    .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
+
                     // #108B: countdown lives inside the CTA (Waze-like drain + "Ns"
                     // chip, pen `R5JfD`) — replaces the old separate countdown bar.
                     HangsPrimaryButton(
@@ -287,7 +306,8 @@ struct AnswerConfirmationView: View {
                         isLoading: isEvaluating,
                         countdownSecondsRemaining: autoConfirmEnabled && !isEditing && !isEvaluating && autoConfirmCountdown > 0
                             ? autoConfirmCountdown : nil,
-                        countdownTotal: autoConfirmTotal
+                        countdownTotal: autoConfirmTotal,
+                        singleLineTitle: true
                     ) {
                         editFocused = false
                         onConfirm()
@@ -296,30 +316,11 @@ struct AnswerConfirmationView: View {
                     // "no answer" and submits as such. Disabling it was what left an
                     // empty recording with no way off the sheet but a re-record.
                     .accessibilityLabel(isEmptyAnswer
-                        ? String(localized: "Confirm without an answer", comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
+                        ? String(localized: "Confirm without an answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm button when the answer field is empty, which submits no answer")
                         : autoConfirmEnabled && autoConfirmCountdown > 0 && !isEditing
-                        ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", comment: "Accessibility label for the confirm button while auto-confirm counts down")
-                        : String(localized: "Confirm answer", comment: "Accessibility label for the confirm-answer button"))
+                        ? String(localized: "Confirm answer, auto-confirming in \(autoConfirmCountdown) seconds", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm button while auto-confirm counts down")
+                        : String(localized: "Confirm answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the confirm-answer button"))
                     .accessibilityIdentifier("confirmation.confirm")
-
-                    // Secondary in weight as well as in position: a text-style
-                    // control under the CTA, the standard iOS pairing.
-                    // #174: "Again" — the title IS the voice command (founder
-                    // 2026-09-09), so the action icon is a retry arrow.
-                    HangsGhostButton(
-                        title: "Again",
-                        icon: "arrow.counterclockwise",
-                        color: Theme.Hangs.Colors.muted,
-                        font: .hangsButton
-                    ) {
-                        editFocused = false
-                        onReRecord()
-                    }
-                    .frame(minHeight: Metrics.chip + Theme.Hangs.Spacing.xxs)
-                    .accessibilityIdentifier("confirmation.reRecord")
-                    .disabled(isReRecordLocked || isEvaluating)
-                    // C2: 45 % is the mock's "this is not yours right now" tone.
-                    .opacity(isReRecordLocked || isEvaluating ? 0.45 : 1)
                 }
                 .padding(.top, 14)
             }
@@ -336,26 +337,22 @@ struct AnswerConfirmationView: View {
         noAnswerCaptured && !isEditing && !isEvaluating
     }
 
-    /// Again first — it is the likelier wish after "I didn't catch that" — and
-    /// no countdown on either: this sheet never resolves itself.
+    /// Again is the primary here — it is the likelier wish after "I didn't
+    /// catch that" — and no countdown on either: this sheet never resolves
+    /// itself. #208.6: the same row as the transcript's, Again on the left,
+    /// Skip in Confirm's place (an empty confirm IS the skip).
     private var noAnswerChoice: some View {
-        VStack(spacing: Theme.Hangs.Spacing.xs) {
-            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise") {
+        HStack(spacing: Theme.Hangs.Spacing.xs) {
+            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", singleLineTitle: true) {
                 editFocused = false
                 onReRecord()
             }
             .accessibilityIdentifier("confirmation.reRecord")
 
-            HangsGhostButton(
-                title: "Skip",
-                icon: "chevron.right.2",
-                color: Theme.Hangs.Colors.muted,
-                font: .hangsButton
-            ) {
+            HangsSecondaryButton(title: "Next (skip question)", icon: "chevron.right.2", singleLineTitle: true) {
                 editFocused = false
                 onConfirm()
             }
-            .frame(minHeight: Metrics.chip + Theme.Hangs.Spacing.xxs)
             .accessibilityIdentifier("confirmation.skip")
         }
     }
@@ -392,6 +389,7 @@ struct AnswerConfirmationView: View {
                 .focused($editFocused)
                 .submitLabel(.done)
                 .onSubmit { editFocused = false }
+                .limitLength($transcribedAnswer, to: TextInputLimit.answer)
                 .toolbar {
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
@@ -440,7 +438,7 @@ struct AnswerConfirmationView: View {
                         .tracking(-1)
                         .foregroundColor(Theme.Hangs.Colors.ink)
                 }
-                .accessibilityLabel(String(localized: "Processing your answer", comment: "Accessibility label for the processing state on the answer confirmation sheet"))
+                .accessibilityLabel(String(localized: "Processing your answer", bundle: .interface, locale: .interface, comment: "Accessibility label for the processing state on the answer confirmation sheet"))
             }
 
             Spacer(minLength: 0)
@@ -449,7 +447,7 @@ struct AnswerConfirmationView: View {
                 HangsSecondaryButton(title: "voice.cancel", icon: "xmark") {
                     onCancel()
                 }
-                .accessibilityLabel(String(localized: "Cancel processing", comment: "Accessibility label for the cancel-processing button"))
+                .accessibilityLabel(String(localized: "Cancel processing", bundle: .interface, locale: .interface, comment: "Accessibility label for the cancel-processing button"))
                 .accessibilityIdentifier("confirmation.cancel")
             }
         }
@@ -517,6 +515,19 @@ struct AnswerConfirmationView: View {
             autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {}
+        )
+    }
+
+    #Preview("Spelling hint") {
+        AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant("Parish"),
+            autoConfirmCountdown: 4,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: 5,
+            onConfirm: {},
+            onReRecord: {},
+            showsSpellingHint: true
         )
     }
 

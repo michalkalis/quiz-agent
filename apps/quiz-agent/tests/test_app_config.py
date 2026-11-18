@@ -3,8 +3,8 @@
 Why these tests matter: every public build blocks play when it is below the
 served minimum version. So the defaults must be fully permissive (a deploy
 that forgets the env must not lock anyone out), a malformed minimum must be
-dropped rather than served, and every switch must come from env so the
-founder can flip it with a Fly secret instead of shipping code.
+dropped rather than served, and every switch must have an env default that
+applies when no DB override exists (#207 task 207.18, test_app_switches_db.py).
 """
 
 from __future__ import annotations
@@ -53,9 +53,20 @@ async def test_defaults_never_block_or_hide_anything():
         "orders_enabled": True,
         # #205: on in dev; prod's fly.toml turns it off until the founder flips it.
         "daily_challenge_enabled": True,
+        # #212: same; off in prod until the founder flips it.
+        "multiplayer_enabled": True,
+        # #217: hidden in the App Store build unless switched on in the DB.
+        "multiplayer_enabled_app_store": False,
         "notice": None,
         # No DB in this test app: the voice test block is null (fail open).
         "voice_experiment": None,
+        # #214: no nudge and no maintenance unless switched on in the DB.
+        "recommended_version_app_store": None,
+        "recommended_version_testflight": None,
+        "maintenance_enabled": False,
+        "maintenance_message": None,
+        # #232: sharing by link stays hidden until switched on in the DB.
+        "shared_quiz_enabled": False,
     }
     # Public and cacheable: hit at every launch/foreground, no per-user data.
     assert cache_control == "public, max-age=60"

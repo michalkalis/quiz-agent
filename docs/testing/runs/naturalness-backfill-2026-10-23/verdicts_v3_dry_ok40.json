@@ -1,0 +1,532 @@
+[
+  {
+    "id": "8f5fa371-c789-4044-a326-5ebae25d3a8b",
+    "language": "cs",
+    "question": "Lezci po celém světě si mažou ruce bílým magnéziem, aby jim neklouzaly. Na pískovcových skalách v Adršpachu nebo v Českém ráji je ale magnézium zakázané. Proč?",
+    "answer": "Ničí a zanáší pískovec",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "3ad24906-40ea-4862-a6f2-83fdfecdfe44",
+    "language": "cs",
+    "question": "Red Bull je původně thajský nápoj pro řidiče kamionů. Rakouský obchodník ho v Bangkoku ochutnal po dlouhém letu a zjistil, že mu pomáhá na jednu nepříjemnou cestovatelskou potíž. Na jakou?",
+    "answer": "Jet lag",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1936da1a-dae7-498e-92fb-91a57f781436",
+    "language": "cs",
+    "question": "Slovo robot proslavila hra R.U.R. z roku 1920. Její autor ale sám přiznával, že slovo nevymyslel on. Kdo ho tedy vymyslel?",
+    "answer": "Josef Čapek",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "47d11a7d-a86c-4a0d-bc78-5d0af6eea475",
+    "language": "sk",
+    "question": "Bratislavský Most SNP s reštauráciou UFO je ako jediný most na svete členom medzinárodnej federácie, do ktorej patrí aj parížska Eiffelovka či torontská CN Tower. Federácia čoho?",
+    "answer": "Veľkých veží",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1c4e5298-8833-4b6e-9941-de954d11329f",
+    "language": "cs",
+    "question": "Ve kterém roce zahájila společnost Radiojournal pravidelné rozhlasové vysílání ze stanu v Praze-Kbelích?",
+    "answer": "1923",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "48f8bca6-af63-465c-8b7e-f4f450d0793f",
+    "language": "sk",
+    "question": "Ktorý slovenský nealkoholický nápoj vznikol v roku 1973 vo vinárskych závodoch v Pezinku a dodnes sa vyrába z hroznového muštu?",
+    "answer": "Vinea",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "4c9a74ec-c34c-43e2-a27a-e700cb105f2b",
+    "language": "cs",
+    "question": "Léky Viread a Truvada proti HIV, které prodává americká firma Gilead, stojí na látkách vyvinutých v pražském Ústavu organické chemie a biochemie. Který český chemik je objevil?",
+    "answer": "Antonín Holý",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "92109505-e2c8-48ec-8bdd-91c9aae7f0ee",
+    "language": "sk",
+    "question": "Spevácka súťaž SuperStar sa v septembri 2026 po päťročnej pauze vrátila na obrazovky. Ktorý slovenský spevák bol jediným Slovákom v jej štvorčlennej porote?",
+    "answer": "Pavol Habera",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "76e2e8f8-d76c-4d6d-83fc-e5a0e35f7f1d",
+    "language": "cs",
+    "question": "Který film byl za celý rok 2025 nejnavštěvovanějším filmem v českých kinech?",
+    "answer": "Minecraft film",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "padding",
+          "quote": "nejnavštěvovanějším filmem"
+        }
+      ],
+      "rewrite": "Který film byl za celý rok 2025 nejnavštěvovanějším v českých kinech?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "de548ae5-dac5-435a-95fa-14f67b5ab60b",
+    "language": "cs",
+    "question": "Proč se pivo nejčastěji stáčí do hnědých lahví, a ne do čirých?",
+    "answer": "Chrání ho před světlem",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "a6f63f03-591a-4217-8a45-0c3f04fea0c9",
+    "language": "cs",
+    "question": "Hřebíček, který přidáváte do svařáku nebo do perníku, je usušená část jednoho tropického stromu. Která část rostliny to je?",
+    "answer": "Květní poupě",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "f1a19fec-7e30-45f8-8023-e3eb505ddbb5",
+    "language": "sk",
+    "question": "Prečo sa v starších vlakoch ozývalo pravidelné „ťuk-ťuk, ťuk-ťuk“? Cez čo kolesá stále prechádzali?",
+    "answer": "Medzery medzi koľajnicami",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1bb74196-a01e-4247-b57d-096923d3ae67",
+    "language": "cs",
+    "question": "Jmelí, které si o Vánocích věšíme doma pro štěstí, nikdy nezapouští kořeny do země. Kde tedy roste?",
+    "answer": "Na stromech",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "300aafa6-2493-4286-84dd-dbab078eef29",
+    "language": "sk",
+    "question": "Na okrajoch Bratislavy sú parkoviská so značkou „P plus R“. P znamená parkovanie, ale čo znamená to R?",
+    "answer": "Ride",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "63813a60-162c-4614-a666-849ab1d39793",
+    "language": "cs",
+    "question": "Než existovaly ledničky, muži v zimě vysekávali ze zamrzlých rybníků obrovské kvádry ledu a vozili je do hlubokých sklepů. Který podnik v obci jich spotřeboval zdaleka nejvíc?",
+    "answer": "Pivovar",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "790fa873-814c-4f57-ae50-7e83d56ea958",
+    "language": "cs",
+    "question": "Moshpity na Brutal Assaultu, největším českém metalovém festivalu, se točí uvnitř vojenské pevnosti z 18. století. Podle kterého panovníka se ta pevnost jmenuje?",
+    "answer": "Josef II.",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "a4af55c5-9aec-4ef8-b315-e4c1d4dd3333",
+    "language": "sk",
+    "question": "Na ktorom hrade na severe Slovenska vznikli zábery k slávnemu nemeckému nemému hororu Nosferatu z roku 1922?",
+    "answer": "Oravský hrad",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "0910e36d-9ea8-4591-a28d-a141bd0871ee",
+    "language": "sk",
+    "question": "Bryndza je symbolom slovenskej kuchyne, no jej názov k nám priniesli valašskí pastieri. Z ktorého jazyka slovo bryndza pochádza?",
+    "answer": "z rumunčiny",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "65364ff0-e759-4bf6-9e56-52c2b0b55bf1",
+    "language": "sk",
+    "question": "Kým na Slovensku je na Štedrý večer kapor so šalátom, v ktorej ázijskej krajine si rodiny týždne vopred objednávajú vianočnú večeru z KFC?",
+    "answer": "Japonsko",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "8a9e9b7b-8a2d-4614-afeb-8181576dd1d9",
+    "language": "cs",
+    "question": "Na zahrádkách často vidíte na tyči nebo ve větvích stromu obrácený květináč vycpaný slámou či dřevitou vlnou. Kterému hmyzu má sloužit jako úkryt? Nápověda: v noci požírá mšice.",
+    "answer": "Škvorům",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "86d04348-52d8-4725-bb5c-a7b2a603c9ae",
+    "language": "cs",
+    "question": "Největší přírodní skalní most z pískovce v celé Evropě stojí v Českém Švýcarsku. Jak se jmenuje?",
+    "answer": "Pravčická brána",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "d721fc73-7b24-44ab-ba8f-7e88ce7d7fd7",
+    "language": "cs",
+    "question": "Na klasickém českém táboře se nespí na zemi, ale ve stanu postaveném na dřevěné konstrukci s prkennou podlahou a postelemi. Jak se takovému stanu říká?",
+    "answer": "podsadový stan",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "001c3e17-e3a2-4b3b-b3b8-ee95b9b37627",
+    "language": "cs",
+    "question": "Malé pivo v české hospodě má 0,3 litru. Jakou zdrobnělinou odvozenou od zlomku litru se mu říká?",
+    "answer": "Třetinka",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "86cae097-a512-4101-b461-ccc3997f4e34",
+    "language": "sk",
+    "question": "Najväčší pohár horúceho nápoja v Starbucks sa volá Venti. Je to talianska číslovka – ktorá?",
+    "answer": "Dvadsať",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "e40cc29d-f9f5-45d1-a7e4-e4d15c3a1454",
+    "language": "sk",
+    "question": "Pravda alebo nepravda: Slovenský zákon prikazuje mať na osobnom aute zimné pneumatiky od 15. novembra do 31. marca, nech je počasie akékoľvek.",
+    "answer": "Nepravda",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "5b8fdc8f-6a96-4c08-8861-f266b43324e4",
+    "language": "cs",
+    "question": "Energetický nápoj Semtex si půjčil jméno od slavné české plastické trhaviny. Ta je pojmenovaná po místní části jednoho východočeského města, kde se vyráběla. O které město jde?",
+    "answer": "Pardubice",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "be005823-636e-4901-8384-b4c09a6ed195",
+    "language": "cs",
+    "question": "Zamilované páry v Praze chodí prvního máje na Petřín a nosí květiny k soše jednoho básníka. Kterého?",
+    "answer": "Karel Hynek Mácha",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "c5ff1b42-811f-4b0d-ac6a-eafb34d4d473",
+    "language": "sk",
+    "question": "Halloween má v mene ukrytý iný sviatok. Jeho názov je totiž skrátený anglický výraz pre predvečer tohto sviatku. O ktorý kresťanský sviatok ide?",
+    "answer": "Sviatok všetkých svätých",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "fc0b86c6-1553-4eab-88f5-8e16a19a9e51",
+    "language": "sk",
+    "question": "V animovanom filme Hoppers od štúdia Pixar z roku 2026 prenesie dievča Mabel svoje vedomie do robotickej kópie zvieraťa, aby sa dostala medzi obyvateľov ohrozeného rybníka a mokrade. Do kópie akého zvieraťa?",
+    "answer": "Bobra",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "cc6c3a6a-007f-4b2f-87f1-b23458ae796f",
+    "language": "cs",
+    "question": "Ve filmu Ďábel nosí Pradu 2 z roku 2026 se Meryl Streep po dvaceti letech vrátila do role obávané šéfredaktorky módního časopisu Runway. Jak se tato postava jmenuje?",
+    "answer": "Miranda Priestly",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "9b47ecf8-1169-453d-85d3-dee1cb8f7cc2",
+    "language": "cs",
+    "question": "Známé pravidlo, že zásnubní prsten má stát několik měsíčních platů, nevzniklo jako lidová moudrost. Vymyslela ho reklama jedné firmy. Jaké?",
+    "answer": "De Beers",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "43b697b2-35b2-49c4-90ac-27d4db105a80",
+    "language": "cs",
+    "question": "Vrcholem maturitního plesu je chvíle, kdy třídní učitel každému maturantovi slavnostně navlékne přes rameno pruh látky s nápisem a ročníkem. Jak se tomuto pruhu látky říká?",
+    "answer": "Šerpa",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "cb6137e2-ffcc-4e8e-b8f7-666bd05a9ebc",
+    "language": "sk",
+    "question": "Na čerpacích staniciach Slovnaft si kávu a hot dog kúpite v občerstvení, ktoré má anglický názov. Ako sa volá?",
+    "answer": "Fresh Corner",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "e48c83dd-1986-4d34-bc32-fa34198e0c78",
+    "language": "cs",
+    "question": "Při druhé pražské defenestraci vyhodili místodržící z okna Pražského hradu z výšky asi patnácti metrů, a přesto přežili. Na co podle protestantů dopadli?",
+    "answer": "Na hromadu hnoje",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "b47c5372-ac71-42f0-8a78-a41337326a02",
+    "language": "cs",
+    "question": "Vynálezce bankomatu John Shepherd-Barron chtěl původně, aby PIN měl šest číslic. Kvůli komu nakonec zůstalo jen u čtyř?",
+    "answer": "jeho manželka",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "1fb7fcdb-440a-4d3f-aaea-a573d49a021c",
+    "language": "sk",
+    "question": "Keď tínedžeri povedia, že sa niekto „flexuje“ novým mobilom, myslia tým, že sa predvádza. Čo pôvodne „flexovali“ Angličania, keď sa chceli predviesť?",
+    "answer": "svaly",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "d8f3649a-f7ba-472a-82d8-bfc8cb2d2335",
+    "language": "sk",
+    "question": "Na Chatu pod Rysmi nevedie žiadna cesta pre autá ani lanovka. Kto tam najčastejšie dopravuje jedlo, pivo a plynové bomby?",
+    "answer": "Nosiči",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "66c4b432-b59b-4de0-8ae1-e1097b1558d1",
+    "language": "cs",
+    "question": "Ve kterém městě v Bosně a Hercegovině skáčou místní odvážlivci pro turisty z kamenného mostu vysokého přes dvacet metrů do řeky?",
+    "answer": "Mostar",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "4a84ef59-0204-45cc-98f9-c1c248dc78bd",
+    "language": "cs",
+    "question": "Kovové stavebnice Merkur se celé generace vyrábějí v jednom východočeském městečku nedaleko Adršpašských skal. Jeho jméno zní stejně jako nábytek, na který si dáváte knihy. Které město to je?",
+    "answer": "Police nad Metují",
+    "verdict": {
+      "ok": false,
+      "problems": [
+        {
+          "kind": "unnatural",
+          "quote": "se celé generace vyrábějí"
+        }
+      ],
+      "rewrite": "Kovové stavebnice Merkur se po celé generace vyrábějí v jednom východočeském městečku nedaleko Adršpašských skal. Jeho jméno zní stejně jako nábytek, na který si dáváte knihy. Které město to je?",
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  },
+  {
+    "id": "59c1b36b-7e75-4c32-917e-7fe220730c0f",
+    "language": "sk",
+    "question": "V slávnom filme Obchod na korze z roku 1965 dostane tesár Tóno Brtko v podaní Jozefa Kronera do správy obchodík starej židovskej vdovy. Čo sa v tomto obchodíku predávalo?",
+    "answer": "Gombíky",
+    "verdict": {
+      "ok": true,
+      "problems": [],
+      "rewrite": null,
+      "model": "claude-opus-5-5",
+      "version": 3
+    }
+  }
+]

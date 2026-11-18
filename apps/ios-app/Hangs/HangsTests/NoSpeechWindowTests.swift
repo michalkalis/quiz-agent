@@ -28,7 +28,6 @@ struct NoSpeechWindowTests {
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: clock
         )
         vm.currentSession = Fixtures.makeActiveSession()

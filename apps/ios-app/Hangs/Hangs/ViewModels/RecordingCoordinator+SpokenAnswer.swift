@@ -213,7 +213,13 @@ extension RecordingCoordinator {
         guard let replacement = spokenReplacement else { return false }
         spokenReplacement = nil
         let language = CommandLanguage.forQuizLanguage(currentSession()?.language ?? settings().language)
-        let command = VoiceCommandMatcher.match(transcript: transcript, on: .confirmation, language: language)
+        // Car test 2026-10-30: the upload may carry the read-back's echo.
+        let heard = readBackText.map { Self.strippingEchoedAnswer(transcript, readBack: $0, language: language) } ?? transcript
+        guard !heard.isEmpty else {
+            keepAnswerAfterEcho(replacement)
+            return true
+        }
+        let command = VoiceCommandMatcher.match(transcript: heard, on: .confirmation, language: language)
         switch command {
         case .ok:
             attemptLedger.record(.command, "sheetAnswer.wasConfirm")
@@ -227,7 +233,8 @@ extension RecordingCoordinator {
             countdownHold = .driverStop
             restorePreviousAnswer(replacement, readBack: true)
         default:
-            return false
+            guard heard != transcript else { return false }
+            presentAnswerAfterEcho(heard)
         }
         return true
     }
@@ -247,7 +254,7 @@ extension RecordingCoordinator {
     /// Put the replaced answer back on the sheet. Its grade is gone — the
     /// backend graded the newer audio last — so confirming it re-grades the
     /// text (`confirmAnswer`'s resubmit path).
-    private func restorePreviousAnswer(_ replacement: SpokenReplacement, readBack: Bool) {
+    func restorePreviousAnswer(_ replacement: SpokenReplacement, readBack: Bool) {
         forgetRejectedTranscript(replacement.previousAnswer) // #204.2: it stands again
         pendingResponse = nil
         guard readBack else {

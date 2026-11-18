@@ -173,7 +173,7 @@ struct ListenBarInspectorTests {
             let tree = try view.inspect()
             let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try sub.text().string() == hint)
-            #expect(hint.contains("start") && hint.contains("skip"), "the question screen's words")
+            #expect(hint.contains("start") && hint.contains("next"), "the question screen's words")
         }
     }
 
@@ -295,10 +295,10 @@ struct ListenBarInspectorTests {
     }
 
     /// Shrinking the bar must not drop the one thing that tells the driver what
-    /// to say — Home's slim bar still names its command, in the command language.
+    /// to say — The slim bar still names its commands, in the command language.
     @Test("Slim still names the screen's command words, in the command language")
     func slimKeepsTheWords() async throws {
-        let hint = VoiceCommandLexicon.hint(on: .home, language: .slovak)
+        let hint = VoiceCommandLexicon.hint(on: .question, language: .slovak)
         let view = ListenBar(mode: .command, commandHint: hint, size: .slim, language: .slovak)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
@@ -315,7 +315,7 @@ struct ListenBarInspectorTests {
     /// must still be able to read what to say.
     @Test("Slim bar keeps its id and its words across every feedback phase")
     func slimStructureStableAcrossPhases() async throws {
-        let hint = VoiceCommandLexicon.hint(on: .home, language: .english)
+        let hint = VoiceCommandLexicon.hint(on: .question, language: .english)
         for phase in [VoiceFeedbackPhase.idle, .matched, .unmatched] {
             let view = ListenBar(mode: .command, feedback: phase, commandHint: hint, size: .slim)
             try await ViewHosting.host(view) {

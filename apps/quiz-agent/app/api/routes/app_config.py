@@ -1,10 +1,12 @@
 """Remote app switches for shipped iOS builds (#193 task 193.9 — beta hardening).
 
 ``GET /app-config`` lets a public build be steered without an app release:
-force builds below a minimum version to update, pause custom-pack ordering,
-or show a short notice. Values come from env (``app.config.Settings``), so a
-Fly secret/env change flips them on the running deploy. The voice-settings test
-(#204.9) is the exception: it lives in the DB so the weekly job can change it.
+force builds below a minimum version to update, nudge builds below a
+recommended version (#214), pause custom-pack ordering, show a short notice,
+or put the app into maintenance (#214). Each switch has an env default (``app.config.Settings``)
+and a DB override (``app.app_switches``, #207 task 207.18) that the founder or
+agent changes with ``PUT /admin/app-switches`` without restarting the machine.
+The voice-settings test (#204.9) lives in the DB too, for its weekly job.
 
 Public and unauthenticated: the client calls it at launch before any token
 exists, and treats any failure as "no switches set" (fail open), so this route
@@ -13,13 +15,16 @@ must never be the reason a build cannot play.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Response
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
+from ... import app_switches
 from ...config import get_settings
 from ...voice_experiment.served import voice_experiment_config
+from ..admin import verify_admin_key
 from ..deps import get_auth_sessionmaker
 
 router = APIRouter()
@@ -35,6 +40,9 @@ class AppNotice(BaseModel):
     sk: Optional[str] = None
     cs: Optional[str] = None
     en: Optional[str] = None
+    # #231: additive; left out of the served JSON while blank (see
+    # ``_without_blank_uk``), so a three-language body stays byte-identical.
+    uk: Optional[str] = None
 
 
 class VoiceExperimentArmConfig(BaseModel):
@@ -50,31 +58,125 @@ class AppConfigResponse(BaseModel):
 
     min_version_app_store: Optional[str] = None
     min_version_testflight: Optional[str] = None
+    # #214: builds below this get a dismissible "new version" card on Home.
+    recommended_version_app_store: Optional[str] = None
+    recommended_version_testflight: Optional[str] = None
     orders_enabled: bool = True
     # #205: show the daily challenge card on Home.
     daily_challenge_enabled: bool = False
+    # #212: show the Spolu (play together) button.
+    multiplayer_enabled: bool = False
+    # #217: the App Store build shows Spolu only when this is also true
+    # (TestFlight builds only read ``multiplayer_enabled``). DB switch, off.
+    multiplayer_enabled_app_store: bool = False
     notice: Optional[AppNotice] = None
     # #204.9: the voice-settings test, {flag: {route_group: arm}}. Null when
     # there is no DB or the read fails; the app then uses its manual switches.
     voice_experiment: Optional[dict[str, dict[str, VoiceExperimentArmConfig]]] = None
+    # #214: a full-screen maintenance message blocks the app while true. The
+    # message is optional; without it the app shows its own default text.
+    maintenance_enabled: bool = False
+    maintenance_message: Optional[AppNotice] = None
+    # #232: offer "send to a friend" and open shared-quiz links. DB switch, off.
+    shared_quiz_enabled: bool = False
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
 async def get_app_config(
-    response: Response, sessionmaker=Depends(get_auth_sessionmaker)
-) -> AppConfigResponse:
+    sessionmaker=Depends(get_auth_sessionmaker),
+) -> JSONResponse:
     settings = get_settings()
-    notice = AppNotice(
-        sk=settings.app_notice_sk,
-        cs=settings.app_notice_cs,
-        en=settings.app_notice_en,
+    switches = app_switches.effective(
+        settings, await app_switches.cached_overrides(sessionmaker)
     )
-    response.headers["Cache-Control"] = CACHE_CONTROL
-    return AppConfigResponse(
-        min_version_app_store=settings.min_app_version_app_store,
-        min_version_testflight=settings.min_app_version_testflight,
-        orders_enabled=settings.pack_orders_enabled,
+    notice = _localized(switches, "notice")
+    maintenance_message = _localized(switches, "maintenance")
+    config = AppConfigResponse(
+        min_version_app_store=switches["min_version_app_store"],
+        min_version_testflight=switches["min_version_testflight"],
+        recommended_version_app_store=switches["recommended_version_app_store"],
+        recommended_version_testflight=switches["recommended_version_testflight"],
+        orders_enabled=switches["orders_enabled"],
         daily_challenge_enabled=settings.daily_challenge_enabled,
-        notice=notice if (notice.sk or notice.cs or notice.en) else None,
+        multiplayer_enabled=settings.multiplayer_enabled,
+        multiplayer_enabled_app_store=switches["multiplayer_enabled_app_store"],
+        notice=notice,
         voice_experiment=await voice_experiment_config(sessionmaker),
+        maintenance_enabled=switches["maintenance_enabled"],
+        maintenance_message=maintenance_message,
+        shared_quiz_enabled=switches["shared_quiz_enabled"],
     )
+    return JSONResponse(
+        _without_blank_uk(config.model_dump(mode="json")),
+        headers={"Cache-Control": CACHE_CONTROL},
+    )
+
+
+def _without_blank_uk(body: dict[str, Any]) -> dict[str, Any]:
+    """Drop ``uk`` from a notice that has none: the client falls back to ``en``
+    and every other build reads exactly the body it read before (#231)."""
+    for key in ("notice", "maintenance_message"):
+        notice = body.get(key)
+        if notice is not None and notice.get("uk") is None:
+            notice.pop("uk", None)
+    return body
+
+
+def _localized(switches: dict[str, Any], prefix: str) -> Optional[AppNotice]:
+    """``<prefix>_sk/cs/en`` as one ``AppNotice``; ``None`` when all are blank."""
+    text = AppNotice(
+        sk=switches[f"{prefix}_sk"],
+        cs=switches[f"{prefix}_cs"],
+        en=switches[f"{prefix}_en"],
+        uk=switches[f"{prefix}_uk"],
+    )
+    return text if (text.sk or text.cs or text.en or text.uk) else None
+
+
+class AppSwitchesUpdate(BaseModel):
+    """``set``: switch → new value (``null``/blank = off: no minimum, no
+    notice). ``reset``: switches that go back to their env value."""
+
+    set: dict[str, Any] = Field(default_factory=dict)
+    reset: list[str] = Field(default_factory=list)
+
+
+async def _switches_state(sessionmaker) -> dict[str, Any]:
+    settings = get_settings()
+    overrides = await app_switches.read_overrides(sessionmaker)
+    return {
+        "effective": app_switches.effective(settings, overrides),
+        "overrides": overrides,
+        "env": app_switches.env_values(settings),
+    }
+
+
+@router.get("/admin/app-switches")
+async def get_app_switches(
+    _: str = Depends(verify_admin_key),
+    sessionmaker=Depends(get_auth_sessionmaker),
+) -> dict[str, Any]:
+    """What ``/app-config`` serves, the DB overrides and the env defaults."""
+    if sessionmaker is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    return await _switches_state(sessionmaker)
+
+
+@router.put("/admin/app-switches")
+async def put_app_switches(
+    body: AppSwitchesUpdate,
+    _: str = Depends(verify_admin_key),
+    sessionmaker=Depends(get_auth_sessionmaker),
+) -> dict[str, Any]:
+    """Change switches live (no restart); served by ``/app-config`` at once."""
+    if sessionmaker is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    if overlap := set(body.set) & set(body.reset):
+        raise HTTPException(
+            status_code=422, detail=f"both set and reset: {sorted(overlap)}"
+        )
+    try:
+        await app_switches.write(sessionmaker, body.set, body.reset)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return await _switches_state(sessionmaker)

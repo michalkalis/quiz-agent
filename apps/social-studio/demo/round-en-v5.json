@@ -1,0 +1,272 @@
+{
+	"language": "en",
+	"recording": "demo/rec/round5.mp4",
+	"recordingSize": {
+		"w": 1206,
+		"h": 2622
+	},
+	"category": "geography-world",
+	"segments": [
+		{
+			"from": 0.0,
+			"to": 5.467
+		},
+		{
+			"from": 5.5,
+			"to": 7.034
+		},
+		{
+			"from": 7.067,
+			"to": 9.834
+		},
+		{
+			"from": 9.867,
+			"to": 11.534
+		},
+		{
+			"from": 11.567,
+			"to": 12.834
+		},
+		{
+			"from": 12.867,
+			"to": 17.5
+		},
+		{
+			"from": 17.533,
+			"to": 22.967
+		}
+	],
+	"taps": [
+		{
+			"t": 6.73,
+			"x": 270,
+			"y": 2388
+		},
+		{
+			"t": 12.917,
+			"x": 864,
+			"y": 2349
+		}
+	],
+	"zooms": [
+		{
+			"from": 0.0,
+			"to": 0.8,
+			"x": 607,
+			"y": 1792,
+			"scale": 1.25
+		},
+		{
+			"from": 0.8,
+			"to": 2.55,
+			"x": 607,
+			"y": 1792,
+			"scale": 1.25
+		},
+		{
+			"from": 2.55,
+			"to": 5.467,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 5.5,
+			"to": 7.033,
+			"x": 507,
+			"y": 2388,
+			"scale": 1.25
+		},
+		{
+			"from": 7.067,
+			"to": 9.833,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 9.867,
+			"to": 11.533,
+			"x": 603,
+			"y": 2181,
+			"scale": 1.25
+		},
+		{
+			"from": 11.567,
+			"to": 12.833,
+			"x": 604,
+			"y": 1503,
+			"scale": 1.25
+		},
+		{
+			"from": 12.867,
+			"to": 13.117,
+			"x": 864,
+			"y": 2352,
+			"scale": 1.25
+		},
+		{
+			"from": 13.617,
+			"to": 15.517,
+			"x": 382,
+			"y": 939,
+			"scale": 1.25
+		},
+		{
+			"from": 15.517,
+			"to": 17.499666666666666,
+			"x": 603,
+			"y": 1200,
+			"scale": 1.2
+		},
+		{
+			"from": 17.533,
+			"to": 21.18,
+			"x": 603,
+			"y": 645,
+			"scale": 1.5
+		},
+		{
+			"from": 21.18,
+			"to": 22.966666666666665,
+			"x": 603,
+			"y": 810,
+			"scale": 1.3
+		}
+	],
+	"highlights": [
+		{
+			"from": 0.8,
+			"to": 2.55,
+			"x": 90,
+			"y": 1605,
+			"w": 1035,
+			"h": 375
+		},
+		{
+			"from": 2.55,
+			"to": 5.467,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 5.5,
+			"to": 7.033,
+			"x": 48,
+			"y": 2304,
+			"w": 918,
+			"h": 168
+		},
+		{
+			"from": 7.067,
+			"to": 9.833,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 9.867,
+			"to": 11.533,
+			"x": 48,
+			"y": 2094,
+			"w": 1110,
+			"h": 174
+		},
+		{
+			"from": 11.567,
+			"to": 12.833,
+			"x": 72,
+			"y": 1344,
+			"w": 1065,
+			"h": 318
+		},
+		{
+			"from": 12.867,
+			"to": 13.117,
+			"x": 615,
+			"y": 2271,
+			"w": 498,
+			"h": 162
+		},
+		{
+			"from": 13.617,
+			"to": 15.517,
+			"x": 90,
+			"y": 846,
+			"w": 585,
+			"h": 186
+		}
+	],
+	"audio": [
+		{
+			"t": 0.23,
+			"src": "demo/rec/q-island.mp3"
+		},
+		{
+			"t": 7.267,
+			"src": "demo/rec/player-denmark.mp3"
+		},
+		{
+			"t": 13.367,
+			"src": "demo/rec/correct-denmark.mp3"
+		},
+		{
+			"t": 17.653,
+			"src": "demo/rec/nar-wifi.mp3"
+		},
+		{
+			"t": 21.28,
+			"src": "demo/rec/nar-reveal.mp3"
+		}
+	],
+	"captions": [
+		{
+			"from": 0.0,
+			"to": 5.5,
+			"text": "Trubbo reads the question out loud",
+			"kind": "step"
+		},
+		{
+			"from": 5.5,
+			"to": 9.867,
+			"text": "Think, then say or type your answer",
+			"kind": "step"
+		},
+		{
+			"from": 9.867,
+			"to": 13.317,
+			"text": "Trubbo checks your answer",
+			"kind": "step"
+		},
+		{
+			"from": 13.317,
+			"to": 17.533,
+			"text": "And shows the result with a fun fact",
+			"kind": "step"
+		},
+		{
+			"from": 17.533,
+			"to": 21.18,
+			"text": "Play together on the same Wi-Fi",
+			"kind": "step"
+		},
+		{
+			"from": 21.18,
+			"to": 23.0,
+			"text": "See who answered what",
+			"kind": "step"
+		},
+		{
+			"from": 8.217,
+			"to": 9.867,
+			"text": "Denmark!",
+			"kind": "player"
+		}
+	],
+	"endCard": true,
+	"endWord": "Free.",
+	"endAudio": "demo/rec/nar-free.mp3"
+}

@@ -228,6 +228,89 @@ struct PackOrderServiceTests {
         #expect(ids[0] == ids[1])
     }
 
+    // MARK: Difficulty on the wire (#224)
+
+    @Test("the chosen difficulty is sent as the wire string the backend validates; Mix sends none",
+          arguments: [(PackDifficulty.hard, "hard" as String?), (.easy, "easy"), (.mixed, nil)])
+    func difficultyIsSentOnTheWire(level: PackDifficulty, expected: String?) async throws {
+        let service = makeService()
+        let sent = OSAllocatedUnfairLock<[String: Bool]>(initialState: [:])
+        let value = OSAllocatedUnfairLock<String?>(initialState: nil)
+
+        PackOrderStubURLProtocol.handler = { req in
+            if let data = readRequestBody(req),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            {
+                let v = json["difficulty"] as? String
+                let present = json["difficulty"] != nil
+                value.withLock { $0 = v }
+                sent.withLock { $0["present"] = present }
+            }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        _ = try await service.createOrder(
+            intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, difficulty: level)
+        )
+
+        // The backend accepts only easy|medium|hard (a localized value would 422
+        // the paid order); a mixed batch is an ABSENT field, never "mixed".
+        #expect(value.withLock { $0 } == expected)
+        #expect(sent.withLock { $0["present"] } == (expected != nil))
+    }
+
+    // MARK: Audience on the wire (#236)
+
+    /// The `audience` value of every captured JSON body, nil when the body had
+    /// no such key.
+    private func captureAudience() -> OSAllocatedUnfairLock<[String?]> {
+        let seen = OSAllocatedUnfairLock<[String?]>(initialState: [])
+        PackOrderStubURLProtocol.handler = { req in
+            if let data = readRequestBody(req),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            {
+                let audience = json["audience"] as? String
+                seen.withLock { $0.append(audience) }
+            }
+            let isTopicCheck = req.url?.path.hasSuffix("topic-check") == true
+            let body = isTopicCheck ? #"{"verdict":"ok"}"# : Stubs.createdJSON
+            return (.make(status: isTopicCheck ? 200 : 202), Data(body.utf8))
+        }
+        return seen
+    }
+
+    // WHY: the server writes a child band with the kids template and checks;
+    // an adult order must stay byte-for-byte today's request so the server's
+    // "absent = adults" path (and older servers) see nothing new.
+    @Test("a child band is sent on the order and the topic check; adults sends no field",
+          arguments: [(PackAudience.kids7to9, "kids_7_9" as String?), (.kids4to6, "kids_4_6"), (.kids10to12, "kids_10_12"), (.adults, nil)])
+    func audienceIsSentOnTheWire(audience: PackAudience, expected: String?) async throws {
+        let service = makeService()
+        let seen = captureAudience()
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        _ = try await service.checkTopic(prompt: "Space", language: "sk", audience: audience)
+        _ = try await service.createOrder(
+            intent: PackOrderIntent(prompt: "Space", language: "sk", category: nil, theme: nil, difficulty: .easy, audience: audience)
+        )
+
+        #expect(seen.withLock { $0 } == [expected, expected])
+    }
+
+    @Test("an adult request carries no audience key at all")
+    func adultRequestHasNoAudienceKey() throws {
+        let order = try JSONSerialization.jsonObject(with: JSONEncoder().encode(CreateOrderRequest(
+            transactionId: "t", productId: "pack_30", prompt: "Space", language: "sk",
+            targetCount: 30, category: nil, theme: nil, difficulty: .easy
+        ))) as? [String: Any] ?? [:]
+        let check = try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(TopicCheckRequest(prompt: "Space", language: "sk"))
+        ) as? [String: Any] ?? [:]
+        #expect(order["audience"] == nil, "no key, not an explicit null")
+        #expect(check["audience"] == nil, "no key, not an explicit null")
+    }
+
     // MARK: 2. A new intent gets a new key
 
     @Test("a new intent sends a DIFFERENT transaction_id")
@@ -287,7 +370,9 @@ struct PackOrderServiceTests {
         // The guard is hit before any network call, so the second task only needs
         // scheduler turns (no I/O) to reach it and start awaiting the first task.
         // Then release the single blocked request.
-        for _ in 0 ..< 1000 { await Task.yield() }
+        for _ in 0 ..< 1000 {
+            await Task.yield()
+        }
         gate.signal()
 
         let (firstResult, secondResult) = try await (first, second)
@@ -452,6 +537,30 @@ struct PackOrderServiceTests {
         let transactionId = try #require(capturedTransactionId(request))
         #expect(transactionId.hasPrefix("admin-"),
                 "keyless synthetic orders must stay in the server's admin- id namespace")
+    }
+
+    // WHY (#228.6): the server reads the pack size from `product_id`; an
+    // order for a 10 pack that still said pack_30 would build the wrong pack.
+    @Test("the intent's size is the product and target count on the wire")
+    func sizeIsSentOnTheWire() async throws {
+        let service = makeService(adminKey: "seeded-admin-key")
+        let sent = OSAllocatedUnfairLock<(product: String?, count: Int?)>(initialState: (nil, nil))
+
+        PackOrderStubURLProtocol.handler = { req in
+            let json = readRequestBody(req).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            let wire = (product: json?["product_id"] as? String, count: json?["target_count"] as? Int)
+            sent.withLock { $0 = wire }
+            return (.make(status: 202), Data(Stubs.createdJSON.utf8))
+        }
+        defer { PackOrderStubURLProtocol.handler = nil }
+
+        _ = try await service.createOrder(
+            intent: PackOrderIntent(prompt: "History of Rome", language: "en", category: nil, theme: nil, size: .ten)
+        )
+
+        let wire = sent.withLock { $0 }
+        #expect(wire.product == "pack_10")
+        #expect(wire.count == 10)
     }
 
     @Test("a non-401 failure is unchanged — still PackOrderError.server with the backend detail, no refresh")

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trubbo: game invite</title>
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-itunes-app" content="app-id=6762482437">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#E8EAEE;--ink:#111216;--ink2:#3F4350;--btn:#111216;--btn-ink:#FFFFFF}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1014;--ink:#F2F3F5;--ink2:#C3C6CF;--btn:#F2F3F5;--btn-ink:#111216}}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;padding:16px;box-sizing:border-box}
+main{max-width:420px}
+h1{font-size:36px;font-weight:900;letter-spacing:-.03em;margin:0 0 12px}
+p{color:var(--ink2);font-size:18px;margin:8px 0 24px}
+a.get{display:inline-block;background:var(--btn);color:var(--btn-ink);font-weight:700;font-size:18px;text-decoration:none;border-radius:28px;padding:16px 28px}
+section+section{margin-top:40px}
+</style>
+</head>
+<body>
+<main>
+  <!-- Opened only without Trubbo installed: with the app, iOS opens the invite in it (universal link, #212). -->
+  <section lang="en">
+    <h1>You're invited to a game</h1>
+    <p>Install Trubbo and open it. On the same Wi-Fi the game shows up by itself.</p>
+    <a class="get" href="https://apps.apple.com/app/id6762482437">Get Trubbo on the App Store</a>
+  </section>
+  <section lang="sk">
+    <h1>Pozvánka do hry</h1>
+    <p>Nainštaluj si Trubbo a otvor ho. V tej istej wifi sa hra ukáže sama.</p>
+    <a class="get" href="https://apps.apple.com/sk/app/id6762482437">Stiahnuť Trubbo v App Store</a>
+  </section>
+  <section lang="cs">
+    <h1>Pozvánka do hry</h1>
+    <p>Nainstaluj si Trubbo a otevři ho. Ve stejné wifi se hra ukáže sama.</p>
+    <a class="get" href="https://apps.apple.com/cz/app/id6762482437">Stáhnout Trubbo v App Store</a>
+  </section>
+</main>
+<script>
+// Show the visitor's language first; the others stay below.
+(function () {
+  var lang = (navigator.language || "en").slice(0, 2);
+  var mine = document.querySelector('section[lang="' + lang + '"]');
+  if (mine) mine.parentNode.insertBefore(mine, mine.parentNode.firstChild);
+})();
+</script>
+</body>
+</html>

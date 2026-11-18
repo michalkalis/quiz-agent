@@ -18,6 +18,7 @@ small client and not inline in the route.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import httpx
@@ -53,20 +54,24 @@ class AppleOAuthClient:
         self,
         *,
         team_id: str,
-        client_id: str,
+        client_id: str | Sequence[str],
         key_id: str,
         private_key: str,
         http_client: httpx.AsyncClient | None = None,
         token_url: str = _APPLE_TOKEN_URL,
         revoke_url: str = _APPLE_REVOKE_URL,
     ) -> None:
-        if not (team_id and client_id and key_id and private_key):
+        client_ids = (client_id,) if isinstance(client_id, str) else tuple(client_id)
+        if not (team_id and client_ids and all(client_ids) and key_id and private_key):
             raise RuntimeError(
                 "Apple Sign in key is not fully configured (need APPLE_SIGNIN_TEAM_ID, "
                 "APPLE_SIGNIN_CLIENT_ID, APPLE_SIGNIN_KEY_ID, APPLE_SIGNIN_PRIVATE_KEY)."
             )
         self._team_id = team_id
-        self._client_id = client_id
+        # #234: every app that signs in (App Store app first = primary, then the
+        # beta app). Apple binds an authorization code and the refresh token it
+        # yields to the client that requested it, so each call names its client.
+        self._client_ids = client_ids
         self._key_id = key_id
         self._private_key = private_key
         # Injected in tests (httpx.MockTransport); None → a short-lived client.
@@ -74,22 +79,33 @@ class AppleOAuthClient:
         self._token_url = token_url
         self._revoke_url = revoke_url
 
-    def _client_secret(self) -> str:
+    def _resolve_client_id(self, client_id: str | None) -> str:
+        """The client a call authenticates as; None = primary (pre-#234 rows)."""
+        return client_id or self._client_ids[0]
+
+    def _client_secret(self, client_id: str) -> str:
         return generate_client_secret(
             team_id=self._team_id,
-            client_id=self._client_id,
+            client_id=client_id,
             key_id=self._key_id,
             private_key=self._private_key,
         )
 
-    async def exchange_authorization_code(self, code: str) -> AppleTokenExchange:
+    async def exchange_authorization_code(
+        self, code: str, *, client_id: str | None = None
+    ) -> AppleTokenExchange:
         """Exchange a single-use ``authorization_code`` for Apple's tokens.
 
-        Native SIWA needs no ``redirect_uri`` (that is for web flows). Raises
-        ``AppleOAuthError`` on any failure (the route maps it to 502)."""
+        ``client_id`` is the app the code was issued to (the verified id_token's
+        ``aud``); it must be one of the configured clients. Native SIWA needs no
+        ``redirect_uri`` (that is for web flows). Raises ``AppleOAuthError`` on
+        any failure (the route maps it to 502)."""
+        client_id = self._resolve_client_id(client_id)
+        if client_id not in self._client_ids:
+            raise AppleOAuthError(f"Apple client {client_id!r} is not configured")
         data = {
-            "client_id": self._client_id,
-            "client_secret": self._client_secret(),
+            "client_id": client_id,
+            "client_secret": self._client_secret(client_id),
             "code": code,
             "grant_type": "authorization_code",
         }
@@ -101,7 +117,11 @@ class AppleOAuthClient:
         return AppleTokenExchange(refresh_token=payload.get("refresh_token"))
 
     async def revoke(
-        self, token: str, *, token_type_hint: str = "refresh_token"
+        self,
+        token: str,
+        *,
+        token_type_hint: str = "refresh_token",
+        client_id: str | None = None,
     ) -> None:
         """Revoke a stored Apple token at ``/auth/revoke`` (61.5, Session C).
 
@@ -109,10 +129,15 @@ class AppleOAuthClient:
         Apple answers an **empty 200** on success — unlike token exchange there is
         no JSON body to parse, so this does not go through ``_post_form``. Raises
         ``AppleOAuthError`` on any non-2xx or network failure; the delete route
-        swallows it (best-effort, F4)."""
+        swallows it (best-effort, F4).
+
+        ``client_id`` is the app whose sign-in produced ``token`` (stored next to
+        it, #234); Apple rejects a revoke authenticated as a different client.
+        None = the primary client, which issued every pre-#234 token."""
+        client_id = self._resolve_client_id(client_id)
         data = {
-            "client_id": self._client_id,
-            "client_secret": self._client_secret(),
+            "client_id": client_id,
+            "client_secret": self._client_secret(client_id),
             "token": token,
             "token_type_hint": token_type_hint,
         }
@@ -147,7 +172,7 @@ def build_apple_oauth_client(settings) -> AppleOAuthClient:
     """Construct an ``AppleOAuthClient`` from app settings (Session B/C)."""
     return AppleOAuthClient(
         team_id=settings.apple_signin_team_id,
-        client_id=settings.apple_signin_client_id,
+        client_id=settings.apple_signin_client_ids,
         key_id=settings.apple_signin_key_id,
         private_key=settings.apple_signin_private_key,
     )

@@ -15,6 +15,8 @@ silently downgraded to "just retry".
 
 from __future__ import annotations
 
+import asyncio
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -57,7 +59,8 @@ def _app(process_answer_side_effect: Exception) -> FastAPI:
     app.include_router(quiz_routes.router, prefix="/api/v1")
 
     session_manager = MagicMock()
-    session_manager.get_session = MagicMock(return_value=_session())
+    session_manager.get_session = AsyncMock(return_value=_session())
+    session_manager.session_lock = lambda sid, *, wait=True: asyncio.Lock()
     app.dependency_overrides[deps.get_session_manager] = lambda: session_manager
 
     quiz_flow = MagicMock()

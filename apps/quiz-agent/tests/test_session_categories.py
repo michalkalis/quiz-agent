@@ -53,7 +53,7 @@ async def _create(manager: SessionManager, body: CreateSessionRequest):
         token_service=None,
         auth_sessionmaker=None,
     )
-    return manager.get_session(response.session_id)
+    return await manager.get_session(response.session_id)
 
 
 async def test_no_categories_leaves_filter_empty():

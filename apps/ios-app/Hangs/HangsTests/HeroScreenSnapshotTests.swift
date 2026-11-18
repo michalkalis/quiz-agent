@@ -93,6 +93,9 @@ enum HeroScreen: String, CaseIterable {
         case .question:
             let vm = Self.quizViewModel()
             vm.quizState = .askingQuestion
+            // #208: the frozen screen is the question being READ, which the bar
+            // now only claims while a read really plays.
+            vm.isPlayingQuestionTTS = true
             return AnyView(QuestionView(viewModel: vm, debugSurfaces: false))
 
         case .questionMCQ:
@@ -224,7 +227,7 @@ struct HeroScreenSnapshotTests {
             .environment(\.colorScheme, .dark)
             .preferredColorScheme(.dark)
         let strategy: Snapshotting<AnyView, UIImage> = .image(
-            precision: 0.99,
+            precision: 0.9995,
             perceptualPrecision: 0.98,
             layout: .fixed(width: SnapshotBaseline.width, height: SnapshotBaseline.height),
             traits: UITraitCollection(traitsFrom: [
@@ -254,7 +257,7 @@ struct HeroScreenSnapshotTests {
         assertSnapshot(
             of: AnyView(light.dynamicTypeSize(.large)),
             as: .image(
-                precision: 0.99,
+                precision: 0.9995,
                 perceptualPrecision: 0.98,
                 layout: .fixed(width: SnapshotBaseline.width, height: SnapshotBaseline.height),
                 traits: UITraitCollection(traitsFrom: [

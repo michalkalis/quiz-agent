@@ -23,11 +23,19 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from app.db.models import CreditLedger, Feedback, Product, Subscription
+from app.db.models import (
+    CreditLedger,
+    Feedback,
+    Product,
+    QuestionRatingRow,
+    QuizSessionRow,
+    Subscription,
+)
+from app.rating.store import PostgresRatingStore
 from app.session.manager import SessionManager
-from quiz_shared.database.sql_client import QuizSessionDB, RatingDB, SQLClient
+from app.session.store import PostgresSessionStore
 from quiz_shared.models.rating import QuestionRating
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from tests.test_auth_me_endpoints import (
     _asgi,
@@ -167,72 +175,76 @@ async def test_delete_keeps_purchase_records_for_accounting(db_sessionmaker):
     assert (ledger.account_id, ledger.delta) == (user_id, 100)
 
 
-def _ratings_store(tmp_path) -> SQLClient:
-    return SQLClient(database_url=f"sqlite:///{tmp_path}/ratings.db")
+def _manager(db) -> SessionManager:
+    """The app's session manager as production wires it: sessions in Postgres."""
+    return SessionManager(store=PostgresSessionStore(db))
 
 
-def _rate(store: SQLClient, user: str, session_id: str) -> None:
-    assert store.add_rating(
+async def _rate(db, user: str, session_id: str) -> None:
+    assert await PostgresRatingStore(db).add_rating(
         QuestionRating(question_id="q1", session_id=session_id, user_id=user, rating=4)
     )
 
 
-async def test_delete_unlinks_stored_sessions_and_ratings(db_sessionmaker, tmp_path):
+async def _ratings_by_session(db) -> dict:
+    async with db() as s:
+        rows = (await s.execute(select(QuestionRatingRow))).scalars().all()
+    return {r.session_id: r.user_id for r in rows}
+
+
+async def test_delete_unlinks_stored_sessions_and_ratings(db_sessionmaker):
     """Answers and ratings stay for question statistics but must no longer be
     personal: the id disappears from the session JSON (owner, participant and
-    the display name that defaults to it) and from the rating. The live session
-    is dropped and the stored one deactivated, so an ownerless session can never
-    run again (it would skip the quota gates, which key on its owner)."""
-    store = _ratings_store(tmp_path)
-    manager = SessionManager(sql_client=store)
+    the display name that defaults to it) and from the rating. The stored
+    session is deactivated, so an ownerless session can never run again (it
+    would skip the quota gates, which key on its owner)."""
+    manager = _manager(db_sessionmaker)
     app = _make_app(db_sessionmaker)
     app.state.session_manager = manager
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="a.sess")
-    mine = manager.create_session(user_id=user_id)
-    theirs = manager.create_session(user_id=OTHER)
-    _rate(store, user_id, mine.session_id)
-    _rate(store, OTHER, theirs.session_id)
+    mine = await manager.create_session(user_id=user_id)
+    theirs = await manager.create_session(user_id=OTHER)
+    await _rate(db_sessionmaker, user_id, mine.session_id)
+    await _rate(db_sessionmaker, OTHER, theirs.session_id)
 
     assert (await _delete(app, bearer)).status_code == 204
 
-    assert manager.get_session(mine.session_id) is None
-    assert manager.get_session(theirs.session_id) is not None
-    db = store._get_session()
-    try:
-        row = db.get(QuizSessionDB, mine.session_id)
+    assert await manager.get_session(mine.session_id) is None
+    assert await manager.get_session(theirs.session_id) is not None
+    async with db_sessionmaker() as db:
+        row = await db.get(QuizSessionRow, mine.session_id)
         assert row is not None and row.is_active is False
         assert user_id not in row.data_json
         data = json.loads(row.data_json)
         assert data["user_id"] is None
         assert data["participants"][0]["user_id"] is None
         assert data["participants"][0]["display_name"] == "Player"
-        assert OTHER in db.get(QuizSessionDB, theirs.session_id).data_json
-        ratings = {r.session_id: r.user_id for r in db.query(RatingDB).all()}
-    finally:
-        db.close()
-    assert ratings == {mine.session_id: None, theirs.session_id: OTHER}
+        assert OTHER in (await db.get(QuizSessionRow, theirs.session_id)).data_json
+    assert await _ratings_by_session(db_sessionmaker) == {
+        mine.session_id: None,
+        theirs.session_id: OTHER,
+    }
 
 
-async def test_delete_aborts_whole_erasure_when_ratings_store_fails(
-    db_sessionmaker, tmp_path
-):
-    """The ratings store cannot share the Postgres transaction, so it is unlinked
-    before the commit: if it fails, nothing is committed and the user can retry.
-    Committing first would leave sessions linked and a retry would 404."""
-    store = _ratings_store(tmp_path)
+async def test_delete_aborts_whole_erasure_when_the_unlink_fails(db_sessionmaker):
+    """Sessions and ratings are unlinked inside the erasure's own transaction:
+    if that step fails, nothing is committed and the user can retry. Committing
+    the account delete first would leave sessions linked to a person who no
+    longer exists and a retry would 404."""
+    manager = _manager(db_sessionmaker)
 
-    def boom(_user_id):
-        raise RuntimeError("ratings store down")
+    async def boom(_user_id, db=None):
+        raise RuntimeError("session store down")
 
-    store.unlink_user = boom
+    manager._store.forget_user = boom
     app = _make_app(db_sessionmaker)
-    app.state.session_manager = SessionManager(sql_client=store)
+    app.state.session_manager = manager
     user_id, bearer = await _make_account(db_sessionmaker, apple_sub="a.fail")
     async with db_sessionmaker() as s:
         s.add(Feedback(user_id=user_id, message="still here"))
         await s.commit()
 
-    with pytest.raises(RuntimeError, match="ratings store down"):
+    with pytest.raises(RuntimeError, match="session store down"):
         await _delete(app, bearer)
 
     assert await _user_exists(db_sessionmaker, user_id)

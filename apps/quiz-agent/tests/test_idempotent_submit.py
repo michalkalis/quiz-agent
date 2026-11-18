@@ -82,15 +82,15 @@ class _FakeSessionManager:
         self.writes: List[QuizSession] = []
         self._lock = asyncio.Lock()
 
-    def get_session(self, session_id: str) -> QuizSession:
+    async def get_session(self, session_id: str) -> QuizSession:
         return _roundtrip(self.stored)
 
-    def update_session(self, session: QuizSession) -> bool:
+    async def update_session(self, session: QuizSession) -> bool:
         self.stored = _roundtrip(session)
         self.writes.append(self.stored)
         return True
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
+    def session_lock(self, session_id: str, *, wait: bool = True) -> asyncio.Lock:
         return self._lock
 
 
@@ -164,7 +164,7 @@ async def _submit(
     question_id: Optional[str] = None,
 ):
     """One submit, the way the route does it: fresh copy in, FlowResult out."""
-    session = manager.get_session(_SESSION_ID)
+    session = await manager.get_session(_SESSION_ID)
     return await flow.process_answer(
         session=session, answer_text=text, submitted_question_id=question_id
     )
@@ -537,3 +537,27 @@ async def test_route_replays_a_retried_submit_end_to_end(client):
     assert manager.stored.asked_question_ids == [_Q1, _Q2]
     assert flow.answer_evaluator.evaluate.await_count == 1
     flow.usage_tracker.record_question.assert_awaited_once()
+
+
+async def test_regrade_emits_a_superseding_answer_evaluated_event():
+    """Player stats keep the LATEST verdict per (session, question). Without an
+    event for the corrected grade, the stats would keep the first, overridden
+    verdict and disagree with the score the player saw (#213)."""
+    manager = _FakeSessionManager(_session())
+    flow = _flow(manager)
+    flow.analytics = MagicMock()
+    await _submit(flow, manager, "Paris", question_id=_Q1)
+    flow.analytics.emit.reset_mock()
+
+    session = await manager.get_session(_SESSION_ID)
+    await flow.process_answer(
+        session=session, answer_text="Lyon", submitted_question_id=_Q1, route="text"
+    )
+
+    (call,) = flow.analytics.emit.call_args_list
+    assert call.args == ("answer_evaluated",)
+    assert call.kwargs["session_id"] == _SESSION_ID
+    props = call.kwargs["properties"]
+    assert props["is_regrade"] is True
+    assert props["question_id"] == _Q1 and props["result"] == "incorrect"
+    assert props["route"] == "text" and props["category"] == "general"

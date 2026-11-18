@@ -33,6 +33,9 @@ ENV_PINS: dict[str, str] = {
     # #203 203.9: pack sub-themes are a customer-order feature; the weekly job
     # never plans them, whatever the worker's secret says.
     "PACK_SUBTHEMES": "0",
+    # #211: the native sk/cs house style v2 is a customer-pack switch too; the
+    # weekly job keeps the prompt its blind round approved.
+    "GEN_HOUSE_STYLE_V2": "0",
 }
 
 # #203 203.9: the house style has its own switch here, so the worker's

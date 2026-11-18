@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# #172 — session worker on a Mac (founder MacBook now, mba later): opens the
-# prod Fly tunnels (Postgres + Redis) and runs the ARQ worker on the Claude
-# Code subscription via run_session_worker.sh. Logs + pids in
+# #172 / #207 — backup pack worker on mba: opens the prod Fly tunnels
+# (Postgres + Redis) and runs the gated backup worker on the Claude Code
+# subscription via run_session_worker.sh. It takes orders only while the Fly
+# worker is down or an order sits unclaimed (app/worker/backup.py). Logs + pids in
 # ~/Library/Logs/quiz-session-worker/.
 #
 #   session_worker_local.sh start | stop | status   one-off run, detached (nohup)
@@ -17,6 +18,9 @@
 # PROD_REDIS_URL (redis://:<REDIS_PASSWORD>@localhost:16379/0), OPENAI_API_KEY.
 # Tunnels use the founder's `fly auth login` (app-scoped tokens do not cover
 # quiz-pack-db / quiz-pack-redis), hence `env -u FLY_API_TOKEN`.
+# #222 (moving the backend to Hetzner): PROD_TUNNEL=hetzner in .env opens one
+# SSH tunnel to the Hetzner server instead, on the same local ports, so the URLs
+# keep their localhost form (infra/hetzner/local-prod-env.sh switches .env).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -44,14 +48,28 @@ start_proxy() {  # name local_port remote_port fly_app
   echo "$1 tunnel up on :$2"
 }
 
+start_ssh_tunnel() {  # #222: Postgres + Redis of the Hetzner server, one SSH connection
+  if listening 15432 && listening 16379; then echo "hetzner tunnel already listening"; return; fi
+  nohup ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 \
+    -L 15432:127.0.0.1:5432 -L 16379:127.0.0.1:6379 trubbo-prod >"$RUN_DIR/ssh-tunnel.log" 2>&1 &
+  echo $! >"$RUN_DIR/ssh-tunnel.pid"
+  for _ in $(seq 1 30); do listening 15432 && listening 16379 && break; sleep 1; done
+  listening 15432 && listening 16379 || { echo "hetzner tunnel failed — see $RUN_DIR/ssh-tunnel.log" >&2; exit 1; }
+  echo "hetzner tunnel up on :15432 + :16379"
+}
+
 prepare() {  # env + tunnels, shared by start and supervise
   set -a; source "$REPO/.env"; set +a
   for var in PROD_DATABASE_URL PROD_REDIS_URL OPENAI_API_KEY; do
     [ -n "${!var:-}" ] || { echo "$var missing in $REPO/.env" >&2; exit 1; }
   done
 
-  start_proxy db 15432 5432 quiz-pack-db
-  start_proxy redis 16379 6379 quiz-pack-redis
+  if [ "${PROD_TUNNEL:-fly}" = hetzner ]; then
+    start_ssh_tunnel
+  else
+    start_proxy db 15432 5432 quiz-pack-db
+    start_proxy redis 16379 6379 quiz-pack-redis
+  fi
 
   export PATH="$REPO/.venv/bin:$HOME/.local/bin:$PATH"
   # The shared venv also has apps/quiz-agent installed editable, whose `app`
@@ -60,8 +78,9 @@ prepare() {  # env + tunnels, shared by start and supervise
   export PYTHONPATH="$REPO/apps/quiz-pack-api${PYTHONPATH:+:$PYTHONPATH}"
   export DATABASE_URL="$PROD_DATABASE_URL"
   export REDIS_URL="$PROD_REDIS_URL"
-  export ORDER_QUEUE_NAME="quiz-pack:session"
-  export WORKER_QUEUE_NAME="quiz-pack:session"
+  # #207: the backup consumes the Fly worker's queue (ARQ default) and takes
+  # orders only when the Fly worker is down or an order sits unclaimed.
+  unset ORDER_QUEUE_NAME WORKER_QUEUE_NAME
   export WORKER_MAX_JOBS="${WORKER_MAX_JOBS:-1}"
   export WORKER_JOB_TIMEOUT_S="${WORKER_JOB_TIMEOUT_S:-14400}"
   export ENVIRONMENT=production
@@ -142,7 +161,7 @@ cmd_uninstall_launchd() {
 }
 
 cmd_stop() {
-  for name in worker redis-proxy db-proxy; do
+  for name in worker redis-proxy db-proxy ssh-tunnel; do
     if alive "$name"; then kill "$(cat "$RUN_DIR/$name.pid")" && echo "stopped $name"; fi
     rm -f "$RUN_DIR/$name.pid"
   done
@@ -155,7 +174,7 @@ cmd_status() {
   else
     echo "launchd: not installed"
   fi
-  for name in db-proxy redis-proxy worker; do
+  for name in db-proxy redis-proxy ssh-tunnel worker; do
     alive "$name" && echo "$name: running (pid $(cat "$RUN_DIR/$name.pid"))" || echo "$name: stopped"
   done
   [ -f "$RUN_DIR/worker.log" ] && { echo "--- worker.log (tail)"; tail -15 "$RUN_DIR/worker.log"; }

@@ -1,0 +1,26 @@
+# texts
+Pravidlá hry
+Hotovo
+Čas na odpoveď
+15 s
+30 s
+45 s
+60 s
+Vlastný
+Čas na odpoveď
+Čítať otázky nahlas
+
+After each question
+At the end of the quiz
+Kedy ukázať odpovede
+At the end of the quiz
+Kedy ukázať odpovede
+At the end of the quiz
+Platí pre všetkých hráčov. Tvoje sólo nastavenia ostávajú.
+# identifiers
+room.rules.done
+room.rules.sheet.time
+room.rules.sheet.readsAloud
+room.rules.sheet.reveal
+room.rules.sheet.reveal.question
+room.rules.sheet.reveal.round

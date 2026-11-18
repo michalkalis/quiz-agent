@@ -120,7 +120,10 @@ final class QuizTimersController: ObservableObject {
     /// Countdown before auto-recording starts, giving user time to think.
     /// Creates a fire-and-forget Task stored in `taskBag` under `.thinkingTime` for cancellation.
     /// `heldSeconds` (#200) continues a window a pause held; 0 = the full window.
-    func startThinkingTimeCountdown(resumingAt heldSeconds: Int = 0) {
+    /// `readingPause` (#208): nothing read the question aloud, so the window
+    /// stands still at full for this long before it drains. Same task and key
+    /// as the countdown, so every cancel and pause hold covers it too.
+    func startThinkingTimeCountdown(resumingAt heldSeconds: Int = 0, readingPause: Duration = .zero) {
         // #173: paused means paused. The re-arm guard `startAutoConfirmIfEnabled`
         // has always had, applied to the window the QUESTION screen runs on —
         // without it a question-TTS tail resolved by the pause's own
@@ -135,9 +138,23 @@ final class QuizTimersController: ObservableObject {
 
         cancelThinkingTime()
         let owner = attemptLedger.current
+        // #208: full and still from the first frame of the reading pause.
+        if readingPause > .zero { thinkingTimeCountdown = thinkingSeconds }
 
         let task = Task { [weak self] in
             guard let self else { return }
+
+            if readingPause > .zero {
+                self.attemptLedger.record(.timer, "readingPause.start")
+                try? await self.clock.sleep(for: readingPause)
+                if Task.isCancelled { return }
+                guard self.quizState() == .askingQuestion,
+                      self.attemptLedger.ownsQuestion(owner, "readingPause.end")
+                else {
+                    if self.quizState() != .recording { self.thinkingTimeCountdown = 0 }
+                    return
+                }
+            }
 
             guard thinkingSeconds > 0 else {
                 // No thinking time — start recording immediately (500ms delay like before)
@@ -184,6 +201,14 @@ final class QuizTimersController: ObservableObject {
             await self.startRecording()
         }
         taskBag.add(task, key: .thinkingTime)
+    }
+
+    /// #208: how long a silent question gets to be read off the screen before
+    /// the think window drains (`Config.silentReadingWordsPerSecond`, clamped).
+    nonisolated static func silentReadingPause(for questionText: String) -> Duration {
+        let words = questionText.split(whereSeparator: \.isWhitespace).count
+        let seconds = Double(words) / Config.silentReadingWordsPerSecond
+        return .seconds(min(max(seconds, Config.silentReadingPauseMin), Config.silentReadingPauseMax))
     }
 
     /// Cancel the thinking time countdown

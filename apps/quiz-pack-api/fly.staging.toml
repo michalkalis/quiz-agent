@@ -22,6 +22,16 @@ primary_region = "cdg"
   web = "uvicorn app.main:app --host 0.0.0.0 --port 8003"
   worker = "arq app.worker.WorkerSettings"
 
+# #207 207.29: the worker restarts after ANY exit, however often. Fly's default
+# (on-failure, 10 tries in 5 min) gave up during the 2026-10-16 host crash:
+# Redis and Postgres were unreachable for ~5 min, every boot exited within
+# seconds, and the worker then stayed stopped for 2.5 days. A requested stop
+# (`fly machine stop`) is still honoured. The web group keeps the default:
+# it scales to zero and is woken by the proxy.
+[[restart]]
+  policy = "always"
+  processes = ["worker"]
+
 [[vm]]
   processes = ["web", "worker"]
   # 256mb (#41 B4 cost hygiene) OOM-killed the arq worker and pushed web boot

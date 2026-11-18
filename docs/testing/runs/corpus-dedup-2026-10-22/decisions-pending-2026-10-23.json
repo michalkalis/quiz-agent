@@ -1,0 +1,373 @@
+{
+ "run_at": "2026-10-23T08:15:14.923819+00:00",
+ "pools": {
+  "en": {
+   "questions": 954,
+   "candidates": 83,
+   "same_fact": 55
+  },
+  "sk": {
+   "questions": 738,
+   "candidates": 0,
+   "same_fact": 0
+  },
+  "cs": {
+   "questions": 730,
+   "candidates": 0,
+   "same_fact": 0
+  }
+ },
+ "unjudged": 0,
+ "archived": {
+  "cdcb3755-c8ce-4c82-8a66-78a5e1eaf471": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4462e4c4-3fab-4928-bce8-a18471b5b576",
+   "question": "Ketchup came to Europe in the 1600s from Asia, but the original sauce contained no tomatoes at all. What was it made from?",
+   "twin_question": "Ketchup's name comes from a sauce sold in southern China centuries ago, but that original sauce had no tomatoes in it. What was it made from?"
+  },
+  "2b85eece-f972-4e3e-bdc2-b8fc82d91333": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4462e4c4-3fab-4928-bce8-a18471b5b576",
+   "question": "Before tomatoes had anything to do with it, the original 17th-century 'ketchup' that European sailors brought home from Southeast Asia was a fermented sauce made mainly from what?",
+   "twin_question": "Ketchup's name comes from a sauce sold in southern China centuries ago, but that original sauce had no tomatoes in it. What was it made from?"
+  },
+  "0d64947b-9ebd-4559-b8f3-94e9eccb2650": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "81ab065c-212e-4dfd-a335-491977f869dc",
+   "question": "In 1868, astronomers spotted an unknown element in the Sun's light during an eclipse — 27 years before anyone found it on Earth. Fittingly named after the Greek sun god, which element is it?",
+   "twin_question": "Which chemical element was first detected in sunlight in 1868, nearly three decades before anyone found it on Earth?"
+  },
+  "4ba3e579-c9cb-44e8-9dfb-97d0a3c3b7a3": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "6bfc5679-0b64-4df4-a124-ee173948614f",
+   "question": "Only two countries on Earth are doubly landlocked — surrounded entirely by neighbours that are themselves landlocked. Uzbekistan is one; which European microstate is the other?",
+   "twin_question": "Liechtenstein is one of only two countries that are landlocked and bordered solely by other landlocked countries. Which Central Asian nation is the other?"
+  },
+  "edab36a4-ec76-47fe-ab47-c5456eb41b3e": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "6bc8edd0-d43e-4afc-828d-b28658112e30",
+   "question": "Between 1900 and 1920, the Olympic Games awarded medals in a team event you would now expect at a school picnic: two teams, one rope. Which event?",
+   "twin_question": "Which team event, today mostly seen at school sports days and village fairs, awarded Olympic medals at every Games from 1900 to 1920?"
+  },
+  "5bdd40c8-0a02-493a-8a8e-519e90c5d6a1": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "535625eb-ef52-4eb0-bf2b-76fdc92a7b1b",
+   "question": "When James Naismith invented basketball in 1891, players did not shoot at hoops with nets. What did they aim at instead?",
+   "twin_question": "James Naismith's first basketball hoops, nailed to a gym balcony in 1891, were containers originally meant for which fruit?"
+  },
+  "240ec77d-e0c3-441f-957f-464c3e97c471": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "1923aede-e959-4c54-b94e-c03a6c8b3a5c",
+   "question": "Between 1912 and 1948, the Olympic Games awarded official medals not only to athletes but also to competitors in an entirely different kind of contest. What kind?",
+   "twin_question": "For the first half of the 20th century, you could win an official Olympic medal without breaking a sweat. What kind of competition did you have to enter?"
+  },
+  "98bd5740-ef3f-42b0-ad88-18e315fc132e": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "3b139bd6-4848-4ed4-9ded-1f5aef48ae11",
+   "question": "In Pixar's Finding Nemo, Nemo and his overprotective father Marlin belong to which brightly striped species of fish?",
+   "twin_question": "In the Pixar film Finding Nemo, what kind of fish are Nemo and his father Marlin?"
+  },
+  "8f5e7287-556b-4e77-8627-3254ab11765e": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4749cd6d-55f7-4eb5-a952-b620373d3d23",
+   "question": "In 2012, a tongue-in-cheek dance hit by a South Korean rapper became the first video in YouTube history to pass one billion views. Who was the artist?",
+   "twin_question": "True or false: Psy's 'Gangnam Style', sung almost entirely in Korean, was the first video in YouTube history to pass one billion views."
+  },
+  "b1615b68-3ba6-47fa-953c-89d16879d31d": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "fe87d67d-dac9-414d-ab4d-9ff3e4873ef9",
+   "question": "Greenland, the largest island on Earth, is an autonomous territory of which European kingdom?",
+   "twin_question": "The world's largest island is a self-governing territory of which European kingdom?"
+  },
+  "fb9e060b-6578-4541-b610-a305b6524b84": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "12bbe09b-e5a5-4f4b-b6e4-c94cc5eda19e",
+   "question": "Shine an ultraviolet party light on a gin and tonic and the drink glows an eerie blue. Which ingredient in the tonic water makes it fluoresce?",
+   "twin_question": "Under a nightclub's ultraviolet light, a glass of tonic water glows an eerie blue. Which bitter ingredient, once taken to fight malaria, makes it shine?"
+  },
+  "ba718eba-b802-437e-b114-f97716b31076": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "e6ab36db-58fd-41cd-ae87-c355ec8860d0",
+   "question": "Botanically speaking, bananas, kiwis and even watermelons all belong to one class of fruit — a class that, surprisingly, excludes strawberries and raspberries. Which class?",
+   "twin_question": "Botanists classify a fruit as a berry if it develops from a single flower's ovary with seeds inside its flesh. By that strict rule, which everyday fruit that most people would never call a berry actually qualifies as one?"
+  },
+  "b5d7bdf8-fa29-4857-8025-3b065ed6ae05": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4b56db5e-f0c3-4005-9970-b690c4935515",
+   "question": "On a June morning in 1974, a cashier in an Ohio supermarket scanned the world's first barcoded product at a checkout. What was it?",
+   "twin_question": "The very first product ever scanned by a barcode reader at a supermarket checkout cost just 67 cents. What was it?"
+  },
+  "581fe118-7952-400c-a15d-2f667229e1b1": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "722c4059-ffd7-493a-ac1d-39ceee3ce5f2",
+   "question": "Sweden's ABBA shot to world fame by winning the 1974 Eurovision Song Contest with which song, named after a famous Napoleonic battle?",
+   "twin_question": "Which Swedish pop group shot to international fame by winning the 1974 Eurovision Song Contest with the song 'Waterloo'?"
+  },
+  "9c04ba0c-cf1c-4d19-804b-4ce539843b6b": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "62451cc9-9347-4fa8-bc96-82353ca6b96a",
+   "question": "Which country's national flag is the only one in the world to feature a modern assault rifle — an AK-47 crossed with a hoe over an open book?",
+   "twin_question": "Mozambique's flag shows a farmer's hoe and an open book, plus a third object you won't find on any other national flag. What is it?"
+  },
+  "a3ca2456-97a7-4e0a-b55e-e478280b48e8": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "91d757ac-bd97-43a8-9e75-1942476220ec",
+   "question": "Thai, Indian and Sichuan cooking are unimaginable without chillies, yet no cook in Asia had seen one before the 16th century. Where do chilli peppers originally come from?",
+   "twin_question": "Fiery Indian curries and spicy Thai dishes had no chili peppers at all until about 500 years ago. From which part of the world did chilies first arrive?"
+  },
+  "812c6840-cf64-4bf8-90b6-9bb1fed6b0ab": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "99b44897-59cd-4b88-a5d6-5109b16dc0d3",
+   "question": "From the ground a rainbow is always an arc, but passengers in an aircraft can sometimes see one in its complete, uncut form. What shape does a full rainbow actually have?",
+   "twin_question": "From the ground a rainbow always looks like an arch, but pilots flying above the rain sometimes see it as what shape?"
+  },
+  "fd16911e-1aa8-4505-9726-fc85ab5ed995": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "question": "You see a lightning flash and start counting until the thunder arrives. Roughly how many seconds of counting equal one kilometre of distance to the storm?",
+   "twin_question": "Count the seconds between a lightning flash and its thunder, then divide by three. What does the result tell you?"
+  },
+  "c2f3ddab-3442-4477-985e-5b17b46d239d": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "d637a063-26c1-4e79-8ab0-2820be6a7d12",
+   "question": "Name the European country that shares a land border with Brazil.",
+   "twin_question": "France's longest land border isn't with any European country at all. Which country is it shared with?"
+  },
+  "b489971a-124d-4f48-8d7f-f23b1f490eab": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "2aa4ac32-60e7-476a-8ab4-3d0eafcf97f1",
+   "question": "Is a Tyrannosaurus rex closer in time to a Stegosaurus, or to you sitting here today?",
+   "twin_question": "Stegosaurus and Tyrannosaurus rex share every toy box, yet they never met. Roughly how much time separated the two dinosaurs?"
+  },
+  "f5896162-f589-4127-aee4-15afe65a4926": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4a84509b-6243-4ce2-83ba-8f4f5dd46dd9",
+   "question": "Which came first: the last woolly mammoths dying out, or the Great Pyramid of Giza being built?",
+   "twin_question": "What happened first: the building of the Great Pyramid of Giza, or the death of the last woolly mammoths?"
+  },
+  "1d760f3c-6191-4c8c-a073-5eef3da16948": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "8022e07b-ecc0-5a01-bdca-579271097aec",
+   "question": "The microwave oven was born in 1945 when an engineer testing radar equipment noticed something had melted in his pocket. What was it?",
+   "twin_question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set — an accident that led him to invent which kitchen appliance?"
+  },
+  "27bca867-319e-4961-825d-451ffaf836f5": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "77d068d5-a7a6-557e-9990-d2ff2908e7fc",
+   "question": "Name the planet in our solar system where a single day, one full rotation, lasts longer than its entire year.",
+   "twin_question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun — its day is literally longer than its year. Which planet?"
+  },
+  "57ca5b6e-a915-4e70-acba-aa7deec04131": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "b3b469fd-2cb2-4c00-8a47-5825deb38f40",
+   "question": "Roman harbour concrete has survived 2,000 years of pounding waves and actually grows stronger with age. What volcanic ingredient did the Romans mix into it?",
+   "twin_question": "Modern concrete can crumble in seawater within decades, yet 2,000-year-old Roman harbour walls are still standing — and some have actually grown stronger over time. What natural ingredient from the region around the Bay of Naples gave Roman concrete this remarkable durability?"
+  },
+  "9d9bfdea-ca20-4d96-9ff9-03c405e4c3eb": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+   "question": "Ancient Romans collected a certain liquid in public jars and used it to whiten togas and even to clean their teeth. What was it?",
+   "twin_question": "Ancient Roman laundry workers whitened togas by soaking them in a liquid collected from pots on street corners — a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid was it?"
+  },
+  "e85a05da-240f-40e3-90b6-5b147893e2a8": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "91ad26c0-d9b8-4e0b-829d-76532f188370",
+   "question": "Which was patented first: a machine that could send images over a wire, the fax machine, or the telephone?",
+   "twin_question": "Fax machine or telephone: which of these two was invented first?"
+  },
+  "35ddda4b-d4c2-4e64-b030-c1a2e1a1e340": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "1d005c8a-efd7-4f01-9907-64a31572f0d1",
+   "question": "After a hike in the Alps in 1941, a Swiss engineer got fed up picking prickly burrs off his dog's fur, so he put one under a microscope and saw hundreds of tiny hooks. What everyday fastener did that inspire?",
+   "twin_question": "Velcro was invented after a Swiss engineer came home from a walk in the woods and examined what was stuck to his dog's fur. What was it?"
+  },
+  "43520f30-d790-4d3e-be5b-2df27afa9e90": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "eb92a5b7-44e1-424f-a318-42abc48eb7f8",
+   "question": "The croissant is a symbol of France, yet its ancestor was a crescent-shaped pastry called the kipferl, brought to Paris by a baker from a different country. Which country?",
+   "twin_question": "The croissant, the very symbol of a French breakfast, is descended from a crescent-shaped pastry first baked in which European capital?"
+  },
+  "f1a6ebdf-d4c2-4ef6-971e-be965d5532fa": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "bcb432e0-40ed-468e-a37d-d85372174593",
+   "question": "Pineapple on pizza divides the world. The so-called Hawaiian pizza was invented neither in Hawaii nor in Italy, but by a Greek immigrant running a restaurant in which country?",
+   "twin_question": "Despite its tropical name, Hawaiian pizza was invented in 1962 by a Greek-born restaurant owner. In which country did he first put pineapple on a pizza?"
+  },
+  "41381afb-6d58-4f7e-a479-1a808e6cddf5": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "91d757ac-bd97-43a8-9e75-1942476220ec",
+   "question": "True or false: Chili peppers have been grown and eaten in India and Thailand for thousands of years.",
+   "twin_question": "Fiery Indian curries and spicy Thai dishes had no chili peppers at all until about 500 years ago. From which part of the world did chilies first arrive?"
+  },
+  "ca6ec16c-ef0f-4176-a857-36a266daa13a": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "39770ac0-2666-4fae-98a2-560de977e177",
+   "question": "Name the North American amphibian that survives winter frozen solid, with no heartbeat and no breathing, then thaws in spring and hops away.",
+   "twin_question": "One small North American amphibian survives winter by letting most of the water in its body freeze solid — its heart stops beating, then restarts when it thaws in spring. Which animal?"
+  },
+  "82a083b8-1f40-4d29-9542-5cc5b3572559": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "db28a6ee-5275-566d-a43f-c6668c113c1e",
+   "question": "A desert is defined by how little precipitation falls, not by heat. By that rule, what is the largest desert on Earth?",
+   "twin_question": "A desert is defined by how little precipitation falls, not by heat — which is why the largest desert on Earth is not the Sahara. Which continent holds the title?"
+  },
+  "ba6f8853-64f4-436f-87ba-f008839b9fa3": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "b722dcda-f528-468b-b99b-5bb3dd0adae7",
+   "question": "Carved with the same decree in three different scripts, the Rosetta Stone finally let scholars read what long-silent writing system?",
+   "twin_question": "The ancient Egyptian picture-based script carved on temple walls baffled scholars for centuries, until the Rosetta Stone finally unlocked it in 1822. What is this script called?"
+  },
+  "923d2bb1-100b-4590-af34-083e7f6f2d01": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "6a6cf9f8-1a24-49bd-8b85-4b39029273e5",
+   "question": "On the Canary Island of La Gomera, shepherds developed a way to hold full conversations across deep ravines, with no phone and no shouting. How do they do it?",
+   "twin_question": "On La Gomera in the Canary Islands, locals traditionally send messages across the island's deep ravines using Silbo, a UNESCO-listed form of communication now taught in local schools. What does someone using Silbo actually do?"
+  },
+  "e0fd4c81-e3d6-444b-ba83-1e1a2fcd32c9": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "748948f7-69d1-40cf-aed7-ee34a1f10ccf",
+   "question": "Which language has more native speakers?",
+   "twin_question": "Counting only people who learned it as their mother tongue, is English or Spanish spoken by more people worldwide?"
+  },
+  "3f6ebbed-126e-4bb8-9e5f-2a41071dc265": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "a928cf39-5172-4ee3-b982-3a857a6737a7",
+   "question": "Three of these are berries in the strict botanical sense. Which one is not?",
+   "twin_question": "Odd one out: three of these fruits are true berries by botanical definition, and one is not. Which is the impostor?"
+  },
+  "287a83b3-edc1-4838-94ab-bf270ae21e3c": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "525346a6-22b5-4ce6-a3f0-a9bce5e02c08",
+   "question": "Every national flag in the world is a rectangle or a square, with one exception made of two stacked triangles. Which country's flag is it?",
+   "twin_question": "All but one of the world's national flags are rectangles or squares. Which Himalayan country flies the exception — a flag shaped like two stacked triangles?"
+  },
+  "3c5f3786-887e-4f10-bced-217a83ca3755": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "aa3f9d45-f03b-46c3-8898-11800a94d9f8",
+   "question": "Each year the Moon drifts about four centimetres further from Earth. Scientists like to compare that speed to the growth rate of which part of the human body?",
+   "twin_question": "Every year the Moon drifts about 4 centimetres further from Earth, almost exactly the rate at which which part of your body grows?"
+  },
+  "a927b2a4-45ce-4ea4-a62b-473b5285ad56": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "7f7a4c8a-0fee-5f10-8f60-53ee7e359efe",
+   "question": "The Mona Lisa became a global celebrity only after it was stolen from the Louvre in 1911. Two years later it resurfaced when the thief tried to sell it in which country?",
+   "twin_question": "In 1911 the Mona Lisa vanished from the Louvre, stolen by a former museum worker who kept it hidden in his small Paris flat for over two years. He was finally caught when he tried to sell the painting in the country where he insisted it truly belonged. Which country?"
+  },
+  "0830cc7d-95d2-4a74-963f-590dc93e8d33": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "57ceaede-c264-5627-9049-0dc65b66d3da",
+   "question": "An Olympic gold medal is made almost entirely of which metal?",
+   "twin_question": "The last Olympic gold medals made of solid gold were handed out in 1912. Ever since, they've been made almost entirely of a different metal, with just a few grams of gold plating on top. Which metal?"
+  },
+  "e80155a7-92b6-43fb-822e-84c49078e43f": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "f7017ba7-a1af-4526-8d1f-76bde8d792e0",
+   "question": "Because the Earth bulges at the equator, the summit farthest from the planet's centre is not Everest but a volcano in which country?",
+   "twin_question": "Everest is the highest peak above sea level, but because the Earth bulges at the equator, the summit farthest from the planet's centre belongs to which Ecuadorian volcano?"
+  },
+  "7d191d32-8ce1-4905-8908-551ee5104c3e": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "9b20d737-74d1-4016-9d53-b6afd103b8b6",
+   "question": "When two engineers first sealed air bubbles between sheets of plastic in 1957, they were trying to sell the result as what kind of home décor product?",
+   "twin_question": "Bubble wrap was invented in 1957 by two engineers who were not thinking about packaging at all — they were trying and failing to create which household product?"
+  },
+  "7ee6f43d-66f1-4764-83fe-b3b03bea7f54": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "4b56db5e-f0c3-4005-9970-b690c4935515",
+   "question": "In 1974, the first product ever rung up by scanning a barcode at a supermarket checkout was a pack of what?",
+   "twin_question": "The very first product ever scanned by a barcode reader at a supermarket checkout cost just 67 cents. What was it?"
+  },
+  "0cebd37e-85a1-4ab6-9899-4137f95f6edb": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "8022e07b-ecc0-5a01-bdca-579271097aec",
+   "question": "An engineer noticed a chocolate bar melting in his pocket while working next to which military technology, leading him to invent the microwave oven?",
+   "twin_question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set — an accident that led him to invent which kitchen appliance?"
+  },
+  "d29c8548-8f63-4ad6-9f58-59a050deece2": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "1513e8bb-cecd-46ff-b6bc-cf023639b64e",
+   "question": "During the Second World War, Norwegians under occupation quietly wore which small office item on their lapels as a symbol of resistance and holding together?",
+   "twin_question": "During the Second World War, people in occupied Norway pinned a humble office item to their coats as a silent protest. Wearing one could get you arrested. What was it?"
+  },
+  "c049da61-480f-44d4-9df1-8f1df5bc3914": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "a39eb9e9-f42f-4702-a051-674e6f220940",
+   "question": "Before rubber erasers existed, artists and writers rubbed out pencil marks using a common food item. Which one?",
+   "twin_question": "Before rubber erasers existed, artists and schoolchildren rubbed out pencil marks with something you would normally find on the kitchen table. What was it?"
+  },
+  "76c2e512-af68-418f-8315-32a47b112991": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "805b0c1b-d509-4ef0-9d95-3e584f925d75",
+   "question": "In 1942, a chemist trying to make clear plastic gun sights rejected a substance because it stuck to everything it touched. Years later it was sold as what?",
+   "twin_question": "Super Glue was discovered by accident while chemists were trying to make see-through plastic for one part of a gun. Which part?"
+  },
+  "b1f55130-37a9-4ca5-92e7-f3a92893af9e": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "75634579-1404-5367-8350-9dbb14a22830",
+   "question": "The cheetah is the fastest animal on land, but which bird of prey beats it by more than double when it dives on its prey?",
+   "twin_question": "The cheetah gets all the glory, but the true speed record for any animal on Earth — over 300 kilometres per hour — belongs to a bird of prey in its hunting dive. Which bird?"
+  },
+  "55b27da9-edca-40d5-aa8f-fe52eb218abf": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "2312b30b-cdf6-424c-b141-adcaddcb2ac8",
+   "question": "Which small, brightly coloured crustacean punches so fast and hard that it has been known to crack the glass of aquarium tanks?",
+   "twin_question": "One colourful crustacean strikes so fast that its punch creates bubbles of boiling water and has been known to crack aquarium glass. Name it."
+  },
+  "97bd90ee-ba4b-4274-b28a-0f8fb9c9654a": {
+   "pool": "en",
+   "status": "pending_review",
+   "twin": "655198de-7863-43ef-b71f-c130e4aa6dbd",
+   "question": "Look closely into a goat's eye and you'll find its pupil is not round. What shape is it?",
+   "twin_question": "Next time you look a goat in the eye, check its pupil. It isn't round like ours or a vertical slit like a cat's. What shape is it?"
+  }
+ }
+}

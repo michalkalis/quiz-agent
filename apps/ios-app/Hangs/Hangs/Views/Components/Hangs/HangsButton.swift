@@ -46,6 +46,15 @@ struct HangsPrimaryButton: View {
     /// #198: a fill other than the ink action, under white text — only the
     /// question screen's Stop (`Colors.listenStrong`, canvas Bg-Question).
     var tint: Color? = nil
+    /// #208.6: one line at every text size (scaled down further), for a
+    /// button sharing its row with another, where a wrapped title broke the
+    /// word ("Po-tvr-ď").
+    var singleLineTitle: Bool = false
+    /// #224: `false` = hug the content and centre, with `contentInset` on each
+    /// side, for a main action that sits above the floating tab bar and should
+    /// not out-span it.
+    var fillsWidth: Bool = true
+    var contentInset: CGFloat = Theme.Hangs.Spacing.md
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -98,7 +107,7 @@ struct HangsPrimaryButton: View {
                         // Localized titles ("Nahrávať") outgrow the EN layout:
                         // scale down first, and at large text wrap rather than
                         // ever cut the word (D10).
-                        .hangsButtonTitle(dynamicTypeSize)
+                        .hangsButtonTitle(dynamicTypeSize, singleLine: singleLineTitle)
                 }
                 if let trailingIcon {
                     Image(systemName: trailingIcon)
@@ -123,9 +132,9 @@ struct HangsPrimaryButton: View {
                 }
             }
             .foregroundColor(looksDisabled ? Theme.Hangs.Colors.muted : label)
-            .padding(.horizontal, Theme.Hangs.Spacing.md)
+            .padding(.horizontal, contentInset)
             .padding(.vertical, Theme.Hangs.Spacing.xs)
-            .frame(maxWidth: .infinity, minHeight: height)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: height)
             .background(
                 ZStack(alignment: .leading) {
                     // Lift on the capsule only, never on the title (#194 B2).
@@ -158,6 +167,8 @@ struct HangsSecondaryButton: View {
     var icon: String? = nil
     /// Minimum height; a two-line title at large text grows past it.
     var height: CGFloat = 56
+    /// #208.6: see `HangsPrimaryButton.singleLineTitle`.
+    var singleLineTitle: Bool = false
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -172,7 +183,7 @@ struct HangsSecondaryButton: View {
                 }
                 Text(title)
                     .font(.hangsBody(16, weight: .semibold))
-                    .hangsButtonTitle(dynamicTypeSize)
+                    .hangsButtonTitle(dynamicTypeSize, singleLine: singleLineTitle)
             }
             .foregroundColor(Theme.Hangs.Colors.ink)
             .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -225,14 +236,19 @@ enum HangsButtonTitle {
     }
 
     static func wraps(at size: DynamicTypeSize) -> Bool { size > .large }
+
+    /// #208.6: the floor for a `singleLineTitle`, which never wraps — half a
+    /// row at the quiz's largest text size needs more room to shrink.
+    static let singleLineMinimumScale: CGFloat = 0.5
 }
 
 private extension Text {
-    func hangsButtonTitle(_ size: DynamicTypeSize) -> some View {
-        lineLimit(HangsButtonTitle.lineLimit(for: size))
-            .minimumScaleFactor(HangsButtonTitle.wraps(at: size) ? 1 : 0.7)
+    func hangsButtonTitle(_ size: DynamicTypeSize, singleLine: Bool = false) -> some View {
+        let wraps = !singleLine && HangsButtonTitle.wraps(at: size)
+        return lineLimit(wraps ? HangsButtonTitle.lineLimit(for: size) : 1)
+            .minimumScaleFactor(wraps ? 1 : singleLine ? HangsButtonTitle.singleLineMinimumScale : 0.7)
             .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: HangsButtonTitle.wraps(at: size))
+            .fixedSize(horizontal: false, vertical: wraps)
     }
 }
 

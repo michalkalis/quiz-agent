@@ -10,8 +10,7 @@
 //      passes a real utterance (via the pure `SilenceStopDecision`, which is what
 //      `SilenceDetectionService` consumes — the service itself is @available(iOS
 //      26) and is skipped on the 18.6 sim, so we exercise the pure logic that CAN
-//      fail rather than fake a detector test);
-//    • the ElevenLabs streaming URL actually consumes the centralised params.
+//      fail rather than fake a detector test).
 //
 //  These are STARTING points finalised on-device at 77.15 — the range checks
 //  bound the tuning, they don't pin an exact value.
@@ -68,14 +67,6 @@ struct VADConstantsTests {
         )
     }
 
-    @Test("ElevenLabs VAD params are sane starting points")
-    func elevenLabsParamsSane() {
-        #expect(VADTuning.elevenLabsVadSilenceThresholdSecs >= 1.0)
-        #expect(VADTuning.elevenLabsVadSilenceThresholdSecs <= 2.5)
-        #expect(VADTuning.elevenLabsMinSpeechDurationMs > 0)
-        #expect(VADTuning.elevenLabsMinSilenceDurationMs > 0)
-    }
-
     // MARK: - Blip rejection (the pure logic SilenceDetectionService consumes)
 
     @Test("a sub-threshold blip is rejected, not auto-submitted")
@@ -115,23 +106,5 @@ struct VADConstantsTests {
             silenceElapsed: VADTuning.silenceHangoverSecs
         )
         #expect(outcome == .stop, "exactly the min-speech duration must count as speech, got \(outcome)")
-    }
-
-    // MARK: - ElevenLabs consumes the centralised params
-
-    @Test("the ElevenLabs streaming URL carries the centralised VAD params")
-    func elevenLabsURLConsumesConstants() throws {
-        let url = try ElevenLabsSTTService.buildWebSocketURL(token: "t", languageCode: "sk")
-        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        let dict = Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { a, _ in a })
-
-        #expect(dict["vad_silence_threshold_secs"] == String(VADTuning.elevenLabsVadSilenceThresholdSecs))
-        #expect(dict["min_speech_duration_ms"] == String(VADTuning.elevenLabsMinSpeechDurationMs))
-        #expect(dict["min_silence_duration_ms"] == String(VADTuning.elevenLabsMinSilenceDurationMs))
-    }
-
-    @Test("Config forwards the centralised ElevenLabs threshold")
-    func configForwardsThreshold() {
-        #expect(Config.elevenLabsVadSilenceThresholdSecs == VADTuning.elevenLabsVadSilenceThresholdSecs)
     }
 }

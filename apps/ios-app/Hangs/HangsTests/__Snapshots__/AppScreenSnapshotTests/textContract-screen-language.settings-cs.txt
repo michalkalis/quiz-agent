@@ -4,7 +4,7 @@ hlas
 Hlasové příkazy
 Ovládej kvíz hlasem, bez klepání
 
-Hlasové nápovědy
+Nápověda příkazů
 Zobrazovat hlasové příkazy, které můžeš říct
 
 Rozpoznávání řeči
@@ -29,12 +29,7 @@ Jazyk kvízu
 English
 Jazyk kvízu
 English
-Otázky, odpovědi a hlas
-Jazyk aplikace
-English
-Jazyk aplikace
-English
-Tlačítka, popisky a nastavení
+Otázky, hlas i celá aplikace
 kvíz
 0s
 10s
@@ -68,9 +63,9 @@ Automatický posun
 Pauza na výsledku před další otázkou
 After each question
 At the end of the quiz
-Odhalení odpovědí
+Kdy ukázat odpovědi
 After each question
-Odhalení odpovědí
+Kdy ukázat odpovědi
 After each question
 zvuková odezva
 Číst nahlas
@@ -80,7 +75,7 @@ Zvuky nahrávání
 Krátký tón, když se zapne mikrofon. Vibrace zůstává.
 
 účet
-Přihlas se, aby ti po přeinstalování zůstalo Premium i historie.
+Přihlas se, aby ti po přeinstalování zůstalo Trubbo Plus i historie.
 Exportuj moje údaje
 
 Exportuj moje údaje
@@ -122,6 +117,7 @@ Podmínky používání
 Podmínky používání
 
 Otázky a vyhodnocení odpovědí generuje umělá inteligence a mohou obsahovat nepřesnosti.
+Tvoje mluvené odpovědi a témata, která napíšeš pro balíčky, zpracovávají AI služby od OpenAI, Anthropic, ElevenLabs, Amazon a OpenRouter.
 zpětná vazba
 Odešli zpětnou vazbu
 
@@ -138,7 +134,6 @@ settings-language-menu
 settings.language.en
 settings.language.sk
 settings.language.cs
-settings-app-language-row
 settings-thinking-time-menu
 settings.thinkingTime.0
 settings.thinkingTime.10
@@ -176,4 +171,5 @@ settings.resetHistory
 settings.privacyPolicy
 settings.termsOfUse
 settings.aiDisclosure
+settings.aiServices
 settings.sendFeedback

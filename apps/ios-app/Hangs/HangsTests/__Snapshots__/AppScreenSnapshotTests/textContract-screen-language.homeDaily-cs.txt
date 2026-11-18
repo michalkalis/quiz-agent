@@ -1,14 +1,33 @@
 # texts
-trubbo
 denní výzva · Oct 15
 Pět otázek. Stejné pro všechny.
 Hraj dnešní výzvu
 Kvíz
-History
-Science & Nature
-Geography & World
+Vyber více
+All Categories
 10 otázek
 All Categories
+Science & Nature
+10 otázek
+Science & Nature
+History
+10 otázek
+History
+Geography & World
+10 otázek
+Geography & World
+Movies & Music
+10 otázek
+Movies & Music
+Sports
+10 otázek
+Sports
+Food & Everyday Life
+10 otázek
+Food & Everyday Life
+Entertainment
+10 otázek
+Entertainment
 English
 Slovenčina
 Čeština
@@ -19,26 +38,21 @@ Medium
 Hard
 Random
 Obtížnost
-Medium
+Random
 Kategorie
 All Categories
-tvůj plán
-18
-z 30 otázek zdarma
-Získej Plus
-18
-z 30 otázek zdarma
-Získej Plus
-18
-z 30 otázek zdarma
-Získej Plus
-resets in 13 days
-resets in 13 days
+Rychlý kvíz
+Po „Další“ hned další otázka, bez vysvětlení
+
+trubbo
 Start
 # identifiers
-home.moreSettings
 home.daily
 home.daily.play
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
 home-language-menu
 home.language.en
 home.language.sk
@@ -49,18 +63,5 @@ home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
 home-categories-menu
-home.planLabel
-home.freePlanUpgradeButton
-home.freePlanCard
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.planPrimary
-home.planCaption
-home.freePlanUpgrade
-home.freePlanReset
-home.freePlanReset
+home.quickGame
 home.startQuiz

@@ -96,10 +96,11 @@ async def test_happy_path_multipart_insert_and_detail_read(client):
     feedback_id = resp.json()["id"]
     assert feedback_id
 
-    # feedback.received fired with the id + a message excerpt (#109 design).
+    # feedback.received fires with the id + length only: the feedback text stays
+    # in our own table, never in Sentry (#207, 207.23).
     mock_capture.assert_called_once()
     assert feedback_id in mock_capture.call_args[0][0]
-    assert "the mic cuts out" in mock_capture.call_args[0][0]
+    assert "the mic cuts out" not in mock_capture.call_args[0][0]
 
     detail = await client.get(
         f"/api/v1/feedback/{feedback_id}", headers={"X-Admin-Key": _ADMIN_KEY}
@@ -148,6 +149,24 @@ async def test_size_cap_413_message_over_limit(client):
         "/api/v1/feedback",
         headers=_bearer(),
         data={"message": "x" * (feedback_routes.MESSAGE_MAX_CHARS + 1)},
+    )
+    assert resp.status_code == 413
+
+
+@pytest.mark.parametrize(
+    "field,limit",
+    [
+        ("metadata", feedback_routes.METADATA_MAX_CHARS),
+        ("app_version", feedback_routes.APP_VERSION_MAX_CHARS),
+    ],
+)
+async def test_size_cap_413_side_fields_over_limit(client, field, limit):
+    """The side fields went to the DB uncapped: only Starlette's ~1 MB form
+    part limit stood between a script and a megabyte row per request."""
+    resp = await client.post(
+        "/api/v1/feedback",
+        headers=_bearer(),
+        data={"message": "hi", field: "x" * (limit + 1)},
     )
     assert resp.status_code == 413
 

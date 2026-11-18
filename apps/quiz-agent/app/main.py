@@ -48,34 +48,48 @@ logger = logging.getLogger(__name__)
 # Initialize Sentry (no-op if SENTRY_DSN is not set)
 sentry_dsn = os.environ.get("SENTRY_DSN")
 if sentry_dsn:
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    from quiz_shared.sentry_privacy import sentry_privacy_options
+
     sentry_sdk.init(
         dsn=sentry_dsn,
         traces_sample_rate=0.1,
         environment=os.environ.get("ENVIRONMENT", "development"),
+        # #207 (207.10): warnings and errors also go to Sentry Logs (5 GB/month
+        # on our plan, 30-day retention) — Fly's own log buffer only reaches
+        # back minutes, too short to investigate an incident afterwards.
+        enable_logs=True,
+        integrations=[LoggingIntegration(sentry_logs_level=logging.WARNING)],
+        # #207 (207.23): no request bodies, local variables or player text.
+        **sentry_privacy_options(),
     )
     logger.info(
         "Sentry initialized (env=%s)", os.environ.get("ENVIRONMENT", "development")
     )
 
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.database.sql_client import SQLClient
 from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
 from .config import get_settings
 from .session.manager import SessionManager
 from .input.parser import InputParser
-from .retrieval.question_retriever import QuestionRetriever
+from .retrieval.question_retriever import QuestionRetriever, embed_query
 from .evaluation.evaluator import AnswerEvaluator
 from .rating.feedback import FeedbackService
 from .voice.transcriber import VoiceTranscriber
 from .tts.service import TTSService
 from .translation import TranslationService
+from .usage.caps import UsageCaps
+from .usage.elevenlabs_budget import ElevenLabsBudget
 from .usage.tracker import UsageTracker
 from .api import rest, admin
+from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
 from .analytics.recorder import AnalyticsRecorder, AppVersionMiddleware, drain_pending
 from .daily_challenge.service import DailyChallengeService
+from .monitoring.ops_watch import LatencyMiddleware
 
 try:
     from .monitoring.question_monitor import QuestionMonitor
@@ -86,7 +100,6 @@ from .rate_limit import limiter
 
 # Global service instances
 session_manager: SessionManager = None
-sql_client: SQLClient = None
 tts_service: TTSService = None
 translation_service: TranslationService = None
 
@@ -100,7 +113,7 @@ async def lifespan(app: FastAPI):
     - Start background cleanup
     - Graceful shutdown
     """
-    global session_manager, sql_client, tts_service, translation_service
+    global session_manager, tts_service, translation_service
 
     logger.info("Starting Quiz Agent API...")
 
@@ -166,36 +179,41 @@ async def lifespan(app: FastAPI):
     question_store = SyncPgvectorStore(async_pgvector)
     logger.info("Question store: PgvectorQuestionStore (canonical, read + write)")
 
-    try:
-        logger.info("Initializing SQL client...")
-        # DATABASE_URL is the pgvector questions store (postgresql+asyncpg://,
-        # async-only driver). The sync sqlite ratings store must not inherit
-        # it — with DATABASE_URL set, startup died in create_all (MissingGreenlet).
-        sql_client = SQLClient(
-            database_url=os.getenv(
-                "RATINGS_DATABASE_URL", "sqlite:///./data/ratings.db"
-            )
-        )
-        logger.info("SQL client initialized")
-    except Exception as e:
-        logger.error("Failed to initialize SQL client: %s", e, exc_info=True)
-        raise
-
     # Initialize services
     try:
         logger.info("Initializing services...")
-        session_manager = SessionManager(cleanup_interval=300, sql_client=sql_client)
+        # #207.20: sessions, ratings, translation cache and monitor state live
+        # in Postgres, not on a machine volume, so any number of machines can
+        # serve any request (resilience design §2).
+        from .coordination.leases import LeaseStore
+        from .db.engine import get_sessionmaker
+        from .rating.store import PostgresRatingStore
+        from .session.store import PostgresSessionStore
+        from .translation.store import PostgresTranslationStore
+
+        shared_sm = get_sessionmaker()
+        session_manager = SessionManager(
+            cleanup_interval=300,
+            store=PostgresSessionStore(shared_sm),
+            leases=LeaseStore(shared_sm),
+        )
         input_parser = InputParser()
-        question_retriever = QuestionRetriever(question_store=async_pgvector)
+        # #235: the serve path bounds its query embedding (slow API → an
+        # unranked pick); admin writes on `async_pgvector` keep the long default.
+        question_retriever = QuestionRetriever(
+            question_store=async_pgvector.with_embedder(embed_query)
+        )
         answer_evaluator = AnswerEvaluator()
         # Ratings persist in SQL only (#41 D1) — no question-store writes.
         feedback_service = FeedbackService(
-            sql_client=sql_client,
+            rating_store=PostgresRatingStore(shared_sm),
             low_rating_threshold=2.5,
         )
         voice_transcriber = VoiceTranscriber()
         tts_service = TTSService()
-        translation_service = TranslationService()
+        translation_service = TranslationService(
+            store=PostgresTranslationStore(shared_sm)
+        )
         # Persistent usage tracker on the auth Postgres (#60). Without
         # DATABASE_URL (plain local dev) usage limits are simply not enforced —
         # the dependents all guard a None tracker.
@@ -294,14 +312,6 @@ async def lifespan(app: FastAPI):
         logger.error("Failed to initialize services: %s", e, exc_info=True)
         raise
 
-    # Reload persisted sessions (survives fly deploy restarts)
-    try:
-        reloaded = session_manager.reload_active_sessions()
-        if reloaded:
-            logger.info("Restored %d sessions from previous run", reloaded)
-    except Exception as e:
-        logger.warning("Failed to reload sessions: %s", e)
-
     # Question health check on startup
     try:
         if QuestionMonitor is not None:
@@ -341,6 +351,14 @@ async def lifespan(app: FastAPI):
     app.state.translation_service = translation_service
     app.state.question_store = question_store
     app.state.usage_tracker = usage_tracker
+    # #207.13: per-user daily cost caps; disabled without a database.
+    app.state.usage_caps = UsageCaps(auth_sessionmaker)
+    # #207.13: service-wide ElevenLabs daily budget -> OpenAI voice.
+    elevenlabs_budget = ElevenLabsBudget(auth_sessionmaker)
+    tts_service.primary_budget = elevenlabs_budget
+    # #207.20: one synthesis per audio across machines (lease + shared R2).
+    tts_service.leases = LeaseStore(shared_sm)
+    app.state.elevenlabs_budget = elevenlabs_budget
     app.state.auth_sessionmaker = auth_sessionmaker
     app.state.token_service = token_service
     app.state.refresh_store = refresh_store
@@ -359,7 +377,37 @@ async def lifespan(app: FastAPI):
         else None
     )
     app.state.daily_challenge = daily_challenge
-    app.state.quiz_flow = QuizFlowService(
+    # #232: share a quiz by link (needs the database for shares and results).
+    shared_quiz = None
+    if auth_sessionmaker is not None:
+        from .shared_quiz.service import SharedQuizService
+        from .shared_quiz.store import SharedQuizStore
+
+        shared_quiz = SharedQuizService(
+            SharedQuizStore(auth_sessionmaker),
+            session_manager,
+            question_retriever,
+            daily_challenge,
+            analytics,
+        )
+    app.state.shared_quiz = shared_quiz
+    # #212: same-room multiplayer rooms; tickets are signed with the auth
+    # secret, so rooms exist only where sign-in does.
+    rooms = None
+    if token_service is not None and settings.auth_jwt_secret:
+        from .rooms.network import NetTickets
+        from .rooms.service import RoomService
+        from .rooms.store import PostgresRoomStore
+
+        rooms = RoomService(
+            session_manager,
+            PostgresRoomStore(shared_sm),
+            NetTickets(settings.auth_jwt_secret),
+            analytics,
+            pack_status=question_retriever.pack_status,
+        )
+    app.state.rooms = rooms
+    app.state.quiz_flow = quiz_flow = QuizFlowService(
         session_manager=session_manager,
         input_parser=input_parser,
         question_retriever=question_retriever,
@@ -369,27 +417,69 @@ async def lifespan(app: FastAPI):
         translation_service=translation_service,
         analytics=analytics,
         daily_challenge=daily_challenge,
+        shared_quiz=shared_quiz,
     )
+    if rooms is not None:
+        from .rooms.play import RoomPlay
+
+        rooms.play = RoomPlay(session_manager, rooms.store, quiz_flow)
     logger.info("API dependencies configured")
 
     # Start background tasks
     await session_manager.start_cleanup()
     logger.info("Background cleanup started")
-    # #193: daily provider credit check → Sentry alert when one runs low.
-    balance_task = None
-    if settings.provider_balance_check_enabled:
-        from .monitoring.provider_balances import run_daily_balance_check
+    # #207: ops alerts are e-mailed (quiz_shared.ops_alerts), deduped per
+    # problem+state; the state is a Postgres row every machine shares, so a
+    # deploy does not re-send and a new leader knows what was mailed.
+    from quiz_shared.ops_alerts import AlertBook
 
-        balance_task = asyncio.create_task(run_daily_balance_check(settings))
-    # #199: daily question-stock check → Sentry alert before a (language ×
-    # category) or the fresh entertainment stock runs out.
-    stock_task = None
-    if settings.question_stock_check_enabled:
-        from .monitoring.question_stock import run_daily_stock_check
+    from .monitoring.pack_watch import pack_watch
+    from .monitoring.shared_state import HeartbeatStore, PostgresAlertState
 
-        stock_task = asyncio.create_task(
-            run_daily_stock_check(settings, question_retriever)
-        )
+    alert_book = AlertBook(
+        "quiz-agent", store=PostgresAlertState(shared_sm, "quiz-agent")
+    )
+    pack_watch.heartbeats = HeartbeatStore(shared_sm)
+
+    # #207.20 step 5: the monitors run on ONE machine, the holder of the
+    # `monitors` lease (Postgres row with expiry); another machine takes over
+    # within ~2 min when it dies, at once on a clean shutdown.
+    def start_monitors() -> list[asyncio.Task]:
+        tasks: list[asyncio.Task] = []
+        # #193/#207: hourly provider credit check → e-mail when one runs low.
+        if settings.provider_balance_check_enabled:
+            from .monitoring.provider_balances import run_balance_check
+
+            tasks.append(asyncio.create_task(run_balance_check(settings, alert_book)))
+        # #199: daily question-stock check → Sentry alert before a (language ×
+        # category) or the fresh entertainment stock runs out.
+        if settings.question_stock_check_enabled:
+            from .monitoring.question_stock import run_daily_stock_check
+
+            tasks.append(
+                asyncio.create_task(run_daily_stock_check(settings, question_retriever))
+            )
+        # #207: disk / memory / DB connections / response time → e-mail; and the
+        # mutual watch with the pack worker (its minute pings) + quiz-pack-api.
+        if settings.ops_watch_enabled:
+            from .monitoring.ops_watch import run_ops_watch
+            from .monitoring.pack_watch import run_pack_watch
+
+            tasks.append(
+                asyncio.create_task(
+                    run_ops_watch(
+                        settings, auth_sessionmaker, alert_book, elevenlabs_budget
+                    )
+                )
+            )
+            tasks.append(asyncio.create_task(run_pack_watch(alert_book)))
+        return tasks
+
+    from .coordination.leases import LeaseStore
+    from .monitoring.leader import MonitorLeader
+
+    monitor_leader = MonitorLeader(LeaseStore(shared_sm), start_monitors)
+    leader_task = asyncio.create_task(monitor_leader.run())
 
     logger.info("Quiz Agent API is ready! Docs: /docs | Health: /api/v1/health")
 
@@ -398,10 +488,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down Quiz Agent API...")
     await session_manager.stop_cleanup()
-    if balance_task is not None:
-        balance_task.cancel()
-    if stock_task is not None:
-        stock_task.cancel()
+    leader_task.cancel()
+    await monitor_leader.resign()
     await drain_pending()
     logger.info("Cleanup stopped")
 
@@ -421,7 +509,29 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+# #207.20: session reads and the session lease now hit Postgres before a
+# route's own error mapping runs; a DB blip or a session stuck behind another
+# request must reach iOS as the retryable 503 (TransientRetry), not a 500.
+from .api.submit_errors import TRANSIENT_INFRA_ERRORS  # noqa: E402
+from .session.manager import SessionBusy  # noqa: E402
+
+
+async def _retryable_503(request, exc):
+    from fastapi.responses import JSONResponse
+
+    logger.warning("Retryable 503 on %s: %s", request.url.path, type(exc).__name__)
+    return JSONResponse(
+        status_code=503, content={"detail": "Temporary server issue, please retry"}
+    )
+
+
+for _exc in (*TRANSIENT_INFRA_ERRORS, SessionBusy):
+    app.add_exception_handler(_exc, _retryable_503)
+
 app.add_middleware(AppVersionMiddleware)
+# #207: response-time samples for the ops watch (cheap, always on).
+app.add_middleware(LatencyMiddleware)
 
 # CORS middleware for web clients (iOS native client doesn't use CORS)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
@@ -432,6 +542,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-Admin-Key", "Authorization"],
 )
+
+# #232.3: the website's play page reads the public shared-quiz preview.
+app.middleware("http")(shared_quiz_routes.website_cors)
 
 # Include API routes
 app.include_router(rest.router)

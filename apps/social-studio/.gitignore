@@ -1,0 +1,13 @@
+node_modules/
+# whisper.cpp + model, fetched prod rows (re-created on demand)
+.cache/
+# render output (mp4/jpg) and staged voice clips
+out/
+public/audio/
+# AppDemo footage: trimmed simulator recordings + the app's voice clips (never committed)
+public/demo/rec/
+# copied/generated from apps/website/src by scripts/sync-brand.mjs (npm install)
+public/brand/
+src/brand/
+# App Store screenshots + badge for the Pinned reel, copied by scripts/sync-brand.mjs (npm install)
+public/store/

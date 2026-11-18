@@ -107,6 +107,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let sessionIdKey = "current_session_id"
     private let settingsKey = "quiz_settings"
     private let legacyMuteClearedKey = "mute_preference_cleared_173"
+    private let difficultyDefaultMovedKey = "difficulty_default_random_216"
     private let historyKey = "asked_question_history"
     private let packProgressKey = "pack_played_question_ids"
     private let statsKey = "quiz_stats"
@@ -117,8 +118,13 @@ final class PersistenceStore: PersistenceStoreProtocol {
     /// fine, while a full list must never stop a quiz from starting.
     static let historyWindow = 5000
 
-    init(userDefaults: UserDefaults = .standard) {
+    /// The phone's language among the app's own (en/sk/cs): what a first
+    /// launch starts the quiz in.
+    private let phoneLanguage: String?
+
+    init(userDefaults: UserDefaults = .standard, phoneLanguage: String? = Bundle.main.preferredLocalizations.first) {
         self.userDefaults = userDefaults
+        self.phoneLanguage = phoneLanguage
     }
 
     // MARK: - Device Identity
@@ -182,11 +188,14 @@ final class PersistenceStore: PersistenceStoreProtocol {
         // mute would be wiped as "legacy" on the next launch.
         let legacyMutePending = !userDefaults.bool(forKey: legacyMuteClearedKey)
         userDefaults.set(true, forKey: legacyMuteClearedKey)
+        // #216: spent on the first load like the #173 marker, for the same reason.
+        let difficultyMovePending = !userDefaults.bool(forKey: difficultyDefaultMovedKey)
+        userDefaults.set(true, forKey: difficultyDefaultMovedKey)
 
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
-            return QuizSettings.default
+            return QuizSettings.firstLaunch(phoneLanguage: phoneLanguage)
         }
 
         do {
@@ -195,21 +204,38 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
             Logger.persistence.debug("📦 PersistenceStore: Loaded settings: \(String(describing: settings), privacy: .public)")
 
-            return legacyMutePending ? clearingLegacyMute(settings) : settings
+            let cleaned = legacyMutePending ? clearingLegacyMute(settings) : settings
+            return difficultyMovePending ? movingOffOldDefaultDifficulty(cleaned) : cleaned
         } catch {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
     }
 
+    /// #216 (founder 2026-10-30): the default moved from Medium to Random. A
+    /// saved Medium is almost always the old default written back by the
+    /// auto-persist sink, and nothing on disk tells it apart from a deliberate
+    /// pick, so it moves to the new default exactly once.
+    private func movingOffOldDefaultDifficulty(_ settings: QuizSettings) -> QuizSettings {
+        guard settings.difficulty == "medium" else { return settings }
+        var moved = settings
+        moved.difficulty = Config.defaultDifficulty
+        // Written back like the #173 mute cleanup: the marker is spent on this
+        // read, and launch reads settings twice (AppState for the speech
+        // recognizer's language, then the quiz view model).
+        saveSettings(moved)
+        return moved
+    }
+
     /// One-time cleanup of a persisted mute that was never a preference (#173).
     /// Until this build the in-quiz mute button and the Settings "Sound" toggle
     /// wrote the SAME persisted flag, so a mute tapped mid-drive survived the
     /// app and silenced the first question of the next quiz (the founder's TF
-    /// screenshot). The button is quiz-scoped now, but the polluted value is
-    /// already on disk and nothing can tell it apart from a deliberate Settings
-    /// choice — so it is dropped exactly once, and everything written from here
-    /// on really is a preference.
+    /// screenshot). The polluted value was already on disk and nothing could
+    /// tell it apart from a deliberate Settings choice, so it is dropped exactly
+    /// once, on the first load of a #173 build. #208 (founder 2026-10-16) makes
+    /// the button write the persisted preference again on purpose: the marker
+    /// is spent by then, so this never wipes such a mute.
     private func clearingLegacyMute(_ settings: QuizSettings) -> QuizSettings {
         guard settings.isMuted else { return settings }
 

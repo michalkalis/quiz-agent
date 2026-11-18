@@ -12,6 +12,7 @@
 //  identically for both question types.
 //
 //   1 `.readingQuestion` — the TTS is reading. Commands "repeat" / "skip".
+//                          Only while a read really plays (#208).
 //   2 `.thinking`        — the think window drains as a fill inside the bar
 //                          (#132 B). Commands "start" / "repeat" / "skip".
 //   3 `.listening`       — the answer mic is open. NO command chips: the app
@@ -51,7 +52,8 @@ enum QuestionListenPhase: Equatable {
         quizState: QuizState,
         answerWindowRemaining: Int,
         answerWindowTotal: Int,
-        answerKind: ListenBar.AnswerKind
+        answerKind: ListenBar.AnswerKind,
+        isReadingQuestion: Bool = false
     ) -> QuestionListenPhase? {
         switch quizState {
         case .recording:
@@ -62,10 +64,16 @@ enum QuestionListenPhase: Equatable {
         case .skipping:
             return .skipping
         case .askingQuestion:
-            // No window running yet = the question is still being read: the think
-            // countdown only starts once the TTS finishes.
-            guard answerWindowRemaining > 0 else { return .readingQuestion }
-            return .thinking(remaining: answerWindowRemaining, total: answerWindowTotal)
+            if answerWindowRemaining > 0 {
+                return .thinking(remaining: answerWindowRemaining, total: answerWindowTotal)
+            }
+            // #208 (TF 2026-10-16, finding 1): "Reading the question" only while a
+            // read really plays. "No window yet" alone also covers a muted question,
+            // one without audio, a retry bridge and a no-think-time setting, and the
+            // bar claimed a read there that nobody heard. Those get the command bar
+            // without a countdown: the question screen's words are live.
+            if isReadingQuestion { return .readingQuestion }
+            return .thinking(remaining: 0, total: 0)
         // #182 `.awaitingQuestion`: nothing to listen for — there is no question
         // on screen yet, and the waiting panel speaks for itself.
         case .idle, .startingQuiz, .awaitingQuestion, .showingResult, .finished, .error:
@@ -98,7 +106,7 @@ enum QuestionListenPhase: Equatable {
 
     /// The draining fill, iff this state has a window to drain (#132 B).
     var countdown: ListenBar.ThinkCountdown? {
-        guard case let .thinking(remaining, total) = self else { return nil }
+        guard case let .thinking(remaining, total) = self, total > 0 else { return nil }
         return .init(remaining: remaining, total: total)
     }
 
@@ -127,7 +135,7 @@ struct QuestionListenBar: View {
     var size: ListenBar.Size = .full
     var language: CommandLanguage = .english
 
-    /// #185 track F: the recording has heard the driver ("Capturing…").
+    /// #185 track F: the recording has heard the driver ("Hearing you…").
     var speechHeard: Bool = false
 
     /// #185 track F: the live mic level the bar breathes with while listening.
@@ -138,6 +146,12 @@ struct QuestionListenBar: View {
     var answerRemaining: Int? = nil
 
     var onDismiss: (() -> Void)? = nil
+
+    /// #237: the commands control while commands wait on the permission
+    /// (`QuizViewModel.commandsAccessory(for:)`), and its two actions.
+    var commandsAccessory: ListenBar.CommandsAccessory? = nil
+    var onTurnOnCommands: (() -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
 
     private var words: [String] {
         guard showsWords else { return [] }
@@ -156,7 +170,10 @@ struct QuestionListenBar: View {
             speechHeard: speechHeard,
             inputLevel: inputLevel,
             answerRemaining: answerRemaining,
-            onDismiss: phase.isDismissable ? onDismiss : nil
+            onDismiss: phase.isDismissable ? onDismiss : nil,
+            commandsAccessory: commandsAccessory,
+            onTurnOnCommands: onTurnOnCommands,
+            onOpenSettings: onOpenSettings
         )
     }
 }

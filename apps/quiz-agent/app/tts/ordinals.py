@@ -1,4 +1,4 @@
-"""Spell Slovak / Czech ordinals ("19. storočí", "1. mája") for TTS (#200).
+"""Spell Slovak / Czech / Ukrainian ordinals ("19. storočí", "1. mája") for TTS (#200).
 
 A digit followed by a period and a lowercase word is an ordinal in sk/cs. The
 cardinal pass in ``number_normalization`` used to read it as a cardinal and keep
@@ -17,6 +17,11 @@ built here, declined in the case the following word asks for:
   ("3. miesto" → "tretie");
 - anything else falls back to the masculine nominative — a real ordinal word,
   never "number-period". Above 100, the cardinal without the period.
+
+Ukrainian (#231) writes dates and centuries without the period ("8 листопада",
+"19 століття"), so a number before a genitive month or a century noun is the
+ordinal there ("восьмого листопада", "дев'ятнадцятого століття"); "N." works
+as in sk/cs. Tens stay cardinal in compounds ("двадцять перший").
 
 Deterministic text transform only; the displayed text keeps its digits.
 """
@@ -65,7 +70,26 @@ _CS_HARD = {M_NOM: "ý", F_NOM: "á", N_NOM: "é", GEN: "ého", DAT: "ému", LOC
 _CS_SOFT = {M_NOM: "í", F_NOM: "í", N_NOM: "í", GEN: "ího", DAT: "ímu", LOC: "ím",
             INS: "ím", F_OBL: "í", F_ACC: "í", F_INS: "í", PL_GEN: "ích"}
 
+_UK_STEMS = {
+    1: "перш", 2: "друг", 4: "четверт", 5: "п'ят", 6: "шост", 7: "сьом",
+    8: "восьм", 9: "дев'ят", 10: "десят", 11: "одинадцят", 12: "дванадцят",
+    13: "тринадцят", 14: "чотирнадцят", 15: "п'ятнадцят", 16: "шістнадцят",
+    17: "сімнадцят", 18: "вісімнадцят", 19: "дев'ятнадцят", 20: "двадцят",
+    30: "тридцят", 40: "сороков", 50: "п'ятдесят", 60: "шістдесят",
+    70: "сімдесят", 80: "вісімдесят", 90: "дев'яност", 100: "сот",
+}
+_UK_HARD = {M_NOM: "ий", F_NOM: "а", N_NOM: "е", GEN: "ого", DAT: "ому", LOC: "ому",
+            INS: "им", F_OBL: "ої", F_ACC: "у", F_INS: "ою", PL_GEN: "их"}
+_UK_TRETII = {M_NOM: "третій", F_NOM: "третя", N_NOM: "третє", GEN: "третього",
+              DAT: "третьому", LOC: "третьому", INS: "третім", F_OBL: "третьої",
+              F_ACC: "третю", F_INS: "третьою", PL_GEN: "третіх"}
+# Tens stay cardinal before the ordinal unit: "двадцять перший".
+_UK_TENS = {20: "двадцять", 30: "тридцять", 40: "сорок", 50: "п'ятдесят",
+            60: "шістдесят", 70: "сімдесят", 80: "вісімдесят", 90: "дев'яносто"}
+
 _MONTHS_GENITIVE = {
+    "uk": "січня лютого березня квітня травня червня липня серпня вересня "
+          "жовтня листопада грудня".split(),
     "sk": "januára februára marca apríla mája júna júla augusta septembra "
           "októbra novembra decembra".split(),
     "cs": "ledna února března dubna května června července srpna září října "
@@ -83,6 +107,16 @@ _KNOWN_NOUNS = {
         **dict.fromkeys(["storočiu", "tisícročiu"], DAT),
         **dict.fromkeys(["storočí", "tisícročí"], LOC),
         **dict.fromkeys(["storočím", "tisícročím"], INS),
+    },
+    "uk": {
+        **dict.fromkeys(_MONTHS_GENITIVE["uk"], GEN),
+        **dict.fromkeys(
+            "січень лютий березень квітень травень червень липень серпень "
+            "вересень жовтень листопад грудень".split(), M_NOM),
+        **dict.fromkeys(["століття", "тисячоліття"], GEN),
+        **dict.fromkeys(["столітті", "тисячолітті"], LOC),
+        **dict.fromkeys(["століттю", "тисячоліттю"], DAT),
+        **dict.fromkeys(["століттям", "тисячоліттям"], INS),
     },
     "cs": {
         **dict.fromkeys(_MONTHS_GENITIVE["cs"], GEN),
@@ -110,20 +144,27 @@ _ADJECTIVE_ENDINGS = {
     "sk": [("ieho", GEN), ("iemu", DAT), ("ého", GEN), ("eho", GEN), ("ému", DAT),
            ("emu", DAT), ("ých", PL_GEN), ("ej", F_OBL), ("ou", F_INS),
            ("ým", INS), ("á", F_NOM), ("é", N_NOM), ("ú", F_ACC), ("ý", M_NOM)],
+    "uk": [("ого", GEN), ("ому", DAT), ("ої", F_OBL), ("ою", F_INS), ("их", PL_GEN),
+           ("им", INS), ("а", F_NOM), ("е", N_NOM), ("ий", M_NOM)],
     "cs": [("ího", GEN), ("ímu", DAT), ("ého", GEN), ("ému", DAT), ("ých", PL_GEN),
            ("ém", LOC), ("ým", INS), ("ou", F_INS), ("á", F_NOM), ("é", N_NOM),
            ("ý", M_NOM)],
 }
 # Neuter nouns in the nominative ("3. miesto", "10. výročie", cs "1. kolo").
-_NEUTER_ENDINGS = {"sk": ("ie", "o"), "cs": ("o",)}
+_NEUTER_ENDINGS = {"sk": ("ie", "o"), "cs": ("o",), "uk": ("о",)}
 # Words that join ordinals: "1. a 2. svetová vojna" — look past them.
-_JOINERS = frozenset("a alebo aj i až či nebo".split())
+_JOINERS = frozenset("a alebo aj i až či nebo і й та або чи".split())
 # fmt: on
 
 # "19." followed by whitespace and a word (group 2: its first letter; a
 # capital means the period ended a sentence). A word followed by a colon is a
 # label ("a: 5. b: 7." — MCQ options read aloud), not what the number counts.
 _ORDINAL_RE = re.compile(r"(?<![\d.,])(\d{1,3})\.(?=\s+([^\W\d_]))(?!\s+\w+:)")
+_UK_NOUN_ORDINAL_RE = re.compile(r"(?<![\d.,])(\d{1,3})(\s+)([^\W\d_]+)")
+_UK_MONTH_NOMINATIVES = frozenset(
+    "січень лютий березень квітень травень червень липень серпень вересень "
+    "жовтень листопад грудень".split()
+)
 _WORD_RE = re.compile(r"[^\W\d_]+|\d+\.")
 # A numeric date "1. 1. 2026" / "8.5.1945": day + month, read as words.
 _NUMERIC_DATE_RE = re.compile(r"(?<![\d.,])(\d{1,2})\.\s?(\d{1,2})\.(?=\s|\d|$)")
@@ -142,8 +183,20 @@ def _cs_word(n: int, case: str) -> str:
     return _CS_HARD_STEMS[n] + _CS_HARD[case]
 
 
+def _uk_word(n: int, case: str) -> str:
+    if n == 3:
+        return _UK_TRETII[case]
+    return _UK_STEMS[n] + _UK_HARD[case]
+
+
 def ordinal_words(n: int, language: str, case: str) -> str | None:
     """1–100 as a declined ordinal ("dvadsiateho prvého"); None outside it."""
+    if language == "uk":
+        if 1 <= n <= 20 or (n % 10 == 0 and 20 < n <= 100):
+            return _uk_word(n, case)
+        if 20 < n < 100:
+            return f"{_UK_TENS[n - n % 10]} {_uk_word(n % 10, case)}"
+        return None
     word = _sk_word if language == "sk" else _cs_word
     if 1 <= n <= 20 or (n % 10 == 0 and 20 < n <= 100):
         return word(n, case)
@@ -173,9 +226,65 @@ def _case_for(language: str, following: list[str], preceding: str | None) -> str
     return M_NOM
 
 
+# uk years: "у 1969 році" is an ordinal adjective ("дев'ятому"), unlike sk/cs
+# "v roku 1969" (cardinal). The noun after the year sets the case; a year after
+# a genitive month ("8 листопада 1945") is genitive. Round hundreds stay digits.
+_UK_HUNDRED_STEMS = {
+    1: "сот",
+    2: "двохсот",
+    3: "трьохсот",
+    4: "чотирьохсот",
+    5: "п'ятисот",
+    6: "шестисот",
+    7: "семисот",
+    8: "восьмисот",
+    9: "дев'ятисот",
+}
+_UK_YEAR_NOUNS = {"рік": M_NOM, "року": GEN, "році": LOC, "роком": INS}
+_UK_YEAR_RE = re.compile(r"(?<![\d.,])(1\d{3}|20\d{2})(?=(\s+)([^\W\d_]+))")
+_UK_DATE_YEAR_RE = re.compile(
+    r"(?<=\s)(?P<month>[^\W\d_]+)(?P<gap>\s+)(?P<year>1\d{3}|20\d{2})(?![\d.,]\d)"
+)
+
+
+def uk_year_words(n: int, case: str) -> str | None:
+    """1969 → "тисяча дев'ятсот шістдесят дев'ятий" in ``case``; a round year
+    fuses into one word: 1900 → "тисяча дев'ятисотий", 2000 → "двохтисячний"."""
+    if not (1000 <= n <= 2099):
+        return None
+    if n % 100 == 0:
+        ending = _UK_HARD[case]
+        if n == 2000:
+            return f"двохтисячн{ending}"
+        if n == 1000:
+            return f"тисячн{ending}"
+        return f"тисяча {_UK_HUNDRED_STEMS[n // 100 - 10]}{ending}"
+    from num2words import num2words
+
+    head = num2words(n - n % 100, lang="uk").replace("одна тисяча", "тисяча")
+    return f"{head} {ordinal_words(n % 100, 'uk', case)}"
+
+
+def _spell_uk_years(text: str) -> str:
+    def by_noun(match: re.Match) -> str:
+        case = _UK_YEAR_NOUNS.get(match.group(3).lower())
+        spelled = uk_year_words(int(match.group(1)), case) if case else None
+        return spelled or match.group(0)
+
+    def after_month(match: re.Match) -> str:
+        if match.group("month").lower() not in _MONTHS_GENITIVE["uk"]:
+            return match.group(0)
+        spelled = uk_year_words(int(match.group("year")), GEN)
+        if not spelled:
+            return match.group(0)
+        return f"{match.group('month')}{match.group('gap')}{spelled}"
+
+    return _UK_DATE_YEAR_RE.sub(after_month, _UK_YEAR_RE.sub(by_noun, text))
+
+
 def spell_ordinals(text: str, language: str) -> str:
     """Replace "N." ordinals in sk/cs ``text`` with declined words."""
-    if language not in ("sk", "cs"):
+    if language not in ("sk", "cs", "uk"):
         return text
 
     def replace(match: re.Match) -> str:
@@ -198,4 +307,20 @@ def spell_ordinals(text: str, language: str) -> str:
         tail = " " if rest[:1].isdigit() else ""
         return f"{ordinal_words(day, language, GEN)} {month_word}{tail}"
 
-    return _ORDINAL_RE.sub(replace, _NUMERIC_DATE_RE.sub(replace_date, text))
+    def replace_noun(match: re.Match) -> str:
+        # uk: "8 листопада", "19 століття": no period, the noun marks the ordinal.
+        n, word = int(match.group(1)), match.group(3)
+        case = _KNOWN_NOUNS["uk"].get(word.lower())
+        is_month = word.lower() in _MONTHS_GENITIVE["uk"]
+        if case is None or word.lower() in _UK_MONTH_NOMINATIVES:
+            return match.group(0)
+        if is_month and not 1 <= n <= 31:
+            return match.group(0)
+        spelled = ordinal_words(n, "uk", case)
+        return f"{spelled}{match.group(2)}{word}" if spelled else match.group(0)
+
+    text = _NUMERIC_DATE_RE.sub(replace_date, text)
+    if language == "uk":
+        text = _UK_NOUN_ORDINAL_RE.sub(replace_noun, text)
+        text = _spell_uk_years(text)
+    return _ORDINAL_RE.sub(replace, text)

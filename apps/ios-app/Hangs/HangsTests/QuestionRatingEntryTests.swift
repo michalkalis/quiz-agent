@@ -36,6 +36,57 @@ struct BuildChannelTests {
         #expect(BuildChannel.debugSurfacesEnabled(receiptURL: testFlight, isDebugBuild: false))
         #expect(BuildChannel.debugSurfacesEnabled(receiptURL: appStore, isDebugBuild: true))
     }
+
+    /// #209: App Review installs with a sandbox receipt, exactly like a
+    /// TestFlight tester. Only the compile-time App Store variant tells them
+    /// apart, so it must win over the receipt AND over a debug build, or the
+    /// reviewer sees the tester surfaces (guideline 2.2 rejection).
+    @Test("the App Store variant hides tester surfaces even with a sandbox receipt")
+    func appStoreVariantWins() {
+        let sandbox = URL(string: "file:///app/StoreKit/sandboxReceipt")!
+
+        #expect(BuildChannel.debugSurfacesEnabled(receiptURL: sandbox, isDebugBuild: false, isAppStoreBuild: true) == false)
+        #expect(BuildChannel.debugSurfacesEnabled(receiptURL: sandbox, isDebugBuild: true, isAppStoreBuild: true) == false)
+        #expect(BuildChannel.isTestFlight(receiptURL: sandbox, isAppStoreBuild: true) == false)
+        // The TestFlight build (no flag) keeps every tester surface.
+        #expect(BuildChannel.debugSurfacesEnabled(receiptURL: sandbox, isDebugBuild: false, isAppStoreBuild: false))
+        #expect(BuildChannel.isTestFlight(receiptURL: sandbox, isAppStoreBuild: false))
+    }
+
+    /// The test host is the TestFlight variant: if the flag leaked into it,
+    /// every gate test above would silently test the wrong build.
+    @Test("the test build is not the App Store variant")
+    func testHostIsNotAppStoreVariant() {
+        #expect(BuildChannel.isAppStoreBuild == false)
+    }
+}
+
+// MARK: - App Store variant: update gate (#209)
+
+@Suite("App Store variant — minimum version (#209)")
+@MainActor
+struct AppStoreVariantMinimumVersionTests {
+    /// App Review's sandbox receipt must not make the App Store build obey the
+    /// TestFlight minimum: a high `min_version_testflight` would lock the
+    /// reviewer out behind "update required".
+    @Test("the App Store variant uses the App Store minimum, not the TestFlight one")
+    func appStoreVariantUsesAppStoreMinimum() async {
+        let sandbox = URL(string: "file:///app/StoreKit/sandboxReceipt")!
+        let config = RemoteAppConfig(
+            minVersionAppStore: "1.0",
+            minVersionTestflight: "99.0",
+            ordersEnabled: true,
+            notice: nil
+        )
+        let store = AppConfigStore(
+            fetch: { config },
+            defaults: UserDefaults(suiteName: "AppStoreVariantMinimumVersionTests.\(UUID().uuidString)")!,
+            appVersion: "1.1",
+            isTestFlight: BuildChannel.isTestFlight(receiptURL: sandbox, isAppStoreBuild: true)
+        )
+        await store.refresh()
+        #expect(store.updateRequired == false)
+    }
 }
 
 // MARK: - Entry affordance on the two quiz screens

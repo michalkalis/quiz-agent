@@ -1,0 +1,287 @@
+{
+ "R1": {
+  "arm": "A",
+  "qid": "786498ed-05b2-4afc-9c22-ee4d908eb447",
+  "topic": "Prevzaté slová"
+ },
+ "R2": {
+  "arm": "A",
+  "qid": "95d8cafa-c5ff-41be-b9ba-9b45d84d2cbf",
+  "topic": "Nakupovanie a supermarkety"
+ },
+ "R3": {
+  "arm": "A",
+  "qid": "057efb6b-60ed-4709-b5b6-bd2ac7149056",
+  "topic": "Přejatá slova"
+ },
+ "R4": {
+  "arm": "B",
+  "qid": "4756a37c-dd3a-4d4b-96fe-903af3568e9a",
+  "topic": "Techno a rave scéna"
+ },
+ "R5": {
+  "arm": "A",
+  "qid": "4aae0078-099d-413c-ba25-41d0a9e25ca2",
+  "topic": "Sníh a zima"
+ },
+ "R6": {
+  "arm": "A",
+  "qid": "34f3f22c-b6c6-4013-9bba-5acad1f6c294",
+  "topic": "Rave a techno scéna"
+ },
+ "R7": {
+  "arm": "B",
+  "qid": "d19a7613-0242-46d8-a42b-f6317dfae529",
+  "topic": "Hospody a bary"
+ },
+ "R8": {
+  "arm": "A",
+  "qid": "409297ff-5a1e-447a-b32a-8921537f0a69",
+  "topic": "Rave a techno scéna"
+ },
+ "R9": {
+  "arm": "B",
+  "qid": "4bd8fe86-829b-42a8-b8cb-4d8aaff933a1",
+  "topic": "Techno a rave scéna"
+ },
+ "R10": {
+  "arm": "A",
+  "qid": "9927e886-49f6-4ab9-abe9-e9ca3a3342a2",
+  "topic": "Winter sports – curling"
+ },
+ "R11": {
+  "arm": "B",
+  "qid": "3bf14a5d-428f-4399-aa6d-2ddc3532bcb1",
+  "topic": "Rave and techno scene"
+ },
+ "R12": {
+  "arm": "A",
+  "qid": "0d0692dc-4aa7-422c-9cbc-dc560fec7606",
+  "topic": "Rave a techno scéna"
+ },
+ "R13": {
+  "arm": "A",
+  "qid": "46f9ca1d-d1ea-4fbe-95c6-8d5c14e1173c",
+  "topic": "Rave and techno scene"
+ },
+ "R14": {
+  "arm": "B",
+  "qid": "7af9d609-b2ce-4708-b8ff-4adf14492328",
+  "topic": "Věda v kuchyni"
+ },
+ "R15": {
+  "arm": "A",
+  "qid": "bd0b4548-b4ab-4dd4-97b7-7aec88dc0bfd",
+  "topic": "Prevzaté slová"
+ },
+ "R16": {
+  "arm": "B",
+  "qid": "ec35b856-5aed-4680-a0aa-2dbc66a14b1d",
+  "topic": "Veda v kuchyni"
+ },
+ "R17": {
+  "arm": "A",
+  "qid": "9eda17f9-0b6b-4009-bacb-f1e83c3765d6",
+  "topic": "Krčmová kultúra"
+ },
+ "R18": {
+  "arm": "A",
+  "qid": "7bdc69fd-8a8d-4841-9e5e-acbf775e609b",
+  "topic": "Pub and bar culture"
+ },
+ "R19": {
+  "arm": "A",
+  "qid": "5950c950-9390-4a00-9656-3a42f5f7b97b",
+  "topic": "Words we borrowed"
+ },
+ "R20": {
+  "arm": "B",
+  "qid": "bd4401c2-d49e-46e3-aa06-4c4233a9341c",
+  "topic": "Čiarové kódy a pokladne"
+ },
+ "R21": {
+  "arm": "A",
+  "qid": "f6501e17-33a6-4eb9-a806-4c74e50cef1a",
+  "topic": "Kuchyňská věda"
+ },
+ "R22": {
+  "arm": "A",
+  "qid": "59614d2f-6989-4504-9ba1-f25c4f2af8bd",
+  "topic": "Sneh a zima"
+ },
+ "R23": {
+  "arm": "A",
+  "qid": "30d3718f-05dc-4e17-b683-1b9918d9e552",
+  "topic": "Nakupovanie a supermarkety"
+ },
+ "R24": {
+  "arm": "B",
+  "qid": "25949aa2-9068-44c3-a979-c4699f9092f0",
+  "topic": "Techno a rave scéna"
+ },
+ "R25": {
+  "arm": "A",
+  "qid": "e86ddd4f-f601-4231-b300-2e5e8268eaf4",
+  "topic": "Nakupování a supermarkety"
+ },
+ "R26": {
+  "arm": "B",
+  "qid": "4808cc2a-e52c-425f-812f-02ce6c172c4a",
+  "topic": "Požičané slová"
+ },
+ "R27": {
+  "arm": "A",
+  "qid": "7274617a-0724-4bfc-8586-d478a7d1d641",
+  "topic": "Rave a techno scéna"
+ },
+ "R28": {
+  "arm": "A",
+  "qid": "826663e0-8e7f-4d3d-88f1-5faab15e90c0",
+  "topic": "Mountains – geology of Everest"
+ },
+ "R29": {
+  "arm": "B",
+  "qid": "b13e4003-be39-40ac-905d-33af4032cacb",
+  "topic": "Rave and techno scene"
+ },
+ "R30": {
+  "arm": "B",
+  "qid": "424c04be-0315-4953-931b-daa47ed1b412",
+  "topic": "Nakupovanie za socializmu"
+ },
+ "R31": {
+  "arm": "A",
+  "qid": "bccd1787-8e0c-49c7-b577-f8346b4d6c0a",
+  "topic": "Kuchyňská věda"
+ },
+ "R32": {
+  "arm": "B",
+  "qid": "94672408-2686-4044-9b7f-4f6af9686596",
+  "topic": "Přejatá slova"
+ },
+ "R33": {
+  "arm": "A",
+  "qid": "8188ff00-87be-4ccf-9283-c33d21c84867",
+  "topic": "Hory a fyzika"
+ },
+ "R34": {
+  "arm": "B",
+  "qid": "31b06cd7-26d1-4057-ae24-29763e85e2eb",
+  "topic": "Supermarkety a pokladny"
+ },
+ "R35": {
+  "arm": "A",
+  "qid": "a924c1f9-122c-4a93-8464-aeeb8510fd21",
+  "topic": "Rave and techno scene"
+ },
+ "R36": {
+  "arm": "B",
+  "qid": "b49893ae-8a8f-4897-9fd0-2520f025b6a7",
+  "topic": "Mountains and winter sports"
+ },
+ "R37": {
+  "arm": "B",
+  "qid": "4ea3a2c1-c9e8-478b-b20f-a803843672c4",
+  "topic": "Curling"
+ },
+ "R38": {
+  "arm": "B",
+  "qid": "a355ec82-a1cb-4025-8b92-60c7710ab993",
+  "topic": "Kitchen science"
+ },
+ "R39": {
+  "arm": "B",
+  "qid": "e7c2c053-c4ea-4b12-bf28-754a3e2aef77",
+  "topic": "Supermarket and shopping habits"
+ },
+ "R40": {
+  "arm": "B",
+  "qid": "3012a38a-2a24-40b2-b11f-1b9513bc54fc",
+  "topic": "Nákupní vozík"
+ },
+ "R41": {
+  "arm": "A",
+  "qid": "3e5fd1d5-5531-4da7-996c-baa25342f3dd",
+  "topic": "Kuchynská veda"
+ },
+ "R42": {
+  "arm": "B",
+  "qid": "26fe9014-7d55-4b9a-94ed-a87e2d409417",
+  "topic": "Britské hospody"
+ },
+ "R43": {
+  "arm": "A",
+  "qid": "b83aa2f6-1050-4670-a74d-c889f55ebc3c",
+  "topic": "Supermarket and shopping habits"
+ },
+ "R44": {
+  "arm": "A",
+  "qid": "3d117c78-f63f-4313-9d5c-b0768a2f1708",
+  "topic": "Pub and bar culture"
+ },
+ "R45": {
+  "arm": "A",
+  "qid": "9f3bddd6-4f2f-4492-a971-cbdb20d69ea7",
+  "topic": "Kitchen science"
+ },
+ "R46": {
+  "arm": "B",
+  "qid": "0616113c-1d9b-4159-8af4-e10082b62d2d",
+  "topic": "Words we borrowed"
+ },
+ "R47": {
+  "arm": "B",
+  "qid": "d34111c8-ec28-4246-9ab3-d48cfcc59df5",
+  "topic": "Words we borrowed"
+ },
+ "R48": {
+  "arm": "A",
+  "qid": "e436c752-8ad9-4ad5-a1d3-a5c9e0a87805",
+  "topic": "Lyžování"
+ },
+ "R49": {
+  "arm": "B",
+  "qid": "e24717d1-d15a-445a-acbc-10062ee2ab9e",
+  "topic": "Techno a rave scéna"
+ },
+ "R50": {
+  "arm": "B",
+  "qid": "bb2c919b-f281-4523-b6f9-13da137a0eb1",
+  "topic": "Tatry"
+ },
+ "R51": {
+  "arm": "B",
+  "qid": "b90999f3-47bd-47b5-8c60-a7752e55a233",
+  "topic": "Požičané slová"
+ },
+ "R52": {
+  "arm": "B",
+  "qid": "2b19c1db-d520-4d32-aa10-35f6d1d512cb",
+  "topic": "Krčmová kultúra"
+ },
+ "R53": {
+  "arm": "B",
+  "qid": "cb1f0404-c817-45b4-b07b-dc9119d957ea",
+  "topic": "Přejatá slova"
+ },
+ "R54": {
+  "arm": "A",
+  "qid": "6c334ce3-530f-4ebb-9887-2f57a0c6cb02",
+  "topic": "Nakupování a supermarkety"
+ },
+ "R55": {
+  "arm": "A",
+  "qid": "36e3ae1f-44ac-4bf5-9319-7251ba0f2a3e",
+  "topic": "Přejatá slova"
+ },
+ "R56": {
+  "arm": "B",
+  "qid": "18a4f944-b7ac-4fdb-9efd-f245cd603a96",
+  "topic": "Zrání ovoce"
+ },
+ "R57": {
+  "arm": "B",
+  "qid": "aa5517ad-4cd4-40e3-ae80-53004981ac14",
+  "topic": "Pub and bar culture"
+ }
+}

@@ -51,6 +51,20 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     setup_logging()
     init_sentry(get_settings().sentry_dsn)
 
+    # #207 207.5: a worker that consumes a different queue than the one orders
+    # are routed to never sees a paid order, yet looks healthy. That split was
+    # the beta's session-queue mode, where every `fly deploy` restarted a Fly
+    # worker that had to be stopped again by hand. Refuse it, so the mistake
+    # shows up as a failed deploy instead of silently stranded orders.
+    settings = get_settings()
+    if settings.worker_queue_name != settings.order_queue_name:
+        raise RuntimeError(
+            f"WORKER_QUEUE_NAME={settings.worker_queue_name!r} but orders go to "
+            f"ORDER_QUEUE_NAME={settings.order_queue_name!r}: this worker would "
+            "never see an order. Unset both (#207: Fly worker primary, mba backup "
+            "on the same queue, docs/setup/session-worker-mba.md)."
+        )
+
     # #172 — session worker (mba, Claude Code subscription). Two fail-loud
     # gates BEFORE this process starts pulling paid orders off the queue:
     #  * the `claude` CLI must be present and logged in via claude.ai; without
@@ -81,6 +95,13 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
     from app.db.migration_check import assert_migrations_at_head
 
     await assert_migrations_at_head(get_settings().database_url, logger)
+
+    # #207: liveness check-ins to the Sentry Cron monitor (checkin.py). A
+    # background task, not an arq cron job: cron jobs wait for a free job slot,
+    # and a worker busy with long packs would look dead.
+    from .checkin import start_checkins
+
+    ctx["checkin_task"] = start_checkins()
 
     from app.db.session import AsyncSessionLocal
     from app.generation.advanced_generator import AdvancedQuestionGenerator
@@ -173,7 +194,6 @@ async def on_startup(ctx: Dict[str, Any]) -> None:
         )
     ctx["gold_standard_path"] = _GOLD_STANDARD_PATH
 
-    settings = get_settings()
     logger.info(
         "worker on_startup: collaborators initialised gateway=%s queue_name=%s "
         "max_jobs=%s job_timeout=%s",
@@ -194,10 +214,20 @@ def _worker_redis_settings(dsn: str) -> RedisSettings:
     an outage longer than that still exits, loudly, and the supervisor
     (launchd on mba, Fly on the Fly worker) restarts the process. WATCHed
     transactions are never retried by redis-py, so job pickup stays atomic.
+
+    #207 207.29: the retry above does not cover the FIRST connect at boot;
+    ARQ's own startup loop does (``conn_*``), and its default (5 tries, 1 s
+    apart, 1 s connect timeout) gave up within ~5-11 s. On 2026-10-16 a Fly
+    host crash took Redis away for minutes; every boot exited and Fly stopped
+    the worker for good. Boot now waits up to ~10 min (120 tries, 5 s apart,
+    5 s connect timeout: Fly's private network can be slow on a fresh boot).
     """
     rs = RedisSettings.from_dsn(dsn)
     rs.retry_on_error = [RedisConnectionError, RedisTimeoutError]
     rs.retry = Retry(ExponentialBackoff(cap=30, base=1), retries=6)
+    rs.conn_timeout = 5
+    rs.conn_retries = 120
+    rs.conn_retry_delay = 5
     return rs
 
 

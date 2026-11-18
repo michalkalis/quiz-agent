@@ -36,25 +36,7 @@ extension RecordingCoordinator {
         let heardSpeech = speechDetectedDuringAutoRecord
         speechDetectedDuringAutoRecord = false
 
-        if isStreamingSTT {
-            // Streaming path: commit and let the event listener handle the response
-            do {
-                try await sttService?.commitAndClose()
-                // The STT event listener will call handleCommittedTranscript.
-                // If ElevenLabs never answers the forced commit (dead air, dropped
-                // socket), only this watchdog stops the UI from showing RECORDING
-                // forever (#54 task 54.4, founder #5).
-                startCommitWatchdog(owner: attempt)
-            } catch {
-                // Cleanup and fallback
-                isStreamingSTT = false
-                audioService.stopStreamingRecording()
-                await sttService?.disconnect()
-                trackCaptureFailure(.sttCommitFailed)
-                setErrorMessage(String(localized: "Transcription failed: \(error.localizedDescription)", comment: "Inline error when streaming speech-to-text fails; placeholder is the underlying error"))
-                transition(to: .askingQuestion)
-            }
-        } else if usesLegacyRecorder {
+        if usesLegacyRecorder {
             // The no-engine fallback (see startLegacyRecorderFallback): M4A upload.
             usesLegacyRecorder = false
             do {
@@ -62,7 +44,7 @@ extension RecordingCoordinator {
                 await submitVoiceAnswer(audioData: data, owner: attempt)
             } catch {
                 trackCaptureFailure(.recorderFailed)
-                setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", comment: "Inline error when audio recording fails; placeholder is the underlying error"))
+                setErrorMessage(String(localized: "Recording failed: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when audio recording fails; placeholder is the underlying error"))
                 transition(to: .askingQuestion)
 
                 Logger.audio.error("❌ Recording stop failed: \(error, privacy: .public)")
@@ -172,7 +154,7 @@ extension RecordingCoordinator {
     func submitVoiceAnswer(audioData: Data, fileName: String = "answer.m4a", owner: AttemptID? = nil) async {
         let owner = owner ?? attemptLedger.current
         guard let sessionId = currentSession()?.id else {
-            setError(message: String(localized: "No active session", comment: "Inline error: no quiz session is currently active"), context: .general)
+            setError(message: String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active"), context: .general)
             return
         }
 
@@ -183,6 +165,9 @@ extension RecordingCoordinator {
         let answeredQuestionId = currentQuestion()?.id
         // #204.2: read with the question id, for the same reason.
         let rejectedTranscripts = rejectedTranscriptsForUpload()
+        // #208.3: the server synthesizes the read-back while it grades — only
+        // worth it when the read-back will be played.
+        let wantsReadBack = !isMuted()
         trackVoiceAnswerSubmitted(questionId: answeredQuestionId)
         // #197: the saved car sample this upload answers, if any.
         let recordingStamp = savedRecordingStamp
@@ -224,7 +209,8 @@ extension RecordingCoordinator {
                             audioData: audioData,
                             fileName: fileName,
                             questionId: answeredQuestionId,
-                            rejectedTranscripts: rejectedTranscripts
+                            rejectedTranscripts: rejectedTranscripts,
+                            readBack: wantsReadBack
                         )
                     }
                 }
@@ -272,7 +258,7 @@ extension RecordingCoordinator {
                     self.pendingResponse = response
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.
-                    self.presentVoiceTranscript(evaluation.userAnswer, owner: owner)
+                    self.presentVoiceTranscript(evaluation.userAnswer, owner: owner, readBack: response.readBack)
                 }
 
                 // Don't call handleQuizResponse yet - wait for user confirmation
@@ -297,7 +283,7 @@ extension RecordingCoordinator {
                 await MainActor.run {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.timeout") else { return }
                     self.setError(
-                        message: String(localized: "Request timed out. Please try again.", comment: "Inline error when a voice answer submission times out"),
+                        message: String(localized: "Request timed out. Please try again.", bundle: .interface, locale: .interface, comment: "Inline error when a voice answer submission times out"),
                         context: .submission,
                         error: error
                     )
@@ -308,7 +294,7 @@ extension RecordingCoordinator {
                 // Handle daily limit reached — show paywall
                 if case .quotaLimitReached = error {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.quota") else { return }
-                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
+                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
                     return
                 }
 
@@ -333,7 +319,7 @@ extension RecordingCoordinator {
                 // plain 400 this looped "didn't catch that" (TF 2026-09-29).
                 if case .sessionFinished = error {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.sessionFinished") else { return }
-                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
+                    await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
                     return
                 }
 
@@ -355,7 +341,7 @@ extension RecordingCoordinator {
                 await MainActor.run {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.error") else { return }
                     self.setError(
-                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,
                         error: error
                     )
@@ -366,7 +352,7 @@ extension RecordingCoordinator {
                 await MainActor.run {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.error") else { return }
                     self.setError(
-                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
+                        message: String(localized: "Failed to submit answer: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when submitting a voice answer fails; placeholder is the underlying error"),
                         context: .submission,
                         error: error
                     )

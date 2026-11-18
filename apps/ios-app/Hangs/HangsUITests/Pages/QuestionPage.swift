@@ -85,7 +85,7 @@ struct QuestionPage {
     /// object silently blind to the MCQ bar.
     ///
     /// #185 track F (F2): the answer bar now leads with its STATE —
-    /// "Listening…" until speech is heard, "Capturing…" after — and the
+    /// "Listening…" until speech is heard, "Hearing you…" after — and the
     /// instruction follows it. Both mean the mic is live for the answer.
     var answerListenBarExists: Bool {
         app.descendants(matching: .any).matching(Self.answerListenBarPredicate).count > 0

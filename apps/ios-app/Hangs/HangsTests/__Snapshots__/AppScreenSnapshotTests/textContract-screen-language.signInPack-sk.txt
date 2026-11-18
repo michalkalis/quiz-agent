@@ -1,0 +1,13 @@
+# texts
+Harry Potter
+30 otázok
+Ulož si balík
+Balík je zatiaľ len v tomto telefóne. Po prihlásení cez Apple ti zostane aj na novom telefóne či po preinštalovaní.
+Možno neskôr
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

@@ -1,0 +1,44 @@
+# TLS + reverse proxy for the Trubbo backend (#222 — moving the backend to Hetzner).
+# Env (env/caddy.env): AGENT_HOSTS, PACK_HOSTS (comma-separated site addresses), FORWARDER_SECRET.
+#
+# Client IP trust chain: the apps rate-limit on the Fly-Client-IP header.
+# - Direct traffic: Caddy overwrites Fly-Client-IP with the real peer address,
+#   so a client can never spoof it.
+# - Traffic from the Fly forwarder (old builds that call *.fly.dev): Fly's edge
+#   sets Fly-Client-IP; it is kept only when the request carries the shared
+#   forwarder secret, otherwise it is overwritten like direct traffic.
+#
+# Deploys: while a container restarts, Caddy holds a request and retries the
+# connection for up to 30 s instead of answering 502. Only requests that never
+# reached the app are retried, so a POST is never sent twice. A POST body can
+# only be re-sent from a buffer: bodies up to 1 MB (JSON calls) are buffered;
+# larger uploads (dictation, feedback) are not retried, as before.
+
+(app) {
+	@forwarder header X-Trubbo-Forwarder {$FORWARDER_SECRET}
+	handle @forwarder {
+		reverse_proxy {args[0]} {
+			header_up -X-Trubbo-Forwarder
+			request_buffers 1MB
+			lb_try_duration 30s
+			lb_try_interval 250ms
+		}
+	}
+	handle {
+		reverse_proxy {args[0]} {
+			header_up Fly-Client-IP {remote_host}
+			header_up -X-Trubbo-Forwarder
+			request_buffers 1MB
+			lb_try_duration 30s
+			lb_try_interval 250ms
+		}
+	}
+}
+
+{$AGENT_HOSTS} {
+	import app quiz-agent:8002
+}
+
+{$PACK_HOSTS} {
+	import app pack-web:8003
+}

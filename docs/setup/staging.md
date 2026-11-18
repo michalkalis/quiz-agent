@@ -14,10 +14,14 @@ Oba stroje sa uspia, keď na ne nikto nevolá, a zobudia sa prvou požiadavkou (
 - **Postgres:** logická DB `quiz_pack_staging` na prod klastri `quiz-pack-db`. Staging roly (`quiz_agent_api_staging`, `quiz_pack_api_staging`) nemajú žiadne práva na prod `quiz_pack` (overené 2026-10-08: SELECT na prod tabuľky odmietnutý). V staging DB vystupujú ako rola `quiz_staging`, ktorá vlastní všetky objekty.
 - **Redis:** rovnaký `quiz-pack-redis`, ale DB `/1` (prod a session worker na mba používajú `/0`), takže fronty sa nikdy nemiešajú.
 - **Tajomstvá:** mená ako v prode. `DATABASE_URL`, `REDIS_URL`, `STOREKIT_ENVIRONMENT`, `RC_ALLOWED_ENVIRONMENT` sú vlastné stagingu. `ORDER_QUEUE_NAME` sa zámerne nenastavuje.
+- **Kľúče providerov (#207, úloha 207.17):** staging mal do 2026-10-16 rovnaké platené kľúče ako prod (zhodné digesty v `fly secrets list`). Odvtedy má `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `ELEVENLABS_API_KEY` (quiz-agent) a `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `TAVILY_API_KEY` (quiz-pack-api) nefunkčné zástupné hodnoty `*-staging-disabled-207`: staging nemôže minúť prod kredit. Appky bežia, health, migrácie a API fungujú, len volania AI zlyhajú. Vlastné kľúče s nízkym limitom pozri Founder kroky. `ADMIN_API_KEY` quiz-agent stagingu je vlastný (GitHub secret `QUIZ_AGENT_ADMIN_API_KEY` v prostredí `staging`).
+- **Kontrola zdieľaných kľúčov:** `fly secrets list -a <staging appka> --json` a to isté pre prod appku; rovnaký `digest` pri tom istom mene = zdieľaná hodnota.
 
-## Nasadenie vetvy
+## Nasadenie
 
-Z koreňa repa, na checkoute vetvy, ktorú chceš skúsiť:
+Bežne netreba nič: workflow **Backend Deploy** (`.github/workflows/backend-deploy.yml`) nasadí staging pred každým prod deployom a spustí smoke test. Vetvu na staging (bez produ): `gh workflow run backend-deploy.yml --ref <vetva> -f apps=both`.
+
+Ručne, z koreňa repa, na checkoute vetvy, ktorú chceš skúsiť:
 
 1. `fly deploy -c apps/quiz-agent/fly.staging.toml --ha=false`
 2. `fly deploy -c apps/quiz-pack-api/fly.staging.toml --process-groups web --ha=false`
@@ -48,13 +52,21 @@ V pokoji ~0,20 $ mesačne: 1 GB volume quiz-agent (0,15 $) a disky uspatých str
 
 ## Founder kroky
 
-Generačné tajomstvá quiz-pack-api ešte na stagingu chýbajú (agent nesmie čítať prod tajomstvá). Treba ich len na skúšku generovania packov, API a migrácie bežia aj bez nich. Raz spusti z koreňa repa:
+Len ak chceš na stagingu skúšať aj volania AI (hranie kvízu cez API, generovanie packov). Deploy, migrácie a smoke testy fungujú aj bez toho. Nikdy nekopíruj na staging prod kľúče.
 
-```
-scripts/staging-copy-secrets.sh quiz-pack-api quiz-pack-api-staging \
-  AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION ANTHROPIC_API_KEY \
-  LLM_ROLE_GEN LLM_ROLE_CRITIQUE LLM_ROLE_NORMALIZE VERIFY_MODEL JUDGE_MODELS \
-  SCORER_MAX_CONCURRENT OVERGEN_MULTIPLIER STAGE_TIMEOUT_SECONDS
-```
-
-Hodnoty sa nevypíšu a prejavia sa pri ďalšom deployi stagingu. Kľúče providerov sú zdieľané s prodom (rozhodnutie z #101 — oddelenie prod a sandbox prostredia), takže skúšky generovania míňajú rovnaký kredit.
+1. **OpenRouter:** openrouter.ai → Settings → Keys → Create Key, názov `trubbo-staging`, Credit limit `2` ($). Skopíruj kľúč.
+2. **OpenAI:** platform.openai.com → Settings → Projects → Create project `trubbo-staging`. V projekte Limits → mesačný budget `2` $ (či je to tvrdý strop alebo len upozornenie, neoverené; ak len upozornenie, stačí nízky limit na OpenRouteri a OpenAI nechaj neplatný). Potom v projekte API keys → Create new secret key. Skopíruj.
+3. **ElevenLabs** (len quiz-agent, hlas): elevenlabs.io → Developers → API Keys → Create API Key `trubbo-staging`, zapni limit kreditov (napr. `2000`), ak ho formulár ponúka. Skopíruj.
+4. **Anthropic** (len pre generovanie packov): console.anthropic.com → Settings → Workspaces → Create workspace `staging` so Spend limit `2` $ → v ňom Create Key. Skopíruj.
+5. V termináli (hodnoty vlož namiesto `…`):
+   ```
+   fly secrets set -a quiz-agent-api-staging --stage OPENAI_API_KEY=… OPENROUTER_API_KEY=… ELEVENLABS_API_KEY=…
+   fly secrets set -a quiz-pack-api-staging --stage OPENAI_API_KEY=… OPENROUTER_API_KEY=… ANTHROPIC_API_KEY=…
+   ```
+6. Nastavenia generovania (nie sú to kľúče, kópia z produ je v poriadku), raz z koreňa repa:
+   ```
+   scripts/staging-copy-secrets.sh quiz-pack-api quiz-pack-api-staging \
+     LLM_ROLE_GEN LLM_ROLE_CRITIQUE LLM_ROLE_NORMALIZE VERIFY_MODEL JUDGE_MODELS \
+     SCORER_MAX_CONCURRENT OVERGEN_MULTIPLIER STAGE_TIMEOUT_SECONDS
+   ```
+7. Prejaví sa pri ďalšom deployi stagingu (`gh workflow run backend-deploy.yml --ref main -f apps=both` alebo najbližší merge).

@@ -78,15 +78,15 @@ class _Manager:
         self.writes = 0
         self._lock = asyncio.Lock()
 
-    def get_session(self, session_id: str) -> QuizSession:
+    async def get_session(self, session_id: str) -> QuizSession:
         return QuizSession.model_validate_json(self.stored.model_dump_json())
 
-    def update_session(self, session: QuizSession) -> bool:
+    async def update_session(self, session: QuizSession) -> bool:
         self.stored = QuizSession.model_validate_json(session.model_dump_json())
         self.writes += 1
         return True
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
+    def session_lock(self, session_id: str, *, wait: bool = True) -> asyncio.Lock:
         return self._lock
 
 

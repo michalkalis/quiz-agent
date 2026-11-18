@@ -80,7 +80,7 @@ def _flow(intent_data):
     usage_tracker.record_question = AsyncMock()
 
     return QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=retriever,
         answer_evaluator=AnswerEvaluator(),

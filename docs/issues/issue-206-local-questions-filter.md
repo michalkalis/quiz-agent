@@ -1,6 +1,6 @@
 # Issue #206 — Voľba „bez lokálnych otázok“
 
-**Triage:** enhancement · ready-for-agent
+**Triage:** enhancement · in-progress (2026-10-22)
 
 **Created:** 2026-10-15 · **Founder:** Michal
 
@@ -15,6 +15,8 @@ Success = every question in the corpus carries a "local" label, every newly gene
 1. Default: local questions **included** (native sk/cs home-country share was deliberate, see #203 — boring stock questions: cause and replacement). The player can switch them off.
 2. New questions must be labelled from now on. Labelling them **the same way** as the existing corpus is fine, nothing special at generation time.
 3. Issue first; order and timing decided by the agent run.
+
+**2026-10-22:** spot check of 50 rows approved ("označenie lokálnych otázok sedí": sk 13/20 local, cs 12/20, en 1/10; $0.06). Placement **B**: switch in the Categories sheet under the tiles, home screen unchanged. Copy "concrete example": sk *Lokálne otázky · Napríklad bratislavská MHD alebo kartová hra prší*, cs *Místní otázky · Třeba pražská MHD nebo karetní hra prší*, en *Local questions · For example, a city's bus routes or a local card game*. Backfill paid from the Max API credit.
 
 ## Current state (2026-10-15)
 
@@ -33,12 +35,12 @@ One classifier, one label, applied in two places, so old and new rows are labell
 
 ## Sub-tasks
 
-- [ ] **206.1 Data.** New nullable column `local_scope` on questions (quiz-pack-api migration via Fly release command) and the matching metadata on the quiz-agent side, carried through every path that copies `language_dependent` today (model ↔ dict, admin import, serializers). Additive only: the live 1.0 app must keep working.
-- [ ] **206.2 Classifier.** `local_scope` classifier module + prompt + tests that encode the boundary (Bratislava MHD → `sk`; prší → `cz`; Kafka → universal; US state capital → `us`). Model choice per the Max API credit rule (#196 — AI calls through the Anthropic API).
-- [ ] **206.3 Backfill.** Script that labels every row without a label, resumable, cost logged. Spot check first (above), then full run on prod. Estimated cost of the full run reported up front; above ~$3–4 ask the founder first.
-- [ ] **206.4 New questions.** Run the same classifier on every newly stored question in all generation paths that write to the shared corpus: corpus runs / import, the weekly fresh entertainment job (#202), any native sk/cs generation. Simplest robust point: where a question row is created/approved, not inside each prompt. Custom packs (private, user-ordered) are out of scope. Test: a newly generated question ends up labelled.
-- [ ] **206.5 Retrieval.** Session preference "skip local questions" (default off = include). When on, retrieval adds `local_scope IS NULL`. Check the stock guard (#199 — question stock + Trubbo Plus) still counts correctly when the filter shrinks the pool.
-- [ ] **206.6 iOS.** Switch next to category/difficulty in quiz settings, sk/cs/en copy (short, no dashes, copy-review CI). Sent with the session start; older app versions simply never send it. Exact placement and wording → show the founder 2 HTML variants first (UI rule).
+- [x] **206.1 Data.** (PR 1, 2026-10-22: migration `a206c0a1e5b7`; classified-or-not marker = `provenance.extra.local_scope`) New nullable column `local_scope` on questions (quiz-pack-api migration via Fly release command) and the matching metadata on the quiz-agent side, carried through every path that copies `language_dependent` today (model ↔ dict, admin import, serializers). Additive only: the live 1.0 app must keep working.
+- [x] **206.2 Classifier.** (PR 1: `app/generation/local_scope_classifier.py`, batched like #195 topicality; role `LLM_ROLE_LOCAL_SCOPE` = Sonnet 5.5, not Haiku: Haiku is weak on sk/cs domestic culture per #201 notes; spot check may still compare) `local_scope` classifier module + prompt + tests that encode the boundary (Bratislava MHD → `sk`; prší → `cz`; Kafka → universal; US state capital → `us`). Model choice per the Max API credit rule (#196 — AI calls through the Anthropic API).
+- [x] **206.3 Backfill.** (2026-10-22 prod: every live row labelled, local = sk 174/424, cs 199/425, en 6/988; ~$1.4 from the Max API credit. Run it on a one-off `fly machine run --vm-memory 1024 --rm` machine, never on the 512 MB worker: 200-row rounds OOM-killed the order worker once) Script that labels every row without a label, resumable, cost logged. Spot check first (above), then full run on prod. Estimated cost of the full run reported up front; above ~$3–4 ask the founder first.
+- [x] **206.4 New questions.** (PR 1: hook in `app/corpus/importer.py`, flag `LOCAL_SCOPE_CLASSIFICATION` default on; other writers (admin import) are covered by re-running the backfill) Run the same classifier on every newly stored question in all generation paths that write to the shared corpus: corpus runs / import, the weekly fresh entertainment job (#202), any native sk/cs generation. Simplest robust point: where a question row is created/approved, not inside each prompt. Custom packs (private, user-ordered) are out of scope. Test: a newly generated question ends up labelled.
+- [x] **206.5 Retrieval.** (PR #536, deployed 2026-10-22: `skip_local_questions` on session + availability probe; pack sessions ignore it; stock guard probes the smaller pool) Session preference "skip local questions" (default off = include). When on, retrieval adds `local_scope IS NULL`. Check the stock guard (#199 — question stock + Trubbo Plus) still counts correctly when the filter shrinks the pool.
+- [x] **206.6 iOS.** (PR 3: `QuizSettings.includeLocalQuestions`, default on, toggle row in `HomeCategoryPicker`; snapshots re-recorded) Switch next to category/difficulty in quiz settings, sk/cs/en copy (short, no dashes, copy-review CI). Sent with the session start; older app versions simply never send it. Exact placement and wording → show the founder 2 HTML variants first (UI rule).
 
 ## Done when
 

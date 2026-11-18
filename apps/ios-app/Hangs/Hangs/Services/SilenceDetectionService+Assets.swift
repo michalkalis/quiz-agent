@@ -2,51 +2,85 @@
 //  SilenceDetectionService+Assets.swift
 //  Hangs
 //
-//  Launch-time readiness for the command recognizer: the #105 speech-recognition
-//  authorization flow and the #77/#120 on-device model-asset preparation for the
-//  selected engine + locale. Split out of SilenceDetectionService.swift (past
+//  Readiness for the command recognizer: the #105/#237 speech-recognition
+//  authorization flow (asked only when the player turns commands on) and the
+//  #77/#120 on-device model-asset preparation for the selected engine + locale. Split out of SilenceDetectionService.swift (past
 //  the ~300-line cap after #120's engine-seam additions); the VAD state machine
 //  and stream plumbing stay there, the analyzer lifecycle is in +Engine.swift.
 //
 
 import Foundation
 
+import os
+
 // @preconcurrency: the legacy SFSpeechRecognizer.requestAuthorization completion
 // fires on a TCC background queue; without this the inferred @MainActor
 // isolation check traps at launch (see SilenceDetectionService.swift).
 @preconcurrency import Speech
-import os
 
 extension SilenceDetectionService {
-    // MARK: - Authorization (#105)
+    // MARK: - Authorization (#105, #237 — only when the player asks)
 
-    /// Requests the OS speech-recognition permission and then, if granted,
-    /// proceeds into the existing asset-prepare flow. #105: the app declared
-    /// `NSSpeechRecognitionUsageDescription` but never actually called
-    /// `SFSpeechRecognizer.requestAuthorization` anywhere — a denied/never-asked
-    /// permission silently strands the command listener with `.unknown`
-    /// availability forever. Called once from AppState at launch, exactly like
-    /// `prepareAssets()` used to be called alone; safe to re-enter (guarded by
-    /// the same `.unknown` check inside `prepareAssets()`).
-    func requestAuthorizationAndPrepareAssets() async {
-        let status = await authorizationProvider()
-        switch Self.authorizationDecision(for: status) {
-        case .proceed:
-            await prepareAssets()
-        case let .unavailable(reason):
-            markCommandsUnavailable(reason: reason)
+    /// Launch-time readiness WITHOUT a prompt (#237, founder 2026-11-17: the
+    /// speech-recognition alert at first launch, before onboarding, was bad
+    /// UX and did not say what it was for). Reads the current status:
+    /// authorized → prepare the model as before; never asked → `.permissionNeeded`
+    /// (the onboarding and the listen bar offer "Turn on"); denied/restricted →
+    /// `.permissionDenied` (the bar offers iOS Settings). The prompt itself is
+    /// `enableCommands()`'s alone.
+    func prepareCommandsIfAuthorized() async {
+        let status = authorizationStatusProvider()
+        guard status == .authorized else {
+            let next = Self.permissionAvailability(for: status)
+            if commandAvailability != next { commandAvailability = next }
+            return
         }
+        if commandAvailability.awaitsPermission { commandAvailability = .unknown }
+        await prepareAssets()
+    }
+
+    /// See the protocol. The prompt only while the status is undecided — iOS
+    /// would not show it again anyway, and a denied player is sent to Settings
+    /// by the caller instead.
+    func enableCommands() async -> Bool {
+        var status = authorizationStatusProvider()
+        if status == .notDetermined {
+            status = await authorizationProvider()
+        }
+        SentryLog.info("Voice commands enable requested", category: .voice, attributes: ["status": status.rawValue])
+        guard status == .authorized else {
+            commandAvailability = .permissionDenied
+            return false
+        }
+        if commandAvailability.awaitsPermission { commandAvailability = .unknown }
+        // Not awaited: the model download can take a while, and neither the
+        // onboarding nor the quiz may wait on it. Re-entry while it runs is a
+        // no-op (one download).
+        if assetPreparationTask == nil {
+            assetPreparationTask = Task { [weak self] in
+                await self?.prepareAssets()
+                self?.assetPreparationTask = nil
+            }
+        }
+        return true
     }
 
     /// #175 (founder 2026-09-09): the command grammar follows the QUIZ
     /// language, so the recognizer may have to change between quizzes. Swaps
-    /// the adapter, resets availability and re-runs the authorization + asset
-    /// flow for the new locale. Refused while a listening window is open or
-    /// starting — the analyzer is built from `transcriberEngine` per window
-    /// (+Engine), so a swap mid-window would orphan modules; the per-window
-    /// start path calls this again, so the switch lands on the next window.
+    /// the adapter, resets availability and re-runs the readiness check for the
+    /// new locale. Refused while a listening window is open or starting — the
+    /// analyzer is built from `transcriberEngine` per window (+Engine), so a
+    /// swap mid-window would orphan modules; the per-window start path calls
+    /// this again, so the switch lands on the next window.
+    ///
+    /// #237: never prompts. While commands wait on the permission it re-reads
+    /// the status on every window start (no prompt, cheap), so a player who
+    /// allowed speech recognition in iOS Settings gets commands on return.
     func setCommandEngine(_ selection: CommandEngineSelection) async {
-        guard !transcriberEngine.matches(selection) else { return }
+        guard !transcriberEngine.matches(selection) else {
+            if commandAvailability.awaitsPermission { await prepareCommandsIfAuthorized() }
+            return
+        }
         guard audioEngine == nil, !startInFlight else {
             Logger.voice.warning("🔇 SilenceDetection: engine switch to \(selection.rawValue) deferred — a listening window is open (#175)")
             return
@@ -60,29 +94,20 @@ extension SilenceDetectionService {
             "Voice command engine switched", category: .voice,
             attributes: ["engine": engine.engineTag, "locale": engine.locale.identifier]
         )
-        await requestAuthorizationAndPrepareAssets()
+        await prepareCommandsIfAuthorized()
     }
 
-    /// Pure status → decision mapping (#105), kept separate from the async
-    /// system call so the decision logic is unit-testable without triggering
-    /// the real permission dialog.
-    enum AuthorizationDecision: Sendable, Equatable {
-        case proceed
-        case unavailable(reason: String)
-    }
-
-    nonisolated static func authorizationDecision(for status: SFSpeechRecognizerAuthorizationStatus) -> AuthorizationDecision {
+    /// Pure status → availability mapping for a status that is not
+    /// `.authorized` (#237), kept apart from the system call so it is
+    /// unit-testable without the dialog.
+    nonisolated static func permissionAvailability(
+        for status: SFSpeechRecognizerAuthorizationStatus
+    ) -> VoiceCommandAvailability {
         switch status {
-        case .authorized, .notDetermined:
-            return .proceed
-        case .denied, .restricted:
-            return .unavailable(
-                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
-            )
-        @unknown default:
-            return .unavailable(
-                reason: "Speech recognition permission denied — enable in iOS Settings > Privacy & Security > Speech Recognition"
-            )
+        case .notDetermined: .permissionNeeded
+        case .authorized: .unknown
+        case .denied, .restricted: .permissionDenied
+        @unknown default: .permissionDenied
         }
     }
 
@@ -111,7 +136,7 @@ extension SilenceDetectionService {
     /// through the SAME `.installingAssets` state the en-US path always used.
     /// Called once from AppState at launch (NOT from startListening, which runs
     /// per listening window); safe to re-enter (no-op after the first
-    /// resolution).
+    /// resolution). #237: reached only once speech recognition is allowed.
     ///
     /// Locale is gated on `supportedLocales.contains` for BOTH engines — never
     /// `supportedLocale(equivalentTo:)`, which normalizes rather than tests
@@ -173,9 +198,13 @@ extension SilenceDetectionService {
     /// Fail-loud seam shared by all failure paths: flips the flag the UI reads
     /// and logs at error level so degrading to buttons is never silent.
     func markCommandsUnavailable(reason: String) {
-        commandAvailability = .unavailable(reason: reason)
         // Mirror to Sentry (#96 P2) so a device that silently degrades to
         // buttons — the founder's exact symptom — surfaces in /check-crashes.
         SentryLog.error("Voice commands unavailable", category: .voice, attributes: ["reason": reason])
+        // #237: a failed listening window says nothing about the permission —
+        // overwriting it would take the player's "Turn on" / "Settings" button
+        // away for the rest of the session.
+        guard !commandAvailability.awaitsPermission else { return }
+        commandAvailability = .unavailable(reason: reason)
     }
 }

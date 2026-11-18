@@ -18,7 +18,9 @@ import Testing
 @MainActor
 struct CommandEngineSwitchTests {
     private func makeService(_ selection: CommandEngineSelection) -> SilenceDetectionService {
-        SilenceDetectionService(authorizationProvider: { .authorized }, selection: selection)
+        SilenceDetectionService(
+            authorizationProvider: { .authorized }, authorizationStatusProvider: { .authorized }, selection: selection
+        )
     }
 
     @Test("idle service swaps engine + locale and re-resolves availability")
@@ -78,8 +80,7 @@ struct CommandEngineSwitchTests {
             networkService: Fixtures.makeFullMockNetwork(),
             audioService: MockAudioService(),
             persistenceStore: MockPersistenceStore(),
-            silenceDetectionService: silence,
-            sttService: MockElevenLabsSTTService()
+            silenceDetectionService: silence
         )
         vm.currentSession = Fixtures.makeActiveSession(language: "cs")
         vm.currentQuestion = Fixtures.makeQuestion()

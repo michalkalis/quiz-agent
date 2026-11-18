@@ -84,11 +84,15 @@ struct UpdateRequiredView: View {
     }
 
     private func openStore() {
-        let link = isTestFlight
-            ? "itms-beta://beta.itunes.apple.com/v1/app/\(Self.appStoreId)"
-            : "https://apps.apple.com/app/id\(Self.appStoreId)"
-        guard let url = URL(string: link) else { return }
+        guard let url = Self.storeURL(isTestFlight: isTestFlight) else { return }
         openURL(url)
+    }
+
+    /// Where "update" leads; shared with the #214 update card on Home.
+    static func storeURL(isTestFlight: Bool) -> URL? {
+        URL(string: isTestFlight
+            ? "itms-beta://beta.itunes.apple.com/v1/app/\(appStoreId)"
+            : "https://apps.apple.com/app/id\(appStoreId)")
     }
 }
 

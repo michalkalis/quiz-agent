@@ -28,6 +28,7 @@ from sqlalchemy.exc import TimeoutError as SATimeoutError
 from quiz_shared.models.phase import SessionPhase
 
 from ..client_capabilities import ANSWER_CODES, has_capability
+from ..usage.caps import DailyCapExceeded
 from ..quiz.errors import (
     AnswerUnmatched,
     InvalidSubmission,
@@ -71,6 +72,11 @@ def submit_http_error(
                 "current_question_id": exc.current_question_id,
             },
         )
+
+    if isinstance(exc, DailyCapExceeded):
+        # #207.13: refused before any paid call; a plain 429, never the quota
+        # body (that one opens the paywall).
+        return exc.http_error()
 
     if isinstance(exc, AnswerUnmatched):
         # #185 G: only raised for `answer-codes` sessions, before any mutation.

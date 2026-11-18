@@ -1,0 +1,34 @@
+# texts
+Celkem
+312 otázek
+3 h, 20 min
+Silná stránka
+Geography & World
+82 % správně
+Prostor ke zlepšení
+Sports
+41 % správně
+Kde hraješ
+V autě
+64 % kvízů
+Kdy hraješ
+Večer
+nejčastěji v neděli
+Běžný kvíz
+6,5 min
+10 otázek
+Tvůj pokrok
++12 bodů
+při stejné obtížnosti
+Nejdelší série
+9 v řadě
+správných odpovědí
+# identifiers
+profile.card.totals
+profile.card.best_category
+profile.card.weakest_category
+profile.card.where
+profile.card.when
+profile.card.typical_game
+profile.card.improvement
+profile.card.best_streak

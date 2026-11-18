@@ -16,12 +16,13 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
     @Published private(set) var voiceProcessingEnabled = VoicePipelineFlags.voiceProcessingEnabled
     @Published private(set) var voiceProcessingOnExternalOutput = VoicePipelineFlags.voiceProcessingOnExternalOutput
     @Published private(set) var conditionAnswerUpload = VoicePipelineFlags.conditionAnswerUpload
-    @Published private(set) var realtimeSTTEnabled = VoicePipelineFlags.realtimeSTTEnabled
     @Published private(set) var saveAnswerRecordings = VoicePipelineFlags.saveAnswerRecordings
     @Published private(set) var echoCancelledInputOnExternalRoutes = VoicePipelineFlags.echoCancelledInputOnExternalRoutes
     @Published private(set) var frontCardioidMic = VoicePipelineFlags.frontCardioidMic
     @Published private(set) var neuralVADEnabled = VoicePipelineFlags.neuralVADEnabled
     @Published private(set) var avoidRejectedTranscriptOnRetry = VoicePipelineFlags.avoidRejectedTranscriptOnRetry
+    /// #208.7: commands keep working while the question is read.
+    @Published private(set) var commandsDuringReading = VoicePipelineFlags.commandsDuringReading
     /// #204.9: while on, the app runs the three switches it tests itself and
     /// their manual rows are inactive.
     @Published private(set) var autoTesting = VoicePipelineFlags.autoTesting
@@ -63,11 +64,6 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
         VoicePipelineFlags.conditionAnswerUpload = isOn
     }
 
-    func setRealtimeSTTEnabled(_ isOn: Bool) {
-        realtimeSTTEnabled = isOn
-        VoicePipelineFlags.realtimeSTTEnabled = isOn
-    }
-
     func setSaveAnswerRecordings(_ isOn: Bool) {
         saveAnswerRecordings = isOn
         VoicePipelineFlags.saveAnswerRecordings = isOn
@@ -94,6 +90,11 @@ final class VoiceDiagnosticsSettingsModel: ObservableObject {
         autoTesting = isOn
         VoicePipelineFlags.autoTesting = isOn
         if !isOn { VoiceExperimentStore.shared.endRound() }
+    }
+
+    func setCommandsDuringReading(_ isOn: Bool) {
+        commandsDuringReading = isOn
+        VoicePipelineFlags.commandsDuringReading = isOn
     }
 
     func setAvoidRejectedTranscriptOnRetry(_ isOn: Bool) {

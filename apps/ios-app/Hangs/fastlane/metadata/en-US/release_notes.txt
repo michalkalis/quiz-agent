@@ -1,1 +1,5 @@
-First release.
+New look: the game is quicker to reach and results are calmer.
+Start a Quick quiz with one tap and pick categories with a tap.
+Choose the difficulty of your custom pack: easy, medium, hard or mix.
+Purchases and progress follow your Apple account, even on a new phone.
+Lots of small fixes and improvements.

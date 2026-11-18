@@ -42,8 +42,10 @@ extension QuizViewModel {
         let chunks = recapNarrationChunks()
         isNarratingRecap = true
         taskBag.add(Task { [weak self] in
-            await self?.narrate(chunks: chunks)
-            self?.isNarratingRecap = false
+            guard let self else { return }
+            let outcome = await narrate(chunks: chunks)
+            isNarratingRecap = false
+            noteRecapRead(.recapSummary, outcome)
         }, key: .recapNarration)
     }
 
@@ -59,27 +61,40 @@ extension QuizViewModel {
         guard let explanation = entry.explanation, !isAudioMuted else { return }
         isNarratingRecap = false
         taskBag.add(Task { [weak self] in
-            await self?.narrate(chunks: Self.splitForTTS(explanation))
+            guard let self else { return }
+            let outcome = await narrate(chunks: Self.splitForTTS(explanation))
+            noteRecapRead(.recapEntry(entry.id), outcome)
         }, key: .recapNarration)
+    }
+
+    /// #235 F3: only a read that ran to its end on the recap reports; a
+    /// replaced or stopped one says nothing.
+    private func noteRecapRead(_ target: ReadAloudTarget, _ outcome: ReadAloudOutcome) {
+        guard !Task.isCancelled, quizState == .finished else { return }
+        noteReadAloud(target, outcome)
     }
 
     /// Sequential fetch-and-play. A failed chunk is logged and skipped — one
     /// transient TTS failure must not silence the rest of the summary.
-    private func narrate(chunks: [String]) async {
+    private func narrate(chunks: [String]) async -> ReadAloudOutcome {
+        var outcome = ReadAloudOutcome()
         for chunk in chunks {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return outcome }
             do {
                 let audio = try await networkService.synthesizeSpeech(
                     text: chunk, language: currentSession?.language ?? settings.language
                 )
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled else { return outcome }
                 _ = try await audioService.playOpusAudio(audio)
+                outcome.played = true
             } catch is CancellationError {
-                return
+                return outcome
             } catch {
+                outcome.failed = true
                 Logger.quiz.warning("⚠️ Recap narration chunk failed: \(error, privacy: .public)")
             }
         }
+        return outcome
     }
 
     // MARK: - Composition
@@ -96,6 +111,7 @@ extension QuizViewModel {
         let correct = recapEntries.filter(\.isCorrect).count
         pieces.append(String(
             localized: "Set finished. You got \(correct) out of \(recapEntries.count) right.",
+            bundle: .interface, locale: .interface,
             comment: "Recap narration intro: correct count out of total"
         ))
         // The question number is its own clip: the server caches clips by
@@ -104,22 +120,26 @@ extension QuizViewModel {
         for entry in recapEntries {
             pieces.append(String(
                 localized: "Question \(entry.id).",
+                bundle: .interface, locale: .interface,
                 comment: "Recap narration: the question number, spoken right before its verdict"
             ))
             switch entry.result {
             case .correct:
                 pieces.append(String(
                     localized: "Correct. \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a correct answer, then the answer"
                 ))
             case .skipped:
                 pieces.append(String(
                     localized: "Skipped. The answer: \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a skipped question, then the revealed answer"
                 ))
             default:
                 pieces.append(String(
                     localized: "Missed. The answer: \(entry.correctAnswerDisplay).",
+                    bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a wrong answer, then the revealed answer"
                 ))
             }

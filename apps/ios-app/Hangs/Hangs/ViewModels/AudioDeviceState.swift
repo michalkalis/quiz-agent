@@ -56,7 +56,7 @@ final class AudioDeviceState: ObservableObject {
         if let device = audioService.currentInputDevice {
             return device.name
         }
-        return String(localized: "Automatic", comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
+        return String(localized: "Automatic", bundle: .interface, locale: .interface, comment: "Fallback name when no audio input device is selected (iOS picks the best mic)")
     }
 
     /// Current audio mode, derived from persisted settings
@@ -95,9 +95,8 @@ final class AudioDeviceState: ObservableObject {
     let currentSession: @MainActor () -> QuizSession?
     let setAudioMode: @MainActor (String) -> Void
     let setPreferredInputDeviceId: @MainActor (String?) -> Void
-    /// #173: the EFFECTIVE mute (in-quiz override over the persisted Settings
-    /// preference) — every playback guard in this child reads it, never
-    /// `settings().isMuted`, which is only what Settings persisted.
+    /// The quiz mute every playback guard in this child reads (#208: the
+    /// persisted preference both the header button and Settings write).
     let isMuted: @MainActor () -> Bool
     let setMuted: @MainActor (Bool) -> Void
     let isAskingQuestion: @MainActor () -> Bool
@@ -131,7 +130,15 @@ final class AudioDeviceState: ObservableObject {
     let onBargeIn: @MainActor () async -> Void
     let startCommandConsumer: @MainActor () -> Void
     let stopCommandConsumer: @MainActor () -> Void
-    let startThinkingTimeCountdown: @MainActor () -> Void
+    /// `true` (#208): nothing read the question aloud — a silent reading pause first.
+    let startThinkingTimeCountdown: @MainActor (_ afterSilentRead: Bool) -> Void
+    /// #208.7 (VoiceCommandCoordinator+Reading): a question read is about to
+    /// play — `true` when the live listener stays up through it.
+    let beginQuestionRead: @MainActor () -> Bool
+    /// #208.7: the read is over; the kept listener judges speech again.
+    let endQuestionRead: @MainActor () -> Void
+    /// #208.7: the listener was kept up for the read in progress.
+    let isListenerKeptThroughRead: @MainActor () -> Bool
 
     // MARK: - Initialization
 
@@ -162,7 +169,10 @@ final class AudioDeviceState: ObservableObject {
         onBargeIn: @escaping @MainActor () async -> Void,
         startCommandConsumer: @escaping @MainActor () -> Void,
         stopCommandConsumer: @escaping @MainActor () -> Void,
-        startThinkingTimeCountdown: @escaping @MainActor () -> Void
+        startThinkingTimeCountdown: @escaping @MainActor (_ afterSilentRead: Bool) -> Void,
+        beginQuestionRead: @escaping @MainActor () -> Bool = { false },
+        endQuestionRead: @escaping @MainActor () -> Void = {},
+        isListenerKeptThroughRead: @escaping @MainActor () -> Bool = { false }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -191,6 +201,9 @@ final class AudioDeviceState: ObservableObject {
         self.startCommandConsumer = startCommandConsumer
         self.stopCommandConsumer = stopCommandConsumer
         self.startThinkingTimeCountdown = startThinkingTimeCountdown
+        self.beginQuestionRead = beginQuestionRead
+        self.endQuestionRead = endQuestionRead
+        self.isListenerKeptThroughRead = isListenerKeptThroughRead
     }
 
     /// T7 unified reset model: clears this child's own scoped device-UI state.
@@ -222,6 +235,11 @@ final class AudioDeviceState: ObservableObject {
         // syncCommandListenerWindow), TTS, recording, a torn-down quiz, and the
         // master switch.
         guard mayCaptureAudio() else { return }
+
+        // #208.7: a listener kept up through the question read is never
+        // re-armed under it — re-minting the consumer streams would drop a
+        // command said in that instant.
+        if service.isListening, isListenerKeptThroughRead() { return }
 
         // #188 G7: while the user has not decided, no listener may be the first
         // to touch the mic (iOS would prompt implicitly, at a random moment).
@@ -345,7 +363,7 @@ final class AudioDeviceState: ObservableObject {
                 // microphone only in call mode) and nothing else republishes them.
                 refreshAudioDevices()
             } catch {
-                setErrorMessage(String(localized: "Failed to switch audio mode: \(error.localizedDescription)", comment: "Inline error when switching audio output mode fails; placeholder is the underlying error"))
+                setErrorMessage(String(localized: "Failed to switch audio mode: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when switching audio output mode fails; placeholder is the underlying error"))
 
                 Logger.audio.error("❌ Error switching audio mode: \(error, privacy: .public)")
             }
@@ -393,7 +411,7 @@ final class AudioDeviceState: ObservableObject {
 
             Logger.audio.info("🎤 Set preferred input device: \(device?.name ?? "Automatic", privacy: .public)")
         } catch {
-            setErrorMessage(String(localized: "Failed to set audio device: \(error.localizedDescription)", comment: "Inline error when selecting a preferred input device fails; placeholder is the underlying error"))
+            setErrorMessage(String(localized: "Failed to set audio device: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Inline error when selecting a preferred input device fails; placeholder is the underlying error"))
 
             Logger.audio.error("❌ Error setting preferred input device: \(error, privacy: .public)")
         }

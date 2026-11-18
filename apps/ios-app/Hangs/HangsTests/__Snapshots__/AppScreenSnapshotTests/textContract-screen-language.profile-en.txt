@@ -1,0 +1,22 @@
+# texts
+PROFILE
+Your name
+Michal
+Your name
+Michal
+Your M10
+In total
+312 questions
+3 hr, 20 min
+Strong suit
+Geography & World
+82% correct
+When you play
+In the evening
+mostly on Sundays
+# identifiers
+profile.settings
+profile.account
+profile.name
+profile.recap
+profile.allStats

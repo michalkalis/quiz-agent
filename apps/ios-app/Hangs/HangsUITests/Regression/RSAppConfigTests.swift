@@ -2,7 +2,8 @@
 //  RSAppConfigTests.swift
 //  HangsUITests
 //
-//  RS-22..RS-23 — server switches for shipped builds (#193 task 193.9). The
+//  RS-22..RS-23 — server switches for shipped builds (#193 task 193.9); RS-26..RS-27
+//  the maintenance screen and the update card (#214). The
 //  switch values are seeded by DEBUG launch arguments
 //  (`AppConfigStore.debugSeed`), so no backend is involved.
 //
@@ -56,5 +57,39 @@ final nonisolated class RSAppConfigTests: XCTestCase {
         settings.openSettings()
         XCTAssertFalse(settings.createPackButton.isEnabled, "RS-23: Create a pack is enabled while orders are paused")
         RSFlow.assertAlive(app, "RS-23")
+    }
+
+    // MARK: RS-26 — Maintenance covers the app
+
+    // Regression guarded: with maintenance on, the player sees the
+    // maintenance message instead of starting a quiz that would fail.
+    @MainActor
+    func testRS26MaintenanceCoversTheApp() {
+        let app = RSFlow.launch(["--app-config-maintenance"])
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)["maintenance.message"].waitForExistence(timeout: 10),
+            "RS-26: maintenance screen missing"
+        )
+        let start = app.buttons["home.startQuiz"]
+        XCTAssertFalse(start.exists && start.isHittable, "RS-26: Home is still reachable behind the maintenance screen")
+        RSFlow.assertAlive(app, "RS-26")
+    }
+
+    // MARK: RS-27 — Update card on Home dismisses
+
+    // Regression guarded: the optional update must stay optional. The card
+    // offers the store and closes, and Home stays playable the whole time.
+    @MainActor
+    func testRS27UpdateCardOffersStoreAndDismisses() {
+        let app = RSFlow.launch(["--app-config-update-recommended"])
+
+        let dismiss = app.buttons["home.update.dismiss"]
+        XCTAssertTrue(dismiss.waitForExistence(timeout: 10), "RS-27: update card missing")
+        XCTAssertTrue(app.buttons["home.update.open"].exists, "RS-27: update button missing")
+        XCTAssertTrue(app.buttons["home.startQuiz"].exists, "RS-27: Home not playable next to the update card")
+        dismiss.tap()
+        XCTAssertTrue(dismiss.waitForNonExistence(timeout: 5), "RS-27: card still shown after dismiss")
+        RSFlow.assertAlive(app, "RS-27")
     }
 }

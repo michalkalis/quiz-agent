@@ -15,14 +15,14 @@ Granularity: one PR per coherent change. Don't batch unrelated work into one PR;
 
 Destructive ops (force-push, reset --hard, amend, history rewrites) require a heads-up. Force-push to your own un-merged PR branch after a rebase is fine.
 
-### Beta line vs redesign (founder, 2026-10-08)
+### Releases: trunk-based, tagged builds (founder, 2026-10-16)
 
-The public TestFlight beta (1.0) must never pick up redesign work (#194 — redesign "Sklo nad kartami"). `release/1.0` is the beta line, `main` carries the next release.
+`main` is production: the redesign (1.1+) ships from it. Which build variant goes to which tester group / App Review, environments and versioning: `docs/setup/release-flow.md`. Agents work on short-lived branches merged through PRs; unfinished features stay behind flags (server `/app-config` or build-config flags like CarPlay's `Local.xcconfig`), never on long-lived branches.
 
-- **Switched 2026-10-08** (founder go, before any redesign code): `release/1.0` frozen at `main` e691530c (all #193 beta hardening included), `release/**` added to the `main-pr-flow` ruleset, `MARKETING_VERSION` on `main` bumped to 1.1. Since then:
-  - **Beta TestFlight builds** run from the beta line only: `gh workflow run ios-release.yml --ref release/1.0`. A build from `main` is a redesign build, internal testers only, on founder request.
-  - **Beta fixes** (iOS): PR into `release/1.0`, then in the same task a second PR cherry-picking the squash commit onto `main`, so the fix is never lost. Never merge `main` into `release/1.0`.
-  - **Backend** stays single-line (deploys from `main`) and must keep the 1.0 app working: no breaking API changes while 1.0 is live.
+- **Every uploaded build is tagged** `ios/<version>-b<build>` by `ios-release.yml` (`-staging` suffix for the staging lane). Store versions are found by tag, not by branch.
+- **Hotfix for a live store version** only when `main` already carries unreleased work that must not ship: `git switch -c hotfix/<version> ios/<version>-b<build>`, fix via PR into `hotfix/<version>`, build with `gh workflow run ios-release.yml --ref hotfix/<version>`, then cherry-pick the squash commit onto `main` in the same task. Otherwise fix on `main` and ship the next build.
+- **Old design (1.0)** is archived: tag `ios/1.0-final` + frozen branch `release/1.0`. No more builds or fixes from it.
+- **Backend** deploys from `main` only and must keep every live app version working (store version + any TestFlight build still in testers' hands): no breaking API changes; the min-version switch in `/app-config` retires old builds.
 
 ### Commit Messages
 Follow Conventional Commits: `<type>(<scope>): <subject>`
@@ -61,11 +61,24 @@ When changing API models:
 3. Update iOS Codable structs to match
 4. Run `/verify-api` to confirm sync
 
+Live builds must keep working: CI (`Backend CI gate`) fails a PR whose spec (quiz-agent or quiz-pack-api) drops/renames an endpoint or response field, adds a required request field or a response enum value, against the newest `ios/*` tag of each marketing version (`infra/ci/openapi_compat.py`, oasdiff). Expand now, contract once no live build uses the old shape; a truly unused break goes in `infra/ci/openapi-compat-ignore.txt` with a reason; retire a version in `RETIRED_VERSIONS`.
+
 ## Testing
 
 - **Backend:** `pytest tests/ -v` — mock OpenAI calls, use fixtures
 - **iOS:** Unit test ViewModels with mocked services
 - Test commands in CLAUDE.md quick reference table
+
+### Beyond the happy path (#235 — tests beyond the happy path; founder, 2026-11-15)
+
+Two bugs reached TestFlight build 87 because tests only met a server that answers at once and correctly. A PR is incomplete, and review flags it, when:
+
+- **A bug fix has no test that fails without the fix.** Reported bug → failing test first → fix (Rule #2).
+- **A new or changed network call in the app has no test for a slow answer and a failed one.** Hold the call in flight or apply a condition (`MockNetworkService+Conditions.swift`: slow, timeout, offline, dropped, server error, malformed); assert what the player sees and that they can leave. No wall-clock waiting: injected clock or a held call only.
+- **A system callback is only ever tested through a stand-in.** New code that hands a handler to a system framework (pasteboard, audio, StoreKit, speech…) gets one test that runs the real call on the simulator, or a row marked device-only in `docs/testing/system-calls-coverage.md`.
+- **A failure is swallowed silently** (`try?` or an empty `catch` around a call whose result the player is waiting for) without a comment saying why silence is right.
+
+The rule the tests guard: under every bad condition the player sees progress or a clear error with a way out — never endless waiting, a screen without navigation, silent nothing, or a double charge.
 
 ## Model Routing (token economy)
 

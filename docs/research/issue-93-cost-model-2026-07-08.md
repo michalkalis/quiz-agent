@@ -4,6 +4,17 @@ Scope: marginal (variable) cost per user, to size the free tier + subscription p
 Ground truth on runtime cost = INPUT A code recon. Prices = INPUT B (cited inline).
 All numbers labeled **[A]** are assumptions, not measured.
 
+> **Revision 2026-10-26 (TTS model switch):** TTS is ElevenLabs (George), since 2026-10-26 on **Eleven v4 Turbo** (PR #580 — read questions with Eleven v4 Turbo; blind test: no audible difference vs Multilingual v2). Measured on the Starter plan: **0.2 credit/char** (v2 was 0.4); list price $40 vs $80 per 1M chars. STT is now OpenAI `gpt-transcribe`, not Scribe (#208 — answer recognition); the STT rows below are stale and not re-priced here.
+>
+> | TTS figure | Multilingual v2 | v4 Turbo (now) |
+> |---|---|---|
+> | First read of a question (~460 chars incl. options + read-back, shared cache after) | ~185 credits ≈ $0.037 | ~90 credits ≈ $0.018 |
+> | Whole corpus once (~4,100 question×language) | ~680k credits ≈ $136 | ~340k credits ≈ $68 |
+> | New question reads per Starter month (30k credits) | ~160 | ~330 |
+> | Custom `pack_30` TTS (unique per buyer, not shared; not in the $4.23 generation COGS of #143 — custom-pack COGS reduction) | ≈ $1.10 | ≈ $0.55 |
+>
+> Price impact: subscription and pack 100 play the shared corpus, so TTS per player stays ≈ $0 → no price change needed. `pack_30` (€8.99, net ≈ $6.70): margin over generation + TTS rises from ≈ $1.4 to ≈ $1.9. Credit-based limits (`ELEVENLABS_DAILY_CREDIT_BUDGET` 5,000) now cover twice the audio; the per-user 10,000-character cap on `/tts/synthesize` costs half as much.
+
 > **Revision 2026-07-10 (verified prices):** STT re-priced against the live ElevenLabs API price list (https://elevenlabs.io/pricing/api — Scribe v2 Realtime **$0.39/hr**, per-unit rate identical across all tiers + pay-as-you-go since the 2026-05-07 repricing); avg utterance set to **5 s** (founder call); Apple cut corrected to **15% from day one** (Small Business Program, verified developer.apple.com); LLM hot path corrected per code (no always-on parser call). Headline: **~$0.0006/answer**. The old ElevenLabs char-plan tier table was stale and is replaced by STT-hours PAYG math.
 
 ## 1. Assumptions

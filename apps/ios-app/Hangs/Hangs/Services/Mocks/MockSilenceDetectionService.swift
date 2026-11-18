@@ -16,14 +16,14 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     // voice-commands fix): every make*Stream() call mints a fresh stream, so
     // tests that re-arm consumers exercise the same lifecycle as production.
     private let silenceChannel = StreamChannel<SilenceEvent>()
-    private let speechActivityChannel = StreamChannel<SilenceEvent>()
+    private let speechActivityChannel = StreamChannel<SpeechActivityEvent>()
     private let bargeInChannel = StreamChannel<Void>()
     private let commandChannel = StreamChannel<CommandTranscript>()
     private let commandAvailabilityChannel = StreamChannel<VoiceCommandAvailability>()
     private let inputLevelChannel = StreamChannel<InputLevel>()
 
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
-    func makeSpeechActivityStream() -> AsyncStream<SilenceEvent> { speechActivityChannel.makeStream() }
+    func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
     func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
@@ -73,6 +73,8 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
     /// default for tests that don't care), cleared by `stopListening()`.
     private(set) var voiceProcessingStatus: VoiceProcessingStatus?
     var voiceProcessingOnStart: VoiceProcessingStatus?
+    /// #208.5: as the real service — a start with this `false` never arms.
+    var voiceProcessingAllowed = true
 
     /// #184 track B: the answer tee. `isAnswerCaptureActive` is what the
     /// recording tests assert where they used to assert `audio.isRecording`.
@@ -121,7 +123,11 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
             return
         }
         isListening = true
-        voiceProcessingStatus = voiceProcessingOnStart
+        voiceProcessingStatus = voiceProcessingAllowed
+            ? voiceProcessingOnStart
+            : voiceProcessingOnStart.map {
+                VoiceProcessingStatus(mode: .offQuietSession, armed: false, outputPort: $0.outputPort)
+            }
     }
 
     func stopListening() {
@@ -138,13 +144,48 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         commandEngineRequests.append(selection)
     }
 
+    /// #237: how many times the player turned commands on, and what the
+    /// system answers. A grant lands on `availabilityAfterGrant` (`.ready`
+    /// by default; `.installingAssets` holds the model download).
+    private(set) var enableCommandsCallCount = 0
+    var enableCommandsGrants = true
+    var availabilityAfterGrant: VoiceCommandAvailability = .ready
+    /// Runs while the "system prompt" is up — lets a test look at the quiz then.
+    var onEnableCommands: (@MainActor () -> Void)?
+
+    func enableCommands() async -> Bool {
+        enableCommandsCallCount += 1
+        onEnableCommands?()
+        commandAvailability = enableCommandsGrants ? availabilityAfterGrant : .permissionDenied
+        return enableCommandsGrants
+    }
+
     func setTTSPlaybackActive(_ active: Bool) {
         ttsPlaybackActive = active
     }
 
     func simulateSilenceEvent(_ event: SilenceEvent) {
         silenceChannel.yield(event)
-        speechActivityChannel.yield(event) // the real service yields both
+        // The real service raises the bar's edges from the same detector.
+        switch event {
+        case .speechStarted:
+            speechActivityChannel.yield(.began(levelDb: -30, noiseFloorDb: -50))
+        case .silenceAfterSpeech:
+            speechActivityChannel.yield(.paused(speechSecs: 0.6, peakDb: -25))
+            speechActivityChannel.yield(.ended)
+        }
+    }
+
+    /// #208.7: drive the command bar's speech edges alone.
+    func simulateSpeechActivity(_ event: SpeechActivityEvent) {
+        speechActivityChannel.yield(event)
+    }
+
+    /// #208.7: every `suspendSpeechEdges` call, in order.
+    private(set) var speechEdgeSuspensions: [Bool] = []
+
+    func suspendSpeechEdges(_ suspended: Bool) {
+        speechEdgeSuspensions.append(suspended)
     }
 
     func simulateBargeIn() {

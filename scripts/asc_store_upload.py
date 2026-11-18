@@ -7,12 +7,19 @@ Sources of truth (all in apps/ios-app/Hangs/fastlane/):
   metadata/copyright.txt, primary_category.txt
   metadata/age_rating.json           age rating questionnaire answers (ageRatingDeclarations attributes)
   Hangs.xcodeproj MARKETING_VERSION  the App Store version string
-  store_copy.json                    TestFlight Test Information, What to Test, IAP texts
+  store_copy.json                    TestFlight Test Information, What to Test, IAP texts, consumables to create
   screenshots/<locale>/NN-*.jpg      6.9" iPhone screenshots (1320x2868)
 
 Dry run by default (prints what would change). `--apply` writes. Steps are opt-in:
-  python scripts/asc_store_upload.py --steps listing,review,testflight,iap,screenshots,version,age-rating,beta-group [--build 66 [--submit-beta-review]] --apply
+  python scripts/asc_store_upload.py --steps listing,review,testflight,iap-create,iap-price,iap,iap-mirror,iap-review,screenshots,version,age-rating,beta-group,groups-setup,promote,phased-release [--build 66 [--submit-beta-review]] --apply
 Runs in CI with the ASC_API_* secrets (see .github/workflows/asc-store-upload.yml).
+
+Target app (#234 — Trubbo Beta): ASC_AUDIT_BUNDLE_ID, default the live app com.missinghue.hangs. For
+com.missinghue.hangs.beta every product id of store_copy.json is read as `beta.` + the id (--product-prefix
+overrides), the catalog is copied from the live app (iap-mirror, asc_iap_mirror.py), only the TestFlight
+steps run, and groups-setup makes Founder + family+friends, both internal with automatic distribution:
+  ASC_AUDIT_BUNDLE_ID=com.missinghue.hangs.beta python scripts/asc_store_upload.py --steps iap-mirror,iap,iap-review --apply
+A catalog or price change runs for both apps.
 """
 
 from __future__ import annotations
@@ -22,15 +29,31 @@ import hashlib
 import json
 import os
 import sys
+from decimal import Decimal
 from pathlib import Path
 
+import asc_iap_mirror as mirror
 import requests
-from asc_audit import BASE, BUNDLE_ID, HEADERS, get
+from asc_audit import (
+    BASE,
+    BUNDLE_ID,
+    HEADERS,
+    VERSIONS,
+    exact_bundle,
+    get,
+    latest_version,
+    prices_with_points,
+    version_localizations,
+)
 
 FL = Path(__file__).resolve().parents[1] / "apps/ios-app/Hangs/fastlane"
 MD = FL / "metadata"
 LOCALES = ["en-GB", "en-US", "sk", "cs"]
+V2 = BASE.replace("/v1", "/v2")
 APPLY = False
+BETA_BUNDLE_ID = "com.missinghue.hangs.beta"
+# The beta app is never released: its App Store side (listing, version, review, public group) stays empty.
+BETA_STEPS = {"testflight", "iap-create", "iap-price", "iap", "iap-mirror", "iap-review", "groups-setup", "promote"}
 
 
 def txt(path: Path) -> str | None:
@@ -43,58 +66,115 @@ def send(method: str, path: str, body: dict | None = None) -> dict:
     print(f"  {method} {path} {json.dumps(shown, ensure_ascii=False)[:160] if body else ''}")
     if not APPLY:
         return {}
-    r = requests.request(method, f"{BASE}{path}", headers={**HEADERS, "Content-Type": "application/json"}, json=body, timeout=60)
+    url = path if path.startswith("http") else f"{BASE}{path}"
+    r = requests.request(method, url, headers={**HEADERS, "Content-Type": "application/json"}, json=body, timeout=60)
     if r.status_code >= 300:
         print(f"  !! {r.status_code} {r.text[:600]}")
         raise SystemExit(1)
     return r.json() if r.text else {}
 
 
-def upsert(kind: str, existing: list[dict], locale: str, attrs: dict, rel: tuple[str, str, str]) -> None:
+def upsert(kind: str, existing: list[dict], locale: str, attrs: dict, rel: tuple[str, str, str], base: str = "") -> None:
     """Create or patch a localization resource of type `kind` for `locale`."""
     attrs = {k: v for k, v in attrs.items() if v is not None}
     cur = next((e for e in existing if e["attributes"].get("locale") == locale), None)
     if cur:
         diff = {k: v for k, v in attrs.items() if cur["attributes"].get(k) != v}
         if diff:
-            send("PATCH", f"/{kind}/{cur['id']}", {"data": {"type": kind, "id": cur["id"], "attributes": diff}})
+            send("PATCH", f"{base}/{kind}/{cur['id']}", {"data": {"type": kind, "id": cur["id"], "attributes": diff}})
     else:
         rel_name, rel_type, rel_id = rel
-        send("POST", f"/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
-                                           "relationships": {rel_name: {"data": {"type": rel_type, "id": rel_id}}}}})
+        send("POST", f"{base}/{kind}", {"data": {"type": kind, "attributes": {"locale": locale, **attrs},
+                                                  "relationships": {rel_name: {"data": {"type": rel_type, "id": rel_id}}}}})
+
+
+PRODUCT_EDITABLE = {"PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "REJECTED", "DEVELOPER_REJECTED"}
+
+
+def sync_product_texts(kind: str, product_id: str, texts: dict[str, dict]) -> None:
+    """Upsert IAP / subscription / group texts ({locale: attrs}) on the product's editable version.
+
+    Texts live on versions; an approved version is frozen, so a change opens a new version
+    (it then rides along with the next app review, see asc_app_review_submit.py)."""
+    vtype = VERSIONS[kind][1]
+    loc_kind = vtype.replace("Versions", "Localizations")
+    ver = latest_version(kind, product_id)
+    existing = version_localizations(kind, ver)
+    have = {e["attributes"].get("locale"): e["attributes"] for e in existing}
+    changed = [loc for loc, a in texts.items() if any(have.get(loc, {}).get(k) != v for k, v in a.items() if v is not None)]
+    if not changed:
+        return
+    if not ver or ver["attributes"]["state"] not in PRODUCT_EDITABLE:
+        state = ver["attributes"]["state"] if ver else "none"
+        print(f"  {kind}/{product_id}: version {state} is frozen, opening a new one")
+        res = send("POST", f"/{vtype}", {"data": {"type": vtype, "relationships": {kind[:-1]: {"data": {"type": kind, "id": product_id}}}}})
+        ver = res.get("data") or {"id": "<new>"}
+        if APPLY:  # a new version may start with a copy of the previous texts
+            existing = version_localizations(kind, ver)
+    for loc in changed:
+        upsert(loc_kind, existing, loc, texts[loc], ("version", vtype, ver["id"]), base=V2)
+
+
+EDITABLE = "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED"
+# Promotional text may change at any time, also on a version in review or on sale; nothing else may.
+PROMO_ANYTIME = "WAITING_FOR_REVIEW,IN_REVIEW,PENDING_DEVELOPER_RELEASE,READY_FOR_SALE"
 
 
 def editable_version(app_id: str) -> dict:
-    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED"})
+    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})
     return versions["data"][0]
+
+
+def promo_text_only(app_id: str) -> None:
+    """No editable version (e.g. one waits for App Review): update only promotionalText, never touch the review."""
+    versions = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": PROMO_ANYTIME})["data"]
+    for ver in versions:
+        print(f"  version {ver['attributes']['versionString']} is {ver['attributes']['appStoreState']}: promotional text only")
+        existing = get(f"/appStoreVersions/{ver['id']}/appStoreVersionLocalizations").get("data", [])
+        for loc in LOCALES:
+            upsert("appStoreVersionLocalizations", existing, loc, {"promotionalText": txt(MD / loc / "promotional_text.txt")},
+                   ("appStoreVersion", "appStoreVersions", ver["id"]))
+    print("  description, keywords and URLs wait for the next editable version")
 
 
 def step_listing(app_id: str) -> None:
     print("listing")
-    info = next(i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION")
+    info = next((i for i in get(f"/apps/{app_id}/appInfos")["data"] if i["attributes"].get("state") != "READY_FOR_DISTRIBUTION"), None)
+    if info is None:
+        print("  no editable app info: every version is on sale, run the version step first")
+        promo_text_only(app_id)
+        return
     cat = txt(MD / "primary_category.txt")
     cur_cat = (get(f"/appInfos/{info['id']}/primaryCategory").get("data") or {}).get("id")
     if cat and cur_cat != cat:
         send("PATCH", f"/appInfos/{info['id']}", {"data": {"type": "appInfos", "id": info["id"],
                                                          "relationships": {"primaryCategory": {"data": {"type": "appCategories", "id": cat}}}}})
-    existing = get(f"/appInfos/{info['id']}/appInfoLocalizations").get("data", [])
-    for loc in LOCALES:
-        d = MD / loc
-        upsert("appInfoLocalizations", existing, loc,
-               {"name": txt(d / "name.txt"), "subtitle": txt(d / "subtitle.txt"), "privacyPolicyUrl": txt(d / "privacy_url.txt")},
-               ("appInfo", "appInfos", info["id"]))
+    if info["attributes"].get("state") in EDITABLE.split(","):
+        existing = get(f"/appInfos/{info['id']}/appInfoLocalizations").get("data", [])
+        for loc in LOCALES:
+            d = MD / loc
+            upsert("appInfoLocalizations", existing, loc,
+                   {"name": txt(d / "name.txt"), "subtitle": txt(d / "subtitle.txt"), "privacyPolicyUrl": txt(d / "privacy_url.txt")},
+                   ("appInfo", "appInfos", info["id"]))
+    else:
+        print(f"  app info is {info['attributes'].get('state')}: name and subtitle wait for the next editable version")
+    if not get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})["data"]:
+        promo_text_only(app_id)
+        return
     ver = editable_version(app_id)
     copyright_ = txt(MD / "copyright.txt")
     if copyright_ and ver["attributes"].get("copyright") != copyright_:
         send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"copyright": copyright_}}})
+    released = get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": "READY_FOR_SALE"})["data"]
     existing = get(f"/appStoreVersions/{ver['id']}/appStoreVersionLocalizations").get("data", [])
     for loc in LOCALES:
         d = MD / loc
-        # whatsNew is rejected on a first version, so release_notes.txt is not sent.
-        upsert("appStoreVersionLocalizations", existing, loc,
-               {"description": txt(d / "description.txt"), "keywords": txt(d / "keywords.txt"),
-                "promotionalText": txt(d / "promotional_text.txt"), "supportUrl": txt(d / "support_url.txt"),
-                "marketingUrl": txt(d / "marketing_url.txt")},
+        fields = {"description": txt(d / "description.txt"), "keywords": txt(d / "keywords.txt"),
+                  "promotionalText": txt(d / "promotional_text.txt"), "supportUrl": txt(d / "support_url.txt"),
+                  "marketingUrl": txt(d / "marketing_url.txt")}
+        if released:  # whatsNew is rejected on a first version
+            fields["whatsNew"] = txt(d / "release_notes.txt")
+        upsert("appStoreVersionLocalizations", existing, loc, fields,
                ("appStoreVersion", "appStoreVersions", ver["id"]))
 
 
@@ -134,30 +214,140 @@ def step_testflight(app_id: str, copy: dict, build: str | None) -> None:
             upsert("betaBuildLocalizations", existing, loc, {"whatsNew": tf["what_to_test"][loc]}, ("build", "builds", b["id"]))
 
 
+def all_pages(path: str, **params) -> list[dict]:
+    """GET every page of a list endpoint (follows links.next)."""
+    out, res = [], get(path, **params)
+    while True:
+        if "_error" in res:
+            raise SystemExit(f"  !! GET {path}: {res}")
+        out += res.get("data", [])
+        if not (nxt := res.get("links", {}).get("next")):
+            return out
+        res = get(nxt)
+
+
+def iap_base_price(iap_id: str) -> tuple[str | None, list[dict]]:
+    """Base territory and manual prices of an in-app purchase's price schedule; (None, []) when it has none."""
+    sched = get(f"{V2}/inAppPurchases/{iap_id}/iapPriceSchedule", include="baseTerritory")
+    if "_error" in sched or not sched.get("data"):
+        return None, []
+    base = (sched["data"].get("relationships", {}).get("baseTerritory", {}).get("data") or {}).get("id")
+    manual = get(f"/inAppPurchasePriceSchedules/{sched['data']['id']}/manualPrices", include="inAppPurchasePricePoint,territory", limit=200)
+    return base, prices_with_points(manual, "inAppPurchasePricePoint")
+
+
+def iap_availability(iap_id: str) -> tuple[bool, list[str]] | None:
+    """(availableInNewTerritories, territory ids) of an in-app purchase; None when availability is not set."""
+    av = get(f"{V2}/inAppPurchases/{iap_id}/inAppPurchaseAvailability")
+    if "_error" in av or not av.get("data"):
+        return None
+    terrs = all_pages(f"/inAppPurchaseAvailabilities/{av['data']['id']}/availableTerritories", limit=200)
+    return av["data"]["attributes"].get("availableInNewTerritories"), [t["id"] for t in terrs]
+
+
+def iap_price_point(iap_id: str, territory: str, price: str) -> dict:
+    points = all_pages(f"{V2}/inAppPurchases/{iap_id}/pricePoints", limit=200, **{"filter[territory]": territory})
+    hit = next((p for p in points if Decimal(p["attributes"]["customerPrice"]) == Decimal(price)), None)
+    if not hit:
+        raise SystemExit(f"  !! no price point {price} in {territory}")
+    return hit
+
+
+def set_base_price(iap_id: str, base: str, point_id: str) -> None:
+    """Replace the price schedule with one base-territory price, effective now; other territories follow
+    Apple's equalization (manual prices in other territories are dropped)."""
+    send("POST", "/inAppPurchasePriceSchedules", {"data": {"type": "inAppPurchasePriceSchedules", "relationships": {
+        "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+        "baseTerritory": {"data": {"type": "territories", "id": base}},
+        "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${base-price}"}]}}},
+        "included": [{"type": "inAppPurchasePrices", "id": "${base-price}", "attributes": {"startDate": None},
+                      "relationships": {"inAppPurchaseV2": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                                        "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point_id}}}}]})
+
+
+def step_iap_price(app_id: str, copy: dict) -> None:
+    """Set the base-territory price of existing products listed under iap_prices when it differs from ASC."""
+    print("iap-price")
+    have = {p["attributes"]["productId"]: p for p in all_pages(f"/apps/{app_id}/inAppPurchasesV2", limit=200)}
+    for pid, price in copy.get("iap_prices", {}).items():
+        if pid.startswith("_"):
+            continue
+        cur = have.get(pid)
+        if not cur:
+            raise SystemExit(f"  !! {pid}: not found in ASC")
+        base, manual = iap_base_price(cur["id"])
+        if not base:
+            raise SystemExit(f"  !! {pid}: no price schedule (iap-create sets the first price)")
+        now = next((m.get("customerPrice") for m in manual if m["territory"] == base), None)
+        if now is not None and Decimal(now) == Decimal(price):
+            print(f"  {pid}: {base} {now} already")
+            continue
+        if len(manual) > 1:
+            print(f"  note: {pid} has manual prices beyond {base}; they are replaced by equalization")
+        point = iap_price_point(cur["id"], base, price)
+        print(f"  {pid}: {base} {now} -> {point['attributes']['customerPrice']} (proceeds {point['attributes'].get('proceeds')})")
+        set_base_price(cur["id"], base, point["id"])
+
+
+def step_iap_create(app_id: str, copy: dict) -> None:
+    """Create the consumables listed under iap_create that are missing in ASC: reference name, review note,
+    price in the base territory of `mirror` (other territories follow Apple's equalization) and the territories
+    of `mirror`. Existing products keep their settings; only a missing price or availability is filled in."""
+    print("iap-create")
+    have = {p["attributes"]["productId"]: p for p in all_pages(f"/apps/{app_id}/inAppPurchasesV2", limit=200)}
+    for pid, spec in copy.get("iap_create", {}).items():
+        if pid.startswith("_"):
+            continue
+        if pid not in copy["in_app_purchases"]:
+            raise SystemExit(f"  !! {pid}: no texts in in_app_purchases (the iap step writes them)")
+        mirror = have.get(spec["mirror"])
+        if not mirror:
+            raise SystemExit(f"  !! {pid}: mirror {spec['mirror']} not found in ASC")
+        base, manual = iap_base_price(mirror["id"])
+        avail = iap_availability(mirror["id"])
+        if not base or not avail:
+            raise SystemExit(f"  !! {pid}: mirror {spec['mirror']} has no price schedule or availability")
+        print(f"  mirror {spec['mirror']} ({mirror['attributes']['state']}): base {base}, manual prices "
+              f"{[(m['territory'], m.get('customerPrice')) for m in manual]}, {len(avail[1])} territories, "
+              f"availableInNewTerritories={avail[0]}")
+        if len(manual) > 1:
+            print("  note: the mirror has manual prices beyond its base territory; only the base price is set here")
+        cur = have.get(pid)
+        if cur:
+            iap_id = cur["id"]
+            need_price, need_avail = iap_base_price(iap_id)[0] is None, iap_availability(iap_id) is None
+            print(f"  {pid}: exists ({cur['attributes']['state']}), price set={not need_price}, availability set={not need_avail}")
+        else:
+            res = send("POST", f"{V2}/inAppPurchases", {"data": {"type": "inAppPurchases", "attributes": {
+                "name": spec["reference_name"], "productId": pid, "inAppPurchaseType": mirror["attributes"]["inAppPurchaseType"],
+                "reviewNote": spec["review_note"]}, "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+            iap_id = res.get("data", {}).get("id")
+            need_price = need_avail = True
+        if need_price:
+            # Price point ids belong to one product; a dry run looks the tier up on the mirror instead.
+            point = iap_price_point(iap_id or mirror["id"], base, spec["price"])
+            print(f"  price {base} {point['attributes']['customerPrice']} (proceeds {point['attributes'].get('proceeds')})")
+            set_base_price(iap_id, base, point["id"])
+        if need_avail:
+            send("POST", "/inAppPurchaseAvailabilities", {"data": {"type": "inAppPurchaseAvailabilities",
+                "attributes": {"availableInNewTerritories": avail[0]}, "relationships": {
+                    "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                    "availableTerritories": {"data": [{"type": "territories", "id": t} for t in avail[1]]}}}})
+
+
 def step_iap(app_id: str, copy: dict) -> None:
     print("iap")
     iap = copy["in_app_purchases"]
     for p in get(f"/apps/{app_id}/inAppPurchasesV2", limit=50).get("data", []):
         texts = iap.get(p["attributes"]["productId"])
-        if not texts:
-            continue
-        # Only the v2 path lists IAP localizations; the v1 path answers with an empty list.
-        existing = get(f"{BASE.replace('/v1', '/v2')}/inAppPurchases/{p['id']}/inAppPurchaseLocalizations").get("data", [])
-        for loc in LOCALES:
-            name, desc = texts[loc]
-            upsert("inAppPurchaseLocalizations", existing, loc, {"name": name, "description": desc}, ("inAppPurchaseV2", "inAppPurchases", p["id"]))
+        if texts:
+            sync_product_texts("inAppPurchases", p["id"], {loc: {"name": texts[loc][0], "description": texts[loc][1]} for loc in LOCALES})
     for g in get(f"/apps/{app_id}/subscriptionGroups", limit=20).get("data", []):
-        existing = get(f"/subscriptionGroups/{g['id']}/subscriptionGroupLocalizations").get("data", [])
-        for loc in LOCALES:
-            upsert("subscriptionGroupLocalizations", existing, loc, {"name": iap["subscription_group"][loc]}, ("subscriptionGroup", "subscriptionGroups", g["id"]))
+        sync_product_texts("subscriptionGroups", g["id"], {loc: {"name": iap["subscription_group"][loc]} for loc in LOCALES})
         for s in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20).get("data", []):
             texts = iap.get(s["attributes"]["productId"])
-            if not texts:  # annual stays untouched and unsubmitted (founder 2026-10-07)
-                continue
-            existing = get(f"/subscriptions/{s['id']}/subscriptionLocalizations").get("data", [])
-            for loc in LOCALES:
-                name, desc = texts[loc]
-                upsert("subscriptionLocalizations", existing, loc, {"name": name, "description": desc}, ("subscription", "subscriptions", s["id"]))
+            if texts:  # annual stays untouched and unsubmitted (founder 2026-10-07)
+                sync_product_texts("subscriptions", s["id"], {loc: {"name": texts[loc][0], "description": texts[loc][1]} for loc in LOCALES})
 
 
 def step_screenshots(app_id: str) -> None:
@@ -194,15 +384,25 @@ def step_screenshots(app_id: str) -> None:
                                                                          "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
 
 
-def step_version(app_id: str) -> None:
-    """The App Store version record follows the app's MARKETING_VERSION (the redesign ships as 1.1)."""
-    print("version")
+def marketing_version() -> str:
     pbx = (FL.parent / "Hangs.xcodeproj/project.pbxproj").read_text()
     wanted = {m.split("=")[1].strip(" ;") for m in pbx.splitlines() if "MARKETING_VERSION =" in m}
     if len(wanted) != 1:
         raise SystemExit(f"  !! MARKETING_VERSION differs between configurations: {wanted}")
+    return wanted.pop()
+
+
+def step_version(app_id: str) -> None:
+    """The App Store version record follows the app's MARKETING_VERSION; once the last one is on sale, create the next."""
+    print("version")
+    if not get(f"/apps/{app_id}/appStoreVersions", **{"filter[appStoreState]": EDITABLE})["data"]:
+        send("POST", "/appStoreVersions", {"data": {"type": "appStoreVersions",
+                                                     "attributes": {"platform": "IOS", "versionString": marketing_version(),
+                                                                    "releaseType": "AFTER_APPROVAL"},
+                                                     "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+        return
     ver = editable_version(app_id)
-    if ver["attributes"]["versionString"] != (v := wanted.pop()):
+    if ver["attributes"]["versionString"] != (v := marketing_version()):
         send("PATCH", f"/appStoreVersions/{ver['id']}", {"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"versionString": v}}})
 
 
@@ -215,6 +415,31 @@ def step_age_rating(app_id: str) -> None:
     diff = {k: v for k, v in answers.items() if not k.startswith("_") and cur["attributes"].get(k) != v}
     if diff:
         send("PATCH", f"/ageRatingDeclarations/{cur['id']}", {"data": {"type": "ageRatingDeclarations", "id": cur["id"], "attributes": diff}})
+
+
+def step_phased_release(app_id: str) -> None:
+    """Release the MARKETING_VERSION over Apple's 7-day phased rollout (#207 task 207.3).
+
+    A phased release can be attached until the version goes live; it starts INACTIVE and
+    Apple activates it on release, so a bad build reaches ~1 % of auto-updaters first.
+    """
+    print("phased-release")
+    v = marketing_version()
+    vers = get(f"/apps/{app_id}/appStoreVersions", **{"filter[versionString]": v, "filter[platform]": "IOS"}).get("data", [])
+    if not vers:
+        raise SystemExit(f"  !! no App Store version {v}")
+    ver = vers[0]
+    print(f"  {v}: {ver['attributes'].get('appStoreState')}")
+    cur = get(f"/appStoreVersions/{ver['id']}/appStoreVersionPhasedRelease")
+    if "_error" in cur:
+        raise SystemExit(f"  !! {cur}")
+    if cur.get("data"):
+        a = cur["data"]["attributes"]
+        print(f"  phased release: {a.get('phasedReleaseState')} day {a.get('currentDayNumber')}")
+        return
+    send("POST", "/appStoreVersionPhasedReleases", {"data": {
+        "type": "appStoreVersionPhasedReleases", "attributes": {"phasedReleaseState": "INACTIVE"},
+        "relationships": {"appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver["id"]}}}}})
 
 
 PUBLIC_GROUP = "Public beta"
@@ -241,36 +466,168 @@ def step_beta_group(app_id: str, build: str | None, submit: bool) -> None:
         send("POST", "/betaAppReviewSubmissions", {"data": {"type": "betaAppReviewSubmissions",
                                                             "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
 
+FOUNDER_GROUP = "Founder"
+FRIENDS_GROUP = "family+friends"
+PROMOTE_GROUPS = (FOUNDER_GROUP, FRIENDS_GROUP, PUBLIC_GROUP)
+LEGACY_GROUP = "Alpha"  # retired; reported only, never deleted by code
+
+
+def tester_count(group_id: str) -> str:
+    r = get(f"/betaGroups/{group_id}/relationships/betaTesters", limit=1)
+    return str(r.get("meta", {}).get("paging", {}).get("total", "?")) if "_error" not in r else f"? ({r['_error']})"
+
+
+def find_group(app_id: str, name: str) -> dict | None:
+    groups = get(f"/apps/{app_id}/betaGroups", limit=200).get("data", [])
+    return next((g for g in groups if g["attributes"]["name"] == name), None)
+
+
+def step_groups_setup_beta(app_id: str) -> None:
+    """Trubbo Beta (#234): Founder and family+friends, both internal and getting every build automatically.
+    Automatic distribution is set when the group is created; existing groups are only reported."""
+    print("groups-setup (beta)")
+    for name in (FOUNDER_GROUP, FRIENDS_GROUP):
+        g = find_group(app_id, name)
+        if g:
+            print(f"  {name}: exists, hasAccessToAllBuilds={g['attributes'].get('hasAccessToAllBuilds')}")
+            continue
+        send("POST", "/betaGroups", {"data": {"type": "betaGroups", "attributes": {
+            "name": name, "isInternalGroup": True, "hasAccessToAllBuilds": True, "feedbackEnabled": True},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+
+
+def step_groups_setup(app_id: str) -> None:
+    """TestFlight ladder: Founder (internal, all builds) / family+friends (internal, manual) / Public beta (external)."""
+    print("groups-setup")
+    founder = find_group(app_id, FOUNDER_GROUP)
+    if founder:
+        print(f"  {FOUNDER_GROUP}: exists, hasAccessToAllBuilds={founder['attributes'].get('hasAccessToAllBuilds')}")
+    else:
+        send("POST", "/betaGroups", {"data": {"type": "betaGroups", "attributes": {
+            "name": FOUNDER_GROUP, "isInternalGroup": True, "hasAccessToAllBuilds": True, "feedbackEnabled": True},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+    friends = find_group(app_id, FRIENDS_GROUP)
+    if not friends:
+        print(f"  !! group '{FRIENDS_GROUP}' not found")
+    elif friends["attributes"].get("hasAccessToAllBuilds") is False:
+        print(f"  {FRIENDS_GROUP}: already manual (hasAccessToAllBuilds=false)")
+    else:
+        # Docs list hasAccessToAllBuilds on BetaGroupUpdateRequest; unverified for existing internal groups, so fall back to manual steps.
+        print(f"  {FRIENDS_GROUP}: hasAccessToAllBuilds=true, PATCH to false")
+        if APPLY:
+            r = requests.patch(f"{BASE}/betaGroups/{friends['id']}", headers={**HEADERS, "Content-Type": "application/json"}, timeout=60,
+                               json={"data": {"type": "betaGroups", "id": friends["id"], "attributes": {"hasAccessToAllBuilds": False}}})
+            if r.status_code >= 300:
+                print(f"  !! API refused ({r.status_code}: {r.text[:300]}). Manual: App Store Connect > TestFlight > Internal Testing > "
+                      f"{FRIENDS_GROUP} > untick 'Enable automatic distribution' (access to all builds) > Save")
+            else:
+                print("  patched")
+        else:
+            print("  (dry run; if the API refuses on apply, manual steps are printed)")
+    for g in get(f"/apps/{app_id}/betaGroups", limit=200).get("data", []):
+        a = g["attributes"]
+        kind = "internal" if a.get("isInternalGroup") else "external"
+        note = "  <- legacy, retire manually in ASC" if a["name"] == LEGACY_GROUP else ""
+        print(f"  [{kind}] {a['name']}: testers={tester_count(g['id'])} allBuilds={a.get('hasAccessToAllBuilds')}{note}")
+
+
+def step_promote(app_id: str, copy: dict, build: str | None, group_name: str | None) -> None:
+    """Add build N to a named group; external group also gets What to Test + Beta App Review. Idempotent."""
+    print("promote")
+    if not build or group_name not in PROMOTE_GROUPS:
+        raise SystemExit(f"promote needs --build and --group one of {PROMOTE_GROUPS}")
+    if group_name == PUBLIC_GROUP:
+        step_beta_group(app_id, None, False)  # make sure the capped public group exists
+    group = find_group(app_id, group_name)
+    if not group:
+        print(f"  !! group '{group_name}' missing (run groups-setup first)")
+        if APPLY:
+            raise SystemExit(1)
+        return
+    b = get("/builds", **{"filter[app]": app_id, "filter[version]": build})["data"][0]
+    have = get(f"/betaGroups/{group['id']}/relationships/builds", limit=200).get("data", [])
+    if any(x["id"] == b["id"] for x in have):
+        print(f"  build {build} already in {group_name}")
+    else:
+        send("POST", f"/betaGroups/{group['id']}/relationships/builds", {"data": [{"type": "builds", "id": b["id"]}]})
+    if group["attributes"].get("isInternalGroup"):
+        return
+    step_testflight(app_id, copy, build)  # What to Test must exist before review
+    sub = get(f"/builds/{b['id']}/betaAppReviewSubmission").get("data")
+    if sub:
+        print(f"  Beta App Review: {sub['attributes'].get('betaReviewState')} (not resubmitting)")
+    else:
+        send("POST", "/betaAppReviewSubmissions", {"data": {"type": "betaAppReviewSubmissions",
+                                                            "relationships": {"build": {"data": {"type": "builds", "id": b["id"]}}}}})
+
+
+def prefixed(copy: dict, prefix: str) -> dict:
+    """store_copy.json with every product id under `prefix` (the beta app's catalog, #234)."""
+    if not prefix:
+        return copy
+    out = dict(copy)
+    out["in_app_purchases"] = {(k if k == "subscription_group" or k.startswith("_") else prefix + k): v
+                               for k, v in copy["in_app_purchases"].items()}
+    out["iap_prices"] = {(k if k.startswith("_") else prefix + k): v for k, v in copy.get("iap_prices", {}).items()}
+    out["iap_create"] = {(k if k.startswith("_") else prefix + k): (v if k.startswith("_") else {**v, "mirror": prefix + v["mirror"]})
+                         for k, v in copy.get("iap_create", {}).items()}
+    return out
+
 
 def main() -> int:
     global APPLY
     ap = argparse.ArgumentParser()
     ap.add_argument("--steps", default="listing,review,testflight,iap")
+    ap.add_argument("--product-prefix", help="product id prefix in the target app (default: 'beta.' for the beta app, else none)")
     ap.add_argument("--build", help="build number that gets What to Test")
+    ap.add_argument("--group", choices=PROMOTE_GROUPS, help="with promote: target TestFlight group")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--submit-beta-review", action="store_true", help="with beta-group + --build: submit the build to Beta App Review")
     args = ap.parse_args()
     APPLY = args.apply
     print("APPLY" if APPLY else "DRY RUN (pass --apply to write)")
-    app_id = get("/apps", **{"filter[bundleId]": BUNDLE_ID})["data"][0]["id"]
-    copy = json.loads((FL / "store_copy.json").read_text())
+    beta = BUNDLE_ID == BETA_BUNDLE_ID
+    prefix = args.product_prefix if args.product_prefix is not None else ("beta." if beta else "")
+    print(f"app {BUNDLE_ID}, product id prefix '{prefix}'")
+    app_id = exact_bundle(get("/apps", **{"filter[bundleId]": BUNDLE_ID}), BUNDLE_ID)["data"][0]["id"]
+    source = json.loads((FL / "store_copy.json").read_text())
+    copy = prefixed(source, prefix)
     steps = args.steps.split(",")
+    if beta and (refused := sorted(set(steps) - BETA_STEPS)):
+        raise SystemExit(f"!! not for the beta app (never released): {refused}")
+    if beta and args.group == PUBLIC_GROUP:
+        raise SystemExit("!! the beta app has no public group")
+    if "version" in steps:  # first: listing needs the editable version it may create
+        step_version(app_id)
     if "listing" in steps:
         step_listing(app_id)
     if "review" in steps:
         step_review(app_id)
     if "testflight" in steps:
         step_testflight(app_id, copy, args.build)
+    if "iap-price" in steps:
+        step_iap_price(app_id, copy)
+    if "iap-create" in steps:
+        step_iap_create(app_id, copy)
+    if "iap-mirror" in steps:
+        live_id = exact_bundle(get("/apps", **{"filter[bundleId]": mirror.LIVE_BUNDLE_ID}), mirror.LIVE_BUNDLE_ID)["data"][0]["id"]
+        mirror.step_iap_mirror(sys.modules[__name__], app_id, live_id, prefix, source)
     if "iap" in steps:
         step_iap(app_id, copy)
+    if "iap-review" in steps:
+        mirror.step_iap_review(sys.modules[__name__], app_id, prefix, source)
     if "screenshots" in steps:
         step_screenshots(app_id)
-    if "version" in steps:
-        step_version(app_id)
     if "age-rating" in steps:
         step_age_rating(app_id)
     if "beta-group" in steps:
         step_beta_group(app_id, args.build, args.submit_beta_review)
+    if "groups-setup" in steps:
+        step_groups_setup_beta(app_id) if beta else step_groups_setup(app_id)
+    if "promote" in steps:
+        step_promote(app_id, copy, args.build, args.group)
+    if "phased-release" in steps:
+        step_phased_release(app_id)
     return 0
 
 

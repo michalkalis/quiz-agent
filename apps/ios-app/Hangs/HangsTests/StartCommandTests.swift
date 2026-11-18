@@ -31,7 +31,6 @@ private func makeStartVM() -> (QuizViewModel, MockAudioService) {
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: MockSilenceDetectionService(),
-        sttService: nil, // nil STT → deterministic batch recording path
         clock: AnyClock(TestClock())
     )
     vm.currentSession = Fixtures.makeActiveSession()
@@ -106,21 +105,6 @@ struct StartCommandTests {
                 #expect(vm.quizState == state, "start must be inert in \(state.label)")
                 #expect(audio.isRecording == false)
             }
-        }
-    }
-
-    @Test("Home (idle): 'start' begins the quiz even with the question flag OFF")
-    func startOnHomeBeginsQuiz() async {
-        await withMainSerialExecutor {
-            let (vm, _) = makeStartVM()
-            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false // question flag OFF…
-            vm.quizState = .idle                   // …still starts the quiz on Home
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .home)
-
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
-
-            await pumpUntil({ vm.quizState != .idle }, turns: 2000, "start on Home did not begin the quiz")
-            #expect(vm.quizState != .idle)
         }
     }
 

@@ -280,6 +280,18 @@ struct QuizSettingsBackwardCompatTests {
         #expect(settings.includeImageQuestions == false)
     }
 
+    // MARK: - Missing includeLocalQuestions (#206)
+
+    /// Every settings blob saved before #206 must keep local questions ON —
+    /// the founder's default (2026-10-15). Decoding to OFF would silently drop
+    /// most native sk/cs questions for every existing player after an update.
+    @Test("missing includeLocalQuestions decodes to on")
+    func missingIncludeLocalQuestionsDefaultsOn() throws {
+        let settings = try decodeSettings(legacyMinimalJSON)
+
+        #expect(settings.includeLocalQuestions == true)
+    }
+
     // MARK: - Missing answerRevealMode (#132 E)
 
     /// Regression: every pre-#132 blob must decode to the founder-picked

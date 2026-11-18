@@ -1,0 +1,13 @@
+# texts
++100
+questions
+Save your credit
+Your credit is only on this phone for now. Sign in with Apple and it stays with you on a new phone or after reinstalling.
+Maybe later
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.appleButton
+signInPrompt.later

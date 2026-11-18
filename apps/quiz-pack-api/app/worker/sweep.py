@@ -159,6 +159,17 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
             await session.commit()
             return
 
+        # #207 207.5: two workers (Fly + the mba backup) can each run a sweep
+        # (each one's run_at_startup tick). The candidate list was read before
+        # this row lock, so the other sweep may have recovered the order in the
+        # meantime: re-check staleness under the lock, or both would requeue
+        # it and run two paid pipelines for one purchase.
+        now = datetime.now(timezone.utc)
+        if order.status == "pending" and order.enqueued_at >= now - PENDING_STUCK_TIMEOUT:
+            return
+        if order.status == "in_progress" and job.updated_at >= now - IN_PROGRESS_STUCK_TIMEOUT:
+            return
+
         # #193: the session worker runs one pack at a time, for an hour or more,
         # so an order queued behind it looks dead by `updated_at` alone. If its
         # current attempt is still waiting in the arq queue, nothing died:

@@ -7,12 +7,13 @@ import logging
 import re
 from typing import Tuple, Any
 
-from quiz_shared.llm import factory as llm_factory
 from quiz_shared.models.question import Question
+from quiz_shared.sentry_privacy import user_text_log
 from quiz_shared.utils.text_normalization import normalize_text
 
 from .. import hot_path_llm
 from ..config import get_settings
+from ..usage.ai_grading_cap import ai_grading_allowed
 from .mcq_matcher import match_option
 from .phonetic_match import phonetic_matches
 from .voice_match import sounds_like_any
@@ -44,9 +45,9 @@ class AnswerEvaluator:
         # Anthropic-SDK-shaped client for Claude ids; None = the shared direct
         # client. Injected by the eval harness to record real Claude calls.
         self.claude_client: Any = None
-        self.model = llm_factory.resolve_model(
-            model or hot_path_llm.role_model("EVAL_MODEL")
-        )
+        # Not gateway-resolved (#207.11): the answer path talks to Anthropic
+        # and OpenAI directly, never through LLM_GATEWAY.
+        self.model = model or hot_path_llm.role_model("EVAL_MODEL")
         self.temperature = temperature
 
     async def evaluate(
@@ -110,7 +111,7 @@ class AnswerEvaluator:
         if sounds_like_any(
             user_answer, [str(scoring_answer), *question.alternative_answers]
         ):
-            logger.info(
+            user_text_log.info(
                 "Sound-alike accepted without LLM: heard=%r expected=%r",
                 user_answer,
                 str(scoring_answer),
@@ -124,6 +125,10 @@ class AnswerEvaluator:
         ):
             logger.info("Phonetic key accepted without LLM")
             return "correct", 1.0
+
+        # #218.7: a player past the daily AI cap is graded by the fast path only.
+        if not await ai_grading_allowed():
+            return "incorrect", 0.0
 
         # LLM evaluation for nuanced scoring
         result = await self._llm_evaluate(
@@ -208,6 +213,7 @@ class AnswerEvaluator:
         eval_prompt = f"""You are a fair quiz answer evaluator for a voice quiz played in a car. Compare the user's answer to the correct answer.
 
 The user's answer is a speech-to-text transcript of the player talking in a moving car. The recogniser is set to the language of the quiz, so it makes predictable mistakes: foreign words and names come back respelled the way they sound in that language, or as a similar-sounding real word or brand name (e.g. "Carling" or "Karling" for "curling"), and road noise can swap or drop a sound.
+The transcript may contain a spelled-out answer: letters the player spelled are joined into one word (e.g. "VAH" for "Váh"), so judge the word it spells.
 
 Question: {question_text}
 Correct Answer: {correct_answer}

@@ -10,6 +10,10 @@
 # Usage: BACKUP_CERT_B64=<base64 of the PEM cert> infra/quiz-pack-db/backup.sh <out.cms>
 # Needs `fly` on PATH and a token that can SSH into quiz-pack-db
 # (`fly tokens create ssh -a quiz-pack-db`). Restore: docs/setup/db-backup.md.
+#
+# Hetzner (#222 — moving the backend to Hetzner): set DB_SSH_HOST (an ssh alias
+# whose key is locked to infra/hetzner/backup-ssh.sh on the server). Dump and
+# encryption then run on the Hetzner server instead, with the same guarantees.
 set -euo pipefail
 
 out="${1:?usage: backup.sh <output-file>}"
@@ -27,7 +31,16 @@ fi
 # command instead of shipping a truncated-but-valid-looking ciphertext.
 remote="bash -c 'set -o pipefail; pg_dump -p 5433 -U postgres -d ${db} --format=custom --compress=9 | openssl cms -encrypt -binary -stream -aes256 -outform DER -recip <(echo ${cert_b64} | base64 -d)'"
 
-if ! fly ssh console -a "$app" --pty=false -C "$remote" > "$out"; then
+if [[ -n "${DB_SSH_HOST:-}" ]]; then
+  dump_cmd=(ssh "$DB_SSH_HOST" dump)
+  df_cmd=(ssh "$DB_SSH_HOST" df)
+  app="$DB_SSH_HOST"
+else
+  dump_cmd=(fly ssh console -a "$app" --pty=false -C "$remote")
+  df_cmd=(fly ssh console -a "$app" --pty=false -C "df --output=pcent /data")
+fi
+
+if ! "${dump_cmd[@]}" > "$out"; then
   echo "dump/encrypt failed on ${app}" >&2
   rm -f "$out"
   exit 1
@@ -54,7 +67,7 @@ echo "encrypted backup written: ${out} (${size} bytes)"
 # through a restarting machine update). Fail the nightly run before it fills
 # up so the failure email doubles as the disk alarm; the backup above is
 # already valid and gets uploaded regardless.
-used=$(fly ssh console -a "$app" --pty=false -C "df --output=pcent /data" | tr -dc '0-9')
+used=$("${df_cmd[@]}" | tr -dc '0-9')
 echo "quiz-pack-db /data used: ${used}%"
 if [[ -z "$used" || "$used" -ge "${DISK_ALERT_PERCENT:-80}" ]]; then
   echo "quiz-pack-db volume at ${used:-unknown}% — extend it (docs/setup/db-backup.md)" >&2

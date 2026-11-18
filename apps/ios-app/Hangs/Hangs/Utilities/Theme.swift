@@ -187,6 +187,26 @@ extension Theme.Hangs {
         static let neutralSoft = ink.opacity(0.055)
     }
 
+    /// #213.5: the recap story's slides (canvas "Lišta a Profil", section 3).
+    /// Light values in both modes: the last slide is shared as an image and
+    /// reads the same on anyone's phone.
+    enum Recap {
+        private static let ink = Color(hex: Palette.ink)
+        private static let white = Color(hex: Palette.white)
+
+        static let intro = Category.Style(fill: ink, text: white)
+        static let finale = Category.Style(fill: Color(hex: Palette.lime), text: ink)
+        /// The card slides in between take these in turn.
+        static let cards: [Category.Style] = [
+            Category.Style(fill: Color(hex: Palette.cobalt), text: white),
+            Category.Style(fill: Color(hex: Palette.yellow), text: ink),
+            Category.Style(fill: Color(hex: Palette.mandarin), text: ink),
+            Category.Style(fill: Color(hex: Palette.mint), text: ink),
+            Category.Style(fill: Color(hex: Palette.violet), text: white),
+            Category.Style(fill: Color(hex: Palette.rose), text: ink),
+        ]
+    }
+
     /// #194 B1: category colours (founder rounds 2–4). Each card carries its
     /// category's fill with the text colour measured for it; dark mode takes
     /// slightly deeper fills so white text keeps its contrast.
@@ -215,6 +235,22 @@ extension Theme.Hangs {
             // #198: an unknown or missing category is cobalt, never ink — a
             // black card read as "broken" (founder, 2026-10-10).
             default: return Style(fill: Color(light: Palette.cobalt, dark: Palette.cobaltDark), text: .white)
+            }
+        }
+
+        /// #212: a player's colour in a game together. The server deals out
+        /// the category palette (`rooms/service.py` COLORS) as hex; anything
+        /// else gets the cobalt fallback.
+        static func player(_ hex: String?) -> Style {
+            switch hex?.lowercased() {
+            case "#ff6b2c": style(for: "history")
+            case "#7a5cff": style(for: "food-everyday")
+            case "#a3e635": style(for: "entertainment")
+            case "#3fe0ae": style(for: "science-nature")
+            case "#e8317f": style(for: "movies-music")
+            case "#ffc53d": style(for: "sports")
+            case "#16b386": Style(fill: Color(hex: Palette.liveFill), text: inkText)
+            default: style(for: "geography-world")
             }
         }
 

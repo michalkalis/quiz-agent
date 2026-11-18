@@ -78,7 +78,40 @@ extension QuizViewModel {
             answerWindowTotal: answerWindowTotal,
             answerKind: question.sortedAnswerOptions.count == 2
                 ? .trueFalse
-                : (question.usesLetterLabels ? .mcqLetters : .mcq)
+                : (question.usesLetterLabels ? .mcqLetters : .mcq),
+            isReadingQuestion: isReadingQuestion
         )
+    }
+
+    /// #237 (canvas pick L1): the listen bar's trailing control in this phase
+    /// — "Turn on", "Preparing commands…" or "Settings" — or `nil`.
+    func commandsAccessory(for phase: QuestionListenPhase) -> ListenBar.CommandsAccessory? {
+        voiceCommandCoordinator.commandsBarAccessory(
+            phaseHasCommands: !phase.commands.isEmpty,
+            micDenied: audioService.microphonePermissionStatus == .denied
+        )
+    }
+
+    /// #237: the player turned commands on (onboarding or the listen bar).
+    @discardableResult
+    func enableVoiceCommands(source: VoiceCommandsSource) async -> Bool {
+        await voiceCommandCoordinator.enableCommands(source: source)
+    }
+
+    /// #237: "Turn on" on the listen bar. The system prompt covers the
+    /// question, so the quiz holds still under it — the read and the think
+    /// window would otherwise run out, and the mic open, behind the alert —
+    /// and continues where it stopped once the player answered.
+    func turnOnVoiceCommandsFromListenBar() async {
+        let holdsQuiz = !isPaused && canPauseQuiz
+        if holdsQuiz { enterPause() }
+        await enableVoiceCommands(source: .listenBar)
+        if holdsQuiz { exitPause() }
+    }
+
+    /// #208: a question read is playing, or is about to (the first question's
+    /// hardware settle). What the bar may call "Reading the question".
+    var isReadingQuestion: Bool {
+        isPlayingQuestionTTS || isQuestionReadPending
     }
 }

@@ -41,14 +41,19 @@ protocol PackOrderServiceProtocol: Sendable {
     /// passes nil. That is what makes a failed order recoverable after the app
     /// (or the Settings screen) has been torn down and the proof is gone.
     func retryOrder(id: String, paymentProof: PackPaymentProof?) async throws -> OrderCreatedResponse
+    /// `POST /v1/orders/topic-check` (#233) — is the order text a topic we
+    /// make packs about? Asked before payment; bearer required. A child-band
+    /// `audience` (#236) is checked at the stricter child tier.
+    func checkTopic(prompt: String, language: String, audience: PackAudience) async throws -> TopicVerdict
+}
+
+extension PackOrderServiceProtocol {
+    /// Test doubles that never order a pack let every topic through.
+    func checkTopic(prompt _: String, language _: String, audience _: PackAudience) async throws -> TopicVerdict { .ok }
 }
 
 /// Thread-safe pack-order service using a Swift 6 actor.
 actor PackOrderService: PackOrderServiceProtocol {
-    /// v1 single tier — server overwrites `target_count` from the tier anyway.
-    private nonisolated static let productId = "pack_30"
-    private nonisolated static let targetCount = 30
-
     private let baseURL: URL
     private let session: URLSession
     private let authService: AuthServiceProtocol?
@@ -106,12 +111,15 @@ actor PackOrderService: PackOrderServiceProtocol {
 
         let payload = CreateOrderRequest(
             transactionId: intent.idempotencyKey,
-            productId: intent.paymentProof?.productId ?? Self.productId,
+            productId: intent.paymentProof?.productId ?? intent.size.productId,
             prompt: intent.prompt,
             language: intent.language,
-            targetCount: Self.targetCount,
+            // The server overwrites it from the product's tier anyway.
+            targetCount: intent.size.questionCount,
             category: intent.category,
-            theme: intent.theme
+            theme: intent.theme,
+            difficulty: intent.difficulty,
+            audience: intent.audience
         )
         request.httpBody = try JSONEncoder().encode(payload)
 
@@ -129,6 +137,27 @@ actor PackOrderService: PackOrderServiceProtocol {
             throw PackOrderError.server(Self.errorMessage(from: data))
         }
         return try JSONDecoder().decode(OrderCreatedResponse.self, from: data)
+    }
+
+    func checkTopic(prompt: String, language: String, audience: PackAudience) async throws -> TopicVerdict {
+        let url = baseURL.appendingPathComponent("/v1/orders/topic-check")
+        var request = makeRequest(url: url, method: "POST", includeAdminKey: false)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(TopicCheckRequest(prompt: prompt, language: language, audience: audience))
+
+        Logger.network.debug("🌐 POST \(url, privacy: .public) (pack topic check)")
+        let (data, response) = try await send(request)
+        guard let http = response as? HTTPURLResponse else {
+            throw PackOrderError.invalidResponse
+        }
+        guard http.statusCode != 401 else {
+            throw PackOrderError.unauthorized
+        }
+        guard http.statusCode == 200 else {
+            throw PackOrderError.server(Self.errorMessage(from: data))
+        }
+        let verdict = try JSONDecoder().decode(TopicCheckResponse.self, from: data).verdict
+        return TopicVerdict(rawValue: verdict) ?? .ok
     }
 
     func listOrders() async throws -> [OrderSnapshot] {
@@ -251,7 +280,7 @@ actor PackOrderService: PackOrderServiceProtocol {
         if let decoded = try? JSONDecoder().decode(DetailStringError.self, from: data) {
             return decoded.detail
         }
-        return String(localized: "The pack service returned an error. Please try again.", comment: "Fallback message when the pack-order API returns a non-2xx response we can't parse")
+        return String(localized: "The pack service returned an error. Please try again.", bundle: .interface, locale: .interface, comment: "Fallback message when the pack-order API returns a non-2xx response we can't parse")
     }
 }
 
@@ -279,9 +308,9 @@ enum PackOrderError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return String(localized: "Invalid response from the pack service", comment: "Pack-order error: malformed server response")
+            return String(localized: "Invalid response from the pack service", bundle: .interface, locale: .interface, comment: "Pack-order error: malformed server response")
         case .unauthorized:
-            return String(localized: "Your session expired. Please sign in again to continue.", comment: "Pack-order error: the request was still unauthorized after a token refresh")
+            return String(localized: "Your session expired. Please sign in again to continue.", bundle: .interface, locale: .interface, comment: "Pack-order error: the request was still unauthorized after a token refresh")
         case let .retryRefused(message):
             // Server-provided message — already human-readable, do not wrap.
             return message

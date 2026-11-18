@@ -1,0 +1,767 @@
+{
+ "week": "2026-W47",
+ "monday": "2026-11-16",
+ "created": "2026-11-16T10:04:26.400Z",
+ "posts": [
+  {
+   "key": "mon-ig_en",
+   "account": "ig_en",
+   "day": "Mon",
+   "format": "five",
+   "language": "en",
+   "date": "2026-11-17",
+   "files": [
+    "five-en-10cd9730.mp4",
+    "five-en-10cd9730.jpg"
+   ],
+   "caption": "The toy brand name LEGO is squeezed together from two Danish words meaning what?\n\nDid you know it before the reveal?\n\n#trivia #quiz #food #didyouknow",
+   "youtube": {
+    "title": "The toy brand name LEGO is squeezed together from two Danish words meaning what?",
+    "description": "The toy brand name LEGO is squeezed together from two Danish words meaning what?\n\nDid you know it before the reveal?\n\n#trivia #quiz #food #didyouknow"
+   },
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+     "category": "food-everyday",
+     "question": "The toy brand name LEGO is squeezed together from two Danish words meaning what?",
+     "answer": "Play well",
+     "options": [],
+     "explanation": "Founder Ole Kirk Christiansen took it from the Danish phrase 'leg godt', which simply means 'play well'.",
+     "source_url": "https://www.lego.com/en-us/aboutus/lego-group/the-lego-group-history"
+    }
+   ],
+   "note_moved": "Mon slot missed while waiting for re-approval; moved to Tue 17 Nov",
+   "status": "approved",
+   "publish_at": "2026-11-17T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-en-10cd9730.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-en-10cd9730.jpg"
+   ],
+   "tiktok_buffer": "6afc21c93825971990f1e99d"
+  },
+  {
+   "key": "mon-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Mon",
+   "format": "five",
+   "language": "sk",
+   "date": "2026-11-17",
+   "files": [
+    "five-sk-ffe2b860.mp4",
+    "five-sk-ffe2b860.jpg"
+   ],
+   "caption": "Názov slovenskej limonády Vinea je obyčajné latinské slovo. Čo znamená?\n\nVieš to skôr, ako prezradíme odpoveď?\n\n#kvíz #kviz #jedlo #vedomosti",
+   "youtube": null,
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "ffe2b860-714d-4346-aadc-df4a2bca9c9c",
+     "category": "food-everyday",
+     "question": "Názov slovenskej limonády Vinea je obyčajné latinské slovo. Čo znamená?",
+     "answer": "vinica",
+     "options": [],
+     "explanation": "Latinské vinea znamená vinica alebo vinohrad, a sedí to, lebo Vinea sa vyrába z hroznovej šťavy. Je to vlastne nealkoholická sestra vína.",
+     "source_url": "https://en.wiktionary.org/wiki/vinea"
+    }
+   ],
+   "note_moved": "Mon slot missed while waiting for re-approval; moved to Tue 17 Nov",
+   "status": "approved",
+   "publish_at": "2026-11-17T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-sk-ffe2b860.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/five-sk-ffe2b860.jpg"
+   ],
+   "tiktok_buffer": "6afc21cad62bd5b48639768c"
+  },
+  {
+   "key": "tue-ig_en",
+   "account": "ig_en",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-11-17",
+   "files": [
+    "carousel-en-p5-0-cover.jpg",
+    "carousel-en-p5-1-q.jpg",
+    "carousel-en-p5-2-a.jpg",
+    "carousel-en-p5-3-q.jpg",
+    "carousel-en-p5-4-a.jpg",
+    "carousel-en-p5-5-q.jpg",
+    "carousel-en-p5-6-a.jpg",
+    "carousel-en-p5-7-q.jpg",
+    "carousel-en-p5-8-a.jpg"
+   ],
+   "caption": "Road trip round, part 5.\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Free on the App Store, link in bio.\n\n#trivia #quiz #food #geography #didyouknow",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "5b876950-2cdb-4035-a600-3587cdc9be8f",
+     "category": "food-everyday",
+     "question": "In the office kitchen fridge, which spot is usually the warmest, making it the worst place to keep the shared milk?",
+     "answer": "The door",
+     "options": [],
+     "explanation": "Every time a colleague opens the fridge, the door shelves get a blast of warm room air, so they swing up and down in temperature far more than the back of the fridge. The coldest, most stable spot for milk is usually at the back of a lower shelf.",
+     "source_url": "https://www.tastingtable.com/1929505/warmest-spot-in-fridge-door/"
+    },
+    {
+     "id": "aedfcaff-e1cb-4905-9531-2c36f042e4f9",
+     "category": "geography-world",
+     "question": "The word 'robot' was coined for a 1920 stage play and comes from a word meaning forced labour in which language?",
+     "answer": "Czech",
+     "options": [],
+     "explanation": "Karel Čapek used it in his play R.U.R., and credited his brother Josef with suggesting the word.",
+     "source_url": "https://www.npr.org/2025/09/11/nx-s1-5532095/where-word-robot-came-from-rur"
+    },
+    {
+     "id": "15d42b90-c22f-4a64-b94b-d14da80e50eb",
+     "category": "general",
+     "question": "Someone very drunk is 'three sheets to the wind'. On a sailing ship, those 'sheets' aren't sails at all. What are they?",
+     "answer": "Ropes",
+     "options": [],
+     "explanation": "Sheets are the ropes that trim a sail. Let three of them run loose and the sails flap uselessly while the ship lurches about like a sailor after shore leave.",
+     "source_url": "https://grammarphobia.com/blog/2007/03/three-sheets-to-the-wind.html"
+    },
+    {
+     "id": "6709c973-546b-40c4-89dd-5410df8e326b",
+     "category": "general",
+     "question": "A newborn Dalmatian puppy is missing the one feature the breed is famous for. What is it missing?",
+     "answer": "Its spots",
+     "options": [],
+     "explanation": "Dalmatian puppies are born pure white, and their spots only start appearing after about two weeks. So a real litter would look nothing like the cartoon.",
+     "source_url": "https://www.dogster.com/lifestyle/are-dalmatians-born-with-their-spots/"
+    }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-17T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p5-8-a.jpg"
+   ]
+  },
+  {
+   "key": "tue-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Tue",
+   "format": "carousel",
+   "language": "cs",
+   "date": "2026-11-17",
+   "files": [
+    "carousel-cs-p3-0-cover.jpg",
+    "carousel-cs-p3-1-q.jpg",
+    "carousel-cs-p3-2-a.jpg",
+    "carousel-cs-p3-3-q.jpg",
+    "carousel-cs-p3-4-a.jpg",
+    "carousel-cs-p3-5-q.jpg",
+    "carousel-cs-p3-6-a.jpg",
+    "carousel-cs-p3-7-q.jpg",
+    "carousel-cs-p3-8-a.jpg"
+   ],
+   "caption": "Kvíz na cestu, 3. díl.\n\nKolik máš správně?\n\n#kvíz #kviz #popkultura #zajímavosti #vědomosti",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "98e2fc22-954b-498d-b15b-1eed6f2407fe",
+     "category": "entertainment",
+     "question": "Pěvecká soutěž SuperStar se v září 2026 po pauze vrátila na obrazovky Novy a Markízy s novou porotou. Kdo ji moderoval?",
+     "answer": "Leoš Mareš",
+     "options": [],
+     "explanation": "Leoš Mareš provází SuperStar už od její úplně první řady z roku 2004 a v porotě mu v roce 2026 seděli Pavol Habera, Ewa Farna, Jakub Prachař a Calin.",
+     "source_url": "https://tv.nova.cz/porad/superstar/clanek/648400-superstar-2026-legendarni-show-se-vraci-ve-velkem-stylu-calin-prachar-farna-habera"
+    },
+    {
+     "id": "274ae4bf-21c4-4877-a71c-877776f6f68e",
+     "category": "general",
+     "question": "Myslivci mají pro krev zvěře zvláštní slovo. Je to úplně obyčejné slovo, které byste spíš čekali u malíře. Jaké?",
+     "answer": "barva",
+     "options": [],
+     "explanation": "V myslivecké mluvě se krev opravdu nazývá barva. Postřelená zvěř „barví“ a dohledává se po barvě. Podobně má zajíc místo uší slechy a liška místo ocasu oháňku.",
+     "source_url": "https://slovnik.iz.sk/?word=blood"
+    },
+    {
+     "id": "5f7ffe67-e8f8-4117-abfb-c2fbf26b1daa",
+     "category": "general",
+     "question": "Samotné slovo pomlázka prozrazuje, co mělo velikonoční šlehání ženám a dívkám původně dát. Co to je?",
+     "answer": "Mládí",
+     "options": [],
+     "explanation": "Pomlázka pochází od slova „pomladit“, tedy omladit. Mladé pružné vrbové proutky měly na šlehanou přenést svou svěžest, zdraví a mladost.",
+     "source_url": "https://www.novinky.cz/zena/velikonoce/clanek/velikonocni-pondeli-a-jeho-tradice-pomlazka-ma-prinest-mladi-rozhodne-ne-modriny-40356007"
+    },
+    {
+     "id": "f781d481-d95a-4ceb-b219-864832ce6c11",
+     "category": "geography-world",
+     "question": "Které české krajské město má přímo v názvu schované, že kdysi patřilo českým královnám jako jejich věno?",
+     "answer": "Hradec Králové",
+     "options": [],
+     "explanation": "„Králové“ znamená „královny“. Město bylo věnným městem českých královen a nejslavnější z nich, Eliška Rejčka, tam založila kostel, který stojí dodnes.",
+     "source_url": "https://cs.wikipedia.org/wiki/Hradec_Králové"
+    }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-17T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-cs-p3-8-a.jpg"
+   ]
+  },
+  {
+   "key": "wed-ig_en",
+   "account": "ig_en",
+   "day": "Wed",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-18",
+   "files": [
+    "round-en-f30607ef.mp4",
+    "round-en-f30607ef.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #science #popculture",
+   "youtube": {
+    "title": "Can you get 3 out of 3? Why does a street sound so strangely hushed right after a fresh, fluffy…",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\n#trivia #quiz #science #popculture"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "f30607ef-bf42-4deb-9107-8078a4eca141",
+     "category": "science-nature",
+     "question": "Why does a street sound so strangely hushed right after a fresh, fluffy snowfall?",
+     "answer": "Snow absorbs sound",
+     "options": [],
+     "explanation": "Fresh snow is mostly air trapped between ice crystals, so it soaks up sound like the foam on a recording studio wall. Once it melts and refreezes into a hard crust, it reflects sound and the hush is gone.",
+     "source_url": "https://accuweather.com/en/weather-news/why-does-it-become-so-quiet-after-a-fresh-snowfall/352439"
+    },
+    {
+     "id": "6172d7e0-1ac3-4909-ac61-1c83284049b3",
+     "category": "entertainment",
+     "question": "In Breaking Bad, chemistry teacher Walter White takes a criminal alias borrowed from a famous German physicist. That physicist is best known for a principle named after what?",
+     "answer": "Uncertainty",
+     "options": [],
+     "explanation": "The alias is Heisenberg, after Werner Heisenberg's uncertainty principle. It suits a man whose true identity the police can never be sure of.",
+     "source_url": "https://looper.com/1254107/breaking-bad-why-heisenberg-walter-whites-moniker-why-mattered"
+    },
+    {
+     "id": "2008b006-db2a-4104-b561-26de7f5015e3",
+     "category": "entertainment",
+     "question": "In the 2025 Netflix animated hit KPop Demon Hunters, the girl group Huntr/x, whose song Golden topped the Billboard Hot 100, battle demons posing as a rival boy band. What is that boy band called?",
+     "answer": "Saja Boys",
+     "options": [],
+     "explanation": "The name is a pun: in Korean, saja means lion, but it is also the word for the grim reapers who escort souls to the afterlife, which is precisely what the boys are.",
+     "source_url": "https://www.billboard.com/lists/huntrx-golden-hot-100-number-one-fifth-week/"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-18T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f30607ef.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f30607ef.jpg"
+   ],
+   "tiktok_buffer": "6afc21cb64f1073d81d43722"
+  },
+  {
+   "key": "wed-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Wed",
+   "format": "round",
+   "language": "sk",
+   "size": 3,
+   "date": "2026-11-18",
+   "files": [
+    "round-sk-adfe95be.mp4",
+    "round-sk-adfe95be.jpg"
+   ],
+   "caption": "Trafíš všetky tri?\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Zadarmo v App Store, odkaz v profile.\n\n#kvíz #kviz #zemepis #popkultúra",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "adfe95be-5b7c-4fda-b26b-d505dccd9093",
+     "category": "geography-world",
+     "question": "Starí Slováci volali jedno známe rakúske mesto Soľnohrad. O ktoré mesto ide?",
+     "answer": "Salzburg",
+     "options": [],
+     "explanation": "Salzburg doslova znamená „soľný hrad“, lebo mesto zbohatlo na ťažbe a obchode so soľou. Slovenský názov je teda presný preklad.",
+     "source_url": "https://sk.wikipedia.org/wiki/Salzburg"
+    },
+    {
+     "id": "e0084f33-6e6a-49fc-a3bb-dc8ff2e692aa",
+     "category": "entertainment",
+     "question": "Kto bol dlhoročným partnerom Milana Lasicu v najslávnejšej komickej dvojici slovenského humoru?",
+     "answer": "Július Satinský",
+     "options": [],
+     "explanation": "Lasica a Satinský spolu vystupovali od konca päťdesiatych rokov až do Satinského smrti v roku 2002 a ich dialógy dodnes patria do slovenskej kultúrnej pamäti.",
+     "source_url": "https://ct24.ceskatelevize.cz/clanek/kultura/zemrel-milan-lasica-profesni-zivot-stravil-vedle-satinskeho-znaly-ho-cele-generace-31497"
+    },
+    {
+     "id": "59c1b36b-7e75-4c32-917e-7fe220730c0f",
+     "category": "entertainment",
+     "question": "V slávnom filme Obchod na korze z roku 1965 dostane tesár Tóno Brtko v podaní Jozefa Kronera do správy obchodík starej židovskej vdovy. Čo sa v tomto obchodíku predávalo?",
+     "answer": "Gombíky",
+     "options": [],
+     "explanation": "Pani Lautmannová mala malú galantériu s gombíkmi, ktorá takmer nič nezarábala. Brtko tak zo „zabraného“ obchodu nič nemal a nakoniec ho starú pani tajne živili susedia.",
+     "source_url": "https://en.wikipedia.org/wiki/The_Shop_on_Main_Street"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-18T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-adfe95be.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-adfe95be.jpg"
+   ],
+   "tiktok_buffer": "6afc21cc3825971990f1ea3e"
+  },
+  {
+   "key": "thu-ig_en",
+   "account": "ig_en",
+   "day": "Thu",
+   "format": "abc",
+   "language": "en",
+   "date": "2026-11-19",
+   "files": [
+    "abc-en-79e58051.mp4",
+    "abc-en-79e58051.jpg"
+   ],
+   "caption": "True or false: the word 'emoji' is derived from the word 'emotion'.\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #geography #didyouknow",
+   "youtube": {
+    "title": "True or false: the word 'emoji' is derived from the word 'emotion'.",
+    "description": "True or false: the word 'emoji' is derived from the word 'emotion'.\n\nWhich one is it? The answer comes at the end.\n\n#trivia #quiz #geography #didyouknow"
+   },
+   "voice": "app voice: question + answer",
+   "questions": [
+    {
+     "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+     "category": "geography-world",
+     "question": "True or false: the word 'emoji' is derived from the word 'emotion'.",
+     "answer": "False",
+     "options": [
+      "True",
+      "False"
+     ],
+     "explanation": "Emoji is Japanese for 'picture character', from 'e' meaning picture and 'moji' meaning character, and its similarity to 'emotion' is pure coincidence.",
+     "source_url": "https://www.etymonline.com/word/emoji"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-19T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/abc-en-79e58051.jpg"
+   ],
+   "tiktok_buffer": "6afc21cde5d943745edf996d"
+  },
+  {
+   "key": "fri-ig_en",
+   "account": "ig_en",
+   "day": "Fri",
+   "format": "round",
+   "language": "en",
+   "size": 5,
+   "date": "2026-11-20",
+   "files": [
+    "round-en-b4898637.mp4",
+    "round-en-b4898637.jpg"
+   ],
+   "caption": "Can you get 5 out of 5?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #food",
+   "youtube": {
+    "title": "Can you get 5 out of 5? Hardly any national flag uses the colour purple. What's the historical…",
+    "description": "Can you get 5 out of 5?\n\nHow many did you get right?\n\n#trivia #quiz #funfacts #food"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+     "category": "general",
+     "question": "Hardly any national flag uses the colour purple. What's the historical reason?",
+     "answer": "Purple dye was too expensive",
+     "options": [],
+     "explanation": "For centuries purple dye came from thousands of crushed sea snails and cost more than gold, so it was reserved for royalty. Today only a handful of flags, such as Dominica's parrot, show any purple at all.",
+     "source_url": "https://en.wikipedia.org/wiki/Purple"
+    },
+    {
+     "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+     "category": "food-everyday",
+     "question": "The puzzle cube invented by architecture professor Ernő Rubik in 1974 came from which country?",
+     "answer": "Hungary",
+     "options": [],
+     "explanation": "Rubik built it in Budapest as a teaching aid for spatial thinking and reportedly took a month to solve his own creation.",
+     "source_url": "https://en.wikipedia.org/wiki/Ern%C5%91_Rubik"
+    },
+    {
+     "id": "46da9f0f-fa47-400c-8204-17d36d5e95e9",
+     "category": "entertainment",
+     "question": "The very first video game tournament, held at Stanford University in the early 1970s, had a modest prize: a one-year subscription to which famous music magazine?",
+     "answer": "Rolling Stone",
+     "options": [],
+     "explanation": "The 1972 'Intergalactic Spacewar Olympics' was organised with Rolling Stone, which covered the event. Today's top tournaments pay out millions of dollars.",
+     "source_url": "https://en.wikipedia.org/wiki/Spacewar!"
+    },
+    {
+     "id": "ee19cc76-0491-404c-a592-1532fec82229",
+     "category": "entertainment",
+     "question": "Drake landed another US top-five hit, 'Solar Eclipse', in October 2026. Before music fame, he played a basketball player who ends up in a wheelchair in which Canadian teen drama series?",
+     "answer": "Degrassi",
+     "options": [],
+     "explanation": "As Aubrey Graham, he played Jimmy Brooks in Degrassi: The Next Generation, starting in 2001. Jimmy was paralysed after being shot by a classmate.",
+     "source_url": "https://www.billboard.com/lists/taylor-swift-patient-zero-hot-100-number-one-second-week/"
+    },
+    {
+     "id": "9f73c5dc-35f2-44ce-9778-e0e7ae5c8675",
+     "category": "science-nature",
+     "question": "The word 'tsunami' is Japanese and combines two words. One means 'wave'. What does the other mean?",
+     "answer": "Harbour",
+     "options": [],
+     "explanation": "Fishermen out at sea would notice nothing unusual, then return to find their harbour destroyed, so the word literally means 'harbour wave'.",
+     "source_url": "https://en.wikipedia.org/wiki/Tsunami"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-20T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-b4898637.jpg"
+   ],
+   "tiktok_buffer": "6afc21cef1430c135f7c2c55"
+  },
+  {
+   "key": "fri-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Fri",
+   "format": "round",
+   "language": "sk",
+   "size": 5,
+   "date": "2026-11-20",
+   "files": [
+    "round-sk-b6b5e315.mp4",
+    "round-sk-b6b5e315.jpg"
+   ],
+   "caption": "Trafíš všetkých päť?\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Zadarmo v App Store, odkaz v profile.\n\n#kvíz #kviz #zaujímavosti #popkultúra",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "b6b5e315-eb80-47ae-bd29-e653881df319",
+     "category": "general",
+     "question": "Keď kamaráti počas svadby „unesú“ nevestu, kam ju podľa tradície najčastejšie odvedú?",
+     "answer": "do krčmy",
+     "options": [],
+     "explanation": "Ženích ju tam musí nájsť a vykúpiť. Výkupné býva často celý účet, ktorý si únoscovia medzitým stihli objednať.",
+     "source_url": "https://english.radio.cz/node/8044865"
+    },
+    {
+     "id": "0218eaa6-8e68-4b2d-a32c-9b7044a68780",
+     "category": "entertainment",
+     "question": "Pavol Habera zasadol v roku 2026 opäť do poroty SuperStar. Ktorej slovenskej kapely je dlhoročným frontmanom?",
+     "answer": "Team",
+     "options": [],
+     "explanation": "S kapelou Team spieva Habera od osemdesiatych rokov a jej hity, napríklad Držím ti miesto, sa dodnes hrajú v rádiách.",
+     "source_url": "https://www.markiza.sk/relacie/superstar/clanok/1038725-superstar-2026-navrat-legendy-skuseny-moderator-a-nova-porota"
+    },
+    {
+     "id": "d1bf4941-3ce7-486c-b019-67ea3050ce04",
+     "category": "food-everyday",
+     "question": "Pri prechode na euro v roku 2009 bol stanovený pevný konverzný kurz. Koľko slovenských korún bolo jedno euro?",
+     "answer": "30,126 korún",
+     "options": [],
+     "explanation": "Kurz 30,1260 koruny za euro platil od prvého januára 2009 a obchody museli ešte celý rok uvádzať ceny v oboch menách.",
+     "source_url": "https://www.mfsr.sk/en/press/the-eur-skk-conversion-rate-stands-30-1260.html"
+    },
+    {
+     "id": "c9985c8f-8b27-44dd-84a7-e3d2167a8470",
+     "category": "food-everyday",
+     "question": "Slovenská borovička sa napriek svojmu názvu nevyrába z borovice. Plody ktorého kríka jej dávajú chuť?",
+     "answer": "Borievka",
+     "options": [],
+     "explanation": "Modré bobule borievky obyčajnej dávajú borovičke rovnakú chuť, akú má britský gin, len Slováci ju pijú čistú a ľadovú.",
+     "source_url": "https://www.britannica.com/topic/borovicka"
+    },
+    {
+     "id": "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2",
+     "category": "general",
+     "question": "Na Slovensku oslavujeme Deň učiteľov 28. marca. Čie narodeniny si v tento deň vlastne pripomíname?",
+     "answer": "Jána Amosa Komenského",
+     "options": [],
+     "explanation": "Komenský sa narodil 28. marca 1592 a vďaka učebniciam ako Orbis pictus ho dodnes voláme učiteľom národov. Kvety pre pani učiteľku sú teda vlastne aj darček k jeho narodeninám.",
+     "source_url": "https://www.teraz.sk/magazin/den-ucitelov-sa-pripomina-od-roku-19/951262-clanok.html"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-20T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-sk-b6b5e315.jpg"
+   ],
+   "tiktok_buffer": "6afc21cfe5d943745edf9a15"
+  },
+  {
+   "key": "sat-ig_en",
+   "account": "ig_en",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "en",
+   "date": "2026-11-21",
+   "files": [
+    "carousel-en-p6-0-cover.jpg",
+    "carousel-en-p6-1-q.jpg",
+    "carousel-en-p6-2-a.jpg",
+    "carousel-en-p6-3-q.jpg",
+    "carousel-en-p6-4-a.jpg",
+    "carousel-en-p6-5-q.jpg",
+    "carousel-en-p6-6-a.jpg",
+    "carousel-en-p6-7-q.jpg",
+    "carousel-en-p6-8-a.jpg"
+   ],
+   "caption": "Road trip round, part 6.\n\nHow many did you get right?\n\n#trivia #quiz #food #funfacts #didyouknow",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "87945219-e3b1-4b97-afa2-f3fd5ff8d296",
+     "category": "food-everyday",
+     "question": "If you swap the ham in eggs Benedict for spinach, the dish takes its name from which Italian city?",
+     "answer": "Florence",
+     "options": [],
+     "explanation": "It becomes eggs Florentine. In classic French cooking, 'à la florentine' has long meant 'served with spinach', a nod to Florence.",
+     "source_url": "https://en.wikipedia.org/wiki/Eggs_Benedict"
+    },
+    {
+     "id": "60c63d18-cf04-48f4-b4d7-00ab2c4bc89f",
+     "category": "general",
+     "question": "Which button-up knitted jacket is named after the British earl who led the doomed Charge of the Light Brigade?",
+     "answer": "Cardigan",
+     "options": [],
+     "explanation": "The 7th Earl of Cardigan and his officers wore knitted wool waistcoats in the Crimean War, and his fame turned his title into a wardrobe staple. The same war gave us the balaclava, named after a battle there.",
+     "source_url": "https://en.wikipedia.org/wiki/Cardigan_(sweater)"
+    },
+    {
+     "id": "d7e2f0e2-6b8f-4171-b691-c9ce9af954e9",
+     "category": "general",
+     "question": "In the word 'karaoke', the Japanese 'kara' means 'empty'. The 'oke' part is a clipped borrowing of which English word?",
+     "answer": "Orchestra",
+     "options": [],
+     "explanation": "Karaoke literally means 'empty orchestra'. The band is all there on the backing track, and the only thing missing is the singer, which is you.",
+     "source_url": "https://en.wikipedia.org/wiki/Karaoke"
+    },
+    {
+     "id": "086f9a1c-c0b8-49a8-9585-8ee857bd94fe",
+     "category": "geography-world",
+     "question": "Only one US state has a genuine royal palace, built for a real king and queen. Which state is it?",
+     "answer": "Hawaii",
+     "options": [],
+     "explanation": "Hawaii was an independent kingdom until 1893, and ʻIolani Palace in Honolulu was the home of its last monarchs. It even had electric lights before the White House did.",
+     "source_url": "https://www.nps.gov/places/iolanipalace.htm"
+    }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-21T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-en-p6-8-a.jpg"
+   ]
+  },
+  {
+   "key": "sat-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "format": "carousel",
+   "language": "sk",
+   "date": "2026-11-21",
+   "files": [
+    "carousel-sk-p3-0-cover.jpg",
+    "carousel-sk-p3-1-q.jpg",
+    "carousel-sk-p3-2-a.jpg",
+    "carousel-sk-p3-3-q.jpg",
+    "carousel-sk-p3-4-a.jpg",
+    "carousel-sk-p3-5-q.jpg",
+    "carousel-sk-p3-6-a.jpg",
+    "carousel-sk-p3-7-q.jpg",
+    "carousel-sk-p3-8-a.jpg"
+   ],
+   "caption": "Kvíz na cestu, 3. diel.\n\nKoľko máš správne?\n\n#kvíz #kviz #zaujímavosti #šport #vedomosti",
+   "youtube": null,
+   "voice": null,
+   "questions": [
+    {
+     "id": "0c3914e6-2761-43a5-83e4-82813cf8bd50",
+     "category": "general",
+     "question": "Slovenské zvolanie „sakra“ je len skrátená podoba staršej nadávky. Z akého cirkevného pojmu vzniklo?",
+     "answer": "sviatosť",
+     "options": [],
+     "explanation": "„Sakra“ pochádza z latinského slova sacramentum, teda sviatosť. Kedysi bolo zahrešiť na niečo sväté naozaj vážne, a preto sa nadávka zjemnila na krátke „sakra“.",
+     "source_url": "https://www.wiktionary.com/wiki/sakra"
+    },
+    {
+     "id": "9e8ee79e-fcad-433f-958c-c0b8d84b7555",
+     "category": "sports",
+     "question": "Čo musí podľa známeho pokriku slovenských hokejových fanúšikov robiť každý, kto chce dokázať, že je Slovák?",
+     "answer": "Skákať",
+     "options": [],
+     "explanation": "Pokrik znie „Kto neskáče, nie je Slovák!“, a preto pri ňom poskakujú celé tribúny aj fanzóny, od štadióna až po námestia.",
+     "source_url": "https://forum.wordreference.com/threads/all-slavic-languages-he-who-isnt-jumping-isnt-supporter-of-a-team-nation.1831749/"
+    },
+    {
+     "id": "f93b3c33-936f-4ada-8fd3-a1911209386d",
+     "category": "general",
+     "question": "Ktoré slovenské mesto sa pre svoje bane prezýva „zlaté mesto“ a dodnes sa v ňom razia slovenské euromince?",
+     "answer": "Kremnica",
+     "options": [],
+     "explanation": "Kremnické zlaté dukáty patrili v stredoveku k najcennejším minciam v Európe. Tamojšia mincovňa razí peniaze nepretržite už takmer sedem storočí, takže euro vo vašej peňaženke pochádza z rovnakej dielne ako dukáty kráľov.",
+     "source_url": "https://nbs.sk/_img/documents/_publik_nbs_fsr/biatec/rok2008/biatec_9_2008.pdf"
+    },
+    {
+     "id": "b8b1ba33-6aee-4c74-b9e9-3c4099b8792e",
+     "category": "geography-world",
+     "question": "Najväčší riečny ostrov v Európe leží na Slovensku. Obteká ho Dunaj a Malý Dunaj. Ako sa volá?",
+     "answer": "Žitný ostrov",
+     "options": [],
+     "explanation": "Kto ide z Bratislavy do Komárna, celý čas je vlastne na ostrove, len o tom nevie. Žitný ostrov je taký veľký, že sú na ňom celé mestá vrátane Dunajskej Stredy a Veľkého Medera.",
+     "source_url": "https://en.wikipedia.org/wiki/%C5%BDitn%C3%BD_ostrov"
+    }
+   ],
+   "status": "manual",
+   "publish_at": "2026-11-21T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-0-cover.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-1-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-2-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-3-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-4-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-5-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-6-a.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-7-q.jpg",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/carousel-sk-p3-8-a.jpg"
+   ]
+  },
+  {
+   "key": "sun-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-22",
+   "files": [
+    "round-en-f32924aa.mp4",
+    "round-en-f32924aa.jpg"
+   ],
+   "caption": "Can you get 3 out of 3?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Free on the App Store, link in bio.\n\n#trivia #quiz #funfacts #popculture",
+   "youtube": {
+    "title": "Can you get 3 out of 3? The word 'nausea' comes from an Ancient Greek word for a means of…",
+    "description": "Can you get 3 out of 3?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Free on the App Store, link in bio.\n\n#trivia #quiz #funfacts #popculture"
+   },
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "f32924aa-366b-482c-be75-d347d594e5ee",
+     "category": "general",
+     "question": "The word 'nausea' comes from an Ancient Greek word for a means of transport. Which one?",
+     "answer": "Ship",
+     "options": [],
+     "explanation": "The Greek 'naus' meant ship, the same root as 'nautical', so nausea literally means seasickness. Sailors had the feeling long before anyone got carsick.",
+     "source_url": "https://en.wiktionary.org/wiki/nausea"
+    },
+    {
+     "id": "7d06f93f-852f-41a0-af68-5b7b9d612bfc",
+     "category": "entertainment",
+     "question": "In 2025 a toothy, pointy-eared elf doll called Labubu became a worldwide craze, sold in sealed blind boxes and clipped to designer handbags from Bangkok to Paris. Which Chinese toy company sells it?",
+     "answer": "Pop Mart",
+     "options": [],
+     "explanation": "The Beijing-based company turned a character drawn by Hong Kong artist Kasing Lung for his The Monsters series into a mystery-box phenomenon, with queues outside its stores and resale prices many times the shelf price.",
+     "source_url": "https://en.wikipedia.org/wiki/Labubu"
+    },
+    {
+     "id": "13447f39-e4b7-4026-adb3-15f88ad6c8c6",
+     "category": "entertainment",
+     "question": "Dancers in Harlem's drag ballrooms competed by snapping into frozen poses copied from the models in one famous fashion magazine, and the dance took that magazine's name. Which magazine?",
+     "answer": "Vogue",
+     "options": [],
+     "explanation": "Voguing was mimicking Vogue's cover poses long before Madonna's 1990 song made it a worldwide craze, and she borrowed it from the ballroom scene.",
+     "source_url": "https://en.wikipedia.org/wiki/Vogue_(dance)"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-22T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-en-f32924aa.jpg"
+   ],
+   "tiktok_buffer": "6afc21d005a7e8ecf85109c6"
+  },
+  {
+   "key": "sun-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "format": "round",
+   "language": "cs",
+   "size": 3,
+   "date": "2026-11-22",
+   "files": [
+    "round-cs-cddde900.mp4",
+    "round-cs-cddde900.jpg"
+   ],
+   "caption": "Trefíš všechny tři?\n\nKolik máš správně?\n\n#kvíz #kviz #popkultura #zajímavosti",
+   "youtube": null,
+   "voice": "app voice: questions + answers",
+   "questions": [
+    {
+     "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
+     "category": "entertainment",
+     "question": "Jaký dvouslovný nápis se skví nad jevištěm Národního divadla v Praze?",
+     "answer": "Národ sobě",
+     "options": [],
+     "explanation": "Nápis připomíná, že divadlo zaplatily celonárodní sbírky, a to dokonce dvakrát, protože budova krátce před dokončením v roce 1881 vyhořela.",
+     "source_url": "https://www.geocaching.com/geocache/GC1ACB7"
+    },
+    {
+     "id": "f6104550-837a-4767-a835-460cbe30db1c",
+     "category": "general",
+     "question": "Když na ulici potkáte kominíka, čeho se podle staré pověry máte rychle chytit, aby vám přinesl štěstí?",
+     "answer": "knoflíku",
+     "options": [],
+     "explanation": "Kdo potká kominíka, má se chytit za vlastní knoflík, a štěstí ho prý nemine. Kominík byl symbolem štěstí proto, že čistý komín chránil dům před požárem.",
+     "source_url": "https://www.kudyznudy.cz/aktuality/den-kominiku-cesta-za-kominy-ktere-vypraveji-pribe"
+    },
+    {
+     "id": "bd5e0d88-f829-4450-b36b-603ae1cc195d",
+     "category": "entertainment",
+     "question": "Zasněžený zámek, kam Popelka ve Třech oříšcích pro Popelku přijíždí na ples, ve skutečnosti nestojí v Česku. Ve které zemi ho najdeme?",
+     "answer": "Německo",
+     "options": [],
+     "explanation": "Je to zámek Moritzburg u Drážďan. Každou zimu se tam koná výstava věnovaná právě Popelce.",
+     "source_url": "https://www.novinky.cz/clanek/vase-zpravy-moritzburg-proslavila-pohadka-o-popelce-naleznete-zde-take-perovou-komnatu-nebo-jediny-sasky-majak-309601"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-22T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/round-cs-cddde900.jpg"
+   ],
+   "tiktok_buffer": "6afc21d1e5d943745edf9aed"
+  }
+ ],
+ "version": 2
+}

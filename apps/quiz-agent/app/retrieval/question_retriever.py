@@ -7,6 +7,7 @@ Proper RAG Implementation:
 - Metadata filters are constraints, not primary selection criteria
 """
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Callable, List, Optional, Sequence, TypeVar
@@ -30,6 +31,38 @@ T = TypeVar("T")
 # boost far above 2×. Reads a column the row already carries: no extra LLM or
 # DB round trip on the hot path.
 BOOST_WEIGHT = 2.0
+
+# #232: pack rows never get approved, so these are the statuses that take one
+# out of a pack (same rule as quiz-pack-api's pack copy, #225 pack_reuse.py).
+PACK_DROPPED_STATUSES = ("rejected", "archived")
+
+# #235: the next-question lookup embeds its query text to rank candidates by
+# similarity. With the shared client's 30 s timeout and 2 retries a slow
+# embeddings API held the next question for 90 s or more. One attempt, at most
+# this long, then the question is picked without ranking. An embedding of a
+# short query normally comes back well under a second, so 2 s only trips when
+# the API is truly slow, and the whole lookup stays far inside the app's wait.
+QUERY_EMBED_TIMEOUT_S = 2.0
+
+
+class QueryEmbeddingUnavailable(Exception):
+    """The query could not be embedded in time (slow or failed API)."""
+
+
+async def embed_query(text: str) -> List[float]:
+    """Embedder for the next-question lookup: one bounded attempt, no retries.
+
+    Ranking is a nicety, the question is not: a retry here would only spend
+    the time the player is waiting, so any failure goes to the unranked pick.
+    """
+    try:
+        return await asyncio.wait_for(
+            generate_embedding_async(text, max_retries=0), QUERY_EMBED_TIMEOUT_S
+        )
+    except Exception as e:
+        raise QueryEmbeddingUnavailable(
+            str(e) or f"no embedding within {QUERY_EMBED_TIMEOUT_S:g} s"
+        ) from e
 
 
 def pick_weight(q: Question, now: datetime) -> float:
@@ -76,7 +109,9 @@ class QuestionRetriever:
                 "explicit question_store=... or set DATABASE_URL so the "
                 "PgvectorQuestionStore can connect."
             )
-        return PgvectorQuestionStore(database_url=settings.database_url)
+        return PgvectorQuestionStore(
+            database_url=settings.database_url, embedder=embed_query
+        )
 
     async def get(self, question_id: str) -> Optional[Question]:
         """Look up a single question by ID.
@@ -86,6 +121,10 @@ class QuestionRetriever:
         place to add caching, telemetry, or fallbacks later.
         """
         return await self._store.get(question_id)
+
+    async def fresh_public_entertainment(self, language: str, limit: int) -> list[dict]:
+        """#223 — fresh entertainment rows for the public website (read-only)."""
+        return await self._store.fresh_public_entertainment(language, limit)
 
     async def count(self, filters: Optional[dict] = None) -> int:
         """Count questions, optionally filtered by metadata."""
@@ -250,26 +289,41 @@ class QuestionRetriever:
             len(client_excluded),
         )
 
-        # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
-        candidates = await self._retrieve_candidates_semantic(
-            semantic_query=semantic_query,
-            filters=filters,
-            n_candidates=n_candidates,
-            excluded_ids=all_excluded_ids,
-        )
-
-        # Filter out expired questions
-        candidates = [c for c in candidates if not c.is_expired()]
-
-        if not candidates:
-            logger.debug(
-                "No candidates from semantic search, trying fallback strategies"
+        try:
+            # Step 5: Retrieve candidates using semantic search (PRIMARY mechanism)
+            candidates = await self._retrieve_candidates_semantic(
+                semantic_query=semantic_query,
+                filters=filters,
+                n_candidates=n_candidates,
+                excluded_ids=all_excluded_ids,
             )
-            candidates = await self._fallback_retrieval(
-                session, question_difficulty, n_candidates, all_excluded_ids, filters
-            )
-            # Filter out expired questions from fallback results too
+
+            # Filter out expired questions
             candidates = [c for c in candidates if not c.is_expired()]
+
+            if not candidates:
+                logger.debug(
+                    "No candidates from semantic search, trying fallback strategies"
+                )
+                candidates = await self._fallback_retrieval(
+                    session,
+                    question_difficulty,
+                    n_candidates,
+                    all_excluded_ids,
+                    filters,
+                )
+                # Filter out expired questions from fallback results too
+                candidates = [c for c in candidates if not c.is_expired()]
+        except QueryEmbeddingUnavailable as e:
+            # #235: a slow embeddings API costs the ranking, not the question.
+            logger.warning(
+                "Next question picked without similarity ranking "
+                "(query embedding unavailable): %s",
+                e,
+            )
+            candidates = await self._unranked_candidates(
+                filters, n_candidates, all_excluded_ids
+            )
 
         if not candidates:
             return await self._handle_no_candidates(session, question_difficulty)
@@ -345,15 +399,74 @@ class QuestionRetriever:
 
     async def _next_fixed_question(self, session: QuizSession) -> Optional[Question]:
         """The first question of ``fixed_question_ids`` not asked yet. A row that
-        has since disappeared is skipped rather than ending the round."""
+        has since disappeared is skipped rather than ending the round.
+
+        #232: a shared-quiz list was built from someone else's session, so each
+        row is re-checked against THIS session's serving filters (its build's
+        review statuses, images, language, rows rejected since). Only the daily
+        challenge's own set — pre-filtered for every player — reads rows as is.
+        """
+        recheck = bool(session.shared_quiz_id) and not session.daily_challenge_date
         for question_id in session.fixed_question_ids:
             if question_id in session.asked_question_ids:
                 continue
-            question = await self._store.get(question_id)
+            question = await (
+                self.shared_question(session, question_id)
+                if recheck
+                else self._store.get(question_id)
+            )
             if question is not None:
                 return question
-            logger.warning("Daily challenge question %s is gone", question_id)
+            logger.warning(
+                "Fixed-list question %s is gone or not servable", question_id
+            )
         return None
+
+    async def shared_question(
+        self, session: QuizSession, question_id: str
+    ) -> Optional[Question]:
+        """``question_id`` if this session's own serving filters allow it (#232).
+
+        The same filter dict a normal question of this session would pass
+        (difficulty aside: a shared list mixes them), narrowed to the one row.
+        A pack session additionally drops rows rejected or archived since —
+        pack rows carry no approval, so the review gate cannot do it.
+        """
+        filters = self._build_metadata_filters("random", session)
+        filters.pop("difficulty", None)
+        filters["id"] = question_id
+        rows = await self._store.search(query_text=None, filters=filters, n_results=1)
+        question = rows[0] if rows else None
+        if question is None or question.is_expired():
+            return None
+        if session.pack_id and question.review_status in PACK_DROPPED_STATUSES:
+            return None
+        if question_id in await self._structure_fix_pending(session):
+            return None
+        return question
+
+    async def pack_question_ids(self, pack_id: str, limit: int = 500) -> List[str]:
+        """A pack's playable questions in creation order (#232 share a finished
+        pack): the same rule as copying a pack for another owner (#225) —
+        neither rejected nor archived, not expired."""
+        rows = await self._store.search(
+            query_text=None, filters={"pack_id": pack_id}, n_results=limit
+        )
+        rows = [
+            q
+            for q in rows
+            if q.review_status not in PACK_DROPPED_STATUSES and not q.is_expired()
+        ]
+        rows.sort(key=lambda q: (q.created_at, q.id))
+        return [q.id for q in rows]
+
+    async def pack_status(self, pack_id: Optional[str]) -> Optional[str]:
+        """``question_packs.generation_status`` (#232: only a ``complete`` pack
+        may be shared or played together). None = no such pack or no state."""
+        probe = getattr(self._store, "pack_generation_status", None)
+        if not pack_id or probe is None:
+            return None
+        return await probe(pack_id)
 
     async def daily_candidates(self, language: str, n: int = 300) -> List[Question]:
         """Random approved questions a daily challenge in ``language`` may use
@@ -442,6 +555,12 @@ class QuestionRetriever:
             filters["$or"] = [english_rows, {"language": session.language}]
         else:
             filters.update(english_rows)
+
+        # #206: a player who switched local questions off gets only universal
+        # rows. Unlabelled rows are NULL too, so a classifier miss never hides
+        # a question from anyone.
+        if session.skip_local_questions:
+            filters["local_scope"] = None
 
         # Add category filter if specified
         if session.preferred_categories:
@@ -555,6 +674,29 @@ class QuestionRetriever:
         )
 
         return candidates
+
+    async def _unranked_candidates(
+        self, filters: dict, n_candidates: int, excluded_ids: List[str]
+    ) -> List[Question]:
+        """Candidates without a query embedding (#235): the store's random
+        sample (the daily challenge's draw) under the SAME filters and
+        exclusions, then without difficulty, as ``_fallback_retrieval``'s last
+        step does. Rows a ranked search could not return stay out: expired ones
+        and ones without a stored embedding (the diversity pick that follows
+        would otherwise embed them on the spot)."""
+        for constraints in (
+            filters,
+            {k: v for k, v in filters.items() if k != "difficulty"},
+        ):
+            rows = await self._store.sample(
+                filters=constraints,
+                n_results=n_candidates,
+                excluded_ids=excluded_ids,
+            )
+            rows = [q for q in rows if q.embedding is not None and not q.is_expired()]
+            if rows:
+                return rows
+        return []
 
     async def _handle_no_candidates(
         self, session: QuizSession, question_difficulty: str

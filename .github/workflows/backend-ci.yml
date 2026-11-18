@@ -10,23 +10,55 @@ on:
       - 'apps/quiz-pack-api/**'
       - 'packages/shared/**'
       - '.github/workflows/backend-ci.yml'
+      - 'data/examples/**'
+      - 'uv.lock'
+      - 'pyproject.toml'
+      - 'infra/ci/**'
+  # #207 task 207.15: "Backend CI gate" is a required check in the main-pr-flow
+  # ruleset, so it must report on EVERY pull request (a path-filtered required
+  # check never reports on unrelated PRs and blocks them forever). PRs are
+  # therefore unfiltered; the `changes` job decides whether the suites run and
+  # the gate passes when they were skipped.
   pull_request:
-    # feat/170-coverage-dedup: #170 integration branch (founder 2026-09-04 — work
-    # stays off main until duplicates are a real problem); PRs into it get CI too.
-    branches: [main, 'feat/170-coverage-dedup']
-    paths:
-      - 'apps/quiz-agent/**'
-      - 'apps/quiz-pack-api/**'
-      - 'packages/shared/**'
-      - '.github/workflows/backend-ci.yml'
+  # The deploy workflow (backend-deploy.yml) runs this whole suite first, so a
+  # change cannot reach staging or prod without passing it.
+  workflow_call:
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  changes:
+    name: Detect backend changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          # push/dispatch/workflow_call are path-filtered or explicit: always run.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')
+          if printf '%s\n' "$files" | grep -qE '^(apps/quiz-agent/|apps/quiz-pack-api/|packages/shared/|data/examples/|infra/ci/|\.github/workflows/backend-ci\.yml$|uv\.lock$|pyproject\.toml$)'; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test-backend:
     name: Test Quiz Agent Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -46,23 +78,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e apps/quiz-agent
-          uv pip install --system -e apps/quiz-pack-api
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
           uv pip install --system pytest pytest-cov pytest-asyncio httpx
 
       # The shared test DB mirrors prod co-tenancy: quiz-agent's pgvector/pack
@@ -77,15 +110,23 @@ jobs:
 
       - name: Run backend tests
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Tests mock OpenAI; the placeholder covers runs without repo secrets
+          # (Dependabot), where an empty key beats the tests' own setdefault.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key' }}
           TEST_DATABASE_URL: postgresql+asyncpg://quiz:quiz@localhost:5432/quiz_pack_test
           REQUIRE_DB_TESTS: "1"
         run: |
           cd apps/quiz-agent
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
 
+      # #235 task 235.6: packages/shared is imported by both apps (DB engine,
+      # user-text guards, query helpers) but its own tests never ran in CI.
+      - name: Run shared package tests
+        working-directory: packages/shared
+        run: pytest tests/ -v
+
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         if: github.event_name == 'pull_request'
         with:
           file: ./apps/quiz-agent/coverage.xml
@@ -94,21 +135,23 @@ jobs:
 
   lint-backend:
     name: Lint Backend Code
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
@@ -125,6 +168,8 @@ jobs:
 
   test-quiz-pack-api:
     name: Test Quiz Pack API (integration)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -159,22 +204,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e "apps/quiz-pack-api[test]"
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
           uv pip install --system pytest pytest-asyncio httpx
 
       - name: Run Alembic migrations
@@ -194,7 +241,9 @@ jobs:
         run: pytest tests/integration/ -v -m integration
 
   verify-openapi:
-    name: Verify OpenAPI Spec Generation
+    name: Verify OpenAPI Spec + iOS compatibility
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     # Startup requires DATABASE_URL (#41 D6, no fallback) AND a migrated schema:
@@ -217,22 +266,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: "latest"
+          version: "0.12.24"
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e apps/quiz-agent
-          uv pip install --system -e packages/shared
+          # #207 task 207.24: exact versions from uv.lock, the same set the
+          # Docker images install, so CI tests what ships.
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-package quiz-system -o "$RUNNER_TEMP/requirements.txt"
+          uv pip install --system -r "$RUNNER_TEMP/requirements.txt"
 
       - name: Run Alembic migrations
         working-directory: apps/quiz-agent
@@ -267,8 +318,45 @@ jobs:
           ls -lh openapi.json
 
       - name: Upload OpenAPI spec as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: openapi-spec
           path: openapi.json
           retention-days: 30
+
+      # #207 task 207.26: the spec must not break a live iOS build. Compares
+      # both apps' specs against the newest ios/* tag of every marketing
+      # version (oasdiff ERR rules); see infra/ci/openapi_compat.py.
+      - name: Fetch iOS release tags
+        run: git fetch --no-tags --depth=1 origin '+refs/tags/ios/*:refs/tags/ios/*'
+
+      - name: Install oasdiff
+        env:
+          OASDIFF_VERSION: "1.33.0"
+          OASDIFF_SHA256: 43a4e328e2d13ba1552d760aa68d2485c75c5621f309f6ff64ae895188345247
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/oasdiff.tgz" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          echo "${OASDIFF_SHA256}  $RUNNER_TEMP/oasdiff.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/oasdiff.tgz" -C "$RUNNER_TEMP" oasdiff
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: API compatibility with live iOS builds
+        run: python infra/ci/openapi_compat.py
+
+  # The one required check (#207 task 207.15). Green when every suite passed,
+  # or when the PR touches no backend path and the suites were skipped; red on
+  # any failed or cancelled suite.
+  gate:
+    name: Backend CI gate
+    needs: [changes, test-backend, lint-backend, test-quiz-pack-api, verify-openapi]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "::error::a backend suite did not pass ($r)"; exit 1 ;; esac
+          done

@@ -17,7 +17,6 @@ final class AppState: ObservableObject {
     let audioService: AudioServiceProtocol
     let persistenceStore: PersistenceStoreProtocol
     let silenceDetectionService: SilenceDetectionServiceProtocol
-    let sttService: ElevenLabsSTTServiceProtocol?
     let storeManager: StoreManager
     /// The auth service, exposed so SettingsView can drive Apple sign-in, sign-out, and account actions.
     let authService: AuthService
@@ -31,8 +30,20 @@ final class AppState: ObservableObject {
     let analytics: AnalyticsClient
     /// Server-side switches: forced update, orders on/off, Home notice (#193 task 193.9).
     let appConfig = AppConfigStore()
+    /// #212: the same-room multiplayer endpoints (the live NetworkService).
+    let roomService: RoomServiceProtocol
+    /// #212: a join link that arrived, held until Home opens the game.
+    let roomInvites = RoomInviteInbox()
+    /// #213: the player's stat cards (the live NetworkService).
+    let playerStatsService: PlayerStatsServiceProtocol
     /// #197: car answer recordings → backend (production only; nil in UI tests).
     private var answerRecordingUploader: AnswerRecordingUploader?
+
+    /// The interface language's locale, set on the app root (founder
+    /// 2026-10-30: the whole app speaks the quiz language).
+    @Published private(set) var interfaceLocale = InterfaceLanguage.locale
+    private var quizLanguageSubscription: AnyCancellable?
+    private var followQuizLanguage: (String) -> Void = InterfaceLanguage.follow
 
     /// The `app_opened` launch kind still to report: cold until the first
     /// activation, then foreground after every trip to the background.
@@ -49,6 +60,27 @@ final class AppState: ObservableObject {
         analytics: analytics
     )
 
+    /// The custom-pack list Home and My packs show (#208.5). Owned HERE, not
+    /// by either view: ContentView swaps Home out for every quiz, and a
+    /// view-owned model came back empty ("Loading your packs…") after each
+    /// round. Long-lived, the list stays on screen while it refreshes. Reset
+    /// when the account changes (sign-out, deletion).
+    private(set) lazy var myPacksViewModel = MyPacksViewModel(
+        service: packOrderService,
+        playedCount: { [weak self] in self?.quizViewModel?.playedQuestionCount(inPack: $0) ?? 0 }
+    )
+
+    /// #232: a friend's quiz link (tapped or pasted), held until Home starts it.
+    /// Lazy so it is built at the first launch's start, before onboarding ends.
+    private(set) lazy var sharedQuizInbox = SharedQuizInbox(
+        isFirstLaunch: SharedQuizInbox.claimFirstLaunch(hasCompletedOnboarding: persistenceStore.hasCompletedOnboarding),
+        analytics: analytics
+    )
+
+    /// #213.4: the Profile tab, long-lived like the packs list so its cards
+    /// stay while a quiz runs and while they refresh.
+    private(set) lazy var profileViewModel = ProfileViewModel(service: playerStatsService, analytics: analytics)
+
     /// The app's one QuizViewModel, created by `sharedQuizViewModel()` and
     /// owned here for the app's lifetime (#97 — CarPlay support): the phone
     /// window and the CarPlay scene drive the same quiz, and CarPlay can connect
@@ -62,10 +94,11 @@ final class AppState: ObservableObject {
             if UITestSupport.isUITesting {
                 let mocks = UITestSupport.makeMockServices()
                 self.networkService = mocks.network
+                roomService = mocks.rooms
+                playerStatsService = UITestSupport.makeMockPlayerStats()
                 audioService = mocks.audio
                 persistenceStore = mocks.persistence
                 silenceDetectionService = mocks.silence
-                sttService = mocks.stt
                 analytics = NoopAnalyticsClient()
                 let purchaseMock = MockPurchaseService()
                 // `--ui-test-purchase-stall` (#129): suspend purchase/restore so
@@ -83,6 +116,14 @@ final class AppState: ObservableObject {
                 if CommandLine.arguments.contains("--ui-test-paywall-offline") {
                     purchaseMock.stubbedOfferings = nil
                 }
+                // #235.5: the store reports a failure, or the player closes the
+                // store sheet without buying (RS-39, RS-40).
+                if CommandLine.arguments.contains("--ui-test-purchase-fail") {
+                    purchaseMock.stubbedPurchaseError = URLError(.notConnectedToInternet)
+                }
+                if CommandLine.arguments.contains("--ui-test-purchase-cancel") {
+                    purchaseMock.stubbedPurchaseOutcome = .userCancelled
+                }
                 self.storeManager = StoreManager(purchaseService: purchaseMock)
                 self.authService = AuthService(baseURL: Config.apiBaseURL)
                 if StoreScreenshotFixtures.isActive {
@@ -99,7 +140,7 @@ final class AppState: ObservableObject {
                 packPurchaseService = MockPackPurchaseService()
                 questionRatingService = MockQuestionRatingService()
                 storeManager.onPurchaseSuccess = { [weak self] in
-                    await self?.quizViewModel?.notifyPremiumPurchased() ?? false
+                    await self?.quizViewModel?.notifyPremiumPurchased()
                 }
                 // Issue #111 T3 (#140 update): the packs entries are ungated now,
                 // but the seeded key keeps UI-test order flows on the deterministic
@@ -131,6 +172,8 @@ final class AppState: ObservableObject {
         self.authService = authService
         let networkService = NetworkService(baseURL: Config.apiBaseURL, authService: authService)
         self.networkService = networkService
+        roomService = networkService
+        playerStatsService = networkService
         // #197: recordings a previous run could not send go out now.
         let uploader = AnswerRecordingUploader(transport: networkService)
         answerRecordingUploader = uploader
@@ -160,31 +203,24 @@ final class AppState: ObservableObject {
                 let silenceService = SilenceDetectionService(
                     selection: .forQuizLanguage(persistence.loadSettings().language)
                 )
-                // One-time launch authorization + prepare (#77 device fix, #105 auth
-                // gap): request speech-recognition permission, then — if granted —
-                // check/download the on-device en-US SpeechTranscriber model assets.
-                // Without them the command transcriber never yields a result on a
-                // real device. Non-blocking; any failure flips `commandAvailability`
-                // (fail loud).
-                Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+                // One-time launch readiness (#77 device fix): if speech recognition
+                // is already allowed, check/download the on-device model assets —
+                // without them the command transcriber never yields a result on a
+                // real device. #237: NEVER the permission prompt here; it waits
+                // until the player turns commands on (onboarding, listen bar).
+                // Non-blocking; any failure flips `commandAvailability` (fail loud).
+                Task { await silenceService.prepareCommandsIfAuthorized() }
                 resolved = silenceService
             }
         #else
             let silenceService = SilenceDetectionService(
                 selection: .forQuizLanguage(persistence.loadSettings().language)
             )
-            // One-time launch authorization + prepare (#77 / #105) — see DEBUG branch.
-            Task { await silenceService.requestAuthorizationAndPrepareAssets() }
+            // One-time launch readiness, no prompt (#77 / #237) — see DEBUG branch.
+            Task { await silenceService.prepareCommandsIfAuthorized() }
             resolved = silenceService
         #endif
         silenceDetectionService = resolved
-
-        // ElevenLabs streaming STT (controlled by feature flag)
-        if Config.useElevenLabsSTT {
-            sttService = ElevenLabsSTTService()
-        } else {
-            sttService = nil
-        }
 
         // #136: NO audio-session activation at launch — the eager
         // setupAudioSession here paused external audio (Spotify) the moment the
@@ -237,44 +273,74 @@ final class AppState: ObservableObject {
             if let viewModel = self.quizViewModel {
                 return await viewModel.notifyPremiumPurchased()
             } else {
-                try? await self.networkService.syncEntitlements()
-                let usage = try? await self.networkService.getUsage()
-                return (usage?.isPlus ?? false) || (usage?.creditBalance ?? 0) > 0
+                guard (try? await self.networkService.syncEntitlements()) != nil,
+                      let usage = try? await self.networkService.getUsage() else { return nil }
+                return usage.isPlus || usage.creditBalance > 0
             }
+        }
+
+        // Before the first frame, so the app never opens in the phone's language.
+        followQuizLanguage(persistenceStore.loadSettings().language)
+        interfaceLocale = InterfaceLanguage.locale
+
+        // #235 F5: a leave from a game together the last run could not send.
+        Task { [pendingRoomLeaves, roomService, networkService] in
+            await pendingRoomLeaves.resend(rooms: roomService, network: networkService)
         }
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
         Logger.quiz.info("🔇 Silence detection: available")
-        let sttEnabled = sttService != nil ? "enabled (ElevenLabs)" : "disabled (using Whisper)"
-        Logger.quiz.info("🎙️ Streaming STT: \(sttEnabled)")
     }
 
-    // For testing
-    init(
-        networkService: NetworkServiceProtocol,
-        audioService: AudioServiceProtocol,
-        persistenceStore: PersistenceStoreProtocol,
-        silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
-        sttService: ElevenLabsSTTServiceProtocol? = nil,
-        storeManager: StoreManager? = nil,
-        authService: AuthService? = nil,
-        packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
-        packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
-        questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
-        analytics: AnalyticsClient = NoopAnalyticsClient()
-    ) {
-        self.networkService = networkService
-        self.audioService = audioService
-        self.persistenceStore = persistenceStore
-        self.silenceDetectionService = silenceDetectionService
-        self.sttService = sttService
-        self.storeManager = storeManager ?? StoreManager()
-        self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
-        self.packOrderService = packOrderService
-        self.packPurchaseService = packPurchaseService
-        self.questionRatingService = questionRatingService
-        self.analytics = analytics
+    #if DEBUG
+        // For testing (its default room and stats services are Debug-only mocks)
+        init(
+            networkService: NetworkServiceProtocol,
+            audioService: AudioServiceProtocol,
+            persistenceStore: PersistenceStoreProtocol,
+            silenceDetectionService: SilenceDetectionServiceProtocol = SilenceDetectionService(),
+            storeManager: StoreManager? = nil,
+            authService: AuthService? = nil,
+            packOrderService: PackOrderServiceProtocol = MockPackOrderService(),
+            packPurchaseService: PackPurchaseServiceProtocol = MockPackPurchaseService(),
+            questionRatingService: QuestionRatingServiceProtocol = MockQuestionRatingService(),
+            analytics: AnalyticsClient = NoopAnalyticsClient(),
+            roomService: RoomServiceProtocol = MockRoomService(),
+            playerStatsService: PlayerStatsServiceProtocol = MockPlayerStatsService(),
+            followQuizLanguage: @escaping (String) -> Void = { _ in }
+        ) {
+            self.followQuizLanguage = followQuizLanguage
+            self.networkService = networkService
+            self.roomService = roomService
+            self.playerStatsService = playerStatsService
+            self.audioService = audioService
+            self.persistenceStore = persistenceStore
+            self.silenceDetectionService = silenceDetectionService
+            self.storeManager = storeManager ?? StoreManager()
+            self.authService = authService ?? AuthService(baseURL: Config.apiBaseURL)
+            self.packOrderService = packOrderService
+            self.packPurchaseService = packPurchaseService
+            self.questionRatingService = questionRatingService
+            self.analytics = analytics
+        }
+    #endif
+
+    /// The account changed (sign-out, deletion): the packs and the stats on
+    /// screen belonged to the previous one.
+    func identityChanged() {
+        myPacksViewModel.reset()
+        profileViewModel.reset()
+    }
+
+    /// #217.4: signing in from the purchase prompt moved this phone's packs,
+    /// question credit and stats onto the account. Play and Profile are
+    /// already on screen behind the sheet, so they load them again now.
+    func reloadAfterSignIn() async {
+        profileViewModel.reset()
+        await profileViewModel.refresh().value
+        await myPacksViewModel.refresh()
+        await quizViewModel?.refreshUsage()
     }
 
     /// #51: `app_opened` on the first activation and on every return from the
@@ -310,8 +376,6 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = open
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
                 viewModel.quizState = .recording
-                viewModel.liveTranscript = content.openAnswer
-                viewModel.isStreamingSTT = true
             case "confirm":
                 viewModel.currentQuestion = open
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 2, correct: 2)
@@ -327,12 +391,45 @@ final class AppState: ObservableObject {
                 viewModel.currentQuestion = mcq
                 viewModel.currentSession = StoreScreenshotFixtures.session(answered: 3, correct: 3)
                 viewModel.quizState = .recording
-                viewModel.isStreamingSTT = true
             default:
                 break
             }
         }
     #endif
+
+    /// #212: a game together, with the host's solo settings and services.
+    func makeRoomViewModel(for quiz: QuizViewModel) -> RoomViewModel {
+        RoomViewModel(
+            rooms: roomService,
+            network: networkService,
+            audio: audioService,
+            audioMode: quiz.selectedAudioMode,
+            solo: quiz.settings,
+            deviceId: persistenceStore.deviceId,
+            accountName: KeychainTokenStore().load()?.accountName,
+            excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() },
+            settingsStore: roomSettingsStore,
+            analytics: analytics,
+            packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled },
+            pendingLeaves: pendingRoomLeaves
+        )
+    }
+
+    /// #235 F5: a UI test starts without a leave from an earlier launch.
+    private var pendingRoomLeaves: PendingRoomLeaveStore {
+        #if DEBUG
+            if UITestSupport.isUITesting { return PendingRoomLeaveStore(defaults: UITestSupport.roomSettingsDefaults) }
+        #endif
+        return PendingRoomLeaveStore()
+    }
+
+    /// #213.8: the host's rules; a UI test starts from the defaults every launch.
+    private var roomSettingsStore: MultiplayerSettingsStore {
+        #if DEBUG
+            if UITestSupport.isUITesting { return MultiplayerSettingsStore(defaults: UITestSupport.roomSettingsDefaults) }
+        #endif
+        return MultiplayerSettingsStore()
+    }
 
     /// The app's QuizViewModel, created with injected dependencies on first use.
     func sharedQuizViewModel() -> QuizViewModel {
@@ -346,25 +443,11 @@ final class AppState: ObservableObject {
             audioService: audioService,
             persistenceStore: persistenceStore,
             silenceDetectionService: silenceDetectionService,
-            sttService: sttService,
             isLocallyEntitled: { storeManager.isPurchased },
-            // #184: realtime vs. batch answers is the founder's in-car A/B switch.
-            realtimeSTTEnabled: {
-                #if DEBUG
-                    // The --ui-test mock STT (UITestSupport.makeMockServices) is a
-                    // streaming mock: the frozen RS suite drives answers by injecting
-                    // realtime STT events, and the batch path (local VAD → WAV →
-                    // backend) never reads them. #184 flipped the default to batch,
-                    // which silently broke RS-01/03/05/06/07/08/09/16/17 — so under
-                    // --ui-test the answer path stays realtime. Batch has no UI-test
-                    // coverage yet (#184 follow-up).
-                    if UITestSupport.isUITesting { return true }
-                #endif
-                return VoicePipelineFlags.realtimeSTTEnabled
-            },
             analytics: analytics,
             answerRecordingUploader: answerRecordingUploader,
-            voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment }
+            voiceExperimentConfig: { [appConfig] in appConfig.voiceExperiment },
+            sharedQuizEnabled: { [appConfig] in appConfig.sharedQuizEnabled }
         )
 
         #if DEBUG
@@ -374,13 +457,14 @@ final class AppState: ObservableObject {
             // injects the transcript; on a loaded CI runner the 5 s window closed
             // first, and the mock's forced commit ("Paris") reached the sheet
             // instead of the injected answer. The cap still ends the recording.
+            // (#208.8: the batch path has no forced commit — an expired window
+            // now lands on the empty sheet instead, so the reason stands.)
             if CommandLine.arguments.contains("--ui-test-park-speech-window") {
                 viewModel.recordingCoordinator.speechStartWindow = viewModel.recordingCoordinator.deadAirCap
             }
             // `--ui-test-error`: land directly on a voice QuestionView with the
             // recording-error banner shown, so the error state can be screenshot-
-            // verified without driving the full record→disconnect flow. Mirrors the
-            // "Connection lost" copy set by RecordingCoordinator+Streaming on STT drop.
+            // verified without driving the full record→interruption flow.
             if CommandLine.arguments.contains("--ui-test-error") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .askingQuestion
@@ -421,8 +505,6 @@ final class AppState: ObservableObject {
             if CommandLine.arguments.contains("--ui-test-recording") {
                 viewModel.currentQuestion = Question.preview
                 viewModel.quizState = .recording
-                viewModel.liveTranscript = "Paris is the capital of France"
-                viewModel.isStreamingSTT = true
             }
             // `--ui-test-glow-matched` / `--ui-test-glow-unmatched` (#122): voice
             // QuestionView with the ambient-glow feedback phase pinned, so the
@@ -541,6 +623,16 @@ final class AppState: ObservableObject {
             }
         #endif
 
+        quizLanguageSubscription = viewModel.$settings
+            .map(\.language)
+            .removeDuplicates()
+            .sink { [weak self] language in
+                self?.followQuizLanguage(language)
+                // The first value arrives while the root view is being built:
+                // publish only a real change.
+                let locale = InterfaceLanguage.locale
+                if self?.interfaceLocale != locale { self?.interfaceLocale = locale }
+            }
         quizViewModel = viewModel
 
         #if DEBUG

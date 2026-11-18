@@ -83,11 +83,16 @@ class BatchViewResponse(BaseModel):
     ratings: dict[str, SavedRating]
 
 
+# A reason is a sentence or two; the cap only stops a client storing megabytes.
+REASON_MAX_CHARS = 2000
+
+
 class WebRatingRequest(BaseModel):
-    rater: str
-    qid: str
+    # The DB column is String(128): longer used to pass and 500 on INSERT.
+    rater: str = Field(max_length=128)
+    qid: str = Field(max_length=128)
     score: float = Field(ge=SCORE_MIN, le=SCORE_MAX)
-    reason: Optional[str] = None
+    reason: Optional[str] = Field(default=None, max_length=REASON_MAX_CHARS)
     # Omitted = leave stored flags untouched; {} = explicitly clear them.
     flags: Optional[dict[str, bool]] = None
 
@@ -113,12 +118,12 @@ class WebRatingRequest(BaseModel):
 
 
 class InAppRatingRequest(BaseModel):
-    question_id: str
+    question_id: str = Field(max_length=128)
     score: float = Field(ge=SCORE_MIN, le=SCORE_MAX)
-    reason: Optional[str] = None
+    reason: Optional[str] = Field(default=None, max_length=REASON_MAX_CHARS)
     # Cosmetic only: `rater` stays the JWT subject so a renamed rater keeps one
     # row instead of forking into two.
-    display_name: Optional[str] = None
+    display_name: Optional[str] = Field(default=None, max_length=64)
 
 
 class RatingSavedResponse(BaseModel):

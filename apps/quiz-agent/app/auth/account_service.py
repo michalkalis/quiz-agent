@@ -30,7 +30,11 @@ from ..db.models import (
     DailyChallengePlay,
     DailyUsage,
     Feedback,
+    PlayerRecap,
     RefreshToken,
+    SharedQuiz,
+    SharedQuizResult,
+    UsageCounter,
     User,
 )
 from ..usage.tracker import _month_start
@@ -173,11 +177,13 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     accounting but are unlinked (see ``_unlink_pack_orders``). Purchase records
     (``subscription``, ``credit_ledger``, ``revoked_transactions``) are kept
     untouched: accounting/refund law requires them. Quiz sessions and ratings
-    live in the separate ratings store and are unlinked by the route
+    are unlinked by the route in the same transaction
     (``SessionManager.forget_user``). The caller commits.
 
-    Sign-in does not re-key feedback, analytics, orders or sessions, so what the
-    person produced *before* signing in still sits under the linked anon ids.
+    Sign-in does not re-key feedback, analytics or sessions (pack orders it does,
+    #217.2, but one bought while signed out may still wait for the next sign-in),
+    so what the person produced *before* signing in still sits under the linked
+    anon ids.
     Those trails are erased the same way, or de-linking would leave them behind.
     Returns every subject id erased (account + linked anons) for the route's
     ratings-store unlink."""
@@ -185,6 +191,11 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
     anon_ids = await linked_anon_ids(session, user_id)
     await _preserve_month_usage_on_anons(session, user_id, anon_ids)
     await session.execute(delete(DailyUsage).where(DailyUsage.subject_id == user_id))
+    # #207.13 cost-cap counters (today's only). The linked anons keep theirs,
+    # like their month usage above: the device stays bound to them.
+    await session.execute(
+        delete(UsageCounter).where(UsageCounter.subject_id == user_id)
+    )
     subject_ids = [user_id, *anon_ids]
     await _erase_personal_trail(session, subject_ids)
     await session.execute(delete(RefreshToken).where(RefreshToken.anon_id == user_id))
@@ -217,8 +228,8 @@ async def erase_anonymous(session: AsyncSession, anon_id: str) -> None:
 
 
 async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -> None:
-    """Delete feedback, analytics events and daily challenge plays (their answers
-    cascade) and unlink pack orders for each id. A deleted play drops out of
+    """Delete feedback, analytics events, recap snapshots, daily challenge plays (their answers
+    cascade) and shared quizzes / results, and unlink pack orders for each id. A deleted play drops out of
     that day's crowd numbers too."""
     await session.execute(
         delete(AnalyticsEvent).where(AnalyticsEvent.subject_id.in_(subject_ids))
@@ -227,6 +238,17 @@ async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -
         delete(DailyChallengePlay).where(DailyChallengePlay.subject_id.in_(subject_ids))
     )
     await session.execute(delete(Feedback).where(Feedback.user_id.in_(subject_ids)))
+    await session.execute(
+        delete(PlayerRecap).where(PlayerRecap.subject_id.in_(subject_ids))
+    )
+    # #232: their shared quizzes (friends' results on them cascade) and their
+    # results on others' — both show a name and a score to other players.
+    await session.execute(
+        delete(SharedQuiz).where(SharedQuiz.sender_subject_id.in_(subject_ids))
+    )
+    await session.execute(
+        delete(SharedQuizResult).where(SharedQuizResult.subject_id.in_(subject_ids))
+    )
     for subject_id in subject_ids:
         await _unlink_pack_orders(session, subject_id)
 
@@ -342,8 +364,12 @@ async def revoke_apple_grant(
     cipher: Optional[AppleTokenCipher],
     encrypted: Optional[bytes],
     user_id: str,
+    *,
+    client_id: Optional[str] = None,
 ) -> None:
     """Best-effort Apple token revoke for a just-deleted account (F4).
+
+    ``client_id`` is the app that obtained the token (#234); None = primary.
 
     Never raises: the GDPR delete already committed, so neither a missing refresh
     token, an unconfigured client, a decrypt error, nor an Apple outage may undo it.
@@ -365,7 +391,7 @@ async def revoke_apple_grant(
         )
         return
     try:
-        await oauth_client.revoke(cipher.decrypt(encrypted))
+        await oauth_client.revoke(cipher.decrypt(encrypted), client_id=client_id)
         logger.info("Revoked Apple grant for deleted account %s.", user_id)
     except AppleOAuthError:
         logger.warning(

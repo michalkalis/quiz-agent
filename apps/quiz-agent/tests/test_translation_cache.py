@@ -256,8 +256,9 @@ def test_durable_across_instances(service, store_url):
     assert result == QUESTION_SK
 
 
-def test_warm_load_serves_from_disk(store_url):
-    """Pre-seeded disk rows are warm-loaded into memory before any call."""
+def test_durable_row_is_served_without_an_llm_call(store_url):
+    """A row already in the durable store is served by a fresh service on first
+    use (read-through, no warm-load at init), without calling the LLM."""
     TranslationStore(store_url).upsert(
         "question", QUESTION, "sk", TRANSLATION_PROMPT_VERSION, QUESTION_SK
     )
@@ -267,7 +268,7 @@ def test_warm_load_serves_from_disk(store_url):
         return_value=mock_response("SHOULD NOT BE CALLED")
     )
 
-    assert service._cache  # warm-loaded before any call
+    assert not service._cache  # nothing preloaded: served by read-through
     result = asyncio.run(service.translate_question(QUESTION, "sk"))
     assert result == QUESTION_SK
     assert service.client.chat.completions.create.call_count == 0

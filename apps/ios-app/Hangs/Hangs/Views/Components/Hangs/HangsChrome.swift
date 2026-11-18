@@ -14,6 +14,8 @@ import SwiftUI
 struct HangsBrandMark: View {
     /// Wordmark size; the mark is drawn a little taller than the cap height.
     var size: CGFloat = 28
+    /// The wordmark's colour; a recap slide (#213.5) sets it on its fill.
+    var color: Color = Theme.Hangs.Colors.ink
 
     var body: some View {
         // Logo = the mascot head (founder 2026-10-13) + "trubbo" in Rethink Sans
@@ -23,7 +25,7 @@ struct HangsBrandMark: View {
             Text(verbatim: "trubbo")
                 .font(Theme.Hangs.Fonts.content(size, weight: .heavy))
                 .tracking(-size * 0.03)
-                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .foregroundStyle(color)
                 .lineLimit(1)
                 .fixedSize()
         }

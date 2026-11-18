@@ -14,7 +14,16 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
@@ -25,11 +34,15 @@ from ..deps import get_auth_sessionmaker, require_auth_or_grace
 from ...auth.identity import AuthSubject
 from ...db.models import Feedback
 from ...rate_limit import limiter
+from ...triage.dispatch import dispatch_feedback
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MESSAGE_MAX_CHARS = 5000
+# The app sends a handful of short fields (version, device, locale, session).
+METADATA_MAX_CHARS = 16_000
+APP_VERSION_MAX_CHARS = 64
 SCREENSHOT_MAX_BYTES = 5 * 1024 * 1024
 AUDIO_MAX_BYTES = 10 * 1024 * 1024
 LOGS_MAX_BYTES = 1 * 1024 * 1024
@@ -104,6 +117,7 @@ async def _read_capped(upload: UploadFile, *, max_bytes: int, field: str) -> byt
 @limiter.limit("5/minute")
 async def submit_feedback(
     request: Request,
+    background: BackgroundTasks,
     message: str = Form(...),
     metadata: str | None = Form(default=None),
     app_version: str | None = Form(default=None),
@@ -124,6 +138,16 @@ async def submit_feedback(
             status_code=413,
             detail=f"message exceeds the {MESSAGE_MAX_CHARS} character limit",
         )
+
+    for value, limit, field in (
+        (metadata, METADATA_MAX_CHARS, "metadata"),
+        (app_version, APP_VERSION_MAX_CHARS, "app_version"),
+    ):
+        if value is not None and len(value) > limit:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{field} exceeds the {limit} character limit",
+            )
 
     metadata_dict = None
     if metadata:
@@ -176,10 +200,13 @@ async def submit_feedback(
 
     if sentry_sdk.get_client().is_active():
         sentry_sdk.capture_message(
-            f"feedback.received id={row.id} message={message[:100]!r}",
+            # #207 (207.23): length only; the text stays in our own table.
+            f"feedback.received id={row.id} chars={len(message)}",
             level="info",
         )
 
+    # #218.3: to the private triage repo after the response, never in its way.
+    background.add_task(dispatch_feedback, row, sessionmaker)
     return FeedbackSubmitResponse(id=str(row.id))
 
 

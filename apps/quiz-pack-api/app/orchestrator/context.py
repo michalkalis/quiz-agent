@@ -14,6 +14,11 @@ from quiz_shared.models.question import Question
 # it inside customer order text; it has no activating effect.
 DIRECT_GENERATION_MARKER = "DIRECT GENERATION MODE"
 
+# Product id of offline CLI orders (`offline_stages.build_order`). Only these
+# may steer the pipeline through in-prompt markers (`--mcq-bias`): a paying
+# customer's or admin's order text is player data, same rule as #157.
+CLI_PRODUCT_ID = "pack_cli"
+
 
 @dataclass
 class OrderContext:
@@ -35,6 +40,10 @@ class OrderContext:
     # batch — the generation prompt asks the LLM for an honest per-question
     # assessment with a spread instead of one echoed value.
     difficulty: str | None = None
+    # #236: who the pack is written for (`app.audience`). None / "adults" =
+    # today's generation; a child band picks the kids prompt and the
+    # post-generation kids check.
+    audience: str | None = None
     # Issue #42 task 42.20 blocker fix (root cause D): True when the order
     # asks for a mostly-MCQ batch. Set by `PackGenerator` from the
     # MULTIPLE-CHOICE EMPHASIS marker on the order prompt; read by

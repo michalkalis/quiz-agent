@@ -49,8 +49,12 @@ extension VoiceCommandCoordinator {
         // Down during ANY TTS (the recognizer must never transcribe the app's
         // own playback — #119 widened this from question-only to feedback too)
         // and during any recording (the answer window is the Slovak ElevenLabs
-        // stream — time-disjoint from command listening).
-        if isPlayingTTS() || isRecordingActive { return false }
+        // stream — time-disjoint from command listening). #208.7: the one
+        // exception is the question read an echo-cancelling listener was kept
+        // up through (+Reading) — and only that engine: with it gone, nothing
+        // may start one under the playing clip.
+        if isRecordingActive { return false }
+        if isPlayingTTS(), !listensThroughQuestionRead { return false }
 
         // #171 Track D / #173: a paused quiz is frozen — every countdown is
         // cancelled and the mic must come down with them, or "paused" would
@@ -87,10 +91,8 @@ extension VoiceCommandCoordinator {
         guard mayCaptureAudio else { return nil }
 
         switch quizState() {
-        case .idle: return .home
         case .askingQuestion: return .question
         case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
-        case .showingResult: return .result
         case .error: return .error
         case .finished: return .setEnd
         default: return nil // startingQuiz / skipping / recording
@@ -146,13 +148,19 @@ extension VoiceCommandCoordinator {
         // exception: it ends the recording (stop → submit), and the mic comes
         // down with it (#173).
         if isRecordingActive, !isQuizPaused() { return }
+        restartListenerIfCommandsBecameReady() // #237
         if let screen = currentCommandScreen {
-            // #136 (founder decision B): Home listening runs under the QUIET
+            // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app
-            // waits for "start". In-quiz windows keep whatever session
+            // waits for "again" / "home". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
-            if screen == .home || screen == .setEnd {
+            if screen == .setEnd {
                 configureQuietListeningSession()
+                // #208.5: a quiz engine still up here would keep `.voiceChat`
+                // (call volume) there; the restart below comes up without it.
+                if silenceDetectionService.voiceProcessingStatus?.armed == true {
+                    stopSilenceDetectionListening()
+                }
             }
             await startSilenceDetectionListening()
         } else {
@@ -230,7 +238,8 @@ extension VoiceCommandCoordinator {
     }
 
     /// #122 follow-up (TF 2026-10-07, founder: no feedback that the app heard a
-    /// command): feed the energy VAD's speech edges into the "hearing" cue —
+    /// command), #208.7: feed the VAD's speech edges into the "hearing" and
+    /// "processing" cues —
     /// from their OWN channel, never the silence channel the answer recording's
     /// auto-stop consumes (a channel serves one consumer).
     private func startCommandSpeechConsumer() {
@@ -238,10 +247,7 @@ extension VoiceCommandCoordinator {
         let task = Task { [weak self] in
             for await event in events {
                 guard let self, !Task.isCancelled else { break }
-                switch event {
-                case .speechStarted: self.noteSpeechStartedForFeedback()
-                case .silenceAfterSpeech: self.noteSpeechEndedForFeedback()
-                }
+                self.noteSpeechActivity(event)
             }
         }
         taskBag.add(task, key: .commandSpeechEvents)
@@ -251,6 +257,10 @@ extension VoiceCommandCoordinator {
     func stopCommandConsumer() {
         taskBag.cancel(.commandListener)
         taskBag.cancel(.commandSpeechEvents)
+        flushUtteranceLog(screen: currentCommandScreen, outcome: "listenerStopped") // #208.7
+        // #208.7: a listener kept up through a read is gone — nothing may
+        // start a new one under the clip (`mayCaptureAudio`).
+        endQuestionRead()
         applyCaptureEvent(.reset)
         // A torn-down listener will never deliver the final that would have
         // ended the utterance, so the latch must not survive it (#119).

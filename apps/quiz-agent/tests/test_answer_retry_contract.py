@@ -94,15 +94,15 @@ class _Manager:
         self.writes = 0
         self._lock = asyncio.Lock()
 
-    def get_session(self, session_id: str) -> QuizSession:
+    async def get_session(self, session_id: str) -> QuizSession:
         return QuizSession.model_validate_json(self.stored.model_dump_json())
 
-    def update_session(self, session: QuizSession) -> bool:
+    async def update_session(self, session: QuizSession) -> bool:
         self.stored = QuizSession.model_validate_json(session.model_dump_json())
         self.writes += 1
         return True
 
-    def session_lock(self, session_id: str) -> asyncio.Lock:
+    def session_lock(self, session_id: str, *, wait: bool = True) -> asyncio.Lock:
         return self._lock
 
 
@@ -411,7 +411,7 @@ async def test_session_create_stores_the_declared_capabilities(monkeypatch):
             token_service=None,
             auth_sessionmaker=None,
         )
-        return manager.get_session(resp.session_id)
+        return await manager.get_session(resp.session_id)
 
     assert (await _create({})).client_capabilities == []
     declared = await _create({"X-Client-Capabilities": "answer-codes, option-labels"})

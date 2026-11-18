@@ -16,6 +16,7 @@ from arq.constants import default_queue_name as arq_default_queue_name
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
+from quiz_shared.store_ids import parse_id_list
 
 _BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootCA-G3.cer"
 
@@ -24,6 +25,11 @@ _BUNDLED_APPLE_ROOT = Path(__file__).parent / "storekit" / "certs" / "AppleRootC
 # key's presence IS the heartbeat that GET /api/v1/admin/worker/heartbeat reports to
 # the prod monitor (the beta's session worker on mba once lay dead for ~20 h unseen).
 WORKER_HEALTH_CHECK_INTERVAL_S = 60
+
+# #207 207.5: the mba backup worker consumes the SAME queue as the Fly worker, so
+# it writes its heartbeat under its own key. `<queue>:health-check` then stays the
+# Fly worker's alone, and its absence is what tells the backup to step in.
+BACKUP_HEALTH_CHECK_KEY = "quiz-pack:backup:health-check"
 
 
 class Settings(BaseSettings):
@@ -52,22 +58,41 @@ class Settings(BaseSettings):
     # serves, mirroring quiz-agent's RC_ALLOWED_ENVIRONMENT. Comma-separated
     # (#193): prod sets "Production,Sandbox" because App Review and TestFlight
     # always buy in Sandbox while real customers buy in Production.
+    # APP_BUNDLE_ID is comma-separated (#234): the App Store app first
+    # (primary), then the TestFlight-only beta app, e.g.
+    # "com.missinghue.hangs,com.missinghue.hangs.beta". One value = one app.
     app_bundle_id: str = "com.missinghue.hangs"
     storekit_environment: Optional[frozenset[str]] = None
     storekit_root_cert_path: Path = _BUNDLED_APPLE_ROOT
 
+    # App Store Server API (#207 207.6 — order check after a DB restore). An
+    # In-App Purchase key from App Store Connect; the private key is the .p8
+    # contents (PEM, or that PEM base64-encoded). Unset → the reconcile
+    # command refuses to run; nothing else reads these.
+    app_store_server_key_id: Optional[str] = None
+    app_store_server_issuer_id: Optional[str] = None
+    app_store_server_private_key: Optional[str] = None
+
     # Queue routing (#172 — session worker: custom packy v bete cez subscription).
     # `order_queue_name` is where the API and the sweep PUT jobs; `worker_queue_name`
     # is what this worker process TAKES them from. Both default to ARQ's own default
-    # queue, so an unset deploy behaves exactly as before. Prod flips only
-    # ORDER_QUEUE_NAME (jobs land on the session queue the mba worker consumes); the
-    # mba worker sets both, plus a single slot and a long budget, because a
-    # `claude -p` pack run is far slower than the paid-API one and the subscription
-    # quota is shared with interactive work.
+    # queue, so an unset deploy behaves exactly as before. Since #207 (founder
+    # 2026-10-16: Fly worker primary, mba only a backup) both stay unset
+    # everywhere; a worker whose two values differ refuses to boot (on_startup),
+    # because it would sit idle while paid orders pile up somewhere else. The mba
+    # backup sets a single slot and a long budget, because a `claude -p` pack run
+    # is far slower than the paid-API one.
     order_queue_name: str = arq_default_queue_name
     worker_queue_name: str = arq_default_queue_name
     worker_max_jobs: int = 2
     worker_job_timeout_s: int = 3600
+
+    # #207 207.5 — when the mba backup worker (app.worker.backup) may take orders:
+    # the Fly worker's heartbeat has been gone this long (a deploy restart is
+    # ~1-2 min, so it never triggers a takeover), or an order has waited in the
+    # queue this long with nobody picking it up.
+    backup_fly_down_grace_s: int = 300
+    backup_queue_wait_s: int = 900
 
     # Pause switch for NEW custom-pack orders (#193 task 193.9). Same name as
     # quiz-agent's setting that disables the order entry in the app; this one
@@ -75,11 +100,27 @@ class Settings(BaseSettings):
     # Off refuses only order creation: status, stream, retry and the
     # idempotent replay of an existing (already paid) order keep working.
     pack_orders_enabled: bool = True
+    # #225: answer an order with a copy of another player's finished pack for
+    # the same prompt/language/difficulty instead of generating. Live override:
+    # quiz-agent's `app_switches` row `pack_reuse_enabled`.
+    pack_reuse_enabled: bool = True
+
+    # TestFlight testers order with Sandbox purchases, which cost them nothing
+    # while generation still costs us (~$2.25 a pack_30, 2026-11-08). Cap per
+    # account over a rolling 7 days rather than per day, so a tester can test
+    # several packs in one sitting. 0 turns the cap off. Real App Store
+    # purchases and the founder's admin orders are never capped.
+    tester_weekly_pack_cap: int = 7
 
     # Sentry (backend arch review 2026-07-18). Per-deploy Fly secret; unset →
     # no Sentry init (dev). Read by main.py AND worker.on_startup (separate
     # processes, both init).
     sentry_dsn: Optional[str] = None
+
+    @property
+    def app_bundle_ids(self) -> tuple[str, ...]:
+        """`APP_BUNDLE_ID` as an ordered tuple; the first entry is primary."""
+        return parse_id_list(self.app_bundle_id)
 
     @field_validator("storekit_environment", mode="before")
     @classmethod

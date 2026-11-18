@@ -1,0 +1,5 @@
+# texts
+Statistiky se nepodařilo načíst
+Zkus znovu
+# identifiers
+profile.statsRetry

@@ -16,6 +16,7 @@ import Foundation
             fetchDailyChallengeCallCount += 1
             capturedDailyFetchDate = date
             capturedDailyFetchLanguage = language
+            try await simulateNetwork(.fetchDailyChallenge)
             if let fetchDailyChallengeError { throw fetchDailyChallengeError }
             if let stubbedDailyState { return stubbedDailyState }
             if let dailyScript { return dailyScript.state(date: date, language: language) }
@@ -26,6 +27,7 @@ import Foundation
             startDailyChallengeCallCount += 1
             capturedDailyStartDate = date
             capturedDailyStartLanguage = language
+            try await simulateNetwork(.startDailyChallenge)
             if let startDailyChallengeError { throw startDailyChallengeError }
             if let stubbedDailyStart { return stubbedDailyStart }
             if let dailyScript { return dailyScript.start(date: date, language: language) }

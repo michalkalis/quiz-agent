@@ -32,19 +32,24 @@ COST_REPORT_URL = "https://api.anthropic.com/v1/organizations/cost_report"
 API = "api"
 SESSION = "session"
 
-DEFAULT_BUDGET_USD = 200.0
 DEFAULT_RESERVE_USD = 25.0
+
+# The Max plan's monthly API credit, as Claude Console → Billing →
+# Promotional credits shows it. Not a secret, so it lives here (one place for
+# this gate and the prod cost monitor) and is updated by PR when a new grant
+# appears. Start is the first day this grant is drawn: the 2026-11-03 grant
+# only took over once the previous one expired on 2026-11-06; 11-05 is used
+# because the cost report refuses a window starting today (counts ~$6 extra,
+# the safe direction).
+CREDIT_START = date(2026, 11, 5)
+CREDIT_EXPIRES = date(2026, 12, 6)  # first day the credit is gone
+CREDIT_USD = 200.0
 
 
 @dataclass(frozen=True)
 class Decision:
     route: str  # API or SESSION
     reason: str
-
-
-def _env_date(name: str) -> date | None:
-    raw = (os.getenv(name) or "").strip()
-    return date.fromisoformat(raw) if raw else None
 
 
 def _env_float(name: str, default: float) -> float:
@@ -88,14 +93,10 @@ def decide(
     if not admin_key:
         return Decision(SESSION, "ANTHROPIC_ADMIN_KEY not set, spend unknown")
     try:
-        start = _env_date("ANTHROPIC_CREDIT_START")
-        expires = _env_date("ANTHROPIC_CREDIT_EXPIRES")
-        budget = _env_float("ANTHROPIC_CREDIT_USD", DEFAULT_BUDGET_USD)
         reserve = _env_float("ANTHROPIC_CREDIT_RESERVE_USD", DEFAULT_RESERVE_USD)
     except ValueError as exc:
         return Decision(SESSION, f"bad credit config: {exc}")
-    if start is None or expires is None:
-        return Decision(SESSION, "ANTHROPIC_CREDIT_START / _EXPIRES not set")
+    start, expires, budget = CREDIT_START, CREDIT_EXPIRES, CREDIT_USD
     if not start <= today < expires:
         return Decision(SESSION, f"no active credit (period {start}..{expires})")
     try:

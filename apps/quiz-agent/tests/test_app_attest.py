@@ -411,3 +411,52 @@ async def test_assertion_challenge_is_single_use(db_sessionmaker, root):
         await svc.verify_assertion(
             key_id_b64, build_assertion(challenge, leaf_key, counter=3), challenge
         )
+
+
+# ── Two apps: App Store + Trubbo Beta (#234) ─────────────────────────────────
+
+BETA_APP_ID = "ABCDE12345.com.example.hangs.beta"
+
+
+async def test_beta_app_attests_and_asserts_when_both_apps_are_configured(
+    db_sessionmaker, root
+):
+    """#234: the beta app is a second bundle id. Without it in
+    APP_ATTEST_APP_ID a beta install could never mint an identity, so it must
+    attest and assert like the App Store app does."""
+    root_key, root_cert, root_pem = root
+    svc, store = _service(db_sessionmaker, root_pem, app_id=(APP_ID, BETA_APP_ID))
+    challenge = await store.issue()
+    attestation, key_id_b64, leaf_key = build_attestation(
+        challenge, root_key, root_cert, app_id=BETA_APP_ID
+    )
+    await svc.verify_attestation(key_id_b64, attestation, challenge)
+
+    challenge = await store.issue()
+    assertion = build_assertion(challenge, leaf_key, counter=1, app_id=BETA_APP_ID)
+    row = await svc.verify_assertion(key_id_b64, assertion, challenge)
+    assert row.sign_counter == 1
+
+
+async def test_two_configured_apps_still_reject_a_foreign_app(db_sessionmaker, root):
+    """A list of app ids must not widen the rpId check to any app."""
+    root_key, root_cert, root_pem = root
+    svc, store = _service(db_sessionmaker, root_pem, app_id=(APP_ID, BETA_APP_ID))
+    challenge = await store.issue()
+    attestation, key_id_b64, _ = build_attestation(
+        challenge, root_key, root_cert, app_id="OTHER999.com.evil.app"
+    )
+    with pytest.raises(AppAttestError):
+        await svc.verify_attestation(key_id_b64, attestation, challenge)
+
+
+async def test_single_app_config_rejects_the_beta_app_as_before(db_sessionmaker, root):
+    """One configured app id = pre-#234 behaviour: the beta is a foreign app."""
+    root_key, root_cert, root_pem = root
+    svc, store = _service(db_sessionmaker, root_pem, app_id=APP_ID)
+    challenge = await store.issue()
+    attestation, key_id_b64, _ = build_attestation(
+        challenge, root_key, root_cert, app_id=BETA_APP_ID
+    )
+    with pytest.raises(AppAttestError):
+        await svc.verify_attestation(key_id_b64, attestation, challenge)

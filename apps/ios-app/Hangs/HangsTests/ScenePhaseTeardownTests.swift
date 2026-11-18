@@ -38,7 +38,6 @@ private func makeScenePhaseVM(
         audioService: audio,
         persistenceStore: MockPersistenceStore(),
         silenceDetectionService: silence,
-        sttService: nil,
         clock: clock
     )
     vm.currentSession = Fixtures.makeActiveSession()
@@ -95,26 +94,6 @@ struct ScenePhaseTeardownTests {
     }
 
     // MARK: - .background during recording → #67 interruption path
-
-    @Test("background during STREAMING recording aborts via the #67 interruption path")
-    func backgroundDuringStreamingRecordingAborts() async throws {
-        let (vm, _, audio) = makeScenePhaseVM()
-
-        vm.quizState = .recording
-        vm.isStreamingSTT = true
-        try await audio.startStreamingRecording { _ in }
-        #expect(audio.isRecording == true)
-
-        vm.handleScenePhase(.background)
-
-        // Same end-state as QuizViewModelInterruptionTests (one reset path).
-        #expect(vm.quizState == .askingQuestion)
-        #expect(vm.isStreamingSTT == false)
-        #expect(audio.isRecording == false)
-        #expect(audio.audioEngineActive == false)
-        #expect(vm.errorMessage != nil, "the #67 'recording interrupted' message is reused")
-        #expect(audio.deactivateSessionCallCount == 0, "mid-quiz session stays alive")
-    }
 
     @Test("background during BATCH recording drops the capture and exits .recording")
     func backgroundDuringBatchRecordingStopsRecorder() async throws {

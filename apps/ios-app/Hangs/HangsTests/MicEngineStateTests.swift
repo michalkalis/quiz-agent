@@ -55,7 +55,6 @@ struct MicEngineStateTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -109,7 +108,7 @@ struct MicEngineStateTests {
     func rerecordAdoptsInFlightStart() async {
         let clock = TestClock()
         let (vm, silence, _, audio) = makeVM(clock: clock)
-        vm.quizMuteOverride = true // no read-back: the sheet arms its listener at once
+        vm.settings.isMuted = true // no read-back: the sheet arms its listener at once
         let gate = EngineGate()
         silence.onStartListeningSuspend = {
             silence.isStartingListening = true

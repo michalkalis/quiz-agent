@@ -7,6 +7,8 @@ configurable, a resolved model id); they never read an API key or hardcode a
 
     LLM_GATEWAY=direct      # canonical provider endpoints
     LLM_GATEWAY=openrouter  # everything OpenRouter can serve routes through OpenRouter
+    LLM_GATEWAY=mixed       # offline runs: openrouter, but Claude ids must draw the
+                            # Anthropic credit — fails loud without either key
 
 Phase 0 of issue #53 proved OpenRouter serves chat + embeddings but **not**
 audio (TTS / Whisper) or image (gpt-image-1). Those capabilities pass
@@ -57,6 +59,13 @@ OPENROUTER = "openrouter"
 # ``claude -p`` (see session_cli.py). Never set on Fly.
 SESSION = "session"
 SESSION_PREFIX = "session:"
+# Offline runs on the founder's Anthropic API credit: ``openrouter`` plus the
+# #196 Claude-direct rule, made mandatory. Plain ``openrouter`` quietly sends
+# Claude through OpenRouter when ANTHROPIC_API_KEY is missing; ``mixed``
+# refuses instead. ``gateway()`` reports it as ``openrouter`` so every
+# OpenRouter-aware call site (judge panel, cost delta, caching) behaves alike.
+MIXED = "mixed"
+_MIXED_KEYS = ("ANTHROPIC_API_KEY", "OPENROUTER_API_KEY")
 
 BEDROCK_PREFIX = "bedrock:"
 
@@ -176,10 +185,11 @@ SCORE_THIRD = "deepseek-v4-pro"
 # cheap model can't reach the answer blind, a player won't either.
 ANSWERABILITY = "deepseek-v4-flash"
 # #170 D7: pairwise "same fact yes/no" for the dedup gray zone (cosine
-# 0.70–0.85). A one-word comprehension verdict, not a quality judge — the
-# cheap FACTCHECK-class model is enough and stays family-disjoint from the
-# generator. Session tier: sonnet (via the gpt-5-mini alias below).
-DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "gpt-5-mini")
+# 0.70–0.85). A one-word comprehension verdict, not a quality judge, so
+# family overlap with the generator does not matter. Sonnet since the judge
+# went default-on (2026-10-22): the model the 2026-10-01 replay measured, and
+# the weekly job already pinned it. Rollback: LLM_ROLE_DEDUP_JUDGE=gpt-5-mini.
+DEDUP_JUDGE = _role("LLM_ROLE_DEDUP_JUDGE", "claude-sonnet-5-5")
 # #201: "casual player" check — estimates how many ordinary adults in the
 # player's country would get an entertainment question. Sonnet, not the
 # flash-class ANSWERABILITY proxy: it must know small-market (sk/cs) pop
@@ -195,9 +205,21 @@ SOURCING = _role("LLM_ROLE_SOURCING", "claude-sonnet-5-5")  # was gpt-5-mini
 TOPIC_PLAN = _role("LLM_ROLE_TOPIC_PLAN", CRITIQUE)  # kept: Claude less varied
 EXPIRY = _role("LLM_ROLE_EXPIRY", "claude-sonnet-5-5")  # was CRITIQUE
 OTDB_REWRITE = _role("LLM_ROLE_OTDB_REWRITE", "claude-haiku-5-5")  # was gpt-4o-mini
+# #233: custom pack topic check before payment; serve-time, one word out.
+TOPIC_CHECK = _role("LLM_ROLE_TOPIC_CHECK", "claude-haiku-5-5")
+# #236: child-band pack check after generation (forbidden themes), same model.
+KIDS_CHECK = _role("LLM_ROLE_KIDS_CHECK", "claude-haiku-5-5")
 HINT_QUESTION = _role("LLM_ROLE_HINT_QUESTION", "gpt-4o")  # kept: Claude over-clues
 SILHOUETTE_QUESTION = _role("LLM_ROLE_SILHOUETTE_QUESTION", "gpt-4o")  # kept: 2x longer
 HINT_VALIDATE = _role("LLM_ROLE_HINT_VALIDATE", "claude-haiku-5-5")  # was gpt-4o-mini
+# #206: "local question" label (which country a question is tied to). Sonnet,
+# not haiku: it must know which sk/cs shows, people and customs are domestic,
+# the same small-market knowledge CASUAL_PLAYER needs.
+LOCAL_SCOPE = _role("LLM_ROLE_LOCAL_SCOPE", "claude-sonnet-5-5")
+# #211: native sk/cs naturalness check (calques, empty home hooks) + proposed
+# rewrite. Opus: the rewrite may replace a live question once the founder's
+# blind pairs approve it, so it must write the best Slovak/Czech we have.
+NATURALNESS = _role("LLM_ROLE_NATURALNESS", "claude-opus-5-5")
 
 
 def pick_generation_model(rand=random.random) -> str:
@@ -411,9 +433,18 @@ def provider_for_model(model_id: str) -> str:
 def gateway() -> str:
     """Active gateway, read fresh each call so tests/env flips take effect."""
     value = os.getenv("LLM_GATEWAY", DIRECT).strip().lower()
+    if value == MIXED:
+        missing = [k for k in _MIXED_KEYS if not (os.getenv(k) or "").strip()]
+        if missing:
+            raise RuntimeError(
+                f"LLM_GATEWAY=mixed needs {' and '.join(missing)} — refusing to "
+                "route Claude or the other models through another provider."
+            )
+        return OPENROUTER
     if value not in (DIRECT, OPENROUTER, SESSION):
         raise ValueError(
-            f"LLM_GATEWAY must be {DIRECT!r}, {OPENROUTER!r} or {SESSION!r}, got {value!r}"
+            f"LLM_GATEWAY must be {DIRECT!r}, {OPENROUTER!r}, {SESSION!r} or "
+            f"{MIXED!r}, got {value!r}"
         )
     return value
 

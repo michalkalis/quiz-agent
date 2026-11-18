@@ -1206,3 +1206,112 @@ async def test_entitlement_read_gate_fails_closed_when_unset(
     monkeypatch.delenv("RC_ALLOWED_ENVIRONMENT", raising=False)
     async with db_sessionmaker() as s:
         assert await account_is_entitled(s, _ACCOUNT) is False
+
+
+# --- Trubbo Beta products (#234) ---------------------------------------------
+#
+# The beta app sells `beta.` + the live product id. RevenueCat names no bundle,
+# so the prefix is mapped back only on a Sandbox purchase (the beta app is never
+# released). A beta purchase must unlock exactly what the live product does; a
+# `beta.` id claiming Production must credit nothing.
+
+
+async def test_beta_pack_bought_in_sandbox_credits_the_live_pack(
+    client, db_sessionmaker, monkeypatch
+):
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    event = _pack_event(
+        "NON_RENEWING_PURCHASE",
+        ts_ms=1000,
+        txn_id="beta_pack_txn",
+        event_id="evt_beta_pack",
+        environment="SANDBOX",
+    )
+    event["product_id"] = f"beta.{_PACK_PID}"
+    resp = await _post_webhook(client, event)
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 100
+
+
+async def test_beta_pack_id_claiming_production_credits_nothing(
+    client, db_sessionmaker, monkeypatch
+):
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    event = _pack_event(
+        "NON_RENEWING_PURCHASE",
+        ts_ms=1000,
+        txn_id="beta_prod_txn",
+        event_id="evt_beta_prod",
+        environment="PRODUCTION",
+    )
+    event["product_id"] = f"beta.{_PACK_PID}"
+    resp = await _post_webhook(client, event)
+    assert resp.status_code == 200
+    assert await _balance(db_sessionmaker) == 0
+
+
+async def test_beta_subscription_webhook_unlocks_the_live_subscription(
+    client, db_sessionmaker, monkeypatch
+):
+    # `subscription.product_id` is a foreign key into the live catalog; the
+    # beta id must be mapped before the write or the purchase 500s forever.
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    resp = await _post_webhook(
+        client,
+        _sub_event(
+            "INITIAL_PURCHASE",
+            ts_ms=1000,
+            expires_ms=_ms(30),
+            environment="SANDBOX",
+            product_id=f"beta.{_SUB_PID}",
+        ),
+    )
+    assert resp.status_code == 200
+    row = await _sub_row(db_sessionmaker)
+    assert row.product_id == _SUB_PID
+    assert row.status == "active"
+
+
+async def test_sync_maps_sandbox_beta_entries_and_ignores_production_ones(
+    client, db_sessionmaker, monkeypatch
+):
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION,SANDBOX")
+    snapshot = _snapshot(
+        request_date_ms=5000,
+        subscriptions={
+            f"beta.{_SUB_PID}": {
+                "expires_date": (utcnow() + timedelta(days=30)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+                "grace_period_expires_date": None,
+                "billing_issues_detected_at": None,
+                "original_transaction_id": "orig_beta_sub",
+                "is_sandbox": True,
+            }
+        },
+        non_subscriptions={
+            f"beta.{_PACK_PID}": [
+                {
+                    "id": "rc_ns_beta",
+                    "store_transaction_id": "beta_sync_txn",
+                    "is_sandbox": True,
+                },
+                {
+                    "id": "rc_ns_fake",
+                    "store_transaction_id": "beta_fake_txn",
+                    "is_sandbox": False,
+                },
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        rc_service, "fetch_rc_subscriber", AsyncMock(return_value=snapshot)
+    )
+    resp = await client.post("/api/v1/entitlements/sync")
+    assert resp.status_code == 200
+    row = await _sub_row(db_sessionmaker)
+    assert row.product_id == _SUB_PID
+    assert row.status == "active"
+    # Only the Sandbox beta pack is credited; the Production one is unknown.
+    assert await _balance(db_sessionmaker) == 100
+    assert await _row_count(db_sessionmaker, "grant") == 1

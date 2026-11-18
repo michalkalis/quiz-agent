@@ -17,7 +17,7 @@ from ..deps import (
 from ...serializers import session_translation, translated_question_payload
 from ..session_auth import require_session_ownership
 from ...auth.identity import AuthSubject
-from ...session.manager import SessionManager
+from ...session.manager import SessionBusy, SessionConflict, SessionManager
 from ...retrieval.question_retriever import QuestionRetriever
 from ...tts.number_normalization import normalize_numbers_for_tts
 from ...tts.spoken_text import spoken_question_text
@@ -28,6 +28,36 @@ from ...rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+async def synthesize_metered(
+    tts_service: TTSService,
+    usage_tracker: Optional[UsageTracker],
+    subject_id: Optional[str],
+    text: str,
+    language: Optional[str] = None,
+    voice: Optional[str] = None,
+) -> bytes:
+    """Client-chosen text to speech under the per-user daily budget (#193.13).
+
+    Shared by ``POST /tts/synthesize`` and the answer read-back that
+    ``/voice/submit`` synthesizes itself (#208.3): same text normalisation,
+    voice and cache key, so either one's audio is the other's cache hit.
+    """
+    budget = get_settings().tts_synthesize_daily_char_budget
+    metered = bool(budget and usage_tracker and subject_id)
+    billing = TTSBilling()
+    if metered:
+        used = await usage_tracker.tts_chars_today(subject_id)
+        billing.allow_primary = used < budget
+    if language:
+        text = normalize_numbers_for_tts(text, language)
+    audio_data = await tts_service.synthesize(
+        text=text, voice=voice, use_cache=True, billing=billing
+    )
+    if metered and billing.billed_chars:
+        await usage_tracker.add_tts_chars(subject_id, billing.billed_chars)
+    return audio_data
 
 
 @router.post("/tts/synthesize")
@@ -45,23 +75,15 @@ async def synthesize_tts(
     character budget for the billed primary. Over it, the free-to-us fallback
     speaks instead (cache hits cost nothing and are never counted).
     """
-    budget = get_settings().tts_synthesize_daily_char_budget
-    metered = bool(budget and usage_tracker and subject.subject_id)
-    billing = TTSBilling()
     try:
-        if metered:
-            used = await usage_tracker.tts_chars_today(subject.subject_id)
-            billing.allow_primary = used < budget
-        text = (
-            normalize_numbers_for_tts(body.text, body.language)
-            if body.language
-            else body.text
+        audio_data = await synthesize_metered(
+            tts_service,
+            usage_tracker,
+            subject.subject_id,
+            body.text,
+            language=body.language,
+            voice=body.voice,
         )
-        audio_data = await tts_service.synthesize(
-            text=text, voice=body.voice, use_cache=True, billing=billing
-        )
-        if metered and billing.billed_chars:
-            await usage_tracker.add_tts_chars(subject.subject_id, billing.billed_chars)
         return Response(
             content=audio_data,
             media_type=f"audio/{body.format}",
@@ -87,23 +109,38 @@ async def synthesize_tts(
         raise HTTPException(status_code=500, detail="TTS synthesis failed")
 
 
-@router.get("/sessions/{session_id}/question/audio")
-@limiter.limit("60/minute")
-async def get_question_audio(
-    request: Request,
-    session_id: str,
-    session_manager: SessionManager = Depends(get_session_manager),
-    tts_service: TTSService = Depends(get_tts_service),
-    question_retriever: QuestionRetriever = Depends(get_question_retriever),
-    translation_service=Depends(get_translation_service),
-    subject: AuthSubject = Depends(require_auth_or_grace),
-):
-    """Get audio for current question in session (cached)."""
-    session = session_manager.get_session(session_id)
-    # #144: this audio IS the question read aloud, so it leaks exactly what
-    # /sessions/{id}/question leaks — same owner gate.
-    require_session_ownership(session, subject, session_id=session_id)
+async def _remember_question_text(
+    session_manager: SessionManager, served, question_text, translation_record
+) -> None:
+    """Best-effort: keep the resolved text on the session so the next read
+    reuses it. Never delays or fails the audio: when a submit holds the
+    session (any machine) or it moved on, the write is skipped; writing the
+    copy read before the await would undo that submit's advance (#207.20)."""
+    try:
+        async with session_manager.session_lock(served.session_id, wait=False):
+            fresh = await session_manager.get_session(served.session_id)
+            if (
+                fresh is None
+                or fresh.current_question_id != served.current_question_id
+                or fresh.current_question_text
+            ):
+                return
+            fresh.current_question_text = question_text
+            fresh.current_question_translation = translation_record
+            await session_manager.update_session(fresh)
+    except (SessionBusy, SessionConflict):
+        logger.info("Question text not cached on busy session %s", served.session_id)
 
+
+async def question_audio_response(
+    session,
+    session_manager: SessionManager,
+    tts_service: TTSService,
+    question_retriever: QuestionRetriever,
+    translation_service,
+) -> Response:
+    """The current question read aloud (cached). Callers authorize first:
+    the solo route by session owner, the room route (#230.1) by membership."""
     if not session.current_question_id:
         raise HTTPException(status_code=400, detail="No active question in session")
 
@@ -130,7 +167,7 @@ async def get_question_audio(
                     current_question,
                     session.language,
                     translation_service,
-                    session_id=session_id,
+                    session_id=session.session_id,
                     question_store=question_retriever,
                     build_channel=session.build_channel,
                 )
@@ -139,7 +176,9 @@ async def get_question_audio(
 
                 session.current_question_text = question_text
                 session.current_question_translation = translation_record
-                session_manager.update_session(session)
+                await _remember_question_text(
+                    session_manager, session, question_text, translation_record
+                )
 
         # MCQ options are part of the spoken audio (founder 2026-08-03) but
         # never of the cached display text.
@@ -164,9 +203,34 @@ async def get_question_audio(
         raise
     except Exception as e:
         logger.error(
-            "Audio generation failed for session %s: %s", session_id, e, exc_info=True
+            "Audio generation failed for session %s: %s",
+            session.session_id,
+            e,
+            exc_info=True,
         )
         raise HTTPException(status_code=500, detail="Audio generation failed")
+
+
+@router.get("/sessions/{session_id}/question/audio")
+@limiter.limit("60/minute")
+async def get_question_audio(
+    request: Request,
+    session_id: str,
+    session_manager: SessionManager = Depends(get_session_manager),
+    tts_service: TTSService = Depends(get_tts_service),
+    question_retriever: QuestionRetriever = Depends(get_question_retriever),
+    translation_service=Depends(get_translation_service),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """Get audio for current question in session (cached)."""
+    session = await session_manager.get_session(session_id)
+    # #144: this audio IS the question read aloud, so it leaks exactly what
+    # /sessions/{id}/question leaks — same owner gate.
+    require_session_ownership(session, subject, session_id=session_id)
+
+    return await question_audio_response(
+        session, session_manager, tts_service, question_retriever, translation_service
+    )
 
 
 @router.get("/tts/feedback/{result}")
@@ -224,7 +288,7 @@ async def get_session_feedback_audio(
     subject: AuthSubject = Depends(require_auth_or_grace),
 ):
     """Get feedback audio in session's language."""
-    session = session_manager.get_session(session_id)
+    session = await session_manager.get_session(session_id)
     require_session_ownership(session, subject, session_id=session_id)  # #144
 
     valid_results = [

@@ -1,0 +1,377 @@
+{
+ "run_at": "2026-10-22T13:33:25.842976+00:00",
+ "pools": {
+  "en": {
+   "questions": 730,
+   "candidates": 67,
+   "same_fact": 37
+  },
+  "sk": {
+   "questions": 768,
+   "candidates": 68,
+   "same_fact": 11
+  },
+  "cs": {
+   "questions": 762,
+   "candidates": 52,
+   "same_fact": 14
+  }
+ },
+ "unjudged": 0,
+ "archived": {
+  "fae71dd9-c64f-556f-a97a-f5457e4c4ed1": {
+   "pool": "en",
+   "twin": "4a4b5149-3a4a-5806-a882-265352fbdbe6",
+   "question": "During its original nine-week run at UK number one in the 1970s, Queen's Bohemian Rhapsody was finally dethroned by an ABBA song whose title Freddie Mercury actually sings inside Bohemian Rhapsody itself — which song?",
+   "twin_question": "After its original nine-week reign at UK number one in the mid-1970s, Queen's Bohemian Rhapsody was finally dethroned by a song that shares one of Freddie Mercury's most famous sung exclamations — which band knocked it off the top?"
+  },
+  "b861af0a-056d-50a6-852f-4f32eb24823b": {
+   "pool": "en",
+   "twin": "b23b6cc5-0951-596a-8859-c2afa3029e64",
+   "question": "Ryan Gosling's 2026 space blockbuster Project Hail Mary was directed by the same duo behind which beloved animated comedy hit?",
+   "twin_question": "Which directing duo jumped from the gleefully absurd The Lego Movie to the 2026 Ryan Gosling space blockbuster Project Hail Mary?"
+  },
+  "8730a6ed-b8a2-5813-814b-bab0e2c36c17": {
+   "pool": "en",
+   "twin": "0a0ba41c-788c-531c-a635-bf4c8569acf5",
+   "question": "One place on Earth sees lightning storms on up to 160 nights every year — so reliably that sailors once used the flashes as a natural lighthouse. Over which large Venezuelan lake does this famous 'everlasting storm' rage?",
+   "twin_question": "The mouth of one river at Lake Maracaibo sees so much lightning — on well over a hundred nights a year — that it's often called the lightning capital of the world. In which South American country is it?"
+  },
+  "bef675a8-3c78-58c2-8b32-dbd69887df72": {
+   "pool": "en",
+   "twin": "b4de4587-d85c-5087-80ed-d0c71b769753",
+   "question": "Long before children squeezed it into shapes, Play-Doh was sold as a household cleaning product. In the era of coal heating, homeowners rolled the soft putty across one surface in particular to lift off the soot. What was it made to clean?",
+   "twin_question": "Before it hit toy shelves in the 1950s, the squishy modelling compound Play-Doh was sold for a completely different job around the house. What was it originally used for?"
+  },
+  "97c3253f-6a01-50da-83e3-2a9c3aa4bfb2": {
+   "pool": "en",
+   "twin": "cd124130-c9dd-5c66-9a8f-1863cef6be1d",
+   "question": "Titanic's famous sweep of eleven Oscars in 1998 only tied, rather than broke, the record set by which 1959 epic?",
+   "twin_question": "Which film took home more Academy Awards: James Cameron's Titanic or the 1959 epic Ben-Hur?"
+  },
+  "4634fc00-9e53-485e-8234-e5e2d570a886": {
+   "pool": "en",
+   "twin": "5a8883a8-5402-48dd-8684-5c7c96eb4fef",
+   "question": "The 2026 horror film Obsession became the highest grossing release ever for its studio, Focus Features. Roughly how big was its production budget in US dollars?",
+   "twin_question": "The 2026 box-office hit Obsession, one of the most profitable films ever made, was produced on a budget closest to which amount?"
+  },
+  "6814cb24-9027-42f3-8aaa-112adc3bed6f": {
+   "pool": "en",
+   "twin": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+   "question": "The Eiffel Tower in Paris is built from wrought iron. Why is it measurably taller on a hot summer afternoon than on a cold winter night?",
+   "twin_question": "Every summer, the Eiffel Tower measurably grows — by as much as 15 centimetres. What causes this seasonal growth spurt?"
+  },
+  "277c9c09-282a-418d-902f-a78bfdb1212a": {
+   "pool": "en",
+   "twin": "22564f0f-b6d8-503c-9133-4a53282e785f",
+   "question": "Counting its overseas territories, which country covers more time zones than any other nation on Earth?",
+   "twin_question": "Thanks to far-flung overseas territories stretching from the Pacific to the Caribbean, which country spans twelve time zones — more than any other nation on Earth?"
+  },
+  "db7f4401-7b5a-4f7d-b098-93462ee27e4b": {
+   "pool": "en",
+   "twin": "de1704b9-6d44-5803-88ff-ea9fd819236f",
+   "question": "What is sealed inside every popcorn kernel that makes it explode when heated?",
+   "twin_question": "Popcorn kernels explode because a small amount of something sealed inside each kernel suddenly turns to high-pressure steam when heated. What is that something?"
+  },
+  "d94b0f97-cdd4-490d-8787-db66d0633dc5": {
+   "pool": "en",
+   "twin": "f013693e-2dff-5900-b16e-f862277d91c3",
+   "question": "Milk chocolate and dark chocolate both contain it, but white chocolate has none. What is it?",
+   "twin_question": "White chocolate contains cocoa butter, sugar and milk — but it is completely missing the dark component that gives milk and dark chocolate both their colour and their classic chocolatey taste. What is that missing component called?"
+  },
+  "1134f16b-b2c6-4ea0-b109-67ef8a4dd382": {
+   "pool": "en",
+   "twin": "e28f0808-72c9-47db-9be8-e5d11c8cad0b",
+   "question": "Restaurateur Caesar Cardini invented the Caesar salad in the 1920s at his restaurant in which country?",
+   "twin_question": "Most people assume the Caesar salad hails from Italy, thanks to its name. But in which country was it actually invented, in the border city of Tijuana back in 1927?"
+  },
+  "a4a5fdc7-7234-458b-8500-b6792021433f": {
+   "pool": "en",
+   "twin": "b30f81e2-f1b6-5068-81f3-af6f170a3116",
+   "question": "Astronauts who spend months on the International Space Station come home measurably taller than when they launched, yet shrink back to normal within days. What is happening inside their bodies?",
+   "twin_question": "After six months floating on the International Space Station, astronauts return to Earth with up to five extra centimetres of something they quickly lose again. Five centimetres of what?"
+  },
+  "0098aebd-c7d9-4a79-8770-d930b58984c1": {
+   "pool": "en",
+   "twin": "2fb4ebee-d091-5eac-afa1-0df32ed6e54d",
+   "question": "Which part of the human body contains no blood vessels and takes its oxygen straight from the air?",
+   "twin_question": "One living tissue in the human body contains no blood vessels at all and takes its oxygen straight from the surrounding air — which is exactly why it stays perfectly transparent. Which tissue is it?"
+  },
+  "e0ec67f1-0094-4f7b-bc44-de5c47603923": {
+   "pool": "en",
+   "twin": "77d068d5-a7a6-557e-9990-d2ff2908e7fc",
+   "question": "Which planet spins so slowly that one full rotation takes longer than its entire trip around the Sun?",
+   "twin_question": "On one planet in our solar system, a single rotation on its axis takes longer than a full trip around the Sun — its day is literally longer than its year. Which planet?"
+  },
+  "5fb8f5a4-c4ac-458b-b966-bb5fde7da28d": {
+   "pool": "en",
+   "twin": "b5a41f93-4f07-55cc-9f28-18f2cb45203f",
+   "question": "In 1971, astronaut Alan Shepard became the first person to play which sport on the Moon?",
+   "twin_question": "In 1971, Apollo 14 commander Alan Shepard smuggled a modified club head to the Moon and became the first person to play which sport there?"
+  },
+  "d1e60729-a67b-4dd6-b203-c61a26df1042": {
+   "pool": "en",
+   "twin": "cd16f4fc-aac1-5e5f-a4eb-9459fa5563ce",
+   "question": "When MTV launched in 1981, the very first music video it broadcast had a pointedly fitting title. Which song was it?",
+   "twin_question": "When MTV went on air for the very first time in August 1981, it deliberately opened with a Buggles song whose title predicted exactly what the channel would do to an older medium. What was the song?"
+  },
+  "6f2090b8-2a43-43cb-96eb-53dd2669eced": {
+   "pool": "en",
+   "twin": "aa3f9d45-f03b-46c3-8898-11800a94d9f8",
+   "question": "Earth's continents drift across the planet at roughly the same speed as which part of the human body grows?",
+   "twin_question": "Every year the Moon drifts about 4 centimetres further from Earth, almost exactly the rate at which which part of your body grows?"
+  },
+  "c875bed5-0416-4e74-9900-4553bc90b61a": {
+   "pool": "en",
+   "twin": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+   "question": "The colourful twisting cube puzzle that became a worldwide craze in the 1980s was invented by a professor of architecture from which country?",
+   "twin_question": "The puzzle cube invented by architecture professor Ernő Rubik in 1974 came from which country?"
+  },
+  "fb7d1cf3-ed18-4dde-9ff5-9c05574fe8b7": {
+   "pool": "en",
+   "twin": "035077c2-f271-4f2a-846c-1459ef636270",
+   "question": "On a standard six-sided die, which number is always on the face directly opposite the six?",
+   "twin_question": "On a standard six-sided die, the numbers on any two opposite faces always add up to what?"
+  },
+  "12cea7f0-775a-42fb-aa07-a52c7d843c4f": {
+   "pool": "en",
+   "twin": "de1704b9-6d44-5803-88ff-ea9fd819236f",
+   "question": "A popcorn kernel explodes because of something ordinary trapped inside its hard shell. What is it?",
+   "twin_question": "Popcorn kernels explode because a small amount of something sealed inside each kernel suddenly turns to high-pressure steam when heated. What is that something?"
+  },
+  "cbe4866d-f81f-4267-9fdc-7e0c9e26a7c8": {
+   "pool": "en",
+   "twin": "74c654c7-8d47-5ae7-ace1-f6d462e59db6",
+   "question": "Which Australian animal leaves cube-shaped droppings, stacked on rocks and logs to mark its territory?",
+   "twin_question": "Which burrowing Australian marsupial is the only animal known to produce cube-shaped droppings?"
+  },
+  "6b1ab892-5683-4178-9fdd-d95d1598ea93": {
+   "pool": "en",
+   "twin": "a02569a9-b250-525e-8598-a72a1817965e",
+   "question": "An octopus breaks one of nature's most basic rules: its blood isn't red. It carries oxygen using copper instead of iron. So what colour is octopus blood?",
+   "twin_question": "An octopus's blood carries oxygen using copper instead of iron. What colour does that make its blood?"
+  },
+  "5b56bee9-3b73-4167-a494-a13c9a0e8642": {
+   "pool": "en",
+   "twin": "aedfcaff-e1cb-4905-9531-2c36f042e4f9",
+   "question": "The word 'robot' comes from an old word for forced labour, the work peasants owed their lords. Which European language gave the world 'robot'?",
+   "twin_question": "The word 'robot' was coined for a 1920 stage play and comes from a word meaning forced labour in which language?"
+  },
+  "5aa7bb74-a81d-4a3c-ade2-79359cbd5dc5": {
+   "pool": "en",
+   "twin": "8193b5c7-5f80-52cd-b885-1868c1835724",
+   "question": "A chili's burn keeps mammals from eating its seeds, but one whole group of animals feels no burn at all and happily spreads the seeds far and wide. Which animals?",
+   "twin_question": "Chili plants make capsaicin to punish mammals, whose chewing teeth destroy the seeds. But one whole group of animals literally cannot feel the burn — and conveniently swallows the seeds whole and spreads them far away. Which group?"
+  },
+  "79e96ab5-6f0b-4c02-9b3d-1a9d6a8c913e": {
+   "pool": "en",
+   "twin": "b4de4587-d85c-5087-80ed-d0c71b769753",
+   "question": "Before it became a children's toy, Play-Doh was a cleaning putty. People rolled it across something in their homes to lift off sooty grime from coal fires. What was it?",
+   "twin_question": "Before it hit toy shelves in the 1950s, the squishy modelling compound Play-Doh was sold for a completely different job around the house. What was it originally used for?"
+  },
+  "a91a6f02-76c7-4db0-baf1-77cacf34cafa": {
+   "pool": "en",
+   "twin": "8022e07b-ecc0-5a01-bdca-579271097aec",
+   "question": "An engineer testing radar equipment noticed that the chocolate bar in his pocket had melted. Which kitchen appliance did this lead to?",
+   "twin_question": "In 1945, engineer Percy Spencer noticed a chocolate bar melting in his pocket while he stood near an active radar set — an accident that led him to invent which kitchen appliance?"
+  },
+  "54c46936-1a1b-48b2-800b-85d3c9621502": {
+   "pool": "en",
+   "twin": "a3d3592c-0688-5ce2-bc48-085a2cc5a641",
+   "question": "On a hot summer day, the Eiffel Tower can be about 15 centimetres taller than in winter. What makes it grow?",
+   "twin_question": "Every summer, the Eiffel Tower measurably grows — by as much as 15 centimetres. What causes this seasonal growth spurt?"
+  },
+  "12867942-1c04-4ac0-80e5-dac381edd57e": {
+   "pool": "en",
+   "twin": "590cb1c4-b836-4ba9-a50b-05a9a8414e60",
+   "question": "Before 'Yesterday' had its real lyrics, Paul McCartney sang the melody with placeholder words about which breakfast food?",
+   "twin_question": "Paul McCartney had the tune for 'Yesterday' long before the words. Until the real lyrics came, he sang it under a placeholder title named after a breakfast dish. What was that title?"
+  },
+  "cd1eab23-c5ad-4601-b2db-9178eb84df9e": {
+   "pool": "en",
+   "twin": "da500a5a-96a3-4c13-93bd-e548c5a4a2c2",
+   "question": "Nirvana's anthem 'Smells Like Teen Spirit' took its title from a friend's graffiti. But Teen Spirit was actually the brand name of what product?",
+   "twin_question": "Nirvana's breakthrough hit 'Smells Like Teen Spirit' got its title from a phrase a friend scrawled on Kurt Cobain's wall. Without Cobain realising it, the phrase referred to a brand of which everyday product?"
+  },
+  "b9b44ba0-b791-43c1-aac0-3e4b4bf145f6": {
+   "pool": "en",
+   "twin": "520f86ee-2fec-56d6-b408-3177c4f2fbcd",
+   "question": "The word 'dollar' comes from a silver coin called the 'thaler', named after the valley where its silver was mined. In which present-day country is that valley?",
+   "twin_question": "The name of the American dollar goes back to the 'thaler' — silver coins first struck in the 1520s in the mining town of Joachimsthal. In which present-day European country does that town lie?"
+  },
+  "f3375ad8-f457-4139-958e-bd0d32191b3b": {
+   "pool": "en",
+   "twin": "37215edc-bdba-57dd-837b-00c7912ee6f8",
+   "question": "Laundries in ancient Rome collected a liquid from public pots left on street corners and used it to get clothes clean and white. What was the liquid?",
+   "twin_question": "Ancient Roman laundry workers whitened togas by soaking them in a liquid collected from pots on street corners — a trade so profitable that Emperor Vespasian slapped a tax on it. What liquid was it?"
+  },
+  "1ec26de0-9480-499f-b961-74cf4cecc8bd": {
+   "pool": "en",
+   "twin": "40cf3fc8-601a-4fef-b4f1-77afbea98b70",
+   "question": "At many car washes, the last step is a 'spot-free rinse' that lets the car dry in the air without leaving marks. What has been taken out of that rinse water?",
+   "twin_question": "Many window cleaners now skip soap entirely and just rinse the glass with ultra-purified water, then let it dry on its own. Why does it dry without leaving any spots?"
+  },
+  "eee055fb-6849-4623-bc9a-90b83d98d827": {
+   "pool": "en",
+   "twin": "54135c1a-7932-4e12-9dab-5bdca901a7b3",
+   "question": "Dictionary.com's Word of the Year for 2025 wasn't really a word at all. It was a pair of numbers that schoolkids everywhere shouted, often while juggling their hands up and down. Which numbers?",
+   "twin_question": "Dictionary.com's 2025 Word of the Year was not a word but a number, chanted by schoolkids worldwide and boosted by a track from the rapper Skrilla. Which number?"
+  },
+  "19e9064a-9f5c-461a-9846-67b34aa6eb3c": {
+   "pool": "en",
+   "twin": "3befd125-2465-45c8-87b9-9bf61c5516a0",
+   "question": "When the famous Scoville scale for chilli heat was first invented, it didn't use any laboratory machine. What did it rely on to detect the heat?",
+   "twin_question": "True or false: the original 1912 Scoville test measured chilli heat by having human tasters sip ever more diluted pepper extract in sugar water until they felt no burn."
+  },
+  "65eb6683-d045-4435-9399-556ffe520c72": {
+   "pool": "sk",
+   "twin": "c90959f3-224a-477e-ad33-59b1dc7f9da4",
+   "question": "Na Veľkonočný pondelok sa dievčatá šibú, aby boli celý rok zdravé a svieže. Z prútov ktorého stromu sa korbáč tradične pletie, práve preto, že na jar pučí medzi prvými?",
+   "twin_question": "Z prútov ktorého stromu sa na Slovensku tradične pletie veľkonočný korbáč?"
+  },
+  "c7750d6a-de60-491c-959b-0a03360225cf": {
+   "pool": "sk",
+   "twin": "e4b6e7b6-fadc-4102-b483-a50d90c0b103",
+   "question": "Speváčka Kristína v roku 2010 reprezentovala Slovensko na Eurovízii s hitom, ktorý ospevuje kraj okolo horného toku jednej slovenskej rieky. Ako sa táto pieseň volá?",
+   "twin_question": "Ktorá slovenská speváčka reprezentovala Slovensko na Eurovízii v roku 2010 s piesňou Horehronie?"
+  },
+  "9eb87f16-7b45-47f4-817c-eb57f95abf62": {
+   "pool": "sk",
+   "twin": "96245d7e-d1ae-4f11-8ec3-b4d8785fa87d",
+   "question": "Ktorý slovenský herec stvárnil dobráckeho tesára Tóna Brtka v slávnom filme Obchod na korze z roku 1965?",
+   "twin_question": "Film Obchod na korze získal v roku 1966 prvého Oscara pre Československo za najlepší cudzojazyčný film. Ktorý slovenský herec v ňom stvárnil hlavnú postavu, stolára Tóna Brtka?"
+  },
+  "f87d0a2e-0ef3-4457-8208-6e2bd4344595": {
+   "pool": "sk",
+   "twin": "e0084f33-6e6a-49fc-a3bb-dc8ff2e692aa",
+   "question": "S ktorým hercom tvoril Milan Lasica legendárnu komickú dvojicu, ktorá od šesťdesiatych rokov bavila divákov na Slovensku aj v Česku?",
+   "twin_question": "Kto bol dlhoročným partnerom Milana Lasicu v najslávnejšej komickej dvojici slovenského humoru?"
+  },
+  "6b7b63d0-2673-44e7-a1b2-609f49da6ae1": {
+   "pool": "sk",
+   "twin": "429f2b3a-1036-4bad-a4ea-d30ee797d24d",
+   "question": "Keď sa ľudí spýtate na najdlhšiu rieku Slovenska, mnohí povedia Dunaj. Ten však tečie po našom území len asi 170 kilometrov. Ktorá rieka je na Slovensku naozaj najdlhšia?",
+   "twin_question": "Ktorá rieka je najdlhšou riekou tečúcou výlučne po území Slovenska?"
+  },
+  "50f027db-700a-41fe-a039-4ef96fdff9cf": {
+   "pool": "sk",
+   "twin": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "question": "Cestou autom zbadáte blesk a začnete pomaly počítať. Hrom zaduní až po šiestich sekundách. Približne ako ďaleko od vás udrel blesk?",
+   "twin_question": "Spočítaj sekundy medzi zábleskom blesku a zahrmením a vydeľ ich tromi. Čo ti výsledok povie?"
+  },
+  "ea1e2759-aceb-4537-8124-3a6eb35000f9": {
+   "pool": "sk",
+   "twin": "8c684d10-213f-46d2-aa7d-de1337ba5c58",
+   "question": "Na slovenských minciach v hodnote jeden, dva a päť centov je hora, ktorú ľudia vybrali v hlasovaní ako symbol Slovenska. Ktorá?",
+   "twin_question": "Slováci ho nosia vo vrecku každý deň: ktorý tatranský vrch, oddávna vnímaný ako národný symbol, je vyobrazený na slovenských jedno-, dvoj- a päťcentových eurominciach?"
+  },
+  "1c6d8224-7fdf-425b-9ad4-f9d15aa7d3ee": {
+   "pool": "sk",
+   "twin": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+   "question": "Slovo emoji znie takmer ako emócia, no s emóciami nemá nič spoločné. Z ktorého jazyka pochádza?",
+   "twin_question": "Slovo „emoji“ je odvodené od slova „emotion“ (emócia). Je toto tvrdenie pravda, alebo nepravda?"
+  },
+  "f8baaef0-41c3-433a-9e72-9b9ee85624b4": {
+   "pool": "sk",
+   "twin": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+   "question": "Názov LEGO vznikol skrátením dvoch dánskych slov. Čo tie dve slová znamenajú po slovensky?",
+   "twin_question": "Značka hračiek LEGO vznikla spojením dvoch dánskych slov. Čo znamenajú tieto dve dánske slová?"
+  },
+  "ea4ed5f2-adb1-4d1f-b91b-7a38e9711141": {
+   "pool": "sk",
+   "twin": "053d821c-c66a-4fed-a739-29cfa91d6daa",
+   "question": "Diváci reality šou Farma mohli v lete 2026 po prvý raz v jej histórii rozhodnúť hlasovaním o niečom, čo dovtedy určovala iba produkcia. O čom rozhodovali?",
+   "twin_question": "Do 18. série reality šou Farma na Markíze v roku 2026 sa jeden zo súťažiacich dostal spôsobom, aký v histórii Farmy dovtedy nebol. Kto a ako o ňom rozhodol?"
+  },
+  "09e92dc0-c70d-48ee-bd4b-06fc8760d41a": {
+   "pool": "sk",
+   "twin": "7ee0bf16-da88-4f16-8e4d-3cc4a2b9adfd",
+   "question": "Zelené vybuchujúce monštrum creeper z hry Minecraft vzniklo vlastne omylom. Model ktorého zvieraťa sa autorovi hry pri programovaní pokazil?",
+   "twin_question": "Creeper, slávne zelené monštrum z Minecraftu, vznikol omylom. Autor hry pri modelovaní jedného zvieraťa zamenil výšku tela s jeho dĺžkou. Ktoré zviera chcel pôvodne vytvoriť?"
+  },
+  "dff1f9bd-6a0e-4759-b687-68d4db076f30": {
+   "pool": "cs",
+   "twin": "1936da1a-dae7-498e-92fb-91a57f781436",
+   "question": "Karel Čapek chtěl umělé dělníky ve hře R.U.R. původně nazvat „laboři“. Slovo robot mu nakonec poradil někdo z jeho rodiny, malíř. Kdo to byl?",
+   "twin_question": "Slovo robot proslavila hra R.U.R. z roku 1920. Její autor ale sám přiznával, že slovo nevymyslel on. Kdo ho tedy vymyslel?"
+  },
+  "41d5c551-7268-46c2-a4a3-709386fb4f3e": {
+   "pool": "cs",
+   "twin": "6802c547-ece1-4646-9bf3-1ba7f25dcfc5",
+   "question": "Firma z Mladé Boleslavi, ze které později vyrostla Škoda Auto, nezačínala s auty. Co tam Václav Laurin a Václav Klement vyráběli úplně nejdřív?",
+   "twin_question": "Firma Laurin & Klement, předchůdce dnešní Škody Auto, vznikla v Mladé Boleslavi roku 1895. Co vyráběla jako první, ještě před motocykly a automobily?"
+  },
+  "cdaa8e80-c30b-4c6c-add8-f460c54cfbb0": {
+   "pool": "cs",
+   "twin": "c419222d-c16a-4f23-b917-a8ea0bd9b16d",
+   "question": "Úplně první plzeňský ležák, vzor pro většinu piv na světě, neuvařil Čech. Ze které země nebo oblasti pocházel jeho sládek?",
+   "twin_question": "Pravda, nebo nepravda: První várku plzeňského ležáku v roce 1842 uvařil český sládek."
+  },
+  "7fe3b8ed-974a-4872-9cfd-b7d3315b9c59": {
+   "pool": "cs",
+   "twin": "487e3392-9798-4a79-b029-5bc06121ee8a",
+   "question": "Kostka cukru, kterou házíme do kávy, je český vynález. Vznikla poté, co se manželka ředitele cukrovaru řízla při sekání cukrové homole. Ve kterém jihočeském městě se to stalo?",
+   "twin_question": "V roce 1843 si ředitel místního cukrovaru Jakub Kryštof Rad nechal patentovat vynález, který dnes používá celý svět: kostkový cukr. Ve kterém městě na pomezí jižních Čech a Moravy ho dodnes připomíná kamenný pomník ve tvaru kostky?"
+  },
+  "0351a3f8-849a-4177-9305-8fef7347a7c2": {
+   "pool": "cs",
+   "twin": "ccc323b7-c1ed-49a4-9989-ddff75c5d08d",
+   "question": "Otto Wichterle vyrobil první měkké kontaktní čočky doma v kuchyni, na stroji, který si postavil z dětské hračky. Ze které?",
+   "twin_question": "Z jaké dětské stavebnice sestavil Otto Wichterle přístroj, na kterém o Vánocích 1961 doma odlil první měkké kontaktní čočky?"
+  },
+  "c432e877-cbfa-488d-8e27-81c11ee3ed68": {
+   "pool": "cs",
+   "twin": "c5301e56-d6b9-4c41-b46e-e51b4cac33fa",
+   "question": "Který hrdina českých večerníčků se jako plyšová hračka proletěl s americkým astronautem až na Mezinárodní vesmírnou stanici?",
+   "twin_question": "Který hrdina českých večerníčků se v roce 2011 podíval do vesmíru na palubě amerického raketoplánu Endeavour?"
+  },
+  "676e7184-efc1-40db-a199-f0fe5c5cdd33": {
+   "pool": "cs",
+   "twin": "3c8b1686-cada-45b5-af8c-1c38d174f43d",
+   "question": "Při bouřce uvidíte blesk a hrom zaburácí až za devět sekund. Zhruba jak daleko od vás blesk udeřil?",
+   "twin_question": "Spočítej sekundy mezi zábleskem blesku a zahřměním a vyděl je třemi. Co ti výsledek prozradí?"
+  },
+  "c2dbdcd7-36b5-4138-8857-3f99039e4bb0": {
+   "pool": "cs",
+   "twin": "906a921a-b216-442a-8bfe-15185f2e1a4b",
+   "question": "Emil Zátopek získal na olympiádě v Helsinkách tři zlaté medaile. Jednu z těch disciplín ale ten den běžel úplně poprvé v životě. Kterou?",
+   "twin_question": "Kterou disciplínu běžel Emil Zátopek na olympiádě v Helsinkách roku 1952 poprvé v životě, a přesto v ní vyhrál?"
+  },
+  "fa8861ce-9a51-4e98-8e5c-fd65384cc9f9": {
+   "pool": "cs",
+   "twin": "fd533f2a-2ce1-4b6b-9946-0e51b5a2e8d2",
+   "question": "Ester Ledecká v roce 2018 v Pchjongčchangu nečekaně vyhrála lyžařský superobří slalom. Na stejných hrách pak získala zlato ještě v úplně jiném sportu. V jakém?",
+   "twin_question": "Ester Ledecká na olympiádě v Pchjongčchangu 2018 vyhrála snowboardový paralelní obří slalom a k úžasu všech i jednu lyžařskou disciplínu, navíc na vypůjčených lyžích. Kterou?"
+  },
+  "61b7fbf1-75f2-460e-b717-841af731b837": {
+   "pool": "cs",
+   "twin": "10cd9730-d66f-4d0f-9c6c-58b9d44e1bcf",
+   "question": "Název LEGO vznikl zkrácením dvou dánských slov. Co ta slova v překladu znamenají?",
+   "twin_question": "Název hračkářské značky LEGO vznikl složením dvou dánských slov. Co tato dvě slova znamenají?"
+  },
+  "31a819a1-09b0-4f48-a6e2-172b1c29b72d": {
+   "pool": "cs",
+   "twin": "b705d62d-2312-47c3-814c-b1c4893733fd",
+   "question": "Největší rybník v Česku, kde se každý podzim konají slavné výlovy kaprů, nese jméno po mocném jihočeském šlechtickém rodu. Jak se jmenuje?",
+   "twin_question": "Jak se jmenuje největší rybník v Česku, který na Třeboňsku vybudoval v 16. století rybníkář Jakub Krčín?"
+  },
+  "4dd62601-5cca-40df-8566-44edef4169e9": {
+   "pool": "cs",
+   "twin": "2bf1fb8d-106c-4b44-a63b-eaee9147d74b",
+   "question": "Zakladatel Adidasu Adolf Dassler se nesmiřitelně pohádal s vlastním bratrem. Ten pak ve stejném bavorském městečku založil konkurenční sportovní značku. Jakou?",
+   "twin_question": "Rudolf Dassler se ve 40. letech rozešel se svým bratrem Adim a založil vlastní značku sportovního oblečení, která dodnes sídlí ve stejném malém německém městě jako Adidas. Jak se tato značka jmenuje?"
+  },
+  "bcfd61a1-4a1b-49a7-b5b6-ff0a9d5bae32": {
+   "pool": "cs",
+   "twin": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+   "question": "Slovo emoji zní, jako by vzniklo z anglického slova emotion, tedy emoce. Ve skutečnosti s ním ale nemá nic společného. Z jakého jazyka toto slovo pochází?",
+   "twin_question": "Slovo „emoji“ je odvozeno od anglického slova „emotion“ (emoce). Je toto tvrzení pravda, nebo lež?"
+  },
+  "d7550bd4-94d0-4a9d-944e-45d8b57e4126": {
+   "pool": "cs",
+   "twin": "5ff1e733-6fe6-4b0f-bd4b-5936f786d49e",
+   "question": "Druhý díl hry Kingdom Come: Deliverance od pražského studia Warhorse zavede hráče do skutečného středověkého města, které díky stříbrným dolům patřilo k nejbohatším v tehdejší Evropě. Které české město to je?",
+   "twin_question": "Česká hra Kingdom Come: Deliverance II z roku 2025 posílá hráče do Čech roku 1403. Které středověké město, proslulé stříbrnými doly, v ní mohou procházet?"
+  }
+ }
+}

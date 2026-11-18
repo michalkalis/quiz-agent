@@ -15,6 +15,8 @@ SWIFT_OPTIMIZATION_LEVEL = -Onone
 // MARK: - Compilation conditions
 GCC_PREPROCESSOR_DEFINITIONS = DEBUG=1 $(inherited)
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)
+// #209: Info.plist entries for debug-only handlers (the hangs-test:// scheme).
+INFOPLIST_PREPROCESSOR_DEFINITIONS = DEBUG=1 $(inherited)
 
 // MARK: - Assertions
 ENABLE_NS_ASSERTIONS = YES

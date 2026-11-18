@@ -9,6 +9,9 @@ on:
       - "apps/website/**"
       - ".github/workflows/website.yml"
   workflow_dispatch:
+  # #223.3: refresh the fresh-question pages daily (the weekly job #202 adds new ones on Wednesdays)
+  schedule:
+    - cron: "40 6 * * *"
 
 permissions:
   contents: read
@@ -23,17 +26,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Generate site
         run: python3 apps/website/build.py
       - name: Committed output matches the sources
         run: git diff --exit-code -- apps/website/public
+      - name: This week's fresh questions (keeps the committed snapshot if the API fails)
+        run: python3 apps/website/build.py --fresh-live
       - uses: actions/upload-pages-artifact@v5
         with:
           path: apps/website/public
+          # #212: .well-known/apple-app-site-association (universal links).
+          include-hidden-files: true
 
   deploy:
     needs: build

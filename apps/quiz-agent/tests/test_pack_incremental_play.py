@@ -85,19 +85,19 @@ def _flow(manager: SessionManager, retriever: MagicMock) -> QuizFlowService:
     )
 
 
-def _pack_session(manager: SessionManager, *, pack_id: str | None = PACK_ID):
-    session = manager.create_session(user_id="u1", max_questions=30)
+async def _pack_session(manager: SessionManager, *, pack_id: str | None = PACK_ID):
+    session = await manager.create_session(user_id="u1", max_questions=30)
     session.pack_id = pack_id
     session.current_question_id = "q1"
     session.asked_question_ids = ["q1"]
     session.transition(to=SessionPhase.ASKING, caller="test")
-    manager.update_session(session)
+    await manager.update_session(session)
     return session
 
 
 async def test_answer_on_a_still_generating_pack_parks_instead_of_finishing():
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     retriever = _retriever([None], generating=True)
     retriever.get = AsyncMock(return_value=_question("q1"))
     flow = _flow(manager, retriever)
@@ -108,14 +108,14 @@ async def test_answer_on_a_still_generating_pack_parks_instead_of_finishing():
     assert result.awaiting_question is True
     assert result.quiz_finished is False
     assert result.next_question_dict is None
-    stored = manager.get_session(session.session_id)
+    stored = await manager.get_session(session.session_id)
     assert stored.phase == SessionPhase.ASKING
     assert stored.current_question_id is None
 
 
 async def test_answer_on_a_closed_pack_still_finishes_when_exhausted():
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     retriever = _retriever([None], generating=False)
     retriever.get = AsyncMock(return_value=_question("q1"))
     flow = _flow(manager, retriever)
@@ -124,12 +124,14 @@ async def test_answer_on_a_closed_pack_still_finishes_when_exhausted():
 
     assert result.awaiting_question is False
     assert result.quiz_finished is True
-    assert manager.get_session(session.session_id).phase == SessionPhase.FINISHED
+    assert (
+        await manager.get_session(session.session_id)
+    ).phase == SessionPhase.FINISHED
 
 
 async def test_non_pack_session_never_probes_pack_state():
     manager = SessionManager()
-    session = _pack_session(manager, pack_id=None)
+    session = await _pack_session(manager, pack_id=None)
     retriever = _retriever([None], generating=True)
     retriever.get = AsyncMock(return_value=_question("q1"))
     flow = _flow(manager, retriever)
@@ -142,9 +144,9 @@ async def test_non_pack_session_never_probes_pack_state():
 
 async def test_resume_serves_the_question_once_it_lands():
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     session.current_question_id = None
-    manager.update_session(session)
+    await manager.update_session(session)
     retriever = _retriever([None, _question("q2")], generating=True)
     flow = _flow(manager, retriever)
 
@@ -152,16 +154,16 @@ async def test_resume_serves_the_question_once_it_lands():
 
     assert result.awaiting_question is False
     assert result.next_question_dict["id"] == "q2"
-    stored = manager.get_session(session.session_id)
+    stored = await manager.get_session(session.session_id)
     assert stored.current_question_id == "q2"
     assert stored.asked_question_ids == ["q1", "q2"]
 
 
 async def test_resume_reports_waiting_again_when_the_wait_budget_runs_out():
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     session.current_question_id = None
-    manager.update_session(session)
+    await manager.update_session(session)
     retriever = _retriever([None, None, None], generating=True)
     flow = _flow(manager, retriever)
 
@@ -170,21 +172,23 @@ async def test_resume_reports_waiting_again_when_the_wait_budget_runs_out():
     )
 
     assert result.awaiting_question is True
-    assert manager.get_session(session.session_id).phase == SessionPhase.ASKING
+    assert (await manager.get_session(session.session_id)).phase == SessionPhase.ASKING
 
 
 async def test_resume_finishes_once_the_pack_closed_with_nothing_left():
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     session.current_question_id = None
-    manager.update_session(session)
+    await manager.update_session(session)
     retriever = _retriever([None], generating=False)
     flow = _flow(manager, retriever)
 
     result = await flow.resume_after_wait(session, wait_seconds=0.0)
 
     assert result.quiz_finished is True
-    assert manager.get_session(session.session_id).phase == SessionPhase.FINISHED
+    assert (
+        await manager.get_session(session.session_id)
+    ).phase == SessionPhase.FINISHED
 
 
 async def _call_endpoint(manager, session_id, flow, retriever):
@@ -202,7 +206,7 @@ async def _call_endpoint(manager, session_id, flow, retriever):
 
 async def test_endpoint_rejects_a_session_that_is_not_parked():
     manager = SessionManager()
-    session = manager.create_session(user_id="u1")  # still idle
+    session = await manager.create_session(user_id="u1")  # still idle
     retriever = _retriever([], generating=True)
 
     with pytest.raises(HTTPException) as exc:
@@ -215,7 +219,7 @@ async def test_endpoint_rejects_a_session_that_is_not_parked():
 
 async def test_endpoint_replays_the_active_question_instead_of_skipping_it():
     manager = SessionManager()
-    session = _pack_session(manager)  # q1 active
+    session = await _pack_session(manager)  # q1 active
     retriever = _retriever([], generating=True)
     retriever.get = AsyncMock(return_value=_question("q1"))
     flow = _flow(manager, retriever)
@@ -232,9 +236,9 @@ async def test_endpoint_returns_awaiting_flag_while_pack_generates(monkeypatch):
 
     monkeypatch.setattr(quiz_routes, "NEXT_QUESTION_WAIT_SECONDS", 0.0)
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     session.current_question_id = None
-    manager.update_session(session)
+    await manager.update_session(session)
     retriever = _retriever([None], generating=True)
     flow = _flow(manager, retriever)
 
@@ -253,9 +257,9 @@ async def test_submitting_while_parked_is_rejected_with_a_clear_conflict():
     from app.api.routes.quiz import submit_input
 
     manager = SessionManager()
-    session = _pack_session(manager)
+    session = await _pack_session(manager)
     session.current_question_id = None
-    manager.update_session(session)
+    await manager.update_session(session)
 
     with pytest.raises(HTTPException) as exc:
         await submit_input(

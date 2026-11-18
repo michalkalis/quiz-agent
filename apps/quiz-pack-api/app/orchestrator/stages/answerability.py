@@ -54,13 +54,19 @@ class AnswerabilityStage:
             reasons[result.reason or "unknown"] = (
                 reasons.get(result.reason or "unknown", 0) + 1
             )
+            # #228 228.3: the full question and expected answer, so a drop can
+            # be judged later (was the checker wrong, or the question unclear?)
+            # — the truncated text alone could not be re-checked.
             logger.warning(
                 "AnswerabilityStage dropped id=%s reason=%s model_answer=%r "
-                "question=%r",
+                "expected=%r alternatives=%r options=%r question=%r",
                 q.id,
                 result.reason,
                 result.model_answer,
-                q.question[:100],
+                q.correct_answer,
+                q.alternative_answers,
+                q.possible_answers,
+                q.question,
             )
 
         ctx.questions = kept

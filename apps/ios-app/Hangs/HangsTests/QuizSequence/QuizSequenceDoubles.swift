@@ -270,7 +270,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
 
     private var requestKeys: [Int: String] = [:]
 
-    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?, rejectedTranscripts _: [String]) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData _: Data, fileName _: String, questionId: String?, rejectedTranscripts _: [String], readBack _: Bool) async throws -> QuizResponse {
         try await send(sessionId: sessionId, isVoice: true, questionId: questionId, input: nil)
     }
 
@@ -278,11 +278,11 @@ final class SequenceNetwork: NetworkServiceProtocol {
         try await send(sessionId: sessionId, isVoice: false, questionId: questionId, input: input)
     }
 
-    func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories _: [String], userId _: String?, includeImages _: Bool, packId _: String?) async throws -> QuizSession {
+    func createSession(maxQuestions _: Int, difficulty _: String, language _: String, categories _: [String], userId _: String?, includeImages _: Bool, skipLocalQuestions _: Bool, packId _: String?) async throws -> QuizSession {
         SequenceQuiz.session(finished: false, config)
     }
 
-    func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, excludedQuestionIds _: [String]) async throws -> QuestionAvailability {
+    func questionAvailability(requestedCount: Int, difficulty _: String, language _: String, categories _: [String], includeImages _: Bool, skipLocalQuestions _: Bool, excludedQuestionIds _: [String]) async throws -> QuestionAvailability {
         QuestionAvailability(available: requestedCount, requested: requestedCount, sufficient: true)
     }
 
@@ -317,7 +317,7 @@ final class SequenceNetwork: NetworkServiceProtocol {
     func extendSession(sessionId _: String, minutes _: Int) async throws {}
     func rateQuestion(sessionId _: String, rating _: Int) async throws {}
     func flagQuestion(sessionId _: String, reason _: String?) async throws {}
-    func fetchElevenLabsToken() async throws -> String { "harness-token" }
+    func transcribeDictation(audioWAV _: Data, language _: String) async throws -> String { "" }
     func syncEntitlements() async throws {}
 
     func postAnalyticsEvents(_: AnalyticsBatch) async throws {}
@@ -517,6 +517,7 @@ final class SequenceAudio: AudioServiceProtocol {
 
     func setupAudioSession(mode _: AudioMode) throws {}
     func setupQuietListeningSession() throws {}
+    func setupPlaybackOnlySession() throws {}
     func restoreSessionAfterVoiceProcessing() {}
     func deactivateSession() {}
     func switchAudioMode(_: AudioMode) async throws {}

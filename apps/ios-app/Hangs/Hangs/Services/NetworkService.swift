@@ -12,11 +12,11 @@ import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, packId: String?) async throws -> QuizSession
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession
     /// #174: how many unseen questions this configuration still has, asked
     /// BEFORE the session is created. Read-only and cheap (one COUNT server
     /// side) so it can sit on the tap-to-start path.
-    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability
     func startQuiz(sessionId: String, excludedQuestionIds: [String]) async throws -> QuizResponse
     /// `questionId` (#133 1a) is the id of the question the submission answers —
     /// pass it on EVERY submit. The backend then replays an already-graded
@@ -28,7 +28,10 @@ protocol NetworkServiceProtocol: Sendable {
     /// `rejectedTranscripts` (#204.2): what the player already rejected on this
     /// question, sent as the `rejected_transcripts` form field (JSON array);
     /// empty = the field is left out (today's request).
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String]) async throws -> QuizResponse
+    /// `readBack` (#208.3): ask the server to synthesize the "you said" read-back
+    /// while it grades and return it as `QuizResponse.readBack`. Send it only
+    /// when the read-back will be played (not muted).
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String, questionId: String?, rejectedTranscripts: [String], readBack: Bool) async throws -> QuizResponse
     func submitTextInput(sessionId: String, input: String, audio: Bool, questionId: String?) async throws -> QuizResponse
     /// #182: fetch the next question of a custom pack that was still generating
     /// when the previous answer was graded (`QuizResponse.awaitingQuestion`).
@@ -53,7 +56,10 @@ protocol NetworkServiceProtocol: Sendable {
     func extendSession(sessionId: String, minutes: Int) async throws
     func rateQuestion(sessionId: String, rating: Int) async throws
     func flagQuestion(sessionId: String, reason: String?) async throws
-    func fetchElevenLabsToken() async throws -> String
+    /// #208.8: `POST /voice/dictation` — a dictated clip (16-bit mono WAV) in,
+    /// its text out (empty when nothing intelligible was heard). Used by the
+    /// feedback, rating and pack-prompt dictation; the server runs OpenAI STT.
+    func transcribeDictation(audioWAV: Data, language: String) async throws -> String
     /// `GET /usage/me` — the backend derives the subject from the bearer, the
     /// same identity every write path (sessions, RC webhook grants, sync) is
     /// keyed on. Never pass a client-side id here: reading usage under the
@@ -76,6 +82,30 @@ protocol NetworkServiceProtocol: Sendable {
     /// usual `/sessions/{id}/start`, or no session when today's challenge is
     /// already played (the state then carries the result).
     func startDailyChallenge(date: String, language: String) async throws -> DailyStartResult
+    /// #232: `POST /shared-quizzes` — a link to the caller's finished quiz
+    /// (`sessionId`) or finished pack (`packId`). `displayName` is the name the
+    /// comparison shows (the one from a game together), nil = "Player N".
+    func createSharedQuiz(sessionId: String?, packId: String?, displayName: String?) async throws -> SharedQuizCreated
+    /// #232: `POST /shared-quizzes/{token}/start` — the friend's session.
+    func startSharedQuiz(token: String, displayName: String?) async throws -> SharedQuizStart
+    /// #232: `GET /shared-quizzes/{token}/results` — the comparison as the
+    /// server filters it for this viewer.
+    func sharedQuizResults(token: String) async throws -> SharedQuizResults
+}
+
+/// #232: test doubles that never share answer like the server with the switch off.
+extension NetworkServiceProtocol {
+    func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func startSharedQuiz(token _: String, displayName _: String?) async throws -> SharedQuizStart {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    func sharedQuizResults(token _: String) async throws -> SharedQuizResults {
+        throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
 }
 
 /// Thread-safe network service using Swift 6 actor
@@ -93,7 +123,7 @@ actor NetworkService: NetworkServiceProtocol {
         return "\(version) (\(build))"
     }()
 
-    private let baseURL: URL
+    let baseURL: URL
     private let session: URLSession
     /// Server-trusted anonymous identity (#60). When present, every request
     /// carries `Authorization: Bearer <access>` and a 401 triggers a
@@ -155,7 +185,7 @@ actor NetworkService: NetworkServiceProtocol {
     private nonisolated func breadcrumbRequest(method: String, endpoint: String) {
         let crumb = Breadcrumb(level: .info, category: "network.request")
         crumb.message = "\(method) \(endpoint)"
-        crumb.data = ["method": method, "endpoint": endpoint]
+        crumb.setData(["method": method, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -163,7 +193,7 @@ actor NetworkService: NetworkServiceProtocol {
         let level: SentryLevel = (200 ... 299).contains(status) ? .info : .warning
         let crumb = Breadcrumb(level: level, category: "network.response")
         crumb.message = "HTTP \(status) \(endpoint) (\(bytes)B)"
-        crumb.data = ["status": status, "bytes": bytes, "endpoint": endpoint]
+        crumb.setData(["status": status, "bytes": bytes, "endpoint": endpoint])
         SentryBreadcrumb.add(crumb)
     }
 
@@ -191,10 +221,10 @@ actor NetworkService: NetworkServiceProtocol {
     //
     // Returns raw `Data` rather than decoding — callers own their own decode
     // (MainActor iso8601 for createSession/startQuiz/submitVoiceAnswer/
-    // submitTextInput; plain decode for getUsage/fetchElevenLabsToken) so this
+    // submitTextInput; plain decode for getUsage/transcribeDictation) so this
     // stays off the main actor and no decode is dragged onto it implicitly.
 
-    private func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
+    func performRequestData(_ request: URLRequest, endpointPath: String) async throws -> Data {
         breadcrumbRequest(method: request.httpMethod ?? "?", endpoint: endpointPath)
 
         let (data, response) = try await sendAuthorized(request)
@@ -255,6 +285,14 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.packExhausted
         }
 
+        // #232: a shared quiz that cannot be created or started; the code
+        // decides what the player is told. A 404 also means the switch is off.
+        if endpointPath.hasPrefix("/api/v1/shared-quizzes"), [404, 409].contains(httpResponse.statusCode) {
+            let code = (try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data))?.detail.code
+            logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: code)
+            throw NetworkError.sharedQuizUnavailable(SharedQuizUnavailable(statusCode: httpResponse.statusCode, code: code))
+        }
+
         guard (200 ... 299).contains(httpResponse.statusCode) else {
             let statusCode = httpResponse.statusCode
             Logger.network.error("❌ HTTP error: \(statusCode, privacy: .public)")
@@ -290,7 +328,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, packId: String? = nil) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, skipLocalQuestions: Bool = false, packId: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         let base = baseURL
@@ -318,6 +356,8 @@ actor NetworkService: NetworkServiceProtocol {
             "mode": "single",
             "language": language,
             "include_images": includeImages,
+            // #206: only universal questions when the player switched local ones off.
+            "skip_local_questions": skipLocalQuestions,
         ]
 
         // Add category filter if any selected (#82 item 4: multi-select list;
@@ -351,7 +391,7 @@ actor NetworkService: NetworkServiceProtocol {
         }
     }
 
-    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
+    func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
         let endpoint = baseURL.appendingPathComponent("/api/v1/questions/availability")
 
         var request = URLRequest(url: endpoint)
@@ -370,6 +410,7 @@ actor NetworkService: NetworkServiceProtocol {
             "difficulty": difficulty,
             "language": language,
             "include_images": includeImages,
+            "skip_local_questions": skipLocalQuestions,
             "excluded_question_ids": excludedQuestionIds,
         ]
         if !categories.isEmpty {
@@ -496,14 +537,23 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Voice Submission
 
-    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil, rejectedTranscripts: [String] = []) async throws -> QuizResponse {
+    func submitVoiceAnswer(sessionId: String, audioData: Data, fileName: String = "answer.m4a", questionId: String? = nil, rejectedTranscripts: [String] = [], readBack: Bool = false) async throws -> QuizResponse {
         // #133 1a: the route takes `question_id` as a QUERY param (the body is the
         // multipart audio), and rejects a mismatch BEFORE paying for transcription.
         guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/voice/submit/\(sessionId)"), resolvingAgainstBaseURL: false) else {
             throw NetworkError.invalidURL
         }
+        var queryItems: [URLQueryItem] = []
         if let questionId {
-            components.queryItems = [URLQueryItem(name: "question_id", value: questionId)]
+            queryItems.append(URLQueryItem(name: "question_id", value: questionId))
+        }
+        // #208.3: a backend without the parameter ignores it (and so does an
+        // old one, which then simply sends no `read_back`).
+        if readBack {
+            queryItems.append(URLQueryItem(name: "read_back", value: "true"))
+        }
+        if !queryItems.isEmpty {
+            components.queryItems = queryItems
         }
 
         guard let endpoint = components.url else {
@@ -760,31 +810,37 @@ actor NetworkService: NetworkServiceProtocol {
         return data
     }
 
-    // MARK: - ElevenLabs Token
+    // MARK: - Dictation (#208.8)
 
-    func fetchElevenLabsToken() async throws -> String {
-        let endpoint = baseURL.appendingPathComponent("/api/v1/elevenlabs/token")
+    func transcribeDictation(audioWAV: Data, language: String) async throws -> String {
+        let endpoint = baseURL.appendingPathComponent("/api/v1/voice/dictation")
 
+        let boundary = UUID().uuidString
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        // #181: this wait is spent with the mic SHUT and the screen saying
-        // "listening". On a cold prod machine it ran the full 10 s before the
-        // batch fallback opened the mic; 5 s is still ~10× a normal round trip.
-        request.timeoutInterval = 5
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        // Upload of up to 2 min of audio plus one transcription.
+        request.timeoutInterval = 60
 
-        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (ElevenLabs token)")
+        var body = Data()
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"language\"\r\n\r\n".utf8))
+        body.append(Data(language.utf8))
+        body.append(Data("\r\n--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"audio\"; filename=\"dictation.wav\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/wav\r\n\r\n".utf8))
+        body.append(audioWAV)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        request.httpBody = body
 
-        let data = try await performRequestData(request, endpointPath: "/api/v1/elevenlabs/token")
+        Logger.network.debug("🌐 POST \(endpoint, privacy: .public) (dictation: \(audioWAV.count, privacy: .public) bytes)")
 
-        struct TokenResponse: Decodable {
-            let token: String
+        let data = try await performRequestData(request, endpointPath: "/api/v1/voice/dictation")
+
+        struct DictationResponse: Decodable {
+            let text: String
         }
-
-        let tokenResponse = try JSONDecoder().decode(TokenResponse.self, from: data)
-
-        Logger.network.info("✅ ElevenLabs token received")
-
-        return tokenResponse.token
+        return try JSONDecoder().decode(DictationResponse.self, from: data).text
     }
 
     // MARK: - Usage / Freemium
@@ -983,30 +1039,34 @@ enum NetworkError: LocalizedError {
     /// HTTP 409 `pack_exhausted` (#200): every question of the pack is in the
     /// start's exclusions. Not a failure — the pack can start over.
     case packExhausted
+    /// HTTP 404/409 from a shared-quiz route (#232).
+    case sharedQuizUnavailable(SharedQuizUnavailable)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return String(localized: "Invalid server response", comment: "Network error: server returned a malformed response")
+            return String(localized: "Invalid server response", bundle: .interface, locale: .interface, comment: "Network error: server returned a malformed response")
         case .invalidURL:
-            return String(localized: "Invalid URL", comment: "Network error: the request URL could not be built")
+            return String(localized: "Invalid URL", bundle: .interface, locale: .interface, comment: "Network error: the request URL could not be built")
         case let .decodingError(error):
-            return String(localized: "Failed to decode response: \(error.localizedDescription)", comment: "Network error: response body could not be decoded; placeholder is the underlying error")
+            return String(localized: "Failed to decode response: \(error.localizedDescription)", bundle: .interface, locale: .interface, comment: "Network error: response body could not be decoded; placeholder is the underlying error")
         case let .serverError(_, message):
             // Server-provided message, already localized by the backend — do not wrap.
             return message
         case .quotaLimitReached:
-            return String(localized: "Free question limit reached", comment: "Network error: user hit the free monthly question quota")
+            return String(localized: "Free question limit reached", bundle: .interface, locale: .interface, comment: "Network error: user hit the free monthly question quota")
         case .sessionNotFound:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:
-            return String(localized: "The quiz moved on to another question", comment: "Network error: the answer was submitted for a question the session is no longer on")
+            return String(localized: "The quiz moved on to another question", bundle: .interface, locale: .interface, comment: "Network error: the answer was submitted for a question the session is no longer on")
         case .answerNotCaptured:
-            return String(localized: "I didn't catch your answer, please try again.", comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
+            return String(localized: "I didn't catch your answer, please try again.", bundle: .interface, locale: .interface, comment: "Question screen: shown above the mic during the one automatic re-record after an empty answer; the same line is spoken")
         case .sessionFinished:
-            return String(localized: "Session not found or already ended", comment: "Network error: the quiz session is no longer active")
+            return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .packExhausted:
-            return String(localized: "You've played every question in this pack.", comment: "A custom pack has nothing left this phone has not played")
+            return String(localized: "You've played every question in this pack.", bundle: .interface, locale: .interface, comment: "A custom pack has nothing left this phone has not played")
+        case let .sharedQuizUnavailable(reason):
+            return reason.message
         }
     }
 }

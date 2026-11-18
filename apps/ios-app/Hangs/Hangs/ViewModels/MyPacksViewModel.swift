@@ -2,7 +2,7 @@
 //  MyPacksViewModel.swift
 //  Hangs
 //
-//  Drives the My packs order list (issue #137). Loads once on appear, then
+//  Drives the My packs order list (issue #137). Loads on every appearance, then
 //  keeps the list fresh while it is on screen: pull-to-refresh plus a periodic
 //  reload whenever any listed order is still non-terminal, so an order
 //  transitioning in_progress → delivered/failed updates its row without the
@@ -13,6 +13,9 @@
 //  can fail. A failed load keeps the last good list and is retried on its own
 //  with a growing pause; Home shows the failure (with Retry) only while there
 //  is no list at all.
+//
+//  #208.5: one instance for the app's lifetime (AppState), shared by Home and
+//  My packs, so a reload after a quiz never blanks the list.
 //
 
 import Combine
@@ -89,6 +92,17 @@ final class MyPacksViewModel: ObservableObject {
         }
     }
 
+    /// #208.5: the account changed (sign-out, deletion) — the list belonged
+    /// to the previous one. Back to the first-load state; the next appearance
+    /// loads the new account's packs.
+    func reset() {
+        orders = []
+        isLoading = true
+        loadFailed = false
+        needsSignIn = false
+        retryErrorMessage = nil
+    }
+
     /// Home's "Retry" after a failed load: back to the spinner, then one more try.
     func retryLoad() async {
         isLoading = true
@@ -123,7 +137,7 @@ final class MyPacksViewModel: ObservableObject {
             _ = try await service.retryOrder(id: orderId, paymentProof: nil)
         } catch {
             retryErrorMessage = (error as? LocalizedError)?.errorDescription
-                ?? String(localized: "Couldn't restart this pack. Please try again.", comment: "Shown when retrying a failed custom-pack order from My packs did not reach the server")
+                ?? String(localized: "Couldn't restart this pack. Please try again.", bundle: .interface, locale: .interface, comment: "Shown when retrying a failed custom-pack order from My packs did not reach the server")
             return
         }
         await refresh()

@@ -90,9 +90,9 @@ async def _start(manager: SessionManager, session_id: str, tracker: MagicMock):
 
 async def test_pack_session_does_not_touch_quota():
     manager = SessionManager()
-    session = manager.create_session(user_id="u1")
+    session = await manager.create_session(user_id="u1")
     session.pack_id = "e5b8c1a2-0000-4000-8000-000000000abc"
-    manager.update_session(session)
+    await manager.update_session(session)
     tracker = _tracker()
 
     await _start(manager, session.session_id, tracker)
@@ -105,8 +105,8 @@ async def test_normal_session_still_charges_quota():
     # The contrast case: without a pack_id the same path MUST gate + record, so
     # this test fails if the guard is widened to skip the quota for everyone.
     manager = SessionManager()
-    session = manager.create_session(user_id="u1")
-    manager.update_session(session)
+    session = await manager.create_session(user_id="u1")
+    await manager.update_session(session)
     tracker = _tracker()
 
     await _start(manager, session.session_id, tracker)

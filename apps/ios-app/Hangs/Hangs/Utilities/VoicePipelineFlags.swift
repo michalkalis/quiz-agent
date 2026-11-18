@@ -5,17 +5,14 @@
 //  #184 (car-noise field test, founder 2026-09-21): the answer-pipeline
 //  switches the founder A/Bs in the car. They are RUNTIME flags (UserDefaults),
 //  not `Config` constants, because the whole point of the track is to measure
-//  combinations on the same drive — voice processing on/off, realtime vs. batch
-//  transcription — without a new TestFlight build per combination. Surfaced in
-//  Settings under the TestFlight/debug "diagnostics" group only.
+//  combinations on the same drive without a new TestFlight build per
+//  combination. Surfaced in Settings under the TestFlight/debug "diagnostics"
+//  group only.
 //
 //  Defaults encode the research verdict (docs/research/stt-car-noise-research-
 //  2026-09-21.md): voice processing ON (Apple AEC/NS/AGC on the mic — the raw
-//  mic was root cause #1), realtime OFF (the answer goes record → upload →
-//  Scribe v2 batch on the backend; ElevenLabs Realtime + its server VAD stays
-//  reachable behind the switch until it has been measured against batch), and
-//  sample saving OFF (privacy: recordings are only kept when the founder opts
-//  in for the 30–50-sample measurement set). #185 track C added voice
+//  mic was root cause #1), and sample saving OFF (privacy: recordings are only
+//  kept when the founder opts in for the 30–50-sample measurement set). #185 track C added voice
 //  processing on external outputs, OFF (it moves the sound off the car), and
 //  the cleaned-up answer upload, OFF (Scribe's input stays as it is).
 //
@@ -27,13 +24,13 @@ nonisolated enum VoicePipelineFlags {
         static let voiceProcessing = "voicePipeline.voiceProcessingEnabled"
         static let voiceProcessingOnExternalOutput = "voicePipeline.voiceProcessingOnExternalOutput"
         static let conditionAnswerUpload = "voicePipeline.conditionAnswerUpload"
-        static let realtimeSTT = "voicePipeline.realtimeSTTEnabled"
         static let saveAnswerRecordings = "voicePipeline.saveAnswerRecordings"
         static let echoCancelledInputOnExternalRoutes = "voicePipeline.echoCancelledInputOnExternalRoutes"
         static let frontCardioidMic = "voicePipeline.frontCardioidMic"
         static let neuralVAD = "voicePipeline.neuralVADEnabled"
         static let avoidRejectedTranscriptOnRetry = "voicePipeline.avoidRejectedTranscriptOnRetry"
         static let autoTesting = "voicePipeline.autoTesting"
+        static let commandsDuringReading = "voicePipeline.commandsDuringReading"
         static let aecBlockedGeneration = "voicePipeline.experiment.aecBlockedGeneration"
         static let echoCancelledInputCapable = "voicePipeline.experiment.echoCancelledInputCapable"
     }
@@ -66,14 +63,6 @@ nonisolated enum VoicePipelineFlags {
     static var conditionAnswerUpload: Bool {
         get { bool(Key.conditionAnswerUpload, default: false) }
         set { UserDefaults.standard.set(newValue, forKey: Key.conditionAnswerUpload) }
-    }
-
-    /// Route answers through ElevenLabs Scribe v2 REALTIME (WebSocket, server
-    /// VAD decides the end of speech) instead of the local-VAD + batch upload
-    /// path. Off by default since #184; kept for the A/B measurement.
-    static var realtimeSTTEnabled: Bool {
-        get { bool(Key.realtimeSTT, default: false) }
-        set { UserDefaults.standard.set(newValue, forKey: Key.realtimeSTT) }
     }
 
     /// Keep every batch answer recording (WAV + sidecar metadata) in the app's
@@ -133,6 +122,17 @@ nonisolated enum VoicePipelineFlags {
     static var autoTesting: Bool {
         get { autoTesting(in: .standard) }
         set { UserDefaults.standard.set(newValue, forKey: Key.autoTesting) }
+    }
+
+    /// #208.7: keep an echo-cancelling command listener up through the
+    /// question read, so "zopakuj" / "preskoč" / "pauza" work while the
+    /// question is read (`VoiceCommandCoordinator+Reading`). OFF by default
+    /// until the founder hears it on a device: with the listener up, iOS keeps
+    /// the session in `.voiceChat`, so the question plays at call volume —
+    /// the volume #208.5 removed from Home.
+    static var commandsDuringReading: Bool {
+        get { bool(Key.commandsDuringReading, default: false) }
+        set { UserDefaults.standard.set(newValue, forKey: Key.commandsDuringReading) }
     }
 
     static func autoTesting(in defaults: UserDefaults) -> Bool {

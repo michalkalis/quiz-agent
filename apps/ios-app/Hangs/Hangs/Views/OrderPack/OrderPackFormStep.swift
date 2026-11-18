@@ -19,11 +19,30 @@ struct OrderPackFormStep: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.lg) {
-            PackPreviewCard(topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines))
+            PackPreviewCard(
+                topic: viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines),
+                questionCount: viewModel.size.questionCount
+            )
             topicGroup
+            OrderPackDifficultyPicker(
+                selection: viewModel.difficulty,
+                onSelect: viewModel.selectDifficulty
+            )
+            OrderPackAudiencePicker(
+                selection: viewModel.audience,
+                onSelect: viewModel.selectAudience
+            )
+            // The topic check is asked for this band; no switching under it.
+            .disabled(viewModel.isCheckingTopic)
             languageGroup
 
-            HangsPrimaryButton(title: "Continue", trailingIcon: "arrow.right", action: continueToSummary)
+            HangsPrimaryButton(
+                title: "Continue",
+                trailingIcon: "arrow.right",
+                // #233: the topic check runs before the summary.
+                isLoading: viewModel.isCheckingTopic,
+                action: continueToSummary
+            )
             // #188 G14 (M9): the button draws its own legible disabled state.
             .disabled(!viewModel.isValid)
             .accessibilityIdentifier("orderPack.submit")
@@ -51,23 +70,33 @@ struct OrderPackFormStep: View {
                     .font(.hangsBodyLG)
                     .foregroundStyle(Theme.Hangs.Colors.ink)
                     .accessibilityIdentifier("orderPack.prompt")
+                    .limitLength($viewModel.prompt, to: OrderPackViewModel.maxPromptInputLength)
+                    // The topic check is asked for this text; no edits under it.
+                    .disabled(viewModel.isCheckingTopic)
 
-                    if !dictation.partialTranscript.isEmpty {
-                        Text(verbatim: dictation.partialTranscript)
+                    if dictation.isTranscribing {
+                        Text("Transcribing…")
                             .font(.hangsCaption)
                             .italic()
                             .foregroundStyle(Theme.Hangs.Colors.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("orderPack.partialTranscript")
+                            .accessibilityIdentifier("orderPack.transcribing")
                     }
 
                     Text(verbatim: "\(viewModel.trimmedPromptCount) / \(OrderPackViewModel.maxPromptLength)")
                         .font(.hangsCaption.monospacedDigit())
-                        .foregroundStyle(viewModel.isValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
+                        .foregroundStyle(viewModel.isPromptValid ? Theme.Hangs.Colors.muted : Theme.Hangs.Colors.error)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-            Text("Tell us what the quiz should be about — topic, difficulty, audience. A few words are enough.")
+            if viewModel.isTopicBlocked {
+                Text("We can't make a quiz on this topic. Please try a different one.")
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.error)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, Theme.Hangs.Spacing.md)
+                    .accessibilityIdentifier("orderPack.topicBlocked")
+            }
+            Text("Tell us what the quiz should be about. A few words are enough.")
                 .font(.hangsCaption)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -96,7 +125,7 @@ struct OrderPackFormStep: View {
             }
         }
         .frame(minHeight: Metrics.minTapTarget)
-        .disabled(dictation.micButtonDisabled)
+        .disabled(dictation.micButtonDisabled || viewModel.isCheckingTopic)
         .opacity(dictation.micButtonDisabled ? 0.4 : 1)
         .accessibilityIdentifier("orderPack.mic")
     }
@@ -104,10 +133,13 @@ struct OrderPackFormStep: View {
     /// Explains a denied mic or the cap stop so the button never feels dead.
     private var micHint: String? {
         if dictation.micState == .denied {
-            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", comment: "Order form: mic disabled because permission was denied")
+            return String(localized: "Microphone access is off — you can still type. Enable it in Settings to dictate.", bundle: .interface, locale: .interface, comment: "Order form: mic disabled because permission was denied")
+        }
+        if dictation.didFailTranscription {
+            return String(localized: "Couldn't transcribe that. Try again or type it.", bundle: .interface, locale: .interface, comment: "Dictation: the recording came back without text (offline, server error or nothing heard)")
         }
         if dictation.didHitDictationCap {
-            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", comment: "Order form: dictation auto-stopped at the 120-second cap")
+            return String(localized: "Reached the 2-minute dictation limit. Tap Dictate to add more.", bundle: .interface, locale: .interface, comment: "Order form: dictation auto-stopped at the 120-second cap")
         }
         return nil
     }
@@ -126,7 +158,7 @@ struct OrderPackFormStep: View {
     private func continueToSummary() {
         Task {
             await dictation.stop()
-            viewModel.advanceToSummary()
+            await viewModel.continueFromForm()
         }
     }
 
@@ -152,6 +184,7 @@ struct OrderPackFormStep: View {
                     .allowsHitTesting(false)
                 }
                 .accessibilityIdentifier("orderPack.language")
+                .disabled(viewModel.isCheckingTopic)
             }
             Text("Preselected from your quiz language in Settings.")
                 .font(.hangsCaption)
@@ -167,6 +200,7 @@ struct OrderPackFormStep: View {
 /// the text field below is the input.
 private struct PackPreviewCard: View {
     let topic: String
+    let questionCount: Int
 
     var body: some View {
         let style = Theme.Hangs.Category.style(for: nil)
@@ -184,7 +218,7 @@ private struct PackPreviewCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Spacer(minLength: Theme.Hangs.Spacing.xxs)
-                    Text(verbatim: "\(Metrics.packSize)")
+                    Text(verbatim: "\(questionCount)")
                 }
                 .font(.hangsMonoMini)
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
@@ -211,9 +245,6 @@ private struct PackPreviewCard: View {
 
     private enum Metrics {
         static let card = CGSize(width: 132, height: 164)
-        /// Questions per custom pack, as in the summary copy ("Custom pack · 30
-        /// questions") and `PackOrderService.targetCount`.
-        static let packSize = 30
     }
 }
 
@@ -223,7 +254,7 @@ private struct PackPreviewCard: View {
             viewModel: OrderPackViewModel(service: MockPackOrderService()),
             dictation: TextDictation(voice: nil, networkService: nil)
         )
-            .padding(20)
-            .background(Theme.Hangs.Colors.bg)
+        .padding(20)
+        .background(Theme.Hangs.Colors.bg)
     }
 #endif

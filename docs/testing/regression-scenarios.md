@@ -12,17 +12,19 @@ Preconditions are set up by launching the app with `--ui-test` (see
 
 Steps drive UI via XcodeBuildMCP accessibility-tree taps and a tiny
 DEBUG-only HTTP listener on `127.0.0.1:9999` (see
-`UITestSupport.startTestListener()`) for STT events. The legacy
+`UITestSupport.startTestListener()`) for spoken answers and interruptions. The legacy
 `hangs-test://` URL scheme handler is still wired and may work on real
 devices, but iOS 26.3 simulator drops it (LaunchServices bug), so the
 HTTP path is canonical.
 
 | Curl | Effect |
 |---|---|
-| `curl -s "http://127.0.0.1:9999/stt/connected"`           | injects `STTEvent.connected` |
-| `curl -s "http://127.0.0.1:9999/stt/partial?text=foo"`    | injects `STTEvent.partialTranscript("foo")` |
-| `curl -s "http://127.0.0.1:9999/stt/committed?text=foo"`  | injects `STTEvent.committedTranscript("foo")` |
-| `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=..."`  | injects `STTEvent.disconnected(error)` |
+| `curl -s "http://127.0.0.1:9999/stt/connected"`           | readiness ping (200 once the listener is up) |
+| `curl -s "http://127.0.0.1:9999/stt/committed?text=foo"`  | the player says "foo" into the open recording: the real batch path uploads it and the mock server hears "foo" (#208.8). 404 when no recording is armed |
+| `curl -s "http://127.0.0.1:9999/recording/interrupt"`     | an audio interruption (phone call) hits the recording |
+| `curl -s "http://127.0.0.1:9999/command/send?text=start"` | a voice command |
+| `curl -s "http://127.0.0.1:9999/network/condition?text=offline&calls=submitTextInput"` | the network changes while the app runs (#235.5): a `--ui-test-network` profile, `clear` brings it back; without `calls` every mock call and the game together's polls |
+| `curl -s "http://127.0.0.1:9999/network/release"` | the calls held since launch with `--ui-test-network-hold <name,name>` answer (#235.5) |
 
 State assertions read the label of the hidden static text element
 `question.state` (values: `idle`, `startingQuiz`, `askingQuestion`,
@@ -74,6 +76,21 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-21 | `RSPaywallTests.testRS21…` | purchase → success branch, no `paywall.purchaseError` |
 | RS-24 | `RSPackTests.testRS24…` (+ unit `PackProgressTests`) | alert buttons matched by label (system alert) |
 | RS-25 | `RSDailyChallengeTests.testRS25…` (+ unit `QuizViewModelDailyChallengeTests`) | scripted mock challenge (`DailyChallengeFixtures`), questions skipped |
+| RS-26 | `RSAppConfigTests.testRS26…` (+ unit `AppConfigStoreTests`) | DEBUG seed, no backend |
+| RS-27 | `RSAppConfigTests.testRS27…` (+ unit `AppConfigStoreTests`) | DEBUG seed; the store link itself is not opened |
+| RS-28 | `RSRoomTests.testRS28…` (+ unit `RoomViewModelTests`) | scripted mock room (`MockRoomService`), DEBUG seed |
+| RS-29 | `RSRoomTests.testRS29…` (+ unit `RoomViewModelTests`) | scripted mock room; host driven over the test listener |
+| RS-32 | `RSRoomTests.testRS32…` (+ unit `RoomViewModelSettingsTests`) | scripted mock room; rules start from the defaults every launch (`UITestSupport.roomSettingsDefaults`); the in-game sheet is covered by unit tests and the `roomRules` snapshot only |
+| RS-33 | `RSSharedQuizTests.testRS33a/b/c…` (+ unit `SharedQuizFlowTests`, `SharedQuizLinkTests`) | link delivered over the test listener; mocks answer for the server (`SharedQuizFixtures`); the friend's quiz is not played to its end (the round end is covered by unit tests and the `completionShare` / `sharedQuizRanking` snapshots) |
+| RS-35 | `RSNetworkTests.testRS35…` | `--ui-test-network-hold getUsage,syncEntitlements`, released over the test listener (a 3 s delay ran out during XCUITest's launch idle waits); app config is not on the mock network (it fails open) |
+| RS-36 | `RSNetworkTests.testRS36…` | typed answer; the network is switched off and back over the test listener (`/network/condition`); waits out the app's real 24 s `TransientRetry` window, the suite's slowest new scenario |
+| RS-37 | `RSNetworkTests.testRS37…` | build-87 tab-bar bug; slow `startQuiz` (3 s) |
+| RS-38 | `RSNetworkTests.testRS38…` | `--ui-test-network server-error` on `startQuiz`, cleared over the test listener; found `error.root` stamped over `error.retry`/`error.home` (fixed in `ErrorView`) |
+| RS-39 | `RSPaywallTests.testRS39…` | `--ui-test-purchase-fail` (the purchase mock throws) |
+| RS-40 | `RSPaywallTests.testRS40…` | `--ui-test-purchase-cancel` (the purchase mock returns `.userCancelled`) |
+| RS-41 | `RSRoomTests.testRS41…` | `/network/condition?text=offline` fails every mock call and the room's polls |
+| RS-42 | `RSRoomTests.testRS42…` | Home button press; the host moves on over the test listener while the guest is away |
+| RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -94,7 +111,7 @@ Stay/Resume is one `result.stayHere` toggle. Page objects in
 
 ## RS-01: Recording stops on committed transcript
 
-**Hypothesis:** After ElevenLabs commits the final transcript, the app
+**Hypothesis:** After the player finishes the spoken answer and the server transcribes it, the app
 must leave `recording` state, surface the confirmation sheet, and not
 crash.
 
@@ -150,12 +167,12 @@ recording must clear it.
 **Preconditions**
 - Launch with `--ui-test`
 - Pre-existing error on screen: trigger via
-  `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=fake-error"` mid-recording
+  `curl -s "http://127.0.0.1:9999/recording/interrupt"` mid-recording
 
 **Steps**
 1. Tap `home.startQuiz`
 2. Tap `question.micButton`; wait for `recording`
-3. `curl -s "http://127.0.0.1:9999/stt/disconnect?msg=upstream-down" >/dev/null`
+3. `curl -s "http://127.0.0.1:9999/recording/interrupt" >/dev/null`
 4. Wait until `question.errorBanner` is visible
 5. Tap `question.micButton` again to start a fresh recording
 6. Wait for `question.state` label `recording`
@@ -304,16 +321,14 @@ edit", not a global "abandon this answer".
 
 ---
 
-## RS-09: MCQ voice answer highlights the option and goes through confirmation
+## RS-09: MCQ voice answer goes through confirmation
 
-**Hypothesis:** When the app receives a committed transcript that matches an MCQ option,
-`MCQTranscriptMatcher` maps it to the correct key, `mcqVoiceMatchedKey` is set so the matching
-`AnswerOption` highlights as `selected` — and the answer then goes through the **confirmation
-sheet**, not straight to the backend (issue #171 Track I, founder 2026-09-05, restoring #45
-decision D4). The sheet is prefilled with the option's **value** (the backend MCQ evaluator
-matches by value with no LLM fallback) and shows the matched option as `A · <text>`. Confirm —
-by tap, by the spoken "ok", or by letting the 5 s auto-confirm expire — submits it and the quiz
-reaches the result. A mishearing is therefore always correctable before it is graded.
+**Hypothesis:** A spoken MCQ answer goes through the **confirmation sheet**, not straight to
+the result (issue #171 Track I, founder 2026-09-05, restoring #45 decision D4). Since #208.8 the
+backend transcribes and places the answer among the options (#185 track G); the sheet shows
+exactly what it heard. Confirm — by tap, by the spoken "ok", or by letting the 5 s auto-confirm
+expire — and the quiz reaches the result. A mishearing is therefore always correctable before
+it is graded.
 
 **Preconditions**
 - Launch with `--ui-test --ui-test-mcq`
@@ -330,30 +345,29 @@ reaches the result. A mishearing is therefore always correctable before it is gr
 3. Confirm `mcq.option.a` is present in the accessibility tree (MCQ screen rendered)
 4. Confirm the answer `listen-bar` caption reads "Listening — say A–D or the answer" (#171 Track I3
    — answering with the option TEXT is supported, and the caption must say so)
-5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s, then STT connect)
+5. Wait for `question.state` label `recording` (up to 5s — answer timer fires after ~1s)
 6. `curl -s "http://127.0.0.1:9999/stt/committed?text=Jupiter" >/dev/null`
 7. Wait up to 3s for `confirmation.answer` to appear
 8. Tap `confirmation.confirm`
 9. Wait up to 5s
 
 **Asserts**
-- After step 7: `confirmation.answer` reads `Jupiter` — the option VALUE, never the raw transcript
-- After step 7: `confirmation.matchedOption` reads `B · Jupiter`
+- After step 7: `confirmation.answer` reads `Jupiter` — what the server heard
 - After step 7: `question.state` label is `processing` and **no** `submitTextInput` has fired yet
 - After step 9: `question.state` label is `showingResult`
 - `mcq.option.b` is present in the accessibility tree while the question is up (options still rendered)
 - App process is alive; no `EXC_*` in log
 - `question.errorBanner` is **not** present
 
-**Variant (#171 Track I2, tolerant matching):** replay step 6 with an inflected form
-(`?text=Jupitera`) — the sheet must still prefill `Jupiter`. An unmatched transcript
-(`?text=something%20unrelated`) instead prefills the RAW transcript, unchanged from before.
+**Variant:** replay step 6 with a free answer (`?text=something%20unrelated`) — the sheet
+shows it unchanged.
 
 ---
 
 ## RS-10: MCQ tap answer submits and transitions to processing
 
-**Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` after the 500ms confirm delay
+**Hypothesis:** Tapping an MCQ option calls `submitMCQAnswer` at the tap (no delay since the
+RS-10 flake fix: a 500 ms hand-off let the speech-start window end the open recording first)
 and the ViewModel transitions to `processing`. This covers the tap-to-answer path that complements
 the voice path tested in RS-09 — a tap is an explicit choice, so it submits directly and does NOT
 go through the confirmation sheet the voice path uses (#171 Track I).
@@ -695,6 +709,326 @@ alive.
 
 ---
 
+## RS-26: Maintenance covers the app
+
+**Type:** XCUITest (`RSAppConfigTests`). #214.
+
+**Hypothesis:** With the server's maintenance switch on, the player sees the
+maintenance message over the whole app instead of starting a quiz that fails.
+
+**Steps:** launch with `--app-config-maintenance` (DEBUG seed, no backend).
+
+**Asserts:** `maintenance.message` present; `home.startQuiz` not hittable. App alive.
+
+---
+
+## RS-27: Update card on Home offers the store and dismisses
+
+**Type:** XCUITest (`RSAppConfigTests`). #214.
+
+**Hypothesis:** Below the recommended version the update stays optional: the
+card offers the store, closes, and Home stays playable.
+
+**Steps:** launch with `--app-config-update-recommended`; tap `home.update.dismiss`.
+
+**Asserts:** `home.update.open`, `home.update.dismiss` and `home.startQuiz`
+present; card gone after dismiss. App alive.
+
+---
+
+## RS-28: The host plays a whole game together
+
+**Type:** XCUITest (`RSRoomTests`). #212 (game together in one room).
+
+**Hypothesis:** The host's phone drives the game for everyone (read, open,
+next); a stalled step would leave every phone on one question.
+
+**Steps:** launch with `--app-config-multiplayer`; tap the Together tab (`tab.together`),
+`room.host`; give a name if asked; pick `room.rules.reveal` →
+`room.rules.reveal.question` (#213.8: the default reveals at the end);
+`room.start`; tap option B; `room.next`;
+type "Canberra" and send; `room.next`; `room.done`.
+
+**Asserts:** `room.qr` and `room.player.p_other` in the lobby; `room.reveal.answer`
+after each question; `room.final.winner` is the host; `room.final.away`
+present; back on Home. App alive.
+
+---
+
+## RS-29: A guest joins by link and follows the host
+
+**Type:** XCUITest (`RSRoomTests`). #212.
+
+**Hypothesis:** A join link opens the game from Home; a guest answers, sees
+each reveal, waits for the host and never sees host-only controls.
+
+**Steps:** launch with `--app-config-multiplayer`; POST `/room/join?text=mock-token`
+to the test listener; `/room/start`; tap option B; `/room/next`; type
+"Sydney" and send; `/room/next`.
+
+**Asserts:** `room.lobby.rename` after the link; `room.reveal.answer` and
+`room.waitingForHost` after question 1, `room.next` absent; `room.final.winner`
+present, `room.final.away` absent. App alive.
+
+---
+
+## RS-30: Profile: plan, All stats, Settings under the gear; a quiz hides the tab bar
+
+**Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile), #216.3
+(plan moved to Profile, stat cards behind All stats).
+
+**Hypothesis:** Settings left Home for the Profile tab, so its gear is the only
+way in; the plan now lives on the Profile, the stat cards behind "All stats"
+(open and locked, without the retired ones); a quiz keeps the full screen with
+no tab bar to wander off to.
+
+**Steps:** launch (mock stats: a seasoned player); tap `tab.profile`; tap
+`profile.allStats`, then back; tap `profile.settings`; tap `tab.play`; start a
+quiz.
+
+**Asserts:** `home.moreSettings` and `home.planLabel` absent on Home;
+`home.planLabel` on the Profile; `profile.myPacks` absent;
+`profile.card.totals` in All stats, `profile.card.hard_questions` absent;
+`settings.voiceCommands` after the gear; `tab.profile` not hittable on the
+question screen. App alive. RS-pack-nav-start now opens Settings the same way
+and so also covers a quiz started from the Profile landing on Play.
+
+---
+
+## RS-31: The recap card shows on the Profile with Share
+
+**Type:** XCUITest (`RSProfileTests`). #213.5 (recap and sharing), #216.3
+(one card instead of the story).
+
+**Hypothesis:** the monthly recap is the reason to come back; it is one card on
+the Profile with Share ready (the picture rendered).
+
+**Steps:** launch (mock: a seasoned player with an unseen October recap); tap
+`tab.profile`.
+
+**Asserts:** `profile.recap` and `recap.share` present. App alive.
+
+---
+
+## RS-32: The host sets the rules in the lobby; a guest only reads them
+
+**Type:** XCUITest (`RSRoomTests`). #213.8 (rules for a game together).
+
+**Hypothesis:** the rules hold for every phone, so a first game starts from
+the group defaults (not the host's solo choices), a change shows at once,
+and a guest sees the host's rules without any control to change them.
+
+**Steps:** launch with `--app-config-multiplayer`; tap the Together tab (`tab.together`),
+`room.host`; give a name if asked; tap `room.rules.time` →
+`room.rules.time.45`. Relaunch; POST `/room/join?text=mock-token` to the
+test listener.
+
+**Asserts:** `room.rules.reveal` reads "At the end of the quiz",
+`room.rules.time` "30 s", `room.rules.readsAloud` present; after the pick
+`room.rules.time` reads "45 s". Guest: `room.rules.guest` present;
+`room.rules.reveal`, `room.rules.time`, `room.rules.readsAloud` absent. App
+alive (both launches).
+
+---
+
+## RS-33: A shared quiz link plays once, then compares
+
+**Type:** XCUITest (`RSSharedQuizTests`). #232 (share a quiz by link).
+
+**Hypothesis:** A friend's link starts its quiz at once from Home; a link the
+player cannot play again (already played, or the sender's own) shows the
+comparison instead of an error or a second attempt.
+
+**Steps:** launch with `--app-config-shared-quiz` (a: no other flag; b:
+`--ui-test-shared-quiz-played`; c: `--ui-test-shared-quiz-own`); POST
+`/shared/open?text=rs33-shared-quiz` to the test listener; in b and c tap
+`sharedQuiz.results.done`.
+
+**Asserts:** a: the question screen, no `sharedQuiz.ranking`. b, c:
+`sharedQuiz.ranking` present, no question, back on Home (`home.startQuiz`)
+after Done. App alive.
+
+---
+
+## RS-34: A slow start shows Cancel, then the question
+
+**Type:** XCUITest (`RSNetworkTests`). #235.1 (a "bad network" switch for
+tests).
+
+**Hypothesis:** on a slow server the quiz start stays visibly in flight and
+cancellable on Home (the window in which a player can walk to another tab,
+founder build 87), and the question still arrives once the server answers.
+
+**Steps:** launch with `--ui-test-network slow --ui-test-network-delay 4
+--ui-test-network-calls startQuiz` (the first question comes 4 s late; see
+`MockNetworkService+Conditions.swift` for the other profiles: `timeout`,
+`offline`, `dropped`, `server-error`, `malformed`); tap `home.startQuiz`.
+
+**Asserts:** `home.cancelStart` present and hittable while the start is in
+flight, `question.text` absent; then `question.text` present, `question.state`
+reads `askingQuestion`, `home.cancelStart` gone. App alive.
+
+---
+
+## RS-35: A slow launch keeps Home usable
+
+**Type:** XCUITest (`RSNetworkTests`). #235.5 (degraded conditions).
+
+**Hypothesis:** usage and the entitlement sync answering late (cold server,
+weak signal) must not block Home: Start and the tab bar work the whole time,
+the plan says it is loading, then settles to the player's real plan.
+
+**Steps:** launch with `--ui-test-plan-subscriber --ui-test-network-hold
+getUsage,syncEntitlements` (both stay in flight); tap `tab.profile`, then
+`tab.play`; POST `/network/release`; tap `tab.profile`.
+
+**Asserts:** while held: `home.startQuiz` and `tab.profile` hittable,
+`home.freePlanLoading` on the Profile, `home.startQuiz` hittable back on Play;
+after release `home.planManageButton`, loading gone, no
+`home.freePlanRetryButton`. App alive.
+
+---
+
+## RS-36: The network drops while answering; retry keeps the question
+
+**Type:** XCUITest (`RSNetworkTests`). #235.5.
+
+**Hypothesis:** an answer sent into a dead connection never vanishes
+silently: while the app retries on its own (24 s) the screen says it is
+processing, then an error with Try again and a way Home; Try again with the
+network back reopens the same question and the answer is graded.
+
+**Steps:** launch; start a quiz; POST `/network/condition?text=offline&calls=submitTextInput`;
+type "Paris" and send; wait ≤40 s; POST `/network/condition?text=clear`; tap
+`error.retry`; type "Paris" and send.
+
+**Asserts:** probe `processing` after the send; `error.title`, `error.retry`,
+`error.home` present and no result; after Try again the probe reads
+`askingQuestion` with the same `question.text`; then the result with
+"Nailed it" and no error screen. App alive.
+
+---
+
+## RS-37: A slow start finishes on the question after a tab switch
+
+**Type:** XCUITest (`RSNetworkTests`). #235.5; the build-87 bug (PR #799).
+
+**Hypothesis:** a quiz started on a slow server lands on its question even
+when the player walked to the Together tab meanwhile, and ending that quiz
+brings the tab bar back (on build 87 it vanished and the app had to be killed).
+
+**Steps:** launch with `--app-config-multiplayer --ui-test-network slow
+--ui-test-network-delay 3 --ui-test-network-calls startQuiz`; tap
+`home.startQuiz`; tap `tab.together` while `home.cancelStart` shows; wait for
+the question; X → "End Quiz".
+
+**Asserts:** `question.text` present with the probe at `askingQuestion`;
+after ending, `tab.together` present and hittable. App alive.
+
+---
+
+## RS-38: A failed start offers Try again and Home
+
+**Type:** XCUITest (`RSNetworkTests`). #235.5.
+
+**Hypothesis:** a server error on the start ends in an error the player can
+act on, and Home works afterwards. (First run found both buttons carrying the
+screen's `error.root` identifier; `ErrorView` now keeps its children's ids.)
+
+**Steps:** launch with `--ui-test-network server-error
+--ui-test-network-calls startQuiz`; tap `home.startQuiz`; tap `error.home`;
+POST `/network/condition?text=clear`; start a quiz.
+
+**Asserts:** `error.title`, `error.retry`, `error.home` present, no
+`question.text`; Home with `tab.profile` after `error.home`; the next start
+reaches the question. App alive.
+
+---
+
+## RS-39: A failed purchase says so and grants nothing
+
+**Type:** XCUITest (`RSPaywallTests`). #235.5.
+
+**Hypothesis:** when the store reports a failure the paywall says so and
+stays usable, claims no success, and the free wall still stands.
+
+**Steps:** launch with `--ui-test-paywall --ui-test-purchase-fail`; tap
+`home.startQuiz`; tap `paywall-purchase-button`; tap ✕; tap `home.startQuiz`.
+
+**Asserts:** `paywall.purchaseError` present; no `paywall.success.headline` /
+`paywall.activating.headline`; purchase CTA enabled and ✕ hittable; the next
+start shows the paywall again, no question. App alive.
+
+---
+
+## RS-40: A cancelled purchase returns to the paywall quietly
+
+**Type:** XCUITest (`RSPaywallTests`). #235.5.
+
+**Hypothesis:** closing the store sheet is the player's choice, not a
+failure: the paywall comes back as it was, no error, no entitlement.
+
+**Steps:** RS-39 with `--ui-test-purchase-cancel` instead of the fail flag.
+
+**Asserts:** purchase CTA enabled again; no `paywall.purchaseError`; the rest
+as RS-39. App alive.
+
+---
+
+## RS-41: The host loses the network mid-game
+
+**Type:** XCUITest (`RSRoomTests`). #235.5.
+
+**Hypothesis:** the host's phone drives the game, so a dead connection must
+show, the game goes on by itself when the network is back, and the host can
+leave at any time.
+
+**Steps:** launch with `--app-config-multiplayer`; host a game (per-question
+reveal) and start it; on question 1 POST `/network/condition?text=offline`;
+then `?text=clear`; tap option B; `room.close` → "End game".
+
+**Asserts:** `room.connection` appears while offline and `room.close` is
+hittable; `room.connection` gone after the network is back; the reveal
+(`room.reveal.count`) after the answer; back on the Together tab
+(`room.host`) after ending. App alive.
+
+---
+
+## RS-42: A guest back from the background sees the current question
+
+**Type:** XCUITest (`RSRoomTests`). #235.5.
+
+**Hypothesis:** a guest who switched apps while the host moved on comes back
+to the question the room is on, not the stale reveal.
+
+**Steps:** launch with `--app-config-multiplayer`; POST `/room/join?text=mock-token`,
+`/room/start`; tap option B; press Home; POST `/room/next`; bring the app back.
+
+**Asserts:** `room.answer.field` (question 2) present; `room.reveal.count`
+and `room.waitingForHost` absent. App alive.
+
+---
+
+## RS-43: A shared quiz link during a running quiz waits for it to end
+
+**Type:** XCUITest (`RSSharedQuizTests`). #235.5.
+
+**Hypothesis:** a friend's link tapped mid-quiz neither throws away the quiz
+being played nor leaves a stuck screen: the link waits and starts the
+friend's quiz once the player is back on Home (today's behaviour, by design
+in `ContentView.openPendingSharedQuiz`).
+
+**Steps:** launch with `--app-config-shared-quiz`; start a quiz; POST
+`/network/condition?text=slow&calls=startSharedQuiz` (so the friend's start is
+visible); POST `/shared/open?text=rs33-shared-quiz`; X → "End Quiz".
+
+**Asserts:** for 2 s after the link the probe stays `askingQuestion`,
+`question.text` present, no `sharedQuiz.ranking`; after ending,
+`home.cancelStart` (the friend's quiz starting without a tap), then
+`question.text` at `askingQuestion`. App alive.
+
+---
+
 ## Adding a scenario
 
 1. Pick the next free `RS-NN`.
@@ -707,3 +1041,13 @@ alive.
 When a scenario starts failing after a code change, fix the code, not the
 scenario. If the scenario itself becomes wrong (the desired behavior
 changed), update the hypothesis and bump nothing — the number stays.
+
+## On-device checks before a release
+
+No simulator covers these (#235.5). Run them on a phone with a TestFlight build; system interruptions in detail: the checklist in `docs/testing/system-calls-coverage.md` (arriving with PR #816).
+
+1. Weak signal: start a quiz on Wi-Fi, walk away from it mid-question and answer. Expected: progress, then the answer is graded or an error with Try again; never a frozen screen.
+2. Car Bluetooth: connect the car while a question is read, disconnect while recording. Expected: audio moves to the car and back, the quiz keeps its question and a way to answer.
+3. Phone call: take a call while a question is read, then another while recording. Expected: reading and recording stop; after the call the question is still there and can be answered.
+4. Siri / alarm: trigger Siri and let an alarm ring mid-question. Expected: the same as a call, no crash, no lost question.
+

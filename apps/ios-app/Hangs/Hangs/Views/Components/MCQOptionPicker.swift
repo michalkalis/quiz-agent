@@ -8,42 +8,6 @@
 
 import SwiftUI
 
-/// Holds the delayed tap-submit task (54.16). A reference type (kept in @State) so
-/// the voice-match onChange cancels the exact task the tap scheduled, and so the
-/// single-submit guard is unit-testable without SwiftUI state machinery.
-@MainActor
-final class MCQDelayedSubmit {
-    private var task: Task<Void, Never>?
-    /// The key this in-flight submit will fire for (#110 T4 cancel-semantics
-    /// rework) — lets the owner tell its own tap echo (the VM key becoming this
-    /// same value) apart from an other-source supersede (a different key arrives).
-    private(set) var pendingKey: String?
-
-    func schedule(key: String? = nil, delayNs: UInt64 = 500_000_000, _ fire: @escaping @MainActor () -> Void) {
-        pendingKey = key
-        task = Task {
-            try? await Task.sleep(nanoseconds: delayNs)
-            guard !Task.isCancelled else { return }
-            fire()
-            pendingKey = nil
-        }
-    }
-
-    func cancel() {
-        task?.cancel()
-        task = nil
-        pendingKey = nil
-    }
-
-    /// The selection key changed to `newKey`. Only an other-source supersede (a
-    /// different key, e.g. a voice match overriding a pending tap) cancels; the
-    /// tap's own echo and a nil reset (new question) do not.
-    func supersede(with newKey: String?) {
-        guard let newKey, newKey != pendingKey else { return }
-        cancel()
-    }
-}
-
 struct MCQOptionPicker: View {
     let options: [(key: String, value: String)]
     /// #185 track G: key → badge label from the server (`Question.optionLabels`);
@@ -59,9 +23,6 @@ struct MCQOptionPicker: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// Pending tap submit (54.16) — a concurrent voice match cancels it; the VM
-    /// submits voice matches itself, so letting both run fired onSelect twice.
-    @State private var pendingSubmit = MCQDelayedSubmit()
 
     /// #125: SE-class shrinks the grid tiles + gaps (driven by container height).
     var compact: Bool = false
@@ -125,8 +86,7 @@ struct MCQOptionPicker: View {
     }
 
     /// Full-width AnswerOption rows — the T/F path, and now the long-option path
-    /// too. The `.onChange` stays on THIS VStack (the tap/voice race wiring the
-    /// 54.16 tests drive).
+    /// too.
     private var optionRows: some View {
         // #174 C2: this path now carries four rows, not just the T/F pair — a
         // short container tightens the gaps so they still fit above the fold.
@@ -151,9 +111,6 @@ struct MCQOptionPicker: View {
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .onChange(of: externalSelectedKey) { _, newValue in
-            handleSelectionChange(newValue)
-        }
     }
 
     private var gridGap: CGFloat { Theme.Hangs.Spacing.xs }
@@ -185,9 +142,6 @@ struct MCQOptionPicker: View {
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .onChange(of: externalSelectedKey) { _, newValue in
-            handleSelectionChange(newValue)
-        }
     }
 
     /// The chosen option is the only one that spins; a skip has no chosen option
@@ -197,31 +151,17 @@ struct MCQOptionPicker: View {
     /// Everything the driver can no longer act on recedes while a submit is in flight.
     private func isDimmed(_ key: String) -> Bool { isSubmitting && externalSelectedKey != key }
 
-    /// Shared tap handler (both the rows and the grid). Schedules BEFORE writing
-    /// the key so the in-flight `pendingKey` is set before the write can be
-    /// observed by `handleSelectionChange` as the tap's own echo.
+    /// Shared tap handler (both the rows and the grid). The answer goes to the
+    /// view model AT the tap: a 500 ms grace before `onSelect` (54.16) left the
+    /// quiz in `.recording` after the driver had answered, so the speech-start
+    /// window, VAD or the cap could still end that recording first, upload it
+    /// and open the voice sheet, and the late tap then found `.processing` and
+    /// was dropped (RS-10 flake). The tapped tile is the feedback now (#174:
+    /// it spins in place), so the grace bought nothing.
     private func tapOption(_ option: (key: String, value: String)) {
         guard externalSelectedKey == nil else { return }
-        submitAfterDelay(key: option.key, value: option.value)
         externalSelectedKey = option.key
-    }
-
-    /// #110 T4 cancel-semantics rework: now that the tap writes this same key,
-    /// this fires on the tap's own echo too. Only cancel on an other-source
-    /// supersede (a different key arriving — e.g. a voice match overriding a
-    /// pending tap); never on the tap's own echo, and never on nil (the VM
-    /// clears this key on a new question). A voice match on the SAME key as a
-    /// pending tap never fires this at all (no value change) — that duplicate is
-    /// absorbed by the entry guard in `submitMCQAnswer` (answers are legal only
-    /// from .askingQuestion/.recording), not here.
-    private func handleSelectionChange(_ newValue: String?) {
-        pendingSubmit.supersede(with: newValue)
-    }
-
-    private func submitAfterDelay(key: String, value: String) {
-        pendingSubmit.schedule(key: key) {
-            onSelect(key, value)
-        }
+        onSelect(option.key, option.value)
     }
 }
 

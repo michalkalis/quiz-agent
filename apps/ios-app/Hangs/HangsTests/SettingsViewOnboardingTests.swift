@@ -7,7 +7,7 @@
 //  Why these tests matter:
 //  - The "Replay intro" row is the Settings entry point for re-running onboarding
 //    (founder decision 2026-06-11). It must call startOnboarding() which resets
-//    the VM to the Welcome page WITHOUT clearing hasCompletedOnboarding — clearing
+//    the VM to the first (microphone) page WITHOUT clearing hasCompletedOnboarding — clearing
 //    the flag would silently re-trigger first-launch onboarding on the next cold launch.
 //  - The structural test (ViewInspector) ensures the row label stays present and
 //    wasn't accidentally removed during future refactors.
@@ -46,19 +46,20 @@ struct SettingsViewOnboardingTests {
 
     // MARK: - Wiring contract: closure must not clear hasCompletedOnboarding
 
-    @Test("startOnboarding resets VM to Welcome without clearing hasCompletedOnboarding")
+    @Test("startOnboarding resets VM to the microphone page without clearing hasCompletedOnboarding")
     func replayDoesNotClearFlag() {
         let store = MockPersistenceStore()
         store.hasCompletedOnboarding = true
         let vm = OnboardingViewModel(
             audioService: MockAudioService(),
-            persistenceStore: store
+            persistenceStore: store,
+            enableCommands: {}
         )
 
         // This is what the Settings replay row calls via the onReplayOnboarding closure.
         vm.startOnboarding()
 
-        #expect(vm.page == .welcome, "Replay must restart at the Welcome page")
+        #expect(vm.page == .microphone, "Replay must restart at the first page")
         #expect(!vm.isComplete, "Replay must mark the flow as not yet complete")
         #expect(
             store.hasCompletedOnboarding,

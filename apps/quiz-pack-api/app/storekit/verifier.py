@@ -16,11 +16,12 @@ Verification steps:
    signatures are raw `r||s` (64 bytes) — they must be re-encoded to DER for
    `cryptography`'s `verify`.
 6. Decode payload, parse into `SignedTransaction`.
-7. Cross-check `bundleId` and `environment` against the configured values
+7. Cross-check `bundleId` (any configured app, #234) and `environment` against the configured values
    (a deploy may allow several store environments; prod serves Production
    and Sandbox, #193). Mismatches raise `JWSWrongBundle` or `JWSInvalid` respectively, so the
    error log distinguishes "JWS for a different app" (security signal) from
-   "Sandbox JWS hit a Production deployment" (config drift).
+   "Sandbox JWS hit a Production deployment" (config drift). The product id
+   is then mapped to the live catalog id (`beta.` prefix of the beta app, #234).
 
 8. Reject a payload whose `expiresDate` has passed (`JWSExpired`) — the
    lapsed-subscriber enforcement line. Non-subscription products carry no
@@ -46,6 +47,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from pydantic import ValidationError
+
+from quiz_shared.store_ids import canonical_product_id, parse_id_list
 
 from .exceptions import JWSExpired, JWSInvalid, JWSRevoked, JWSWrongBundle
 from .models import SignedTransaction
@@ -83,14 +86,22 @@ class AppleJWSVerifier:
     def __init__(
         self,
         root_cert: x509.Certificate,
-        app_bundle_id: str,
+        app_bundle_id: Union[str, Iterable[str]],
         environment: Union[str, Iterable[str], None],
     ) -> None:
         self._root = root_cert
         self._root_der = root_cert.public_bytes(
             encoding=serialization.Encoding.DER
         )
-        self._app_bundle_id = app_bundle_id
+        # #234: the App Store app and the TestFlight-only beta app. A string is
+        # the comma-separated `APP_BUNDLE_ID` value; the first entry is primary.
+        self._app_bundle_ids: tuple[str, ...] = (
+            parse_id_list(app_bundle_id)
+            if isinstance(app_bundle_id, str)
+            else tuple(app_bundle_id)
+        )
+        if not self._app_bundle_ids:
+            raise ValueError("at least one app bundle id must be configured")
         if isinstance(environment, str):
             environment = (environment,)
         # An empty set is as unconfigured as None: verify_payload fails closed.
@@ -100,8 +111,13 @@ class AppleJWSVerifier:
 
     @property
     def app_bundle_id(self) -> str:
-        """The bundle id this verifier accepts (read by the notification path)."""
-        return self._app_bundle_id
+        """The primary bundle id (the App Store app)."""
+        return self._app_bundle_ids[0]
+
+    @property
+    def app_bundle_ids(self) -> tuple[str, ...]:
+        """Every bundle id this verifier accepts (read by the notification path)."""
+        return self._app_bundle_ids
 
     @property
     def environments(self) -> Optional[frozenset[str]]:
@@ -112,7 +128,7 @@ class AppleJWSVerifier:
     def from_path(
         cls,
         root_cert_path: Union[str, Path],
-        app_bundle_id: str,
+        app_bundle_id: Union[str, Iterable[str]],
         environment: Union[str, Iterable[str], None],
     ) -> "AppleJWSVerifier":
         path = Path(root_cert_path)
@@ -192,16 +208,21 @@ class AppleJWSVerifier:
         except ValidationError as exc:
             raise JWSInvalid(f"payload missing required fields: {exc}") from exc
 
-        if tx.bundle_id != self._app_bundle_id:
+        if tx.bundle_id not in self._app_bundle_ids:
             raise JWSWrongBundle(
                 f"bundle mismatch: JWS bundleId={tx.bundle_id!r}, "
-                f"expected {self._app_bundle_id!r}"
+                f"expected one of {list(self._app_bundle_ids)!r}"
             )
         if tx.environment not in self._environments:
             raise JWSInvalid(
                 f"environment mismatch: JWS environment={tx.environment!r}, "
                 f"expected one of {sorted(self._environments)!r}"
             )
+        # #234: every caller (orders, notifications/revocation, reconcile) gets
+        # the live catalog ID. `beta.pack_30` from the beta app becomes
+        # `pack_30`; a `beta.` ID from the live app stays as-is, matches no
+        # catalog entry and buys nothing.
+        tx.product_id = canonical_product_id(tx.bundle_id, tx.product_id)
         return tx
 
     def verify(self, jws: str) -> SignedTransaction:

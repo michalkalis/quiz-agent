@@ -35,7 +35,6 @@ struct EmptyAnswerRetryTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -118,7 +117,7 @@ struct EmptyAnswerRetryTests {
     @Test("muted: the first miss re-records without speaking")
     func mutedFirstMissRetriesSilently() async {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
 
         await vm.toggleRecording()
@@ -157,7 +156,7 @@ struct EmptyAnswerRetryTests {
         #expect(vm.showsEmptyAnswerRetryHint, "…and while the mic is open again")
 
         network.submitVoiceAnswerError = nil
-        vm.quizMuteOverride = true // no read-back of the answer
+        vm.settings.isMuted = true // no read-back of the answer
         await recordUnderstoodAsNothing(vm, silence)
 
         #expect(vm.showAnswerConfirmation, "the retry's answer reached the sheet")
@@ -170,7 +169,7 @@ struct EmptyAnswerRetryTests {
     @Test("muted: the retry line is on the question screen while the mic is open again")
     func mutedRetryLineOnQuestionScreen() async throws {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
-        vm.quizMuteOverride = true
+        vm.settings.isMuted = true
         network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
 
         await vm.toggleRecording()
@@ -197,7 +196,6 @@ struct RecordingDuringReadOutTests {
             audioService: audio,
             persistenceStore: MockPersistenceStore(),
             silenceDetectionService: silence,
-            sttService: nil,
             clock: AnyClock(clock)
         )
         vm.currentSession = Fixtures.makeActiveSession()
@@ -299,6 +297,13 @@ struct NoAnswerSheetViewTests {
         #expect(try tree.find(viewWithAccessibilityIdentifier: "confirmation.reRecord").isDisabled() == false,
                 "Again must work with no countdown running")
         #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "confirmation.confirm") }
+        // #208.6: the same row as the transcript sheet, Again on the left.
+        let ids = ["confirmation.reRecord", "confirmation.skip"]
+        let order = tree.findAll(where: { view in
+            guard let id = try? view.accessibilityIdentifier() else { return false }
+            return ids.contains(id)
+        }).compactMap { try? $0.accessibilityIdentifier() }
+        #expect(order == ids, "Again must keep its place on the left")
     }
 
     /// WHY: an empty field the driver cleared while editing is not a miss —

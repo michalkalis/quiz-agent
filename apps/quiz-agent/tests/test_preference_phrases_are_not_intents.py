@@ -39,7 +39,7 @@ def _flow(intents):
     retriever.get_next_question = AsyncMock(return_value=_question("q_next"))
 
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=retriever,
         answer_evaluator=MagicMock(),

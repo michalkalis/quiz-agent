@@ -21,6 +21,7 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from quiz_shared.auth.identity import JWT_AUDIENCE, JWT_ISSUER
+from quiz_shared.store_ids import parse_id_list
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,8 @@ class Settings(BaseSettings):
     # (TestFlight/App Store), or "both" (one backend serves both build
     # distributions without flipping a flag). It is set via the
     # `APP_ATTEST_PRODUCTION` env var (see `_attest_environment`).
+    # #234: APP_ATTEST_APP_ID is comma-separated (App Store app first, then the
+    # TestFlight-only beta app); one value = one app, as before.
     attest_challenge_ttl_seconds: int = 300  # 5 min — one attest/assert round-trip
     app_attest_required: bool = False
     app_attest_app_id: Optional[str] = None
@@ -119,6 +122,9 @@ class Settings(BaseSettings):
     # `…_team_id` form the client_secret header.kid / issuer. `apple_token_enc_key`
     # is a Fernet key (one `Fernet.generate_key()`) for encrypting Apple's refresh
     # token at rest (F1/F2).
+    # #234: APPLE_SIGNIN_CLIENT_ID is comma-separated — the App Store app first
+    # (primary), then the beta app. Any entry is an accepted id_token `aud`; the
+    # client_secret `sub` is always the client id that issued the token.
     # #101 prod/sandbox separation: which RevenueCat purchase environment(s)
     # this deployment ingests + honors — comma-separated, e.g.
     # "PRODUCTION,SANDBOX" on prod (TestFlight + App Review buy in sandbox).
@@ -129,8 +135,8 @@ class Settings(BaseSettings):
     # deleted). `tts_fallback_provider` set to "none"/empty disables failover.
     # `tts_voice` overrides the provider's default voice — an ElevenLabs voice
     # id or an OpenAI voice name, so it only makes sense alongside a pinned
-    # `tts_provider`. `tts_cache_dir` must point at the Fly volume (/data/…)
-    # for the audio cache to survive a deploy.
+    # `tts_provider`. `tts_cache_dir` is a per-machine L1 since
+    # #207.20; the shared copy is the private R2 bucket (``tts.remote_cache``).
     tts_provider: str = "elevenlabs"
     tts_fallback_provider: Optional[str] = "openai"
     tts_voice: Optional[str] = None
@@ -142,33 +148,40 @@ class Settings(BaseSettings):
     tts_cache_max_mb: int = 1500
     # #193.13: per-user daily cap on characters sent to the BILLED primary by
     # `POST /tts/synthesize` (ElevenLabs Starter = 30k credits/month, shared with
-    # STT; multilingual_v2 bills ~0.4 credit/char on current plans). Heavy
+    # STT; eleven_v4_turbo bills 0.2 credit/char, measured 2026-10-26 —
+    # multilingual_v2 was 0.4). Heavy
     # legit play: ~100 answer read-backs (~40 chars) + a few recaps is ~5-6k,
     # so 10k never blocks it. Over budget -> OpenAI fallback, not an
     # error. 0 disables the cap.
     tts_synthesize_daily_char_budget: int = 10000
-    elevenlabs_tts_model: str = "eleven_multilingual_v2"
+    # #207 (207.13): per-user daily caps so one account, or one leaked attested
+    # identity, cannot drain provider credit. Sized from the heaviest real day
+    # (Plus = 1,000 questions/month; a long road trip ~200 answers, ~1.5 tries
+    # each, ≤ 15 s per recording) with headroom; a real player never meets
+    # them. Over a cap the request gets a plain 429, which shipped builds
+    # already treat as "too many requests" (realtime token → batch recording,
+    # entitlement sync → best effort). 0 disables a cap.
+    daily_cap_stt_tokens: int = 500  # realtime STT token mints (~300 heavy day)
+    daily_cap_stt_seconds: int = 7200  # audio sent to /voice/submit (~1.25 h heavy)
+    daily_cap_answer_attempts: int = 30  # submits for ONE question (normal ≤ 6)
+    daily_cap_entitlement_syncs: int = 100  # RevenueCat REST syncs (~10-30 normal)
+    # #218.7: AI (LLM) answer gradings per player per UTC day. Not a 429: past it
+    # that player's answers are graded by the fast deterministic path only.
+    daily_cap_ai_gradings: int = 300
+    # #207 (207.13): service-wide ElevenLabs credits per UTC day (Starter = 30k
+    # a month, ~420/day average so far). Past it, new speech uses the OpenAI
+    # voice/recogniser until midnight UTC, so one bad day cannot spend the
+    # month. 0 disables.
+    elevenlabs_daily_credit_budget: int = 5000
+    elevenlabs_tts_model: str = "eleven_v4_turbo"
     openai_tts_model: str = "tts-1"
-    # Answer transcription (#184 — batch STT for car noise). Scribe v2 batch is
-    # primary: it publishes Slovak quality, takes `keyterms` biasing and returns
-    # per-word logprob so trailing noise words can be cut. `stt_fallback_model`
-    # is the OpenAI model used when Scribe is unavailable — set it back to
-    # "whisper-1" to roll all the way back, or `stt_provider="openai"` to skip
-    # Scribe entirely. `stt_trailing_logprob_cutoff`: words below this at the end
-    # of a transcript count as noise (logprob ≤ 0, higher = confident).
-    # `stt_trim_trailing_low_confidence` (#185 E): whether that noise run is
-    # actually cut from the text. OFF until the cutoff is measured on car
-    # recordings — an answer in a foreign language ("curling" in a Slovak quiz)
-    # scores low confidence and was at risk of being cut; while off, the run is
-    # only logged ("would have trimmed …") so it can be calibrated.
-    stt_provider: str = "elevenlabs"
-    stt_fallback_model: str = "gpt-transcribe"
-    elevenlabs_stt_model: str = "scribe_v2"
-    stt_trailing_logprob_cutoff: float = -1.0
-    stt_trim_trailing_low_confidence: bool = False
+    # Answer transcription (#208.1): OpenAI is the only answer recogniser
+    # (ElevenLabs Scribe left the answer path after the 2026-10-16 replay).
+    # Set to "whisper-1" to roll back to the pre-#184 model.
+    stt_model: str = "gpt-transcribe"
     # #204.2: when a retry's transcript equals one the player already rejected,
-    # re-recognise with the answer as bias and a different seed instead of
-    # grading the same wrong words again. Only acts when the client sends
+    # re-recognise with another decoding (#208.1: no prompt, then sampled)
+    # instead of grading the same wrong words again. Only acts when the client sends
     # `rejected_transcripts`; this is the server-side kill switch.
     stt_retry_avoid_rejected: bool = True
     # #204.6: deterministic sk/cs/en pronunciation-key tier between the
@@ -181,10 +194,38 @@ class Settings(BaseSettings):
     # left, ElevenLabs in percent of the character quota left.
     provider_balance_check_enabled: bool = False
     provider_balance_initial_delay_s: float = 120.0
+    # #207: hourly (was daily) so a credit running out is caught the same hour.
+    provider_balance_interval_s: float = 3600.0
     openrouter_low_usd: float = 10.0
     openrouter_critical_usd: float = 3.0
     elevenlabs_low_pct: float = 25.0
     elevenlabs_critical_pct: float = 10.0
+    # #207 (207.12): spend-based checks (monitoring/provider_costs.py). The
+    # Anthropic API credit (Max plan, ANTHROPIC_CREDIT_* like credit_gate) in
+    # USD left, and a warning this many days before it expires; OpenAI spend
+    # against a monthly budget; Fly billing status + run-rate for this org.
+    anthropic_low_usd: float = 40.0
+    anthropic_critical_usd: float = 15.0
+    anthropic_expiry_warn_days: int = 3
+    openai_monthly_budget_usd: float = 50.0
+    fly_org: str = "personal"
+    # #207 (207.8/207.9): infrastructure + latency watch (monitoring/
+    # ops_watch.py). Opt-in like the checks above (on in fly.toml).
+    ops_watch_enabled: bool = False
+    # Dedupe state for e-mailed alerts; on the /data volume in prod (fly.toml)
+    # so a deploy does not re-send ongoing problems. Empty = memory only.
+    ops_watch_interval_s: float = 300.0
+    # "fly" (Fly Prometheus, needs FLY_METRICS_TOKEN) or "local" (this host's
+    # /proc/meminfo + statvfs; for the Hetzner VPS, #222).
+    ops_metrics_source: str = "fly"
+    ops_local_disk_path: str = "/"
+    ops_local_target: str = "hetzner-host"
+    ops_disk_alarm_pct: float = 70.0
+    ops_db_connections_alarm_pct: float = 70.0
+    ops_memory_alarm_pct: float = 90.0
+    ops_latency_p95_alarm_s: float = 8.0
+    ops_latency_window_s: float = 600.0
+    ops_latency_min_requests: int = 30
     # Question stock early warning (#199): the daily check counts playable
     # questions per (language × category) and fresh entertainment questions per
     # language, and raises a Sentry issue when one runs low so generation can
@@ -205,8 +246,19 @@ class Settings(BaseSettings):
     # #205 daily challenge: on in dev/tests, off in prod until the founder
     # flips it (fly.toml [env] DAILY_CHALLENGE_ENABLED).
     daily_challenge_enabled: bool = True
+    # #212 same-room multiplayer: on in dev/tests, off in prod until the
+    # founder flips it (fly.toml [env] MULTIPLAYER_ENABLED).
+    multiplayer_enabled: bool = True
+    # #212.2 room answer time on top of the host's thinking time: A to D gets
+    # the voice speech-start window (5 s); a typed answer also gets the voice
+    # answer time (8 s) + 5 s to type. The clock starts when the host's phone
+    # finished reading aloud, or after the fallback if it never says so.
+    room_mcq_extra_seconds: int = 5
+    room_open_extra_seconds: int = 18
+    room_read_fallback_seconds: int = 45
     app_notice_sk: Optional[str] = None
     app_notice_cs: Optional[str] = None
+    app_notice_uk: Optional[str] = None
     app_notice_en: Optional[str] = None
     apple_signin_client_id: Optional[str] = None
     apple_signin_key_id: Optional[str] = None
@@ -226,7 +278,13 @@ class Settings(BaseSettings):
     def _normalize_min_app_version(cls, value: object) -> Optional[str]:
         return _min_app_version(None if value is None else str(value))
 
-    @field_validator("app_notice_sk", "app_notice_cs", "app_notice_en", mode="before")
+    @field_validator(
+        "app_notice_sk",
+        "app_notice_cs",
+        "app_notice_uk",
+        "app_notice_en",
+        mode="before",
+    )
     @classmethod
     def _normalize_app_notice(cls, value: object) -> Optional[str]:
         text_value = None if value is None else str(value).strip()
@@ -236,6 +294,16 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_rc_environment(cls, value: object) -> Optional[frozenset[str]]:
         return _rc_environment(None if value is None else str(value))
+
+    @property
+    def apple_signin_client_ids(self) -> tuple[str, ...]:
+        """`APPLE_SIGNIN_CLIENT_ID` as an ordered tuple; first = primary."""
+        return parse_id_list(self.apple_signin_client_id)
+
+    @property
+    def app_attest_app_ids(self) -> tuple[str, ...]:
+        """`APP_ATTEST_APP_ID` as an ordered tuple; first = primary."""
+        return parse_id_list(self.app_attest_app_id)
 
 
 def get_settings() -> Settings:

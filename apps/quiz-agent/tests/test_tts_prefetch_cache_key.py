@@ -93,12 +93,12 @@ async def test_prefetch_then_serve_synthesizes_once_for_a_slovak_digit_stem():
     synthesis for one question, and it must be the digits-spelled-out text."""
     service, provider = _service()
     manager = SessionManager()
-    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
+    session = await manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_next"
     session.current_question_text = SK_STEM
-    manager.update_session(session)
+    await manager.update_session(session)
 
     prefetch_question_audio(service, SK_STEM, "sk")
     await _drain_prefetch()
@@ -127,7 +127,7 @@ async def test_answer_advance_prefetch_uses_the_session_language():
     """The answer-advance prefetch must normalize with the *session's* language —
     passing the raw stem (or "en") re-opens the double-synthesis."""
     service, provider = _service()
-    session = SessionManager().create_session()
+    session = await SessionManager().create_session()
     session.language = "sk"
     session.transition(to=SessionPhase.ASKING, caller="test")
     session.current_question_id = "q_current"
@@ -142,7 +142,7 @@ async def test_answer_advance_prefetch_uses_the_session_language():
     retriever.get_next_question = AsyncMock(return_value=_question())
 
     flow = QuizFlowService(
-        session_manager=MagicMock(),
+        session_manager=AsyncMock(),
         input_parser=input_parser,
         question_retriever=retriever,
         answer_evaluator=MagicMock(),
@@ -163,9 +163,9 @@ async def test_start_prefetch_uses_the_session_language():
     """Same for the /start prefetch — the other call site of the same helper."""
     service, provider = _service()
     manager = SessionManager()
-    session = manager.create_session(user_id="u_owner")  # #144: owner-gated route
+    session = await manager.create_session(user_id="u_owner")  # #144: owner-gated route
     session.language = "sk"
-    manager.update_session(session)
+    await manager.update_session(session)
 
     retriever = MagicMock()
     retriever.get_next_question = AsyncMock(return_value=_question())

@@ -34,7 +34,8 @@ extension AudioDeviceState {
         guard VoiceProcessingPolicy.shouldRestartListener(
             reason: change.reason,
             armed: armed,
-            wantsVoiceProcessing: change.voiceProcessingMode.armsVoiceProcessing
+            // #208.5: the quiet Home session never wants it, whatever the route.
+            wantsVoiceProcessing: service.voiceProcessingAllowed && change.voiceProcessingMode.armsVoiceProcessing
         ) else { return }
 
         SentryLog.info("command listener restarted for route", category: .audio, attributes: [

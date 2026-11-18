@@ -40,7 +40,7 @@ nonisolated enum Config {
 
     static func legalPageURL(
         _ page: String,
-        languageCode: String = Bundle.main.preferredLocalizations.first ?? "en"
+        languageCode: String = InterfaceLanguage.code
     ) -> URL {
         let prefix = ["sk", "cs"].contains(languageCode) ? "/\(languageCode)" : ""
         return URL(string: "https://trubbo.app\(prefix)/\(page)")!
@@ -74,8 +74,9 @@ nonisolated enum Config {
     /// Default number of questions per quiz
     static let defaultQuestions = 10
 
-    /// Default quiz difficulty
-    static let defaultDifficulty = "medium"
+    /// Default quiz difficulty: a mix, each question's level picked by the
+    /// server (#216, founder 2026-10-30).
+    static let defaultDifficulty = "random"
 
     /// Session expiry time in minutes (should match backend TTL)
     static let sessionTTLMinutes = 30
@@ -92,28 +93,32 @@ nonisolated enum Config {
     static let questionCountOptions = [5, 10, 15, 20]
 
     /// Available difficulty options for quiz settings
-    static let difficultyOptions = [
-        ("easy", String(localized: "Easy", comment: "Quiz difficulty option")),
-        ("medium", String(localized: "Medium", comment: "Quiz difficulty option")),
-        ("hard", String(localized: "Hard", comment: "Quiz difficulty option")),
-        ("random", String(localized: "Random", comment: "Quiz difficulty option: pick difficulty at random")),
-    ]
+    static var difficultyOptions: [(String, String)] {
+        [
+            ("easy", String(localized: "Easy", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("medium", String(localized: "Medium", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("hard", String(localized: "Hard", bundle: .interface, locale: .interface, comment: "Quiz difficulty option")),
+            ("random", String(localized: "Random", bundle: .interface, locale: .interface, comment: "Quiz difficulty option: pick difficulty at random")),
+        ]
+    }
 
     /// Available category options for quiz settings (nil = All Categories)
     /// Interest-based taxonomy (2026-08 revamp) — mirrors the backend
     /// `CATEGORY_TAXONOMY` in `apps/quiz-agent/app/api/admin.py`. Age is a
     /// separate axis (`ageAppropriateOptions`); fandom/themed content lives in
     /// packs, not here. Backend filters on whatever id is sent.
-    static let categoryOptions: [(id: String?, display: String)] = [
-        (nil, String(localized: "All Categories", comment: "Quiz category option: no category filter")),
-        ("science-nature", String(localized: "Science & Nature", comment: "Quiz category option")),
-        ("history", String(localized: "History", comment: "Quiz category option")),
-        ("geography-world", String(localized: "Geography & World", comment: "Quiz category option")),
-        ("movies-music", String(localized: "Movies & Music", comment: "Quiz category option")),
-        ("sports", String(localized: "Sports", comment: "Quiz category option")),
-        ("food-everyday", String(localized: "Food & Everyday Life", comment: "Quiz category option")),
-        ("entertainment", String(localized: "Entertainment", comment: "Quiz category option")),
-    ]
+    static var categoryOptions: [(id: String?, display: String)] {
+        [
+            (nil, String(localized: "All Categories", bundle: .interface, locale: .interface, comment: "Quiz category option: no category filter")),
+            ("science-nature", String(localized: "Science & Nature", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("history", String(localized: "History", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("geography-world", String(localized: "Geography & World", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("movies-music", String(localized: "Movies & Music", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("sports", String(localized: "Sports", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("food-everyday", String(localized: "Food & Everyday Life", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("entertainment", String(localized: "Entertainment", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+        ]
+    }
 
     /// Human-readable (localized) name for a taxonomy category id; nil for
     /// anything else (#198: a raw id like "general" or "adults" must never
@@ -162,8 +167,8 @@ nonisolated enum Config {
 
     /// HIDDEN dead-air cap for one recording (seconds). The driver never sees
     /// it: it only guarantees the mic closes when nothing is ever said and no
-    /// VAD commit arrives. Once speech starts, the answer ends on ElevenLabs
-    /// VAD (1.5 s of silence), not here — which is why it can stay this long
+    /// VAD commit arrives. Once speech starts, the answer ends on the
+    /// on-device VAD's silence, not here — which is why it can stay this long
     /// (raised from 4 s to 15 s for Phase 2 silence detection so a long spoken
     /// answer is never cut off mid-sentence).
     /// Lowered 15 → 8 s (founder 2026-10-10): in car noise the energy VAD
@@ -183,12 +188,17 @@ nonisolated enum Config {
     /// empty transcript → confirmation sheet with an empty field (#171 B).
     static let speechStartWindow: TimeInterval = 5.0
 
-    /// How long the streaming path waits after a forced STT commit before
-    /// treating the silence as a transcription failure (#54 task 54.4)
-    static let sttCommitWatchdogSecs: TimeInterval = 5.0
-
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
+
+    /// #208 (founder 2026-10-16): with read-aloud muted, or a question without
+    /// audio, the think countdown stands still (full) for a silent reading pause
+    /// first: question words / `silentReadingWordsPerSecond`, clamped to the
+    /// min/max. Deterministic from the text, so the same question always gets
+    /// the same pause.
+    static let silentReadingWordsPerSecond: Double = 2.5
+    static let silentReadingPauseMin: TimeInterval = 3
+    static let silentReadingPauseMax: TimeInterval = 15
 
     /// Countdown duration for auto-confirm (also controls re-record window) in
     /// seconds. #171 Track F (founder 2026-09-05): 10 s read as "the app froze"
@@ -196,34 +206,14 @@ nonisolated enum Config {
     /// the result. 5 s is still long enough to say "again" or tap Re-record.
     static let autoConfirmDelaySecs: Int = 5
 
-    // MARK: - ElevenLabs Streaming STT
+    // MARK: - Dictation (feedback, rating, pack prompt)
 
-    /// Compile-time availability of the ElevenLabs Scribe v2 Realtime answer
-    /// path (live word-by-word transcript, server-side VAD). Whether a recording
-    /// actually takes it is a RUNTIME choice since #184 —
-    /// `VoicePipelineFlags.realtimeSTTEnabled`, default OFF: the car test showed
-    /// the server VAD (1.5 s) appending trailing words, so answers now go local
-    /// VAD → WAV → backend batch (Scribe v2). The realtime path stays wired for
-    /// the A/B measurement; on any setup/connection failure it too falls back to
-    /// the batch upload.
-    static let useElevenLabsSTT: Bool = true
-
-    /// ElevenLabs Scribe v2 Realtime model ID
-    static let elevenLabsModel: String = "scribe_v2_realtime"
-
-    /// Audio format for ElevenLabs WebSocket (raw PCM, 16kHz, 16-bit, mono)
-    static let elevenLabsAudioFormat: String = "pcm_16000"
-
-    /// Interval for streaming audio chunks to ElevenLabs WebSocket (milliseconds)
+    /// How often the dictation recorder hands its PCM chunks over (milliseconds).
     static let sttStreamingChunkIntervalMs: UInt64 = 250
 
     /// Hard cap on a single in-app feedback dictation (#109). ~120 s of 16 kHz
-    /// 16-bit mono PCM ≈ 3.8 MB WAV, under the backend's 10 MB audio guideline.
+    /// 16-bit mono PCM ≈ 3.8 MB WAV, under the dictation endpoint's 5 MB limit.
     static let feedbackDictationCapSecs: TimeInterval = 120
-
-    /// VAD silence threshold — ElevenLabs commits transcript after this many seconds of silence.
-    /// Centralised in `VADTuning` (77.11); forwarded here for back-compat.
-    static let elevenLabsVadSilenceThresholdSecs: Double = VADTuning.elevenLabsVadSilenceThresholdSecs
 
     // MARK: - Voice Commands (#77)
 
@@ -236,18 +226,22 @@ nonisolated enum Config {
     /// (so tests can flip it without a global).
     static let voiceStartCommandEnabled: Bool = true
 
-    /// Founder-overridable build/settings flag: arm the command listener on the idle
-    /// Home screen so spoken "start" begins the quiz. Default ON. On-device English
-    /// command recognition only — nothing leaves the device. Copied into
-    /// `VoiceCommandCoordinator.voiceStartOnHomeEnabled` per instance.
-    static let voiceHomeStartEnabled: Bool = true
-
     // MARK: - Freemium
 
     /// RevenueCat public Apple SDK key (project "CarQuiz", fe489552). Public by
     /// design — safe to embed in the client; entitlement is still resolved
     /// server-side via the backend's RevenueCat secret key + webhook mirror.
-    static let revenueCatPublicSDKKey = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+    static var revenueCatPublicSDKKey: String {
+        BetaApp.isBetaBuild ? revenueCatPublicSDKKeyBeta : revenueCatPublicSDKKeyLive
+    }
+
+    static let revenueCatPublicSDKKeyLive = "appl_zaNZviocTQkXpIoNzpqJehlnLwm"
+
+    /// #234 — Trubbo Beta is its own iOS app in the same RevenueCat project,
+    /// with its own public key; its `beta.` products hang off the same
+    /// `unlimited` entitlement and offering.
+    /// RevenueCat app "Trubbo Beta (TestFlight)" (app411663fe8f), created 2026-11-14.
+    static let revenueCatPublicSDKKeyBeta = "appl_YDuzXLReVxhTTmWTWKCkoWPYpMJ"
 
     // MARK: - Sentry
 

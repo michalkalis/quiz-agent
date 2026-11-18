@@ -42,6 +42,16 @@ a player a verdict. The Claude attempt and its fallback share ONE
 ``CLAUDE_TIMEOUT_S`` (6 s, no retry; Haiku p90 was 1.2–1.8 s), the fallback
 gets whatever is left (≥ 6 s, enough for gpt-4o-mini's p95 of 2.2–3.2 s). So a
 call still never exceeds 12 s and the two-call worst case above stays 24 s.
+
+#207 (task 207.11, 2026-10-16): the OpenAI-SDK side of this path (the
+fallback, or a role rolled back to ``gpt-4o-mini``) goes to OpenAI with
+``OPENAI_API_KEY`` directly, never through ``LLM_GATEWAY``. Prod runs
+``LLM_GATEWAY=openrouter``, and with the fallback on OpenRouter an empty
+OpenRouter balance silently left Claude as the only judge — one more empty
+credit (Anthropic) and nobody could grade an answer. Claude on the Anthropic
+key and gpt-4o-mini on the OpenAI key are two independent balances, so either
+one running dry still grades. Role env vars therefore take plain provider ids
+(``gpt-4o-mini``, ``claude-…``), not OpenRouter slugs.
 """
 
 from __future__ import annotations
@@ -91,10 +101,11 @@ def role_model(env_name: str) -> str:
 
 
 def client() -> openai.AsyncOpenAI:
-    """The async OpenAI-SDK client the answer path uses (active gateway)."""
-    return llm_factory.openai_client(async_=True, timeout=ATTEMPT_TIMEOUT).with_options(
-        max_retries=MAX_RETRIES
-    )
+    """The async OpenAI-SDK client the answer path uses: direct OpenAI,
+    whatever ``LLM_GATEWAY`` says (#207.11 — its own balance, not OpenRouter's)."""
+    return llm_factory.openai_client(
+        async_=True, direct=True, timeout=ATTEMPT_TIMEOUT
+    ).with_options(max_retries=MAX_RETRIES)
 
 
 async def complete(
@@ -117,7 +128,7 @@ async def complete(
         reply = await _complete_claude(stage, request, claude_llm)
         if reply is not None:
             return reply
-        request = {**request, "model": llm_factory.resolve_model(FALLBACK_MODEL)}
+        request = {**request, "model": FALLBACK_MODEL}
     try:
         return await asyncio.wait_for(
             llm.chat.completions.create(**request),
@@ -218,7 +229,7 @@ def _report(stage: str, model: str | None, exc: BaseException) -> None:
     with sentry_sdk.new_scope() as scope:
         scope.fingerprint = ["answer-path-llm-unavailable"]
         scope.set_tag("llm_stage", stage)
-        scope.set_tag("llm_gateway", llm_factory.gateway())
+        scope.set_tag("llm_route", "anthropic+openai-direct")
         scope.set_tag("llm_error", type(exc).__name__)
         sentry_sdk.capture_message(
             f"LLM provider unavailable on the answer path ({stage}: "

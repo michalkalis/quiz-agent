@@ -45,7 +45,7 @@ struct AppNoticeBanner: View {
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "Dismiss", comment: "Accessibility label: hide the notice on Home"))
+                    .accessibilityLabel(String(localized: "Dismiss", bundle: .interface, locale: .interface, comment: "Accessibility label: hide the notice on Home"))
                     .accessibilityIdentifier("home.notice.dismiss")
                 }
             }

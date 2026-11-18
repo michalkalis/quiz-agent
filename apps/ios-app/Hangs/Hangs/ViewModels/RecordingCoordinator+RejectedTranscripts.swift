@@ -35,6 +35,12 @@ extension RecordingCoordinator {
         return rejectedTranscripts.transcripts(for: rejectionQuestionKey)
     }
 
+    /// #208.6: a transcript of the current question is still thrown away
+    /// (a take back removes it), whatever the switch says — the spelling hint.
+    var hasRejectedTranscriptOnCurrentQuestion: Bool {
+        !rejectedTranscripts.transcripts(for: rejectionQuestionKey).isEmpty
+    }
+
     /// Rejections on the current question so far, whatever the switch says
     /// (#204.9 `answer_captured`).
     func rejectedTranscriptCount() -> Int {

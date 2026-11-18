@@ -164,6 +164,17 @@ async def test_non_english_session_excludes_language_dependent_questions(client,
     assert native_rows == {"language": "sk"}
 
 
+async def test_skip_local_questions_narrows_the_count(client, store):
+    """WHY (#206): a player who switched local questions off is served fewer;
+    a count that ignored the switch would promise a set length it cannot
+    deliver."""
+    await _ask(client, language="sk", skip_local_questions=True)
+    assert store.count.await_args.kwargs["filters"]["local_scope"] is None
+
+    await _ask(client, language="sk")
+    assert "local_scope" not in store.count.await_args.kwargs["filters"]
+
+
 async def test_english_session_keeps_language_dependent_questions(client, store):
     """WHY: the mirror of the above — the filter is a non-English constraint, so
     an English count that applied it would under-report and alert needlessly."""

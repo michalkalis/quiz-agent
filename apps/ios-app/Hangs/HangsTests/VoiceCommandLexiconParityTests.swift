@@ -49,8 +49,10 @@ private let sheetIntents: [SpokenIntent] = [
     SpokenIntent(name: "no, again", screen: .confirmation, expected: .again, sk: "Nie, znova.", cs: "Ne, znovu.", en: "No, again."),
     SpokenIntent(name: "stop", screen: .confirmation, expected: .stop, sk: "Stop", cs: "Stop", en: "Stop"),
     SpokenIntent(name: "wait", screen: .confirmation, expected: .stop, sk: "počkaj", cs: "počkej", en: "wait"),
-    SpokenIntent(name: "skip (no answer)", screen: .noAnswer, expected: .skip, sk: "preskoč", cs: "přeskoč", en: "skip"),
-    SpokenIntent(name: "move on (no answer)", screen: .noAnswer, expected: .next, sk: "ďalej", cs: "dál", en: "next"),
+    // #224: the button word, and the old words as hidden synonyms. English
+    // "next" is also the `.next` command, but the strict skip check wins.
+    SpokenIntent(name: "next = skip (no answer)", screen: .noAnswer, expected: .skip, sk: "ďalšia", cs: "další", en: "next"),
+    SpokenIntent(name: "old skip word (no answer)", screen: .noAnswer, expected: .skip, sk: "preskoč", cs: "přeskoč", en: "skip"),
     SpokenIntent(name: "again (no answer)", screen: .noAnswer, expected: .again, sk: "znova", cs: "znovu", en: "again"),
     SpokenIntent(name: "no (no answer)", screen: .noAnswer, expected: .again, sk: "nie", cs: "ne", en: "no"),
 ]
@@ -109,13 +111,12 @@ struct VoiceCommandLexiconParityTests {
         }
     }
 
-    /// WHY: "áno" / "yes" became commands on the SHEET only. On the result
-    /// screen an "áno" would cut the explanation short, and on the question
-    /// screen it must stay padding ("áno, preskoč" still skips).
+    /// WHY: "áno" / "yes" became commands on the SHEET only. On the question
+    /// screen they must stay padding ("áno, preskoč" still skips).
     @Test("yes-words stay filler off the sheet", arguments: CommandLanguage.allCases)
     func yesWordsStayFillerElsewhere(_ language: CommandLanguage) {
         let yes = sheetIntents[0].phrase(language)
-        #expect(VoiceCommandMatcher.match(transcript: yes, on: .result, language: language) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: yes, on: .question, language: language) == nil)
         let skip = language == .english ? "yeah, skip" : "\(sheetIntents[1].phrase(language)), \(language == .czech ? "přeskoč" : "preskoč")"
         #expect(VoiceCommandMatcher.match(transcript: skip, on: .question, language: language) == .skip, "\(language) '\(skip)'")
     }

@@ -33,6 +33,7 @@ from collections.abc import Collection, Iterable
 
 from quiz_shared.models.question import GenerationProvenance, Question
 
+from app import uk_policy
 from app.scoring import craft_guards
 
 # Stamped into `reviewed_by` so a machine approval is distinguishable from a
@@ -40,7 +41,7 @@ from app.scoring import craft_guards
 GATE_VERSION = "machine:gates-v1"
 
 # Languages whose corpus rows are generated natively through the gated pipeline.
-MACHINE_APPROVABLE_LANGUAGES = frozenset({"en", "sk", "cs"})
+MACHINE_APPROVABLE_LANGUAGES = frozenset({"en", "sk", "cs", "uk"})
 
 # Shadow-flag keys written into `generation_metadata.extra` by ScoringStage
 # (#177 T1). Defined here — the predicate is the consumer that gives them
@@ -166,6 +167,17 @@ def _recomputed_guard_reason(q: Question, tf_excess: Collection[str]) -> str | N
         return f"{CRAFT_FLAG_KEY}={craft_reason}"
     if q.id in tf_excess:
         return f"{CRAFT_FLAG_KEY}=tf_key_imbalance"
+    if q.language == uk_policy.UK:
+        # #231: Ukrainian rows also clear the Russian-contamination and
+        # topic-policy checks, recomputed like the guards above.
+        texts = [q.question, str(q.correct_answer), q.explanation or ""]
+        texts += [str(v) for v in (q.possible_answers or {}).values()]
+        texts += [str(a) for a in (q.alternative_answers or [])]
+        uk_reason = uk_policy.russian_contamination_reason(
+            texts
+        ) or uk_policy.topic_policy_reason(texts)
+        if uk_reason is not None:
+            return f"uk_policy={uk_reason}"
     undated_reason = craft_guards.undated_record_reason(q.question, q.explanation)
     if undated_reason is not None:
         return f"{UNDATED_FLAG_KEY}={undated_reason}"

@@ -8,12 +8,15 @@ trustworthy:
 - a broken provider API is reported as `error`, never an exception — the check
   runs in a background loop and an admin endpoint, and must not take either
   down or hide the other providers;
-- alerts carry a fingerprint per provider+status, so a balance that stays low
-  for a week is one Sentry email, not seven;
+- alerts are e-mailed once per provider+state (#207), so a balance that stays
+  low for a week is one mail, not 168; a failed check alerts too;
+- OpenRouter running critical moves this server off OpenRouter by itself;
 - the endpoint is admin-only (it reveals spend).
 """
 
 from __future__ import annotations
+
+import os
 
 import httpx
 import pytest
@@ -22,6 +25,7 @@ from app.config import Settings
 from app.monitoring import provider_balances as pb
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient, MockTransport, Response
+from quiz_shared.ops_alerts import AlertBook
 
 pytestmark = pytest.mark.asyncio
 
@@ -74,6 +78,10 @@ def _client(
 def _keys(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-secret-test-key")
     monkeypatch.setenv("ELEVENLABS_API_KEY", "xi-secret-test-key")
+    # Spend-based providers (provider_costs) stay unconfigured here; they
+    # have their own tests in test_provider_costs.py.
+    for var in ("ANTHROPIC_ADMIN_KEY", "OPENAI_ADMIN_KEY", "FLY_METRICS_TOKEN"):
+        monkeypatch.delenv(var, raising=False)
 
 
 async def _fetch(**kw) -> dict[str, pb.ProviderBalance]:
@@ -127,7 +135,7 @@ async def test_unreachable_provider_is_error_and_never_leaks_key():
 
     async with httpx.AsyncClient(transport=MockTransport(boom)) as c:
         got = await pb.fetch_provider_balances(_SETTINGS, c)
-    assert {b.status for b in got} == {"error"}
+    assert {b.status for b in got} == {"error", "unconfigured"}
     dumped = str([b.model_dump() for b in got])
     assert "secret-test-key" not in dumped
 
@@ -138,36 +146,104 @@ async def test_missing_key_is_error_not_silently_skipped(monkeypatch):
     assert (await _fetch())["elevenlabs"].status == "error"
 
 
-async def test_sentry_alert_fingerprint_is_stable_per_provider_and_status(monkeypatch):
-    """Same provider+status → same fingerprint regardless of the amount, so
-    daily repeats group into one issue (one email); ok and error never alert."""
-    captured: list[tuple[list[str], str]] = []
+class _Mails:
+    def __init__(self) -> None:
+        self.sent: list[str] = []
 
-    def fake_capture(message, level=None, **scope_kwargs):
-        captured.append((scope_kwargs["fingerprint"], level))
+    async def __call__(self, subject: str, body: str) -> bool:
+        self.sent.append(subject + "\n" + body)
+        return True
 
-    monkeypatch.setattr(pb.sentry_sdk, "capture_message", fake_capture)
-    day1 = [
-        pb.ProviderBalance(
-            provider="openrouter", unit="usd", remaining=8.0, status="low"
-        ),
-        pb.ProviderBalance(
-            provider="elevenlabs", unit="characters", remaining=900, status="critical"
-        ),
-        pb.ProviderBalance(provider="x", unit="usd", remaining=50.0, status="ok"),
-        pb.ProviderBalance(provider="y", unit="usd", status="error", detail="HTTP 500"),
+
+def _book(tmp_path) -> tuple[AlertBook, _Mails]:
+    mails = _Mails()
+    return AlertBook("test", tmp_path / "state.json", sender=mails), mails
+
+
+async def test_one_mail_per_provider_and_state_plus_recovery(tmp_path, monkeypatch):
+    """A low balance seen every hour is one mail; low → critical is a second;
+    back to ok is a recovery mail. ok/unconfigured never mail; error does —
+    a blind check is how OpenRouter ran dry unseen."""
+    monkeypatch.setenv("LLM_GATEWAY", "direct")  # no self-heal in this test
+    book, mails = _book(tmp_path)
+    low = pb.ProviderBalance(
+        provider="openrouter", unit="usd", remaining=8.0, status="low"
+    )
+    await pb.report(
+        [
+            low,
+            pb.ProviderBalance(provider="x", unit="usd", remaining=50.0, status="ok"),
+            pb.ProviderBalance(
+                provider="y", unit="usd", status="error", detail="HTTP 500"
+            ),
+            pb.ProviderBalance(provider="z", unit="usd", status="unconfigured"),
+        ],
+        book,
+    )
+    await pb.report([low.model_copy(update={"remaining": 7.0})], book)
+    assert [m.splitlines()[0] for m in mails.sent] == [
+        "[Trubbo ALERT] credit openrouter: low",
+        "[Trubbo ALERT] credit y: error",
     ]
-    day2 = [
-        pb.ProviderBalance(
-            provider="openrouter", unit="usd", remaining=6.5, status="low"
-        )
+    await pb.report([low.model_copy(update={"status": "critical"})], book)
+    await pb.report([low.model_copy(update={"status": "ok"})], book)
+    assert [m.splitlines()[0] for m in mails.sent[2:]] == [
+        "[Trubbo ALERT] credit openrouter: critical",
+        "[Trubbo OK] credit openrouter recovered",
     ]
-    pb.report_to_sentry(day1)
-    pb.report_to_sentry(day2)
-    assert captured == [
-        (["provider-balance", "openrouter", "low"], "warning"),
-        (["provider-balance", "elevenlabs", "critical"], "error"),
-        (["provider-balance", "openrouter", "low"], "warning"),
+
+
+async def test_openrouter_critical_moves_this_server_to_direct(tmp_path, monkeypatch):
+    """Founder 2026-10-16: switch by itself where an alternative exists, and
+    say so in the mail."""
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    book, mails = _book(tmp_path)
+    crit = pb.ProviderBalance(
+        provider="openrouter", unit="usd", remaining=1.0, status="critical"
+    )
+    await pb.report([crit], book)
+    assert os.environ["LLM_GATEWAY"] == "direct"
+    assert "switched" in mails.sent[0]
+
+
+async def test_openrouter_critical_without_direct_key_only_alerts(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv("LLM_GATEWAY", "openrouter")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    book, mails = _book(tmp_path)
+    crit = pb.ProviderBalance(
+        provider="openrouter", unit="usd", remaining=1.0, status="critical"
+    )
+    await pb.report([crit], book)
+    assert os.environ["LLM_GATEWAY"] == "openrouter"
+    assert "none possible" in mails.sent[0]
+
+
+async def test_one_off_fetch_failure_is_retried_before_alerting(monkeypatch, tmp_path):
+    """A blip that heals on the re-check must not mail; a failure that
+    persists must (one mail, not one per attempt)."""
+    calls = {"n": 0}
+
+    async def flaky(settings):
+        calls["n"] += 1
+        status = "error" if calls["n"] == 1 else "ok"
+        return [pb.ProviderBalance(provider="openrouter", unit="usd", status=status)]
+
+    book, mails = _book(tmp_path)
+    monkeypatch.setattr(pb, "fetch_provider_balances", flaky)
+    await pb.check_once(_SETTINGS, book, retry_delay_s=0)
+    assert calls["n"] == 2
+    assert mails.sent == []
+
+    async def broken(settings):
+        return [pb.ProviderBalance(provider="openrouter", unit="usd", status="error")]
+
+    monkeypatch.setattr(pb, "fetch_provider_balances", broken)
+    await pb.check_once(_SETTINGS, book, retry_delay_s=0)
+    assert [m.splitlines()[0] for m in mails.sent] == [
+        "[Trubbo ALERT] credit openrouter: error"
     ]
 
 

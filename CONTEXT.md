@@ -47,7 +47,7 @@ _Avoid_: app state (too generic — that's `AppState`).
 Real-time speech-to-text via SpeechAnalyzer + SpeechTranscriber (iOS 26+). Default voice path. The user's device runs iOS 26+; SpeechAnalyzer is always active.
 
 **Server STT**
-ElevenLabs Scribe v2 batch transcription on the backend, with an OpenAI transcription model as fallback (`apps/quiz-agent/app/voice/`).
+OpenAI `gpt-transcribe` batch transcription of the answer on the backend, primed with the question (`apps/quiz-agent/app/voice/`). ElevenLabs Scribe left the answer path in #208.
 
 **Confirmation sheet**
 The `AnswerConfirmationView` that appears after the user finishes speaking. Lets the user edit the transcript, re-record, or confirm.

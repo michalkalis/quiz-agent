@@ -225,13 +225,16 @@ final class EntitlementReconciler: ObservableObject {
     /// restorePurchases()` uses this to detect a pack-only recovery, since
     /// `isPurchased` never reflects consumable packs (#102 finding 3); `.purchase()`
     /// uses it to decide between `.success` and `.activating` (#102 finding 4).
+    /// nil = the server could not be reached (#235 F6): restore then says so
+    /// instead of "nothing to restore".
     @discardableResult
-    func notifyPremiumPurchased() async -> Bool {
-        await syncEntitlementsWithRetry()
+    func notifyPremiumPurchased() async -> Bool? {
+        let synced = await syncEntitlementsWithRetry()
         // force: the value below is the purchase/restore VERDICT — it must come
         // from a fetch issued after the sync above, never from a launch/onAppear
         // fetch that was already in flight (#133 audit 1d).
         await refreshUsage(force: true)
+        guard synced else { return nil }
         return (usageInfo?.isPlus ?? false) || (usageInfo?.creditBalance ?? 0) > 0
     }
 
@@ -268,12 +271,14 @@ final class EntitlementReconciler: ObservableObject {
     /// purchase/sign-in event. Failure after the final attempt is logged only
     /// (Sentry breadcrumb via `SentryLog`) — the webhook still lands on its
     /// own; the client never grants anything itself.
-    private func syncEntitlementsWithRetry(maxAttempts: Int = 3) async {
+    /// Returns whether the server took the sync.
+    @discardableResult
+    private func syncEntitlementsWithRetry(maxAttempts: Int = 3) async -> Bool {
         for attempt in 1 ... maxAttempts {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return false }
             do {
                 try await networkService.syncEntitlements()
-                return
+                return true
             } catch {
                 guard attempt < maxAttempts else {
                     SentryLog.warn(
@@ -281,12 +286,13 @@ final class EntitlementReconciler: ObservableObject {
                         category: .network,
                         attributes: ["error": String(describing: error)]
                     )
-                    return
+                    return false
                 }
                 let backoffSeconds = 0.2 * pow(2.0, Double(attempt - 1))
                 try? await clock.sleep(for: .seconds(backoffSeconds))
             }
         }
+        return false
     }
 
     /// Bounded pre-paywall reconciliation (#102 finding 1): if RC's local

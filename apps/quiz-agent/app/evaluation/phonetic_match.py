@@ -32,6 +32,7 @@ _RULES = (
     ("w", "v"),
     ("x", "ks"),
     ("y", "i"),
+    ("ґ", "г"),  # uk: "Ґете"/"Гете" are both correct spellings (#231)
 )
 # Final consonants lose their voicing (cs/sk devoicing): Praha-style words
 # compare by the voiceless partner.

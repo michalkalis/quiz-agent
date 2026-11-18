@@ -15,7 +15,7 @@ from typing import Optional
 from ..config import get_settings
 from .cache import TTSCache
 from .remote_cache import R2AudioStore
-from .providers import PRIMARY_TTS_TIMEOUT_S, TTSProvider, build_provider
+from .providers import PRIMARY_TTS_TIMEOUT_S, TTSProvider, build_provider, is_cyrillic
 from .voices import STATIC_FEEDBACK, SpeechStyle, cache_voice, speech_style
 
 logger = logging.getLogger(__name__)
@@ -114,13 +114,23 @@ def _style_model(provider: TTSProvider, style: SpeechStyle) -> Optional[str]:
     return getattr(provider, "model", None)
 
 
-def primary_cache_voice(voice: str, language: Optional[str], settings=None) -> str:
+def primary_cache_voice(
+    voice: str, language: Optional[str], settings=None, text: str = ""
+) -> str:
     """Cache-key voice of an ElevenLabs primary clip in ``language``, without
     building a service: lets read-only tools (social-studio's
     fetch_question.py) find the clip the app plays. Must match
-    ``TTSService._cache_voice`` for the primary."""
+    ``TTSService._cache_voice`` for the primary; Cyrillic ``text`` (#231)
+    keys by what is sent, so it needs the text."""
     settings = settings or get_settings()
     style = speech_style(language, settings.tts_language_styles)
+    if text and is_cyrillic(text):
+        provider = build_provider(
+            "elevenlabs",
+            model=settings.elevenlabs_tts_model,
+            cyrillic_model=settings.elevenlabs_tts_model_cyrillic,
+        )
+        return TTSService._cache_voice(provider, voice, style, text)
     if style is None:
         return voice
     return cache_voice(voice, style.model or settings.elevenlabs_tts_model, style)
@@ -233,6 +243,7 @@ class TTSService:
         # (wired in main.py) makes single-flight work across machines too.
         self.remote: Optional[R2AudioStore] = R2AudioStore.from_env()
         self.leases = None
+        self.primary_timeout_cyrillic_s = settings.tts_primary_timeout_cyrillic_s
 
         logger.info(
             "TTS provider: %s (fallback: %s)",
@@ -285,7 +296,7 @@ class TTSService:
                 text, primary_voice, use_cache, billing, style
             )
 
-        key = (text, self._cache_voice(self.provider, primary_voice, style))
+        key = (text, self._cache_voice(self.provider, primary_voice, style, text))
         task = self._in_flight.get(key)
         if task is None:
             task = asyncio.create_task(
@@ -304,9 +315,18 @@ class TTSService:
 
     @staticmethod
     def _cache_voice(
-        provider: TTSProvider, voice: str, style: Optional[SpeechStyle]
+        provider: TTSProvider,
+        voice: str,
+        style: Optional[SpeechStyle],
+        text: str = "",
     ) -> str:
-        """Voice part of the cache key for ``provider`` reading in ``style``."""
+        """Voice part of the cache key for ``provider`` reading in ``style``.
+        Cyrillic text on ElevenLabs keys by the model and settings it sends
+        (#231); Latin keys are exactly as before."""
+        variant = getattr(provider, "cache_variant", None)
+        tag = variant(text, style) if variant and text else None
+        if tag:
+            return f"{voice}|{tag}"
         if style is None:
             return voice
         return cache_voice(voice, _style_model(provider, style), style)
@@ -317,7 +337,9 @@ class TTSService:
         """R2 key of the primary voice's clip of ``text`` in ``language``."""
         voice = voice or self.provider.default_voice
         style = self.style_for(language)
-        return self._remote_key(text, self._cache_voice(self.provider, voice, style))
+        return self._remote_key(
+            text, self._cache_voice(self.provider, voice, style, text)
+        )
 
     async def _primary_paused(self) -> bool:
         """The service spent today's ElevenLabs budget (#207.13). Never pauses
@@ -349,7 +371,9 @@ class TTSService:
             if billing and not billing.allow_primary:
                 # Over budget: already-cached primary audio is free to serve,
                 # anything that would cost credits goes to the fallback.
-                primary_key = self._cache_voice(self.provider, primary_voice, style)
+                primary_key = self._cache_voice(
+                    self.provider, primary_voice, style, text
+                )
                 cached = (
                     await self._cached_audio(text, primary_key) if use_cache else None
                 )
@@ -371,12 +395,11 @@ class TTSService:
             # it neither bills nor fills the cache; letting it finish in the
             # background would keep a synthesis slot busy while the backup
             # needs one, exactly when the primary is struggling.
+            limit = self._primary_timeout(text)
             try:
-                return await asyncio.wait_for(primary, PRIMARY_TTS_TIMEOUT_S)
+                return await asyncio.wait_for(primary, limit)
             except TimeoutError:
-                raise RuntimeError(
-                    f"no audio within {PRIMARY_TTS_TIMEOUT_S:g} s"
-                ) from None
+                raise RuntimeError(f"no audio within {limit:g} s") from None
         except TTSBudgetExceeded:
             raise
         except Exception as primary_error:
@@ -386,11 +409,13 @@ class TTSService:
             # The primary is the metered one (ElevenLabs credits are shared with
             # realtime STT), so a quota wall here must degrade the voice, not
             # silence the question.
+            model_for = getattr(self.provider, "model_for", None)
             logger.warning(
-                "TTS provider %s failed, falling back to %s: %s",
+                "TTS provider %s failed, falling back to %s: %s (model %s)",
                 self.provider.name,
                 self.fallback.name,
                 primary_error,
+                model_for(text, style) if model_for else self.provider.name,
             )
             try:
                 return await self._synthesize_with(
@@ -406,6 +431,12 @@ class TTSService:
                     f"({primary_error}) and on fallback {self.fallback.name} "
                     f"({fallback_error})"
                 )
+
+    def _primary_timeout(self, text: str) -> float:
+        """#231: the Cyrillic model is slower, so it gets its own cut-off."""
+        if hasattr(self.provider, "model_for") and is_cyrillic(text):
+            return self.primary_timeout_cyrillic_s
+        return PRIMARY_TTS_TIMEOUT_S
 
     async def _synthesize_with(
         self,
@@ -423,7 +454,7 @@ class TTSService:
         and fallback audio coexist in one cache without shadowing each other.
         A styled language adds its model and speed to the voice part.
         """
-        key_voice = self._cache_voice(provider, voice, style)
+        key_voice = self._cache_voice(provider, voice, style, text)
         if use_cache:
             cached = await self._cached_audio(text, key_voice)
             if cached:

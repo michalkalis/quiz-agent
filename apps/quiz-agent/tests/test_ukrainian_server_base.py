@@ -391,7 +391,7 @@ def test_uk_rare_and_hard_lines_are_spoken():
     assert line == "Це знали лише 3 відсотки."
     assert (
         copy.spoken_line("rare", Crowd(others=100, knew=1), "uk", 1)
-        == "Лише 1 відсоток це знали."
+        == "Лише 1 відсоток це знав."
     )
     assert (
         copy.spoken_line("hard", Crowd(others=10, knew=0), "uk", 0)

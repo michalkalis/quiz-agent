@@ -31,7 +31,8 @@ ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
 # `eleven_v4_turbo` is half the price of `eleven_multilingual_v2` ($40 vs $80
 # per 1M characters) and the founder heard no real difference in the 2026-10-26
 # blind test (sk/cs/en, docs/research/tts-provider-alternatives-2026-10-25.md).
-# The unstyled cache key is (text, voice), so audio made by v2 keeps playing;
+# The unstyled cache key is (text, voice) (Cyrillic adds the model and settings,
+# #231), so audio made by v2 keeps playing;
 # roll back via `ELEVENLABS_TTS_MODEL=eleven_multilingual_v2`. Since 2026-11-18
 # en/sk/cs read on `eleven_flash_v2_5` with a speed (`TTS_LANGUAGE_STYLES`,
 # config.py): v4 Turbo ignores `speed`, and Flash given `language_code`
@@ -44,8 +45,10 @@ ELEVENLABS_DEFAULT_MODEL = "eleven_v4_turbo"
 ELEVENLABS_CYRILLIC_MODEL = "eleven_v3"
 # v3 at its default ("Natural") read 2 of 11 Ukrainian questions in what a
 # native speaker heard as a different voice; "Robust" (1.0) kept all 11 the same
-# voice (round 4, 2026-11-18).
+# voice (round 4, 2026-11-18). Tuned on v3 only, so sent only to v3: a rollback
+# via `ELEVENLABS_TTS_MODEL_CYRILLIC` gets that model's own defaults.
 ELEVENLABS_CYRILLIC_STABILITY = 1.0
+ELEVENLABS_CYRILLIC_STABILITY_MODEL = "eleven_v3"
 ELEVENLABS_OUTPUT_FORMAT = "mp3_44100_128"
 
 

@@ -1,7 +1,7 @@
 # #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 240.1 audit hotový: 24 potvrdených nálezov; 3 zo 4 vysokých opravené v PR #872–#874, štvrtý čaká na rozhodnutie foundera; 240.2 rozrobené; pridané 240.8 zábavnosť a chuť zdieľať
+**Status:** 2026-11-18 audit hotový (24 nálezov; PR #872–#874 nasadené, #878 v kontrole, 19 stredných čaká); prechody appkou čiastočne; posudok zábavnosti hotový, čaká na rozhodnutia foundera; hlavné zistenie: noví hráči z App Store nedohrajú kolo, hlas ich „nepočuje“
 **Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 
@@ -69,7 +69,7 @@ Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, 
 |---|---|---|---|---|---|
 | 1 | vysoká | Hra spolu | Hra skončí 30 minút po otvorení miestnosti, bez poradia a bez chyby | `rooms/service.py:152` | PR #872 |
 | 2 | vysoká | Účet | Zmazanie účtu a export údajov u prihláseného hráča účet nezmaže | `routes/auth.py:364` | PR #874 |
-| 3 | vysoká | Účet | Po odhlásení sa na tom istom telefóne už nedá prihlásiť iným Apple ID | `usage/account_merge.py:60` | čaká na rozhodnutie foundera (komu patria nákupy pri druhom Apple ID) |
+| 3 | vysoká | Účet | Po odhlásení sa na tom istom telefóne už nedá prihlásiť iným Apple ID | `usage/account_merge.py:60` | PR #878 (vlastný čistý účet, founder 11-18; obnova Plus podľa pravidla Applu prijatá) |
 | 4 | vysoká | Prevádzka | Hlásenie o zlyhanom nasadení a postup nasadenia stále posielajú na Fly; nasledovanie by vrátilo starú appku na starej databáze | `backend-deploy.yml:239` | PR #873 |
 | 5 | stredná | Hra spolu | Výpadok hodnotenia odpovede zasekne miestnosť a stratí odpoveď posledného hráča | `rooms/play.py:248` | PR #872 (pri trvajúcom výpadku sa otázka zruší všetkým, founder 11-18) |
 | 6 | stredná | Zdieľaný kvíz | Jediné hranie zdieľaného balíka prepadne, keď štart zlyhá alebo ho hráč zruší (spolu s nálezom 22) | `shared_quiz/service.py:120` | čaká |
@@ -94,7 +94,7 @@ Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, 
 
 **Pôvodne neistý, po posúdení skutočný (malá pravdepodobnosť, veľký dopad):** výpadok spojenia počas nasadenia v ~30 s okne nechá službu zastavenú a návrat sa nespustí (`infra/hetzner/deploy-ssh.sh:146`). Oprava samostatným PR: nasadenie beží na serveri nezávisle od spojenia.
 
-**Po nasadení PR #874:** dohľadať a dodatočne zmazať účty, ktoré od 2026-10-08 dostali potvrdenie o zmazaní, ale ostali (potvrdiť s founderom).
+**Po nasadení PR #874 (2026-11-18, overené):** dohľadanie účtov, ktoré mali byť zmazané: 0 postihnutých (v prevádzke sú 2 účty, oba čisté), netreba nič mazať.
 
 **Vyvrátené:** prepnutie „Čo hráme“ v čakárni ukončí hru · kontrola duplicít porovnáva so súkromnými balíkmi iných zákazníkov · ukrajinské MCQ číta latinské písmená.
 
@@ -105,3 +105,17 @@ Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, 
 Dva prechody v testovacom režime (bez servera), druhý pozastavený v polovici. Potvrdené druhým agentom, všetko drobné: surová systémová hláška pri zlyhanom nákupe (`StoreManager.swift:203`) · názvy kategórií na kartách ostanú v pôvodnom jazyku po prepnutí jazyka (`Config.categoryOptions`) · dlhá odpoveď odrezaná v potvrdzovacom okne bez náznaku pokračovania. Nie je chyba: „LISTENING FOR COMMANDS“ sa riadi jazykom povelov. Otvorené podozrenie (videné raz): po ukončení kola bez odpovede chyba „Vypršal časový limit“ namiesto prehľadu.
 
 Nepokryté: prerušenia počas vyhodnocovania, denná výzva, profil, balíky, Hra spolu, najväčšie písmo; ukrajinčina v appke ešte nie je. Poznámky: `scratchpad/walk/batch1|batch2/report.md` (session quiz-agent-87). Poučenie: simulátor nastavovať cez ID, nie menom (dva „iPhone 17e“), a po prechode appku vypnúť (drží port 9999).
+
+Druhý prechod, dokončený po pauze: nová potvrdená chyba (2/2): **Nastavenia otvorené počas kvízu zmiznu**, lebo odpočet a mikrofón bežia ďalej a po vypršaní nahrávania ich nahradí okno „Nič som nezachytil“. Videné raz: po kole bez odpovede chyba „Vypršal časový limit“ (pravdepodobne oneskorené zlyhanie hlasového odoslania cez výsledky); jazyk kvízu sa medzi spusteniami nie vždy zachová. Hra spolu v testovacom režime prešla bez nálezu (vytvorenie, pripojenie, odchod, odstránenie hráča). Nepokryté ostáva: profil a nastavenia po riadkoch, odoslanie objednávky balíka, najväčšie písmo.
+
+### 240.8 — Zábavnosť a chuť zdieľať (2026-11-18)
+
+Posudok: [docs/research/fun-and-shareability-review-2026-11-18.md](../research/fun-and-shareability-review-2026-11-18.md), artefakt pre foundera https://claude.ai/artifact/ApjyP33XSGY85ri4DSnC1v.
+
+Čísla z prevádzky (App Store buildy od 11-02, 9–11 inštalácií): 10 začatých kôl, 0 dohraných, 17 z 25 hlasových odpovedí odmietnutých ako „žiadna reč“ (interne 27 %), nikto sa nevrátil v iný deň; denná výzva, zdieľanie a Hra spolu bez dát od skutočných hráčov.
+
+Príčina odmietnutých odpovedí (rozbor len čítaním): (1) hráč mlčal, kým bol mikrofón otvorený (10 s čakanie, 5 s okno, tiché nahrávky sa posielajú a automaticky opakujú, takže sa rátajú dvakrát); (2) zakázaný mikrofón sa nekontroluje a hráč dostane „nezachytil som“ (`RecordingCoordinator+Capture.swift:36`, `QuizViewModel.swift:1356`); (3) zlyhanie rozpoznávania povelov vypne nahrávanie odpovedí na builde 84, opravené na main cez #237 — povolenie povelov na požiadanie, ale ešte nie v App Store builde; (4) jedna inštalácia je pravdepodobne App Review.
+
+Chýbajúce meranie: stav mikrofónu a spúšťač nahrávania pri odpovedi, dôvod a miesto odchodu z kola, štart a koniec hry spolu s dôvodom, príchod cez odkaz, kanál buildu na každej udalosti, `pack_id` pri kole z balíka.
+
+Ďalšie kroky čakajú na rozhodnutia foundera (poradie v posudku, časť „Čo by som spravil“).

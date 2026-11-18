@@ -569,6 +569,11 @@ class QuestionRetriever:
             # user-scoped paid content. pack_id IS NULL keeps the shared free quiz
             # to the curated global corpus (#95).
             "pack_id": None,
+            # #236: a question written for a child age band is served ONLY to
+            # a session that asks for exactly that band; every other session
+            # (None) gets NULL-band rows only. Packs never reach this branch,
+            # so a child-band pack still plays in full above.
+            "age_band": session.age_band,
         }
 
         # Native sk/cs corpus (founder 2026-10-08): a native row is written for

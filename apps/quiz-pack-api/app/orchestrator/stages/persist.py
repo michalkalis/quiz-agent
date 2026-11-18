@@ -37,6 +37,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.audience import is_child
 from app.db.models import (
     EMBEDDING_DIM,
     PIPELINE_OWNED_COLUMNS,
@@ -87,7 +88,9 @@ class PersistStage:
             session.add(pack)
             await session.flush()  # populate pack.id
 
-            rows = [_question_row_dict(q, pack.id) for q in ctx.questions]
+            rows = [
+                _question_row_dict(q, pack.id, _age_band(ctx)) for q in ctx.questions
+            ]
             inserted = 0
             if rows:
                 stmt = (
@@ -193,7 +196,9 @@ class PersistStage:
                 await session.flush()
                 order.pack_id = pack.id
 
-            rows = [_question_row_dict(q, pack.id) for q in new_questions]
+            rows = [
+                _question_row_dict(q, pack.id, _age_band(ctx)) for q in new_questions
+            ]
             inserted = 0
             if rows:
                 stmt = (
@@ -261,7 +266,16 @@ async def fail_pack_in_session(session: AsyncSession, order: GenerationOrder) ->
             pack.generated_at = datetime.now(timezone.utc)
 
 
-def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
+def _age_band(ctx: OrderContext) -> str | None:
+    """#236: a pack ordered for a child band stamps that band on its questions
+    (`questions.age_band`), so the row says who it was written for wherever it
+    is read later. Adult / legacy orders stamp nothing."""
+    return ctx.audience if is_child(ctx.audience) else None
+
+
+def _question_row_dict(
+    question: Any, pack_id: uuid.UUID, age_band: str | None = None
+) -> dict[str, Any]:
     """Build a `{column_name: value}` dict for a dialect-level INSERT.
 
     Going through `question_to_row` keeps the Pydantic↔ORM seam authoritative —
@@ -270,6 +284,8 @@ def _question_row_dict(question: Any, pack_id: uuid.UUID) -> dict[str, Any]:
     """
     row = question_to_row(question)
     row.pack_id = pack_id
+    if age_band is not None:
+        row.age_band = age_band
     if row.id is None:
         row.id = uuid.uuid4()
     if row.embedding is not None:

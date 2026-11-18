@@ -175,6 +175,15 @@ class QuizSession(BaseModel):
             "the free monthly quota — a pack is paid, curated content."
         ),
     )
+    age_band: Optional[str] = Field(
+        None,
+        description=(
+            "#236: the child age band this session plays (`Question.age_band`, "
+            "e.g. 'kids_7_9'). None = an ordinary session, which is never served "
+            "a question written for a band; set → only questions of exactly "
+            "that band. A pack session ignores it (the pack is its own set)."
+        ),
+    )
     daily_challenge_date: Optional[str] = Field(
         None,
         description=(

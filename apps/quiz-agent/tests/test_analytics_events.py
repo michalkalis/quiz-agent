@@ -156,6 +156,25 @@ async def test_app_and_server_agree_on_the_client_event_list():
         )
 
 
+async def test_family_mode_events_carry_the_content_setting_and_nothing_personal():
+    # #236: the mode's events tell how families use it (which band, which
+    # topic). The band is a content setting; nothing about the child or the
+    # player may ride along, and an unlisted event would be dropped silently.
+    for name in (
+        "family_mode_changed",
+        "family_band_selected",
+        "family_topic_selected",
+        "family_topic_empty",
+        "family_round_end_action",
+    ):
+        assert name in CLIENT_EVENTS
+    cleaned = clean_properties(
+        CLIENT_EVENTS["family_band_selected"],
+        {"band": "kids_7_9", "first_time": True, "child_name": "Ema", "age": 8},
+    )
+    assert cleaned == {"band": "kids_7_9", "first_time": True}
+
+
 async def test_recap_events_keep_only_progress_and_kind():
     # #213.5: tells whether players watch their recap to the end and share
     # it; the recap's contents (cards, player type) must not leak into events.

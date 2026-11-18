@@ -6,7 +6,8 @@ import type {ReelStyle} from './types';
  * could speak faster, e.g. 1.2x). Remotion renders `playbackRate` with
  * ffmpeg's atempo, which keeps the pitch. Times measured on a clip at its
  * own speed go through `atVoiceRate` before they reach a timeline. */
-export const VOICE_RATE = 1.2;
+// Off (founder 11-18): the artificial speed-up sounds robotic; a natural faster voice is pending.
+export const VOICE_RATE = 1.0;
 export const atVoiceRate = (clipMs: number) => Math.round(clipMs / VOICE_RATE);
 
 export const HOOK_MS = 1500;

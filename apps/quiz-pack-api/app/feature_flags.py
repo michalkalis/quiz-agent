@@ -530,6 +530,16 @@ def pack_subthemes() -> bool:
     return _truthy(os.getenv("PACK_SUBTHEMES"))
 
 
+def pack_same_fact_judge() -> bool:
+    """Customer packs: the gray-zone judge's pairwise "same fact?" verdict
+    between each new question and its nearest questions already in the pack
+    (`DedupStage(in_pack_judge=...)`). Default ON: without it nothing stops a
+    true/false rewording of a question already in the pack (2026-11-18 LEGO
+    kids pack). Read only by the customer worker and ``--customer-order``;
+    ``PACK_SAME_FACT_JUDGE=0`` turns it off."""
+    return _default_on(os.getenv("PACK_SAME_FACT_JUDGE"))
+
+
 def pack_language_fix() -> bool:
     """Custom packs: before each round is saved, the #211 naturalness check
     (with a pack note: names, punctuation, answer and explanation) fixes

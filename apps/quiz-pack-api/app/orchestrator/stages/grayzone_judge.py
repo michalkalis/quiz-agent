@@ -11,8 +11,10 @@ with a warning, never silently.
 
 This is NOT a quality judge and deliberately does not hang off the
 ``_judges_enabled`` panel switch (#169 keeps that OFF in session runs); it is
-allowed under the session gateway. Default OFF: ``DedupStage`` only calls it
-when a ``GrayZoneJudge`` is injected (D5), which only corpus CLI runs do.
+allowed under the session gateway. ``DedupStage`` only calls it when a
+``GrayZoneJudge`` is injected (D5): corpus CLI runs inject one for the corpus
+gray zone; customer orders inject a second one for same-fact pairs inside the
+pack (``in_pack_judge``, ``PACK_SAME_FACT_JUDGE``).
 
 The LLM boundary is ``llm_factory.chat_openai`` — the same seam
 ``MultiModelScorer._get_client`` uses — so the call is remapped to the active

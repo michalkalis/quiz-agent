@@ -28,6 +28,8 @@ from app.db.session import AsyncSessionLocal
 from app.orchestrator import PackGenerator
 from app.orchestrator.pack_generator import Stage
 from app.orchestrator.progress_sink import DBProgressSink
+from app.orchestrator.stages.dedup import IN_PACK_JUDGE_MAX_CALLS
+from app.orchestrator.stages.grayzone_judge import GrayZoneJudge
 from app.orchestrator.stages.language_fix import LanguageFixStage
 from app.orchestrator.stages.persist import fail_pack_in_session
 from app.orchestrator.stages import (
@@ -120,6 +122,12 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         ctx["question_store"],
         ctx.get("gold_standard_path"),
         in_pack_cosine=feature_flags.pack_subthemes(),  # #203 203.9 change 4
+        # Same-fact pairs inside the pack (one call per pair, per-order budget).
+        in_pack_judge=(
+            GrayZoneJudge(max_calls=IN_PACK_JUDGE_MAX_CALLS)
+            if feature_flags.pack_same_fact_judge()
+            else None
+        ),
     )
     answerability = None
     if feature_flags.answerability_check() and ctx.get("answerability_checker"):

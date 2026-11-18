@@ -21,7 +21,7 @@ import type {CarouselSlideProps, ExplainTrack, Language, Opening, ReelProps, Ree
 import {APP_DIR, CACHE_DIR, PUBLIC_AUDIO_DIR, VOICE_CHARS_PER_WEEK, VOICE_LEDGER, runOnProd, voiceCharsLeft} from './paths';
 import {explainParts, shapeQuestion, type QuestionInput} from './shape';
 import {cutAnswerNumber} from './trim';
-import {ownClip} from './voice';
+import {hasClip, ownClip} from './voice';
 import {audioDurationMs, ensureWhisper, timeWords} from './whisper';
 
 const {values, positionals} = parseArgs({
@@ -108,7 +108,7 @@ async function withOwnVoice(row: QuestionInput, id: string, questionOnly: boolea
 	if (answerNumber !== undefined && texts.answer) todo.push(['answer_audio_b64', 'answer', texts.answer]);
 	const out: QuestionInput = {...row, spoken_text: texts.question, audio_b64: null, explanation_audio_b64: null, answer_audio_b64: null};
 	for (const [field, what, text] of todo) {
-		if (voiceCharsLeft(ledger()) < text.length) throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
+		if (!hasClip(text, row.language) && voiceCharsLeft(ledger()) < text.length) throw new Error(`${id}: the weekly voice budget (${VOICE_CHARS_PER_WEEK} characters) is used up`);
 		const {bytes, made} = await ownClip(text, row.language);
 		if (made) logVoice({at: new Date().toISOString(), id, language: row.language, chars: made, what: `${what} (social voice)`});
 		(out as Record<string, unknown>)[field] = bytes.toString('base64');

@@ -29,6 +29,9 @@ const settingsFor = (language: Language) => ({
 const cacheFile = (text: string, language: Language) =>
 	path.join(CACHE_DIR, 'voice', `${createHash('sha1').update(JSON.stringify([VOICE_ID, settingsFor(language), text])).digest('hex')}.mp3`);
 
+/** Whether `text` is already voiced (a cache hit costs nothing, so the weekly cap does not apply). */
+export const hasClip = (text: string, language: Language) => existsSync(cacheFile(text, language));
+
 /** A clip of `text` in the social voice: from the cache, or made now (`made` = billed characters, 0 on a hit). */
 export async function ownClip(text: string, language: Language): Promise<{bytes: Buffer; made: number}> {
 	const file = cacheFile(text, language);

@@ -27,6 +27,8 @@ struct ResultAnswerPanel: View {
     let explanation: String?
     /// What the driver said, when it is not the answer above (a miss).
     var userAnswer: String? = nil
+    /// #235 F3: the last "hear it" could not be fetched; a note says so.
+    var hearItFailed = false
 
     let onHearIt: () -> Void
 
@@ -69,6 +71,10 @@ struct ResultAnswerPanel: View {
                     HangsSectionLabel(text: "why")
                     Spacer()
                     hearItControl
+                }
+                if hearItFailed {
+                    ReadAloudFailureNote(identifier: "result.hearItFailed")
+                        .padding(.top, Metrics.labelGap)
                 }
                 explanationScroll(explanation)
                     .padding(.top, Metrics.labelGap)
@@ -128,6 +134,21 @@ struct ResultAnswerPanel: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("result.hearIt")
+    }
+}
+
+/// #235 F3: the line under a "hear it" whose read could not be fetched, in
+/// the rating panel's inline failure look. It goes with the next read that
+/// plays or with the screen.
+struct ReadAloudFailureNote: View {
+    let identifier: String
+
+    var body: some View {
+        Text("Can't read it aloud right now.")
+            .font(.hangsCaption)
+            .foregroundStyle(Theme.Hangs.Colors.error)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier(identifier)
     }
 }
 

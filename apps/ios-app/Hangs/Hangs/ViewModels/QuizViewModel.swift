@@ -124,7 +124,10 @@ extension QuizState {
 final class QuizViewModel: ObservableObject {
     // MARK: - Published State
 
-    @Published var quizState: QuizState = .idle
+    @Published var quizState: QuizState = .idle {
+        // #235 F3: a "can't be read" note belongs to the screen it was shown on.
+        didSet { if quizState != oldValue, readAloudFailure != nil { readAloudFailure = nil } }
+    }
     @Published var currentQuestion: Question? {
         // #186 step 1: entering a question starts its first attempt — anything
         // still in flight for the previous question loses ownership here.
@@ -203,6 +206,10 @@ final class QuizViewModel: ObservableObject {
     /// drives the recap CTA's play/stop swap. Row-level "hear it" playback
     /// does not set this (it replaces the summary via the shared task key).
     @Published var isNarratingRecap: Bool = false
+    /// #235 F3: the "hear it" whose read could not be fetched; its screen
+    /// says so next to the button. Cleared by the next read that plays and
+    /// by any screen change (`quizState`).
+    @Published var readAloudFailure: ReadAloudTarget?
     /// Test seam (#200): the recap reads itself aloud on appear. Auto-record,
     /// which used to gate that, is always on now — a test that freezes the
     /// recap screen turns this off instead. Production never assigns it.
@@ -1301,6 +1308,16 @@ final class QuizViewModel: ObservableObject {
             // #232: the friend's session from the link. Played already (a
             // pack plays once) or gone: Home says so, no error screen.
             if let shared {
+                // #235 F7: the sender's own link opens its comparison. Asked
+                // under the start's spinner, so Home shows it and Cancel at once.
+                if await isOwnSharedQuiz(token: shared) {
+                    try Task.checkCancellation()
+                    activeShare = nil
+                    sharedQuizComparison = SharedQuizPlay(token: shared)
+                    transition(to: .idle)
+                    return
+                }
+                try Task.checkCancellation()
                 let result = try await withTransientStartRetry {
                     try await networkService.startSharedQuiz(token: shared, displayName: PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName))
                 }
@@ -1713,7 +1730,7 @@ final class QuizViewModel: ObservableObject {
     /// Post-purchase/restore sync — see `EntitlementReconciler.notifyPremiumPurchased`.
     /// (`StoreManager` relies on the returned entitlement flag.)
     @discardableResult
-    func notifyPremiumPurchased() async -> Bool {
+    func notifyPremiumPurchased() async -> Bool? {
         await entitlementReconciler.notifyPremiumPurchased()
     }
 

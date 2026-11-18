@@ -15,6 +15,8 @@ import Foundation
         private(set) var fetchCount = 0
         private(set) var recapFetchCount = 0
         private(set) var seenIDs: [String] = []
+        /// #235 F4: when set, every "seen" report fails with it (and is not recorded).
+        var seenError: Error?
 
         init(
             results: [Result<PlayerStats, NetworkError>] = [.success(.mockSeasoned)],
@@ -37,6 +39,7 @@ import Foundation
         }
 
         func markRecapSeen(id: String) async throws {
+            if let seenError { throw seenError }
             seenIDs.append(id)
         }
     }

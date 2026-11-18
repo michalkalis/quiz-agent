@@ -140,7 +140,7 @@ final class AppState: ObservableObject {
                 packPurchaseService = MockPackPurchaseService()
                 questionRatingService = MockQuestionRatingService()
                 storeManager.onPurchaseSuccess = { [weak self] in
-                    await self?.quizViewModel?.notifyPremiumPurchased() ?? false
+                    await self?.quizViewModel?.notifyPremiumPurchased()
                 }
                 // Issue #111 T3 (#140 update): the packs entries are ungated now,
                 // but the seeded key keeps UI-test order flows on the deterministic
@@ -273,15 +273,20 @@ final class AppState: ObservableObject {
             if let viewModel = self.quizViewModel {
                 return await viewModel.notifyPremiumPurchased()
             } else {
-                try? await self.networkService.syncEntitlements()
-                let usage = try? await self.networkService.getUsage()
-                return (usage?.isPlus ?? false) || (usage?.creditBalance ?? 0) > 0
+                guard (try? await self.networkService.syncEntitlements()) != nil,
+                      let usage = try? await self.networkService.getUsage() else { return nil }
+                return usage.isPlus || usage.creditBalance > 0
             }
         }
 
         // Before the first frame, so the app never opens in the phone's language.
         followQuizLanguage(persistenceStore.loadSettings().language)
         interfaceLocale = InterfaceLanguage.locale
+
+        // #235 F5: a leave from a game together the last run could not send.
+        Task { [pendingRoomLeaves, roomService, networkService] in
+            await pendingRoomLeaves.resend(rooms: roomService, network: networkService)
+        }
 
         Logger.quiz.info("🚀 AppState initialized")
         Logger.quiz.info("📍 API Base URL: \(Config.apiBaseURL, privacy: .public)")
@@ -405,8 +410,17 @@ final class AppState: ObservableObject {
             excludedQuestionIds: { [persistenceStore] in persistenceStore.getExclusionList() },
             settingsStore: roomSettingsStore,
             analytics: analytics,
-            packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled }
+            packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled },
+            pendingLeaves: pendingRoomLeaves
         )
+    }
+
+    /// #235 F5: a UI test starts without a leave from an earlier launch.
+    private var pendingRoomLeaves: PendingRoomLeaveStore {
+        #if DEBUG
+            if UITestSupport.isUITesting { return PendingRoomLeaveStore(defaults: UITestSupport.roomSettingsDefaults) }
+        #endif
+        return PendingRoomLeaveStore()
     }
 
     /// #213.8: the host's rules; a UI test starts from the defaults every launch.

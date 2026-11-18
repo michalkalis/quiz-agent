@@ -9,20 +9,23 @@
 import Foundation
 
 extension QuizViewModel {
+    /// #235 F7: how long the "is this my own link?" question may hold the
+    /// start. Slower or failed means: play it.
+    static let sharedQuizOwnerCheckSeconds = 3
+
     /// A friend's link (tapped, or pasted on the first launch): the shared
     /// quiz starts right away. The mic is asked for as at every start. The
-    /// sender's own link opens its comparison instead: that is where the
-    /// sender sees how friends did, after leaving the round end.
+    /// sender's own link opens its comparison instead (decided inside
+    /// `startNewQuiz`, so Home shows the start's spinner and Cancel at once).
     @discardableResult
     func beginSharedQuiz(token: String) -> Task<Void, Never> {
+        let running = taskBag.task(for: .quizStart)
+        // The same link already starting (opened twice): that start plays it (#235.2).
+        if let running, isStarting, activeShare?.token == token { return running }
         let task = Task {
-            let isOwn = await isOwnSharedQuiz(token: token)
-            // Replaced (the link again, another start) during the check: that one plays (#235.2).
+            // Another start gives way first: its cancel lands on Home, then the link plays.
+            await running?.value
             guard !Task.isCancelled else { return }
-            if isOwn {
-                sharedQuizComparison = SharedQuizPlay(token: token)
-                return
-            }
             await startNewQuiz(shared: token)
         }
         taskBag.add(task, key: .quizStart)
@@ -30,10 +33,16 @@ extension QuizViewModel {
     }
 
     /// The server lists the viewer as the link's sender. Any failure (a
-    /// friend's first open is a 404 here) means: play it.
-    private func isOwnSharedQuiz(token: String) async -> Bool {
-        guard let results = try? await networkService.sharedQuizResults(token: token) else { return false }
-        return results.players.contains { $0.isSender && $0.isYou }
+    /// friend's first open is a 404 here) or an answer slower than
+    /// `sharedQuizOwnerCheckSeconds` means: play it. A sender whose check was
+    /// skipped is still safe: the server refuses a second play of a pack
+    /// (the comparison opens) and gives a round its questions again without
+    /// counting it.
+    func isOwnSharedQuiz(token: String) async -> Bool {
+        let results = try? await withUserFacingTimeout(seconds: Self.sharedQuizOwnerCheckSeconds, clock: clock) {
+            try await self.networkService.sharedQuizResults(token: token)
+        }
+        return results?.players.contains { $0.isSender && $0.isYou } ?? false
     }
 
     func dismissSharedQuizComparison() {

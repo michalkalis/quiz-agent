@@ -163,25 +163,67 @@ struct ReadAloudConditionTests {
         #expect(rig.vm.quizState == .idle)
     }
 
-    // WHY: "hear it" on the result is a tap that today stays silent when the
-    // speech service fails (a founder decision, see the issue file). It must at
-    // least give the result screen its voice commands back, so the quiz goes on.
-    @Test("a 'hear it' read that cannot be fetched gives the result screen its listener back")
-    func failedExplanationReadRestoresListener() async {
+    // WHY: "hear it" on the result is a tap. When the speech service fails the
+    // screen must say it cannot be read right now (founder 2026-11-17, F3),
+    // and still give the result screen its voice commands back.
+    @Test("a 'hear it' read that cannot be fetched says so and gives the result screen its listener back")
+    func failedExplanationReadSaysSo() async {
         let rig = makeRig()
         rig.network.setNetworkCondition(.offline, for: [.synthesizeSpeech])
-        let question = Fixtures.makeQuestion(id: "q_001")
-        rig.vm.quizState = .showingResult(
-            question: question,
-            evaluation: Evaluation(userAnswer: "b", result: .incorrect, points: 0, correctAnswer: "a", questionId: "q_001", explanation: nil)
-        )
+        rig.vm.quizState = Self.result
 
         rig.vm.readExplanationAloud("Venus is hotter because of its thick atmosphere.")
 
         await pumpUntil({ rig.silence.isListening }, "the result screen lost its listener")
         #expect(rig.audio.playOpusCallCount == 0)
+        #expect(rig.vm.readAloudFailure == .explanation, "the failed read stayed silent")
         #expect(rig.vm.quizState.isShowingResult)
     }
+
+    // WHY: the note is about the last try only. A tap that plays removes it,
+    // and so does leaving the result screen.
+    @Test("the 'can't be read' note goes with the next read that plays and with the screen")
+    func failureNoteClears() async {
+        let rig = makeRig()
+        rig.network.setNetworkCondition(.offline, for: [.synthesizeSpeech])
+        rig.vm.quizState = Self.result
+        rig.vm.readExplanationAloud("Venus.")
+        await pumpUntil { rig.vm.readAloudFailure == .explanation }
+
+        rig.network.setNetworkCondition(nil, for: [.synthesizeSpeech])
+        rig.vm.readExplanationAloud("Venus.")
+        await pumpUntil({ rig.vm.readAloudFailure == nil }, "a read that played kept the note")
+        #expect(rig.audio.playOpusCallCount == 1)
+
+        rig.network.setNetworkCondition(.offline, for: [.synthesizeSpeech])
+        rig.vm.readExplanationAloud("Venus.")
+        await pumpUntil { rig.vm.readAloudFailure == .explanation }
+        rig.vm.quizState = .askingQuestion
+        #expect(rig.vm.readAloudFailure == nil, "the note followed the player to the next question")
+    }
+
+    // WHY: the recap's own "hear it" (a row, or the whole summary) fails the
+    // same way and must say so next to the button that asked.
+    @Test("a recap read that cannot be fetched says so next to its button")
+    func failedRecapReadSaysSo() async {
+        let rig = makeRig(state: .finished)
+        rig.network.setNetworkCondition(.serverError(statusCode: 500), for: [.synthesizeSpeech])
+        let entry = RecapEntry(
+            number: 3,
+            question: Fixtures.makeQuestion(id: "q_003"),
+            evaluation: Evaluation(userAnswer: "b", result: .incorrect, points: 0, correctAnswer: "a", questionId: "q_003", explanation: "Because.")
+        )
+
+        rig.vm.playRecapEntryExplanation(entry)
+
+        await pumpUntil({ rig.vm.readAloudFailure == .recapEntry(3) }, "the failed recap read stayed silent")
+        #expect(rig.audio.playOpusCallCount == 0)
+    }
+
+    private static let result = QuizState.showingResult(
+        question: Fixtures.makeQuestion(id: "q_001"),
+        evaluation: Evaluation(userAnswer: "b", result: .incorrect, points: 0, correctAnswer: "a", questionId: "q_001", explanation: nil)
+    )
 
     // WHY: the spoken verdict decides how long the result stays up before the
     // next question. A verdict clip that cannot be downloaded must still hand

@@ -108,21 +108,21 @@ struct PurchaseConditionTests {
         #expect(loop.vm.usageInfo?.isPremium == true)
     }
 
-    // WHY: restore on a dead network ends, never spins. Today a buyer whose
-    // purchase only the server can find (a question pack) is then told there
-    // is nothing to restore, not that the server was unreachable (founder
-    // case F6). Pinned: it ends, it is safe (nothing charged), and Restore can
-    // be tapped again.
-    @Test("restore with the server unreachable ends, and can be tapped again")
-    func restoreWithServerUnreachableEnds() async {
+    // WHY: restore on a dead network ends, never spins. A buyer whose
+    // purchase only the server can find (a question pack) must hear that the
+    // server could not be reached, never "nothing to restore" (founder
+    // 2026-11-17, F6). It is safe (nothing charged) and Restore can be tapped again.
+    @Test("restore with the server unreachable says it could not connect, and can be tapped again")
+    func restoreWithServerUnreachableSaysSo() async {
         let loop = await makeLoop(entitledAfterPurchase: false)
         loop.network.setNetworkCondition(.offline, for: [.syncEntitlements, .getUsage])
         let restore = Task { await loop.store.restorePurchases() }
 
-        await advanceUntil(clock, limit: .seconds(30)) { loop.store.purchaseState == .nothingToRestore }
+        await advanceUntil(clock, limit: .seconds(30)) { ![.idle, .restoring].contains(loop.store.purchaseState) }
         await restore.value
 
-        #expect(loop.store.purchaseState == .nothingToRestore)
+        #expect(loop.store.purchaseState == .failed(message: Self.couldNotConnect), "an unreachable server was reported as nothing to restore")
+        #expect(loop.store.purchaseError == Self.couldNotConnect)
         #expect(loop.purchases.purchaseCallCount == 0)
         loop.network.setNetworkCondition(nil, for: [.syncEntitlements, .getUsage])
         loop.network.stubbedUsage = UsageInfo(
@@ -131,5 +131,34 @@ struct PurchaseConditionTests {
         )
         await loop.store.restorePurchases()
         #expect(loop.store.purchaseState == .success(productID: nil), "a second Restore on a good network found nothing")
+    }
+
+    // WHY: what the store itself returned is restored even when the server
+    // cannot be reached: a subscriber gets their subscription back.
+    @Test("restore keeps what the store returned when only the server is unreachable")
+    func restoreKeepsStoreResultWhenServerUnreachable() async {
+        let loop = await makeLoop(entitledAfterPurchase: true)
+        loop.network.setNetworkCondition(.offline, for: [.syncEntitlements, .getUsage])
+        let restore = Task { await loop.store.restorePurchases() }
+
+        await advanceUntil(clock, limit: .seconds(30)) { ![.idle, .restoring].contains(loop.store.purchaseState) }
+        await restore.value
+
+        #expect(loop.store.purchaseState == .success(productID: nil))
+        #expect(loop.store.isPurchased)
+        #expect(loop.store.purchaseError == nil)
+    }
+
+    // WHY: "nothing to restore" is still right when both the store and the
+    // server answered and found nothing.
+    @Test("restore says nothing to restore only when the store and the server both found nothing")
+    func nothingToRestoreWhenBothAnswered() async {
+        let loop = await makeLoop(entitledAfterPurchase: false)
+        await loop.store.restorePurchases()
+        #expect(loop.store.purchaseState == .nothingToRestore)
+    }
+
+    private static var couldNotConnect: String {
+        String(localized: "Couldn't connect. Try again.", bundle: .interface, locale: .interface)
     }
 }

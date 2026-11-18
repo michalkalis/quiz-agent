@@ -126,16 +126,32 @@ extension QuizViewModel {
     func readExplanationAloud(_ explanation: String) {
         taskBag.add(Task { [weak self] in
             guard let self else { return }
+            var outcome = ReadAloudOutcome()
             for chunk in Self.splitForTTS(explanation) {
                 guard let audio = try? await networkService.synthesizeSpeech(
                     text: chunk, language: currentSession?.language ?? settings.language
-                ),
-                      !Task.isCancelled, quizState.isShowingResult else { break }
+                ) else {
+                    outcome.failed = true
+                    break
+                }
+                guard !Task.isCancelled, quizState.isShowingResult else { break }
                 await audioDeviceState.playAppSpeech(audio)
+                outcome.played = true
             }
             guard !Task.isCancelled else { return }
+            if quizState.isShowingResult { noteReadAloud(.explanation, outcome) }
             await audioDeviceState.startSilenceDetectionListening()
         }, key: .explanationReadOut)
+    }
+
+    /// #235 F3: a read that played clears the note; one that could not fetch
+    /// anything shows it next to the button that asked.
+    func noteReadAloud(_ target: ReadAloudTarget, _ outcome: ReadAloudOutcome) {
+        if outcome.played {
+            readAloudFailure = nil
+        } else if outcome.failed {
+            readAloudFailure = target
+        }
     }
 
     // MARK: - Fetch

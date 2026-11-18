@@ -94,7 +94,7 @@ struct SharedQuizConditionTests {
         let first = vm.beginSharedQuiz(token: token)
         await pumpUntil { hold.heldCount == 1 }
         let second = vm.beginSharedQuiz(token: token)
-        await pumpUntil { hold.arrivals == 2 }
+        #expect(hold.arrivals == 1, "the second open asked again instead of joining the running start")
 
         hold.release()
         await first.value
@@ -104,20 +104,44 @@ struct SharedQuizConditionTests {
         #expect(vm.currentSession != nil, "neither tap started the round")
     }
 
-    // WHY: the "is this my own link?" question must not strand a friend. Any
-    // failure, even a request that never answers, means "play it". Today the
-    // player waits on Home without a spinner meanwhile (founder case F7).
-    @Test("a sender check the server never answers still starts the friend's round")
+    // WHY: the "is this my own link?" question must not strand a friend.
+    // Home shows the start's spinner (with Cancel) from the first moment, and
+    // the question gets 3 s; slower or failed means "play it" (founder
+    // 2026-11-17, F7). Before, Home showed nothing for up to 30 s.
+    @Test("a sender check the server never answers shows the spinner at once and plays after 3 s")
     func senderCheckTimeoutStillPlays() async {
         let vm = makeVM()
         network.setNetworkCondition(.timeout, for: [.sharedQuizResults])
         let start = vm.beginSharedQuiz(token: token)
+        await pumpUntil { network.sharedQuizResultsCallCount == 1 }
+        #expect(vm.quizState == .startingQuiz, "Home showed nothing while the link was checked")
 
-        let waited = await advanceUntil(clock, limit: .seconds(60)) { !network.startSharedQuizCalls.isEmpty }
+        await clock.advance(by: .milliseconds(2999))
+        #expect(network.startSharedQuizCalls.isEmpty, "the check gave up before its bound")
+        await clock.advance(by: .milliseconds(1))
+        await pumpUntil({ !network.startSharedQuizCalls.isEmpty }, "the friend's round never started after the check timed out")
         await start.value
 
-        #expect(waited >= NetworkCondition.requestTimeout, "pinned: today the friend waits for the full timeout")
         #expect(vm.currentSession != nil)
+    }
+
+    // WHY: the spinner shown during the check is the ordinary start's, so
+    // its Cancel works there too: Home, and nothing starts afterwards.
+    @Test("Cancel during a slow sender check lands on Home and starts nothing")
+    func cancelDuringSenderCheck() async {
+        let vm = makeVM()
+        let hold = network.hold(.sharedQuizResults)
+        let start = vm.beginSharedQuiz(token: token)
+        await pumpUntil { hold.heldCount == 1 }
+        #expect(vm.quizState == .startingQuiz)
+
+        vm.cancelQuizStart()
+        await start.value
+        hold.release()
+
+        #expect(vm.quizState == .idle)
+        #expect(network.startSharedQuizCalls.isEmpty, "the cancelled link started anyway")
+        #expect(vm.sharedQuizComparison == nil)
     }
 
     // WHY: the comparison sheet shows a spinner while it loads; when it

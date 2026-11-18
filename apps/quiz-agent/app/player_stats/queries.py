@@ -5,6 +5,11 @@ only the LATEST ``answer_evaluated`` row kept per (session, question), because
 an edited transcript is re-graded and emits a newer row with ``is_regrade``
 (``quiz/resubmission.py``). The rows are never loaded into Python; only the
 small grouped results are.
+
+#236: rounds with kids stay out of every stat. A band question carries a
+``family-*`` category on both its first and its corrected ``answer_evaluated``
+row, so ``ans`` drops them by that prefix; ``answer_submitted`` carries no
+category, so the overall latency drops the sessions that played one.
 """
 
 from __future__ import annotations
@@ -18,6 +23,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import DateTime, Text
 
 _P = "properties"
+# #236: the category key prefix of every question written for an age band.
+_BAND = f"starts_with(coalesce({_P}->>'category', ''), 'family-')"
 
 
 def _ans_cte(start: datetime | None, end: datetime | None) -> str:
@@ -38,7 +45,8 @@ WITH ans AS (
          {_P}->>'question_type' AS qtype
   FROM analytics_events
   WHERE name = 'answer_evaluated' AND subject_id = ANY(:ids)
-    AND session_id IS NOT NULL AND {_P}->>'question_id' IS NOT NULL{window}
+    AND session_id IS NOT NULL AND {_P}->>'question_id' IS NOT NULL
+    AND NOT {_BAND}{window}
   ORDER BY session_id, {_P}->>'question_id', occurred_at DESC, received_at DESC
 )
 """
@@ -194,6 +202,11 @@ FROM (
     AND session_id IS NOT NULL AND {_P}->>'question_id' IS NOT NULL
     AND jsonb_typeof({_P}->'latency_ms') = 'number'
     AND coalesce(({_P}->>'is_retry')::boolean, false) = false
+    AND session_id NOT IN (
+      SELECT session_id FROM analytics_events
+      WHERE name = 'answer_evaluated' AND subject_id = ANY(:ids)
+        AND session_id IS NOT NULL AND {_BAND}
+    )
     {"AND occurred_at >= :start" if start is not None else ""}
     {"AND occurred_at < :end" if end is not None else ""}
   ORDER BY session_id, {_P}->>'question_id', occurred_at

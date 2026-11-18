@@ -303,9 +303,13 @@ class QuizSession(BaseModel):
         ``is_quota_exempt``): the daily challenge (one attempt per player) and
         a pack played from a shared link (played once by that person, never
         handed on to a room). An owner's own finished pack and a shared corpus
-        round may be played together."""
-        return bool(self.daily_challenge_date) or bool(
-            self.shared_quiz_id and self.pack_id
+        round may be played together. #236: a round with kids (``age_band``)
+        stays solo in v1: it is one parent answering with the kids at one
+        phone, and a game together with a band is a later step."""
+        return (
+            bool(self.daily_challenge_date)
+            or bool(self.shared_quiz_id and self.pack_id)
+            or bool(self.age_band)
         )
 
     def is_multiplayer(self) -> bool:

@@ -113,8 +113,8 @@ async def merge_anonymous_identity(
     """Fold an anonymous identity's usage into the account, exactly once (F3).
 
     Guarded by ``anonymous_identities.upgraded_to_user_id``: already this user →
-    only ``rekey_purchases`` runs again; a different user → 409 (the anon belongs
-    elsewhere, nothing moves). The
+    only the subscription fold and ``rekey_purchases`` run again; a different
+    user → 409 (the anon belongs elsewhere, nothing moves). The
     anon's ``daily_usage`` rows (keyed on ``subject_id``) are **summed** into the
     account's rows (``is_premium`` OR-ed) — sum, not max, so signing in cannot
     reset the freemium limit. The anon's own rows are **kept** (frozen — nothing
@@ -141,7 +141,9 @@ async def merge_anonymous_identity(
                 detail="This anonymous identity already belongs to another account",
             )
         # Usage is already folded (once per anon), but a device that signed out
-        # returns to this same anon and can buy again before signing back in.
+        # returns to this same anon and can buy again before signing back in,
+        # a subscription included (#239).
+        await _fold_subscription(session, anon_id, user_id)
         await rekey_purchases(session, anon_id, user_id)
         return
 

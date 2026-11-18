@@ -54,10 +54,11 @@ _CARDINALS = {
     "styri": 4, "ctyri": 4,
     "sest": 6, "sedem": 7, "sedm": 7,
     "osem": 8, "osm": 8, "devat": 9, "devet": 9, "desat": 10, "deset": 10,
-    # uk (#231); п'ять / дев'ять left out like pat/pet: the apostrophe splits them.
+    # uk (#231); fold drops the apostrophe: "п'ять" → "пять".
     "один": 1, "одна": 1, "одне": 1, "одну": 1,
     "два": 2, "дві": 2, "двох": 2, "три": 3, "трьох": 3,
-    "чотири": 4, "чотирьох": 4, "шість": 6, "сім": 7, "вісім": 8, "десять": 10,
+    "чотири": 4, "чотирьох": 4, "пять": 5, "шість": 6, "сім": 7, "вісім": 8,
+    "девять": 9, "десять": 10,
 }  # päť/pět ("pat"/"pet") left out: as plain words they are names and pets
 # Colloquial number nouns ("dvojka", "trojku", "čtyřkou"): stem → number.
 _NUMBER_NOUN_STEMS = {
@@ -66,7 +67,7 @@ _NUMBER_NOUN_STEMS = {
 }
 _NUMBER_NOUN_ENDINGS = (
     "a", "u", "ou", "y", "e", "ach", "ami",
-    "а", "у", "ою", "и", "і", "ю", "ею", "ях", "ами",
+    "а", "у", "ою", "и", "і", "ю", "ею", "ях", "ами", "я",
 )
 # Ordinals (positional in both schemes): stem → position, declined endings.
 _ORDINAL_STEMS = {
@@ -93,9 +94,15 @@ _LETTER_NOUN_ENDINGS = ("o", "a", "u", "om", "e")
 # the ONE thing said ("C", "je to cé", "option B").
 _WEAK_LETTER_WORDS = {
     "be": "b", "ce": "c", "de": "d", "bee": "b", "see": "c", "sea": "c", "dee": "d",
-    # uk letters А Б В Г (labels stay A–D on the wire): "а", "бе", "ве", "ге".
+    # uk (#231): the screen shows Latin A–D and the audio names them the
+    # Ukrainian way, «А», «Бе», «Це», «Де» (see _UK_LETTER_C for «це»); the
+    # English names and the Cyrillic order (В, Г third and fourth) also count.
     "а": "a", "б": "b", "в": "c", "г": "d", "бе": "b", "ве": "c", "ге": "d",
+    "де": "d", "ей": "a", "бі": "b", "сі": "c", "ді": "d",
 }
+# «це» is also the everyday "this is" ("це Київ"), so it is the letter C only
+# as the whole utterance of a lettered question.
+_UK_LETTER_C = "це"
 # English verbs that sound like letters: dropped when another label is said
 # ("it could be C", "let me see, B").
 _LETTER_LOOKALIKE_VERBS = frozenset({"be", "see"})
@@ -183,13 +190,16 @@ _LABEL_WORDS = {
         "2": "два",
         "3": "три",
         "4": "чотири",
-        "A": "а",
+        # No "а": a lone vowel hint invents answers out of noise, like "C" in en.
         "B": "бе",
-        "C": "ве",
-        "D": "ге",
+        "C": "це",
+        "D": "де",
     },
     "en": {"1": "one", "2": "two", "3": "three", "4": "four"},
 }
+# Letters said in a language's own names for the Latin letters on screen; any
+# other language reads the letter itself ("A", "B").
+_SPOKEN_LETTERS = {"uk": {"A": "А", "B": "Бе", "C": "Це", "D": "Де"}}
 
 
 def label_keyterms(labels: Mapping[str, str], language: Optional[str]) -> list[str]:
@@ -200,10 +210,12 @@ def label_keyterms(labels: Mapping[str, str], language: Optional[str]) -> list[s
 def spoken_label(label: str, language: Optional[str]) -> str:
     """How question audio reads a label (founder 2026-09-24): numbers in the
     counting form ("Jedna", "Dva", "Tri"/"Tři", "Štyri"/"Čtyři", "One"…),
-    letters as letters. A label with no word in this language stays as is."""
+    letters as letters (uk: their Ukrainian names, "Бе", "Це"). A label with no
+    word in this language stays as is."""
+    lang = (language or "").lower()
     if not label.isdigit():
-        return label
-    word = _LABEL_WORDS.get((language or "").lower(), {}).get(label)
+        return _SPOKEN_LETTERS.get(lang, {}).get(label, label)
+    word = _LABEL_WORDS.get(lang, {}).get(label)
     return word.capitalize() if word else label
 
 
@@ -340,6 +352,8 @@ def _is_directive(token: str) -> bool:
 
 
 def _directive_match(tokens: list[str], keys: list[str], scheme: str) -> Optional[str]:
+    if tokens == [_UK_LETTER_C] and scheme == "letters":
+        return _key_for_letter("c", keys)
     content: list[str] = []
     for i, token in enumerate(tokens):
         # "the second one": after an ordinal, "one" is a pronoun, not option 1.

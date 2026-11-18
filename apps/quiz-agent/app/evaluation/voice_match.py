@@ -30,7 +30,8 @@ import re
 import unicodedata
 from typing import Iterable
 
-_VOWELS = frozenset("aeiou")
+# Latin, then Ukrainian vowel letters (#231). й is a consonant: "бій" ≠ "бий".
+_VOWELS = frozenset("aeiouаеєиіїоуюя")
 _ROMAN_NUMERAL = re.compile(r"^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$")
 # Spelling that does not change the sound (applied in order, on folded text).
 _SPELLING_RULES = (
@@ -42,8 +43,13 @@ _SPELLING_RULES = (
     ("w", "v"),
     ("x", "ks"),
     ("y", "i"),
+    # uk: foreign "g" is written both ways ("Ґете"/"Гете", 2019 orthography).
+    ("ґ", "г"),
 )
 _MIN_FUZZY_WORD_LEN = 6
+_CYRILLIC_APOSTROPHE = re.compile(
+    r"(?<=[\u0400-\u04ff])['\u2019\u02bc](?=[\u0400-\u04ff])"
+)
 
 
 def fold(text: str) -> str:
@@ -65,6 +71,9 @@ def fold(text: str) -> str:
             continue
         kept.append(ch)
     stripped = unicodedata.normalize("NFC", "".join(kept))
+    # The Ukrainian apostrophe is part of the word ("дев'ять"), typed as ', ’
+    # or ʼ (U+02BC, a letter to the regex below): one form, no split (#231).
+    stripped = _CYRILLIC_APOSTROPHE.sub("", stripped)
     return " ".join(re.sub(r"[\W_]+", " ", stripped).split())
 
 

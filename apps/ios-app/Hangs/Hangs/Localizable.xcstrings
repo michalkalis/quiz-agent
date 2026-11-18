@@ -2171,6 +2171,12 @@
             "state" : "translated",
             "value" : "Vek"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вік"
+          }
         }
       }
     },
@@ -2187,6 +2193,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "10 až 12 rokov"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від 10 до 12 років"
           }
         }
       }
@@ -2205,6 +2217,12 @@
             "state" : "translated",
             "value" : "4 až 6 rokov"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від 4 до 6 років"
+          }
         }
       }
     },
@@ -2221,6 +2239,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "7 až 9 rokov"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від 7 до 9 років"
           }
         }
       }
@@ -7117,6 +7141,12 @@
             "state" : "translated",
             "value" : "Vek si zapamätám. Zmeníš ho na Úvode."
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я запам'ятаю вік. Зміниш його на головному екрані."
+          }
         }
       }
     },
@@ -8062,6 +8092,12 @@
             "state" : "translated",
             "value" : "Dlhšie otázky, odpoveď hlasom"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довші питання, відповідь голосом"
+          }
         }
       }
     },
@@ -8408,6 +8444,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Režim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим"
           }
         }
       }
@@ -12271,6 +12313,12 @@
             "state" : "translated",
             "value" : "Krátke otázky, odpoveď hlasom"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Короткі питання, відповідь голосом"
+          }
         }
       }
     },
@@ -12334,6 +12382,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Štart s deťmi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Старт із дітьми"
           }
         }
       }
@@ -15243,6 +15297,12 @@
             "state" : "translated",
             "value" : "Táto téma zatiaľ nemá otázky v jazyku kvízu."
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цієї теми ще немає питань мовою вікторини."
+          }
         }
       }
     },
@@ -15260,6 +15320,12 @@
             "state" : "translated",
             "value" : "Téma"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема"
+          }
         }
       }
     },
@@ -15276,6 +15342,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Témy pre %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теми для %@"
           }
         }
       }
@@ -15410,6 +15482,12 @@
             "state" : "translated",
             "value" : "Pre aký vek?"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для якого віку?"
+          }
         }
       }
     },
@@ -15496,6 +15574,12 @@
             "state" : "translated",
             "value" : "S deťmi"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З дітьми"
+          }
         }
       }
     },
@@ -15512,6 +15596,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Áno, nie alebo jedna z dvoch"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Так, ні або одне з двох"
           }
         }
       }
@@ -15552,6 +15642,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpovedáš ty, deti hádajú s tebou."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповідаєш ти, а діти вгадують разом із тобою."
           }
         }
       }

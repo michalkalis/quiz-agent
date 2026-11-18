@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "apps/ios-app/Hangs/Hangs"
 CATALOGS = ["Localizable.xcstrings", "InfoPlist.xcstrings"]
-LANGS = ["en", "sk", "cs"]
+LANGS = ["en", "sk", "cs", "uk"]
 
 
 def unit_value(loc: dict) -> str | dict | None:

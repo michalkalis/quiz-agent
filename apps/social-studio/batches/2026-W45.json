@@ -904,6 +904,62 @@
     "youtube": "https://youtube.com/shorts/KgN9BiVdYWM"
    },
    "note": "SK app promo video, published by hand 2026-11-09 (founder approved). Facebook and YouTube text carry the App Store link (ct=fb_sk / yt_sk). TikTok SK/CZ (@trubboskcz) uploaded by the founder in the app on 2026-11-11 (caption: search Trubbo in the App Store, no link in the TikTok bio)."
+  },
+  {
+   "key": "promo-hp-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Wed",
+   "format": "demo",
+   "language": "sk",
+   "date": "2026-11-18",
+   "files": [
+    "promo-hp-sk.mp4",
+    "promo-hp-sk.jpg"
+   ],
+   "caption": "Bavia ťa kvízy, ale téma nikdy nie je úplne tvoja? Napíš Trubbu, o čom chceš hrať, napríklad Harry Potter, a odpovedaj nahlas. Zadarmo v App Store, odkaz v profile.",
+   "voice": "narrator (ElevenLabs flash v2.5, speed 1.15) + app voice + player, promo B custom quiz",
+   "ai_generated": true,
+   "questions": [],
+   "status": "published",
+   "publish_at": "2026-11-18T20:56:23Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/promo-hp-sk.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/promo-hp-sk.jpg"
+   ],
+   "links": {
+    "instagram": "https://www.instagram.com/reel/Df5abX1nCwQ/",
+    "facebook": "https://www.facebook.com/reel/2883901451983697/",
+    "youtube": "https://youtube.com/shorts/LoyLibnnQJo"
+   },
+   "note": "Promo B (custom quiz on your topic, Harry Potter), published by hand 2026-11-18 (founder approved). Facebook and YouTube text carry the App Store link (ct=fb_sk / yt_sk). TikTok is uploaded by the founder by hand."
+  },
+  {
+   "key": "promo-hp-ig_en",
+   "account": "ig_en",
+   "day": "Wed",
+   "format": "demo",
+   "language": "en",
+   "date": "2026-11-18",
+   "files": [
+    "promo-hp-en.mp4",
+    "promo-hp-en.jpg"
+   ],
+   "caption": "Love quizzes, but the topic is never quite yours? Tell Trubbo what you want to play, Harry Potter for example, and answer out loud. Free on the App Store, link in bio.",
+   "voice": "narrator (ElevenLabs flash v2.5, speed 1.15) + app voice + player, promo B custom quiz",
+   "ai_generated": true,
+   "questions": [],
+   "status": "published",
+   "publish_at": "2026-11-18T20:57:37Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/promo-hp-en.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W47/promo-hp-en.jpg"
+   ],
+   "links": {
+    "instagram": "https://www.instagram.com/reel/Df5am6aFWqr/",
+    "facebook": "https://www.facebook.com/reel/1658617055752288/",
+    "youtube": "https://youtube.com/shorts/i8OhckSvtkk"
+   },
+   "note": "Promo B (custom quiz on your topic, Harry Potter), published by hand 2026-11-18 (founder approved). Facebook and YouTube text carry the App Store link (ct=fb_en / yt_en). TikTok is uploaded by the founder by hand."
   }
  ]
 }

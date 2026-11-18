@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import importlib.util
 import uuid
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -31,11 +32,15 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text
 
 from app.api.routes.sessions import _require_pack_ownership
-from app.db.models import AnonymousIdentity, CreditLedger
+from app.db.base import utcnow
+from app.db.models import AnonymousIdentity, CreditLedger, Product, Subscription
 from app.rate_limit import limiter
+from app.usage.entitlement import account_is_entitled
 from tests.test_auth_apple_endpoint import _call_apple, _make_anon, _make_app
 
 pytestmark = pytest.mark.asyncio
+
+_PLUS = "com.carquiz.unlimited.monthly"
 
 
 @pytest.fixture(scope="module")
@@ -208,6 +213,36 @@ async def test_credit_bought_after_sign_out_moves_on_the_next_sign_in(
 
     assert await _balance(db_sessionmaker, user_id) == 130
     assert await _balance(db_sessionmaker, anon_id) == 0
+
+
+async def test_plus_bought_after_sign_out_moves_on_the_next_sign_in(
+    client, keypair, db_sessionmaker, monkeypatch
+):
+    """#239: the webhook writes a Plus bought while signed out to the linked
+    anon, but the quota gate reads only the account id, so a player who just
+    paid would be held to the free tier once they sign back in."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION")
+    anon_id, bearer = await _make_anon(db_sessionmaker)
+    user_id = await _sign_in(client, keypair, "apple.sub.plus", bearer)
+    async with db_sessionmaker() as s:
+        s.add(Product(product_id=_PLUS, kind="subscription", tier="unlimited"))
+        s.add(
+            Subscription(
+                account_id=anon_id,
+                product_id=_PLUS,
+                status="active",
+                expires_at=utcnow() + timedelta(days=30),
+                rc_original_txn_id="txn-plus-after-sign-out",
+                environment="PRODUCTION",
+            )
+        )
+        await s.commit()
+
+    await _sign_in(client, keypair, "apple.sub.plus", bearer)
+
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, user_id)
+        assert not await account_is_entitled(s, anon_id)
 
 
 async def _seed_credit(db, account_id: str, amount: int, txn: str) -> None:

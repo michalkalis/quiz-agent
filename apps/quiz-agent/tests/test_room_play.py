@@ -26,6 +26,7 @@ from app.api.routes import quiz as quiz_routes
 from app.api.routes import room_play as play_routes
 from app.api.routes import rooms as room_routes
 from app.auth.tokens import TokenService
+from app.quiz.errors import JudgeUnavailable
 from app.quiz.flow import QuizFlowService
 from app.rate_limit import limiter
 from app.rooms import rounds
@@ -33,6 +34,7 @@ from app.rooms.network import NetTickets
 from app.rooms.play import RoomPlay
 from app.rooms.service import RoomService
 from app.rooms.store import MemoryRoomStore
+from app.session import manager as session_manager
 from app.session.manager import SessionManager
 
 pytestmark = pytest.mark.asyncio
@@ -84,10 +86,13 @@ class Judge:
 
     def __init__(self):
         self.calls: list[str] = []
+        self.down = False  # the provider is down or too slow (hot_path_llm)
 
     async def evaluate(self, user_answer, question, question_text=""):
         self.calls.append(user_answer)
         await asyncio.sleep(0)
+        if self.down:
+            raise JudgeUnavailable("evaluate")
         ok = normalize_text(user_answer) == normalize_text(str(question.correct_answer))
         return ("correct", 1.0) if ok else ("incorrect", 0.0)
 
@@ -541,3 +546,87 @@ async def test_host_pause_is_seen_by_guests_and_clears_with_the_next_question(ga
     await game.post("next")
     assert "paused" not in (await game.state("jana"))["round"]
     assert (await game.post("pause", paused=True)).status_code == 409  # new, open
+
+
+async def test_a_long_game_outlives_the_30_minutes_a_fresh_session_gets(
+    game, monkeypatch
+):
+    # A lobby wait plus 20 typed questions with 60 s to think runs past the
+    # 30 minutes the app's session starts with. The room lives 6 hours, so
+    # the game must not end under the players with no final ranking.
+    await game.setup()
+    later = datetime.now(timezone.utc) + timedelta(minutes=31)
+
+    class Later(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return later
+
+    monkeypatch.setattr(session_manager, "datetime", Later)
+    assert (await game.state("jana"))["round"]["question_id"] == "q_mcq"
+    assert (await game.answer("peto", "q_mcq", "b")).status_code == 200
+
+
+async def test_a_judge_outage_on_the_last_answer_keeps_that_answer(game):
+    # The last player's answer closes the question. If the judge is down at
+    # that moment, the answer must still count once it can be judged: the
+    # player sees the question being graded, never an error and a lost answer.
+    await game.setup()
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_mcq", "b")
+    await game.post("next")
+    await game.answer("host", "q_open", "Paris")
+    await game.answer("jana", "q_open", "Lyon")
+
+    game.judge.down = True
+    last = await game.answer("peto", "q_open", "Paris")
+    assert last.status_code == 200, last.text
+    assert last.json()["round"]["phase"] == "grading"
+    await game.settle()
+
+    game.judge.down = False
+    await game.state()
+    await game.settle()
+    rnd = (await game.state("peto"))["round"]
+    assert rnd["phase"] == "revealed"
+    points = {r["participant_id"]: r["points"] for r in rnd["results"]}
+    assert points[await game.pid("peto")] == 1.0
+
+
+async def test_a_question_the_judge_cannot_grade_is_cancelled_when_the_host_moves_on(
+    game,
+):
+    # Founder 2026-11-18: a room can always move on, and nobody is scored on a
+    # question that could not be judged fairly, not even a player whose answer
+    # was right. Polls keep working while the judge is down.
+    later = OPEN.model_copy(update={"id": "q_open2", "correct_answer": "Rome"})
+    game.service.play.flow.question_retriever.questions.append(later)
+    await game.setup(max_questions=3, thinking_seconds=10)
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_mcq", "b")
+    await game.post("next")
+    await game.post("open", question_id="q_open")
+    game.judge.down = True
+    await game.answer("host", "q_open", "Paris")
+    await game.answer("jana", "q_open", "Paris")
+    game.clock.tick(60)
+    assert (await game.state("peto"))["round"]["phase"] == "grading"
+    await game.settle()
+
+    moved = await game.post("next")
+    assert moved.status_code == 200, moved.text
+    assert moved.json()["round"]["question_id"] == "q_open2"
+    scores = {p["display_name"]: p["score"] for p in moved.json()["players"]}
+    assert scores == {"Michal": 1.0, "Jana": 1.0, "Peto": 1.0}  # first question only
+
+    game.judge.down = False
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_open2", "Oslo")
+    end = (await game.post("next")).json()
+    cancelled = end["rounds"][1]
+    assert cancelled["cancelled"] is True and cancelled["phase"] == "revealed"
+    assert {(r["result"], r["points"]) for r in cancelled["results"]} == {
+        ("skipped", 0.0)
+    }
+    assert "cancelled" not in end["rounds"][0]
+    assert [r["correct_count"] for r in end["ranking"]] == [1, 1, 1]

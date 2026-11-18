@@ -45,6 +45,9 @@ class RoomRound(BaseModel):
     # #224.4: the host stays on this reveal; guests are told. Lives on the
     # round, so the next question starts unpaused without any reset code.
     paused: bool = False
+    # The judge stayed down until the host moved on: the question counts for
+    # nobody (founder 2026-11-18, #239).
+    cancelled: bool = False
 
 
 class RoomGame(BaseModel):

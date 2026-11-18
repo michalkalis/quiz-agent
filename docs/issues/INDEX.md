@@ -14,7 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
-| 239 | [Kvalita appky z voľnej kapacity predplatného](issue-239-quality-program-from-subscription.md) | enhancement · in-progress | `[~]` #239 | 2026-11-18: audit kódu kolo 2, prechody appkou, prístupnosť, použiteľnosť, bezpečnosť, robot-hráč pre hlas; len z predplatného |
+| 240 | [Kvalita appky z voľnej kapacity predplatného](issue-240-quality-program-from-subscription.md) | enhancement · in-progress | `[~]` #240 | 2026-11-18: audit kódu kolo 2, prechody appkou, prístupnosť, použiteľnosť, bezpečnosť, robot-hráč pre hlas; len z predplatného |
 | 238 | [Brány kvality otázok + prekontrolovanie fondu](issue-238-question-qa-gates.md) | enhancement · ready-for-agent | `[ ]` #238 | 2026-10-25: 18 chýb v schválených (#210); celá otázka proti stiahnutému zdroju, latka 0,9, jazyk sk/cs všetkých polí pred schválením, schválenie viazané na text; prekontrolovanie 145+316+96 najprv; schválené 10-26; 11-18 founder: po vydaní 1.3, nič nepostavené, etapa 1 (~50 $) skutočný náklad = súhlas pred behom |
 | 239 | [Partia v dennej výzve](issue-239-daily-crew.md) | enhancement · ready-for-agent | `[~]` #239 | 2026-11-18: founder vybral návrh B (partia z odkazov) + body za vzácnosť; server v PR, appka nasleduje |
 | 237 | [Povolenie povelov na požiadanie + nový onboarding](issue-237-voice-permission-onboarding.md) | enhancement · done | `[x]` #237 | 2026-11-18: hotové PR #832; okno reči len na požiadanie (onboarding, lišta), onboarding Mikrofón → Príkazy |

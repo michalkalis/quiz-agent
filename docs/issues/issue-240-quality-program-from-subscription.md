@@ -1,7 +1,8 @@
-# #239 — Kvalita appky z voľnej kapacity predplatného
+# #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 239.1 audit hotový: 24 potvrdených nálezov; 3 zo 4 vysokých opravené v PR #872–#874, štvrtý čaká na rozhodnutie foundera; 239.2 rozrobené; pridané 239.8 zábavnosť a chuť zdieľať
+**Status:** 2026-11-18 240.1 audit hotový: 24 potvrdených nálezov; 3 zo 4 vysokých opravené v PR #872–#874, štvrtý čaká na rozhodnutie foundera; 240.2 rozrobené; pridané 240.8 zábavnosť a chuť zdieľať
+**Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 
 Podklad: [rešerš 2026-11-18](../research/claude-code-quality-from-subscription-2026-11-18.md) (čo ide z predplatného, čo funguje, čo je plytvanie).
@@ -24,43 +25,43 @@ Podklad: [rešerš 2026-11-18](../research/claude-code-quality-from-subscription
 
 ## Časti
 
-### 239.1 — Audit kódu, kolo 2
+### 240.1 — Audit kódu, kolo 2
 Od auditu 2026-07-30 pribudlo ~950 zmien, ktoré takým auditom neprešli. Hľadači po oblastiach, každý nález dostane skeptika.
 
 Oblasti: Hra spolu (v miestnosti aj na diaľku) · zdieľanie kvízu odkazom · nákupy, predplatné, limity a tester strop · vlastné balíky (objednávka, worker, kontrola témy, opätovné použitie) · stavy kvízu a hlasová cesta v appke · denná výzva a profil · prihlásenie a účet · hlas na serveri a jeho cache · nasadenie a prevádzka na Hetzneri.
 
 Hotové, keď: zoznam potvrdených nálezov podľa závažnosti je tu v časti Výsledky, kritické a vysoké sú opravené cez PR s testom, ostatné majú rozhodnutie (opraviť / nechať s dôvodom).
 
-### 239.2 — Prieskumné prechody appkou
+### 240.2 — Prieskumné prechody appkou
 Agent prechádza appku na simulátore podľa zadaní s pomenovanými okrajovými prípadmi: prvé spustenie, kvíz hlasom aj ťukaním, MCQ, denná výzva, nákup a zlyhaný nákup, vlastný balík, Hra spolu, zdieľaný kvíz, profil, nastavenia; v sk/cs/en/uk; pomalá a vypadnutá sieť; odchod do pozadia a návrat.
 
 Nález platí až po zopakovaní druhým agentom so snímkou a krokmi. Potvrdené chyby sa po oprave zmrazia do regresných scenárov (RS).
 
-### 239.3 — Stráže vzhľadu a prístupnosti
+### 240.3 — Stráže vzhľadu a prístupnosti
 Snímky obrazoviek doplniť o ukrajinčinu, malý telefón a najväčšie písmo; zabudovaný audit prístupnosti Xcode v UI testoch (kontrast, veľkosť cieľov, popisky, orezaný text); pseudojazyk s dvojnásobnou dĺžkou textu. Popisky pre čítačku obrazovky na hlavných obrazovkách.
 
-### 239.4 — Prechod použiteľnosti po úlohách
+### 240.4 — Prechod použiteľnosti po úlohách
 Agent vykoná úlohy za nového hráča, rodinu a partiu a meria ťuknutia, čakanie a slepé uličky. Výstup: artefakt so snímkami a návrhmi na posúdenie founderom. Nič z toho sa nemení v appke bez jeho rozhodnutia.
 
-### 239.5 — Bezpečnostný prechod
+### 240.5 — Bezpečnostný prechod
 Jednorazový prechod servera aj appky (prihlásenie, platby, admin, odkazy na zdieľanie, limity) + bezplatné kontroly v CI (úniky tajomstiev, zraniteľné knižnice).
 
-### 239.6 — Robot-hráč pre hlas
+### 240.6 — Robot-hráč pre hlas
 Odpovede a povely nahovorené hlasmi zabudovanými v Macu do súboru (bez zvuku nahlas), rôzne hlasy a tempo, s pridaným hlukom auta; pustené cez rozpoznávanie povelov aj prepis odpovedí. Výstup: podiel nepočutých podľa jazyka + sada, ktorá stráži zhoršenie. Nadväzuje na #197 — nahrávky z auta a #204 — spoľahlivejšie rozpoznanie odpovede.
 
-### 239.7 — Preverenie testov úmyselnými chybami (neskôr)
+### 240.7 — Preverenie testov úmyselnými chybami (neskôr)
 Mutačné sondy na peniaze, limity, vyhodnotenie odpovedí a stavy kvízu; každá prežitá mutácia = nový test.
 
-### 239.8 — Zábavnosť a chuť zdieľať
+### 240.8 — Zábavnosť a chuť zdieľať
 Founder 2026-11-18: „chcel by som, aby si skúsil posúdiť aj zábavnosť appky, či sú nejaké časti, čo nedávajú zmysel, prípadne sú dobré, čo by si upravil… či hra spolu bude zábavná pre ľudí, či bude lákať ju zdieľať.“
 
 Posudok herného zážitku, nie hľadanie chýb: jadro hry (tempo, odmena, napätie, pestrosť), denná výzva, profil, vlastné balíky, Hra spolu (priebeh večera, čakanie, drámy, koniec) a všetky miesta, kde hráč môže niečo poslať ďalej (čo posiela, čo uvidí príjemca). Opiera sa o prechod appkou ako hráč, o skutočné čísla z prevádzky a z testov (dohrané kolá, návraty, vytvorené a otvorené odkazy, veľkosť a dĺžka hier spolu), o spätnú väzbu testerov a o to, čo funguje v kvízových a párty hrách (s citáciami). Rešerš upozorňuje, že úsudok modelu o zážitku je slabý dôkaz, preto je každý bod označený ako údaj alebo názor.
 
-Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, čo by som zmenil a prečo, zoradené podľa dopadu. V appke sa nič nemení bez jeho rozhodnutia. Robí sa spolu s 239.4.
+Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, čo by som zmenil a prečo, zoradené podľa dopadu. V appke sa nič nemení bez jeho rozhodnutia. Robí sa spolu s 240.4.
 
 ## Výsledky
 
-### 239.1 — Audit kódu, kolo 2 (2026-11-18, session quiz-agent-87)
+### 240.1 — Audit kódu, kolo 2 (2026-11-18, session quiz-agent-87)
 
 38 agentov, 10 oblastí. 32 nálezov → 28 preverených skeptikom → **24 potvrdených** (6 zopakovaných skriptom, 18 stopou v kóde), 3 vyvrátené, 1 neistý, 4 nižšie zaradené nepreverené. Opravy idú cez PR s testom, ktorý bez opravy zlyhá.
 
@@ -99,7 +100,7 @@ Výstup: artefakt so snímkami pre foundera: čo je dobré, čo nedáva zmysel, 
 
 **Nepreverené (nižšia priorita):** jedno miesto na doklad o nákupe balíka, druhý nákup prepíše nepoužitý (`PackPurchaseService.swift:175`) · appka ukazuje Plus zo surového stavu predplatného, server dáva bezplatných 30 (`UsageInfo.swift:48`) · 6 s limit hlasu nastavený pre rýchlejší model, ukrajinčina beží na pomalšom (`tts/providers.py:60`) · zdieľaný odkaz ťuknutý počas hry spolu sa spustí neskôr sám (`ContentView.swift:167`).
 
-### 239.2 — Prieskumné prechody appkou (2026-11-18, rozrobené)
+### 240.2 — Prieskumné prechody appkou (2026-11-18, rozrobené)
 
 Dva prechody v testovacom režime (bez servera), druhý pozastavený v polovici. Potvrdené druhým agentom, všetko drobné: surová systémová hláška pri zlyhanom nákupe (`StoreManager.swift:203`) · názvy kategórií na kartách ostanú v pôvodnom jazyku po prepnutí jazyka (`Config.categoryOptions`) · dlhá odpoveď odrezaná v potvrdzovacom okne bez náznaku pokračovania. Nie je chyba: „LISTENING FOR COMMANDS“ sa riadi jazykom povelov. Otvorené podozrenie (videné raz): po ukončení kola bez odpovede chyba „Vypršal časový limit“ namiesto prehľadu.
 

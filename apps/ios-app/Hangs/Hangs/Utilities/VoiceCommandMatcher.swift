@@ -160,7 +160,7 @@ enum VoiceCommandMatcher {
             var best = 0.0
             for token in tokens {
                 for variant in variants {
-                    best = max(best, score(token, variant, isFinal: isFinal))
+                    best = max(best, score(token, variant, isFinal: isFinal, language: language))
                 }
             }
             scores.append((command, best))
@@ -246,7 +246,7 @@ enum VoiceCommandMatcher {
                 let isCutOff = variant.hasPrefix(token) && variant.count - token.count <= Self.maxSkipTruncation
                 return token.count < variant.count && !isCutOff
                     ? similarity(token, variant)
-                    : score(token, variant, isFinal: isFinal)
+                    : score(token, variant, isFinal: isFinal, language: language)
             }
             .max() ?? 0
         return best >= skipFloor
@@ -275,9 +275,21 @@ enum VoiceCommandMatcher {
     ///    contains its letters: the Czech backchannel "no" rates 0.80 against
     ///    "znovu" and would re-record the answer. A half-heard command loses its
     ///    TAIL, never its head, so requiring the head is what separates the two.
-    static func score(_ token: String, _ variant: String, isFinal: Bool) -> Double {
+    ///
+    /// #231 Ukrainian is stricter (PR #862 review): its inflections put an
+    /// ordinary answer one letter from a short command («сто» / «стопа» vs
+    /// «стоп», «дали» vs «далі», «око» vs «окей»), so a variant of
+    /// `ukrainianShortWord` letters or fewer, and every `exactOnlyVariants`
+    /// word, scores only on an exact match, and a token shorter than that
+    /// earns no truncation credit.
+    static func score(_ token: String, _ variant: String, isFinal: Bool, language: CommandLanguage = .english) -> Double {
+        if language == .ukrainian, token != variant,
+           variant.count <= ukrainianShortWord || VoiceCommandLexicon.exactOnlyVariants(for: language).contains(variant)
+        {
+            return 0
+        }
         let levenshtein = similarity(token, variant)
-        guard isFinal, isTruncation(token, of: variant) else { return levenshtein }
+        guard isFinal, isTruncation(token, of: variant, language: language) else { return levenshtein }
         return max(levenshtein, jaroWinkler(token, variant))
     }
 
@@ -285,13 +297,18 @@ enum VoiceCommandMatcher {
     /// is treated as a truncation rather than a different word.
     static let truncationPrefix = 2
 
+    /// #231: a Ukrainian command this short must be heard exactly, and a
+    /// Ukrainian token shorter than this is a word of its own, not a cut-off.
+    static let ukrainianShortWord = 4
+
     /// Whether `token` looks like `variant` with its tail cut off. The token
     /// must also carry at least half the variant: a whole short word that
     /// happens to open a longer command ("na" → "na úvod", "za" → "zavri")
     /// is that word, not a half-heard command.
-    private static func isTruncation(_ token: String, of variant: String) -> Bool {
+    private static func isTruncation(_ token: String, of variant: String, language: CommandLanguage) -> Bool {
         guard token.count < variant.count, token.count >= truncationPrefix,
               token.count * 2 >= variant.count else { return false }
+        if language == .ukrainian, token.count < ukrainianShortWord { return false }
         return token.prefix(truncationPrefix) == variant.prefix(truncationPrefix)
     }
 

@@ -182,7 +182,8 @@ enum VoiceCommandLexicon {
         // Same benign no-answer-sheet-only hazard as Slovak "ďalej".
         case (.ukrainian, .next): return ["далі", "продовжуй"]
         // "ще раз" (the button) and "знову" (a hidden synonym); "ні" and
-        // "неправильно" act on a final only, like sk "nie" / "zle".
+        // "неправильно" act on a final only, like sk "nie" / "zle", and only
+        // when heard exactly (`exactOnlyVariants`: «правильно», «неправда» are answers).
         case (.ukrainian, .again): return ["щераз", "знову", "ні", "неправильно", "спробуйщераз", "зіграйщераз"]
         case (.ukrainian, .repeatQuestion): return ["повтори"]
         // The button reads "Пропусти"; "наступне" (sk "ďalšia") stays a synonym.

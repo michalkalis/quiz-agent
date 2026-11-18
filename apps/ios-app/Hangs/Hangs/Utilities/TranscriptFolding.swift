@@ -2,8 +2,8 @@
 //  TranscriptFolding.swift
 //  Hangs
 //
-//  #231: the one normalisation both on-device matchers share
-//  (`VoiceCommandMatcher`, `MCQTranscriptMatcher`). Latin is lowercased and
+//  #231: the normalisation of the on-device command matcher
+//  (`VoiceCommandMatcher`). Latin is lowercased and
 //  diacritic-folded exactly as before ("Štyri" → "styri"). Cyrillic is only
 //  lowercased: in Ukrainian й, ї and є are letters of their own, and folding
 //  them (й → и, ї → і) would merge different words ("бій" fight, "бий" hit).

@@ -98,6 +98,92 @@ struct UkrainianCommandGrammarTests {
         #expect(VoiceCommandMatcher.match(transcript: "Ні, це була Одеса", on: .confirmation, language: .ukrainian) == nil)
     }
 
+    /// WHY (PR #862 review): on the sheet the player may say a NEW answer, and
+    /// «Правильно» ("right") is the natural Ukrainian confirm, «правда» /
+    /// «неправда» the way the app asks true/false questions to be answered.
+    /// One letter away from «неправильно» they re-recorded the answer: the
+    /// opposite of what the player meant. The conversational words that act
+    /// only on finals match exactly, never fuzzily or as a cut-off.
+    @Test("«правильно», «правда», «неправда» and inflections of «добре» are answers, not commands")
+    func nearConversationalWordsAreAnswers() {
+        for word in ["Правильно.", "правильно", "Неправда.", "неправда", "Правда", "Добро", "Добра", "Доба", "Таки"] {
+            for screen in [VoiceCommandScreen.confirmation, .noAnswer] {
+                for isFinal in [true, false] {
+                    #expect(VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: isFinal, language: .ukrainian) == nil,
+                            "'\(word)' on \(screen), final \(isFinal)")
+                }
+            }
+        }
+        // The exact words keep working.
+        #expect(VoiceCommandMatcher.match(transcript: "Так.", on: .confirmation, language: .ukrainian) == .ok)
+        #expect(VoiceCommandMatcher.match(transcript: "Добре", on: .confirmation, language: .ukrainian) == .ok)
+        #expect(VoiceCommandMatcher.match(transcript: "Неправильно.", on: .confirmation, language: .ukrainian) == .again)
+        #expect(VoiceCommandMatcher.match(transcript: "Ні", on: .noAnswer, language: .ukrainian) == .again)
+    }
+
+    /// WHY (PR #862 review): a short answer must not be taken for a command it
+    /// shares letters with. «Сто» (100) dropped the new answer as «стоп»,
+    /// «Око» confirmed the old one as «ок», «Дах» skipped as «далі». A
+    /// Ukrainian word of four letters or fewer is usually another word one
+    /// letter away (сто/стоп, стопа, даль/далі), so short commands match exactly.
+    @Test("short answers one letter or a cut-off away from a command never fire it")
+    func shortAnswersAreNotCommands() {
+        for word in ["Сто", "Око", "Ока", "Стопа", "Стовп", "Да", "Дам", "Дар", "Дах", "Даль", "Дали"] {
+            for screen in [VoiceCommandScreen.confirmation, .noAnswer] {
+                for isFinal in [true, false] {
+                    #expect(VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: isFinal, language: .ukrainian) == nil,
+                            "'\(word)' on \(screen), final \(isFinal)")
+                }
+            }
+        }
+    }
+
+    /// WHY: the truncation credit exists for a command the recognizer cut off
+    /// in cabin noise (#184). A cut-off of four letters or more keeps it.
+    @Test("a genuinely cut-off long command still works on a final")
+    func longCutOffStillWorks() {
+        #expect(VoiceCommandMatcher.match(transcript: "Підтвер", on: .confirmation, language: .ukrainian) == .ok)
+        #expect(VoiceCommandMatcher.match(transcript: "Зачека", on: .confirmation, language: .ukrainian) == .stop)
+        #expect(VoiceCommandMatcher.match(transcript: "Пропуст", on: .question, language: .ukrainian) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "Підтвер", on: .confirmation, isFinal: false, language: .ukrainian) == nil)
+    }
+
+    /// WHY: a sentence answer opens with filler or a backchannel ("Ну, це
+    /// Київ", "Так, це Львів"). The answer word is content, so the utterance is
+    /// a new answer, never a confirm of the old one.
+    @Test("answers padded with filler or a backchannel are not commands")
+    func paddedAnswersAreNotCommands() {
+        for answer in ["Ну, це Київ", "Так, це Львів", "Добре, Київ", "Ще Одеса", "це Київ", "Ну, ні, Харків"] {
+            for screen in [VoiceCommandScreen.confirmation, .noAnswer] {
+                #expect(VoiceCommandMatcher.match(transcript: answer, on: screen, language: .ukrainian) == nil, "'\(answer)' on \(screen)")
+            }
+        }
+    }
+
+    /// WHY (#231): й/ї are letters of their own. Folded to и/і, «Дали» ("they
+    /// gave", with и) would read as «далі» and skip the question.
+    @Test("й and ї are not merged with и and і")
+    func shortIAndYiStayDistinct() {
+        #expect(VoiceCommandMatcher.normalize("бій", language: .ukrainian) != VoiceCommandMatcher.normalize("бий", language: .ukrainian))
+        #expect(VoiceCommandMatcher.normalize("Їжак", language: .ukrainian) != VoiceCommandMatcher.normalize("іжак", language: .ukrainian))
+        #expect(VoiceCommandMatcher.normalize("Зіграй", language: .ukrainian) == "зіграй")
+        #expect(VoiceCommandMatcher.match(transcript: "Дали", on: .noAnswer, language: .ukrainian) == nil)
+    }
+
+    /// WHY: recognizers and keyboards write the Ukrainian apostrophe three ways.
+    /// «п'ять» must be one word however it is written, or "five" splits into
+    /// "п" + "ять" and the answer stops being one token.
+    @Test("apostrophe variants ʼ ’ ' give the same word, and it is an answer", arguments: ["'", "\u{2019}", "\u{02BC}"])
+    func apostropheVariants(_ apostrophe: String) {
+        #expect(VoiceCommandMatcher.normalize("П\(apostrophe)ять", language: .ukrainian) == "пять")
+        #expect(VoiceCommandMatcher.normalize("дев\(apostrophe)ять", language: .ukrainian) == "девять")
+        for word in ["П\(apostrophe)ять", "Дев\(apostrophe)ять"] {
+            for screen in [VoiceCommandScreen.confirmation, .noAnswer] {
+                #expect(VoiceCommandMatcher.match(transcript: word, on: screen, language: .ukrainian) == nil, "'\(word)' on \(screen)")
+            }
+        }
+    }
+
     @Test("hints and captions speak Ukrainian with Ukrainian quotes")
     func display() {
         #expect(VoiceCommandLexicon.hint(on: .question, language: .ukrainian) == "Скажи «старт» або «пропусти»")
@@ -106,5 +192,35 @@ struct UkrainianCommandGrammarTests {
         #expect(VoiceCommandLexicon.listeningCaption(language: .ukrainian) == "СЛУХАЮ КОМАНДИ")
         #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: .ukrainian)
             == "Готово, 7 з 10 правильно. Скажи ще раз або додому.")
+    }
+
+    /// WHY: the app runs from iOS 26, and a device whose dictation lacks
+    /// uk_UA must degrade like sk / cs do: commands off (the buttons stay),
+    /// no download attempt, no crash. On the iOS 26.5 and 27.0 simulators
+    /// DictationTranscriber lists uk-UA (2026-11-18), so this is the fallback.
+    @Test("no uk_UA in the dictation engine: commands are off and nothing downloads")
+    @MainActor
+    func unsupportedLocaleTurnsCommandsOff() async {
+        let service = SilenceDetectionService(engine: NoUkrainianDictation(), selection: .dictationUkrainian)
+        await service.prepareAssets()
+        guard case .unavailable = service.commandAvailability else {
+            Issue.record("commands are \(service.commandAvailability) without uk_UA")
+            return
+        }
+    }
+}
+
+/// A dictation engine without Ukrainian, as an older or trimmed iOS reports it.
+@MainActor
+private final class NoUkrainianDictation: CommandTranscriberAdapter {
+    nonisolated let engineTag = "dictation"
+    nonisolated let locale = Locale(identifier: "uk_UA")
+    var contextualStrings: [String]? { nil }
+
+    func supportedLocales() async -> [Locale] { [Locale(identifier: "en_US"), Locale(identifier: "sk_SK")] }
+    func installedLocales() async -> [Locale] { [] }
+    func installAssets() async throws { Issue.record("an unsupported locale must not download") }
+    func makeSession() -> CommandTranscriberSession {
+        DictationTranscriberCommandAdapter(locale: locale, language: .ukrainian).makeSession()
     }
 }

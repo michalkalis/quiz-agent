@@ -81,6 +81,19 @@ extension VoiceCommandLexicon {
         }
     }
 
+    /// #231 (PR #862 review): words that count only when heard EXACTLY — never
+    /// by edit distance or as a cut-off. The Ukrainian conversational words sit
+    /// one letter from ordinary answers: «правильно» ("right") and «неправда»
+    /// (a true/false answer) from «неправильно», «добро» from «добре», «таки»
+    /// from «так». sk / cs / en keep their field-tuned fuzzy match.
+    static func exactOnlyVariants(for language: CommandLanguage) -> Set<String> {
+        switch language {
+        case .english, .slovak, .czech: return []
+        case .ukrainian:
+            return finalOnlyVariants(for: language).union(confirmationOnlyVariants(for: .ok, language: language))
+        }
+    }
+
     /// Multi-word commands, as normalized token runs, and the single token they
     /// are joined into before matching (`VoiceCommandMatcher.normalize`). The
     /// matcher counts content WORDS, so without the join "ešte raz" would be two

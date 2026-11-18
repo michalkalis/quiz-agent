@@ -168,10 +168,17 @@ enum MCQTranscriptMatcher {
 
     /// Lowercase, diacritic-fold (`štyri`→`styri`, `béčko`→`becko`), and reduce
     /// every non-alphanumeric run to a single space so STT punctuation/casing
-    /// and Slovak diacritics don't defeat the lookup tables below. Cyrillic is
-    /// only lowercased (#231, `TranscriptFolding`).
+    /// and Slovak diacritics don't defeat the lookup tables below.
     private static func normalize(_ string: String) -> String {
-        TranscriptFolding.fold(string).split(separator: " ").joined(separator: " ")
+        let folded = string.folding(
+            options: [.diacriticInsensitive, .caseInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
+        var scalars = String.UnicodeScalarView()
+        for scalar in folded.unicodeScalars {
+            scalars.append(CharacterSet.alphanumerics.contains(scalar) ? scalar : " ")
+        }
+        return String(scalars).split(separator: " ").joined(separator: " ")
     }
 
     /// Normalized letter-names → option key letter. Slovak `áčko/béčko/céčko/déčko`
@@ -183,17 +190,11 @@ enum MCQTranscriptMatcher {
         "decko": "d", "de": "d",
     ]
 
-    /// Normalized number / ordinal words → 1-based option position (SK + EN,
-    /// and UK since #231: the options are read "Один… Два… Три… Чотири…",
-    /// ordinals in the three genders plus the accusative "першу").
+    /// Normalized number / ordinal words → 1-based option position (SK + EN).
     private static let numberWords: [String: Int] = [
         "one": 1, "first": 1, "jedna": 1, "jeden": 1, "prva": 1, "prvy": 1, "prve": 1,
         "two": 2, "second": 2, "dva": 2, "dve": 2, "druha": 2, "druhy": 2, "druhe": 2,
         "three": 3, "third": 3, "tri": 3, "tretia": 3, "treti": 3, "tretie": 3,
         "four": 4, "fourth": 4, "styri": 4, "stvrta": 4, "stvrty": 4, "stvrte": 4,
-        "один": 1, "одна": 1, "одне": 1, "перший": 1, "перша": 1, "перше": 1, "першу": 1,
-        "два": 2, "дві": 2, "другий": 2, "друга": 2, "друге": 2, "другу": 2,
-        "три": 3, "третій": 3, "третя": 3, "третє": 3, "третю": 3,
-        "чотири": 4, "четвертий": 4, "четверта": 4, "четверте": 4, "четверту": 4,
     ]
 }

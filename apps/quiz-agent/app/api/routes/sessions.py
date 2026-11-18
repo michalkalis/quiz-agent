@@ -67,8 +67,11 @@ async def _require_pack_ownership(
     async with auth_sessionmaker() as db:
         result = await db.execute(
             text(
-                "SELECT target_count, language FROM question_packs "
-                "WHERE id = :pid AND user_id = :uid LIMIT 1"
+                "SELECT target_count, language FROM question_packs p "
+                "WHERE id = :pid AND user_id = :uid "
+                # #240 (founder 2026-11-18): a refunded pack is played by nobody.
+                "AND NOT EXISTS (SELECT 1 FROM generation_orders o "
+                "WHERE o.id = p.order_id AND o.status = 'refunded') LIMIT 1"
             ),
             {"pid": pid, "uid": subject_id},
         )

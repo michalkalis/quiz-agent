@@ -69,6 +69,22 @@ class SharedQuizStore:
             return None
         return {"name": row[0], "language": str(row[1]), "status": str(row[2])}
 
+    async def pack_refunded(self, pack_id) -> bool:
+        """Whether Apple refunded the order behind this pack (#240: a
+        refunded pack is played by nobody, through any link)."""
+        async with self._sm() as db:
+            row = (
+                await db.execute(
+                    text(
+                        "SELECT 1 FROM question_packs p JOIN generation_orders o "
+                        "ON o.id = p.order_id "
+                        "WHERE p.id = :pid AND o.status = 'refunded' LIMIT 1"
+                    ),
+                    {"pid": uuid.UUID(str(pack_id))},
+                )
+            ).first()
+        return row is not None
+
     async def existing(
         self, sender: str, *, session_id: Optional[str], pack_id: Optional[str]
     ) -> Optional[SharedQuiz]:

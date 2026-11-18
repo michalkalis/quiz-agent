@@ -64,6 +64,8 @@ class ShareCreation:
             raise ShareError(
                 409, "family_not_shareable", "A round with kids cannot be shared"
             )
+        if session.pack_id:
+            await self._refuse_refunded(session.pack_id)
         if session.shared_quiz_id and not session.daily_challenge_date:
             # Forwarding a quiz a friend sent: the same link, never a new one.
             share = await self.store.by_id(session.shared_quiz_id)
@@ -121,6 +123,7 @@ class ShareCreation:
         self, subject_id: str, pack_id: str, name: Optional[str]
     ) -> SharedQuiz:
         pack = await self._finished_pack(pack_id, subject_id)
+        await self._refuse_refunded(pack_id)
         found = await self.store.existing(subject_id, session_id=None, pack_id=pack_id)
         if found is not None:
             return found
@@ -143,6 +146,13 @@ class ShareCreation:
         if pack["status"] != "complete":
             raise ShareError(409, "pack_not_finished", "The pack is not finished yet")
         return pack
+
+    async def _refuse_refunded(self, pack_id) -> None:
+        """#240 (founder 2026-11-18): a refunded pack is played by nobody, so
+        it gets no link either. ``nothing_playable`` is the code live builds
+        already show as "This quiz can't be played any more." """
+        if await self.store.pack_refunded(pack_id):
+            raise ShareError(409, "nothing_playable", "This pack was refunded")
 
     async def _insert(self, subject_id: str, **fields) -> SharedQuiz:
         if not fields["question_ids"]:

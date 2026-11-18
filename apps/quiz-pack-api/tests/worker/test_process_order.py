@@ -908,6 +908,45 @@ async def test_refund_during_a_run_is_never_turned_into_a_refund_we_owe(
 
 
 @pytest.mark.asyncio
+async def test_retry_of_a_refunded_order_closes_its_pack(
+    session: AsyncSession,
+    worker_ctx: Dict[str, Any],
+    pipeline_http_mocks: respx.MockRouter,
+) -> None:
+    """#240: Apple refunded the order while an attempt was failing, so ARQ's
+    retry is skipped and nothing will add questions again. A player still in
+    the round they started before the refund must not wait on a pack that
+    says 'generating' forever; the order stays refunded, never refund-owed."""
+    order_id, _ = await _create_order_and_job(session, target_count=3)
+    order = await session.get(GenerationOrder, order_id)
+    pack = QuestionPack(
+        order_id=order_id,
+        prompt=order.prompt,
+        language=order.language,
+        target_count=order.target_count,
+        actual_count=1,
+        generation_status="generating",
+    )
+    session.add(pack)
+    await session.flush()
+    order.pack_id = pack.id
+    order.status = "refunded"
+    pack_id = pack.id
+    await session.commit()
+
+    from app.worker.tasks import process_order
+
+    await process_order(worker_ctx, str(order_id))
+
+    session.expire_all()
+    order = await session.get(GenerationOrder, order_id)
+    assert (order.status, order.refund_eligible) == ("refunded", False)
+    assert (await session.get(QuestionPack, pack_id)).generation_status == "failed"
+
+    await _cleanup(session, order_id)
+
+
+@pytest.mark.asyncio
 async def test_superseded_attempt_never_runs_a_second_pipeline(
     session: AsyncSession,
     worker_ctx: Dict[str, Any],

@@ -362,7 +362,7 @@ def test_uk_count_strip_and_rank_lines():
     assert copy.strip_text(Crowd(others=9, knew=1), "uk") == "Знав 1 із 9."
     assert (
         copy.strip_text(Crowd(others=0, knew=0), "uk")
-        == "Сьогодні до тебе ніхто не грав."
+        == "Перший результат дня."
     )
     assert copy.strip_text(Crowd(others=100, knew=70), "uk") == f"Знали 70{NBSP}%."
 

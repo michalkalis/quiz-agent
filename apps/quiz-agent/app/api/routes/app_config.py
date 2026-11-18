@@ -17,12 +17,13 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ... import app_switches
 from ...config import get_settings
+from ...daily_challenge.gate import daily_challenge_on
 from ...voice_experiment.served import voice_experiment_config
 from ..admin import verify_admin_key
 from ..deps import get_auth_sessionmaker
@@ -83,6 +84,7 @@ class AppConfigResponse(BaseModel):
 
 @router.get("/app-config", response_model=AppConfigResponse)
 async def get_app_config(
+    request: Request,
     sessionmaker=Depends(get_auth_sessionmaker),
 ) -> JSONResponse:
     settings = get_settings()
@@ -97,7 +99,7 @@ async def get_app_config(
         recommended_version_app_store=switches["recommended_version_app_store"],
         recommended_version_testflight=switches["recommended_version_testflight"],
         orders_enabled=switches["orders_enabled"],
-        daily_challenge_enabled=settings.daily_challenge_enabled,
+        daily_challenge_enabled=await daily_challenge_on(request, sessionmaker),
         multiplayer_enabled=settings.multiplayer_enabled,
         multiplayer_enabled_app_store=switches["multiplayer_enabled_app_store"],
         notice=notice,
@@ -108,7 +110,9 @@ async def get_app_config(
     )
     return JSONResponse(
         _without_blank_uk(config.model_dump(mode="json")),
-        headers={"Cache-Control": CACHE_CONTROL},
+        # The daily-challenge beta preview depends on the app's build number
+        # in the User-Agent (#205), so a cache must not share bodies across it.
+        headers={"Cache-Control": CACHE_CONTROL, "Vary": "User-Agent"},
     )
 
 

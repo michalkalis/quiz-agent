@@ -138,4 +138,35 @@ async def test_a_finished_challenge_comes_back_as_its_result(client, app):
     assert body["session"] is None
     assert body["state"]["status"] == "played"
     assert body["state"]["summary"]["score"] == 5
-    assert body["state"]["summary"]["comparison"] == "Nobody played before you today."
+    assert body["state"]["summary"]["comparison"] == "First result today."
+
+
+async def test_beta_builds_reach_the_endpoints_before_launch(client, monkeypatch):
+    """#205 beta preview: with the env switch off, only builds at or above
+    ``daily_challenge_beta_min_build`` reach the endpoints (see
+    test_daily_challenge_gate.py); a store build still gets 404."""
+    from app import app_switches
+
+    monkeypatch.setenv("DAILY_CHALLENGE_ENABLED", "false")
+
+    async def fake_cached(_sessionmaker):
+        return {"daily_challenge_beta_min_build": "87"}
+
+    monkeypatch.setattr(app_switches, "cached_overrides", fake_cached)
+    params = {"date": _today(), "language": "en"}
+    ua = "Hangs/{} CFNetwork/3826.500.111 Darwin/25.0.0"
+
+    store = await client.get(
+        "/api/v1/daily-challenge",
+        params=params,
+        headers={**_bearer(), "User-Agent": ua.format(86)},
+    )
+    beta = await client.get(
+        "/api/v1/daily-challenge",
+        params=params,
+        headers={**_bearer(), "User-Agent": ua.format(89)},
+    )
+
+    assert store.status_code == 404
+    assert beta.status_code == 200
+    assert beta.json()["status"] == "not_played"

@@ -1,7 +1,7 @@
 # #239 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 plán zapísaný (session quiz-agent-87); 239.1 audit kódu a 239.2 prechody appkou sa spúšťajú ako prvé
+**Status:** 2026-11-18 239.1 audit kódu hotový: 24 potvrdených nálezov (4 vysoké), opravy bežia; 239.2 prvý prechod appkou beží
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 
 Podklad: [rešerš 2026-11-18](../research/claude-code-quality-from-subscription-2026-11-18.md) (čo ide z predplatného, čo funguje, čo je plytvanie).
@@ -53,4 +53,39 @@ Mutačné sondy na peniaze, limity, vyhodnotenie odpovedí a stavy kvízu; každ
 
 ## Výsledky
 
-(dopĺňa sa po každej časti)
+### 239.1 — Audit kódu, kolo 2 (2026-11-18, session quiz-agent-87)
+
+38 agentov, 10 oblastí. 32 nálezov → 28 preverených skeptikom → **24 potvrdených** (6 zopakovaných skriptom, 18 stopou v kóde), 3 vyvrátené, 1 neistý, 4 nižšie zaradené nepreverené. Opravy idú cez PR s testom, ktorý bez opravy zlyhá.
+
+| # | Závažnosť | Oblasť | Nález | Kde | Stav |
+|---|---|---|---|---|---|
+| 1 | vysoká | Hra spolu | Hra skončí 30 minút po otvorení miestnosti, bez poradia a bez chyby | `rooms/service.py:152` | oprava beží |
+| 2 | vysoká | Účet | Zmazanie účtu a export údajov u prihláseného hráča účet nezmaže | `routes/auth.py:364` | oprava beží |
+| 3 | vysoká | Účet | Po odhlásení sa na tom istom telefóne už nedá prihlásiť iným Apple ID | `usage/account_merge.py:60` | oprava beží |
+| 4 | vysoká | Prevádzka | Hlásenie o zlyhanom nasadení a postup nasadenia stále posielajú na Fly; nasledovanie by vrátilo starú appku na starej databáze | `backend-deploy.yml:239` | oprava beží |
+| 5 | stredná | Hra spolu | Výpadok hodnotenia odpovede zasekne miestnosť a stratí odpoveď posledného hráča | `rooms/play.py:248` | oprava beží |
+| 6 | stredná | Zdieľaný kvíz | Jediné hranie zdieľaného balíka prepadne, keď štart zlyhá alebo ho hráč zruší (spolu s nálezom 22) | `shared_quiz/service.py:120` | čaká |
+| 7 | stredná | Zdieľaný kvíz | Okno s výsledkami sa točí donekonečna, keď nie je s kým porovnať | `SharedQuizResultsSheet.swift:38` | čaká |
+| 8 | stredná | Zdieľaný kvíz | „Pošli kamarátovi“ po predčasnom ukončení kola vždy zlyhá | `QuizViewModel+SharedQuiz.swift:70` | čaká |
+| 9 | stredná | Peniaze | Záporný zostatok po vrátení peňazí za balík blokuje aj bezplatné otázky každý mesiac | `routes/misc.py:225` | čaká |
+| 10 | stredná | Peniaze | Vlastný balík po vrátení peňazí ostáva hrateľný (zdieľané odkazy fungujú) | `routes/sessions.py:68` | čaká |
+| 11 | stredná | Peniaze | Obnova nákupov vytvorí stratenú objednávku bez publika a obťažnosti | `storekit/reconcile.py:56` | čaká |
+| 12 | stredná | Vlastné balíky | Po zastavení pre rozpočet ostane čiastočný balík „pripravuje sa“ a hráč čaká donekonečna | `worker/sweep.py:189` | čaká |
+| 13 | stredná | Vlastné balíky | Worker, ktorý dobehne po vrátení peňazí, prepíše stav „vrátené“ | `worker/tasks.py:324` | čaká |
+| 14 | stredná | Kvíz v appke | Napísaná odpoveď počas preskakovania zasekne kvíz na 35 s a ukáže falošnú chybu | `QuizViewModel.swift:2029` | čaká |
+| 15 | stredná | Kvíz v appke | Preskočenie MCQ pri otvorenom mikrofóne nahrávanie neukončí | `QuizViewModel.swift:2152` | čaká |
+| 16 | stredná | Denná výzva | Zdieľaný odkaz na dennú výzvu obchádza obmedzenie pre betu | `shared_quiz/service.py:144` | čaká |
+| 17 | stredná | Denná výzva | Karta dennej výzvy po polnoci ukazuje včerajší deň | `HomeDailyChallengeSection.swift:43` | čaká |
+| 18 | stredná | Denná výzva | Dátum výzvy podľa kalendára telefónu: iný než gregoriánsky kalendár výzvu rozbije | `DailyChallengeDay.swift:26` | čaká |
+| 19 | stredná | Účet | Predplatné kúpené počas odhlásenia sa po prihlásení neprenesie | `usage/account_merge.py:145` | oprava beží |
+| 20 | stredná | Hlas na serveri | Denný strop prepisu reči verí dĺžke, ktorú si nahraný súbor sám uvedie | `usage/caps.py:104` | čaká |
+| 21 | stredná | Hlas na serveri | Kontrola zostatku ElevenLabs stojí pred každou požiadavkou na hlas, mimo 6 s limitu | `tts/service.py:242` | čaká |
+| 22 | stredná | Kostra appky | Automatické opakovanie štartu zdieľaného balíka minie jediné hranie | `QuizViewModel.swift:1321` | čaká |
+| 23 | stredná | Kostra appky | Odkaz od kamaráta pri prvom spustení preskočí súhlas s AI službami | `ContentView.swift:222` | čaká |
+| 24 | stredná | Kostra appky | Trubbo Beta: vynútená aktualizácia otvára TestFlight App Store appky | `UpdateRequiredView.swift:94` | čaká |
+
+**Neistý (posúdenie beží):** výpadok SSH počas nasadenia môže nechať službu zastavenú bez návratu (`infra/hetzner/deploy-ssh.sh:146`).
+
+**Vyvrátené:** prepnutie „Čo hráme“ v čakárni ukončí hru · kontrola duplicít porovnáva so súkromnými balíkmi iných zákazníkov · ukrajinské MCQ číta latinské písmená.
+
+**Nepreverené (nižšia priorita):** jedno miesto na doklad o nákupe balíka, druhý nákup prepíše nepoužitý (`PackPurchaseService.swift:175`) · appka ukazuje Plus zo surového stavu predplatného, server dáva bezplatných 30 (`UsageInfo.swift:48`) · 6 s limit hlasu nastavený pre rýchlejší model, ukrajinčina beží na pomalšom (`tts/providers.py:60`) · zdieľaný odkaz ťuknutý počas hry spolu sa spustí neskôr sám (`ContentView.swift:167`).

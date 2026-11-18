@@ -18,10 +18,27 @@ _NON_WORD_RE = re.compile(r"[^\w ]+", re.UNICODE)
 _SPACES_RE = re.compile(r"\s+")
 
 
+def _fold_char(c: str) -> str:
+    # #231: a Cyrillic letter is kept whole. NFKD would split й into и + breve
+    # and ї into і + diaeresis, and й/и, ї/і are different Ukrainian letters
+    # ("Київ" is not "киів"). A combining stress mark on its own still goes.
+    if "\u0400" <= c <= "\u04ff":
+        return c
+    return "".join(
+        d for d in unicodedata.normalize("NFKD", c) if not unicodedata.combining(d)
+    )
+
+
 def fold(text: str) -> str:
-    """Casefolded, accent-folded, punctuation-free comparison form."""
-    decomposed = unicodedata.normalize("NFKD", str(text).casefold())
-    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
+    """Casefolded, accent-folded, punctuation-free comparison form.
+
+    Latin letters lose their diacritics (sk/cs "žirafa" → "zirafa"); Cyrillic
+    letters keep theirs. The Ukrainian apostrophe ʼ (U+02BC) is a letter to
+    Unicode, so it is turned into ' and split like the other apostrophes
+    ("мʼясо" folds like "м'ясо").
+    """
+    composed = unicodedata.normalize("NFC", str(text).casefold().replace("ʼ", "'"))
+    stripped = "".join(_fold_char(c) for c in composed)
     return _SPACES_RE.sub(" ", _NON_WORD_RE.sub(" ", stripped)).strip()
 
 

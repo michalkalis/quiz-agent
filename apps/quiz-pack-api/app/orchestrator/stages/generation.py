@@ -500,7 +500,7 @@ class GenerationStage:
                     update={
                         "extra": {
                             **provenance.extra,
-                            "house_style": house_style_version(),
+                            "house_style": house_style_version(ctx.language),
                         }
                     }
                 )

@@ -313,7 +313,7 @@ class ScoringStage:
             # craft_guards.undated_record_reason): counted and logged for
             # every question, never a drop, even under CRAFT_GUARDS_ENFORCE.
             undated_reason = craft_guards.undated_record_reason(
-                q.question, q.explanation
+                q.question, q.explanation, language=q.language
             )
             if undated_reason is not None:
                 undated_flagged += 1
@@ -334,7 +334,8 @@ class ScoringStage:
                 )
             if craft_reason is None:
                 craft_reason = craft_guards.units_reason(
-                    q.question, q.correct_answer, q.possible_answers
+                    q.question, q.correct_answer, q.possible_answers,
+                    language=q.language,
                 )
             if craft_reason is None and q.id in tf_excess:
                 craft_reason = "tf_key_imbalance"

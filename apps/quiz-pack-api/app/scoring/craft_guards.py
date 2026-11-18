@@ -101,6 +101,29 @@ _DATE_ANCHOR_RE = re.compile(
     r"victorian|renaissance|middle ages|bce?|ad|ce|world war)\b"
 )
 
+# #231 — Ukrainian as a fourth language: the same two guards in Ukrainian,
+# used only when the caller says the row is ``uk`` (the English lists above
+# never match Cyrillic, so a uk row slipped through both). Imperial units are
+# quantified by digits only; "фунт стерлінгів" is money, not weight.
+_UK_IMPERIAL_ALWAYS_RE = re.compile(r"(?i)(?:\bфаренгейт\w*|\bмил\w* на годину)")
+_UK_IMPERIAL_QUANTIFIED_RE = re.compile(
+    r"(?i)\d[\d\s,.]*\s*(?:фут\w*|мил[яіьею]\w*|фунт(?!\w*\s+стерлінг)\w*|"
+    r"дюйм\w*|ярд\w*|галон\w*|унці\w*|акр\w*)"
+)
+_UK_METRIC_RE = re.compile(
+    r"(?i)(?:\bцельсі\w*|\bкілометр\w*|\bкм\b|\bметр(?:а|и|ів|ах|ом)?\b|"
+    r"\bсантиметр\w*|\bміліметр\w*|\bсм\b|\bмм\b|\bкілограм\w*|\bкг\b|"
+    r"\bграм(?:а|и|ів)?\b|\bлітр\w*|\bтонн\w*)"
+)
+_UK_RECORD_MARKER_RE = re.compile(
+    r"(?i)(?:\b[ув]перше\b|\bрекорд\w*|\bніколи раніше\b|"
+    r"\bнай\w+ (?:у|в) світі\b)"
+)
+_UK_DATE_ANCHOR_RE = re.compile(
+    r"(?i)(?:\b\d0-х\b|\bстоліт\w*|\bсторіч\w*|\bсередньовіч\w*|\bантичн\w*|"
+    r"\bстародавн\w*|\bдо н\.\s?е\.|\bсвітов\w+ війн\w*)"
+)
+
 
 def _content_tokens(text: str) -> set[str]:
     return {
@@ -279,6 +302,7 @@ def units_reason(
     question: str,
     correct_answer: object,
     possible_answers: dict | None = None,
+    language: str | None = None,
 ) -> str | None:
     """Reason string when a figure is imperial-only, else None.
 
@@ -297,9 +321,12 @@ def units_reason(
     elif correct_answer is not None:
         parts.append(str(correct_answer))
     text = " ".join(parts)
-    if _METRIC_RE.search(text):
+    uk = language == "uk"
+    if _METRIC_RE.search(text) or (uk and _UK_METRIC_RE.search(text)):
         return None
     m = _IMPERIAL_ALWAYS_RE.search(text) or _IMPERIAL_QUANTIFIED_RE.search(text)
+    if m is None and uk:
+        m = _UK_IMPERIAL_ALWAYS_RE.search(text) or _UK_IMPERIAL_QUANTIFIED_RE.search(text)
     if m:
         marker = " ".join(m.group(0).split()).lower()
         return f"imperial_units({marker})"
@@ -307,7 +334,7 @@ def units_reason(
 
 
 def undated_record_reason(
-    question: str, explanation: str | None = None
+    question: str, explanation: str | None = None, language: str | None = None
 ) -> str | None:
     """Reason string when a record/first/milestone claim has no date, else None.
 
@@ -319,10 +346,13 @@ def undated_record_reason(
     until it is validated on a founder-rated batch (#99 Phase 4).
     """
     text = f"{question or ''} {explanation or ''}"
+    uk = language == "uk"
     m = _RECORD_MARKER_RE.search(text)
+    if m is None and uk:
+        m = _UK_RECORD_MARKER_RE.search(text)
     if m is None:
         return None
-    if _DATE_ANCHOR_RE.search(text):
+    if _DATE_ANCHOR_RE.search(text) or (uk and _UK_DATE_ANCHOR_RE.search(text)):
         return None
     return f"undated_record({m.group(0).lower()})"
 

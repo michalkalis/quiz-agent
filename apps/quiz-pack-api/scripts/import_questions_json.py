@@ -12,7 +12,7 @@ Review status is decided **per row** by default (``--review-status auto``,
 #177): a shared-corpus row (en, sk or cs, see
 ``app.scoring.machine_approval.MACHINE_APPROVABLE_LANGUAGES``) that cleared
 every machine gate with zero findings lands as ``approved`` (stamped
-``reviewed_by="machine:gates-v1"``) and serves to every client; anything with a
+``reviewed_by="machine:gates-v2"``) and serves to every client; anything with a
 finding — or any missing evidence, the predicate is fail-closed — lands as
 ``pending_review`` (TestFlight-only serving). Founder decision 2026-09-10
 replaced the 2026-08-28 rule that only a human could produce ``approved``; see
@@ -147,7 +147,7 @@ def main() -> int:
                         choices=(AUTO_REVIEW_STATUS, *REVIEW_STATUSES),
                         help="review_status for imported rows. Default 'auto' (#177): decided per "
                              "row by the machine-approval predicate — clean en/sk/cs rows become "
-                             "'approved' (reviewed_by=machine:gates-v1), the rest "
+                             "'approved' (reviewed_by=machine:gates-v2), the rest "
                              "'pending_review'. An explicit value forces every row.")
     parser.add_argument("--batch-size", type=int, default=100,
                         help="OpenAI embedding batch size (default 100).")

@@ -932,7 +932,8 @@ class AdvancedQuestionGenerator:
                 )
             if reason is None:
                 reason = craft_guards.units_reason(
-                    q.question, q.correct_answer, q.possible_answers
+                    q.question, q.correct_answer, q.possible_answers,
+                    language=q.language,
                 )
             if reason is not None:
                 filtered += 1

@@ -9,6 +9,7 @@ for the why of each filter.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -17,6 +18,8 @@ from app import uk_policy
 from app.sourcing.openai_web_search_source import _cited_url
 from app.sourcing.web_search_source import _extract_domain, classify_credibility
 from app.translation_verification.normalize import fold
+
+logger = logging.getLogger(__name__)
 
 MAX_SEEDS = 25
 MAX_PER_SUBJECT = 2
@@ -108,15 +111,26 @@ def cite_filter(
 def topic_policy_cut(
     kept: list[Seed], lang: str, dropped: dict[str, int]
 ) -> list[Seed]:
-    """Ukrainian seeds only: drop the war since 2014, current politics and
-    Russia (founder 2026-11-08). Blunt on purpose, see ``app.uk_policy``."""
+    """Ukrainian seeds only (founder 2026-11-08, tiers in ``app.uk_policy``).
+
+    A reject-tier seed (the war since 2014, current politics) is dropped and
+    counted as ``topic_policy``. A hold-tier seed (Russia, war, a year from
+    2014 on…) may well be history (the Mongol invasion of 1240), so it is
+    kept and logged with its reason. The seed is only a brief line; the gate
+    that holds content for a human is ``machine_approval``, which checks every
+    question made from it against the same policy (all text fields).
+    """
     if lang != uk_policy.UK:
         return kept
     out: list[Seed] = []
     for seed in kept:
-        if uk_policy.topic_policy_reason([seed.subject, seed.fact, seed.angle]):
+        reason = uk_policy.topic_policy_reason([seed.subject, seed.fact, seed.angle])
+        if reason and reason.startswith(uk_policy.REJECT_PREFIX):
             _bump(dropped, "topic_policy")
+            logger.info("uk seed %r dropped: %s", seed.subject, reason)
             continue
+        if reason:
+            logger.warning("uk seed %r kept, held for a human: %s", seed.subject, reason)
         out.append(seed)
     return out
 

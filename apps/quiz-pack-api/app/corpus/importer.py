@@ -9,10 +9,13 @@ Order of operations in :func:`import_questions`:
 1. #158 fail-closed guard — rows the verifier held / failed never enter.
 2. De-duplicate by id (first surviving row wins).
 3. Review status (#177): ``review_status="auto"`` decides per row via the
-   machine-approval predicate (``approved`` + ``reviewed_by=machine:gates-v1``
+   machine-approval predicate (``approved`` + ``reviewed_by=GATE_VERSION``
    when every gate cleared, else ``pending_review``); an explicit status is
    forced onto every row (the human promotion / quarantine path). Auto-approve
-   is allowed for en/sk/cs (``app.scoring.machine_approval``).
+   is allowed for en/sk/cs/uk (``app.scoring.machine_approval``). A uk row
+   needs a passing naturalness verdict, which the importer writes only on
+   ``execute`` (step 4), so a dry run shows new uk rows pending
+   ``naturalness=missing`` and uk rows are decided again after labelling.
 4. Existing ids are skipped; the rest are embedded (question + question/answer
    vectors, #170 D2/D10) and inserted idempotently on the primary key.
 
@@ -38,7 +41,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from app import feature_flags
+from app import feature_flags, uk_policy
 from app.db import (
     PIPELINE_OWNED_COLUMNS,
     QuestionRow,
@@ -59,6 +62,7 @@ from app.scoring.machine_approval import (
     GATE_VERSION,
     machine_approval_block_reason,
     tf_imbalance_excess_ids,
+    uk_texts,
 )
 
 logger = logging.getLogger("import_questions_json")
@@ -121,21 +125,31 @@ def _verification_block_reason(q: Question) -> str | None:
         return "held_for_review"
     if extra.get("verified") is False:
         return "verified=False"
+    if q.language == uk_policy.UK:
+        # #231: the reject tier (the war since 2014, current politics) never
+        # enters, not even for review; the hold tier is machine_approval's.
+        reason = uk_policy.topic_reject_reason(uk_texts(q))
+        if reason is not None:
+            return f"uk_policy={reason}"
     return None
 
 
 def _apply_auto_review_status(
-    questions: list[Question], per_question: dict[str, str] | None = None
+    questions: list[Question],
+    per_question: dict[str, str] | None = None,
+    tf_excess: set[str] | None = None,
 ) -> dict[str, int]:
     """Stamp ``approved`` / ``pending_review`` per row (#177); return reasons.
 
     ``approved`` here means "every machine gate cleared with zero findings",
-    marked ``reviewed_by=machine:gates-v1`` so it stays distinguishable from a
+    marked ``reviewed_by=GATE_VERSION`` so it stays distinguishable from a
     human verdict (`reviewed_by LIKE 'machine:%'`). The returned dict maps
     block reason → row count, so a dry run shows WHY rows stayed pending
     instead of only how many. ``per_question`` (optional) collects id → reason.
+    ``tf_excess`` defaults to the T/F balance of ``questions`` themselves.
     """
-    tf_excess = tf_imbalance_excess_ids(questions)
+    if tf_excess is None:
+        tf_excess = tf_imbalance_excess_ids(questions)
     now = datetime.now(UTC)
     reasons: dict[str, int] = {}
     for q in questions:
@@ -286,6 +300,31 @@ def _embed_questions(needs_embedding: list[Question], batch_size: int) -> None:
         logger.info("Embedded batch %d/%d (%d row(s))", i, batches, len(batch))
 
 
+def _redecide_uk_rows(
+    prepared: list[Question], to_insert: list[Question], result: ImportResult
+) -> None:
+    """#231: decide new uk rows again now that they carry a naturalness
+    verdict (or still none, when the check is off or failed: they stay
+    pending). en/sk/cs rows are not touched."""
+    uk_rows = [q for q in to_insert if q.language == uk_policy.UK]
+    if not uk_rows:
+        return
+    for q in uk_rows:
+        old = result.pending_reasons.pop(q.id, None)
+        if old is not None:
+            result.block_reasons[old] -= 1
+            if not result.block_reasons[old]:
+                del result.block_reasons[old]
+    reasons = _apply_auto_review_status(
+        uk_rows, result.pending_reasons, tf_imbalance_excess_ids(prepared)
+    )
+    for reason, n in reasons.items():
+        result.block_reasons[reason] = result.block_reasons.get(reason, 0) + n
+    result.statuses.update({q.id: q.review_status for q in uk_rows})
+    result.approved = sum(1 for q in to_insert if q.review_status == "approved")
+    result.pending = len(to_insert) - result.approved
+
+
 async def import_questions(
     questions: Iterable[Question],
     *,
@@ -369,6 +408,8 @@ async def import_questions(
                     q for q in to_insert
                     if q.embedding is None or q.embedding_qa is None
                 ]
+        if review_status == AUTO_REVIEW_STATUS:
+            _redecide_uk_rows(prepared, to_insert, result)
 
         if needs_embedding:
             if not os.getenv("OPENAI_API_KEY"):

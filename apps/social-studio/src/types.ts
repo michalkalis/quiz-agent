@@ -85,4 +85,6 @@ export type RoundProps = {
 	hookIndex: number;
 	/** `solo`: the hook line alone before the first question; otherwise fused onto it. */
 	opening?: Opening;
+	/** Replaces the language's opening line ("3 trivia questions…"), e.g. for a holiday round. */
+	openLine?: string;
 };

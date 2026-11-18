@@ -6,7 +6,8 @@ primary_region = "cdg"
 kill_timeout = 30
 
 # Build from repository root to access monorepo packages
-# Deploy command: cd ../../ && fly deploy -c apps/quiz-agent/fly.toml
+# DO NOT DEPLOY (since 2026-11-06, #222): this Fly app runs only the forwarder
+# (infra/fly-forwarder/); prod is on Hetzner. Kept for the cutover's Back path.
 [build]
   dockerfile = "Dockerfile"
   build_context = "../.."

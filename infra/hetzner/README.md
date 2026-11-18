@@ -33,12 +33,12 @@ Plan: [`docs/issues/issue-222-hetzner-migration.md`](../../docs/issues/issue-222
 | Start the order worker | `docker compose --profile worker up -d pack-worker` (prod only: a copied DB would re-run real orders on paid keys) |
 | psql | `docker compose exec postgres psql -U postgres -d quiz_pack` |
 | Reload Caddy | `docker compose up -d --force-recreate caddy` (a checkout replaces the Caddyfile and the running container keeps seeing the old one, so `caddy reload` is not enough) |
-| Refresh secrets (from a laptop) | `infra/hetzner/pull-env.sh rehearsal\|prod` |
+| Refresh secrets (from a laptop) | `infra/hetzner/pull-env.sh rehearsal\|prod`: cutover only. **Do not run since 2026-11-06**: it reads the Fly machines, which now run the forwarder, and would overwrite the server's app env files |
 | WAL archive status | `docker compose exec postgres psql -U postgres -c 'select * from pg_stat_archiver'` |
 | Base backup now | `SSH_ORIGINAL_COMMAND=basebackup ~/trubbo/bin/backup-ssh.sh` |
-| Copy the DB Fly ↔ Hetzner (laptop) | `infra/hetzner/db-copy.sh compare\|fly-to-hetzner\|hetzner-to-fly` |
+| Copy the DB Fly ↔ Hetzner (laptop) | `infra/hetzner/db-copy.sh compare\|fly-to-hetzner\|hetzner-to-fly`: cutover and its Back path only. **Never `fly-to-hetzner` now**: it replaces the prod DB with the frozen 2026-11-06 Fly copy |
 | Social posts on time | cron `5 * * * * ~/trubbo/bin/social-publish-trigger.sh` starts the social-publish workflow hourly (GitHub's own schedule lags hours); token in `env/github-dispatch.env` |
-| Prod tunnel for mba tools (laptop) | `infra/hetzner/local-prod-env.sh hetzner\|fly` |
+| Prod tunnel for mba tools (laptop) | `infra/hetzner/local-prod-env.sh hetzner` (`fly` only on the cutover's Back path: it points the tools at the old Fly DB) |
 
 ## Client IP
 

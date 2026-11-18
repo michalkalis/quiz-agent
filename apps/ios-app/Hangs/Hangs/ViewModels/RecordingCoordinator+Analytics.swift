@@ -61,7 +61,11 @@ extension RecordingCoordinator {
             frontMicApplicable: mic.builtInMicOnly && !voiceProcessing,
             micDataSource: mic.micDataSource,
             micPolarPattern: mic.micPolarPattern,
-            rejectedCount: rejectedTranscriptCount()
+            rejectedCount: rejectedTranscriptCount(),
+            trigger: recordingTrigger?.analyticsValue,
+            micOpenDelayMs: micOpenDelayMs,
+            peakDb: detection.peakDb.map { Int($0.rounded()) },
+            micPermission: audioService.microphonePermissionStatus.analyticsValue
         )
         trackAnalytics(.answerCaptured(report))
     }

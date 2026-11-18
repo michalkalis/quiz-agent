@@ -32,10 +32,10 @@ struct ListenBarRecordingStatusTests {
 
     /// WHY: before any speech the driver needs the instruction AND the fact
     /// that the mic is open — the status says the second, the caption the first.
-    @Test("waiting for speech: \"Listening…\" over the instruction")
+    @Test("waiting for speech: \"Speak now\" (#240.9) over the instruction")
     func listening() async throws {
         try await host(ListenBar(mode: .answer(.open))) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "Listening…") }
+            #expect(throws: Never.self) { try tree.find(text: "Speak now") }
             #expect(throws: Never.self) { try tree.find(text: "Say your answer") }
             #expect(throws: (any Error).self, "no speech was heard yet") {
                 try tree.find(text: "Hearing you…")
@@ -52,7 +52,7 @@ struct ListenBarRecordingStatusTests {
             #expect(throws: Never.self) { try tree.find(text: "Hearing you…") }
             #expect(throws: Never.self) { try tree.find(text: "I'll stop when you go quiet") }
             #expect(throws: (any Error).self, "the status must move on, not stack") {
-                try tree.find(text: "Listening…")
+                try tree.find(text: "Speak now")
             }
         }
     }
@@ -80,7 +80,7 @@ struct ListenBarRecordingStatusTests {
     func slimKeepsInstruction(kind: ListenBar.AnswerKind, instruction: String) async throws {
         let bar = ListenBar(mode: .answer(kind), size: .slim)
         try await host(bar) { tree in
-            #expect(throws: Never.self) { try tree.find(text: "Listening…") }
+            #expect(throws: Never.self) { try tree.find(text: "Speak now") }
             #expect(throws: Never.self) { try tree.find(text: instruction) }
             let label = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
                 .accessibilityLabel().string()

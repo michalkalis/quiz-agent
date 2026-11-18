@@ -206,7 +206,7 @@ struct QuestionFooterInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self, "the bar is the recording surface") {
-                try tree.find(text: "Listening…")
+                try tree.find(text: "Speak now")
             }
             #expect(throws: (any Error).self, "the empty transcript card is gone") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")

@@ -42,32 +42,31 @@ final nonisolated class RSRecordingTests: XCTestCase {
         RSFlow.assertAlive(app, "RS-01")
     }
 
-    // MARK: RS-02 — Hard auto-stop fires when nothing is said
+    // MARK: RS-02 — Silence ends the recording with a calm way on
 
     // Regression guarded: with no answer ever spoken, the speech-start window
-    // and the hidden dead-air cap (real time — not shortened under --ui-test)
-    // must stop recording and route to a recoverable state.
-    // If it lands on `error`, the banner text must be human-readable.
+    // (real time, not shortened under --ui-test) must stop recording. #240.9
+    // (founder 2026-11-18): silence the phone measured (the mock detector
+    // vouches "quiet") is not a failed attempt: nothing is uploaded, there is
+    // no automatic "didn't catch that" retry and no Again/Skip sheet; the
+    // question stays on screen with a calm speak / type / move on line.
     @MainActor
     func testRS02HardAutoStopWithoutSTTEvents() async throws {
         let app = RSFlow.launch()
         let question = RSFlow.startQuiz(app)
         RSFlow.startRecording(question)
 
-        // Nothing spoken. Only the recording's own deadlines can end this. The
-        // first empty recording re-records once on its own (#185 track B, the
-        // "didn't catch that" retry, passing through askingQuestion); the
-        // second lands on the no-answer sheet (`processing`) or an error.
-        let landed = question.waitForState(in: ["processing", "error"], timeout: 45)
-        XCTAssertTrue(
-            ["processing", "askingQuestion", "error"].contains(landed),
-            "RS-02: auto-stop landed on '\(landed)', not a recoverable state"
-        )
-        if landed == "error" {
-            let text = question.errorBanner.label
-            XCTAssertFalse(text.isEmpty, "RS-02: error state with an empty banner")
-            XCTAssertFalse(text.contains("Optional("), "RS-02: banner leaks an Optional: '\(text)'")
-        }
+        // Nothing spoken. Only the recording's own deadlines can end this.
+        question.waitForStateToLeave("recording", timeout: 20)
+        XCTAssertEqual(question.stateValue, "askingQuestion", "RS-02: silence must leave the player on the question")
+        XCTAssertTrue(question.silencePrompt.waitForExistence(timeout: 3), "RS-02: no calm prompt after silence")
+        XCTAssertFalse(question.retryHint.exists, "RS-02: silence must not say \"didn't catch that\"")
+        RSFlow.assertNoErrorBanner(question, "RS-02")
+
+        // No automatic retry: the mic stays closed until the player asks.
+        let reopened = question.stopButton.waitForExistence(timeout: 8)
+        XCTAssertFalse(reopened, "RS-02: the mic reopened by itself after silence")
+        XCTAssertEqual(question.stateValue, "askingQuestion")
         RSFlow.assertAlive(app, "RS-02")
     }
 

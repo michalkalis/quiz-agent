@@ -22,12 +22,20 @@ final class LiveAnalyticsClient: AnalyticsClient {
 
     private let networkService: NetworkServiceProtocol
     private let clock: AnyClock<Duration>
+    /// #240.9: `build_channel` on every event (app_store / testflight /
+    /// debug), so store players are never mixed with testers in the numbers.
+    private let buildChannel: String
     private var pending: [AnalyticsBatch.Event] = []
     private var flushTimer: Task<Void, Never>?
 
-    init(networkService: NetworkServiceProtocol, clock: AnyClock<Duration> = .continuous) {
+    init(
+        networkService: NetworkServiceProtocol,
+        clock: AnyClock<Duration> = .continuous,
+        buildChannel: String = BuildChannel.analyticsValue()
+    ) {
         self.networkService = networkService
         self.clock = clock
+        self.buildChannel = buildChannel
     }
 
     func track(_ event: AnalyticsEvent, sessionId: String?) {
@@ -35,7 +43,7 @@ final class LiveAnalyticsClient: AnalyticsClient {
             name: event.name,
             occurredAt: .now,
             sessionId: sessionId,
-            properties: event.properties
+            properties: event.properties.merging(["build_channel": .string(buildChannel)]) { current, _ in current }
         ))
         if pending.count >= Self.batchThreshold {
             flush()

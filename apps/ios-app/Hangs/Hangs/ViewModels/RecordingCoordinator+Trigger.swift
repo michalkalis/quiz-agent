@@ -37,6 +37,19 @@ enum RecordingTrigger: String, Sendable {
         case .tap, .voiceCommand, .bargeIn, .rerecord, .emptyAnswerRetry: false
         }
     }
+
+    /// #240.9: `answer_captured.trigger`, so the data can tell a mic the app
+    /// opened by itself from one the player asked for.
+    var analyticsValue: String {
+        switch self {
+        case .autoRecord, .foregroundResume: "auto"
+        case .tap: "tap"
+        case .voiceCommand: "voice_command"
+        case .bargeIn: "barge_in"
+        case .rerecord: "rerecord"
+        case .emptyAnswerRetry: "retry"
+        }
+    }
 }
 
 extension RecordingCoordinator {

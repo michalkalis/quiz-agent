@@ -85,6 +85,11 @@ struct QuestionVoiceFooter: View {
                 EmptyAnswerRetryHint()
                     .padding(.horizontal, Self.gutter)
                     .transition(.opacity)
+            } else if viewModel.showsSilencePrompt {
+                // #240.9: the Answer / Type / Skip row below is the way on.
+                SilentAnswerPrompt(isMultipleChoice: false)
+                    .padding(.horizontal, Self.gutter)
+                    .transition(.opacity)
             } else if viewModel.showsSpellingHint {
                 // #208.6: after a rejected transcript, before the next try.
                 AnswerSpellingHint()

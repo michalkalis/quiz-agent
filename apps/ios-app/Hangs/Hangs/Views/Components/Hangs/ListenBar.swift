@@ -499,8 +499,11 @@ struct ListenBar: View {
             ))
         // #185 track F: the state, not the instruction — the instruction
         // moved to `answerInstruction` (the sub-line).
+        // #240.9 (founder 2026-11-18): the open mic says in words that it is
+        // the player's turn. "Listening…" read as the app being busy, and most
+        // store answers were silence.
         case .answer:
-            return speechHeard ? Text("Hearing you…") : Text("Listening…")
+            return speechHeard ? Text("Hearing you…") : Text("Speak now")
         }
     }
 

@@ -57,6 +57,16 @@ final class AnswerLatencyTracker {
         speechOnset = clock.now.advanced(by: .milliseconds(firstSpeechMs - durationMs))
     }
 
+    /// #240.9: active time since the window opened (pauses cut out), without
+    /// closing it: `answer_captured.mic_open_delay_ms`. nil when unknown, as
+    /// for a second recording after the first answer was sent.
+    func elapsedMs(questionId: String?) -> Int? {
+        guard questionId != nil, questionId == self.questionId, let openedAt else { return nil }
+        var paused = pausedTotal
+        if let pausedSince { paused += pausedSince.duration(to: clock.now) }
+        return max(0, Int((openedAt.duration(to: clock.now) - paused) / .milliseconds(1)))
+    }
+
     /// The latency of the answer being submitted, or nil when unknown. Closes
     /// the window: it measures the first attempt only.
     func consumeLatencyMs(questionId: String?, isRetry: Bool, voice: Bool) -> Int? {

@@ -26,6 +26,17 @@ extension QuizViewModel {
         ))
     }
 
+    /// #240.9: leaving a round early — how, and on which question. Built
+    /// before the exit tears the state down.
+    func quizAbandonedEvent(reason: QuizLeaveReason) -> AnalyticsEvent {
+        .quizAbandoned(
+            questionsAnswered: questionsAnswered,
+            phase: quizState.label,
+            reason: reason,
+            question: questionScreenNumber
+        )
+    }
+
     func trackAnswerSubmitted(_ inputMode: AnswerInputMode, questionId: String?) {
         let isRetry = attemptLedger.noteAnswerAttempt(questionId: questionId)
         let latencyMs = attemptLedger.latency.consumeLatencyMs(

@@ -70,4 +70,17 @@ nonisolated enum BuildChannel {
         #endif
         return isDebugBuild || isTestFlight(receiptURL: receiptURL, isAppStoreBuild: false)
     }
+
+    /// #240.9: the channel every analytics event carries (`build_channel`).
+    /// The App Store variant wins, as everywhere in this file; then a
+    /// development build; then the receipt.
+    static func analyticsValue(
+        receiptURL: URL? = Bundle.main.appStoreReceiptURL,
+        isDebugBuild: Bool = BuildChannel.isDebugBuild,
+        isAppStoreBuild: Bool = BuildChannel.isAppStoreBuild
+    ) -> String {
+        if isAppStoreBuild { return "app_store" }
+        if isDebugBuild { return "debug" }
+        return isTestFlight(receiptURL: receiptURL, isAppStoreBuild: false) ? "testflight" : "app_store"
+    }
 }

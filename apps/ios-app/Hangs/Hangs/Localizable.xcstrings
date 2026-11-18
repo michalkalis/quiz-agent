@@ -1882,6 +1882,23 @@
         }
       }
     },
+    "Answer by voice" : {
+      "comment" : "Button on a multiple-choice question after silence: opens the mic again (#240.9)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověz hlasem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovedz hlasom"
+          }
+        }
+      }
+    },
     "Answer locked" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -9150,6 +9167,23 @@
         }
       }
     },
+    "Speak now" : {
+      "comment" : "Listen bar caption while the mic is open for the answer and nothing has been heard yet (#240.9)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teď mluv"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teraz hovor"
+          }
+        }
+      }
+    },
     "Speech recognition is off" : {
       "comment" : "Listen bar note: speech recognition was refused; a Settings button sits beside it",
       "localizations" : {
@@ -9180,6 +9214,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Štart s deťmi"
+          }
+        }
+      }
+    },
+    "Take your time. Speak, tap an option or move on." : {
+      "comment" : "Calm line on a multiple-choice question after the mic heard nothing for the whole answer window; nothing was sent",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikam nespěchej. Mluv, klepni na možnost nebo přejdi na další."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikam sa neponáhľaj. Hovor, klepni na možnosť alebo prejdi na ďalšiu."
+          }
+        }
+      }
+    },
+    "Take your time. Speak, type or move on." : {
+      "comment" : "Calm line on an open question after the mic heard nothing for the whole answer window; nothing was sent",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikam nespěchej. Mluv, napiš nebo přejdi na další."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikam sa neponáhľaj. Hovor, napíš alebo prejdi na ďalšiu."
           }
         }
       }

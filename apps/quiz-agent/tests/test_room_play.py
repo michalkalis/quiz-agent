@@ -591,3 +591,42 @@ async def test_a_judge_outage_on_the_last_answer_keeps_that_answer(game):
     assert rnd["phase"] == "revealed"
     points = {r["participant_id"]: r["points"] for r in rnd["results"]}
     assert points[await game.pid("peto")] == 1.0
+
+
+async def test_a_question_the_judge_cannot_grade_is_cancelled_when_the_host_moves_on(
+    game,
+):
+    # Founder 2026-11-18: a room can always move on, and nobody is scored on a
+    # question that could not be judged fairly, not even a player whose answer
+    # was right. Polls keep working while the judge is down.
+    later = OPEN.model_copy(update={"id": "q_open2", "correct_answer": "Rome"})
+    game.service.play.flow.question_retriever.questions.append(later)
+    await game.setup(max_questions=3, thinking_seconds=10)
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_mcq", "b")
+    await game.post("next")
+    await game.post("open", question_id="q_open")
+    game.judge.down = True
+    await game.answer("host", "q_open", "Paris")
+    await game.answer("jana", "q_open", "Paris")
+    game.clock.tick(60)
+    assert (await game.state("peto"))["round"]["phase"] == "grading"
+    await game.settle()
+
+    moved = await game.post("next")
+    assert moved.status_code == 200, moved.text
+    assert moved.json()["round"]["question_id"] == "q_open2"
+    scores = {p["display_name"]: p["score"] for p in moved.json()["players"]}
+    assert scores == {"Michal": 1.0, "Jana": 1.0, "Peto": 1.0}  # first question only
+
+    game.judge.down = False
+    for who in ("host", "jana", "peto"):
+        await game.answer(who, "q_open2", "Oslo")
+    end = (await game.post("next")).json()
+    cancelled = end["rounds"][1]
+    assert cancelled["cancelled"] is True and cancelled["phase"] == "revealed"
+    assert {(r["result"], r["points"]) for r in cancelled["results"]} == {
+        ("skipped", 0.0)
+    }
+    assert "cancelled" not in end["rounds"][0]
+    assert [r["correct_count"] for r in end["ranking"]] == [1, 1, 1]

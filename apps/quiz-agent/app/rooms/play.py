@@ -164,7 +164,10 @@ class RoomPlay:
             if not rnd.closed:
                 if not rounds.close_due(session, rounds.now()):
                     raise RoomError(409, "Players are still answering")
-                await self._grade(session, rnd)
+                try:
+                    await self._grade(session, rnd)
+                except JudgeUnavailable:
+                    await self._cancel(session, rnd)
             await self._advance(session)
 
     async def _advance(self, session: QuizSession) -> None:
@@ -236,10 +239,28 @@ class RoomPlay:
                 if game and rounds.close_due(session, rounds.now()):
                     await self._grade(session, game.current)
                     await self.sessions.update_session(session)
+        except JudgeUnavailable:
+            # Already reported (throttled) by hot_path_llm; the next poll
+            # retries, and the host's Next cancels the question.
+            logger.warning("Room grading deferred for session %s", session_id)
         except Exception:
             logger.exception("Room close failed for session %s", session_id)
         finally:
             self._closing.discard(session_id)
+
+    async def _cancel(self, session: QuizSession, rnd: RoomRound) -> None:
+        """The judge stayed down until the host moved on (founder 2026-11-18):
+        the question counts for nobody, so the room can always go on. Current
+        builds read "skipped" with 0 points as a plain miss."""
+        question = await self.flow.question_retriever.get(rnd.question_id)
+        translation = session_translation(session, rnd.question_id)
+        for a in rnd.answers.values():
+            a.result, a.points = "skipped", 0.0
+        rnd.correct_answer = await self.flow._correct_answer_display(
+            question, translation, session
+        )
+        rnd.explanation = translated_question_view(question, translation).explanation
+        rnd.cancelled = rnd.closed = True
 
     async def _grade(self, session: QuizSession, rnd: RoomRound) -> None:
         """Grade every answer with the solo evaluator. Equal answers (after

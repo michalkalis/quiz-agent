@@ -2,6 +2,13 @@
 // or from reading time when there is no clip; the explanation phase likewise.
 import type {ReelStyle} from './types';
 
+/** Every voice clip plays this much faster (founder 2026-11-18: the voice
+ * could speak faster, e.g. 1.2x). Remotion renders `playbackRate` with
+ * ffmpeg's atempo, which keeps the pitch. Times measured on a clip at its
+ * own speed go through `atVoiceRate` before they reach a timeline. */
+export const VOICE_RATE = 1.2;
+export const atVoiceRate = (clipMs: number) => Math.round(clipMs / VOICE_RATE);
+
 export const HOOK_MS = 1500;
 /** The hook alone on screen before the question (`solo` opening). */
 export const HOOK_SOLO_MS = 1700;

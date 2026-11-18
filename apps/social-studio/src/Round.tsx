@@ -8,7 +8,7 @@ import {COPY} from './copy';
 import {AnswerReveal} from './AnswerReveal';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, INK2, OK, SURF, tintFor} from './theme';
-import {HOOK_SOLO_MS, roundTimeline} from './timing';
+import {HOOK_SOLO_MS, VOICE_RATE, roundTimeline} from './timing';
 import type {RoundItem, RoundProps} from './types';
 
 const Tally: React.FC<{n: number; of: number; color: string}> = ({n, of, color}) => (
@@ -37,7 +37,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 	const clip = (src: string | null, from: number, to: number, key: string) =>
 		src ? (
 			<Sequence key={key} from={f(from, fps)} durationInFrames={Math.max(1, f(to - from, fps))}>
-				<Audio src={staticFile(src)} />
+				<Audio src={staticFile(src)} playbackRate={VOICE_RATE} />
 			</Sequence>
 		) : null;
 	const audio = [

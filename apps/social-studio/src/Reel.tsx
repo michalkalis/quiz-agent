@@ -10,7 +10,7 @@ import {AnswerReveal} from './AnswerReveal';
 import {ExplainPhase} from './Explain';
 import {Countdown, EndCard, HOOK_HOLD_MS, HookLine, HookSolo, QuestionCard, Reveal, SAFE, SMALL_Q, f, ms} from './ReelParts';
 import {FONT, INK, tintFor} from './theme';
-import {ANSWER_LEAD_MS, LEAD_MS, reelTimeline} from './timing';
+import {ANSWER_LEAD_MS, LEAD_MS, VOICE_RATE, reelTimeline} from './timing';
 import type {ReelProps} from './types';
 
 export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio, words, questionMs, optionsAtMs, optionAtMs, hookIndex, variant, style, explain, answer}) => {
@@ -38,12 +38,12 @@ export const Reel: React.FC<ReelProps & {variant: 'five' | 'abc'}> = ({q, audio,
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio ? (
 				<Sequence from={f(qStart + lead, fps)}>
-					<Audio src={staticFile(audio)} />
+					<Audio src={staticFile(audio)} playbackRate={VOICE_RATE} />
 				</Sequence>
 			) : null}
 			{style.explain === 'card' && answer.audio ? (
 				<Sequence from={f(revealStart + ANSWER_LEAD_MS, fps)}>
-					<Audio src={staticFile(answer.audio)} />
+					<Audio src={staticFile(answer.audio)} playbackRate={VOICE_RATE} />
 				</Sequence>
 			) : null}
 

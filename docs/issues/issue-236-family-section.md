@@ -86,6 +86,7 @@ Rozhodnutia foundera 2026-11-18:
 ### 236.5 Sekcia v appke
 
 Výber otázok podľa pásma a témy, obrazovky podľa 236.3, analytické udalosti (vstup do sekcie, pásmo, téma, dohraté kolo), za vypínačom na serveri.
+Plán stavby (API, appka, kroky, otázky pre foundera): [issue-236-family-mode-build.md](issue-236-family-mode-build.md).
 
 ### 236.6 Otázky „na pokec“
 

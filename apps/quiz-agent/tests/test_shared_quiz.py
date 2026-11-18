@@ -287,7 +287,9 @@ async def test_pack_link_plays_once_per_person_and_only_that_pack(client, app):
     session = await _session(app, resp)
     assert session.pack_id == PACK and session.fixed_question_ids == ["p1", "p2"]
     assert session.is_quota_exempt and session.is_solo_only
-    # Once per person: starting it again is refused.
+    # Once per person: after an answer, starting it again is refused.
+    session.question_results["p1"] = "correct"
+    await app.state.session_manager.update_session(session)
     assert (await _start(client, share["token"], "friend")).status_code == 409
     # The owner never "plays once" their own pack through the link.
     assert (await _start(client, share["token"], "owner")).status_code == 409

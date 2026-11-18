@@ -18,7 +18,7 @@ from quiz_shared.models.session import QuizSession
 from ..config import get_settings
 from ..db.models import SharedQuiz
 from ..retrieval.question_retriever import QuestionRetriever
-from ..session.manager import SessionManager
+from ..session.manager import SessionBusy, SessionManager
 from .creation import ShareCreation, ShareError, player_score
 from .marks import aligned, known_in_session
 from .ranking import RankedPlayer, rank
@@ -114,7 +114,9 @@ class SharedQuizService(ShareCreation):
     ) -> QuizSession:
         """Once per person per pack. The play is reserved only after the session
         exists, so a failed start never uses up the one play; a lost race
-        removes the extra session again."""
+        removes the extra session again. A repeated start of this link before
+        any answer moves the play to the new session (the app retried or lost
+        the first answer)."""
         already = ShareError(
             409, "already_played", "This shared pack was played already"
         )
@@ -123,8 +125,8 @@ class SharedQuizService(ShareCreation):
         session = await self._persist(probe, ids)
         try:
             reserved = await self.store.begin_play(
-                share, probe.user_id, name, once=True
-            )
+                share, probe.user_id, name, once=True, session_id=session.session_id
+            ) or await self._restart_unanswered(share, probe.user_id, session)
         except Exception:
             await self.sessions.delete_session(session.session_id)
             raise
@@ -132,6 +134,29 @@ class SharedQuizService(ShareCreation):
             await self.sessions.delete_session(session.session_id)
             raise already
         return session
+
+    async def _restart_unanswered(
+        self, share: SharedQuiz, subject_id: str, session: QuizSession
+    ) -> bool:
+        """This person's play of this link, not answered yet, now runs in
+        ``session``; the old session goes so one play stays one session.
+        Under the old session's lock, which the answer routes hold until the
+        grade is written: an answer being graded is seen (refused), and an
+        answer arriving later finds no session (404)."""
+        old_id = await self.store.open_play(share, subject_id)
+        if old_id is None:
+            return False
+        try:
+            async with self.sessions.session_lock(old_id):
+                old = await self.sessions.get_session(old_id)
+                if old is None or old.question_results:
+                    return False
+                if not await self.store.move_play(share.id, old_id, session.session_id):
+                    return False
+                await self.sessions.delete_session(old_id)
+        except SessionBusy:  # still grading after the lease wait: it was played
+            return False
+        return True
 
     async def _start_daily(
         self,

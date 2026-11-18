@@ -33,6 +33,7 @@ from typing import Optional
 
 import sentry_sdk
 
+from app import uk_policy
 from app.orchestrator.context import OrderContext, StageResult
 from app.orchestrator.progress_sink import ProgressSink
 from app.verification.fact_verifier import MAX_CONCURRENT_VERIFICATIONS, FactVerifier
@@ -206,7 +207,7 @@ class VerificationStage:
                 dropped += 1
                 continue
             if not q.source_url:
-                _attach_source(q, verification)
+                _attach_source(q, verification, ctx.language)
             if ctx.direct_generation and not q.source_url and not _is_logical(q):
                 # F8 for direct-generation mode (founder 2026-09-09: every
                 # question carries a source). GenerationStage relaxes F8 there
@@ -248,10 +249,19 @@ class VerificationStage:
         )
 
 
-def _attach_source(q: Question, verification: object) -> None:
-    """Copy the verifier's evidence page onto an unsourced question."""
+def _attach_source(
+    q: Question, verification: object, language: str | None = None
+) -> None:
+    """Copy the verifier's evidence page onto an unsourced question.
+
+    #231: a Ukrainian pack never cites a Russian page (``.ru``, RT, Sputnik…),
+    so such a page is skipped; with no other evidence the question has no source
+    and direct generation withholds it, the top-up round writes a replacement.
+    """
     for src in getattr(verification, "sources", None) or []:
         url = str(src.get("url") or "").strip() if isinstance(src, dict) else ""
+        if url and language == uk_policy.UK and uk_policy.source_reason(url):
+            continue
         if url:
             q.source_url = url
             q.source_excerpt = src.get("excerpt") or None

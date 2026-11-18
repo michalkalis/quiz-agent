@@ -211,8 +211,8 @@ def build_stages(
     ``forced_topics`` pins the sourced topic set; ``facts_file`` replaces
     sourcing entirely with a previously dumped fact set.
     ``per_topic_cap`` overrides CompositionStage's scaled per-topic cap
-    (#167); ``None`` keeps today's scaled default, so the worker/API path —
-    which never sets it — stays byte-identical.
+    (#167); ``None`` keeps the stage's default (the scaled cap; none on a
+    customer order), which is all the worker/API path ever uses.
     ``floor_fraction`` overrides TopUpStage's shortfall floor (#195); ``None``
     keeps the 80% default the worker uses.
 
@@ -234,7 +234,9 @@ def build_stages(
     #203 203.9 ``customer_order`` (``--customer-order``, default ``False`` =
     every corpus run unchanged): build the run as the worker builds a paid
     order — ``GenerationStage(customer_order=True)`` (sub-themes when
-    ``PACK_SUBTHEMES`` is on), the worker's plain ``DedupStage`` (+ in-pack
+    ``PACK_SUBTHEMES`` is on), ``CompositionStage(customer_order=True)`` (no
+    per-topic cap unless ``per_topic_cap`` is set), the worker's plain
+    ``DedupStage`` (+ in-pack
     cosine under the same flag, none of the #170 corpus levers) and, when
     ``PACK_BATCH_SCHEDULE`` is not ``0``, the worker's incremental round walk.
     Without ``persist`` the rounds go to an in-memory stand-in, so a blind
@@ -319,7 +321,9 @@ def build_stages(
         )
     else:
         dedup = build_dedup_stage(dedup_store, None, strictness)
-    composition = CompositionStage(per_topic_cap=per_topic_cap)
+    composition = CompositionStage(
+        per_topic_cap=per_topic_cap, customer_order=customer_order
+    )
     # #135 D10 — early round-trip answerability check between dedup and
     # verification, behind the same flag the worker honours.
     answerability = (

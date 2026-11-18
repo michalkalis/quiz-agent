@@ -133,7 +133,8 @@ def _build_stages(ctx: Dict[str, Any]) -> list[Stage]:
         stages.append(answerability)
     # #153 Phase 0.1 — deterministic batch caps (per-topic, T/F) right after
     # scoring, so judge scores decide which questions survive each cap.
-    composition = CompositionStage()
+    # A customer order has no per-topic cap (founder 2026-11-18).
+    composition = CompositionStage(customer_order=True)
     batch_schedule = feature_flags.pack_batch_schedule()
     if batch_schedule:
         # #182 incremental delivery: sourcing once, then scheduled rounds

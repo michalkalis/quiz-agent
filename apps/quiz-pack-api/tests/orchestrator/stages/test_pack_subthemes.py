@@ -378,6 +378,7 @@ async def test_only_the_customer_worker_opts_in(monkeypatch: pytest.MonkeyPatch)
     )
     assert offline._generation_stage._customer_order is False
     assert offline._dedup_stage._in_pack_cosine is False
+    assert offline._composition_stage._customer_order is False
 
     worker = next(
         s
@@ -395,6 +396,8 @@ async def test_only_the_customer_worker_opts_in(monkeypatch: pytest.MonkeyPatch)
     )
     assert worker._generation_stage._customer_order is True
     assert worker._dedup_stage._in_pack_cosine is True
+    # Founder 2026-11-18: no per-topic cap on a customer pack.
+    assert worker._composition_stage._customer_order is True
 
 
 @pytest.mark.usefixtures("subthemes_on")

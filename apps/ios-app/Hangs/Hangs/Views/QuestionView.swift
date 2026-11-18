@@ -183,7 +183,7 @@ struct QuestionView: View {
             onClose: { showEndQuizConfirmation = true },
             onMute: { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.togglePause() },
-            onSettings: { showQuizSettings = true },
+            onSettings: openQuizSettings,
             onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
             onRateQuestion: rateQuestionAction
         )
@@ -223,7 +223,8 @@ struct QuestionView: View {
             // #188 G9: the answer sheet is part of the quiz — same cap.
             .dynamicTypeSize(...QuizTypeSize.screenCap)
         }
-        .sheet(isPresented: $showQuizSettings) {
+        // #240: Settings holds the question while it is open.
+        .sheet(isPresented: $showQuizSettings, onDismiss: viewModel.releaseQuestionAfterSettings) {
             // #68 resolution: the chip opens the full settings screen, which now
             // contains the Session group (decision 6 Variant A rows). The #86
             // Pencil pass approved the session card on the Settings screen only —
@@ -236,7 +237,7 @@ struct QuestionView: View {
             Button("Continue", role: .cancel) {}
             // #125: the MCQ screen drops its settings gear, so settings stay
             // reachable through this sheet (both modes share the alert).
-            Button("Settings") { showQuizSettings = true }
+            Button("Settings", action: openQuizSettings)
             // Founder 2026-08-03 (Sporcle-style early exit): ending mid-quiz can
             // land on the score screen for the questions answered so far instead
             // of discarding the run.
@@ -248,12 +249,21 @@ struct QuestionView: View {
             }
         }
         // #81 follow-up (founder 2026-07-06): the think/answer countdowns keep
-        // running behind the dialog and the settings sheet — a pause here would
-        // let the user buy thinking time by opening a modal (same rationale as
-        // the no-pause-while-typing decision 2a).
+        // running behind the dialog — a pause here would let the user buy
+        // thinking time by opening a modal (same rationale as the
+        // no-pause-while-typing decision 2a). #240: the settings sheet holds
+        // the question since the toolbar pause (#173) gives that time anyway,
+        // and a countdown running out there replaced Settings mid-edit.
     }
 
     // MARK: - Toolbar actions
+
+    /// #240: from the ⋯ menu or the End Quiz alert. The sheet's dismissal
+    /// lets the question go on.
+    private func openQuizSettings() {
+        viewModel.holdQuestionForSettings()
+        showQuizSettings = true
+    }
 
     /// The #155 gate, unchanged: TestFlight/Debug only, and only with a question
     /// to rate. nil = the row is absent, which is what an App Store build gets.

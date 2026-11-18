@@ -6190,6 +6190,23 @@
         }
       }
     },
+    "Microphone is off for Trubbo" : {
+      "comment" : "Listen bar note on the question screen: microphone access is refused in iOS Settings, so voice answers cannot be heard; a Settings button sits beside it",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon je pro Trubbo vypnutý"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofón je pre Trubbo vypnutý"
+          }
+        }
+      }
+    },
     "Microphone permission denied" : {
       "comment" : "Audio error: the user denied microphone access",
       "localizations" : {

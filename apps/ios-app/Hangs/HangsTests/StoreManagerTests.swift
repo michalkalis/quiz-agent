@@ -27,10 +27,10 @@
 //  Offerings (monthly/annual sub + consumable pack). Tests updated accordingly.
 //
 
-import Foundation
-import Testing
 import ConcurrencyExtras
+import Foundation
 @testable import Hangs
+import Testing
 
 // MARK: - Helpers
 
@@ -71,7 +71,6 @@ private func makeManager(
 @Suite("StoreManager Tests")
 @MainActor
 struct StoreManagerTests {
-
     // MARK: 1. loadOfferings — sets offerings when service returns them
 
     @Test("loadOfferings sets offerings when service returns a PurchasableOfferings")
@@ -151,6 +150,48 @@ struct StoreManagerTests {
         #expect(manager.purchaseError != nil)
         #expect(manager.isPurchased == false)
         #expect(manager.isLoading == false)
+    }
+
+    // MARK: 7b. #240 — a failed purchase never shows the raw system error
+
+    private static var couldNotConnect: String {
+        String(localized: "Couldn't connect. Try again.", bundle: .interface, locale: .interface)
+    }
+
+    /// WHY (#240 walkthrough): offline, the paywall printed "The operation
+    /// couldn't be completed. (NSURLErrorDomain error -1009.)" in English on
+    /// a Slovak screen. The player needs to know what to do: reconnect and
+    /// tap again, in the restore path's own words.
+    @Test("an offline purchase says to reconnect, never the raw system error",
+          arguments: [
+              URLError(.notConnectedToInternet) as NSError,
+              // How RevenueCat reports it: its own error wrapping the URL error.
+              NSError(domain: "RevenueCat.ErrorCode", code: 10,
+                      userInfo: [NSUnderlyingErrorKey: URLError(.notConnectedToInternet) as NSError]),
+          ])
+    func offlinePurchaseFailureIsFriendly(error: NSError) async {
+        let (manager, _) = await makeManager(purchaseError: error)
+
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+
+        #expect(manager.purchaseError == Self.couldNotConnect)
+        #expect(manager.purchaseState == .failed(message: Self.couldNotConnect))
+    }
+
+    /// WHY: any other store failure is just as unreadable to a player as a
+    /// URL error code; they get a short "try again", and the real error goes
+    /// to the logs only.
+    @Test("any other purchase failure shows a short try-again, not the error text")
+    func otherPurchaseFailureIsFriendly() async {
+        let error = NSError(domain: "SKErrorDomain", code: 0,
+                            userInfo: [NSLocalizedDescriptionKey: "The operation couldn't be completed. (SKErrorDomain error 0.)"])
+        let (manager, _) = await makeManager(purchaseError: error)
+
+        await manager.purchase(productID: StoreProduct.monthlySubId)
+
+        let expected = String(localized: "Something went wrong. Try again.", bundle: .interface, locale: .interface)
+        #expect(manager.purchaseError == expected)
+        #expect(manager.purchaseError != error.localizedDescription)
     }
 
     // MARK: 8. restorePurchases() happy path — flips isPurchased=true when entitled
@@ -260,6 +301,7 @@ struct StoreManagerTests {
     }
 
     // MARK: 13. Purchase outcome is a first-class event (#96 P1)
+
     //
     // The founder's device bug: a pack purchase succeeded end-to-end
     // (Apple + RC + webhook + credits granted) but the app gave zero feedback,
@@ -278,7 +320,7 @@ struct StoreManagerTests {
 
         #expect(manager.purchaseState == .success(productID: StoreProduct.packId))
         #expect(bridgeFired == true)
-        #expect(manager.isPurchased == false)  // consumable never flips the sub flag
+        #expect(manager.isPurchased == false) // consumable never flips the sub flag
     }
 
     @Test("subscription purchase success fires onPurchaseSuccess")
@@ -351,6 +393,7 @@ struct StoreManagerTests {
     }
 
     // MARK: 14. Pack-only recovery via restore (#102 finding 3)
+
     //
     // StoreKit has no restore mechanism for consumables — a pack buyer's
     // credits only come back through the server re-deriving them from RC's

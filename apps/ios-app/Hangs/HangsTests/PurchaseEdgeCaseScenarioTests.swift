@@ -114,7 +114,8 @@ struct PurchaseEdgeCaseScenarioTests {
 
         await loop.store.purchase(productID: StoreProduct.monthlySubId)
 
-        #expect(loop.store.purchaseState == .failed(message: StoreFailure().errorDescription!), "the reason must reach the paywall — a silent failure was the #96 re-prompt loop")
+        // #240: a readable try-again, never the store's own error text.
+        #expect(loop.store.purchaseState == .failed(message: StoreManager.purchaseFailureMessage(for: StoreFailure())), "the failure must reach the paywall — a silent failure was the #96 re-prompt loop")
         #expect(loop.store.isPurchased == false)
         #expect(loop.network.syncEntitlementsCallCount == syncsBefore, "nothing was bought — no bridge sync may fire")
 

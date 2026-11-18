@@ -200,14 +200,39 @@ final class StoreManager: ObservableObject {
                 purchaseState = .pending
             }
         } catch {
-            purchaseError = error.localizedDescription
-            purchaseState = .failed(message: error.localizedDescription)
+            // #240: the raw error ("The operation couldn't be completed.
+            // (NSURLErrorDomain error -1009.)") is for the logs only.
+            let message = Self.purchaseFailureMessage(for: error)
+            purchaseError = message
+            purchaseState = .failed(message: message)
             SentryLog.error("purchase failed", category: .quiz, attributes: ["product": productID, "error": String(describing: error)])
             Logger.quiz.error("❌ StoreManager: Purchase failed: \(error, privacy: .public)")
         }
 
         trackPurchaseResult(productID: productID)
         isLoading = false
+    }
+
+    /// #240: what a failed purchase tells the player, in the restore path's
+    /// words: no connection, reconnect and try again; anything else, a short
+    /// try-again.
+    static func purchaseFailureMessage(for error: Error) -> String {
+        if isConnectionFailure(error) {
+            return String(localized: "Couldn't connect. Try again.", bundle: .interface, locale: .interface, comment: "Paywall: a purchase or restore could not reach the store or the server")
+        }
+        return String(localized: "Something went wrong. Try again.", bundle: .interface, locale: .interface, comment: "Paywall: a purchase failed for a reason the player cannot act on")
+    }
+
+    /// A URL error anywhere in the chain; RevenueCat wraps it in its own error.
+    private static func isConnectionFailure(_ error: Error) -> Bool {
+        var current: NSError? = error as NSError
+        var depth = 0
+        while let nsError = current, depth < 5 {
+            if nsError.domain == NSURLErrorDomain { return true }
+            current = nsError.userInfo[NSUnderlyingErrorKey] as? NSError
+            depth += 1
+        }
+        return false
     }
 
     /// Clears a finished purchase attempt back to `.idle` — the paywall calls

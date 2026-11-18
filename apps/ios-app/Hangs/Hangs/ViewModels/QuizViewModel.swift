@@ -410,6 +410,10 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
+    /// #240: the pause is Settings' own (`holdQuestionForSettings`), not the
+    /// player's, so closing Settings ends it.
+    var isHeldBySettings = false
+
     /// Quiz-level pause (#171 Track D; resets on the next question) — see
     /// `QuizTimersController.isPaused`.
     var isPaused: Bool {
@@ -1379,7 +1383,9 @@ final class QuizViewModel: ObservableObject {
             // #188 G7: onboarding's "Maybe later" leaves the mic undecided. Ask
             // here, the one moment before every mic user of the quiz (question
             // read, command listener, barge-in, recording), so iOS never raises
-            // the prompt implicitly mid-question. Denied keeps today's behaviour.
+            // the prompt implicitly mid-question. The answer needs no keeping:
+            // every recording reads the status itself, and a denied mic records
+            // nothing and shows the mic-off note instead (#240).
             // The status check is synchronous on purpose: awaiting a nonisolated
             // helper hops off the main actor even when it does nothing, which
             // shifted the RS timing for every quiz start.

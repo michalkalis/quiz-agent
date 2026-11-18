@@ -3,10 +3,9 @@
 Sibling to ``rc_service`` — the sign-in-side counterpart of the webhook-side
 subscription/credit writes. Extracted verbatim from ``app.api.routes.auth``
 (backend architecture review 2026-07-18): the ``users`` upsert, the row-locked
-identity merge (usage summing, subscription/credit folding), and its
-pre-exchange 409 check. All helpers run in the caller's session/transaction —
-the sign-in route owns the commit. Error mapping is preserved exactly as it was
-in the route layer, so the merge guards raise ``fastapi.HTTPException`` (409).
+identity merge (usage summing, subscription/credit folding). All helpers run in
+the caller's session/transaction — the sign-in route owns the commit. An anon
+linked to another account is left alone (#240), so nothing here raises.
 """
 
 from __future__ import annotations
@@ -14,7 +13,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import HTTPException
 from sqlalchemy import select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,35 +30,6 @@ from ..db.models import (
 # player_recaps (#213.3) are deliberately not re-keyed here: /me/recaps reads the
 # account's and its linked anon ids' snapshots together, so sign-in needs no merge.
 from .subscription_state import SubscriptionState, merge_subscription_rows
-
-
-async def precheck_merge_conflict(
-    session: AsyncSession, anon_id: str, apple_sub: str
-) -> None:
-    """Raise the merge 409 before Apple's single-use code is exchanged (#91 item 5).
-
-    An unlocked read answering the same question as merge_anonymous_identity's
-    guard, from data available before the exchange: the anon is already upgraded
-    to some account, and this apple_sub is not it (a first-time apple_sub can
-    never match a pre-existing upgrade). The locked check downstream stays
-    authoritative — a race between this read and the transaction is still caught
-    there, at the same one-time-code cost as today."""
-    anon = (
-        await session.execute(
-            select(AnonymousIdentity).where(AnonymousIdentity.anon_id == anon_id)
-        )
-    ).scalar_one_or_none()
-    if anon is None or anon.upgraded_to_user_id is None:
-        return
-    user = (
-        await session.execute(select(User).where(User.apple_sub == apple_sub))
-    ).scalar_one_or_none()
-    if user is not None and str(user.id) == str(anon.upgraded_to_user_id):
-        return  # already folded into this same account — the idempotent path
-    raise HTTPException(
-        status_code=409,
-        detail="This anonymous identity already belongs to another account",
-    )
 
 
 async def upsert_apple_user(
@@ -114,7 +83,7 @@ async def merge_anonymous_identity(
 
     Guarded by ``anonymous_identities.upgraded_to_user_id``: already this user →
     only the subscription fold and ``rekey_purchases`` run again; a different
-    user → 409 (the anon belongs elsewhere, nothing moves). The
+    user → nothing at all (the anon belongs elsewhere, #240). The
     anon's ``daily_usage`` rows (keyed on ``subject_id``) are **summed** into the
     account's rows (``is_premium`` OR-ed) — sum, not max, so signing in cannot
     reset the freemium limit. The anon's own rows are **kept** (frozen — nothing
@@ -136,10 +105,11 @@ async def merge_anonymous_identity(
         return  # bearer named a subject with no identity row — nothing to merge
     if anon.upgraded_to_user_id is not None:
         if anon.upgraded_to_user_id != user_id:
-            raise HTTPException(
-                status_code=409,
-                detail="This anonymous identity already belongs to another account",
-            )
+            # A second Apple ID on a device linked to another account (#240,
+            # founder 2026-11-18): it signs in to its own clean account and
+            # nothing moves; what the device bought signed out stays the first
+            # account's.
+            return
         # Usage is already folded (once per anon), but a device that signed out
         # returns to this same anon and can buy again before signing back in,
         # a subscription included (#239).
@@ -273,8 +243,8 @@ async def rekey_purchases(session: AsyncSession, anon_id: str, user_id: str) -> 
 
     Runs on every sign-in, not once per anon: sign-out returns the device to the
     same, already linked anon, which can buy again before signing back in. Always
-    after the 409 guard, so an anon that belongs to another account never gets
-    here and its purchases never move. Idempotent: a second run finds nothing
+    after the ownership guard, so an anon that belongs to another account never
+    gets here and its purchases never move. Idempotent: a second run finds nothing
     left on the anon id. Only the signing-in device's anon moves, so a different,
     signed-out device of the same person keeps what it bought until it signs in
     itself. Also the one-off backfill (``scripts/rekey_linked_purchases.py``).

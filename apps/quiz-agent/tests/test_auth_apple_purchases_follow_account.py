@@ -8,8 +8,8 @@ gone. These pin that ``POST /auth/apple`` moves those purchases onto the account
 - on the first sign-in, and again on every later one (sign-out returns the
   device to the same, already linked anon, which can buy again);
 - idempotently (signing in twice duplicates nothing);
-- never on the 409 path (an anon that belongs to another account keeps its
-  purchases, nothing moves to the account trying to claim it).
+- never to a different Apple ID signing in on a device linked to another
+  account (#240): that person gets their own account and nothing moves.
 
 "In GET /v1/orders" is asserted on ``generation_orders.user_id`` (that endpoint
 filters on exactly it); "playable" runs the real play-time ownership check. Pack
@@ -182,20 +182,34 @@ async def test_repeated_sign_in_duplicates_no_pack_or_credit(
     assert await _balance(db_sessionmaker, user_id) == 100
 
 
-async def test_conflict_409_moves_no_purchase(client, keypair, db_sessionmaker, orders):
-    """An anon already linked to account A cannot be claimed by B: the 409 must
-    stay, and what the anon bought since must move to neither B nor (on this
-    rolled-back call) A."""
+async def test_second_apple_id_gets_none_of_the_first_accounts_purchases(
+    client, keypair, db_sessionmaker, orders, monkeypatch
+):
+    """#240: on a shared device linked to account A, person B signs in and gets
+    their own account. What was bought on the device while signed out (pack,
+    credit, Plus) belongs to A: none of it may move to B, and A still gets it
+    on A's next sign-in."""
+    monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION")
     anon_id, bearer = await _make_anon(db_sessionmaker)
-    await _sign_in(client, keypair, "apple.sub.ownerA", bearer)
+    user_a = await _sign_in(client, keypair, "apple.sub.ownerA", bearer)
     pack_id = await orders(anon_id)
-    await _seed_credit(db_sessionmaker, anon_id, 50, "txn-409")
+    await _seed_credit(db_sessionmaker, anon_id, 50, "txn-shared")
+    await _seed_plus(db_sessionmaker, anon_id)
 
-    r = await _call_apple(client, keypair, sub="apple.sub.thiefB", bearer=bearer)
+    user_b = await _sign_in(client, keypair, "apple.sub.personB", bearer)
 
-    assert r.status_code == 409
+    assert user_b != user_a
     assert await _pack_owners(db_sessionmaker, pack_id) == (anon_id, anon_id)
-    assert await _balance(db_sessionmaker, anon_id) == 50
+    assert await _order_count(db_sessionmaker, user_b) == 0
+    assert await _balance(db_sessionmaker, user_b) == 0
+    async with db_sessionmaker() as s:
+        assert not await account_is_entitled(s, user_b)
+
+    assert await _sign_in(client, keypair, "apple.sub.ownerA", bearer) == user_a
+    assert await _pack_owners(db_sessionmaker, pack_id) == (user_a, user_a)
+    assert await _balance(db_sessionmaker, user_a) == 50
+    async with db_sessionmaker() as s:
+        assert await account_is_entitled(s, user_a)
 
 
 async def test_credit_bought_after_sign_out_moves_on_the_next_sign_in(
@@ -224,19 +238,7 @@ async def test_plus_bought_after_sign_out_moves_on_the_next_sign_in(
     monkeypatch.setenv("RC_ALLOWED_ENVIRONMENT", "PRODUCTION")
     anon_id, bearer = await _make_anon(db_sessionmaker)
     user_id = await _sign_in(client, keypair, "apple.sub.plus", bearer)
-    async with db_sessionmaker() as s:
-        s.add(Product(product_id=_PLUS, kind="subscription", tier="unlimited"))
-        s.add(
-            Subscription(
-                account_id=anon_id,
-                product_id=_PLUS,
-                status="active",
-                expires_at=utcnow() + timedelta(days=30),
-                rc_original_txn_id="txn-plus-after-sign-out",
-                environment="PRODUCTION",
-            )
-        )
-        await s.commit()
+    await _seed_plus(db_sessionmaker, anon_id)
 
     await _sign_in(client, keypair, "apple.sub.plus", bearer)
 
@@ -254,6 +256,22 @@ async def _seed_credit(db, account_id: str, amount: int, txn: str) -> None:
                 kind="grant",
                 reason="pack_purchase",
                 store_txn_id=txn,
+            )
+        )
+        await s.commit()
+
+
+async def _seed_plus(db, account_id: str) -> None:
+    async with db() as s:
+        s.add(Product(product_id=_PLUS, kind="subscription", tier="unlimited"))
+        s.add(
+            Subscription(
+                account_id=account_id,
+                product_id=_PLUS,
+                status="active",
+                expires_at=utcnow() + timedelta(days=30),
+                rc_original_txn_id=f"txn-plus-{account_id}",
+                environment="PRODUCTION",
             )
         )
         await s.commit()

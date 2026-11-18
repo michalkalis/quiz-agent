@@ -62,6 +62,11 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     "room_finished": frozenset({"room_id", "reason", "players", "questions_asked"}),
     # #232.2: the host's finished custom pack became a game together.
     "room_with_pack": frozenset({"room_id"}),
+    # #240.9: the first question of a game together was served (players incl.
+    # the host; rematch = "play again" with the same people), and the host
+    # started such a "play again" after a finished game.
+    "room_started": frozenset({"room_id", "players", "rematch"}),
+    "room_rematch": frozenset({"room_id", "players"}),
     # #232: share a quiz by link. kind = round | daily | pack; opened under the
     # player who starts it (source app) or anonymously from the website's play
     # page (source web); finished once per session that recorded a result.
@@ -131,6 +136,11 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     # #224.4: the host stayed on a reveal (paused) or let the game go on.
     "room_pause_changed": frozenset({"paused", "question"}),
     "room_guest_read_aloud": frozenset({"on", "via"}),
+    # #240.9: the host's phone closed a game together (reason = finished |
+    # host_left | never_started | expired), and the share sheet opened on the
+    # final ranking (role = host | guest).
+    "room_closed": frozenset({"reason", "players", "questions"}),
+    "room_ranking_shared": frozenset({"role", "players"}),
     # #224.6: a step on the Home category deck (to = category id or "all"), and
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),

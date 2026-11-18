@@ -495,6 +495,11 @@ async def test_measurement_counts_each_guest_once_with_how_they_found_the_game(g
         ("room_created", "host", {"room_id": game.room_id}),
         ("room_joined", "jana", {"room_id": game.room_id, "via": "link"}),
         (
+            "room_started",
+            "host",
+            {"room_id": game.room_id, "players": 2, "rematch": False},
+        ),
+        (
             "room_finished",
             "host",
             {

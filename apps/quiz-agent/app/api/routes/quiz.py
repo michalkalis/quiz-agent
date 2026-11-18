@@ -286,6 +286,18 @@ async def start_quiz(
                     "repeats": repeats,
                 },
             )
+            if session.room_game is not None:
+                # #240.9: a game together started (players incl. the host).
+                analytics.emit(
+                    "room_started",
+                    subject_id=session.user_id,
+                    session_id=session_id,
+                    properties={
+                        "room_id": session.room_code,
+                        "players": len(session.participants),
+                        "rematch": session.room_game.rematch,
+                    },
+                )
 
             audio_info = None
             if audio:

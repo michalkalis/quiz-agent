@@ -19,6 +19,8 @@
 | `room_joined` | a guest joins a game for the first time (#212.5), under the guest; a rejoin (name change) is not counted | `room_id`, `via` (nearby = the Wi-Fi list / qr = scanned code / link = shared link, also builds that do not send it) |
 | `room_finished` | a game together ends (#212.5), under the host, next to its `quiz_completed` | `room_id`, `reason`, `players` (incl. host), `questions_asked` |
 | `room_with_pack` | a host's finished custom pack becomes a game together (#232.2), next to its `room_created` | `room_id` |
+| `room_started` | the first question of a game together is served (#240.9), under the host, next to its `quiz_started` | `room_id`, `players` (incl. host), `rematch` (a "play again" game) |
+| `room_rematch` | the host starts "play again" after a finished game (#240.9): the same room moves to a new session with everyone in it; no new `room_created` | `room_id`, `players` (carried over, incl. host) |
 | `quiz_shared` | a player creates a "play my quiz" link (#232); not when the same session or pack is shared again (same link back) | `kind` (round / daily / pack), `language`, `question_count` |
 | `shared_quiz_opened` | a shared-quiz link is opened: in the app when the player starts it (under that player), or on the website's play page (anonymous) | `kind`, `source` (app / web) |
 | `shared_quiz_finished` | a session started from a shared link finishes and records a result (#232); once per session, under the player (or host of a game together) | `kind`, `players` (results recorded), `questions_asked` |
@@ -57,6 +59,8 @@
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
 | `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |
 | `room_pause_changed` | the host of a game together stayed on a reveal or resumed (#224.4); the server accepted it | `paused` (true / false), `question` (number) |
+| `room_closed` | the host's phone leaves a game together (#240.9), once per game | `reason` (finished = left after the ranking / host_left = left mid-game / never_started = left the lobby / expired = the room was gone), `players` (incl. host), `questions` (served so far) |
+| `room_ranking_shared` | the share sheet opens on the final ranking of a game together (#240.9); whether the player then posts it is not known | `role` (host / guest), `players` |
 | `home_category_stepped` | a step on the Home category deck (#224.6): one per tap or VoiceOver adjust | `direction` (next / previous), `input` (tap / voiceover), `to` (category id, or `all`) |
 | `home_category_picker_opened` | the multi-category picker opened on Home (#224.6) | `source` (deck_button / pill) |
 | `quick_game_changed` | the Home "Quick quiz" switch flipped (#224.8) | `enabled` |

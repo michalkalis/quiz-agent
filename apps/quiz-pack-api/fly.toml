@@ -1,5 +1,5 @@
 # Fly.io configuration for quiz-pack-api (issue #33).
-# DO NOT DEPLOY (since 2026-11-06, #222): this Fly app runs only the forwarder
+# DO NOT DEPLOY (since 2026-11-06, #222 — moving the backend to Hetzner): this Fly app runs only the forwarder
 # (infra/fly-forwarder/); prod is on Hetzner. Kept for the cutover's Back path.
 app = "quiz-pack-api"
 primary_region = "cdg"

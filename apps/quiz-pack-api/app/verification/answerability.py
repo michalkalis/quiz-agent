@@ -60,7 +60,8 @@ class AnswerabilityResult:
 def _normalize(text: str) -> str:
     # #192: keep letters of any alphabet (Slovak/Czech pack answers).
     # Apostrophes vanish rather than split: "April Fool's" = "April Fools".
-    text = re.sub(r"['’]", "", text.lower())
+    # #231: also ʼ (U+02BC), the Ukrainian apostrophe: "мʼясо" = "м'ясо".
+    text = re.sub(r"['’ʼ]", "", text.lower())
     text = re.sub(r"[^\w ]+|_", " ", text).strip()
     for article in _ARTICLES:
         if text.startswith(article):

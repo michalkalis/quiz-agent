@@ -145,8 +145,10 @@ def test_seed_filter_drops_policy_seeds_for_uk_only() -> None:
 
 
 def test_machine_approval_holds_uk_rows_that_break_the_rules() -> None:
+    # A uk row also needs a passing naturalness verdict (#231 gate review).
+    meta = {"extra": dict(CLEAN_EXTRA, naturalness={"ok": True})}
     assert "uk" in MACHINE_APPROVABLE_LANGUAGES
-    assert machine_approval_block_reason(_q()) is None
+    assert machine_approval_block_reason(_q(generation_metadata=meta)) is None
     russian = machine_approval_block_reason(_q(question="Какая планета самая быстрая?"))
     assert russian and russian.startswith("uk_policy=russian")
     topic = machine_approval_block_reason(_q(question="Яка війна з Росією триває?"))

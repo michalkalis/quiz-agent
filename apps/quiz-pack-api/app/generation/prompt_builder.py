@@ -277,6 +277,12 @@ def _house_style_parts() -> tuple[str, str]:
 # onto world facts to meet the 7-in-10 home share. A sk/cs file holds the
 # native output-language override, then the house style after the marker.
 HOUSE_STYLE_V2_VERSION = "2026-10-22"
+# #231: a language whose v2 file changed on its own gets its own stamp, so the
+# en/sk/cs stamp keeps meaning the same text. uk: PR #852 (no decorative
+# detail lists, name the event precisely) changed the file without a bump.
+# Bump the entry whenever that language's file changes
+# (tests/generation/test_house_style.py pins the file to its version).
+HOUSE_STYLE_V2_LANGUAGE_VERSIONS = {"uk": "2026-11-18"}
 _HOUSE_STYLE_V2_DIR = os.path.dirname(_HOUSE_STYLE_PATH)
 _V2_STYLE_MARKER = "<!-- house style -->"
 _V2_HEADINGS = {"en": "HOUSE STYLE", "sk": "ŠTÝL DOMU", "cs": "STYL DOMU", "uk": "СТИЛЬ ДОМУ"}
@@ -295,10 +301,10 @@ def _house_style_v2_parts(language: str) -> tuple[str | None, str]:
     return lang_section.strip(), body.strip()
 
 
-def house_style_version() -> str:
+def house_style_version(language: str | None = None) -> str:
     """Version stamped on every question generated with the house style."""
     if feature_flags.gen_house_style_v2():
-        return HOUSE_STYLE_V2_VERSION
+        return HOUSE_STYLE_V2_LANGUAGE_VERSIONS.get(language, HOUSE_STYLE_V2_VERSION)
     return HOUSE_STYLE_VERSION
 
 

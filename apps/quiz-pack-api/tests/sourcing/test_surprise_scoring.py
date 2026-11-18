@@ -80,3 +80,12 @@ def test_top_by_surprise_orders_by_heuristic_score() -> None:
     top = batch.top_by_surprise(2)
 
     assert [f.text for f in top] == [extreme.text, plain.text]  # dull tail dropped
+
+
+def test_heuristic_does_not_cut_words_at_non_ascii_letters() -> None:
+    """#231: the word splitter keeps letters of any alphabet. "[a-z]+" cut
+    "mostá" (Slovak "bridged") into the English marker "most" plus a stray
+    letter, and read Cyrillic as no words at all."""
+    baseline = heuristic_surprise("Mostá cesta vedie cez rieku.")
+    assert baseline == heuristic_surprise("Шоколад це смачно")
+    assert heuristic_surprise("largest record") > baseline

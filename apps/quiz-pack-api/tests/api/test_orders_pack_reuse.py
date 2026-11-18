@@ -435,3 +435,34 @@ def test_prompt_key_ignores_case_spacing_punctuation_not_diacritics() -> None:
     assert prompt_key("Harry Potter") == prompt_key("Harry-Potter?")
     assert prompt_key("Pán prsteňov") != prompt_key("Pan prstenov")
     assert prompt_key("Harry Potter") != prompt_key("Harry Potter knihy")
+
+
+def test_prompt_key_ukrainian_case_and_apostrophe_forms() -> None:
+    """#231: a Cyrillic topic matches across case/spacing, and the two
+    Ukrainian apostrophes (' and ʼ) are one prompt; different words are not."""
+    assert prompt_key("М'ясні страви") == prompt_key("  мʼясні   СТРАВИ!! ")
+    assert prompt_key("Космос для дітей") != prompt_key("Космос")
+
+
+@pytest.mark.asyncio
+async def test_ukrainian_order_reuses_only_a_ukrainian_pack(
+    client: httpx.AsyncClient,
+    make_jws: JWSFactory,
+    test_session: AsyncSession,
+    arq_mock: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Why: a uk buyer must never get an sk/en pack on the same topic text, and
+    must get the uk one even when the Cyrillic text differs in case."""
+    monkeypatch.setenv("PACK_ORDER_LANGUAGES", "en,sk,cs,uk")
+    await _seed_source(test_session, prompt="Космос для дітей", language="sk")
+    uk_order, _ = await _seed_source(
+        test_session, prompt="Космос для дітей", language="uk", owner="player-c"
+    )
+    uk_order_id = uk_order.id
+
+    order_id = await _order(client, make_jws, prompt="космос ДЛЯ дітей!", language="uk")
+
+    arq_mock.enqueue_job.assert_not_called()
+    order = await _load(test_session, order_id)
+    assert order.reused_from_order_id == uk_order_id

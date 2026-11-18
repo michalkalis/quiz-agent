@@ -567,3 +567,15 @@ async def test_forced_topics_bypass_derivation_and_pool() -> None:
     assert sourcer.calls[0]["topics"] == forced
     assert ctx.auto_topics == forced
     assert pool.last_count is None
+
+
+def test_prompt_tokens_cyrillic_topic_and_latin_unchanged() -> None:
+    """#231: a Cyrillic prompt used to yield no topic tokens at all. Generic
+    Ukrainian filler is dropped like its English twin; Latin is unchanged."""
+    assert SourcingStage._prompt_tokens("Зроби запитання про космос для дітей") == [
+        "космос",
+        "дітей",
+    ]
+    assert SourcingStage._prompt_tokens("ancient Roman emperors") == [
+        "ancient", "roman", "emperors",
+    ]

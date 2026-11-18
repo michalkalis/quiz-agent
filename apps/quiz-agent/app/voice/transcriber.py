@@ -121,27 +121,35 @@ class TranscriptionResult:
         Returns:
             True if transcription appears to be valid speech, False otherwise
         """
-        # Empty or very short text
-        if not self.text or len(self.text.strip()) < min_chars:
-            return False
+        return self.rejection_code(min_chars) is None
+
+    def rejection_code(self, min_chars: int = 2) -> Optional[str]:
+        """Why the transcript is not an answer, as a fixed code for analytics
+        (#240): empty_transcript / too_short / no_speech_prob / low_confidence /
+        hallucination, or None when it is valid. Never carries the text."""
+        text = (self.text or "").strip()
+        if not text:
+            return "empty_transcript"
+        if len(text) < min_chars:
+            return "too_short"
 
         # High probability of no speech (> 0.8 = very likely silence)
         # Relaxed from 0.6 to avoid rejecting valid speech in noisy environments
         if self.no_speech_prob > 0.8:
-            return False
+            return "no_speech_prob"
 
         # Very low confidence (< -1.5 = severely garbled)
         # Relaxed from -1.0 to accept short answers and accented speech
         if self.avg_logprob < -1.5:
-            return False
+            return "low_confidence"
 
         # Check for known hallucination patterns
-        text_lower = self.text.lower().strip()
+        text_lower = text.lower()
         for pattern in HALLUCINATION_PATTERNS:
             if text_lower == pattern or text_lower == pattern + ".":
-                return False
+                return "hallucination"
 
-        return True
+        return None
 
     def get_rejection_reason(self, min_chars: int = 2) -> Optional[str]:
         """Get human-readable reason why transcription was rejected.

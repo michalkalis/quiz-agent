@@ -52,7 +52,9 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
         {"reason", "questions_asked", "score", "is_pack", "age_band"}
     ),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
-    "transcription_failed": frozenset({"reason", "question_id"}),
+    # #240: reason = why the voice answer was turned away (see the doc);
+    # transcript_chars = its length, never the text.
+    "transcription_failed": frozenset({"reason", "question_id", "transcript_chars"}),
     # #212.5: game together. Under the host (created, finished) or the
     # guest (joined; via = nearby | qr | link).
     "room_created": frozenset({"room_id"}),

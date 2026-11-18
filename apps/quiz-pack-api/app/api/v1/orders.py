@@ -327,17 +327,19 @@ def _idempotent_replay_response(existing: GenerationOrder) -> JSONResponse:
 _ORDERS_PAUSED = {
     "sk": "Objednávanie je zatiaľ pozastavené. Skús to neskôr.",
     "cs": "Objednávání je zatím pozastavené. Zkus to později.",
+    "uk": "Замовлення поки що призупинені. Спробуй пізніше.",
     "en": "Ordering is paused for now. Try again later.",
 }
 _ORDERS_PAUSED_PAID = {
     "sk": "Objednávanie je zatiaľ pozastavené. Platba ostáva uložená, skús to neskôr.",
     "cs": "Objednávání je zatím pozastavené. Platba zůstává uložená, zkus to později.",
+    "uk": "Замовлення поки що призупинені. Оплата збережена, спробуй пізніше.",
     "en": "Ordering is paused for now. Your payment is saved, try again later.",
 }
 
 
 def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
-    """The paused-orders message in the first of sk/cs/en the client accepts."""
+    """The paused-orders message in the first of sk/cs/uk/en the client accepts."""
     messages = _ORDERS_PAUSED_PAID if paid else _ORDERS_PAUSED
     for part in (accept_language or "").split(","):
         code = part.split(";")[0].strip().split("-")[0].lower()
@@ -351,14 +353,20 @@ def _orders_paused_detail(accept_language: Optional[str], paid: bool) -> str:
 _TESTER_CAP_REACHED = {
     "sk": "Týždenný limit testovacích balíkov je vyčerpaný. Ďalší sa dá vytvoriť od {date}.",
     "cs": "Týdenní limit testovacích balíčků je vyčerpaný. Další půjde vytvořit od {date}.",
+    "uk": "Тижневий ліміт тестових наборів вичерпано. Наступний можна створити з {date}.",
     "en": "You've used this week's test packs. You can create the next one on {date}.",
 }
+# #231 — Ukrainian: day + genitive month ("25 листопада"), never a bare number.
+_UK_MONTHS_GEN = (
+    "січня", "лютого", "березня", "квітня", "травня", "червня",
+    "липня", "серпня", "вересня", "жовтня", "листопада", "грудня",
+)
 _EN_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _TESTER_CAP_WINDOW = timedelta(days=7)
 
 
 def _tester_cap_detail(accept_language: Optional[str], next_allowed: datetime) -> str:
-    """The cap message in the first of sk/cs/en the client accepts."""
+    """The cap message in the first of sk/cs/uk/en the client accepts."""
     lang = "en"
     for part in (accept_language or "").split(","):
         code = part.split(";")[0].strip().split("-")[0].lower()
@@ -367,6 +375,8 @@ def _tester_cap_detail(accept_language: Optional[str], next_allowed: datetime) -
             break
     if lang == "en":
         date = f"{_EN_MONTHS[next_allowed.month - 1]} {next_allowed.day}"
+    elif lang == "uk":
+        date = f"{next_allowed.day} {_UK_MONTHS_GEN[next_allowed.month - 1]}"
     else:
         date = f"{next_allowed.day}. {next_allowed.month}"
     return _TESTER_CAP_REACHED[lang].format(date=date)

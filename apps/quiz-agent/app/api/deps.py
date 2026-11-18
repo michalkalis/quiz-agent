@@ -140,8 +140,7 @@ class CreateSessionRequest(BaseModel):
         if is_dark_language(code, servable):
             # #231: no build offers it, so there is nothing to keep working.
             raise ValueError(
-                f"language {code!r} is not available "
-                f"(available: {', '.join(servable)})"
+                f"language {code!r} is not available (available: {', '.join(servable)})"
             )
         if code not in servable:
             logger.warning(

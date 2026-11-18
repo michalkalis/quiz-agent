@@ -46,8 +46,9 @@ LEGACY_QUIZ_LANGUAGES: tuple[str, ...] = (
 # list it (defaults below stay en,sk,cs).
 QUIZ_LANGUAGES: tuple[str, ...] = (*LEGACY_QUIZ_LANGUAGES, "uk")
 
-# Languages served ONLY from rows written natively in them (plus stored,
-# approved translations). Every other non-English language may fall back to an
+# Languages served ONLY from rows written natively in them: no English rows at
+# all, not even ones with a stored approved translation (the retriever has no
+# exact filter for that). Every other non-English language may fall back to an
 # English row translated live by an LLM at serve time; that is acceptable for
 # sk/cs, which have verified stored translations. Ukrainian has none (the
 # translation tool supports only sk and cs), so a live translation would reach
@@ -62,7 +63,11 @@ def is_dark_language(code: str, listed: tuple[str, ...]) -> bool:
     Such a request must be refused (422), unlike a legacy code, which is only
     warned about. Once the env list includes the code this is False.
     """
-    return code in QUIZ_LANGUAGES and code not in LEGACY_QUIZ_LANGUAGES and code not in listed
+    return (
+        code in QUIZ_LANGUAGES
+        and code not in LEGACY_QUIZ_LANGUAGES
+        and code not in listed
+    )
 
 
 # DD14: quiz sessions default to the three languages with an approved corpus.

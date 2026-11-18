@@ -35,6 +35,14 @@ struct SharedQuizResultsSheet: View {
                         .font(.hangsBody)
                         .foregroundStyle(Theme.Hangs.Colors.muted)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                } else if share.rows.isEmpty, share.hasLoaded {
+                    // A pack sent from Home has no sender score, so until a
+                    // friend finishes it the server lists nobody.
+                    Text("No one has finished this quiz yet.")
+                        .font(.hangsBody)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("sharedQuiz.results.empty")
                 } else if share.rows.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity)

@@ -27,9 +27,14 @@ nonisolated struct DailyChallengeDay: Equatable, Sendable {
         self.day = day
     }
 
-    /// The local calendar date of `date` (time zone and calendar of the device).
+    /// The local date of `date` in the time zone of `calendar`, always
+    /// counted in the Gregorian calendar: the server reads `YYYY-MM-DD` as
+    /// Gregorian, and a phone set to the Japanese or Buddhist calendar would
+    /// otherwise send "8-10-15" or 2569 (#240 audit finding 18).
     init(_ date: Date, calendar: Calendar = .current) {
-        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        let parts = gregorian.dateComponents([.year, .month, .day], from: date)
         self.init(year: parts.year ?? 1970, month: parts.month ?? 1, day: parts.day ?? 1)
     }
 

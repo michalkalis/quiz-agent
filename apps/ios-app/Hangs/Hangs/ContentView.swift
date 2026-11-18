@@ -74,13 +74,17 @@ struct ContentView: View {
             if showOnboarding {
                 OnboardingView(viewModel: onboardingVM)
                     .onChange(of: onboardingVM.isComplete) { _, complete in
-                        if complete { showOnboarding = false }
+                        guard complete else { return }
+                        showOnboarding = false
+                        // A friend's link that waited for the AI disclosure.
+                        openPendingSharedQuiz()
                     }
             } else {
                 mainContent
             }
         }
-        // #232: a friend's link opens even over the first launch's onboarding.
+        // #232: a friend's link opens over the first launch's onboarding once
+        // the AI disclosure on its first page was accepted (#240 audit finding 23).
         .onReceive(sharedQuiz.$token) { token in
             // @Published delivers before the new value is stored.
             if token != nil { Task { openPendingSharedQuiz() } }
@@ -212,12 +216,15 @@ struct ContentView: View {
         openRoom(invite: invite)
     }
 
-    /// #232: a friend's link starts its quiz at once, without the onboarding
-    /// (it stays for the next launch); the mic is asked for at the start, as
-    /// for every quiz. Waits while the switch is off (the config may still be
-    /// the launch default), a game together is up or a quiz runs.
+    /// #232: a friend's link starts its quiz at once; the mic is asked for at
+    /// the start, as for every quiz. Waits while the switch is off (the config
+    /// may still be the launch default), a game together is up or a quiz runs,
+    /// and on a first launch until the onboarding's AI disclosure was accepted:
+    /// spoken answers go to AI services, which App Review requires to be
+    /// disclosed before first use (#209, #240 audit finding 23).
     private func openPendingSharedQuiz() {
         guard appConfig.sharedQuizEnabled, room == nil, viewModel.quizState == .idle,
+              SharedQuizInbox.mayOpen(isOnboardingShown: showOnboarding),
               let token = sharedQuiz.take() else { return }
         showOnboarding = false
         viewModel.beginSharedQuiz(token: token)

@@ -54,6 +54,13 @@ final class SharedQuizInbox: ObservableObject {
         return true
     }
 
+    /// A waiting link may start: the onboarding is not up, or its first page
+    /// (the AI services disclosure, #209) was already accepted. Otherwise the
+    /// link stays here until the onboarding finishes.
+    static func mayOpen(isOnboardingShown: Bool, consentDefaults: UserDefaults = .standard) -> Bool {
+        !isOnboardingShown || AIProcessingConsent.hasConsented(defaults: consentDefaults)
+    }
+
     func take() -> String? {
         defer { token = nil }
         return token

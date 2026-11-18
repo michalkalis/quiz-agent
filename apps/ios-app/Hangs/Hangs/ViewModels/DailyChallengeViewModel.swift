@@ -10,9 +10,15 @@
 //  A failed fetch keeps the last state of the same day and language; with
 //  none, the card offers the challenge to play (the start then retries).
 //
+//  #240 (audit finding 17): Home stays on screen while the app sleeps, so the
+//  card moves to the new day when iOS reports a day change (midnight, a time
+//  zone change; queued while suspended, delivered on return). Otherwise the
+//  morning card shows yesterday and "Play today" starts yesterday's set.
+//
 
 import Combine
 import Foundation
+import UIKit
 
 @MainActor
 final class DailyChallengeViewModel: ObservableObject {
@@ -31,13 +37,17 @@ final class DailyChallengeViewModel: ObservableObject {
     private let now: () -> Date
     private let calendar: Calendar
     private var language: String?
+    /// Set by `refreshToday`: this model follows today (Home), not a fixed day.
+    private var followsToday = false
+    private var dayChange: AnyCancellable?
 
     init(
         network: NetworkServiceProtocol,
         now: @escaping () -> Date = { .now },
         calendar: Calendar = .current,
         day: DailyChallengeDay? = nil,
-        state: DailyChallengeState? = nil
+        state: DailyChallengeState? = nil,
+        notificationCenter: NotificationCenter = .default
     ) {
         self.network = network
         self.now = now
@@ -45,6 +55,10 @@ final class DailyChallengeViewModel: ObservableObject {
         self.day = day ?? state.flatMap { DailyChallengeDay(isoDate: $0.date) } ?? DailyChallengeDay(now(), calendar: calendar)
         self.state = state
         language = state?.language
+        dayChange = notificationCenter.publisher(for: UIApplication.significantTimeChangeNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor in await self?.dayMayHaveChanged() }
+            }
     }
 
     /// Questions in the challenge; before the first answer, the server's set size.
@@ -62,7 +76,14 @@ final class DailyChallengeViewModel: ObservableObject {
 
     /// Home: today's challenge in the quiz language.
     func refreshToday(language: String) async {
+        followsToday = true
         await refresh(day: DailyChallengeDay(now(), calendar: calendar), language: language)
+    }
+
+    /// iOS reported a significant time change: a new day gets its own card.
+    private func dayMayHaveChanged() async {
+        guard followsToday, let language, DailyChallengeDay(now(), calendar: calendar) != day else { return }
+        await refreshToday(language: language)
     }
 
     /// The challenge of `day` in `language`. A different day or language

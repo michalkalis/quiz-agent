@@ -44,6 +44,9 @@ final class SharedQuizShareModel: ObservableObject {
     @Published private(set) var rows: [Row] = []
     /// The comparison could not be read (the link is gone or not this player's).
     @Published private(set) var loadFailed = false
+    /// The server answered at least once, so empty `rows` means nobody has
+    /// finished it yet, not "still loading" (#240 audit finding 7).
+    @Published private(set) var hasLoaded = false
 
     private let network: NetworkServiceProtocol
     private let source: Source?
@@ -137,6 +140,7 @@ final class SharedQuizShareModel: ObservableObject {
             guard !Task.isCancelled else { return }
             rows = Self.rows(from: results.players)
             loadFailed = false
+            hasLoaded = true
         } catch {
             loadFailed = rows.isEmpty
             // The comparison is extra: the screen keeps what it had.

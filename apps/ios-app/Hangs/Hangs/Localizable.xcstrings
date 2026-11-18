@@ -9300,6 +9300,23 @@
         }
       }
     },
+    "No one has finished this quiz yet." : {
+      "comment" : "#240: the comparison sheet of a shared quiz link when nobody has finished the quiz yet (e.g. a pack sent from Home)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kvíz ještě nikdo nedohrál."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kvíz ešte nikto nedohral."
+          }
+        }
+      }
+    },
     "No packs yet" : {
       "localizations" : {
         "cs" : {

@@ -18,6 +18,9 @@ struct UpdateRequiredView: View {
 
     /// App Store Connect app id of Trubbo.
     private static let appStoreId = "6762482437"
+    /// App Store Connect app id of Trubbo Beta (#234), the app every
+    /// TestFlight build is since 2026-11-14.
+    private static let betaAppId = "6834881608"
 
     @Environment(\.openURL) private var openURL
 
@@ -88,10 +91,12 @@ struct UpdateRequiredView: View {
         openURL(url)
     }
 
-    /// Where "update" leads; shared with the #214 update card on Home.
-    static func storeURL(isTestFlight: Bool) -> URL? {
+    /// Where "update" leads; shared with the #214 update card on Home. A
+    /// TestFlight build of Trubbo Beta opens Trubbo Beta's TestFlight page:
+    /// Trubbo's holds no beta build for it (#240 audit finding 24).
+    static func storeURL(isTestFlight: Bool, isBeta: Bool = BetaApp.isBetaBuild) -> URL? {
         URL(string: isTestFlight
-            ? "itms-beta://beta.itunes.apple.com/v1/app/\(appStoreId)"
+            ? "itms-beta://beta.itunes.apple.com/v1/app/\(isBeta ? betaAppId : appStoreId)"
             : "https://apps.apple.com/app/id\(appStoreId)")
     }
 }

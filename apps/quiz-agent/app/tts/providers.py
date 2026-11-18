@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Optional, Protocol, runtime_checkable
 
 import httpx
@@ -24,6 +25,7 @@ from ..monitoring.provider_alerts import (
     report_openai_refusal,
 )
 from .voices import (
+    ELEVENLABS_CYRILLIC_MODEL,
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
     ELEVENLABS_OUTPUT_FORMAT,
@@ -34,6 +36,8 @@ from .voices import (
 )
 
 logger = logging.getLogger(__name__)
+
+_CYRILLIC_RE = re.compile(r"[\u0400-\u04FF]")
 
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
@@ -106,8 +110,10 @@ class ElevenLabsTTSProvider:
         model: str = ELEVENLABS_DEFAULT_MODEL,
         voice: Optional[str] = None,
         api_key: Optional[str] = None,
+        cyrillic_model: str = ELEVENLABS_CYRILLIC_MODEL,
     ):
         self.model = model
+        self.cyrillic_model = cyrillic_model
         self.default_voice = voice or ELEVENLABS_DEFAULT_VOICE
         self._api_key = api_key
 
@@ -116,6 +122,10 @@ class ElevenLabsTTSProvider:
         # Read late, not at construction: tests and the RC-style env reloads
         # mutate the environment after services are wired up.
         return self._api_key or os.environ.get("ELEVENLABS_API_KEY")
+
+    def model_for(self, text: str) -> str:
+        """The language is in the text: Cyrillic means Ukrainian (#231)."""
+        return self.cyrillic_model if _CYRILLIC_RE.search(text) else self.model
 
     async def synthesize(self, text: str, voice: str) -> bytes:
         api_key = self.api_key
@@ -127,7 +137,7 @@ class ElevenLabsTTSProvider:
                 f"{ELEVENLABS_TTS_URL}/{voice}",
                 params={"output_format": ELEVENLABS_OUTPUT_FORMAT},
                 headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-                json={"text": text, "model_id": self.model},
+                json={"text": text, "model_id": self.model_for(text)},
                 timeout=ELEVENLABS_TIMEOUT_SECONDS,
             )
 
@@ -151,7 +161,10 @@ _BUILDERS = {
 
 
 def build_provider(
-    name: str, model: Optional[str] = None, voice: Optional[str] = None
+    name: str,
+    model: Optional[str] = None,
+    voice: Optional[str] = None,
+    cyrillic_model: Optional[str] = None,
 ) -> TTSProvider:
     """Instantiate a provider by name (`elevenlabs` / `openai`)."""
     builder = _BUILDERS.get(name.strip().lower())
@@ -162,6 +175,8 @@ def build_provider(
     kwargs = {}
     if model:
         kwargs["model"] = model
+    if cyrillic_model and builder is ElevenLabsTTSProvider:
+        kwargs["cyrillic_model"] = cyrillic_model
     if voice:
         kwargs["voice"] = voice
     return builder(**kwargs)

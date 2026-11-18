@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 from typing import Any
 
@@ -56,11 +57,17 @@ BOOL_KEYS = (
     "triage_bridge_enabled",
     "pack_reuse_enabled",
     "shared_quiz_enabled",
+    "family_mode_enabled",
+    "family_mode_enabled_app_store",
 )
 # #205: lowest app build number that sees the daily challenge before it is on
 # for everyone (see ``daily_challenge.gate``); null = no beta preview.
 BUILD_KEYS = ("daily_challenge_beta_min_build",)
-KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS, *BUILD_KEYS)
+# #236: App Store countries (StoreKit ``Storefront.countryCode``, ISO 3166-1
+# alpha-3 such as "USA") where the app hides family mode; stored comma-joined.
+LIST_KEYS = ("family_mode_hidden_storefronts",)
+KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS, *BUILD_KEYS, *LIST_KEYS)
+_STOREFRONT_RE = re.compile(r"[A-Z]{3}")
 
 _cache: tuple[float, dict[str, str | None]] | None = None
 _lock = asyncio.Lock()
@@ -85,6 +92,8 @@ def encode(key: str, value: Any) -> str | None:
         if not isinstance(value, bool):
             raise ValueError(f"{key} must be true or false")
         return "true" if value else "false"
+    if key in LIST_KEYS:
+        return _encode_storefronts(key, value)
     if value is None:
         return None
     if not isinstance(value, str):
@@ -99,6 +108,19 @@ def encode(key: str, value: Any) -> str | None:
     if key in NOTICE_KEYS and len(text) > NOTICE_MAX_CHARS:
         raise ValueError(f"{key} is longer than {NOTICE_MAX_CHARS} characters")
     return text
+
+
+def _encode_storefronts(key: str, value: Any) -> str | None:
+    """A list of alpha-3 country codes → "USA,GBR"; empty/None = none hidden."""
+    if value is None:
+        return None
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise ValueError(f"{key} must be a list of country codes or null")
+    codes = [v.strip().upper() for v in value if v.strip()]
+    bad = [c for c in codes if not _STOREFRONT_RE.fullmatch(c)]
+    if bad:
+        raise ValueError(f"{key} takes 3-letter codes like USA, got {bad[0]!r}")
+    return ",".join(dict.fromkeys(codes)) or None
 
 
 def env_values(settings: Settings) -> dict[str, Any]:
@@ -124,6 +146,10 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "pack_reuse_enabled": True,
         # #232: share a quiz by link; off until the founder has tested it.
         "shared_quiz_enabled": False,
+        # #236: family mode „S deťmi“; off on both channels until switched on.
+        "family_mode_enabled": False,
+        "family_mode_enabled_app_store": False,
+        "family_mode_hidden_storefronts": [],
         "daily_challenge_beta_min_build": None,
         "maintenance_sk": None,
         "maintenance_cs": None,
@@ -142,8 +168,12 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
             "maintenance_enabled",
             "multiplayer_enabled_app_store",
             "shared_quiz_enabled",
+            "family_mode_enabled",
+            "family_mode_enabled_app_store",
         ):
             out[key] = raw == "true"
+        elif key in LIST_KEYS:
+            out[key] = raw.split(",") if raw else []
         elif key in out:
             out[key] = raw
     return out

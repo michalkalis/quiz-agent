@@ -520,6 +520,41 @@ class QuestionRetriever:
         translated = await self.get_translations(english, language) if english else {}
         return [q for q in rows if q.language == language or q.id in translated]
 
+    def _band_filters(self, session: QuizSession) -> dict:
+        """#236 family round pool: the session's own serving filters (band,
+        topic, build channel's review statuses, no packs, no images), any
+        difficulty, and the session's language ONLY. Band questions are never
+        translated at play time: the child checks (word and number limits,
+        the kids judge) ran on the text in the language it was written in."""
+        filters = self._build_metadata_filters("random", session)
+        filters.pop("difficulty")
+        filters.pop("$or", None)
+        filters.pop("language_dependent", None)
+        filters["language"] = session.language
+        return filters
+
+    async def band_pool_ids(self, session: QuizSession, limit: int = 2000) -> List[str]:
+        """Every playable question of a family session's band + topic (#236)."""
+        rows = await self._store.search(
+            query_text=None, filters=self._band_filters(session), n_results=limit
+        )
+        return [q.id for q in rows if not q.is_expired()]
+
+    async def band_topic_counts(
+        self, language: str, build_channel: Optional[str]
+    ) -> dict:
+        """Playable band questions per ``(age_band, category)`` in one query,
+        under the same filters ``band_pool_ids`` plays from (#236 topics)."""
+        template = QuizSession(
+            session_id="family-topics",
+            language=language,
+            build_channel=build_channel,
+            age_band="kids_4_6",
+        )
+        filters = self._band_filters(template)
+        filters["age_band"] = {"$ne": None}
+        return await self._store.grouped_counts(("age_band", "category"), filters)
+
     @staticmethod
     def _image_types(session: QuizSession) -> list[str]:
         """Image type is served only when the session opted in (#68, default off)."""

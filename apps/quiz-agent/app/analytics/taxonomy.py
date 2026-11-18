@@ -12,8 +12,19 @@ from __future__ import annotations
 
 # Emitted by this API, where the truth lives.
 SERVER_EVENTS: dict[str, frozenset[str]] = {
+    # #236 family round: age_band = the round's content setting (never a
+    # property of the player); repeats = it replays questions played before.
     "quiz_started": frozenset(
-        {"category", "language", "difficulty", "mode", "is_pack", "max_questions"}
+        {
+            "category",
+            "language",
+            "difficulty",
+            "mode",
+            "is_pack",
+            "max_questions",
+            "age_band",
+            "repeats",
+        }
     ),
     "answer_evaluated": frozenset(
         {
@@ -33,9 +44,13 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
             # #212.2: graded in a multiplayer room
             "multiplayer",
             "room_id",
+            # #236: the family round's age band
+            "age_band",
         }
     ),
-    "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),
+    "quiz_completed": frozenset(
+        {"reason", "questions_asked", "score", "is_pack", "age_band"}
+    ),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
     "transcription_failed": frozenset({"reason", "question_id"}),
     # #212.5: game together. Under the host (created, finished) or the

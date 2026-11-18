@@ -1,7 +1,7 @@
 # #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 audit hotový (24 nálezov; PR #872–#874 nasadené, #878 v kontrole, 19 stredných čaká); prechody appkou čiastočne; posudok zábavnosti hotový, čaká na rozhodnutia foundera; hlavné zistenie: noví hráči z App Store nedohrajú kolo, hlas ich „nepočuje“
+**Status:** 2026-11-18 audit hotový (24 nálezov; PR #872–#874 a #878 nasadené, všetky 4 vysoké opravené, 18 stredných čaká); prechody appkou čiastočne; posudok zábavnosti hotový, čaká na rozhodnutia foundera; hlavné zistenie: noví hráči z App Store nedohrajú kolo, hlas ich „nepočuje“
 **Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 

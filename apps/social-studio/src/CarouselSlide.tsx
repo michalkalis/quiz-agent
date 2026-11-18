@@ -1,4 +1,4 @@
-// "Road Trip Round" carousel (4:5 stills): cover, then each question followed
+// Quiz carousel (4:5 stills): cover, then each question followed
 // right away by its answer (founder 2026-11-04). The answer slide quietly says
 // another question follows; the last one asks for the score instead.
 import React from 'react';
@@ -26,7 +26,7 @@ const Why: React.FC<{sentence: string}> = ({sentence}) => {
 	return why.text ? <div style={{fontSize: why.size, lineHeight: 1.3, color: INK2, marginTop: 24, fontWeight: 500}}>{why.text}</div> : null;
 };
 
-export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, part, questions, index}) => {
+export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, questions, index}) => {
 	const copy = COPY[language];
 	const q = questions[index];
 	const tint = kind !== 'cover' && q ? tintFor(q.category) : tintFor('geography-world');
@@ -44,8 +44,8 @@ export const CarouselSlide: React.FC<CarouselSlideProps> = ({kind, language, par
 
 			{kind === 'cover' ? (
 				<div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 36}}>
-					<div style={{fontSize: 112, fontWeight: 800, lineHeight: 1.02, color: tint.onBg, letterSpacing: -2}}>{copy.roundTitle(part)}</div>
-					<div style={{fontSize: 48, fontWeight: 600, lineHeight: 1.25, color: tint.onBg, opacity: 0.9}}>{copy.roundSub(questions.length)}</div>
+					<div style={{fontSize: 112, fontWeight: 800, lineHeight: 1.02, color: tint.onBg, letterSpacing: -2}}>{copy.openLine(questions.length)}</div>
+					<div style={{fontSize: 48, fontWeight: 600, lineHeight: 1.25, color: tint.onBg, opacity: 0.9}}>{copy.roundSub}</div>
 					<div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 30, marginTop: 20}}>
 						<div style={{fontSize: 40, fontWeight: 700, color: tint.onBg, marginBottom: 40}}>{copy.swipe} →</div>
 						<Monkey size={300} mood="thinking" />

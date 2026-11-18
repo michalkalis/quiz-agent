@@ -11,8 +11,7 @@ type Copy = {
 	soon: string;
 	/** Pinned launch reel, opening line (founder 2026-11-02: one pinned reel per account once 1.1 is live). */
 	live: string;
-	roundTitle: (part: number) => string;
-	roundSub: (n: number) => string;
+	roundSub: string;
 	/** Cover line before the arrow (founder 2026-11-04: sk/cs name the next slide, "Listuj" was not right either). */
 	swipe: string;
 	/** Answer slide, quiet hint that another question follows. */
@@ -33,8 +32,7 @@ export const COPY: Record<Language, Copy> = {
 		tagline: 'Trivia you answer out loud',
 		soon: 'Free on the App Store',
 		live: 'Trubbo is now on the App Store.',
-		roundTitle: (p) => `Quiz round, part ${p}.`,
-		roundSub: (n) => `${n} questions. Each answer on the next slide.`,
+		roundSub: 'Each answer on the next slide.',
 		swipe: 'Swipe',
 		next: 'Next question',
 		score: 'How many did you get?',
@@ -47,8 +45,7 @@ export const COPY: Record<Language, Copy> = {
 		tagline: 'Kvíz, ktorý hráš hlasom',
 		soon: 'Zadarmo v App Store',
 		live: 'Trubbo je už v App Store.',
-		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0diel.`,
-		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázok'}. Odpoveď hneď na ďalšej strane.`,
+		roundSub: 'Odpoveď hneď na ďalšej strane.',
 		swipe: 'Prvá otázka',
 		next: 'Ďalšia otázka',
 		score: 'Koľko máš správne?',
@@ -61,8 +58,7 @@ export const COPY: Record<Language, Copy> = {
 		tagline: 'Kvíz, který hraješ hlasem',
 		soon: 'Zdarma v App Store',
 		live: 'Trubbo je už v App Store.',
-		roundTitle: (p) => `Kvízové kolo, ${p}.\u00a0díl.`,
-		roundSub: (n) => `${n} ${n < 5 ? 'otázky' : 'otázek'}. Odpověď hned na další straně.`,
+		roundSub: 'Odpověď hned na další straně.',
 		swipe: 'První otázka',
 		next: 'Další otázka',
 		score: 'Kolik máš správně?',

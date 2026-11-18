@@ -322,7 +322,8 @@ function main() {
 		if (slot.format === 'carousel') {
 			const part = (carouselParts[slot.language] = (carouselParts[slot.language] ?? 0) + 1);
 			files = render(['--carousel', ids.join(','), '--part', String(part), '--out', outDir]);
-			firstLine = {en: `Road trip round, part ${part}.`, sk: `Kvíz na cestu, ${part}. diel.`, cs: `Kvíz na cestu, ${part}. díl.`}[slot.language];
+			// Founder 2026-11-18: no "road trip" and no part number; the hook line says what it is.
+			firstLine = COPY[slot.language].openLine(ids.length);
 		} else {
 			files =
 				slot.format === 'round'

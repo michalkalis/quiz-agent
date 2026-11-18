@@ -79,6 +79,47 @@ def test_unreadable_audio_is_charged_as_a_full_recording():
     assert recording_seconds(io.BytesIO(b"RIFF\0\0\0\0WAVE")) == UNKNOWN_CLIP_SECONDS
 
 
+_MAX_UPLOAD = 5 * 1024 * 1024  # VoiceTranscriber.MAX_FILE_SIZE
+
+
+def _patched(clip: bytes, offset: int, value: int) -> bytes:
+    return clip[:offset] + struct.pack("<I", value) + clip[offset + 4 :]
+
+
+def test_a_lying_wav_header_cannot_buy_more_transcription_than_the_cap():
+    """#240 audit: OpenAI bills the audio that is really uploaded, so the cap
+    must charge for it too. A player who rewrites the header (huge byte rate,
+    tiny data size) would otherwise send ~164 s of 16 kHz speech charged as 1 s
+    and get ~160x the daily cap of paid transcription."""
+    honest = _wav(_MAX_UPLOAD / 32000)
+    real_seconds = len(honest) // 32000  # 16 kHz 16-bit mono = 32,000 bytes/s
+    assert real_seconds >= 160
+    assert recording_seconds(io.BytesIO(honest)) >= real_seconds
+
+    byte_rate_at = 12 + 8 + 8  # RIFF hdr, fmt chunk hdr, format/channels/rate
+    huge_rate = _patched(honest, byte_rate_at, 0xFFFFFFFF)
+    data_size_at = 12 + 8 + 16 + 4
+    tiny_data = _patched(honest, data_size_at, 32000)
+    for spoofed in (huge_rate, tiny_data):
+        assert recording_seconds(io.BytesIO(spoofed)) >= real_seconds
+
+
+def test_compressed_uploads_are_charged_by_size():
+    """A 5 MB low-bitrate Opus/m4a holds tens of minutes of audio; a flat 15 s
+    charge let one account loop the cap ~100x over. An honest 15 s answer from
+    the legacy recorder (AAC at 32 kbit/s) still pays 15 s."""
+    big = b"OggS" + b"\0" * (_MAX_UPLOAD - 4)
+    assert recording_seconds(io.BytesIO(big)) >= 1300  # ~22 min at 32 kbit/s
+
+    legacy_answer = b"\0\0\0\x18ftypM4A " + b"\0" * (15 * 4000 - 12)
+    assert recording_seconds(io.BytesIO(legacy_answer)) == UNKNOWN_CLIP_SECONDS
+
+    # A WAV that wraps compressed audio (format 0x55 = MP3) is charged by size.
+    mp3_in_wav = bytearray(_wav(_MAX_UPLOAD / 32000))
+    mp3_in_wav[20:22] = struct.pack("<H", 0x55)
+    assert recording_seconds(io.BytesIO(bytes(mp3_in_wav))) >= 1300
+
+
 # ── Limits are generous for a real player ────────────────────────────────────
 
 

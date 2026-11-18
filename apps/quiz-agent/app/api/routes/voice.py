@@ -46,7 +46,13 @@ from ...quiz.flow import QuizFlowService, elapsed_ms
 from ...quiz.resubmission import reanswers_finished_session
 from ...config import get_settings
 from ...usage.ai_grading_cap import bind_ai_grading
-from ...usage.caps import STT_SECONDS, UsageCaps, answer_attempts, recording_seconds
+from ...usage.caps import (
+    STT_SECONDS,
+    DailyCapExceeded,
+    UsageCaps,
+    answer_attempts,
+    recording_seconds,
+)
 from ...rate_limit import limiter
 from quiz_shared.utils.text_normalization import normalize_text
 from quiz_shared.models.phase import SessionPhase
@@ -220,6 +226,22 @@ async def transcribe_and_submit(
                     status_code=409, detail="Waiting for the next question"
                 )
 
+            def record_rejection(
+                reason: str, transcript_chars: Optional[int] = None
+            ) -> None:
+                # #240: why a voice answer was turned away, and how long the
+                # transcript was — a count, never the player's words.
+                quiz_flow.analytics.emit(
+                    "transcription_failed",
+                    subject_id=session.user_id,
+                    session_id=session_id,
+                    properties={
+                        "reason": reason,
+                        "question_id": session.current_question_id,
+                        "transcript_chars": transcript_chars,
+                    },
+                )
+
             try:
                 if not voice_transcriber.is_supported_format(audio.filename):
                     raise InvalidSubmission(
@@ -236,18 +258,22 @@ async def transcribe_and_submit(
                 # these bound how much STT one account can buy.
                 settings = get_settings()
                 cap_subject = subject.subject_id or session.user_id
-                await usage_caps.consume(
-                    cap_subject,
-                    answer_attempts(question_id or session.current_question_id),
-                    1,
-                    settings.daily_cap_answer_attempts,
-                )
-                await usage_caps.consume(
-                    cap_subject,
-                    STT_SECONDS,
-                    recording_seconds(audio.file),
-                    settings.daily_cap_stt_seconds,
-                )
+                try:
+                    await usage_caps.consume(
+                        cap_subject,
+                        answer_attempts(question_id or session.current_question_id),
+                        1,
+                        settings.daily_cap_answer_attempts,
+                    )
+                    await usage_caps.consume(
+                        cap_subject,
+                        STT_SECONDS,
+                        recording_seconds(audio.file),
+                        settings.daily_cap_stt_seconds,
+                    )
+                except DailyCapExceeded:
+                    record_rejection("daily_cap")
+                    raise
 
                 # Transcribe against the question this recording is FOR: a retry of a
                 # lost submit carries the already-graded id, and priming Whisper with
@@ -279,15 +305,19 @@ async def transcribe_and_submit(
 
                 # Transcribe with quiz context
                 stage_started = time.perf_counter()
-                transcription_result = (
-                    await voice_transcriber.transcribe_with_quiz_context(
-                        audio_file=audio.file,
-                        filename=audio.filename,
-                        current_question=current_question.question,
-                        language=session.language,
-                        keyterms=mcq_keyterms(current_question, session),
+                try:
+                    transcription_result = (
+                        await voice_transcriber.transcribe_with_quiz_context(
+                            audio_file=audio.file,
+                            filename=audio.filename,
+                            current_question=current_question.question,
+                            language=session.language,
+                            keyterms=mcq_keyterms(current_question, session),
+                        )
                     )
-                )
+                except Exception:
+                    record_rejection("stt_error")
+                    raise
                 stage_ms["stt_ms"] = elapsed_ms(stage_started)
 
                 # #185 G: a one-character MCQ answer ("C", "3") is a whole answer
@@ -316,14 +346,9 @@ async def transcribe_and_submit(
                         session_id,
                         transcription_result.text,
                     )
-                    quiz_flow.analytics.emit(
-                        "transcription_failed",
-                        subject_id=session.user_id,
-                        session_id=session_id,
-                        properties={
-                            "reason": "no_speech",
-                            "question_id": session.current_question_id,
-                        },
+                    record_rejection(
+                        transcription_result.rejection_code(min_chars),
+                        len(transcription_result.text.strip()),
                     )
                     raise retry_answer_error(
                         session,
@@ -420,6 +445,7 @@ async def transcribe_and_submit(
                     user_text_log.info(
                         "No answer intent in transcription: %r", transcribed_text
                     )
+                    record_rejection("no_answer", len(transcribed_text.strip()))
                     raise retry_answer_error(
                         session,
                         "no_answer",

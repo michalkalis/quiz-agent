@@ -284,7 +284,7 @@ class TTSService:
 
         primary_voice = voice or self.provider.default_voice
         style = self.style_for(language)
-        if await self._primary_paused():
+        if self._primary_paused():
             # Same path as a user over their own budget: cached primary audio
             # is still free to serve, anything new goes to the fallback.
             billing = billing or TTSBilling()
@@ -341,14 +341,16 @@ class TTSService:
             text, self._cache_voice(self.provider, voice, style, text)
         )
 
-    async def _primary_paused(self) -> bool:
+    def _primary_paused(self) -> bool:
         """The service spent today's ElevenLabs budget (#207.13). Never pauses
-        without a fallback: a question must not go silent over a budget."""
+        without a fallback: a question must not go silent over a budget. Never
+        waits on the budget's meter either (#240): the last verdict stands
+        while a stale one refreshes in the background."""
         return (
             self.primary_budget is not None
             and self.fallback is not None
             and self.provider.name == "elevenlabs"
-            and await self.primary_budget.exhausted()
+            and self.primary_budget.exhausted_now()
         )
 
     def _forget_in_flight(self, key: tuple[str, str]):

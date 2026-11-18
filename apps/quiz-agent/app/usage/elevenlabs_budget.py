@@ -74,19 +74,42 @@ class ElevenLabsBudget:
         self._checked_at: float | None = None
         self._day: date | None = None  # UTC day of the last good reading
         self._lock = asyncio.Lock()
+        self._background: asyncio.Task[None] | None = None
 
     async def exhausted(self) -> bool:
+        budget = self._budget()
+        if not budget:
+            return False
+        if not self._fresh():
+            await self._refresh_once(budget)
+        return self._exhausted
+
+    def exhausted_now(self) -> bool:
+        """The last verdict, without waiting (#240 audit). Speech calls this:
+        a slow ElevenLabs meter or database must never delay question audio,
+        so a stale reading is refreshed in the background and this request
+        goes by the previous one (at start: not exhausted)."""
+        budget = self._budget()
+        if not budget:
+            return False
+        if not self._fresh() and (self._background is None or self._background.done()):
+            self._background = asyncio.get_running_loop().create_task(
+                self._refresh_once(budget)
+            )
+        return self._exhausted
+
+    def _budget(self) -> int:
         budget = get_settings().elevenlabs_daily_credit_budget
         if not budget or self._sessionmaker is None:
-            return False
+            return 0
         if not os.environ.get("ELEVENLABS_API_KEY"):
-            return False
-        if self._fresh():
-            return self._exhausted
+            return 0
+        return budget
+
+    async def _refresh_once(self, budget: int) -> None:
         async with self._lock:
             if not self._fresh():  # another request may have just refreshed
                 await self._refresh(budget)
-        return self._exhausted
 
     def status(self) -> tuple[date | None, bool, int | None]:
         """(UTC day of the last good reading, budget reached, credits spent

@@ -518,6 +518,7 @@ final class SequenceAudio: AudioServiceProtocol {
     func setupAudioSession(mode _: AudioMode) throws {}
     func setupQuietListeningSession() throws {}
     func setupPlaybackOnlySession() throws {}
+    func ensureRecordingSession() throws {}
     func restoreSessionAfterVoiceProcessing() {}
     func deactivateSession() {}
     func switchAudioMode(_: AudioMode) async throws {}

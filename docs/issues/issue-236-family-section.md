@@ -18,9 +18,11 @@ Rodiny s deťmi sú od MVP prvý smer rastu, ale dnes pre ne v appke nie je nič
 |---|---|
 | Čím začať | Najprv vek pri vlastnom balíku, potom sekcia „S deťmi“ |
 | Vekové pásma | **4–6, 7–9, 10–12** hneď od začiatku |
-| Otázky „na pokec“ (absurdné, bez správnej odpovede, bez bodov) | **Áno, už v prvej verzii** |
+| Otázky „na pokec“ (absurdné, bez správnej odpovede, bez bodov) | **Áno, už v prvej verzii**; 2026-11-18 zmenené na „zatiaľ nie“ (236.6 odložené) |
 
 Skoršie: hádanky „čo som“ founder odmietol ako detinské klišé (2026-10-14), nepoužívať.
+
+2026-11-18 (k plánu stavby 236.5): kolo s deťmi sa počíta do limitu zadarmo, rozohrané kolo sa vždy dohrá, ponuka len na Úvode; hraničné otázky hodnotí founder naslepo, čisté idú automaticky; vydať všade hneď s vetou, že odpovedá dospelý; kolo 6 otázok pre 4–6, inak 10; „na pokec“ zatiaľ nie; zahraná téma sa opakuje od najstarších („Už ste hrali, opakujeme“); skutočné názvy značiek bez log. Podrobne v [pláne stavby](issue-236-family-mode-build.md).
 
 ## Mantinely (Apple a súkromie)
 
@@ -59,7 +61,7 @@ Pravidlá návrhu, ktoré z toho plynú:
 - App Store kľúčové slová a plán vlastnej stránky „Rodina a deti“ (#220 — App Store marketing) prepísať na rodinné rámovanie; `kids quiz` vypustiť.
 - Zásady súkromia: doplniť hlas dieťaťa pri hre s rodičom (appka je určená dospelým, hlas sa po prepise neukladá).
 - Znova prejsť dotazník vekového hodnotenia; overiť vek digitálneho súhlasu v SR a ČR (predpoklad 16 a 15, neoverené).
-- **Otvorené, treba právnika pred vydaním sekcie v USA:** americký COPPA posudzuje aj časť služby zameranú na deti a výnimka pre hlasové nahrávky nerieši posielanie zvuku službe na prepis. Rámovanie „hráčom je rodič“ pokrýva pravidlá Apple o slovách, nie nutne toto. Dovtedy možnosť: sekcia len v obchodoch EÚ.
+- **Otvorené, treba právnika pred vydaním sekcie v USA:** americký COPPA posudzuje aj časť služby zameranú na deti a výnimka pre hlasové nahrávky nerieši posielanie zvuku službe na prepis. Rámovanie „hráčom je rodič“ pokrýva pravidlá Apple o slovách, nie nutne toto. Founder 2026-11-18: vydať všade s vetou, že odpovedá dospelý; riziko prijal. Právnik je nepovinný ďalší krok, nie podmienka vydania.
 
 ### 236.3 Návrh obrazoviek
 
@@ -70,7 +72,7 @@ Rozhodnutia foundera 2026-11-18:
 - **Appka si režim pamätá** aj po zavretí (proti môjmu odporúčaniu otvárať vždy v bežnom kvíze). Zapnutý režim preto musí byť na Úvode zreteľný: prepínač a tlačidlo „Štart s deťmi“.
 - **Nižší vejár kategórií** na Úvode v oboch režimoch (karty asi o 30 % menšie, výška z ~300 na ~200 bodov); pás kariet zamietnutý. Ide von samostatne ako zmena Úvodu.
 - **Témy podľa pásma**, kolo vždy na jednu tému. Návrh rozdelenia: 4–6 Tvoje telo; Fuj, ale pravda; Veci doma; Superschopnosti zvierat; Dinosaury; Zvuky a smiešne slová. 7–9 Tvoje telo; Fuj, ale pravda; Jedlo ako veda; Ako sa čo vyrába; Superschopnosti zvierat; LEGO; Minecraft; Rekordy; Dinosaury. 10–12 Jedlo ako veda; Dalo by sa to?; Rekordy; Harry Potter; Minecraft; Vesmír; Špióni a šifry.
-- V hre: bez časového limitu; po zlej odpovedi len správna odpoveď a „Prečo“; 4–6 dve veľké tlačidlá; „na pokec“ na vlastnej karte s tlačidlom „Ďalšia“; koniec kola „Toto ste sa dozvedeli“ bez skóre. Prvé prepnutie otvorí voľbu veku, potom sa vek mení v stĺpci „Vek“.
+- V hre: bez časového limitu; po zlej odpovedi len správna odpoveď a „Prečo“; 4–6 dve veľké tlačidlá; „na pokec“ na vlastnej karte s tlačidlom „Ďalšia“ (odložené 2026-11-18); koniec kola „Toto ste sa dozvedeli“ bez skóre. Prvé prepnutie otvorí voľbu veku, potom sa vek mení v stĺpci „Vek“.
 
 ### 236.4 Obsah
 
@@ -90,7 +92,7 @@ Plán stavby (API, appka, kroky, otázky pre foundera): [issue-236-family-mode-b
 
 ### 236.6 Otázky „na pokec“
 
-Otázka bez správnej odpovede: appka prečíta, počká na pokyn „ďalej“, nič nehodnotí a nepočíta body. Nie je to nová hodnota typu otázky (typ hovorí, ako sa otázka zobrazí; otázka pre 4–6 môže byť výber z dvoch a zároveň nehodnotená), ale samostatný údaj „hodnotí sa / nehodnotí sa“; správna odpoveď prestane byť pri nehodnotených povinná. Server ich podáva len v sekcii a len buildom, ktoré ich vedia zahrať; denná výzva a štatistiky hráča ich vynechávajú. Vlastná téma v sekcii. Treba vyriešiť od generovania (iná rubrika: vtip a rozhovor, nie fakt; zdroj sa nevyžaduje) cez hlasový priebeh po skóre. Pravidlo „každá otázka má zdroj“ ostáva pre všetky vedomostné otázky.
+Odložené, founder 2026-11-18 („tie na pokec by som zatiaľ celkovo nedával. to asi nepotrebujeme“). Pôvodný návrh (samostatný údaj „hodnotí sa“, podávanie len buildom, ktoré ich vie zahrať) je v histórii tohto súboru.
 
 ### 236.7 Pásmo 4–6
 
@@ -100,6 +102,8 @@ Len otázky áno/nie alebo výber z dvoch, odpoveď môže ťuknúť rodič. Pre
 
 Hra spolu s pásmom pri hráčovi (dieťa dostane na tú istú tému ľahšiu otázku, tím rodič + dieťa) — až podľa používania sekcie.
 
+Otázky „na pokec“ (236.6), ak sa k nim founder vráti.
+
 ## Riziká
 
 | Riziko | Ošetrenie |
@@ -107,7 +111,7 @@ Hra spolu s pásmom pri hráčovi (dieťa dostane na tú istú tému ľahšiu ot
 | App Review vyhodnotí appku ako určenú deťom | Rámovanie na rodiča, žiadne detské motívy v ikone a snímkach, sekcia za vypínačom na serveri |
 | Hlas malých detí sa nerozpozná (štúdie: až tretina slov zle u škôlkarov; sk/cs nemerané) | 236.7: uzavreté odpovede, ťuknutie rodiča, skúška pred vydaním |
 | Nevhodná otázka v detskom obsahu | Kontrola po generovaní (pevné limity dĺžky + malý model ako sudca, pri neistote otázka vypadne) + overovanie faktov ako dnes |
-| COPPA v USA (nejasné, viď 236.2) | Právne posúdenie pred vydaním sekcie v USA; vypínač podľa krajiny |
+| COPPA v USA (nejasné, viď 236.2) | Founder riziko prijal (2026-11-18), veta „odpovedá dospelý“ nie je právna záruka; vypínač podľa krajiny ako páka; právnik nepovinne |
 | Dopyt je neoverený (žiadne dáta o hľadanosti ani tržbách) | 236.1 je malý krok a zmeria záujem cez podiel detských objednávok |
 
 ## Zdroje

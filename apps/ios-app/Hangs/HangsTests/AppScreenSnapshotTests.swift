@@ -38,6 +38,8 @@ enum AppScreen: String, CaseIterable {
     case setRecap
     case confirmTranscribing, confirmTranscript
     case orderForm, orderSummary, orderPreparing, orderReadyGenerating, orderReady, orderFailed
+    /// #240: the wait for a custom pack ran out while the pack is still being made.
+    case orderStillPreparing
     case signInIdle, signInSigningIn, signInFailed, signInCredit, signInPack
     case errorRetry, errorGoHome, errorDismiss
     case paywallPack, paywallAllowanceSpent, paywallOffline

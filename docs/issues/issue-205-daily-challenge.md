@@ -41,12 +41,16 @@ Make Trubbo competitive by comparing the player with other players. Start with a
 - [x] **205.4 iOS: Home card + flow.** (PR #444) Daily challenge card at the top of Home (mockup 6): not played → "Hraj dnešnú výzvu"; played → score + live crowd line, refreshed on appear. Play uses the existing quiz screens with 5 questions and the voice flow unchanged.
 - [x] **205.5 iOS: crowd strip + round end.** (PR #444) Strip under the correct-answer sticker per the rules table (mockups 1–2, position per decision 2). Daily round end (mockups 3–5 adapted): score, comparison, rarest hit last; numbers re-fetched when the screen or Home card reappears. Spoken lines per rules.
 - [x] **205.6 iOS: share.** (PR #444) Share button on the daily round end: "Trubbo · denná výzva 15. 10. / ✅✅❌✅✅ 4/5 / trubbo.app" (+ rank line only in top half). No answers in the text.
-- [ ] **205.7 Privacy text.** Proposed wording ready (run report 2026-10-15); not yet on the website, needs the founder's go. Showing aggregates of other players' answers is a new use. Update the privacy policy on the website (apps/website) and note any App Privacy label change for the founder.
+- [x] **205.7 Privacy text.** (PR #849, 2026-11-18) Proposed wording ready (run report 2026-10-15); not yet on the website, needs the founder's go. Showing aggregates of other players' answers is a new use. Update the privacy policy on the website (apps/website) and note any App Privacy label change for the founder.
 - [ ] **Later (not this run):** "X % hráčov" in regular rounds, reusing 205.3 per question, behind a switch, OFF until there is volume.
 
 ## Status (2026-10-15)
 
 Backend live on prod with the switch OFF (`DAILY_CHALLENGE_ENABLED = "false"` in `apps/quiz-agent/fly.toml`; turn on = set `"true"` + deploy). Implementation notes: crowd lines are built on the server (`apps/quiz-agent/app/daily_challenge/copy.py`, copy-reviewed), the app shows them verbatim; a resumed challenge continues with the unanswered questions; an edited transcript re-grades the recorded verdict; the one-per-day guard and "others" cover every linked identity (sign-in / sign-out). Open: 205.7, the founder's call on sk "Dnes si prvý." (masculine) vs a neutral wording.
+
+## Status (2026-11-18)
+
+Founder: beta first, then everyone. DB switch `daily_challenge_beta_min_build` (PR #848) turns the challenge on for app builds at or above that number (CFNetwork User-Agent) while `DAILY_CHALLENGE_ENABLED` stays off; store builds are ≤ 86, Trubbo Beta is 89. Raise or clear the switch before a store build at or above it ships; for everyone set the env switch to true. First-player line is now "Prvý výsledok dňa." (founder). Next ideas: friend leagues ([návrhy A/B/C](https://claude.ai/artifact/RkMrXQ8LhGmcvQdHdBJDzp), [rešerš](../research/seasonal-themes-and-competition-2026-11-18.md)).
 
 ## Done when
 

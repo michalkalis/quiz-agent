@@ -178,6 +178,8 @@ Create a free-tier global Redis database in Upstash, region closest to `cdg`
 
 ### Cloud provisioning — Fly secrets (Task 1.2)
 
+> Historical (Fly era). Since 2026-11-06 prod runs on Hetzner and the Fly app `quiz-pack-api` is only the forwarder: do not run these commands.
+
 Run **after** `fly deploy -c apps/quiz-pack-api/fly.toml` has created the app:
 
 ```bash

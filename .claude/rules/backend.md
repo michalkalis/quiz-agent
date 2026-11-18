@@ -62,13 +62,13 @@ When updating shared models, verify iOS still builds (`/verify-api`).
 
 ## Deployment
 
-Normal path: the **Backend Deploy** workflow (`.github/workflows/backend-deploy.yml`, #207): full Backend CI → staging → smoke → prod → smoke, quiz-pack-api before quiz-agent, `deployed/<app>` tags mark what prod runs. Run it with `gh workflow run backend-deploy.yml --ref main` (add `--ref <branch>` to rehearse a branch on staging only). The `/deploy` skill (laptop) is the manual emergency path. Backend CI's `Backend CI gate` job is a required PR check.
+Production runs on the Hetzner server since 2026-11-06 (#222 — moving the backend to Hetzner, `infra/hetzner/README.md`). Normal path: the **Backend Deploy** workflow (`.github/workflows/backend-deploy.yml`, #207 — production readiness): full Backend CI → `infra/hetzner/deploy-ssh.sh` over SSH (build, migrate, swap, wait healthy, automatic rollback without migrating) → smoke on `api.trubbo.app` / `pack.trubbo.app`; `deployed/<app>` tags mark what prod runs. Run it with `gh workflow run backend-deploy.yml --ref main` (Hetzner has no staging, so a branch ref only runs the tests). The `/deploy` skill is the manual emergency path. Backend CI's `Backend CI gate` job is a required PR check.
 
-Known Fly.io pitfalls (Dockerfile dep drift, volume mounts): see `docs/runbooks/fly-deploy.md`. Read it before `fly deploy` or before changing `[[mounts]]` in `fly.toml`.
+**Never `fly deploy` the app configs** (`apps/*/fly.toml`) or a release image to `quiz-agent-api` / `quiz-pack-api`: those Fly apps now run only the forwarder for builds that call `*.fly.dev`, and a deploy replaces it with the old app on the old Fly database. The image notes in `docs/runbooks/fly-deploy.md` (dependency lock, unprivileged user) still apply to the Dockerfiles; its Fly deploy commands do not.
 
 ## Migrations
 
 - Migrations only add (expand). Drops/renames ship one release later (contract), after no running code reads the old column/table.
 - The `questions` table is owned by quiz-pack-api but read by quiz-agent (`apps/quiz-agent/alembic/env.py`). Any change to it needs the matching quiz-agent change deployed first.
-- `release_command = "alembic upgrade head"` (both apps' `fly.toml`) runs before rollout.
-- Never downgrade the prod DB. Roll back by redeploying the previous image (see `/deploy` skill, Rollback; it skips `release_command`, which would fail on the unknown revision); the boot check `apps/quiz-pack-api/app/db/migration_check.py` accepts a DB ahead of code.
+- `deploy-ssh.sh` runs `alembic upgrade head` for each touched app before the swap (on Fly this was the `release_command`).
+- Never downgrade the prod DB. Roll back by running the previous code without migrating (see `/deploy` skill, Rollback; the older alembic would fail on the unknown revision); the boot check `apps/quiz-pack-api/app/db/migration_check.py` accepts a DB ahead of code.

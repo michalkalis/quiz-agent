@@ -2,7 +2,7 @@
 
 Jedna stránka na prvých 15 minút výpadku. Podrobnosti sú v odkazovaných návodoch, tu sa neopakujú.
 
-**Kto čo robí:** agent (session na laptope alebo `mba`) diagnostikuje, prepína prepínače, robí rollback a obnovu DB sám (Fly prod operácie sú povolené natrvalo). Founder rozhoduje len o tom, čo ide navonok (text oznamu nad rámec šablóny nižšie, refundy, odpovede zákazníkom) a robí kroky, ku ktorým agent nemá prístup (App Store Connect, Apple refund, podpisy).
+**Kto čo robí:** agent (session na laptope alebo `mba`) diagnostikuje, prepína prepínače, robí rollback a obnovu DB sám (prod operácie sú povolené natrvalo). Prod beží od 2026-11-06 na Hetzner serveri `trubbo-prod` ([infra/hetzner/README.md](../../infra/hetzner/README.md)); Fly appky `quiz-agent-api` a `quiz-pack-api` sú už len presmerovač pre `*.fly.dev`. **Na prod nikdy `fly deploy`** (prepíše presmerovač starou appkou na starej Fly DB). Founder rozhoduje len o tom, čo ide navonok (text oznamu nad rámec šablóny nižšie, refundy, odpovede zákazníkom) a robí kroky, ku ktorým agent nemá prístup (App Store Connect, Apple refund, podpisy).
 
 ## 1. Ako sa o výpadku dozvieme
 
@@ -20,12 +20,12 @@ Mechanika alarmov: `packages/shared/quiz_shared/ops_alerts.py`, `.github/workflo
 
 ## 2. Prvé kontroly (5 min)
 
-1. Zdravie: `curl -s https://quiz-agent-api.fly.dev/api/v1/health` a `curl -s https://quiz-pack-api.fly.dev/health`.
-2. Celkový stav jedným volaním (disk, pamäť, DB, odozva, worker ping): `curl -s -H "X-Admin-Key: $KEY" https://quiz-agent-api.fly.dev/api/v1/admin/ops-health`; kredity: `.../api/v1/admin/provider-balances`.
-3. Stroje a logy: `fly status -a <app>`, `fly logs -a <app> --no-tail | tail -100` pre `quiz-agent-api`, `quiz-pack-api` (procesy `web`, `worker`), `quiz-pack-db`, Redis. Worker musí byť `started`.
-4. Čo sa zmenilo: posledný beh `gh run list -w backend-deploy.yml -L 3`, `fly releases -a <app>`. Výpadok krátko po deployi = najprv rollback (bod 4), potom hľadať príčinu.
-5. Fly samotné: https://status.flyio.net (región cdg), providery: status stránky Anthropic, OpenAI, ElevenLabs, OpenRouter.
-6. Objednávky, ktoré čakajú alebo sú na refund: `curl -s -H "X-Admin-Key: $PACK_KEY" https://quiz-pack-api.fly.dev/api/v1/admin/orders/attention`.
+1. Zdravie: `curl -s https://api.trubbo.app/api/v1/health` a `curl -s https://pack.trubbo.app/health` (tie isté cesty na `*.fly.dev` overia aj presmerovač).
+2. Celkový stav jedným volaním (disk, pamäť, DB, odozva, worker ping): `curl -s -H "X-Admin-Key: $KEY" https://api.trubbo.app/api/v1/admin/ops-health`; kredity: `.../api/v1/admin/provider-balances`.
+3. Kontajnery a logy: `ssh trubbo-prod`, v `~/trubbo/repo/infra/hetzner` `docker compose ps`, `docker stats --no-stream`, `docker compose logs --since 10m <služba>` pre `quiz-agent`, `pack-web`, `pack-worker`, `postgres`, `redis`. Worker musí bežať. `fly status` / `fly logs` ukážu len presmerovač.
+4. Čo sa zmenilo: posledný beh `gh run list -w backend-deploy.yml -L 3`, na serveri nasadený kód `git -C ~/trubbo/repo rev-parse HEAD`. Výpadok krátko po deployi = najprv rollback (bod 4), potom hľadať príčinu.
+5. Hetzner: https://status.hetzner.com (Falkenstein `fsn1`); Fly (len presmerovač): https://status.flyio.net; providery: status stránky Anthropic, OpenAI, ElevenLabs, OpenRouter.
+6. Objednávky, ktoré čakajú alebo sú na refund: `curl -s -H "X-Admin-Key: $PACK_KEY" https://pack.trubbo.app/api/v1/admin/orders/attention`.
 
 Admin kľúče: GitHub secrets `QUIZ_AGENT_ADMIN_API_KEY` (`$KEY`) a `QUIZ_PACK_ADMIN_API_KEY` (`$PACK_KEY`), na laptope v `.env`.
 
@@ -39,23 +39,21 @@ Všetko cez `PUT /api/v1/admin/app-switches`, príkazy a hodnoty v [app-switches
 - **Odporúčaná verzia** (`recommended_version_*`, #214 — odporúčaná aktualizácia a údržba): nová verzia je vonku a chceme hráčov jemne posunúť, bez blokovania.
 - **Údržba** (`maintenance_enabled` + `maintenance_*`): kvíz by aj tak zlyhal (migrácia, výpadok providera, rozbité otázky); spolu s oznamom pre staršie buildy.
 - Automatické poistky, ktoré netreba prepínať: záložný hlas pri dennom strope ElevenLabs, záložný hodnotiteľ odpovedí na priamom OpenAI, prepnutie embeddingov z OpenRouter na OpenAI pri kritickom kredite (príde v maile).
-- Celé AI na kanonických providerov: Fly secret `LLM_GATEWAY=direct` na oboch appkách (reštartuje stroj, preto až keď prepínače nestačia), pozri `.claude/rules/backend.md`.
+- Celé AI na kanonických providerov: `LLM_GATEWAY=direct` v `env/quiz-agent.env` a `env/quiz-pack-api.env` na serveri, potom `docker compose up -d --force-recreate quiz-agent pack-web` (+ `--profile worker … pack-worker`, ak beží); reštartuje kontajnery, preto až keď prepínače nestačia. Pozri `.claude/rules/backend.md`. Nie Fly secret: Fly appky sú len presmerovač.
 
 ## 4. Rollback backendu
 
-Normálna cesta je nasadiť opravu cez `gh workflow run backend-deploy.yml -f apps=<app>` (testy → staging → prod). Keď treba späť hneď, predošlý obraz bez migrácie podľa `/deploy` skillu, sekcia Rollback (`.claude/skills/deploy/SKILL.md`):
+Normálna cesta je nasadiť opravu cez `gh workflow run backend-deploy.yml --ref main -f apps=<app>`. Zlyhaný krok „Deploy to Hetzner“ sa vracia sám (`deploy-ssh.sh`, bez migrácie; v logu `rolled back to …`). Keď je zlý kód už živý a treba späť hneď: `/deploy` skill, sekcia Rollback (`.claude/skills/deploy/SKILL.md`), na serveri checkout posledného dobrého sha (tag `deployed/<app>`), `docker compose build` a `up -d` bez migrácie (migrácie sú len pridávajúce, DB sa nikdy nevracia `alembic downgrade`). Potom smoke: `infra/deploy/smoke.sh <app> https://api.trubbo.app` (quiz-agent) alebo `https://pack.trubbo.app` (quiz-pack-api).
 
-1. `fly releases --image -a <app>` a vyber posledný dobrý obraz.
-2. `fly deploy --image <obraz> -a <app> --skip-release-command` (migrácie sú len pridávajúce, DB sa nikdy nevracia `alembic downgrade`).
-3. Smoke: `infra/deploy/smoke.sh <app> <url>`.
-
-Ručný deploy z laptopu: najprv zámok `mkdir /tmp/trubbo-deploy-<app>.lock`, po skončení `rmdir`. Ďalšie pasce: [../runbooks/fly-deploy.md](../runbooks/fly-deploy.md).
+**Nespúšťaj** `fly releases` / `fly deploy --image` na `quiz-agent-api` ani `quiz-pack-api`: od 2026-11-06 tam beží len presmerovač a deploy ho nahradí starou appkou na starej Fly DB. Ručný deploy aj CI berú ten istý zámok na serveri, `/tmp` zámok netreba.
 
 ## 5. Obnova databázy
 
-Dáta poškodené / zmazané alebo zmizol DB stroj: [db-backup.md](db-backup.md), časť Obnova. Najprv **Objednávky stop** (bod 3) a oznam, potom kroky B.1 až B.9 (obnova do novej DB vedľa pôvodnej, prepnutie až po kontrole) a **vždy krok 10**: `python -m app.storekit.reconcile` porovná App Store nákupy s DB a dorobí objednávky zaplatené po čase zálohy; čo sa dorobiť nedá, ide na refund. Na konci prepínače späť (`reset`). Staré dáta (`quiz_pack_broken`) mazať až po reconcile.
+Dáta poškodené / zmazané alebo zmizol DB stroj: [db-backup.md](db-backup.md), časť Obnova. **Pozor:** postup B tam je ešte pre Fly `quiz-pack-db` (pred 2026-11-06); prod DB je Postgres na Hetzner serveri a postup obnovy do nej zatiaľ nie je napísaný. Obnova k času T z R2 (db-backup.md, barman server `trubbo-prod`) funguje bez Fly. Najprv **Objednávky stop** (bod 3) a oznam, potom kroky B.1 až B.9 (obnova do novej DB vedľa pôvodnej, prepnutie až po kontrole) a **vždy krok 10**: `python -m app.storekit.reconcile` porovná App Store nákupy s DB a dorobí objednávky zaplatené po čase zálohy; čo sa dorobiť nedá, ide na refund. Na konci prepínače späť (`reset`). Staré dáta (`quiz_pack_broken`) mazať až po reconcile.
 
 ### 5a. Výpadok celého regiónu cdg (DB aj appky preč)
+
+> **Platilo pre Fly (pred 2026-11-06).** Prod je teraz jeden Hetzner server; postup pre jeho výpadok zatiaľ nie je napísaný. Fly príkazy nižšie nespúšťaj na `quiz-agent-api` / `quiz-pack-api` (prepíšu presmerovač); R2 token a čísla RPO/RTO platia ďalej.
 
 Všetky prod stroje (quiz-agent, quiz-pack-api, quiz-pack-db, Redis) sú v `cdg`. Pri výpadku regiónu nemá kto poslať `[Trubbo ALERT]` a nefungujú ani prepínače (sú v DB): signál je len zlyhaný `prod-monitor` a https://status.flyio.net. Krátky výpadok (Fly ho rieši, odhad < ~1 h) sa prečká; dlhší = obnova z R2 inde.
 
@@ -68,9 +66,9 @@ Všetky prod stroje (quiz-agent, quiz-pack-api, quiz-pack-db, Redis) sú v `cdg`
 
 ## 6. Pack worker nebeží
 
-- Fly worker padol: alarm `pack worker: down`. Najprv `fly status -a quiz-pack-api` a `fly machine start <id worker> -a quiz-pack-api`; logy ukážu dôvod (Redis, kredit Anthropic, OOM).
-- Worker sa po páde reštartuje sám (Fly `restart policy = always`) a pri štarte čaká na Redis až ~10 min (#207 úloha 207.29 — incident: Fly pack worker stál). Ak napriek tomu stojí, bol zastavený ručne (`fly machine stop`) alebo má problém Fly; vtedy ho spusti ručne.
-- Záloha na `mba` preberá **len beta (Sandbox) objednávky** sama po 5 min bez heartbeatu, nič sa neprepína. Objednávky z App Store čakajú vo fronte na Fly worker. Postup a núdzové prepnutie: [session-worker-mba.md](session-worker-mba.md).
+- Worker (`pack-worker` na serveri) padol: alarm `pack worker: down`. Na serveri v `~/trubbo/repo/infra/hetzner`: `docker compose ps pack-worker` a `docker compose logs --since 30m pack-worker`; logy ukážu dôvod (Redis, kredit Anthropic, OOM). Štart: `docker compose --profile worker up -d pack-worker`.
+- Worker sa po páde reštartuje sám (`restart: unless-stopped` v `compose.yml`) a pri štarte čaká na Redis až ~10 min (#207 úloha 207.29 — incident: Fly pack worker stál). Ak napriek tomu stojí, bol zastavený ručne (`docker compose stop`); vtedy ho spusti ručne.
+- Záloha na `mba` preberá **len beta (Sandbox) objednávky** sama po 5 min bez heartbeatu, nič sa neprepína. Objednávky z App Store čakajú vo fronte na hlavný worker. Postup a núdzové prepnutie: [session-worker-mba.md](session-worker-mba.md).
 - Výpadok dlhší ako ~1 h: **Objednávky stop** + oznam; visiace zaplatené objednávky z `orders/attention` po oprave dobehnú samy (sweep), inak refund cez Apple.
 
 ## 7. Komunikácia s používateľmi

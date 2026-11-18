@@ -55,6 +55,8 @@ Pozn.: obraz `pgvector/pgvector:pg17` má staršiu glibc (2.36) než DB stroj (2
 
 ## Obnova
 
+> **Od 2026-11-06 (#222 — presun backendu na Hetzner) je prod DB Postgres na Hetzner serveri; Fly `quiz-pack-db` je stará zmrazená kópia.** Postup B a časť „Miesto na disku“ nižšie pracujú cez `fly` s Fly DB: na prod ich nespúšťaj (obnovili by starú DB a `fly apps restart` / `fly machine` by zasiahli presmerovač). Postup obnovy do Hetzner prod DB zatiaľ nie je napísaný; obnova k času T vyššie (barman server `trubbo-prod`) funguje bez Fly.
+
 Potrebuješ: `gh` prihlásený na účet `michalkalis`, `openssl` 3 (`brew install openssl@3`), Docker, `fly` prihlásený na org, súkromný kľúč uložený do súboru `key.pem` (`chmod 600 key.pem`, po obnove zmazať).
 
 ### A. Skúška obnovy naostro bez zásahu do produkcie (overené 2026-10-08)

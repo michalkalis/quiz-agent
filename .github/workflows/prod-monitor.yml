@@ -103,5 +103,5 @@ jobs:
             then exit 0; fi
             if [ "$attempt" -lt 4 ]; then sleep 60; fi
           done
-          echo "::error::Fly pack worker is down. Check: fly status -a quiz-pack-api (machine 'worker' must be started); see docs/setup/session-worker-mba.md."
+          echo "::error::Pack worker is down. Check on the server (ssh trubbo-prod, in ~/trubbo/repo/infra/hetzner): docker compose ps pack-worker; see docs/setup/incident-runbook.md section 6."
           exit 1

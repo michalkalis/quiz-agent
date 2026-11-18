@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from quiz_shared.models.session import QuizSession
 
 from ...rooms import rounds
+from ...rooms.awards import awards
 
 
 class RoundResult(BaseModel):
@@ -52,6 +53,26 @@ class AwayOut(BaseModel):
     questions: int = Field(description="Questions during which they left the app")
 
 
+class AwardOut(BaseModel):
+    """#240.9: a small award on the final screen."""
+
+    kind: str = Field(
+        description="fastest (fastest right answer) | only_one (the only one "
+        "right on a question) | streak (most right answers in a row, 3 or more); "
+        "apps skip a kind they do not know"
+    )
+    participant_id: str
+    question_number: Optional[int] = Field(
+        None, description="fastest: that question; only_one: the first such question"
+    )
+    ms: Optional[int] = Field(
+        None, description="fastest: time from the question appearing to the answer"
+    )
+    count: Optional[int] = Field(
+        None, description="only_one: how many questions; streak: its length"
+    )
+
+
 class GameView(BaseModel):
     """The game part of the room state (all optional: lobby has none)."""
 
@@ -75,6 +96,9 @@ class GameView(BaseModel):
     )
     away: Optional[List[AwayOut]] = Field(
         None, description="Host only, once finished: who left the app (#212.4)"
+    )
+    awards: Optional[List[AwardOut]] = Field(
+        None, description="Once finished, with 2+ players (#240.9)"
     )
 
 
@@ -130,6 +154,7 @@ def game_view(session: QuizSession, you) -> GameView:
             for i, p in enumerate(rounds.ranking(session))
         ]
         view.rounds = [round_out(session, r, you, at) for r in game.rounds]
+        view.awards = [AwardOut(**a.__dict__) for a in awards(session)] or None
         if you.is_host:
             counts: Dict[str, int] = {}
             for r in game.rounds:

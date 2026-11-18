@@ -51,6 +51,9 @@ class CreateRoomRequest(BaseModel):
     reveal_mode: Literal["question", "round"] = "question"
     thinking_seconds: int = Field(10, ge=3, le=60)
     reads_aloud: bool = True
+    # #240.9: the host's current room. It moves to this session with its
+    # players, link and QR (play again, or other content in the lobby).
+    room_id: Optional[str] = Field(None, max_length=64)
 
 
 class RoomResponse(BaseModel):
@@ -168,6 +171,7 @@ async def create_room(
             allow_pack=await app_switches.is_on(
                 get_settings(), get_auth_sessionmaker(request), "shared_quiz_enabled"
             ),
+            room_id=body.room_id,
         )
     except RoomError as e:
         raise_http(e)
@@ -274,7 +278,9 @@ def _status(session) -> str:
 
 
 def _state(room_id, session, you, *, since) -> RoomStateResponse:
-    version = session._store_version
+    # #240.9: a room that moved to a new session keeps counting up.
+    game = session.room_game
+    version = session._store_version + (game.version_base if game else 0)
     if since is not None and since == version and stable(session):
         return RoomStateResponse(room_id=room_id, version=version, changed=False)
     return RoomStateResponse(

@@ -117,6 +117,9 @@ class RoomPlay:
                 raise RoomError(409, "Time is up")
             rnd.answers[you.participant_id] = RoomAnswer(answer=text.strip(), at=at)
             if rounds.all_answered(session, rnd):
+                # #240.9: stored first, so while the judge works every other
+                # phone sees "grading" instead of a question that looks open.
+                await self.sessions.update_session(session)
                 try:
                     await self._grade(session, rnd)
                 except JudgeUnavailable:

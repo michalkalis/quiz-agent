@@ -57,6 +57,12 @@ class RoomGame(BaseModel):
     reads_aloud: bool = True
     finished_reason: Optional[str] = None
     rounds: List[RoomRound] = Field(default_factory=list)
+    # #240.9: a room moves to a new session (another game with the same
+    # people, or other content in the lobby). Added to the session's version
+    # so the version a phone polls with keeps growing across the move.
+    version_base: int = 0
+    # #240.9: this game is "play again" after a finished one in the same room.
+    rematch: bool = False
 
     @property
     def current(self) -> Optional[RoomRound]:

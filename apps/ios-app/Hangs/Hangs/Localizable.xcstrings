@@ -8799,13 +8799,13 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odebrat z party"
+            "value" : "Odeber z party"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odobrať z partie"
+            "value" : "Odober z partie"
           }
         }
       }

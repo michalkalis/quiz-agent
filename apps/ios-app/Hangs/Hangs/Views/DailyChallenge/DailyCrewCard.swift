@@ -82,6 +82,7 @@ struct DailyCrewCard: View {
             Button("Remove", role: .destructive) {
                 Task { await model.remove(member) }
             }
+            .accessibilityIdentifier("daily.crew.remove.confirm")
         } message: { _ in
             Text("You will no longer see each other in the table.")
         }
@@ -124,6 +125,7 @@ struct DailyCrewCard: View {
                     Button("Remove from crew", systemImage: "person.badge.minus", role: .destructive) {
                         pendingRemoval = member
                     }
+                    .accessibilityIdentifier("daily.crew.menu.remove")
                 }
                 .accessibilityAction(named: Text("Remove from crew")) { pendingRemoval = member }
         }

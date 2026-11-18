@@ -19,7 +19,7 @@ Súťaž s kamarátmi, ktorá drží ľudí viac dní, bez nových krokov v appk
 ## Pravidlá
 
 - **Kto je v mojej partii:** človek, ktorý otvoril môj odkaz na dennú výzvu, alebo ktorého odkaz na dennú výzvu som otvoril ja. Len priame spojenie; kamaráti mojich kamarátov sa navzájom nevidia (rovnaké pravidlo ako porovnanie v #232 z 2026-11-14).
-- Človek = všetky jeho id (anonymné aj účet), ako v #232 a #205.
+- Človek = všetky jeho id (anonymné aj účet), ako v #232 a #205 — denná výzva: hráč proti davu.
 - **Týždeň** = od pondelka do dňa výzvy, ktorý hráč práve hrá (jeho lokálny dátum). Body = súčet bodov za vzácnosť z dokončených denných výziev v tom týždni, v ktoromkoľvek jazyku. Body za otázku = 10 + 90 × (1 − podiel tých, čo ju vedeli, zo všetkých, čo na ňu v ten deň a jazyk odpovedali, vrátane hráča). Počítajú sa živo, takže sa menia, ako hrajú ďalší.
 - V tabuľke sú len tí, ktorí tento týždeň hrali, alebo s ktorými som sa spojil tento týždeň. Najviac 20. Ja som tam vždy, ak mám aspoň jedného člena.
 - **Odobratie:** obojstranné, platí natrvalo, aj keď si neskôr znova pošlete odkaz. Je uložené pre všetky id človeka.

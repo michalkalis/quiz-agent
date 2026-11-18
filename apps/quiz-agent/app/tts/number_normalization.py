@@ -100,7 +100,59 @@ def _uk_feminine(words: str) -> str:
 
 _UK_PLACE = {1: ("десята", "десятих"), 2: ("сота", "сотих"), 3: ("тисячна", "тисячних")}
 _UK_PERCENT_FORMS = ("відсоток", "відсотки", "відсотків")
-_UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)(,\d+)?\s?%")
+_UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)([,.]\d+)?\s?%")
+# "3.5" is a decimal too; a dot before exactly three digits groups thousands.
+_UK_DECIMAL_DOT_RE = re.compile(r"(?<![\d,.])(\d+)\.(\d{1,2}|\d{4,})(?![\d,]|\.\d)")
+# "7 з 10", "2 із 9": "out of" takes the genitive ("сім з десяти"); the first
+# number stays as written.
+_UK_OUT_OF_RE = re.compile(
+    r"(?<![\d,.])(\d+\s+(?:з|із|зі)\s+)(\d{1,3}(?:[ \u00a0]\d{3})+|\d+)(?![\d]|[,.]\d)"
+)
+# fmt: off
+_UK_GENITIVE_UNITS = (
+    "нуля", "одного", "двох", "трьох", "чотирьох", "п'яти", "шести", "семи",
+    "восьми", "дев'яти", "десяти", "одинадцяти", "дванадцяти", "тринадцяти",
+    "чотирнадцяти", "п'ятнадцяти", "шістнадцяти", "сімнадцяти", "вісімнадцяти",
+    "дев'ятнадцяти",
+)
+_UK_GENITIVE_TENS = {2: "двадцяти", 3: "тридцяти", 4: "сорока", 5: "п'ятдесяти",
+                     6: "шістдесяти", 7: "сімдесяти", 8: "вісімдесяти", 9: "дев'яноста"}
+_UK_GENITIVE_HUNDREDS = {1: "ста", 2: "двохсот", 3: "трьохсот", 4: "чотирьохсот",
+                         5: "п'ятисот", 6: "шестисот", 7: "семисот", 8: "восьмисот",
+                         9: "дев'ятисот"}
+# fmt: on
+
+
+def _uk_genitive(n: int) -> str | None:
+    """A cardinal in the genitive ("десяти", "двадцяти одного", "двох тисяч");
+    None from a million (left to the cardinal pass). num2words gets 200+ wrong
+    ("двохста")."""
+    if n >= 1_000_000:
+        return None
+    if n == 0:
+        return _UK_GENITIVE_UNITS[0]
+    words = []
+    thousands, rest = divmod(n, 1000)
+    if thousands == 1:
+        words.append("тисячі")
+    elif thousands:
+        head = _uk_genitive(thousands)
+        head = head[: -len("одного")] + "однієї" if head.endswith("одного") else head
+        words += [head, "тисячі" if _uk_plural(thousands) == 0 else "тисяч"]
+    hundreds, rest = divmod(rest, 100)
+    if hundreds:
+        words.append(_UK_GENITIVE_HUNDREDS[hundreds])
+    if rest >= 20:
+        words.append(_UK_GENITIVE_TENS[rest // 10])
+        rest %= 10
+    if rest:
+        words.append(_UK_GENITIVE_UNITS[rest])
+    return " ".join(words)
+
+
+def _spell_out_of_uk(match: re.Match) -> str:
+    words = _uk_genitive(int(re.sub(r"\D", "", match.group(2))))
+    return f"{match.group(1)}{words}" if words else match.group(0)
 
 
 def _spell_decimal_uk(match: re.Match, num2words) -> str:
@@ -111,10 +163,9 @@ def _spell_decimal_uk(match: re.Match, num2words) -> str:
     digits = match.group(2).rstrip("0")
     if not digits:
         return _uk_cardinal(whole, num2words)
-    if _uk_plural(whole) == 0:
-        head = _uk_feminine(_uk_cardinal(whole, num2words)) + " ціла"
-    else:
-        head = f"{_uk_cardinal(whole, num2words)} цілих"
+    # "ціла" is feminine, so is the whole part: "одна ціла", "дві цілих".
+    head = _uk_feminine(_uk_cardinal(whole, num2words))
+    head += " ціла" if _uk_plural(whole) == 0 else " цілих"
     value = int(digits)
     if len(digits) not in _UK_PLACE:
         return f"{head} {_uk_cardinal(value, num2words)}"
@@ -125,8 +176,8 @@ def _spell_decimal_uk(match: re.Match, num2words) -> str:
 
 def _spell_percent_uk(match: re.Match) -> str:
     """ "1%" → "1 відсоток", "3%" → "3 відсотки", "5%" → "5 відсотків",
-    "3,5%" → "3,5 відсотка" (the digits are spelled by the later pass)."""
-    if match.group(2):
+    "3,5%" / "3.5%" → "3,5 відсотка" (the digits are spelled by the later pass)."""
+    if match.group(2) and match.group(2).strip(",.0"):
         return f"{match.group(1)}{match.group(2)} відсотка"
     return f"{match.group(1)} {_UK_PERCENT_FORMS[_uk_plural(int(match.group(1)))]}"
 
@@ -208,7 +259,8 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
     if language not in _PERCENT_WORD:
         return text
     text = _spell_symbols(text, language)
-    if not any(ch.isdigit() for ch in text):
+    # uk also writes centuries in Roman numerals ("XX століття").
+    if not any(ch.isdigit() for ch in text) and language != "uk":
         return text
     try:
         from num2words import num2words
@@ -233,10 +285,10 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
         # not the cardinal plus a sentence-end period ("devätnásť. storočí").
         text = spell_ordinals(text, language)
         if language == "uk":
+            text = _UK_OUT_OF_RE.sub(_spell_out_of_uk, text)
             text = _UK_PERCENT_RE.sub(_spell_percent_uk, text)
-            text = _DECIMAL_COMMA_RE.sub(
-                lambda m: _spell_decimal_uk(m, num2words), text
-            )
+            for decimal in (_DECIMAL_COMMA_RE, _UK_DECIMAL_DOT_RE):
+                text = decimal.sub(lambda m: _spell_decimal_uk(m, num2words), text)
         else:
             text = _DECIMAL_COMMA_RE.sub(
                 lambda m: _spell_decimal_comma(m, language, num2words), text

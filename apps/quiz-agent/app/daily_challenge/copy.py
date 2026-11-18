@@ -29,9 +29,10 @@ def _count_verb(language: str, k: int) -> str:
 
 
 def _percent_verb(language: str, p: int) -> str:
-    """Past "knew" agreeing with "percento / percentá / percent"."""
+    """Past "knew" agreeing with "percento / percentá / percent"; uk "відсоток
+    знав" (1, 21), otherwise "знали"."""
     if language == "uk":
-        return "Знали"
+        return uk_plural(p, "Знав", "Знали", "Знали")
     if language == "sk":
         return "Vedeli" if 2 <= p <= 4 else "Vedelo"
     return "Věděla" if 2 <= p <= 4 else "Vědělo"
@@ -141,7 +142,7 @@ def rare_text(crowd: Crowd, language: str) -> str:
         )
     if lang == "uk":
         if crowd.uses_percent:
-            return f"Це знали лише {p}{NBSP}%."
+            return f"Це {_percent_verb(lang, p).lower()} лише {p}{NBSP}%."
         return f"Це {_count_verb(lang, k).lower()} лише {k} {_of(lang, n)} {n}."
     only = "len" if lang == "sk" else "jen"
     if crowd.uses_percent:
@@ -181,7 +182,10 @@ def spoken_line(kind: CrowdKind, crowd: Crowd, language: str, variant: int) -> s
         return f"Just {amount} got that." if alt else f"Only {amount} knew that."
     if lang == "uk":
         if crowd.uses_percent:
-            verb, amount = "знали", f"{p} {_percent_word(lang, p)}"
+            verb, amount = (
+                _percent_verb(lang, p).lower(),
+                f"{p} {_percent_word(lang, p)}",
+            )
         else:
             verb, amount = _count_verb(lang, k).lower(), f"{k} {_of(lang, n)} {n}"
         if alt:

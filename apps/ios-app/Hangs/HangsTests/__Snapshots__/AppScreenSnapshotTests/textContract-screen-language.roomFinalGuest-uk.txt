@@ -1,0 +1,50 @@
+# texts
+Гра разом
+Перемагає
+Peťo
+Правильно 2 з 2
+1.
+P
+Peťo (ти)
+2
+2.
+M
+Michal
+1
+Нагороди
+M
+Найшвидша правильна відповідь
+Michal
+2.3 с, питання 1
+Найшвидша правильна відповідь
+Michal
+2.3 с, питання 1
+P
+Більше ніхто не знав
+Peťo
+Питання 2
+Більше ніхто не знав
+Peťo
+Питання 2
+Питання
+1
+Which planet has the most known moons?
+Saturn
+2
+What is the capital of Australia?
+Canberra
+Ведучий може почати ще одну гру з усіма.
+Поділись
+Готово
+# identifiers
+room.close
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
+room.final.round.1
+room.final.round.2
+room.final.waitingForHost
+room.final.share
+room.done

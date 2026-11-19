@@ -127,22 +127,28 @@
     "%@ s, question %lld" : {
       "comment" : "Hra spolu (#240.9): fastest award, seconds and the question number",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ s, question %2$lld"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ s, otázka %2$lld"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ s, question %2$lld"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ s, otázka %2$lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ с, питання %2$lld"
           }
         }
       }
@@ -281,6 +287,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld správne za sebou"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правильно поспіль: %lld"
           }
         }
       }
@@ -2670,6 +2682,12 @@
             "state" : "translated",
             "value" : "Čas na odpoveď začne po prečítaní"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час на відповідь почнеться після прочитання"
+          }
         }
       }
     },
@@ -2686,6 +2704,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpovedali: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповіли: %@"
           }
         }
       }
@@ -3102,6 +3126,12 @@
             "state" : "translated",
             "value" : "Ocenenia"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нагороди"
+          }
         }
       }
     },
@@ -3487,6 +3517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kontrolujeme odpovede…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевіряємо відповіді…"
           }
         }
       }
@@ -5906,6 +5942,12 @@
             "state" : "translated",
             "value" : "Najrýchlejšia správna odpoveď"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найшвидша правильна відповідь"
+          }
         }
       }
     },
@@ -8263,6 +8305,12 @@
             "state" : "translated",
             "value" : "Najdlhšia séria"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдовша серія"
+          }
         }
       }
     },
@@ -9385,6 +9433,12 @@
             "state" : "translated",
             "value" : "Nikto iný nevedel"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Більше ніхто не знав"
+          }
         }
       }
     },
@@ -9401,6 +9455,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nepočíta sa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зараховується"
           }
         }
       }
@@ -10464,6 +10524,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ešte raz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зіграй ще раз"
           }
         }
       }
@@ -11713,6 +11779,12 @@
             "state" : "translated",
             "value" : "Otázka %lld"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання %lld"
+          }
         }
       }
     },
@@ -12736,6 +12808,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hostiteľ môže spustiť ďalšiu hru so všetkými."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ведучий може почати ще одну гру з усіма."
           }
         }
       }
@@ -15806,6 +15884,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odpovede na túto otázku sa nedali skontrolovať. Nepočíta sa nikomu."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перевірити відповіді на це питання. Воно нікому не зараховується."
           }
         }
       }

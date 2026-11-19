@@ -147,10 +147,12 @@ def check(row: dict) -> list[dict]:
         flags.append({"id": row["id"], "lang": lang, "rule": rule, "note": note, "source": "check", "error": error})
 
     en_ph = placeholders(row["en"])
+    # A row translated into one language but not another ships English to those players: error.
+    translated = any(row.get(lang) is not None for lang in LANGS if lang != "en")
     for lang in LANGS:
         value = row.get(lang)
         if value is None:
-            flag(lang, 8, "missing translation")
+            flag(lang, 8, "missing translation", error=translated and lang != "en")
             continue
         for text in texts(value):
             for rule, note, error in text_flags(lang, text):

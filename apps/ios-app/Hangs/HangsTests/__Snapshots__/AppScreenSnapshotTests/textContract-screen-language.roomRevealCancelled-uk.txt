@@ -1,0 +1,35 @@
+# texts
+Гра разом
+1/2
+Science & Nature
+Which planet has the most known moons?
+Не вдалося перевірити відповіді на це питання. Воно нікому не зараховується.
+A
+Jupiter
+ніхто
+Saturn
+M
+J
+C
+Uranus
+ніхто
+D
+Neptune
+ніхто
+Чому
+Mock explanation.
+Далі
+Залишся
+# identifiers
+room.close
+room.rules.open
+question.progress
+question.counter
+deck.category
+room.reveal.cancelled
+room.reveal.option.a
+room.reveal.option.b
+room.reveal.option.c
+room.reveal.option.d
+room.next
+room.pause

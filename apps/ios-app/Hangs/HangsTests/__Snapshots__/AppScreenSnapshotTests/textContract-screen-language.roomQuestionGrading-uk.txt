@@ -1,0 +1,28 @@
+# texts
+Гра разом
+1/2
+M
+Michal
+P
+Peťo
+30 с
+після читання
+SCIENCE & NATURE
+Which planet has the most known moons?
+Відповідь зафіксовано
+Jupiter
+Інші побачать її після питання.
+Відповіли: Michal, Peťo
+Перевіряємо відповіді…
+# identifiers
+room.close
+question.progress
+question.counter
+room.question.players
+room.question.timer
+question.category
+room.guestReadAloud
+question.text
+room.answer.locked
+room.answer.answeredBy
+room.question.grading

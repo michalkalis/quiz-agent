@@ -3,6 +3,7 @@ Geography & World
 7.5
 out of 10
 Correct 7 · Missed 3 · Skipped 0
+Hardest one you got: Answer 10
 Running low on free questions
 ^[4 free questions](inflect: true) left this month.
 Get Trubbo Plus
@@ -35,6 +36,7 @@ Home
 completion.close
 completion.score
 completion.breakdown
+completion.highlight
 completion.cards
 completion.upsell
 recap.row.1

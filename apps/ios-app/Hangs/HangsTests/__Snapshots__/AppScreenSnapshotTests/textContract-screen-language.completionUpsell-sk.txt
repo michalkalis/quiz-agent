@@ -3,6 +3,7 @@ Geography & World
 7.5
 z 10
 Správne 7 · Vedľa 3 · Preskočené 0
+Najťažšia uhádnutá: Answer 10
 Míňajú sa ti otázky zadarmo
 Tento mesiac ti zostáva 4 otázok zadarmo.
 Získaj Trubbo Plus
@@ -35,6 +36,7 @@ Hraj znova
 completion.close
 completion.score
 completion.breakdown
+completion.highlight
 completion.cards
 completion.upsell
 recap.row.1

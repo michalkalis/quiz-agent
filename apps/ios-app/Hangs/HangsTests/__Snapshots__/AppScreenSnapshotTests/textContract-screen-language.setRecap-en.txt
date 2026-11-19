@@ -3,6 +3,7 @@ Geography & World
 0
 out of 10
 Correct 1 · Missed 1 · Skipped 1
+Hardest one you got: Paris
 Questions
 Play summary
 What is the capital of France?
@@ -19,6 +20,7 @@ Home
 recap.close
 recap.hero
 completion.breakdown
+recap.highlight
 recap.cards
 recap.playSummary
 recap.row.1

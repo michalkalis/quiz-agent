@@ -222,6 +222,27 @@ struct ProfileViewModelTests {
         #expect(resolved("\(2) more days of play", "cs") == "Ještě 2 dny hraní")
         #expect(try text(0, 2, "moons", "en") == "Keep playing")
     }
+
+    /// WHY (#231 — Ukrainian as a fourth language): Ukrainian has a fourth
+    /// plural form, "many" (5–20, 11–14, 25…), that no sk/cs/en count uses.
+    /// ViewInspector picks plurals by English rules, so the forms are read
+    /// from the real catalog: "5 питання" or "Ще 11 вікторини" would read broken.
+    @Test("Ukrainian counts take one / few / many from the catalog")
+    func ukrainianPluralForms() {
+        func resolved(_ resource: LocalizedStringResource) -> String {
+            var resource = resource
+            resource.locale = Locale(identifier: "uk")
+            return String(localized: resource)
+        }
+        #expect(resolved("\(1) questions") == "1 питання")
+        #expect(resolved("\(2) questions") == "2 питання")
+        #expect(resolved("\(5) questions") == "5 питань")
+        #expect(resolved("\(21) questions") == "21 питання")
+        #expect(resolved("\(11) questions") == "11 питань")
+        #expect(resolved("\(1) more quizzes") == "Ще 1 вікторина")
+        #expect(resolved("\(3) more quizzes") == "Ще 3 вікторини")
+        #expect(resolved("\(5) more quizzes") == "Ще 5 вікторин")
+    }
 }
 
 private final nonisolated class StubTokenStore: TokenStore, @unchecked Sendable {

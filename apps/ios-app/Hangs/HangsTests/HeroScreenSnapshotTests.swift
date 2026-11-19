@@ -59,10 +59,31 @@ nonisolated enum HeroLanguage: String, CaseIterable {
     /// #231: the content face follows the interface language (Manrope for
     /// Ukrainian, `Theme.Hangs.Fonts`), which `\.locale` alone cannot reach.
     /// sk/cs/en keep the process default, so their baselines stay untouched.
-    /// Undo with `InterfaceLanguage.set(nil)` once the snapshot is taken.
-    func applyInterfaceFace() {
+    /// The interface language is process-wide and a pixel test holds it across
+    /// awaits, so one window is open at a time across both snapshot suites: in
+    /// a parallel run sk would otherwise render in Manrope or uk in Rethink
+    /// Sans. Close it with `leaveInterfaceFace()` once the snapshots are taken.
+    @MainActor
+    func enterInterfaceFace() async {
+        while FaceWindow.isOpen {
+            await withCheckedContinuation { FaceWindow.waiters.append($0) }
+        }
+        FaceWindow.isOpen = true
         InterfaceLanguage.set(self == .uk ? rawValue : nil)
     }
+
+    @MainActor
+    static func leaveInterfaceFace() {
+        InterfaceLanguage.set(nil)
+        FaceWindow.isOpen = false
+        if !FaceWindow.waiters.isEmpty { FaceWindow.waiters.removeFirst().resume() }
+    }
+}
+
+@MainActor
+private enum FaceWindow {
+    static var isOpen = false
+    static var waiters: [CheckedContinuation<Void, Never>] = []
 }
 
 // MARK: - Screens
@@ -226,8 +247,8 @@ struct HeroScreenSnapshotTests {
         arguments: HeroScreen.allCases, HeroLanguage.allCases
     )
     func pixels(screen: HeroScreen, language: HeroLanguage) async {
-        language.applyInterfaceFace()
-        defer { InterfaceLanguage.set(nil) }
+        await language.enterInterfaceFace()
+        defer { HeroLanguage.leaveInterfaceFace() }
         // Pinned, not inherited: the app ships dark-first and the CI simulator
         // boots in light mode with whatever text size the image left behind.
         let view = await screen.make()

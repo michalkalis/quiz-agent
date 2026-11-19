@@ -8376,6 +8376,12 @@
             "state" : "translated",
             "value" : "Mikrofón je pre Trubbo vypnutý"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мікрофон для Trubbo вимкнено"
+          }
         }
       }
     },

@@ -34,10 +34,13 @@ enum CommandLanguage: String, CaseIterable, Sendable, Equatable {
     /// #175 — Czech shares the Slovak precision-over-recall design (same
     /// hazards: the mic is open to the language being spoken).
     case czech = "cs"
+    /// #231 — Ukrainian on the same design. Its words are Cyrillic and are
+    /// matched unfolded (`VoiceCommandMatcher.normalize`): й, ї, є stay letters.
+    case ukrainian = "uk"
 
     /// The command grammar for a quiz language code (ISO 639-1, as stored in
-    /// `QuizSettings.language`). Anything that is not Slovak or Czech speaks
-    /// English commands — the pre-#120 default.
+    /// `QuizSettings.language`). Anything that is not Slovak, Czech or
+    /// Ukrainian speaks English commands — the pre-#120 default.
     static func forQuizLanguage(_ code: String) -> CommandLanguage {
         CommandEngineSelection.forQuizLanguage(code).commandLanguage
     }
@@ -57,6 +60,9 @@ enum CommandEngineSelection: String, CaseIterable, Sendable {
     /// locally 2026-08-31); SpeechTranscriber has no Czech, so — as with
     /// Slovak — the pair is only constructible on the dictation engine.
     case dictationCzech = "dictation-cs"
+    /// #231 — uk_UA is supported by DictationTranscriber on-device (measured on
+    /// macOS 27, 2026-11-17: all nine command words, and один–чотири as 1–4).
+    case dictationUkrainian = "dictation-uk"
 
     /// The engine + grammar for a quiz language code (#175). English stays on
     /// SpeechTranscriber (field-proven, `.fastResults`); `dictationEnglish`
@@ -65,6 +71,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable {
         switch code.lowercased().prefix(2) {
         case "sk": return .dictationSlovak
         case "cs": return .dictationCzech
+        case "uk": return .dictationUkrainian
         default: return .speechEnglish
         }
     }
@@ -77,6 +84,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable {
         case .speechEnglish, .dictationEnglish: return "en_US"
         case .dictationSlovak: return "sk_SK"
         case .dictationCzech: return "cs_CZ"
+        case .dictationUkrainian: return "uk_UA"
         }
     }
 
@@ -87,6 +95,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable {
         case .speechEnglish, .dictationEnglish: return .english
         case .dictationSlovak: return .slovak
         case .dictationCzech: return .czech
+        case .dictationUkrainian: return .ukrainian
         }
     }
 
@@ -95,7 +104,7 @@ enum CommandEngineSelection: String, CaseIterable, Sendable {
     nonisolated var engineTag: String {
         switch self {
         case .speechEnglish: return "speech"
-        case .dictationEnglish, .dictationSlovak, .dictationCzech: return "dictation"
+        case .dictationEnglish, .dictationSlovak, .dictationCzech, .dictationUkrainian: return "dictation"
         }
     }
 }

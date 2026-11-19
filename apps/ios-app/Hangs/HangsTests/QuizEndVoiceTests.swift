@@ -244,7 +244,7 @@ struct QuizEndCommandWordTests {
         let again = VoiceCommandLexicon.spokenWord(.again, language: language)
         let home = VoiceCommandLexicon.spokenWord(.home, language: language)
         #expect(match(again, .error, language) == .again)
-        #expect(match("stop", .error, language) == .stop)
+        #expect(match(VoiceCommandLexicon.spokenWord(.stop, language: language), .error, language) == .stop)
         #expect(match(again, .setEnd, language) == .again)
         #expect(match(home, .setEnd, language) == .home)
     }
@@ -273,7 +273,7 @@ struct QuizEndCommandWordTests {
             (SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: language), .setEnd),
         ]
         for (line, screen) in lines {
-            #expect(!line.contains("\"") && !line.contains("„") && !line.contains("“"))
+            #expect(!line.contains("\"") && !line.contains("„") && !line.contains("“") && !line.contains("«"))
             for command in VoiceCommandLexicon.commands(on: screen) {
                 let word = VoiceCommandLexicon.spokenWord(command, language: language)
                 #expect(line.contains(word), "\(line) must name \(word)")

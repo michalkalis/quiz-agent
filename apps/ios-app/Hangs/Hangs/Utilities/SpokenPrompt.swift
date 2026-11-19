@@ -38,14 +38,17 @@ enum SpokenPrompt: String, Sendable {
         // "I didn't catch your answer, please try again." (app language).
         case (.didNotCatch, .slovak): "Nezachytil som odpoveď, skús to znova."
         case (.didNotCatch, .czech): "Nezachytil jsem odpověď, zkus to znovu."
+        case (.didNotCatch, .ukrainian): "Я не розчув відповіді, спробуй ще раз."
         case (.didNotCatch, .english): "I didn't catch your answer, please try again."
         // Founder wording 2026-09-24; on-screen twins "…Please say its
         // number." / "…Please say its letter." (app language).
         case (.mcqUnmatchedNumber, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
         case (.mcqUnmatchedNumber, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
+        case (.mcqUnmatchedNumber, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його номер."
         case (.mcqUnmatchedNumber, .english): "I didn't catch which option you meant. Please say its number."
         case (.mcqUnmatchedLetter, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
         case (.mcqUnmatchedLetter, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
+        case (.mcqUnmatchedLetter, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його літеру."
         case (.mcqUnmatchedLetter, .english): "I didn't catch which option you meant. Please say its letter."
         }
     }
@@ -62,12 +65,14 @@ enum SpokenPrompt: String, Sendable {
             return switch language {
             case .slovak: "Otázky Trubbo Plus na tento mesiac sa minuli. Ako pokračovať, uvidíš na obrazovke."
             case .czech: "Otázky Trubbo Plus na tento měsíc došly. Jak pokračovat, uvidíš na obrazovce."
+            case .ukrainian: "Питання Trubbo Plus на цей місяць закінчилися. Як продовжити, побачиш на екрані."
             case .english: "You've used up this month's Trubbo Plus questions. The screen shows how to continue."
             }
         }
         return switch language {
         case .slovak: "Otázky zadarmo na tento mesiac sa minuli. Ako pokračovať, uvidíš na obrazovke."
         case .czech: "Otázky zdarma na tento měsíc došly. Jak pokračovat, uvidíš na obrazovce."
+        case .ukrainian: "Безплатні питання на цей місяць закінчилися. Як продовжити, побачиш на екрані."
         case .english: "You've used up this month's free questions. The screen shows how to continue."
         }
     }
@@ -80,6 +85,7 @@ enum SpokenPrompt: String, Sendable {
         let opening = switch language {
         case .slovak: "Niečo sa pokazilo."
         case .czech: "Něco se pokazilo."
+        case .ukrainian: "Щось пішло не так."
         case .english: "Something went wrong."
         }
         return [opening, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
@@ -93,6 +99,7 @@ enum SpokenPrompt: String, Sendable {
         let score = switch language {
         case .slovak: "Hotovo, \(correct) z \(total) správne."
         case .czech: "Hotovo, \(correct) z \(total) správně."
+        case .ukrainian: "Готово, \(correct) з \(total) правильно."
         case .english: "Done, \(correct) out of \(total) right."
         }
         return [score, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
@@ -106,6 +113,7 @@ enum SpokenPrompt: String, Sendable {
         let (verb, or) = switch language {
         case .slovak: ("Povedz", "alebo")
         case .czech: ("Řekni", "nebo")
+        case .ukrainian: ("Скажи", "або")
         case .english: ("Say", "or")
         }
         let list = words.count > 1 ? "\(words.dropLast().joined(separator: ", ")) \(or) \(last)" : last

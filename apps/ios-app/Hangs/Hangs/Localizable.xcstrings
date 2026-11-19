@@ -2562,6 +2562,12 @@
             "state" : "translated",
             "value" : "Odpovedz hlasom"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповідай голосом"
+          }
         }
       }
     },
@@ -12383,6 +12389,12 @@
             "state" : "translated",
             "value" : "Teraz hovor"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Говори"
+          }
         }
       }
     },
@@ -12446,6 +12458,12 @@
             "state" : "translated",
             "value" : "Nikam sa neponáhľaj. Hovor, klepni na možnosť alebo prejdi na ďalšiu."
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не поспішай. Говори, торкнися варіанта або переходь до наступного."
+          }
         }
       }
     },
@@ -12462,6 +12480,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nikam sa neponáhľaj. Hovor, napíš alebo prejdi na ďalšiu."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не поспішай. Говори, напиши або переходь до наступного."
           }
         }
       }

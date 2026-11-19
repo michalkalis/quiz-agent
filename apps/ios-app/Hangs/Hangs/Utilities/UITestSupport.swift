@@ -106,7 +106,6 @@
                     )
                 ))
                 network.submitTextInputError = limit
-                network.submitVoiceAnswerError = limit
             }
 
             // #123 Track B: seed the Home entitlement card's key visuals for the

@@ -136,7 +136,13 @@ final nonisolated class RSPaywallTests: XCTestCase {
     @MainActor
     func testRS45LimitMidRoundShowsVerdictThenRoundEndThenPaywall() async throws {
         let app = RSFlow.launch(["--ui-test-quota-mid-round"])
-        let result = try await RSFlow.reachResult(app, client: UITestClient(), scenario: "RS-45")
+        // The voice upload is the graded answer: its 429 comes straight back,
+        // with no confirmation sheet in between.
+        let question = RSFlow.startQuiz(app)
+        RSFlow.startRecording(question)
+        try await UITestClient().sendSpokenAnswer("Paris")
+        let result = ResultPage(app: app)
+        result.waitForResult(timeout: 15)
         let paywall = PaywallPage(app: app)
 
         XCTAssertTrue(result.verdict.exists, "RS-45: the last answer's verdict is missing")

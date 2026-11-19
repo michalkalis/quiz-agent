@@ -1,7 +1,7 @@
 // npm run render -- <question-id | question.json> [--format five|abc] [--lang en|sk|cs] [--hook N] [--out DIR] [--make-voice]
 //                    [--opening solo|fused|intro|plain] [--explain line|parts|captions] [--app-clips]
 // npm run render -- --carousel <id,id,id> [--part N] [--lang en|sk|cs] [--out DIR]
-// npm run render -- --round <id,id,id> [--lang en|sk|cs] [--out DIR] [--make-voice] [--opening solo|fused]   (easiest first)
+// npm run render -- --round <id,id,id> [--lang en|sk|cs] [--out DIR] [--make-voice] [--opening solo|fused] [--open-line TEXT]   (easiest first)
 //
 // Fetches approved rows read-only from prod (or reads a JSON file), voices what
 // the app reads in the social voice (cli/voice.ts: George on Flash v2.5, faster
@@ -39,6 +39,8 @@ const {values, positionals} = parseArgs({
 		'app-clips': {type: 'boolean', default: false},
 		// Founder 2026-10-26: the hook alone first, then the question.
 		opening: {type: 'string', default: 'solo'},
+		// A round's own opening line instead of the default (e.g. "3 Christmas questions…").
+		'open-line': {type: 'string'},
 		explain: {type: 'string', default: 'card'},
 	},
 });
@@ -262,7 +264,7 @@ async function main() {
 			items.push({q, audio, words, questionMs, answerAudio, answerMs});
 		}
 		if (!['fused', 'solo'].includes(values.opening)) throw new Error('--opening solo|fused');
-		const props: RoundProps = {items, hookIndex: 0, opening: values.opening as Opening};
+		const props: RoundProps = {items, hookIndex: 0, opening: values.opening as Opening, openLine: values['open-line']};
 		const timeline = roundTimeline(
 			items.map((it) => it.questionMs),
 			items.map((it) => ({answerMs: it.answerMs, whyChars: it.q.explanation.length})),

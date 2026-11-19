@@ -22,7 +22,7 @@ const Tally: React.FC<{n: number; of: number; color: string}> = ({n, of, color})
 	</div>
 );
 
-export const Round: React.FC<RoundProps> = ({items, opening}) => {
+export const Round: React.FC<RoundProps> = ({items, opening, openLine}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const now = ms(frame, fps);
@@ -81,7 +81,7 @@ export const Round: React.FC<RoundProps> = ({items, opening}) => {
 		<AbsoluteFill style={{backgroundColor: tint.bg, fontFamily: FONT, color: INK}}>
 			{audio}
 			{now >= step.start ? <Tally n={i} of={items.length} color={tint.onBg} /> : null}
-			{solo ? <HookSolo line={COPY[item.q.language].openLine(items.length)} color={tint.onBg} endMs={step.start} /> : null}
+			{solo ? <HookSolo line={openLine ?? COPY[item.q.language].openLine(items.length)} color={tint.onBg} endMs={step.start} /> : null}
 			{now >= step.start ? (
 			<div style={{position: 'absolute', top: SAFE.top + 90, left: SAFE.left, right: SAFE.right - 50, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 44}}>
 				{fused ? <HookLine text={hook} color={tint.onBg} grow={grow} /> : null}

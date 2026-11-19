@@ -16,6 +16,7 @@ import random
 
 logger = logging.getLogger(__name__)
 
+from quiz_shared.languages import NATIVE_ONLY_LANGUAGES
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
@@ -32,6 +33,8 @@ T = TypeVar("T")
 # boost far above 2×. Reads a column the row already carries: no extra LLM or
 # DB round trip on the hot path.
 BOOST_WEIGHT = 2.0
+# #205: how many timely questions join the daily challenge candidates.
+DAILY_TIMELY_SAMPLE = 30
 
 # #232: pack rows never get approved, so these are the statuses that take one
 # out of a pack (same rule as quiz-pack-api's pack copy, #225 pack_reuse.py).
@@ -508,17 +511,65 @@ class QuestionRetriever:
         session = QuizSession(session_id="daily-challenge", language=language)
         filters = self._build_metadata_filters("random", session)
         filters.pop("difficulty")
+        fix_pending = await self._structure_fix_pending(session)
         rows = await self._store.sample(
-            filters=filters,
-            n_results=n,
-            excluded_ids=await self._structure_fix_pending(session),
+            filters=filters, n_results=n, excluded_ids=fix_pending
         )
-        rows = [q for q in rows if not q.is_expired()]
+        # Timely questions are a handful among thousands, so a random sample
+        # almost never holds one: fetch them on their own for the set's timely
+        # place (`pick_daily_set`). A permanent boost (9999-01-01) is not timely.
+        timely = await self._store.sample(
+            filters={
+                **filters,
+                "boost_until": {
+                    "$gt": datetime.now(timezone.utc),
+                    "$lt": datetime(9000, 1, 1, tzinfo=timezone.utc),
+                },
+            },
+            n_results=DAILY_TIMELY_SAMPLE,
+            excluded_ids=fix_pending + [q.id for q in rows],
+        )
+        rows = [q for q in rows + timely if not q.is_expired()]
         if language == "en":
             return rows
         english = [q.id for q in rows if q.language != language]
         translated = await self.get_translations(english, language) if english else {}
         return [q for q in rows if q.language == language or q.id in translated]
+
+    def _band_filters(self, session: QuizSession) -> dict:
+        """#236 family round pool: the session's own serving filters (band,
+        topic, build channel's review statuses, no packs, no images), any
+        difficulty, and the session's language ONLY. Band questions are never
+        translated at play time: the child checks (word and number limits,
+        the kids judge) ran on the text in the language it was written in."""
+        filters = self._build_metadata_filters("random", session)
+        filters.pop("difficulty")
+        filters.pop("$or", None)
+        filters.pop("language_dependent", None)
+        filters["language"] = session.language
+        return filters
+
+    async def band_pool_ids(self, session: QuizSession, limit: int = 2000) -> List[str]:
+        """Every playable question of a family session's band + topic (#236)."""
+        rows = await self._store.search(
+            query_text=None, filters=self._band_filters(session), n_results=limit
+        )
+        return [q.id for q in rows if not q.is_expired()]
+
+    async def band_topic_counts(
+        self, language: str, build_channel: Optional[str]
+    ) -> dict:
+        """Playable band questions per ``(age_band, category)`` in one query,
+        under the same filters ``band_pool_ids`` plays from (#236 topics)."""
+        template = QuizSession(
+            session_id="family-topics",
+            language=language,
+            build_channel=build_channel,
+            age_band="kids_4_6",
+        )
+        filters = self._band_filters(template)
+        filters["age_band"] = {"$ne": None}
+        return await self._store.grouped_counts(("age_band", "category"), filters)
 
     @staticmethod
     def _image_types(session: QuizSession) -> list[str]:
@@ -583,7 +634,14 @@ class QuestionRetriever:
         # non-English session, whose English wordplay breaks in translation. A
         # native row's wordplay is in its own language, so that guard skips it.
         english_rows = {"language": {"$in_or_null": ["en"]}}
-        if session.language and session.language != "en":
+        if session.language in NATIVE_ONLY_LANGUAGES:
+            # #231: no English row, translated or not. Stored approved
+            # translations are not offered here either: the filter dict has no
+            # cheap, exact way to say "has one" (the serve path reads the
+            # translation table, `approved_languages` is only a derived index),
+            # and a mismatch would fall through to a live machine translation.
+            filters["language"] = session.language
+        elif session.language and session.language != "en":
             english_rows["language_dependent"] = False
             filters["$or"] = [english_rows, {"language": session.language}]
         else:

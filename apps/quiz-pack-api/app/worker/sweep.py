@@ -187,6 +187,8 @@ async def _recover_stuck_order(ctx: Dict[str, Any], order_id: uuid.UUID) -> None
         verdict = order_budget.evaluate(order, job)
         if not verdict.ok:
             order_budget.mark_exhausted(order, job, verdict)
+            # #240: a partly filled pack (#182) must stop saying 'generating'.
+            await fail_pack_in_session(session, order)
             job.error = (
                 f"sweep: order stuck in {order.status!r} and cut off — {verdict.detail}"
             )

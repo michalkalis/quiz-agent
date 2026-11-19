@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..db.models import MultiplayerRoom
@@ -40,6 +40,9 @@ class RoomStore(Protocol):
         self, subject_id: str, db: AsyncSession | None = None
     ) -> int: ...
 
+    async def move(self, room_id: str, session_id: str, expires_at: datetime) -> None:
+        """#240.9: the room (its id, link and QR) now leads to another session."""
+
 
 def _matches(room: Room, keys: list[str]) -> bool:
     return bool({room.net_v4, room.net_v6} & set(keys))
@@ -69,6 +72,11 @@ class MemoryRoomStore:
             if r.expires_at > now and r.created_at > created_after and _matches(r, keys)
         ]
         return sorted(rooms, key=lambda r: r.created_at, reverse=True)[:20]
+
+    async def move(self, room_id, session_id, expires_at) -> None:
+        self._rooms[room_id] = replace(
+            self._rooms[room_id], session_id=session_id, expires_at=expires_at
+        )
 
     async def forget_host(self, subject_id, db=None) -> int:
         gone = [k for k, r in self._rooms.items() if r.host_subject_id == subject_id]
@@ -134,6 +142,15 @@ class PostgresRoomStore:
                 )
             ).scalars()
             return [_room(r) for r in rows]
+
+    async def move(self, room_id, session_id, expires_at) -> None:
+        async with self._sm() as db:
+            await db.execute(
+                update(MultiplayerRoom)
+                .where(MultiplayerRoom.room_id == room_id)
+                .values(session_id=session_id, expires_at=expires_at)
+            )
+            await db.commit()
 
     async def forget_host(self, subject_id, db=None) -> int:
         stmt = delete(MultiplayerRoom).where(

@@ -25,6 +25,11 @@ with the judge panel off (``JUDGE_GATE=0``, today's configuration) it is inert
 by construction — which is exactly why the marker below is *versioned*:
 ``GATE_VERSION`` names "the gates as configured", and a changed gate set gets a
 new version rather than a silently different meaning for the same string.
+
+``machine:gates-v2`` (#231 — Ukrainian as a fourth language): Ukrainian rows
+also need a passing naturalness verdict, a source that is not Russian, and the
+tiered topic policy and wider Russian check of ``app.uk_policy`` over every
+text field. The en/sk/cs gates are the same as in v1.
 """
 
 from __future__ import annotations
@@ -38,7 +43,7 @@ from app.scoring import craft_guards
 
 # Stamped into `reviewed_by` so a machine approval is distinguishable from a
 # human one in SQL (`reviewed_by LIKE 'machine:%'`); humans stay `michal`.
-GATE_VERSION = "machine:gates-v1"
+GATE_VERSION = "machine:gates-v2"
 
 # Languages whose corpus rows are generated natively through the gated pipeline.
 MACHINE_APPROVABLE_LANGUAGES = frozenset({"en", "sk", "cs", "uk"})
@@ -161,24 +166,50 @@ def _recomputed_guard_reason(q: Question, tf_excess: Collection[str]) -> str | N
         )
     if craft_reason is None:
         craft_reason = craft_guards.units_reason(
-            q.question, q.correct_answer, q.possible_answers
+            q.question, q.correct_answer, q.possible_answers, language=q.language
         )
     if craft_reason is not None:
         return f"{CRAFT_FLAG_KEY}={craft_reason}"
     if q.id in tf_excess:
         return f"{CRAFT_FLAG_KEY}=tf_key_imbalance"
     if q.language == uk_policy.UK:
-        # #231: Ukrainian rows also clear the Russian-contamination and
-        # topic-policy checks, recomputed like the guards above.
-        texts = [q.question, str(q.correct_answer), q.explanation or ""]
-        texts += [str(v) for v in (q.possible_answers or {}).values()]
-        texts += [str(a) for a in (q.alternative_answers or [])]
-        uk_reason = uk_policy.russian_contamination_reason(
-            texts
-        ) or uk_policy.topic_policy_reason(texts)
+        uk_reason = _uk_reason(q)
         if uk_reason is not None:
-            return f"uk_policy={uk_reason}"
-    undated_reason = craft_guards.undated_record_reason(q.question, q.explanation)
+            return uk_reason
+    undated_reason = craft_guards.undated_record_reason(
+        q.question, q.explanation, language=q.language
+    )
     if undated_reason is not None:
         return f"{UNDATED_FLAG_KEY}={undated_reason}"
+    return None
+
+
+def uk_texts(q: Question) -> list[str]:
+    """Every text of a row a player or the reviewer reads (#231)."""
+    texts = [q.question, str(q.correct_answer), q.explanation or "", q.topic or ""]
+    texts += [q.headline_answer or "", q.source_excerpt or ""]
+    texts += [str(v) for v in (q.possible_answers or {}).values()]
+    texts += [str(a) for a in (q.alternative_answers or [])]
+    return texts
+
+
+def _uk_reason(q: Question) -> str | None:
+    """#231: Russian contamination, topic policy (either tier) and a Russian
+    source, recomputed like the guards above; then the naturalness verdict,
+    which for Ukrainian is a gate, not only a label: no native speaker reads
+    the rows before they would serve, so a missing or failing verdict holds."""
+    texts = uk_texts(q)
+    reason = (
+        uk_policy.russian_contamination_reason(texts)
+        or uk_policy.topic_policy_reason(texts)
+        or uk_policy.source_reason(q.source_url)
+    )
+    if reason is not None:
+        return f"uk_policy={reason}"
+    extra = q.generation_metadata.extra if q.generation_metadata else {}
+    verdict = extra.get("naturalness")
+    if not isinstance(verdict, dict):
+        return "naturalness=missing"
+    if verdict.get("ok") is not True:
+        return "naturalness=not_ok"
     return None

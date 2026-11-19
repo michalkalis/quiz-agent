@@ -18,6 +18,7 @@ from quiz_shared.models.session import QuizSession
 from quiz_shared.utils.text_normalization import normalize_text
 
 from ..evaluation.evaluator import UNMATCHED
+from ..quiz.errors import JudgeUnavailable
 from ..quiz.flow import FlowResult, QuizFlowService
 from ..serializers import session_translation, translated_question_view
 from ..session.manager import SessionManager
@@ -116,7 +117,15 @@ class RoomPlay:
                 raise RoomError(409, "Time is up")
             rnd.answers[you.participant_id] = RoomAnswer(answer=text.strip(), at=at)
             if rounds.all_answered(session, rnd):
-                await self._grade(session, rnd)
+                # #240.9: stored first, so while the judge works every other
+                # phone sees "grading" instead of a question that looks open.
+                await self.sessions.update_session(session)
+                try:
+                    await self._grade(session, rnd)
+                except JudgeUnavailable:
+                    # The answer is in either way; nothing was graded yet, so
+                    # the next poll closes the question once the judge answers.
+                    logger.warning("Room grading deferred for session %s", session_id)
             await self.sessions.update_session(session)
 
     async def away(self, room_id: str, subject_id: str, question_id: str) -> None:
@@ -158,7 +167,10 @@ class RoomPlay:
             if not rnd.closed:
                 if not rounds.close_due(session, rounds.now()):
                     raise RoomError(409, "Players are still answering")
-                await self._grade(session, rnd)
+                try:
+                    await self._grade(session, rnd)
+                except JudgeUnavailable:
+                    await self._cancel(session, rnd)
             await self._advance(session)
 
     async def _advance(self, session: QuizSession) -> None:
@@ -230,10 +242,28 @@ class RoomPlay:
                 if game and rounds.close_due(session, rounds.now()):
                     await self._grade(session, game.current)
                     await self.sessions.update_session(session)
+        except JudgeUnavailable:
+            # Already reported (throttled) by hot_path_llm; the next poll
+            # retries, and the host's Next cancels the question.
+            logger.warning("Room grading deferred for session %s", session_id)
         except Exception:
             logger.exception("Room close failed for session %s", session_id)
         finally:
             self._closing.discard(session_id)
+
+    async def _cancel(self, session: QuizSession, rnd: RoomRound) -> None:
+        """The judge stayed down until the host moved on (founder 2026-11-18):
+        the question counts for nobody, so the room can always go on. Current
+        builds read "skipped" with 0 points as a plain miss."""
+        question = await self.flow.question_retriever.get(rnd.question_id)
+        translation = session_translation(session, rnd.question_id)
+        for a in rnd.answers.values():
+            a.result, a.points = "skipped", 0.0
+        rnd.correct_answer = await self.flow._correct_answer_display(
+            question, translation, session
+        )
+        rnd.explanation = translated_question_view(question, translation).explanation
+        rnd.cancelled = rnd.closed = True
 
     async def _grade(self, session: QuizSession, rnd: RoomRound) -> None:
         """Grade every answer with the solo evaluator. Equal answers (after

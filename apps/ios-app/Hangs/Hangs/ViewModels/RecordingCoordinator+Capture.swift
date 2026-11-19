@@ -34,6 +34,18 @@ extension RecordingCoordinator {
     /// Handles audio preparation, state transitions, and error rollback
     /// `trigger` decides what happens to a question read-out in progress (+Trigger).
     func startRecording(trigger: RecordingTrigger = .tap) async {
+        // #240: iOS hands an app without mic access silence. Recording it
+        // uploaded an empty answer and the player heard "didn't catch that",
+        // twice per question. The listen bar says the mic is off instead
+        // (`.micOff`), and the question stays answerable by tapping or typing.
+        guard audioService.microphonePermissionStatus != .denied else {
+            if quizState() == .askingQuestion {
+                trackAnalytics(.voiceCaptureFailed(reason: .micDenied, questionId: currentQuestion()?.id))
+            }
+            Logger.audio.info("🎙️ startRecording refused — microphone access is denied")
+            return
+        }
+
         // #185 (founder 2026-09-24): a manual start stops the read-out, the
         // hands-free one waits for it to end — see RecordingCoordinator+Trigger.
         let readOut = await resolveQuestionReadOut(for: trigger)

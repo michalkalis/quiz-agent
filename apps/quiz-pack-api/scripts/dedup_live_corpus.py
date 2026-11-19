@@ -6,8 +6,11 @@ side. This replays what the dedup gate should have done, over the corpus as
 players see it:
 
 - **Pools** = what one player can draw: ``en`` (approved English rows), and
-  per native language ``sk`` / ``cs`` (approved native rows + English rows
-  served in that language, compared through their approved translation).
+  per native language ``sk`` / ``cs`` / ``uk`` (approved native rows + English
+  rows served in that language, compared through their approved translation).
+  #231: uk joined once approved uk rows existed, because a row in a language
+  outside this list stops the whole run. Nothing here is script-specific: the
+  judge reads Cyrillic as it reads Latin, and pairs come from embeddings.
 - **Candidates** = pairs inside a pool with question cosine ≥ 0.60 or
   question+answer cosine ≥ 0.75 — a wider net than the generation gate's
   0.70 / 0.90, affordable because this runs once and every pair is judged
@@ -69,7 +72,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 logger = logging.getLogger("dedup_live_corpus")
 
 NOTE_PREFIX = "corpus dedup: same fact as"
-NATIVE_LANGUAGES = ("sk", "cs")
+NATIVE_LANGUAGES = ("sk", "cs", "uk")
 NEUTRAL_RATING = 0.5
 JUDGE_CONCURRENCY = 6
 CANDIDATE_Q_FLOOR = 0.60

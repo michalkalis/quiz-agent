@@ -170,3 +170,31 @@ def test_v2_stamps_its_own_version(monkeypatch) -> None:
     assert house_style_version() == HOUSE_STYLE_VERSION
     monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
     assert house_style_version() == HOUSE_STYLE_V2_VERSION != HOUSE_STYLE_VERSION
+
+
+def test_uk_v2_has_its_own_stamp_and_en_sk_cs_keep_theirs(monkeypatch) -> None:
+    """#231: the uk file changed after v2 shipped (PR #852) without a new
+    stamp, so ratings could not tell its questions apart. uk now carries its
+    own version; en/sk/cs rows keep the stamp that names their unchanged text."""
+    from app.generation.prompt_builder import HOUSE_STYLE_V2_VERSION, house_style_version
+
+    monkeypatch.setenv("GEN_HOUSE_STYLE_V2", "1")
+    for language in (None, "en", "sk", "cs"):
+        assert house_style_version(language) == HOUSE_STYLE_V2_VERSION
+    assert house_style_version("uk") not in (HOUSE_STYLE_V2_VERSION, None)
+
+
+def test_uk_house_style_file_is_pinned_to_its_version() -> None:
+    """Editing house_style_v2.uk.md must come with a bump of its entry in
+    HOUSE_STYLE_V2_LANGUAGE_VERSIONS (then re-pin the hash here)."""
+    import hashlib
+    from pathlib import Path
+
+    from app.generation.prompt_builder import HOUSE_STYLE_V2_LANGUAGE_VERSIONS
+
+    path = Path(__file__).resolve().parents[2] / "prompts" / "house_style_v2.uk.md"
+    pinned = {
+        "2026-11-18": "68a09a09329a1f05e3d8b914d02a08f45fd999c7dcf8e010f38ec4c29c8422fa"
+    }
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert pinned.get(HOUSE_STYLE_V2_LANGUAGE_VERSIONS["uk"]) == digest

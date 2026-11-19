@@ -1,0 +1,41 @@
+{
+  "keep": [
+    "467872b5-c337-4c6a-aeda-b4201eb34554",
+    "daab6b98-c97b-492b-8a8e-8b61be843f57",
+    "ddd0bf65-0fb0-4c41-ab4b-8bf242a730ac",
+    "4862614d-1e6d-4c59-a448-55eb9ca5a5ca",
+    "78020c6f-8f6f-4d1a-a395-0dd8776a7b47",
+    "6cd6b96a-9f90-4c6b-b5f2-9fe2d1649499",
+    "2a4b6b86-0b20-4b0f-9a70-e3446e108311",
+    "29420e4f-d7ad-4364-928f-20821cdf4775",
+    "099d197b-b51d-49e8-8e3b-0a3ff68dd8de",
+    "271a7292-9329-4514-9c20-47cacfb8334b",
+    "a3e283b4-40ed-484b-a0ad-d782aa158bdc",
+    "de84ee2e-1fcd-4bd8-9793-b9479286fd9f",
+    "5d7eb42b-7f3c-4ef8-978e-7026bf214ed9",
+    "351778f3-d309-4f50-a133-d804d8dba2ed",
+    "1ea19d48-bb57-4ed9-a9f6-01226419d496",
+    "65226a5c-9305-47cf-b33f-82b67c58ca88",
+    "624b3a52-1177-4319-963b-0e16a9e47101",
+    "03ac60b8-1c7d-42a9-9da9-462c03d5239e",
+    "12339e3d-ff67-4df9-9a79-37698a108016",
+    "934996e6-7049-4c92-ac82-477698976bdb",
+    "5841a08f-c8ba-4c3e-9026-2d7f18fb6772",
+    "790c0268-3ed2-4824-bfed-884286cc83f7",
+    "74d5f281-5593-45e2-b9db-97c5fb2345d7",
+    "960b45ad-3bb6-478e-b7ef-3caec60280a8",
+    "766076d3-6b5e-40c4-94eb-e5fd541ebb99"
+  ],
+  "drop": [
+    {"id": "3fa840da-332f-4c0a-9abc-364ba6aa287b", "why": "Duplicate of live sk question (Mikuláš, Myra -> Turecko); also live in cs."},
+    {"id": "3c72b84e-efb0-4d82-a63c-3b89925741b9", "why": "Same legend as live sk 'na veno' question and its wording gives that answer away; opening rhetorical question confuses when read aloud."},
+    {"id": "ec961590-c4d0-4f8c-8561-8d48d4537ddf", "why": "Setup states 'hviezda', which is the answer of the live sk apple-cutting question; same custom."},
+    {"id": "7cdff1a4-ad76-44ce-b0f5-5e3cc1196f66", "why": "Wording gives the answer away ('as many dishes as Jesus had apostles' = 12)."},
+    {"id": "be85e873-f45e-4c29-8567-e29a249da12d", "why": "No single clear answer: 'šťastie', 'zdravie', 'ochrana' are equally natural guesses for what throwing nuts should bring."},
+    {"id": "c6968980-8f32-46a8-8125-cc531ff76adc", "why": "Correct but Popoluška overload: two live sk questions plus the kept Moritzburg one already cover the film."}
+  ],
+  "fix": [
+    {"id": "ddd0bf65-0fb0-4c41-ab4b-8bf242a730ac", "field": "alternative_answers", "new": ["chuti bahna", "bahna", "pachuti po bahne", "zápachu bahna", "bahnitej chuti", "pachuti", "zápachu", "aby nesmrdel bahnom"], "why": "Common short spoken answers 'pachuti' / 'zápachu' were missing."},
+    {"id": "5841a08f-c8ba-4c3e-9026-2d7f18fb6772", "field": "alternative_answers", "new": ["Dóm sv. Alžbety", "Katedrála svätej Alžbety", "Košický dóm", "svätá Alžbeta", "Dóm", "Košická katedrála", "Alžbetin dóm"], "why": "Spoken variants 'Dóm', 'Košická katedrála', 'Alžbetin dóm' missing."}
+  ]
+}

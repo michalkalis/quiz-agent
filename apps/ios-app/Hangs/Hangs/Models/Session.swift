@@ -24,6 +24,9 @@ struct QuizSession: Codable, Identifiable, Sendable {
     /// does not move on a skip. Optional: backends that predate the field
     /// omit it, and the counter then falls back to `answeredCount`.
     var askedCount: Int? = nil
+    /// #236: the child age band of a family round ("kids_7_9"); nil for every
+    /// other session. Plain text, as the server sends it.
+    var ageBand: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case id = "session_id"
@@ -37,6 +40,7 @@ struct QuizSession: Codable, Identifiable, Sendable {
         case expiresAt = "expires_at"
         case createdAt = "created_at"
         case askedCount = "asked_count"
+        case ageBand = "age_band"
     }
 }
 

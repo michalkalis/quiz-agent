@@ -57,6 +57,10 @@ _PROMPT_STOPWORDS = frozenset(
         # ("general relativity" still keeps "relativity").
         "general", "knowledge", "mixed", "mix", "misc", "miscellaneous",
         "various", "variety", "anything", "everything", "surprise", "assorted",
+        # #231: the same generic words in Ukrainian ("запитання про космос").
+        "про", "для", "питання", "запитання", "вікторина", "вікторини", "тест",
+        "тести", "зроби", "створи", "дай", "хочу", "мені", "факти", "цікаві",
+        "цікавих", "загальні", "різне", "різні", "будь",
     }
 )
 
@@ -284,13 +288,13 @@ class SourcingStage:
     def _prompt_tokens(prompt: str | None) -> list[str]:
         """Mine up to `MAX_PROMPT_TOPIC_TOKENS` topic tokens from free text.
 
-        Heuristic, no LLM: lowercase, split on `[a-z0-9]+`, drop ≤2-char tokens
+        Heuristic, no LLM: lowercase, split on letters/digits of any alphabet (#231), drop ≤2-char tokens
         and a small stopword set, de-dupe preserving order, cap the count.
         """
         if not prompt:
             return []
         tokens: list[str] = []
-        for match in re.findall(r"[a-z0-9]+", prompt.lower()):
+        for match in re.findall(r"[^\W_]+", prompt.lower()):
             if len(match) <= 2 or match in _PROMPT_STOPWORDS:
                 continue
             if match not in tokens:

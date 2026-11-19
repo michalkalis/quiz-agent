@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from quiz_shared.models.session import QuizSession
 
 from ...rooms import rounds
+from ...rooms.awards import awards
 
 
 class RoundResult(BaseModel):
@@ -35,6 +36,9 @@ class RoundOut(BaseModel):
     results: Optional[List[RoundResult]] = None
     # #224.4: set (true) only while the host holds the reveal; absent otherwise.
     paused: Optional[bool] = None
+    # #239: set (true) only when the judge could not grade the question and the
+    # host moved on; every result is then "skipped" with 0 points. Absent otherwise.
+    cancelled: Optional[bool] = None
 
 
 class RankOut(BaseModel):
@@ -47,6 +51,26 @@ class RankOut(BaseModel):
 class AwayOut(BaseModel):
     participant_id: str
     questions: int = Field(description="Questions during which they left the app")
+
+
+class AwardOut(BaseModel):
+    """#240.9: a small award on the final screen."""
+
+    kind: str = Field(
+        description="fastest (fastest right answer) | only_one (the only one "
+        "right on a question) | streak (most right answers in a row, 3 or more); "
+        "apps skip a kind they do not know"
+    )
+    participant_id: str
+    question_number: Optional[int] = Field(
+        None, description="fastest: that question; only_one: the first such question"
+    )
+    ms: Optional[int] = Field(
+        None, description="fastest: time from the question appearing to the answer"
+    )
+    count: Optional[int] = Field(
+        None, description="only_one: how many questions; streak: its length"
+    )
 
 
 class GameView(BaseModel):
@@ -73,6 +97,9 @@ class GameView(BaseModel):
     away: Optional[List[AwayOut]] = Field(
         None, description="Host only, once finished: who left the app (#212.4)"
     )
+    awards: Optional[List[AwardOut]] = Field(
+        None, description="Once finished, with 2+ players (#240.9)"
+    )
 
 
 def round_out(session: QuizSession, rnd, you, at: datetime) -> RoundOut:
@@ -92,6 +119,7 @@ def round_out(session: QuizSession, rnd, you, at: datetime) -> RoundOut:
         out.correct_answer = rnd.correct_answer
         out.explanation = rnd.explanation
         out.paused = True if rnd.paused else None
+        out.cancelled = True if rnd.cancelled else None
         out.results = [
             RoundResult(
                 participant_id=pid, answer=a.answer, result=a.result, points=a.points
@@ -126,6 +154,7 @@ def game_view(session: QuizSession, you) -> GameView:
             for i, p in enumerate(rounds.ranking(session))
         ]
         view.rounds = [round_out(session, r, you, at) for r in game.rounds]
+        view.awards = [AwardOut(**a.__dict__) for a in awards(session)] or None
         if you.is_host:
             counts: Dict[str, int] = {}
             for r in game.rounds:

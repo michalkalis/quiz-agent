@@ -100,10 +100,14 @@ class FakeStore(SharedQuizStore):
     SQL is the session gate's (tests/db/test_pack_ownership.py)."""
 
     packs: dict = {}
+    refunded: set = set()
 
     async def owned_pack(self, pack_id, subject_id):
         pack = self.packs.get(pack_id)
         return pack if pack and pack["owner"] == subject_id else None
+
+    async def pack_refunded(self, pack_id):
+        return str(pack_id) in self.refunded
 
 
 @pytest_asyncio.fixture
@@ -115,6 +119,7 @@ async def app(db_sessionmaker, monkeypatch):
     retriever = FakeRetriever()
     sessions = SessionManager()
     daily = DailyChallengeService(db_sessionmaker, retriever)
+    FakeStore.refunded = set()
     FakeStore.packs = {
         PACK: {
             "owner": "owner",
@@ -287,7 +292,9 @@ async def test_pack_link_plays_once_per_person_and_only_that_pack(client, app):
     session = await _session(app, resp)
     assert session.pack_id == PACK and session.fixed_question_ids == ["p1", "p2"]
     assert session.is_quota_exempt and session.is_solo_only
-    # Once per person: starting it again is refused.
+    # Once per person: after an answer, starting it again is refused.
+    session.question_results["p1"] = "correct"
+    await app.state.session_manager.update_session(session)
     assert (await _start(client, share["token"], "friend")).status_code == 409
     # The owner never "plays once" their own pack through the link.
     assert (await _start(client, share["token"], "owner")).status_code == 409
@@ -303,6 +310,43 @@ async def test_only_the_owner_shares_a_pack_and_only_when_finished(client, app):
         "/api/v1/shared-quizzes", json={"pack_id": PACK}, headers=_h("owner")
     )
     assert resp.status_code == 409
+
+
+async def test_a_refunded_pack_is_played_by_nobody(client, app):
+    """#240 (founder 2026-11-18): after Apple refunds a custom pack nobody
+    plays it — links already sent stop working and no new link can be made.
+    The refusal reuses the code live builds already show as "This quiz can't
+    be played any more." instead of a dead end."""
+    share = await _share(client, "owner", pack_id=PACK)
+    FakeStore.refunded.add(PACK)
+
+    resp = await _start(client, share["token"], "friend")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+
+    # A new link: neither from the pack nor from a pack round played before.
+    resp = await client.post(
+        "/api/v1/shared-quizzes", json={"pack_id": PACK}, headers=_h("owner")
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+    played = await _finished(app, "owner", ["p1", "p2"], pack_id=PACK)
+    resp = await client.post(
+        "/api/v1/shared-quizzes",
+        json={"session_id": played.session_id},
+        headers=_h("owner"),
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "nothing_playable"
+
+
+async def test_a_refund_of_another_pack_changes_nothing(client, app):
+    """#240: only the refunded pack is blocked; a pack that was not refunded
+    keeps its links working."""
+    FakeStore.refunded.add("22222222-2222-2222-2222-222222222222")
+    share = await _share(client, "owner", pack_id=PACK)
+
+    assert (await _start(client, share["token"], "friend")).status_code == 200
 
 
 async def _daily_share(client, app, day):
@@ -390,3 +434,32 @@ async def test_public_preview_shows_no_questions_and_needs_no_login(client, app)
         f"/api/v1/shared-quizzes/{token}/results", headers=_h("sender")
     )
     assert "access-control-allow-origin" not in results.headers
+
+
+async def test_beta_build_opens_a_daily_link_as_its_own_daily_before_launch(
+    client, app, monkeypatch
+):
+    """#239: with the daily challenge on for beta builds only, a beta friend
+    who opens a daily link gets their own daily (so the crew forms), while a
+    store build still gets a round of the same five."""
+    monkeypatch.setenv("DAILY_CHALLENGE_ENABLED", "false")
+    today = datetime.now(timezone.utc).date()
+    token, set_ids = await _daily_share(client, app, today)
+
+    async def overrides(_sessionmaker):
+        return {"shared_quiz_enabled": "true", "daily_challenge_beta_min_build": "87"}
+
+    monkeypatch.setattr(app_switches, "cached_overrides", overrides)
+    ua = "Hangs/{} CFNetwork/3826.500.111 Darwin/25.0.0"
+
+    async def start(subject, build):
+        return await client.post(
+            f"/api/v1/shared-quizzes/{token}/start",
+            json={},
+            headers={**_h(subject), "User-Agent": ua.format(build)},
+        )
+
+    beta = await _session(app, await start("beta-friend", 89))
+    store = await _session(app, await start("store-friend", 86))
+    assert beta.daily_challenge_date == today.isoformat()
+    assert store.daily_challenge_date is None and store.fixed_question_ids == set_ids

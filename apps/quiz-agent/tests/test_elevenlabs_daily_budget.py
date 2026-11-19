@@ -10,6 +10,7 @@ survive a deploy, and a meter that cannot be read must never block play.
 
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import UTC, datetime, timedelta
 
@@ -124,6 +125,58 @@ class Spent:
     async def exhausted(self) -> bool:
         return self.value
 
+    def exhausted_now(self) -> bool:
+        return self.value
+
+
+class HeldMeter(Meter):
+    """ElevenLabs' meter answering only when the test lets it (a slow API)."""
+
+    def __init__(self, used: int):
+        super().__init__(used)
+        self.release = asyncio.Event()
+
+    async def __call__(self) -> int:
+        self.reads += 1
+        await self.release.wait()
+        return self.used
+
+
+async def test_a_slow_meter_never_delays_question_audio(db_sessionmaker):
+    """#240 audit: the budget reading refreshes once a minute and calls the
+    ElevenLabs API (5 s timeout) plus the database. Done inline, the first
+    question of each minute waited for it, cached audio too, outside the 6 s
+    primary cut-off: during an ElevenLabs slowdown that pushed a question past
+    the app's 10 s wait. Speech must go by the last verdict and refresh in the
+    background."""
+    meter, now, clock = HeldMeter(5_000), [_T0], [0.0]
+    budget = _budget(db_sessionmaker, meter, now, clock)
+    primary, fallback = (
+        FakeProvider("elevenlabs", "v-el"),
+        FakeProvider("openai", "nova"),
+    )
+    tts = TTSService(provider=primary, fallback_provider=fallback)
+    tts.primary_budget = budget
+
+    # The meter is held: a synthesis that waited for it would never return.
+    # (The timeout is only a guard so a regression fails instead of hanging.)
+    first = await asyncio.wait_for(tts.synthesize("A question"), 5)
+    cached = await asyncio.wait_for(tts.synthesize("A question"), 5)
+    assert first == cached == b"elevenlabs-audio"
+    assert meter.reads == 1  # one background refresh, not one per request
+
+    # The refresh lands later and its verdict applies from then on.
+    meter.release.set()
+    await budget._background
+    meter.used += BUDGET
+    clock[0] += 61  # stale again: the next request starts a refresh...
+    next_audio = await asyncio.wait_for(tts.synthesize("Next question"), 5)
+    assert next_audio == b"elevenlabs-audio"  # ...and goes by the last verdict
+    await budget._background
+    assert await asyncio.wait_for(tts.synthesize("Third question"), 5) == (
+        b"openai-audio"
+    )
+
 
 async def test_spent_budget_moves_new_speech_to_the_fallback_voice():
     primary, fallback = (
@@ -173,3 +226,25 @@ async def test_spent_budget_refuses_realtime_tokens(monkeypatch):
         resp = await c.post("/api/v1/elevenlabs/token")
     assert resp.status_code == 503
     assert "token" not in resp.json()
+
+
+async def test_a_rerecord_batch_does_not_push_players_onto_the_fallback(
+    db_sessionmaker,
+):
+    """Re-recording the cache after a voice change spends many days of budget
+    at once (founder 2026-11-18, faster voice). Left out of today's spend, the
+    budget keeps guarding what players spend, and nothing else."""
+    from app.usage.elevenlabs_budget import exclude_from_today
+
+    meter, now, clock = Meter(10_000), [_T0], [0.0]
+    budget = _budget(db_sessionmaker, meter, now, clock)
+    assert not await budget.exhausted()
+
+    meter.used += 20 * BUDGET  # the batch
+    await exclude_from_today(db_sessionmaker, 20 * BUDGET, meter.used, _T0.date())
+    clock[0] += 61
+    assert not await budget.exhausted()
+
+    meter.used += BUDGET  # players still count
+    clock[0] += 61
+    assert await budget.exhausted()

@@ -1,9 +1,8 @@
 # Fly.io Deployment Runbook — quiz-agent
 
-- **Production URL:** https://quiz-agent-api.fly.dev (Fly.io, 1 machine, no volume, bluegreen deploys)
-- **Deploy:** `cd apps/quiz-agent && fly deploy`
+> **Since 2026-11-06 production runs on Hetzner** (#222 — moving the backend to Hetzner; deploy and rollback: `/deploy` skill, [`infra/hetzner/README.md`](../../infra/hetzner/README.md)). The Fly app `quiz-agent-api` now runs only the forwarder for `*.fly.dev`. **Do not run `fly deploy` from `apps/quiz-agent`**: it replaces the forwarder with the old app on the old Fly database. The image notes below still apply, because Hetzner builds the same Dockerfiles.
 
-Read this before deploying or before changing `[[mounts]]` in `apps/quiz-agent/fly.toml`.
+- **Production URL (until 2026-11-06):** https://quiz-agent-api.fly.dev (Fly.io, 1 machine, no volume, bluegreen deploys)
 
 ## Pitfall 1 (RETIRED 2026-10-16): Dockerfile pip deps drift from pyproject.toml
 

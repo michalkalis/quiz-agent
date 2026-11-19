@@ -13,11 +13,12 @@
 # Prod runs only from `main` (the `production` environment also only accepts
 # main); dispatching from a branch rehearses that branch on staging only.
 #
-# Manual emergency path: the /deploy skill (laptop, founder Fly login). It
-# does not move the `deployed/*` tags, so the next run here may redeploy the
-# same code once, which is harmless. Laptop deploys use the local lock
-# `mkdir /tmp/trubbo-deploy-<app>.lock`, which this workflow cannot see:
-# take that lock yourself before dispatching while anyone deploys by hand.
+# Manual emergency path: the /deploy skill (runs infra/hetzner/deploy-ssh.sh on
+# the server by hand). It does not move the `deployed/*` tags, so the next run
+# here may redeploy the same code once, which is harmless. deploy-ssh.sh takes
+# the server's deploy lock, so a manual deploy and this workflow cannot overlap.
+# Since the 2026-11-06 cutover the Fly apps only forward: never `fly deploy`
+# the app configs (it replaces the forwarder with the old app on the old DB).
 name: Backend Deploy
 
 on:
@@ -231,9 +232,15 @@ jobs:
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RESULTS: "tests=${{ needs.test.result }} staging=${{ needs.staging.result }} production=${{ needs.production.result }}"
+          BACKEND_HOST: ${{ vars.BACKEND_HOST }}
         run: |
+          if [ "$BACKEND_HOST" = hetzner ]; then
+            hint='Prod is untouched when the tests failed. If the "Deploy to Hetzner" step failed, read its log: "[deploy] ERROR:" before any build = nothing changed; "rolled back to <sha>" = the old code is live again; "ROLLBACK ALSO FAILED" = inspect the server (`ssh trubbo-prod`, then `docker compose ps` in ~/trubbo/repo/infra/hetzner). If a later step failed (smoke, pack worker), the new code is live: fix forward, or roll back per the /deploy skill (Rollback). Do NOT run `fly deploy` or `fly status` for this: the Fly apps only run the forwarder, and a Fly deploy replaces it with the old app on the old database.'
+          else
+            hint='BACKEND_HOST is not "hetzner", so this workflow deploys app code to Fly (staging, then prod). Production has run on Hetzner since 2026-11-06 and the Fly apps only forward, so a Fly prod deploy replaces the forwarder. Check BACKEND_HOST before any rerun; see infra/hetzner/README.md.'
+          fi
           gh label create deploy-failed --repo "$REPO" --color B60205 \
             --description "Backend deploy workflow failed" --force
           gh issue create --repo "$REPO" --label deploy-failed \
             --title "Backend deploy failed at ${GITHUB_SHA::8}" \
-            --body "$(printf 'Run: %s\nCommit: %s\nStages: %s\n\nProd is untouched when tests or staging failed. If production failed mid-way, check `fly status` and roll back per the /deploy skill (Rollback).' "$RUN_URL" "$GITHUB_SHA" "$RESULTS")"
+            --body "$(printf 'Run: %s\nCommit: %s\nStages: %s\n\n%s' "$RUN_URL" "$GITHUB_SHA" "$RESULTS" "$hint")"

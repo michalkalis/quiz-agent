@@ -52,7 +52,9 @@ def prompt_key(prompt: str) -> str:
     symbols as spaces, whitespace collapsed. Hashed so the key has a fixed
     size (a 1000-char prompt can exceed a btree entry) and does not repeat
     the prompt text."""
-    folded = unicodedata.normalize("NFKC", prompt).casefold()
+    # #231: Ukrainian keyboards type the apostrophe as ' or ʼ (U+02BC, a
+    # letter, not punctuation): "м'ясо" and "мʼясо" are the same prompt.
+    folded = unicodedata.normalize("NFKC", prompt).replace("ʼ", "'").casefold()
     spaced = "".join(
         " " if unicodedata.category(ch)[0] in "PS" else ch for ch in folded
     )

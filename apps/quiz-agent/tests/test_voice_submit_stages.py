@@ -53,7 +53,9 @@ class _TTS:
         self.gate = gate
         self.fail = fail
 
-    async def synthesize(self, text, voice=None, use_cache=True, billing=None):
+    async def synthesize(
+        self, text, voice=None, use_cache=True, billing=None, language=None
+    ):
         self.texts.append(text)
         self.started.set()
         if self.gate is not None:

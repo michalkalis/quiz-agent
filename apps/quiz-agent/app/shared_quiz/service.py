@@ -18,7 +18,7 @@ from quiz_shared.models.session import QuizSession
 from ..config import get_settings
 from ..db.models import SharedQuiz
 from ..retrieval.question_retriever import QuestionRetriever
-from ..session.manager import SessionManager
+from ..session.manager import SessionBusy, SessionManager
 from .creation import ShareCreation, ShareError, player_score
 from .marks import aligned, known_in_session
 from .ranking import RankedPlayer, rank
@@ -71,17 +71,25 @@ class SharedQuizService(ShareCreation):
         name: Optional[str] = None,
         build_channel: Optional[str] = None,
         capabilities: Sequence[str] = (),
+        daily_on: Optional[bool] = None,
     ) -> StartOutcome:
+        """``daily_on``: whether this player gets the daily challenge (the
+        route's beta gate, #239); None falls back to the server-wide switch."""
         share = await self.store.by_token(token)
         if share is None:
             raise ShareError(404, "not_found", "Shared quiz not found")
+        if share.kind == "pack" and share.pack_id is not None:
+            # #240: links sent before the refund stop working too.
+            await self._refuse_refunded(share.pack_id)
         is_sender = share.sender_subject_id in await self.store.person_ids(subject_id)
         self._emit(
             "shared_quiz_opened", subject_id, None, kind=share.kind, source="app"
         )
         probe = self._session(share, subject_id, build_channel, capabilities)
         if share.kind == "daily" and _still_open(share.challenge_date):
-            outcome = await self._start_daily(share, subject_id, probe, is_sender, name)
+            outcome = await self._start_daily(
+                share, subject_id, probe, is_sender, name, daily_on
+            )
             if outcome is not None:
                 return outcome
         ids = [
@@ -109,7 +117,9 @@ class SharedQuizService(ShareCreation):
     ) -> QuizSession:
         """Once per person per pack. The play is reserved only after the session
         exists, so a failed start never uses up the one play; a lost race
-        removes the extra session again."""
+        removes the extra session again. A repeated start of this link before
+        any answer moves the play to the new session (the app retried or lost
+        the first answer)."""
         already = ShareError(
             409, "already_played", "This shared pack was played already"
         )
@@ -118,8 +128,8 @@ class SharedQuizService(ShareCreation):
         session = await self._persist(probe, ids)
         try:
             reserved = await self.store.begin_play(
-                share, probe.user_id, name, once=True
-            )
+                share, probe.user_id, name, once=True, session_id=session.session_id
+            ) or await self._restart_unanswered(share, probe.user_id, session)
         except Exception:
             await self.sessions.delete_session(session.session_id)
             raise
@@ -128,6 +138,29 @@ class SharedQuizService(ShareCreation):
             raise already
         return session
 
+    async def _restart_unanswered(
+        self, share: SharedQuiz, subject_id: str, session: QuizSession
+    ) -> bool:
+        """This person's play of this link, not answered yet, now runs in
+        ``session``; the old session goes so one play stays one session.
+        Under the old session's lock, which the answer routes hold until the
+        grade is written: an answer being graded is seen (refused), and an
+        answer arriving later finds no session (404)."""
+        old_id = await self.store.open_play(share, subject_id)
+        if old_id is None:
+            return False
+        try:
+            async with self.sessions.session_lock(old_id):
+                old = await self.sessions.get_session(old_id)
+                if old is None or old.question_results:
+                    return False
+                if not await self.store.move_play(share.id, old_id, session.session_id):
+                    return False
+                await self.sessions.delete_session(old_id)
+        except SessionBusy:  # still grading after the lease wait: it was played
+            return False
+        return True
+
     async def _start_daily(
         self,
         share: SharedQuiz,
@@ -135,13 +168,16 @@ class SharedQuizService(ShareCreation):
         probe: QuizSession,
         is_sender: bool,
         name: Optional[str],
+        daily_on: Optional[bool] = None,
     ) -> Optional[StartOutcome]:
         """A daily that can still be played: the friend's own daily challenge
         (same five questions, it counts as their attempt and in the crowd
         numbers). Decided by the server, never by a date the app sends, so
         today's questions are never replayed as a round next to the crowd.
         None → no daily challenge here (no DB or switch off): a shared round."""
-        if self.daily is None or not get_settings().daily_challenge_enabled:
+        if daily_on is None:
+            daily_on = get_settings().daily_challenge_enabled
+        if self.daily is None or not daily_on:
             return None
         play, remaining = await self.daily.begin(
             subject_id, share.language, share.challenge_date

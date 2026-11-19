@@ -33,9 +33,9 @@ import Testing
 @Suite("CommandEngineSelection (#120)")
 @MainActor
 struct CommandEngineSelectionTests {
-    @Test("only four valid engine-language pairs exist; Slovak and Czech are dictation-only")
+    @Test("only five valid engine-language pairs exist; Slovak, Czech and Ukrainian are dictation-only")
     func validPairs() {
-        #expect(CommandEngineSelection.allCases.count == 4)
+        #expect(CommandEngineSelection.allCases.count == 5)
         // No case maps SpeechTranscriber to Slovak or Czech (#175) — those
         // combinations do not exist in the SDK (no sk_SK / cs_CZ in
         // SpeechTranscriber.supportedLocales) and must be unconstructible,
@@ -71,6 +71,10 @@ struct CommandEngineSelectionTests {
         #expect(CommandEngineSelection.forQuizLanguage("de") == .speechEnglish)
         #expect(CommandEngineSelection.forQuizLanguage("") == .speechEnglish)
         #expect(CommandLanguage.forQuizLanguage("cs") == .czech)
+        // #231: Ukrainian commands on the uk_UA dictation engine.
+        #expect(CommandEngineSelection.forQuizLanguage("uk") == .dictationUkrainian)
+        #expect(CommandEngineSelection.forQuizLanguage("uk-UA") == .dictationUkrainian)
+        #expect(CommandLanguage.forQuizLanguage("uk") == .ukrainian)
     }
 }
 

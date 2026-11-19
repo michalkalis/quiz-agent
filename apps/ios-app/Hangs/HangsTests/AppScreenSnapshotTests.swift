@@ -49,6 +49,8 @@ enum AppScreen: String, CaseIterable {
     case recapShareImage
     /// #232: share a quiz by link (1A send card, 4A ranking, 3 paste row, 5A picker).
     case completionShare, sharedQuizRanking, homeSharedPaste, roomContentPicker
+    /// #236: Home in the family mode „S deťmi“ per age band, and the age sheet.
+    case homeFamily46, homeFamily79, homeFamily1012, familyBandSheet
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

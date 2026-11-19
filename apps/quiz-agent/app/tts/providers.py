@@ -11,6 +11,7 @@ provider-agnostic — a provider here only turns text into MP3 bytes.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -26,6 +27,8 @@ from ..monitoring.provider_alerts import (
 )
 from .voices import (
     ELEVENLABS_CYRILLIC_MODEL,
+    ELEVENLABS_CYRILLIC_STABILITY,
+    ELEVENLABS_CYRILLIC_STABILITY_MODEL,
     ELEVENLABS_DEFAULT_MODEL,
     ELEVENLABS_DEFAULT_VOICE,
     ELEVENLABS_OUTPUT_FORMAT,
@@ -33,6 +36,7 @@ from .voices import (
     OPENAI_DEFAULT_VOICE,
     TTS_FORMAT,
     TTS_SPEED,
+    SpeechStyle,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,6 +63,11 @@ ELEVENLABS_TIMEOUT_SECONDS = 30.0
 PRIMARY_TTS_TIMEOUT_S = 6.0
 
 
+def is_cyrillic(text: str) -> bool:
+    """Cyrillic text means Ukrainian (#231), the only Cyrillic quiz language."""
+    return bool(_CYRILLIC_RE.search(text))
+
+
 @runtime_checkable
 class TTSProvider(Protocol):
     """Turns text into MP3 bytes. One implementation per vendor."""
@@ -66,7 +75,9 @@ class TTSProvider(Protocol):
     name: str
     default_voice: str
 
-    async def synthesize(self, text: str, voice: str) -> bytes: ...
+    async def synthesize(
+        self, text: str, voice: str, style: Optional[SpeechStyle] = None
+    ) -> bytes: ...
 
 
 class OpenAITTSProvider:
@@ -80,14 +91,19 @@ class OpenAITTSProvider:
         self.model = model
         self.default_voice = voice or OPENAI_DEFAULT_VOICE
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    async def synthesize(
+        self, text: str, voice: str, style: Optional[SpeechStyle] = None
+    ) -> bytes:
+        # The backup reads at the language's speed too, so a fallback clip
+        # does not sound slower than the George clips around it.
+        speed = style.speed if style and style.speed else TTS_SPEED
         try:
             response = await self.client.audio.speech.create(
                 model=self.model,
                 voice=voice,
                 input=text,
                 response_format=TTS_FORMAT,
-                speed=TTS_SPEED,
+                speed=speed,
             )
         except openai.APIStatusError as exc:
             report_openai_refusal("tts", exc)
@@ -123,11 +139,42 @@ class ElevenLabsTTSProvider:
         # mutate the environment after services are wired up.
         return self._api_key or os.environ.get("ELEVENLABS_API_KEY")
 
-    def model_for(self, text: str) -> str:
-        """The language is in the text: Cyrillic means Ukrainian (#231)."""
-        return self.cyrillic_model if _CYRILLIC_RE.search(text) else self.model
+    def model_for(self, text: str, style: Optional[SpeechStyle] = None) -> str:
+        """The language is in the text: Cyrillic means Ukrainian (#231).
+        Otherwise the language's style may name its own model."""
+        if is_cyrillic(text):
+            return self.cyrillic_model
+        return (style.model if style else None) or self.model
 
-    async def synthesize(self, text: str, voice: str) -> bytes:
+    def payload_for(self, text: str, style: Optional[SpeechStyle] = None) -> dict:
+        """Request body; Ukrainian on v3 also pins v3's most stable setting."""
+        model = self.model_for(text, style)
+        payload = {"text": text, "model_id": model}
+        voice_settings = {}
+        if is_cyrillic(text) and model == ELEVENLABS_CYRILLIC_STABILITY_MODEL:
+            voice_settings["stability"] = ELEVENLABS_CYRILLIC_STABILITY
+        if style and style.speed:
+            voice_settings["speed"] = style.speed
+        if voice_settings:
+            payload["voice_settings"] = voice_settings
+        if style and style.language_code:
+            payload["language_code"] = style.language_code
+        return payload
+
+    def cache_variant(
+        self, text: str, style: Optional[SpeechStyle] = None
+    ) -> Optional[str]:
+        """What shapes Cyrillic audio besides (text, voice): the model and every
+        setting sent, so a change to any makes new clips instead of replaying
+        old ones (#231). None for Latin text keeps its cache keys unchanged."""
+        if not is_cyrillic(text):
+            return None
+        sent = {k: v for k, v in self.payload_for(text, style).items() if k != "text"}
+        return json.dumps(sent, sort_keys=True)
+
+    async def synthesize(
+        self, text: str, voice: str, style: Optional[SpeechStyle] = None
+    ) -> bytes:
         api_key = self.api_key
         if not api_key:
             raise RuntimeError("ELEVENLABS_API_KEY is not set")
@@ -137,7 +184,7 @@ class ElevenLabsTTSProvider:
                 f"{ELEVENLABS_TTS_URL}/{voice}",
                 params={"output_format": ELEVENLABS_OUTPUT_FORMAT},
                 headers={"xi-api-key": api_key, "Content-Type": "application/json"},
-                json={"text": text, "model_id": self.model_for(text)},
+                json=self.payload_for(text, style),
                 timeout=ELEVENLABS_TIMEOUT_SECONDS,
             )
 

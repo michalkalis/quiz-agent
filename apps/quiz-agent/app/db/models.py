@@ -803,3 +803,29 @@ class SharedQuizResult(Base):
     finished_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class DailyCrewRemoval(Base):
+    """A person taken out of a player's daily crew (#239 — the daily crew).
+
+    Both sides stop seeing each other, and it stays so even when they share a
+    daily link again. Each side is one id of that person; the crew folds every
+    id a person plays under, so a sign-in never brings a removed person back.
+    """
+
+    __tablename__ = "daily_crew_removals"
+    __table_args__ = (
+        UniqueConstraint(
+            "subject_id", "removed_subject_id", name="uq_daily_crew_removals_pair"
+        ),
+        Index("ix_daily_crew_removals_removed", "removed_subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    removed_subject_id: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )

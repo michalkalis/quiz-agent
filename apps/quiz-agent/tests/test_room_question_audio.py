@@ -18,7 +18,7 @@ class FakeTTS:
     def __init__(self):
         self.texts: list[str] = []
 
-    async def synthesize_question(self, question_text, voice=None):
+    async def synthesize_question(self, question_text, voice=None, language=None):
         self.texts.append(question_text)
         return b"opus-bytes"
 

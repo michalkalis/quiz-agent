@@ -63,6 +63,7 @@ Všetko pod `/api/v1`, s prihlásením (anonymný `subject_id` stačí), mimo pr
 |---|---|---|
 | hostiteľ, hosť | `GET /rooms/net-probe` na hostname len IPv4 a len IPv6 | lístky siete pre `net_tickets` (kým DNS mená nie sú, appka posiela prázdny zoznam, funguje podľa adresy dopytu) |
 | hostiteľ | `POST /rooms` {session_id, host_name, net_tickets, reveal_mode `question`/`round`, thinking_seconds 3–60} | z jeho čakajúcej session spraví miestnosť → room_id, join_token (do QR a odkazu) |
+| hostiteľ | `POST /rooms` + voliteľné `room_id` (240.9) | jeho miestnosť sa presunie na novú čakajúcu session aj s hráčmi, rovnaké room_id a odkaz: „Ešte raz“ po skončenej hre alebo iný obsah v lobby; počas hry 409, cudzí 404 |
 | hosť | `POST /rooms/nearby` {net_tickets} | hry v tej istej wifi (meno hostiteľa, farba, počet) |
 | hosť | `POST /rooms/join` {display_name, join_token alebo room_id, net_tickets} | pripojenie → stav |
 | hostiteľ, hosť | `DELETE /rooms/{id}/players/{pid}` | hostiteľ vyhodí hosťa, hosť odíde |
@@ -74,7 +75,7 @@ Všetko pod `/api/v1`, s prihlásením (anonymný `subject_id` stačí), mimo pr
 | hostiteľ, hosť | `GET /rooms/{id}/question/audio?question_id=` | zvuk aktuálnej otázky pre člena (audio/opus, rovnaký ako solo); cudzí 404, iná otázka alebo lobby/koniec 409 (230.1) |
 | všetci | `GET /rooms/{id}/state?since=<version>` cca raz za sekundu | `changed:false` = bez zmeny; inak status lobby/playing/finished, players, question (tvar ako solo), round, na konci ranking, rounds, away (len hostiteľ) |
 
-`round.phase`: reading (hostiteľ číta, `remaining_ms` chýba) → answering (odpočet od `remaining_ms`, nie od hodín mobilu) → grading → revealed (`correct_answer`, `explanation`, `results`). `answered` = kto už odpovedal, čo odpovedal je skryté do odhalenia. Pri `reveal_mode=round` appka výsledky otázok ukáže až na konci z `rounds`. `finished_reason`: max_questions / usage_limit (hostiteľovi došiel limit, ponuka ako solo) / no_more_questions. Čas: A až D = thinking + 5 s, voľná = thinking + 18 s, 2 s tolerancia na doručenie.
+`round.phase`: reading (hostiteľ číta, `remaining_ms` chýba) → answering (odpočet od `remaining_ms`, nie od hodín mobilu) → grading → revealed (`correct_answer`, `explanation`, `results`). `answered` = kto už odpovedal, čo odpovedal je skryté do odhalenia. Pri `reveal_mode=round` appka výsledky otázok ukáže až na konci z `rounds`. `finished_reason`: max_questions / usage_limit (hostiteľovi došiel limit, ponuka ako solo) / no_more_questions. Na konci aj `awards` (240.9, od 2 hráčov): fastest / only_one / streak; `version` rastie aj po presune miestnosti; počas vyhodnotenia poslednej odpovede vidia všetci `grading`. Čas: A až D = thinking + 5 s, voľná = thinking + 18 s, 2 s tolerancia na doručenie.
 
 ## Nastavenia v hre spolu
 

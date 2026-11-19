@@ -1,0 +1,153 @@
+{
+  "keep": [
+    "3164feae-5e68-4f71-953b-eb51e6125487",
+    "a07de814-8fb9-4c6e-8771-20d58e7ee1c1",
+    "45daf916-a381-4020-af26-1249c352c0d7",
+    "1665056c-5de5-4065-8b96-5c6d7c3a56bd",
+    "63fb660c-c3d6-4789-856b-b7d844a4d0db",
+    "f64d54d4-caf1-4561-8c98-1e2a5d612b82",
+    "e5248b1e-1e68-4308-91ff-5c763ba28dc2",
+    "6874e964-b5e9-440f-b3b1-b08a060df6ad",
+    "63372a84-7777-4a4f-8a68-ae052984e518",
+    "2f8926e5-9e8c-4e1b-86f9-b3d5ca1cd0e2",
+    "3454cac1-baae-4a17-99de-c838d70a22c8",
+    "4a5e0a37-3504-4cf3-ae79-ad6607fbd3a8",
+    "d197d6d2-d96b-4598-90c4-c2c78f05809b",
+    "1e0e518a-31ae-41f6-8f84-e5bd573131a2",
+    "c37b0fee-2e25-4045-8d83-09d01e2190ab",
+    "7344c130-c0aa-4322-b758-1849dcf629fa",
+    "2bd67f18-caca-4df7-a651-1801fd2dbb4e",
+    "43981a32-63b8-4760-9b59-710f5181eca3",
+    "fe09f800-0458-4a86-8fee-192c816081ba",
+    "4e617aa8-b65e-4123-8234-809f10bde409",
+    "20a0f4e4-b00d-4f7b-bdb2-705ff7852c85",
+    "08e9790f-4d8e-4665-8777-d5ea02732c72",
+    "d675ab70-57f5-4ef4-8b62-0b6fdafff97f",
+    "bf6ce95c-37af-4415-af05-cf474a53c864",
+    "5af92acc-333a-40ba-b0bc-52708e1ee7ed",
+    "c301f6bb-40f9-4a31-a12d-9ee48c0ec8c8",
+    "64b135a1-7c99-440f-a5c2-6acc44db3324"
+  ],
+  "drop": [
+    {
+      "id": "6b63d812-646a-4360-89c9-272c0f05908f",
+      "why": "Near-duplicate of live question on Mariah Carey chart run; true/false coin flip"
+    },
+    {
+      "id": "6bad26eb-91bd-4ab8-851c-7b29ac4379c2",
+      "why": "Fact right but only source is a restaurant news headline; no Wikipedia/authority source found"
+    },
+    {
+      "id": "842384d7-ce04-4bf0-9587-0312088a5288",
+      "why": "Six White Boomers is a Rolf Harris song (convicted offender), off festive mood; lyrics-site source"
+    },
+    {
+      "id": "e67fd511-9e55-4d4d-af6c-43d3b748fc3d",
+      "why": "Rockefeller tree lumber donation is a yearly practice that can change"
+    },
+    {
+      "id": "9f8cde38-e165-4791-8ae0-5dc3f7ede161",
+      "why": "Practical tip more than trivia, German-only source, third German-market question"
+    }
+  ],
+  "fix": [
+    {
+      "id": "a07de814-8fb9-4c6e-8771-20d58e7ee1c1",
+      "field": "source_url",
+      "new": "https://en.wikipedia.org/wiki/Sinterklaas",
+      "why": "Wikipedia over St Nicholas Center"
+    },
+    {
+      "id": "a07de814-8fb9-4c6e-8771-20d58e7ee1c1",
+      "field": "source_excerpt",
+      "new": "the festivities begin in mid-November, when Sinterklaas \"arrives\" by a steamboat at a designated seaside town, supposedly from Spain.",
+      "why": "Matches new source"
+    },
+    {
+      "id": "a07de814-8fb9-4c6e-8771-20d58e7ee1c1",
+      "field": "alternative_answers",
+      "new": [
+        "From Spain",
+        "Spanje"
+      ],
+      "why": "Spoken variants"
+    },
+    {
+      "id": "6874e964-b5e9-440f-b3b1-b08a060df6ad",
+      "field": "question",
+      "new": "Christmas crackers were invented in Victorian London. Before the bang, the paper hats and the jokes were added, the idea began as a twist of paper wrapped around what?",
+      "why": "First crackers already had the snap; the plain paper twist was the bonbon that inspired them"
+    },
+    {
+      "id": "63372a84-7777-4a4f-8a68-ae052984e518",
+      "field": "question",
+      "new": "In 1965, two astronauts told Mission Control they'd spotted something like Santa in orbit. Then they pulled out a smuggled harmonica and bells and played the first song ever played on instruments in space. Which song?",
+      "why": "A cosmonaut had already sung in space in 1962; claim is first song played on instruments"
+    },
+    {
+      "id": "4a5e0a37-3504-4cf3-ae79-ad6607fbd3a8",
+      "field": "question",
+      "new": "Old Hollywood snow was often made from cornflakes, but they crunched too loudly for the actors' lines. For It's a Wonderful Life, the crew mixed a quiet snow from a foam chemical instead. Which safety device normally sprays that foam?",
+      "why": "'Painted white' not supported (Wikipedia: untoasted cornflakes)"
+    },
+    {
+      "id": "d197d6d2-d96b-4598-90c4-c2c78f05809b",
+      "field": "source_url",
+      "new": "https://en.wikipedia.org/wiki/Home_Alone",
+      "why": "Angels with Filthy Souls article redirects here"
+    },
+    {
+      "id": "d197d6d2-d96b-4598-90c4-c2c78f05809b",
+      "field": "source_excerpt",
+      "new": "For the film within a film, Angels with Filthy Souls (the title of which parodies the 1938 crime film Angels with Dirty Faces), shooting took one day... To create the illusion that the film was an authentic 1940s gangster film, the scene was filmed on black-and-white negative film",
+      "why": "Excerpt now proves the film is fictional"
+    },
+    {
+      "id": "c37b0fee-2e25-4045-8d83-09d01e2190ab",
+      "field": "alternative_answers",
+      "new": [
+        "Pooping",
+        "Poops",
+        "Defecates",
+        "Craps them out",
+        "By pooping",
+        "It poos them out",
+        "Poos",
+        "Pooing",
+        "By pooing",
+        "Poo"
+      ],
+      "why": "British spoken variants"
+    },
+    {
+      "id": "2bd67f18-caca-4df7-a651-1801fd2dbb4e",
+      "field": "question",
+      "new": "In Japan, where few people are Christian, a 1970s advertising campaign made Christmas dinner from one American fast-food chain a national custom. Families book their meals well in advance. Which chain?",
+      "why": "Fix grammar; drop unsourced \"millions\""
+    },
+    {
+      "id": "2bd67f18-caca-4df7-a651-1801fd2dbb4e",
+      "field": "source_url",
+      "new": "https://en.wikipedia.org/wiki/Christmas_in_Japan",
+      "why": "Wikipedia over news headline"
+    },
+    {
+      "id": "2bd67f18-caca-4df7-a651-1801fd2dbb4e",
+      "field": "source_excerpt",
+      "new": "A successful advertising campaign in the 1970s made eating at KFC around Christmas a national custom. Its chicken meals are so popular during the season that stores take reservations months in advance.",
+      "why": "Matches new source"
+    },
+    {
+      "id": "20a0f4e4-b00d-4f7b-bdb2-705ff7852c85",
+      "field": "source_excerpt",
+      "new": "children at the mission school Rauhes Haus, founded by Wichern in Hamburg, would ask daily if Christmas had arrived... he took a large wooden ring from an old cartwheel",
+      "why": "Excerpt now contains the answer"
+    },
+    {
+      "id": "64b135a1-7c99-440f-a5c2-6acc44db3324",
+      "field": "question",
+      "new": "The first Christmas card sold in shops, in London in 1843, showed a family at a festive table, and it is said to have shocked some people. What was the little girl in the picture doing?",
+      "why": "Source only says \"allegedly\" controversial; hedge"
+    }
+  ]
+}

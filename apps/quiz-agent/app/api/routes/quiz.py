@@ -40,6 +40,7 @@ from ...usage.tracker import UsageTracker
 from ...usage.ai_grading_cap import bind_ai_grading
 from ...usage.caps import UsageCaps, answer_attempts
 from ...config import get_settings
+from ...family.rounds import start_family_round
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
 from ...quiz.resubmission import reanswers_finished_session
@@ -130,6 +131,14 @@ async def start_quiz(
             # so the user can retry /start. (Mutating here would be lost since
             # get_session() returns a deep copy.)
             session.asked_question_ids = []
+
+            # #236: a family round is picked in full here and then played as a
+            # fixed list; an empty pool is its only 409 (family_topic_empty).
+            repeats = None
+            if session.age_band:
+                repeats = await start_family_round(
+                    question_retriever, session, client_excluded_ids
+                )
 
             # Get first question
             logger.debug(
@@ -273,8 +282,22 @@ async def start_quiz(
                     "mode": session.mode,
                     "is_pack": bool(session.pack_id),
                     "max_questions": session.max_questions,
+                    "age_band": session.age_band,
+                    "repeats": repeats,
                 },
             )
+            if session.room_game is not None:
+                # #240.9: a game together started (players incl. the host).
+                analytics.emit(
+                    "room_started",
+                    subject_id=session.user_id,
+                    session_id=session_id,
+                    properties={
+                        "room_id": session.room_code,
+                        "players": len(session.participants),
+                        "rematch": session.room_game.rematch,
+                    },
+                )
 
             audio_info = None
             if audio:
@@ -301,6 +324,7 @@ async def start_quiz(
                 current_question=translated_question_dict,
                 feedback_received=[],
                 audio=audio_info,
+                repeats=repeats,
             )
         except HTTPException:
             raise

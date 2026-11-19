@@ -398,3 +398,38 @@ async def test_a_machine_killed_holding_the_lease_does_not_freeze_the_room(
     assert m.SESSION_LEASE_WAIT_S > 0.5
     rnd = (await two.stored()).room_game.current
     assert await two.pid("jana") in rnd.answers
+
+
+async def test_play_again_on_one_machine_reaches_a_guest_polling_another(two):
+    # #240.9: the room row now points at the new session in Postgres, so a
+    # guest whose polls land on the other machine sees the new lobby with the
+    # same people, and the old link still leads into it.
+    await two.lobby(["jana"])
+    await two.start()
+    for who in ("host", "jana"):
+        await two.answer(two.a, who, "b")
+    await two.post(two.a, "next", "host")
+    await two.post(two.a, "open", "host", question_id="q_open")
+    for who in ("host", "jana"):
+        await two.post(two.a, "answer", who, question_id="q_open", answer="Paris")
+    await two.post(two.a, "next", "host")
+    finished = await two.state(two.b, "jana")
+    assert finished["status"] == "finished"
+
+    fresh = await two.a.sessions.create_session(user_id="host", max_questions=2)
+    moved = await two.a.c.post(
+        "/api/v1/rooms",
+        json={
+            "session_id": fresh.session_id,
+            "host_name": "Michal",
+            "room_id": two.room_id,
+        },
+        headers=_h("host"),
+    )
+    assert moved.status_code == 200, moved.text
+    assert moved.json()["join_token"] == two.token
+
+    lobby = await two.state(two.b, "jana")
+    assert lobby["status"] == "lobby" and lobby["version"] > finished["version"]
+    assert {p["display_name"] for p in lobby["players"]} == {"Michal", "Jana"}
+    assert (await two.join(two.b, "peto")).status_code == 200

@@ -340,6 +340,54 @@ struct PersistenceStoreQuestionHistoryTests {
         #expect(store.askedQuestionIds.first == "q_1", "the oldest id drops off first")
         #expect(store.askedQuestionIds.last == "q_new", "a new question is never refused")
     }
+
+    // MARK: - Last play order (#236)
+
+    /// WHY (#236 design review 2026-11-18): a family round on a fully played
+    /// topic repeats the questions played longest ago, in the order of this
+    /// list. If a replayed question kept its first-play slot, it would stay
+    /// "oldest" forever and the topic would loop over the same few questions.
+    @Test("a question played again moves to the end of the history")
+    func replayMovesToTheEnd() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+        for id in ["q_1", "q_2", "q_3"] {
+            store.addQuestionId(id)
+        }
+
+        store.addQuestionId("q_1")
+
+        #expect(store.askedQuestionIds == ["q_2", "q_3", "q_1"])
+    }
+
+    /// The server's refill rule (`app/family/rounds.py` pick_round): with no
+    /// unplayed question left, a round takes the topic's played questions in
+    /// the order of the history the app sends, oldest first.
+    private func serverRound(pool: [String], history: [String], size: Int) -> [String] {
+        Array(history.filter(pool.contains).prefix(size))
+    }
+
+    @Test("two rounds in a row on a fully played topic do not get the same questions")
+    func consecutiveRoundsOnAPlayedTopicDiffer() {
+        let (store, isolated) = makeStore()
+        _ = isolated
+        let topic = (1 ... 10).map { "fam_\($0)" }
+        // The whole topic was played once, mixed with ordinary quiz questions.
+        for id in topic {
+            store.addQuestionId(id)
+            store.addQuestionId("lib_\(id)")
+        }
+
+        let first = serverRound(pool: topic, history: store.getExclusionList(), size: 6)
+        for id in first {
+            store.addQuestionId(id) // the app records each question as it is served
+        }
+        let second = serverRound(pool: topic, history: store.getExclusionList(), size: 6)
+
+        #expect(first == Array(topic.prefix(6)))
+        #expect(second != first)
+        #expect(second == ["fam_7", "fam_8", "fam_9", "fam_10", "fam_1", "fam_2"], "the four not replayed come first")
+    }
 }
 
 // MARK: - Pack progress (#200)

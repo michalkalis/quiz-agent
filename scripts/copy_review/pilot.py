@@ -26,9 +26,9 @@ REVIEWERS = {"gemini": "gemini-3.1-pro-preview", "gpt": "gpt-5.5"}
 # USD per 1M tokens (input, output incl. thinking); GPT-5.5 list price unverified.
 PRICES = {"gemini-3.1-pro-preview": (2.0, 12.0), "gpt-5.5": (5.0, 30.0)}
 CONTROL = 25
-FIELDS = ("id", "en", "sk", "cs", "comment", "files")
+FIELDS = ("id", "en", "sk", "cs", "uk", "comment", "files")
 
-PROMPT = """You are a senior native Slovak and native Czech localization reviewer
+PROMPT = """You are a senior native Slovak, Czech and Ukrainian localization reviewer
 (LQA, MQM method) with excellent English. You review the user-facing texts of
 "Trubbo", an iOS trivia quiz played by voice, often hands-free. The texts were
 written by another AI.
@@ -46,13 +46,13 @@ SCREEN CONTEXT: strings of the screen, so you can judge consistency:
 
 REVIEW ONLY these row ids: {targets}
 
-For every target row and each language (en, sk, cs), report a finding only
+For every target row and each language (en, sk, cs, uk), report a finding only
 when a native speaker or the house rules would demand a change: grammar,
 case, plural, a calque or unnatural phrasing, meaning that differs between
 languages, wrong term, rule violation, unclear text. Taste alone is not a
 finding. Give the exact full replacement text.
 
-Return JSON: {{"findings": [{{"id": "...", "lang": "en|sk|cs",
+Return JSON: {{"findings": [{{"id": "...", "lang": "en|sk|cs|uk",
  "category": "accuracy|grammar|fluency|terminology|style|rule",
  "rule": "<house rule number or null>", "severity": "minor|major|critical",
  "issue": "<one sentence in English>", "fix": "<full replacement text>"}}]}}

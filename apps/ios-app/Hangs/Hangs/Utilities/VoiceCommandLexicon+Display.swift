@@ -49,6 +49,15 @@ extension VoiceCommandLexicon {
         case (.czech, .stop): return "stop"
         case (.czech, .pause): return "pauza"
         case (.czech, .home): return "domů"
+        case (.ukrainian, .start): return "старт"
+        case (.ukrainian, .ok): return "підтверди"
+        case (.ukrainian, .next): return "далі"
+        case (.ukrainian, .again): return "ще раз"
+        case (.ukrainian, .repeatQuestion): return "повтори"
+        case (.ukrainian, .skip): return "пропусти"
+        case (.ukrainian, .stop): return "стоп"
+        case (.ukrainian, .pause): return "пауза"
+        case (.ukrainian, .home): return "додому"
         }
     }
 
@@ -83,6 +92,11 @@ extension VoiceCommandLexicon {
         case (.czech, .noAnswer): return "Řekni „znovu“ nebo „další“"
         case (.czech, .error): return "Řekni „znovu“ nebo „stop“"
         case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
+        case (.ukrainian, .question): return "Скажи «старт» або «пропусти»"
+        case (.ukrainian, .confirmation): return "Скажи «підтверди», «ще раз» або нову відповідь"
+        case (.ukrainian, .noAnswer): return "Скажи «ще раз» або «пропусти»"
+        case (.ukrainian, .error): return "Скажи «ще раз» або «стоп»"
+        case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
         }
     }
 
@@ -104,6 +118,7 @@ extension VoiceCommandLexicon {
             switch language {
             case .english: return "\u{201C}\(word)\u{201D}"
             case .slovak, .czech: return "\u{201E}\(word)\u{201C}"
+            case .ukrainian: return "\u{00AB}\(word)\u{00BB}"
             }
         }
     }
@@ -126,6 +141,8 @@ extension VoiceCommandLexicon {
         case (.slovak, true): return "POČÚVAM"
         case (.czech, false): return "POSLOUCHÁM PŘÍKAZY"
         case (.czech, true): return "POSLOUCHÁM"
+        case (.ukrainian, false): return "СЛУХАЮ КОМАНДИ"
+        case (.ukrainian, true): return "СЛУХАЮ"
         }
     }
 
@@ -139,6 +156,7 @@ extension VoiceCommandLexicon {
         case .english: return "READING BACK"
         case .slovak: return "ČÍTAM ODPOVEĎ"
         case .czech: return "ČTU ODPOVĚĎ"
+        case .ukrainian: return "ЧИТАЮ ВІДПОВІДЬ"
         }
     }
 
@@ -150,6 +168,7 @@ extension VoiceCommandLexicon {
         case .english: return "Hearing you…"
         case .slovak: return "Počujem…"
         case .czech: return "Slyším…"
+        case .ukrainian: return "Чую…"
         }
     }
 
@@ -160,6 +179,7 @@ extension VoiceCommandLexicon {
         case .english: return "Processing…"
         case .slovak: return "Spracúvam…"
         case .czech: return "Zpracovávám…"
+        case .ukrainian: return "Обробляю…"
         }
     }
 
@@ -172,6 +192,10 @@ extension VoiceCommandLexicon {
         language: CommandLanguage = .english
     ) -> String {
         let word = spokenWord(command, language: language)
-        return language == .english ? "\"\(word)\"…" : "„\(word)“…"
+        switch language {
+        case .english: return "\"\(word)\"…"
+        case .slovak, .czech: return "„\(word)“…"
+        case .ukrainian: return "«\(word)»…"
+        }
     }
 }

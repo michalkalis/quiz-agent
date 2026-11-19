@@ -264,6 +264,7 @@ async def process_resubmission(
             "route": route,
             "is_regrade": True,
             "question_index": len(session.asked_question_ids),
+            "age_band": session.age_band,
         },
     )
     # #205: an edited transcript is the same attempt, corrected.

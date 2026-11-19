@@ -4,8 +4,9 @@
 //
 //  #205.5: the end of a daily challenge, in peak-end order: the round's
 //  tiles, the score, how the player compares with today's crowd, and LAST
-//  the best hit (the rarest question they knew). Every crowd sentence is the
-//  server's, shown as sent; the screen never says "worse than". The numbers
+//  of the round the best hit (the rarest question they knew); the week's
+//  crew table (#239) follows it. Every crowd sentence is the server's, shown
+//  as sent; the screen never says "worse than". The numbers
 //  are fetched again whenever the screen shows, so they fill in as others
 //  play. No Play Again (one challenge a day) and no upsell; Share sends the
 //  tiles and the score without the answers (#205.6).
@@ -20,7 +21,10 @@ struct DailyRoundEndView: View {
     @StateObject private var daily: DailyChallengeViewModel
     /// #232 (daily text B): the same five questions as a link.
     @StateObject private var share: SharedQuizShareModel
+    /// #239: the week's crew table under the result.
+    @StateObject private var crew: DailyCrewViewModel
     private let round: DailyRound
+    private let playerName: String
 
     private enum Metrics {
         /// R-Complete: the score figure, as on the regular round end.
@@ -42,16 +46,25 @@ struct DailyRoundEndView: View {
             state: round.state
         ))
         _share = StateObject(wrappedValue: Self.shareModel(viewModel))
+        _crew = StateObject(wrappedValue: DailyCrewViewModel(network: viewModel.networkService))
+        playerName = Self.playerName()
     }
 
     #if DEBUG
         /// Test seam: a pre-loaded state, so snapshots need not wait on a fetch.
-        init(viewModel: QuizViewModel, daily: DailyChallengeViewModel) {
+        init(
+            viewModel: QuizViewModel,
+            daily: DailyChallengeViewModel,
+            crew: DailyCrewViewModel? = nil,
+            playerName: String = "Jana"
+        ) {
             self.viewModel = viewModel
             round = viewModel.activeDaily
                 ?? DailyRound(day: daily.day, language: viewModel.settings.language)
             _daily = StateObject(wrappedValue: daily)
             _share = StateObject(wrappedValue: Self.shareModel(viewModel))
+            _crew = StateObject(wrappedValue: crew ?? DailyCrewViewModel(network: viewModel.networkService))
+            self.playerName = playerName
         }
     #endif
 
@@ -78,6 +91,11 @@ struct DailyRoundEndView: View {
                     if let bestHit = content.bestHit {
                         bestHitCard(bestHit)
                     }
+                    DailyCrewCard(
+                        model: crew,
+                        playerName: playerName,
+                        canInvite: viewModel.shareableRoundSessionId != nil
+                    )
                     if let failure = share.failureMessage {
                         Text(verbatim: failure)
                             .font(.hangsBody)
@@ -251,7 +269,14 @@ struct DailyRoundEndView: View {
     }
 
     private func refresh() async {
-        await daily.refresh(day: round.day, language: round.language)
+        async let state: Void = daily.refresh(day: round.day, language: round.language)
+        async let table: Void = crew.refresh(day: round.day, language: round.language)
+        _ = await (state, table)
+    }
+
+    /// The name the crew sees for this player (the one a shared link carries).
+    private static func playerName() -> String {
+        PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName)
     }
 
     private func shareWithLink() {

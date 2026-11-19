@@ -204,10 +204,22 @@ import os
         /// (five questions, crowd strips, the result once it is played).
         var dailyScript: DailyMockScript?
 
-        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession {
+        // MARK: #239 daily crew (see +Daily)
+
+        /// What `fetchDailyCrew` returns; nil = no crew yet (empty members).
+        var stubbedDailyCrew: DailyCrew?
+        /// When set, `fetchDailyCrew` throws this.
+        var fetchDailyCrewError: Error?
+        var fetchDailyCrewCallCount = 0
+        /// When set, `removeDailyCrewMember` throws this.
+        var removeDailyCrewMemberError: Error?
+        var removedDailyCrewMemberIds: [String] = []
+
+        func createSession(maxQuestions: Int, difficulty _: String, language _: String, categories: [String], userId _: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?, ageBand: String?) async throws -> QuizSession {
             createSessionCallCount += 1
             capturedMaxQuestions = maxQuestions
             capturedPackId = packId
+            capturedAgeBand = ageBand
             onCreateSession?()
             // Mirrors the real NetworkService's cancellation-cooperative behaviour
             // (Task cancellation propagates through `URLSession.data(for:)` as
@@ -228,10 +240,26 @@ import os
             if shouldFail {
                 throw NetworkError.invalidResponse
             }
+            if let ageBand, let familyScript { return familyScript.session(band: ageBand, size: maxQuestions) }
             guard let session = mockSession else {
                 throw NetworkError.invalidResponse
             }
             return session
+        }
+
+        /// #236: the `age_band` of the most recent `createSession` (nil = not a family round).
+        var capturedAgeBand: String?
+        /// #236, UI-test mode: a scripted family round (see +Family).
+        var familyScript: FamilyMockScript?
+        /// #236: what `familyTopics` answers (the server with the switch off by default).
+        var stubbedFamilyTopics = FamilyTopicsResponse(bands: [])
+        var familyTopicsCallCount = 0
+        var capturedFamilyTopicsLanguage: String?
+
+        func familyTopics(language: String) async throws -> FamilyTopicsResponse {
+            familyTopicsCallCount += 1
+            capturedFamilyTopicsLanguage = language
+            return stubbedFamilyTopics
         }
 
         /// #174: when set, the pre-flight probe reports this instead of "plenty".
@@ -262,6 +290,7 @@ import os
             try await simulateNetwork(.startQuiz)
             (trackedScore, trackedAnswered, trackedCorrect) = (0, 0, 0)
             if let scripted = dailyScript?.startResponse(sessionId: sessionId) { return scripted }
+            if let scripted = familyScript?.startResponse(sessionId: sessionId) { return scripted }
             if let error = startQuizError { throw error }
             if shouldFail {
                 throw NetworkError.invalidResponse
@@ -375,6 +404,7 @@ import os
                 throw NetworkError.invalidResponse
             }
             if let scripted = dailyScript?.answer(sessionId: sessionId, input: input) { return scripted }
+            if let scripted = familyScript?.answer(sessionId: sessionId, input: input) { return scripted }
             guard let response = mockTextInputResponse ?? mockResponse else {
                 throw NetworkError.invalidResponse
             }

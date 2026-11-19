@@ -128,6 +128,7 @@ final class QuizViewModel: ObservableObject {
         // #235 F3: a "can't be read" note belongs to the screen it was shown on.
         didSet { if quizState != oldValue, readAloudFailure != nil { readAloudFailure = nil } }
     }
+
     @Published var currentQuestion: Question? {
         // #186 step 1: entering a question starts its first attempt — anything
         // still in flight for the previous question loses ownership here.
@@ -168,6 +169,22 @@ final class QuizViewModel: ObservableObject {
     /// #232: the comparison of a link this player cannot play again (the
     /// sender's own link, a friend's already played one); Home shows it.
     @Published var sharedQuizComparison: SharedQuizPlay?
+
+    // MARK: Family mode (#236, rules in QuizViewModel+Family)
+
+    /// The mode as the parent left it; saved on every change.
+    @Published var familySettings = FamilySettings()
+    /// The server's topics per band for the quiz language; empty while the
+    /// server switch is off for this build, which hides the mode.
+    @Published var familyCatalog: [FamilyBand: [FamilyTopic]] = [:]
+    /// Topics the server answered `family_topic_empty` for, as "band/key";
+    /// hidden until the next launch (never saved).
+    @Published var hiddenFamilyTopics: Set<String> = []
+    /// The age sheet ("Pre aký vek?") is up: the first flip to the mode.
+    @Published var showingFamilyBandSheet = false
+    /// The family round of the latest start, kept like `activePack` so Play
+    /// Again and Try Again replay it. Cleared by every return Home.
+    @Published var activeFamily: FamilyRound?
 
     // Derived projections over `currentSession` (#113 T7) — no stored backing,
     // so they can never drift from the session (kills the stale-projection bug
@@ -392,6 +409,10 @@ final class QuizViewModel: ObservableObject {
         if answerWindowRemaining > 0 { return settings.thinkingTime }
         return 0
     }
+
+    /// #240: the pause is Settings' own (`holdQuestionForSettings`), not the
+    /// player's, so closing Settings ends it.
+    var isHeldBySettings = false
 
     /// Quiz-level pause (#171 Track D; resets on the next question) — see
     /// `QuizTimersController.isPaused`.
@@ -936,6 +957,14 @@ final class QuizViewModel: ObservableObject {
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
 
+        // #236: the family mode is remembered across launches (founder 2026-11-18).
+        familySettings = persistenceStore.loadFamilySettings()
+        $familySettings
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [persistenceStore] in persistenceStore.saveFamilySettings($0) }
+            .store(in: &cancellables)
+
         // Re-publish child slice changes so views bound to the façade
         // re-render (#113 decision 2 — views keep @ObservedObject QuizViewModel).
         entitlementReconciler.objectWillChange
@@ -1197,10 +1226,11 @@ final class QuizViewModel: ObservableObject {
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
         shared: String? = nil,
+        family: FamilyRound? = nil,
         skipAvailabilityCheck: Bool = false
     ) -> Task<Void, Never> {
         let task = Task {
-            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, shared: shared, skipAvailabilityCheck: skipAvailabilityCheck)
+            await startNewQuiz(maxQuestions: maxQuestions, difficulty: difficulty, language: language, pack: pack, daily: daily, shared: shared, family: family, skipAvailabilityCheck: skipAvailabilityCheck)
         }
         taskBag.add(task, key: .quizStart)
         return task
@@ -1221,6 +1251,9 @@ final class QuizViewModel: ObservableObject {
     /// questions and hands back the session (or, already played, the result).
     /// `shared` (#232) plays the quiz behind a friend's link token: the server
     /// builds the session from the link's questions.
+    /// `family` (#236) plays one topic of one age band: the server picks the
+    /// whole round (repeating played questions when it must), so there is no
+    /// availability check, and the round is never a pack, link or daily one.
     func startNewQuiz(
         maxQuestions: Int? = nil,
         difficulty: String? = nil,
@@ -1228,6 +1261,7 @@ final class QuizViewModel: ObservableObject {
         pack: PackPlay? = nil,
         daily: DailyChallengeDay? = nil,
         shared: String? = nil,
+        family: FamilyRound? = nil,
         skipAvailabilityCheck: Bool = false
     ) async {
         // #110: startNewQuiz is legal only from {.idle, .error, .finished} (cold
@@ -1244,6 +1278,7 @@ final class QuizViewModel: ObservableObject {
         guard transition(to: .startingQuiz) else { return }
         activePack = daily == nil && shared == nil ? pack : nil
         activeShare = shared.map { SharedQuizPlay(token: $0) }
+        activeFamily = pack == nil && daily == nil && shared == nil ? family : nil
         sharedQuizNotice = nil
         packRestartOffer = nil
         errorMessage = nil
@@ -1253,7 +1288,7 @@ final class QuizViewModel: ObservableObject {
         isRerecording = false
 
         // Use provided parameters or fall back to settings
-        let quizMaxQuestions = maxQuestions ?? settings.numberOfQuestions
+        let quizMaxQuestions = activeFamily?.roundSize ?? maxQuestions ?? settings.numberOfQuestions
         let quizDifficulty = difficulty ?? settings.difficulty
         // #168 DD14: a stored preference for a language that is no longer
         // servable degrades to the default rather than 422-ing the start call.
@@ -1265,7 +1300,7 @@ final class QuizViewModel: ObservableObject {
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, daily == nil, shared == nil, !skipAvailabilityCheck,
+        if pack == nil, daily == nil, shared == nil, activeFamily == nil, !skipAvailabilityCheck,
            let shortfall = await probeQuestionShortfall(
                requestedCount: quizMaxQuestions,
                difficulty: quizDifficulty,
@@ -1348,7 +1383,9 @@ final class QuizViewModel: ObservableObject {
             // #188 G7: onboarding's "Maybe later" leaves the mic undecided. Ask
             // here, the one moment before every mic user of the quiz (question
             // read, command listener, barge-in, recording), so iOS never raises
-            // the prompt implicitly mid-question. Denied keeps today's behaviour.
+            // the prompt implicitly mid-question. The answer needs no keeping:
+            // every recording reads the status itself, and a denied mic records
+            // nothing and shows the mic-off note instead (#240).
             // The status check is synchronous on purpose: awaiting a nonisolated
             // helper hops off the main actor even when it does nothing, which
             // shifted the RS timing for every quiz start.
@@ -1391,11 +1428,12 @@ final class QuizViewModel: ObservableObject {
                         maxQuestions: quizMaxQuestions,
                         difficulty: quizDifficulty,
                         language: quizLanguage,
-                        categories: settings.categories,
+                        categories: activeFamily.map { [$0.topic] } ?? settings.categories,
                         userId: persistenceStore.deviceId,
-                        includeImages: settings.includeImageQuestions,
+                        includeImages: activeFamily == nil && settings.includeImageQuestions,
                         skipLocalQuestions: !settings.includeLocalQuestions,
-                        packId: pack?.packId
+                        packId: pack?.packId,
+                        ageBand: activeFamily?.band.rawValue
                     )
                 }
             }
@@ -1474,6 +1512,11 @@ final class QuizViewModel: ObservableObject {
             }
 
             if let pack, case .packExhausted? = error as? NetworkError, offerRestartAfterServerRanOut(pack) {
+                return
+            }
+
+            if let round = activeFamily, case .familyTopicEmpty? = error as? NetworkError {
+                familyTopicWasEmpty(round)
                 return
             }
 
@@ -1880,7 +1923,7 @@ final class QuizViewModel: ObservableObject {
             errorMessage = nil
         default:
             // Fallback to starting new quiz — the same pack, if it was one (#200).
-            await startNewQuiz(pack: activePack, daily: activeDaily?.day, shared: activeShare?.token)
+            await startNewQuiz(pack: activePack, daily: activeDaily?.day, shared: activeShare?.token, family: activeFamily)
         }
     }
 
@@ -2811,6 +2854,7 @@ final class QuizViewModel: ObservableObject {
         recapEntries = []
         activeDaily = nil
         activeShare = nil
+        activeFamily = nil
         errorMessage = nil
         nextQuestionAudioUrl = nil
         nextQuestion = nil

@@ -231,6 +231,27 @@ struct ConfirmationSheetVoiceTests {
         #expect(vm.transcribedAnswer != "Confirm.")
     }
 
+    /// WHY (#231 — Ukrainian as a fourth language, PR #862 review): «Правильно»
+    /// is how a Ukrainian says "right", «Неправда» how the app asks a false
+    /// statement to be answered. Both sit one letter from «неправильно»
+    /// ("wrong" = record again) and re-recorded the answer — on the listener
+    /// and again on the upload's transcript. They are a new answer.
+    @Test("5.1 uk: «Правильно» / «Неправда» on the sheet are a new answer, not 'again'",
+          arguments: ["Правильно.", "Неправда."])
+    func ukrainianNearWrongIsAnAnswer(_ spoken: String) async {
+        let (vm, silence, network) = makeVM(clock: TestClock())
+        vm.settings.language = "uk"
+        vm.currentSession = Fixtures.makeActiveSession(language: "uk")
+        await openSheet(vm, silence, answer: "Київ")
+        network.mockResponse = response(answer: spoken)
+
+        silence.simulateAnswerAudio(Data(count: 16000))
+        silence.simulateCommandTranscript(spoken)
+        await pumpUntil({ vm.transcribedAnswer == spoken }, "'\(spoken)' did not become the new answer")
+        #expect(vm.quizState == .processing, "'\(spoken)' re-recorded the answer")
+        #expect(network.submitVoiceAnswerCallCount == 1)
+    }
+
     /// WHY: cabin noise the recognizer took for words must not destroy a good
     /// answer — an empty transcription keeps the old one, with no retry prompt.
     @Test("5.1: an unheard new answer keeps the old one")

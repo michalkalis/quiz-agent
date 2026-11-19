@@ -10,6 +10,11 @@
 //  navigation bar's large title; on scroll the system swaps it for the
 //  inline title "Play" (a `.title` logo item showed at rest too, so none).
 //  Start is a bar over the content, which scrolls under it.
+//  #236 (canvas „B · rozpracované“ F1–F4): the switch "Kvíz | S deťmi" on top
+//  turns Home into the family version while the server lists topics: the
+//  deck shows the age band's topics, Vek and Téma replace Náročnosť and
+//  Kategórie, Start reads "Štart s deťmi" under the line that the adult
+//  answers; the daily challenge, "Choose several" and Quick quiz hide.
 //
 
 import SwiftUI
@@ -39,13 +44,19 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Theme.Hangs.Spacing.xl) {
+                // #236: only while the server lists topics for this build.
+                if viewModel.isFamilyModeAvailable {
+                    modePicker
+                }
+
                 // #232: the first launch's "quiz link from a friend?" row.
                 if let appConfig, let sharedQuiz {
                     HomeSharedQuizPasteRow(inbox: sharedQuiz, appConfig: appConfig)
                 }
 
                 // #205.4: the daily challenge opens the page, above the quiz.
-                if let appConfig, let dailyChallenge {
+                // #236: it is for adults, so the family version leaves it out.
+                if let appConfig, let dailyChallenge, !viewModel.isFamilyModeOn {
                     HomeDailyChallengeSection(
                         appConfig: appConfig,
                         viewModel: dailyChallenge,
@@ -100,6 +111,17 @@ struct HomeView: View {
             viewModel.refreshAudioDevices()
             Task { await viewModel.refreshUsage() }
         }
+        .task(id: familyTopicsRequest) {
+            await viewModel.refreshFamilyTopics(enabled: familyTopicsRequest.enabled, language: familyTopicsRequest.language)
+        }
+        .sheet(isPresented: $viewModel.showingFamilyBandSheet) {
+            FamilyBandSheet(
+                bands: viewModel.familyBands,
+                selected: viewModel.familySettings.band,
+                onSelect: viewModel.selectFamilyBand,
+                onClose: viewModel.dismissFamilyBandSheet
+            )
+        }
         .sheet(isPresented: $viewModel.showingMicrophonePicker) {
             AudioDevicePickerView(viewModel: viewModel)
         }
@@ -111,11 +133,55 @@ struct HomeView: View {
         }
     }
 
-    /// The Start button; Home has no voice commands (#224).
+    /// The Start button; Home has no voice commands (#224). #236: in the
+    /// family version the line that the adult answers sits above it.
     private var bottomBar: some View {
-        startQuizButton
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
+            if viewModel.isFamilyModeOn {
+                Text("You answer, the kids guess along with you.")
+                    .font(.hangsCaption)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("home.family.adultAnswers")
+            }
+            startQuizButton
+        }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.vertical, Theme.Hangs.Spacing.sm)
+    }
+
+    // MARK: - Family mode (#236)
+
+    /// What the topics fetch depends on: the server switch and the quiz language.
+    private struct FamilyTopicsRequest: Equatable {
+        let enabled: Bool
+        let language: String
+    }
+
+    private var familyTopicsRequest: FamilyTopicsRequest {
+        FamilyTopicsRequest(
+            enabled: appConfig?.familyModeEnabled == true,
+            language: Language.selectable(viewModel.settings.language).id
+        )
+    }
+
+    /// Canvas F1–F4: a compact segmented switch, leading. While the age sheet
+    /// of the first flip is up it already shows "S deťmi".
+    private var modePicker: some View {
+        Picker("Mode", selection: Binding(
+            get: { viewModel.isFamilyModeOn || viewModel.showingFamilyBandSheet },
+            set: { viewModel.setFamilyMode($0) }
+        )) {
+            Text("Quiz").tag(false)
+                .accessibilityIdentifier("home.mode.quiz")
+            Text("With kids").tag(true)
+                .accessibilityIdentifier("home.mode.family")
+        }
+        .pickerStyle(.segmented)
+        .fixedSize()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("home.mode")
     }
 
     /// The pack whose start is running spins: the start request names it
@@ -153,33 +219,59 @@ struct HomeView: View {
 
     // MARK: - Sections (founder 2026-10-13: one label style for every section)
 
+    @ViewBuilder
     private var quizSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-            HStack(alignment: .firstTextBaseline) {
-                sectionLabel("Quiz")
-                Spacer(minLength: Theme.Hangs.Spacing.sm)
-                // #224.6 (canvas C4): the deck steps one category per tap, so
-                // the multi-select picker gets its own entry beside the label.
-                if !dynamicTypeSize.isAccessibilitySize {
-                    chooseSeveralButton
+        if viewModel.isFamilyModeOn, let band = viewModel.familySettings.band {
+            familySection(band)
+        } else {
+            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+                HStack(alignment: .firstTextBaseline) {
+                    sectionLabel("Quiz")
+                    Spacer(minLength: Theme.Hangs.Spacing.sm)
+                    // #224.6 (canvas C4): the deck steps one category per tap, so
+                    // the multi-select picker gets its own entry beside the label.
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        chooseSeveralButton
+                    }
                 }
+                // The deck now opens the page, so it gets a fixed height instead
+                // of whatever the content left: it overlapped the pills and lost
+                // its bottom under Start once packs filled the screen.
+                if !dynamicTypeSize.isAccessibilitySize {
+                    HomeCategoryDeck(
+                        selectedCategories: viewModel.settings.categories,
+                        title: viewModel.settings.categoryDisplayName(),
+                        questionCount: viewModel.settings.numberOfQuestions,
+                        onStep: { viewModel.stepCategory($0, input: $1) }
+                    )
+                    .frame(height: Metrics.deckHeight)
+                    // The fanned back cards turn on their bottom edge, so one
+                    // corner dips below the cards: the page dots' gap holds it.
+                }
+                settingPills
+                quickGameRow
             }
-            // The deck now opens the page, so it gets a fixed height instead
-            // of whatever the content left: it overlapped the pills and lost
-            // its bottom under Start once packs filled the screen.
-            if !dynamicTypeSize.isAccessibilitySize {
+        }
+    }
+
+    /// #236 (canvas F2–F4): the band's topics on the deck, one per round.
+    /// A band with nothing to play keeps its pills, so another age is one tap.
+    private func familySection(_ band: FamilyBand) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+            sectionLabel("Topics for \(band.label)")
+            if !dynamicTypeSize.isAccessibilitySize, let topic = viewModel.familyTopic {
                 HomeCategoryDeck(
-                    selectedCategories: viewModel.settings.categories,
-                    title: viewModel.settings.categoryDisplayName(),
-                    questionCount: viewModel.settings.numberOfQuestions,
-                    onStep: { viewModel.stepCategory($0, input: $1) }
+                    cards: HomeDeckCard.topics(viewModel.familyBandTopics),
+                    front: viewModel.familyBandTopics.firstIndex(of: topic) ?? 0,
+                    title: topic.name,
+                    questionCount: topic.roundSize,
+                    label: "Topic",
+                    identifier: "home.familyDeck",
+                    onStep: { direction, _ in viewModel.stepFamilyTopic(direction) }
                 )
                 .frame(height: Metrics.deckHeight)
-                // The fanned back cards turn on their bottom edge, so one
-                // corner dips below the cards: the page dots' gap holds it.
             }
             settingPills
-            quickGameRow
         }
     }
 
@@ -210,9 +302,8 @@ struct HomeView: View {
     }
 
     private enum Metrics {
-        /// The deck's card height (`HomeCategoryDeck` cards are 196 × 256) plus
-        /// the page dots under it.
-        static let deckHeight: CGFloat = 256 + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
+        /// The deck's card height plus the page dots under it.
+        static let deckHeight: CGFloat = DeckMetrics.cardSize.height + DeckMetrics.dotsGap + DeckMetrics.dotsHeight
     }
 
     // MARK: - Start Quiz / Cancel (quiz-start in-button loading)
@@ -232,6 +323,16 @@ struct HomeView: View {
                 viewModel.cancelQuizStart()
             }
             .accessibilityIdentifier("home.cancelStart")
+        } else if viewModel.isFamilyModeOn {
+            // #236: the mode is remembered, so Start names it (founder 2026-11-18).
+            HangsPrimaryButton(
+                title: "Start with kids",
+                icon: "play.fill"
+            ) {
+                viewModel.beginFamilyStart()
+            }
+            .disabled(viewModel.familyRound == nil)
+            .accessibilityIdentifier("home.startFamily")
         } else {
             // #174 (founder 2026-09-09): "Start" — the title IS the voice command.
             HangsPrimaryButton(
@@ -284,8 +385,13 @@ struct HomeView: View {
             : AnyLayout(HStackLayout(spacing: Theme.Hangs.Spacing.xs))
         return layout {
             languageMenu
-            difficultyMenu
-            categoriesButton
+            if viewModel.isFamilyModeOn {
+                bandMenu
+                topicMenu
+            } else {
+                difficultyMenu
+                categoriesButton
+            }
         }
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -336,6 +442,51 @@ struct HomeView: View {
             )
         }
         .accessibilityIdentifier("home-difficulty-menu")
+    }
+
+    /// #236: "Vek" replaces "Náročnosť" (canvas F3).
+    private var bandMenu: some View {
+        Menu {
+            ForEach(viewModel.familyBands, id: \.self) { band in
+                Button {
+                    viewModel.selectFamilyBand(band)
+                } label: {
+                    if viewModel.familySettings.band == band {
+                        Label(band.label, systemImage: "checkmark")
+                    } else {
+                        Text(verbatim: band.label)
+                    }
+                }
+                .accessibilityLabel(Text(band.spokenLabel))
+                .accessibilityIdentifier("home.band.\(band.rawValue)")
+            }
+        } label: {
+            HomeSettingPill(caption: "Age", value: viewModel.familySettings.band?.label ?? "")
+        }
+        .accessibilityValue(viewModel.familySettings.band.map { Text($0.spokenLabel) } ?? Text(verbatim: ""))
+        .accessibilityIdentifier("home.band.menu")
+    }
+
+    /// #236: the topic, also the way to change it where the deck hides
+    /// (accessibility text sizes).
+    private var topicMenu: some View {
+        Menu {
+            ForEach(viewModel.familyBandTopics) { topic in
+                Button {
+                    viewModel.selectFamilyTopic(topic.key)
+                } label: {
+                    if viewModel.familyTopic == topic {
+                        Label(topic.name, systemImage: "checkmark")
+                    } else {
+                        Text(verbatim: topic.name)
+                    }
+                }
+                .accessibilityIdentifier("home.topic.\(topic.key)")
+            }
+        } label: {
+            HomeSettingPill(caption: "Topic", value: viewModel.familyTopic?.name ?? "", valueLineLimit: 2)
+        }
+        .accessibilityIdentifier("home.topic.menu")
     }
 
     private var categoriesButton: some View {

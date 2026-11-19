@@ -56,6 +56,11 @@ private let backendClientEvents: [String: Set<String>] = [
     "question_skipped": ["quick"],
     "pack_topic_checked": ["verdict"],
     "shared_quiz_pasted": ["outcome"],
+    // #236 family mode (A1). Added to the server allowlist in its own backend PR.
+    "family_mode_changed": ["enabled"],
+    "family_band_selected": ["band", "first_time"],
+    "family_topic_selected": ["band", "topic"],
+    "family_topic_empty": ["band", "topic"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -96,6 +101,10 @@ private let everyEvent: [AnalyticsEvent] = [
     .questionSkipped(quick: true),
     .packTopicChecked(verdict: "blocked"),
     .sharedQuizPasted(outcome: .notALink),
+    .familyModeChanged(enabled: true),
+    .familyBandSelected(band: .kids7to9, firstTime: true),
+    .familyTopicSelected(band: .kids4to6, topic: "family-dinosaurs"),
+    .familyTopicEmpty(band: .kids10to12, topic: "family-harry-potter"),
 ]
 
 @MainActor

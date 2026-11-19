@@ -141,6 +141,13 @@ nonisolated enum Config {
         "entertainment": "Entertainment",
     ]
 
+    /// #240: the resource behind a `categoryOptions` name (nil id = All
+    /// Categories), for a card that resolves it in the locale it is drawn in.
+    static func categoryNameResource(for id: String?) -> LocalizedStringResource? {
+        guard let id else { return "All Categories" }
+        return categoryResources[id]
+    }
+
     /// `categoryDisplayName(for:)` resolved in `locale` (the view's environment
     /// locale). nil for anything outside the taxonomy, as above.
     static func categoryDisplayName(for id: String, locale: Locale) -> String? {

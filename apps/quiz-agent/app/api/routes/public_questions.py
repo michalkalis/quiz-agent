@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from quiz_shared.languages import servable_quiz_languages
 from pydantic import BaseModel
 
 from ...rate_limit import limiter
@@ -55,6 +56,10 @@ async def fresh_questions(
     limit: int = Query(10, ge=1, le=20),
     retriever: QuestionRetriever = Depends(get_question_retriever),
 ) -> FreshQuestionsResponse:
+    if language not in servable_quiz_languages():
+        # #231: a language that is not offered yet must not leak onto the
+        # public website through this door, which needs no login.
+        raise HTTPException(status_code=404, detail="Language not available")
     rows = await retriever.fresh_public_entertainment(language, limit)
     response.headers["Cache-Control"] = _CACHE_CONTROL
     return FreshQuestionsResponse(

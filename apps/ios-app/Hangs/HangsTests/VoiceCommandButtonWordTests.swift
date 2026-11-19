@@ -19,32 +19,34 @@ private struct ButtonTitle {
     let sk: String
     let cs: String
     let en: String
+    let uk: String
 
     func title(_ language: CommandLanguage) -> String {
         switch language {
         case .slovak: sk
         case .czech: cs
         case .english: en
+        case .ukrainian: uk
         }
     }
 }
 
 private let buttonTitles: [ButtonTitle] = [
-    ButtonTitle(button: "Answer", screen: .question, expected: .start, sk: "Odpovedz", cs: "Odpověz", en: "Answer"),
-    ButtonTitle(button: "Next (skip)", screen: .question, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next"),
-    ButtonTitle(button: "Confirm", screen: .confirmation, expected: .ok, sk: "Potvrď", cs: "Potvrď", en: "Confirm"),
-    ButtonTitle(button: "Again", screen: .confirmation, expected: .again, sk: "Znova", cs: "Znovu", en: "Again"),
-    ButtonTitle(button: "Pause", screen: .confirmation, expected: .pause, sk: "Pauza", cs: "Pauza", en: "Pause"),
-    ButtonTitle(button: "Again", screen: .noAnswer, expected: .again, sk: "Znova", cs: "Znovu", en: "Again"),
-    ButtonTitle(button: "Next (skip)", screen: .noAnswer, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next"),
-    ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again"),
-    ButtonTitle(button: "Go Home", screen: .error, expected: .stop, sk: "Na úvod", cs: "Na úvod", en: "Go Home"),
-    ButtonTitle(button: "Dismiss", screen: .error, expected: .stop, sk: "Zavri", cs: "Zavři", en: "Dismiss"),
-    ButtonTitle(button: "Play Again", screen: .setEnd, expected: .again, sk: "Hraj znova", cs: "Hraj znovu", en: "Play Again"),
-    ButtonTitle(button: "Home", screen: .setEnd, expected: .home, sk: "Úvod", cs: "Úvod", en: "Home"),
+    ButtonTitle(button: "Answer", screen: .question, expected: .start, sk: "Odpovedz", cs: "Odpověz", en: "Answer", uk: "Відповідай"),
+    ButtonTitle(button: "Next (skip)", screen: .question, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next", uk: "Пропусти"),
+    ButtonTitle(button: "Confirm", screen: .confirmation, expected: .ok, sk: "Potvrď", cs: "Potvrď", en: "Confirm", uk: "Підтверди"),
+    ButtonTitle(button: "Again", screen: .confirmation, expected: .again, sk: "Znova", cs: "Znovu", en: "Again", uk: "Ще раз"),
+    ButtonTitle(button: "Pause", screen: .confirmation, expected: .pause, sk: "Pauza", cs: "Pauza", en: "Pause", uk: "Пауза"),
+    ButtonTitle(button: "Again", screen: .noAnswer, expected: .again, sk: "Znova", cs: "Znovu", en: "Again", uk: "Ще раз"),
+    ButtonTitle(button: "Next (skip)", screen: .noAnswer, expected: .skip, sk: "Ďalšia", cs: "Další", en: "Next", uk: "Пропусти"),
+    ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again", uk: "Спробуй ще раз"),
+    ButtonTitle(button: "Go Home", screen: .error, expected: .stop, sk: "Na úvod", cs: "Na úvod", en: "Go Home", uk: "На головну"),
+    ButtonTitle(button: "Dismiss", screen: .error, expected: .stop, sk: "Zavri", cs: "Zavři", en: "Dismiss", uk: "Закрий"),
+    ButtonTitle(button: "Play Again", screen: .setEnd, expected: .again, sk: "Hraj znova", cs: "Hraj znovu", en: "Play Again", uk: "Зіграй ще раз"),
+    ButtonTitle(button: "Home", screen: .setEnd, expected: .home, sk: "Úvod", cs: "Úvod", en: "Home", uk: "Додому"),
 ]
 
-@Suite("Button titles work as voice commands — sk / cs / en")
+@Suite("Button titles work as voice commands — sk / cs / en / uk")
 struct VoiceCommandButtonWordTests {
     /// WHY: the driver reads the button and says it; a title the matcher does
     /// not know is a command that silently does nothing at the wheel.
@@ -100,7 +102,12 @@ struct VoiceCommandButtonWordTests {
     /// abandon the quiz from the error or set-end screen.
     @Test("a short word that opens a title does not leave the screen", arguments: CommandLanguage.allCases)
     func shortHeadIsNotATitle(_ language: CommandLanguage) {
-        let heads = language == .english ? ["go"] : ["na", "za", "No na!"]
+        let heads: [String] = switch language {
+        case .english: ["go"]
+        case .slovak, .czech: ["na", "za", "No na!"]
+        // "на" opens "На головну", "до" "Додому", "за" "Закрий"; "Ну на!" is conversation.
+        case .ukrainian: ["на", "до", "за", "Ну на!"]
+        }
         for head in heads {
             for screen in [VoiceCommandScreen.error, .setEnd] {
                 #expect(VoiceCommandMatcher.match(transcript: head, on: screen, isFinal: true, language: language) == nil, "\(language) '\(head)' on \(screen)")
@@ -116,6 +123,7 @@ struct VoiceCommandButtonWordTests {
         case .slovak: ["Preskoč", "vynechaj"]
         case .czech: ["Přeskoč", "vynech"]
         case .english: ["Skip", "pass"]
+        case .ukrainian: ["Наступне", "наступна"]
         }
         for word in old {
             #expect(VoiceCommandMatcher.match(transcript: word, on: .question, language: language) == .skip, "\(language) '\(word)'")

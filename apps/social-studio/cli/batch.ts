@@ -40,6 +40,7 @@ type Candidate = {
 	mcq: boolean;
 	local_scope: string | null;
 	topicality: string | null;
+	timely?: boolean;
 	rating: number | null;
 	has_clip: boolean;
 	options: Record<string, string> | null;
@@ -139,7 +140,11 @@ function score(c: Candidate): number {
 	// Shorts were all Czech/Slovak, Karel Gott 4× the next one), so a local
 	// question goes ahead of a general one of similar strength.
 	const local = c.local_scope ? 0.15 : 0;
-	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + local + jitter * 0.05;
+	// A question about a film, show or event people talk about this week goes
+	// ahead of an evergreen one of similar strength while its window runs
+	// (trend experiment, founder 2026-11-18; docs/research/social-trends-capture-2026-11-18.md).
+	const timely = c.timely ? 0.2 : 0;
+	return (REVIEW[c.id]?.stop_power ?? 0) / 10 + (c.rating ?? 0.7) * 0.3 + local + timely + jitter * 0.05;
 }
 
 const fitsAccount = (c: Candidate, s: Slot) =>
@@ -346,7 +351,7 @@ function main() {
 			caption: text,
 			// Shorts: the EN account's reels only (one YouTube channel, English).
 			youtube: slot.account === 'ig_en' && slot.format !== 'carousel' ? {title: youtubeTitle(slot.format === 'round' ? `${firstLine} ${questions[0].question}` : questions[0].question), description: text} : null,
-			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'app voice: questions + answers' : 'app voice: question + answer',
+			voice: slot.format === 'carousel' ? null : slot.format === 'round' ? 'social voice: questions + answers' : 'social voice: question + answer',
 			questions,
 		});
 	}

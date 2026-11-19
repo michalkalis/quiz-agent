@@ -1536,5 +1536,243 @@
   "language": "en",
   "chars": 169,
   "what": "answer"
+ },
+ {
+  "at": "2026-11-18T21:30:32.972Z",
+  "id": "b6b5e315-eb80-47ae-bd29-e653881df319",
+  "language": "sk",
+  "chars": 85,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:33.727Z",
+  "id": "b6b5e315-eb80-47ae-bd29-e653881df319",
+  "language": "sk",
+  "chars": 140,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:37.951Z",
+  "id": "0218eaa6-8e68-4b2d-a32c-9b7044a68780",
+  "language": "sk",
+  "chars": 124,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:38.650Z",
+  "id": "0218eaa6-8e68-4b2d-a32c-9b7044a68780",
+  "language": "sk",
+  "chars": 141,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:42.503Z",
+  "id": "d1bf4941-3ce7-486c-b019-67ea3050ce04",
+  "language": "sk",
+  "chars": 118,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:43.333Z",
+  "id": "d1bf4941-3ce7-486c-b019-67ea3050ce04",
+  "language": "sk",
+  "chars": 203,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:48.249Z",
+  "id": "c9985c8f-8b27-44dd-84a7-e3d2167a8470",
+  "language": "sk",
+  "chars": 101,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:48.951Z",
+  "id": "c9985c8f-8b27-44dd-84a7-e3d2167a8470",
+  "language": "sk",
+  "chars": 148,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:52.668Z",
+  "id": "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2",
+  "language": "sk",
+  "chars": 113,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:30:53.678Z",
+  "id": "fac1dc7c-3e47-4fb8-9985-cf1bf3e19ca2",
+  "language": "sk",
+  "chars": 252,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:34:51.075Z",
+  "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+  "language": "en",
+  "chars": 78,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:34:51.940Z",
+  "id": "b4898637-3ae2-49d0-9e05-8cfd47ab6873",
+  "language": "en",
+  "chars": 247,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:34:55.990Z",
+  "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+  "language": "en",
+  "chars": 94,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:34:56.631Z",
+  "id": "6cd4a18a-82b1-4bc0-a463-92a40478ddd9",
+  "language": "en",
+  "chars": 141,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:00.964Z",
+  "id": "46da9f0f-fa47-400c-8204-17d36d5e95e9",
+  "language": "en",
+  "chars": 161,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:01.785Z",
+  "id": "46da9f0f-fa47-400c-8204-17d36d5e95e9",
+  "language": "en",
+  "chars": 181,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:06.251Z",
+  "id": "ee19cc76-0491-404c-a592-1532fec82229",
+  "language": "en",
+  "chars": 185,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:06.970Z",
+  "id": "ee19cc76-0491-404c-a592-1532fec82229",
+  "language": "en",
+  "chars": 167,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:10.742Z",
+  "id": "9f73c5dc-35f2-44ce-9778-e0e7ae5c8675",
+  "language": "en",
+  "chars": 98,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:35:11.558Z",
+  "id": "9f73c5dc-35f2-44ce-9778-e0e7ae5c8675",
+  "language": "en",
+  "chars": 160,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:37:33.706Z",
+  "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+  "language": "en",
+  "chars": 90,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:37:34.427Z",
+  "id": "79e58051-51e6-4ca9-97f7-ad3a35625a13",
+  "language": "en",
+  "chars": 169,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:09.757Z",
+  "id": "f32924aa-366b-482c-be75-d347d594e5ee",
+  "language": "en",
+  "chars": 87,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:10.509Z",
+  "id": "f32924aa-366b-482c-be75-d347d594e5ee",
+  "language": "en",
+  "chars": 170,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:14.704Z",
+  "id": "7d06f93f-852f-41a0-af68-5b7b9d612bfc",
+  "language": "en",
+  "chars": 198,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:15.575Z",
+  "id": "7d06f93f-852f-41a0-af68-5b7b9d612bfc",
+  "language": "en",
+  "chars": 240,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:19.749Z",
+  "id": "13447f39-e4b7-4026-adb3-15f88ad6c8c6",
+  "language": "en",
+  "chars": 185,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:38:20.436Z",
+  "id": "13447f39-e4b7-4026-adb3-15f88ad6c8c6",
+  "language": "en",
+  "chars": 164,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:22.379Z",
+  "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
+  "language": "cs",
+  "chars": 69,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:23.348Z",
+  "id": "cddde900-b4ea-43c2-86cc-d1303ca651c8",
+  "language": "cs",
+  "chars": 194,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:27.283Z",
+  "id": "f6104550-837a-4767-a835-460cbe30db1c",
+  "language": "cs",
+  "chars": 102,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:28.169Z",
+  "id": "f6104550-837a-4767-a835-460cbe30db1c",
+  "language": "cs",
+  "chars": 180,
+  "what": "answer (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:32.292Z",
+  "id": "bd5e0d88-f829-4450-b36b-603ae1cc195d",
+  "language": "cs",
+  "chars": 134,
+  "what": "question (social voice)"
+ },
+ {
+  "at": "2026-11-18T21:40:32.901Z",
+  "id": "bd5e0d88-f829-4450-b36b-603ae1cc195d",
+  "language": "cs",
+  "chars": 116,
+  "what": "answer (social voice)"
  }
 ]

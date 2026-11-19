@@ -83,7 +83,8 @@ extension RoomViewModel {
             userId: deviceId,
             includeImages: MultiplayerSettings.includeImageQuestions,
             skipLocalQuestions: !solo.includeLocalQuestions,
-            packId: content.packId
+            packId: content.packId,
+            ageBand: nil
         )
         return try await rooms.createRoom(
             sessionId: session.id,

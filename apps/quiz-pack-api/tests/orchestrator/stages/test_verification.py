@@ -548,3 +548,26 @@ async def test_direct_mode_keeps_existing_source_and_exempts_logical_puzzles() -
     assert [q.id for q in ctx.questions] == ["q_0", "q_1"]
     assert ctx.questions[0].source_url == "https://kept.org"  # not overwritten
     assert ctx.questions[1].source_url is None  # invented puzzle, F8-exempt
+
+
+@pytest.mark.asyncio
+async def test_ukrainian_pack_never_cites_a_russian_source() -> None:
+    """#231: the dry run shipped a Ukrainian question cited to a .ru shop page.
+    A Russian evidence page is not an attribution for a uk pack: the question is
+    withheld (the top-up round regenerates); the same page still sources en."""
+    sources = [{"url": "https://vkusvill.ru/goods/x", "excerpt": "ы", "agrees": True}]
+    verifier = _FakeFactVerifier(
+        {"q_0": VerificationResult(verdict="ok", confidence=0.9, sources=sources)}
+    )
+    uk_ctx = _direct_ctx([_stub_question(0)])
+    uk_ctx.language = "uk"
+    result = await VerificationStage(fact_verifier=verifier).run(  # type: ignore[arg-type]
+        uk_ctx, _RecordingSink()
+    )
+    assert uk_ctx.questions == [] and result.info["withheld"] == 1
+
+    en_ctx = _direct_ctx([_stub_question(0)])
+    await VerificationStage(fact_verifier=verifier).run(  # type: ignore[arg-type]
+        en_ctx, _RecordingSink()
+    )
+    assert en_ctx.questions[0].source_url == "https://vkusvill.ru/goods/x"

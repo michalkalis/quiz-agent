@@ -10,18 +10,22 @@
 
 | Event | When | Properties |
 |---|---|---|
-| `quiz_started` | first question served (`routes/quiz.py` start_quiz) | `category`, `language`, `difficulty`, `mode`, `is_pack`, `max_questions` |
-| `answer_evaluated` | grade of a question: first grade (`quiz/flow.py` process_answer) and again on every re-grade of an edited answer (`quiz/resubmission.py`, `is_regrade` = true; consumers keep the latest row per `session_id` + `question_id`) | `question_id`, `result` (correct / incorrect / partially_correct / skipped …), `category`, `question_type`, `difficulty`, `route` (voice / text), `is_regrade`, `question_index`; voice route stage durations in ms (#208.3): `stt_ms`, `parse_ms`, `judge_ms`, `feedback_tts_ms` (only when feedback audio was synthesized) |
-| `quiz_completed` | session → finished | `reason` (max_questions / usage_limit / no_more_questions), `questions_asked`, `score`, `is_pack` |
+| `quiz_started` | first question served (`routes/quiz.py` start_quiz) | `category`, `language`, `difficulty`, `mode`, `is_pack`, `max_questions`; family round (#236 — family mode „S deťmi“): `age_band` (kids_4_6 / kids_7_9 / kids_10_12, a content setting, never a property of the player), `repeats` (the round replays questions played before) |
+| `answer_evaluated` | grade of a question: first grade (`quiz/flow.py` process_answer) and again on every re-grade of an edited answer (`quiz/resubmission.py`, `is_regrade` = true; consumers keep the latest row per `session_id` + `question_id`) | `question_id`, `result` (correct / incorrect / partially_correct / skipped …), `category`, `question_type`, `difficulty`, `route` (voice / text), `is_regrade`, `question_index`; voice route stage durations in ms (#208.3): `stt_ms`, `parse_ms`, `judge_ms`, `feedback_tts_ms` (only when feedback audio was synthesized); `age_band` in a family round (#236) |
+| `quiz_completed` | session → finished | `reason` (max_questions / usage_limit / no_more_questions), `questions_asked`, `score`, `is_pack`; `age_band` in a family round (#236) |
 | `quota_hit` | the monthly limit (free 30 or Trubbo Plus 1,000) blocks a start or the next question | `stage` (start / mid_quiz), `questions_used`, `questions_limit`, `plan` (plus / free) |
-| `transcription_failed` | server rejects a voice upload as no speech | `reason`, `question_id` |
+| `transcription_failed` | server turns a voice answer away (the player is asked to say it again or gets an error) | `reason` (#240; rows written before it say no_speech whatever happened): empty_transcript (nothing recognised) / too_short (shorter than 2 characters, 1 for an MCQ option) / no_speech_prob / low_confidence / hallucination (a known filler such as "thank you") / no_answer (speech, but no answer in it) / stt_error (the recogniser failed) / daily_cap (a per-account daily cap refused it before transcription); `transcript_chars` (length of the recognised text, never the text; absent for stt_error and daily_cap), `question_id` |
 | `room_created` | a host turns an idle session into a game together (#212.5); not on a retried create | `room_id` |
 | `room_joined` | a guest joins a game for the first time (#212.5), under the guest; a rejoin (name change) is not counted | `room_id`, `via` (nearby = the Wi-Fi list / qr = scanned code / link = shared link, also builds that do not send it) |
 | `room_finished` | a game together ends (#212.5), under the host, next to its `quiz_completed` | `room_id`, `reason`, `players` (incl. host), `questions_asked` |
 | `room_with_pack` | a host's finished custom pack becomes a game together (#232.2), next to its `room_created` | `room_id` |
+| `room_started` | the first question of a game together is served (#240.9), under the host, next to its `quiz_started` | `room_id`, `players` (incl. host), `rematch` (a "play again" game) |
+| `room_rematch` | the host starts "play again" after a finished game (#240.9): the same room moves to a new session with everyone in it; no new `room_created` | `room_id`, `players` (carried over, incl. host) |
 | `quiz_shared` | a player creates a "play my quiz" link (#232); not when the same session or pack is shared again (same link back) | `kind` (round / daily / pack), `language`, `question_count` |
 | `shared_quiz_opened` | a shared-quiz link is opened: in the app when the player starts it (under that player), or on the website's play page (anonymous) | `kind`, `source` (app / web) |
 | `shared_quiz_finished` | a session started from a shared link finishes and records a result (#232); once per session, under the player (or host of a game together) | `kind`, `players` (results recorded), `questions_asked` |
+| `daily_crew_viewed` | the week's crew table loads at the end of the daily challenge (#239) | `members` (people besides the player; 0 = no crew yet) |
+| `daily_crew_member_removed` | the player takes one person out of their daily crew (#239) | none |
 | `store_event` | every RevenueCat webhook (purchase, renewal, cancellation, expiration, refund …) | `type`, `product_id`, `environment`, `store`, `period_type` |
 
 ## App events (posted to `POST /api/v1/analytics/events` — only what the server cannot see)
@@ -33,7 +37,7 @@
 | `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`), `quick_game` (the Home quick-game switch was on, #224.8; absent on older builds) |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase` |
 | `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry`, `latency_ms` (ms from when the player could answer to speech onset or tap/submit, pauses excluded; left out on retries or when unknown) |
-| `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed), `question_id` |
+| `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed / mic_denied: the microphone is refused in iOS Settings and nothing was recorded, from #240), `question_id` |
 | `voice_command` | a voice command is recognised | `command` (next / skip / repeat / pause / stop …), `phase` |
 | `voice_commands_turned_on` | the player turned voice commands on (#237; speech recognition is asked only then) | `source` (onboarding / listen_bar), `result` (granted / denied: what iOS answered) |
 | `paywall_viewed` | paywall shown | `source` (quota / home (builds ≤ 81) / profile (#216.3, the plan card moved there) / settings / completion) |
@@ -46,10 +50,17 @@
 | `recap_shared` | the share sheet opens on the recap's last slide (#213.5) or, from #216.3, on the Profile's recap card; whether the player then posts it is not known | `kind` |
 | `together_opened` | the Together tab comes on screen (#216.2); with `room_created` / `room_joined` it shows how many who look at the tab go on to play | — |
 | `pack_topic_checked` | the topic check before a custom pack order answered (#233); one per check sent to the server | `verdict` (ok / softened / blocked / error; error = the check failed and the order went on) |
+| `family_mode_changed` | the "Kvíz / S deťmi" switch on Home was flipped (#236) | `enabled` (true / false) |
+| `family_band_selected` | an age band was chosen in the "S deťmi" mode (#236); the band is a content setting, never a person's age | `band` (kids_4_6 / kids_7_9 / kids_10_12), `first_time` (the sheet on the first flip) |
+| `family_topic_selected` | a topic card was chosen in the "S deťmi" mode (#236) | `band`, `topic` (family-* key) |
+| `family_topic_empty` | a round could not start because the topic had no questions; Home hid the topic (#236) | `band`, `topic` |
+| `family_round_end_action` | what the player tapped at the end of a round with kids (#236) | `action` (other_topic / home) |
 | `shared_quiz_pasted` | the first-launch "quiz from a friend?" paste button was used (#232) | `outcome` (opened / not_a_link) |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |
 | `room_guest_read_aloud` | a guest of a game together switched reading aloud on their own phone on or off (#230.2) | `on` (true / false), `via` (nearby / qr / link) |
 | `room_pause_changed` | the host of a game together stayed on a reveal or resumed (#224.4); the server accepted it | `paused` (true / false), `question` (number) |
+| `room_closed` | the host's phone leaves a game together (#240.9), once per game | `reason` (finished = left after the ranking / host_left = left mid-game / never_started = left the lobby / expired = the room was gone), `players` (incl. host), `questions` (served so far) |
+| `room_ranking_shared` | the share sheet opens on the final ranking of a game together (#240.9); whether the player then posts it is not known | `role` (host / guest), `players` |
 | `home_category_stepped` | a step on the Home category deck (#224.6): one per tap or VoiceOver adjust | `direction` (next / previous), `input` (tap / voiceover), `to` (category id, or `all`) |
 | `home_category_picker_opened` | the multi-category picker opened on Home (#224.6) | `source` (deck_button / pill) |
 | `quick_game_changed` | the Home "Quick quiz" switch flipped (#224.8) | `enabled` |

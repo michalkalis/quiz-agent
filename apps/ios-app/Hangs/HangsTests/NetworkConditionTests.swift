@@ -106,7 +106,7 @@ struct NetworkConditionTests {
         let call = CallOutcome.start {
             _ = try await network.createSession(
                 maxQuestions: 5, difficulty: "medium", language: "en", categories: [], userId: nil,
-                includeImages: false, skipLocalQuestions: false, packId: nil
+                includeImages: false, skipLocalQuestions: false, packId: nil, ageBand: nil
             )
             return QuizResponse.previewStartQuiz
         }
@@ -163,7 +163,7 @@ struct NetworkConditionTests {
 
         _ = try await network.createSession(
             maxQuestions: 5, difficulty: "medium", language: "en", categories: [], userId: nil,
-            includeImages: false, skipLocalQuestions: false, packId: nil
+            includeImages: false, skipLocalQuestions: false, packId: nil, ageBand: nil
         )
         let call = startQuiz(network)
         await pumpUntil { call.finished }

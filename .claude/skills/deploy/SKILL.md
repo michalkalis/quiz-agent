@@ -1,121 +1,83 @@
 ---
 name: deploy
-description: Deploy backend to Fly.io with pre-flight checks and post-deploy verification
+description: Deploy the backend to the Hetzner production server (Backend Deploy workflow, or deploy-ssh.sh by hand in an emergency) with checks, post-deploy verification and rollback
 model: haiku
 allowed-tools: Bash, Read
-argument-hint: "[backend|pack-api|both] [--skip-tests] [--dry-run]"
+argument-hint: "[backend|pack-api|both]"
 ---
 
-# Deploy to Fly.io
+# Deploy to Hetzner
 
-Guided deployment with safety checks. Two deployable apps; every step below is keyed on the **target**.
+Production runs on one Hetzner server (`trubbo-prod`, since 2026-11-06, #222 — moving the backend to Hetzner; [`infra/hetzner/README.md`](../../../infra/hetzner/README.md)). Every step below is keyed on the **target**.
 
-**This is the manual emergency path (#207).** The normal path is the **Backend Deploy** GitHub workflow (`gh workflow run backend-deploy.yml --ref main`): tests → staging → smoke → prod → smoke, alert issue on failure. Use this skill only when that workflow cannot run (GitHub Actions down, a hotfix that must skip staging). A deploy here does not move the `deployed/<app>` tags, so the next workflow run may redeploy the same code once (harmless). Post-deploy, `infra/deploy/smoke.sh <quiz-agent|quiz-pack-api> <URL>` is the same smoke test the workflow runs.
+> **Never `fly deploy` the app configs** (`apps/quiz-agent/fly.toml`, `apps/quiz-pack-api/fly.toml`) and never `fly deploy --image` on `quiz-agent-api` / `quiz-pack-api`. Those Fly apps now run only the forwarder (`infra/fly-forwarder/`) that passes `*.fly.dev` traffic from build 1.1, Apple and RevenueCat to the server. A Fly deploy replaces it with the old app, which still talks to the old Fly database: purchases and progress land where prod no longer reads. `fly status` / `fly logs` on those apps show only the forwarder. The only exception is the **Back** path of [`docs/setup/hetzner-cutover.md`](../../../docs/setup/hetzner-cutover.md), a founder decision.
 
 ## Targets
 
-| Target (arg) | App dir | Fly app | Token env var (repo-root `.env`) | Health URL | Processes |
-|---|---|---|---|---|---|
-| `backend` (default) | `apps/quiz-agent` | `quiz-agent-api` | `FLY_API_TOKEN` | `https://quiz-agent-api.fly.dev/api/v1/health` | `app` |
-| `pack-api` | `apps/quiz-pack-api` | `quiz-pack-api` | `FLY_API_TOKEN_QUIZ_PACK_API` | `https://quiz-pack-api.fly.dev/health` | `web` + `worker` |
-| `both` | run `backend`, then `pack-api` — each with its own pre-flight tests, deploy, and verification | | | | |
+| Target (arg) | Workflow `apps` input | deploy-ssh services | Smoke |
+|---|---|---|---|
+| `backend` (default) | `quiz-agent` | `quiz-agent` | `infra/deploy/smoke.sh quiz-agent https://api.trubbo.app` |
+| `pack-api` | `quiz-pack-api` | `pack` (web; the worker restarts too if it runs) | `infra/deploy/smoke.sh quiz-pack-api https://pack.trubbo.app` |
+| `both` | `both` | `quiz-agent,pack` | both of the above |
 
-Fly tokens are **app-scoped** (2026-09-04): using the wrong one fails with `Error: unauthorized`. Without any token (`env -u FLY_API_TOKEN`) flyctl falls back to the founder's `flyctl auth login`. Always deploy from a checkout of `origin/main`. If the shared checkout (`$CLAUDE_PROJECT_DIR`) is on another branch or dirty, create a throwaway worktree and deploy from it:
-
-```bash
-git -C "$CLAUDE_PROJECT_DIR" fetch origin main
-git -C "$CLAUDE_PROJECT_DIR" worktree add --detach "$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main" origin/main
-DEPLOY_DIR="$CLAUDE_PROJECT_DIR/.claude/worktrees/deploy-main"   # otherwise DEPLOY_DIR="$CLAUDE_PROJECT_DIR"
-```
-
-Remove it afterwards (`git worktree remove --force <path>`). `.env` is gitignored and lives only in the shared checkout, so it is always sourced by absolute path from `$CLAUDE_PROJECT_DIR`.
-
-## Pre-flight Checks (always run, per target)
-
-Run all checks before deploying. Stop and report if any fail.
-
-### 1. Deploy dir is `origin/main`
-```bash
-git -C "$DEPLOY_DIR" status --porcelain && git -C "$DEPLOY_DIR" rev-parse HEAD origin/main
-```
-- Clean and at `origin/main` → proceed. Anything else → recreate the worktree above; never deploy a branch or local commits.
-
-### 2. Test gate (unless `--skip-tests`)
-The deployed commit must have a green **Backend CI** run (it runs both app suites, path-filtered):
-```bash
-gh run list --commit "$(git -C "$DEPLOY_DIR" rev-parse HEAD)" --json name,conclusion,status --jq '.[] | "\(.name): \(.status) \(.conclusion)"'
-```
-- Require `Backend CI: completed success` for that exact commit. Still running → wait for it; failed or absent → **stop deployment of that target** and report.
-- Do not run pytest inside a fresh worktree (no `.venv` there, and the repo-root build is flaky under `uv sync`). A local run is only meaningful from the shared checkout on `main`: `cd "$CLAUDE_PROJECT_DIR/<App dir>" && uv run --no-sync pytest tests/ -x -q --tb=short -m "not integration"`.
-
-### 3. Check fly CLI is available
-```bash
-fly version 2>/dev/null
-```
-- If `fly` is not installed, report and stop.
-
-## Deploy
-
-Load the token for the target, then deploy its `fly.toml`:
+## Normal path: the Backend Deploy workflow
 
 ```bash
-cd "$DEPLOY_DIR" && set -a && source "$CLAUDE_PROJECT_DIR/.env" && set +a && \
-  FLY_API_TOKEN="$<Token env var>" fly deploy -c <App dir>/fly.toml --yes
+gh workflow run backend-deploy.yml --ref main -f apps=<Workflow apps input>
 ```
 
-- `backend`: `FLY_API_TOKEN="$FLY_API_TOKEN" fly deploy -c apps/quiz-agent/fly.toml --yes`
-- `pack-api`: `FLY_API_TOKEN="$FLY_API_TOKEN_QUIZ_PACK_API" fly deploy -c apps/quiz-pack-api/fly.toml --yes`
+It runs the full Backend CI, then one SSH forced command on the server (`infra/hetzner/deploy-ssh.sh`): lock, build, `alembic upgrade head` before the swap, restart, wait up to 120 s for health, and on failure an automatic rollback to the previous sha without migrating. Then it smoke-tests both domains and checks the pack worker heartbeat. A failure opens a `deploy-failed` issue. Prod deploys only from `main`; Hetzner has no staging stage, so a branch ref only runs the tests. Watch it with `gh run watch`.
 
-Database migrations need no separate step: each `fly.toml` has a `release_command` (`alembic upgrade head`) that Fly runs in a one-off machine from the new image before rollout. If it fails, Fly aborts the deploy and the old version keeps serving — report the release-command output as a failed deploy.
+## Manual emergency path (GitHub Actions down)
 
-### `--dry-run`
-Same command with `--build-only` (builds the image for the chosen target, deploys nothing). Skip post-deploy verification.
+Only when the workflow cannot run. Needs the server login (`ssh trubbo-prod`, key `~/.ssh/trubbo_hetzner`).
 
-## Post-deploy Verification (per target)
+1. **Commit:** the full 40-char sha of `origin/main` (`git fetch origin main && git rev-parse origin/main`). The script refuses short shas and anything not on `origin/main`.
+2. **Test gate:** that exact commit must have a green **Backend CI** run:
+   ```bash
+   gh run list --commit <sha> --json name,conclusion,status --jq '.[] | "\(.name): \(.status) \(.conclusion)"'
+   ```
+   Require `Backend CI: completed success`. Still running → wait; failed or absent → stop and report.
+3. **Deploy** (on the server; the same script and lock CI uses, so the two cannot overlap):
+   ```bash
+   ssh trubbo-prod
+   SSH_ORIGINAL_COMMAND="deploy <sha> <deploy-ssh services>" ~/trubbo/bin/deploy-ssh.sh
+   ```
+   It ends with `OK: <sha> live`, or `rolled back to <prev> (<sha> was NOT deployed)`, or `ROLLBACK ALSO FAILED: inspect the server`. Only the first is a success.
+4. This does not move the `deployed/<app>` tags, so the next workflow run may redeploy the same code once (harmless).
 
-After each successful deploy:
+## Post-deploy verification
 
-### 1. Health check
-```bash
-curl -s -o /dev/null -w '%{http_code}' <Health URL>
-```
-- Expect HTTP 200. Retry up to 3 times with 10s between attempts (app needs ~8s to start).
-
-### 2. Smoke test
-```bash
-curl -s https://<Fly app>.fly.dev/docs | head -c 100
-```
-- Verify the docs page loads.
-
-### 3. Check deployment status
-```bash
-fly status -a <Fly app>
-```
-- Every process in the target's **Processes** column must exist on the new version. `app` / `web` scale to zero (`min_machines_running = 0`), so `stopped` right after a deploy is normal idle — the health check above auto-starts them and is the real signal. `worker` (`pack-api`) has no HTTP service and must be `started`; a missing or stopped `worker` is a failed deploy — report it, never a green.
-- **#207 — Fly worker is primary:** custom packs run on the Fly `worker` (the mba backup on the same queue only steps in when it is down), so after every deploy `worker` must be `started`. Never stop it to "hand orders to mba"; the old session-queue mode (`ORDER_QUEUE_NAME=quiz-pack:session`) is retired and the worker refuses to boot with it. Optional check: `GET /api/v1/admin/worker/heartbeat` (header `X-Admin-Key`) shows `heartbeat_age_s` as a number within ~1 min of the deploy.
+1. Smoke test for the target (table above). Expect it to pass.
+2. Server state, in `~/trubbo/repo/infra/hetzner`: `docker compose ps` (touched services up and `healthy`; `pack-worker` up if it ran before) and `git -C ~/trubbo/repo rev-parse HEAD` = the deployed sha.
+3. `pack-api`: the worker heartbeat must be newer than the deploy: `curl -fsS -H "X-Admin-Key: $PACK_KEY" https://pack.trubbo.app/api/v1/admin/worker/heartbeat` → `heartbeat_age_s` a number within ~1 min. A missing heartbeat is a failed deploy, never a green.
 
 ## Report
 
-One block per deployed target:
+One block per target:
 ```
-DEPLOYMENT SUMMARY — <Fly app>
-─────────────────
-Branch:     <branch>
-Commit:     <short hash> <message>
-Tests:      <passed/skipped/failed>
-Deploy:     <success/failed>
-Health:     <HTTP status>
-Processes:  <started list>
-URL:        https://<Fly app>.fly.dev
+DEPLOYMENT SUMMARY — <target>
+Commit:   <short sha> <message>
+Path:     workflow <run URL> | manual deploy-ssh
+Deploy:   <OK live / rolled back / rollback failed>
+Smoke:    <pass/fail>
+Worker:   <heartbeat age, pack-api only>
 ```
 
 ## Rollback
 
-Never `alembic downgrade` the prod DB; the boot check accepts a DB ahead of code, so redeploy the previous image instead (migrations are expand-only, see `.claude/rules/backend.md`).
+Never `alembic downgrade` the prod DB. Migrations are expand-only and the apps accept a DB ahead of their code, so roll back by running the previous code **without migrating** (see `.claude/rules/backend.md`).
 
-```bash
-fly releases --image -a <Fly app>          # find the last good release's image ref
-fly deploy --image <registry.fly.io/<Fly app>:deployment-...> -a <Fly app> --skip-release-command
-```
-
-`--skip-release-command` is required: if the bad release shipped a migration, the old image does not contain the DB's current revision, so `alembic upgrade head` fails (`Can't locate revision`) and aborts the deploy. The boot check's DB-ahead tolerance then carries the rollback. Afterwards rerun Post-deploy Verification.
+- **The deploy step itself failed:** deploy-ssh.sh already rolled back (log line `rolled back to …`). Nothing to do but find the cause. On `ROLLBACK ALSO FAILED`, continue with the manual rollback below.
+- **The new code is live but bad** (smoke or worker step red, or a problem found later): fix forward through the workflow when there is time. To go back right away, on the server, with the last good sha (the tag `deployed/<app>` moves only after a green smoke, so it is the last good code unless someone deployed by hand):
+  ```bash
+  ssh trubbo-prod
+  cd ~/trubbo/repo/infra/hetzner
+  git -C ~/trubbo/repo checkout -q --detach <good sha>
+  docker compose build <services>        # quiz-agent and/or pack-web
+  docker compose up -d <services>
+  docker compose --profile worker up -d pack-worker   # pack-api only, if the worker was running
+  docker compose ps
+  ```
+  This is what deploy-ssh.sh's own rollback does (build and restart, no migration). Do **not** use `deploy <older sha>` for this when the bad release shipped a migration: that path runs `alembic upgrade head` with the older code, which fails on the unknown revision and then "rolls back" to the bad sha.
+- Afterwards rerun Post-deploy verification and report.

@@ -67,6 +67,10 @@ async def test_defaults_never_block_or_hide_anything():
         "maintenance_message": None,
         # #232: sharing by link stays hidden until switched on in the DB.
         "shared_quiz_enabled": False,
+        # #236: family mode stays hidden on both channels, no country hidden.
+        "family_mode_enabled": False,
+        "family_mode_enabled_app_store": False,
+        "family_mode_hidden_storefronts": [],
     }
     # Public and cacheable: hit at every launch/foreground, no per-user data.
     assert cache_control == "public, max-age=60"

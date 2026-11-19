@@ -9,9 +9,13 @@ import sentry_sdk
 from fastapi import Depends, Request
 from pydantic import BaseModel, Field, field_validator
 from quiz_shared.database.question_store import QuestionStore
-from quiz_shared.languages import QUIZ_LANGUAGES, servable_quiz_languages
+from quiz_shared.languages import (
+    QUIZ_LANGUAGES,
+    is_dark_language,
+    servable_quiz_languages,
+)
 from quiz_shared.models.participant import Participant
-from quiz_shared.models.question import PublicQuestion
+from quiz_shared.models.question import AGE_BANDS, PublicQuestion
 from quiz_shared.models.session import QuizSession
 from quiz_shared.models.submit import AudioInfo, Evaluation
 
@@ -99,6 +103,15 @@ class CreateSessionRequest(BaseModel):
     ttl_minutes: int = Field(
         default=30, ge=10, le=120, description="Session expiry time"
     )
+    age_band: Optional[Literal[AGE_BANDS]] = Field(
+        default=None,
+        description=(
+            "#236 family round: the child age band to play, with exactly one "
+            "`family-*` topic of that band in `categories`. The server then sets "
+            "the round size (6 for kids_4_6, else 10), difficulty and images, "
+            "and picks the whole round at /start. Omit for a normal quiz."
+        ),
+    )
 
     @field_validator("language")
     @classmethod
@@ -112,6 +125,8 @@ class CreateSessionRequest(BaseModel):
 
         * outside ``QUIZ_LANGUAGES`` → 422. No shipped build can send such a
           code, so it is a bug or a probe either way.
+        * known but not yet offered by any build (``uk``, #231) and not in
+          ``SERVABLE_QUIZ_LANGUAGES`` → 422.
         * known but not in ``SERVABLE_QUIZ_LANGUAGES`` (de/fr/es/it/pl/hu/ro
           today) → **accepted**, with a WARNING and a Sentry breadcrumb naming
           the code. Every installed build still offers all ten languages, so
@@ -122,6 +137,11 @@ class CreateSessionRequest(BaseModel):
         if code not in QUIZ_LANGUAGES:
             raise ValueError(f"language must be one of {', '.join(QUIZ_LANGUAGES)}")
         servable = servable_quiz_languages()
+        if is_dark_language(code, servable):
+            # #231: no build offers it, so there is nothing to keep working.
+            raise ValueError(
+                f"language {code!r} is not available (available: {', '.join(servable)})"
+            )
         if code not in servable:
             logger.warning(
                 "Session requested non-servable quiz language %r (servable: %s); "
@@ -151,6 +171,10 @@ class SessionResponse(BaseModel):
     participants: List[Participant]
     expires_at: datetime
     created_at: datetime
+    age_band: Optional[str] = Field(
+        default=None,
+        description="#236: the child age band of a family round; null otherwise",
+    )
     asked_count: int = Field(
         default=0,
         description=(
@@ -248,6 +272,14 @@ class InputResponse(BaseModel):
             "#208.3: /voice/submit with read_back=true only — the answer read "
             "aloud, so the app skips its own /tts/synthesize call. Absent when "
             "synthesis failed or was not ready in time; the app then falls back."
+        ),
+    )
+    repeats: Optional[bool] = Field(
+        default=None,
+        description=(
+            "#236: /start of a family round only. True when the round repeats "
+            "questions played before (the topic ran out of new ones); the app "
+            "then says so once on the first question."
         ),
     )
 
@@ -775,6 +807,11 @@ def get_daily_challenge(request: Request):
     return getattr(request.app.state, "daily_challenge", None)
 
 
+def get_daily_crew(request: Request):
+    """#239 the daily crew; None without a database."""
+    return getattr(request.app.state, "daily_crew", None)
+
+
 def get_shared_quiz(request: Request):
     """#232 SharedQuizService (None without a database)."""
     return getattr(request.app.state, "shared_quiz", None)
@@ -831,6 +868,7 @@ def session_to_response(session: QuizSession) -> SessionResponse:
         participants=session.participants,
         expires_at=session.expires_at,
         created_at=session.created_at,
+        age_band=session.age_band,
         asked_count=len(session.asked_question_ids),
     )
 

@@ -16,19 +16,25 @@
 import Combine
 import Foundation
 import os
+import StoreKit
 
 @MainActor
 final class AppConfigStore: ObservableObject {
     typealias Fetch = () async throws -> RemoteAppConfig
+    /// #236: the App Store country (alpha-3, "USA"); nil when StoreKit cannot tell.
+    typealias StorefrontLookup = () async -> String?
 
     @Published private(set) var config: RemoteAppConfig = .permissive
     @Published private var dismissedNotice: String?
     @Published private var dismissedRecommendedVersion: String?
+    /// #236: read only while the server hides family mode somewhere.
+    @Published private var storefrontCountry: String?
 
     private static let dismissedNoticeKey = "dismissedAppNotice"
     private static let dismissedRecommendedVersionKey = "dismissedRecommendedVersion"
 
     private let fetch: Fetch
+    private let storefront: StorefrontLookup
     private let defaults: UserDefaults
     private let appVersion: String
     private let interfaceLanguage: () -> String
@@ -37,6 +43,10 @@ final class AppConfigStore: ObservableObject {
     /// The channel decides which minimum applies and where "update" leads.
     let isTestFlight: Bool
     private let isAppStoreBuild: Bool
+    /// #236: the build announces itself as TestFlight to the server
+    /// (`X-Build-Channel`, a TestFlight install or a development build): the
+    /// same test the server makes for family mode.
+    private let sendsTestFlightChannel: Bool
 
     var updateRequired: Bool {
         let minimum = isTestFlight ? config.minVersionTestflight : config.minVersionAppStore
@@ -75,6 +85,21 @@ final class AppConfigStore: ObservableObject {
     /// #232: share a quiz by link; every surface of it hides while off.
     var sharedQuizEnabled: Bool { config.sharedQuizEnabled }
 
+    /// #236: family mode „S deťmi“ may show on Home: on for this build's
+    /// channel (the server's own test, `family/rounds.py` family_mode_on) and
+    /// not hidden in this App Store country. With a country list set and the
+    /// country not known yet, it stays hidden: the list is the legal lever.
+    /// The topics list is the last gate: no topics, no mode.
+    var familyModeEnabled: Bool {
+        guard config.familyModeEnabled,
+              sendsTestFlightChannel || config.familyModeEnabledAppStore
+        else { return false }
+        let hidden = config.familyModeHiddenStorefronts
+        guard !hidden.isEmpty else { return true }
+        guard let storefrontCountry else { return false }
+        return !hidden.contains { $0.uppercased() == storefrontCountry.uppercased() }
+    }
+
     /// The notice to show on Home, nil once the player dismissed this text.
     /// A new text from the server shows again.
     var notice: String? {
@@ -88,9 +113,13 @@ final class AppConfigStore: ObservableObject {
         appVersion: String = AppVersion.current,
         isTestFlight: Bool = BuildChannel.isTestFlight(),
         isAppStoreBuild: Bool = BuildChannel.isAppStoreBuild,
+        sendsTestFlightChannel: Bool = BuildChannel.debugSurfacesEnabled(),
+        storefront: @escaping StorefrontLookup = AppConfigStore.liveStorefront,
         languageCode: @autoclosure @escaping () -> String = InterfaceLanguage.code
     ) {
         self.fetch = fetch
+        self.storefront = storefront
+        self.sendsTestFlightChannel = sendsTestFlightChannel
         self.defaults = defaults
         self.appVersion = appVersion
         self.isTestFlight = isTestFlight
@@ -114,6 +143,10 @@ final class AppConfigStore: ObservableObject {
             config = try await fetch()
         } catch {
             Logger.network.info("app-config fetch skipped: \(error.localizedDescription, privacy: .public)")
+        }
+        // #236: StoreKit is asked only when a country list needs the answer.
+        if !config.familyModeHiddenStorefronts.isEmpty, storefrontCountry == nil {
+            storefrontCountry = await storefront()
         }
     }
 
@@ -145,6 +178,10 @@ final class AppConfigStore: ObservableObject {
         isTestFlight ? config.recommendedVersionTestflight : config.recommendedVersionAppStore
     }
 
+    static func liveStorefront() async -> String? {
+        await Storefront.current?.countryCode
+    }
+
     /// Short timeout: this runs at launch and must never hold anything up.
     static func liveFetch() async throws -> RemoteAppConfig {
         #if DEBUG
@@ -167,7 +204,8 @@ final class AppConfigStore: ObservableObject {
         /// Launch arguments that show each state on the simulator without a
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
         /// `--app-config-notice`, `--app-config-update-recommended`,
-        /// `--app-config-maintenance` (#214), `--app-config-multiplayer` (#212); any `--ui-test-daily-*` flag
+        /// `--app-config-maintenance` (#214), `--app-config-multiplayer` (#212),
+        /// `--app-config-family` (#236); any `--ui-test-daily-*` flag
         /// turns the #205 daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
@@ -178,7 +216,8 @@ final class AppConfigStore: ObservableObject {
             let daily = DailyChallengeFixtures.isActive(arguments)
             let multiplayer = arguments.contains("--app-config-multiplayer")
             let sharedQuiz = arguments.contains("--app-config-shared-quiz")
-            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz else { return nil }
+            let family = arguments.contains("--app-config-family")
+            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz || family else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -193,7 +232,9 @@ final class AppConfigStore: ObservableObject {
                 recommendedVersionTestflight: recommended ? "999" : nil,
                 maintenanceEnabled: maintenance,
                 multiplayerEnabled: multiplayer,
-                sharedQuizEnabled: sharedQuiz
+                sharedQuizEnabled: sharedQuiz,
+                familyModeEnabled: family,
+                familyModeEnabledAppStore: family
             )
         }
     #endif

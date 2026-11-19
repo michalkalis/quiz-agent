@@ -1,4 +1,4 @@
-"""One approved question + its app voice clip, from prod.
+"""One approved question + its app voice clip (and the texts the app reads), from prod.
 
 Not run locally: the CLI pipes this file into the prod API machine
 (`ssh trubbo-prod "docker exec -i trubbo-quiz-agent-1 python - <id> <lang>"`), where the app
@@ -34,6 +34,7 @@ import boto3
 from app.client_capabilities import ANSWER_CODES, OPTION_LABELS
 from app.tts.cache import TTSCache
 from app.tts.number_normalization import normalize_numbers_for_tts
+from app.tts.service import primary_cache_voice
 from app.tts.spoken_text import spoken_question_text
 from app.tts.voices import ELEVENLABS_VOICES, VOICE_PROFILES
 from botocore.config import Config
@@ -59,8 +60,21 @@ def spoken_candidates(text, options, lang):
         )
 
 
+def voices_for(lang):
+    """Cache-key voices, newest first: the app voice in the language's current
+    style (model + speed, TTS_LANGUAGE_STYLES), then every voice before styles."""
+    current = primary_cache_voice(VOICES[0], lang)
+    return ([current] if current != VOICES[0] else []) + VOICES
+
+
 def clip_keys(text, options, lang):
-    for spoken in spoken_candidates(text, options, lang):
+    spoken_texts = list(spoken_candidates(text, options, lang))
+    voices = voices_for(lang)
+    # The current style's clip first, for every text the app may have read.
+    for voice in voices[: len(voices) - len(VOICES)]:
+        for spoken in spoken_texts:
+            yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
+    for spoken in spoken_texts:
         for voice in VOICES:
             yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
@@ -70,7 +84,7 @@ def text_keys(text, lang):
     past 1000 characters, which no approved explanation reaches), or a round
     reel's answer."""
     spoken = normalize_numbers_for_tts(text or "", lang)
-    for voice in VOICES:
+    for voice in voices_for(lang):
         yield spoken, f"questions/{TTSCache._hash(None, spoken, voice)}.opus"
 
 
@@ -160,6 +174,7 @@ async def one(qid, lang, answer_number=None):
                 explanation_audio_b64=base64.b64encode(body).decode(),
                 explanation_spoken=spoken,
             )
+    out["app_texts"] = app_texts(out, lang, answer_number)
     out["answer_audio_b64"] = None
     if answer_number is not None:
         spoken, body = first_clip(
@@ -207,6 +222,27 @@ def display_answer(row):
 
 # What the shipped apps (1.0 beta and 1.1) send as X-Client-Capabilities.
 APP_CAPABILITIES = (ANSWER_CODES, OPTION_LABELS)
+
+
+def app_texts(row, lang, answer_number=None):
+    """What the app reads for this row, clip or not: the question (MCQ options
+    included, as GET /sessions/{id}/question/audio builds it), the "hear it"
+    explanation, and a reel's answer. The social videos voice these
+    themselves (cli/voice.ts, founder 2026-11-18)."""
+    session = SimpleNamespace(client_capabilities=APP_CAPABILITIES, language=lang)
+    texts = {
+        "question": normalize_numbers_for_tts(
+            spoken_question_text(row["question"], row["possible_answers"], session),
+            lang,
+        )
+    }
+    if row["explanation"] and len(row["explanation"]) <= 1000:
+        texts["explanation"] = normalize_numbers_for_tts(row["explanation"], lang)
+    if answer_number is not None:
+        texts["answer"] = normalize_numbers_for_tts(
+            answer_text(row, answer_number), lang
+        )
+    return texts
 
 
 async def elevenlabs_usage():
@@ -292,8 +328,10 @@ async def ensure(qid, lang, question_only=False, answer_number=None):
         voice = tts.provider.default_voice
         for what, audio_field, text_field, spoken in todo:
             billing = TTSBilling()
-            audio = await tts.synthesize(text=spoken, use_cache=True, billing=billing)
-            key = tts._remote_key(spoken, voice)
+            audio = await tts.synthesize(
+                text=spoken, use_cache=True, billing=billing, language=out["language"]
+            )
+            key = tts.remote_key_for(spoken, out["language"], voice)
             if await tts.remote.get(key) is None:
                 return {
                     "error": f"{qid}: {what} clip made but not found in R2 under {key}"
@@ -347,6 +385,9 @@ async def candidates():
         "q.question, q.possible_answers, q.local_scope, q.explanation, q.source_url, "
         "coalesce(q.headline_answer, q.correct_answer->>0, q.correct_answer#>>'{}') as answer, q.created_at::date::text as created, "
         "q.provenance->'extra'->'topicality'->>'tier' as topicality, "
+        # Tied to something people talk about now: a boost window that ends
+        # (#195 stores a permanent boost as 9999-01-01, which is not timely).
+        "coalesce(q.boost_until > now() and q.boost_until < '9000-01-01', false) as timely, "
         "(select avg(r.score / r.scale_max) from ratings r where r.question_id = q.id::text) as rating "
         "from questions q where q.review_status = 'approved' "
         # #236: a question written for a child band is not ordinary content.
@@ -379,6 +420,7 @@ async def candidates():
                 "local_scope": r["local_scope"],
                 "created": r["created"],
                 "topicality": r["topicality"],
+                "timely": r["timely"],
                 "rating": float(r["rating"]) if r["rating"] is not None else None,
                 "has_clip": any(
                     k in keys for _, k in clip_keys(r["question"], opts, r["language"])

@@ -122,11 +122,17 @@ _SOURCE_MATCH_STOPWORDS = frozenset({
     "how", "why", "than", "then", "into", "about", "over", "after", "before",
     "more", "most", "some", "any", "all", "one", "two", "first", "also", "has",
     "have", "had", "but", "not", "you", "your", "they", "their", "them",
+    # #231: Ukrainian glue words, so Cyrillic overlap is also driven by content.
+    "хто", "що", "яка", "який", "яке", "які", "якого", "коли", "де", "як",
+    "чому", "цей", "ця", "це", "ці", "для", "від", "про", "при", "або", "але",
+    "його", "вона", "вони", "був", "була", "було", "були", "між", "після",
+    "перед", "понад", "також", "один", "одна", "перший", "першим",
 })
 
 
 def _content_tokens(*texts: object) -> set[str]:
-    """Lowercased alphanumeric content tokens (len >= 3, stopwords removed).
+    """Lowercased content tokens (len >= 3, stopwords removed), letters of any
+    alphabet (#231: Cyrillic Ukrainian; ASCII text tokenizes as before).
 
     The match key for `_best_matching_fact`: shared content words between a
     question and a fact signal that the question was built from that fact.
@@ -135,7 +141,7 @@ def _content_tokens(*texts: object) -> set[str]:
     for text in texts:
         if not text:
             continue
-        for raw in re.findall(r"[a-z0-9]+", str(text).lower()):
+        for raw in re.findall(r"[^\W_]+", str(text).lower()):
             if len(raw) >= 3 and raw not in _SOURCE_MATCH_STOPWORDS:
                 tokens.add(raw)
     return tokens
@@ -932,7 +938,8 @@ class AdvancedQuestionGenerator:
                 )
             if reason is None:
                 reason = craft_guards.units_reason(
-                    q.question, q.correct_answer, q.possible_answers
+                    q.question, q.correct_answer, q.possible_answers,
+                    language=q.language,
                 )
             if reason is not None:
                 filtered += 1

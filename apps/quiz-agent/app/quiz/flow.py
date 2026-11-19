@@ -109,7 +109,9 @@ def prefetch_question_audio(
         return
 
     tts_text = normalize_numbers_for_tts(question_text, language)
-    task = asyncio.create_task(tts_service.synthesize_question(tts_text))
+    task = asyncio.create_task(
+        tts_service.synthesize_question(tts_text, language=language)
+    )
     _prefetch_tasks.add(task)
     task.add_done_callback(_prefetch_tasks.discard)
     task.add_done_callback(_log_prefetch_outcome)
@@ -299,6 +301,7 @@ class QuizFlowService:
                 "route": route,
                 "is_regrade": False,
                 "question_index": len(session.asked_question_ids),
+                "age_band": session.age_band,
                 **(stage_ms or {}),
             },
         )
@@ -327,7 +330,17 @@ class QuizFlowService:
 
         # Check usage limit. #95: custom-pack sessions bypass the free monthly
         # quota (paid, curated content); so does the daily challenge (#205).
-        if self.usage_tracker and session.user_id and not session.is_quota_exempt:
+        # #236: a round with kids still counts (charged below and gated at
+        # /start) but is never cut off mid-round, and the app gets no
+        # purchase prompt while the kids play. Past the limit a question
+        # spends a pack credit if there is one, else nothing
+        # (``record_question``), so nothing ever goes below zero.
+        if (
+            self.usage_tracker
+            and session.user_id
+            and not session.is_quota_exempt
+            and not session.age_band
+        ):
             allowed, remaining, resets_at = await self.usage_tracker.check_limit(
                 session.user_id
             )
@@ -403,6 +416,7 @@ class QuizFlowService:
                     session.participants[0].score if session.participants else 0.0
                 ),
                 "is_pack": bool(session.pack_id),
+                "age_band": session.age_band,
             },
         )
 
@@ -752,7 +766,9 @@ class QuizFlowService:
             # in the session language ("tisícdeväťstoosemnásť", "prvého mája"),
             # or the fallback voice reads "1918" in English inside Slovak text.
             tts_text = normalize_numbers_for_tts(feedback_text, language)
-            return await self.tts_service.synthesize(text=tts_text, use_cache=True)
+            return await self.tts_service.synthesize(
+                text=tts_text, use_cache=True, language=language
+            )
         except Exception as e:
             logger.warning("Failed to generate enhanced feedback: %s", e)
             return None

@@ -70,7 +70,7 @@ Stop and tell the user **before triggering the workflow** if any of these are tr
 - admin-health `total_approved == 0` (CRITICAL: No questions in database)
 - admin-health `runway_days < 7` (warn — questions will run out soon)
 
-Questions live in Postgres + pgvector; an empty count means the question store, not the app — check `fly logs -a quiz-agent-api --no-tail` for the store's startup errors before triggering.
+Questions live in Postgres + pgvector; an empty count means the question store, not the app — check the server logs (`ssh trubbo-prod`, then `docker compose logs --since 30m quiz-agent` in `~/trubbo/repo/infra/hetzner`; `fly logs` shows only the forwarder) for the store's startup errors before triggering.
 
 ### 3. Trigger the workflow
 

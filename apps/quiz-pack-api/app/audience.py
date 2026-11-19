@@ -73,7 +73,23 @@ _SHAPE: dict[str, str] = {
         "multiple-choice section below: here every question is a two-option "
         "MCQ. Things a small child sees every day: animals, colours, food, "
         "home, toys, the body, weather, simple shapes and sizes. Words a "
-        "four-year-old uses; one short sentence."
+        "four-year-old uses; one short sentence.\n"
+        # Founder on the pilot, 2026-11-18: "too obvious", "written too
+        # childishly, almost primitive"; the "why" in the explanation was the
+        # part he liked ("children learn why it happens").
+        "Simple is not the same as obvious. Never ask what every child of "
+        "this age already knows for sure (\"Does it hurt when your hair is "
+        "cut?\", \"Can your tummy rumble when you are hungry?\"): there is "
+        "nothing to think about. When the fact itself is known to the child, "
+        "ask about the surprising reason instead, as a pick of two (\"Why "
+        "does a haircut not hurt? Hair cannot feel / The scissors are "
+        "gentle\"), or find a fact a child would honestly have to guess. "
+        "Both options must be plausible to a small child.\n"
+        "Plain words, not baby talk: write the way a kind adult talks to a "
+        "child, with the ordinary word for a thing. No pet names or "
+        "diminutives for body parts and everyday things in the pack's "
+        "language (in Slovak or Czech: \"srdce\", \"brucho\", \"jesť\", never "
+        "\"srdiečko\", \"bruško\", \"papať\")."
     ),
     "kids_7_9": (
         "Early school years. Everyday words; a hard word only when it IS the "

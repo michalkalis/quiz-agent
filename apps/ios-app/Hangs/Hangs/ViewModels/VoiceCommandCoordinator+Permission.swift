@@ -16,8 +16,10 @@ extension VoiceCommandCoordinator {
     /// The listen bar's trailing control for a question-screen phase, or `nil`.
     /// Shown only where command words would be (`phaseHasCommands`), with the
     /// master switch on and the hints visible — the player who hid the hints
-    /// in Settings hid this too — and never with the mic denied: commands
-    /// listen through the mic, so turning them on could not help.
+    /// in Settings hid this too. #240: with the mic denied the bar says so
+    /// (`.micOff`) wherever the words would be, whatever the switches: no
+    /// command and no voice answer can be heard, and this is the only place
+    /// that tells the player.
     func commandsBarAccessory(phaseHasCommands: Bool, micDenied: Bool) -> ListenBar.CommandsAccessory? {
         Self.commandsBarAccessory(
             availability: commandAvailability,
@@ -36,7 +38,9 @@ extension VoiceCommandCoordinator {
         micDenied: Bool,
         phaseHasCommands: Bool
     ) -> ListenBar.CommandsAccessory? {
-        guard phaseHasCommands, voiceCommandsEnabled, showsHints, !micDenied else { return nil }
+        guard phaseHasCommands else { return nil }
+        if micDenied { return .micOff }
+        guard voiceCommandsEnabled, showsHints else { return nil }
         return switch availability {
         case .permissionNeeded: .turnOn
         case .installingAssets: .preparing

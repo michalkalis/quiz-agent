@@ -59,6 +59,14 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// game together). Off unless the server says on, also in `permissive`:
     /// the shared-quiz endpoints answer 404 while the server switch is off.
     let sharedQuizEnabled: Bool
+    /// #236: family mode „S deťmi“ on Home. TestFlight builds read
+    /// `familyModeEnabled`; the App Store build needs `familyModeEnabledAppStore`
+    /// too. Off unless the server says on, also in `permissive`.
+    let familyModeEnabled: Bool
+    let familyModeEnabledAppStore: Bool
+    /// #236: App Store countries (StoreKit `Storefront.countryCode`, alpha-3
+    /// such as "USA") where the mode stays hidden.
+    let familyModeHiddenStorefronts: [String]
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -82,6 +90,9 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case multiplayerEnabled = "multiplayer_enabled"
         case multiplayerEnabledAppStore = "multiplayer_enabled_app_store"
         case sharedQuizEnabled = "shared_quiz_enabled"
+        case familyModeEnabled = "family_mode_enabled"
+        case familyModeEnabledAppStore = "family_mode_enabled_app_store"
+        case familyModeHiddenStorefronts = "family_mode_hidden_storefronts"
     }
 
     init(
@@ -97,7 +108,10 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         maintenanceMessage: Notice? = nil,
         multiplayerEnabled: Bool = false,
         multiplayerEnabledAppStore: Bool = false,
-        sharedQuizEnabled: Bool = false
+        sharedQuizEnabled: Bool = false,
+        familyModeEnabled: Bool = false,
+        familyModeEnabledAppStore: Bool = false,
+        familyModeHiddenStorefronts: [String] = []
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -112,6 +126,9 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.multiplayerEnabled = multiplayerEnabled
         self.multiplayerEnabledAppStore = multiplayerEnabledAppStore
         self.sharedQuizEnabled = sharedQuizEnabled
+        self.familyModeEnabled = familyModeEnabled
+        self.familyModeEnabledAppStore = familyModeEnabledAppStore
+        self.familyModeHiddenStorefronts = familyModeHiddenStorefronts
     }
 
     init(from decoder: Decoder) throws {
@@ -130,5 +147,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         multiplayerEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabled)) ?? false
         multiplayerEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .multiplayerEnabledAppStore)) ?? false
         sharedQuizEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .sharedQuizEnabled)) ?? false
+        familyModeEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .familyModeEnabled)) ?? false
+        familyModeEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .familyModeEnabledAppStore)) ?? false
+        familyModeHiddenStorefronts = (try? container.decodeIfPresent([String].self, forKey: .familyModeHiddenStorefronts)) ?? []
     }
 }

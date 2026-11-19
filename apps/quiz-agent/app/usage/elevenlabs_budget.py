@@ -74,19 +74,42 @@ class ElevenLabsBudget:
         self._checked_at: float | None = None
         self._day: date | None = None  # UTC day of the last good reading
         self._lock = asyncio.Lock()
+        self._background: asyncio.Task[None] | None = None
 
     async def exhausted(self) -> bool:
+        budget = self._budget()
+        if not budget:
+            return False
+        if not self._fresh():
+            await self._refresh_once(budget)
+        return self._exhausted
+
+    def exhausted_now(self) -> bool:
+        """The last verdict, without waiting (#240 audit). Speech calls this:
+        a slow ElevenLabs meter or database must never delay question audio,
+        so a stale reading is refreshed in the background and this request
+        goes by the previous one (at start: not exhausted)."""
+        budget = self._budget()
+        if not budget:
+            return False
+        if not self._fresh() and (self._background is None or self._background.done()):
+            self._background = asyncio.get_running_loop().create_task(
+                self._refresh_once(budget)
+            )
+        return self._exhausted
+
+    def _budget(self) -> int:
         budget = get_settings().elevenlabs_daily_credit_budget
         if not budget or self._sessionmaker is None:
-            return False
+            return 0
         if not os.environ.get("ELEVENLABS_API_KEY"):
-            return False
-        if self._fresh():
-            return self._exhausted
+            return 0
+        return budget
+
+    async def _refresh_once(self, budget: int) -> None:
         async with self._lock:
             if not self._fresh():  # another request may have just refreshed
                 await self._refresh(budget)
-        return self._exhausted
 
     def status(self) -> tuple[date | None, bool, int | None]:
         """(UTC day of the last good reading, budget reached, credits spent
@@ -145,3 +168,32 @@ class ElevenLabsBudget:
                 budget,
             )
         self._exhausted = exhausted
+
+
+async def exclude_from_today(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    credits: int,
+    used_now: int,
+    today: date | None = None,
+) -> None:
+    """Leave a deliberate batch's spend out of today's budget.
+
+    Re-recording the question cache after a voice change spends many days of
+    budget in an hour; counted, it would put every player on the OpenAI voice
+    until midnight UTC. Moving the day's starting reading up by what the batch
+    spent keeps the budget guarding player spend only, with no restart. No
+    reading yet today: ``used_now`` (which already holds the batch) becomes it.
+    """
+    today = today or datetime.now(UTC).date()
+    async with sessionmaker() as session:
+        await session.execute(
+            pg_insert(UsageCounter)
+            .values(
+                subject_id=_SUBJECT, usage_date=today, metric=_METRIC, amount=used_now
+            )
+            .on_conflict_do_update(
+                index_elements=["subject_id", "usage_date", "metric"],
+                set_={"amount": UsageCounter.amount + credits},
+            )
+        )
+        await session.commit()

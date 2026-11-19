@@ -18,9 +18,10 @@ extension QuizViewModel {
     static let quickSkipNoteDuration: Duration = .seconds(4)
 
     /// Whether this evaluation is a skip the quick quiz answers with the note.
-    /// The daily challenge keeps its result card (its crowd strip lives there).
+    /// The daily challenge keeps its result card (its crowd strip lives there);
+    /// a family round (#236) keeps it too, the explanation is the point there.
     func quickGameSkips(_ evaluation: Evaluation) -> Bool {
-        settings.quickGame && activeDaily == nil && evaluation.result == .skipped
+        settings.quickGame && activeDaily == nil && !isFamilySession && evaluation.result == .skipped
     }
 
     func showQuickSkipNote(_ correctAnswer: String) {

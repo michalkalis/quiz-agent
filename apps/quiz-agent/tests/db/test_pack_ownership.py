@@ -98,6 +98,44 @@ async def test_owner_passes_non_owner_and_unknown_pack_denied(factory):
 
 
 @pytest.mark.asyncio
+async def test_refunded_pack_is_no_longer_the_owners_to_play(factory):
+    """#240 (founder 2026-11-18): once Apple refunds a custom pack, nobody
+    plays it — the owner cannot start a new session on it, and every share
+    link is refused (``pack_refunded``). Another pack, even the same owner's,
+    stays playable: a refund takes back exactly what it bought."""
+    from app.shared_quiz.store import SharedQuizStore
+
+    owner = f"owner-{uuid.uuid4().hex[:12]}"
+    refunded_pack, refunded_order = await _seed_owned_pack(factory, owner)
+    kept_pack, kept_order = await _seed_owned_pack(factory, owner)
+    try:
+        async with factory() as s:
+            await s.execute(
+                text(
+                    "UPDATE generation_orders SET status = 'refunded' WHERE id = :oid"
+                ),
+                {"oid": refunded_order},
+            )
+            await s.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await _require_pack_ownership(str(refunded_pack), owner, factory)
+        assert exc.value.status_code == 404
+        assert await _require_pack_ownership(str(kept_pack), owner, factory) == (
+            30,
+            "en",
+        )
+
+        store = SharedQuizStore(factory)
+        assert await store.pack_refunded(str(refunded_pack)) is True
+        assert await store.pack_refunded(str(kept_pack)) is False
+        assert await store.pack_refunded(str(uuid.uuid4())) is False
+    finally:
+        await _cleanup(factory, refunded_order)
+        await _cleanup(factory, kept_order)
+
+
+@pytest.mark.asyncio
 async def test_pack_share_is_owner_only_and_never_grants_the_pack(factory):
     """#232: a pack link reads its snapshotted questions through the link
     alone; it must not turn the friend into an owner. Sharing needs the real

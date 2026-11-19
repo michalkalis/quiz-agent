@@ -9,7 +9,7 @@ lease and optimistic-version rules cover it and any machine can serve it.
 from __future__ import annotations
 
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 
 from quiz_shared.models.participant import Participant
@@ -100,13 +100,17 @@ class RoomService:
         keys: dict[str, str],
         game: RoomGame | None = None,
         allow_pack: bool = False,
+        room_id: str | None = None,
     ) -> tuple[Room, QuizSession]:
         """Make the host's idle session a room. Calling it again for the same
         session returns the same room (a retried request must not fork it).
 
         #232.2: the host's own custom pack plays together once it is finished
         (``allow_pack`` = the shared-quiz switch); one still being made is
-        refused, so a game never has to wait for questions."""
+        refused, so a game never has to wait for questions.
+
+        #240.9: with ``room_id`` (the host's room) the room moves to this
+        session instead of a new room being made (see ``_move``)."""
         async with self.sessions.session_lock(session_id):
             session = await self.sessions.get_session(session_id)
             if session is None or session.user_id != subject_id:
@@ -116,23 +120,32 @@ class RoomService:
                 if room is not None:
                     return room, session
             if session.is_solo_only:
-                raise RoomError(422, "The daily challenge is solo only")
+                raise RoomError(
+                    422,
+                    "A round with kids is solo only"
+                    if session.age_band
+                    else "The daily challenge is solo only",
+                )
             if session.pack_id and not await self._pack_ready(session, allow_pack):
                 raise RoomError(422, "Only a finished pack can be played together")
             if session.phase != SessionPhase.IDLE:
                 raise RoomError(409, "The quiz has already started")
             now = _now()
-            room = Room(
-                room_id=f"r_{secrets.token_hex(8)}",
-                session_id=session_id,
-                host_subject_id=subject_id,
-                join_token=secrets.token_urlsafe(16),
-                net_v4=keys.get("v4"),
-                net_v6=keys.get("v6"),
-                created_at=now,
-                expires_at=now + ROOM_TTL,
-            )
-            await self.store.insert(room)
+            game = game or RoomGame()
+            if room_id:
+                room = await self._move(room_id, session, subject_id, game, now)
+            else:
+                room = Room(
+                    room_id=f"r_{secrets.token_hex(8)}",
+                    session_id=session_id,
+                    host_subject_id=subject_id,
+                    join_token=secrets.token_urlsafe(16),
+                    net_v4=keys.get("v4"),
+                    net_v6=keys.get("v6"),
+                    created_at=now,
+                    expires_at=now + ROOM_TTL,
+                )
+                await self.store.insert(room)
             host = _host(session) or member(session, subject_id)
             if host is None:
                 host = Participant(
@@ -146,14 +159,71 @@ class RoomService:
             host.color = host.color or COLORS[0]
             session.mode = "multiplayer"
             session.room_code = room.room_id
-            session.room_game = game or RoomGame()
+            session.room_game = game
+            # The app's session starts with 30 minutes and nothing in a room
+            # extends it; a game lives as long as its room.
+            session.expires_at = max(session.expires_at, room.expires_at)
             # One picture on several phones is not in the first version.
             session.include_images = False
             await self.sessions.update_session(session)
-            self._emit("room_created", subject_id, session_id, room.room_id)
+            # A moved room was counted when it was made (#240.9).
+            if not room_id:
+                self._emit("room_created", subject_id, session_id, room.room_id)
             if session.pack_id:
                 self._emit("room_with_pack", subject_id, session_id, room.room_id)
             return room, session
+
+    async def _move(
+        self,
+        room_id: str,
+        session: QuizSession,
+        subject_id: str,
+        game: RoomGame,
+        now: datetime,
+    ) -> Room:
+        """#240.9: the host's room moves to their new idle session with
+        everyone in it, so nobody is invited again: "play again" once a game
+        is over, or other content picked in the lobby. The room id, the link
+        and the QR stay; every phone keeps polling the same room and sees the
+        new lobby. Mid-game it is refused (409). The old session drops the
+        room, so a join racing the move fails instead of landing in it."""
+        room = await self.store.get(room_id, now)
+        if room is None or room.host_subject_id != subject_id:
+            raise RoomError(404, "Game not found")
+        if room.session_id == session.session_id:
+            raise RoomError(409, "The game is already in this room")
+        async with self.sessions.session_lock(room.session_id):
+            old = await self.sessions.get_session(room.session_id)
+            if old is None or old.room_game is None:
+                raise RoomError(404, "Game not found")
+            if old.phase not in (SessionPhase.IDLE, SessionPhase.FINISHED):
+                raise RoomError(409, "The game is still running")
+            again = old.phase == SessionPhase.FINISHED
+            session.participants = [
+                Participant(
+                    participant_id=p.participant_id,
+                    user_id=p.user_id,
+                    display_name=p.display_name,
+                    color=p.color,
+                    is_host=p.is_host,
+                )
+                for p in old.participants
+            ]
+            game.version_base = old._store_version + old.room_game.version_base + 1
+            game.rematch = again or old.room_game.rematch
+            old.room_code = None
+            await self.sessions.update_session(old)
+        expires_at = max(room.expires_at, now + ROOM_TTL)
+        await self.store.move(room.room_id, session.session_id, expires_at)
+        if again:
+            self._emit(
+                "room_rematch",
+                subject_id,
+                session.session_id,
+                room.room_id,
+                players=len(session.participants),
+            )
+        return replace(room, session_id=session.session_id, expires_at=expires_at)
 
     async def _pack_ready(self, session: QuizSession, allow_pack: bool) -> bool:
         if not allow_pack or self.pack_status is None:

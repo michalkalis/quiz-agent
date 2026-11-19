@@ -52,6 +52,13 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Deterministic first pass (copy-style rules); exits 1 only on error-level flags
+      # (Russian letters or words, Latin lookalikes in uk). Warnings stay in the log. main has 0 errors.
+      - if: steps.changed.outputs.run == 'true'
+        run: |
+          python3 scripts/copy_review/extract.py "$RUNNER_TEMP/rows.jsonl"
+          python3 scripts/copy_review/checks.py "$RUNNER_TEMP/rows.jsonl" "$RUNNER_TEMP/flags.jsonl"
+
       - if: steps.changed.outputs.run == 'true'
         uses: anthropics/claude-code-action@v1
         with:
@@ -59,8 +66,9 @@ jobs:
           prompt: |
             Copy review of PR ${{ github.repository }}#${{ github.event.pull_request.number }}.
             Read docs/design/copy-style.md. Run `git diff origin/${{ github.base_ref }}...HEAD` and review ONLY user-facing
-            texts this PR adds or changes (sk, cs, en values in .xcstrings files, voice hints and spoken prompts in Swift,
-            crowd lines in apps/quiz-agent/app/daily_challenge/copy.py).
+            texts this PR adds or changes (sk, cs, uk, en values in .xcstrings files, voice hints and spoken prompts in Swift,
+            crowd lines in apps/quiz-agent/app/daily_challenge/copy.py, including its uk lines). Apply the Ukrainian
+            rules 21 to 26 to uk texts (informal «ти», imperative buttons, no Russian, «вікторина», natural wording).
             Ignore code, comments and unchanged texts. For each objective violation of a rule in copy-style.md, post one
             inline comment on the changed line naming the rule and giving the exact replacement for every affected
             language. Taste and tone are not findings. If there are no violations, post nothing.

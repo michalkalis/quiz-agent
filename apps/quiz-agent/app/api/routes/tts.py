@@ -53,7 +53,7 @@ async def synthesize_metered(
     if language:
         text = normalize_numbers_for_tts(text, language)
     audio_data = await tts_service.synthesize(
-        text=text, voice=voice, use_cache=True, billing=billing
+        text=text, voice=voice, use_cache=True, billing=billing, language=language
     )
     if metered and billing.billed_chars:
         await usage_tracker.add_tts_chars(subject_id, billing.billed_chars)
@@ -189,7 +189,9 @@ async def question_audio_response(
         # (the cached display text keeps its numerals).
         tts_text = normalize_numbers_for_tts(speech_text, session.language)
 
-        audio_data = await tts_service.synthesize_question(question_text=tts_text)
+        audio_data = await tts_service.synthesize_question(
+            question_text=tts_text, language=session.language
+        )
 
         return Response(
             content=audio_data,
@@ -308,7 +310,9 @@ async def get_session_feedback_audio(
         from ...translation import get_feedback_message
 
         feedback_text = get_feedback_message(result, session.language)
-        audio_data = await tts_service.synthesize(feedback_text, use_cache=True)
+        audio_data = await tts_service.synthesize(
+            feedback_text, use_cache=True, language=session.language
+        )
 
         return Response(
             content=audio_data,

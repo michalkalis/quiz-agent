@@ -253,7 +253,7 @@ extension CommandEngineSelection {
         switch self {
         case .speechEnglish:
             return SpeechTranscriberCommandAdapter(locale: Locale(identifier: localeIdentifier))
-        case .dictationEnglish, .dictationSlovak, .dictationCzech:
+        case .dictationEnglish, .dictationSlovak, .dictationCzech, .dictationUkrainian:
             return DictationTranscriberCommandAdapter(
                 locale: Locale(identifier: localeIdentifier),
                 language: commandLanguage

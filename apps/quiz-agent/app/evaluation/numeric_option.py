@@ -12,7 +12,8 @@ words ("tisíc", "milióny", "rokov", "%", "km") and approximators / connectors
 ("približne", "přibližně", "about", "cca", "viac ako") are removed. "Apollo 11"
 keeps "apollo", so it is a name, not a number.
 
-All vocabulary is folded (lowercase, no diacritics) and covers sk / cs / en,
+All vocabulary is folded (lowercase, no diacritics; Ukrainian keeps й and ї
+and loses its apostrophe, "п'ять" → "пять") and covers sk / cs / en / uk,
 because the scheme is computed on whatever language the options are served in.
 """
 
@@ -44,11 +45,25 @@ _NUMBER_WORDS = frozenset(
     milion miliony milionov milionu miliona milionmi million millions mln
     miliarda miliardy miliard miliardu billion billions mld bn
     bilion biliony bilionov bilionu trillion trillions
+    нуль нуля один одна одне одного одної однієї одному одній одну одним однією
+    два дві двох двом двома три трьох трьом трьома чотири чотирьох чотирьом чотирма
+    пять пяти пятьох шість шести шістьох сім семи сімох вісім восьми вісьмох
+    девять девяти десять десяти одинадцять одинадцяти дванадцять дванадцяти
+    тринадцять тринадцяти чотирнадцять чотирнадцяти пятнадцять пятнадцяти
+    шістнадцять шістнадцяти сімнадцять сімнадцяти вісімнадцять вісімнадцяти
+    девятнадцять девятнадцяти двадцять двадцяти тридцять тридцяти сорок сорока
+    пятдесят пятдесяти шістдесят шістдесяти сімдесят сімдесяти вісімдесят
+    вісімдесяти девяносто девяноста сто ста двісті двохсот триста трьохсот
+    чотириста чотирьохсот пятсот пятисот шістсот шестисот сімсот семисот
+    вісімсот восьмисот девятсот девятисот сотня сотні сотень півтора півтори
+    тисяча тисячі тисяч тисячу тис мільйон мільйона мільйони мільйонів млн
+    мільярд мільярда мільярди мільярдів млрд трильйон трильйона трильйони
+    трильйонів трлн
     """.split()
 )
 # Real words as often as numbers ("Pat", "Pet", "Set", sk "pol"): a number
 # only beside another number-ish token ("pět set", "pol milióna", "asi päť").
-_WEAK_NUMBER_WORDS = frozenset("pat pet set ste pol half".split())
+_WEAK_NUMBER_WORDS = frozenset("pat pet set ste pol half пів".split())
 # Units and measure words: a number's company, never a number on their own.
 _UNIT_WORDS = frozenset(
     """
@@ -69,6 +84,16 @@ _UNIT_WORDS = frozenset(
     stupen stupne stupnov stupnu degree degrees c f
     ludi lidi people obyvatelov obyvatel osob osoby persons
     krat times kus kusy kusov kusu ks x k
+    рік роки років року році роком роках р рр літ місяць місяці місяців місяця
+    тиждень тижні тижнів тижня день дні днів дня доба доби діб година години
+    годин годину год хвилина хвилини хвилин хвилину хв секунда секунди секунд
+    секунду сек с століття століть ст тисячоліття тисячоліть відсоток відсотки
+    відсотків відсотка процент процентів гривня гривні гривень грн євро долар
+    долари доларів долара дол м км см мм метр метри метрів метра кілометр
+    кілометри кілометрів кілометра сантиметр сантиметрів міліметр міліметрів
+    миля милі миль г кг т тонна тонни тонн грам грамів кілограм кілограмів л мл
+    літр літри літрів літра градус градуси градусів градуса людина людини люди
+    людей осіб особи особа мешканців жителів раз рази разів штук штуки шт
     """.split()
 )
 # Approximators and connectors that carry no answer of their own.
@@ -80,6 +105,9 @@ _FILLER_WORDS = frozenset(
     about around approximately approx roughly circa ca almost nearly over under
     more less than at least most exactly just only up to from between and an in
     ago per
+    близько приблизно орієнтовно майже понад більше менше ніж як щонайменше
+    щонайбільше принаймні рівно точно лише тільки лиш десь від до з із зі по між
+    і та й на у в за над під через біля
     """.split()
 )
 # Glued suffixes on a digit run: "3rd", "19th"; units cover "5km", "1990s", "20x".

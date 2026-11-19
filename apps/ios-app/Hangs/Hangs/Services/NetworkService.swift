@@ -12,7 +12,12 @@ import Sentry
 
 /// Protocol for network operations
 protocol NetworkServiceProtocol: Sendable {
-    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?) async throws -> QuizSession
+    /// `ageBand` (#236): a family round of that band; `categories` then holds
+    /// its one `family-*` topic. Nil = an ordinary quiz (the key is left out).
+    func createSession(maxQuestions: Int, difficulty: String, language: String, categories: [String], userId: String?, includeImages: Bool, skipLocalQuestions: Bool, packId: String?, ageBand: String?) async throws -> QuizSession
+    /// #236: `GET /family/topics?language=` — per band the topics with a whole
+    /// round in that language for this build's channel; empty with the switch off.
+    func familyTopics(language: String) async throws -> FamilyTopicsResponse
     /// #174: how many unseen questions this configuration still has, asked
     /// BEFORE the session is created. Read-only and cheap (one COUNT server
     /// side) so it can sit on the tap-to-start path.
@@ -91,10 +96,21 @@ protocol NetworkServiceProtocol: Sendable {
     /// #232: `GET /shared-quizzes/{token}/results` — the comparison as the
     /// server filters it for this viewer.
     func sharedQuizResults(token: String) async throws -> SharedQuizResults
+    /// #239: `GET /daily-challenge/crew` — everyone the player swapped a
+    /// daily link with, by rarity points this week. Empty = no crew yet.
+    func fetchDailyCrew(date: String, language: String) async throws -> DailyCrew
+    /// #239: `DELETE /daily-challenge/crew/{member_id}` — both stop seeing
+    /// each other in the table.
+    func removeDailyCrewMember(memberId: String) async throws
 }
 
-/// #232: test doubles that never share answer like the server with the switch off.
+/// #232/#239: test doubles that never share answer like the server with the switch off.
 extension NetworkServiceProtocol {
+    /// #236: like the server with the switch off.
+    func familyTopics(language _: String) async throws -> FamilyTopicsResponse {
+        FamilyTopicsResponse(bands: [])
+    }
+
     func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
         throw NetworkError.sharedQuizUnavailable(.notFound)
     }
@@ -105,6 +121,15 @@ extension NetworkServiceProtocol {
 
     func sharedQuizResults(token _: String) async throws -> SharedQuizResults {
         throw NetworkError.sharedQuizUnavailable(.notFound)
+    }
+
+    /// #239: like the server with the daily challenge off.
+    func fetchDailyCrew(date _: String, language _: String) async throws -> DailyCrew {
+        throw NetworkError.serverError(statusCode: 404, message: "Daily challenge is off")
+    }
+
+    func removeDailyCrewMember(memberId _: String) async throws {
+        throw NetworkError.serverError(statusCode: 404, message: "Daily challenge is off")
     }
 }
 
@@ -285,6 +310,16 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.packExhausted
         }
 
+        // #236: a family topic with no question in this language (it thinned
+        // out after the topics list was cached). The app hides the topic.
+        if httpResponse.statusCode == 409,
+           let coded = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data),
+           coded.detail.code == "family_topic_empty"
+        {
+            logHTTPError(endpoint: endpointPath, status: 409, code: coded.detail.code)
+            throw NetworkError.familyTopicEmpty
+        }
+
         // #232: a shared quiz that cannot be created or started; the code
         // decides what the player is told. A 404 also means the switch is off.
         if endpointPath.hasPrefix("/api/v1/shared-quizzes"), [404, 409].contains(httpResponse.statusCode) {
@@ -328,7 +363,7 @@ actor NetworkService: NetworkServiceProtocol {
 
     // MARK: - Session Management
 
-    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, skipLocalQuestions: Bool = false, packId: String? = nil) async throws -> QuizSession {
+    func createSession(maxQuestions: Int = 10, difficulty: String = "medium", language: String = "en", categories: [String] = [], userId: String? = nil, includeImages: Bool = false, skipLocalQuestions: Bool = false, packId: String? = nil, ageBand: String? = nil) async throws -> QuizSession {
         let endpoint = baseURL.appendingPathComponent("/api/v1/sessions")
 
         let base = baseURL
@@ -377,6 +412,11 @@ actor NetworkService: NetworkServiceProtocol {
             body["pack_id"] = packId
         }
 
+        // #236: a family round; the server sets its size, difficulty and images.
+        if let ageBand {
+            body["age_band"] = ageBand
+        }
+
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let endpointPath = "/api/v1/sessions"
@@ -389,6 +429,25 @@ actor NetworkService: NetworkServiceProtocol {
             decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(QuizSession.self, from: data)
         }
+    }
+
+    func familyTopics(language: String) async throws -> FamilyTopicsResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/family/topics"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        components.queryItems = [URLQueryItem(name: "language", value: language)]
+        guard let url = components.url else { throw NetworkError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Same header contract as createSession: the server shows a topic only
+        // when this build's channel has a whole round of it.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+
+        let data = try await performRequestData(request, endpointPath: "/api/v1/family/topics")
+        return try JSONDecoder().decode(FamilyTopicsResponse.self, from: data)
     }
 
     func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
@@ -1041,6 +1100,9 @@ enum NetworkError: LocalizedError {
     case packExhausted
     /// HTTP 404/409 from a shared-quiz route (#232).
     case sharedQuizUnavailable(SharedQuizUnavailable)
+    /// HTTP 409 `family_topic_empty` (#236): the family topic has no question
+    /// in this language. Not a failure — Home hides the topic.
+    case familyTopicEmpty
 
     var errorDescription: String? {
         switch self {
@@ -1067,6 +1129,8 @@ enum NetworkError: LocalizedError {
             return String(localized: "You've played every question in this pack.", bundle: .interface, locale: .interface, comment: "A custom pack has nothing left this phone has not played")
         case let .sharedQuizUnavailable(reason):
             return reason.message
+        case .familyTopicEmpty:
+            return String(localized: "This topic has no questions in your quiz language yet.", bundle: .interface, locale: .interface, comment: "#236 family mode: the chosen topic has no question in the quiz language")
         }
     }
 }

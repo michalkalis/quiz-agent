@@ -12,8 +12,19 @@ from __future__ import annotations
 
 # Emitted by this API, where the truth lives.
 SERVER_EVENTS: dict[str, frozenset[str]] = {
+    # #236 family round: age_band = the round's content setting (never a
+    # property of the player); repeats = it replays questions played before.
     "quiz_started": frozenset(
-        {"category", "language", "difficulty", "mode", "is_pack", "max_questions"}
+        {
+            "category",
+            "language",
+            "difficulty",
+            "mode",
+            "is_pack",
+            "max_questions",
+            "age_band",
+            "repeats",
+        }
     ),
     "answer_evaluated": frozenset(
         {
@@ -33,11 +44,17 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
             # #212.2: graded in a multiplayer room
             "multiplayer",
             "room_id",
+            # #236: the family round's age band
+            "age_band",
         }
     ),
-    "quiz_completed": frozenset({"reason", "questions_asked", "score", "is_pack"}),
+    "quiz_completed": frozenset(
+        {"reason", "questions_asked", "score", "is_pack", "age_band"}
+    ),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
-    "transcription_failed": frozenset({"reason", "question_id"}),
+    # #240: reason = why the voice answer was turned away (see the doc);
+    # transcript_chars = its length, never the text.
+    "transcription_failed": frozenset({"reason", "question_id", "transcript_chars"}),
     # #212.5: game together. Under the host (created, finished) or the
     # guest (joined; via = nearby | qr | link).
     "room_created": frozenset({"room_id"}),
@@ -45,19 +62,33 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     "room_finished": frozenset({"room_id", "reason", "players", "questions_asked"}),
     # #232.2: the host's finished custom pack became a game together.
     "room_with_pack": frozenset({"room_id"}),
+    # #240.9: the first question of a game together was served (players incl.
+    # the host; rematch = "play again" with the same people), and the host
+    # started such a "play again" after a finished game.
+    "room_started": frozenset({"room_id", "players", "rematch"}),
+    "room_rematch": frozenset({"room_id", "players"}),
     # #232: share a quiz by link. kind = round | daily | pack; opened under the
     # player who starts it (source app) or anonymously from the website's play
     # page (source web); finished once per session that recorded a result.
     "quiz_shared": frozenset({"kind", "language", "question_count"}),
     "shared_quiz_opened": frozenset({"kind", "source"}),
     "shared_quiz_finished": frozenset({"kind", "players", "questions_asked"}),
+    # #239: the daily crew. viewed = the week's table was loaded (members =
+    # people in it besides the player); removed = one person taken out.
+    "daily_crew_viewed": frozenset({"members"}),
+    "daily_crew_member_removed": frozenset(),
     "store_event": frozenset(
         {"type", "product_id", "environment", "store", "period_type"}
     ),
 }
 
-# Posted by the app — only what the server cannot observe itself.
-CLIENT_EVENTS: dict[str, frozenset[str]] = {
+# #240.9: keys every app event may carry. build_channel = app_store |
+# testflight | debug, so store players are never read next to testers.
+CLIENT_COMMON_PROPERTIES = frozenset({"build_channel"})
+
+# Posted by the app — only what the server cannot observe itself. Each event
+# also allows CLIENT_COMMON_PROPERTIES (merged into CLIENT_EVENTS below).
+_CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "app_opened": frozenset({"launch"}),
     "onboarding_finished": frozenset({"outcome", "step"}),
     "quiz_context": frozenset(
@@ -70,7 +101,9 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "quick_game",
         }
     ),
-    "quiz_abandoned": frozenset({"questions_answered", "phase"}),
+    # #240.9: reason = end_quiz | end_with_results | error_screen; question =
+    # the 1-based question on screen.
+    "quiz_abandoned": frozenset({"questions_answered", "phase", "reason", "question"}),
     "answer_submitted": frozenset(
         {"input_mode", "question_id", "is_retry", "latency_ms"}
     ),
@@ -110,6 +143,11 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
     # #224.4: the host stayed on a reveal (paused) or let the game go on.
     "room_pause_changed": frozenset({"paused", "question"}),
     "room_guest_read_aloud": frozenset({"on", "via"}),
+    # #240.9: the host's phone closed a game together (reason = finished |
+    # host_left | never_started | expired), and the share sheet opened on the
+    # final ranking (role = host | guest).
+    "room_closed": frozenset({"reason", "players", "questions"}),
+    "room_ranking_shared": frozenset({"role", "players"}),
     # #224.6: a step on the Home category deck (to = category id or "all"), and
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),
@@ -148,11 +186,32 @@ CLIENT_EVENTS: dict[str, frozenset[str]] = {
             "mic_data_source",
             "mic_polar_pattern",
             "rejected_count",
+            # #240.9: trigger = auto | tap | voice_command | retry | rerecord |
+            # barge_in; mic_open_delay_ms = question answerable → mic open;
+            # peak_db = loudest level (dBFS); mic_permission = granted |
+            # denied | undetermined.
+            "trigger",
+            "mic_open_delay_ms",
+            "peak_db",
+            "mic_permission",
         }
     ),
+    # #236: the "S deťmi" mode on Home. band = the content setting
+    # (kids_4_6 | kids_7_9 | kids_10_12), never a person's age; topic = the
+    # family-* topic key. first_time = the band sheet on the first flip.
+    "family_mode_changed": frozenset({"enabled"}),
+    "family_band_selected": frozenset({"band", "first_time"}),
+    "family_topic_selected": frozenset({"band", "topic"}),
+    "family_topic_empty": frozenset({"band", "topic"}),
+    # action = other_topic | home, on the end-of-round screen of a band round.
+    "family_round_end_action": frozenset({"action"}),
     "voice_experiment_guard": frozenset(
         {"flag", "reason", "from_route", "to_route", "exp_gen"}
     ),
+}
+
+CLIENT_EVENTS: dict[str, frozenset[str]] = {
+    name: keys | CLIENT_COMMON_PROPERTIES for name, keys in _CLIENT_EVENT_KEYS.items()
 }
 
 # Property values are short scalars only: a long string is either a bug or free

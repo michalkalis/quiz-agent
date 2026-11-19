@@ -91,3 +91,36 @@ def test_pairs_of_two_anchored_rows_are_not_rejudged():
     new = _item("new")
     pairs = cleanup.candidate_pairs([en1, en2, new])
     assert {(i, j) for i, j, _, _ in pairs} == {(0, 2), (1, 2)}
+
+
+def test_approved_ukrainian_rows_do_not_stop_the_run(tmp_path, monkeypatch):
+    """#231: approved uk rows exist in prod; a language outside
+    NATIVE_LANGUAGES makes load_pools refuse, which blocked dedup for every
+    language. uk rows form their own pool, compared like sk/cs."""
+    import asyncio
+    from types import SimpleNamespace
+
+    def row(qid, lang):
+        return SimpleNamespace(
+            id=qid, language=lang, question=f"Питання {qid}?", correct_answer="Київ",
+            possible_answers=None, created_at=T0, approved_languages=[],
+            review_status="approved", emb="[1.0, 0.0]", emb_qa=None,
+        )
+
+    class _Result(list):
+        def all(self):
+            return list(self)
+
+    class _Conn:
+        def __init__(self):
+            self.calls = 0
+
+        async def execute(self, stmt, params=None):
+            self.calls += 1
+            if self.calls == 2:  # the questions query (after ratings)
+                return _Result([row("en1", "en"), row("uk1", "uk"), row("uk2", "uk")])
+            return _Result()
+
+    monkeypatch.setattr(cleanup.llm_factory, "openai_client", lambda **kw: object())
+    pools = asyncio.run(cleanup.load_pools(_Conn(), tmp_path / "cache.json", False))
+    assert [it.id for it in pools["uk"]] == ["uk1", "uk2"]

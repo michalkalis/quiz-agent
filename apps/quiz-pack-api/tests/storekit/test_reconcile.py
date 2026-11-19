@@ -280,6 +280,7 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
             "prompt": "Techno in Berlin", "category": None, "theme": None, "target_count": 30,
             "language": "cs", "generation_mode": None,
             "created_at": SINCE + timedelta(hours=2),
+            "audience": "kids_7_9", "difficulty": "easy", "prompt_key": "techno in berlin",
         }
     }
 
@@ -328,6 +329,12 @@ async def test_recreates_lost_orders_from_the_source_and_reports_the_rest(
     # Apple's environment travels with the rebuilt order (#207 207.5): an App
     # Store purchase must stay off the mba backup's Claude subscription.
     assert order.storekit_environment == "Production"
+    # What the buyer chose survives the restore (#240): a parent's order for a
+    # child band must regenerate as a kids' pack at the picked difficulty, not
+    # as an adult mixed-difficulty pack; the reuse key keeps #225 matching it.
+    assert (order.audience, order.difficulty, order.prompt_key) == (
+        "kids_7_9", "easy", "techno in berlin",
+    )
     job =await session.get(GenerationJob, order.job_id)
     assert job is not None and job.status == "queued"
     pool.enqueue_job.assert_awaited_once()
@@ -346,7 +353,9 @@ async def test_source_rows_read_the_pre_restore_orders(session: AsyncSession) ->
     # The source query is raw SQL against another database; it must return
     # every column a recreated order needs, and skip admin and CLI orders.
     await truncate_order_graph(session)
-    session.add(_order("tx-after", "user-1"))
+    kids = _order("tx-after", "user-1")
+    kids.audience, kids.difficulty, kids.prompt_key = "kids_7_9", "easy", "jazz in prague"
+    session.add(kids)
     session.add(_order(f"{ADMIN_TX_PREFIX}x", "user-1"))
     cli = _order("cli-0123456789ab", None)
     cli.product_id = "pack_cli"
@@ -359,5 +368,10 @@ async def test_source_rows_read_the_pre_restore_orders(session: AsyncSession) ->
     assert set(rows) == {"tx-after"}
     assert rows["tx-after"]["prompt"] == "Jazz in Prague"
     assert rows["tx-after"]["user_id"] == "user-1"
+    # The buyer's audience and difficulty (#240) and the reuse key travel too.
+    assert (
+        rows["tx-after"]["audience"], rows["tx-after"]["difficulty"],
+        rows["tx-after"]["prompt_key"],
+    ) == ("kids_7_9", "easy", "jazz in prague")
     await truncate_order_graph(session)
 

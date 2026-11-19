@@ -44,8 +44,18 @@ ENTITLEMENT_SYNCS = "entitlement_syncs"
 _ANSWER_ATTEMPTS = "answer_attempts"
 
 # A recording whose length cannot be read (not a WAV: legacy m4a builds) is
-# charged as the longest answer iOS records (it hard-stops at 15 s).
+# charged as the longest answer iOS records (it hard-stops at 15 s)...
 UNKNOWN_CLIP_SECONDS = 15
+# ...or by its size, whichever is more. The header is the client's word, and
+# OpenAI bills the audio that is really there (#240 audit): a compressed file is
+# charged as if encoded at 32 kbit/s, the rate of the only compressed recorder
+# iOS ships (AudioService, AAC 16 kHz), so an honest clip pays what it did and a
+# 5 MB low-bitrate file pays ~22 min instead of 15 s.
+COMPRESSED_BYTES_PER_SECOND = 4000
+# A PCM WAV is charged from its sample format, never from the byte rate the
+# header states, and never faster than 48 kHz stereo 16-bit.
+MAX_PCM_BYTES_PER_SECOND = 48000 * 2 * 2
+_PCM_FORMATS = (1, 3)  # integer PCM, IEEE float
 
 
 def answer_attempts(question_id: str) -> str:
@@ -91,33 +101,46 @@ class DailyCapExceeded(Exception):
 
 
 def recording_seconds(audio_file: BinaryIO) -> int:
-    """Length of an uploaded answer in whole seconds, from its WAV header.
+    """Length of an uploaded answer in whole seconds, never less than the
+    audio actually uploaded.
 
-    Shipped builds upload 16-bit PCM WAV; the length is the ``data`` chunk over
-    the ``fmt`` chunk's byte rate. Anything unreadable (legacy m4a, a broken
-    header) is charged ``UNKNOWN_CLIP_SECONDS``. Reads chunk headers only and
-    leaves the file at offset 0.
+    Shipped builds upload 16-bit PCM WAV; the length is every byte from the
+    ``data`` chunk on over the rate the ``fmt`` chunk's sample format implies
+    (the stated byte rate is only believed when it is higher-charging).
+    Anything else (legacy m4a, a compressed or broken WAV) is charged by size,
+    at least ``UNKNOWN_CLIP_SECONDS``. Reads chunk headers only and leaves the
+    file at offset 0.
     """
     try:
         total = audio_file.seek(0, 2)
+        by_size = max(
+            UNKNOWN_CLIP_SECONDS, math.ceil(total / COMPRESSED_BYTES_PER_SECOND)
+        )
         audio_file.seek(0)
         if audio_file.read(12)[8:12] != b"WAVE":
-            return UNKNOWN_CLIP_SECONDS
+            return by_size
         pos, byte_rate = 12, 0
         while pos + 8 <= total:
             audio_file.seek(pos)
-            header = audio_file.read(20)
+            header = audio_file.read(24)
             chunk_id = header[:4]
             (size,) = struct.unpack("<I", header[4:8])
             # fmt body: format(2) channels(2) sample rate(4) byte rate(4)
-            if chunk_id == b"fmt " and size >= 12 and len(header) == 20:
-                (byte_rate,) = struct.unpack("<I", header[16:20])
+            # block align(2) bits per sample(2)
+            if chunk_id == b"fmt " and size >= 16 and len(header) == 24:
+                fmt, channels, sample_rate, stated, _, bits = struct.unpack(
+                    "<HHIIHH", header[8:24]
+                )
+                pcm_rate = sample_rate * channels * bits // 8
+                if fmt in _PCM_FORMATS and pcm_rate > 0:
+                    byte_rate = min(pcm_rate, stated or pcm_rate)
+                    byte_rate = min(byte_rate, MAX_PCM_BYTES_PER_SECOND)
             elif chunk_id == b"data" and byte_rate > 0:
-                # A streamed WAV may declare 0xFFFFFFFF; trust the bytes present.
-                present = min(size, total - pos - 8)
-                return max(1, math.ceil(present / byte_rate))
+                # Every byte after the data header counts, whatever size the
+                # chunk declares (a streamed WAV may say 0xFFFFFFFF).
+                return max(1, math.ceil((total - pos - 8) / byte_rate))
             pos += 8 + size + (size & 1)
-        return UNKNOWN_CLIP_SECONDS
+        return by_size
     finally:
         audio_file.seek(0)
 

@@ -21,7 +21,9 @@ built here, declined in the case the following word asks for:
 Ukrainian (#231) writes dates and centuries without the period ("8 листопада",
 "19 століття"), so a number before a genitive month or a century noun is the
 ordinal there ("восьмого листопада", "дев'ятнадцятого століття"); "N." works
-as in sk/cs. Tens stay cardinal in compounds ("двадцять перший").
+as in sk/cs. Tens stay cardinal in compounds ("двадцять перший"). The
+Ukrainian-only passes (years, suffixes "1-го", Roman centuries) live in
+``ordinals_uk``.
 
 Deterministic text transform only; the displayed text keeps its digits.
 """
@@ -34,6 +36,9 @@ import re
 M_NOM, F_NOM, N_NOM = "m_nom", "f_nom", "n_nom"
 GEN, DAT, LOC, INS = "gen", "dat", "loc", "ins"
 F_OBL, F_ACC, F_INS, PL_GEN = "f_obl", "f_acc", "f_ins", "pl_gen"
+# uk only: its fem dat/loc ("п'ятій") differs from the genitive ("п'ятої"), and
+# suffixes name plural forms ("1990-ті", "1990-ми").
+F_LOC, PL_NOM, PL_INS = "f_loc", "pl_nom", "pl_ins"
 
 # fmt: off
 # Ordinal stems for 1–10, the teens, the tens and 100 (+ whether the stem ends
@@ -79,10 +84,12 @@ _UK_STEMS = {
     70: "сімдесят", 80: "вісімдесят", 90: "дев'яност", 100: "сот",
 }
 _UK_HARD = {M_NOM: "ий", F_NOM: "а", N_NOM: "е", GEN: "ого", DAT: "ому", LOC: "ому",
-            INS: "им", F_OBL: "ої", F_ACC: "у", F_INS: "ою", PL_GEN: "их"}
+            INS: "им", F_OBL: "ої", F_ACC: "у", F_INS: "ою", PL_GEN: "их",
+            F_LOC: "ій", PL_NOM: "і", PL_INS: "ими"}
 _UK_TRETII = {M_NOM: "третій", F_NOM: "третя", N_NOM: "третє", GEN: "третього",
               DAT: "третьому", LOC: "третьому", INS: "третім", F_OBL: "третьої",
-              F_ACC: "третю", F_INS: "третьою", PL_GEN: "третіх"}
+              F_ACC: "третю", F_INS: "третьою", PL_GEN: "третіх",
+              F_LOC: "третій", PL_NOM: "треті", PL_INS: "третіми"}
 # Tens stay cardinal before the ordinal unit: "двадцять перший".
 _UK_TENS = {20: "двадцять", 30: "тридцять", 40: "сорок", 50: "п'ятдесят",
             60: "шістдесят", 70: "сімдесят", 80: "вісімдесят", 90: "дев'яносто"}
@@ -160,11 +167,6 @@ _JOINERS = frozenset("a alebo aj i až či nebo і й та або чи".split())
 # capital means the period ended a sentence). A word followed by a colon is a
 # label ("a: 5. b: 7." — MCQ options read aloud), not what the number counts.
 _ORDINAL_RE = re.compile(r"(?<![\d.,])(\d{1,3})\.(?=\s+([^\W\d_]))(?!\s+\w+:)")
-_UK_NOUN_ORDINAL_RE = re.compile(r"(?<![\d.,])(\d{1,3})(\s+)([^\W\d_]+)")
-_UK_MONTH_NOMINATIVES = frozenset(
-    "січень лютий березень квітень травень червень липень серпень вересень "
-    "жовтень листопад грудень".split()
-)
 _WORD_RE = re.compile(r"[^\W\d_]+|\d+\.")
 # A numeric date "1. 1. 2026" / "8.5.1945": day + month, read as words.
 _NUMERIC_DATE_RE = re.compile(r"(?<![\d.,])(\d{1,2})\.\s?(\d{1,2})\.(?=\s|\d|$)")
@@ -226,64 +228,8 @@ def _case_for(language: str, following: list[str], preceding: str | None) -> str
     return M_NOM
 
 
-# uk years: "у 1969 році" is an ordinal adjective ("дев'ятому"), unlike sk/cs
-# "v roku 1969" (cardinal). The noun after the year sets the case; a year after
-# a genitive month ("8 листопада 1945") is genitive. Round hundreds stay digits.
-_UK_HUNDRED_STEMS = {
-    1: "сот",
-    2: "двохсот",
-    3: "трьохсот",
-    4: "чотирьохсот",
-    5: "п'ятисот",
-    6: "шестисот",
-    7: "семисот",
-    8: "восьмисот",
-    9: "дев'ятисот",
-}
-_UK_YEAR_NOUNS = {"рік": M_NOM, "року": GEN, "році": LOC, "роком": INS}
-_UK_YEAR_RE = re.compile(r"(?<![\d.,])(1\d{3}|20\d{2})(?=(\s+)([^\W\d_]+))")
-_UK_DATE_YEAR_RE = re.compile(
-    r"(?<=\s)(?P<month>[^\W\d_]+)(?P<gap>\s+)(?P<year>1\d{3}|20\d{2})(?![\d.,]\d)"
-)
-
-
-def uk_year_words(n: int, case: str) -> str | None:
-    """1969 → "тисяча дев'ятсот шістдесят дев'ятий" in ``case``; a round year
-    fuses into one word: 1900 → "тисяча дев'ятисотий", 2000 → "двохтисячний"."""
-    if not (1000 <= n <= 2099):
-        return None
-    if n % 100 == 0:
-        ending = _UK_HARD[case]
-        if n == 2000:
-            return f"двохтисячн{ending}"
-        if n == 1000:
-            return f"тисячн{ending}"
-        return f"тисяча {_UK_HUNDRED_STEMS[n // 100 - 10]}{ending}"
-    from num2words import num2words
-
-    head = num2words(n - n % 100, lang="uk").replace("одна тисяча", "тисяча")
-    return f"{head} {ordinal_words(n % 100, 'uk', case)}"
-
-
-def _spell_uk_years(text: str) -> str:
-    def by_noun(match: re.Match) -> str:
-        case = _UK_YEAR_NOUNS.get(match.group(3).lower())
-        spelled = uk_year_words(int(match.group(1)), case) if case else None
-        return spelled or match.group(0)
-
-    def after_month(match: re.Match) -> str:
-        if match.group("month").lower() not in _MONTHS_GENITIVE["uk"]:
-            return match.group(0)
-        spelled = uk_year_words(int(match.group("year")), GEN)
-        if not spelled:
-            return match.group(0)
-        return f"{match.group('month')}{match.group('gap')}{spelled}"
-
-    return _UK_DATE_YEAR_RE.sub(after_month, _UK_YEAR_RE.sub(by_noun, text))
-
-
 def spell_ordinals(text: str, language: str) -> str:
-    """Replace "N." ordinals in sk/cs ``text`` with declined words."""
+    """Replace "N." ordinals in sk/cs/uk ``text`` with declined words."""
     if language not in ("sk", "cs", "uk"):
         return text
 
@@ -307,20 +253,9 @@ def spell_ordinals(text: str, language: str) -> str:
         tail = " " if rest[:1].isdigit() else ""
         return f"{ordinal_words(day, language, GEN)} {month_word}{tail}"
 
-    def replace_noun(match: re.Match) -> str:
-        # uk: "8 листопада", "19 століття": no period, the noun marks the ordinal.
-        n, word = int(match.group(1)), match.group(3)
-        case = _KNOWN_NOUNS["uk"].get(word.lower())
-        is_month = word.lower() in _MONTHS_GENITIVE["uk"]
-        if case is None or word.lower() in _UK_MONTH_NOMINATIVES:
-            return match.group(0)
-        if is_month and not 1 <= n <= 31:
-            return match.group(0)
-        spelled = ordinal_words(n, "uk", case)
-        return f"{spelled}{match.group(2)}{word}" if spelled else match.group(0)
-
     text = _NUMERIC_DATE_RE.sub(replace_date, text)
     if language == "uk":
-        text = _UK_NOUN_ORDINAL_RE.sub(replace_noun, text)
-        text = _spell_uk_years(text)
+        from .ordinals_uk import spell_uk_ordinals  # it builds on this module
+
+        text = spell_uk_ordinals(text)
     return _ORDINAL_RE.sub(replace, text)

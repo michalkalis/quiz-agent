@@ -28,6 +28,7 @@ from ..db.models import (
     AnalyticsEvent,
     AnonymousIdentity,
     DailyChallengePlay,
+    DailyCrewRemoval,
     DailyUsage,
     Feedback,
     PlayerRecap,
@@ -150,16 +151,34 @@ async def resolve_anonymous(
 
     Anonymous users have a server-side identity (and data) from first launch, so
     GDPR erasure / App Store 5.1.1(v) deletion and the Art. 20 export must work
-    without signing in."""
+    without signing in.
+
+    A ``users.id`` is never an anon, even though starting a quiz upserts an
+    identity row for it too (``identity._touch_identity`` runs for every bearer):
+    without this check a signed-in player's deletion took the anon branch and
+    left the account alive (#239)."""
     if not subject.authenticated or not subject.subject_id:
         return None
-    return (
+    anon = (
         await session.execute(
             select(AnonymousIdentity).where(
                 AnonymousIdentity.anon_id == subject.subject_id
             )
         )
     ).scalar_one_or_none()
+    if anon is None or await _is_account_id(session, subject.subject_id):
+        return None
+    return anon
+
+
+async def _is_account_id(session: AsyncSession, subject_id: str) -> bool:
+    try:
+        user_id = uuid.UUID(subject_id)
+    except ValueError:
+        return False  # e.g. a legacy ``dev_…`` id is never a users.id
+    return (
+        await session.execute(select(User.id).where(User.id == user_id))
+    ).first() is not None
 
 
 async def erase_account(session: AsyncSession, user: User) -> list[str]:
@@ -204,6 +223,11 @@ async def erase_account(session: AsyncSession, user: User) -> list[str]:
         .where(AnonymousIdentity.upgraded_to_user_id == user_id)
         .values(upgraded_to_user_id=None)
     )
+    # The row starting a quiz upserted under the account's own id (#239): it
+    # names the deleted account and no device key is bound to it.
+    await session.execute(
+        delete(AnonymousIdentity).where(AnonymousIdentity.anon_id == user_id)
+    )
     await session.execute(delete(User).where(User.id == user.id))
     return subject_ids
 
@@ -229,7 +253,7 @@ async def erase_anonymous(session: AsyncSession, anon_id: str) -> None:
 
 async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -> None:
     """Delete feedback, analytics events, recap snapshots, daily challenge plays (their answers
-    cascade) and shared quizzes / results, and unlink pack orders for each id. A deleted play drops out of
+    cascade) shared quizzes / results and crew removals, and unlink pack orders for each id. A deleted play drops out of
     that day's crowd numbers too."""
     await session.execute(
         delete(AnalyticsEvent).where(AnalyticsEvent.subject_id.in_(subject_ids))
@@ -248,6 +272,13 @@ async def _erase_personal_trail(session: AsyncSession, subject_ids: list[str]) -
     )
     await session.execute(
         delete(SharedQuizResult).where(SharedQuizResult.subject_id.in_(subject_ids))
+    )
+    # #239: crew removals, both who they removed and who removed them.
+    await session.execute(
+        delete(DailyCrewRemoval).where(
+            DailyCrewRemoval.subject_id.in_(subject_ids)
+            | DailyCrewRemoval.removed_subject_id.in_(subject_ids)
+        )
     )
     for subject_id in subject_ids:
         await _unlink_pack_orders(session, subject_id)

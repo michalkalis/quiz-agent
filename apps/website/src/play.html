@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trubbo: quiz from a friend</title>
 <meta name="robots" content="noindex">
+<meta name="description" content="Play the same questions in Trubbo and compare your scores.">
+<!-- Link preview in chat apps (#240.9). Crawlers skip the script, so it is one static preview for every link and language. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Trubbo">
+<meta property="og:title" content="A friend sent you a quiz">
+<meta property="og:description" content="Play the same questions in Trubbo and compare your scores.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="sk_SK">
+<meta property="og:locale:alternate" content="cs_CZ">
+<meta property="og:locale:alternate" content="uk_UA">
+<meta property="og:image" content="https://trubbo.app/og-play.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A row of answered questions above an empty row for yours">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-itunes-app" content="app-id=6762482437">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -47,13 +62,21 @@ section+section{margin-top:40px}
     <a class="get" href="https://apps.apple.com/cz/app/trubbo/id6762482437">Stáhni z App Store</a>
     <p class="hint">Po instalaci klepni na odkaz ještě jednou.</p>
   </section>
+  <section lang="uk">
+    <h1>Тобі надіслали вікторину</h1>
+    <p class="topic"></p>
+    <p>Зіграй ті самі питання й порівняй результати.</p>
+    <a class="get" href="https://apps.apple.com/ua/app/trubbo/id6762482437">Завантажити в App Store</a>
+    <p class="hint">Після встановлення торкнися посилання ще раз.</p>
+  </section>
 </main>
 <script>
+{{gen.link_page_js}}
 (function () {
-  // Show the visitor's language first; the others stay below (like join.html).
-  var lang = (navigator.language || "en").slice(0, 2);
-  var mine = document.querySelector('section[lang="' + lang + '"]');
-  if (mine) mine.parentNode.insertBefore(mine, mine.parentNode.firstChild);
+  // Language first and copy-then-App-Store (link-page.js). After the install the app
+  // finds the link on the clipboard and opens the same quiz.
+  var link = trubboLinkPage("s");
+  var token = link.token, valid = link.valid;
 
   var T = {
     en: { daily: "A friend sent you a daily challenge", topic: "Topic: ",
@@ -61,11 +84,10 @@ section+section{margin-top:40px}
     sk: { daily: "Kamarát ti poslal dennú výzvu", topic: "Téma: ",
           cats: { "science-nature": "Veda a príroda", "history": "História", "geography-world": "Geografia a svet", "movies-music": "Film a hudba", "sports": "Šport", "food-everyday": "Jedlo a bežný život", "entertainment": "Zábava" } },
     cs: { daily: "Kamarád ti poslal denní výzvu", topic: "Téma: ",
-          cats: { "science-nature": "Věda a příroda", "history": "Historie", "geography-world": "Zeměpis a svět", "movies-music": "Film a hudba", "sports": "Sport", "food-everyday": "Jídlo a běžný život", "entertainment": "Zábava" } }
+          cats: { "science-nature": "Věda a příroda", "history": "Historie", "geography-world": "Zeměpis a svět", "movies-music": "Film a hudba", "sports": "Sport", "food-everyday": "Jídlo a běžný život", "entertainment": "Zábava" } },
+    uk: { daily: "Тобі надіслали щоденний виклик", topic: "Тема: ",
+          cats: { "science-nature": "Наука і природа", "history": "Історія", "geography-world": "Географія і світ", "movies-music": "Кіно і музика", "sports": "Спорт", "food-everyday": "Їжа й побут", "entertainment": "Розваги" } }
   };
-  var token = new URLSearchParams(location.search).get("s") || "";
-  var valid = /^[A-Za-z0-9_-]{8,64}$/.test(token);
-
   // What the quiz is (kind and topic). Any failure, or 404 while the feature
   // is off, keeps the generic "a friend sent you a quiz".
   if (valid && window.fetch) {
@@ -83,32 +105,6 @@ section+section{margin-top:40px}
       })
       .catch(function () {});
   }
-
-  // Copy this page's link, then open the App Store. After the install the app
-  // finds the link on the clipboard and opens the same quiz.
-  function legacyCopy(text) {
-    var t = document.createElement("textarea");
-    t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
-    document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
-    try { document.execCommand("copy"); } catch (e) {}
-    t.remove();
-  }
-  function copy(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
-    }
-    legacyCopy(text);
-    return Promise.resolve();
-  }
-  document.querySelectorAll("a.get").forEach(function (a) {
-    a.addEventListener("click", function (e) {
-      if (!valid) return;
-      e.preventDefault();
-      copy(location.href).then(function () {
-        setTimeout(function () { location.href = a.href; }, 300);
-      });
-    });
-  });
 })();
 </script>
 </body>

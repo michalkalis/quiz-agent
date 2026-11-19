@@ -7773,6 +7773,12 @@
             "state" : "translated",
             "value" : "Trvá to dlhšie ako zvyčajne. Keď bude hotový, nájdeš ho v Mojich balíkoch."
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це триває довше, ніж зазвичай. Коли набір буде готовий, ти знайдеш його в «Моїх наборах»."
+          }
         }
       }
     },
@@ -9330,6 +9336,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tento kvíz ešte nikto nedohral."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цю вікторину ще ніхто не пройшов."
           }
         }
       }
@@ -12820,6 +12832,12 @@
             "state" : "translated",
             "value" : "Tvoj balík sa ešte pripravuje"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Твій набір ще готується"
+          }
         }
       }
     },
@@ -15819,6 +15837,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skús Trubbo, kvíz, ktorý hráš hlasom."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спробуй Trubbo, вікторину, у яку граєш голосом."
           }
         }
       }

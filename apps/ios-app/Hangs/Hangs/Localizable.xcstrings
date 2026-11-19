@@ -3148,15 +3148,111 @@
       "comment" : "End of round, the line it opens with: the longest run of right answers this round",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nejdelší série: %lld v řadě"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nejdelší série: %lld v řadě"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nejdelší série: %lld v řadě"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nejdelší série: %lld v řadě"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nejdelší série: %lld v řadě"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Best run: %lld in a row"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Best run: %lld in a row"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najdlhšia séria: %lld za sebou"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Najdlhšia séria: %lld za sebou"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Najdlhšia séria: %lld za sebou"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Najdlhšia séria: %lld za sebou"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Najdlhšia séria: %lld za sebou"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Найдовша серія: %lld поспіль"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Найдовша серія: %lld поспіль"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Найдовша серія: %lld поспіль"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Найдовша серія: %lld поспіль"
+                }
+              }
+            }
           }
         }
       }
@@ -6979,6 +7075,12 @@
             "state" : "translated",
             "value" : "Najťažšia uhádnutá: %@"
           }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найважче вгадане: %@"
+          }
         }
       }
     },
@@ -9446,6 +9548,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tentoraz nič nevyšlo. Všetky odpovede sú nižšie."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цього разу жодної правильної. Усі відповіді нижче."
           }
         }
       }

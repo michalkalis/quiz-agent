@@ -105,7 +105,7 @@ _UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)([,.]\d+)?\s?%")
 _UK_DECIMAL_DOT_RE = re.compile(r"(?<![\d,.])(\d+)\.(\d{1,2}|\d{4,})(?![\d,]|\.\d)")
 # …except a clock time after "о/об": "о 10.30" is "о десятій тридцять".
 _UK_TIME_RE = re.compile(
-    r"(?<![^\W\d_])(о|об)(\s+)([01]?\d|2[0-4])[.:]([0-5]\d)(?![\d,]|[.:]\d)",
+    r"(?<![^\W\d_])(о|об)(\s+)([01]?\d|2[0-4])[.:]([0-5]\d)(?!\d|[.:,]\d)",
     re.IGNORECASE,
 )
 

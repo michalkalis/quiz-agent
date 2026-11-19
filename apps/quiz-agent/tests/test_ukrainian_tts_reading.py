@@ -239,6 +239,12 @@ def test_a_dashed_decade_span_gives_both_years_the_suffix_case():
         ("о 7.05", "о сьомій нуль п'ять"),
         ("о 11.15", "об одинадцятій п'ятнадцять"),
         ("о 10.00", "о десятій"),
+        # Sentence punctuation after the time keeps it a time.
+        ("Поїзд о 10.30, потім", "Поїзд о десятій тридцять, потім"),
+        ("Поїзд о 10:30, потім", "Поїзд о десятій тридцять, потім"),
+        ("о 10.30.", "о десятій тридцять."),
+        ("о 10.30?", "о десятій тридцять?"),
+        ("(о 10.30)", "(о десятій тридцять)"),
         # Not a time: still a decimal.
         ("2.5 метра", "дві цілих п'ять десятих метра"),
     ],
@@ -247,6 +253,11 @@ def test_a_clock_time_after_o_is_not_a_decimal(text, spoken):
     """«о десять цілих три десятих» is a decimal where the question gives a
     time of day."""
     assert say(text) == spoken
+
+
+def test_a_number_running_on_after_the_minutes_is_not_a_time():
+    """«о 10.30,5» is no clock time; only a comma before a digit blocks it."""
+    assert "десятій" not in say("о 10.30,5")
 
 
 @pytest.mark.parametrize(

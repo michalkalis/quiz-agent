@@ -1,7 +1,7 @@
 # #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-19 ráno: všetky schválené zmeny z posudku (240.9) sú zlúčené, server nasadený, build do Trubbo Beta spustený z `5e7278c0`; audit: 23 z 24 nálezov vyriešených (ostáva nasadenie pri výpadku spojenia); ďalej 240.3, 240.5, 240.6, 240.7
+**Status:** 2026-11-19 ráno: všetky schválené zmeny z posudku (240.9) sú zlúčené, server nasadený, build 1.3 (90) v Trubbo Beta z `5e7278c0` (tag `ios/1.3-b90`); audit: 23 z 24 nálezov vyriešených (ostáva nasadenie pri výpadku spojenia); ďalej 240.3 — stráže vzhľadu a prístupnosti, 240.5 — bezpečnostný prechod, 240.6 — robot-hráč pre hlas, 240.7 — preverenie testov úmyselnými chybami
 **Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 

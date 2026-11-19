@@ -1,0 +1,141 @@
+{
+ "keep": [
+  "03d82416-39d7-497b-a2e3-f990a6a13e95",
+  "d1699ab2-6007-4d51-a3b6-ec36d828d698",
+  "7f1ee025-718c-4e01-ac21-983332826595",
+  "11873b46-f01f-408d-903e-1e394b32c451",
+  "34e302a3-06d7-4d1d-a6ff-07267ad65eb8",
+  "98e34a9a-017c-4349-a36a-fca660ce02c9",
+  "9a709a93-9180-4626-badf-e66f8fea51f6",
+  "22d3d5e4-7f1c-4367-ad9a-08da00814260",
+  "a90409d2-a1d9-4532-accc-796b64f3975b",
+  "7ac51053-e66d-4e95-88aa-0fe231f7feeb",
+  "b7144e2f-e27b-4001-a8e3-8ef83f972d8d",
+  "80e75c77-4033-4701-9a8e-b5ab6e1b7d21",
+  "c2385f56-5304-4016-9b1f-1e914869b8f8",
+  "5461017e-1c91-4131-838f-5cf23708c368",
+  "85986596-9c18-4737-b137-c268527d0922",
+  "6303e77b-bb13-465e-90fe-b10064f23157",
+  "584f194f-474a-47ad-b2e9-01efb5c215dd",
+  "4715df0c-5c1b-4970-a202-a506aa9f8dc6",
+  "fc33bb70-f790-4d37-8a47-c05dddcf2d3f",
+  "097b2df3-e3f3-4809-824a-6fe7e1b2994f",
+  "dd6c4150-9b8c-42da-b326-50b26f08e987",
+  "c8ec4cea-d3a2-4d69-973e-471ccaae8250",
+  "3e80cdcd-3723-4c10-a7c0-52b7089ab5ed"
+ ],
+ "drop": [
+  {
+   "id": "a1d38fd3-138a-46b2-8bc7-b5ae8cf0bc0d",
+   "why": "Same fact (Leonida is based on Florida) as a live English question."
+  },
+  {
+   "id": "c56d9d78-6174-400b-aff8-9cc8faddb508",
+   "why": "Same fact (Gojira blends gorilla and whale) as a live English question."
+  },
+  {
+   "id": "9b9c391d-640c-431b-b640-0a688c3582b8",
+   "why": "A live English question already spells out Penelope's burial shroud trick, so the answer is known to players who heard it."
+  },
+  {
+   "id": "5134d534-8761-4eeb-ae45-3f088029983b",
+   "why": "Rockstar never confirmed the state is named after the fault (fan interpretation only) and the source is a disambiguation page that does not support it."
+  },
+  {
+   "id": "8ac7ea84-9e72-4113-810f-09554599c99c",
+   "why": "The hybrid TV/handheld description gives away the Switch, so the surprising Nvidia link is not actually tested; the source is a sales article that does not mention Nvidia."
+  }
+ ],
+ "fix": [
+  {
+   "id": "d1699ab2-6007-4d51-a3b6-ec36d828d698",
+   "field": "question",
+   "new": "Tourist boats head for a needle-shaped limestone rock rising out of the sea, which everyone now calls 'James Bond Island' because a villain's lair was filmed there. Which country is it in?",
+   "why": "'Tourist boats there' refers to a place not yet named; awkward when read aloud."
+  },
+  {
+   "id": "d1699ab2-6007-4d51-a3b6-ec36d828d698",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Khao_Phing_Kan",
+   "why": "Original URL was malformed (Www.wikipedia.org)."
+  },
+  {
+   "id": "d1699ab2-6007-4d51-a3b6-ec36d828d698",
+   "field": "source_excerpt",
+   "new": "Khao Phing Kan is an island in Thailand, in Phang Nga Bay northeast of Phuket. The islands are commonly known in English as James Bond Island.",
+   "why": "Excerpt matched to the corrected source page."
+  },
+  {
+   "id": "7f1ee025-718c-4e01-ac21-983332826595",
+   "field": "question",
+   "new": "The white Lotus that turns into a submarine in The Spy Who Loved Me was sold at auction in 2013 for nearly a million dollars. The buyer, a famous tech entrepreneur, said he wanted to make it transform for real. Who bought it?",
+   "why": "Hammer price was 550,000 pounds (about 870,000 to 990,000 dollars), so 'nearly' is accurate."
+  },
+  {
+   "id": "7f1ee025-718c-4e01-ac21-983332826595",
+   "field": "source_url",
+   "new": "https://www.thetruthaboutcars.com/2013/10/elon-musk-buys-007-submarine-will-attempt-to-make-it-functional/",
+   "why": "Original excerpt misread an article id in the URL as the price; this source quotes Musk directly."
+  },
+  {
+   "id": "7f1ee025-718c-4e01-ac21-983332826595",
+   "field": "source_excerpt",
+   "new": "\"I was disappointed to learn that it can't actually transform. What I'm going to do is upgrade it with a Tesla electric powertrain and try to make it transform for real.\"",
+   "why": "Real quote supporting the question."
+  },
+  {
+   "id": "7f1ee025-718c-4e01-ac21-983332826595",
+   "field": "explanation",
+   "new": "Musk bought the original underwater prop, which had sat forgotten in a storage unit for years until someone bought it blind for about 100 dollars. He said he was disappointed to learn that it couldn't actually transform, and planned to fit it with a Tesla electric drive.",
+   "why": "Musk's disappointment was that it can't transform, not that it can't drive into the sea."
+  },
+  {
+   "id": "11873b46-f01f-408d-903e-1e394b32c451",
+   "field": "question",
+   "new": "Which of these James Bond actors starred in only a single official Bond film?",
+   "why": "The question listed all four options, which are then read aloud again as choices."
+  },
+  {
+   "id": "34e302a3-06d7-4d1d-a6ff-07267ad65eb8",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Edward_Cullen",
+   "why": "VFX trade article only names a 'Diamond Skin effect'; Wikipedia states the fact directly."
+  },
+  {
+   "id": "34e302a3-06d7-4d1d-a6ff-07267ad65eb8",
+   "field": "source_excerpt",
+   "new": "Edward's skin sparkles in the sunlight.",
+   "why": "Excerpt matched to the new source."
+  },
+  {
+   "id": "98e34a9a-017c-4349-a36a-fca660ce02c9",
+   "field": "source_excerpt",
+   "new": "Carlisle Cullen transformed him into a vampire in 1918 to prevent him from dying in the Spanish influenza epidemic.",
+   "why": "Excerpt now matches the source wording and names the Spanish flu."
+  },
+  {
+   "id": "7ac51053-e66d-4e95-88aa-0fe231f7feeb",
+   "field": "explanation",
+   "new": "True. GTA V passed one billion dollars in just three days in 2013, earning a Guinness World Record as the fastest entertainment product of any kind to do it at the time.",
+   "why": "'Ever' may go stale with GTA VI launching now; pin the record to its time."
+  },
+  {
+   "id": "5461017e-1c91-4131-838f-5cf23708c368",
+   "field": "question",
+   "new": "Odysseus blinds the Cyclops, who screams for help. The other Cyclopes come running, then shrug and walk away. What had Odysseus told the Cyclops his name was?",
+   "why": "'What name had Odysseus given him' wrongly suggests the Cyclops was renamed."
+  },
+  {
+   "id": "5461017e-1c91-4131-838f-5cf23708c368",
+   "field": "explanation",
+   "new": "When Polyphemus shouts that 'Nobody' is hurting him, his neighbours decide nothing is wrong. One of the oldest wordplay jokes in literature saves Odysseus's life.",
+   "why": "'Ancient Greece's oldest name joke' is an unverifiable superlative."
+  },
+  {
+   "id": "4715df0c-5c1b-4970-a202-a506aa9f8dc6",
+   "field": "explanation",
+   "new": "Godzilla Minus One won Best Visual Effects, the franchise's first ever Oscar, seventy years after the original film. Its budget was a small fraction of the Hollywood films it beat.",
+   "why": "'First Oscar in 70 years' wrongly implies an earlier win."
+  }
+ ]
+}

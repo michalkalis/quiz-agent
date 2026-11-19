@@ -1,0 +1,115 @@
+{
+ "week": "2026-W49",
+ "monday": "2026-11-30",
+ "created": "2026-11-18T23:00:00Z",
+ "posts": [
+  {
+   "key": "sat-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sat",
+   "format": "round",
+   "language": "cs",
+   "size": 3,
+   "date": "2026-12-05",
+   "files": [
+    "round-cs-4065c0bb.mp4",
+    "round-cs-4065c0bb.jpg"
+   ],
+   "caption": "Dnes večer chodí Mikuláš s čertem a andělem.\n\nKolik máš správně?\n\n#mikuláš #vánoce #kvíz #kviz #zajímavosti",
+   "youtube": null,
+   "voice": "social voice",
+   "note": "#241 Christmas 2026",
+   "questions": [
+    {
+     "id": "4065c0bb-6ce5-42aa-96fd-fb11dc3be414",
+     "category": "food-everyday",
+     "question": "Pravda, nebo nepravda: Podle české tradice dostanou zlobivé děti od Mikuláše a čerta místo sladkostí uhlí.",
+     "answer": "Pravda",
+     "options": [
+      "Pravda",
+      "Nepravda"
+     ],
+     "explanation": "Uhlí, někdy i brambory nebo cibule, patří k čertovi, protože připomíná pekelný oheň. Většinou ho ale v balíčku stejně najdete pod sladkostmi.",
+     "source_url": "https://www.novinky.cz/clanek/vanoce-mikulasske-nadelovani-casto-prehlusi-strach-z-certu-40260671"
+    },
+    {
+     "id": "159187d4-3d99-418f-ba03-16c5f0133a1d",
+     "category": "history",
+     "question": "Podle legendy svatý Mikuláš tajně hodil oknem měšec zlata do domu chudého otce, který měl tři dcery. Na co dívky ty peníze nutně potřebovaly?",
+     "answer": "Na věno",
+     "options": [],
+     "explanation": "Bez věna se dívky nemohly provdat a hrozila jim bída. Tajné dárky od Mikuláše se z tohoto příběhu rozšířily do celé Evropy.",
+     "source_url": "https://en.wikipedia.org/wiki/Saint_Nicholas"
+    },
+    {
+     "id": "b8eb51f5-be70-43d2-9556-1a25c062f5e8",
+     "category": "general",
+     "question": "Santa Claus leze komínem a vidět se nechá. Ježíška ale nikdo nikdy neviděl. Podle čeho české děti na Štědrý večer poznají, že už pod stromečkem byl?",
+     "answer": "zazvoní zvoneček",
+     "options": [],
+     "explanation": "Zvoneček obvykle nenápadně rozezvoní někdo z rodičů a pro děti je to signál, že můžou běžet ke stromečku. Dárky se u nás rozbalují už večer 24. prosince, ne až ráno na Boží hod jako v anglosaském světě.",
+     "source_url": "https://www.novinky.cz/clanek/vanoce-v-cesku-nosi-darky-jezisek-prisel-k-nam-z-nemecka-40345570"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-12-05T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W49/round-cs-4065c0bb.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W49/round-cs-4065c0bb.jpg"
+   ]
+  },
+  {
+   "key": "sun-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-12-06",
+   "files": [
+    "round-en-3164feae.mp4",
+    "round-en-3164feae.jpg"
+   ],
+   "caption": "December 6 is St Nicholas Day. Long before he was Santa, he was a bishop in a warm seaside town.\n\nHow many did you get right?\n\n#christmas #santa #stnicholas #trivia #quiz",
+   "youtube": null,
+   "voice": "social voice",
+   "note": "#241 Christmas 2026",
+   "questions": [
+    {
+     "id": "3164feae-5e68-4f71-953b-eb51e6125487",
+     "category": "history",
+     "question": "Santa Claus is based on a real bishop called Nicholas, who lived about 1,700 years ago in a warm town by the Mediterranean Sea. In which modern country is that town?",
+     "answer": "Turkey",
+     "options": [],
+     "explanation": "Nicholas was bishop of Myra, now the town of Demre on Turkey's southern coast. The original Santa lived among olive trees, not snowdrifts.",
+     "source_url": "https://en.wikipedia.org/wiki/Saint_Nicholas"
+    },
+    {
+     "id": "1665056c-5de5-4065-8b96-5c6d7c3a56bd",
+     "category": "general",
+     "question": "Legend says the real St Nicholas secretly tossed bags of gold through a poor family's window at night, and the gold landed in something left drying by the fire. What was it? Children still hang them up at Christmas.",
+     "answer": "Stockings",
+     "options": [],
+     "explanation": "The gold was dowry money for the man's three daughters, and that is why Christmas stockings get hung up by the fireplace. The same three bags of gold are behind the three golden balls on a pawnbroker's sign, since Nicholas is also their patron saint.",
+     "source_url": "https://en.wikipedia.org/wiki/Christmas_stocking"
+    },
+    {
+     "id": "a07de814-8fb9-4c6e-8771-20d58e7ee1c1",
+     "category": "general",
+     "question": "In the Netherlands, Santa's Dutch cousin Sinterklaas doesn't come from the North Pole. He arrives every November by steamboat. From which country does he sail?",
+     "answer": "Spain",
+     "options": [],
+     "explanation": "Dutch tradition says Sinterklaas spends the year in Spain and arrives by steamboat in mid-November. His arrival is broadcast live on national TV.",
+     "source_url": "https://en.wikipedia.org/wiki/Sinterklaas"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-12-06T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W49/round-en-3164feae.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W49/round-en-3164feae.jpg"
+   ]
+  }
+ ],
+ "version": 1
+}

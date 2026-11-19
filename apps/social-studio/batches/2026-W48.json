@@ -1,0 +1,112 @@
+{
+ "week": "2026-W48",
+ "monday": "2026-11-23",
+ "created": "2026-11-18T23:00:00Z",
+ "posts": [
+  {
+   "key": "sun-ig_skcz",
+   "account": "ig_skcz",
+   "day": "Sun",
+   "format": "round",
+   "language": "sk",
+   "size": 3,
+   "date": "2026-11-29",
+   "files": [
+    "round-sk-74d5f281.mp4",
+    "round-sk-74d5f281.jpg"
+   ],
+   "caption": "Dnes sa zapaľuje prvá sviečka na adventnom venci. Vieš, z čoho bol ten úplne prvý?\n\nKoľko máš správne?\n\nTrubbo, kvíz, ktorý hráš hlasom. Zadarmo v App Store, odkaz v profile.\n\n#vianoce #advent #kvíz #kviz #vedomosti",
+   "youtube": null,
+   "voice": "social voice",
+   "note": "#241 Christmas 2026",
+   "questions": [
+    {
+     "id": "74d5f281-5593-45e2-b9db-97c5fb2345d7",
+     "category": "general",
+     "question": "Deti z celého Slovenska aj zo zahraničia píšu Ježiškovi. Slovenská pošta im posiela odpovede z malej obce pri Žiline, ktorá je známa aj obrovským dreveným betlehemom. Ako sa tá obec volá?",
+     "answer": "Rajecká Lesná",
+     "options": [],
+     "explanation": "Ježiškova pošta tam funguje od konca 90. rokov a každý rok dostane desaťtisíce listov. Slovenský betlehem v miestnom Dome Božieho milosrdenstva patrí k najväčším pohyblivým betlehemom v Európe.",
+     "source_url": "https://www.posta.sk/subory/42103/2023_11_22-ts_vianocna-posta_otvorenie.pdf"
+    },
+    {
+     "id": "12339e3d-ff67-4df9-9a79-37698a108016",
+     "category": "general",
+     "question": "Na tradičnom adventnom venci sú tri sviečky fialové a jedna ružová. Na ktorú adventnú nedeľu sa zapaľuje ružová?",
+     "answer": "na tretiu",
+     "options": [],
+     "explanation": "Tretia nedeľa sa volá Gaudete, po latinsky „radujte sa“. Fialovú kajúcnu farbu vtedy na chvíľu zjasní ružová, pretože Vianoce sú už blízko.",
+     "source_url": "https://www.catholicextension.org/?p=33536"
+    },
+    {
+     "id": "03ac60b8-1c7d-42a9-9da9-462c03d5239e",
+     "category": "general",
+     "question": "Prvý adventný veniec mal namiesto štyroch sviečok vyše dvadsať, aby deti v detskom domove vedeli, koľko dní ešte zostáva do Vianoc. Z akého obyčajného predmetu ho vyrobili?",
+     "answer": "zo starého kolesa od voza",
+     "options": [],
+     "explanation": "V Hamburgu ho v roku 1839 vymyslel Johann Hinrich Wichern. Na koleso dal malé červené sviečky na všedné dni a veľké biele na nedele. Z tých štyroch veľkých je dnešný veniec.",
+     "source_url": "https://www.hamburg-travel.com/blog/the-advent-wreath-four-candles-conquer-the-world/"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-29T17:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W48/round-sk-74d5f281.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W48/round-sk-74d5f281.jpg"
+   ]
+  },
+  {
+   "key": "sun-ig_en",
+   "account": "ig_en",
+   "day": "Sun",
+   "format": "round",
+   "language": "en",
+   "size": 3,
+   "date": "2026-11-29",
+   "files": [
+    "round-en-2bd67f18.mp4",
+    "round-en-2bd67f18.jpg"
+   ],
+   "caption": "First Sunday of Advent, and the first candle is lit. Do you know what the very first Advent wreath was made from?\n\nHow many did you get right?\n\nTrubbo, trivia you answer out loud. Free on the App Store, link in bio.\n\n#christmas #advent #trivia #quiz #didyouknow",
+   "youtube": null,
+   "voice": "social voice",
+   "note": "#241 Christmas 2026",
+   "questions": [
+    {
+     "id": "2bd67f18-caca-4df7-a651-1801fd2dbb4e",
+     "category": "food-everyday",
+     "question": "In Japan, where few people are Christian, a 1970s advertising campaign made Christmas dinner from one American fast-food chain a national custom. Families book their meals well in advance. Which chain?",
+     "answer": "KFC",
+     "options": [],
+     "explanation": "It all started with a 1970s advertising slogan, 'Kentucky for Christmas!', and fried chicken has been Japan's festive meal ever since.",
+     "source_url": "https://en.wikipedia.org/wiki/Christmas_in_Japan"
+    },
+    {
+     "id": "20a0f4e4-b00d-4f7b-bdb2-705ff7852c85",
+     "category": "general",
+     "question": "The very first Advent wreath was made by a Hamburg pastor for children who kept asking how long it was until Christmas. He built it from an old piece of farm equipment. Which one?",
+     "answer": "A cartwheel",
+     "options": [],
+     "explanation": "It held a candle for every day of Advent, small ones for weekdays and big ones for Sundays. Later the wreath was shrunk to just the four Sunday candles we know today.",
+     "source_url": "https://en.wikipedia.org/wiki/Advent_wreath"
+    },
+    {
+     "id": "63372a84-7777-4a4f-8a68-ae052984e518",
+     "category": "movies-music",
+     "question": "In 1965, two astronauts told Mission Control they'd spotted something like Santa in orbit. Then they pulled out a smuggled harmonica and bells and played the first song ever played on instruments in space. Which song?",
+     "answer": "Jingle Bells",
+     "options": [],
+     "explanation": "The Gemini 6 crew snuck the harmonica and bells aboard, and both instruments are now kept at the Smithsonian.",
+     "source_url": "https://www.smithsonianmag.com/smithsonian-institution/sixty-years-ago-when-instruments-were-played-in-space-for-the-first-time-it-was-jingle-bells-all-the-way-180987851/"
+    }
+   ],
+   "status": "approved",
+   "publish_at": "2026-11-29T18:00:00Z",
+   "media_urls": [
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W48/round-en-2bd67f18.mp4",
+    "https://pub-93c1fbd068fe48a6848d4e647fe1596e.r2.dev/social/2026-W48/round-en-2bd67f18.jpg"
+   ]
+  }
+ ],
+ "version": 1
+}

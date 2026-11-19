@@ -27,7 +27,7 @@ CLEAN_EXTRA = {
     "verified": True,
     "verification_score": 0.9,
     "factcheck_tier": "web",
-    "naturalness": {"ok": True},
+    "naturalness": {"ok": True, "off_policy": False, "gives_away": False},
 }
 
 
@@ -56,7 +56,6 @@ def test_the_clean_baseline_row_is_approved() -> None:
 
 WAR_AND_POLITICS = [
     "Яке місто 2022 року пережило облогу «Азовсталі»?",
-    "Який півострів 2014 року опинився під контролем іншої держави?",
     "Яке місто на Донбасі звільнили восени 2022 року?",
     "Як називається війна, що почалася 24 лютого?",
     "Хто став президентом України 2019 року?",

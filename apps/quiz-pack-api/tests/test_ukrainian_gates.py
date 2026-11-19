@@ -146,7 +146,12 @@ def test_seed_filter_drops_policy_seeds_for_uk_only() -> None:
 
 def test_machine_approval_holds_uk_rows_that_break_the_rules() -> None:
     # A uk row also needs a passing naturalness verdict (#231 gate review).
-    meta = {"extra": dict(CLEAN_EXTRA, naturalness={"ok": True})}
+    meta = {
+        "extra": dict(
+            CLEAN_EXTRA,
+            naturalness={"ok": True, "off_policy": False, "gives_away": False},
+        )
+    }
     assert "uk" in MACHINE_APPROVABLE_LANGUAGES
     assert machine_approval_block_reason(_q(generation_metadata=meta)) is None
     russian = machine_approval_block_reason(_q(question="Какая планета самая быстрая?"))
@@ -263,6 +268,8 @@ async def test_naturalness_rewrite_with_russian_letters_is_dropped_but_cyrillic_
         "ok": False,
         "problems": [{"kind": "calque", "quote": "x"}],
         "rewrite": "Яка планета обертається швидко?",
+        "off_policy": False,
+        "gives_away": False,
     }
     bad = dict(good, rewrite="Что за планета?")
 

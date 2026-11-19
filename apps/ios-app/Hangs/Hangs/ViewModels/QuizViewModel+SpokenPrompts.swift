@@ -98,7 +98,9 @@ extension QuizViewModel {
 
     /// Say the score, release the quiz session (music back to full volume),
     /// then listen on the quiet session like Home does.
-    func announceSetFinished() {
+    /// #240.9: `thenPaywall` = the round ended at the monthly limit; after
+    /// the score the paywall follows (`showRoundEndPaywall`).
+    func announceSetFinished(thenPaywall quotaLimit: QuotaLimitError? = nil) {
         let text = SpokenPrompt.setFinishedLine(
             correct: sessionCorrectCount,
             total: currentSession?.maxQuestions ?? settings.numberOfQuestions,
@@ -111,6 +113,8 @@ extension QuizViewModel {
                 guard !Task.isCancelled, quizState == .finished else { return }
                 await audioDeviceState.playAppSpeech(audio)
             }
+            guard !Task.isCancelled, quizState == .finished else { return }
+            if let quotaLimit { await showRoundEndPaywall(quotaLimit) }
             guard !Task.isCancelled, quizState == .finished else { return }
             audioService.deactivateSession()
             quizEndCommandsArmed = true

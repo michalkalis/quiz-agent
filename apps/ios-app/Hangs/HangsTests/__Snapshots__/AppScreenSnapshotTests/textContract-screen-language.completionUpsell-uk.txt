@@ -3,6 +3,7 @@ Geography & World
 7.5
 з 10
 Правильно 7 · Мимо 3 · Пропущено 0
+Найважче вгадане: Answer 10
 Безплатні питання закінчуються
 Цього місяця в тебе залишається 4 безплатного питання.
 Оформи Trubbo Plus
@@ -35,6 +36,7 @@ Answer 10
 completion.close
 completion.score
 completion.breakdown
+completion.highlight
 completion.cards
 completion.upsell
 recap.row.1

@@ -3,6 +3,7 @@ Geography & World
 0
 з 10
 Правильно 1 · Мимо 1 · Пропущено 1
+Найважче вгадане: Paris
 Питання
 Прослухай підсумок
 What is the capital of France?
@@ -19,6 +20,7 @@ Four
 recap.close
 recap.hero
 completion.breakdown
+recap.highlight
 recap.cards
 recap.playSummary
 recap.row.1

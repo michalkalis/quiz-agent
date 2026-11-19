@@ -63,6 +63,9 @@ nonisolated struct QuotaLimitError: Codable, Sendable {
     let questionsLimit: Int
     let resetsAt: String
     let upgradeAvailable: Bool
+    /// #240.9: a mid-round 429 still carries the verdict of the answer that
+    /// reached the limit (the server graded it first). Absent on the start gate.
+    var evaluation: Evaluation? = nil
 
     enum CodingKeys: String, CodingKey {
         case error
@@ -70,6 +73,7 @@ nonisolated struct QuotaLimitError: Codable, Sendable {
         case questionsLimit = "questions_limit"
         case resetsAt = "resets_at"
         case upgradeAvailable = "upgrade_available"
+        case evaluation
     }
 
     /// Parsed reset time — the same parsing as `UsageInfo.resetDate`.

@@ -77,6 +77,11 @@ struct RoundCompleteView: View {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                     scoreBlock
 
+                    if let highlight = viewModel.roundHighlight {
+                        highlightLine(highlight)
+                            .padding(.top, Theme.Hangs.Spacing.xxs)
+                    }
+
                     if !viewModel.recapEntries.isEmpty {
                         RoundCardRow(outcomes: cardOutcomes)
                             .padding(.top, Theme.Hangs.Spacing.xs)
@@ -87,8 +92,8 @@ struct RoundCompleteView: View {
                     // everyone who played it did.
                     if viewModel.shareableRoundSessionId != nil {
                         SharedQuizSendCard(isCreating: share.isCreating, failureMessage: share.failureMessage, action: sendToFriend)
-                        .padding(.top, Theme.Hangs.Spacing.xxs)
-                        .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
+                            .padding(.top, Theme.Hangs.Spacing.xxs)
+                            .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
                     }
                     if showsSharing, !share.rows.isEmpty {
                         SharedQuizRankingCard(rows: share.rows)
@@ -151,6 +156,29 @@ struct RoundCompleteView: View {
         if let title = created.title { return title }
         guard created.categories.count == 1, let category = created.categories.first else { return nil }
         return Config.categoryDisplayName(for: category, locale: .interface)
+    }
+
+    // MARK: - Highlight (#240.9)
+
+    /// One line worth remembering, above the list: the best run, else the
+    /// hardest question answered right.
+    private func highlightLine(_ highlight: RoundHighlight) -> some View {
+        highlightText(highlight)
+            .font(.hangsBody.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("\(route.idPrefix).highlight")
+    }
+
+    private func highlightText(_ highlight: RoundHighlight) -> Text {
+        switch highlight {
+        case let .bestRun(run):
+            Text("Best run: \(run) in a row", comment: "End of round, the line it opens with: the longest run of right answers this round")
+        case let .hardestRight(answer):
+            Text("Hardest one you got: \(answer)", comment: "End of round, the line it opens with: the answer to the hardest question the player got right")
+        case .noneRight:
+            Text("None right this time. All the answers are below.", comment: "End of round, the line it opens with when no answer was right")
+        }
     }
 
     // MARK: - Score
@@ -281,11 +309,11 @@ struct RoundCompleteView: View {
             viewModel.toggleRecapNarration()
         } label: {
             Label(summaryTitle, systemImage: viewModel.isNarratingRecap ? "stop.fill" : "speaker.wave.2")
-            .font(.hangsCaption.weight(.semibold))
-            .foregroundStyle(Theme.Hangs.Colors.ink)
-            .padding(.horizontal, Theme.Hangs.Spacing.sm)
-            .frame(minHeight: Theme.Hangs.Spacing.xxl)
-            .glassEffect(.regular.interactive(), in: Capsule())
+                .font(.hangsCaption.weight(.semibold))
+                .foregroundStyle(Theme.Hangs.Colors.ink)
+                .padding(.horizontal, Theme.Hangs.Spacing.sm)
+                .frame(minHeight: Theme.Hangs.Spacing.xxl)
+                .glassEffect(.regular.interactive(), in: Capsule())
         }
         .buttonStyle(.plain)
         .disabled(viewModel.isAudioMuted)
@@ -374,7 +402,7 @@ struct RoundCompleteView: View {
     @ViewBuilder private var mainButton: some View {
         if isFriendsRound {
             HangsPrimaryButton(title: "Send to a friend", icon: "square.and.arrow.up", isLoading: share.isCreating, action: sendToFriend)
-            .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
+                .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
         } else {
             playAgainButton
         }

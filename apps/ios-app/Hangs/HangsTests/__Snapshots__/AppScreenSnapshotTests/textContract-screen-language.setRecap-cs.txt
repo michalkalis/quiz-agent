@@ -3,6 +3,7 @@ Geography & World
 0
 z 10
 Správně 1 · Vedle 1 · Přeskočeno 1
+Nejtěžší uhodnutá: Paris
 Otázky
 Přehraj souhrn
 What is the capital of France?
@@ -19,6 +20,7 @@ Hraj znovu
 recap.close
 recap.hero
 completion.breakdown
+recap.highlight
 recap.cards
 recap.playSummary
 recap.row.1

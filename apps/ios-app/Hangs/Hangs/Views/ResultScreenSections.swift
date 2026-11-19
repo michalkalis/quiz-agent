@@ -55,6 +55,8 @@ enum ResultVerdict {
 /// colour (a wrong answer reads neutral, never red).
 struct ResultVerdictLabel: View {
     let verdict: ResultVerdict
+    /// #240.9: right answers in a row this round, said beside "Correct" from 3.
+    var streak: Int? = nil
 
     var body: some View {
         if let word = verdict.word, let symbol = verdict.symbol {
@@ -64,6 +66,12 @@ struct ResultVerdictLabel: View {
                 Text(word)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("result.verdict")
+                if let streak {
+                    Text(verbatim: "·")
+                        .accessibilityHidden(true)
+                    Text("\(streak) in a row")
+                        .accessibilityIdentifier("result.streak")
+                }
             }
             .font(.hangsBody.weight(.semibold))
             .foregroundStyle(verdict == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)

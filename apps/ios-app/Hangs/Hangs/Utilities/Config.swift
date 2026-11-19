@@ -203,6 +203,21 @@ nonisolated enum Config {
     /// spoken "start" means the player is ready.
     static let immediateMicExtraWindow: TimeInterval = 10
 
+    /// #240.9 (founder 2026-11-18): the result moves on a short moment after
+    /// the spoken verdict ends, instead of a fixed 8 s from the moment the
+    /// result appears. Without a spoken verdict (muted, no audio) the result
+    /// keeps the Settings pause (`autoAdvanceDelay`), the time to read it.
+    static let pauseAfterSpokenVerdict = 3
+
+    /// #240.9: the longest the result waits for its spoken verdict (a slow
+    /// download included) before the countdown starts anyway, so the result
+    /// never sits still without a visible reason.
+    static let spokenVerdictWaitCap: Duration = .seconds(12)
+
+    /// #240.9: how long the end-of-round screen shows before the paywall when
+    /// the monthly limit ended the round (after the spoken score, if any).
+    static let roundEndPaywallDelay = 3
+
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 

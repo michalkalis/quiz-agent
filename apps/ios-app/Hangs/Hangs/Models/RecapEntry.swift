@@ -30,6 +30,9 @@ struct RecapEntry: Identifiable, Equatable, Sendable {
     /// one screen that shows every answer of the set was the one screen with no
     /// way to check any of them.
     let sourceUrl: String?
+    /// #240.9: the question's difficulty, for the end-of-round line ("the
+    /// hardest one you got").
+    let difficulty: String
 
     var wasSkipped: Bool { result == .skipped }
     /// The recap's ✓ bucket — mirrors `Evaluation.isCorrect` (only a full
@@ -51,6 +54,7 @@ struct RecapEntry: Identifiable, Equatable, Sendable {
         explanation = evaluation.explanation?.trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
         sourceUrl = question.sourceUrl
+        difficulty = question.difficulty
     }
 }
 

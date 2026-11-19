@@ -3,6 +3,7 @@ Geography & World
 7.5
 z 10
 Správně 7 · Vedle 3 · Přeskočeno 0
+Nejtěžší uhodnutá: Answer 10
 Pošli kamarádovi
 Zahraje si stejné otázky. Výsledky uvidíš, až si otevřeš svůj odkaz.
 Otázky
@@ -34,6 +35,7 @@ Hraj znovu
 completion.close
 completion.score
 completion.breakdown
+completion.highlight
 completion.cards
 completion.sendToFriend
 recap.row.1

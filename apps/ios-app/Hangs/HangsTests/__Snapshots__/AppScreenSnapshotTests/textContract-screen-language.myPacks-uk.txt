@@ -1,0 +1,30 @@
+# texts
+30
+Delivered
+Famous bridges of the world and the engineers who built them
+English
+Зіграно 4 / 30
+Почни вікторину
+5
+Preparing
+history
+Зіграно 4 / 30
+Готово питань: 5 з 30. Решта генерується, поки ти граєш.
+Почни вікторину
+0
+Preparing
+EN
+!
+Failed
+EN
+Спробуй ще раз
+Створи набір
+# identifiers
+myPacks.language
+myPacks.progress
+myPacks.startQuiz
+myPacks.progress
+myPacks.readyCount
+myPacks.startQuiz
+myPacks.retry
+myPacks.createPack

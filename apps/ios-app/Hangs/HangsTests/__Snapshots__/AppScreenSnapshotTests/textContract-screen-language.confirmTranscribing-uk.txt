@@ -1,0 +1,6 @@
+# texts
+ОБРОБКА
+Розпізнаю…
+Скасуй
+# identifiers
+confirmation.cancel

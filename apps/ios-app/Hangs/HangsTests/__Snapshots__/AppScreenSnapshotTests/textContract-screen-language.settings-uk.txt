@@ -1,0 +1,175 @@
+# texts
+НАЛАШТУВАННЯ
+голос
+Голосові команди
+Керуй вікториною голосом, без натискань
+
+Підказки команд
+Показувати голосові команди, які можна сказати
+
+Розпізнавання мовлення
+Ready
+Розпізнавання мовлення
+Ready
+Автопідтвердження відповідей
+Відповідь надсилається автоматично через 5 секунди, якщо ти її не зміниш
+
+Мікрофон
+Automatic
+Мікрофон
+Automatic
+Режим дзвінка
+Використовує Bluetooth-мікрофон (в авто може виглядати як дзвінок)
+
+мова
+English
+Slovenčina
+Čeština
+Мова вікторини
+English
+Мова вікторини
+English
+Питання, голос і весь застосунок
+вікторина
+0s
+10s
+15s
+30s
+45s
+60s
+90s
+120s
+Час на роздуми
+10s
+Час на роздуми
+10s
+Пауза, перш ніж увімкнеться мікрофон
+5 questions
+10 questions
+15 questions
+20 questions
+Кількість питань у вікторині
+10 questions
+Кількість питань у вікторині
+10 questions
+5s
+8s
+10s
+15s
+Автоперехід
+8s
+Автоперехід
+8s
+Пауза на результаті перед наступним питанням
+After each question
+At the end of the quiz
+Коли показувати відповіді
+After each question
+Коли показувати відповіді
+After each question
+звукові сигнали
+Читати вголос
+Питання, результати й рахунок
+
+Звуки запису
+Короткий сигнал, коли вмикається мікрофон. Вібрація лишається.
+
+акаунт
+Увійди, щоб після перевстановлення в тебе лишилися Trubbo Plus та історія.
+Експортуй мої дані
+
+Експортуй мої дані
+
+Видали мої дані
+
+Видали мої дані
+
+підписка
+План
+Loading…
+План
+Loading…
+власні набори
+Ключ адміна
+Збережи
+Створи набір
+
+Створи набір
+
+про застосунок
+Версія
+Версія
+Покажи вступ знову
+
+Покажи вступ знову
+
+Скинь історію питань
+0
+Скинь історію питань
+0
+Зіграні питання не повторюються. Після скидання вони повернуться.
+Політика конфіденційності
+
+Політика конфіденційності
+
+Умови використання
+
+Умови використання
+
+Питання й оцінку відповідей створює штучний інтелект, тож можливі неточності.
+Твої голосові відповіді й теми, які ти пишеш для наборів, обробляють сервіси ШІ від OpenAI, Anthropic, ElevenLabs, Amazon і OpenRouter.
+відгук
+Надішли відгук
+
+Надішли відгук
+
+# identifiers
+settings.voiceCommands
+settings.voiceHints
+settings-voice-commands-status
+settings.autoConfirm
+settings-microphone-row
+settings-call-mode-toggle
+settings-language-menu
+settings.language.en
+settings.language.sk
+settings.language.cs
+settings-thinking-time-menu
+settings.thinkingTime.0
+settings.thinkingTime.10
+settings.thinkingTime.15
+settings.thinkingTime.30
+settings.thinkingTime.45
+settings.thinkingTime.60
+settings.thinkingTime.90
+settings.thinkingTime.120
+settings-question-count-menu
+settings.questionCount.5
+settings.questionCount.10
+settings.questionCount.15
+settings.questionCount.20
+settings-auto-advance-menu
+settings.autoAdvance.5
+settings.autoAdvance.8
+settings.autoAdvance.10
+settings.autoAdvance.15
+settings-answer-reveal-menu
+settings.answerReveal.per_question
+settings.answerReveal.end_of_set
+settings-speak-scores-toggle
+settings-recording-sounds-toggle
+account.signInWithApple
+account.exportData
+account.deleteMyData
+settings.subscription
+packs.adminKeyField
+packs.saveAdminKey
+packs.createPack
+packs.myPacks
+settings.replayOnboarding
+settings.resetHistory
+settings.privacyPolicy
+settings.termsOfUse
+settings.aiDisclosure
+settings.aiServices
+settings.sendFeedback

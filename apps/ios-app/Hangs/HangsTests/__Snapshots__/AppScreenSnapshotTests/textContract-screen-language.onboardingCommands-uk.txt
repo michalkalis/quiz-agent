@@ -1,0 +1,25 @@
+# texts
+trubbo
+“next”
+“repeat”
+“start”
+ГОЛОСОВІ КОМАНДИ
+Скажи «далі», і не треба торкатися телефона. Зручно, коли руки зайняті.
+iPhone запитає про розпізнавання мовлення. Відповідати голосом можна й без команд.
+“next”
+“repeat”
+“start”
+ГОЛОСОВІ КОМАНДИ
+Скажи «далі», і не треба торкатися телефона. Зручно, коли руки зайняті.
+iPhone запитає про розпізнавання мовлення. Відповідати голосом можна й без команд.
+Увімкни команди
+Не зараз
+# identifiers
+onboarding.root
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.commands
+onboarding.speechRecognitionNote
+onboarding.pageIndicator
+onboarding.enableCommands
+onboarding.commandsNotNow

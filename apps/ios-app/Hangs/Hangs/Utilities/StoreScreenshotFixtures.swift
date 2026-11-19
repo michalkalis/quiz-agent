@@ -4,12 +4,12 @@
 //
 //  App Store screenshot mode (#190 — store listing readiness). Active only in
 //  DEBUG builds launched with `--ui-test --store-screenshots`. Supplies
-//  hand-written, listing-quality content in the quiz language (en / sk / cs) so
+//  hand-written, listing-quality content in the quiz language (en / sk / cs / uk) so
 //  raw store screenshots show real-looking questions instead of the generic
 //  `Question.preview` fixtures, and hides every debug-only surface.
 //
 //  Launch args (all optional beyond the two flags):
-//  - `-quizLanguage sk|cs|en`   force the content language (UserDefaults arg domain)
+//  - `-quizLanguage sk|cs|uk|en` force the content language (UserDefaults arg domain)
 //  - `--store-scene <name>`     seed a static scene: listening | confirm | result | mcq
 //    (no value = Home; the custom-pack summary is reached through the UI).
 //
@@ -82,6 +82,18 @@
                     mcqExplanation: "Francie pokrývá 12 časových pásem díky zámořským územím, jako jsou Francouzská Polynésie, Réunion nebo Nová Kaledonie.",
                     packTopic: "Vesmír pro děti: planety, rakety a astronauti",
                     packRowLabel: "Vesmír pro děti"
+                )
+            case "uk":
+                return Content(
+                    openQuestion: "Яка планета має найкоротший день у Сонячній системі?",
+                    openAnswer: "Юпітер",
+                    openExplanation: "Юпітер обертається навколо своєї осі менш ніж за 10 годин, швидше за будь-яку іншу планету. Через швидке обертання він навіть трохи сплюснутий на полюсах.",
+                    openSourceUrl: "https://uk.wikipedia.org/wiki/Юпітер",
+                    mcqQuestion: "У якої країни найбільше часових поясів, якщо рахувати й заморські території?",
+                    mcqOptions: ["Сполучені Штати", "Велика Британія", "Франція", "Австралія"],
+                    mcqExplanation: "Франція має 12 часових поясів завдяки заморським територіям, як-от Французька Полінезія, Реюньйон і Нова Каледонія.",
+                    packTopic: "Космос для дітей: планети, ракети й астронавти",
+                    packRowLabel: "Космос для дітей"
                 )
             default:
                 return Content(

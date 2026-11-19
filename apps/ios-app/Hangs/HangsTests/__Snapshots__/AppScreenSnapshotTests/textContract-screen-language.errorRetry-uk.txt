@@ -1,0 +1,13 @@
+# texts
+ОЙ
+No internet connection
+Check your Wi-Fi or mobile data and try again.
+Спробуй ще раз
+На головну
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.retry
+error.home

@@ -82,6 +82,9 @@
 		<string>RethinkSans-SemiBold.ttf</string>
 		<string>RethinkSans-Bold.ttf</string>
 		<string>RethinkSans-ExtraBold.ttf</string>
+		<string>Manrope-SemiBold.ttf</string>
+		<string>Manrope-Bold.ttf</string>
+		<string>Manrope-ExtraBold.ttf</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>

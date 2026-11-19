@@ -42,7 +42,7 @@ nonisolated enum Config {
         _ page: String,
         languageCode: String = InterfaceLanguage.code
     ) -> URL {
-        let prefix = ["sk", "cs"].contains(languageCode) ? "/\(languageCode)" : ""
+        let prefix = ["sk", "cs", "uk"].contains(languageCode) ? "/\(languageCode)" : ""
         return URL(string: "https://trubbo.app\(prefix)/\(page)")!
     }
 

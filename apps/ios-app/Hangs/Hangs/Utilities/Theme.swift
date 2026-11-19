@@ -86,6 +86,7 @@ private enum Palette {
 extension Theme.Hangs {
     enum Colors {
         // MARK: Surfaces (light / dark)
+
         static let bg = Color(light: Palette.page, dark: Palette.night) // page bg
         static let bgCard = Color(light: Palette.white, dark: Palette.nightCard) // white card
         /// #174 A1: modal sheet surface. MUST stay distinct from `bg` — a sheet
@@ -97,6 +98,7 @@ extension Theme.Hangs {
         static let bgInset = Color(light: Palette.page, dark: Palette.nightInset)
 
         // MARK: Text
+
         static let ink = Color(light: Palette.ink, dark: Palette.paper) // primary text
         static let muted = Color(light: Palette.slate, dark: Palette.fog) // subtext
         static let mutedFaint = Color(light: Palette.slateFaint, dark: Palette.fogFaint) // struck-through answer text
@@ -105,6 +107,7 @@ extension Theme.Hangs {
         static let textOnAccent = Color.white
 
         // MARK: Action — #194 B1: the main action is ink, not pink. Founder
+
         // rule "accent only for the main action" holds; the accent is now ink
         // (light) / paper (dark), so its text flips with it.
         static let action = Color(light: Color(hex: Palette.ink).opacity(0.92), dark: Color(hex: Palette.paper))
@@ -114,6 +117,7 @@ extension Theme.Hangs {
         static let actionSoft = ink.opacity(0.06)
 
         // MARK: Selection and links
+
         /// The chosen option (paywall plan, selected MCQ answer) — cobalt with white text.
         static let accentPrimary = Color(light: Palette.cobalt, dark: Palette.cobaltDark)
         static let accentPrimarySoft = Color(light: Palette.cobalt, dark: Palette.cobaltDark).opacity(0.12)
@@ -125,6 +129,7 @@ extension Theme.Hangs {
         static let credits = Color(light: Palette.mint, dark: Palette.mintDark)
 
         // MARK: Live — listening, reading, thinking (#194 B1, was teal)
+
         /// Text and icons in the live state: 6.4:1 on the light page, 11:1 dark.
         static let live = Color(light: Palette.liveDeep, dark: Palette.liveBright)
         /// Dots, glows and progress fills in the live state (non-text).
@@ -132,6 +137,7 @@ extension Theme.Hangs {
         static let liveSoft = Color(hex: Palette.liveFill).opacity(0.12)
 
         // MARK: Listening for an answer — #198 (canvas Bg-Question): the open
+
         // mic is pink, so it never reads as the green "listening for commands".
         /// Border and wash of the answer bar.
         static let listen = Color(light: Palette.rose, dark: Palette.roseDark)
@@ -142,6 +148,7 @@ extension Theme.Hangs {
         static let listenText = Color(light: Palette.missText, dark: Palette.missTextDark)
 
         // MARK: Rows and groups (#188 G12). One colour per role on every
+
         // screen; the action colour stays reserved for the main action.
         /// Caps label above a group of rows (Settings, Home, sheets).
         static let sectionLabel = muted
@@ -151,6 +158,7 @@ extension Theme.Hangs {
         static let rowValue = muted
 
         // MARK: Feedback
+
         static let greenCheck = Color(hex: Palette.liveFill) // correct fill (white glyph)
         static let greenCorrect = live // correct text/icon on a surface
         static let successText = live
@@ -167,6 +175,7 @@ extension Theme.Hangs {
         static let warning = Color(light: Palette.amber, dark: Palette.amberDark)
 
         // MARK: Borders. Hairline outlines replace drop shadows (#194 B1).
+
         static let hairline = Color( // border-subtle
             light: Color(hex: Palette.ink).opacity(0.06),
             dark: Color(hex: Palette.white).opacity(0.08)
@@ -180,6 +189,7 @@ extension Theme.Hangs {
         static let track = ink.opacity(0.14)
 
         // MARK: Soft washes, translucent fills that read in both appearances
+
         static let greenSoft = liveSoft
         static let errorSoft = error.opacity(0.15)
         /// neutral-soft — the "no verdict either way" wash (skipped result
@@ -361,7 +371,34 @@ extension Theme.Hangs {
         }
 
         private static func content(_ size: CGFloat, weight: Font.Weight, relativeTo style: Font.TextStyle) -> Font {
-            .custom(RethinkSans.name(for: weight), size: size, relativeTo: style)
+            .custom(contentFaceName(for: weight, language: InterfaceLanguage.code), size: size, relativeTo: style)
+        }
+
+        /// The "trubbo" wordmark is a logo: Rethink Sans in every language.
+        static func wordmark(_ size: CGFloat) -> Font {
+            .custom(RethinkSans.name(for: .heavy), size: size, relativeTo: textStyle(for: size))
+        }
+
+        /// #231 (founder 2026-11-17): Rethink Sans has no Cyrillic, so a
+        /// Ukrainian interface sets its content in Manrope (same weights), the
+        /// whole text, so Cyrillic, Latin and digits never mix two faces. Every
+        /// other language keeps Rethink Sans. Read when a view body runs, like
+        /// code-built text in the interface language (`InterfaceLanguage`).
+        nonisolated static func contentFaceName(for weight: Font.Weight, language: String) -> String {
+            language == "uk" ? Manrope.name(for: weight) : RethinkSans.name(for: weight)
+        }
+
+        /// Manrope (OFL, Google Fonts) static 600/700/800 cuts for Ukrainian.
+        nonisolated enum Manrope {
+            static let all = ["Manrope-SemiBold", "Manrope-Bold", "Manrope-ExtraBold"]
+
+            static func name(for weight: Font.Weight) -> String {
+                switch weight {
+                case .heavy, .black: return "Manrope-ExtraBold"
+                case .bold: return "Manrope-Bold"
+                default: return "Manrope-SemiBold"
+                }
+            }
         }
 
         /// PostScript names of the bundled cuts; any weight maps to the nearest.
@@ -448,7 +485,7 @@ extension Font {
     static var hangsContent: Font { Theme.Hangs.Fonts.content(17) }
     /// Long answers in the one-column MCQ list.
     static var hangsContentCompact: Font { Theme.Hangs.Fonts.content(16) }
-    static var hangsWordmark: Font { Theme.Hangs.Fonts.content(28, weight: .heavy) }
+    static var hangsWordmark: Font { Theme.Hangs.Fonts.wordmark(28) }
 }
 
 // MARK: - View helpers

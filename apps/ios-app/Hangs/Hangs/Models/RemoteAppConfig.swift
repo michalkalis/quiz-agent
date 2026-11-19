@@ -18,12 +18,17 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         let sk: String?
         let cs: String?
         let en: String?
+        /// #231: the server omits `uk` while it has no Ukrainian text.
+        let uk: String?
 
         /// The text for `languageCode`, else English, else whichever exists.
+        /// Ukrainian is never the stand-in for another language: a Slovak
+        /// player reads English sooner than Cyrillic.
         func text(for languageCode: String) -> String? {
             let preferred = switch languageCode {
             case "sk": sk
             case "cs": cs
+            case "uk": uk
             default: en
             }
             return [preferred, en, sk, cs].lazy.compactMap { $0 }.first { !$0.isEmpty }

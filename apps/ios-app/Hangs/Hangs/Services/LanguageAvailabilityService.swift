@@ -3,7 +3,7 @@
 //  Hangs
 //
 //  #168 — batch translation pipeline SK/CS (DD14/DD15): which languages the
-//  app may currently OFFER. `Language.supportedLanguages` stays the full ten-code
+//  app may currently OFFER. `Language.supportedLanguages` stays the full
 //  display catalogue (names + native names); this decides which of them the
 //  three pickers actually list.
 //

@@ -14,7 +14,9 @@ import Testing
 
 @Suite("Legal page URLs on trubbo.app")
 struct LegalPageURLTests {
-    @Test("Slovak and Czech open their language variant", arguments: ["sk", "cs"])
+    /// #231: the website's /uk/ legal pages ship before Ukrainian is served
+    /// (231.8 precedes the server switch in 231.11).
+    @Test("Slovak, Czech and Ukrainian open their language variant", arguments: ["sk", "cs", "uk"])
     func localizedVariant(language: String) {
         #expect(Config.legalPageURL("privacy", languageCode: language).absoluteString
             == "https://trubbo.app/\(language)/privacy")

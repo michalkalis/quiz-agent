@@ -145,6 +145,9 @@ struct DailyChallengeDayTests {
         #expect(day.label(languageCode: "sk") == "15. 10.")
         #expect(day.label(languageCode: "cs") == "15. 10.")
         #expect(day.label(languageCode: "en") == "Oct 15")
+        // #231: Ukrainian puts the month in the genitive after the day.
+        #expect(day.label(languageCode: "uk") == "15 жовтня")
+        #expect(DailyChallengeDay(year: 2026, month: 11, day: 18).label(languageCode: "uk") == "18 листопада")
     }
 }
 
@@ -172,6 +175,12 @@ struct DailyShareTextTests {
     func englishAndUnanswered() {
         let text = DailyShareText.make(day: day, language: "en", marks: [true, nil], score: 1, total: 5, rank: nil)
         #expect(text == "Trubbo · daily challenge Oct 15\n✅⬜⬜⬜⬜ 1/5\ntrubbo.app")
+    }
+
+    @Test("Ukrainian header with the genitive month (#231)")
+    func ukrainianHeader() {
+        let text = DailyShareText.make(day: day, language: "uk", marks: [true, false], score: 1, total: 2, rank: nil)
+        #expect(text == "Trubbo · щоденний виклик 15 жовтня\n✅❌ 1/2\ntrubbo.app")
     }
 
     @Test("the text never contains an answer")

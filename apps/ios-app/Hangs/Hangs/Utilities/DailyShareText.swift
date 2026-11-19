@@ -59,6 +59,7 @@ nonisolated enum DailyShareText {
         switch language {
         case "sk": "denná výzva"
         case "cs": "denní výzva"
+        case "uk": "щоденний виклик"
         default: "daily challenge"
         }
     }

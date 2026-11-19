@@ -114,6 +114,8 @@ struct AppScreenSnapshotTests {
         arguments: AppScreen.allCases, HeroLanguage.allCases
     )
     func pixels(screen: AppScreen, language: HeroLanguage) async {
+        await language.enterInterfaceFace()
+        defer { HeroLanguage.leaveInterfaceFace() }
         // Pinned, not inherited — same as the hero suite (dark, 1x, fixed locale).
         let view = await screen.make()
             .environment(\.hangsCardMotion, false)

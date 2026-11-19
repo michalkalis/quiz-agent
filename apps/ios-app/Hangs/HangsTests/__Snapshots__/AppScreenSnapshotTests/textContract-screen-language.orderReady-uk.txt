@@ -1,0 +1,8 @@
+# texts
+30
+Твій набір готовий
+Почни вікторину
+Закрий
+# identifiers
+orderProgress.startQuiz
+orderPack.closeButton

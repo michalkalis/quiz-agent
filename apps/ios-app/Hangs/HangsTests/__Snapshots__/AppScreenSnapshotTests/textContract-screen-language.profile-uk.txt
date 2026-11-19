@@ -1,0 +1,22 @@
+# texts
+ПРОФІЛЬ
+Твоє ім'я
+Michal
+Твоє ім'я
+Michal
+Твій M10
+Усього
+312 питання
+3 год, 20 хв
+Сильна сторона
+Geography & World
+82 % правильно
+Коли граєш
+Увечері
+найчастіше в неділю
+# identifiers
+profile.settings
+profile.account
+profile.name
+profile.recap
+profile.allStats

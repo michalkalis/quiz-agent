@@ -1,0 +1,11 @@
+# texts
+ОЙ
+Quiz ended
+This quiz is no longer active. Start a new quiz.
+На головну
+# identifiers
+error.root
+error.icon
+error.title
+error.description
+error.home

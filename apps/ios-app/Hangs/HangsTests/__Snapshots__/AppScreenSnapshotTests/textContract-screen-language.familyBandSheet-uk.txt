@@ -1,0 +1,17 @@
+# texts
+Для якого віку?
+Відповідаєш ти, а діти вгадують разом із тобою.
+4–6
+Так, ні або одне з двох
+7–9
+Короткі питання, відповідь голосом
+10–12
+Довші питання, відповідь голосом
+Я запам'ятаю вік. Зміниш його на головному екрані.
+# identifiers
+family.band.sheet
+family.band.close
+family.band.adultAnswers
+family.band.kids_4_6
+family.band.kids_7_9
+family.band.kids_10_12

@@ -107,6 +107,29 @@ struct AppConfigStoreTests {
         #expect(czech.notice == "Maintenance tonight.")
     }
 
+    /// WHY (#231): the server sends an optional `uk` notice; a Ukrainian
+    /// player must read it, and while the server omits it (it drops a blank
+    /// `uk`), English stands in. Ukrainian never stands in for sk/cs/en.
+    @Test("A Ukrainian notice reaches a Ukrainian player; without one English stands in")
+    func ukrainianNotice() async throws {
+        let withUk = try JSONDecoder().decode(RemoteAppConfig.self, from: Data("""
+        {"orders_enabled": true,
+         "notice": {"sk": null, "cs": null, "en": "Maintenance tonight.", "uk": "Сьогодні технічні роботи."}}
+        """.utf8))
+        let withoutUk = try JSONDecoder().decode(RemoteAppConfig.self, from: Data("""
+        {"orders_enabled": true, "notice": {"sk": "Údržba.", "cs": null, "en": "Maintenance tonight."}}
+        """.utf8))
+        let ukrainian = makeStore(version: "1.0", language: "uk") { withUk }
+        let fallback = makeStore(version: "1.0", language: "uk") { withoutUk }
+        let slovak = makeStore(version: "1.0", language: "sk") { withUk }
+        await ukrainian.refresh()
+        await fallback.refresh()
+        await slovak.refresh()
+        #expect(ukrainian.notice == "Сьогодні технічні роботи.")
+        #expect(fallback.notice == "Maintenance tonight.")
+        #expect(slovak.notice == "Maintenance tonight.")
+    }
+
     @Test("A dismissed notice stays hidden across launches until the text changes")
     func dismissedNoticeIsRemembered() async {
         let defaults = UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)")!
@@ -116,7 +139,7 @@ struct AppConfigStoreTests {
                 minVersionAppStore: nil,
                 minVersionTestflight: nil,
                 ordersEnabled: true,
-                notice: .init(sk: nil, cs: nil, en: text)
+                notice: .init(sk: nil, cs: nil, en: text, uk: nil)
             )
         }
         let first = makeStore(version: "1.0", defaults: defaults, fetch: fetch)

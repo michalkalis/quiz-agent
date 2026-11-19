@@ -1,0 +1,40 @@
+# texts
+ГОТОВО
+фінальний рахунок
+4
+з 5
+Lepšie skóre ako 2 z 3 hráčov.
+це мало хто знав
+Libanon
+Ktorá krajina má na vlajke cédrový strom?
+Vedel to len 1 z 3.
+твоя компанія цього тижня
+1.
+Peter
+240
+2.
+Jana (ти)
+185
+3.
+Mama
+90
+Правильна відповідь, яку знали небагато людей, дає більше балів, до 100.
+Поділись
+Додому
+Поділись
+Додому
+# identifiers
+daily.end
+daily.close
+daily.tiles
+daily.score
+daily.comparison
+daily.bestHit
+daily.crew
+daily.crew.member
+daily.crew.you
+daily.crew.member
+daily.share
+daily.home
+daily.share
+daily.home

@@ -1,0 +1,19 @@
+# texts
+мої набори
+Famous bridges of the world and the engineers who built them
+Зіграно 4 / 30
+· English
+history
+Готово 5 з 30
+EN
+Preparing
+Створи власний набір
+# identifiers
+home.myPacksSection
+home.myPacks.showAll
+home.myPacks.play
+home.myPacks.progress
+home.myPacks.language
+home.myPacks.play
+home.myPacks.readyCount
+home.createPack

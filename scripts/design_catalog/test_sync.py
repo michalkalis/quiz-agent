@@ -149,7 +149,13 @@ enum Fonts {
         content(size, weight: weight, relativeTo: textStyle(for: size))
     }
     private static func content(_ size: CGFloat, weight: Font.Weight, relativeTo style: Font.TextStyle) -> Font {
-        .custom(RethinkSans.name(for: weight), size: size, relativeTo: style)
+        .custom(contentFaceName(for: weight, language: InterfaceLanguage.code), size: size, relativeTo: style)
+    }
+    static func wordmark(_ size: CGFloat) -> Font {
+        .custom(RethinkSans.name(for: .heavy), size: size, relativeTo: textStyle(for: size))
+    }
+    nonisolated static func contentFaceName(for weight: Font.Weight, language: String) -> String {
+        language == "uk" ? Manrope.name(for: weight) : RethinkSans.name(for: weight)
     }
     nonisolated enum RethinkSans {
         static let all = ["RethinkSans-SemiBold", "RethinkSans-Bold", "RethinkSans-ExtraBold"]
@@ -191,6 +197,7 @@ extension Font {
     static var hangsRow: Font { .hangsBody(16, weight: .semibold) }
     static var hangsAnswer: Font { Theme.Hangs.Fonts.content(17) }
     static var hangsMark: Font { Theme.Hangs.Fonts.content(28, weight: .heavy) }
+    static var hangsLogo: Font { Theme.Hangs.Fonts.wordmark(28) }
 }
 """
 

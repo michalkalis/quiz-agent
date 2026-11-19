@@ -1,0 +1,26 @@
+# texts
+Правила гри
+Готово
+Час на відповідь
+15 s
+30 s
+45 s
+60 s
+Власний
+Час на відповідь
+Читати питання вголос
+
+After each question
+At the end of the quiz
+Коли показувати відповіді
+At the end of the quiz
+Коли показувати відповіді
+At the end of the quiz
+Діє для всіх гравців. Твої налаштування для гри наодинці лишаються.
+# identifiers
+room.rules.done
+room.rules.sheet.time
+room.rules.sheet.readsAloud
+room.rules.sheet.reveal
+room.rules.sheet.reveal.question
+room.rules.sheet.reveal.round

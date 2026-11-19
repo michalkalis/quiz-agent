@@ -94,7 +94,14 @@ class FontResolver:
         self.display = [(b, _num(s), w, t) for b, (s, w, t) in _switch(
             _block(fonts, "static func display("), r"content\(([\d.]+), weight: \.(\w+), relativeTo: \.(\w+)\)", "display(_:)")]
         _one(r"private static func content\(_ size: CGFloat, weight: Font\.Weight, relativeTo style: Font\.TextStyle\) -> Font \{\s*"
-             r"\.custom\(RethinkSans\.name\(for: weight\), size: size, relativeTo: style\)\s*\}", fonts, "content(_:weight:relativeTo:)")
+             r"\.custom\(contentFaceName\(for: weight, language: InterfaceLanguage\.code\), size: size, relativeTo: style\)\s*\}",
+             fonts, "content(_:weight:relativeTo:)")
+        # #231: the catalog shows the Latin interface; only Ukrainian swaps the face (Manrope).
+        _one(r'static func contentFaceName\(for weight: Font\.Weight, language: String\) -> String \{\s*'
+             r'language == "uk" \? Manrope\.name\(for: weight\) : RethinkSans\.name\(for: weight\)\s*\}',
+             fonts, "contentFaceName(for:language:)")
+        self.wordmark_weight = _one(r"static func wordmark\(_ size: CGFloat\) -> Font \{\s*\.custom\(RethinkSans\.name\(for: \.(\w+)\), "
+                                    r"size: size, relativeTo: textStyle\(for: size\)\)\s*\}", fonts, "wordmark(_:)").group(1)
         self.content_default = _one(r"static func content\(_ size: CGFloat, weight: Font\.Weight = \.(\w+)\) -> Font \{\s*"
                                     r"content\(size, weight: weight, relativeTo: textStyle\(for: size\)\)\s*\}", fonts, "content(_:weight:)").group(1)
         self.body_default = _one(r"static func body\(_ size: CGFloat, weight: Font\.Weight = \.(\w+)\) -> Font \{\s*"
@@ -134,6 +141,8 @@ class FontResolver:
             return self._cut(fn, s, w, style)
         if fn == "content":
             return self._cut(fn, size, weight or self.content_default, self.text_style(size)[0])
+        if fn == "wordmark":  # the logo: Rethink Sans in every interface language
+            return self._cut("content", size, self.wordmark_weight, self.text_style(size)[0])
         style, pt = self.text_style(size)
         if fn == "body":
             return Resolved(fn, SYSTEM_FAMILY, pt, FONT_WEIGHTS[weight or self.body_default], style)

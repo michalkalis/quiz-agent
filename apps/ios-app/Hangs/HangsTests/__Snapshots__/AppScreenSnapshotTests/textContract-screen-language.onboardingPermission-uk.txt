@@ -1,0 +1,23 @@
+# texts
+trubbo
+МІКРОФОН
+Trubbo потрібен доступ до мікрофона, щоб чути твої голосові відповіді. Відповіді можеш і писати.
+Твої відповіді й теми наборів обробляють сторонні сервіси ШІ. Продовжуючи, ти з цим погоджуєшся.
+Політика конфіденційності
+МІКРОФОН
+Trubbo потрібен доступ до мікрофона, щоб чути твої голосові відповіді. Відповіді можеш і писати.
+Твої відповіді й теми наборів обробляють сторонні сервіси ШІ. Продовжуючи, ти з цим погоджуєшся.
+Політика конфіденційності
+Дозволь мікрофон
+Може, пізніше
+# identifiers
+onboarding.root
+onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
+onboarding.permission
+onboarding.aiDisclosure
+onboarding.privacyPolicy
+onboarding.pageIndicator
+onboarding.allowMic
+onboarding.maybeLater

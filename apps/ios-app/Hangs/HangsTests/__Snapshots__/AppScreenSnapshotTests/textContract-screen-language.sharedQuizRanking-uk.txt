@@ -1,0 +1,14 @@
+# texts
+Рейтинг
+1.
+Rýchly gepard
+8
+2.
+Ти
+7.5
+3.
+Zuzka
+5
+Коли її дограють інші, вони з'являться тут.
+# identifiers
+sharedQuiz.ranking

@@ -1,0 +1,14 @@
+# texts
+Trubbo Plus
+Збережи Plus
+Після входу Trubbo Plus прив'яжеться до твого облікового запису Apple. Він лишиться з тобою на новому телефоні або після перевстановлення.
+Не вдалося увійти. Перевір підключення й спробуй ще раз. Твоя покупка й далі збережена на цьому пристрої.
+Пізніше, увійду в Налаштуваннях
+# identifiers
+signInPrompt.root
+signInPrompt.hero
+signInPrompt.title
+signInPrompt.subtitle
+signInPrompt.errorBanner
+signInPrompt.appleButton
+signInPrompt.later

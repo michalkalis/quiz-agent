@@ -1,0 +1,15 @@
+# texts
+trubbo
+МІКРОФОН ВИМКНЕНО
+Для голосових відповідей потрібен мікрофон. Увімкни його в Параметрах або грай далі й пиши відповіді.
+МІКРОФОН ВИМКНЕНО
+Для голосових відповідей потрібен мікрофон. Увімкни його в Параметрах або грай далі й пиши відповіді.
+Відкрий Параметри
+Краще пиши відповіді
+# identifiers
+onboarding.root
+onboarding.denied
+onboarding.denied
+onboarding.pageIndicator
+onboarding.openSettings
+onboarding.typeInstead

@@ -1,0 +1,8 @@
+# texts
+
+Tvůj balíček se ještě připravuje
+Trvá to déle než obvykle. Až bude hotový, najdeš ho v Mých balíčcích.
+Rozumím
+# identifiers
+orderPack.stillPreparing
+orderPack.gotIt

@@ -11,9 +11,9 @@
 Читати питання вголос
 
 Коли показувати відповіді
-At the end of the quiz
+After each question
 Коли показувати відповіді
-At the end of the quiz
+After each question
 Зміни діють з наступного питання. Коли показувати відповіді, можна змінити лише до початку гри.
 # identifiers
 room.rules.done

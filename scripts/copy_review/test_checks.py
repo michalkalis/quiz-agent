@@ -98,9 +98,15 @@ class UkrainianChecks(unittest.TestCase):
 
 
 class RowChecks(unittest.TestCase):
-    def test_missing_ukrainian_translation_is_flagged(self):
+    def test_row_translated_for_some_languages_only_is_an_error(self):
+        # #905 and #907 merged with sk/cs texts and no uk: a Ukrainian player would read English.
         flags = check(row())
-        self.assertIn(("uk", 8, "missing translation"), {(f["lang"], f["rule"], f["note"]) for f in flags})
+        self.assertIn(("uk", 8, "missing translation", True), {(f["lang"], f["rule"], f["note"], f["error"]) for f in flags})
+
+    def test_row_with_no_translation_at_all_is_not_an_error(self):
+        # Symbols, debug labels and names stay English on purpose; only a partly translated row blocks.
+        flags = check(row(sk=None, cs=None))
+        self.assertEqual([f for f in flags if f["error"]], [])
 
     def test_ukrainian_count_needs_plural_variants(self):
         flags = check(row(en={"one": "%lld question", "other": "%lld questions"}, sk=None, cs=None, uk="%lld питань"))

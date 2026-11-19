@@ -1,0 +1,34 @@
+# texts
+Гра разом
+1/2
+M
+Michal
+P
+Peťo
+30 с
+після читання
+SCIENCE & NATURE
+Which planet has the most known moons?
+A
+Jupiter
+B
+Saturn
+C
+Uranus
+D
+Neptune
+Інші побачать твою відповідь лише після питання.
+# identifiers
+room.close
+question.progress
+question.counter
+room.question.players
+room.question.timer
+room.question.readingProgress
+question.category
+room.guestReadAloud
+question.text
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d

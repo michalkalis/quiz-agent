@@ -131,3 +131,60 @@ async def test_translation_record_still_wins():
     result = await flow.process_answer(session=session, answer_text="b")
 
     assert result.evaluation.correct_answer == "Venusa"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "language, question_text, answer",
+    [
+        ("uk", "Яке місто є столицею України?", "Київ"),
+        ("sk", "Ktoré mesto je hlavným mestom Slovenska?", "Bratislava"),
+        ("cs", "Které město je hlavním městem Česka?", "Praha"),
+    ],
+    ids=["uk", "sk", "cs"],
+)
+async def test_native_answer_in_its_own_language_is_never_machine_translated(
+    language, question_text, answer
+):
+    """#231: a native question carries its answer already written and gate-checked
+    in the session language. Sending it through the live "translate to <lang>" LLM
+    call would put a model on the hot path and could reword a reviewed answer
+    (a Ukrainian game must show only natively written text)."""
+    question = Question(
+        id="q_current",
+        question=question_text,
+        type="text",
+        correct_answer=answer,
+        topic="Geography",
+        category="general",
+        difficulty="easy",
+        language=language,
+    )
+    flow = _make_flow(question)
+    flow.translation_service = MagicMock()
+    flow.translation_service.translate_feedback = AsyncMock(
+        return_value="LLM:" + answer
+    )
+
+    result = await flow.process_answer(
+        session=_make_session(language=language), answer_text=answer
+    )
+
+    assert result.evaluation.correct_answer == answer
+    flow.translation_service.translate_feedback.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_english_question_in_a_ukrainian_session_still_gets_its_answer_translated():
+    """The same-language shortcut must not swallow the legacy path: an English row
+    served without a translation record still needs its answer in Ukrainian."""
+    flow = _make_flow(_free_text().model_copy(update={"language": "en"}))
+    flow.translation_service = MagicMock()
+    flow.translation_service.translate_feedback = AsyncMock(return_value="Париж")
+
+    result = await flow.process_answer(
+        session=_make_session(language="uk"), answer_text="Paris"
+    )
+
+    assert result.evaluation.correct_answer == "Париж"
+    flow.translation_service.translate_feedback.assert_awaited_once()

@@ -12,7 +12,7 @@ its numerals.
 import logging
 import re
 
-from .ordinals import spell_ordinals
+from .ordinals import F_LOC, ordinal_words, spell_ordinals
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,30 @@ _UK_PERCENT_FORMS = ("відсоток", "відсотки", "відсотків
 _UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)([,.]\d+)?\s?%")
 # "3.5" is a decimal too; a dot before exactly three digits groups thousands.
 _UK_DECIMAL_DOT_RE = re.compile(r"(?<![\d,.])(\d+)\.(\d{1,2}|\d{4,})(?![\d,]|\.\d)")
+# …except a clock time after "о/об": "о 10.30" is "о десятій тридцять".
+_UK_TIME_RE = re.compile(
+    r"(?<![^\W\d_])(о|об)(\s+)([01]?\d|2[0-4])[.:]([0-5]\d)(?!\d|[.:,]\d)",
+    re.IGNORECASE,
+)
+
+
+def _spell_time_uk(match: re.Match, num2words) -> str:
+    """The hour as a feminine ordinal in the locative ("годині" left out), the
+    minutes as a feminine count ("хвилин"): "о сьомій нуль п'ять", "об
+    одинадцятій двадцять дві"; a full hour is just "о десятій"."""
+    hour, minutes = int(match.group(3)), match.group(4)
+    if hour == 0:
+        return match.group(0)
+    words = ordinal_words(hour, "uk", F_LOC)
+    preposition = "об" if words.startswith("о") else "о"  # "об одинадцятій"
+    if match.group(1)[0].isupper():
+        preposition = preposition.capitalize()
+    if minutes != "00":
+        zero = "нуль " if minutes[0] == "0" else ""
+        words += f" {zero}{_uk_feminine(_uk_cardinal(int(minutes), num2words))}"
+    return f"{preposition}{match.group(2)}{words}"
+
+
 # "7 з 10", "2 із 9": "out of" takes the genitive ("сім з десяти"); the first
 # number stays as written.
 _UK_OUT_OF_RE = re.compile(
@@ -281,6 +305,8 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
             return token
 
     try:
+        if language == "uk":
+            text = _UK_TIME_RE.sub(lambda m: _spell_time_uk(m, num2words), text)
         # Ordinals first (#200): "19. storočí" must become one declined word,
         # not the cardinal plus a sentence-end period ("devätnásť. storočí").
         text = spell_ordinals(text, language)

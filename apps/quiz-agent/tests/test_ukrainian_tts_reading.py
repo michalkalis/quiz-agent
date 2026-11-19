@@ -186,6 +186,93 @@ def test_sk_and_cs_counts_are_untouched():
     assert normalize_numbers_for_tts("2,5", "cs") == "dvě celé pět"
 
 
+# ── Server review 2 (#231): forms a native speaker heard as wrong ────────────
+
+
+@pytest.mark.parametrize(
+    ("text", "spoken"),
+    [
+        (
+            "Правильна відповідь: XIX століття.",
+            "Правильна відповідь: дев'ятнадцяте століття.",
+        ),
+        ("Відповідь: 3 століття.", "Відповідь: третє століття."),
+        ("Відповідь: XX ст.", "Відповідь: двадцяте століття."),
+        ("Період: XIX століття", "Період: дев'ятнадцяте століття"),
+        # Another label before 2–4 may still be a count.
+        ("Тривалість: 3 століття", "Тривалість: три століття"),
+    ],
+)
+def test_the_answer_names_its_century_in_the_nominative(text, spoken):
+    """The feedback line "Правильна відповідь: {answer}" names the century, so
+    it must not come out in the genitive ("дев'ятнадцятого") or as a count."""
+    assert say(text) == spoken
+
+
+@pytest.mark.parametrize(
+    ("text", "spoken"),
+    [
+        ("З 1 по 5 травня", "З першого по п'яте травня"),
+        ("з 1 до 5 травня", "з першого до п'ятого травня"),
+        ("1–5 травня", "першого – п'ятого травня"),
+        ("8 листопада", "восьмого листопада"),
+    ],
+)
+def test_a_span_of_days_reads_both_days_as_dates(text, spoken):
+    """«З один по п'ятого травня» mixes a count with a date; both ends of a
+    span are days of the month, "по" taking the accusative."""
+    assert say(text) == spoken
+
+
+def test_a_dashed_decade_span_gives_both_years_the_suffix_case():
+    """«шістдесят–…сімдесятих роках» left the first decade a bare cardinal."""
+    assert say("У 1960–1970-х роках") == (
+        "У тисяча дев'ятсот шістдесятих – тисяча дев'ятсот сімдесятих роках"
+    )
+
+
+@pytest.mark.parametrize(
+    ("text", "spoken"),
+    [
+        ("Поїзд о 10.30", "Поїзд о десятій тридцять"),
+        ("Поїзд о 10:30", "Поїзд о десятій тридцять"),
+        ("о 7.05", "о сьомій нуль п'ять"),
+        ("о 11.15", "об одинадцятій п'ятнадцять"),
+        ("о 10.00", "о десятій"),
+        # Sentence punctuation after the time keeps it a time.
+        ("Поїзд о 10.30, потім", "Поїзд о десятій тридцять, потім"),
+        ("Поїзд о 10:30, потім", "Поїзд о десятій тридцять, потім"),
+        ("о 10.30.", "о десятій тридцять."),
+        ("о 10.30?", "о десятій тридцять?"),
+        ("(о 10.30)", "(о десятій тридцять)"),
+        # Not a time: still a decimal.
+        ("2.5 метра", "дві цілих п'ять десятих метра"),
+    ],
+)
+def test_a_clock_time_after_o_is_not_a_decimal(text, spoken):
+    """«о десять цілих три десятих» is a decimal where the question gives a
+    time of day."""
+    assert say(text) == spoken
+
+
+def test_a_number_running_on_after_the_minutes_is_not_a_time():
+    """«о 10.30,5» is no clock time; only a comma before a digit blocks it."""
+    assert "десятій" not in say("о 10.30,5")
+
+
+@pytest.mark.parametrize(
+    ("text", "spoken"),
+    [
+        ("У 2100 році", "У дві тисячі сотому році"),
+        ("у 2150 році", "у дві тисячі сто п'ятдесятому році"),
+        ("у 2000 році", "у двохтисячному році"),
+    ],
+)
+def test_years_after_2099_are_ordinals_too(text, spoken):
+    """«У дві тисячі сто році» is a count where a year is meant."""
+    assert say(text) == spoken
+
+
 # ── Daily challenge: the verb agrees with "1 відсоток" ───────────────────────
 
 

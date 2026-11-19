@@ -1,0 +1,77 @@
+{
+ "keep": [
+  "558d4be7-9726-4c0a-89b0-3091f0430063",
+  "ceb0d769-d9d9-47a9-95f1-278dcc9526db",
+  "c40a6515-0cdd-48dc-b29b-bb490b24ba49",
+  "2acffbd4-85f4-405b-a387-036c1fe42064",
+  "09a59503-2bb3-4cee-ba05-5f19bbc9d94c",
+  "5527b403-19e6-4869-9056-d979a3c13ac8",
+  "916d54e9-d29a-42ba-8849-37c799e654b6",
+  "d33272a9-3bfc-4902-a90d-ef313a1f52ef",
+  "39e68e7c-6061-4df7-96ce-c9a4f58b5a9c",
+  "8f1eedfb-e2e9-43d7-9090-e48a2c1ec58a",
+  "4739a977-a5ce-41df-9509-725fc830589e"
+ ],
+ "fix": [
+  {
+   "id": "ceb0d769-d9d9-47a9-95f1-278dcc9526db",
+   "field": "source_excerpt",
+   "new": "represent prosperity, food, flavour, warmth for the house, and good cheer",
+   "why": "Old excerpt was a paraphrase; verbatim text from the page"
+  },
+  {
+   "id": "2acffbd4-85f4-405b-a387-036c1fe42064",
+   "field": "source_excerpt",
+   "new": "In Buddhism, there are 108 sins known as kleshas or bonnou (煩悩) in Japanese.",
+   "why": "Old excerpt did not support what each strike chases away"
+  },
+  {
+   "id": "09a59503-2bb3-4cee-ba05-5f19bbc9d94c",
+   "field": "question",
+   "new": "One of the first inhabited places on Earth to see the New Year is a Pacific atoll called Christmas Island. Which country does it belong to?",
+   "why": "Other inhabited Line Islands share UTC+14; Wikipedia says 'one of the first'"
+  },
+  {
+   "id": "09a59503-2bb3-4cee-ba05-5f19bbc9d94c",
+   "field": "explanation",
+   "new": "Christmas Island, or Kiritimati, runs on the world's earliest clock, so its fireworks go off while it's still ten in the morning in London.",
+   "why": "Dropped 'ahead of everyone', which is overstated"
+  },
+  {
+   "id": "09a59503-2bb3-4cee-ba05-5f19bbc9d94c",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Kiritimati",
+   "why": "News item about one year; replaced with a lasting source"
+  },
+  {
+   "id": "09a59503-2bb3-4cee-ba05-5f19bbc9d94c",
+   "field": "source_excerpt",
+   "new": "one of the first inhabited places on Earth to experience New Year's Day",
+   "why": "Verbatim from the new source"
+  },
+  {
+   "id": "916d54e9-d29a-42ba-8849-37c799e654b6",
+   "field": "explanation",
+   "new": "King cake belongs to the whole Carnival season, from Epiphany until the last party on Fat Tuesday. Then Lent begins.",
+   "why": "'Official cake' and 'out of season is bad form' unsupported; Wikipedia notes it is now sold year round"
+  },
+  {
+   "id": "916d54e9-d29a-42ba-8849-37c799e654b6",
+   "field": "source_excerpt",
+   "new": "Twelfth Night, January 6th, is the traditional start. ... Mardi Gras closes the season",
+   "why": "Old excerpt was not verbatim"
+  },
+  {
+   "id": "8f1eedfb-e2e9-43d7-9090-e48a2c1ec58a",
+   "field": "explanation",
+   "new": "The Roman year opened in March, which made September the seventh month, October the eighth, November the ninth and December the tenth. January and February were added later.",
+   "why": "Whether they were added at the front is disputed (Plutarch: first at the end, moved later)"
+  }
+ ],
+ "drop": [
+  {
+   "id": "851f622c-7f85-41c3-bec3-76d9876791f3",
+   "why": "Danish plate custom and its 'many friends' meaning found only in listicles; Danish Wikipedia describes throwing pottery at doors as a former custom to make noise"
+  }
+ ]
+}

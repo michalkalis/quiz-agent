@@ -1,0 +1,674 @@
+{
+ "keep": [
+  "347dcb1b-a7d1-4e75-8d7a-0caf4c408c18",
+  "89c5f968-1aea-4038-a705-a501f8a88a81",
+  "c2bbc6c9-fd87-4c4a-8403-a9c659b1c9c1",
+  "7fa9194f-b478-43d9-9af5-160b9ac2a2fb",
+  "2dfe4211-f613-4c66-a110-300387f14992",
+  "f6ed6ac1-35b6-4ef7-95c6-e70a7e849fd1",
+  "635528f5-a1e2-4f46-bdad-89fa0135c766",
+  "bfa3aa10-72f8-481a-a4f8-1a742927d398",
+  "dbfa2048-7955-48f3-bf7c-c6d8134c5f95",
+  "dae56b76-cc38-4125-afec-a9310e762631",
+  "18970fff-9e88-44e7-ac24-e2b65b1fa61d",
+  "98757607-54c7-4c7b-bc94-e6fd32ecd62c",
+  "00fb2d3d-bace-47ce-86ec-2141cca7ae74",
+  "910b7191-0ad4-44f2-a6b2-143a741ff2a0",
+  "de729fb0-ada9-4f17-ade8-9485eeffdd6c",
+  "424baa66-466f-4b49-9643-067e10005c64",
+  "fa03737c-e300-47be-a923-ed1271e2d257",
+  "023194f4-6238-49d4-a6d6-97855db69e0e",
+  "2b178416-56ac-4432-8589-8b614b98f825",
+  "1bff9ced-908b-4903-9ee7-ed2213ba311e",
+  "48b95f4c-ef1f-47a7-88df-9fba1ffc5e50",
+  "3535fc19-f752-44af-93da-ad9618b331e8",
+  "7a413a4b-a405-4180-bc8c-f861b5387037",
+  "a6ef9f3f-c86e-4920-b7b5-767667b9901a",
+  "06eb30ea-7ade-44c5-b086-26309cc4955c",
+  "2f34f41e-334a-4209-9d2f-5608095f51ad",
+  "fcbcc6a7-ca3c-4815-a6fa-f9bd427b654e",
+  "7b54b97b-16d1-4534-8e6e-cbd762b225b0",
+  "8ac1caf2-4b68-44af-becc-de1cb4889553",
+  "4ebb8868-6f96-410c-8b03-53471b966b53",
+  "e01d7394-654a-4257-a560-c42e71702599",
+  "ae14c28d-eec4-454e-9377-f2fc820df7e7",
+  "f509f139-9589-410b-8ff0-4944e7fa7df7",
+  "f932663a-9b1c-4903-b316-90b1a1ed4bb2",
+  "d21d668c-af55-4832-b45c-39946944192f",
+  "bc1f3794-964e-4fda-a250-210e6c2a96a9",
+  "3e45a96c-0376-41ec-87c3-2a19d5ebeb10",
+  "678f212e-96c5-40c7-88dc-1c5051f06191",
+  "e64337e4-f120-4f17-a552-cff5359a3854",
+  "c82daa3e-1aad-4400-b5fc-4a674f8958f9",
+  "cbe6cec8-03a8-4874-9624-d364cdb46bd8",
+  "e696e941-21a3-4435-86d0-9d430fa0cbbe",
+  "a3624275-05bd-4997-97e3-81f3e14e040e",
+  "68413d83-d1eb-4708-81f9-4e906adac402",
+  "c9cf0d17-3cbd-49dc-bc10-0ba8b73980ec",
+  "69ea6183-06e1-4922-a733-b543716f8639",
+  "20b3f2eb-5940-46f8-88bb-529ebf6f8032",
+  "b9b6df14-316f-40cc-a2ec-e6b8f65cf656",
+  "38a2d9d9-43ab-4a07-87bb-930131926116",
+  "86417d34-b8e7-40a5-b5ae-0c10b987eef9",
+  "6d73d814-4c3e-4ef8-a5a6-e295752fd0d8",
+  "b8daaaaa-9a45-4b16-854f-c6fb39c27ac0",
+  "7c8d271f-9c44-4130-b7aa-a95d14b5a5f6",
+  "00a15ca1-7f4f-48ad-8c84-b08b65bfa1f0",
+  "8f2d77a0-ab32-4daa-aeb0-6c56c1b87a09",
+  "b00eae08-d482-40d7-b0a8-7aec7e797644",
+  "d31ebca3-e1b5-4aa6-b4d9-44fcc6164fc0",
+  "5e1d19e6-6371-48fd-b3f6-07c8347f8f5b",
+  "c6a9df05-b274-44e3-a58c-a15da30ea6d5",
+  "7901f090-3c8d-4b16-a202-c896e098ea57",
+  "afd0c2dc-f6b7-4e8f-8591-dc7efbeebbd7",
+  "70908806-cbb2-4fa2-8f0f-476c664e6e98",
+  "86acd784-5622-41c1-8d4f-72cf3c959347",
+  "6c312982-8739-4c8b-8443-19484c6f7157",
+  "e51b4451-f5d6-4839-ae85-a3d3bf6af8b4",
+  "edce2001-686d-458c-a811-6d55d7872efc",
+  "1cfb606a-a662-41ba-9e9a-2e661b163caf",
+  "d2cd6482-0c8b-4685-8a9a-395f3d8f1ba6",
+  "e5282f13-adde-4e6d-af53-8daa3e728853",
+  "5f0f4e31-923c-4e80-a2f7-4f1d5966ce00",
+  "68c395e3-d651-4158-afb5-f716db08e1ca"
+ ],
+ "fix": [
+  {
+   "id": "347dcb1b-a7d1-4e75-8d7a-0caf4c408c18",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Geographical_midpoint_of_Europe",
+   "why": "summitpost (climbing forum) is a weak source; Wikipedia states the 1887 Austro-Hungarian marker"
+  },
+  {
+   "id": "347dcb1b-a7d1-4e75-8d7a-0caf4c408c18",
+   "field": "source_excerpt",
+   "new": "In 1887, geographers from the Austro-Hungarian Empire set up a historical marker and a large stone in what is today a part of Ukraine, believed to mark the geographic centre of Europe.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "c2bbc6c9-fd87-4c4a-8403-a9c659b1c9c1",
+   "field": "question",
+   "new": "На глибині понад двісті метрів Чорне море майже мертве: там виживають хіба що бактерії, бо вода насичена газом із запахом тухлих яєць. Що це за газ?",
+   "why": "«глибше двохсот метрів» (comparative + genitive) is a Russianism"
+  },
+  {
+   "id": "c2bbc6c9-fd87-4c4a-8403-a9c659b1c9c1",
+   "field": "explanation",
+   "new": "Понад 90% глибинних вод Чорного моря не мають кисню, зате насичені сірководнем. Тому дельфіни, риба й медузи живуть лише в тонкому верхньому шарі.",
+   "why": "Source says >90% of the deep volume is anoxic water, not that H2S fills 90% of the sea"
+  },
+  {
+   "id": "7fa9194f-b478-43d9-9af5-160b9ac2a2fb",
+   "field": "source_excerpt",
+   "new": "Some scholars understand the name to be derived from a system of Turkic color symbolism representing the cardinal directions, with black or dark for north, red for south, white for west, and green or light blue for east.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "2dfe4211-f613-4c66-a110-300387f14992",
+   "field": "question",
+   "new": "Червоноцегляний палац Чернівецького університету внесли до списку ЮНЕСКО, але звели його зовсім не для студентів. Хто там жив?",
+   "why": "spelling: compound adjective is written as one word"
+  },
+  {
+   "id": "2dfe4211-f613-4c66-a110-300387f14992",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Резиденція_митрополитів_Буковини_і_Далмації",
+   "why": "en excerpt was not on the page; uk.wikipedia supports architect, dates and later university use"
+  },
+  {
+   "id": "2dfe4211-f613-4c66-a110-300387f14992",
+   "field": "source_excerpt",
+   "new": "Комплекс збудований у 1864—1882 роках. Архітектор — Йозеф Главка. Після Другої світової війни його будівлі використовує Чернівецький національний університет імені Юрія Федьковича.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "f6ed6ac1-35b6-4ef7-95c6-e70a7e849fd1",
+   "field": "alternative_answers",
+   "new": [
+    "Поліський бурштин",
+    "Рівненський бурштин"
+   ],
+   "why": "«янтар» is the Russian word; do not accept it"
+  },
+  {
+   "id": "635528f5-a1e2-4f46-bdad-89fa0135c766",
+   "field": "explanation",
+   "new": "Сама точка лежить біля села Соломоново поруч із Чопом, над Тисою. А колісні пари тут міняють, бо в Україні колія ширша, ніж у західних сусідів.",
+   "why": "«сама крайня» is a Russianism (самая); «ніж у Європі» implies Ukraine is outside Europe"
+  },
+  {
+   "id": "635528f5-a1e2-4f46-bdad-89fa0135c766",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Соломоново",
+   "why": "en excerpt not found on the page; uk.wikipedia confirms the westernmost point by Solomonovo (Chop hromada)"
+  },
+  {
+   "id": "635528f5-a1e2-4f46-bdad-89fa0135c766",
+   "field": "source_excerpt",
+   "new": "Село є крайнім західним населеним пунктом України. За півтора кілометра на захід — кордон зі Словаччиною, де розташована найзахідніша точка України.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "bfa3aa10-72f8-481a-a4f8-1a742927d398",
+   "field": "explanation",
+   "new": "Коли льодовик відступив, гірські нарциси залишилися в долині як живий релікт. Тепер це найбільший у Центральній Європі осередок нарциса вузьколистого, частина Карпатського біосферного заповідника.",
+   "why": "uk.wikipedia: largest site in Central Europe, not «largest lowland meadow in Europe»"
+  },
+  {
+   "id": "bfa3aa10-72f8-481a-a4f8-1a742927d398",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Долина_нарцисів",
+   "why": "Ramsar excerpt unverifiable; uk.wikipedia states the glacial relict"
+  },
+  {
+   "id": "bfa3aa10-72f8-481a-a4f8-1a742927d398",
+   "field": "source_excerpt",
+   "new": "Популяція в цьому рівнинному локалітеті збереглася з післяльодовикового періоду і має реліктовий характер.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "dae56b76-cc38-4125-afec-a9310e762631",
+   "field": "question",
+   "new": "Печера Оптимістична на Тернопільщині — найдовша у світі серед печер у цьому мінералі. Ним же лікарі фіксують зламану руку чи ногу. Що це за мінерал?",
+   "why": "«найдовша печера, утворена в одному мінералі» is false (limestone/calcite caves like Mammoth Cave are longer); the record is longest gypsum cave"
+  },
+  {
+   "id": "dae56b76-cc38-4125-afec-a9310e762631",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Оптимістична_печера",
+   "why": "suspilne page not reachable to verify; uk.wikipedia states the record"
+  },
+  {
+   "id": "dae56b76-cc38-4125-afec-a9310e762631",
+   "field": "source_excerpt",
+   "new": "Це найдовша у світі гіпсова печера, яка увійшла до Книги рекордів Гіннеса.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "18970fff-9e88-44e7-ac24-e2b65b1fa61d",
+   "field": "source_excerpt",
+   "new": "У XIX столітті у Вертебі знайшли понад 400 цілих посудин, понад 35 тисяч глиняних і керамічних фрагментів, майже 120 антропоморфних фігурок, 200 знарядь із кісток і рогів, 300 виробів із кісток і каменю. Все це — зразки прадавньої Трипільської культури.",
+   "why": "excerpt was an English paraphrase of a Ukrainian page; replaced with verbatim text"
+  },
+  {
+   "id": "98757607-54c7-4c7b-bc94-e6fd32ecd62c",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Бакота",
+   "why": "Kyiv Post excerpt (a headline) did not support the flooding"
+  },
+  {
+   "id": "98757607-54c7-4c7b-bc94-e6fd32ecd62c",
+   "field": "source_excerpt",
+   "new": "Історія Бакоти закінчилася в 1981 році, коли в ході будівництва Новодністровської ГЕС населення було виселено в сусідні міста, а сам населений пункт повністю затоплений водою",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "de729fb0-ada9-4f17-ade8-9485eeffdd6c",
+   "field": "source_excerpt",
+   "new": "10 квітня (20 квітня) 1622 року Петро Сагайдачний помер унаслідок ускладнень вогнепального поранення руки, яке отримав під час битви під Хотином.",
+   "why": "excerpt was marked «не перевірено дослівно»; replaced with verbatim text"
+  },
+  {
+   "id": "424baa66-466f-4b49-9643-067e10005c64",
+   "field": "explanation",
+   "new": "Це дуга Струве, і вона допомогла точно виміряти, наскільки наша планета сплюснута біля полюсів.",
+   "why": "Oblateness was known before; the arc measured it precisely"
+  },
+  {
+   "id": "424baa66-466f-4b49-9643-067e10005c64",
+   "field": "source_excerpt",
+   "new": "The chain was established and used by the German-born Russian scientist Friedrich Georg Wilhelm von Struve in the years 1816 to 1855 to establish the size and shape of the Earth.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "fa03737c-e300-47be-a923-ed1271e2d257",
+   "field": "source_url",
+   "new": "https://worldheritageoutlook.iucn.org/node/1157",
+   "why": "UNESCO documents page excerpt was just the site title; IUCN page names the original Slovakia–Ukraine property"
+  },
+  {
+   "id": "fa03737c-e300-47be-a923-ed1271e2d257",
+   "field": "source_excerpt",
+   "new": "Extension of Primeval Beech Forests of the Carpathians, Slovakia and Ukraine",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "3535fc19-f752-44af-93da-ad9618b331e8",
+   "field": "source_excerpt",
+   "new": "Further fame was brought to Berdychiv's main catholic church by the celebrated marriage of French author Honoré de Balzac to his Polish aristocratic bride and landowner Countess Ewelina Hańska in 1850.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "a6ef9f3f-c86e-4920-b7b5-767667b9901a",
+   "field": "question",
+   "new": "Усі знають Софію Київську Ярослава Мудрого. А його брат Мстислав заклав собор у Чернігові, який стоїть досі. Як називається цей собор?",
+   "why": "«почав будувати ще раніше» is disputed (Sophia is dated 1011 or 1037); uk.wikipedia calls both the oldest"
+  },
+  {
+   "id": "a6ef9f3f-c86e-4920-b7b5-767667b9901a",
+   "field": "explanation",
+   "new": "Спаський собор у Чернігові разом із Софією Київською вважають найдавнішим собором України. Мстислав до його завершення не дожив, і саме в ньому його поховали.",
+   "why": "removed unsupported «раніше, ніж Софію» / «найдавніший храм Русі»"
+  },
+  {
+   "id": "a6ef9f3f-c86e-4920-b7b5-767667b9901a",
+   "field": "source_excerpt",
+   "new": "На сьогоднішній день, Спас Чернігівський разом з Софією Київською, є найдавнішим собором України.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "06eb30ea-7ade-44c5-b086-26309cc4955c",
+   "field": "question",
+   "new": "Маєток Качанівка на Чернігівщині приймав багатьох митців. 1843 року, вирушивши з Петербурга в Україну, тут зупинився гість, якого сьогодні знають передусім як поета, хоча за фахом він був художником. Хто це?",
+   "why": "No source that he came to paint Tarnovsky family portraits; the chronicle only records his 1843 stay"
+  },
+  {
+   "id": "06eb30ea-7ade-44c5-b086-26309cc4955c",
+   "field": "explanation",
+   "new": "Шевченко навчався в Академії мистецтв і заробляв на життя пензлем. Його картин і малюнків збереглося понад вісімсот.",
+   "why": "In 1843 he had not yet finished the Academy (graduated 1845)"
+  },
+  {
+   "id": "06eb30ea-7ade-44c5-b086-26309cc4955c",
+   "field": "source_excerpt",
+   "new": "Шевченко з Петербурга виїхав на Україну. Зупинився поет у Качанівці на Чернігівщині (маєток поміщика Г. Тарновського)",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "fcbcc6a7-ca3c-4815-a6fa-f9bd427b654e",
+   "field": "source_excerpt",
+   "new": "Має специфічний присмак і легкий запах нафти, особливо відчутний для тих, хто вживає воду вперше (саме звідси пішла назва лікувальної води).",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "7b54b97b-16d1-4534-8e6e-cbd762b225b0",
+   "field": "source_excerpt",
+   "new": "На гербі Києва зображений срібний Архангел Михаїл із вогняним мечем та щитом, на якому є хрест, на синьому давньоруському (варязькому) щиті.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "4ebb8868-6f96-410c-8b03-53471b966b53",
+   "field": "question",
+   "new": "У подільському Меджибожі, крім старовинної фортеці, є могила, до якої їдуть паломники з Ізраїлю, США та інших країн. Засновника якого релігійного руху там поховано?",
+   "why": "«щороку тисячі» is unverified and may go stale"
+  },
+  {
+   "id": "4ebb8868-6f96-410c-8b03-53471b966b53",
+   "field": "explanation",
+   "new": "У Меджибожі жив і помер Баал-Шем-Тов, засновник хасидизму. Тож маленьке селище над Бугом стало місцем прощі для хасидів з усього світу.",
+   "why": "«мільйонів хасидів» overstates (Hasidim number well under a few million)"
+  },
+  {
+   "id": "4ebb8868-6f96-410c-8b03-53471b966b53",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Меджибіж",
+   "why": "kiwix mirror is a weak source; uk.wikipedia states the burial"
+  },
+  {
+   "id": "4ebb8868-6f96-410c-8b03-53471b966b53",
+   "field": "source_excerpt",
+   "new": "На єврейському цвинтарі Меджибожа похований засновник хасидського руху Баал Шем Тов. Його могила — місце прощі хасидів з усього світу.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "e01d7394-654a-4257-a560-c42e71702599",
+   "field": "alternative_answers",
+   "new": [
+    "Між Бугом і Бужком",
+    "Між двома Бугами",
+    "Між Бугом і Божком"
+   ],
+   "why": "«Межа Бугу» means \"border of the Bug\", a wrong answer; «Між Бугом» is incomplete"
+  },
+  {
+   "id": "e01d7394-654a-4257-a560-c42e71702599",
+   "field": "source_excerpt",
+   "new": "Назва пішла від річок Бога й Божка, які з'єднуються неподалік міста.",
+   "why": "excerpt did not match the page text; replaced with verbatim Ukrainian sentence"
+  },
+  {
+   "id": "ae14c28d-eec4-454e-9377-f2fc820df7e7",
+   "field": "question",
+   "new": "Найвища гора материкової Австралії має ім'я польського героя, ватажка повстання проти поділів Польщі. Її так назвав польський мандрівник. Як вона називається?",
+   "why": "Mawson Peak (Heard Island, Australian territory) is higher"
+  },
+  {
+   "id": "ae14c28d-eec4-454e-9377-f2fc820df7e7",
+   "field": "source_excerpt",
+   "new": "is the highest mountain of mainland Australia, at 2,228 metres (7,310 ft) above sea level",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "f509f139-9589-410b-8ff0-4944e7fa7df7",
+   "field": "source_excerpt",
+   "new": "its summit is the farthest point on Earth's surface from its center due to its location along the equatorial bulge",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "f932663a-9b1c-4903-b316-90b1a1ed4bb2",
+   "field": "explanation",
+   "new": "Береги Амазонки здебільшого вкривають болотисті джунглі, які щороку затоплює, а великих доріг уздовж річки майже немає. Тому людей і вантажі там перевозять поромами й човнами.",
+   "why": "grammar: plural subject «джунглі» needs «вкривають»"
+  },
+  {
+   "id": "bc1f3794-964e-4fda-a250-210e6c2a96a9",
+   "field": "source_excerpt",
+   "new": "The name Islas Canarias is likely derived from the Latin name Canariae Insulae, meaning 'Islands of the Dogs'",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "3e45a96c-0376-41ec-87c3-2a19d5ebeb10",
+   "field": "question",
+   "new": "Ваніль родом із Мексики, але сьогодні найбільше натуральної ванілі у світі вирощують на одному великому острові біля берегів Африки. На якому?",
+   "why": "80% unsupported (its own source said 41.89%); keep only \"largest producer\""
+  },
+  {
+   "id": "3e45a96c-0376-41ec-87c3-2a19d5ebeb10",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Vanilla",
+   "why": "trade-data site contradicted the question; Wikipedia/FAO supports largest producer"
+  },
+  {
+   "id": "3e45a96c-0376-41ec-87c3-2a19d5ebeb10",
+   "field": "source_excerpt",
+   "new": "According to the United Nations Food and Agriculture Organization 2019 data, Madagascar, followed by Indonesia, were the largest producers of vanilla in 2018.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "678f212e-96c5-40c7-88dc-1c5051f06191",
+   "field": "source_excerpt",
+   "new": "Pumice has a porosity of 64–85% by volume and it floats on water, possibly for years, until it eventually becomes waterlogged and sinks.",
+   "why": "excerpt did not mention floating"
+  },
+  {
+   "id": "c82daa3e-1aad-4400-b5fc-4a674f8958f9",
+   "field": "source_excerpt",
+   "new": "The map on the flag is a copper-orange colour, symbolising the large deposits of copper ore on the island, from which it may have received its name.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "cbe6cec8-03a8-4874-9624-d364cdb46bd8",
+   "field": "source_excerpt",
+   "new": "is the only national capital to have land borders with two other sovereign states",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "e696e941-21a3-4435-86d0-9d430fa0cbbe",
+   "field": "question",
+   "new": "Чикаго прозвали «Містом вітрів», але, за однією з версій, мова зовсім не про погоду. Кого так висміювали?",
+   "why": "Wikipedia lists four competing explanations; \"most common\" is unsupported"
+  },
+  {
+   "id": "e696e941-21a3-4435-86d0-9d430fa0cbbe",
+   "field": "source_excerpt",
+   "new": "Nineteenth-century journalists frequently referred to Chicago as the Windy City because they allegedly believed Chicagoan politicians were nothing but profit-centric (i.e. \"full of wind\", or \"full of hot air\").",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "a3624275-05bd-4997-97e3-81f3e14e040e",
+   "field": "question",
+   "new": "Японська єна, китайський юань і корейська вона мають назву від одного й того самого китайського ієрогліфа. Підказка в тебе в гаманці. Що означає цей ієрогліф?",
+   "why": "player is addressed informally («ти»)"
+  },
+  {
+   "id": "a3624275-05bd-4997-97e3-81f3e14e040e",
+   "field": "source_excerpt",
+   "new": "in formal contexts Chinese: 圆; lit. 'round'",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "68413d83-d1eb-4708-81f9-4e906adac402",
+   "field": "source_excerpt",
+   "new": "It is the only national flag worldwide that has a unique design on each side.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "c9cf0d17-3cbd-49dc-bc10-0ba8b73980ec",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Panama_Canal",
+   "why": "NWE excerpt was a paraphrase; Wikipedia states the direction verbatim"
+  },
+  {
+   "id": "c9cf0d17-3cbd-49dc-bc10-0ba8b73980ec",
+   "field": "source_excerpt",
+   "new": "the general direction of the canal passage from the Atlantic to the Pacific is from northwest to southeast, because of the shape of the isthmus at the point the canal occupies.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "69ea6183-06e1-4922-a733-b543716f8639",
+   "field": "source_excerpt",
+   "new": "the Barbary macaque population in Gibraltar is the only wild monkey population on the European continent.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "b9b6df14-316f-40cc-a2ec-e6b8f65cf656",
+   "field": "question",
+   "new": "Під молдовським селом Мілештій-Мічь тягнуться підземні галереї завдовжки понад двісті кілометрів, і ними їздять навіть автівками. За те, що там зберігають, комплекс потрапив до Книги рекордів Гіннеса. Що там зберігають?",
+   "why": "source: 250 km of galleries"
+  },
+  {
+   "id": "b9b6df14-316f-40cc-a2ec-e6b8f65cf656",
+   "field": "explanation",
+   "new": "Там зберігають близько двох мільйонів пляшок, і 2007 року Гіннес визнав цю колекцію вина найбільшою у світі. Галереї мають власні «вулиці», названі на честь вин, як-от Каберне чи Совіньйон.",
+   "why": "1.5 million contradicted the source (2 million); \"найбільша\" anchored to the 2007 record so it cannot go stale; unverified Aligote dropped"
+  },
+  {
+   "id": "b9b6df14-316f-40cc-a2ec-e6b8f65cf656",
+   "field": "source_excerpt",
+   "new": "In 2007, the Mileștii Mici wine cellars were noted in the Guinness World Records 2007 Yearbook, for having the largest (2 million bottles) wine collection in the world.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "38a2d9d9-43ab-4a07-87bb-930131926116",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/The_Voice_(franchise)",
+   "why": "source domain nl.wikipedia.com is wrong and excerpt was English paraphrase"
+  },
+  {
+   "id": "38a2d9d9-43ab-4a07-87bb-930131926116",
+   "field": "source_excerpt",
+   "new": "Originating from the reality singing competition The Voice of Holland, many other countries adapted the format and began airing their own versions starting in 2010.",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "86417d34-b8e7-40a5-b5ae-0c10b987eef9",
+   "field": "source_excerpt",
+   "new": "The ritual involved a game and was performed in spring.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "6d73d814-4c3e-4ef8-a5a6-e295752fd0d8",
+   "field": "source_excerpt",
+   "new": "This was the first-ever entry from Ukraine in the Eurovision Song Contest.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "7c8d271f-9c44-4130-b7aa-a95d14b5a5f6",
+   "field": "explanation",
+   "new": "Пісня називається «Teresa & Maria»: авторки надихалися людяністю матері Терези й Діви Марії. Третє місце стало одним із найкращих результатів України на Євробаченні.",
+   "why": "«кожна жінка може стати сильною» is not what the source says about the song"
+  },
+  {
+   "id": "7c8d271f-9c44-4130-b7aa-a95d14b5a5f6",
+   "field": "source_excerpt",
+   "new": "inspired by the humanity of both Albanian Roman Catholic saint Mother Teresa and the Virgin Mary",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "00a15ca1-7f4f-48ad-8c84-b08b65bfa1f0",
+   "field": "source_excerpt",
+   "new": "Before doing rap, she worked as a teacher at \"Teremok\" kindergarten of Baryshivka, Kyiv Oblast.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "8f2d77a0-ab32-4daa-aeb0-6c56c1b87a09",
+   "field": "question",
+   "new": "Гурт «Друга Ріка» починав не в Києві і не у Львові, а в обласному центрі приблизно за 140 кілометрів на захід від столиці. Що це за місто?",
+   "why": "Removed Soviet rocket designer Korolev as a point of local pride (Soviet framing presented as «ours»)"
+  },
+  {
+   "id": "8f2d77a0-ab32-4daa-aeb0-6c56c1b87a09",
+   "field": "explanation",
+   "new": "«Другу Ріку» створили 1996 року житомирські музиканти, а лідером гурту став Валерій Харчишин.",
+   "why": "Removed «місто подарувало світу космічні ракети» (Soviet framing)"
+  },
+  {
+   "id": "8f2d77a0-ab32-4daa-aeb0-6c56c1b87a09",
+   "field": "source_excerpt",
+   "new": "«Друга Ріка» — український рок-гурт, створений на початку 1996 року в Житомирі.",
+   "why": "excerpt was English text not on the Ukrainian page"
+  },
+  {
+   "id": "b00eae08-d482-40d7-b0a8-7aec7e797644",
+   "field": "explanation",
+   "new": "Купальська ніч в українських повір'ях — час чарівних квітів, тож червона рута тут сусідить із цвітом папороті. Цей переказ Івасюк сам почув у гуцульських селах.",
+   "why": "Misquoted lyric («Червона рута не шукай») and a non-sequitur «Тому й співають»"
+  },
+  {
+   "id": "b00eae08-d482-40d7-b0a8-7aec7e797644",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Червона_рута",
+   "why": "old source was a Russian-language Glavred article"
+  },
+  {
+   "id": "b00eae08-d482-40d7-b0a8-7aec7e797644",
+   "field": "source_excerpt",
+   "new": "де він особисто зафіксував народні перекази про те, що звичайна рута лише раз на рік у купальську ніч зацвітає чарівним червоним кольором і здатна приворожити серце обранця",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "7901f090-3c8d-4b16-a202-c896e098ea57",
+   "field": "alternative_answers",
+   "new": [
+    "болти",
+    "болтик"
+   ],
+   "why": "In S.T.A.L.K.E.R. it is a bolt; «гайка» (nut) is wrong for the game"
+  },
+  {
+   "id": "afd0c2dc-f6b7-4e8f-8591-dc7efbeebbd7",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Sherlock_Holmes:_Nemesis",
+   "why": "malformed host «Www.Wikipedia.org»"
+  },
+  {
+   "id": "e51b4451-f5d6-4839-ae85-a3d3bf6af8b4",
+   "field": "alternative_answers",
+   "new": [
+    "топірець",
+    "гуцульський топірець"
+   ],
+   "why": "«барда» is a different, broad carpenter's axe, not the bartka"
+  },
+  {
+   "id": "70908806-cbb2-4fa2-8f0f-476c664e6e98",
+   "field": "source_excerpt",
+   "new": "Natus Vincere (Latin for \"born to win\")",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "86acd784-5622-41c1-8d4f-72cf3c959347",
+   "field": "question",
+   "new": "У 2011 році українська команда NAVI з Дендіком у складі виграла найперший чемпіонат світу з Dota 2, The International. Скільки доларів отримали переможці?",
+   "why": "dash used as punctuation where a comma works"
+  },
+  {
+   "id": "edce2001-686d-458c-a811-6d55d7872efc",
+   "field": "source_excerpt",
+   "new": "He then dropped to the floor and demonstrated his ability, at the age of 73, to perform one-armed push-ups.",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "1cfb606a-a662-41ba-9e9a-2e661b163caf",
+   "field": "question",
+   "new": "Міла Куніс до семи років жила в Чернівцях. З 1999 року вона озвучує в американському мультсеріалі Мег, доньку, яку власна родина постійно ігнорує. Що це за мультсеріал?",
+   "why": "anchor the date instead of a count that drifts"
+  },
+  {
+   "id": "1cfb606a-a662-41ba-9e9a-2e661b163caf",
+   "field": "source_excerpt",
+   "new": "has voiced Meg Griffin on Family Guy since 1999",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "5f0f4e31-923c-4e80-a2f7-4f1d5966ce00",
+   "field": "question",
+   "new": "Суворий суддя українського «МастерШефа» Ектор Хіменес-Браво народився в Південній Америці. У якій країні?",
+   "why": "He came to Ukraine from Asia via Canada and Russia, not «з Південної Америки»"
+  },
+  {
+   "id": "5f0f4e31-923c-4e80-a2f7-4f1d5966ce00",
+   "field": "explanation",
+   "new": "Ектор народився в Колумбії, працював шефом у Канаді та Азії, а 2009 року приїхав відкривати ресторани в Києві. Згодом він отримав українське громадянство.",
+   "why": "Cali birthplace unverified; route to Kyiv corrected per Wikipedia"
+  },
+  {
+   "id": "5f0f4e31-923c-4e80-a2f7-4f1d5966ce00",
+   "field": "source_excerpt",
+   "new": "is a Colombian-born Canadian and Ukrainian chef",
+   "why": "excerpt was a paraphrase; replaced with a passage copied verbatim from the page"
+  },
+  {
+   "id": "e5282f13-adde-4e6d-af53-8daa3e728853",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Вуйко",
+   "why": "kiwix mirror of en.wiktionary is weak; uk.wikipedia article on the word"
+  },
+  {
+   "id": "e5282f13-adde-4e6d-af53-8daa3e728853",
+   "field": "source_excerpt",
+   "new": "слово, уживане на заході Україні щодо брата матері",
+   "why": "excerpt copied verbatim from the new source"
+  },
+  {
+   "id": "68c395e3-d651-4158-afb5-f716db08e1ca",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Всесвітній_день_вишиванки",
+   "why": "Kyiv Post excerpt (headline) did not mention Chernivtsi"
+  },
+  {
+   "id": "68c395e3-d651-4158-afb5-f716db08e1ca",
+   "field": "source_excerpt",
+   "new": "Святу передувала акція «Всесвітній день вишиванки», котру в 2006 році запропонувала студентка факультету історії, політології та міжнародних відносин Чернівецького національного університету імені Юрія Федьковича Леся Воронюк.",
+   "why": "excerpt copied verbatim from the new source"
+  }
+ ],
+ "drop": [
+  {
+   "id": "06cc3905-2bb7-4d74-8617-eb06835a56cb",
+   "why": "Duplicate of 347dcb1b (Dilove marker = centre of Europe, 1887); each question gives away the other's answer."
+  },
+  {
+   "id": "dd2a955d-5097-45fe-aa3a-c3b5a3c53102",
+   "why": "Duplicate of bfa3aa10 (Narcissus Valley near Khust); bfa3aa10 names the narcissus, giving away this answer."
+  },
+  {
+   "id": "3e96bd30-2f04-486c-ac3d-a73f59cef51d",
+   "why": "Its question states the university sits in the metropolitans' residence, giving away 2dfe4211; \"маленький Відень\" is also used for other cities."
+  },
+  {
+   "id": "0d099b21-1aec-4b64-a212-08330ca2218e",
+   "why": "Same answer (Gogol) as 7a413a4b in this chunk; the question names his story, so it is a near giveaway."
+  },
+  {
+   "id": "a897961d-8bab-4b5e-9957-9f77cd4bf319",
+   "why": "Third Gogol question in chunk; 7a413a4b names Gogol and «Вечори…», which open with «Сорочинський ярмарок», giving the answer away; alt \"Ніколай Гоголь\" is a Russian form."
+  },
+  {
+   "id": "bfc23779-0db9-4b05-b486-1aba70491de0",
+   "why": "Russian scene: per uk.wikipedia, Kseniya Simonova performed in Russia and occupied Crimea after 2014 (Koktebel Jazz Party at Kiselyov's invitation)."
+  },
+  {
+   "id": "a9584aed-4c9e-466c-918c-7872d8f63bfd",
+   "why": "Same artist (Simonova, Russian scene) and same answer «піском» as bfc23779."
+  },
+  {
+   "id": "2bbaf750-97bd-4253-8d17-30442583d847",
+   "why": "b00eae08 says «пісні Івасюка», giving away this answer; question features Sofia Rotaru (worked in Russia after 2014); explanation wrongly says the festival was named after the author."
+  },
+  {
+   "id": "0b6085c0-2225-4a70-b256-8f47e3c1ccdd",
+   "why": "Russian scene: «Орел і решка» was largely made for and aired on Russia's «Пятница!» with Russian hosts; explanation also has a grammar error («безкоштовного ночівлі»)."
+  }
+ ]
+}

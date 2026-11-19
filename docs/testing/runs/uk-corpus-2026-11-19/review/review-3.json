@@ -1,0 +1,436 @@
+{
+ "keep": [
+  "b1851dd5-dd4e-4c4f-93b8-757f846afb4b",
+  "4e0638c8-c13f-4d3a-aa3d-778e3c08c259",
+  "7617a3ce-905d-4576-a211-c26a5d3615df",
+  "6d98daeb-6141-4f65-a497-41a40f7b47c7",
+  "e3458491-8893-4f59-ab35-525b047f7626",
+  "8f34b09b-7df8-4fbb-b187-e708591ebde7",
+  "3901d654-60b3-4516-b6e4-0f6bdaa3f563",
+  "00faec78-dd21-463f-a5c7-9cb84ddedbcd",
+  "f8343da1-0286-4368-b3a7-b4e1436f3a21",
+  "1a66c630-b223-4c85-98e5-fd235262bb34",
+  "d99c6de8-9e7e-4e27-b92d-5d060f27d2a3",
+  "8319a429-f5ed-46fb-a442-bc462101c666",
+  "b1f5b6e1-b905-4f66-8641-2e76bfa025dd",
+  "1c91fd38-42bc-4dc4-8701-9f906765bdad",
+  "6b647235-bbca-4519-b26e-5756aa91c9a7",
+  "7156041f-eadd-41a0-a0d9-ae0df240f2b9",
+  "d1ef96f0-32e6-43ea-8f77-7b05c3b3406c",
+  "e7353106-e4d4-4292-aafb-d1f78298767d",
+  "4c0922d7-bc57-4cad-8480-522d2e0dcae8",
+  "841d775e-6167-47f0-881e-903bef821c47",
+  "a9ca5ca5-ae24-47eb-8577-3a35f75762ee",
+  "45b76ae8-8759-4383-9126-d953e6929922",
+  "1c2e675c-5067-4b5e-ac72-94819f4a25d6",
+  "67c6c5c7-2166-42f1-8db8-bf5598eb6218",
+  "0f50ccd3-dfd3-4da4-a06d-8909144b51f5",
+  "6e932407-5313-4549-8714-b16aecb6e941",
+  "450e01e6-7cee-4685-bd0e-4c3ff504b511",
+  "1cb773b1-1905-44de-ad3f-4c7b20099004",
+  "e7b18edd-85be-4639-90f8-b3d158032acf",
+  "68441417-1c09-4ec4-980b-0cd180c00f67",
+  "1faf25b6-1fd8-49dd-88c2-1f24f6cf5f44",
+  "cffd2be8-86f7-4252-a3b8-ff97a882135d",
+  "682ce89a-5e53-468a-be3b-51b50fc43e53",
+  "904ff959-6216-4a9e-8d5f-0500448c5449",
+  "7c51cf99-f0cc-4319-8c54-024720de9dca",
+  "1203d940-7f0e-4231-86d1-eccd5b2f6408",
+  "5de8eb7c-4ffa-4aa1-b3f8-37b3abe7461d",
+  "c6902341-9075-499b-9cf7-5f2ed2765284",
+  "f2e98c4d-dba7-4da8-b34f-a604e00c8cd0",
+  "baf7e4d2-dd0d-40da-b273-0087ed0d5d8e",
+  "12fbeec8-e1e7-4980-b37f-fbbc7b5c1b89",
+  "134954b4-8596-4085-9678-5801c588e53f",
+  "8d015722-5a79-4a48-8b4d-0191442e9fed",
+  "0e053b2d-9914-4bc7-9e86-25a6ccb80088",
+  "c380f4b7-0d87-4302-b3be-5e28991942c3",
+  "594c78d4-0d7c-4714-89a9-8255e25eaea5",
+  "0553fd40-fb5f-400b-a5a0-aff11c20c384",
+  "55619649-849e-40c5-b6a3-26979ffa8a97",
+  "174c5fd3-1e9d-4c45-bcdd-c06a029d2ea3",
+  "a876a7cc-23e6-44c2-8493-2c0c0000cc5c",
+  "0188268a-f497-4e52-9106-2c452c3a1754",
+  "ddee6d82-8791-4acc-af35-c7867dc47a27",
+  "2215a3cd-158c-4135-8811-9ae4581b8d67",
+  "76cf90fc-b49c-4f7d-a2f7-9c0a69336b29",
+  "3059adf1-6d2b-47c5-a0c9-21df12b39fdb",
+  "7aca6788-d4f3-4731-a0a7-b366128bf13f",
+  "1e55970d-43ff-4cd0-9115-ca035ac25647",
+  "13035780-55a1-4f13-8b0b-0e33697ddcb5",
+  "e401d078-f8d7-4c75-9c78-1ff07cc2950c",
+  "6cfb14c4-2fb3-4059-a6ed-3de390034aaa",
+  "fa438ed6-b139-4e12-9098-c7a6352bd5d1",
+  "4f1cc3ce-29fe-41e5-9b42-c3e52905b7b1",
+  "fb633ce4-5c8a-4718-9b97-3bfbe7a8d97b",
+  "284080fd-f10f-4459-a61d-9d3e8867411b",
+  "87c9e27a-8803-45c1-9569-deac95ef1e89",
+  "ee919d0b-71f0-40ff-803e-39fa34099541",
+  "59b64e95-9caa-416e-a921-bf17f28774ed",
+  "8c050fca-67c6-4852-be2e-d146ebede60c",
+  "6fca1380-f8a1-4536-a83d-fc5dcd6f09e5",
+  "c451a200-e4d8-4cdd-b87b-af724a00fb1b",
+  "01a8f362-99a9-4430-8592-4a73e043c8d9",
+  "8be9245f-8102-42e7-9815-5d287841d89a",
+  "8eac9162-492d-4cff-bc2e-b8bfc9702760",
+  "bb7d7856-3954-42a7-a01f-08c2632484b8",
+  "307d93e3-d1b9-456f-a72e-fab0d0822553"
+ ],
+ "fix": [
+  {
+   "id": "4e0638c8-c13f-4d3a-aa3d-778e3c08c259",
+   "field": "explanation",
+   "new": "Мовою суахілі «хакуна матата» означає «жодних проблем», а ще з цієї мови взяли ім'я Сімба, що просто означає «лев».",
+   "why": "«Суахілією» is not a word; «зі цієї мови» is wrong."
+  },
+  {
+   "id": "7617a3ce-905d-4576-a211-c26a5d3615df",
+   "field": "alternative_answers",
+   "new": [
+    "лиходійка",
+    "негативною героїнею",
+    "антагоністкою",
+    "злою королевою"
+   ],
+   "why": "«злодійка» in Ukrainian means a thief (Russian «злодейка» calque), wrong alternative."
+  },
+  {
+   "id": "3901d654-60b3-4516-b6e4-0f6bdaa3f563",
+   "field": "alternative_answers",
+   "new": [
+    "йогурт",
+    "кисляк",
+    "кисломолочні продукти",
+    "болгарський йогурт"
+   ],
+   "why": "«простокваша» is Russian; kefir is a different product, wrong alternative."
+  },
+  {
+   "id": "00faec78-dd21-463f-a5c7-9cb84ddedbcd",
+   "field": "explanation",
+   "new": "У дорослого лелеки майже не працює співоча гортань, тож він закидає голову на спину й гучно тріщить дзьобом. Саме цей звук чути біля гнізда на стовпі.",
+   "why": "Player addressed with «ви»; reworded without address."
+  },
+  {
+   "id": "1a66c630-b223-4c85-98e5-fd235262bb34",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Edelweiss",
+   "why": "Broken domain (wikipedia.com)."
+  },
+  {
+   "id": "1a66c630-b223-4c85-98e5-fd235262bb34",
+   "field": "source_excerpt",
+   "new": "Each bloom consists of five to six small yellow clustered spikelet-florets (5 mm, 3⁄16 in) surrounded by fuzzy white",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "8319a429-f5ed-46fb-a442-bc462101c666",
+   "field": "alternative_answers",
+   "new": [
+    "сліпа зона",
+    "диск зорового нерва"
+   ],
+   "why": "«сліпе пятно» is a Russian form."
+  },
+  {
+   "id": "8319a429-f5ed-46fb-a442-bc462101c666",
+   "field": "explanation",
+   "new": "Сліпа пляма є в кожного, і її легко знайти: заплющ одне око й повільно наближай до себе намальовану крапку, і в якийсь момент вона просто зникне. Ми не бачимо дірки, бо мозок заповнює її тим, що бачить навколо, і тим, що бачить друге око.",
+   "why": "Formal «ви» imperative → informal «ти»."
+  },
+  {
+   "id": "b1f5b6e1-b905-4f66-8641-2e76bfa025dd",
+   "field": "question",
+   "new": "Чому неможливо полоскотати самого себе? Одна частина мозку заздалегідь передбачає, куди торкнеться твоя рука, і приглушує відчуття. Вона лежить у потиличній частині голови, під великими півкулями. Як вона називається?",
+   "why": "Formal «ваша» → informal «твоя»."
+  },
+  {
+   "id": "b1f5b6e1-b905-4f66-8641-2e76bfa025dd",
+   "field": "explanation",
+   "new": "Мозочок постійно прогнозує, що ти відчуєш від власних рухів, і зменшує ці сигнали. Тому лоскіт працює лише тоді, коли він для тебе несподіваний. У дослідах люди відчували лоскіт від власної руки, коли робот додавав до руху невеличку затримку й збивав цей прогноз.",
+   "why": "Formal «ви» → informal «ти»."
+  },
+  {
+   "id": "6b647235-bbca-4519-b26e-5756aa91c9a7",
+   "field": "explanation",
+   "new": "Шоколадку розтопили мікрохвилі від магнетрона, серця радарної установки. Першу мікрохвильову піч зробили на основі тієї самої деталі, і важила вона понад 300 кілограмів.",
+   "why": "«установи» (institution) → «установки» (equipment)."
+  },
+  {
+   "id": "7156041f-eadd-41a0-a0d9-ae0df240f2b9",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Mezhyrich",
+   "why": "Broken URL (Wikipedia.com/Mezhirich)."
+  },
+  {
+   "id": "7156041f-eadd-41a0-a0d9-ae0df240f2b9",
+   "field": "source_excerpt",
+   "new": "In 1965, a farmer dug up the lower jawbone of a mammoth while in the process of expanding his cellar.",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "d1ef96f0-32e6-43ea-8f77-7b05c3b3406c",
+   "field": "question",
+   "new": "Тиранозавр жив ближче в часі до нас, ніж до одного відомого травоїдного динозавра з великими пластинами вздовж спини. До якого?",
+   "why": "Stegosaurus has two staggered rows of plates, not «ряд»."
+  },
+  {
+   "id": "e7353106-e4d4-4292-aafb-d1f78298767d",
+   "field": "alternative_answers",
+   "new": [
+    "на основі міді"
+   ],
+   "why": "Duplicate «мідь»; «гемоціанін» is a protein, not the metal asked for."
+  },
+  {
+   "id": "45b76ae8-8759-4383-9126-d953e6929922",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Ольвія",
+   "why": "ancient-origins.net is weak; uk.wikipedia confirms."
+  },
+  {
+   "id": "45b76ae8-8759-4383-9126-d953e6929922",
+   "field": "source_excerpt",
+   "new": "початок випуску власної плавленої бронзової монети в формі дельфінчиків",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "6e932407-5313-4549-8714-b16aecb6e941",
+   "field": "question",
+   "new": "Влітку 1853 року у львівській лікарні вперше провели нічну операцію при світлі гасової лампи. Гас і саму лампу придумали двоє львів'ян. Яка в них була професія?",
+   "why": "They designed the lamp; a tinsmith made it, so «самі зробили» overstated."
+  },
+  {
+   "id": "6e932407-5313-4549-8714-b16aecb6e941",
+   "field": "explanation",
+   "new": "Ігнацій Лукасевич і Ян Зег працювали в аптеці «Під золотою зіркою» й перегнали з нафти чистий гас. Лампу за їхнім задумом виготовив львівський бляхар.",
+   "why": "Removed unverifiable claim that the restaurant sits in the same building on Вірменська."
+  },
+  {
+   "id": "1faf25b6-1fd8-49dd-88c2-1f24f6cf5f44",
+   "field": "source_excerpt",
+   "new": "Стояв біля витоків створення мисливського товариства у Києві, мріяв взяти участь в африканському сафарі.",
+   "why": "Old excerpt was English text not on the uk page."
+  },
+  {
+   "id": "7c51cf99-f0cc-4319-8c54-024720de9dca",
+   "field": "question",
+   "new": "Американця Лангстрота часто називають батьком сучасного вулика, проте Петро Прокопович створив рамковий вулик на кілька десятиліть раніше. А ще біля Батурина він відкрив заклад, якого тоді не було більше ніде в Європі. Який?",
+   "why": "uk.wikipedia supports 'first in the Russian Empire and the only one in Europe then', not 'first in the world'."
+  },
+  {
+   "id": "7c51cf99-f0cc-4319-8c54-024720de9dca",
+   "field": "alternative_answers",
+   "new": [
+    "Школу бджолярів",
+    "Школу бджолярства",
+    "Пасічницьку школу",
+    "Бджолярську школу",
+    "Школу пасічників"
+   ],
+   "why": "Add the source's own wording."
+  },
+  {
+   "id": "7c51cf99-f0cc-4319-8c54-024720de9dca",
+   "field": "explanation",
+   "new": "Прокопович навчав учнів просто на своїй пасіці, і за 53 роки школа випустила понад 700 пасічників.",
+   "why": "Two-year study and 'all over the empire' unverified; replaced with sourced figures."
+  },
+  {
+   "id": "7c51cf99-f0cc-4319-8c54-024720de9dca",
+   "field": "source_excerpt",
+   "new": "першу в Російській імперії та єдину тоді в Європі школу пасічників",
+   "why": "Old excerpt was a paraphrase, not copied."
+  },
+  {
+   "id": "1203d940-7f0e-4231-86d1-eccd5b2f6408",
+   "field": "alternative_answers",
+   "new": [
+    "DDT",
+    "де-де-те"
+   ],
+   "why": "«дуст» is a colloquial powder name, not the three-letter abbreviation asked."
+  },
+  {
+   "id": "5de8eb7c-4ffa-4aa1-b3f8-37b3abe7461d",
+   "field": "explanation",
+   "new": "«Я несу гусеня» читається однаково в обидва боки, а дзеркалом посередині стоїть літера «г». Спробуй прочитати фразу задом наперед уголос.",
+   "why": "Formal «Спробуйте» → «Спробуй»."
+  },
+  {
+   "id": "5de8eb7c-4ffa-4aa1-b3f8-37b3abe7461d",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Паліндром",
+   "why": "Broken domain (wiktionary.com) and unverified appendix."
+  },
+  {
+   "id": "5de8eb7c-4ffa-4aa1-b3f8-37b3abe7461d",
+   "field": "source_excerpt",
+   "new": "Важче придумувати речення, які даватимуть однаковий зміст при прямому та зворотному читанні, як-от: «Я несу гусеня»",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "baf7e4d2-dd0d-40da-b273-0087ed0d5d8e",
+   "field": "alternative_answers",
+   "new": [
+    "у Туреччині",
+    "Туреччина, Анталія"
+   ],
+   "why": "«Анталія» alone is a province, not the country asked."
+  },
+  {
+   "id": "12fbeec8-e1e7-4980-b37f-fbbc7b5c1b89",
+   "field": "alternative_answers",
+   "new": [
+    "панчоха",
+    "шкарпетки",
+    "шкарпетка"
+   ],
+   "why": "«чулки» is Russian."
+  },
+  {
+   "id": "55619649-849e-40c5-b6a3-26979ffa8a97",
+   "field": "question",
+   "new": "Наприкінці різдвяної лялькової вистави цар Ірод отримує по заслузі: йому відтинають голову. Хто з персонажів це робить?",
+   "why": "«вертепної» gave away the answer of the «Нова радість стала» question in this chunk."
+  },
+  {
+   "id": "a876a7cc-23e6-44c2-8493-2c0c0000cc5c",
+   "field": "alternative_answers",
+   "new": [
+    "коцюба",
+    "кочерга",
+    "на кочерзі"
+   ],
+   "why": "«рогач» is a different oven tool, wrong."
+  },
+  {
+   "id": "ddee6d82-8791-4acc-af35-c7867dc47a27",
+   "field": "explanation",
+   "new": "Говорити й сміятися по дорозі не можна було, бо вода б вилилася. Спечені балабушки потім розкладали на долівці й пускали собаку: чию він з'їсть першою, та першою й вийде заміж.",
+   "why": "«а надто вже донести воду» is garbled."
+  },
+  {
+   "id": "1e55970d-43ff-4cd0-9115-ca035ac25647",
+   "field": "question",
+   "new": "Наприкінці історії про Ґрінча його занадто мале серце раптом виросло. На скільки розмірів?",
+   "why": "Seuss says 'grew three sizes', not 'three times'; question asked «у скільки разів»."
+  },
+  {
+   "id": "1e55970d-43ff-4cd0-9115-ca035ac25647",
+   "field": "correct_answer",
+   "new": "На три розміри",
+   "why": "Match the source wording."
+  },
+  {
+   "id": "1e55970d-43ff-4cd0-9115-ca035ac25647",
+   "field": "alternative_answers",
+   "new": [
+    "три розміри",
+    "на три",
+    "три"
+   ],
+   "why": "Removed «У три рази»/«втричі», which misstate the text."
+  },
+  {
+   "id": "13035780-55a1-4f13-8b0b-0e33697ddcb5",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Ніч_перед_Різдвом",
+   "why": "Original URL returns 404."
+  },
+  {
+   "id": "13035780-55a1-4f13-8b0b-0e33697ddcb5",
+   "field": "source_excerpt",
+   "new": "і чорт, який ховає місяць в кишеню",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "87c9e27a-8803-45c1-9569-deac95ef1e89",
+   "field": "explanation",
+   "new": "Уся гра побудована на тому, щоб визначити місце. Гравці не бачать дороги й мусять за підказками і завданнями на зупинках здогадатися, в якій частині України вони перебувають. Свої здогадки вони позначають на мапі, і той, хто помилився найбільше, ризикує вилетіти. Формат придумали в Бельгії, а веде українську версію музикант Дмитро Каднай.",
+   "why": "Host's name is Дмитро Каднай (KADNAY), not «Кадний»."
+  },
+  {
+   "id": "87c9e27a-8803-45c1-9569-deac95ef1e89",
+   "field": "source_url",
+   "new": "https://week.ukrainianwall.com/165155-bez-telefoniv-i-navigatoriv-ukrajinoyu-startuye-trevel-shou-svitovogo-masshtabu-hto-sered-uchasnikiv",
+   "why": "Old excerpt was English text not on the Ukrainian Interfax page; this page confirms ten players, no maps, guessing location, host."
+  },
+  {
+   "id": "87c9e27a-8803-45c1-9569-deac95ef1e89",
+   "field": "source_excerpt",
+   "new": "визначити власне місцеперебування",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "ee919d0b-71f0-40ff-803e-39fa34099541",
+   "field": "source_url",
+   "new": "https://fakty.com.ua/ua/styl-zhyttia/show/20260424-hto-takyj-v-yacheslav-kravtsov-biografiya-ta-osobyste-zhyttya-novogo-holostyaka/",
+   "why": "Old source headline foregrounds playing in Russia; this one confirms Odesa, height and NBA clubs."
+  },
+  {
+   "id": "ee919d0b-71f0-40ff-803e-39fa34099541",
+   "field": "source_excerpt",
+   "new": "виступи за топові американські клуби Detroit Pistons і Phoenix Suns",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "8c050fca-67c6-4852-be2e-d146ebede60c",
+   "field": "source_url",
+   "new": "https://vikna.tv/styl-zhyttya/shou-biz/ukrayina-maye-talant-2026-hto-peremig-im-ya-peremozhtsya/",
+   "why": "Diia page lacks the winner's age and city stated in the explanation; this page has all."
+  },
+  {
+   "id": "8c050fca-67c6-4852-be2e-d146ebede60c",
+   "field": "source_excerpt",
+   "new": "Переможцем Україна має талант 2026 став Марко Сердинський. 12-річний Марко родом з Івано-Франківська.",
+   "why": "Excerpt copied from the verified page."
+  },
+  {
+   "id": "6fca1380-f8a1-4536-a83d-fc5dcd6f09e5",
+   "field": "source_excerpt",
+   "new": "held on 24 October 2026 at the Malta Fairs & Conventions Centre in Ta' Qali, Malta",
+   "why": "Old excerpt was not verbatim."
+  },
+  {
+   "id": "c451a200-e4d8-4cdd-b87b-af724a00fb1b",
+   "field": "source_excerpt",
+   "new": "land their Cessna Skywagon on a remote Alaskan lake and camp overnight",
+   "why": "Old excerpt was not on the page."
+  },
+  {
+   "id": "01a8f362-99a9-4430-8592-4a73e043c8d9",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Verity_(film)",
+   "why": "Replaced a third-party Wikipedia mirror with the original."
+  },
+  {
+   "id": "01a8f362-99a9-4430-8592-4a73e043c8d9",
+   "field": "source_excerpt",
+   "new": "The film stars Anne Hathaway, Dakota Johnson, and Josh Hartnett.",
+   "why": "Excerpt copied from the verified page."
+  }
+ ],
+ "drop": [
+  {
+   "id": "00d5c2b8-8b89-4457-ab0e-dc92783af1c7",
+   "why": "Vague open answer (many valid phrasings: speed, fuel saving, payload) and weak source; school physics."
+  },
+  {
+   "id": "90ff3b1d-7a20-4ac9-91ae-e41450d04156",
+   "why": "Answer given away inside this chunk: two other questions name the station «Академік Вернадський»; its explanation also repeats their answers (one pound, ozone hole)."
+  },
+  {
+   "id": "883787c1-20f9-4cb5-b2b5-767a33102b6b",
+   "why": "Gives away the answer of the first-star question (names the Bethlehem star), and that question's explanation answers this one (magi); school-level."
+  },
+  {
+   "id": "d033a1fe-ad44-434b-888c-5714e6ba0d31",
+   "why": "Mutual giveaway with the Didukh question in this chunk (this one names Дідух, the other says «на покуті»); kept the Didukh one."
+  },
+  {
+   "id": "a0e4d92b-b61c-40d7-9308-de56da9b65e6",
+   "why": "Its question states the names come from Swahili, which is the answer of the Hakuna matata question in this chunk; also repeats its Simba/hakuna matata facts. Not autumn-2026 entertainment."
+  }
+ ]
+}

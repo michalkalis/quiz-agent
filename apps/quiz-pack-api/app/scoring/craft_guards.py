@@ -357,8 +357,16 @@ def undated_record_reason(
     return f"undated_record({m.group(0).lower()})"
 
 
-# #192: Slovak/Czech packs write the T/F options as "Pravda" / "Nepravda".
-_TF_WORDS = {"true": "true", "false": "false", "pravda": "true", "nepravda": "false"}
+# #192: Slovak/Czech packs write the T/F options as "Pravda" / "Nepravda";
+# #231: Ukrainian packs as "Правда" / "Неправда" (Cyrillic).
+_TF_WORDS = {
+    "true": "true",
+    "false": "false",
+    "pravda": "true",
+    "nepravda": "false",
+    "правда": "true",
+    "неправда": "false",
+}
 
 
 def true_false_key(
@@ -388,7 +396,7 @@ def true_false_key(
 
     if ans in _TF_WORDS:
         return _TF_WORDS[ans]
-    m = re.match(r"^(true|false|pravda|nepravda)\s*[—–:,.;-]", ans)
+    m = re.match(r"^(true|false|pravda|nepravda|правда|неправда)\s*[—–:,.;-]", ans)
     return _TF_WORDS[m.group(1)] if m else None
 
 

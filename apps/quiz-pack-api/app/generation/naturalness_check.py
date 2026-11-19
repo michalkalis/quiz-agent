@@ -122,7 +122,22 @@ from Russian ("приймати участь", proper "брати участь";
 Ukrainians ask directly (native speaker 2026-11-17: "Яке місто є столицею \
 Австралії?", proper "Яка столиця Австралії?"; "Хто є автором збірки віршів \
 «Кобзар»?", proper "Хто написав «Кобзар»?"), and padding that names what every \
-player already knows ("збірки віршів"). Write every rewrite in Ukrainian."""
+player already knows ("збірки віршів"). Write every rewrite in Ukrainian.
+
+A [uk] question also shows its answer and explanation. They are context: \
+judge the wording of the question only and rewrite only the question. For \
+every [uk] question add two booleans to its check, also when "ok" is true:
+- "off_policy": true when the question, its answer or its explanation touches \
+the war since 2014 in any way (battles, defenders, weapons, occupied or \
+liberated places, wartime symbols or phrases, even heroic or indirect, e.g. \
+"a city in the east that became a symbol of resilience after long battles"), \
+current politics or politicians (government, ministers, mayors, parties, \
+elections, NATO or EU membership), or Russia and relations with it. History \
+before 2014, culture, science and sport are fine.
+- "gives_away": true when the question text contains the answer in any form: \
+another case, a derived word or an adjective made from it (answer "Київ", \
+question "…святкує День Києва…"), so a player can answer by repeating a word \
+of the question."""
 
 
 def _foreign_letters(text: str) -> set[str]:
@@ -142,24 +157,27 @@ class Naturalness:
     ok: bool
     problems: list[dict] = field(default_factory=list)
     rewrite: Optional[str] = None
+    # #231, uk only: the model's topic-policy and answer-leak flags. ``None``
+    # = not answered, which the uk approval gate treats as a hold.
+    off_policy: Optional[bool] = None
+    gives_away: Optional[bool] = None
 
 
 def apply_naturalness(q: Question, verdict: Naturalness) -> None:
     """Record the verdict in provenance; the question text is never changed."""
     provenance = q.generation_metadata or GenerationProvenance()
+    recorded = {
+        "ok": verdict.ok,
+        "problems": verdict.problems,
+        "rewrite": verdict.rewrite,
+        "model": _CHECK_MODEL,
+        "version": PROMPT_VERSION,
+    }
+    if q.language == uk_policy.UK:
+        recorded["off_policy"] = verdict.off_policy
+        recorded["gives_away"] = verdict.gives_away
     q.generation_metadata = provenance.model_copy(
-        update={
-            "extra": {
-                **provenance.extra,
-                "naturalness": {
-                    "ok": verdict.ok,
-                    "problems": verdict.problems,
-                    "rewrite": verdict.rewrite,
-                    "model": _CHECK_MODEL,
-                    "version": PROMPT_VERSION,
-                },
-            }
-        }
+        update={"extra": {**provenance.extra, "naturalness": recorded}}
     )
 
 
@@ -231,6 +249,12 @@ class NaturalnessChecker:
             lines[0] += _UK_NOTE
         for i, q in enumerate(questions, start=1):
             lines.append(f"{i}. [{q.language}] {q.question}")
+            if q.language == uk_policy.UK:
+                answer = (q.possible_answers or {}).get(
+                    str(q.correct_answer), q.correct_answer
+                )
+                lines.append(f"   answer: {answer}")
+                lines.append(f"   explanation: {q.explanation or '-'}")
         return "\n".join(lines)
 
     @staticmethod
@@ -272,8 +296,13 @@ class NaturalnessChecker:
             )
             if not (1 <= idx <= n) or not consistent:
                 continue
+            flags = {
+                key: item[key]
+                for key in ("off_policy", "gives_away")
+                if isinstance(item.get(key), bool)
+            }
             result[idx - 1] = Naturalness(
-                ok=ok, problems=problems, rewrite=rewrite if not ok else None
+                ok=ok, problems=problems, rewrite=rewrite if not ok else None, **flags
             )
 
         matched = sum(1 for r in result if r is not None)
@@ -304,6 +333,18 @@ class NaturalnessChecker:
                 return [None] * n
             verdicts = self._parse(text, n)
             for i, (q, v) in enumerate(zip(questions, verdicts)):
+                if q.language == "uk" and v and (
+                    v.off_policy is None or v.gives_away is None
+                ):
+                    # #231: fail closed, like a skipped question: unchecked,
+                    # so the row stays pending and the backfill retries it.
+                    logger.warning(
+                        "NaturalnessChecker: uk verdict for %s lacks the "
+                        "off_policy/gives_away flags; left unchecked",
+                        q.id,
+                    )
+                    verdicts[i] = None
+                    continue
                 if q.language == "uk":
                     # Cyrillic is native here; the contamination is Russian
                     # letters the question itself did not carry.

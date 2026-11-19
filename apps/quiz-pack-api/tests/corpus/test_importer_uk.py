@@ -34,7 +34,9 @@ class _Verdicts:
 
     async def label(self, questions, batch_size=20):
         for q in questions:
-            apply_naturalness(q, Naturalness(ok=self.ok[q.id]))
+            apply_naturalness(
+                q, Naturalness(ok=self.ok[q.id], off_policy=False, gives_away=False)
+            )
         return len(questions)
 
 

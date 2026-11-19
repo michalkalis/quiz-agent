@@ -21,9 +21,11 @@ Deterministic checks, free and pure so every gate can call them:
     machine-approved (``machine_approval``: stays pending_review, so
     TestFlight-only) and a human decides. Never dropped.
   - **reject**: wording with no reading before 2014: the full-scale invasion,
-    Azovstal, the Revolution of Dignity, "РФ", Putin…, or a hold word together
-    with a year from 2014 on in the same row ("Донбас … 2022"). Such a seed
-    is dropped (counted) and such a row never enters the corpus (importer).
+    Azovstal, the Revolution of Dignity, "РФ", Putin…, or a war word or place
+    together with a year from 2014 on in the same sentence ("Донбас … 2022").
+    Such a seed is dropped (counted) and such a row never enters the corpus
+    (importer). Any other hold word next to a recent year only holds: a wrong
+    reject silently loses a good question, a hold costs one human look.
 
   Reasons quote the matched words so the reviewer sees why at a glance.
 * Source: a Russian state or ``.ru`` source holds the row for a human.
@@ -56,11 +58,28 @@ _RUSSIAN_ONLY_WORDS = frozenset(
     столица столице столицей она они его где здесь сейчас почему сколько всего
     нет самый самая самое самые является являются называется сегодня вообще
     конечно ладно шо канєшно конєшно конешно тіпа типа щас всьо нада
-    львов львове""".split()
+    кто чем чей лучший лучшая впервые время страна стране страну
+    написал создал открыл основал сказал стал получил построил назвал спел
+    львов львове ровно кривой сергей сергея сергею сергеем андрей андрея
+    андрею андреем""".split()
 )
 # Word starts that are Russian forms of names and loanwords (uk: Київ, Харків,
-# Одеса, Дніпро, Запоріжжя, Борщів, меланін).
-_RUSSIAN_STEMS = ("киев", "харьков", "одесс", "днепр", "запорожж", "борщев", "меланин")
+# Одеса, Дніпро, Запоріжжя, Борщів, меланін, Володимир, Микола / Миколаїв,
+# Чернігів, Донецьк, Дністер).
+_RUSSIAN_STEMS = (
+    "киев",
+    "харьков",
+    "одесс",
+    "днепр",
+    "запорожж",
+    "борщев",
+    "меланин",
+    "владимир",
+    "никола",
+    "чернигов",
+    "донецк",
+    "днестр",
+)
 # Spellings Ukrainian never uses: "ии" (Франции), "ье" (Запорожье), and the
 # masculine reflexive past in "-лся" (uk "-вся": родился / народився).
 _RUSSIAN_SPELLING_RE = re.compile(r"ии|ье|лся\b")
@@ -113,7 +132,9 @@ def russian_contamination_reason(texts: Iterable[str]) -> str | None:
 # Regexes over casefolded text, each anchored at a word start (see
 # ``_matches``). Reject: no reading before 2014.
 _REJECT = (
-    r"повномасштабн\w*",
+    # "повномасштабна реставрація" is a restoration; only the invasion counts
+    # (bare "з початку повномасштабного" is the invasion too, so it holds).
+    r"повномасштабн\w* (?:вторгн|війн|наступ)\w*",
     r"азовстал\w*",
     r"революці\w* гідності",
     r"євромайдан\w*",
@@ -125,8 +146,31 @@ _REJECT = (
     r"путін\w*",
     r"мінськ\w* угод\w*",
 )
+# Hold, war and its places: a recent year in the SAME sentence makes these a
+# reject ("Донбас … 2022"). "війна" and "облога" are not here: history rows
+# use them next to a recent year ("фільм про Другу світову війну 2019 року",
+# "200-річчя Шевченка 2014 … після війни"), so those only hold.
+_HOLD_WAR = (
+    r"вторгнен\w*",
+    r"окупа\w*",
+    r"окупов\w*",
+    r"анексі\w*",
+    r"агресор\w*",
+    r"мобілізац\w*",
+    r"фронт(?:і|у|ом|ах|ів|и)?\b",
+    r"24 лютого",
+    r"крим(?:у|і|ом|ськ\w*)?\b",
+    r"донбас\w*",
+    r"гостомел\w*",
+    r"бахмут\w*",
+    r"ірпін\w*",
+    r"буч(?:а|і|у|ею)\b",
+    r"авдіївк\w*",
+    r"маріупол\w*",
+    r"зміїн\w*",
+)
 # Hold: may be history before 2014 or may not; a human decides.
-_HOLD = (
+_HOLD = _HOLD_WAR + (
     # Russia and Moscow. "росі" alone is dew or the river Рось: not listed.
     r"росі[яїює]\w*",
     r"російськ\w*",
@@ -134,26 +178,29 @@ _HOLD = (
     r"москв\w*",
     r"москал\w*",
     r"кремл\w*",
-    # war, invasion, occupation, siege
+    # war, siege, fighting and its symbols since 2014
+    r"повномасштабн\w*",
     r"війн\w*",
     r"воєнн\w*",
-    r"вторгнен\w*",
-    r"окупа\w*",
-    r"окупов\w*",
-    r"анексі\w*",
-    r"агресор\w*",
     r"облог\w*",
-    r"мобілізац\w*",
-    r"фронт(?:і|у|ом|ах|ів|и)?\b",
-    r"24 лютого",
-    # places the war since 2014 is about
-    r"крим(?:у|і|ом|ськ\w*)?\b",
-    r"донбас\w*",
-    r"гостомел\w*",
-    r"майдан(?:і|у|ом)?\b",  # not "майданчик", a playground
+    r"бо(?:ї|їв|ях|ями|ям)\b",
+    r"бойов\w*",
+    r"збройн\w* сил\w*",
+    r"кіборг\w*",
+    r"ато\b",  # whole word only: "атом"
+    r"байрактар\w*",
+    r"джавелін\w*",
+    r"хаймарс\w*",
+    r"прикордонник\w*",
+    r"звільн\w*",  # "звільнили навесні": a liberated town
     # politics
     r"президент\w*",
     r"прем['’ʼ]?єр(?:-міністр\w*)?\b",  # not "прем'єра", a premiere
+    r"міністр\w*",
+    r"уряд\w*",
+    r"мер(?:а|ом|у|и|ів|ам|ами|ах)?\b",  # a mayor; not "Мері" (Mary)
+    r"мері[яїює]\w*",
+    r"нато\b",
     r"верховн\w* рад\w*",
     r"парламент\w*",
     r"депутат\w*",
@@ -163,11 +210,17 @@ _HOLD = (
     r"зеленськ\w*",
     r"порошенк\w*",
     r"янукович\w*",
+    r"тимошенк\w*",
+    r"залужн\w*",
+    r"буданов\w*",
 )
 _RECENT_YEAR_RE = re.compile(r"(?<!\d)20(?:1[4-9]|[2-9]\d)(?!\d)")
 _WORD_START = r"(?<![^\W\d_])"
 _REJECT_RE = re.compile(_WORD_START + "(?:" + "|".join(_REJECT) + ")")
 _HOLD_RE = re.compile(_WORD_START + "(?:" + "|".join(_HOLD) + ")")
+_HOLD_WAR_RE = re.compile(_WORD_START + "(?:" + "|".join(_HOLD_WAR) + ")")
+# Sentence ends, but not after a one-letter abbreviation ("2015 р. бої").
+_SENTENCE_END_RE = re.compile(r"(?<=[.!?…])(?<!\b\w\.)\s+")
 
 REJECT_PREFIX = "topic_policy:reject"
 HOLD_PREFIX = "topic_policy:hold"
@@ -196,7 +249,12 @@ def topic_policy_reason(texts: Iterable[str]) -> str | None:
     rejects = {m for t in folded for m in _REJECT_RE.findall(t)}
     holds = {m for t in folded for m in _HOLD_RE.findall(t)}
     years = {m for t in folded for m in _RECENT_YEAR_RE.findall(t)}
-    if rejects or (holds and years):
+    for sentence in (s for t in folded for s in _SENTENCE_END_RE.split(t)):
+        war = _HOLD_WAR_RE.findall(sentence)
+        recent = _RECENT_YEAR_RE.findall(sentence)
+        if war and recent:
+            rejects |= set(war) | set(recent)
+    if rejects:
         return f"{REJECT_PREFIX}({', '.join(sorted(rejects | holds | years))})"
     if holds or years:
         return f"{HOLD_PREFIX}({', '.join(sorted(holds | years))})"
@@ -209,20 +267,44 @@ def topic_reject_reason(texts: Iterable[str]) -> str | None:
     return reason if reason and reason.startswith(REJECT_PREFIX) else None
 
 
-_SOURCE_DENY_DOMAINS = ("mail.ru", "gw2ru.com", "rt.com")
+# Russian state outlets on non-.ru domains (TASS, Russia Beyond, RT, Channel
+# One, VGTRK) and Russian portals.
+_SOURCE_DENY_DOMAINS = (
+    "mail.ru",
+    "gw2ru.com",
+    "rt.com",
+    "tass.com",
+    "rbth.com",
+    "1tv.com",
+    "russia.tv",
+)
 _SOURCE_DENY_TLDS = (".ru", ".su", ".рф", ".xn--p1ai")
+# A Russian-language or Russia-locale page on any site: "/ru/", "/en-ru/",
+# "/ru-ru/".
+_RU_PATH_SEGMENT_RE = re.compile(r"(?i)^(?:[a-z]{2}[-_])?ru$")
+# A URL wrapped inside another one (web.archive.org/web/2020/https://lenta.ru).
+_EMBEDDED_URL_RE = re.compile(r"(?i)https?:/+(.+)")
+_ARCHIVE_PATH_RE = re.compile(r"^/web/[^/]+/(.+)")
 
 
 def source_reason(url: str | None) -> str | None:
-    """A reason when the source is Russian (``.ru``, RT, Sputnik…)."""
+    """A reason when the source is Russian (``.ru``, ``ru.wikipedia``, RT,
+    TASS, Sputnik, a Russia-locale path, or an archive of a Russian URL)."""
     url = (url or "").strip()
-    host = urlsplit(url if "//" in url else "//" + url).hostname or ""
+    parts = urlsplit(url if "//" in url else "//" + url)
+    host = parts.hostname or ""
     if not host:
         return None
     if (
         host.endswith(_SOURCE_DENY_TLDS)
+        or "ru" in host.split(".")
         or any(host == d or host.endswith("." + d) for d in _SOURCE_DENY_DOMAINS)
         or "sputnik" in host
+        or any(_RU_PATH_SEGMENT_RE.match(seg) for seg in parts.path.split("/"))
     ):
         return f"russian_source({host})"
-    return None
+    rest = parts.path + ("?" + parts.query if parts.query else "")
+    inner = _EMBEDDED_URL_RE.search(rest)
+    if inner is None and host.endswith("archive.org"):
+        inner = _ARCHIVE_PATH_RE.match(parts.path)
+    return source_reason(inner.group(1)) if inner else None

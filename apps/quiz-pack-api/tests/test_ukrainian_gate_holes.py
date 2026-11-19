@@ -27,7 +27,7 @@ CLEAN_EXTRA = {
     "verified": True,
     "verification_score": 0.9,
     "factcheck_tier": "web",
-    "naturalness": {"ok": True},
+    "naturalness": {"ok": True, "off_policy": False, "gives_away": False},
 }
 
 

@@ -1766,7 +1766,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld дн. %2$lld год"
+            "value" : "%1$lld д %2$lld год"
           }
         }
       }

@@ -331,7 +331,7 @@ async def ensure(qid, lang, question_only=False, answer_number=None):
             audio = await tts.synthesize(
                 text=spoken, use_cache=True, billing=billing, language=out["language"]
             )
-            key = tts.remote_key_for(spoken, out["language"], voice)
+            key = tts.remote_key_for(spoken, out["language"])
             if await tts.remote.get(key) is None:
                 return {
                     "error": f"{qid}: {what} clip made but not found in R2 under {key}"

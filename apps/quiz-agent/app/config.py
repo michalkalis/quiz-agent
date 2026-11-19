@@ -188,14 +188,20 @@ class Settings(BaseSettings):
     # 1,1x a sk/cz 1,07x". v4 Turbo ignores `speed`, hence the model per
     # language; sk/cs also name their language so Flash does not guess it.
     # Keys: `model` (ElevenLabs), `speed` (both providers), `language_code`
-    # (ElevenLabs). A styled language gets its own cache keys, so the old clips
+    # (ElevenLabs), `voice` (ElevenLabs voice id; founder 2026-11-19: Josef, a
+    # native Czech voice, reads Czech instead of George). A styled language gets its own cache keys, so the old clips
     # stay in R2: rollback is `TTS_LANGUAGE_STYLES={}` (JSON), which makes the
     # old v4 Turbo clips play again. Unlisted languages (uk on v3) are untouched.
     tts_language_styles: dict[str, dict[str, Any]] = Field(
         default_factory=lambda: {
             "en": {"model": "eleven_flash_v2_5", "speed": 1.1},
             "sk": {"model": "eleven_flash_v2_5", "speed": 1.07, "language_code": "sk"},
-            "cs": {"model": "eleven_flash_v2_5", "speed": 1.07, "language_code": "cs"},
+            "cs": {
+                "model": "eleven_flash_v2_5",
+                "speed": 1.07,
+                "language_code": "cs",
+                "voice": "RxVyXZsJK1kay0fTKgd2",  # Josef, tts/voices.py
+            },
         }
     )
     # Answer transcription (#208.1): OpenAI is the only answer recogniser

@@ -17,9 +17,11 @@ Deterministic checks, free and pure so every gate can call them:
   - **hold**: a word that may or may not be about the excluded topics: Russia
     and Moscow (the Russian Empire is history), war, invasion, occupation and
     annexation (the Mongols in 1240, Kyiv in 1941, Crimea in 1783), Crimea and
-    Donbas, politics words, and any year from 2014 on. The row is never
-    machine-approved (``machine_approval``: stays pending_review, so
-    TestFlight-only) and a human decides. Never dropped.
+    Donbas, politics words. The row is never machine-approved
+    (``machine_approval``: stays pending_review, so TestFlight-only) and a
+    human decides. Never dropped. A year from 2014 on by itself is not a hit:
+    fresh entertainment is all recent years (Eurovision 2026), and the
+    naturalness model's ``off_policy`` flag judges the topic of every uk row.
   - **reject**: wording with no reading before 2014: the full-scale invasion,
     Azovstal, the Revolution of Dignity, "РФ", Putin…, or a war word or place
     together with a year from 2014 on in the same sentence ("Донбас … 2022").
@@ -154,6 +156,7 @@ _HOLD_WAR = (
     r"вторгнен\w*",
     r"окупа\w*",
     r"окупов\w*",
+    r"окупув\w*",  # "окупували"; not "окупність", a payback
     r"анексі\w*",
     r"агресор\w*",
     r"мобілізац\w*",
@@ -178,6 +181,8 @@ _HOLD = _HOLD_WAR + (
     r"москв\w*",
     r"москал\w*",
     r"кремл\w*",
+    # the square: a recent year next to it is a concert as often as 2014
+    r"майдан(?:і|у|ом)?\b",  # not "майданчик", a playground
     # war, siege, fighting and its symbols since 2014
     r"повномасштабн\w*",
     r"війн\w*",
@@ -256,7 +261,7 @@ def topic_policy_reason(texts: Iterable[str]) -> str | None:
             rejects |= set(war) | set(recent)
     if rejects:
         return f"{REJECT_PREFIX}({', '.join(sorted(rejects | holds | years))})"
-    if holds or years:
+    if holds:
         return f"{HOLD_PREFIX}({', '.join(sorted(holds | years))})"
     return None
 

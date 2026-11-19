@@ -202,6 +202,42 @@ def test_bare_full_scale_still_holds() -> None:
     assert reason and reason.startswith(uk_policy.HOLD_PREFIX)
 
 
+# --- a recent year alone is fresh entertainment, not a topic hit --------------
+
+FRESH = [
+    ("Дитяче Євробачення 2026 приймала острівна держава в Середземному морі. Що це за країна?", "Мальта"),
+    ("У фіналі «Україна має талант» 2026 року глядачі обирали переможця у застосунку. Що це за застосунок?", "Дія"),
+    ("Ярослава Магучіх у 2024 році встановила світовий рекорд у стрибках у висоту. Яка це висота?", "2,10 метра"),
+    ("Музичним продюсером нацвідбору на Євробачення 2027 став Дмитро Шуров. З яким гуртом він грав?", "Океан Ельзи"),
+]
+
+
+@pytest.mark.parametrize(("question", "answer"), FRESH)
+def test_a_recent_year_alone_does_not_hold_fresh_entertainment(
+    question: str, answer: str
+) -> None:
+    """First uk fresh run 2026-11-19: every row was held for its year alone.
+    The topic is the model's call (off_policy, fail-closed)."""
+    assert uk_policy.topic_policy_reason([question, answer]) is None
+    assert machine_approval_block_reason(_q(question=question, correct_answer=answer)) is None
+    flagged = _q(
+        question=question,
+        correct_answer=answer,
+        naturalness=dict(CLEAN_VERDICT, off_policy=True),
+    )
+    assert machine_approval_block_reason(flagged) == "naturalness=off_policy"
+
+
+def test_a_recent_year_with_a_hold_word_still_holds() -> None:
+    reason = uk_policy.topic_policy_reason(["Хто став президентом клубу у 2025 році?"])
+    assert reason == f"{uk_policy.HOLD_PREFIX}(2025, президентом)"
+
+
+def test_a_recent_year_with_a_war_word_in_the_sentence_still_rejects() -> None:
+    reason = uk_policy.topic_reject_reason(["Яке місто окупували у 2022 році?"])
+    assert reason and "окупували" in reason
+
+
 # --- 5. Ukrainian true/false answers are balanced too ------------------------
 
 

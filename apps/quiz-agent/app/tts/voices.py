@@ -24,6 +24,10 @@ ELEVENLABS_VOICES: Dict[str, str] = {
     "sarah": "EXAVITQu4vr4xnSDxMaL",  # American female, reassuring
     "alice": "Xb7hH8MSUJpSbSDYk0k2",  # British female, clear educator
     "brian": "nPczCjzI2devNBz1zQrb",  # Deep male, unhurried
+    # Native Czech male from the ElevenLabs voice library (rate 1.0, 730-day
+    # notice period). Founder 2026-11-19: George reading Czech sounds foreign,
+    # Josef reads Czech in the app and the social videos.
+    "josef": "RxVyXZsJK1kay0fTKgd2",
 }
 
 ELEVENLABS_DEFAULT_VOICE = ELEVENLABS_VOICES["george"]
@@ -58,12 +62,15 @@ class SpeechStyle:
 
     ``model`` is the ElevenLabs model for that language (the OpenAI backup keeps
     its own model), ``speed`` applies to both providers, ``language_code`` is
-    sent to ElevenLabs so Flash does not guess the language from the text.
+    sent to ElevenLabs so Flash does not guess the language from the text,
+    ``voice`` is the ElevenLabs voice id that reads the language (None = the
+    provider's default voice; the OpenAI backup keeps its own voice).
     """
 
     model: Optional[str] = None
     speed: Optional[float] = None
     language_code: Optional[str] = None
+    voice: Optional[str] = None
 
 
 def speech_style(
@@ -78,6 +85,7 @@ def speech_style(
         model=raw.get("model") or None,
         speed=float(speed) if speed is not None else None,
         language_code=raw.get("language_code") or None,
+        voice=raw.get("voice") or None,
     )
 
 

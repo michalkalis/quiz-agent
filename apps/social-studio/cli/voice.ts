@@ -1,4 +1,4 @@
-// The social videos' own voice (founder 2026-11-18): the app voice (George)
+// The social videos' own voice (founder 2026-11-18): the app voice (George, for Czech Josef)
 // on ElevenLabs Flash v2.5, natively faster than the app (en 1.15, sk/cs 1.1;
 // an artificial speed-up sounded robotic). Same texts the app reads, made
 // here, cached locally by text + voice settings, never written to the app's R2.
@@ -9,7 +9,10 @@ import path from 'node:path';
 import type {Language} from '../src/types';
 import {CACHE_DIR} from './paths';
 
-export const VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'; // George, the app's question voice
+/** The app's voice per language: George, and for Czech Josef, a native Czech voice
+ * (founder 2026-11-19: George reading Czech sounds foreign). Same ids as the app's
+ * apps/quiz-agent/app/tts/voices.py. */
+export const VOICE_ID: Record<Language, string> = {en: 'JBFqnCBsd6RMkjVDRZzb', sk: 'JBFqnCBsd6RMkjVDRZzb', cs: 'RxVyXZsJK1kay0fTKgd2'};
 export const VOICE_MODEL = 'eleven_flash_v2_5'; // honours voice_settings.speed (v4 Turbo ignores it)
 /** Founder 2026-11-18: "na socials davaj anglictinu 1,15x, sk a cz 1,1x". */
 export const VOICE_SPEED: Record<Language, number> = {en: 1.15, sk: 1.1, cs: 1.1};
@@ -27,7 +30,7 @@ const settingsFor = (language: Language) => ({
 });
 
 const cacheFile = (text: string, language: Language) =>
-	path.join(CACHE_DIR, 'voice', `${createHash('sha1').update(JSON.stringify([VOICE_ID, settingsFor(language), text])).digest('hex')}.mp3`);
+	path.join(CACHE_DIR, 'voice', `${createHash('sha1').update(JSON.stringify([VOICE_ID[language], settingsFor(language), text])).digest('hex')}.mp3`);
 
 /** A cached clip counts only when it has bytes: a write cut short (a full disk, 2026-11-19) leaves an
  * empty file, and taking it as a hit renders a reel whose question is silent. */
@@ -42,7 +45,7 @@ export async function ownClip(text: string, language: Language): Promise<{bytes:
 	if (usableClip(file)) return {bytes: readFileSync(file), made: 0};
 	const key = process.env.ELEVENLABS_API_KEY;
 	if (!key) throw new Error('ELEVENLABS_API_KEY is not set (load the root .env), or pass --app-clips');
-	const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`, {
+	const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID[language]}?output_format=mp3_44100_128`, {
 		method: 'POST',
 		headers: {'xi-api-key': key, 'Content-Type': 'application/json'},
 		body: JSON.stringify({text, ...settingsFor(language)}),

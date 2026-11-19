@@ -21,8 +21,8 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 OUT = ROOT / "public"
 SITE = "https://trubbo.app"
-LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}  # en is the default at the root
-LEGAL = ["privacy", "terms", "support"]  # served at /<page> (en), /sk/<page>, /cs/<page>
+LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/", "uk": "/uk/"}  # en is the default at the root
+LEGAL = ["privacy", "terms", "support"]  # served at /<page> (en), /sk/<page>, /cs/<page>, /uk/<page>
 # Official social accounts: the English ones on /, the shared Slovak and Czech ones on /sk/ and /cs/.
 SOCIAL_EN = {
     "Instagram": "https://www.instagram.com/trubboapp/",
@@ -35,17 +35,18 @@ SOCIAL_SKCZ = {
     "YouTube": "https://www.youtube.com/@trubboapp_sk",
     "Facebook": "https://www.facebook.com/1447421928452448",
 }
-SOCIAL = {"en": SOCIAL_EN, "sk": SOCIAL_SKCZ, "cs": SOCIAL_SKCZ}
-# Trubbo on the App Store: the local storefront for Slovak and Czech, Apple's own redirect for everyone else.
+SOCIAL = {"en": SOCIAL_EN, "sk": SOCIAL_SKCZ, "cs": SOCIAL_SKCZ, "uk": SOCIAL_EN}  # #231: no Ukrainian accounts yet
+# Trubbo on the App Store: the local storefront for Slovak, Czech and Ukrainian, Apple's own redirect for everyone else.
 APP_STORE_ID = "6762482437"
 STORE = {
     "en": f"https://apps.apple.com/app/id{APP_STORE_ID}",
     "sk": f"https://apps.apple.com/sk/app/trubbo/id{APP_STORE_ID}",
     "cs": f"https://apps.apple.com/cz/app/trubbo/id{APP_STORE_ID}",
+    "uk": f"https://apps.apple.com/ua/app/trubbo/id{APP_STORE_ID}",
 }
 BETA = "https://testflight.apple.com/join/qvbqMh1k"
-FONT_FILES = ["calistoga-latin.woff2", "calistoga-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2", "rethink-sans-latin.woff2"]
-STATIC = [*FONT_FILES, "funnel-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "og-play.png", "og-join.png", "robots.txt", "404.html", "CNAME", "clip-test.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
+FONT_FILES = ["calistoga-latin.woff2", "calistoga-latin-ext.woff2", "funnel-sans-latin.woff2", "funnel-sans-latin-ext.woff2", "rethink-sans-latin.woff2", "manrope-cyrillic.woff2"]
+STATIC = [*FONT_FILES, "funnel-OFL.txt", "manrope-OFL.txt", "calistoga-OFL.txt", "rethink-sans-OFL.txt", "app-store-badge.svg", "favicon.svg", "favicon.png", "apple-touch-icon.png", "mascot.svg", "mail-logo.png", "og.png", "og-play.png", "og-join.png", "robots.txt", "404.html", "CNAME", "clip-test.html", "googlee2ff1698bc168aef.html", ".well-known/apple-app-site-association"]
 
 # Pages a shared link lands on without the app (#232 quiz, #212 game invite), with src/link-page.js inlined.
 LINK_PAGES = ["play.html", "join.html"]
@@ -71,7 +72,10 @@ def lint(lang: str, strings: dict, base: set) -> list:
 # Calistoga (headings, founder 11-03) and Funnel Sans (text), SIL OFL, self-hosted; Latin + Latin Extended split like Google Fonts.
 # Calistoga has one weight: the 300-800 range maps every heading weight to it, so browsers never fake a bold.
 # The "trubbo" logo is Rethink Sans ExtraBold like the app's wordmark; its letters are all Latin, so one subset.
+# Neither Calistoga nor Funnel Sans has Cyrillic: Ukrainian letters fall through to Manrope, the app's font for
+# Ukrainian (founder 2026-11-17, #231), loaded only for Cyrillic characters.
 LATIN_EXT = "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF"
+CYRILLIC = "U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116"
 LATIN = "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
 FONTS = "\n".join(
     f'@font-face{{font-family:"{family}";font-style:normal;font-weight:300 800;font-display:swap;'
@@ -81,6 +85,8 @@ FONTS = "\n".join(
 ) + (
     '\n@font-face{font-family:"Rethink Sans";font-style:normal;font-weight:400 800;font-display:swap;'
     f'src:url(/rethink-sans-latin.woff2) format("woff2");unicode-range:{LATIN}}}'
+    '\n@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;'
+    f'src:url(/manrope-cyrillic.woff2) format("woff2");unicode-range:{CYRILLIC}}}'
 )
 EYES = re.compile(r'<circle cx="81" [^>]*/><circle cx="84\.3" [^>]*/><circle cx="123" [^>]*/><circle cx="126\.3" [^>]*/>')
 
@@ -174,8 +180,9 @@ App Store: {STORE["en"]}
 - [English]({SITE}/)
 - [Slovenčina]({SITE}/sk/)
 - [Čeština]({SITE}/cs/)
+- [Українська]({SITE}/uk/)
 - [Privacy]({SITE}/privacy), [Terms]({SITE}/terms), [Support]({SITE}/support)
-- Quiz questions with answers and sources, by topic: [English]({SITE}/questions/), [Slovak]({SITE}/sk/otazky/), [Czech]({SITE}/cs/otazky/)
+- Quiz questions with answers and sources, by topic: [English]({SITE}/questions/), [Slovak]({SITE}/sk/otazky/), [Czech]({SITE}/cs/otazky/), [Ukrainian]({SITE}/uk/pytannia/)
 
 ## Social media
 
@@ -309,7 +316,7 @@ def main() -> int:
             target.write_text(render_legal(legal, page, lang, strings[lang]), "utf-8")
             print(f"wrote {target.relative_to(ROOT)} ({target.stat().st_size:,} bytes)")
     write_topics(strings)
-    print("wrote question topic pages (en, sk, cs)")
+    print(f"wrote question topic pages ({', '.join(topics.LANGS)})")
     (OUT / "sitemap.xml").write_text(sitemap(), "utf-8")
     (OUT / "llms.txt").write_text(llms(strings), "utf-8")
     for name in STATIC:

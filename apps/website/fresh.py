@@ -18,7 +18,7 @@ from pathlib import Path
 # so the Fly host (kept as a forwarder after the move) is the second try.
 APIS = ["https://api.trubbo.app", "https://quiz-agent-api.fly.dev"]
 PATH = "/api/v1/public/fresh-questions"
-SLUGS = {"en": "fresh", "sk": "cerstve", "cs": "cerstve"}
+SLUGS = {"en": "fresh", "sk": "cerstve", "cs": "cerstve", "uk": "svizhi"}
 LIMIT = 12
 MIN = 3
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]  # en dates

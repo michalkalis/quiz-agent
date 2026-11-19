@@ -32,6 +32,14 @@
    "mcq": "Otázka s možnostmi? *Řekni odpověď nebo číslo*",
    "home": "Vyber si *kategorie a obtížnost*",
    "pack": "Balíček otázek *na jakékoli téma*"
+  },
+  "uk": {
+   "listening": "Вікторина, у яку граєш *голосом*",
+   "confirm": "Відповідай *своїми словами*",
+   "result": "До кожної відповіді *пояснення*",
+   "mcq": "Питання з варіантами? *Скажи відповідь або номер*",
+   "home": "Вибери *категорії і складність*",
+   "pack": "Набір питань *на будь-яку тему*"
   }
  },
  "photos": {

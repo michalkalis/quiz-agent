@@ -48,7 +48,7 @@ from asc_audit import (
 
 FL = Path(__file__).resolve().parents[1] / "apps/ios-app/Hangs/fastlane"
 MD = FL / "metadata"
-LOCALES = ["en-GB", "en-US", "sk", "cs"]
+LOCALES = ["en-GB", "en-US", "sk", "cs", "uk"]
 V2 = BASE.replace("/v1", "/v2")
 APPLY = False
 BETA_BUNDLE_ID = "com.missinghue.hangs.beta"

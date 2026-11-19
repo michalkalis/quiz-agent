@@ -1,4 +1,4 @@
-"""Question topic pages (#223): /questions/<slug>/, /sk/otazky/<slug>/, /cs/otazky/<slug>/ and a hub per language.
+"""Question topic pages (#223): /questions/<slug>/, /sk/otazky/<slug>/, /cs/otazky/<slug>/, /uk/pytannia/<slug>/ and a hub per language.
 
 Texts: src/topics/<lang>.json. Questions: src/topics/questions.<lang>.json, a snapshot of approved,
 sourced questions from production made by tools/topic_snapshot.py. Topics pair up across languages by
@@ -16,10 +16,16 @@ from pathlib import Path
 
 import fresh
 
-LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/"}
-DIRS = {"en": "questions", "sk": "otazky", "cs": "otazky"}
+LANGS = {"en": "/", "sk": "/sk/", "cs": "/cs/", "uk": "/uk/"}
+DIRS = {"en": "questions", "sk": "otazky", "cs": "otazky", "uk": "pytannia"}
 COLORS = ["blue", "orange", "green", "purple", "yellow", "rose"]
 PT = "119419107"  # App Store Connect provider token for campaign links (ct=web_<lang>_<slug>)
+
+
+def plural(lang: str, n: int) -> dict:
+    """Format values for a question count: Ukrainian picks «питання» (1 to 4, not 11 to 14) or «питань» by number, as {e}."""
+    few = lang == "uk" and n % 10 in (1, 2, 3, 4) and n % 100 not in (11, 12, 13, 14)
+    return {"n": n, "e": "ня" if few else "ь"}
 
 
 def hub(lang: str) -> str:
@@ -81,9 +87,9 @@ def source_label(url: str) -> str:
     return host
 
 
-def cards(lang: str, texts: dict, questions: dict, skip: str = "") -> str:
+def cards(lang: str, texts: dict, questions: dict, skip: str = "", has_fresh: bool = True) -> str:
     out = []
-    if skip != fresh.SLUGS[lang]:  # the weekly page leads every list of topics
+    if has_fresh and skip != fresh.SLUGS[lang]:  # the weekly page leads every list of topics
         out.append(
             f'<li><a class="topic fresh" href="{hub(lang)}{fresh.SLUGS[lang]}/">'
             f'<span class="t">{esc(texts["fresh.card"])}</span><span class="n">{esc(texts["fresh.badge"])}</span>'
@@ -96,7 +102,7 @@ def cards(lang: str, texts: dict, questions: dict, skip: str = "") -> str:
         out.append(
             f'<li><a class="topic c-{COLORS[i % len(COLORS)]}" href="{hub(lang)}{t["slug"]}/">'
             f'<span class="t">{esc(t["about"][:1].upper() + t["about"][1:])}</span>'
-            f'<span class="n">{esc(texts["count"].format(n=len(questions[t["slug"]])))}</span>'
+            f'<span class="n">{esc(texts["count"].format(**plural(lang, len(questions[t["slug"]]))))}</span>'
             f'<span class="ex">{esc(first)}</span></a></li>'
         )
     return '<ul class="topics">' + "".join(out) + "</ul>"
@@ -122,7 +128,7 @@ def question_list(texts: dict, items: list, color: str) -> str:
     return f'<ol class="qs c-{color}">{qs}</ol>'
 
 
-def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str) -> str:
+def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str, has_fresh: bool) -> str:
     t = texts["topics"][i]
     items = questions[t["slug"]]
     color = COLORS[i % len(COLORS)]
@@ -130,10 +136,10 @@ def topic_main(lang: str, texts: dict, questions: dict, i: int, link: str) -> st
         f'<nav class="crumb"><a href="{hub(lang)}">{esc(texts["title.prefix"])}</a></nav>'
         f'<section class="head c-{color}"><h1 class="disp">{esc(heading(texts, t["about"]))}</h1>'
         f'<p class="lead">{esc(t["lead"])}</p>'
-        f'<p class="how">{esc(texts["count"].format(n=len(items)))}. {esc(texts["how"])}</p></section>'
+        f'<p class="how">{esc(texts["count"].format(**plural(lang, len(items))))}. {esc(texts["how"])}</p></section>'
         + question_list(texts, items, color)
         + cta(lang, texts, link)
-        + f'<section class="more"><h2 class="disp">{esc(texts["more"])}</h2>{cards(lang, texts, questions, t["slug"])}</section>'
+        + f'<section class="more"><h2 class="disp">{esc(texts["more"])}</h2>{cards(lang, texts, questions, t["slug"], has_fresh)}</section>'
     )
 
 
@@ -149,11 +155,11 @@ def fresh_main(lang: str, texts: dict, questions: dict, data: dict, link: str) -
     )
 
 
-def hub_main(lang: str, texts: dict, questions: dict, link: str) -> str:
+def hub_main(lang: str, texts: dict, questions: dict, link: str, has_fresh: bool) -> str:
     return (
         f'<section class="head"><h1 class="disp">{esc(texts["title.prefix"] + " " + texts["title.suffix"])}</h1>'
         f'<p class="lead">{esc(texts["hub.lead"])}</p></section>'
-        + cards(lang, texts, questions)
+        + cards(lang, texts, questions, has_fresh=has_fresh)
         + cta(lang, texts, link)
     )
 
@@ -174,8 +180,11 @@ def quiz_ld(lang: str, url: str, name: str, items: list) -> str:
 def pages(src: Path, site: str, store_urls: dict, live: dict | None = None) -> list[dict]:
     """Every topic, hub and fresh page as {lang, path, title, description, main, jsonld, alternates, link, fresh}.
 
-    `live` maps a language to fresh questions from the API; languages without it use the snapshot."""
+    `live` maps a language to fresh questions from the API; languages without it use the snapshot.
+    A language with no fresh questions at all gets no fresh page and no link to it."""
     data = {lang: load(src, lang) for lang in LANGS}
+    current = {lang: (live or {}).get(lang) or fresh.snapshot(src, lang) for lang in LANGS}
+    current = {lang: c for lang, c in current.items() if c["questions"]}
     out = []
     for lang, (texts, questions) in data.items():
         hub_path = hub(lang)
@@ -184,19 +193,19 @@ def pages(src: Path, site: str, store_urls: dict, live: dict | None = None) -> l
         out.append({
             "lang": lang, "path": hub_path, "texts": texts, "alternates": hub_alt,
             "title": f"{texts['title.prefix']} {texts['title.suffix']} | Trubbo",
-            "description": texts["hub.description"], "main": hub_main(lang, texts, questions, link),
+            "description": texts["hub.description"], "main": hub_main(lang, texts, questions, link, lang in current),
             "jsonld": "", "link": link,
         })
-        current = (live or {}).get(lang) or fresh.snapshot(src, lang)
         path = f"{hub_path}{fresh.SLUGS[lang]}/"
         link = store(lang, store_urls[lang], fresh.SLUGS[lang])
-        out.append({
-            "lang": lang, "path": path, "texts": texts, "fresh": True,
-            "alternates": {other: f"{hub(other)}{fresh.SLUGS[other]}/" for other in LANGS},
-            "title": f"{texts['fresh.title']} | Trubbo", "description": texts["fresh.description"],
-            "main": fresh_main(lang, texts, questions, current, link),
-            "jsonld": quiz_ld(lang, site + path, texts["fresh.title"], current["questions"]), "link": link,
-        })
+        if lang in current:
+            out.append({
+                "lang": lang, "path": path, "texts": texts, "fresh": True,
+                "alternates": {other: f"{hub(other)}{fresh.SLUGS[other]}/" for other in current},
+                "title": f"{texts['fresh.title']} | Trubbo", "description": texts["fresh.description"],
+                "main": fresh_main(lang, texts, questions, current[lang], link),
+                "jsonld": quiz_ld(lang, site + path, texts["fresh.title"], current[lang]["questions"]), "link": link,
+            })
         for i, t in enumerate(texts["topics"]):
             path = f"{hub_path}{t['slug']}/"
             alt = {}
@@ -208,15 +217,17 @@ def pages(src: Path, site: str, store_urls: dict, live: dict | None = None) -> l
             out.append({
                 "lang": lang, "path": path, "texts": texts, "alternates": alt,
                 "title": f"{title(texts, t['about'])} | Trubbo",
-                "description": texts["description"].format(n=len(items), about=t["about"]),
-                "main": topic_main(lang, texts, questions, i, link),
+                "description": texts["description"].format(about=t["about"], **plural(lang, len(items))),
+                "main": topic_main(lang, texts, questions, i, link, lang in current),
                 "jsonld": quiz_ld(lang, site + path, heading(texts, t["about"]), items), "link": link,
             })
     return out
 
 
 def fresh_link(src: Path, lang: str) -> str:
-    """Home page pill to this week's fresh questions."""
+    """Home page pill to this week's fresh questions; empty while the language has none."""
+    if not fresh.snapshot(src, lang)["questions"]:
+        return ""
     label = esc(load(src, lang)[0]["fresh.home"])
     return f'<a class="fresh" href="{hub(lang)}{fresh.SLUGS[lang]}/">{label}</a>'
 
@@ -227,6 +238,8 @@ def home(src: Path, lang: str) -> tuple[str, str]:
     texts, questions = load(src, lang)
     path = hub(lang)
     nav = f'<a class="qnav" href="{path}">{esc(texts["nav"])}</a>'
+    if not any(t.get("home") for t in texts["topics"]):  # #231: no uk questions published yet
+        return nav, ""
     cards = "".join(
         f'<li><a class="topic" href="{path}{t["slug"]}/">{esc(t["about"][:1].upper() + t["about"][1:])}</a>'
         f'<p class="hq">{esc(q["q"])}</p><details><summary>{esc(texts["reveal"])}</summary>'

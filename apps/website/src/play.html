@@ -14,6 +14,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="sk_SK">
 <meta property="og:locale:alternate" content="cs_CZ">
+<meta property="og:locale:alternate" content="uk_UA">
 <meta property="og:image" content="https://trubbo.app/og-play.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -61,6 +62,13 @@ section+section{margin-top:40px}
     <a class="get" href="https://apps.apple.com/cz/app/trubbo/id6762482437">Stáhni z App Store</a>
     <p class="hint">Po instalaci klepni na odkaz ještě jednou.</p>
   </section>
+  <section lang="uk">
+    <h1>Тобі надіслали вікторину</h1>
+    <p class="topic"></p>
+    <p>Зіграй ті самі питання й порівняй результати.</p>
+    <a class="get" href="https://apps.apple.com/ua/app/trubbo/id6762482437">Завантажити в App Store</a>
+    <p class="hint">Після встановлення торкнися посилання ще раз.</p>
+  </section>
 </main>
 <script>
 {{gen.link_page_js}}
@@ -76,7 +84,9 @@ section+section{margin-top:40px}
     sk: { daily: "Kamarát ti poslal dennú výzvu", topic: "Téma: ",
           cats: { "science-nature": "Veda a príroda", "history": "História", "geography-world": "Geografia a svet", "movies-music": "Film a hudba", "sports": "Šport", "food-everyday": "Jedlo a bežný život", "entertainment": "Zábava" } },
     cs: { daily: "Kamarád ti poslal denní výzvu", topic: "Téma: ",
-          cats: { "science-nature": "Věda a příroda", "history": "Historie", "geography-world": "Zeměpis a svět", "movies-music": "Film a hudba", "sports": "Sport", "food-everyday": "Jídlo a běžný život", "entertainment": "Zábava" } }
+          cats: { "science-nature": "Věda a příroda", "history": "Historie", "geography-world": "Zeměpis a svět", "movies-music": "Film a hudba", "sports": "Sport", "food-everyday": "Jídlo a běžný život", "entertainment": "Zábava" } },
+    uk: { daily: "Тобі надіслали щоденний виклик", topic: "Тема: ",
+          cats: { "science-nature": "Наука і природа", "history": "Історія", "geography-world": "Географія і світ", "movies-music": "Кіно і музика", "sports": "Спорт", "food-everyday": "Їжа й побут", "entertainment": "Розваги" } }
   };
   // What the quiz is (kind and topic). Any failure, or 404 while the feature
   // is off, keeps the generic "a friend sent you a quiz".

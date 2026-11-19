@@ -1,7 +1,7 @@
 # trubbo.app website
 
-Static landing page in three languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`. Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…` variants; the iOS app and the App Store listing link to these URLs.
-No framework, no external requests. Three self-hosted web fonts, all SIL OFL (licenses in `calistoga-OFL.txt`, `funnel-OFL.txt`, `rethink-sans-OFL.txt`): Calistoga for headings and the demo question (founder 2026-11-03), Rethink Sans ExtraBold for the "trubbo" logo like the app's wordmark, Funnel Sans for everything else. Each page is one self-contained HTML file.
+Static landing page in four languages: English at `/`, Slovak at `/sk/`, Czech at `/cs/`, Ukrainian at `/uk/` (#231). Also the legal pages (privacy policy, terms of use, support) at `/privacy`, `/terms`, `/support` and their `/sk/…`, `/cs/…`, `/uk/…` variants; the iOS app and the App Store listing link to these URLs.
+No framework, no external requests. Three self-hosted web fonts, all SIL OFL (licenses in `calistoga-OFL.txt`, `funnel-OFL.txt`, `rethink-sans-OFL.txt`): Calistoga for headings and the demo question (founder 2026-11-03), Rethink Sans ExtraBold for the "trubbo" logo like the app's wordmark, Funnel Sans for everything else. Neither has Cyrillic, so Ukrainian letters fall through to Manrope (Cyrillic subset only, `manrope-OFL.txt`), the app's font for Ukrainian. Each page is one self-contained HTML file.
 
 The main call to action is the App Store listing (id 6762482437, local storefront on `/sk/` and `/cs/`, Smart App Banner in Safari); the public TestFlight beta is the secondary link. Both URLs live in `build.py` (`STORE`, `BETA`).
 
@@ -14,7 +14,7 @@ The main call to action is the App Store listing (id 6762482437, local storefron
 | `src/app-store-badge.svg` | Apple's official "Download on the App Store" badge. |
 | `src/audio/question-<lang>.mp3` | Optional. Trubbo's own voice reading the demo question; while a file is missing, "Hear the question" uses the browser's voice. |
 | `src/footer.html` | Footer partial shared by the landing page and the legal pages. |
-| `src/strings/en.json`, `sk.json`, `cs.json` | All visible text, one file per language, same keys. |
+| `src/strings/en.json`, `sk.json`, `cs.json`, `uk.json` | All visible text, one file per language, same keys. |
 | `src/legal.html`, `src/legal/<page>.<lang>.html` | Legal page shell and the legal texts (privacy, terms, support), one file per page and language. Written as plain HTML; the `<h1>` becomes the page title. Built to `public/<page>.html`, which GitHub Pages serves at `/<page>`. |
 | `src/rethink-sans-*` | Rethink Sans, the app's font. Not used by the site; kept here because the website is the brand source for `apps/social-studio` (`sync-brand.mjs`) and `scripts/brand/mascot_assets.py`. |
 | `src/play.html`, `src/join.html`, `src/link-page.js` | Pages a shared quiz link (`/play?s=…`) and a game invite (`/join?t=…`, also `/beta/join`) open without the app. `build.py` inlines `link-page.js` (visitor's language first; the App Store button copies the link first). Chat link previews use `og-play.png` / `og-join.png`, drawn by `scripts/brand/share_previews.py`. |
@@ -27,7 +27,7 @@ The main call to action is the App Store listing (id 6762482437, local storefron
 
 ## Edit text
 
-1. Change the value in all three `src/strings/*.json` files (keys must match across languages).
+1. Change the value in all `src/strings/*.json` files (keys must match across languages).
 2. Run `python3 apps/website/build.py`.
 3. Commit `src/` and `public/` together.
 
@@ -87,7 +87,7 @@ Records from GitHub's docs: "Managing a custom domain for your GitHub Pages site
 
 Refresh the questions: run `tools/export_questions.py` read-only on the `quiz-agent-api` machine, pick ids per topic, then `python3 tools/topic_snapshot.py <export.json> <picks.json> <lang>` (steps in the script header). The build refuses dashes as punctuation, a question on two pages, a topic under 10 questions or a question without an https source.
 
-Fresh entertainment page (`/questions/fresh/`, `/sk/otazky/cerstve/`, `/cs/otazky/cerstve/`, `fresh.py`): the committed page comes from `src/topics/fresh.<lang>.json` (fallback); the deploy workflow then runs `build.py --fresh-live`, which loads the newest boosted entertainment questions from `/api/v1/public/fresh-questions` (`api.trubbo.app`, then the Fly host) and rewrites only those pages. It runs on every deploy and daily at 06:40 UTC; if the API fails, the fallback stays. Every home page links to it above the headline.
+Fresh entertainment page (`/questions/fresh/`, `/sk/otazky/cerstve/`, `/cs/otazky/cerstve/`, `fresh.py`): the committed page comes from `src/topics/fresh.<lang>.json` (fallback); the deploy workflow then runs `build.py --fresh-live`, which loads the newest boosted entertainment questions from `/api/v1/public/fresh-questions` (`api.trubbo.app`, then the Fly host) and rewrites only those pages. It runs on every deploy and daily at 06:40 UTC; if the API fails, the fallback stays. Every home page links to it above the headline. A language with no fresh questions (empty snapshot, nothing live) gets no page and no link to it (Ukrainian until its first weekly batch).
 
 Home entry points (`topics.home`): a "Questions" / "Otázky" link in the header and, between how it works and the price, the first question of each topic marked `"home": true` in `src/topics/<lang>.json` (answer behind a tap) with a link to all questions.
 

@@ -45,10 +45,11 @@ struct SharedQuizLinkTests {
         #expect(SharedQuizLink.token(from: url) == nil)
     }
 
-    @Test("a pasted link may carry spaces around it, never a sentence")
+    // #240: a chat copies the whole message, so the link inside it counts.
+    @Test("a pasted link may carry spaces around it or sit inside the friend's message")
     func pastedText() {
         #expect(SharedQuizLink.token(fromPasted: "  https://trubbo.app/play?s=\(Self.token)\n") == Self.token)
-        #expect(SharedQuizLink.token(fromPasted: "Play my quiz https://trubbo.app/play?s=\(Self.token)") == nil)
+        #expect(SharedQuizLink.token(fromPasted: "Play my quiz https://trubbo.app/play?s=\(Self.token)") == Self.token)
         #expect(SharedQuizLink.token(fromPasted: "hello") == nil)
     }
 

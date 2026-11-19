@@ -54,6 +54,13 @@ final class SharedQuizInbox: ObservableObject {
         return true
     }
 
+    /// A waiting link may start: the onboarding is not up, or its first page
+    /// (the AI services disclosure, #209) was already accepted. Otherwise the
+    /// link stays here until the onboarding finishes.
+    static func mayOpen(isOnboardingShown: Bool, consentDefaults: UserDefaults = .standard) -> Bool {
+        !isOnboardingShown || AIProcessingConsent.hasConsented(defaults: consentDefaults)
+    }
+
     func take() -> String? {
         defer { token = nil }
         return token
@@ -69,8 +76,8 @@ final class SharedQuizInbox: ObservableObject {
         offersPaste = found
     }
 
-    /// What the Paste button handed over: the first text that is exactly a
-    /// `https://trubbo.app/play?s=…` link starts that quiz.
+    /// What the Paste button handed over: the first `https://trubbo.app/play?s=…`
+    /// link in it, alone or inside the friend's message, starts that quiz.
     func paste(_ texts: [String]) {
         if let token = texts.lazy.compactMap(SharedQuizLink.token(fromPasted:)).first {
             analytics.track(.sharedQuizPasted(outcome: .opened))

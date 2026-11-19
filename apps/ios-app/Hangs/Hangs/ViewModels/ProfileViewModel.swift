@@ -34,6 +34,10 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var playerName = ""
     /// Newest first, only kinds this build knows.
     @Published private(set) var recaps: [PlayerRecap] = []
+    /// The recap the card shows, picked when the recaps arrive (#240): the
+    /// oldest one not seen yet, else the newest. Kept until the next fetch,
+    /// so marking it seen does not swap the card under the player's eyes.
+    private var shownRecapID: String?
 
     private let service: PlayerStatsServiceProtocol
     private let tokenStore: any TokenStore
@@ -97,9 +101,10 @@ final class ProfileViewModel: ObservableObject {
         return progress
     }
 
-    /// The recap card on the Profile.
+    /// The recap card on the Profile. An older recap the player has not
+    /// seen comes first, so a newer one never hides it for good (#240).
     var latestRecap: PlayerRecap? {
-        recaps.first
+        recaps.first { $0.id == shownRecapID } ?? recaps.first
     }
 
     /// The player switched to the Profile tab.
@@ -139,6 +144,7 @@ final class ProfileViewModel: ObservableObject {
                     if unsent.contains(recap.id) { recap.seen = true }
                     return recap
                 }
+                shownRecapID = (recaps.last { !$0.seen } ?? recaps.first)?.id
             }
         }
         loadTask = task
@@ -160,7 +166,9 @@ final class ProfileViewModel: ObservableObject {
         let ids = unsentSeenIDs
         guard !ids.isEmpty else { return nil }
         let sends = ids.sorted().map { sendSeen($0) }
-        return Task { for send in sends { await send.value } }
+        return Task { for send in sends {
+            await send.value
+        } }
     }
 
     /// Forgotten once the server took it or no longer knows the recap (404,
@@ -204,6 +212,7 @@ final class ProfileViewModel: ObservableObject {
         loadTask?.cancel()
         stats = nil
         recaps = []
+        shownRecapID = nil
         loadState = .loading
         reloadAccount()
     }

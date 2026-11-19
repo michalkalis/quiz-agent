@@ -169,6 +169,9 @@ final class QuizViewModel: ObservableObject {
     /// #232: the comparison of a link this player cannot play again (the
     /// sender's own link, a friend's already played one); Home shows it.
     @Published var sharedQuizComparison: SharedQuizPlay?
+    /// #240 (audit finding 8): the session the player left early with "End
+    /// quiz". The server deactivates it, so a link made from it always fails.
+    var endedEarlySessionId: String?
 
     // MARK: Family mode (#236, rules in QuizViewModel+Family)
 
@@ -2326,6 +2329,7 @@ final class QuizViewModel: ObservableObject {
         guard let sessionId = currentSession?.id else { return }
         let abandoned = quizAbandonedEvent(reason: .endWithResults)
         guard transition(to: .finished) else { return }
+        endedEarlySessionId = sessionId
         trackAnalytics(abandoned)
 
         // Tear down everything answer-related (we may arrive mid-recording),

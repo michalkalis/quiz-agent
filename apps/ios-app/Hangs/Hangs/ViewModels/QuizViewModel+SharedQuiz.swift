@@ -67,9 +67,12 @@ extension QuizViewModel {
     /// The finished solo round can be sent on: the switch is on, the round
     /// has a server session and it was not a friend's link (that round end
     /// sends the same link on instead). Never a round with kids (#236): the
-    /// server refuses to share one (409 `family_not_shareable`).
+    /// server refuses to share one (409 `family_not_shareable`). Never a round
+    /// ended early: "End quiz" deletes the session on the server, so the link
+    /// could never be made (#240 audit finding 8).
     var shareableRoundSessionId: String? {
-        guard sharedQuizEnabled(), activeShare == nil, !isFamilySession, let id = currentSession?.id else { return nil }
+        guard sharedQuizEnabled(), activeShare == nil, !isFamilySession, let id = currentSession?.id,
+              id != endedEarlySessionId else { return nil }
         return id
     }
 }

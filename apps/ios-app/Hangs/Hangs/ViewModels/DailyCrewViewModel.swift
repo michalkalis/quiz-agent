@@ -3,9 +3,9 @@
 //  Hangs
 //
 //  #239 — the daily crew table on the daily round end: everyone the player
-//  swapped a daily link with, by rarity points this week. Fetched whenever
-//  the round end shows, like the crowd numbers, so it fills in as the crew
-//  plays.
+//  swapped a daily link with, by rarity points this week. Fetched once per
+//  opening of the round end, like the crowd numbers: the table stays put
+//  while the screen is open and shows the new points next time (#240).
 //
 //  The table is extra to the result above it: a failed or slow fetch keeps
 //  the last table (or none) and never blocks the screen. A failed removal
@@ -28,6 +28,12 @@ final class DailyCrewViewModel: ObservableObject {
     init(network: NetworkServiceProtocol, crew: DailyCrew? = nil) {
         self.network = network
         self.crew = crew
+    }
+
+    /// The round end: the table once, unless it already shows one.
+    func loadIfMissing(day: DailyChallengeDay, language: String) async {
+        guard crew == nil else { return }
+        await refresh(day: day, language: language)
     }
 
     func refresh(day: DailyChallengeDay, language: String) async {

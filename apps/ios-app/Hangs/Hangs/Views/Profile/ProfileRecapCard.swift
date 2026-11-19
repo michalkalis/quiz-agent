@@ -5,7 +5,8 @@
 //  #216.3 (founder 2026-10-30, S1): the newest recap as one card on the
 //  Profile — its title ("Your October"), three numbers (questions in total,
 //  strong suit, when you play) and Share, which sends the same card as a
-//  story-size picture. Replaces the banner and the story of #213.5.
+//  story-size picture with one line and the trubbo.app address (#240), so
+//  the friend has something to tap. Replaces the banner and the story of #213.5.
 //
 
 import SwiftUI
@@ -45,7 +46,11 @@ struct ProfileRecapCard: View {
     @ViewBuilder
     private var shareButton: some View {
         if let shareImage {
-            ShareLink(item: shareImage, preview: SharePreview(RecapCopy.title(recap, locale: locale), image: shareImage)) {
+            ShareLink(
+                item: shareImage,
+                message: Text(verbatim: RecapCopy.shareMessage),
+                preview: SharePreview(RecapCopy.title(recap, locale: locale), image: shareImage)
+            ) {
                 Label("Share", systemImage: "square.and.arrow.up")
                     .font(.hangsButton)
                     .foregroundStyle(style.fill)

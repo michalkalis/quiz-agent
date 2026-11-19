@@ -1,7 +1,7 @@
 # #240 — Kvalita appky z voľnej kapacity predplatného
 
 **Triage:** enhancement · in-progress
-**Status:** 2026-11-18 večer: founder schválil všetky návrhy z posudku zábavnosti („so všetkým súhlasím, pusti sa do toho“); beží časť 240.9; audit: 15 z 24 nálezov opravených a nasadených (PR #872–#874, #878, #882–#884, #886), appka v PR #888
+**Status:** 2026-11-19 ráno: všetky schválené zmeny z posudku (240.9) sú zlúčené, server nasadený, build do Trubbo Beta spustený z `5e7278c0`; audit: 23 z 24 nálezov vyriešených (ostáva nasadenie pri výpadku spojenia); ďalej 240.3, 240.5, 240.6, 240.7
 **Číslo:** do 2026-11-18 viedla táto úloha číslo 239 (zhoda s #239 — Partia v dennej výzve); PR #868, #871–#874 ju tak ešte volajú.
 **Founder:** 2026-11-18 „mám moc veľa kreditov voľných a nestíhame ich minúť… najlepšie niečo, čo by zvýšilo kvalitu appky… ale automatizovane“; „ElevenLabs ani kredity nechcem čerpať, ideálne len zo subscription. Prechody appkou ok, tj. dôkladné testovanie… možno aj UX review a podobne“
 
@@ -139,3 +139,39 @@ Bez ďalších otázok: voľby pri vzhľade a hodnotách robí agent, každý PR
 | G — nasadenie | skript nasadenia nezávislý od spojenia | potom |
 
 Poradie zlučovania appky: po jednom, každý ďalší sa zosúladí s hlavnou vetvou (texty a snímky). Potom kompilácia Release, build do Trubbo Beta, overenie v TestFlighte. Zvyšok programu (240.3 stráže prístupnosti, 240.5 bezpečnosť, 240.6 robot-hráč) až po builde.
+
+#### Výsledok 240.9 (2026-11-19 ráno)
+
+| Vetva | Zmena | PR |
+|---|---|---|
+| A — prvá minúta | zakázaný mikrofón má hlášku a cestu do Nastavení; Nastavenia počas otázky pozastavia odpočet; zrozumiteľná hláška pri zlyhanom nákupe; názvy kategórií po zmene jazyka | #888 |
+| B — hlas | mikrofón hneď po otázke, „Teraz hovor“, odpočet 15 s; mlčanie sa neposiela a nie je neúspech; nálezy auditu 14 a 15; meranie | #905 (+ server #906) |
+| B — sólo kolo | výsledok ide ďalej 3 s po dohovorení verdiktu; séria od 3 správnych; veta na konci kola; verdikt a koniec kola pred ponukou pri limite | #911 |
+| C — Hra spolu | odhalenie po otázke predvolené, 15 s, stav čítania a hodnotenia, oznam zrušenej otázky, „Ešte raz“, obrázok poradia, 3 ocenenia, vibrácia; zmena „Čo hráme“ nezruší odkaz | #900 (server), #907 |
+| D — odkazy | náhľad odkazu v chate (jeden, po anglicky), pozvánka do miestnosti prežije inštaláciu, odkazy na kvíz otvára aj Trubbo Beta | #894 |
+| E — server | strop prepisu reči sa nedá obísť; kontrola zostatku hlasu nezdržuje otázku; skutočný dôvod odmietnutej odpovede v meraní | #897 |
+| F — zdieľanie a drobnosti | nálezy auditu 7, 8, 17, 18, 23, 24; prehľad sa zdieľa s vetou a adresou; vloženie celej správy; čísla dennej výzvy stoja; „balík sa ešte pripravuje“; starší prehľad sa nestratí | #909 (vrátane #910) |
+
+Nálezy auditu mimo 240.9: 6 a 22 → #882 · 9 → #884 · 10 → #886 · 11, 12, 13 → #883 · 16 nepotvrdený (pokryl #864) · 20, 21 → #897.
+
+Rozhodnutia agenta, ktoré má founder posúdiť v bete, sú v každom PR v časti „Decisions made“. Ukrajinské texty nových reťazcov sú v PR #911 a #909 v časti „Ukrainian texts for native check“ a v PR #912 (session quiz-agent-25).
+
+**Vynechané / otvorené:**
+- 240.9 G — skript nasadenia nezávislý od spojenia: zámerne nie v noci bez foundera.
+- Výber veku detí vo formulári balíka: nie je chyba, patrí k #236 — rodinná sekcia.
+- Náhľad odkazu podľa konkrétneho kvízu a jazyka: vyžaduje, aby stránky /play a /join podával náš server.
+- Odpočet sa nepozastaví, keď je otvorená len ponuka s tromi bodkami (bez Nastavení); Nastavenia otvorené počas už bežiaceho nahrávania ostali ako predtým.
+- Hosť na staršom builde na záverečnej obrazovke nenasleduje „Ešte raz“ sám.
+- Pozvánka do partie sa po opätovnom otvorení konca dennej výzvy z domova neukáže (treba zmenu servera).
+- Nestabilný UI test `testRS07EditThenReRecordDiscardsWithoutSubmitting` (raz zlyhal na časovaní pri preťažených strojoch).
+
+**Čo skúsiť v bete na telefóne:**
+1. Čerstvá inštalácia, prvý kvíz: po otázke „Teraz hovor“, tón, odpočet 15 s; pri mlčaní pokojná veta bez výčitky; ťuknutie na mikrofón alebo povel funguje.
+2. Mikrofón vypnutý v Nastaveniach iOS: hláška „Mikrofón je pre Trubbo vypnutý“ a tlačidlo do Nastavení.
+3. Hlučné auto, tichý hlas: odpoveď sa zachytí (o tichu teraz rozhoduje telefón).
+4. So zvukom: verdikt doznie a ďalšia otázka príde asi o 3 s; tri správne za sebou ukážu sériu; veta na konci kola.
+5. Bezplatný účet jednu otázku pred limitom: verdikt, koniec kola, potom ponuka.
+6. Hra spolu na dvoch telefónoch: odhalenie po každej otázke, 15 s, mená tých, čo odpovedali, vibrácia raz na otázku, „Ešte raz“, obrázok poradia a jeho zdieľanie, ocenenia.
+7. Zdieľanie: prehľad z profilu do Správ má odkaz; vloženie celej správy s odkazom spustí kvíz; odkaz na kvíz sa na telefóne s oboma appkami otvorí v bete; náhľad odkazu v chate.
+8. Denná výzva: čísla na konci stoja; ráno karta na domove ukáže nový deň.
+9. Objednávka balíka po ~3 minútach čakania: „Tvoj balík sa ešte pripravuje“.

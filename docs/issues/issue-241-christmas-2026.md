@@ -28,3 +28,4 @@ Malý sezónny krok, operatívne, bez nových funkcií v appke (founder 2026-11-
   - 5. 12. večer (Mikuláš v Česku): cs 4065c0bb, 159187d4, b8eb51f5. 6. 12. (St Nicholas Day): en 3164feae, 1665056c, a07de814.
   - Hlas sa tvorí cez appku (`--make-voice`). 2026-11-18 bol denný limit hlasu appky (5 000 znakov) už minutý, preto rendering 11-19, prípadne rozdelený na dva dni.
 - [ ] 241.5 1. 12.: nastaviť zvýhodnenie do 27. 12. pre otázky z tejto sady (id v `ids.txt`).
+- [ ] 241.6 27. 12.: nastaviť zvýhodnenie do 6. 1. pre novoročné otázky (Silvester, Nový rok, Traja králi, kalendár; 32 otázok sk/cs/en nahraných 2026-11-19 so štítkom `new-year-2026`, id v `docs/testing/runs/seasonal-2026-11-19/ids.txt`). Rovnaký príkaz ako pri 241.5.

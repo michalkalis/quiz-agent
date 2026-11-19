@@ -326,6 +326,18 @@ final class AppState: ObservableObject {
         }
     #endif
 
+    /// #168 DD14: the servable language lists, fetched once per launch so the
+    /// pickers offer exactly what the backend accepts. Best-effort: a failure
+    /// leaves the cached/compiled lists. #231: then a player who has not picked
+    /// a language yet gets the phone's language from the fresh list.
+    func refreshLanguages(
+        refresh: () async -> Void = { await LanguageAvailability.shared.refresh() },
+        offered: () -> [Language] = { Language.selectableLanguages }
+    ) async {
+        await refresh()
+        quizViewModel?.followPhoneLanguage(offered: offered())
+    }
+
     /// The account changed (sign-out, deletion): the packs and the stats on
     /// screen belonged to the previous one.
     func identityChanged() {

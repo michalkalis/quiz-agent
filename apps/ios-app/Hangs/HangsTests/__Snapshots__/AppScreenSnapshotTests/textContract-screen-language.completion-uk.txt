@@ -3,6 +3,7 @@ Geography & World
 7.5
 з 10
 Правильно 7 · Мимо 3 · Пропущено 0
+Найважче вгадане: Answer 10
 Питання
 Question 1 of the round?
 Answer 1
@@ -32,6 +33,7 @@ Answer 10
 completion.close
 completion.score
 completion.breakdown
+completion.highlight
 completion.cards
 recap.row.1
 recap.row.2

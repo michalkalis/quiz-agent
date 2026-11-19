@@ -99,15 +99,22 @@ _ROMAN_VALUES = {"I": 1, "V": 5, "X": 10}
 # fmt: on
 
 _JOIN = r"(?P<join>\s*[–—-]\s*|\s+(?:і|й|та|або|чи|до|по)\s+)"
-_SUFFIX_RE = re.compile(r"(?<![\d.,])(\d{1,4})[-‑]([^\W\d_]{1,4})(?![\w'ʼ’-])")
+# A bare number dashed to a suffixed one shares its case: "у 1960–1970-х роках".
+_SUFFIX_RE = re.compile(
+    r"(?<![\d.,])(?:(?P<n1>\d{1,4})(?P<join>\s*[–—-]\s*))?"
+    r"(?P<n>\d{1,4})[-‑](?P<suffix>[^\W\d_]{1,4})(?![\w'ʼ’-])"
+)
 _CENTURY_RE = re.compile(
     rf"(?<![\w.,])(?P<n1>[IVXІХ]+|\d{{1,2}})(?:{_JOIN}(?P<n2>[IVXІХ]+|\d{{1,2}}))?"
     r"(?P<gap>\s+)(?P<noun>ст\.|(?:столітт|тисячолітт)[^\W\d_]*|століть|тисячоліть)"
     r"(?![^\W\d_])"
 )
 _ERA_RE = re.compile(r"\s*(?:до\s+)?(?:н\.\s?е\.|нашої\s+ери)")
-_MONTH_RE = re.compile(r"(?<![\d.,])(\d{1,2})(\s+)([^\W\d_]+)")
-_YEAR = r"1\d{3}|20\d{2}"
+_MONTH_RE = re.compile(
+    rf"(?<![\d.,])(?P<n1>\d{{1,2}})(?:{_JOIN}(?P<n2>\d{{1,2}}))?(?P<gap>\s+)"
+    r"(?P<noun>[^\W\d_]+)"
+)
+_YEAR = r"[12]\d{3}"
 _YEAR_RE = re.compile(
     rf"(?<![\d.,])(?P<n1>{_YEAR})(?:{_JOIN}(?P<n2>{_YEAR}))?(?P<gap>\s+)"
     r"(?P<noun>рр\.|р\.|[^\W\d_]+)"
@@ -119,8 +126,9 @@ _DATE_YEAR_RE = re.compile(
 
 def uk_year_words(n: int, case: str) -> str | None:
     """1969 → "тисяча дев'ятсот шістдесят дев'ятий" in ``case``; a round year
-    fuses into one word: 1900 → "тисяча дев'ятисотий", 2000 → "двохтисячний"."""
-    if not (1000 <= n <= 2099):
+    fuses into one word: 1900 → "тисяча дев'ятисотий", 2000 → "двохтисячний",
+    2100 → "дві тисячі сотий"."""
+    if not (1000 <= n <= 2999):
         return None
     if n % 100 == 0:
         ending = _UK_HARD[case]
@@ -128,7 +136,8 @@ def uk_year_words(n: int, case: str) -> str | None:
             return f"двохтисячн{ending}"
         if n == 1000:
             return f"тисячн{ending}"
-        return f"тисяча {_HUNDRED_STEMS[n // 100 - 10]}{ending}"
+        thousand = "тисяча" if n < 2000 else "дві тисячі"
+        return f"{thousand} {_HUNDRED_STEMS[n // 100 % 10]}{ending}"
     from num2words import num2words
 
     head = num2words(n - n % 100, lang="uk").replace("одна тисяча", "тисяча")
@@ -136,7 +145,7 @@ def uk_year_words(n: int, case: str) -> str | None:
 
 
 def uk_ordinal(n: int, case: str) -> str | None:
-    """1–2099 as a declined ordinal; only the last word declines ("сто
+    """1–2999 as a declined ordinal; only the last word declines ("сто
     двадцять п'ятий"), round hundreds fuse ("двохсотий"). None above."""
     if n <= 100:
         return ordinal_words(n, "uk", case)
@@ -203,7 +212,7 @@ def _governor(match: re.Match) -> str:
 
 def _spell_suffixes(text: str) -> str:
     def replace(match: re.Match) -> str:
-        n, suffix = int(match.group(1)), match.group(2).lower()
+        suffix = match["suffix"].lower()
         case = _SUFFIX_CASE.get(suffix)
         if case is None:
             return match.group(0)
@@ -211,9 +220,21 @@ def _spell_suffixes(text: str) -> str:
             ("і", "ї")
         ):
             case = F_LOC  # "у 5-й школі", "на 2-й лінії"
-        if suffix == "ю" and n % 10 == 3 and n % 100 != 13:
-            case = F_ACC  # "3-ю" is "третю"; "5-ю" is "п'ятою"
-        return uk_ordinal(n, case) or match.group(0)
+
+        def spell(n: int) -> str | None:
+            if suffix == "ю" and n % 10 == 3 and n % 100 != 13:
+                return uk_ordinal(n, F_ACC)  # "3-ю" is "третю"; "5-ю" is "п'ятою"
+            return uk_ordinal(n, case)
+
+        last = spell(int(match["n"]))
+        if last is None:
+            return match.group(0)
+        if not match["n1"]:
+            return last
+        first = spell(int(match["n1"]))
+        if first is None:
+            return match.group(0)
+        return f"{first} – {last}"  # a spoken pause, as in _spell_span
 
     return _SUFFIX_RE.sub(replace, text)
 
@@ -222,9 +243,20 @@ def _century_case(match: re.Match) -> tuple[str, str] | None:
     """(case, noun as spoken) for a century match, None to leave it a count."""
     noun, low, governor = match["noun"], match["noun"].lower(), _governor(match)
     span = bool(match["n2"]) and match["join"].strip() not in ("до", "по")
+    # "Правильна відповідь: XIX століття": an answer or a label names the
+    # century in the nominative, "дев'ятнадцяте". After "відповідь" (the
+    # feedback line) 2–4 are ordinals too; after another label ("Тривалість:
+    # 3 століття") they may still count.
+    named = governor == "відповідь" or (
+        match.string[: match.start()].rstrip().endswith(":")
+    )
     if low == "ст.":
         case = (
-            LOC if governor in ("у", "в") else N_NOM if governor in _ACCUSATIVE else GEN
+            LOC
+            if governor in ("у", "в")
+            else N_NOM
+            if governor in _ACCUSATIVE or named
+            else GEN
         )
         period = _abbreviation_period(match.string, match.end())
         return case, _CENTURY_ABBREVIATION[case][span] + period
@@ -233,9 +265,11 @@ def _century_case(match: re.Match) -> tuple[str, str] | None:
     case = _CENTURY_NOUNS.get(low)
     if case != GEN:
         return (case, noun) if case else None
+    if governor == "відповідь":
+        return N_NOM, noun  # "Відповідь: 3 століття" is "третє"
     # "століття" is also the accusative and the plural after 2–4.
-    if governor in _ACCUSATIVE:
-        case = N_NOM  # "у XXI століття", "по XVII століття"
+    if governor in _ACCUSATIVE or named:
+        case = N_NOM  # "у XXI століття", "по XVII століття", "Період: XIX століття"
     n = int(match["n1"]) if match["n1"].isdigit() and not match["n2"] else None
     if n and 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
         era = _ERA_RE.match(match.string, match.end())
@@ -255,11 +289,19 @@ def _spell_centuries(text: str) -> str:
 
 
 def _spell_months(text: str) -> str:
+    """ "8 листопада" and a span "1–5 травня" / "з 1 по 5 травня": genitive,
+    but "по" takes the accusative ("по п'яте травня")."""
+
     def replace(match: re.Match) -> str:
-        n, word = int(match.group(1)), match.group(3)
-        if word.lower() not in _MONTHS_GENITIVE["uk"] or not 1 <= n <= 31:
+        if match["noun"].lower() not in _MONTHS_GENITIVE["uk"]:
             return match.group(0)
-        return f"{ordinal_words(n, 'uk', GEN)}{match.group(2)}{word}"
+        case = N_NOM if match["n2"] and match["join"].strip() == "по" else GEN
+        return _spell_span(
+            match,
+            case,
+            match["noun"],
+            lambda n, c: ordinal_words(n, "uk", c) if 1 <= n <= 31 else None,
+        )
 
     return _MONTH_RE.sub(replace, text)
 

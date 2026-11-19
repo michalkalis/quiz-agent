@@ -856,6 +856,12 @@ class QuizFlowService:
         correct = question.correct_answer
         if isinstance(correct, list):
             correct = correct[0] if correct else ""
+        if question.language == session.language:
+            # #231: a native question (uk/sk/cs pack or corpus row) carries its
+            # answer already written and gate-checked in the session language —
+            # translating it again would put an LLM call on the hot path and could
+            # reword a reviewed answer.
+            return str(correct)
         return await self._translate_correct_answer(
             str(correct), session.language, session_id=session.session_id
         )

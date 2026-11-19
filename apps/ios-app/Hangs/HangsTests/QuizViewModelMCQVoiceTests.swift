@@ -59,6 +59,7 @@ struct QuizViewModelMCQVoiceTests {
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = makeMCQQuestion()
         viewModel.quizState = .askingQuestion
+        viewModel.settings.thinkingTime = 10
 
         viewModel.startRecordingOrTimer()
 

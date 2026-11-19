@@ -648,6 +648,17 @@ struct QuestionView: View {
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.top, Metrics.blockGap)
                 .transition(.opacity)
+        } else if viewModel.showsSilencePrompt {
+            // #240.9: with the bar, never behind its ✕ — it is how the player
+            // learns the mic is closed and how to open it again.
+            SilentAnswerPrompt(
+                isMultipleChoice: true,
+                buttonHeight: compact ? QuestionSkipButton.chipHeight : QuestionSkipButton.compactRowHeight,
+                onSpeak: speakAfterSilence
+            )
+            .padding(.horizontal, Metrics.gutter)
+            .padding(.top, Metrics.blockGap)
+            .transition(.opacity)
         }
         if !listenBarDismissal.isHidden(questionId: question.id),
            let phase = viewModel.listenPhase(for: question)
@@ -673,6 +684,11 @@ struct QuestionView: View {
             .padding(.top, Metrics.blockGap)
             .transition(.opacity)
         }
+    }
+
+    /// #240.9: the MCQ screen's one-tap way to answer by voice after silence.
+    private func speakAfterSilence() {
+        Task { await viewModel.toggleRecording() }
     }
 
     /// #237: the listen bar's "Turn on" / "Settings".

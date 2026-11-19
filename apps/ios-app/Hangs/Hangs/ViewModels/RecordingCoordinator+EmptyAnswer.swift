@@ -83,6 +83,35 @@ extension RecordingCoordinator {
         }
     }
 
+    // MARK: - 0. Silence the phone measured (#240.9)
+
+    /// #240.9 (founder 2026-11-18): the window to start speaking ran out and
+    /// the phone's own detector vouches that nothing was said. That is not a
+    /// failed attempt: nothing is uploaded, nothing is spoken, no automatic
+    /// retry. The question stays on screen with a calm line offering speak
+    /// again (a tap or "start"), type or skip. Store data 2026-11: most store
+    /// voice answers were silence, and the old upload plus automatic retry
+    /// turned each silent question into two "didn't catch that" rejections.
+    func offerAnswerAfterSilence(owner: AttemptID) {
+        guard attemptLedger.owns(owner, "silence") else { return }
+        trackAnalytics(.voiceCaptureFailed(reason: .silent, questionId: currentQuestion()?.id))
+        cancelAutoStopRecordingTimer()
+        setIsAutoRecording(false)
+        speechDetectedDuringAutoRecord = false
+        setErrorMessage(nil)
+        guard transition(to: .askingQuestion) else { return }
+        // The player's next move is a new attempt; nothing of the silent
+        // recording may land on it.
+        attemptLedger.begin("silencePrompt")
+        silencePromptQuestionKey = owner.questionId ?? ""
+        refreshCommandWindow()
+        SentryLog.info("no answer captured", category: .audio, attributes: [
+            "heardSpeech": false,
+            "outcome": "silencePrompt",
+            "attempt": owner.description,
+        ])
+    }
+
     // MARK: - 1. Automatic retry
 
     /// Say `prompt`, then open the mic again for the same question. The bridge

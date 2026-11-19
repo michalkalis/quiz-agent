@@ -19,7 +19,9 @@ enum AnalyticsEvent: Equatable {
     /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
     /// time of day a player plays at needs it (#213.1).
     case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false)
-    case quizAbandoned(questionsAnswered: Int, phase: String)
+    /// #240.9: `reason` = how the round was left, `question` = the 1-based
+    /// question on screen.
+    case quizAbandoned(questionsAnswered: Int, phase: String, reason: QuizLeaveReason, question: Int)
     /// `latencyMs` (#213.1): time to start answering; nil = unknown, key left out.
     case answerSubmitted(inputMode: AnswerInputMode, questionId: String?, isRetry: Bool, latencyMs: Int? = nil)
     case voiceCaptureFailed(reason: VoiceCaptureFailure, questionId: String?)
@@ -128,8 +130,13 @@ enum AnalyticsEvent: Equatable {
                 ("timezone", .string(timezone)),
                 ("quick_game", .bool(quickGame)),
             ]
-        case let .quizAbandoned(questionsAnswered, phase):
-            [("questions_answered", .int(questionsAnswered)), ("phase", .string(phase))]
+        case let .quizAbandoned(questionsAnswered, phase, reason, question):
+            [
+                ("questions_answered", .int(questionsAnswered)),
+                ("phase", .string(phase)),
+                ("reason", .string(reason.rawValue)),
+                ("question", .int(question)),
+            ]
         case let .answerSubmitted(inputMode, questionId, isRetry, latencyMs):
             [
                 ("input_mode", .string(inputMode.rawValue)),
@@ -334,6 +341,20 @@ enum VoiceCaptureFailure: String {
     case recorderFailed = "recorder_failed"
     /// #240: the microphone is refused in iOS Settings, so no recording was started.
     case micDenied = "mic_denied"
+    /// #240.9: the phone measured silence for the whole window to start
+    /// speaking; nothing was uploaded and the player was offered speak, type
+    /// or skip. Not counted as an answer attempt.
+    case silent
+}
+
+/// #240.9: how the player left a round before its end.
+enum QuizLeaveReason: String {
+    /// ✕ → End quiz: straight to Home.
+    case endQuiz = "end_quiz"
+    /// ✕ → End & See Results: the score screen for what was answered.
+    case endWithResults = "end_with_results"
+    /// Go Home from the error screen of a round.
+    case errorScreen = "error_screen"
 }
 
 enum PaywallSource: String {

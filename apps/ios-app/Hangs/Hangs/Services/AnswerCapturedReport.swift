@@ -37,6 +37,15 @@ nonisolated struct AnswerCapturedReport: Equatable, Sendable {
     /// Transcripts the player already rejected on this question, whether or
     /// not #204.2 sends them with the upload.
     var rejectedCount: Int
+    /// #240.9: who opened the mic (`RecordingTrigger.analyticsValue`).
+    var trigger: String?
+    /// #240.9: ms from the question becoming answerable (its read-out ended)
+    /// to the mic opening, pauses cut out; nil when unknown.
+    var micOpenDelayMs: Int?
+    /// #240.9: the loudest level the detector measured (dBFS, rounded).
+    var peakDb: Int?
+    /// #240.9: granted / denied / undetermined when the recording stopped.
+    var micPermission: String?
 
     /// How long the recording ran on after the last word: the cost of a
     /// detector that waits too long.
@@ -65,6 +74,10 @@ nonisolated struct AnswerCapturedReport: Equatable, Sendable {
             ("mic_data_source", .string(micDataSource)),
             ("mic_polar_pattern", .string(micPolarPattern)),
             ("rejected_count", .int(rejectedCount)),
+            ("trigger", trigger.map { .string($0) }),
+            ("mic_open_delay_ms", micOpenDelayMs.map { .int($0) }),
+            ("peak_db", peakDb.map { .int($0) }),
+            ("mic_permission", micPermission.map { .string($0) }),
         ]
         for flag in VoiceExperimentFlag.allCases {
             guard let value = flags[flag] else { continue }

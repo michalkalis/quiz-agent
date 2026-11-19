@@ -1588,4 +1588,13 @@ enum MicrophonePermissionStatus: Equatable {
     case undetermined
     case granted
     case denied
+
+    /// #240.9: `answer_captured.mic_permission`.
+    var analyticsValue: String {
+        switch self {
+        case .undetermined: "undetermined"
+        case .granted: "granted"
+        case .denied: "denied"
+        }
+    }
 }

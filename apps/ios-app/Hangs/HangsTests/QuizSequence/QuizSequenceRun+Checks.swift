@@ -146,7 +146,9 @@ extension QuizSequenceRun {
         let attempt = vm.currentAttempt.description
         switch vm.quizState {
         case .recording:
-            active["recording \(attempt)"] = ("stuck recording", 16000)
+            // #240.9: a hands-free opening with no think time keeps the mic
+            // open 10 s longer (the think time it replaces), so its cap is too.
+            active["recording \(attempt)"] = ("stuck recording", 16000 + Int(Config.immediateMicExtraWindow * 1000))
         case .skipping:
             active["skipping \(attempt)"] = ("stuck skipping", 40000)
         case .startingQuiz:

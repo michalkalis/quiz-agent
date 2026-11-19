@@ -147,6 +147,8 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
             ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },
             ComponentSample("spellingHint.default") { AnswerSpellingHint() },
+            ComponentSample("silencePrompt.open") { SilentAnswerPrompt(isMultipleChoice: false) },
+            ComponentSample("silencePrompt.mcq") { SilentAnswerPrompt(isMultipleChoice: true, onSpeak: {}) },
         ]
     }
 

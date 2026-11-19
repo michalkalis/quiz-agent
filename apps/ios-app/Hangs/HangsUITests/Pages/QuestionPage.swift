@@ -57,6 +57,21 @@ struct QuestionPage {
         app.buttons["question.textSubmit"]
     }
 
+    /// #240.9: the calm line after a recording the phone measured as silent
+    /// (nothing uploaded), and the MCQ screen's button to speak again.
+    var silencePrompt: XCUIElement {
+        app.staticTexts["question.silencePrompt"]
+    }
+
+    var speakAgainButton: XCUIElement {
+        app.buttons["question.speakAgain"]
+    }
+
+    /// "Didn't catch that" line of the automatic retry after a server rejection.
+    var retryHint: XCUIElement {
+        app.staticTexts["question.retryHint"]
+    }
+
     /// Current value of the hidden state probe ("" when the probe is absent,
     /// e.g. on Home).
     var stateValue: String {
@@ -85,7 +100,7 @@ struct QuestionPage {
     /// object silently blind to the MCQ bar.
     ///
     /// #185 track F (F2): the answer bar now leads with its STATE —
-    /// "Listening…" until speech is heard, "Hearing you…" after — and the
+    /// "Speak now" (#240.9) until speech is heard, "Hearing you…" after — and the
     /// instruction follows it. Both mean the mic is live for the answer.
     var answerListenBarExists: Bool {
         app.descendants(matching: .any).matching(Self.answerListenBarPredicate).count > 0
@@ -93,7 +108,7 @@ struct QuestionPage {
 
     private static let answerListenBarPredicate = NSPredicate(
         format: "identifier == %@ AND (label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@)",
-        "listen-bar", "listening…", "capturing…"
+        "listen-bar", "speak now", "capturing…"
     )
 
     /// Wait for the question screen to appear (question.text must exist).

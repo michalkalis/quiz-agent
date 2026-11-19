@@ -40,9 +40,9 @@ quiz
 90s
 120s
 Thinking time
-10s
+0s
 Thinking time
-10s
+0s
 Pause before the microphone turns on
 5 questions
 10 questions

@@ -130,13 +130,18 @@ struct QuizSequenceRegressionTests {
     func commandAfterAnswerSentIsDropped(command: String) async {
         // #200: recorded with auto-record off, whose 30 s answer timer opened the
         // mic; auto-record is always on now, so a 30 s think window replays it.
+        // #240.9: question 1's silent recording now offers the calm prompt
+        // instead of the empty sheet the original run confirmed, so a Skip
+        // tap moves it on; question 2 is the scenario under test. Its mic tap
+        // moved 2.5 s later: the speech reached the old automatic retry's
+        // recording, which silence no longer opens.
         let dump = """
         # quiz-sequence seed=186115 questions=4 mcq=4 thinking=30 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:32.242 tap mute attempt=q_001#1 state=askingQuestion
-        00:00:52.891 tap confirm attempt=q_001#3 state=processing
+        00:00:52.891 tap skip attempt=q_001#3 state=askingQuestion
         00:01:00.605 network quizResponse attempt=q_001#4 state=skipping correct
-        00:01:06.533 tap mic attempt=q_002#5 state=askingQuestion
+        00:01:09.033 tap mic attempt=q_002#5 state=askingQuestion
         00:01:12.919 speech vad.speechStarted attempt=q_002#7 state=recording
         00:01:14.234 speech vad.silenceAfterSpeech attempt=q_002#7 state=recording
         00:01:18.489 network voiceSubmit.transcript attempt=q_002#7 state=processing

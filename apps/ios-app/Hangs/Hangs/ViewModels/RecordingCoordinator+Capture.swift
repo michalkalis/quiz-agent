@@ -90,6 +90,9 @@ extension RecordingCoordinator {
         // Every recording is a new attempt: whatever the previous one still has
         // in flight (an upload, a transcript, a prompt) can no longer land here.
         let attempt = attemptLedger.begin("recording.\(trigger.rawValue)")
+        recordingTrigger = trigger
+        micOpenDelayMs = nil
+        silencePromptQuestionKey = nil
         // After the transition, as #178 orders the MCQ tap: the interrupted
         // read's tail then sees `.recording` and arms no countdown.
         if readOut == .interrupt {
@@ -126,7 +129,7 @@ extension RecordingCoordinator {
         // up would otherwise leave the mic open in `.recording` with no
         // deadline at all, which is the guarantee #131 Track B's arming used
         // to carry.
-        armRecordingDeadAirCap(deadAirCap)
+        armRecordingDeadAirCap(recordingWindows(for: trigger).cap)
 
         // Local VAD → WAV → backend transcription (#184; the only path since #208.8).
         await startBatchRecording(attempt: attempt)
@@ -140,7 +143,9 @@ extension RecordingCoordinator {
     /// visible window, or the mic would close mid-sentence with nothing able to
     /// say the driver was speaking.
     private func armRecordingWindow(hasSpeechSignal: Bool) {
-        startAutoStopRecordingTimer(hasSpeechSignal ? speechStartWindow : deadAirCap, deadAirCap)
+        let windows = recordingWindows(for: recordingTrigger ?? .tap)
+        startAutoStopRecordingTimer(hasSpeechSignal ? windows.start : windows.cap, windows.cap)
+        micOpenDelayMs = attemptLedger.latency.elapsedMs(questionId: currentQuestion()?.id)
 
         // The driver may already have been heard while the engine was coming up
         // (auto-record's VAD fires `.speechStarted` exactly ONCE per recording).
@@ -148,6 +153,16 @@ extension RecordingCoordinator {
         // landed in the setup gap would be swallowed and the 5 s would then run
         // out under an answer already in progress.
         if speechDetectedDuringAutoRecord { onSpeechStarted() }
+    }
+
+    /// #240.9: the visible "time to start speaking" and the hidden cap for a
+    /// recording. With no think time the hands-free opening is the moment the
+    /// player used to start thinking, so both grow by the think time it
+    /// replaces (`Config.immediateMicExtraWindow`).
+    func recordingWindows(for trigger: RecordingTrigger) -> (start: TimeInterval, cap: TimeInterval) {
+        let extra = trigger.waitsForQuestionReadOut && settings().thinkingTime == 0
+            ? Config.immediateMicExtraWindow : 0
+        return (speechStartWindow + extra, deadAirCap + extra)
     }
 
     /// Start the batch answer recording (#184 track B).

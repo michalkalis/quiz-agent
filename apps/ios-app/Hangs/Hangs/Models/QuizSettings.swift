@@ -65,6 +65,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Thinking time in seconds before auto-recording starts (0 = immediate 500ms delay)
     var thinkingTime: Int
 
+    /// #240.9: which think-time default the saved value was made under. Blobs
+    /// without it come from builds whose default was 10 s; see `init(from:)`.
+    private var thinkingTimeDefaultVersion = Self.currentThinkingTimeDefaultVersion
+
     /// Preferred input device UID (nil = automatic selection)
     var preferredInputDeviceId: String?
 
@@ -133,7 +137,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories: [String] = [],
         difficulty: String,
         autoAdvanceDelay: Int,
-        thinkingTime: Int = 10,
+        thinkingTime: Int = Self.defaultThinkingTime,
         preferredInputDeviceId: String?,
         autoConfirmEnabled: Bool = true,
         showConfirmSheet: Bool = true,
@@ -189,7 +193,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories: [],
         difficulty: Config.defaultDifficulty,
         autoAdvanceDelay: 8,
-        thinkingTime: 10,
+        thinkingTime: Self.defaultThinkingTime,
         preferredInputDeviceId: nil,
         autoConfirmEnabled: true,
         showConfirmSheet: true,
@@ -232,7 +236,16 @@ struct QuizSettings: Codable, Equatable, Sendable {
         categories = categories.filter { Self.categoryOptions.contains($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
-        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? 10
+        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? Self.defaultThinkingTime
+        // #240.9 (founder 2026-11-18): the mic now opens right after the
+        // question. A saved 10 s from an older build is that build's default,
+        // so it moves to the new one; any other saved value was the player's
+        // choice and stays. (A player who picked exactly 10 cannot be told
+        // apart from the old default.)
+        let defaultVersion = try container.decodeIfPresent(Int.self, forKey: .thinkingTimeDefaultVersion) ?? 1
+        if defaultVersion < Self.currentThinkingTimeDefaultVersion, thinkingTime == Self.legacyDefaultThinkingTime {
+            thinkingTime = Self.defaultThinkingTime
+        }
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
@@ -261,6 +274,13 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     /// Valid auto-advance delay options (seconds)
     static let autoAdvanceDelayOptions = [5, 8, 10, 15]
+
+    /// #240.9: no think time; the window to start speaking covers it instead
+    /// (`Config.immediateMicExtraWindow`).
+    static let defaultThinkingTime = 0
+    /// The default every build before #240.9 saved.
+    static let legacyDefaultThinkingTime = 10
+    static let currentThinkingTimeDefaultVersion = 2
 
     /// Valid thinking time options (seconds, 0 = immediate recording)
     static let thinkingTimeOptions = [0, 10, 15, 30, 45, 60, 90, 120]

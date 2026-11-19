@@ -98,6 +98,16 @@ extension RecordingCoordinator {
                 mic: mic
             )
 
+            // #240.9: the phone's own detector vouches that nothing was said
+            // in the window (`noSpeechWindowMayEndRecording` let it end the
+            // recording). Not a failed attempt and no server question: the
+            // capture is dropped and the question offers speak, type or skip.
+            if reason == .noSpeechWindow, !heardSpeech {
+                Logger.audio.info("🎙️ Silent recording, nothing uploaded")
+                offerAnswerAfterSilence(owner: attempt)
+                return
+            }
+
             // Under a fifth of a second of audio is dead air or an engine that
             // never delivered — not a transcription job. #171 Track B funnel.
             guard capture.bytes >= Self.minimumAnswerBytes(sampleRate: capture.sampleRate) else {

@@ -39,6 +39,12 @@ struct RecordingState {
     /// no-answer confirmation sheet.
     var backgroundSuppressedRecordingAt: AnyClock<Duration>.Instant?
 
+    /// #240.9: who opened the mic for this recording, and how long after the
+    /// question became answerable (ms, pauses cut out; nil when unknown).
+    /// Read by `answer_captured` and by the length of the recording window.
+    var recordingTrigger: RecordingTrigger?
+    var micOpenDelayMs: Int?
+
     // Question-scoped — must SURVIVE pair exits (only full `reset()` clears
     // it): the audio URL is replayed from .showingResult.
 
@@ -58,12 +64,21 @@ struct RecordingState {
     /// re-record leaves the recording/processing pair before its upload.
     var rejectedTranscripts = RejectedTranscripts()
 
+    /// #240.9 (founder 2026-11-18): the recording on this question
+    /// (`questionId ?? ""`) ended in silence the phone itself measured, so
+    /// nothing was uploaded and the question offers speak again, type or skip.
+    /// Question-scoped: the prompt lives in `.askingQuestion`, outside the
+    /// recording/processing pair. Cleared when the next recording starts.
+    var silencePromptQuestionKey: String?
+
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         speechDetectedDuringAutoRecord = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
         emptyAnswerRetryHintQuestionKey = nil
+        recordingTrigger = nil
+        micOpenDelayMs = nil
     }
 
     /// Drop the whole subset atomically (full teardown, T7 unified reset model).

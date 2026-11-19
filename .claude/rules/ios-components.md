@@ -53,6 +53,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
 | `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |
+| `SilentAnswerPrompt` | #240.9: calm "take your time" line after a recording the phone measured as silent (nothing uploaded); on MCQ with its own "Answer by voice" button. |
 | `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6). |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |
 | `ReviewBadge`, `QuestionProvenanceRow` | TestFlight-only review/translation badge and the question's provenance row. |

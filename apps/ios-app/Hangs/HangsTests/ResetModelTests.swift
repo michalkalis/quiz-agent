@@ -157,10 +157,12 @@ struct ResetModelTests {
     }
 
     /// WHY: the founder's exact TF trace — the answer window expires,
-    /// auto-record opens and captures dead air. Dead air must take the same
-    /// path as every other miss: the prompt and one re-record, never an upload.
-    @Test("dead air during auto-record takes the retry path")
-    func deadAirDuringAutoRecordRetries() async throws {
+    /// auto-record opens and captures dead air. Dead air is never an upload.
+    /// #240.9 (founder 2026-11-18): nor a failed attempt: no "didn't catch
+    /// that", no re-record on its own, but the calm way on (speak, type or
+    /// move on) on the question.
+    @Test("dead air during auto-record is not a failed attempt")
+    func deadAirDuringAutoRecordIsNotAFailedAttempt() async throws {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
@@ -175,7 +177,9 @@ struct ResetModelTests {
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.isAutoRecording == false)
         #expect(viewModel.errorMessage == nil)
-        #expect(viewModel.taskBag.contains(.emptyAnswerRetry), "the retry is armed")
+        #expect(!viewModel.taskBag.contains(.emptyAnswerRetry), "silence arms no re-record")
+        #expect(viewModel.quizState == .askingQuestion)
+        #expect(viewModel.showsSilencePrompt, "the question offers the calm way on")
     }
 
     /// WHY: a spoken-but-lost answer (speech was heard, the server's transcript

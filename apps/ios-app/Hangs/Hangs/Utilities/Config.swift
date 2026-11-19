@@ -195,6 +195,14 @@ nonisolated enum Config {
     /// empty transcript → confirmation sheet with an empty field (#171 B).
     static let speechStartWindow: TimeInterval = 5.0
 
+    /// #240.9 (founder 2026-11-18): with no think time, the new default, the
+    /// mic opens as soon as the question has been read, and the time to start
+    /// speaking also covers the think time it replaces: 10 + 5 = 15 s. The
+    /// hidden cap moves out by the same amount, so a late start keeps the
+    /// answer time it had. Only the hands-free opening gets it; a tap or a
+    /// spoken "start" means the player is ready.
+    static let immediateMicExtraWindow: TimeInterval = 10
+
     /// Delay after TTS finishes before auto-starting recording (milliseconds)
     static let autoRecordDelayMs: UInt64 = 500
 

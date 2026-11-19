@@ -81,6 +81,24 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
     }
 
+    /// See `RecordingState.recordingTrigger` (#240.9).
+    var recordingTrigger: RecordingTrigger? {
+        get { recordingState.recordingTrigger }
+        set { recordingState.recordingTrigger = newValue }
+    }
+
+    /// See `RecordingState.micOpenDelayMs` (#240.9).
+    var micOpenDelayMs: Int? {
+        get { recordingState.micOpenDelayMs }
+        set { recordingState.micOpenDelayMs = newValue }
+    }
+
+    /// See `RecordingState.silencePromptQuestionKey` (#240.9).
+    var silencePromptQuestionKey: String? {
+        get { recordingState.silencePromptQuestionKey }
+        set { recordingState.silencePromptQuestionKey = newValue }
+    }
+
     /// See `RecordingState.rejectedTranscripts` (#204.2).
     var rejectedTranscripts: RejectedTranscripts {
         get { recordingState.rejectedTranscripts }

@@ -311,6 +311,16 @@ final class QuizViewModel: ObservableObject {
         return quizState == .askingQuestion || quizState == .recording
     }
 
+    /// #240.9 (founder 2026-11-18): the last recording on this question was
+    /// silence the phone measured, so the question offers speak, type or skip
+    /// in a calm line until the player does one of them.
+    var showsSilencePrompt: Bool {
+        guard let key = recordingCoordinator.silencePromptQuestionKey,
+              key == (currentQuestion?.id ?? "")
+        else { return false }
+        return quizState == .askingQuestion
+    }
+
     /// #208.6 (founder 2026-10-16): once the player has thrown a transcript of
     /// this question away (Again, "znova", "nie", a new answer over it), the
     /// question screen and the answer sheet say the answer can be spelled. The
@@ -2062,6 +2072,17 @@ final class QuizViewModel: ObservableObject {
         isSubmittingAnswer = true
         defer { isSubmittingAnswer = false }
 
+        // #240 audit: only a state that can hand the answer to `.processing`
+        // may start a new attempt. A typed answer sent while a skip is in
+        // flight (`.skipping`) used to begin one anyway, which stole the
+        // skip's ownership: its response was dropped and the quiz sat in
+        // `.skipping` until the 35 s watchdog said "Failed to skip question",
+        // although the server had skipped it.
+        guard quizState == .processing || quizState.validTransitions.contains(QuizState.processing.label) else {
+            attemptLedger.record(.tap, "submit.text.refused", quizState.label)
+            return
+        }
+
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
@@ -2187,6 +2208,16 @@ final class QuizViewModel: ObservableObject {
         // onto the result screen would kill its auto-advance.
         isPaused = false
         quizTimersController.cancelThinkingTime()
+        // #240 audit: a skip while the mic is open ends that recording, as an
+        // MCQ tap does (#186 step 2). The MCQ Skip chip stays tappable while
+        // recording, and the capture, its detection session and the engine
+        // the recording started stayed live through the whole skip.
+        quizTimersController.cancelAutoStopRecordingTimer()
+        recordingCoordinator.cancelSilenceDetection()
+        if quizState == .recording {
+            recordingCoordinator.abandonAnswerCapture()
+        }
+        isAutoRecording = false
 
         // Claim .skipping before the first suspension point: a rejected transition
         // must abort the POST rather than skip from an illegal state, and a second
@@ -2232,7 +2263,7 @@ final class QuizViewModel: ObservableObject {
     /// End the current quiz session
     func endQuiz() async {
         guard let sessionId = currentSession?.id else { return }
-        let abandoned = AnalyticsEvent.quizAbandoned(questionsAnswered: questionsAnswered, phase: quizState.label)
+        let abandoned = quizAbandonedEvent(reason: .endQuiz)
 
         quizTimersController.cancelAutoStopRecordingTimer()
 
@@ -2275,9 +2306,9 @@ final class QuizViewModel: ObservableObject {
     /// server session TTLs out on its own.
     func endQuizWithResults() async {
         guard let sessionId = currentSession?.id else { return }
-        let phase = quizState.label
+        let abandoned = quizAbandonedEvent(reason: .endWithResults)
         guard transition(to: .finished) else { return }
-        trackAnalytics(.quizAbandoned(questionsAnswered: questionsAnswered, phase: phase))
+        trackAnalytics(abandoned)
 
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.
@@ -2315,6 +2346,10 @@ final class QuizViewModel: ObservableObject {
 
     /// Reset to home screen immediately (without network call)
     func resetToHome() {
+        // #240.9: Go Home from a round's error screen leaves the round too.
+        if case .error = quizState, currentSession != nil {
+            trackAnalytics(quizAbandonedEvent(reason: .errorScreen))
+        }
         persistenceStore.clearSession()
         resetState()
         // Fire-and-forget is acceptable here: UI transition is immediate,

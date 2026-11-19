@@ -54,7 +54,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS | Frozen as | Notes |
 |---|---|---|
 | RS-01 | `RSRecordingTests.testRS01…` | |
-| RS-02 | `RSRecordingTests.testRS02…` | real 15 s auto-stop (not shortened under `--ui-test`) |
+| RS-02 | `RSRecordingTests.testRS02…` | real 5 s window (a tap, not shortened under `--ui-test`); #240.9: lands on the question with `question.silencePrompt`, no retry |
 | RS-03 | `RSRecordingTests.testRS03…` | |
 | RS-04 | `RSRecordingTests.testRS04…` | second tap lands on `question.stop` |
 | RS-05 | `RSRecordingTests.testRS05…` | "Again" bridges askingQuestion → recording; `confirmation.cancel` only in the transcribing branch, never shown by the instant mock |
@@ -136,26 +136,31 @@ crash.
 
 ---
 
-## RS-02: Hard auto-stop fires when no STT events arrive
+## RS-02: Silence ends the recording with a calm way on
 
-**Hypothesis:** When no committed transcript ever lands, the 15s safety
-timer (`Config.autoRecordingDuration`) must stop recording and route to
-a recoverable state.
+**Hypothesis:** When nothing is said, the window to start speaking
+(`Config.speechStartWindow`, 5 s after a tap) must stop recording. #240.9
+(founder 2026-11-18): silence the phone measured is not a failed attempt.
+Nothing is uploaded, there is no automatic "didn't catch that" retry and no
+Again/Skip sheet; the question stays on screen with a calm line offering
+speak, type or move on, and the mic stays closed until the player asks.
 
 **Preconditions**
-- Launch with `--ui-test`
+- Launch with `--ui-test` (the mock detector vouches "quiet")
 
 **Steps**
 1. Tap `home.startQuiz`
-2. Tap `question.micButton`
+2. Tap `question.record`
 3. Wait for `question.state` label `recording`
 4. **Do not** inject any STT events
-5. Wait 18s
+5. Wait until `question.state` leaves `recording` (up to 20 s)
 
 **Asserts**
-- `question.state` label is **not** `recording` (one of: `processing`, `askingQuestion`, `error`)
+- `question.state` label is `askingQuestion`
+- `question.silencePrompt` is visible; `question.retryHint` is **not**
+- `question.errorBanner` is **not** present
+- `question.stop` does not appear within 8 s (no automatic retry)
 - App process is alive; no `EXC_*` in log
-- If `error`, `question.errorBanner` text is human-readable (not empty, not "Optional(...)")
 
 ---
 

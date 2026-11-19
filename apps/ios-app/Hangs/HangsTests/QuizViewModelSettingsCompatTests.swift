@@ -120,15 +120,15 @@ struct QuizSettingsBackwardCompatTests {
     /// Regression: adding `thinkingTime` as a required `decode` call (instead of
     /// `decodeIfPresent ?? 10`) would throw a `DecodingError` for every v1-era
     /// blob and wipe the user's other settings on upgrade. The fallback tracks
-    /// the product default (10 since #68 — driving-critical defaults).
-    @Test("missing thinkingTime decodes with default value 10")
-    func missingThinkingTimeDefaultsTen() throws {
+    /// the product default (0 since #240.9: the mic opens after the question).
+    @Test("missing thinkingTime decodes with the default value 0")
+    func missingThinkingTimeDefaultsToDefault() throws {
         var json = legacyMinimalJSON
         json.removeValue(forKey: "thinkingTime")
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == 10)
+        #expect(settings.thinkingTime == QuizSettings.defaultThinkingTime)
     }
 
     // MARK: - Missing autoConfirmEnabled
@@ -256,7 +256,7 @@ struct QuizSettingsBackwardCompatTests {
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == 10)
+        #expect(settings.thinkingTime == QuizSettings.defaultThinkingTime)
         #expect(settings.autoConfirmEnabled == true)
         #expect(settings.showConfirmSheet == true)
         #expect(settings.isMuted == false)
@@ -313,13 +313,14 @@ struct QuizSettingsBackwardCompatTests {
     // MARK: - Driving-critical default (#68)
 
     /// #68 acceptance: the default thinking time must stay short — a driver
-    /// can't wait a minute for auto-record to arm. Guards against the default
+    /// can't wait a minute for auto-record to arm. #240.9 (founder 2026-11-18):
+    /// the default is 0, the mic opens as soon as the question was read (the
+    /// window to start speaking grows instead). Guards against the default
     /// creeping back up without a founder decision.
-    @Test("default thinkingTime is 10 and stays under 30")
+    @Test("default thinkingTime is 0 and stays a picker option")
     func defaultThinkingTimeIsDrivingShort() {
-        #expect(QuizSettings.default.thinkingTime == 10)
-        #expect(QuizSettings.default.thinkingTime < 30)
-        #expect(QuizSettings.thinkingTimeOptions.contains(10))
+        #expect(QuizSettings.default.thinkingTime == 0)
+        #expect(QuizSettings.thinkingTimeOptions.contains(QuizSettings.default.thinkingTime))
     }
 
     // MARK: - Unknown legacy keys are silently ignored

@@ -25,7 +25,9 @@ private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
     "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game"],
-    "quiz_abandoned": ["questions_answered", "phase"],
+    // #240.9: reason + question, and `build_channel` on every event below.
+    // Added to the server allowlist in its own backend PR.
+    "quiz_abandoned": ["questions_answered", "phase", "reason", "question"],
     "answer_submitted": ["input_mode", "question_id", "is_retry", "latency_ms"],
     "voice_capture_failed": ["reason", "question_id"],
     "answer_captured": [
@@ -34,6 +36,7 @@ private let backendClientEvents: [String: Set<String>] = [
         "route_group", "output_route", "input_route", "stop_reason", "detector", "heard_speech",
         "speech_ms", "end_delay_ms", "duration_ms", "voice_processing", "ec_enabled", "aec_applicable",
         "front_mic_applicable", "mic_data_source", "mic_polar_pattern", "rejected_count",
+        "trigger", "mic_open_delay_ms", "peak_db", "mic_permission",
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
@@ -68,7 +71,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
     .onboardingFinished(outcome: .commandsOn, step: "commands"),
     .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
-    .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion"),
+    .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion", reason: .endQuiz, question: 4),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
     .answerCaptured(AnswerCapturedReport(
@@ -79,7 +82,8 @@ private let everyEvent: [AnalyticsEvent] = [
         routeGroup: .btCar, outputRoute: "CarAudio", inputRoute: "CarAudio", stopReason: .vad,
         detector: "energy", heardSpeech: true, speechMs: 800, endDelayMs: 600, durationMs: 2000,
         voiceProcessing: false, ecEnabled: false, aecApplicable: true, frontMicApplicable: false,
-        micDataSource: "none", micPolarPattern: "none", rejectedCount: 0
+        micDataSource: "none", micPolarPattern: "none", rejectedCount: 0,
+        trigger: "auto", micOpenDelayMs: 600, peakDb: -24, micPermission: "granted"
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
@@ -282,7 +286,7 @@ struct QuizAnalyticsTests {
         await vm.endQuiz()
 
         #expect(analytics.tracked == [MockAnalyticsClient.Tracked(
-            event: .quizAbandoned(questionsAnswered: 2, phase: "askingQuestion"),
+            event: .quizAbandoned(questionsAnswered: 2, phase: "askingQuestion", reason: .endQuiz, question: 3),
             sessionId: sessionId
         )])
     }
@@ -296,7 +300,35 @@ struct QuizAnalyticsTests {
 
         await vm.endQuizWithResults()
 
-        #expect(analytics.events == [.quizAbandoned(questionsAnswered: 1, phase: "askingQuestion")])
+        #expect(analytics.events == [.quizAbandoned(questionsAnswered: 1, phase: "askingQuestion", reason: .endWithResults, question: 2)])
+    }
+
+    /// WHY (#240.9): store players left rounds and the data could not say
+    /// where or why. Going home from a round's error screen is a way out the
+    /// ✕ events never saw.
+    @Test("Go Home from a round's error screen is quiz_abandoned with reason error_screen")
+    func errorScreenHomeIsAbandoned() {
+        let analytics = MockAnalyticsClient()
+        let (vm, _) = makeQuizViewModel(analytics: analytics)
+        vm.currentSession = Fixtures.session(answered: 4)
+        vm.quizState = .error(message: "x", context: .submission)
+
+        vm.resetToHome()
+
+        #expect(analytics.events == [.quizAbandoned(questionsAnswered: 4, phase: QuizState.error(message: "x", context: .submission).label, reason: .errorScreen, question: 5)])
+    }
+
+    /// WHY: Home's own Go Home (a finished round's close) is not leaving a round.
+    @Test("closing a finished round is not quiz_abandoned")
+    func finishedHomeIsNotAbandoned() {
+        let analytics = MockAnalyticsClient()
+        let (vm, _) = makeQuizViewModel(analytics: analytics)
+        vm.currentSession = Fixtures.session(answered: 10)
+        vm.quizState = .finished
+
+        vm.resetToHome()
+
+        #expect(analytics.events(named: "quiz_abandoned").isEmpty)
     }
 
     @Test("a quiz played to the end and closed is NOT abandoned")
@@ -446,7 +478,7 @@ struct LiveAnalyticsClientTests {
         let client = LiveAnalyticsClient(networkService: network, clock: AnyClock(clock))
 
         client.track(.paywallViewed(source: .home))
-        client.track(.quizAbandoned(questionsAnswered: 1, phase: "askingQuestion"), sessionId: "s1")
+        client.track(.quizAbandoned(questionsAnswered: 1, phase: "askingQuestion", reason: .endQuiz, question: 2), sessionId: "s1")
         await clock.advance(by: LiveAnalyticsClient.flushDelay - .milliseconds(1))
         #expect(network.postedAnalyticsBatches.isEmpty, "nothing before the timer")
 
@@ -455,6 +487,32 @@ struct LiveAnalyticsClientTests {
         let events = network.postedAnalyticsBatches.first?.events ?? []
         #expect(events.map(\.name) == ["paywall_viewed", "quiz_abandoned"])
         #expect(events.map(\.sessionId) == [nil, "s1"])
+    }
+
+    /// WHY (#240.9): the store cohort's numbers were read next to testers'
+    /// and debug runs. Every event carries the channel it came from.
+    @Test("every event carries build_channel")
+    func everyEventCarriesBuildChannel() async {
+        let network = MockNetworkService()
+        let client = LiveAnalyticsClient(networkService: network, clock: AnyClock(TestClock()), buildChannel: "testflight")
+
+        client.track(.paywallViewed(source: .home))
+        client.track(.togetherOpened)
+        client.flush()
+        await pumpUntil({ network.postedAnalyticsBatches.count == 1 }, "flush() never sent")
+
+        let channels = network.postedAnalyticsBatches.first?.events.map { $0.properties["build_channel"] }
+        #expect(channels == [.string("testflight"), .string("testflight")])
+    }
+
+    @Test("build_channel: the App Store variant wins, then debug, then the receipt")
+    func buildChannelValue() {
+        let sandbox = URL(fileURLWithPath: "/x/sandboxReceipt")
+        let store = URL(fileURLWithPath: "/x/receipt")
+        #expect(BuildChannel.analyticsValue(receiptURL: sandbox, isDebugBuild: false, isAppStoreBuild: true) == "app_store")
+        #expect(BuildChannel.analyticsValue(receiptURL: sandbox, isDebugBuild: true, isAppStoreBuild: false) == "debug")
+        #expect(BuildChannel.analyticsValue(receiptURL: sandbox, isDebugBuild: false, isAppStoreBuild: false) == "testflight")
+        #expect(BuildChannel.analyticsValue(receiptURL: store, isDebugBuild: false, isAppStoreBuild: false) == "app_store")
     }
 
     @Test("a full queue flushes at once; background flush sends the rest")

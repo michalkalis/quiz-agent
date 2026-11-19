@@ -9,6 +9,7 @@
 import SwiftUI
 
 struct RoomFinalView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var viewModel: RoomViewModel
     let onShowPlans: () -> Void
     let onClose: () -> Void
@@ -30,6 +31,9 @@ struct RoomFinalView: View {
                         winnerCard(winner)
                     }
                     ranking
+                    if !viewModel.awardRows.isEmpty {
+                        awards
+                    }
                     if viewModel.isHost, !viewModel.awayRows.isEmpty {
                         awayNote
                     }
@@ -42,11 +46,82 @@ struct RoomFinalView: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
-            HangsPrimaryButton(title: "Done", action: onClose)
-                .accessibilityIdentifier("room.done")
+            actions
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
         .padding(.bottom, Theme.Hangs.Spacing.md)
+    }
+
+    /// #240.9: the host plays again with everyone; anyone sends the ranking.
+    @ViewBuilder
+    private var actions: some View {
+        if viewModel.canPlayAgain {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
+                HangsPrimaryButton(title: "Play again", icon: "arrow.counterclockwise", isLoading: viewModel.isWorking) {
+                    Task { await viewModel.playAgain() }
+                }
+                .disabled(viewModel.isWorking)
+                .accessibilityIdentifier("room.playAgain")
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
+                    shareButton
+                    HangsSecondaryButton(title: "Done", singleLineTitle: true, action: onClose)
+                        .accessibilityIdentifier("room.done")
+                }
+            }
+        } else {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
+                if !viewModel.isHost {
+                    Text("The host can start another game with everyone.")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                        .multilineTextAlignment(.center)
+                        .accessibilityIdentifier("room.final.waitingForHost")
+                }
+                shareButton
+                HangsPrimaryButton(title: "Done", action: onClose)
+                    .accessibilityIdentifier("room.done")
+            }
+        }
+    }
+
+    private var shareButton: some View {
+        HangsSecondaryButton(title: "Share", icon: "square.and.arrow.up", singleLineTitle: true, action: share)
+            .accessibilityIdentifier("room.final.share")
+    }
+
+    private var awards: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
+            HangsSectionLabel(text: "Awards")
+            HangsCard {
+                VStack(spacing: 0) {
+                    let rows = viewModel.awardRows
+                    ForEach(rows) { row in
+                        RoomAwardLine(row: row, textColor: Theme.Hangs.Colors.ink, captionColor: Theme.Hangs.Colors.muted)
+                            .padding(.horizontal, Theme.Hangs.Spacing.md)
+                            .padding(.vertical, Theme.Hangs.Spacing.sm)
+                            .accessibilityIdentifier("room.final.award.\(row.kind.rawValue)")
+                        if row.id != rows.last?.id { HangsDivider() }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The ranking as a story-size picture (same approach as the recap card).
+    private func share() {
+        viewModel.rankingShared()
+        let picture = RoomRankingShareImage(
+            ranks: viewModel.rankRows,
+            awards: viewModel.awardRows,
+            total: viewModel.state?.maxQuestions ?? 0
+        )
+        .frame(width: Metrics.shareSize.width, height: Metrics.shareSize.height)
+        .environment(\.locale, locale)
+        .environment(\.dynamicTypeSize, .large)
+        let renderer = ImageRenderer(content: picture)
+        renderer.scale = Metrics.shareScale
+        guard let image = renderer.uiImage else { return }
+        ShareSheetPresenter.present([image])
     }
 
     private func winnerCard(_ winner: RoomViewModel.RankRow) -> some View {
@@ -158,6 +233,11 @@ struct RoomFinalView: View {
                         Text(verbatim: row.correctAnswer ?? "")
                             .font(.hangsLabel)
                             .foregroundStyle(Theme.Hangs.Colors.ink)
+                        if row.isCancelled {
+                            Text("Not counted")
+                                .font(.hangsCaption)
+                                .foregroundStyle(Theme.Hangs.Colors.warning)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     HStack(spacing: Metrics.dotGap) {
@@ -234,5 +314,7 @@ struct RoomFinalView: View {
         static let dot: CGFloat = 8
         static let dotGap: CGFloat = 3
         static let face: CGFloat = 24
+        static let shareSize = CGSize(width: 360, height: 640)
+        static let shareScale: CGFloat = 3
     }
 }

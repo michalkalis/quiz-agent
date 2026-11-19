@@ -1,0 +1,28 @@
+# texts
+Hra spolu
+Vyhráva
+Michal
+Správne 2 z 2
+1.
+Michal
+2
+2.
+Jana
+1
+J
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+M
+Nikto iný nevedel
+Michal
+Otázka 2
+Nikto iný nevedel
+Michal
+Otázka 2
+trubbo
+trubbo.app
+# identifiers

@@ -29,6 +29,8 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
     let ranking: [Rank]?
     let rounds: [Round]?
     let away: [Away]?
+    /// #240.9: small awards on the final screen; nil from an older server.
+    var awards: [Award]? = nil
 
     enum Status: String, Decodable, Sendable {
         case lobby, playing, finished
@@ -73,8 +75,11 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         let results: [Result]?
         /// #224.4: the host stays on this reveal; the server leaves it out otherwise.
         let paused: Bool?
+        /// #240.9: the judge could not grade this question, so it counts for nobody.
+        var cancelled: Bool? = nil
 
         var isPaused: Bool { paused == true }
+        var isCancelled: Bool { cancelled == true }
 
         enum CodingKeys: String, CodingKey {
             case questionId = "question_id"
@@ -88,6 +93,7 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
             case explanation
             case results
             case paused
+            case cancelled
         }
     }
 
@@ -118,6 +124,22 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         }
     }
 
+    /// #240.9: `kind` is fastest / only_one / streak; an unknown kind is skipped.
+    struct Award: Decodable, Sendable, Equatable {
+        let kind: String
+        let participantId: String
+        var questionNumber: Int? = nil
+        var ms: Int? = nil
+        var count: Int? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case kind
+            case participantId = "participant_id"
+            case questionNumber = "question_number"
+            case ms, count
+        }
+    }
+
     struct Away: Decodable, Sendable, Equatable {
         let participantId: String
         let questions: Int
@@ -140,6 +162,6 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         case readsAloud = "reads_aloud"
         case question, round
         case finishedReason = "finished_reason"
-        case ranking, rounds, away
+        case ranking, rounds, away, awards
     }
 }

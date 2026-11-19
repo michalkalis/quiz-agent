@@ -10,10 +10,27 @@ import SwiftUI
 
 struct RoomRevealView: View {
     @ObservedObject var viewModel: RoomViewModel
+    @State private var didAppear = false
     /// Round-reveal mode: results come on the final screen.
     let holdsResults: Bool
 
     var body: some View {
+        content
+            .sensoryFeedback(Self.haptic(for: viewModel.revealOutcome), trigger: didAppear)
+            .onAppear { didAppear = !holdsResults }
+    }
+
+    /// #240.9: one light tap as the answers show, like the solo result: a
+    /// success for a right answer, a soft tap otherwise.
+    static func haptic(for outcome: RoomViewModel.RevealOutcome?) -> SensoryFeedback {
+        switch outcome {
+        case .correct: .success
+        case .miss: ResultView.missHaptic
+        case .cancelled, nil: .selection
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             if let round = viewModel.round {
                 HangsQuizProgressHeader(current: round.number, total: viewModel.state?.maxQuestions ?? round.number)
@@ -23,6 +40,9 @@ struct RoomRevealView: View {
                             heldCard
                         } else {
                             answerCard(round)
+                            if round.isCancelled {
+                                RoomCancelledNote()
+                            }
                             results(round)
                             if let explanation = round.explanation, !explanation.isEmpty {
                                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
@@ -86,10 +106,12 @@ struct RoomRevealView: View {
                             identifier: "room.reveal.answer"
                         )
                     }
-                    Text("Correct: \(viewModel.correctCount(in: round))/\(viewModel.players.count)")
-                        .font(.hangsCaption)
-                        .foregroundStyle(Theme.Hangs.Colors.muted)
-                        .accessibilityIdentifier("room.reveal.count")
+                    if !round.isCancelled {
+                        Text("Correct: \(viewModel.correctCount(in: round))/\(viewModel.players.count)")
+                            .font(.hangsCaption)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .accessibilityIdentifier("room.reveal.count")
+                    }
                 }
             }
         }
@@ -111,6 +133,11 @@ struct RoomRevealView: View {
                 Text("Everyone sees the answers at the end of the game.")
                     .font(.hangsCaption)
                     .foregroundStyle(Theme.Hangs.Colors.muted)
+                if !viewModel.answeredNames.isEmpty {
+                    Text("Answered: \(viewModel.answeredNames.formatted(.list(type: .and, width: .narrow)))")
+                        .font(.hangsCaption)
+                        .foregroundStyle(Theme.Hangs.Colors.muted)
+                }
             }
             .foregroundStyle(Theme.Hangs.Colors.ink)
             .padding(Theme.Hangs.Spacing.md)
@@ -168,5 +195,27 @@ struct RoomNextFooter: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .accessibilityIdentifier("room.waitingForHost")
         }
+    }
+}
+
+/// #240.9: the judge could not check this question, so nobody scores on it
+/// (server, founder 2026-11-18); said out loud instead of a silent zero.
+struct RoomCancelledNote: View {
+    var body: some View {
+        HangsCard {
+            Label {
+                Text("We couldn't check the answers to this question. It doesn't count for anyone.")
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "exclamationmark.circle")
+                    .foregroundStyle(Theme.Hangs.Colors.warning)
+            }
+            .font(.hangsBody)
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .padding(Theme.Hangs.Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("room.reveal.cancelled")
     }
 }

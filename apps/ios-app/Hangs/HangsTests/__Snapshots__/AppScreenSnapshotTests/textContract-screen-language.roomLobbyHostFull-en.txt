@@ -17,7 +17,7 @@ Peťo
 Z
 Zuzka
 Game rules
-10 questions · Random · At the end of the quiz · 30 s
+10 questions · Random · After each question · 15 s
 Start the game
 # identifiers
 room.close

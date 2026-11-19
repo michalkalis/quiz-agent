@@ -1,7 +1,7 @@
 # #231 — Ukrajinčina ako štvrtý jazyk
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-18 overenie hotové (hlas, písmo, štýl otázok); stavba vo vlnách nižšie, kontrola priamo v appke cez TestFlight — [stránka](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
+**Status:** 2026-11-19 postavené a nezávisle skontrolované (server, otázky, appka, texty); uk je na serveri vypnutá; ďalší krok = TestFlight build na požiadanie foundera a kontrola rodeným hovorcom v appke (231.10, 231.11) — [stránka overenia](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
 **Founder:** 2026-11-08 „pridaj ukrajinčinu do appky, na všetko, tak ako cz, sk a en“
 
 ## Cieľ
@@ -49,14 +49,38 @@ Spolu ~10 PR. Riziká v poradí: kvalita a množstvo natívnych otázok, rozpozn
 - [—] **231.3 Pilot** — zrušené (founder 2026-11-18: ďalej neiterovať ukážky, kvalita sa skontroluje priamo v appke).
 - [~] **231.4 Otázky: dávka** — natívne ukrajinské otázky na predplatnom (zadarmo, `generate_pack --dry-run`, recept zo skúšky štýlu), 2 na tému, témy polovica ručne a polovica od modelu; prvá dávka ~200 z mesačného API kreditu k predplatnému (founder 2026-11-18), zvyšok do ~600 po kontrole v appke; cez všetky kategórie, 7/10 Ukrajina; duplicity v dávke preč (`run_dups.py`); import so strojovým schválením cez brány. Preklad univerzálnych en otázok len ak natívne nepokryjú kategórie (najprv uk podpora v prekladovom nástroji). Potom uk v týždennom dopĺňaní zábavy (#202) so súhlasom foundera na sumu.
   - [x] Dávka 1 (2026-11-18, `docs/testing/runs/uk-corpus-2026-11-18/`): 100 tém × 2, z API kreditu (~$18), 197 otázok, 11 rovnakých faktov preč → **186 v prode** (185 strojovo schválených, 1 len TestFlight), všetky so zdrojom, 0 ruských písmen. Kategórie nevyvážené (general 71, geografia 6, zábava 6) → dávka 2 doplní slabé kategórie po kontrole v appke.
-- [ ] **231.5 Vlastné balíky po ukrajinsky** — názov jazyka, ochrana pred ruštinou, štýl domu uk, nadpisy; zdroje z ukrajinskej Wikipédie; overiť opätovné použitie balíka (#225) s jazykom uk.
-- [ ] **231.6 Appka** — uk v projekte; 731 textov + 2 systémové; vybrané písmo pre cyriliku; povely po ukrajinsky (štart, ok, ďalej, znova, zopakuj, preskoč, stop, pauza, domov; výplňové slová так, ну, добре…), nápovedy a tlačidlá v rozkazovacom tvare; párovanie odpovedí 1–4 (MCQ sa číta číslami „Один… Чотири“ ako sk/cs, nie písmenami) a čísel v cyrilike (dnes len latinka bez diakritiky; pozor: й a ї sa nesmú zlúčiť s и a і); dátumy, mená hráčov, právne odkazy na /uk/; analytika jazyka existuje (overiť). Testy: zrkadlo sk/cs testov povelov, pixelové snímky uk.
-- [ ] **231.7 Kontrola textov** — štýl textov pre uk (tykanie „ти“ ako sk/cs, právne texty „ви“, bez pomlčiek), automatická kontrola textov rozšírená o uk (ruské písmená, vykanie), plná kontrola iným modelom ako pri #226.
-- [ ] **231.8 Web** — `/uk/` (texty, 3 právne stránky, tematické stránky s ukrajinskými adresami, ukážka hlasu), hreflang a mapa stránok sa doplnia samé.
-- [ ] **231.9 App Store a nákupy** — ukrajinský popis, názov, podnadpis, kľúčové slová, What's New, snímky s ukrajinskými nadpismi, názvy nákupov a predplatného, TestFlight texty; dostupnosť v obchode Ukrajina a ceny (Apple prepočíta automaticky, **úprava ceny pre Ukrajinu = rozhodnutie foundera**). Nahrá sa s najbližšou verziou.
+  - [x] Oprava dávky 1 po nezávislej kontrole (2026-11-18, `corrections-2026-11-18.md` + `apply_corrections.py` v tom istom priečinku): 4 vyradené (rovnaký fakt alebo odpoveď prezradená inou otázkou), 6 nových zdrojov namiesto ruských alebo nesediacich, ruské tvary preč z uznávaných odpovedí, drobné opravy textu; potom všetky uk riadky znova cez sprísnené brány. **Stav v prode: 150 schválených, 32 čaká na človeka (len TestFlight), 4 vyradené.** Z 32 čakajúcich: 22 neprešlo kontrolou prirodzenosti (brána ich predtým aj tak schválila), 6 zadržal filter tém (rok od 2014, „парламент“, „облоги“ = zväčša falošné poplachy na posúdenie), 2 rekord bez roku, 2 úmyselne (odpoveď je holé písmeno «Ї»; autentický podpis s ъ). Schválené podľa kategórií: general 48, história 24, jedlo 20, veda 20, film a hudba 16, šport 12, zábava 6, geografia 4.
+- [x] **231.5 Vlastné balíky po ukrajinsky** (2026-11-18, PR #903) — cyrilika v párovaní faktov a tém (predtým len latinka), ukrajinský balík necituje ruské stránky, opätovné použitie balíka (#225) drží jazyk a berie oba ukrajinské apostrofy. Skúška zadarmo cez predplatné (2 balíky × 10 otázok, cesta objednávky bez zápisu do DB): všetky so zdrojom, 0 ruských písmen; kuchyňa 7/10 ukrajinské zdroje, vesmír anglické (NASA, ESA). Objednávky uk ostávajú vypnuté (`PACK_ORDER_LANGUAGES`). Na posúdenie pred zapnutím: kontrola témy pred platbou nepozná ukrajinské pravidlo tém (pozri Otvorené); detské balíky 4–6 majú príklady v zadaní len sk/cs; kontrola odpovedateľnosti občas vyradí dobrú odpoveď pri skloňovaní jedného slova (rovnako sk/cs).
+- [x] **231.6 Appka** (2026-11-19, PR #862, #860) — všetky texty appky po ukrajinsky (vrátane systémových), cyrilika v písme **Manrope** (len uk, ostatné jazyky bez zmeny), povely: «Старт», «Підтверди» / «Добре», «Далі», «Ще раз», «Повтори», «Пропусти», «Стоп», «Пауза», «Додому»; krátke slová («так», «добре», «ні») platia len samostatne a slovo podobné povelu («Правильно», «Сто») ostáva odpoveďou; odpovede 1–4 a čísla v cyrilike (й a ї sa nezlučujú s и a і); právne odkazy na /uk/; pixelové snímky uk pre všetky obrazovky vrátane rodinného režimu, pozreté. Tvary množného čísla (1 питання, 5 питань, 21 питання) stráži test nad skutočnými textami. Známe: systémové tlačidlo Sign in with Apple je po anglicky, kým iPhone nie je v ukrajinčine; pri najväčšom písme sa dlhé slová delia («пита-ння»).
+- [x] **231.7 Kontrola textov** (PR #857, #896) — štýl textov pre uk (tykanie „ти“ ako sk/cs, právne texty „ви“, bez pomlčiek), automatická kontrola textov rozšírená o uk (ruské písmená, vykanie), plná kontrola iným modelom ako pri #226. Od PR #896 automatická kontrola v CI naozaj číta aj uk hodnoty (predtým len sk/cs/en) a padá na ruských písmenách a slovách.
+- [~] **231.8 Web** (PR #859, **pozastavené do spustenia**, web sa nasadí pri merge) — `/uk/` (texty, 3 právne stránky, tematické stránky s ukrajinskými adresami, ukážka hlasu), hreflang a mapa stránok sa doplnia samé. Po kontrole textov: jednotné slová s appkou («підписка», «безплатно»), prázdna stránka „nové tento týždeň“ sa pre uk nevytvára, kým nemá otázky, počty otázok v správnom tvare. 2026-11-19 zosúladené s main (stránky o súkromí vrátane partie v dennej výzve) a ukrajinčina doplnená na stránky zdieľaného kvízu a pozvánky do hry.
+- [~] **231.9 App Store a nákupy** (texty v PR #859, pozastavené) — ukrajinský popis, názov, podnadpis, kľúčové slová, What's New, snímky s ukrajinskými nadpismi, názvy nákupov a predplatného, TestFlight texty; dostupnosť v obchode Ukrajina a ceny (Apple prepočíta automaticky, **úprava ceny pre Ukrajinu = rozhodnutie foundera**). Nahrá sa s najbližšou verziou.
 - [ ] **231.10 Overenie rodeným hovorcom v appke** — prejde TestFlight build po ukrajinsky: texty appky, otázky počas hrania, čítanie; k tomu App Store texty, web a právne texty na jednej stránke; pripomienky → opravy.
 - [ ] **231.11 Test celku** — simulátor: celý kvíz po ukrajinsky, prepnutie jazyka, vlastný balík, denná výzva; hra spolu: hostiteľ uk + hosť sk v miestnosti aj na diaľku; zariadenie (TestFlight na požiadanie): povely, odpovede hlasom a možnosti 1–4, hovorí rodený hovorca. Potom zapnúť uk na serveri.
 - [ ] **231.12 Marketing (neskôr, samostatné rozhodnutie)** — ukrajinské sociálne siete, ASO pre ukrajinský obchod.
+
+## Nezávislá kontrola (2026-11-18 večer)
+
+Štyri nezávislé čítania (server, otázky a dávka 1, kód appky, ukrajinské texty) celej práce na #231. Čo našli a čo sa s tým stalo:
+
+| Nález | Oprava |
+|---|---|
+| Ukrajinská hra by dostávala anglické otázky preložené strojom za behu, bez brán | PR #898: uk sa hrá **len z otázok napísaných po ukrajinsky**; keď dôjdu, hra sa skončí ako pri každej vyčerpanej zásobe |
+| uk sa dala vyžiadať napriek vypínaču (hra, objednávka balíka, verejný zoznam nových otázok na webe) | PR #898: server uk odmieta, kým nie je v zozname; nasadené a overené |
+| Filter tém prepúšťal vojnu a politiku inými slovami a zároveň zahadzoval dejiny pred 2014 | PR #901: tri stupne (čisté / čaká na človeka / vyradené); nejasné veci čakajú na človeka |
+| Ruština sa hľadala len podľa 4 písmen a ~20 slov | PR #901: ruské slová, tvary mien, ruské zdroje (.ru, RT…) |
+| Otázka s neúspešnou kontrolou prirodzenosti ostala schválená | PR #901: pre uk je úspešná kontrola podmienkou schválenia |
+| Čítanie nahlas: písmená možností C/D, „2,5“, „1-го“, rímske storočia, „7 з 10“ v zlom páde, roky „р.“ | PR #902 (zoznam viet na vypočutie nižšie) |
+| Povely: «Правильно» spustilo „znova“, «Сто» spustilo „stop“ | PR #862 |
+| Texty: systémové Nastavenia sú «Параметри», dve slová pre predplatné a zadarmo, kostrbaté vety | PR #860, #859 |
+| Automatická kontrola textov ukrajinčinu vôbec nečítala | PR #896 |
+| Stránky o súkromí uvádzali starý hosting (všetky jazyky) | PR #891 |
+
+Staré buildy z App Store (1.1, 1.2) ukrajinčinu v zozname jazykov neukážu (overené v kóde oboch značiek) → zapnutie = prepnutie vypínača na serveri, netreba bránu podľa buildu.
+
+**Na vypočutie rodeným hovorcom v appke:** «А… Бе… Це… Де…» (možnosti pri číselných odpovediach), «дві цілих п'ять десятих метра», «у тисяча дев'ятсот дев'яностих роках», «у дев'ятнадцятому столітті», «з тисяча дев'ятсот тридцять дев'ятого по тисяча дев'ятсот сорок п'ятий рік», «Це знали лише два із дев'яти», «Правильних відповідей: сім з десяти», «Лише один відсоток це знав».
+
+**Neopravené, vedome:** rod číslovky pred podstatným menom («один книга», rovnako sk/cs); «до н. е.» sa číta po písmenách; hlas sa vyberá podľa písma textu, nie jazyka hry; v sk/cs spustí «sto» povel „stop“ (rovnaká diera ako bola v uk, samostatná oprava); cyrilika u hráča so slovenským rozhraním (hosť v ukrajinskej miestnosti) sa vykreslí systémovým písmom; nepoužívaný kód na párovanie odpovedí v appke (`MCQTranscriptMatcher`) na vyčistenie.
 
 ## Poradie (od 2026-11-18)
 
@@ -71,3 +95,8 @@ Founder 2026-11-18: ukážky už neiterovať, stavať všetko a skontrolovať pr
 
 - Cena predplatného a balíkov v ukrajinskom obchode (pri 231.9).
 - Koľko času môže rodený hovorca venovať kontrole v appke (pri 231.10).
+- Má ukrajinský hráč smieť objednať vlastný balík na tému vojny alebo politiky? Dnes to kontrola pred platbou pustí; pravidlo tém platí len pre naše otázky.
+- Tlačidlo a povel na ďalšiu otázku: dnes «Пропусти» (overené diktovaním); pravidlo z #224 by pre sk/cs/en znamenalo «Наступне» (funguje ako synonymum). Posúdi rodený hovorca.
+- 32 otázok čakajúcich na človeka: schváli ich rodený hovorca v appke, alebo ich prepíšeme v dávke 2?
+- Právne odkazy v appke pre uk vedú na trubbo.app/uk/…, ktoré budú živé až po merge PR #859 (web). Pred TestFlight kontrolou buď web pustiť, alebo počítať s tým, že odkazy nefungujú. Dnes otvoria v Safari stránku „nenašlo sa“ (en/sk/cs), appka nespadne.
+- Zásoba pre ukrajinskú hru je 150 schválených otázok (geografia 4, zábava 6) a hrá sa len z nich; keď dôjdu, hra sa skončí. Dávka 2 má prísť až po kontrole v appke: stačí to na kontrolu, pred zapnutím naostro treba doplniť.

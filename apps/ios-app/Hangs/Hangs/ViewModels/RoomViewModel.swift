@@ -97,6 +97,10 @@ final class RoomViewModel: ObservableObject, Identifiable {
     private(set) var answerDeadline: AnyClock<Duration>.Instant?
     /// The whole answer window of the open question, for the countdown bar.
     private(set) var answerWindowSeconds: Int?
+    /// #240.9: when this phone first saw the open question being read aloud.
+    private(set) var readingSince: AnyClock<Duration>.Instant?
+    /// #240.9: the host's phone reported how this game ended (once per game).
+    var closeReported = false
     private var awayReported: Set<String> = []
     private var pollFailures = 0
     /// The player closed the game: a reply still on its way changes nothing (#235.2).
@@ -328,6 +332,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         hasLeft = true
         stopAll()
         if role == .guest { await audio.stopPlayback() }
+        reportClose(state?.status == .finished ? .finished : state?.status == .playing ? .hostLeft : .neverStarted)
         guard let roomId = state?.roomId ?? created?.roomId else { return }
         let leave: PendingRoomLeave
         if role == .guest, let you = state?.you, !hasEnded {
@@ -345,6 +350,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
     func moveToRoom(_ room: RoomCreated) {
         created = room
         state = nil
+        readingSince = nil
     }
 
     func stopAll() {
@@ -359,12 +365,14 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     // MARK: - Polling
 
+    /// Keeps polling on the final screen too: the host may start another game
+    /// with everyone (#240.9), and this phone then follows into its lobby.
     func startPolling() {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 await self.refresh()
-                if self.state?.status == .finished || self.hasEnded { return }
+                if self.hasEnded || self.hasLeft { return }
                 do { try await self.clock.sleep(for: Self.pollInterval) } catch { return }
             }
         }
@@ -375,7 +383,14 @@ final class RoomViewModel: ObservableObject, Identifiable {
         do {
             try apply(await rooms.roomState(roomId: roomId, since: state?.version))
         } catch NetworkError.serverError(statusCode: 404, _) {
-            end()
+            // A finished game whose room expired keeps its ranking on screen.
+            if state?.status == .finished {
+                pollTask?.cancel()
+                pollTask = nil
+            } else {
+                reportClose(.expired)
+                end()
+            }
         } catch is CancellationError {
         } catch {
             pollFailures += 1
@@ -396,7 +411,9 @@ final class RoomViewModel: ObservableObject, Identifiable {
             if round.questionId != previousQuestionId {
                 typedAnswer = ""
                 answerWindowSeconds = nil
+                readingSince = nil
             }
+            if round.phase == .reading, readingSince == nil { readingSince = clock.now }
             answerDeadline = round.phase == .answering
                 ? round.remainingMs.map { clock.now.advanced(by: .milliseconds($0)) }
                 : nil

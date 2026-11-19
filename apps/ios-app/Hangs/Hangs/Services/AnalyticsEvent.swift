@@ -54,6 +54,11 @@ enum AnalyticsEvent: Equatable {
     case roomPauseChanged(paused: Bool, question: Int)
     /// #230.2: a guest switched reading aloud on their own phone on or off; `via` is nearby, qr or link.
     case roomGuestReadAloud(on: Bool, via: String)
+    /// #240.9: the host's phone closed a game together (once per game);
+    /// `questions` = the questions served so far.
+    case roomClosed(reason: RoomCloseReason, players: Int, questions: Int)
+    /// #240.9: the share sheet opened on the final ranking; `role` is host or guest.
+    case roomRankingShared(role: String, players: Int)
     /// #224.6: a step on the Home category deck; `to` is the category id or "all".
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
@@ -102,6 +107,8 @@ enum AnalyticsEvent: Equatable {
         case .roomSettingsChanged: "room_settings_changed"
         case .roomPauseChanged: "room_pause_changed"
         case .roomGuestReadAloud: "room_guest_read_aloud"
+        case .roomClosed: "room_closed"
+        case .roomRankingShared: "room_ranking_shared"
         case .homeCategoryStepped: "home_category_stepped"
         case .homeCategoryPickerOpened: "home_category_picker_opened"
         case .quickGameChanged: "quick_game_changed"
@@ -185,6 +192,10 @@ enum AnalyticsEvent: Equatable {
             [("paused", .bool(paused)), ("question", .int(question))]
         case let .roomGuestReadAloud(on, via):
             [("on", .bool(on)), ("via", .string(via))]
+        case let .roomClosed(reason, players, questions):
+            [("reason", .string(reason.rawValue)), ("players", .int(players)), ("questions", .int(questions))]
+        case let .roomRankingShared(role, players):
+            [("role", .string(role)), ("players", .int(players))]
         case let .homeCategoryStepped(direction, input, to):
             [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
         case let .homeCategoryPickerOpened(source):
@@ -403,6 +414,18 @@ enum RoomSettingKind: String {
     case revealMode = "reveal_mode"
     case thinkingSeconds = "thinking_seconds"
     case readsAloud = "reads_aloud"
+}
+
+/// #240.9: how a game together closed on the host's phone.
+enum RoomCloseReason: String {
+    /// Left after the final ranking (or started "play again").
+    case finished
+    /// Left while a question was being played.
+    case hostLeft = "host_left"
+    /// Left the lobby before the first question.
+    case neverStarted = "never_started"
+    /// The room was gone (expired or removed) while the game was open.
+    case expired
 }
 
 /// #213.8: where the host changed it: before the start or during the game.

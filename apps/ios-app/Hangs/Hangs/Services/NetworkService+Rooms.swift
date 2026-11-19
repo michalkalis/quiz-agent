@@ -14,11 +14,12 @@ extension NetworkService: RoomServiceProtocol {
         hostName: String,
         revealMode: RoomState.RevealMode,
         thinkingSeconds: Int,
-        readsAloud: Bool
+        readsAloud: Bool,
+        movingRoomId: String?
     ) async throws -> RoomCreated {
         // `net_tickets` stays empty until the IPv4/IPv6 probe hostnames exist:
         // the server matches the Wi-Fi on the request's own address.
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "session_id": sessionId,
             "host_name": hostName,
             "net_tickets": [String](),
@@ -26,6 +27,7 @@ extension NetworkService: RoomServiceProtocol {
             "thinking_seconds": thinkingSeconds,
             "reads_aloud": readsAloud,
         ]
+        if let movingRoomId { body["room_id"] = movingRoomId }
         let data = try await roomRequest("POST", "/api/v1/rooms", endpoint: "/api/v1/rooms", body: body)
         return try JSONDecoder().decode(RoomCreated.self, from: data)
     }

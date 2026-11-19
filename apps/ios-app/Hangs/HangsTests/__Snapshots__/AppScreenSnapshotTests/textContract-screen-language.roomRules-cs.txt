@@ -11,9 +11,9 @@ Vlastní
 Číst otázky nahlas
 
 Kdy ukázat odpovědi
-At the end of the quiz
+After each question
 Kdy ukázat odpovědi
-At the end of the quiz
+After each question
 Změny platí od další otázky. Kdy ukázat odpovědi jde změnit jen před hrou.
 # identifiers
 room.rules.done

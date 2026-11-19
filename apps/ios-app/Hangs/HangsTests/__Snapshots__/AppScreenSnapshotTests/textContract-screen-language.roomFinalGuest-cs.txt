@@ -1,0 +1,50 @@
+# texts
+Hra spolu
+Vyhrává
+Peťo
+Správně 2 z 2
+1.
+P
+Peťo (ty)
+2
+2.
+M
+Michal
+1
+Ocenění
+M
+Nejrychlejší správná odpověď
+Michal
+2.3 s, otázka 1
+Nejrychlejší správná odpověď
+Michal
+2.3 s, otázka 1
+P
+Nikdo jiný nevěděl
+Peťo
+Otázka 2
+Nikdo jiný nevěděl
+Peťo
+Otázka 2
+Otázky
+1
+Which planet has the most known moons?
+Saturn
+2
+What is the capital of Australia?
+Canberra
+Hostitel může spustit další hru se všemi.
+Sdílej
+Hotovo
+# identifiers
+room.close
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
+room.final.round.1
+room.final.round.2
+room.final.waitingForHost
+room.final.share
+room.done

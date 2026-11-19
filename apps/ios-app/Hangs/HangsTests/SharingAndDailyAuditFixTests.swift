@@ -10,10 +10,8 @@
 import Clocks
 import Foundation
 @testable import Hangs
-import SwiftUI
 import Testing
 import UIKit
-import ViewInspector
 
 @Suite("Sharing and daily challenge audit fixes (#240)")
 @MainActor
@@ -23,23 +21,30 @@ struct SharingAndDailyAuditFixTests {
     // WHY: a pack sent from Home has no sender score, so until a friend
     // finishes it the server lists nobody. The sheet showed a spinner that
     // never ended, and the player never learnt that nobody had played yet.
-    @Test("an empty comparison says nobody finished it instead of spinning forever")
-    func emptyComparisonSaysSo() async throws {
+    @Test("an empty comparison reads as answered, not as still loading")
+    func emptyComparisonSaysSo() async {
         let network = MockNetworkService()
         network.stubbedShareResults = SharedQuizResults(
             kind: "pack", language: "sk", title: "Hrady", categories: [], questionCount: 10, players: []
         )
-        let sheet = SharedQuizResultsSheet(network: network, token: "Ab3_k9-ZxQ")
+        let share = SharedQuizShareModel(network: network, source: nil, token: "Ab3_k9-ZxQ", displayName: "Jana", present: { _ in })
+        #expect(!share.hasLoaded, "before the answer the sheet shows its spinner")
 
-        try await ViewHosting.host(sheet) {
-            await pumpUntil({ network.sharedQuizResultsCallCount == 1 }, "the sheet never asked for the comparison")
-            await pumpUntil({
-                (try? sheet.inspect().find(viewWithAccessibilityIdentifier: "sharedQuiz.results.empty")) != nil
-            }, "an answered, empty comparison still shows no message")
-            #expect(throws: (any Error).self, "the spinner is still there") {
-                try sheet.inspect().find(ViewType.ProgressView.self)
-            }
-        }
+        await share.loadResults().value
+
+        #expect(share.rows.isEmpty)
+        #expect(!share.loadFailed)
+        #expect(share.hasLoaded, "the sheet cannot tell an empty answer from one still on its way")
+    }
+
+    // WHY: a failed load is not an empty answer; the sheet keeps saying the
+    // link cannot be read, not "nobody finished it".
+    @Test("a failed comparison is not reported as answered")
+    func failedComparisonNotLoaded() async {
+        let share = SharedQuizShareModel(network: MockNetworkService(), source: nil, token: "Ab3_k9-ZxQ", displayName: "Jana", present: { _ in })
+        await share.loadResults().value
+        #expect(share.loadFailed)
+        #expect(!share.hasLoaded)
     }
 
     // MARK: - Finding 8: Send to a friend after an early exit

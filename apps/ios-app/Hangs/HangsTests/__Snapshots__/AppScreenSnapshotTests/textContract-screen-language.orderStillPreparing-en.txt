@@ -1,0 +1,8 @@
+# texts
+
+Still preparing your pack
+It is taking longer than usual. When it's ready, you'll find it in My packs.
+Got it
+# identifiers
+orderPack.stillPreparing
+orderPack.gotIt

@@ -52,6 +52,19 @@
         private(set) var joinNames: [String] = []
         /// #235.2: hold any call in flight or put it on a bad network.
         let conditions = MockCallConditions<MockRoomCall>()
+        /// #240.9: the room each `createRoom` moved (nil = a new room).
+        private(set) var moves: [String?] = []
+        /// #240.9: the other player answers only on `othersAnswer()`.
+        var othersAnswerLater = false
+        /// #240.9: once everyone answered the question stays in grading until `finishGrading()`.
+        var holdGrading = false
+        /// #240.9: question numbers the judge could not grade (cancelled for everyone).
+        var cancelledQuestions: Set<Int> = []
+        /// #240.9: the awards on the final screen (Jana fastest on 1, the host alone on 2).
+        var awards: [RoomState.Award]? = [
+            RoomState.Award(kind: "fastest", participantId: MockRoomService.otherId, questionNumber: 1, ms: 2300),
+            RoomState.Award(kind: "only_one", participantId: MockRoomService.youId, questionNumber: 2, count: 1),
+        ]
 
         private var role: RoomViewModel.Role?
         private var players: [RoomState.Player] = []
@@ -94,10 +107,20 @@
             hostName: String,
             revealMode: RoomState.RevealMode,
             thinkingSeconds: Int,
-            readsAloud: Bool
+            readsAloud: Bool,
+            movingRoomId: String?
         ) async throws -> RoomCreated {
             try await conditions.simulateNetwork(.createRoom)
             if let createError { throw createError }
+            moves.append(movingRoomId)
+            if movingRoomId != nil, role == .host {
+                // #240.9: the same room, everyone still in it, a fresh game.
+                self.revealMode = revealMode
+                self.thinkingSeconds = thinkingSeconds
+                self.readsAloud = readsAloud
+                resetGame()
+                return RoomCreated(roomId: Self.roomId, joinToken: Self.token, sessionId: sessionId)
+            }
             role = .host
             self.revealMode = revealMode
             self.thinkingSeconds = thinkingSeconds
@@ -187,10 +210,29 @@
             }
             answers.append(answer)
             roundAnswers[Self.youId] = answer
+            if othersAnswerLater {
+                bump()
+                return state(full: true)
+            }
             // The other player always has answered by then: the question closes.
-            roundAnswers[Self.otherId] = script[index].otherAnswer
-            close()
+            othersAnswer()
             return state(full: true)
+        }
+
+        /// The other players' answers arrive: the question closes (or is graded first).
+        func othersAnswer() {
+            roundAnswers[Self.otherId] = script[index].otherAnswer
+            if holdGrading {
+                phase = .grading
+                bump()
+            } else {
+                close()
+            }
+        }
+
+        func finishGrading() {
+            guard phase == .grading else { return }
+            close()
         }
 
         func reportAway(roomId _: String, questionId: String) async throws {
@@ -232,6 +274,13 @@
             bump()
         }
 
+        /// A guest's host phone finished reading aloud: the answer time starts.
+        func hostOpens() {
+            guard phase == .reading else { return }
+            phase = .answering
+            bump()
+        }
+
         /// A guest's host moves on after a reveal.
         func hostMovesOn() {
             guard phase == .revealed else { return }
@@ -260,9 +309,29 @@
             bump()
         }
 
+        /// A guest's host taps "Play again" on the final screen.
+        func hostPlaysAgain() {
+            guard status == .finished else { return }
+            resetGame()
+        }
+
+        private func resetGame() {
+            status = .lobby
+            index = -1
+            phase = .reading
+            roundAnswers = [:]
+            closed = []
+            finishedReason = nil
+            holding = false
+            players = players.map { .init(participantId: $0.participantId, displayName: $0.displayName, color: $0.color, isHost: $0.isHost, score: 0) }
+            bump()
+        }
+
+        private var isCancelled: Bool { cancelledQuestions.contains(index + 1) }
+
         private func close() {
             let item = script[index]
-            for (pid, answer) in roundAnswers where answer.lowercased() == item.correctKey {
+            for (pid, answer) in roundAnswers where answer.lowercased() == item.correctKey && !isCancelled {
                 if let i = players.firstIndex(where: { $0.participantId == pid }) {
                     let p = players[i]
                     players[i] = .init(participantId: p.participantId, displayName: p.displayName, color: p.color, isHost: p.isHost, score: p.score + 1)
@@ -290,10 +359,12 @@
                 correctAnswer: revealed ? item.correctAnswer : nil,
                 explanation: revealed ? "Mock explanation." : nil,
                 results: revealed ? roundAnswers.sorted { $0.key < $1.key }.map { pid, answer in
+                    if isCancelled { return RoomState.Result(participantId: pid, answer: answer, result: "skipped", points: 0) }
                     let right = answer.lowercased() == item.correctKey
                     return RoomState.Result(participantId: pid, answer: answer, result: right ? "correct" : "incorrect", points: right ? 1 : 0)
                 } : nil,
-                paused: holding && phase == .revealed ? true : nil
+                paused: holding && phase == .revealed ? true : nil,
+                cancelled: revealed && isCancelled ? true : nil
             )
         }
 
@@ -328,7 +399,8 @@
                     RoomState.Rank(participantId: p.participantId, rank: i + 1, score: p.score, correctCount: Int(p.score))
                 } : nil,
                 rounds: finished ? closed : nil,
-                away: finished && role == .host ? [RoomState.Away(participantId: Self.otherId, questions: 1)] : nil
+                away: finished && role == .host ? [RoomState.Away(participantId: Self.otherId, questions: 1)] : nil,
+                awards: finished ? awards : nil
             )
         }
 

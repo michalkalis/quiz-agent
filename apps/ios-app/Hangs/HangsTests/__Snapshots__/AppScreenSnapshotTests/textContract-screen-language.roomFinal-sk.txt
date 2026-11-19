@@ -11,6 +11,21 @@ Michal (ty)
 J
 Jana
 1
+Ocenenia
+J
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+M
+Nikto iný nevedel
+Michal
+Otázka 2
+Nikto iný nevedel
+Michal
+Otázka 2
 Jana: mimo Trubba počas 1 otázky
 Vidíš to len ty.
 Otázky
@@ -20,13 +35,19 @@ Saturn
 2
 What is the capital of Australia?
 Canberra
+Ešte raz
+Zdieľaj
 Hotovo
 # identifiers
 room.close
 room.final.winner
 room.final.rank.1
 room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
 room.final.away
 room.final.round.1
 room.final.round.2
+room.playAgain
+room.final.share
 room.done

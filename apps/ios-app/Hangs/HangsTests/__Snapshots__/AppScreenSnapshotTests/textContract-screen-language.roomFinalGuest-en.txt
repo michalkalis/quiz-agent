@@ -1,0 +1,50 @@
+# texts
+Play together
+Winner
+Peťo
+2 of 2 correct
+1.
+P
+Peťo (you)
+2
+2.
+M
+Michal
+1
+Awards
+M
+Fastest right answer
+Michal
+2.3 s, question 1
+Fastest right answer
+Michal
+2.3 s, question 1
+P
+Nobody else knew
+Peťo
+Question 2
+Nobody else knew
+Peťo
+Question 2
+Questions
+1
+Which planet has the most known moons?
+Saturn
+2
+What is the capital of Australia?
+Canberra
+The host can start another game with everyone.
+Share
+Done
+# identifiers
+room.close
+room.final.winner
+room.final.rank.1
+room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
+room.final.round.1
+room.final.round.2
+room.final.waitingForHost
+room.final.share
+room.done

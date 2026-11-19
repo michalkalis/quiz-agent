@@ -10,6 +10,21 @@ Michal (ty)
 J
 Jana
 1
+Ocenenia
+J
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+Najrýchlejšia správna odpoveď
+Jana
+2.3 s, otázka 1
+M
+Nikto iný nevedel
+Michal
+Otázka 2
+Nikto iný nevedel
+Michal
+Otázka 2
 Jana: mimo Trubba počas 1 otázky
 Vidíš to len ty.
 Otázky
@@ -31,14 +46,20 @@ Canberra
 J
 Jana
 Sydney
+Ešte raz
+Zdieľaj
 Hotovo
 # identifiers
 room.final.winner
 room.final.rank.1
 room.final.rank.2
+room.final.award.fastest
+room.final.award.only_one
 room.final.away
 room.final.round.1
 room.final.round.1.answers
 room.final.round.2
 room.final.round.2.answers
+room.playAgain
+room.final.share
 room.done

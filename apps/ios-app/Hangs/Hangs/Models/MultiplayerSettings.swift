@@ -16,9 +16,11 @@ import Foundation
 /// the answer time and reading aloud can change mid-game (the server applies
 /// the time from the next question).
 nonisolated struct MultiplayerSettings: Codable, Equatable, Sendable {
-    var revealMode: RoomState.RevealMode = .round
+    /// #240.9 (founder 2026-11-18): answers show after every question, and
+    /// 15 s to answer, unless the host picked otherwise (`Choices`).
+    var revealMode: RoomState.RevealMode = .question
     /// Answer time before the server's typing/tap margin.
-    var thinkingSeconds = 30
+    var thinkingSeconds = 15
     /// The host's phone reads every question aloud.
     var readsAloud = true
 

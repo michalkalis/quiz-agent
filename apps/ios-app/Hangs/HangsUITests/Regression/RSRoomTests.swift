@@ -41,8 +41,8 @@ final nonisolated class RSRoomTests: XCTestCase {
         }
         XCTAssertTrue(room.qrCode.waitForExistence(timeout: 10), "RS-28: lobby QR code missing")
         XCTAssertTrue(room.player("p_other").exists, "RS-28: joined player missing from the lobby")
-        // #213.8: a game together reveals at the end by default; this run
-        // plays the per-question reveal, picked in the lobby's rules.
+        // #240.9: a game together reveals after each question by default;
+        // this run still picks it in the lobby's rules, so the sheet is driven.
         room.lobbyRules.tap()
         XCTAssertTrue(room.rulesReveal.waitForExistence(timeout: 5), "RS-28: rules sheet missing")
         room.rulesReveal.tap()
@@ -67,6 +67,10 @@ final nonisolated class RSRoomTests: XCTestCase {
         XCTAssertTrue(room.winner.waitForExistence(timeout: 10), "RS-28: final ranking missing")
         XCTAssertEqual(room.winner.label, "Michal", "RS-28: wrong winner")
         XCTAssertTrue(room.awayNote.exists, "RS-28: the host's leave-app line missing")
+        // #240.9: the end gives more than the winner a moment and a way to go on.
+        XCTAssertTrue(room.award("fastest").exists, "RS-28: awards missing")
+        XCTAssertTrue(room.playAgainButton.exists, "RS-28: Play again missing for the host")
+        XCTAssertTrue(room.shareButton.exists, "RS-28: share missing on the final ranking")
         room.doneButton.tap()
         XCTAssertTrue(room.togetherButton.waitForExistence(timeout: 5), "RS-28: the tab bar did not come back")
         RSFlow.assertAlive(app, "RS-28")
@@ -75,7 +79,7 @@ final nonisolated class RSRoomTests: XCTestCase {
     // MARK: RS-32 — The host sets the rules in the lobby; a guest only reads them
 
     // Regression guarded: the rules hold for every phone (#213.8). A first game
-    // starts from the group defaults (results at the end, 30 s), not the host's
+    // starts from the group defaults (#240.9: after each question, 15 s), not the host's
     // solo choices; a change shows at once; a guest sees the host's rules but
     // has no control to change them.
     @MainActor
@@ -94,8 +98,8 @@ final nonisolated class RSRoomTests: XCTestCase {
         }
         // #224: the lobby shows the rules as one row; the sheet changes them.
         XCTAssertTrue(room.lobbyRules.waitForExistence(timeout: 10), "RS-32: rules row missing in the host lobby")
-        XCTAssertTrue(room.spoken(room.lobbyRules).contains("At the end of the quiz"), "RS-32: reveal default is not at the end")
-        XCTAssertTrue(room.spoken(room.lobbyRules).contains("30 s"), "RS-32: answer time default is not 30 s")
+        XCTAssertTrue(room.spoken(room.lobbyRules).contains("After each question"), "RS-32: reveal default is not after each question")
+        XCTAssertTrue(room.spoken(room.lobbyRules).contains("15 s"), "RS-32: answer time default is not 15 s")
         room.lobbyRules.tap()
         XCTAssertTrue(room.rulesReveal.waitForExistence(timeout: 5), "RS-32: reveal is not editable in the lobby's sheet")
         XCTAssertTrue(room.rulesReadsAloud.exists, "RS-32: read-aloud switch missing")

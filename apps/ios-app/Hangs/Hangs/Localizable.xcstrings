@@ -124,6 +124,29 @@
         }
       }
     },
+    "%@ s, question %lld" : {
+      "comment" : "Hra spolu (#240.9): fastest award, seconds and the question number",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ s, question %2$lld"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ s, otázka %2$lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ s, otázka %2$lld"
+          }
+        }
+      }
+    },
     "%@ · credits never expire" : {
       "comment" : "Home plan card meta when a free user also holds pack credits: reset countdown plus that credits don't expire",
       "localizations" : {
@@ -241,6 +264,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld МИМО"
+          }
+        }
+      }
+    },
+    "%lld right in a row" : {
+      "comment" : "Hra spolu (#240.9): streak award",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld správně za sebou"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld správne za sebou"
           }
         }
       }
@@ -2610,6 +2650,40 @@
         }
       }
     },
+    "Answer time starts after reading" : {
+      "comment" : "Hra spolu (#240.9): the host's phone reads the question aloud, a bar under it moves",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas na odpověď začne po přečtení"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čas na odpoveď začne po prečítaní"
+          }
+        }
+      }
+    },
+    "Answered: %@" : {
+      "comment" : "Hra spolu (#240.9): who already answered the open question (names joined), never what",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověď mají: %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovedali: %@"
+          }
+        }
+      }
+    },
     "Answered: %lld/%lld" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -3008,6 +3082,23 @@
         }
       }
     },
+    "Awards" : {
+      "comment" : "Hra spolu (#240.9): section label on the final ranking",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocenění"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocenenia"
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "cs" : {
@@ -3373,6 +3464,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зміни діють з наступного питання. Коли показувати відповіді, можна змінити лише до початку гри."
+          }
+        }
+      }
+    },
+    "Checking the answers…" : {
+      "comment" : "Hra spolu (#240.9): everyone answered, the server grades the answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrolujeme odpovědi…"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrolujeme odpovede…"
           }
         }
       }
@@ -5778,6 +5886,23 @@
         }
       }
     },
+    "Fastest right answer" : {
+      "comment" : "Hra spolu (#240.9): award",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejrychlejší správná odpověď"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najrýchlejšia správna odpoveď"
+          }
+        }
+      }
+    },
     "FINISHING UP" : {
       "localizations" : {
         "cs" : {
@@ -8118,6 +8243,23 @@
         }
       }
     },
+    "Longest streak" : {
+      "comment" : "Hra spolu (#240.9): award, most right answers in a row",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejdelší série"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najdlhšia séria"
+          }
+        }
+      }
+    },
     "Looking for games on this Wi-Fi…" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -9223,6 +9365,40 @@
         }
       }
     },
+    "Nobody else knew" : {
+      "comment" : "Hra spolu (#240.9): award, the only player with the right answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikdo jiný nevěděl"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nikto iný nevedel"
+          }
+        }
+      }
+    },
+    "Not counted" : {
+      "comment" : "Hra spolu (#240.9): final list, a question that was cancelled for everyone",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepočítá se"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nepočíta sa"
+          }
+        }
+      }
+    },
     "Not enough questions" : {
       "comment" : "Alert title shown before a quiz starts when the corpus has fewer unseen questions than requested",
       "localizations" : {
@@ -10265,6 +10441,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ПАУЗА"
+          }
+        }
+      }
+    },
+    "Play again" : {
+      "comment" : "Hra spolu (#240.9): host button on the final ranking, a new game with the same players",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ještě jednou"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ešte raz"
           }
         }
       }
@@ -11500,6 +11693,23 @@
         }
       }
     },
+    "Question %lld" : {
+      "comment" : "Hra spolu (#240.9): award, the question it was on",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka %lld"
+          }
+        }
+      }
+    },
     "Question %lld of %lld" : {
       "comment" : "Accessibility label for the progress badge: current question number out of total",
       "localizations" : {
@@ -12488,6 +12698,23 @@
         }
       },
       "comment" : "#232: the pasted text was not a Trubbo quiz link"
+    },
+    "The host can start another game with everyone." : {
+      "comment" : "Hra spolu (#240.9): guest on the final ranking",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostitel může spustit další hru se všemi."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostiteľ môže spustiť ďalšiu hru so všetkými."
+          }
+        }
+      }
     },
     "The link also works for friends in another city." : {
       "comment" : "Hra spolu (#230): host lobby, one line under the share button",
@@ -15538,6 +15765,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "На цю тему вікторину не зробимо. Спробуй іншу."
+          }
+        }
+      }
+    },
+    "We couldn't check the answers to this question. It doesn't count for anyone." : {
+      "comment" : "Hra spolu (#240.9): the answer judge was down, the question was cancelled for everyone",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovědi na tuto otázku nešly zkontrolovat. Nepočítá se nikomu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpovede na túto otázku sa nedali skontrolovať. Nepočíta sa nikomu."
           }
         }
       }

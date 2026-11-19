@@ -66,9 +66,10 @@ struct RoomViewModelSettingsTests {
 
     @Test("A first game together uses the defaults for most players, not the host's solo choices")
     func defaultsIgnoreSolo() async {
-        // Founder 2026-10-29: results at the end, 30 s, read aloud. A host who
-        // plays solo muted, with per-question results and 5 s must still get
-        // the group defaults, and the room is created with them.
+        // #240.9 (founder 2026-11-18): answers after every question, 15 s,
+        // read aloud. A host who plays solo muted, with per-question results
+        // and 5 s must still get the group defaults, and the room is created
+        // with them.
         var solo = QuizSettings.default
         solo.answerRevealMode = .perQuestion
         solo.isMuted = true
@@ -77,11 +78,11 @@ struct RoomViewModelSettingsTests {
         await model.beginHosting()
         defer { model.stopAll() }
 
-        #expect(model.settings == MultiplayerSettings(revealMode: .round, thinkingSeconds: 30, readsAloud: true))
-        #expect(rooms.revealMode == .round)
-        #expect(rooms.thinkingSeconds == 30)
+        #expect(model.settings == MultiplayerSettings(revealMode: .question, thinkingSeconds: 15, readsAloud: true))
+        #expect(rooms.revealMode == .question)
+        #expect(rooms.thinkingSeconds == 15)
         #expect(rooms.readsAloud)
-        #expect(model.state?.thinkingSeconds == 30, "the lobby carries the rules for the guests' card")
+        #expect(model.state?.thinkingSeconds == 15, "the lobby carries the rules for the guests' card")
     }
 
     @Test("A change in the lobby reaches the room, is kept for the next game and is logged once from the lobby")
@@ -95,11 +96,11 @@ struct RoomViewModelSettingsTests {
         #expect(model.state?.thinkingSeconds == 45, "the room's reply is applied")
         #expect(store.load().thinkingSeconds == 45, "the next game starts with it")
 
-        await model.setRevealMode(.question)
-        #expect(model.settings.revealMode == .question)
+        await model.setRevealMode(.round)
+        #expect(model.settings.revealMode == .round)
         #expect(analytics.events == [
             .roomSettingsChanged(setting: .thinkingSeconds, value: "45", surface: .lobby),
-            .roomSettingsChanged(setting: .revealMode, value: "question", surface: .lobby),
+            .roomSettingsChanged(setting: .revealMode, value: "round", surface: .lobby),
         ])
     }
 
@@ -108,7 +109,7 @@ struct RoomViewModelSettingsTests {
         let model = await hostInLobby()
         defer { model.stopAll() }
 
-        await model.setThinkingSeconds(30)
+        await model.setThinkingSeconds(15)
         await model.setReadsAloud(true)
         #expect(rooms.settingsCalls.isEmpty)
         #expect(analytics.events.isEmpty, "a no-op would inflate the change counts")
@@ -119,12 +120,12 @@ struct RoomViewModelSettingsTests {
         let model = await hostInGame()
         defer { model.stopAll() }
 
-        await model.setThinkingSeconds(15)
+        await model.setThinkingSeconds(20)
         await model.setReadsAloud(false)
-        #expect(model.settings.thinkingSeconds == 15)
+        #expect(model.settings.thinkingSeconds == 20)
         #expect(!model.settings.readsAloud)
         #expect(analytics.events == [
-            .roomSettingsChanged(setting: .thinkingSeconds, value: "15", surface: .inGame),
+            .roomSettingsChanged(setting: .thinkingSeconds, value: "20", surface: .inGame),
             .roomSettingsChanged(setting: .readsAloud, value: "false", surface: .inGame),
         ])
     }
@@ -160,8 +161,8 @@ struct RoomViewModelSettingsTests {
         defer { model.stopAll() }
 
         #expect(!model.canChangeRevealMode)
-        await model.setRevealMode(.question)
-        #expect(model.settings.revealMode == .round)
+        await model.setRevealMode(.round)
+        #expect(model.settings.revealMode == .question)
         #expect(rooms.settingsCalls.isEmpty)
         #expect(analytics.events.isEmpty)
     }
@@ -173,8 +174,9 @@ struct RoomViewModelSettingsTests {
         rooms.settingsError = NetworkError.serverError(statusCode: 500, message: "boom")
 
         await model.setThinkingSeconds(60)
-        #expect(model.settings.thinkingSeconds == 30, "the host must see the rule the room plays with")
-        #expect(store.load().thinkingSeconds == 30)
+        #expect(model.settings.thinkingSeconds == 15, "the host must see the rule the room plays with")
+        #expect(store.load().thinkingSeconds == 15)
+        #expect(store.loadChoices().thinkingSeconds == nil, "a refused change is not a pick")
         #expect(model.errorMessage == RoomViewModel.genericMessage)
         #expect(!model.isSavingSettings)
         #expect(analytics.events.isEmpty)
@@ -208,5 +210,34 @@ struct RoomViewModelSettingsTests {
 
         defaults.set(Data(#"{"reveal_mode":"round","thinking_seconds":600,"reads_aloud":true}"#.utf8), forKey: "multiplayer_settings")
         #expect(store.load().thinkingSeconds == 60, "the server takes 3 to 60 s only")
+    }
+
+    // #240.9: new defaults must reach every host who never chose a rule, while
+    // a rule the host did pick stays theirs.
+    @Test("Only picked rules are kept: a lobby change keeps that one rule, the others follow the defaults")
+    func onlyPickedRulesKept() async {
+        let model = await hostInLobby()
+        defer { model.stopAll() }
+        await model.setThinkingSeconds(45)
+
+        let choices = store.loadChoices()
+        #expect(choices.thinkingSeconds == 45)
+        #expect(choices.revealMode == nil, "an untouched rule must follow a future default")
+        #expect(choices.readsAloud == nil)
+    }
+
+    @Test("Rules saved by older builds: the old defaults give way to the new ones, a real pick stays")
+    func olderBuildsRules() {
+        let defaults = UserDefaults(suiteName: "rules-old-\(UUID().uuidString)")!
+        let store = MultiplayerSettingsStore(defaults: defaults)
+
+        defaults.set(Data(#"{"reveal_mode":"round","thinking_seconds":30,"reads_aloud":true}"#.utf8), forKey: "multiplayer_settings")
+        #expect(store.load() == MultiplayerSettings(revealMode: .question, thinkingSeconds: 15, readsAloud: true))
+
+        defaults.set(Data(#"{"reveal_mode":"round","thinking_seconds":45,"reads_aloud":false}"#.utf8), forKey: "multiplayer_settings")
+        #expect(store.load() == MultiplayerSettings(revealMode: .question, thinkingSeconds: 45, readsAloud: false))
+
+        store.save(MultiplayerSettingsStore.Choices(revealMode: .round))
+        #expect(store.load().revealMode == .round, "a host who picks results at the end keeps it")
     }
 }

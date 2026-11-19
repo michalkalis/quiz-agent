@@ -10,12 +10,15 @@ import Foundation
 
 protocol RoomServiceProtocol: Sendable {
     /// Makes the host's idle session a room. `thinkingSeconds` 3–60.
+    /// #240.9: with `movingRoomId` the host's room moves to this session with
+    /// everyone in it (same id, link and QR): play again, or other content.
     func createRoom(
         sessionId: String,
         hostName: String,
         revealMode: RoomState.RevealMode,
         thinkingSeconds: Int,
-        readsAloud: Bool
+        readsAloud: Bool,
+        movingRoomId: String?
     ) async throws -> RoomCreated
     /// Games waiting to start on the caller's Wi-Fi.
     func nearbyRooms() async throws -> [NearbyRoom]

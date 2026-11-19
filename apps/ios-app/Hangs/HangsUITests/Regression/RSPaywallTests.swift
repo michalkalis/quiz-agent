@@ -127,6 +127,31 @@ final nonisolated class RSPaywallTests: XCTestCase {
         assertNothingGranted(app, paywall, "RS-40")
     }
 
+    // MARK: RS-45 — The limit reached on an answer: verdict, round end, then paywall
+
+    // Regression guarded (#240.9, founder 2026-11-18): the server grades the
+    // answer that reaches the monthly limit and sends its verdict with the
+    // 429, but the app dropped it and showed only the paywall, so the player
+    // never learnt the last answer or the round's score.
+    @MainActor
+    func testRS45LimitMidRoundShowsVerdictThenRoundEndThenPaywall() async throws {
+        let app = RSFlow.launch(["--ui-test-quota-mid-round"])
+        let result = try await RSFlow.reachResult(app, client: UITestClient(), scenario: "RS-45")
+        let paywall = PaywallPage(app: app)
+
+        XCTAssertTrue(result.verdict.exists, "RS-45: the last answer's verdict is missing")
+        XCTAssertFalse(paywall.closeButton.exists, "RS-45: the paywall covered the verdict")
+
+        let roundEnd = RoundEndPage(app: app)
+        roundEnd.waitForScreen(timeout: 15, scenario: "RS-45")
+        XCTAssertFalse(paywall.closeButton.exists, "RS-45: the paywall covered the end of the round at once")
+
+        paywall.waitForPaywall(timeout: 20)
+        paywall.tapClose()
+        XCTAssertTrue(roundEnd.homeButton.waitForExistence(timeout: 5), "RS-45: closing the paywall did not land on the end of the round")
+        RSFlow.assertAlive(app, "RS-45")
+    }
+
     /// The paywall is still usable and nothing was unlocked: no success branch,
     /// the CTA can be tapped again, and after ✕ the free wall comes back on the
     /// next start.
@@ -155,7 +180,8 @@ final nonisolated class RSPaywallTests: XCTestCase {
         let deadline = Date().addingTimeInterval(3)
         while Date() < deadline {
             if app.descendants(matching: .any)["paywall.activating.headline"].exists
-                || app.descendants(matching: .any)["paywall.success.headline"].exists {
+                || app.descendants(matching: .any)["paywall.success.headline"].exists
+            {
                 return
             }
             for host in [app, springboard] {

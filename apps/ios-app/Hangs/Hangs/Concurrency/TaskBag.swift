@@ -42,6 +42,7 @@ enum TaskKey: Hashable, Sendable {
     case quizEndPrompt // #188 G1/G3: the error / set-end line, then that screen's command window
     case quickSkipNote // #224.8: the "Skipped, correct: X" note leaves by itself
     case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
+    case roundEndPaywall // #240.9: the paywall after a round the monthly limit ended
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

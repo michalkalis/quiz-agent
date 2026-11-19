@@ -3144,6 +3144,23 @@
         }
       }
     },
+    "Best run: %lld in a row" : {
+      "comment" : "End of round, the line it opens with: the longest run of right answers this round",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejdelší série: %lld v řadě"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najdlhšia séria: %lld za sebou"
+          }
+        }
+      }
+    },
     "Best streak" : {
       "comment" : "Profile stat card (#213.4) caption",
       "localizations" : {
@@ -6948,6 +6965,23 @@
         }
       }
     },
+    "Hardest one you got: %@" : {
+      "comment" : "End of round, the line it opens with: the answer to the hardest question the player got right",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejtěžší uhodnutá: %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najťažšia uhádnutá: %@"
+          }
+        }
+      }
+    },
     "Hearing you…" : {
       "comment" : "Question-screen listen bar, large status once the driver's speech is heard (#185 F2)",
       "localizations" : {
@@ -9395,6 +9429,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nepočíta sa"
+          }
+        }
+      }
+    },
+    "None right this time. All the answers are below." : {
+      "comment" : "End of round, the line it opens with when no answer was right",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentokrát nic nevyšlo. Všechny odpovědi jsou níže."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentoraz nič nevyšlo. Všetky odpovede sú nižšie."
           }
         }
       }

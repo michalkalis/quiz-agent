@@ -91,6 +91,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-41 | `RSRoomTests.testRS41…` | `/network/condition?text=offline` fails every mock call and the room's polls |
 | RS-42 | `RSRoomTests.testRS42…` | Home button press; the host moves on over the test listener while the guest is away |
 | RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
+| RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the answer submit throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -1056,6 +1057,25 @@ questions, tap `completion.home`.
 after Play Again with choices on screen (an adult round would bring the adult
 mock question); `completion.playAgain` and `completion.home` present,
 `completion.sendToFriend` absent; back Home `home.startFamily`. App alive.
+
+---
+
+## RS-45: The monthly limit reached on an answer shows its verdict and the round end first
+
+**Type:** XCUITest (`RSPaywallTests`). #240.9 (founder 2026-11-18).
+
+**Hypothesis:** when an answer reaches the monthly limit, the server grades
+it and sends the verdict with its 429; the player sees that verdict, then the
+end of the round, and only then the paywall, which closes back onto the end
+of the round (the app used to drop the verdict and show only the paywall).
+
+**Steps:** launch with `--ui-test-quota-mid-round`; start a quiz, record
+"Paris" over the test listener and confirm; wait for the round end; wait for
+the paywall; tap `paywall-close-x-button`.
+
+**Asserts:** `result.verdict` present with no paywall; `completion.highlight`
+appears with no paywall; the paywall follows (purchase or offline branch);
+after ✕ `completion.home` is on screen. App alive.
 
 ---
 

@@ -387,6 +387,14 @@ final class QuizViewModel: ObservableObject {
         set { quizTimersController.autoAdvanceCountdown = newValue }
     }
 
+    /// #240.9: the result's countdown length for its fill; while the verdict
+    /// is still spoken, the short pause that will follow it.
+    var autoAdvanceTotal: Int {
+        if isAwaitingSpokenVerdict { return Config.pauseAfterSpokenVerdict }
+        let running = quizTimersController.autoAdvanceTotal
+        return running > 0 ? running : settings.autoAdvanceDelay
+    }
+
     /// Thinking time countdown (visible on QuestionView before auto-recording)
     /// — see `QuizTimersController.thinkingTimeCountdown`.
     var thinkingTimeCountdown: Int {
@@ -523,6 +531,11 @@ final class QuizViewModel: ObservableObject {
     /// `quizStats.currentStreak` is already 0 by the time ResultView renders an
     /// incorrect answer (54.11).
     @Published var streakBeforeLastAnswer: Int = 0
+
+    /// #240.9: the result's verdict is being spoken; its countdown starts
+    /// when it ends. The result shows the countdown held full meanwhile, and
+    /// a tap or STAY holds it as it would the countdown.
+    @Published var isAwaitingSpokenVerdict = false
 
     // MARK: - Quiz Settings
 
@@ -687,6 +700,10 @@ final class QuizViewModel: ObservableObject {
     /// Simple Bool flag to prevent concurrent proceedToNextQuestion calls (#100).
     /// Safe because this class is @MainActor — all access is serialized on the main thread.
     private var isAdvancing = false
+
+    /// #240.9: the monthly limit ended this round on its last answer. The
+    /// verdict and the end of the round show first; the paywall follows.
+    var roundEndQuotaLimit: QuotaLimitError?
 
     /// #186 step 1: owner of the current `AttemptID` — replaces the #79
     /// `submissionEpoch`, which only the committed-voice-transcript path ever
@@ -1709,6 +1726,7 @@ final class QuizViewModel: ObservableObject {
         if let networkError = error as? NetworkError,
            case let .quotaLimitReached(limitError) = networkError
         {
+            if await finishRoundWithLastVerdict(limitError) { return }
             // `upgrade_available: false` means the server already knows the user
             // holds the only plan and spent its allowance: a resync cannot change
             // that, and "subscription just synced, try again" would loop forever.
@@ -2595,32 +2613,21 @@ final class QuizViewModel: ObservableObject {
         // only); this refresh tears the previous question's listener down.
         refreshCommandWindow()
 
-        // 59.7 Bug B: start the auto-advance countdown immediately so the countdown bar is
-        // visible the moment the result appears — previously it ran feedback audio first and
-        // only started the countdown afterwards, so the bar sat invisible for 3-5s. Feedback
-        // audio now plays concurrently (async let) while the countdown runs. The configured
-        // delay (default 8s) normally exceeds the feedback length, so playback isn't cut off.
-        Task {
+        // #240.9: the countdown follows the spoken verdict (a short pause
+        // after it ends) instead of running 8 s over it. 59.7 Bug B (the bar
+        // invisible while the verdict played) stays fixed: the result shows
+        // the countdown held full until the verdict ends. The wait runs under
+        // `.autoAdvance`, so a pause or leaving the result ends it (the
+        // verdict itself plays on); the countdown then takes the key over.
+        taskBag.add(Task {
             // #186: a result already left behind (Next tapped before this ran)
             // must not start talking or counting over the next question.
             guard attemptLedger.ownsQuestion(resultOwner, "resultFeedback.start") else { return }
-            async let feedbackDuration: TimeInterval = {
-                guard let audioInfo = response.audio else { return 0.0 }
-                // Prioritize base64 (enhanced feedback) over URL (generic feedback)
-                if let base64 = audioInfo.feedbackAudioBase64 {
-                    return await audioDeviceState.playFeedbackAudioBase64(base64)
-                } else if let feedbackUrl = audioInfo.feedbackUrl {
-                    return await audioDeviceState.playFeedbackAudio(from: feedbackUrl)
-                }
-                return 0.0
-            }()
-
-            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
-
-            // Keep the feedback audio playing to completion (and surface any failure log)
-            // before this task ends; the countdown above is already running concurrently.
-            _ = await feedbackDuration
-        }
+            let countdown = await playVerdictThenPace(response.audio)
+            guard !Task.isCancelled,
+                  attemptLedger.ownsQuestion(resultOwner, "resultFeedback.countdown") else { return }
+            await quizTimersController.startAutoAdvanceCountdown(duration: countdown, audioDuration: 0)
+        }, key: .autoAdvance)
     }
 
     /// Proceed to next question or finish quiz — the per-question flow's
@@ -2709,13 +2716,16 @@ final class QuizViewModel: ObservableObject {
         audioDeviceState.stopSilenceDetectionListening()
         // #205: the daily round end has no "again" to listen for and says
         // nothing (the crowd lines rode the answers' feedback).
+        let quotaLimit = roundEndQuotaLimit
+        roundEndQuotaLimit = nil
         if endsOnRecap || activeDaily != nil {
             // Release the audio session so Spotify/podcasts resume full volume.
             audioService.deactivateSession()
+            if let quotaLimit { scheduleRoundEndPaywall(quotaLimit) }
         } else {
             // #188 G3: the score screen says the score first (it releases the
             // session once it has spoken).
-            announceSetFinished()
+            announceSetFinished(thenPaywall: quotaLimit)
         }
 
         let finalScore = score

@@ -29,6 +29,9 @@ final class QuizTimersController: ObservableObject {
 
     // Auto-advance countdown for ResultView binding (single source of truth)
     @Published var autoAdvanceCountdown: Int = 0
+    /// #240.9: the length of the running countdown, which is no longer always
+    /// the Settings pause (a spoken verdict gets a short one), for its fill.
+    @Published var autoAdvanceTotal: Int = 0
     // Thinking time countdown (visible on QuestionView before auto-recording)
     @Published var thinkingTimeCountdown: Int = 0
     /// #131 Track B: seconds left of the auto-stop recording window. The founder
@@ -367,6 +370,7 @@ final class QuizTimersController: ObservableObject {
         // `taskBag.add` cancels any previous task under .autoAdvance before
         // installing the new one, so double-fires can't leak a runner.
         autoAdvanceCountdown = duration
+        autoAdvanceTotal = duration
         let owner = attemptLedger.current
 
         let task = Task { [weak self] in

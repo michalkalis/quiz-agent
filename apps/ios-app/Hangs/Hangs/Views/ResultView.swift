@@ -74,8 +74,9 @@ struct ResultView: View {
                 ResultFooter(
                     autoAdvanceActive: autoAdvanceActive,
                     isPaused: viewModel.isPaused,
-                    countdownRemaining: viewModel.autoAdvanceCountdown,
-                    countdownTotal: viewModel.settings.autoAdvanceDelay,
+                    countdownRemaining: viewModel.isAwaitingSpokenVerdict
+                        ? viewModel.autoAdvanceTotal : viewModel.autoAdvanceCountdown,
+                    countdownTotal: viewModel.autoAdvanceTotal,
                     onNext: { viewModel.continueToNext() },
                     onStay: { viewModel.pauseQuiz() },
                     onResume: { viewModel.resumeAutoAdvance() }
@@ -156,7 +157,7 @@ struct ResultView: View {
             categoryIdentifier: "question.category",
             isCalm: true
         ) {
-            ResultVerdictLabel(verdict: verdict)
+            ResultVerdictLabel(verdict: verdict, streak: viewModel.resultStreak)
         } content: {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 ResultAnswerPanel(
@@ -292,13 +293,13 @@ struct ResultView: View {
     // MARK: - Footer state
 
     /// #113 S6a: "active" = not paused && still ticking (no Settings toggle).
+    /// #240.9: also while the verdict is spoken (the countdown waits for it).
     private var autoAdvanceActive: Bool {
-        !viewModel.isPaused && viewModel.autoAdvanceCountdown > 0
+        !viewModel.isPaused && (viewModel.autoAdvanceCountdown > 0 || viewModel.isAwaitingSpokenVerdict)
     }
 
     private func pauseAutoAdvanceIfActive() {
-        guard !viewModel.isPaused,
-              viewModel.autoAdvanceCountdown > 0 else { return }
+        guard autoAdvanceActive else { return }
         viewModel.pauseQuiz()
     }
 

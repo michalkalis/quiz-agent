@@ -91,6 +91,24 @@
                 ))
             }
 
+            // #240.9 RS-45: the monthly limit reached on the first answer; the
+            // server's 429 carries that answer's verdict.
+            if CommandLine.arguments.contains("--ui-test-quota-mid-round") {
+                let limit = NetworkError.quotaLimitReached(QuotaLimitError(
+                    error: "quota_limit_reached",
+                    questionsUsed: 5,
+                    questionsLimit: 5,
+                    resetsAt: "2099-01-01T08:00:00.000Z",
+                    upgradeAvailable: true,
+                    evaluation: Evaluation(
+                        userAnswer: "Paris", result: .correct, points: 1,
+                        correctAnswer: "Paris", questionId: nil, explanation: nil
+                    )
+                ))
+                network.submitTextInputError = limit
+                network.submitVoiceAnswerError = limit
+            }
+
             // #123 Track B: seed the Home entitlement card's key visuals for the
             // screenshot-verify sweep. /usage is mocked, so stub the payload (or
             // stall it) instead of hitting a backend. Combine with `--ui-test`.

@@ -109,6 +109,26 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
     "voice_command": frozenset({"command", "phase"}),
+    # One per closed voice-command listening window, for the on-device vs
+    # cloud recognizer decision: engine = speech | dictation, language = the
+    # command language, screen = question | confirmation | noAnswer | error |
+    # setEnd; counts (transcripts while open, matched commands, unmatched
+    # finished utterances, late = results after the window closed, cut_off =
+    # an utterance still in progress when the window ended) and
+    # first_transcript_ms (window live -> first result; absent = none came).
+    "voice_command_window": frozenset(
+        {
+            "engine",
+            "language",
+            "screen",
+            "transcripts",
+            "matched",
+            "unmatched",
+            "late",
+            "cut_off",
+            "first_transcript_ms",
+        }
+    ),
     # #237: the player turned voice commands on (source = onboarding |
     # listen_bar) and what iOS answered the speech-recognition request
     # (result = granted | denied).

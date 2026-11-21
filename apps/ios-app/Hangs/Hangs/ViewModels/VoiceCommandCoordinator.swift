@@ -116,6 +116,9 @@ final class VoiceCommandCoordinator: ObservableObject {
     var utteranceBeganDuringRead = false
     /// The per-utterance numbers for the "voice cmd utterance" log.
     var utteranceLog = CommandUtteranceLog()
+    /// The listening window in progress, for `voice_command_window`
+    /// (+WindowReport); `nil` while no listener is live.
+    var commandWindowStats: CommandWindowStats?
 
     /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer

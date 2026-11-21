@@ -82,6 +82,7 @@ extension VoiceCommandCoordinator {
 
         guard let screen = currentCommandScreen else {
             utteranceOutcome = "windowClosed"
+            noteWindowTranscript(windowOpen: false, isFinal: transcript.isFinal)
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 SentryLog.info(
                     "voice cmd transcript dropped — window closed",
@@ -93,6 +94,7 @@ extension VoiceCommandCoordinator {
             }
             return
         }
+        noteWindowTranscript(windowOpen: true, isFinal: transcript.isFinal)
 
         // #208.7 echo guard (+Reading): the read's words are stripped before
         // matching. Nothing left = the app heard itself; drop it silently.
@@ -150,6 +152,7 @@ extension VoiceCommandCoordinator {
             if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
                 emitEarcon(.commandAck) // acknowledge the recognized cancel
                 noteMatchedForFeedback() // #122: visual twin of the ack earcon
+                noteWindowCommandMatched()
                 trackAnalytics(.voiceCommand(command: .stop, phase: String(describing: screen)))
                 abortSkipUndoWindow()
                 return
@@ -193,6 +196,9 @@ extension VoiceCommandCoordinator {
             // #185 5.1: a finished non-command utterance on the answer sheet is
             // the driver's new answer — understood, so no "didn't get that" glow.
             let isNewAnswer = onAnswerSheet && transcript.isFinal && hasContent && !commandFiredThisUtterance
+            if transcript.isFinal, !isNewAnswer, !commandFiredThisUtterance {
+                noteWindowUtteranceUnmatched()
+            }
             if isNewAnswer {
                 spokenAnswer = transcript.text
             } else if !underEchoGuard { // over the read, a miss is most likely the app's own voice
@@ -305,6 +311,7 @@ extension VoiceCommandCoordinator {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         attemptLedger.record(.command, command.rawValue, currentCommandScreen.map { String(describing: $0) })
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
+        noteWindowCommandMatched()
         if let screen = currentCommandScreen {
             trackAnalytics(.voiceCommand(command: command, phase: String(describing: screen)))
         }

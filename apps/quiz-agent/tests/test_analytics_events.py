@@ -251,6 +251,38 @@ async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
     assert cleaned == {"source": "listen_bar", "result": "denied"}
 
 
+async def test_voice_command_window_keeps_counts_and_never_text():
+    # One report per listening window decides whether sk / cs / uk stay on the
+    # on-device recognizer: counts and one latency per language and engine.
+    # What was heard must never be stored, whatever key a build sends it under.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_command_window"],
+        {
+            "engine": "dictation",
+            "language": "sk",
+            "screen": "question",
+            "transcripts": 0,
+            "matched": 0,
+            "unmatched": 0,
+            "late": 1,
+            "cut_off": 0,
+            "first_transcript_ms": None,
+            "transcript": "zopakuj otázku",
+            "heard": "zopakuj",
+        },
+    )
+    assert cleaned == {
+        "engine": "dictation",
+        "language": "sk",
+        "screen": "question",
+        "transcripts": 0,
+        "matched": 0,
+        "unmatched": 0,
+        "late": 1,
+        "cut_off": 0,
+    }
+
+
 async def test_sign_in_prompt_events_keep_only_kind_and_outcome():
     # #217.4: how many buyers of each kind (Plus, credit, custom pack) save their
     # purchase by signing in; nothing about the purchase or the account rides along.

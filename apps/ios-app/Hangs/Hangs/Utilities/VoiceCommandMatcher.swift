@@ -112,13 +112,21 @@ enum VoiceCommandMatcher {
         // volatile when the hypothesis CHANGES, never on a timer — so the settle
         // is the real gate and the re-delivery is an accelerator.
         let content = contentTokens(tokens, language: language, on: screen)
+        // The word for "question" may ride along with a command about the
+        // question ("zopakuj otázku", "ďalšia otázka", "next question"): it is
+        // set aside before the cap, and the utterance still needs a command
+        // word that takes it. Alone, beside another content word, or beside
+        // "štart" / a sheet word it changes nothing — those stay inert.
+        let questionWords = content.intersection(VoiceCommandLexicon.questionWords(for: language))
+        let commandWords = content.subtracting(questionWords)
         // Filler only is never a command (#185: a lone "ešte" must not score as
         // a cut-off "ešte raz"), and only content words are scored.
-        guard !content.isEmpty else { return nil }
-        if content.count > maxContentTokens {
-            return agreeingCommand(content, on: screen, isFinal: isFinal, language: language)
-        }
-        return matchOneWord(Array(content), on: screen, isFinal: isFinal, language: language)
+        guard !commandWords.isEmpty else { return nil }
+        let command = commandWords.count > maxContentTokens
+            ? agreeingCommand(commandWords, on: screen, isFinal: isFinal, language: language)
+            : matchOneWord(Array(commandWords), on: screen, isFinal: isFinal, language: language)
+        guard questionWords.isEmpty || command.map(VoiceCommandLexicon.takesQuestionWord) == true else { return nil }
+        return command
     }
 
     /// #185: several content words, each of which is on its own a confident
@@ -409,6 +417,7 @@ enum VoiceCommandMatcher {
     /// Replace every run of a lexicon phrase's words with its single token.
     private static func joinPhrases(_ tokens: [String], language: CommandLanguage) -> [String] {
         let all = VoiceCommandLexicon.phrases(for: language) + VoiceCommandLexicon.buttonPhrases(for: language)
+            + VoiceCommandLexicon.questionPhrases(for: language)
         let phrases = all.map { phrase in
             (words: phrase.words.map { phoneticFold($0, language: language) }, token: phrase.token)
         }

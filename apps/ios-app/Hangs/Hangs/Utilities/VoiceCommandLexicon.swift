@@ -273,43 +273,4 @@ enum VoiceCommandLexicon {
     ) -> Bool {
         undoCancelVariants(for: language).contains(token)
     }
-
-    /// The raw spoken vocabulary (real diacritics, no folding) handed to a
-    /// recognizer that honors `AnalysisContext.contextualStrings` (#120 —
-    /// DictationTranscriber does, SpeechTranscriber ignores them). Biasing the
-    /// engine toward these exact words is a structurally better defence than
-    /// spelling variants + edit distance, so every command form we accept is
-    /// listed, in its display spelling.
-    static func contextualVocabulary(for language: CommandLanguage) -> [String] {
-        commandVocabulary(for: language) + buttonVocabulary(for: language)
-    }
-
-    private static func commandVocabulary(for language: CommandLanguage) -> [String] {
-        switch language {
-        case .english:
-            return [
-                "start", "ok", "okay", "confirm", "yes", "yeah", "next", "again", "retry", "no", "wrong",
-                "one more time", "once more", "try again", "repeat", "skip", "pass", "stop", "wait", "cancel", "pause",
-                "home",
-            ]
-        case .slovak:
-            return [
-                "štart", "ok", "okej", "potvrď", "áno", "hej", "ďalej", "pokračuj",
-                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "ďalšia", "preskoč", "vynechaj",
-                "stop", "počkaj", "zruš", "pauza", "domov",
-            ]
-        case .czech:
-            return [
-                "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
-                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "další", "přeskoč", "vynech",
-                "stop", "počkej", "zruš", "pauza", "domů",
-            ]
-        case .ukrainian:
-            return [
-                "старт", "ок", "окей", "підтверди", "так", "добре", "далі", "продовжуй",
-                "ще раз", "знову", "ні", "неправильно", "повтори", "пропусти", "наступне",
-                "стоп", "зачекай", "почекай", "скасуй", "пауза", "додому",
-            ]
-        }
-    }
 }

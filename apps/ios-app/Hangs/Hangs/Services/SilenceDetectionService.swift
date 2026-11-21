@@ -183,6 +183,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     func startListening() async
     func stopListening()
 
+    /// The command screen the next (or the live) window listens for, so the
+    /// recognizer is biased toward that screen's commands only. `nil` = no
+    /// window: the whole grammar.
+    func setCommandScreen(_ screen: VoiceCommandScreen?)
+
     /// #175: make the command recognizer match the quiz language. No-op when
     /// it already does; deferred (retried at the next window) while a
     /// listening window is open. Called before every window start. Never
@@ -264,6 +269,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // reach an extension in another file.
     var audioEngine: AVAudioEngine?
     var analyzer: SpeechAnalyzer?
+    /// The command screen the recognizer is biased for (`setCommandScreen`),
+    /// and the list the live analyzer last received, so an unchanged screen
+    /// costs no `setContext` call.
+    var commandScreen: VoiceCommandScreen?
+    var appliedContextualStrings: [String]?
     var analyzerTask: Task<Void, Never>?
     var detectionTask: Task<Void, Never>?
     var transcriptionTask: Task<Void, Never>?

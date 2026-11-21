@@ -162,6 +162,8 @@ extension VoiceCommandCoordinator {
                     stopSilenceDetectionListening()
                 }
             }
+            // The recognizer is biased toward this screen's commands only.
+            silenceDetectionService.setCommandScreen(screen)
             await startSilenceDetectionListening()
         } else {
             stopSilenceDetectionListening()
@@ -209,6 +211,10 @@ extension VoiceCommandCoordinator {
     /// the capture phase to `.armed → .listening`.
     func startCommandConsumer() {
         let service = silenceDetectionService
+        if let screen = currentCommandScreen {
+            service.setCommandScreen(screen)
+            openCommandWindowReport(on: screen)
+        }
         applyCaptureEvent(.arm)
         applyCaptureEvent(.listen)
 
@@ -258,6 +264,7 @@ extension VoiceCommandCoordinator {
         taskBag.cancel(.commandListener)
         taskBag.cancel(.commandSpeechEvents)
         flushUtteranceLog(screen: currentCommandScreen, outcome: "listenerStopped") // #208.7
+        closeCommandWindowReport()
         // #208.7: a listener kept up through a read is gone — nothing may
         // start a new one under the clip (`mayCaptureAudio`).
         endQuestionRead()

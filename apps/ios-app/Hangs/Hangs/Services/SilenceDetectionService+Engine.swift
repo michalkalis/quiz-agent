@@ -89,20 +89,11 @@ extension SilenceDetectionService {
             // Vocabulary biasing (#120): fed ONLY to an engine that declares the
             // capability — DictationTranscriber honors contextual strings,
             // SpeechTranscriber ignores them (adapter returns nil; no call at all).
-            // Failure is non-fatal: an unbiased recognizer still recognizes, so log
-            // and continue rather than degrade to buttons.
-            if let vocabulary = transcriberEngine.contextualStrings {
-                let context = AnalysisContext()
-                context.contextualStrings = [.general: vocabulary]
-                do {
-                    try await speechAnalyzer.setContext(context)
-                } catch {
-                    SentryLog.warn(
-                        "contextual strings rejected",
-                        category: .voice,
-                        attributes: ["error": error.localizedDescription, "count": vocabulary.count]
-                    )
-                }
+            // Only the words that are commands on the window's screen.
+            appliedContextualStrings = nil
+            if let vocabulary = transcriberEngine.contextualStrings(on: commandScreen) {
+                appliedContextualStrings = vocabulary
+                await Self.applyContextualStrings(vocabulary, to: speechAnalyzer)
             }
 
             guard let bestFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
@@ -333,6 +324,35 @@ extension SilenceDetectionService {
     nonisolated static let answerOnlyFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false
     )!
+
+    func setCommandScreen(_ screen: VoiceCommandScreen?) {
+        commandScreen = screen
+        // A live analyzer is re-biased in place — Apple documents no
+        // restriction on `setContext` mid-analysis, unconfirmed on device; a
+        // rejection only logs. One not built yet reads `commandScreen`.
+        guard let analyzer,
+              let vocabulary = transcriberEngine.contextualStrings(on: screen),
+              vocabulary != appliedContextualStrings else { return }
+        appliedContextualStrings = vocabulary
+        Task { await Self.applyContextualStrings(vocabulary, to: analyzer) }
+    }
+
+    /// Vocabulary biasing (#120). Failure is non-fatal: an unbiased
+    /// recognizer still recognizes, so log and continue rather than degrade
+    /// to buttons.
+    private static func applyContextualStrings(_ vocabulary: [String], to analyzer: SpeechAnalyzer) async {
+        let context = AnalysisContext()
+        context.contextualStrings = [.general: vocabulary]
+        do {
+            try await analyzer.setContext(context)
+        } catch {
+            SentryLog.warn(
+                "contextual strings rejected",
+                category: .voice,
+                attributes: ["error": error.localizedDescription, "count": vocabulary.count]
+            )
+        }
+    }
 
     /// The optional command-gate SpeechDetector (`VADTuning.commandGateSensitivity`).
     private static func makeSpeechDetector() -> SpeechDetector? {

@@ -259,7 +259,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
-    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> {
+        let stream = commandChannel.makeStream()
+        redeliverDrainedFinal() // +Drain: a final the last teardown finished
+        return stream
+    }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
     func makeInputLevelStream() -> AsyncStream<InputLevel> { inputLevelChannel.makeStream() }
 
@@ -278,6 +282,18 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     var detectionTask: Task<Void, Never>?
     var transcriptionTask: Task<Void, Never>?
     var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+    /// The listening window results belong to (+Drain): bumped at every start
+    /// and stop, so a result of a window already torn down is told apart.
+    var listeningWindow = 0
+    /// A stopped window's analyzer finishing what it already heard (+Drain),
+    /// its last final, and that final kept for the next window on the same
+    /// screen.
+    var drainTask: Task<Void, Never>?
+    /// The live analyzer has started on this window's audio; one that never
+    /// did has nothing to finalize and is cancelled as before.
+    var analyzerStarted = false
+    var drainedFinal: CommandTranscript?
+    var pendingDrainedFinal: DrainedFinal?
     /// #185: the tap's per-buffer levels, drained on the main actor into the VAD.
     var levelTask: Task<Void, Never>?
     var levelContinuation: AsyncStream<InputLevelSample>.Continuation?

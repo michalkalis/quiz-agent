@@ -54,6 +54,8 @@ After "Next": next question, no explanation
 trubbo
 Settings
 Start
+# navigation title
+Play
 # identifiers
 home.categories.chooseSeveral
 home.categoryDeck

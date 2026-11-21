@@ -54,6 +54,8 @@ Po „Další“ hned další otázka, bez vysvětlení
 trubbo
 Nastavení
 Start
+# navigation title
+Hraj
 # identifiers
 home.categories.chooseSeveral
 home.categoryDeck

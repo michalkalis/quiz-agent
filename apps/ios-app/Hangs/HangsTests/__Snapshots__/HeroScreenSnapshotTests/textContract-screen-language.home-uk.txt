@@ -54,6 +54,8 @@ Random
 trubbo
 Налаштування
 Старт
+# navigation title
+Грай
 # identifiers
 home.categories.chooseSeveral
 home.categoryDeck

@@ -54,6 +54,8 @@ Po „Ďalšia“ hneď ďalšia otázka, bez vysvetlenia
 trubbo
 Nastavenia
 Štart
+# navigation title
+Hraj
 # identifiers
 home.categories.chooseSeveral
 home.categoryDeck

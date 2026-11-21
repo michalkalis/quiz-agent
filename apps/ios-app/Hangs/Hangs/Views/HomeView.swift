@@ -25,6 +25,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.locale) private var locale
     @State private var showingCategoryPicker = false
     @ObservedObject var viewModel: QuizViewModel
     /// #141: injected from ContentView so Home can list the account's custom
@@ -112,7 +113,7 @@ struct HomeView: View {
             }
             ToolbarItem(placement: .topBarTrailing) { settingsButton }
         }
-        .navigationTitle("Play")
+        .navigationTitle(Self.navigationTitle(in: locale))
         .navigationBarTitleDisplayMode(.large)
         .background(Theme.Hangs.Colors.bg.ignoresSafeArea())
         .onAppear {
@@ -139,6 +140,16 @@ struct HomeView: View {
                 includeLocalQuestions: $viewModel.settings.includeLocalQuestions
             )
         }
+    }
+
+    /// The inline title that replaces the logo on scroll (#216.2). The bar
+    /// draws it outside the view's locale, so a `Text` key came out in the
+    /// phone's language ("Play" in a Slovak app, TestFlight build 90); it is
+    /// resolved in the screen's locale instead, like the tab label.
+    static func navigationTitle(in locale: Locale) -> String {
+        var title = LocalizedStringResource("Play", comment: "Tab bar: the tab with the quiz (Home)")
+        title.locale = locale
+        return String(localized: title)
     }
 
     /// The Start button; Home has no voice commands (#224). #236: in the

@@ -149,6 +149,16 @@ extension QuizViewModel {
         exitPause()
     }
 
+    /// Founder F3 + C2 (TF build 90): the think window ran out while the
+    /// player typed and the mic opened on top of the typed answer. Typing
+    /// holds the countdown where it stands and the mic stays shut until the
+    /// question is over: send grades the typed answer, Skip moves on as
+    /// usual, and the next question arms its own window (`transition`).
+    func beginTypingAnswer() {
+        guard quizState == .askingQuestion else { return }
+        quizTimersController.holdThinkingTimeForTyping()
+    }
+
     /// The toolbar's single pause/resume control (and the spoken "pauza").
     func togglePause() {
         attemptLedger.record(.tap, "pause") // #186 step 2: replayable black box

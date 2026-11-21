@@ -173,8 +173,9 @@ struct QuestionScreenDeclutterTests {
 
     /// WHY (TF build 90): with the keyboard up the card was squeezed to a
     /// sliver under the strip, the Answer/Type/Skip row and the field. Typing
-    /// is one state: the field and send sit on the keyboard, nothing else.
-    @Test("while typing, only the field and send sit under the question")
+    /// is one state: the field, send and Skip sit on the keyboard. Skip stays
+    /// (founder F2): a player stuck on the answer still moves on.
+    @Test("while typing, only the field, send and Skip sit under the question")
     func typingIsOneCalmState() async throws {
         let (vm, _, _) = makeVM()
         let view = TypingFooterHost(viewModel: vm)
@@ -185,7 +186,7 @@ struct QuestionScreenDeclutterTests {
             #expect(throws: (any Error).self, "the Answer button competes with the field") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.record")
             }
-            #expect(throws: (any Error).self, "the skip control competes with the field") {
+            #expect(throws: Never.self, "a player typing must still be able to skip") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.skip")
             }
         }

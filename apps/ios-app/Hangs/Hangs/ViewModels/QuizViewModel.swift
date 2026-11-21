@@ -628,7 +628,10 @@ final class QuizViewModel: ObservableObject {
             stallEnteredAt = nil
             taskBag.cancel(.stallWatchdog)
         }
-        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil } else {
+            // F3: typing belongs to the question it was opened on.
+            quizTimersController.endTypingHold()
+        }
         // #122: "action landed" signal — a matched glow clears as soon as the
         // min-display floor allows once the screen visibly changed.
         voiceCommandCoordinator.noteQuizStateChangedForFeedback()

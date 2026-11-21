@@ -54,6 +54,11 @@ final class QuizTimersController: ObservableObject {
     /// quiz was paused. Play continues from it instead of a fresh full window.
     private var heldThinkingSeconds = 0
 
+    /// Founder F3 + C2 (TF build 90): the player is typing an answer, so the
+    /// think window stands still and never opens the mic. Ends with the
+    /// question (`endTypingHold`).
+    @Published private(set) var isHeldForTyping = false
+
     /// The façade's shared task owner (decision 4 register/cancel handle).
     let taskBag: TaskBag
 
@@ -113,6 +118,7 @@ final class QuizTimersController: ObservableObject {
         autoAdvanceCountdown = 0
         thinkingTimeCountdown = 0
         heldThinkingSeconds = 0
+        isHeldForTyping = false
         recordingCountdown = 0
         recordingCountdownTotal = 0
         isPaused = false
@@ -133,6 +139,13 @@ final class QuizTimersController: ObservableObject {
         // `stopAnyPlayingAudio()` re-armed the countdown behind a paused UI
         // (AudioDeviceState+Playback's post-playback tail only checks the state).
         guard !isPaused else {
+            thinkingTimeCountdown = 0
+            return
+        }
+        // F3: a window armed while the player types (the read's tail, play
+        // after a pause) stands still at what it would have started from.
+        if isHeldForTyping {
+            heldThinkingSeconds = heldSeconds > 0 ? heldSeconds : settings().thinkingTime
             thinkingTimeCountdown = 0
             return
         }
@@ -224,8 +237,27 @@ final class QuizTimersController: ObservableObject {
     /// Only the question screen's own window counts — the number can still
     /// read for a frame after the mic opened (see the tick's `.recording` note).
     func holdThinkingTime() {
-        heldThinkingSeconds = quizState() == .askingQuestion ? thinkingTimeCountdown : 0
+        // A typing hold already keeps the seconds; the stopped window reads 0.
+        if !isHeldForTyping {
+            heldThinkingSeconds = quizState() == .askingQuestion ? thinkingTimeCountdown : 0
+        }
         cancelThinkingTime()
+    }
+
+    /// F3: typing started. A running window keeps what it had left; during
+    /// the read nothing runs yet and the read's tail arms a held window.
+    func holdThinkingTimeForTyping() {
+        guard !isHeldForTyping else { return }
+        if !isPaused { heldThinkingSeconds = thinkingTimeCountdown }
+        isHeldForTyping = true
+        cancelThinkingTime()
+    }
+
+    /// F3: the question the player typed for is over (sent, skipped, ended).
+    func endTypingHold() {
+        guard isHeldForTyping else { return }
+        isHeldForTyping = false
+        heldThinkingSeconds = 0
     }
 
     /// #200: the think seconds the question screen shows. While the quiz is paused
@@ -234,7 +266,7 @@ final class QuizTimersController: ObservableObject {
     /// the pause held stand in for it, frozen. A hold left behind by a pause
     /// that ended without play is never shown (`isPaused` gates it).
     var shownThinkingSeconds: Int {
-        isPaused && quizState() == .askingQuestion ? heldThinkingSeconds : thinkingTimeCountdown
+        (isPaused || isHeldForTyping) && quizState() == .askingQuestion ? heldThinkingSeconds : thinkingTimeCountdown
     }
 
     /// #200: the remainder `holdThinkingTime()` kept (0 = none); taking it clears it.

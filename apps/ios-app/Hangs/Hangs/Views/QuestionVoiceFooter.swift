@@ -72,9 +72,9 @@ struct QuestionVoiceFooter: View {
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             if showTextInput {
-                // TF build 90 (founder): typing is its own calm state. The field
-                // and send sit directly on the keyboard; only a running
-                // countdown stays above them (it keeps running while typing, 2a).
+                // TF build 90 (founder): typing is its own calm state. The field,
+                // send and Skip (F2) sit directly on the keyboard; only the
+                // countdown stays above them, standing still while typing (F3).
                 if let stripPhase {
                     listenBar(stripPhase)
                 }
@@ -191,6 +191,7 @@ struct QuestionVoiceFooter: View {
     /// first-class way to answer and not a hidden icon.
     private var typeButton: some View {
         Button {
+            viewModel.beginTypingAnswer()
             showTextInput = true
             isTextFieldFocused.wrappedValue = true
         } label: {
@@ -227,7 +228,8 @@ struct QuestionVoiceFooter: View {
     // MARK: - Typed answer
 
     /// #194 Bg-Typed: a white capsule field with the ink send button beside it,
-    /// above the listen bar (the countdown keeps running while typing, 2a).
+    /// under the listen bar. Founder F2 (TF build 90): Skip stays beside them,
+    /// players used it while typing.
     private var textInputRow: some View {
         HStack(spacing: Theme.Hangs.Spacing.xs) {
             TextField("Type your answer…", text: $textAnswer)
@@ -255,6 +257,8 @@ struct QuestionVoiceFooter: View {
             }
             .disabled(textAnswer.isEmpty)
             .accessibilityIdentifier("question.textSubmit")
+
+            skipButton
         }
         .padding(.horizontal, Self.gutter)
     }

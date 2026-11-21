@@ -90,6 +90,36 @@ final nonisolated class RSResultTests: XCTestCase {
         RSFlow.assertAlive(app, "RS-15")
     }
 
+    // MARK: RS-46 — An open answer field closes when a quick skip moves on
+
+    // Regression guarded (founder, TestFlight build 90): a quick-game skip
+    // goes to the next question without the result screen, so the question
+    // screen stays up, and the answer field the player had opened stayed open
+    // on the next question with Type greyed out.
+    @MainActor
+    func testRS46QuickSkipClosesTypedAnswerField() async throws {
+        let app = RSFlow.launch()
+        let home = HomePage(app: app)
+        home.assertVisible()
+        let quickGame = app.switches["home.quickGame"].firstMatch
+        if !quickGame.isHittable { app.swipeUp() }
+        XCTAssertTrue(quickGame.waitForExistence(timeout: 3), "RS-46: home.quickGame missing")
+        quickGame.tap()
+        if quickGame.value as? String != "1" { quickGame.switches.firstMatch.tap() }
+        XCTAssertEqual(quickGame.value as? String, "1", "RS-46: quick game did not turn on")
+        if !home.startQuizButton.isHittable { app.swipeDown() }
+
+        let question = RSFlow.startQuiz(app)
+        question.textInputToggle.tap()
+        XCTAssertTrue(question.textField.waitForExistence(timeout: 3), "RS-46: question.textField did not appear")
+        question.skipButton.tap()
+
+        let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: question.textField)
+        XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 10), .completed, "RS-46: the answer field stayed open on the next question")
+        XCTAssertTrue(question.textInputToggle.isEnabled, "RS-46: Type stayed greyed out on the next question")
+        RSFlow.assertAlive(app, "RS-46")
+    }
+
     // MARK: RS-16 — Read-aloud on the result does not advance
 
     // Regression guarded (#59.7): "hear it" replays the question audio and

@@ -92,6 +92,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-42 | `RSRoomTests.testRS42…` | Home button press; the host moves on over the test listener while the guest is away |
 | RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
 | RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the graded answer throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
+| RS-46 | `RSResultTests.testRS46…` | Home `home.quickGame` on, so the skip skips the result screen |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -1072,6 +1073,23 @@ confirmation sheet); wait for the round end; wait for the paywall; tap
 **Asserts:** `result.verdict` present with no paywall; `completion.highlight`
 appears with no paywall; the paywall follows (purchase or offline branch);
 after ✕ `completion.home` is on screen. App alive.
+
+---
+
+## RS-46: An open answer field closes when a quick skip moves on
+
+**Hypothesis:** A quick-game skip goes to the next question without the
+result screen, so the question screen stays up; the answer field the player
+opened must still close when the next question arrives (founder, TestFlight
+build 90: the field stayed open, Type greyed out).
+
+**Preconditions:** `--ui-test`; Home `home.quickGame` switched on.
+
+**Steps:** start a quiz, tap `question.textInputToggle`, wait for
+`question.textField`, tap `question.skip`.
+
+**Asserts:** `question.textField` is gone within 10 s;
+`question.textInputToggle` is enabled. App alive.
 
 ---
 

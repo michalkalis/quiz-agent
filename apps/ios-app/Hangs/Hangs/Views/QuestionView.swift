@@ -154,9 +154,14 @@ struct QuestionView: View {
         // so the options and the controls keep a screen to live on. Applied to
         // the screen only — the Settings sheet below is not a quiz screen.
         .dynamicTypeSize(...QuizTypeSize.screenCap)
-        // The echo belongs to one question only.
+        // The echo belongs to one question only, and so does an open answer
+        // field: a quick-game skip or the end-of-set reveal goes to the next
+        // question without leaving this screen (TestFlight build 90).
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
             submittedAnswer = ""
+            showTextInput = false
+            textAnswer = ""
+            isTextFieldFocused = false
         }
         // The voice paths (confirm sheet, auto-confirm, an edited transcript) all
         // land the final text in `transcribedAnswer` before submitting, and it is

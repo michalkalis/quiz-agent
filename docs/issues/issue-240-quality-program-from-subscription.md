@@ -152,7 +152,7 @@ Poradie zlučovania appky: po jednom, každý ďalší sa zosúladí s hlavnou v
 | E — server | strop prepisu reči sa nedá obísť; kontrola zostatku hlasu nezdržuje otázku; skutočný dôvod odmietnutej odpovede v meraní | #897 |
 | F — zdieľanie a drobnosti | nálezy auditu 7, 8, 17, 18, 23, 24; prehľad sa zdieľa s vetou a adresou; vloženie celej správy; čísla dennej výzvy stoja; „balík sa ešte pripravuje“; starší prehľad sa nestratí | #909 (vrátane #910) |
 
-**2026-11-21: B — hlas vrátené.** Founder po teste buildu 90 zamietol mikrofón hneď po otázke („ako to bolo predtým, je lepšie“). Vetva `fix/revert-immediate-mic`: otázka sa prečíta, beží čas na premýšľanie (10 s), potom sa otvorí mikrofón, mlčanie ako v builde 89; uložený čas 0 z buildu 90 sa vráti na 10 s. Ostávajú nálezy auditu 14 a 15 a meranie; #911 nedotknuté.
+**2026-11-21: B — hlas vrátené.** Founder po teste buildu 90 zamietol mikrofón hneď po otázke („ako to bolo predtým, je lepšie“). Vetva `fix/revert-immediate-mic`: otázka sa prečíta, beží čas na premýšľanie (10 s), potom sa otvorí mikrofón, mlčanie ako v builde 89; uložený čas 0 z buildu 90 sa vráti na 10 s. Ostávajú nálezy auditu 14 a 15 a meranie; #911 nedotknuté. Navyše: otvorené pole na písanie sa po rýchlom preskočení zavrie (RS-46).
 
 Nálezy auditu mimo 240.9: 6 a 22 → #882 · 9 → #884 · 10 → #886 · 11, 12, 13 → #883 · 16 nepotvrdený (pokryl #864) · 20, 21 → #897.
 

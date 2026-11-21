@@ -176,7 +176,7 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(bar.findAll(ViewType.Text.self).contains { ((try? $0.string()) ?? "").contains("12") })
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "Speak now")
+                _ = try tree.find(text: "Listening…")
             }
         }
 
@@ -186,7 +186,7 @@ struct QuestionViewMCQOptionVisibilityTests {
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Speak now")
+                try tree.find(text: "Listening…")
             }
             #expect(throws: (any Error).self) { _ = try tree.find(text: "Think") }
             #expect(throws: (any Error).self) { _ = try tree.find(text: "THINK. LISTENING IN 0 S") }

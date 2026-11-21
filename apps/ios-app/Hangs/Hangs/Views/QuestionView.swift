@@ -154,9 +154,14 @@ struct QuestionView: View {
         // so the options and the controls keep a screen to live on. Applied to
         // the screen only — the Settings sheet below is not a quiz screen.
         .dynamicTypeSize(...QuizTypeSize.screenCap)
-        // The echo belongs to one question only.
+        // The echo belongs to one question only, and so does an open answer
+        // field: a quick-game skip or the end-of-set reveal goes to the next
+        // question without leaving this screen (TestFlight build 90).
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
             submittedAnswer = ""
+            showTextInput = false
+            textAnswer = ""
+            isTextFieldFocused = false
         }
         // The voice paths (confirm sheet, auto-confirm, an edited transcript) all
         // land the final text in `transcribedAnswer` before submitting, and it is
@@ -648,17 +653,6 @@ struct QuestionView: View {
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.top, Metrics.blockGap)
                 .transition(.opacity)
-        } else if viewModel.showsSilencePrompt {
-            // #240.9: with the bar, never behind its ✕ — it is how the player
-            // learns the mic is closed and how to open it again.
-            SilentAnswerPrompt(
-                isMultipleChoice: true,
-                buttonHeight: compact ? QuestionSkipButton.chipHeight : QuestionSkipButton.compactRowHeight,
-                onSpeak: speakAfterSilence
-            )
-            .padding(.horizontal, Metrics.gutter)
-            .padding(.top, Metrics.blockGap)
-            .transition(.opacity)
         }
         if !listenBarDismissal.isHidden(questionId: question.id),
            let phase = viewModel.listenPhase(for: question)
@@ -684,11 +678,6 @@ struct QuestionView: View {
             .padding(.top, Metrics.blockGap)
             .transition(.opacity)
         }
-    }
-
-    /// #240.9: the MCQ screen's one-tap way to answer by voice after silence.
-    private func speakAfterSilence() {
-        Task { await viewModel.toggleRecording() }
     }
 
     /// #237: the listen bar's "Turn on" / "Settings".

@@ -54,7 +54,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS | Frozen as | Notes |
 |---|---|---|
 | RS-01 | `RSRecordingTests.testRS01…` | |
-| RS-02 | `RSRecordingTests.testRS02…` | real 5 s window (a tap, not shortened under `--ui-test`); #240.9: lands on the question with `question.silencePrompt`, no retry |
+| RS-02 | `RSRecordingTests.testRS02…` | real 15 s auto-stop (not shortened under `--ui-test`) |
 | RS-03 | `RSRecordingTests.testRS03…` | |
 | RS-04 | `RSRecordingTests.testRS04…` | second tap lands on `question.stop` |
 | RS-05 | `RSRecordingTests.testRS05…` | "Again" bridges askingQuestion → recording; `confirmation.cancel` only in the transcribing branch, never shown by the instant mock |
@@ -92,6 +92,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-42 | `RSRoomTests.testRS42…` | Home button press; the host moves on over the test listener while the guest is away |
 | RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
 | RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the graded answer throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
+| RS-46 | `RSResultTests.testRS46…` | Home `home.quickGame` on, so the skip skips the result screen |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -137,31 +138,26 @@ crash.
 
 ---
 
-## RS-02: Silence ends the recording with a calm way on
+## RS-02: Hard auto-stop fires when no STT events arrive
 
-**Hypothesis:** When nothing is said, the window to start speaking
-(`Config.speechStartWindow`, 5 s after a tap) must stop recording. #240.9
-(founder 2026-11-18): silence the phone measured is not a failed attempt.
-Nothing is uploaded, there is no automatic "didn't catch that" retry and no
-Again/Skip sheet; the question stays on screen with a calm line offering
-speak, type or move on, and the mic stays closed until the player asks.
+**Hypothesis:** When no committed transcript ever lands, the 15s safety
+timer (`Config.autoRecordingDuration`) must stop recording and route to
+a recoverable state.
 
 **Preconditions**
-- Launch with `--ui-test` (the mock detector vouches "quiet")
+- Launch with `--ui-test`
 
 **Steps**
 1. Tap `home.startQuiz`
-2. Tap `question.record`
+2. Tap `question.micButton`
 3. Wait for `question.state` label `recording`
 4. **Do not** inject any STT events
-5. Wait until `question.state` leaves `recording` (up to 20 s)
+5. Wait 18s
 
 **Asserts**
-- `question.state` label is `askingQuestion`
-- `question.silencePrompt` is visible; `question.retryHint` is **not**
-- `question.errorBanner` is **not** present
-- `question.stop` does not appear within 8 s (no automatic retry)
+- `question.state` label is **not** `recording` (one of: `processing`, `askingQuestion`, `error`)
 - App process is alive; no `EXC_*` in log
+- If `error`, `question.errorBanner` text is human-readable (not empty, not "Optional(...)")
 
 ---
 
@@ -1077,6 +1073,23 @@ confirmation sheet); wait for the round end; wait for the paywall; tap
 **Asserts:** `result.verdict` present with no paywall; `completion.highlight`
 appears with no paywall; the paywall follows (purchase or offline branch);
 after ✕ `completion.home` is on screen. App alive.
+
+---
+
+## RS-46: An open answer field closes when a quick skip moves on
+
+**Hypothesis:** A quick-game skip goes to the next question without the
+result screen, so the question screen stays up; the answer field the player
+opened must still close when the next question arrives (founder, TestFlight
+build 90: the field stayed open, Type greyed out).
+
+**Preconditions:** `--ui-test`; Home `home.quickGame` switched on.
+
+**Steps:** start a quiz, tap `question.textInputToggle`, wait for
+`question.textField`, tap `question.skip`.
+
+**Asserts:** `question.textField` is gone within 10 s;
+`question.textInputToggle` is enabled. App alive.
 
 ---
 

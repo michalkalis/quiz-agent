@@ -69,17 +69,9 @@ struct EarconToneTests {
         }
     }
 
-    /// WHY (#185 track F, founder 2026-09-24): the tones were loud and grew
-    /// tiresome over a quiz. The remaining tone plays at no more than a quarter
-    /// of full scale (6 dB under the old half scale).
-    @Test("The mic-live cue is at most quarter scale")
-    func cuesAreQuiet() {
-        let data = EarconTone.wavData(for: .micLive)
-        let peak = stride(from: 44, to: data.count, by: 2).map { offset in
-            abs(Int(Int16(bitPattern: UInt16(data[offset]) | UInt16(data[offset + 1]) << 8)))
-        }.max() ?? 0
-        #expect(peak <= Int(0.25 * Double(Int16.max)) + 1, "mic-live is louder than quarter scale")
-    }
+    // The loudness itself is guarded against real speech in
+    // EarconLoudnessTests (TestFlight build 90: the tone was as loud as the
+    // questions).
 
     /// WHY (#185 track F): every cue has a haptic now, and the recording cues
     /// — mic open, speech heard, mic closed — fire on EVERY question, so they

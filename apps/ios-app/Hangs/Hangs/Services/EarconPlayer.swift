@@ -47,11 +47,11 @@ import UIKit
 
 /// The hands-free audio cues (77.10, #185 track F). Language-neutral tones — no words.
 enum Earcon: String, CaseIterable, Sendable, Equatable {
-    case micLive       // mic opened
-    case speechStart   // #185 track F: the driver's answer was first heard
-    case gotIt         // STOP: recording ended / auto-submitted
-    case skipConfirm   // skip undo-window opened
-    case commandAck    // a spoken command was recognized
+    case micLive // mic opened
+    case speechStart // #185 track F: the driver's answer was first heard
+    case gotIt // STOP: recording ended / auto-submitted
+    case skipConfirm // skip undo-window opened
+    case commandAck // a spoken command was recognized
 
     /// #188 G6 (founder 2026-10-06: earcons in the car were "really annoying and
     /// frequent"): the single policy for which cues make a sound. Only the
@@ -179,7 +179,6 @@ final class SystemEarconPlayer: EarconPlaying {
     }
 }
 
-
 // MARK: - Tone synthesis (#184)
 
 /// The in-memory tone generator behind `SystemEarconPlayer`. Pure and
@@ -191,7 +190,7 @@ final class SystemEarconPlayer: EarconPlaying {
 /// carries the meaning because the driver cannot look.
 ///
 /// #185 track F (founder 2026-09-24: the tones were loud and grew tiresome):
-/// 6 dB quieter (peak 0.5 → 0.25), lower (660 → 880 Hz) and a 20 ms
+/// 6 dB quieter (peak 0.5 → 0.25, since lowered again, see `peak`), lower (660 → 880 Hz) and a 20 ms
 /// raised-cosine swell in and out instead of a 10 ms linear ramp — the hard
 /// edges were what made it read as a beep.
 enum EarconTone {
@@ -202,10 +201,15 @@ enum EarconTone {
     }
 
     static let sampleRate: Double = 44100
-    /// Peak amplitude. Quarter scale (#185 track F; was half): the cue rides
-    /// the same session and volume as the TTS, which the driver already set to
-    /// be heard over the road, so it needs no headroom of its own.
-    static let peak: Double = 0.25
+    /// Peak amplitude. The cue rides the same session and volume as the TTS,
+    /// which the driver already set to be heard over the road. TestFlight
+    /// build 90 (founder 2026-11-21: the tone was louder than the questions):
+    /// at quarter scale it measured -17.4 LUFS while sounding, as loud as the
+    /// mastered speech (-16 to -17 LUFS integrated in en, sk and cs). 0.07
+    /// (-23 dBFS) puts it at about -28.4 LUFS, some 12 LU under the voice:
+    /// a quiet cue that still clears road noise, with the haptic beside it.
+    ///  guards the gap against real question audio.
+    static let peak: Double = 0.07
     /// Raised-cosine fade at each end of every TONE segment. Without it the
     /// waveform starts mid-air and the discontinuity is audible as a click —
     /// which on a car speaker is louder than the tone itself; the cosine shape

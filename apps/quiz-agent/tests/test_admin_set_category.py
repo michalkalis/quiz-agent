@@ -48,11 +48,11 @@ class _FakeStore:
         self._items: dict[str, Question] = {q.id: q for q in questions}
         self.upserted: list[Question] = []
 
-    def get(self, question_id: str) -> Question | None:
+    async def get(self, question_id: str) -> Question | None:
         stored = self._items.get(question_id)
         return stored.model_copy(deep=True) if stored else None
 
-    def upsert(self, question: Question) -> bool:
+    async def upsert(self, question: Question) -> bool:
         self._items[question.id] = question
         self.upserted.append(question)
         return True

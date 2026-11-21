@@ -15,7 +15,7 @@ import os
 logger = logging.getLogger(__name__)
 
 from quiz_shared.models.question import Question
-from quiz_shared.database.question_store import QuestionStore
+from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from ..rate_limit import limiter
 
 
@@ -225,7 +225,7 @@ class QuestionStats(BaseModel):
 async def import_questions(
     request: Request,
     import_request: ImportQuestionsRequest,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
@@ -239,7 +239,7 @@ async def import_questions(
         try:
             # Check if question already exists (by ID)
             if import_request.skip_duplicates:
-                existing = store.get(q_data.id)
+                existing = await store.get(q_data.id)
                 if existing:
                     skipped += 1
                     skipped_ids.append(q_data.id)
@@ -273,7 +273,9 @@ async def import_questions(
 
             # Check for semantic duplicates unless forced
             if not import_request.force:
-                duplicates = store.find_duplicates(question.question, threshold=0.85)
+                duplicates = await store.find_duplicates(
+                    question.question, threshold=0.85
+                )
                 if duplicates:
                     # Question text is very similar to existing question
                     skipped += 1
@@ -284,7 +286,7 @@ async def import_questions(
                     continue
 
             # Add to database
-            success = store.add(question)
+            success = await store.add(question)
 
             if success:
                 imported += 1
@@ -313,7 +315,7 @@ async def import_questions(
 async def backfill_sources(
     request: Request,
     payload: BackfillSourcesRequest,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
     """Backfill source_url / source_excerpt on existing questions.
@@ -330,7 +332,7 @@ async def backfill_sources(
         if item.source_url is None and item.source_excerpt is None:
             skipped += 1
             continue
-        question = store.get(item.id)
+        question = await store.get(item.id)
         if question is None:
             not_found_ids.append(item.id)
             continue
@@ -348,7 +350,7 @@ async def backfill_sources(
             skipped += 1
             continue
 
-        if store.upsert(question):
+        if await store.upsert(question):
             updated += 1
         else:
             not_found_ids.append(item.id)
@@ -367,7 +369,7 @@ async def backfill_sources(
 async def set_review_status(
     request: Request,
     payload: ReviewStatusUpdateRequest,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
     """Archive existing questions (or restore archived ones) by ID.
@@ -384,7 +386,7 @@ async def set_review_status(
     not_found_ids: List[str] = []
 
     for question_id in payload.ids:
-        question = store.get(question_id)
+        question = await store.get(question_id)
         if question is None:
             not_found_ids.append(question_id)
             continue
@@ -392,7 +394,7 @@ async def set_review_status(
             unchanged += 1
             continue
         question.review_status = payload.status
-        if store.upsert(question):
+        if await store.upsert(question):
             updated += 1
         else:
             not_found_ids.append(question_id)
@@ -419,7 +421,7 @@ async def set_review_status(
 async def set_category(
     request: Request,
     payload: SetCategoryRequest,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
     """Re-categorize existing questions by ID (bulk, one category per question).
@@ -434,7 +436,7 @@ async def set_category(
     not_found_ids: List[str] = []
 
     for assignment in payload.assignments:
-        question = store.get(assignment.id)
+        question = await store.get(assignment.id)
         if question is None:
             not_found_ids.append(assignment.id)
             continue
@@ -442,7 +444,7 @@ async def set_category(
             unchanged += 1
             continue
         question.category = assignment.category
-        if store.upsert(question):
+        if await store.upsert(question):
             updated += 1
         else:
             not_found_ids.append(assignment.id)
@@ -467,7 +469,7 @@ async def set_category(
 @limiter.limit("5/minute")
 async def list_questions(
     request: Request,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
     search: Optional[str] = None,
     topic: Optional[str] = None,
@@ -475,7 +477,7 @@ async def list_questions(
     limit: int = 1000,
 ):
 
-    all_questions = store.get_all(limit=limit)
+    all_questions = await store.get_all(limit=limit)
 
     results = []
     for q in all_questions:
@@ -506,12 +508,12 @@ async def list_questions(
 @limiter.limit("5/minute")
 async def get_question_stats(
     request: Request,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
     # Get all questions
-    all_questions = store.get_all(limit=10000)
+    all_questions = await store.get_all(limit=10000)
 
     # Calculate statistics
     by_difficulty = {}
@@ -541,12 +543,12 @@ async def get_question_stats(
 async def delete_question(
     request: Request,
     question_id: str,
-    store: QuestionStore = Depends(get_question_store),
+    store: PgvectorQuestionStore = Depends(get_question_store),
     _: str = Depends(verify_admin_key),
 ):
 
     # Check if question exists
-    question = store.get(question_id)
+    question = await store.get(question_id)
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -554,7 +556,7 @@ async def delete_question(
         )
 
     # Delete question
-    success = store.delete(question_id)
+    success = await store.delete(question_id)
 
     if not success:
         raise HTTPException(

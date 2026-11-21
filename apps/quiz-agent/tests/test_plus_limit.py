@@ -83,10 +83,10 @@ def _tracker(db_sessionmaker, clock: _Clock | None = None, **kw) -> UsageTracker
 # --- the number is the product ------------------------------------------------
 
 
-async def test_default_limits_are_30_free_and_1000_plus():
+async def test_default_limits_are_150_free_and_1000_plus():
     """The founder-set plan sizes. Pinned so a stray default edit (or a
     forgotten env override) can't silently change what a subscriber gets."""
-    assert FREE_MONTHLY_LIMIT == 30
+    assert FREE_MONTHLY_LIMIT == 150
     assert SUBSCRIBER_MONTHLY_LIMIT == 1000
 
 

@@ -52,6 +52,11 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
         {"reason", "questions_asked", "score", "is_pack", "age_band"}
     ),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
+    # 2026-11-21: a voice answer met the spent free voice allowance; enforced =
+    # it was refused (false: a build the refusal is not switched on for).
+    "voice_quota_hit": frozenset(
+        {"voice_answers_used", "voice_answers_limit", "enforced"}
+    ),
     # #240: reason = why the voice answer was turned away (see the doc);
     # transcript_chars = its length, never the text.
     "transcription_failed": frozenset({"reason", "question_id", "transcript_chars"}),

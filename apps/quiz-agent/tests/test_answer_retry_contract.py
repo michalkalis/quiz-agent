@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock
 
@@ -45,6 +46,7 @@ from app.evaluation.evaluator import AnswerEvaluator  # noqa: E402
 from app.quiz.flow import QuizFlowService  # noqa: E402
 from app.rate_limit import limiter  # noqa: E402
 from app.tts.spoken_text import spoken_question_text  # noqa: E402
+from app.usage.tracker import VoiceCheck  # noqa: E402
 from app.voice.transcriber import TranscriptionResult, VoiceTranscriber  # noqa: E402
 from quiz_shared.models.participant import Participant  # noqa: E402
 from quiz_shared.models.phase import SessionPhase  # noqa: E402
@@ -156,6 +158,10 @@ class _Harness:
         self.retriever.pack_is_generating = AsyncMock(return_value=False)
         self.usage = MagicMock()
         self.usage.check_limit = AsyncMock(return_value=(True, 5, None))
+        self.usage.check_voice_answer = AsyncMock(
+            return_value=VoiceCheck(True, 0, None, datetime.now(timezone.utc))
+        )
+        self.usage.record_voice_answer = AsyncMock(return_value=True)
         self.usage.record_question = AsyncMock()
         self.flow = QuizFlowService(
             session_manager=self.manager,

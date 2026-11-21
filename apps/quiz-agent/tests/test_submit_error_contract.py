@@ -144,6 +144,7 @@ def _app(
     flow = MagicMock()
     flow.classify_submission = MagicMock(return_value=False)
     flow.process_answer = AsyncMock(side_effect=process_answer_error)
+    flow.usage_tracker = None  # error mapping only, no quota
     app.dependency_overrides[deps.get_quiz_flow] = lambda: flow
 
     app.dependency_overrides[deps.get_voice_transcriber] = lambda: (

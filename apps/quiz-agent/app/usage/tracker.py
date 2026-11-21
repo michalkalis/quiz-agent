@@ -23,6 +23,7 @@ import logging
 import os
 from datetime import date, datetime, timezone
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import uuid
 
@@ -36,10 +37,14 @@ from .entitlement import (
     account_is_entitled,
     account_subscription_status,
 )
+from . import voice_allowance
 
 logger = logging.getLogger(__name__)
 
-FREE_MONTHLY_LIMIT = int(os.getenv("FREE_MONTHLY_LIMIT", "30"))
+FREE_MONTHLY_LIMIT = int(os.getenv("FREE_MONTHLY_LIMIT", "150"))
+# Founder experiment 2026-11-21: of the free questions, at most this many may be
+# answered by voice (the transcription is the cost); see ``voice_allowance``.
+FREE_MONTHLY_VOICE_LIMIT = int(os.getenv("FREE_MONTHLY_VOICE_LIMIT", "30"))
 # #199: Trubbo Plus (the monthly subscription) is a fixed allowance, not unlimited.
 SUBSCRIBER_MONTHLY_LIMIT = int(os.getenv("SUBSCRIBER_MONTHLY_LIMIT", "1000"))
 
@@ -54,6 +59,16 @@ def _today(now: datetime | None = None) -> date:
 
 def _month_start(now: datetime | None = None) -> date:
     return _today(now).replace(day=1)
+
+
+@dataclass(frozen=True)
+class VoiceCheck:
+    """``limit`` None = this account's voice answers are not limited."""
+
+    allowed: bool
+    used: int
+    limit: int | None
+    resets_at: datetime
 
 
 def _next_reset(now: datetime | None = None) -> datetime:
@@ -73,10 +88,12 @@ class UsageTracker:
         monthly_limit: int = FREE_MONTHLY_LIMIT,
         now: Callable[[], datetime] | None = None,
         subscriber_monthly_limit: int = SUBSCRIBER_MONTHLY_LIMIT,
+        voice_monthly_limit: int = FREE_MONTHLY_VOICE_LIMIT,
     ) -> None:
         self._sessionmaker = sessionmaker
         self.monthly_limit = monthly_limit
         self.subscriber_monthly_limit = subscriber_monthly_limit
+        self.voice_monthly_limit = voice_monthly_limit
         # #180 track C: the ONE time source for the quota gate. Each public call
         # reads it once and threads that instant through the month window, the
         # subscription expiry check and ``resets_at`` — so a request straddling
@@ -91,7 +108,7 @@ class UsageTracker:
     def _limit_for(self, entitled: bool) -> int:
         """The monthly allowance that applies right now. There is ONE counter
         per account, so a subscription lapsing mid-month swaps the 1,000 limit
-        for the free 30 against the same count (intended, #199)."""
+        for the free one against the same count (intended, #199)."""
         return self.subscriber_monthly_limit if entitled else self.monthly_limit
 
     async def _read_month(
@@ -202,6 +219,41 @@ class UsageTracker:
             await session.commit()
             return count
 
+    async def check_voice_answer(self, subject_id: str, key: str) -> VoiceCheck:
+        """May ``subject_id`` answer by voice — NON-MUTATING (``voice_allowance``).
+        A free player past the voice limit is still allowed the answer it was
+        already charged for (``key``), so a retry is never refused."""
+        now = self._now()
+        async with self._sessionmaker() as session:
+            used = await voice_allowance.voice_answers_since(
+                session, subject_id, _month_start(now)
+            )
+            if not await voice_allowance.voice_is_limited(session, subject_id, now):
+                return VoiceCheck(True, used, None, _next_reset(now))
+            limit = self.voice_monthly_limit
+            allowed = used < limit or await voice_allowance.already_charged(
+                session, subject_id, key
+            )
+        return VoiceCheck(allowed, used, limit, _next_reset(now))
+
+    async def record_voice_answer(self, subject_id: str, key: str) -> bool:
+        """Count one transcribed voice answer, once per ``key`` (MUTATING).
+        Counted for every plan, so a lapsing subscription meets a true count."""
+        now = self._now()
+        try:
+            async with self._sessionmaker() as session:
+                charged = await voice_allowance.charge(
+                    session, subject_id, key, _today(now)
+                )
+                await session.commit()
+            return charged
+        except Exception as exc:  # noqa: BLE001
+            # Fail open, like the daily caps: the answer is already transcribed
+            # and the player is waiting for its verdict; a counter that cannot
+            # be written must not turn it into an error (it costs one count).
+            logger.warning("Voice answer not counted: %s", type(exc).__name__)
+            return False
+
     async def tts_chars_today(self, subject_id: str) -> int:
         """Characters this subject has had billed to the TTS primary today (UTC)."""
         async with self._sessionmaker() as session:
@@ -284,15 +336,31 @@ class UsageTracker:
         monthly limit and remaining, like the free tier does; ``plan`` is
         ``"plus"`` for it, else ``"free"`` (the 429 / analytics sites read it).
         Only the legacy ``is_premium`` flag on a NON-entitled account still
-        reports unlimited (``None``), as before."""
+        reports unlimited (``None``), as before. 2026-11-21 adds the free voice
+        allowance: ``voice_answers_used`` / ``_limit`` / ``_remaining``."""
         now = self._now()
         async with self._sessionmaker() as session:
             count, premium = await self._read_month(session, subject_id, now)
             entitled = await account_is_entitled(session, subject_id, now=now)
             credit_balance = await account_credit_balance(session, subject_id)
             subscription_status = await account_subscription_status(session, subject_id)
+            voice_used = await voice_allowance.voice_answers_since(
+                session, subject_id, _month_start(now)
+            )
         resets_at = _next_reset(now)
         plan = "plus" if entitled else "free"
+        # The same rule as the gate: only a free player without pack credits
+        # has a voice limit (null = not limited).
+        voice_limit = (
+            self.voice_monthly_limit if not entitled and credit_balance <= 0 else None
+        )
+        voice = {
+            "voice_answers_used": voice_used,
+            "voice_answers_limit": voice_limit,
+            "voice_answers_remaining": (
+                None if voice_limit is None else max(0, voice_limit - voice_used)
+            ),
+        }
         if premium and not entitled:
             return {
                 "user_id": subject_id,
@@ -304,6 +372,7 @@ class UsageTracker:
                 "subscription_status": subscription_status,
                 "credit_balance": credit_balance,
                 "plan": plan,
+                **voice,
             }
         limit = self._limit_for(entitled)
         return {
@@ -316,6 +385,7 @@ class UsageTracker:
             "subscription_status": subscription_status,
             "credit_balance": credit_balance,
             "plan": plan,
+            **voice,
         }
 
     async def set_premium(self, subject_id: str, is_premium: bool = True) -> None:

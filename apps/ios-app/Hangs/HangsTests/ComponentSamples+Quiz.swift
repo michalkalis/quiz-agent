@@ -123,6 +123,17 @@ nonisolated extension ComponentSample {
                 // With the ✕: the countdown and the ✕ each need their own room.
                 QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
             },
+            // TF build 90: the question screen's hints live in the open mic's bar.
+            ComponentSample("questionListenBar.listeningSpelling") {
+                QuestionListenBar(phase: .listening(.open), answerRemaining: 12, answerNote: .spelling, onDismiss: {})
+            },
+            ComponentSample("questionListenBar.listeningRetry") {
+                QuestionListenBar(phase: .listening(.mcq), answerRemaining: 12, answerNote: .didNotCatch, onDismiss: {})
+            },
+            ComponentSample("questionListenBar.slimSpelling") {
+                QuestionListenBar(phase: .listening(.open), size: .slim, answerRemaining: 12,
+                                  answerNote: .spelling, onDismiss: {})
+            },
             // #237 (canvas pick L1): commands wait on the speech-recognition
             // permission — the bar's trailing control, with the ✕ beside it.
             ComponentSample("questionListenBar.thinkingTurnOn") {

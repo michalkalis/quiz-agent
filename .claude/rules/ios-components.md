@@ -50,10 +50,9 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsAnswerSticker` | #194: the answer on its own plate inside a result card, so it reads first on any category colour. |
 | `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
-| `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
+| `QuestionListenBar` | Voice bar on the question screen: the screen's one home of state, countdown and "Processing…". TF build 90: shown only for the think countdown, the open mic and an answer in flight (`QuestionListenPhase.strip`), never with command words, in a reserved slot; the open mic carries the retry and spelling hints (`answerNote`). |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
-| `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |
-| `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6). |
+| `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6), on the answer sheet only. |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |
 | `ReviewBadge`, `QuestionProvenanceRow` | TestFlight-only review/translation badge and the question's provenance row. |
 | `AmbientGlowWash`, `GlowSweepLine` | Voice feedback glow (animated; no snapshot). |
@@ -71,3 +70,5 @@ No call sites outside previews (2026-09-30): `HangsStatBox`, `HangsStatChip`,
 `HangsVerdictCard`, `HangsAnswerRow`, `HangsAnswerComparisonCard`,
 `HangsStatusBar`, `HangsRecordingBar`, `HangsFooterBar`, `HangsTerminalLabel`,
 `HangsSessionDot`. Candidates for removal; not in the catalog.
+`EmptyAnswerRetryHint` (since TF build 90: the retry line is the open mic bar's
+state line) keeps only its catalog sample.

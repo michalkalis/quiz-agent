@@ -17,7 +17,7 @@ import json
 
 import pytest
 from app.generation import subtopics as st
-from app.generation.classification import CATEGORIES, FALLBACK_CATEGORY
+from app.generation.classification import CATEGORIES
 
 MIN_PER_CATEGORY = 10
 MAX_CHARS = 64
@@ -50,10 +50,11 @@ def test_file_matches_schema_and_covers_every_taxonomy_id() -> None:
         )
 
 
-def test_fallback_category_has_no_subtopics() -> None:
-    """`general` is the unclassified bucket, not a player filter — it must
-    never get a coverage cell, or the allocator would steer towards junk."""
-    assert FALLBACK_CATEGORY not in _raw()["en"]
+def test_retired_general_category_has_no_subtopics() -> None:
+    """`general` is no player filter (old rows only; generation no longer
+    produces it) — it must never get a coverage cell, or the allocator would
+    steer new questions into a category no picker offers."""
+    assert "general" not in _raw()["en"]
 
 
 def test_loader_is_cached_and_immutable() -> None:

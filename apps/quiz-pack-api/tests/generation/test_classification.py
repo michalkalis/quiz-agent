@@ -25,7 +25,7 @@ import os
 import pytest
 from app.generation.classification import (
     CATEGORIES,
-    FALLBACK_CATEGORY,
+    CATEGORY_DEFINITIONS,
     normalize_category,
     normalize_difficulty,
 )
@@ -71,14 +71,27 @@ def test_category_aliases_map_to_taxonomy() -> None:
     assert normalize_category("disney") == "movies-music"
 
 
-def test_junk_category_falls_back_to_general() -> None:
-    # An off-taxonomy value ("Trivia", None) must land in the safe fallback
-    # bucket — never reach Postgres as junk the retriever matches exactly.
-    # (Since #170 gate F1 "History" IS a taxonomy id, so it passes through.)
+def test_unclassifiable_category_returns_none_never_general() -> None:
+    """2026-11-21 category review: the old fail-safe stored `general`, an id no
+    picker offers, so 791 approved questions were reachable only under "all
+    categories". An off-taxonomy value must now come back as `None` (the stage
+    drops it loudly), and `general` itself is no longer an acceptable answer.
+    (Since #170 gate F1 "History" IS a taxonomy id, so it passes through.)"""
     assert normalize_category("History") == "history"
-    assert normalize_category("Trivia") == FALLBACK_CATEGORY == "general"
-    assert normalize_category(None) == "general"
-    assert normalize_category("kids") == "general"  # age is a filter, not a category
+    assert normalize_category("Trivia") is None
+    assert normalize_category(None) is None
+    assert normalize_category("") is None
+    assert normalize_category("general") is None
+    assert normalize_category("kids") is None  # age is a filter, not a category
+
+
+def test_everyday_is_not_food() -> None:
+    """`food-everyday` now means food and drink only (founder 2026-11-21, shown
+    as Jedlo a pitie / Food & Drink); 86 rows about cars, brands and household
+    life had landed there. A bare "everyday" label must not be forced into it."""
+    assert normalize_category("everyday") is None
+    assert normalize_category("Food & Drink") == "food-everyday"
+    assert normalize_category("Pop Culture") == "entertainment"
 
 
 def test_explicit_order_category_always_wins() -> None:
@@ -207,6 +220,37 @@ def test_no_order_category_instructs_taxonomy_classification() -> None:
     for category in CATEGORIES:
         assert category in prompt
     assert "classify THIS question" in prompt
+
+
+def test_classifier_prompt_offers_no_catch_all() -> None:
+    """2026-11-21: the old guidance ended "When in doubt, use `general`" and the
+    order header read "Categories: general", so the model filed hundreds of
+    ordinary questions under an id no picker offers. The prompt must describe
+    exactly the seven real ids and name no escape bucket."""
+    prompt = _build()
+    section = prompt[prompt.index("## DIFFICULTY & CATEGORY"):]
+    assert "general" not in section.lower().replace("general knowledge", "")
+    assert "when in doubt" not in prompt.lower()
+    assert "**Categories:** general" not in prompt
+    for category in CATEGORIES:
+        assert f"- `{category}` — {CATEGORY_DEFINITIONS[category]}" in prompt
+    # the confusable subjects are routed explicitly, food-everyday stays food
+    flat = " ".join(section.split())
+    assert "`food-everyday` is food and drink only" in flat
+    for subject in ("Word origins", "Customs and holidays", "Brands:", "Everyday life:"):
+        assert subject in flat
+
+
+def test_structured_mcq_field_names_only_real_categories() -> None:
+    """The MCQ path reads its category instruction from the tool schema, which
+    still listed the pre-#39 ids with "use 'general' when nothing themed
+    fits" — a second road into the invisible bucket."""
+    from app.generation.advanced_generator import MCQQuestionItem
+
+    description = MCQQuestionItem.model_fields["category"].description or ""
+    assert "general" not in description
+    for category in CATEGORIES:
+        assert category in description
 
 
 def test_explicit_order_category_is_pinned_in_schema_and_guidance() -> None:

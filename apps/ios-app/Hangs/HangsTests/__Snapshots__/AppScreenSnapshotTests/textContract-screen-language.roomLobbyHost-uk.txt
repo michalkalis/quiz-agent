@@ -13,7 +13,7 @@ Michal
 J
 Jana
 Правила гри
-10 питання · Random · After each question · 15 s
+8 питання · Random · After each question · 15 s
 Почни гру
 # identifiers
 room.close

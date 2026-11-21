@@ -11,6 +11,7 @@
 
 import Foundation
 @testable import Hangs
+import SwiftUI
 import Testing
 import ViewInspector
 
@@ -54,8 +55,9 @@ struct HomeViewInspectorTests {
         }
     }
 
-    // #194 C1: the session settings moved from a config card to three pills;
-    // the driver must still reach all three pickers and the Start CTA.
+    // TestFlight build 90 (variant A1): the pills became one settings list
+    // under the deck; the player must still reach every quiz setting (the
+    // round length is new on Home), the categories and the Start CTA.
     @Test("Home still renders the session settings and Start Quiz CTA")
     func homeKeepsSessionConfigAndCta() async throws {
         let view = HomeView(viewModel: makeViewModel())
@@ -63,7 +65,7 @@ struct HomeViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
 
-            for id in ["home-language-menu", "home-difficulty-menu", "home-categories-menu"] {
+            for id in ["home-language-menu", "home-difficulty-menu", "home.questionCount", "home.quickGame", "home.categories.chooseSeveral"] {
                 #expect(throws: Never.self) {
                     try tree.find(viewWithAccessibilityIdentifier: id)
                 }
@@ -125,5 +127,57 @@ struct HomeViewInspectorTests {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
+    }
+
+    /// WHY (TestFlight build 90): Home had no way into Settings, so changing
+    /// e.g. the round length meant finding the Profile tab. The gear must be
+    /// there and must open Settings.
+    @Test("Home's gear opens Settings")
+    func gearOpensSettings() async throws {
+        var opened = 0
+        let view = HomeView(viewModel: makeViewModel(), onOpenSettings: { opened += 1 })
+
+        try await ViewHosting.host(view) {
+            // The gear is a navigation-bar item (after the logo): the tree
+            // search does not enter the toolbar, so the test opens it there.
+            let gear = try view.inspect().scrollView().toolbar().item(1).button()
+            #expect(try gear.accessibilityIdentifier() == "home.settings")
+            try gear.tap()
+        }
+        #expect(opened == 1)
+    }
+
+    /// WHY: at accessibility text sizes the deck and its "Choose several"
+    /// hide, so the categories must get their own row in the list, or there
+    /// is no way to pick one on Home.
+    @Test("at accessibility text sizes the categories get a row in the list")
+    func categoriesRowAtAccessibilitySizes() async throws {
+        let view = HomeView(viewModel: makeViewModel())
+            .environment(\.dynamicTypeSize, .accessibility2)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home-categories-menu") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "home.categories.chooseSeveral") }
+        }
+    }
+
+    /// WHY: the round length picked on Home is the one the next quiz plays,
+    /// and the change is counted once (a re-pick of the same value is not).
+    @Test("picking a round length on Home sets it and reports it once")
+    func roundLengthFromHome() {
+        let analytics = MockAnalyticsClient()
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            analytics: analytics
+        )
+        vm.setQuestionCount(15)
+        vm.setQuestionCount(15)
+        vm.settingsOpenedFromHome()
+        #expect(vm.settings.numberOfQuestions == 15)
+        #expect(analytics.events == [.homeRoundLengthChanged(questions: 15), .homeSettingsOpened])
     }
 }

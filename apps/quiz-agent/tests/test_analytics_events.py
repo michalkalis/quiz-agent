@@ -234,6 +234,17 @@ async def test_result_question_opened_keeps_only_kind_and_verdict():
     assert opened == {"kind": "mcq", "verdict": "incorrect"}
 
 
+async def test_home_settings_events_keep_only_the_round_length():
+    # TestFlight build 90 feedback (Home A1): how often Home's own gear and
+    # round-length row get used; the count is the only property that rides.
+    opened = clean_properties(CLIENT_EVENTS["home_settings_opened"], {"name": "x"})
+    assert opened == {}
+    changed = clean_properties(
+        CLIENT_EVENTS["home_round_length_changed"], {"questions": 8, "name": "x"}
+    )
+    assert changed == {"questions": 8}
+
+
 async def test_quick_game_events_keep_only_the_mode():
     # #224.8: compares skipping and finishing in the quick quiz with the
     # normal flow, and whether the switch gets used; nothing else rides along.

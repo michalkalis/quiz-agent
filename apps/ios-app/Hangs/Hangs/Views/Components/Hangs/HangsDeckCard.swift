@@ -228,7 +228,7 @@ struct HangsAnswerSticker: View {
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Geografia a svet") {
+            HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Zemepis") {
                 Text("Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
             }
             HangsDeckCard(style: Theme.Hangs.Category.style(for: "sports"), categoryName: "Šport") {

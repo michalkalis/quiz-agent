@@ -5,32 +5,34 @@ Lepšie skóre ako 2 z 3 hráčov.
 Вікторина
 Вибери кілька
 All Categories
-10 питання
+8 питання
 All Categories
 Science & Nature
-10 питання
+8 питання
 Science & Nature
 History
-10 питання
+8 питання
 History
-Geography & World
-10 питання
-Geography & World
+Geography
+8 питання
+Geography
 Movies & Music
-10 питання
+8 питання
 Movies & Music
 Sports
-10 питання
+8 питання
 Sports
-Food & Everyday Life
-10 питання
-Food & Everyday Life
-Entertainment
-10 питання
-Entertainment
+Food & Drink
+8 питання
+Food & Drink
+Pop Culture
+8 питання
+Pop Culture
 English
 Slovenčina
 Čeština
+Мова вікторини
+Slovenčina
 Мова вікторини
 Slovenčina
 Easy
@@ -39,12 +41,21 @@ Hard
 Random
 Складність
 Random
-Категорії
-All Categories
+Складність
+Random
+5
+8
+10
+15
+Кількість питань
+8
+Кількість питань
+8
 Швидка вікторина
 Після «Пропусти» одразу наступне питання, без пояснення
 
 trubbo
+Налаштування
 Старт
 # identifiers
 home.daily.open
@@ -63,6 +74,11 @@ home.difficulty.easy
 home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
-home-categories-menu
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
 home.quickGame
+home.settings
 home.startQuiz

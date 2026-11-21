@@ -15,6 +15,10 @@
 //  deck shows the age band's topics, Vek and Téma replace Náročnosť and
 //  Kategórie, Start reads "Štart s deťmi" under the line that the adult
 //  answers; the daily challenge, "Choose several" and Quick quiz hide.
+//  TestFlight build 90 (variant A1, founder 2026-11-21): a gear at the top
+//  opens Settings, and one grouped list under the deck (quiz language,
+//  difficulty, number of questions, Quick quiz) replaces the three pills and
+//  the loose toggle row.
 //
 
 import SwiftUI
@@ -40,6 +44,9 @@ struct HomeView: View {
     /// Opens the custom-pack order sheet. Nil in inspector tests and previews,
     /// which then render Home without the create card.
     var onCreatePack: (() -> Void)?
+    /// Pushes Settings from the gear. Nil in inspector tests and previews,
+    /// where the gear does nothing.
+    var onOpenSettings: (() -> Void)?
 
     var body: some View {
         ScrollView {
@@ -103,6 +110,7 @@ struct HomeView: View {
                 HangsBrandMark()
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+            ToolbarItem(placement: .topBarTrailing) { settingsButton }
         }
         .navigationTitle("Play")
         .navigationBarTitleDisplayMode(.large)
@@ -248,8 +256,7 @@ struct HomeView: View {
                     // The fanned back cards turn on their bottom edge, so one
                     // corner dips below the cards: the page dots' gap holds it.
                 }
-                settingPills
-                quickGameRow
+                quizSettingsList
             }
         }
     }
@@ -271,20 +278,28 @@ struct HomeView: View {
                 )
                 .frame(height: Metrics.deckHeight)
             }
-            settingPills
+            quizSettingsList
         }
     }
 
-    /// #224.8 (canvas D2): "Quick quiz" under the pickers. Off = today's flow.
+    /// #224.8 (canvas D2): "Quick quiz", the last row of the list. Off = today's flow.
     private var quickGameRow: some View {
-        HangsCard {
-            HangsToggleRow(
-                label: "Quick quiz",
-                subtitle: "After \"Next\": next question, no explanation",
-                isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
-            )
-        }
+        HangsToggleRow(
+            label: "Quick quiz",
+            subtitle: "After \"Next\": next question, no explanation",
+            isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
+        )
         .accessibilityIdentifier("home.quickGame")
+    }
+
+    private var settingsButton: some View {
+        Button {
+            onOpenSettings?()
+        } label: {
+            Label("Settings", systemImage: "gearshape")
+                .labelStyle(.iconOnly)
+        }
+        .accessibilityIdentifier("home.settings")
     }
 
     private var chooseSeveralButton: some View {
@@ -371,29 +386,42 @@ struct HomeView: View {
         return String(localized: "resets in \(hours) hours", bundle: .interface, locale: .interface, comment: "Home quota card: hours until the free-question reset")
     }
 
-    // MARK: - Setting pills (#194 C1, was the config card)
+    // MARK: - Settings list (TestFlight build 90, variant A1)
 
     // #82 item 4 (decision 7): every picker marks the active choice with a
     // checkmark; categories are multi-select (the picker sheet toggles
     // membership, "All Categories" clears the selection).
 
-    /// Three pills side by side; stacked once the text is too large for a
-    /// third of the width to hold "Slovenčina" on one line.
-    private var settingPills: some View {
-        let layout = dynamicTypeSize >= .xxLarge
-            ? AnyLayout(VStackLayout(spacing: Theme.Hangs.Spacing.xs))
-            : AnyLayout(HStackLayout(spacing: Theme.Hangs.Spacing.xs))
-        return layout {
-            languageMenu
-            if viewModel.isFamilyModeOn {
-                bandMenu
-                topicMenu
-            } else {
-                difficultyMenu
-                categoriesButton
+    /// One grouped list under the deck, as in the iPhone's Settings. The deck
+    /// and its "Choose several" hide at accessibility text sizes, so the
+    /// categories get a row there instead.
+    private var quizSettingsList: some View {
+        HangsCard {
+            VStack(spacing: 0) {
+                languageMenu
+                hairline
+                if viewModel.isFamilyModeOn {
+                    bandMenu
+                    hairline
+                    topicMenu
+                } else {
+                    difficultyMenu
+                    hairline
+                    if dynamicTypeSize.isAccessibilitySize {
+                        categoriesButton
+                        hairline
+                    }
+                    questionCountMenu
+                    hairline
+                    quickGameRow
+                }
             }
         }
-        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var hairline: some View {
+        HangsDivider()
+            .padding(.leading, Theme.Hangs.Spacing.md)
     }
 
     private var languageMenu: some View {
@@ -413,8 +441,8 @@ struct HomeView: View {
         } label: {
             // #130: same scope wording as Settings — this picks the quiz
             // content language, not the interface language.
-            HomeSettingPill(
-                caption: "Quiz language",
+            HangsConfigRowLabel(
+                label: "Quiz language",
                 value: Language.selectable(viewModel.settings.language).nativeName
             )
         }
@@ -436,12 +464,35 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.difficulty.\(id)")
             }
         } label: {
-            HomeSettingPill(
-                caption: "Difficulty",
+            HangsConfigRowLabel(
+                label: "Difficulty",
                 value: viewModel.settings.difficultyDisplayName()
             )
         }
         .accessibilityIdentifier("home-difficulty-menu")
+    }
+
+    private var questionCountMenu: some View {
+        Menu {
+            ForEach(QuizSettings.questionCountOptions, id: \.self) { count in
+                Button {
+                    viewModel.setQuestionCount(count)
+                } label: {
+                    if viewModel.settings.numberOfQuestions == count {
+                        Label(String(count), systemImage: "checkmark")
+                    } else {
+                        Text(verbatim: String(count))
+                    }
+                }
+                .accessibilityIdentifier("home.questionCount.\(count)")
+            }
+        } label: {
+            HangsConfigRowLabel(
+                label: "Number of questions",
+                value: String(viewModel.settings.numberOfQuestions)
+            )
+        }
+        .accessibilityIdentifier("home.questionCount")
     }
 
     /// #236: "Vek" replaces "Náročnosť" (canvas F3).
@@ -461,7 +512,7 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.band.\(band.rawValue)")
             }
         } label: {
-            HomeSettingPill(caption: "Age", value: viewModel.familySettings.band?.label ?? "")
+            HangsConfigRowLabel(label: "Age", value: viewModel.familySettings.band?.label ?? "")
         }
         .accessibilityValue(viewModel.familySettings.band.map { Text($0.spokenLabel) } ?? Text(verbatim: ""))
         .accessibilityIdentifier("home.band.menu")
@@ -484,23 +535,16 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.topic.\(topic.key)")
             }
         } label: {
-            HomeSettingPill(caption: "Topic", value: viewModel.familyTopic?.name ?? "", valueLineLimit: 2)
+            HangsConfigRowLabel(label: "Topic", value: viewModel.familyTopic?.name ?? "")
         }
         .accessibilityIdentifier("home.topic.menu")
     }
 
     private var categoriesButton: some View {
-        Button {
+        HangsConfigRow(label: "Categories", value: viewModel.settings.categoryDisplayName()) {
             viewModel.categoryPickerOpened(from: .pill)
             showingCategoryPicker = true
-        } label: {
-            HomeSettingPill(
-                caption: "Categories",
-                value: viewModel.settings.categoryDisplayName(),
-                valueLineLimit: 2
-            )
         }
-        .buttonStyle(.plain)
         .accessibilityIdentifier("home-categories-menu")
     }
 

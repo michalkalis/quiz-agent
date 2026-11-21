@@ -20,9 +20,13 @@ Slovenčina
 Čeština
 Jazyk kvízu
 Slovenčina
+Jazyk kvízu
+Slovenčina
 4–6
 7–9
 10–12
+Věk
+7–9
 Věk
 7–9
 LEGO
@@ -31,7 +35,10 @@ Ako sa čo vyrába
 Superschopnosti zvierat
 Téma
 LEGO
+Téma
+LEGO
 trubbo
+Nastavení
 Odpovídáš ty, děti hádají s tebou.
 Start s dětmi
 # identifiers
@@ -54,5 +61,6 @@ home.topic.family-lego
 home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
+home.settings
 home.family.adultAnswers
 home.startFamily

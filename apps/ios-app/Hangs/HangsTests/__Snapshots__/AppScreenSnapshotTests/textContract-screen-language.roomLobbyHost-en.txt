@@ -13,7 +13,7 @@ you · host
 J
 Jana
 Game rules
-10 questions · Random · After each question · 15 s
+8 questions · Random · After each question · 15 s
 Start the game
 # identifiers
 room.close

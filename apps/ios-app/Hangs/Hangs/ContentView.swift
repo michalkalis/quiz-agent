@@ -145,6 +145,12 @@ struct ContentView: View {
         navModel.orderFlowPresented = true
     }
 
+    /// The gear on Home pushes Settings onto the Play tab's stack.
+    private func openSettingsFromHome() {
+        viewModel.settingsOpenedFromHome()
+        navModel.path.append(.settings)
+    }
+
     private func openRoom(invite: RoomInvite?) {
         guard room == nil else { return }
         let game = appState.makeRoomViewModel(for: viewModel)
@@ -272,7 +278,8 @@ struct ContentView: View {
                                 appConfig: appState.appConfig,
                                 dailyChallenge: dailyChallenge,
                                 sharedQuiz: sharedQuiz,
-                                onCreatePack: presentOrderFlow
+                                onCreatePack: presentOrderFlow,
+                                onOpenSettings: openSettingsFromHome
                             )
                         case .question:
                             QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)

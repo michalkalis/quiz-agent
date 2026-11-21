@@ -79,7 +79,7 @@ nonisolated enum Config {
     // MARK: - App Configuration
 
     /// Default number of questions per quiz
-    static let defaultQuestions = 10
+    static let defaultQuestions = 8
 
     /// Default quiz difficulty: a mix, each question's level picked by the
     /// server (#216, founder 2026-10-30).
@@ -97,7 +97,7 @@ nonisolated enum Config {
     // MARK: - Settings Options
 
     /// Available question count options for quiz settings
-    static let questionCountOptions = [5, 10, 15, 20]
+    static let questionCountOptions = [5, 8, 10, 15]
 
     /// Available difficulty options for quiz settings
     static var difficultyOptions: [(String, String)] {
@@ -119,11 +119,11 @@ nonisolated enum Config {
             (nil, String(localized: "All Categories", bundle: .interface, locale: .interface, comment: "Quiz category option: no category filter")),
             ("science-nature", String(localized: "Science & Nature", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("history", String(localized: "History", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("geography-world", String(localized: "Geography & World", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("geography-world", String(localized: "Geography", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("movies-music", String(localized: "Movies & Music", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("sports", String(localized: "Sports", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("food-everyday", String(localized: "Food & Everyday Life", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("entertainment", String(localized: "Entertainment", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("food-everyday", String(localized: "Food & Drink", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("entertainment", String(localized: "Pop Culture", bundle: .interface, locale: .interface, comment: "Quiz category option")),
         ]
     }
 
@@ -141,11 +141,11 @@ nonisolated enum Config {
     private static let categoryResources: [String: LocalizedStringResource] = [
         "science-nature": "Science & Nature",
         "history": "History",
-        "geography-world": "Geography & World",
+        "geography-world": "Geography",
         "movies-music": "Movies & Music",
         "sports": "Sports",
-        "food-everyday": "Food & Everyday Life",
-        "entertainment": "Entertainment",
+        "food-everyday": "Food & Drink",
+        "entertainment": "Pop Culture",
     ]
 
     /// #240: the resource behind a `categoryOptions` name (nil id = All

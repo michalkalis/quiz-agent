@@ -17,8 +17,8 @@ final nonisolated class RSProfileTests: XCTestCase {
 
     // MARK: RS-30 — Profile: plan, All stats, Settings under the gear; a quiz hides the tab bar
 
-    // Regression guarded: Settings left Home for the Profile tab, so the gear
-    // there is the only way in; #216.3 moved the plan here and the stat cards
+    // Regression guarded: Settings opens from the gear on Home (TestFlight
+    // build 90 feedback: Home had no way in) and from the Profile's; #216.3 moved the plan here and the stat cards
     // behind "All stats" (open and locked ones, without the retired cards);
     // and a quiz must keep the full screen, with no tab bar to wander off to.
     @MainActor
@@ -26,7 +26,15 @@ final nonisolated class RSProfileTests: XCTestCase {
         let app = RSFlow.launch()
         let profile = ProfilePage(app: app)
 
-        XCTAssertFalse(app.buttons["home.moreSettings"].exists, "RS-30: Home still carries the old settings gear")
+        let home = HomePage(app: app)
+        XCTAssertTrue(home.settingsButton.waitForExistence(timeout: 5), "RS-30: Home has no settings gear")
+        home.settingsButton.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings.voiceCommands"].waitForExistence(timeout: 5),
+            "RS-30: Settings did not open from the Home gear"
+        )
+        app.navigationBars.buttons.element(boundBy: 0).tap() // a11y-id: system back button
+        XCTAssertTrue(home.startQuizButton.waitForExistence(timeout: 5), "RS-30: did not return to Home")
         XCTAssertFalse(profile.planLabel.exists, "RS-30: the plan is still on Home")
         profile.open()
         XCTAssertTrue(profile.planLabel.waitForExistence(timeout: 5), "RS-30: the plan is missing on the Profile")

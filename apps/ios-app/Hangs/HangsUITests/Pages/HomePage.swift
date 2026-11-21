@@ -14,6 +14,11 @@ struct HomePage {
         app.buttons["home.startQuiz"]
     }
 
+    /// TestFlight build 90 (Home A1): the gear at the top opens Settings.
+    var settingsButton: XCUIElement {
+        app.buttons["home.settings"]
+    }
+
     /// While a start is in flight, Start turns into this Cancel control.
     var cancelStartButton: XCUIElement {
         app.buttons["home.cancelStart"]

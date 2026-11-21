@@ -175,6 +175,10 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "result_question_opened": frozenset({"kind", "verdict"}),
     # #224.8: the quick-game switch on Home, and every skip with its mode.
     "quick_game_changed": frozenset({"enabled"}),
+    # TestFlight build 90 feedback (Home A1): Settings opened from the Home
+    # gear, and the round length changed in the Home settings list.
+    "home_settings_opened": frozenset(),
+    "home_round_length_changed": frozenset({"questions"}),
     "question_skipped": frozenset({"quick"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(

@@ -364,10 +364,10 @@ struct FamilyModeHomeViewTests {
 
         #expect(!found.contains("home.mode"))
         #expect(!found.contains("home.startFamily"))
-        #expect(found.isSuperset(of: ["home-difficulty-menu", "home-categories-menu", "home.quickGame", "home.startQuiz"]))
+        #expect(found.isSuperset(of: ["home-difficulty-menu", "home.categories.chooseSeveral", "home.questionCount", "home.quickGame", "home.startQuiz"]))
     }
 
-    @Test("Mode on: switch, Vek and Téma pills, Štart s deťmi; Quick quiz and Choose several gone")
+    @Test("Mode on: switch, Vek and Téma rows, Štart s deťmi; Quick quiz and Choose several gone")
     func modeOnHome() async throws {
         let store = MockPersistenceStore()
         store.familySettings = FamilySettings(isOn: true, band: .kids7to9)
@@ -376,6 +376,6 @@ struct FamilyModeHomeViewTests {
         let found = try await ids(HomeView(viewModel: vm, appConfig: appConfig(on: true)))
 
         #expect(found.isSuperset(of: ["home.mode", "home.band.menu", "home.topic.menu", "home.startFamily", "home.family.adultAnswers"]))
-        #expect(found.isDisjoint(with: ["home-difficulty-menu", "home-categories-menu", "home.quickGame", "home.categories.chooseSeveral", "home.startQuiz"]))
+        #expect(found.isDisjoint(with: ["home-difficulty-menu", "home-categories-menu", "home.questionCount", "home.quickGame", "home.categories.chooseSeveral", "home.startQuiz"]))
     }
 }

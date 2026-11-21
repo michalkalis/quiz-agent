@@ -69,6 +69,10 @@ enum AnalyticsEvent: Equatable {
     case resultQuestionOpened(kind: ResultQuestionKind, verdict: ResultQuestionVerdict)
     /// #224.8: the Home "Quick quiz" switch was flipped.
     case quickGameChanged(enabled: Bool)
+    /// TestFlight build 90 feedback: Settings opened from the gear on Home.
+    case homeSettingsOpened
+    /// TestFlight build 90 feedback: the round length was changed on Home.
+    case homeRoundLengthChanged(questions: Int)
     /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
     case questionSkipped(quick: Bool)
     /// #233: the custom pack topic check before payment; `verdict` is
@@ -118,6 +122,8 @@ enum AnalyticsEvent: Equatable {
         case .homeCategoryPickerOpened: "home_category_picker_opened"
         case .resultQuestionOpened: "result_question_opened"
         case .quickGameChanged: "quick_game_changed"
+        case .homeSettingsOpened: "home_settings_opened"
+        case .homeRoundLengthChanged: "home_round_length_changed"
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
         case .sharedQuizPasted: "shared_quiz_pasted"
@@ -194,8 +200,10 @@ enum AnalyticsEvent: Equatable {
             [("has_account", .bool(hasAccount))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
-        case .togetherOpened, .playerNameChanged:
+        case .togetherOpened, .playerNameChanged, .homeSettingsOpened:
             []
+        case let .homeRoundLengthChanged(questions):
+            [("questions", .int(questions))]
         case let .roomPauseChanged(paused, question):
             [("paused", .bool(paused)), ("question", .int(question))]
         case let .roomGuestReadAloud(on, via):

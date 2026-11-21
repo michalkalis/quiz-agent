@@ -7374,19 +7374,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
+            "value" : "Nebylo jasné, kterou možnost myslíš. Řekni její písmeno."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
+            "value" : "Nebolo jasné, ktorú možnosť myslíš. Povedz jej písmeno."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув, який варіант ти маєш на увазі. Назви його літеру."
+            "value" : "Незрозуміло, який варіант ти маєш на увазі. Назви його літеру."
           }
         }
       }
@@ -7397,19 +7397,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
+            "value" : "Nebylo jasné, kterou možnost myslíš. Řekni její číslo."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
+            "value" : "Nebolo jasné, ktorú možnosť myslíš. Povedz jej číslo."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув, який варіант ти маєш на увазі. Назви його номер."
+            "value" : "Незрозуміло, який варіант ти маєш на увазі. Назви його номер."
           }
         }
       }
@@ -7420,19 +7420,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem odpověď, zkus to znovu."
+            "value" : "Odpověď se nepodařilo zachytit, zkus to znovu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som odpoveď, skús to znova."
+            "value" : "Odpoveď sa nepodarilo zachytiť, skús to znova."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув відповіді, спробуй ще раз."
+            "value" : "Не вдалося розчути відповідь, спробуй ще раз."
           }
         }
       }
@@ -9759,19 +9759,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nic jsem nezachytil"
+            "value" : "Nic nebylo slyšet"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nič som nezachytil"
+            "value" : "Nič nebolo počuť"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нічого не почув"
+            "value" : "Нічого не було чути"
           }
         }
       }

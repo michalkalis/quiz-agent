@@ -132,10 +132,10 @@ struct EmptyAnswerRetryTests {
     /// in the founder's wording (2026-09-24).
     @Test("the prompt exists in every quiz language")
     func promptInEveryQuizLanguage() {
-        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Nezachytil som odpoveď, skús to znova.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Nezachytil jsem odpověď, zkus to znovu.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Odpoveď sa nepodarilo zachytiť, skús to znova.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Odpověď se nepodařilo zachytit, zkus to znovu.")
         #expect(SpokenPrompt.didNotCatch.text(language: .english) == "I didn't catch your answer, please try again.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .ukrainian) == "Я не розчув відповіді, спробуй ще раз.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .ukrainian) == "Не вдалося розчути відповідь, спробуй ще раз.")
     }
 
     /// WHY (founder 2026-09-24): the retry line is ALSO on screen, for the whole

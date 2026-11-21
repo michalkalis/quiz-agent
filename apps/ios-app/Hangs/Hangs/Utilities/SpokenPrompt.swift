@@ -35,19 +35,19 @@ enum SpokenPrompt: String, Sendable {
         switch (self, language) {
         // Founder wording 2026-09-24. The on-screen twin is the xcstrings key
         // "I didn't catch your answer, please try again." (app language).
-        case (.didNotCatch, .slovak): "Nezachytil som odpoveď, skús to znova."
-        case (.didNotCatch, .czech): "Nezachytil jsem odpověď, zkus to znovu."
-        case (.didNotCatch, .ukrainian): "Я не розчув відповіді, спробуй ще раз."
+        case (.didNotCatch, .slovak): "Odpoveď sa nepodarilo zachytiť, skús to znova."
+        case (.didNotCatch, .czech): "Odpověď se nepodařilo zachytit, zkus to znovu."
+        case (.didNotCatch, .ukrainian): "Не вдалося розчути відповідь, спробуй ще раз."
         case (.didNotCatch, .english): "I didn't catch your answer, please try again."
         // Founder wording 2026-09-24; on-screen twins "…Please say its
         // number." / "…Please say its letter." (app language).
-        case (.mcqUnmatchedNumber, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
-        case (.mcqUnmatchedNumber, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
-        case (.mcqUnmatchedNumber, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його номер."
+        case (.mcqUnmatchedNumber, .slovak): "Nebolo jasné, ktorú možnosť myslíš. Povedz jej číslo."
+        case (.mcqUnmatchedNumber, .czech): "Nebylo jasné, kterou možnost myslíš. Řekni její číslo."
+        case (.mcqUnmatchedNumber, .ukrainian): "Незрозуміло, який варіант ти маєш на увазі. Назви його номер."
         case (.mcqUnmatchedNumber, .english): "I didn't catch which option you meant. Please say its number."
-        case (.mcqUnmatchedLetter, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
-        case (.mcqUnmatchedLetter, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
-        case (.mcqUnmatchedLetter, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його літеру."
+        case (.mcqUnmatchedLetter, .slovak): "Nebolo jasné, ktorú možnosť myslíš. Povedz jej písmeno."
+        case (.mcqUnmatchedLetter, .czech): "Nebylo jasné, kterou možnost myslíš. Řekni její písmeno."
+        case (.mcqUnmatchedLetter, .ukrainian): "Незрозуміло, який варіант ти маєш на увазі. Назви його літеру."
         case (.mcqUnmatchedLetter, .english): "I didn't catch which option you meant. Please say its letter."
         }
     }

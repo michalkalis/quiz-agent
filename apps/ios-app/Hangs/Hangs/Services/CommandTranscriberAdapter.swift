@@ -55,6 +55,11 @@ protocol CommandTranscriberAdapter: AnyObject {
     /// an empty list: `nil` means "don't bother calling setContext at all".
     var contextualStrings: [String]? { get }
 
+    /// The bias list for one command screen, or `nil` for an engine that
+    /// ignores contextual strings. A `nil` screen (no window yet) gets the
+    /// whole grammar. Defaults to `contextualStrings`.
+    func contextualStrings(on screen: VoiceCommandScreen?) -> [String]?
+
     /// Locale membership checks — `supportedLocales.contains` is the ONLY valid
     /// gate. `supportedLocale(equivalentTo:)` normalizes an identifier rather
     /// than testing membership and returns sk_SK even for the engine that does
@@ -188,6 +193,14 @@ final class DictationTranscriberCommandAdapter: CommandTranscriberAdapter {
         VoiceCommandLexicon.contextualVocabulary(for: language)
     }
 
+    /// Only the words that are commands on `screen`: a backchannel that is
+    /// no command there would only pull the recognizer toward a word the
+    /// matcher then ignores.
+    func contextualStrings(on screen: VoiceCommandScreen?) -> [String]? {
+        guard let screen else { return contextualStrings }
+        return VoiceCommandLexicon.contextualVocabulary(for: language, on: screen)
+    }
+
     nonisolated init(locale: Locale, language: CommandLanguage) {
         self.locale = locale
         self.language = language
@@ -237,6 +250,8 @@ final class DictationTranscriberCommandAdapter: CommandTranscriberAdapter {
 }
 
 extension CommandTranscriberAdapter {
+    func contextualStrings(on _: VoiceCommandScreen?) -> [String]? { contextualStrings }
+
     /// Whether this adapter already IS the given selection (engine + locale) —
     /// the no-op check for `SilenceDetectionService.setCommandEngine` (#175).
     nonisolated func matches(_ selection: CommandEngineSelection) -> Bool {

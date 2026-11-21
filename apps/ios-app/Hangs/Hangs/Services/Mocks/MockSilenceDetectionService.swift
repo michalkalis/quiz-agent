@@ -136,6 +136,13 @@ final class MockSilenceDetectionService: SilenceDetectionServiceProtocol {
         stopListeningCallCount += 1
     }
 
+    /// The screen the listener was last told it listens for.
+    private(set) var commandScreen: VoiceCommandScreen?
+
+    func setCommandScreen(_ screen: VoiceCommandScreen?) {
+        commandScreen = screen
+    }
+
     /// #175: every requested engine, in order — lets a test prove the window
     /// start path asks for the quiz language's engine before listening.
     var commandEngineRequests: [CommandEngineSelection] = []

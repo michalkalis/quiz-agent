@@ -40,6 +40,7 @@ private let backendClientEvents: [String: Set<String>] = [
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
     "voice_command": ["command", "phase"],
+    "voice_command_window": ["engine", "language", "screen", "transcripts", "matched", "unmatched", "late", "cut_off", "first_transcript_ms"],
     "voice_commands_turned_on": ["source", "result"],
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome", "question_count"],
@@ -90,6 +91,10 @@ private let everyEvent: [AnalyticsEvent] = [
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
     .voiceCommand(command: .next, phase: "result"),
+    .voiceCommandWindow(CommandWindowReport(
+        engine: "dictation", language: "sk", screen: "question",
+        transcripts: 3, matched: 1, unmatched: 1, late: 1, cutOff: 1, firstTranscriptMs: 900
+    )),
     .voiceCommandsTurnedOn(source: .listenBar, result: .granted),
     .paywallViewed(source: .quota),
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success, questionCount: 30),

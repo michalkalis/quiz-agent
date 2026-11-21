@@ -30,6 +30,8 @@ enum AnalyticsEvent: Equatable {
     /// #204.9: the app turned an experiment arm off on this device.
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
     case voiceCommand(command: VoiceCommand, phase: String)
+    /// One closed listening window of the command recognizer.
+    case voiceCommandWindow(CommandWindowReport)
     /// #237: the player turned voice commands on — where, and what iOS
     /// answered the speech-recognition request.
     case voiceCommandsTurnedOn(source: VoiceCommandsSource, result: VoiceCommandsPermissionResult)
@@ -94,6 +96,7 @@ enum AnalyticsEvent: Equatable {
         case .answerCaptured: "answer_captured"
         case .voiceExperimentGuard: "voice_experiment_guard"
         case .voiceCommand: "voice_command"
+        case .voiceCommandWindow: "voice_command_window"
         case .voiceCommandsTurnedOn: "voice_commands_turned_on"
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
@@ -165,6 +168,8 @@ enum AnalyticsEvent: Equatable {
             ]
         case let .voiceCommand(command, phase):
             [("command", .string(command.rawValue)), ("phase", .string(phase))]
+        case let .voiceCommandWindow(report):
+            report.propertyPairs
         case let .voiceCommandsTurnedOn(source, result):
             [("source", .string(source.rawValue)), ("result", .string(result.rawValue))]
         case let .paywallViewed(source):

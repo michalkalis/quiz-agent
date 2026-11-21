@@ -460,6 +460,7 @@ class GenerationStage:
                 id(q): t for q, t in zip(questions, topicalities)
             }
         now = datetime.now(timezone.utc)
+        uncategorized: set[int] = set()
 
         for q in questions:
             # AdvancedQuestionGenerator inherits the Phase 1 `q_<hex>` id
@@ -482,10 +483,16 @@ class GenerationStage:
             # difficulty/category; normalize fail-safe so an off-vocabulary
             # value can never reach Postgres (difficulty → easy|medium|hard,
             # category → taxonomy id, with an explicit order category winning).
+            # An unclassifiable category is dropped after this loop
+            # (2026-11-21: no silent `general` bucket).
             q.difficulty = normalize_difficulty(
                 q.difficulty, default=ctx.difficulty or "medium"
             )
-            q.category = normalize_category(q.category, order_category=ctx.category)
+            category = normalize_category(q.category, order_category=ctx.category)
+            if category is None:
+                uncategorized.add(id(q))
+            else:
+                q.category = category
 
             provenance = q.generation_metadata or GenerationProvenance()
             # #160: never clobber the open branch's `logical_puzzle` marker —
@@ -532,6 +539,26 @@ class GenerationStage:
                 if ttl is not None:
                     q.expires_at = now + ttl
                     q.freshness_tag = classification.content_class
+
+        # 2026-11-21 category review: a question the model filed under no
+        # taxonomy id used to be stored as `general`, which no picker offers
+        # (791 approved questions were reachable only via "all categories").
+        # Drop it loudly instead (counted in `dropped_uncategorized`); with
+        # the seven ids spelled out in the prompt this should stay near zero.
+        dropped_uncategorized = 0
+        classified: list[Question] = []
+        for q in questions:
+            if id(q) in uncategorized:
+                dropped_uncategorized += 1
+                logger.warning(
+                    "GenerationStage dropped question id=%s reason=uncategorized "
+                    "category=%r",
+                    q.id,
+                    q.category,
+                )
+                continue
+            classified.append(q)
+        questions = classified
 
         # Issue #42 task 42.7 + #46 task 46.A2 — post-generation brevity
         # validator, now **normalize-then-drop** instead of drop-only. A
@@ -822,6 +849,7 @@ class GenerationStage:
         return StageResult(
             info={
                 "questions": len(ctx.questions),
+                "dropped_uncategorized": dropped_uncategorized,
                 "dropped_quality": dropped_quality,
                 "normalized_quality": normalized_quality,
                 "dropped_mcq_missing_options": dropped_mcq_missing_options,

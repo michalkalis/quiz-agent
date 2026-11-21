@@ -8,7 +8,7 @@ from typing import List, Optional, Sequence
 from quiz_shared.llm import factory as llm_factory
 
 from .. import feature_flags, uk_policy
-from .classification import CATEGORIES
+from .classification import CATEGORIES, CATEGORY_DEFINITIONS
 from .examples import BAD_EXAMPLES_TEMPLATE, load_gold_standard, load_anti_patterns
 
 # 2026-07-27 live-run F-e — per-question difficulty/category assessment.
@@ -68,13 +68,20 @@ Report your honest assessment in `difficulty`; never label a question `{level}`
 that is not."""
 
 _CATEGORY_CLASSIFY_GUIDANCE = """\
-**`category` — classify each question** into exactly one player-facing filter id:
-{category_ids}.
-`category` is the audience/theme filter players pick in the app — it is NOT the
-subject (`topic` carries that). Use `kids` only for questions a young child can
-enjoy and answer; `adults` only for content unsuited to children; a themed id
-(`disney`, `football`, …) only when the question is squarely about that theme.
-When in doubt, use `general`."""
+**`category` — classify each question** into exactly one of these seven
+player-facing ids (players pick one of them in the app; `topic` carries the
+finer subject):
+{category_definitions}
+File each question under the id whose subject it is closest to; every
+question fits one of the seven. `food-everyday` is food and drink only. Word
+origins and names go where the story is (a place → `geography-world`, a dish
+→ `food-everyday`, a film → `movies-music`, otherwise `history`). Customs and
+holidays: how they are kept around the world → `geography-world`, how they
+began or what they first meant → `history`, festive dishes and drinks →
+`food-everyday`. Brands: food and drink → `food-everyday`, technology →
+`science-nature`, otherwise `entertainment`. Everyday life: how a thing
+works → `science-nature`, where it came from → `history`, how a country does
+it → `geography-world`."""
 
 _CATEGORY_FIXED_GUIDANCE = """\
 **`category`** — this order is for the "{category}" category: set `category` to
@@ -490,7 +497,9 @@ class PromptBuilder:
                 + " — classify THIS question (see DIFFICULTY & CATEGORY)"
             )
             category_guidance = _CATEGORY_CLASSIFY_GUIDANCE.format(
-                category_ids=", ".join(f"`{c}`" for c in CATEGORIES)
+                category_definitions="\n".join(
+                    f"- `{c}` — {CATEGORY_DEFINITIONS[c]}" for c in CATEGORIES
+                )
             )
         player = difficulty_player or _ADULT_PLAYER
         if difficulty:
@@ -519,7 +528,13 @@ class PromptBuilder:
             "category_field": category_field,
             "classification_section": classification_section,
             "topics": ", ".join(topics) if topics else "any",
-            "categories": ", ".join(categories) if categories else "general",
+            # No order category: say so instead of naming a category the
+            # picker does not offer (the old "general" here was echoed back).
+            "categories": (
+                ", ".join(categories)
+                if categories
+                else "none set — classify each question (see DIFFICULTY & CATEGORY)"
+            ),
             "type": question_type,
             "topic_section": topic_section,
             "avoid_section": avoid_section,

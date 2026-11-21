@@ -77,12 +77,12 @@ extension SilenceDetectionService {
         let clock = clock
         let startedAt = clock.now
         drainTask = Task { [weak self] in
-            let outcome = await Self.finishWithinDeadline(
+            let outcome = await Self.drain(
                 clock: clock, budget: Self.drainBudget,
                 finalize: { try await analyzer.finalizeAndFinishThroughEndOfInput() },
-                cancel: { await analyzer.cancelAndFinishNow() }
+                cancel: { await analyzer.cancelAndFinishNow() },
+                results: transcription
             )
-            transcription.cancel()
             self?.endDrain(outcome, screen: screen, locale: locale, startedAt: startedAt)
         }
     }
@@ -131,6 +131,33 @@ extension SilenceDetectionService {
     ) -> Bool {
         guard let screen, pending.screen == screen, pending.localeIdentifier == localeIdentifier else { return false }
         return pending.at.duration(to: now) <= drainedFinalMaxAge
+    }
+
+    /// Finalize, then wait for the results loop to hand over what the
+    /// analyzer published: `finalize` returning does not mean the final has
+    /// crossed the adapter stream and the main-actor hop yet, and cancelling
+    /// the loop at once dropped exactly the late command this exists for.
+    /// The loop ends by itself once the analyzer's result stream finishes;
+    /// both waits together stay within `budget`, and the loop is cancelled
+    /// on any other outcome.
+    nonisolated static func drain(
+        clock: AnyClock<Duration>, budget: Duration,
+        finalize: @escaping @Sendable () async throws -> Void,
+        cancel: @escaping @Sendable () async -> Void,
+        results: Task<Void, Never>
+    ) async -> DrainOutcome {
+        let startedAt = clock.now
+        let outcome = await finishWithinDeadline(clock: clock, budget: budget, finalize: finalize, cancel: cancel)
+        guard outcome == .finalized else {
+            results.cancel()
+            return outcome
+        }
+        let remaining = max(budget - startedAt.duration(to: clock.now), .zero)
+        let delivered = await finishWithinDeadline(
+            clock: clock, budget: remaining,
+            finalize: { await results.value }, cancel: { results.cancel() }
+        )
+        return delivered == .finalized ? .finalized : .timedOut
     }
 
     /// Run `finalize`, but never wait for it longer than `budget` on `clock`.

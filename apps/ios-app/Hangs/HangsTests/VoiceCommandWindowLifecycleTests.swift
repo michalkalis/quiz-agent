@@ -83,6 +83,68 @@ struct VoiceCommandWindowLifecycleTests {
         #expect(cancelled.withLock { $0 })
     }
 
+    // MARK: - Waiting for the results loop
+
+    /// WHY (review on #928): `finalize` returning means the analyzer has
+    /// published its final, not that it has crossed the adapter stream and
+    /// the main-actor hop. Cancelling the results loop right away dropped
+    /// exactly the late command the drain exists for.
+    @Test("the final published by finalize is handed over before the drain ends")
+    func finalReachesTheServiceBeforeTheDrainEnds() async {
+        let (published, analyzerResults) = AsyncStream<Void>.makeStream()
+        let received = OSAllocatedUnfairLock(initialState: false)
+        let resultsLoop = Task {
+            for await _ in published {}
+            // The adapter bridge and the hop to the main actor.
+            for _ in 0 ..< 10 {
+                await Task.yield()
+            }
+            guard !Task.isCancelled else { return }
+            received.withLock { $0 = true }
+        }
+        let outcome = await SilenceDetectionService.drain(
+            clock: AnyClock(TestClock()), budget: .milliseconds(800),
+            finalize: { analyzerResults.finish() }, cancel: {}, results: resultsLoop
+        )
+        #expect(outcome == .finalized)
+        #expect(received.withLock { $0 }, "the final was dropped by cancelling the loop")
+    }
+
+    /// WHY: waiting for the loop must not reopen the hang — finalize plus the
+    /// handover share one budget.
+    @Test("a results loop that never ends is cut off within the same budget")
+    func resultsLoopThatHangs() async {
+        let clock = TestClock()
+        let (never, _) = AsyncStream<Void>.makeStream()
+        let resultsLoop = Task { for await _ in never {} }
+        let decided = OSAllocatedUnfairLock<DrainOutcome?>(initialState: nil)
+        let drain = Task {
+            let outcome = await SilenceDetectionService.drain(
+                clock: AnyClock(clock), budget: .milliseconds(800),
+                finalize: { try await clock.sleep(for: .milliseconds(500)) }, cancel: {},
+                results: resultsLoop
+            )
+            decided.withLock { $0 = outcome }
+        }
+        for _ in 0 ..< 20 {
+            await Task.yield()
+        }
+        await clock.advance(by: .milliseconds(500)) // finalize done, 300 ms left
+        for _ in 0 ..< 20 {
+            await Task.yield()
+        }
+        await clock.advance(by: .milliseconds(299))
+        for _ in 0 ..< 20 {
+            await Task.yield()
+        }
+        #expect(decided.withLock { $0 } == nil, "decided before the budget ran out")
+
+        await clock.advance(by: .milliseconds(1))
+        await drain.value
+        #expect(decided.withLock { $0 } == .timedOut)
+        #expect(resultsLoop.isCancelled)
+    }
+
     // MARK: - Redelivery rule
 
     /// WHY: a drained final is the driver's command only for the window it

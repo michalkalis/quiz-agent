@@ -115,8 +115,8 @@ struct HomeCategoryPicker: View {
 
     private var localQuestionsRow: some View {
         HangsToggleRow(
-            label: "Local questions",
-            subtitle: "For example, a city's bus routes or a local card game",
+            label: "Questions for locals",
+            subtitle: "Things only people who live in that country or city know. For example, bus and tram routes.",
             isOn: $includeLocalQuestions
         )
         .background(surface(cornerRadius: Theme.Hangs.Radius.card))

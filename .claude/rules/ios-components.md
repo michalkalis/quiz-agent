@@ -48,7 +48,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsQuestionPrompt` | The question text with its accent bar; scales down, never wraps off screen. |
 | `HangsDeckCard` | #194: the opaque category-colour card a question sits on (category chip + optional accessory); glass stays on the controls around it. `isCalm: true` (#224) = neutral surface with a category dot and name: the solo result. |
 | `HangsAnswerSticker` | #194: the answer on its own plate inside a result card, so it reads first on any category colour. |
-| `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
+| `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length); `reveal:` = the options read-only with the correct and chosen one marked (result question sheet). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
 | `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |

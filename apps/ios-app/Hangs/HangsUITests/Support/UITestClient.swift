@@ -57,6 +57,11 @@ struct UITestClient {
         try await post(path: "/network/condition", text: profile, calls: calls)
     }
 
+    /// RS-16: `calls` (mock call names) stay in flight until `releaseNetwork()`.
+    func holdNetwork(_ calls: [String]) async throws {
+        try await post(path: "/network/hold", text: calls.joined(separator: ","))
+    }
+
     /// #235.5: the calls held since launch (`--ui-test-network-hold`) answer.
     func releaseNetwork() async throws {
         try await post(path: "/network/release", text: nil)

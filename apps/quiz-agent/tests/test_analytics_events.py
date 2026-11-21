@@ -223,6 +223,17 @@ async def test_home_category_events_keep_only_the_step_and_the_entry_point():
     assert opened == {"source": "deck_button"}
 
 
+async def test_result_question_opened_keeps_only_kind_and_verdict():
+    # TF build 90 (C1): the result no longer prints the question; this counts
+    # how often players still open it, per question type and verdict, and
+    # nothing about the question or the player rides along.
+    opened = clean_properties(
+        CLIENT_EVENTS["result_question_opened"],
+        {"kind": "mcq", "verdict": "incorrect", "question_id": "q1", "answer": "x"},
+    )
+    assert opened == {"kind": "mcq", "verdict": "incorrect"}
+
+
 async def test_quick_game_events_keep_only_the_mode():
     # #224.8: compares skipping and finishing in the quick quiz with the
     # normal flow, and whether the switch gets used; nothing else rides along.

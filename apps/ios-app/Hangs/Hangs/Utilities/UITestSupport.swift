@@ -27,7 +27,8 @@
         /// the end of speech, and the "server" hears the injected transcript.
         private static var mockNetwork: MockNetworkService?
         private static var mockRooms: MockRoomService?
-        /// #235.5: calls held since launch (`--ui-test-network-hold`).
+        /// #235.5: calls held since launch (`--ui-test-network-hold`) or
+        /// since `network/hold`.
         private static var launchHolds: [NetworkHold] = []
         /// #212: where a test's join link lands, as if the player opened it.
         weak static var roomInvites: RoomInviteInbox?
@@ -372,6 +373,8 @@
         /// - `hangs-test://network/condition?text=<profile>&calls=<name,name>` →
         ///   the network changes while the app runs (#235.5); `text=clear`
         ///   brings it back (`changeNetworkCondition`)
+        /// - `hangs-test://network/hold?text=<name,name>` → those calls stay in
+        ///   flight from now on, as with `--ui-test-network-hold` (RS-16)
         /// - `hangs-test://network/release` → the calls held since launch
         ///   (`--ui-test-network-hold`) answer (#235.5)
         /// - `hangs-test://command/send?text=start` → registered command sink("start"),
@@ -420,6 +423,12 @@
             case ("network", "/condition"):
                 let calls = queryItems.first(where: { $0.name == "calls" })?.value
                 return await changeNetworkCondition(profile: text, calls: calls)
+            case ("network", "/hold"):
+                let names = text.split(separator: ",")
+                let calls = names.compactMap { MockNetworkCall(rawValue: String($0)) }
+                guard let mockNetwork, !calls.isEmpty, calls.count == names.count else { return false }
+                launchHolds += calls.map { mockNetwork.hold($0) }
+                return true
             case ("network", "/release"):
                 guard !launchHolds.isEmpty else { return false }
                 launchHolds.forEach { $0.release() }

@@ -2381,6 +2381,30 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
 
+    /// TF build 90 (C1): the result's "Show question" sheet. Reading the
+    /// question holds the auto-advance; the player goes on with Next or the
+    /// toolbar's resume.
+    func openResultQuestion() {
+        if let question = resultQuestion ?? currentQuestion, let evaluation = resultEvaluation {
+            trackAnalytics(.resultQuestionOpened(
+                kind: question.sortedAnswerOptions.isEmpty ? .open : .mcq,
+                verdict: evaluation.wasSkipped ? .skipped : evaluation.isCorrect ? .correct : .incorrect
+            ))
+        }
+        holdResultAutoAdvance()
+    }
+
+    /// The result waits while the player reads the question or listens to the
+    /// explanation, as on any touch on the result (`ResultView`'s tap
+    /// gesture). Held here, not only by that gesture: an activation that is
+    /// no touch (VoiceOver) let the 3 s countdown after the spoken verdict
+    /// leave mid-explanation.
+    func holdResultAutoAdvance() {
+        guard quizState.isShowingResult, !isPaused,
+              autoAdvanceCountdown > 0 || isAwaitingSpokenVerdict else { return }
+        pauseQuiz()
+    }
+
     /// Resume the auto-advance countdown for the *current* result without jumping to the
     /// next question. Distinct from `continueToNext()` (which advances immediately): the
     /// "Resume auto-advance" button must re-arm the countdown so the user stays on the

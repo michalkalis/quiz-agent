@@ -2,29 +2,27 @@
 0/10
 Geography & World
 Влучно
-What is the capital of France?
-твоя відповідь
+правильна відповідь
 Paris
 чому
 послухай
 Paris has been the capital of France since the 10th century.
+Покажи питання
 джерело
 Далі
-ЗАЛИШСЯ
 Налаштування
 # identifiers
 question.progress
 question.counter
 question.category
 result.verdict
-result.question
 result.answer
 result.hearIt
 result.explanation
 result.metaRow
+result.showQuestion
 result.source
 result.continue
-result.stayHere
 question.closeButton
 question.mute
 question.pause

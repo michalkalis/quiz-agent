@@ -36,17 +36,21 @@ extension Question {
     }
 
     func labelledAnswer(_ raw: String) -> String {
+        guard let key = optionKey(matching: raw), let text = possibleAnswers?[key] else { return raw }
+        return "\(optionLabel(for: key)) — \(text)"
+    }
+
+    /// The option an answer names, by key or by option text (the two shapes
+    /// above); nil for an open answer or one that names no option.
+    func optionKey(matching raw: String) -> String? {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !value.isEmpty, let options = possibleAnswers else { return raw }
+        guard !value.isEmpty, let options = possibleAnswers else { return nil }
 
         if let text = options[value.lowercased()],
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         {
-            return "\(optionLabel(for: value.lowercased())) — \(text)"
+            return value.lowercased()
         }
-        if let match = options.first(where: { $0.value.caseInsensitiveCompare(value) == .orderedSame }) {
-            return "\(optionLabel(for: match.key)) — \(match.value)"
-        }
-        return raw
+        return options.first(where: { $0.value.caseInsensitiveCompare(value) == .orderedSame })?.key
     }
 }

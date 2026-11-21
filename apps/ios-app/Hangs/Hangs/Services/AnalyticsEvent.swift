@@ -65,6 +65,8 @@ enum AnalyticsEvent: Equatable {
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
     case homeCategoryPickerOpened(source: CategoryPickerSource)
+    /// TF build 90 (C1): the result's "Show question" sheet opened.
+    case resultQuestionOpened(kind: ResultQuestionKind, verdict: ResultQuestionVerdict)
     /// #224.8: the Home "Quick quiz" switch was flipped.
     case quickGameChanged(enabled: Bool)
     /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
@@ -114,6 +116,7 @@ enum AnalyticsEvent: Equatable {
         case .roomRankingShared: "room_ranking_shared"
         case .homeCategoryStepped: "home_category_stepped"
         case .homeCategoryPickerOpened: "home_category_picker_opened"
+        case .resultQuestionOpened: "result_question_opened"
         case .quickGameChanged: "quick_game_changed"
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
@@ -205,6 +208,8 @@ enum AnalyticsEvent: Equatable {
             [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
         case let .homeCategoryPickerOpened(source):
             [("source", .string(source.rawValue))]
+        case let .resultQuestionOpened(kind, verdict):
+            [("kind", .string(kind.rawValue)), ("verdict", .string(verdict.rawValue))]
         case let .quickGameChanged(enabled):
             [("enabled", .bool(enabled))]
         case let .questionSkipped(quick):
@@ -262,6 +267,17 @@ enum CategoryStepInput: String {
 enum CategoryPickerSource: String {
     case deckButton = "deck_button"
     case pill
+}
+
+enum ResultQuestionKind: String {
+    case open
+    case mcq
+}
+
+enum ResultQuestionVerdict: String {
+    case correct
+    case incorrect
+    case skipped
 }
 
 enum AppLaunchKind: String {

@@ -122,19 +122,31 @@ final nonisolated class RSResultTests: XCTestCase {
 
     // MARK: RS-16 — Read-aloud on the result does not advance
 
-    // Regression guarded (#59.7): "hear it" replays the question audio and
-    // leaves the auto-advance countdown alone — tapping it must not jump to the
-    // next question. (Default auto-advance is 8 s; this check lands well inside.)
+    // Regression guarded (#59.7): "hear it" must not jump to the next question,
+    // and the result waits while it is read. The spoken verdict's download is
+    // held until the test has tapped, so the result's countdown (3 s after the
+    // verdict since #240.9, which made the old 1.5 s wall-clock check race it)
+    // cannot start first. The hold shows at once: the toolbar's pause turns
+    // into Continue. The clock side is pinned in `ResultHearItHoldTests`.
     @MainActor
     func testRS16ReadAloudKeepsResultScreen() async throws {
         let app = RSFlow.launch()
-        let result = try await RSFlow.reachResult(app, client: client, scenario: "RS-16")
+        let question = RSFlow.startQuiz(app)
+        let confirmation = try await RSFlow.recordAndCommit(
+            app, question: question, transcript: "Paris", client: client, scenario: "RS-16"
+        )
+        try await client.holdNetwork(["downloadAudio"])
+        confirmation.confirmButton.tap()
+        let result = ResultPage(app: app)
+        result.waitForResult(timeout: 15)
         let verdictBefore = result.verdict.label
 
         XCTAssertTrue(result.hearItButton.waitForExistence(timeout: 3), "RS-16: result.hearIt missing")
         result.hearItButton.tap()
-        try await Task.sleep(for: .seconds(1.5))
+        let held = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Continue"), object: result.pauseButton)
+        XCTAssertEqual(XCTWaiter.wait(for: [held], timeout: 3), .completed, "RS-16: 'hear it' did not hold the result")
 
+        try await client.releaseNetwork() // the verdict plays; a held result starts no countdown
         XCTAssertTrue(result.continueButton.exists, "RS-16: read-aloud left the result screen")
         XCTAssertEqual(result.verdict.label, verdictBefore, "RS-16: the verdict changed — a new question was graded")
         RSFlow.assertAlive(app, "RS-16")
@@ -142,8 +154,9 @@ final nonisolated class RSResultTests: XCTestCase {
 
     // MARK: RS-17 — Resume auto-advance resumes, does not skip
 
-    // Regression guarded (#59.8): STAY pauses the countdown; RESUME restarts it
-    // and stays on the result — it must not share continueToNext(). Proof of a
+    // Regression guarded (#59.8): pause holds the countdown; resume restarts it
+    // and stays on the result — it must not share continueToNext(). Since TF
+    // build 90 both are the toolbar's pause button (the STAY pill is gone). Proof of a
     // real resume: the result screen then leaves on its own within the 8 s
     // auto-advance window, which a stuck pause would never do.
     @MainActor
@@ -151,13 +164,13 @@ final nonisolated class RSResultTests: XCTestCase {
         let app = RSFlow.launch()
         let result = try await RSFlow.reachResult(app, client: client, scenario: "RS-17")
 
-        XCTAssertTrue(result.stayHereButton.waitForExistence(timeout: 3), "RS-17: result.stayHere missing")
-        result.stayHereButton.tap() // STAY
+        XCTAssertTrue(result.pauseButton.waitForExistence(timeout: 3), "RS-17: question.pause missing")
+        result.pauseButton.tap() // pause
         try await Task.sleep(for: .seconds(1))
-        XCTAssertTrue(result.continueButton.exists, "RS-17: STAY left the result screen")
+        XCTAssertTrue(result.continueButton.exists, "RS-17: pause left the result screen")
 
-        result.stayHereButton.tap() // RESUME
-        XCTAssertTrue(result.continueButton.exists, "RS-17: RESUME skipped straight to the next question")
+        result.pauseButton.tap() // resume
+        XCTAssertTrue(result.continueButton.exists, "RS-17: resume skipped straight to the next question")
 
         result.waitForDismissal(timeout: 15, scenario: "RS-17 (countdown never resumed)")
         RSFlow.assertAlive(app, "RS-17")

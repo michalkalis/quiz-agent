@@ -147,21 +147,6 @@ struct MCQOptionLabelTests {
         #expect(mcq(labels: nil).labelledAnswer("Jupiter") == "B — Jupiter")
     }
 
-    /// WHY: hand-added catalog entries have shipped untranslated before — the
-    /// on-screen twin of each spoken line must resolve in every app language.
-    @Test("the on-screen retry lines resolve in en, sk and cs", arguments: [
-        (SpokenPrompt.mcqUnmatchedNumber, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."),
-        (SpokenPrompt.mcqUnmatchedNumber, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."),
-        (SpokenPrompt.mcqUnmatchedNumber, "en", "I didn't catch which option you meant. Please say its number."),
-        (SpokenPrompt.mcqUnmatchedLetter, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."),
-        (SpokenPrompt.mcqUnmatchedLetter, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."),
-        (SpokenPrompt.mcqUnmatchedLetter, "en", "I didn't catch which option you meant. Please say its letter."),
-    ])
-    func retryLineResolves(prompt: SpokenPrompt, language: String, expected: String) throws {
-        let text = try EmptyAnswerRetryHint(prompt: prompt).inspect().find(ViewType.Text.self)
-        #expect(try text.string(locale: Locale(identifier: language)) == expected)
-    }
-
     @Test("the 1–4 listen-bar caption resolves in en, sk and cs")
     func captionResolves() throws {
         let text = try ListenBar(mode: .answer(.mcq)).inspect().find(text: "Say 1–4 or the answer")

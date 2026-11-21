@@ -70,5 +70,3 @@ No call sites outside previews (2026-09-30): `HangsStatBox`, `HangsStatChip`,
 `HangsVerdictCard`, `HangsAnswerRow`, `HangsAnswerComparisonCard`,
 `HangsStatusBar`, `HangsRecordingBar`, `HangsFooterBar`, `HangsTerminalLabel`,
 `HangsSessionDot`. Candidates for removal; not in the catalog.
-`EmptyAnswerRetryHint` (since TF build 90: the retry line is the open mic bar's
-state line) keeps only its catalog sample.

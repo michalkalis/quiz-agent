@@ -90,8 +90,6 @@ apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	font	.hangsBody(
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	font	.hangsMono(16	1
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	spacing	.padding(.horizontal, 5)	1
 apps/ios-app/Hangs/Hangs/Views/Rating/QuestionRatingSheet.swift	spacing	.padding(.vertical, 10)	1
-apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 10	2
-apps/ios-app/Hangs/Hangs/Views/ResultFooter.swift	spacing	spacing: 3	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	spacing	spacing: 3	1
 apps/ios-app/Hangs/Hangs/Views/SetRecapView.swift	spacing	spacing: 6	1
 apps/ios-app/Hangs/Hangs/Views/SettingsView.swift	font	.hangsBody(12	1

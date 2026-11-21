@@ -2,31 +2,29 @@
 0/10
 Geography & World
 Missed
-What is the capital of France?
 the answer
 Paris
 you said: Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
 hear it
 Paris has been the capital of France since the 10th century.
+Show question
 source
 Next
-STAY
 Settings
 # identifiers
 question.progress
 question.counter
 question.category
 result.verdict
-result.question
 result.answer
 result.said
 result.hearIt
 result.explanation
 result.metaRow
+result.showQuestion
 result.source
 result.continue
-result.stayHere
 question.closeButton
 question.mute
 question.pause

@@ -3,18 +3,28 @@
 //  Hangs
 //
 //  The result card's body (issue #127, re-cut for #131 Track D and again for
-//  #224, canvas B1b): the question in quiet text, the answer big, on a miss what
-//  the driver said (struck through, one line), then "why" with its listen chip.
-//  Byte-identical structure for every verdict, only the label changes. The
-//  explanation scrolls INSIDE it; the screen chrome never scrolls.
+//  #224, canvas B1b): the answer big, on a miss what the driver said (struck
+//  through, one line), then "why" with its listen chip. The explanation scrolls
+//  INSIDE it; the screen chrome never scrolls.
+//
+//  TF build 90 (founder pick C1): the question left the card (it is one tap
+//  away, `ResultQuestionSheet`); the answer is always the question's own; an
+//  accepted answer that was heard differently says what was heard, unstruck.
 //
 
 import SwiftUI
 
 struct ResultAnswerPanel: View {
-    /// The question, quiet, above the answer. Ignored in recap mode (the stem IS the answer text).
-    let questionStem: String?
-    /// "your answer" (correct) / "the answer" (otherwise) / "the question" (recap).
+    /// What the driver said, when it is worth a line under the answer.
+    enum SaidLine: Equatable {
+        /// A miss: struck through.
+        case missed(String)
+        /// TF build 90: accepted, but heard as something else ("solo" for
+        /// "soľ"). Quiet and unstruck: the answer counted.
+        case heard(String)
+    }
+
+    /// "the answer", or "the question" (recap).
     let answerLabel: LocalizedStringKey
     /// The answer, or in recap mode the question stem.
     let answerText: String
@@ -25,8 +35,7 @@ struct ResultAnswerPanel: View {
     let isCorrect: Bool
     /// Explanation text; nil omits the whole "why" block.
     let explanation: String?
-    /// What the driver said, when it is not the answer above (a miss).
-    var userAnswer: String? = nil
+    var saidLine: SaidLine? = nil
     /// #235 F3: the last "hear it" could not be fetched; a note says so.
     var hearItFailed = false
 
@@ -36,21 +45,10 @@ struct ResultAnswerPanel: View {
         static let blockGap = Theme.Hangs.Spacing.sm
         static let labelGap = Theme.Hangs.Spacing.xxs
         static let fadeHeight: CGFloat = 18
-        static let hearItHeight: CGFloat = 32
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let questionStem, !isRecap {
-                Text(questionStem)
-                    .font(.hangsBody)
-                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, Metrics.blockGap)
-                    .accessibilityIdentifier("result.question")
-            }
-
             ResultAnswerHeadline(
                 label: answerLabel,
                 text: answerText,
@@ -59,8 +57,8 @@ struct ResultAnswerPanel: View {
                 identifier: "result.answer"
             )
 
-            if let userAnswer {
-                saidLine(userAnswer)
+            if let saidLine {
+                said(saidLine)
                     .padding(.top, Metrics.labelGap)
             }
 
@@ -86,14 +84,23 @@ struct ResultAnswerPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// "Your answer: ~~X~~", one quiet line (it was wrong, so it is struck through).
-    private func saidLine(_ answer: String) -> some View {
-        (Text("you said") + Text(verbatim: ": ") + Text(verbatim: answer).strikethrough(pattern: .solid))
-            .font(.hangsBody)
-            .foregroundStyle(Theme.Hangs.Colors.muted)
-            .lineLimit(2)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityIdentifier("result.said")
+    /// One quiet line: "you said: ~~X~~" on a miss, "heard: X" on an accepted
+    /// answer that was transcribed differently.
+    private func said(_ line: SaidLine) -> some View {
+        Group {
+            switch line {
+            case let .missed(answer):
+                Text("you said") + Text(verbatim: ": ") + Text(verbatim: answer).strikethrough(pattern: .solid)
+            case let .heard(answer):
+                Text("heard", comment: "Result card: label before the transcript of an accepted answer that differs from the correct answer, e.g. 'heard: solo'")
+                    + Text(verbatim: ": ") + Text(verbatim: answer)
+            }
+        }
+        .font(.hangsBody)
+        .foregroundStyle(Theme.Hangs.Colors.muted)
+        .lineLimit(2)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityIdentifier(line.identifier)
     }
 
     // MARK: Explanation (internal scroll, never clips the screen)
@@ -119,21 +126,17 @@ struct ResultAnswerPanel: View {
 
     /// "Hear it": a neutral chip on the card.
     private var hearItControl: some View {
-        Button(action: onHearIt) {
-            Label {
-                Text("hear it")
-            } icon: {
-                Image(systemName: "speaker.wave.2")
-            }
-            .font(.hangsCaption.weight(.semibold))
-            .foregroundStyle(Theme.Hangs.Colors.ink)
-            .padding(.horizontal, Theme.Hangs.Spacing.sm)
-            .frame(minHeight: Metrics.hearItHeight)
-            .background(Capsule().fill(Theme.Hangs.Colors.bgInset))
-            .contentShape(Capsule())
+        ResultCardChip(title: "hear it", systemImage: "speaker.wave.2", action: onHearIt)
+            .accessibilityIdentifier("result.hearIt")
+    }
+}
+
+extension ResultAnswerPanel.SaidLine {
+    var identifier: String {
+        switch self {
+        case .missed: "result.said"
+        case .heard: "result.heard"
         }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("result.hearIt")
     }
 }
 

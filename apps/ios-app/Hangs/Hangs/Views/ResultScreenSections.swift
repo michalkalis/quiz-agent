@@ -82,8 +82,9 @@ struct ResultVerdictLabel: View {
 
 // MARK: - Meta row
 
-/// The small last row of the card: the TestFlight review badge and (daily
-/// challenge) how the others did on the left, the source link on the right.
+/// The small last row of the card: "Show question" on the left, the source
+/// link on the right (TF build 90, C1). The TestFlight review badge and (daily
+/// challenge) how the others did sit on their own line above it.
 struct ResultMetaRow: View {
     let sourceDomain: String?
     /// #205: how the other players did, daily challenge only.
@@ -93,18 +94,28 @@ struct ResultMetaRow: View {
     var reviewNote: String? = nil
     /// The card's text colour, so the link reads on any category fill.
     var tint: Color = Theme.Hangs.Colors.muted
+    /// Opens the question sheet; nil hides the control (recap: the question is on the card).
+    var onShowQuestion: (() -> Void)? = nil
     let onOpenSource: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-            HStack(spacing: Theme.Hangs.Spacing.xs) {
-                if let reviewBadge {
-                    ReviewBadge(badge: reviewBadge, filled: true)
-                        .fixedSize()
-                        .accessibilityIdentifier("result.reviewBadge")
+            if reviewBadge != nil || crowd != nil {
+                HStack(spacing: Theme.Hangs.Spacing.xs) {
+                    if let reviewBadge {
+                        ReviewBadge(badge: reviewBadge, filled: true)
+                            .fixedSize()
+                            .accessibilityIdentifier("result.reviewBadge")
+                    }
+                    if let crowd {
+                        CrowdStripRow(strip: crowd)
+                    }
                 }
-                if let crowd {
-                    CrowdStripRow(strip: crowd)
+            }
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
+                if let onShowQuestion {
+                    ResultCardChip(title: "Show question", systemImage: "doc.text", action: onShowQuestion)
+                        .accessibilityIdentifier("result.showQuestion")
                 }
                 Spacer(minLength: Theme.Hangs.Spacing.xs)
                 if let sourceDomain {
@@ -125,5 +136,37 @@ struct ResultMetaRow: View {
         // badge inside keep their own identifiers (a bare container id replaces them).
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("result.metaRow")
+    }
+}
+
+// MARK: - Card chip
+
+/// A quiet capsule action on the result card ("hear it", "Show question").
+struct ResultCardChip: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    let action: () -> Void
+
+    private enum Metrics {
+        static let height: CGFloat = 32
+    }
+
+    var body: some View {
+        // a11y-id: call-site
+        Button(action: action) {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: systemImage)
+            }
+            .font(.hangsCaption.weight(.semibold))
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .lineLimit(1)
+            .padding(.horizontal, Theme.Hangs.Spacing.sm)
+            .frame(minHeight: Metrics.height)
+            .background(Capsule().fill(Theme.Hangs.Colors.bgInset))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

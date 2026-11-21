@@ -74,7 +74,7 @@ struct ResultViewInspectorTests {
     /// #131 Track D Variant A: the band states the outcome ONCE — the big
     /// "Nailed it" word plus the check badge. The old "correct" status chip is
     /// gone; the screen must never say the same state twice.
-    @Test("Correct evaluation renders the verdict label, Nailed it word and 'your answer' panel")
+    @Test("Correct evaluation renders the verdict label, Nailed it word and 'the answer' panel")
     func correctVariantRendersVerdictAndAnswerPanel() async throws {
         let evaluation = Evaluation(
             userAnswer: "Uranus", result: .correct, points: 1.0,
@@ -91,8 +91,8 @@ struct ResultViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "checkmark" })
             }
-            // Answer panel: correct-branch label + the answer itself.
-            #expect(throws: Never.self) { try tree.find(text: "your answer") }
+            // TF build 90 (C1): the question's answer, under the same label on every verdict.
+            #expect(throws: Never.self) { try tree.find(text: "the answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
         }
     }
@@ -345,11 +345,11 @@ struct ResultViewInspectorTests {
         }
     }
 
-    // MARK: - Footer consolidation
+    // MARK: - Footer
 
-    /// Footer consolidates to one row: STAY pill + "Next question" CTA. The old
-    /// "Why is this correct?" ghost button is cut on BOTH outcomes.
-    @Test("Footer shows STAY + Next question; the cut 'Why is this correct?' ghost is gone")
+    /// The footer is the "Next" CTA alone (TF build 90 dropped the STAY pill,
+    /// `ResultScreenC1Tests`). The old "Why is this correct?" ghost stays cut.
+    @Test("Footer shows Next; the cut 'Why is this correct?' ghost is gone")
     func footerIsConsolidatedSingleRow() async throws {
         let evaluation = Evaluation(
             userAnswer: "Uranus", result: .correct, points: 1.0,
@@ -360,31 +360,7 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(button: "Next") }
-            #expect(throws: Never.self) { try tree.find(text: "STAY") }
             #expect(throws: (any Error).self) { try tree.find(button: "Why is this correct?") }
-        }
-    }
-
-    /// #131 Track D: "Next question" is the primary CTA and must sit LEFT of the
-    /// STAY/RESUME pill (swapped from the #127 layout, founder spec). Asserted by
-    /// document order of the two footer buttons, which mirrors left-to-right
-    /// layout order in the underlying HStack.
-    @Test("Footer button order: Next question precedes the STAY pill")
-    func footerNextQuestionPrecedesStayPill() async throws {
-        let evaluation = Evaluation(
-            userAnswer: "Uranus", result: .correct, points: 1.0,
-            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
-        )
-        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
-
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            // Document order of Text nodes mirrors left-to-right HStack layout
-            // order; "Next question" is the CTA's label, "STAY" the pill's.
-            let texts = try tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
-            let nextIndex = try #require(texts.firstIndex(of: "Next"))
-            let stayIndex = try #require(texts.firstIndex(of: "STAY"))
-            #expect(nextIndex < stayIndex)
         }
     }
 
@@ -718,10 +694,10 @@ struct ResultViewSkipHapticTests {
     }
 }
 
-// MARK: - CTA countdown + STAY/RESUME pill (#108B / #127)
+// MARK: - CTA countdown (#108B)
 
-/// #108B: the auto-advance countdown lives inside the "Next question" CTA. #127
-/// consolidates the escape hatch into a single STAY/RESUME pill in the same row.
+/// #108B: the auto-advance countdown lives inside the "Next question" CTA. The
+/// pause is the toolbar's (TF build 90 removed the STAY/RESUME pill).
 @Suite("ResultView CTA Countdown Tests")
 @MainActor
 struct ResultViewCTACountdownTests {
@@ -741,7 +717,7 @@ struct ResultViewCTACountdownTests {
         return vm
     }
 
-    @Test("Active auto-advance shows the seconds chip in the CTA and the STAY pill")
+    @Test("Active auto-advance shows the seconds chip in the CTA")
     func activeCountdownShowsChipAndStay() async throws {
         let vm = makeCountdownViewModel(countdown: 7)
         let view = ResultView(viewModel: vm)
@@ -750,11 +726,10 @@ struct ResultViewCTACountdownTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "7s") }
             #expect(throws: (any Error).self) { try tree.find(text: "Next in 7s") }
-            #expect(throws: Never.self) { try tree.find(text: "STAY") }
         }
     }
 
-    @Test("Paused countdown hides the chip and swaps STAY → RESUME in the same slot")
+    @Test("Paused countdown hides the chip and keeps Next")
     func pausedCountdownSwapsPill() async throws {
         let vm = makeCountdownViewModel(countdown: 7)
         vm.isPaused = true
@@ -763,8 +738,6 @@ struct ResultViewCTACountdownTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: (any Error).self) { try tree.find(text: "7s") }
-            #expect(throws: (any Error).self) { try tree.find(text: "STAY") }
-            #expect(throws: Never.self) { try tree.find(text: "RESUME") }
             #expect(throws: Never.self) { try tree.find(text: "Next") }
         }
     }

@@ -152,6 +152,7 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),
     "home_category_picker_opened": frozenset({"source"}),
+    "result_question_opened": frozenset({"kind", "verdict"}),
     # #224.8: the quick-game switch on Home, and every skip with its mode.
     "quick_game_changed": frozenset({"enabled"}),
     "question_skipped": frozenset({"quick"}),

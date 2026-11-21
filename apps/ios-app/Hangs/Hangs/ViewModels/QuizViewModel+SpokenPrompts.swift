@@ -126,8 +126,10 @@ extension QuizViewModel {
 
     /// Read the result's explanation aloud, then give the result screen its
     /// listener back. A tap is explicit, so it plays even when muted, as the
-    /// replay it replaces did.
+    /// replay it replaces did. The result waits while it is read.
     func readExplanationAloud(_ explanation: String) {
+        holdResultAutoAdvance()
+        holdResultAutoAdvance()
         taskBag.add(Task { [weak self] in
             guard let self else { return }
             var outcome = ReadAloudOutcome()

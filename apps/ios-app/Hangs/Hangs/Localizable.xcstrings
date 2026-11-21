@@ -11947,6 +11947,29 @@
         }
       }
     },
+    "Question" : {
+      "comment" : "Title of the sheet that shows the full question from the result screen",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання"
+          }
+        }
+      }
+    },
     "Question %lld" : {
       "comment" : "Hra spolu (#240.9): award, the question it was on",
       "localizations" : {
@@ -14705,6 +14728,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Покажи все"
+          }
+        }
+      }
+    },
+    "Show question" : {
+      "comment" : "Result card: opens a sheet with the full question that was just answered",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobraz otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobraz otázku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи питання"
           }
         }
       }
@@ -20108,6 +20154,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "послухай"
+          }
+        }
+      }
+    },
+    "heard" : {
+      "comment" : "Result card: label before the transcript of an accepted answer that differs from the correct answer, e.g. 'heard: solo'",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozpoznáno"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozpoznané"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "розпізнано"
           }
         }
       }

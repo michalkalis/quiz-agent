@@ -511,26 +511,31 @@ must not appear frozen until the result lands.
 
 ---
 
-## RS-16: Result read-aloud replays the question without disturbing the countdown
+## RS-16: "Hear it" on the result reads the explanation and holds the result
 
-**Type:** Unit (HangsTests) + Sim. Guards issue #59.7.
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.7 (read-aloud jumped to the
+next question) and the CI flake after #240.9.
 
-**Hypothesis:** `ResultView` read-aloud must call the timer-safe
-`replayQuestionAudio()` (not `playQuestionAudio`) — it plays the question
-audio once and leaves the running auto-advance countdown untouched; tapping
-it must not advance to the next question.
+**Hypothesis:** "hear it" (`result.hearIt`) reads the explanation, never advances,
+and holds the auto-advance while it reads (`QuizViewModel.holdResultAutoAdvance`),
+as any touch on the result does. Since #240.9 the countdown is 3 s after the
+spoken verdict, so a hold that only came from the screen's tap gesture let an
+activation without a touch (VoiceOver) leave mid-explanation, and the old
+1.5 s wall-clock check raced the countdown.
 
 **Preconditions**
-- `playOpusCallCount` spy from RS-11 in place.
 - Launch with `--ui-test`.
+- (Sim) Before confirming the answer, hold the spoken verdict's download
+  (`network/hold?text=downloadAudio`), so no countdown can start before the tap.
 
 **Steps**
-1. (Unit) On the result screen, capture `autoAdvanceCountdown`; call `replayQuestionAudio()`.
-2. (Sim) Reach `showingResult`; tap `result.readAloud`.
+1. (Unit, `ResultHearItHoldTests`, test clock) "hear it" during the spoken verdict
+   and during the countdown, then run the clock past the countdown.
+2. (Sim) Reach `showingResult`; tap `result.hearIt`; release the network.
 
 **Asserts**
-- (Unit) `playOpusCallCount == 1` after the call AND `autoAdvanceCountdown` unchanged.
-- (Sim) state stays `showingResult`; countdown value preserved (not reset/aborted).
+- (Unit) still `showingResult`, `isPaused`; Next still moves on from a held result.
+- (Sim) `question.pause` reads "Continue" at once; the result and its verdict stay.
 - App process is alive; no `EXC_*` in log.
 
 ---

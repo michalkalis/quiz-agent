@@ -76,6 +76,18 @@ enum SpokenPrompt: String, Sendable {
         }
     }
 
+    /// Free tier split (founder 2026-11-21): the month's free voice answers
+    /// are used up. Said once a month, the quiz goes on by typing and tapping.
+    /// The on-screen twin is `VoiceLimitNotice` (app language).
+    static func voiceLimitLine(language: CommandLanguage) -> String {
+        switch language {
+        case .slovak: "Hlasové odpovede zadarmo na tento mesiac sa minuli. Hraj ďalej písaním alebo klepnutím."
+        case .czech: "Hlasové odpovědi zdarma na tento měsíc došly. Hraj dál psaním nebo klepnutím."
+        case .ukrainian: "Безплатні голосові відповіді на цей місяць закінчилися. Грай далі й відповідай текстом або дотиком."
+        case .english: "This month's free voice answers are used up. Keep playing by typing or tapping."
+        }
+    }
+
     /// The error screen's line (#188 G1, founder 2026-10-06). `commands` are
     /// the words that screen will act on — empty when voice commands are off,
     /// so the line never promises a word nobody listens for. Command words

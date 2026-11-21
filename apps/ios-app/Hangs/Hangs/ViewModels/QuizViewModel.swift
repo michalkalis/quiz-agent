@@ -1221,7 +1221,9 @@ final class QuizViewModel: ObservableObject {
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
-            answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() }
+            answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() },
+            isVoiceAllowanceSpent: { [weak self] in self?.isVoiceAllowanceSpent ?? false },
+            voiceAllowanceSpent: { [weak self] in self?.noteVoiceAllowanceSpent($0) }
         )
     }
 
@@ -2476,6 +2478,13 @@ final class QuizViewModel: ObservableObject {
     /// waits a silent reading pause first (`silentReadingPause`).
     func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
+        // Free tier split (2026-11-21): no think window and no mic when the
+        // voice answers are used up; the question waits for a typed or tapped
+        // answer.
+        guard !isVoiceAllowanceSpent else {
+            noteVoiceAllowanceSpent(nil)
+            return
+        }
         attemptLedger.latency.openWindow(questionId: currentQuestion?.id)
         quizTimersController.startThinkingTimeCountdown(
             resumingAt: heldSeconds,

@@ -71,6 +71,10 @@ enum AnalyticsEvent: Equatable {
     case quickGameChanged(enabled: Bool)
     /// TestFlight build 90 feedback: Settings opened from the gear on Home.
     case homeSettingsOpened
+    /// Free tier split (2026-11-21): the once-a-month "voice answers used up"
+    /// notice came on the question screen. Its Plus link is `paywallViewed`
+    /// with source `voice_limit`.
+    case voiceLimitNoticeShown
     /// TestFlight build 90 feedback: the round length was changed on Home.
     case homeRoundLengthChanged(questions: Int)
     /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
@@ -123,6 +127,7 @@ enum AnalyticsEvent: Equatable {
         case .resultQuestionOpened: "result_question_opened"
         case .quickGameChanged: "quick_game_changed"
         case .homeSettingsOpened: "home_settings_opened"
+        case .voiceLimitNoticeShown: "voice_limit_notice_shown"
         case .homeRoundLengthChanged: "home_round_length_changed"
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
@@ -200,7 +205,7 @@ enum AnalyticsEvent: Equatable {
             [("has_account", .bool(hasAccount))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
-        case .togetherOpened, .playerNameChanged, .homeSettingsOpened:
+        case .togetherOpened, .playerNameChanged, .homeSettingsOpened, .voiceLimitNoticeShown:
             []
         case let .homeRoundLengthChanged(questions):
             [("questions", .int(questions))]
@@ -400,6 +405,8 @@ enum PaywallSource: String {
     case profile
     case settings
     case completion
+    /// 2026-11-21: the Plus link in the "voice answers used up" notice.
+    case voiceLimit = "voice_limit"
 }
 
 enum PurchaseKind: String {

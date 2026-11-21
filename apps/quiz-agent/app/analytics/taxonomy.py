@@ -183,6 +183,10 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     # TestFlight build 90 feedback (Home A1): Settings opened from the Home
     # gear, and the round length changed in the Home settings list.
     "home_settings_opened": frozenset(),
+    # 2026-11-21 free tier split: the once-a-month "voice answers used up"
+    # notice came on the question screen (its Plus link = paywall_viewed with
+    # source voice_limit).
+    "voice_limit_notice_shown": frozenset(),
     "home_round_length_changed": frozenset({"questions"}),
     "question_skipped": frozenset({"quick"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.

@@ -119,5 +119,13 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
     func incrementSignInPromptShownCount() {
         signInPromptShownCount += 1
     }
+
+    // MARK: - Voice allowance notice
+
+    var voiceLimitNoticeMonth: String?
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String) {
+        voiceLimitNoticeMonth = resetsAt
+    }
 }
 #endif

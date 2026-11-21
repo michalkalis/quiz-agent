@@ -43,6 +43,7 @@ enum TaskKey: Hashable, Sendable {
     case quickSkipNote // #224.8: the "Skipped, correct: X" note leaves by itself
     case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
     case roundEndPaywall // #240.9: the paywall after a round the monthly limit ended
+    case voiceLimitPrompt // 2026-11-21: the once-a-month "voice answers used up" line
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

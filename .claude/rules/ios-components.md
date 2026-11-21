@@ -53,6 +53,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `QuestionListenBar` | Voice bar on the question screen: the screen's one home of state, countdown and "Processing…". TF build 90: shown only for the think countdown, the open mic and an answer in flight (`QuestionListenPhase.strip`), never with command words, in a reserved slot; the open mic carries the retry and spelling hints (`answerNote`). |
 | `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
 | `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6), on the answer sheet only. |
+| `VoiceLimitNotice` | Once-a-month "free voice answers used up" line with a quiet Plus link (2026-11-21 free tier split). |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |
 | `ReviewBadge`, `QuestionProvenanceRow` | TestFlight-only review/translation badge and the question's provenance row. |
 | `AmbientGlowWash`, `GlowSweepLine` | Voice feedback glow (animated; no snapshot). |
@@ -62,6 +63,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | Component | Use for |
 |---|---|
 | `HomePlanCard` | The plan/quota card (free, credits, subscriber, grace, expired). |
+| `PlanVoiceAnswersLine` | Voice answers left this month, inside the free plan card (Profile only). |
 | `HomePacksSection` | The user's question packs on Home (owns `MyPacksViewModel`). |
 
 ## Unused — don't build on these

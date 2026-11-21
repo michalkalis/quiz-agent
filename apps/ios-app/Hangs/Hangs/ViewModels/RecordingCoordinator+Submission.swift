@@ -298,6 +298,21 @@ extension RecordingCoordinator {
                     return
                 }
 
+                // 2026-11-21: the free voice answers are used up. Nothing was
+                // transcribed or charged: back to the same question, which the
+                // player answers by typing or tapping. No retry, no error screen.
+                if case let .voiceLimitReached(limit) = error {
+                    outcome = .notCaptured(VoiceLimitError.reachedCode)
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.voiceLimit") else { return }
+                    self.cancelAutoStopRecordingTimer()
+                    self.setIsAutoRecording(false)
+                    self.setErrorMessage(nil)
+                    self.transition(to: .askingQuestion)
+                    self.voiceAllowanceSpent(limit)
+                    Logger.network.info("🎙️ Voice answer refused — voice answers are used up this month")
+                    return
+                }
+
                 // #185 track G: the server's coded "say it again" — nothing was
                 // graded. An MCQ answer that named no option gets its own line.
                 if case let .answerNotCaptured(code, heard) = error {

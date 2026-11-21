@@ -46,6 +46,15 @@ extension RecordingCoordinator {
             return
         }
 
+        // Free tier split (2026-11-21): no voice answers left this month. The
+        // mic stays closed, as with the mic denied above, and the question
+        // stays answerable by typing or tapping; the notice comes once.
+        guard !isVoiceAllowanceSpent() else {
+            Logger.audio.info("🎙️ startRecording refused — voice answers are used up this month")
+            if quizState() == .askingQuestion { voiceAllowanceSpent(nil) }
+            return
+        }
+
         // #185 (founder 2026-09-24): a manual start stops the read-out, the
         // hands-free one waits for it to end — see RecordingCoordinator+Trigger.
         let readOut = await resolveQuestionReadOut(for: trigger)

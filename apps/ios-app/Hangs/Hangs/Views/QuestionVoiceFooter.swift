@@ -71,6 +71,14 @@ struct QuestionVoiceFooter: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
+            // 2026-11-21: once a month, the voice answers are used up. Shown in
+            // both states, because Answer now opens the typed field.
+            if viewModel.showsVoiceLimitNotice {
+                VoiceLimitNotice(onPlus: viewModel.openPaywallFromVoiceLimitNotice)
+                    .padding(.horizontal, Self.gutter)
+                    .transition(.opacity)
+            }
+
             if showTextInput {
                 // TF build 90 (founder): typing is its own calm state. The field,
                 // send and Skip (F2) sit directly on the keyboard; only the
@@ -168,7 +176,13 @@ struct QuestionVoiceFooter: View {
             tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil,
             singleLineTitle: true
         ) {
-            Task { await viewModel.toggleRecording() }
+            // 2026-11-21: with the voice answers used up, Answer opens the
+            // typed field instead of a mic the server would refuse.
+            if viewModel.isVoiceAllowanceSpent {
+                openTypedAnswer()
+            } else {
+                Task { await viewModel.toggleRecording() }
+            }
         }
         // #174 review: during an in-flight skip the footer stays mounted, so
         // gate the CTA on `.skipping` too — a tap there is a silent no-op.
@@ -190,11 +204,7 @@ struct QuestionVoiceFooter: View {
     /// the Answer button beside it, a labelled glass button, so typing is a
     /// first-class way to answer and not a hidden icon.
     private var typeButton: some View {
-        Button {
-            viewModel.beginTypingAnswer()
-            showTextInput = true
-            isTextFieldFocused.wrappedValue = true
-        } label: {
+        Button(action: openTypedAnswer) {
             Label("Type", systemImage: "keyboard")
                 .font(.hangsButton)
                 .lineLimit(1)
@@ -261,6 +271,12 @@ struct QuestionVoiceFooter: View {
             skipButton
         }
         .padding(.horizontal, Self.gutter)
+    }
+
+    private func openTypedAnswer() {
+        viewModel.beginTypingAnswer()
+        showTextInput = true
+        isTextFieldFocused.wrappedValue = true
     }
 
     private func submitTypedAnswer() {

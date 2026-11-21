@@ -93,12 +93,6 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.micOpenDelayMs = newValue }
     }
 
-    /// See `RecordingState.silencePromptQuestionKey` (#240.9).
-    var silencePromptQuestionKey: String? {
-        get { recordingState.silencePromptQuestionKey }
-        set { recordingState.silencePromptQuestionKey = newValue }
-    }
-
     /// See `RecordingState.rejectedTranscripts` (#204.2).
     var rejectedTranscripts: RejectedTranscripts {
         get { recordingState.rejectedTranscripts }

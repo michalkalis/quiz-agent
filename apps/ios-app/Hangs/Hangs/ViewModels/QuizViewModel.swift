@@ -314,16 +314,6 @@ final class QuizViewModel: ObservableObject {
         return quizState == .askingQuestion || quizState == .recording
     }
 
-    /// #240.9 (founder 2026-11-18): the last recording on this question was
-    /// silence the phone measured, so the question offers speak, type or skip
-    /// in a calm line until the player does one of them.
-    var showsSilencePrompt: Bool {
-        guard let key = recordingCoordinator.silencePromptQuestionKey,
-              key == (currentQuestion?.id ?? "")
-        else { return false }
-        return quizState == .askingQuestion
-    }
-
     /// #208.6 (founder 2026-10-16): once the player has thrown a transcript of
     /// this question away (Again, "znova", "nie", a new answer over it), the
     /// question screen and the answer sheet say the answer can be spelled. The

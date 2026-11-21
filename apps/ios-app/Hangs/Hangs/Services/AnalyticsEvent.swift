@@ -352,10 +352,6 @@ enum VoiceCaptureFailure: String {
     case recorderFailed = "recorder_failed"
     /// #240: the microphone is refused in iOS Settings, so no recording was started.
     case micDenied = "mic_denied"
-    /// #240.9: the phone measured silence for the whole window to start
-    /// speaking; nothing was uploaded and the player was offered speak, type
-    /// or skip. Not counted as an answer attempt.
-    case silent
 }
 
 /// #240.9: how the player left a round before its end.

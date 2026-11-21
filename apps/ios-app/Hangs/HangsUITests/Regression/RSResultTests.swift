@@ -95,7 +95,9 @@ final nonisolated class RSResultTests: XCTestCase {
     // Regression guarded (founder, TestFlight build 90): a quick-game skip
     // goes to the next question without the result screen, so the question
     // screen stays up, and the answer field the player had opened stayed open
-    // on the next question with Type greyed out.
+    // on the next question with Type greyed out. Since the TF build 90
+    // declutter, typing shows only the field and send (no Skip button), so
+    // the skip arrives the way it still can while typing: the voice command.
     @MainActor
     func testRS46QuickSkipClosesTypedAnswerField() async throws {
         let app = RSFlow.launch()
@@ -112,7 +114,7 @@ final nonisolated class RSResultTests: XCTestCase {
         let question = RSFlow.startQuiz(app)
         question.textInputToggle.tap()
         XCTAssertTrue(question.textField.waitForExistence(timeout: 3), "RS-46: question.textField did not appear")
-        question.skipButton.tap()
+        try await client.sendCommand("skip")
 
         let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: question.textField)
         XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 10), .completed, "RS-46: the answer field stayed open on the next question")

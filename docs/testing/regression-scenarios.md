@@ -1093,7 +1093,9 @@ build 90: the field stayed open, Type greyed out).
 **Preconditions:** `--ui-test`; Home `home.quickGame` switched on.
 
 **Steps:** start a quiz, tap `question.textInputToggle`, wait for
-`question.textField`, tap `question.skip`.
+`question.textField`, send the voice command "skip" (`/command/send`; since
+the TF build 90 declutter, typing shows only the field and send, no Skip
+button).
 
 **Asserts:** `question.textField` is gone within 10 s;
 `question.textInputToggle` is enabled. App alive.

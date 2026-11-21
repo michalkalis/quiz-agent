@@ -5282,19 +5282,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozuměl jsem"
+            "value" : "Nebylo ti rozumět"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozumel som"
+            "value" : "Nebolo ti rozumieť"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не розчув"
+            "value" : "Не вдалося розчути"
           }
         }
       }
@@ -5305,19 +5305,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozuměl jsem. %@"
+            "value" : "Nebylo ti rozumět. %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozumel som. %@"
+            "value" : "Nebolo ti rozumieť. %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не розчув. %@"
+            "value" : "Не вдалося розчути. %@"
           }
         }
       }
@@ -6505,28 +6505,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Їжа й напої"
-          }
-        }
-      }
-    },
-    "For example, a city's bus routes or a local card game" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Třeba linky MHD ve tvém městě nebo místní karetní hra"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napríklad linky MHD v tvojom meste alebo miestna kartová hra"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Наприклад, автобусні маршрути твого міста чи місцева карткова гра"
           }
         }
       }
@@ -8356,28 +8334,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажую…"
-          }
-        }
-      }
-    },
-    "Local questions" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Místní otázky"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokálne otázky"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Локальні питання"
           }
         }
       }
@@ -12194,6 +12150,29 @@
         }
       }
     },
+    "Questions for locals" : {
+      "comment" : "Categories sheet: title of the switch that includes questions only people from one country or city know (#206)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky pro místní"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky pre miestnych"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання для місцевих"
+          }
+        }
+      }
+    },
     "Questions per session" : {
       "localizations" : {
         "cs" : {
@@ -15798,6 +15777,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Питання будуть ті самі. Результати побачиш, коли відкриєш своє посилання."
+          }
+        }
+      }
+    },
+    "Things only people who live in that country or city know. For example, bus and tram routes." : {
+      "comment" : "Categories sheet: subtitle of the local questions switch (#206)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To, co ví jen ten, kdo v dané zemi nebo městě žije. Třeba linky MHD."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To, čo vie len ten, kto v danej krajine alebo meste žije. Napríklad linky MHD."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, що знає лише той, хто живе в певній країні чи місті. Наприклад, маршрути міського транспорту."
           }
         }
       }

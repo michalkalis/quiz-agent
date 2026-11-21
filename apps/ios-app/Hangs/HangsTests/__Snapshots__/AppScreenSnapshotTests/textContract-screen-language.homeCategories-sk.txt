@@ -8,8 +8,8 @@ Movies & Music
 Sports
 Food & Drink
 Pop Culture
-Lokálne otázky
-Napríklad linky MHD v tvojom meste alebo miestna kartová hra
+Otázky pre miestnych
+To, čo vie len ten, kto v danej krajine alebo meste žije. Napríklad linky MHD.
 
 Hotovo
 # identifiers

@@ -44,6 +44,14 @@ protocol PersistenceStoreProtocol: Sendable {
     /// Load saved quiz settings (returns default if not found)
     func loadSettings() -> QuizSettings
 
+    /// #231: the phone's language while the quiz language still follows it —
+    /// from a fresh install until the player picks a language. Nil once they
+    /// have, and on an install from before this build (it may have picked one).
+    var unchosenPhoneLanguage: String? { get }
+
+    /// The player picked a quiz language: the phone's language never overrides it again.
+    func markLanguageChosen()
+
     // MARK: - Question History
 
     /// Library question IDs already served, oldest first. Packs keep their own
@@ -122,6 +130,9 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let statsKey = "quiz_stats"
     private let signInPromptCountKey = "sign_in_prompt_shown_count"
     private let familySettingsKey = "family_settings"
+    /// true: the quiz language follows the phone; false: the player chose one;
+    /// absent: an install from before #231, never switched.
+    private let languageFollowsPhoneKey = "quiz_language_follows_phone_231"
 
     /// How many library question ids the history keeps (#200, founder
     /// 2026-10-12). Only an exclusion list: older ids may come back, which is
@@ -205,6 +216,9 @@ final class PersistenceStore: PersistenceStoreProtocol {
         // Try to load saved settings
         guard let data = userDefaults.data(forKey: settingsKey) else {
             Logger.persistence.debug("📦 PersistenceStore: No saved settings found, using default")
+            if userDefaults.object(forKey: languageFollowsPhoneKey) == nil {
+                userDefaults.set(true, forKey: languageFollowsPhoneKey)
+            }
             return QuizSettings.firstLaunch(phoneLanguage: phoneLanguage)
         }
 
@@ -220,6 +234,14 @@ final class PersistenceStore: PersistenceStoreProtocol {
             Logger.persistence.error("❌ PersistenceStore: Failed to decode settings: \(error, privacy: .public), using default")
             return QuizSettings.default
         }
+    }
+
+    var unchosenPhoneLanguage: String? {
+        userDefaults.bool(forKey: languageFollowsPhoneKey) ? phoneLanguage : nil
+    }
+
+    func markLanguageChosen() {
+        userDefaults.set(false, forKey: languageFollowsPhoneKey)
     }
 
     /// #216 (founder 2026-10-30): the default moved from Medium to Random. A

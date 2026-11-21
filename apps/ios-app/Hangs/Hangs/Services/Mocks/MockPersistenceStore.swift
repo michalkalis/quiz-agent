@@ -55,6 +55,13 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
         savedSettings ?? QuizSettings.default
     }
 
+    /// #231: nil = the language never follows the phone (UI tests seed theirs).
+    var unchosenPhoneLanguage: String?
+
+    func markLanguageChosen() {
+        unchosenPhoneLanguage = nil
+    }
+
     // MARK: - Question History
 
     func addQuestionId(_ id: String) {

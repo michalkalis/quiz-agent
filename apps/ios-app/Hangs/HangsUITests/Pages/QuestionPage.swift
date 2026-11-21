@@ -87,13 +87,15 @@ struct QuestionPage {
     /// #185 track F (F2): the answer bar now leads with its STATE —
     /// "Listening…" until speech is heard, "Hearing you…" after — and the
     /// instruction follows it. Both mean the mic is live for the answer.
+    /// TF build 90: on the retry after an empty answer it leads with "Didn't
+    /// catch that" instead, the mic open all the same.
     var answerListenBarExists: Bool {
         app.descendants(matching: .any).matching(Self.answerListenBarPredicate).count > 0
     }
 
     private static let answerListenBarPredicate = NSPredicate(
-        format: "identifier == %@ AND (label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@)",
-        "listen-bar", "listening…", "capturing…"
+        format: "identifier == %@ AND (label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@)",
+        "listen-bar", "listening…", "capturing…", "didn't catch that"
     )
 
     /// Wait for the question screen to appear (question.text must exist).

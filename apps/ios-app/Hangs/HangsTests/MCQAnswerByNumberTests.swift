@@ -259,7 +259,11 @@ struct MCQUnmatchedRetryTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "I didn't catch which option you meant. Please say its letter.") }
+            // TF build 90: the open mic's bar says why it opened again and
+            // asks for the letter; there is no free line under the question.
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(throws: Never.self) { try bar.find(text: "Didn't catch that") }
+            #expect(throws: Never.self) { try bar.find(text: "Say A–D or the answer") }
         }
     }
 

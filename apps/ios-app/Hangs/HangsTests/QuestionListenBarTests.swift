@@ -246,7 +246,7 @@ struct QuestionListenBarRenderTests {
 // MARK: - On the question screen
 
 @MainActor
-@Suite("QuestionView — the D1 bar never leaves the screen (#179)")
+@Suite("QuestionView — the D1 bar while it has something to say (#179, TF build 90)")
 struct QuestionViewListenBarPresenceTests {
     /// Arms the command listener the way `QuestionViewInspectorTests` does, so
     /// `commandListenerHint` is non-nil and the chips are allowed to render.
@@ -264,12 +264,12 @@ struct QuestionViewListenBarPresenceTests {
         return vm
     }
 
-    /// Finding 6 / screenshot 9: on MCQ the bar was simply absent while the
-    /// question was read aloud — the driver's first look at the screen showed no
-    /// hint, no countdown and nothing to say.
-    @Test("the bar is on screen while the question is being read, on both question types",
+    /// TF build 90 (founder) reverses finding 6: the read is audible, so a bar
+    /// saying "Reading the question" was noise. The slot stays (nothing moves),
+    /// the bar does not.
+    @Test("no bar while the question is being read, on both question types",
           arguments: [Question.previewMCQ, Question.preview])
-    func barIsPresentWhileTheQuestionIsRead(question: Question) async throws {
+    func noBarWhileTheQuestionIsRead(question: Question) async throws {
         let vm = await makeArmedViewModel(question: question)
         vm.isPlayingQuestionTTS = true // #208: "reading" is claimed only while a read plays
         #expect(vm.answerWindowRemaining == 0, "precondition: the read is still running")
@@ -277,8 +277,8 @@ struct QuestionViewListenBarPresenceTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: Never.self) { try tree.find(text: "Reading the question") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Reading the question") }
         }
     }
 
@@ -299,30 +299,11 @@ struct QuestionViewListenBarPresenceTests {
         }
     }
 
-    /// #174's five-quiz expiry is reversed (D1): the founder is well past five
-    /// and it had left him with a caption naming nothing he could say.
-    @Test("the command words are still there after more than five completed quizzes",
-          arguments: [Question.previewMCQ, Question.preview])
-    func wordsSurviveTheFifthQuiz(question: Question) async throws {
-        let vm = await makeArmedViewModel(question: question)
-        vm.quizStats.totalQuizzes = 12 // well past the retired gate
-        vm.thinkingTimeCountdown = 8
-        #expect(vm.showsVoiceHints, "the words must not expire with use")
-
-        let view = QuestionView(viewModel: vm)
-        try await ViewHosting.host(view) {
-            let tree = try view.inspect()
-            let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            #expect(throws: Never.self) { try chips.find(text: "“start”") }
-            #expect(throws: Never.self) { try chips.find(text: "“next”") }
-        }
-    }
-
     /// The founder's hard condition on D1: the rest of the screen must not move,
     /// and the bottom action row stays on ONE line. Structural, so it fails if
     /// the chip row ever pushes the footer into wrapping: all three controls must
     /// live in the SAME HStack, and the bar must not be inside it.
-    @Test("the open question's Start · Type · Skip row stays one row with the chips on screen")
+    @Test("the open question's Start · Type · Skip row stays one row with the bar on screen")
     func openQuestionFooterStaysOneRow() async throws {
         let vm = await makeArmedViewModel(question: .preview)
         vm.thinkingTimeCountdown = 8
@@ -330,8 +311,8 @@ struct QuestionViewListenBarPresenceTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self, "precondition: the chip row is on screen") {
-                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(throws: Never.self, "precondition: the countdown bar is on screen") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
 
             let row = try tree.find(ViewType.HStack.self, where: { stack in
@@ -348,7 +329,7 @@ struct QuestionViewListenBarPresenceTests {
     /// The MCQ side of the same condition: the skip chip stays pinned with a
     /// taller bar on screen. #188 G9: it is the stack's last row now (an inset
     /// let the options scroll under it), always outside the options' scroll.
-    @Test("the MCQ skip chip stays pinned with the chips on screen")
+    @Test("the MCQ skip chip stays pinned with the bar on screen")
     func mcqFooterStaysPinned() async throws {
         let vm = await makeArmedViewModel(question: .previewMCQLongOptions)
         vm.thinkingTimeCountdown = 8
@@ -356,8 +337,8 @@ struct QuestionViewListenBarPresenceTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self, "precondition: the chip row is on screen") {
-                try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            #expect(throws: Never.self, "precondition: the countdown bar is on screen") {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.skip") }
             let options = try tree.find(viewWithAccessibilityIdentifier: "mcq.option.a")

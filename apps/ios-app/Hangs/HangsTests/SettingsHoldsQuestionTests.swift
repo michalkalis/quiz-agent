@@ -75,9 +75,9 @@ struct SettingsHoldsQuestionTests {
         let vm = makeVM(clock: clock)
         await thinkFourSeconds(vm, clock)
 
-        vm.holdQuestionForSettings()
+        vm.holdQuestionForModal()
         await clock.advance(by: .seconds(60))
-        vm.releaseQuestionAfterSettings()
+        vm.releaseQuestionAfterModal()
 
         #expect(!vm.isPaused)
         await pumpUntil({ vm.thinkingTimeCountdown == 6 }, "the think window must continue from 6 s")
@@ -95,8 +95,8 @@ struct SettingsHoldsQuestionTests {
         await thinkFourSeconds(vm, clock)
         vm.togglePause()
 
-        vm.holdQuestionForSettings()
-        vm.releaseQuestionAfterSettings()
+        vm.holdQuestionForModal()
+        vm.releaseQuestionAfterModal()
 
         #expect(vm.isPaused, "closing Settings resumed a quiz the player had paused")
         vm.quizTimersController.cancelThinkingTime()

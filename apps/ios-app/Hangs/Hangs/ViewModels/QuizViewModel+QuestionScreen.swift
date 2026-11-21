@@ -63,11 +63,21 @@ extension QuizViewModel {
         return "\(question.optionLabel(for: key)) · \(value)"
     }
 
-    /// A chip is a promise the word will be heard: it needs the Settings toggle
-    /// AND an armed listener (`commandListenerHint`), which is what the bar was
-    /// gated on wholesale before #179 D1 — the bar stays either way now.
-    var showsCommandWords: Bool {
-        showsVoiceHints && commandListenerHint != nil
+    /// TF build 90: what the strip between the card and the buttons shows, or
+    /// nil when it is not on screen (`QuestionListenPhase.strip`), for the
+    /// bar phase the screen derived. Both question types ask this one function.
+    func questionStripPhase(_ phase: QuestionListenPhase?) -> QuestionListenPhase? {
+        QuestionListenPhase.strip(
+            phase,
+            hasCommandsAccessory: phase.flatMap { commandsAccessory(for: $0) } != nil
+        )
+    }
+
+    /// TF build 90: the hint the open mic's bar carries. The retry line wins,
+    /// as it did when both were lines of their own.
+    var answerBarNote: ListenBar.AnswerNote? {
+        if showsEmptyAnswerRetryHint { return .didNotCatch }
+        return showsSpellingHint ? .spelling : nil
     }
 
     /// #179 D1: the one state model, asked the same way by both question types.

@@ -214,8 +214,10 @@ struct QuestionFooterInspectorTests {
         }
     }
 
-    /// The command bar keeps its slot while idle — and now names the words.
-    @Test("the command bar carries the concrete commands sub-line")
+    /// TF build 90 (founder): commands are heard unreliably, so the screen no
+    /// longer advertises them. With a command window armed and nothing to
+    /// count down, the strip is not on screen at all (its slot stays).
+    @Test("an armed command window puts no command bar and no words on screen")
     func commandBarShowsCommands() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
@@ -231,8 +233,11 @@ struct QuestionFooterInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) {
+            #expect(throws: (any Error).self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            }
+            #expect(throws: (any Error).self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
     }

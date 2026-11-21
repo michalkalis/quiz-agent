@@ -163,6 +163,18 @@ struct ListenBar: View {
         case micOff
     }
 
+    /// TF build 90 (founder): the question screen's hints live in the open
+    /// mic's bar, not as free lines under the question. Answer mode only, and
+    /// only until speech is heard.
+    enum AnswerNote: Equatable {
+        /// #185 track B: the mic opened again after an empty answer; the state
+        /// line says why.
+        case didNotCatch
+        /// #208.6: a transcript of this question was thrown away; the
+        /// instruction offers spelling.
+        case spelling
+    }
+
     /// #132 Track B — the think-phase window this bar is counting down. The fill
     /// fraction is `remaining/total`; a zero total hides the fill (no window is
     /// draining, e.g. while the question is still being read).
@@ -219,6 +231,9 @@ struct ListenBar: View {
     /// nil or 0 = no window running, nothing shown. It moved here from the
     /// Stop button so the quiz counts down in one place.
     var answerRemaining: Int? = nil
+
+    /// TF build 90: the retry or spelling hint (answer mode only).
+    var answerNote: AnswerNote? = nil
 
     /// #173 B1 (founder locked 2026-09-07): a trailing ✕ that hides the bar for
     /// the CURRENT question only. Nil = no dismiss affordance (Home, result,
@@ -500,7 +515,8 @@ struct ListenBar: View {
         // #185 track F: the state, not the instruction — the instruction
         // moved to `answerInstruction` (the sub-line).
         case .answer:
-            return speechHeard ? Text("Hearing you…") : Text("Listening…")
+            if speechHeard { return Text("Hearing you…") }
+            return answerNote == .didNotCatch ? Text("Didn't catch that") : Text("Listening…")
         }
     }
 
@@ -510,6 +526,12 @@ struct ListenBar: View {
     private var answerInstruction: Text? {
         guard case let .answer(kind) = mode else { return nil }
         if speechHeard { return Text("I'll stop when you go quiet") }
+        if answerNote == .spelling, kind == .open {
+            return Text(
+                "Or spell it: P, A, R, I, S",
+                comment: "Under 'Listening…' after the player rejected a transcript: the answer can be spoken letter by letter. Short, it shares one line with the countdown. The example spells Paris as it is written in this language."
+            )
+        }
         switch kind {
         // #171 Track I: answering with the option TEXT works (and goes through
         // the confirmation sheet like every other answer), so the caption must

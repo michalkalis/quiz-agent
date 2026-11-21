@@ -421,9 +421,9 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
-    /// #240: the pause is Settings' own (`holdQuestionForSettings`), not the
-    /// player's, so closing Settings ends it.
-    var isHeldBySettings = false
+    /// #240: the pause is the modal's own (`holdQuestionForModal`: Settings,
+    /// the "End Quiz?" alert), not the player's, so closing the modal ends it.
+    var isHeldByModal = false
 
     /// Quiz-level pause (#171 Track D; resets on the next question) — see
     /// `QuizTimersController.isPaused`.

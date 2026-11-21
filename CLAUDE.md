@@ -65,6 +65,7 @@ Fail loud. "Migration completed" is wrong if records were silently skipped; "tes
 ### 3. Communication
 Answer the exact question first, then expand only if it helps. Lead with the answer in whatever form fits the question, and address the user's stated constraint directly (e.g. "what is X" wants a definition; "how do I do Y given Z" wants Z handled). Don't surface adjacent scenarios, future states, or implementation details unless necessary.
 Explain at the conceptual level — what technology or approach, and why, not how it's coded. Never include code snippets, SQL, or implementation abbreviations unless explicitly asked.
+**Reports are short product-level lists (founder, 2026-11-18).** After a piece of work say what was done and how it changes the product, as a brief list; he tests everything himself. Don't repeat what he asked for or decided, don't retell the path, and keep internal detail (reviews, test counts, cleanup) out unless something failed or needs him.
 
 ### 4. Surface conflicts, don't average them
 If two existing patterns contradict, don't blend them.
@@ -111,7 +112,8 @@ If a task genuinely won't fit, split it at a clean boundary, commit what's valid
 Keep going while a step doesn't need the founder; stop only when you can't continue without them, or before anything destructive. A turn that ends in text alone is a progress report, not a done-state — finish the whole task you were given.
 Before asking the user for anything — a decision, an answer, or an action for them to perform — first confirm you genuinely can't resolve it better yourself from the code, conventions, or a sensible default. Most questions never need to reach them: decide what you can, state the assumption, and proceed.
 **Always decide product matters *with* the user** (UX, scope, feature behavior, monetization, vision) — these need their input even when a reasonable default exists.
-When you do need them, **ask interactively during the session** (e.g. an in-session question prompt) with enough context to answer without digging. Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
+When you do need them, **ask through the interactive question prompt** (the dialog with selectable options, `AskUserQuestion`), not as a question at the end of a text reply, whenever the answer blocks your next step and options make sense (founder, 2026-11-18). Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
+**Each question stands on its own.** The founder often sees only the dialog, and the context is buried in session history: put into the question itself what it is about (feature name, not just an issue number), what you found, and what each option leads to, in product terms. Recommended option first. If he answers "I need more context", the question was too thin: explain in plain words and ask again.
 When the user must perform an action outside the code (set a secret or API key, change a console/dashboard setting, run an auth or login flow), give **exact, numbered, step-by-step instructions** and assume zero prior knowledge — they rarely know how on their own.
 
 ## Rules files

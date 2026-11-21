@@ -17,7 +17,8 @@ Spec (every text field accepts markdown; only `title` and `questions` are requir
       "title": "Rodinný režim: úvodná obrazovka",
       "summary": "2-3 sentences: what this is about, product level",
       "done": ["what now works", "..."],            # optional, short
-      "test": ["what to try in the app", "..."],    # optional
+      "how": ["how it works now, plain words"],     # optional: technical direction, no detail
+      "risks": ["what players could feel"],         # optional: product/UX impact only
       "questions": [{
         "id": "entry",                               # stable key, echoed in the answers
         "title": "Kde má byť vstup do režimu?",
@@ -27,6 +28,7 @@ Spec (every text field accepts markdown; only `title` and `questions` are requir
           "title": "Karta na domovskej obrazovke",
           "desc": "one line of consequence",
           "image": "path/to/screenshot.png",         # embedded into the page
+          "video": "path/to/clip.mp4",               # played from disk, not embedded
           "html": "<div>inline mockup</div>",        # rendered in an isolated frame
           "height": 420,                             # frame height for `html`
           "recommended": true
@@ -92,6 +94,7 @@ background:#12351c;border-radius:999px;padding:.05rem .5rem}
 .media{margin-top:.8rem;border-radius:10px;overflow:hidden;background:#0d0f14;
 display:grid;place-items:center}
 .media img{display:block;max-width:100%;max-height:460px;cursor:zoom-in}
+.media video{display:block;max-width:100%;max-height:460px}
 .media iframe{display:block;width:100%;border:0;background:#fff}
 textarea{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--border);
 border-radius:10px;padding:.6rem .8rem;font:inherit;font-size:.95rem;resize:vertical}
@@ -232,6 +235,11 @@ def media(opt: dict, base: Path) -> str:
         mime = mimetypes.guess_type(path.name)[0] or "image/png"
         data = base64.b64encode(path.read_bytes()).decode()
         return f'<div class="media"><img alt="" src="data:{mime};base64,{data}"></div>'
+    if opt.get("video"):
+        path = (base / opt["video"]).resolve()
+        if not path.exists():
+            sys.exit(f"Video not found: {path}")
+        return f'<div class="media"><video controls muted preload="metadata" src="{path.as_uri()}"></video></div>'
     if opt.get("html"):
         doc = html.escape(opt["html"], quote=True)
         return (
@@ -310,7 +318,8 @@ def main() -> None:
         css=CSS,
         summary=md(spec.get("summary", "")),
         boxes=box("Čo je hotové", spec.get("done", []))
-        + box("Čo vyskúšať", spec.get("test", [])),
+        + box("Ako to funguje", spec.get("how", []))
+        + box("Na čo si dať pozor", spec.get("risks", [])),
         questions="\n".join(
             question(i, q, base) for i, q in enumerate(spec["questions"], 1)
         ),

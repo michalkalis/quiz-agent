@@ -69,7 +69,6 @@ if sentry_dsn:
     )
 
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
-from quiz_shared.database.sync_pgvector_store import SyncPgvectorStore
 
 from .config import get_settings
 from .session.manager import SessionManager
@@ -176,8 +175,10 @@ async def lifespan(app: FastAPI):
     )
     # #151: the serve path awaits the async store directly — one bridged,
     # blocking call per retrieval capped the whole process at ~one lookup at a
-    # time. The sync facade stays for the admin/write callers that need it.
-    question_store = SyncPgvectorStore(async_pgvector)
+    # time. The admin routes await it too: the sync facade ran their calls on
+    # another event loop, and the shared async engine's pooled connections
+    # belong to the main loop ("Future attached to a different loop").
+    question_store = async_pgvector
     logger.info("Question store: PgvectorQuestionStore (canonical, read + write)")
 
     # Initialize services

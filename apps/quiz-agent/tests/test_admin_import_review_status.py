@@ -54,13 +54,13 @@ class _FakeStore:
     def __init__(self) -> None:
         self.added: list[Question] = []
 
-    def get(self, question_id: str) -> Question | None:
+    async def get(self, question_id: str) -> Question | None:
         return None
 
-    def find_duplicates(self, text: str, threshold: float = 0.85):
+    async def find_duplicates(self, text: str, threshold: float = 0.85):
         return []
 
-    def add(self, question: Question) -> bool:
+    async def add(self, question: Question) -> bool:
         self.added.append(question)
         return True
 

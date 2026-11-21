@@ -8,7 +8,7 @@ from typing import Any, List, Literal, Optional
 import sentry_sdk
 from fastapi import Depends, Request
 from pydantic import BaseModel, Field, field_validator
-from quiz_shared.database.question_store import QuestionStore
+from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.languages import (
     QUIZ_LANGUAGES,
     is_dark_language,
@@ -859,7 +859,7 @@ def get_quiz_flow(request: Request) -> QuizFlowService:
     return request.app.state.quiz_flow
 
 
-def get_question_store(request: Request) -> QuestionStore:
+def get_question_store(request: Request) -> PgvectorQuestionStore:
     return request.app.state.question_store
 
 

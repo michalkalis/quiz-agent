@@ -37,6 +37,7 @@ from app.rooms.service import RoomService
 from app.rooms.store import MemoryRoomStore
 from app.session import manager as session_manager
 from app.session.manager import SessionManager
+from app.usage.tracker import VoiceCheck
 
 pytestmark = pytest.mark.asyncio
 
@@ -108,6 +109,12 @@ class Usage:
 
     async def record_question(self, user_id):
         self.used[user_id] += 1
+
+    async def check_voice_answer(self, user_id, key):
+        return VoiceCheck(True, 0, None, datetime.now(timezone.utc))
+
+    async def record_voice_answer(self, user_id, key):
+        return True
 
     async def get_usage(self, user_id):
         return {

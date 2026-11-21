@@ -159,6 +159,11 @@ class DailyUsage(Base):
     tts_chars: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    # 2026-11-21: answers given by voice today, against the free voice allowance
+    # (``usage.voice_allowance``); summed over the month like questions_count.
+    voice_answers: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
     # Dead column post-#93: check_limit no longer reads it; kept pending a cleanup migration.
     is_premium: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default="false"

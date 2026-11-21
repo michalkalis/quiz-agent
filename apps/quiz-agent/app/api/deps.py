@@ -368,10 +368,11 @@ class UsageResponse(BaseModel):
 
     Additive over the pre-#93 raw dict: ``subscription_status`` + ``credit_balance``
     are new; the legacy fields are unchanged so an un-updated iOS client keeps
-    working (it just sees the 30-question cap and no pack UI). ``questions_limit``
-    / ``remaining`` are the monthly allowance (free 30, or 1,000 for an entitled
+    working (it just sees the free question cap and no pack UI). ``questions_limit``
+    / ``remaining`` are the monthly allowance (free 150, or 1,000 for an entitled
     Trubbo Plus sub, #199); ``None`` only for the legacy premium flag on a
-    non-entitled account."""
+    non-entitled account. The ``voice_answers_*`` fields (2026-11-21) are the
+    free voice allowance inside it (``usage.voice_allowance``)."""
 
     user_id: str
     is_premium: bool = Field(
@@ -390,6 +391,20 @@ class UsageResponse(BaseModel):
     )
     credit_balance: int = Field(
         description="Pack-credit balance = SUM(credit_ledger.delta)"
+    )
+    voice_answers_used: int = Field(
+        default=0, description="Answers given by voice this month (every plan)"
+    )
+    voice_answers_limit: Optional[int] = Field(
+        default=None,
+        description=(
+            "Monthly cap on voice answers (free plan without pack credits); "
+            "null = voice is not limited (Trubbo Plus or pack credits)"
+        ),
+    )
+    voice_answers_remaining: Optional[int] = Field(
+        default=None,
+        description="Voice answers left this month, or null when not limited",
     )
 
 

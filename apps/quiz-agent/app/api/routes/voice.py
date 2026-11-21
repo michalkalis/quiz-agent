@@ -21,6 +21,7 @@ from fastapi import (
 from ..deps import (
     InputResponse,
     ReadBackAudio,
+    get_auth_sessionmaker,
     get_session_manager,
     get_tts_service,
     get_usage_tracker,
@@ -46,6 +47,7 @@ from ...quiz.flow import QuizFlowService, elapsed_ms
 from ...quiz.resubmission import reanswers_finished_session
 from ...config import get_settings
 from ...usage.ai_grading_cap import bind_ai_grading
+from ...usage.voice_allowance import gate_voice_answer
 from ...usage.caps import (
     STT_SECONDS,
     DailyCapExceeded,
@@ -275,6 +277,17 @@ async def transcribe_and_submit(
                     record_rejection("daily_cap")
                     raise
 
+                # The free voice allowance, also before transcription is paid
+                # for; charged only once the transcript is usable (below).
+                voice_charge_key = await gate_voice_answer(
+                    quiz_flow,
+                    session,
+                    question_id or session.current_question_id,
+                    is_resubmission,
+                    get_auth_sessionmaker(request),
+                    on_refused=lambda: record_rejection("voice_limit"),
+                )
+
                 # Transcribe against the question this recording is FOR: a retry of a
                 # lost submit carries the already-graded id, and priming Whisper with
                 # the question the session has since advanced to would transcribe the
@@ -354,6 +367,10 @@ async def transcribe_and_submit(
                         session,
                         "no_speech",
                         "No clear speech detected. Please speak clearly and try again.",
+                    )
+                if voice_charge_key:
+                    await quiz_flow.usage_tracker.record_voice_answer(
+                        session.user_id, voice_charge_key
                     )
 
                 if rejected and get_settings().stt_retry_avoid_rejected:

@@ -14,8 +14,12 @@ Slovenčina
 Čeština
 Quiz language
 Slovenčina
+Quiz language
+Slovenčina
 4–6
 7–9
+10–12
+Age
 10–12
 Age
 10–12
@@ -23,7 +27,10 @@ Harry Potter
 Špióni a šifry
 Topic
 Harry Potter
+Topic
+Harry Potter
 trubbo
+Settings
 You answer, the kids guess along with you.
 Start with kids
 # identifiers
@@ -44,5 +51,6 @@ home.band.kids_10_12
 home.topic.menu
 home.topic.family-harry-potter
 home.topic.family-spies-and-codes
+home.settings
 home.family.adultAnswers
 home.startFamily

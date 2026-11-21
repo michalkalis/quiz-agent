@@ -5,32 +5,34 @@ Lepšie skóre ako 2 z 3 hráčov.
 Quiz
 Choose several
 All Categories
-10 questions
+8 questions
 All Categories
 Science & Nature
-10 questions
+8 questions
 Science & Nature
 History
-10 questions
+8 questions
 History
-Geography & World
-10 questions
-Geography & World
+Geography
+8 questions
+Geography
 Movies & Music
-10 questions
+8 questions
 Movies & Music
 Sports
-10 questions
+8 questions
 Sports
-Food & Everyday Life
-10 questions
-Food & Everyday Life
-Entertainment
-10 questions
-Entertainment
+Food & Drink
+8 questions
+Food & Drink
+Pop Culture
+8 questions
+Pop Culture
 English
 Slovenčina
 Čeština
+Quiz language
+Slovenčina
 Quiz language
 Slovenčina
 Easy
@@ -39,12 +41,21 @@ Hard
 Random
 Difficulty
 Random
-Categories
-All Categories
+Difficulty
+Random
+5
+8
+10
+15
+Number of questions
+8
+Number of questions
+8
 Quick quiz
 After "Next": next question, no explanation
 
 trubbo
+Settings
 Start
 # identifiers
 home.daily.open
@@ -63,6 +74,11 @@ home.difficulty.easy
 home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
-home-categories-menu
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
 home.quickGame
+home.settings
 home.startQuiz

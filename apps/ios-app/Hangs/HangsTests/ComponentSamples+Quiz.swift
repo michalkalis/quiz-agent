@@ -37,7 +37,7 @@ nonisolated extension ComponentSample {
             // (white on cobalt, ink on yellow); #198.4: a custom pack in its own
             // palette colour with the "Custom pack" chip.
             ComponentSample("deckCard.question") {
-                HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Geografia a svet") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Zemepis") {
                     Text(verbatim: "Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
                 }
                 .frame(height: 260)

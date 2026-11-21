@@ -17,9 +17,13 @@ Slovenčina
 Čeština
 Мова вікторини
 Slovenčina
+Мова вікторини
+Slovenčina
 4–6
 7–9
 10–12
+Вік
+4–6
 Вік
 4–6
 Dinosaury
@@ -27,7 +31,10 @@ Fuj, ale pravda
 Tvoje telo
 Тема
 Dinosaury
+Тема
+Dinosaury
 trubbo
+Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
 Старт із дітьми
 # identifiers
@@ -49,5 +56,6 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.settings
 home.family.adultAnswers
 home.startFamily

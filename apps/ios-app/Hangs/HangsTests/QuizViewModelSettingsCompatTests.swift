@@ -355,6 +355,45 @@ struct QuizSettingsBackwardCompatTests {
         #expect(try decodeSettings(json).thinkingTime == 0)
     }
 
+    // MARK: - Round length: 8 by default (TestFlight build 90 feedback)
+
+    /// WHY: the founder found 10 questions a round too many, so 8 is the
+    /// default. Every build up to 90 saved 10 without a version, so a saved
+    /// 10 is read as "never changed" and becomes 8; a player who chose 5 or 15
+    /// keeps it, and a 20 the list no longer offers lands on the nearest, 15.
+    @Test("a player who never chose a round length gets 8; one who chose keeps it")
+    func roundLengthDefaultMovesToEight() throws {
+        func decoded(_ count: Int, version: Int?) throws -> Int {
+            var json = legacyMinimalJSON
+            json["numberOfQuestions"] = count
+            json["numberOfQuestionsDefaultVersion"] = version
+            return try decodeSettings(json).numberOfQuestions
+        }
+        #expect(QuizSettings.default.numberOfQuestions == 8, "a first launch plays 8")
+        #expect(try decoded(10, version: nil) == 8, "the old default, never changed")
+        #expect(try decoded(5, version: nil) == 5, "a short round picked on an older build")
+        #expect(try decoded(15, version: nil) == 15, "a long round picked on an older build")
+        #expect(try decoded(20, version: nil) == 15, "20 is no longer offered: the nearest choice")
+        #expect(try decoded(10, version: QuizSettings.currentQuestionCountDefaultVersion) == 10, "10 chosen from now on stays")
+    }
+
+    /// WHY: the move to 8 must run once. A blob this build saves carries the
+    /// current version, so a 10 the player picks afterwards is never undone.
+    @Test("a saved blob carries the current round-length version")
+    func savedBlobCarriesRoundLengthVersion() throws {
+        var settings = QuizSettings.default
+        settings.numberOfQuestions = 10
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        #expect(json["numberOfQuestionsDefaultVersion"] as? Int == QuizSettings.currentQuestionCountDefaultVersion)
+        #expect(try decodeSettings(json).numberOfQuestions == 10)
+    }
+
+    @Test("the round-length choices include the default")
+    func roundLengthChoicesIncludeDefault() {
+        #expect(QuizSettings.questionCountOptions == [5, 8, 10, 15])
+        #expect(QuizSettings.questionCountOptions.contains(QuizSettings.defaultNumberOfQuestions))
+    }
+
     // MARK: - Unknown legacy keys are silently ignored
 
     /// Regression: if `Codable` synthesis ever replaced the custom `init(from:)`

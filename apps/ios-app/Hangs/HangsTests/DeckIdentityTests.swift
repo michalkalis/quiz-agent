@@ -90,8 +90,8 @@ struct DeckIdentityTests {
     func categoryNameFollowsTheViewLocale() {
         // The label sits next to a Slovak "VÝSLEDOK KVÍZU"; an English name
         // beside it is the mixed header the founder saw.
-        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "sk")) == "Geografia a svet")
-        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "cs")) == "Zeměpis a svět")
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "sk")) == "Zemepis")
+        #expect(Config.categoryDisplayName(for: "geography-world", locale: Locale(identifier: "cs")) == "Zeměpis")
         for raw in ["general", "adults", ""] {
             #expect(Config.categoryDisplayName(for: raw, locale: Locale(identifier: "sk")) == nil)
         }

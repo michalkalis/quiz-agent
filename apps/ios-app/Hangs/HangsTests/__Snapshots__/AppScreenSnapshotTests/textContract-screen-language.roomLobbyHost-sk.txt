@@ -13,7 +13,7 @@ ty · hostiteľ
 J
 Jana
 Pravidlá hry
-10 otázok · Random · After each question · 15 s
+8 otázok · Random · After each question · 15 s
 Začni hru
 # identifiers
 room.close

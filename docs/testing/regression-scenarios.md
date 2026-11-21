@@ -784,16 +784,18 @@ present, `room.final.away` absent. App alive.
 **Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile), #216.3
 (plan moved to Profile, stat cards behind All stats).
 
-**Hypothesis:** Settings left Home for the Profile tab, so its gear is the only
-way in; the plan now lives on the Profile, the stat cards behind "All stats"
+**Hypothesis:** Settings opens from the gear on Home (TestFlight build 90
+feedback: Home had no way in) and from the Profile's gear; the plan now lives on the Profile, the stat cards behind "All stats"
 (open and locked, without the retired ones); a quiz keeps the full screen with
 no tab bar to wander off to.
 
-**Steps:** launch (mock stats: a seasoned player); tap `tab.profile`; tap
+**Steps:** launch (mock stats: a seasoned player); tap `home.settings`, then
+back; tap `tab.profile`; tap
 `profile.allStats`, then back; tap `profile.settings`; tap `tab.play`; start a
 quiz.
 
-**Asserts:** `home.moreSettings` and `home.planLabel` absent on Home;
+**Asserts:** `settings.voiceCommands` after the Home gear, back on Home;
+`home.planLabel` absent on Home;
 `home.planLabel` on the Profile; `profile.myPacks` absent;
 `profile.card.totals` in All stats, `profile.card.hard_questions` absent;
 `settings.voiceCommands` after the gear; `tab.profile` not hittable on the

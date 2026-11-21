@@ -5716,25 +5716,25 @@
         }
       }
     },
-    "Entertainment" : {
+    "Pop Culture" : {
       "comment" : "Quiz category option",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zábava"
+            "value" : "Popkultura"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zábava"
+            "value" : "Popkultúra"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Розваги"
+            "value" : "Попкультура"
           }
         }
       }
@@ -6486,25 +6486,25 @@
         }
       }
     },
-    "Food & Everyday Life" : {
+    "Food & Drink" : {
       "comment" : "Quiz category option",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jídlo a běžný život"
+            "value" : "Jídlo a pití"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jedlo a bežný život"
+            "value" : "Jedlo a pitie"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Їжа й побут"
+            "value" : "Їжа й напої"
           }
         }
       }
@@ -6855,25 +6855,25 @@
         }
       }
     },
-    "Geography & World" : {
+    "Geography" : {
       "comment" : "Quiz category option",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zeměpis a svět"
+            "value" : "Zeměpis"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geografia a svet"
+            "value" : "Zemepis"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Географія і світ"
+            "value" : "Географія"
           }
         }
       }

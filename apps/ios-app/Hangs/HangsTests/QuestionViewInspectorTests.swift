@@ -49,13 +49,14 @@ struct QuestionViewMCQInspectorTests {
     @Test("MCQ renders the shared category + counter, not the old merged Qn label")
     func mcqHeaderRendersSharedMetaRow() async throws {
         let vm = makeMCQViewModel()
-        // questionsAnswered = 0 → question 1
+        // questionsAnswered = 0 → question 1; no session yet, so the total is
+        // the round length from the settings (Home A1: 8 by default).
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let category = try tree.find(viewWithAccessibilityIdentifier: "question.category")
             #expect(try category.text().string() == Config.categoryDisplayName(for: "science-nature")?.uppercased())
-            #expect(throws: Never.self) { try tree.find(text: "1/10") }
+            #expect(throws: Never.self) { try tree.find(text: "1/\(Config.defaultQuestions)") }
             #expect(throws: (any Error).self, "the merged #125 row is gone") {
                 try tree.find(text: "adults · Q1")
             }

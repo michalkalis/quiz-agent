@@ -41,6 +41,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Number of questions per quiz session
     var numberOfQuestions: Int
 
+    /// Which round-length default the saved value was made under: none = 10
+    /// (every build up to 90), 2 = 8 (founder, TestFlight build 90 feedback).
+    /// See `init(from:)`.
+    private var numberOfQuestionsDefaultVersion = Self.currentQuestionCountDefaultVersion
+
     /// Category filter — multi-select (#82 item 4, founder decision 7).
     /// Empty = all categories. See `Config.categoryOptions` for valid ids.
     var categories: [String]
@@ -190,7 +195,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let `default` = QuizSettings(
         language: "en",
         audioMode: "media",
-        numberOfQuestions: 10,
+        numberOfQuestions: Self.defaultNumberOfQuestions,
         categories: [],
         difficulty: Config.defaultDifficulty,
         autoAdvanceDelay: 8,
@@ -223,7 +228,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // filter below: a stale value would otherwise be sent to the backend.
         language = Language.selectable(try container.decode(String.self, forKey: .language)).id
         audioMode = try container.decode(String.self, forKey: .audioMode)
-        numberOfQuestions = try container.decode(Int.self, forKey: .numberOfQuestions)
+        numberOfQuestions = Self.migratedQuestionCount(
+            try container.decode(Int.self, forKey: .numberOfQuestions),
+            defaultVersion: try container.decodeIfPresent(Int.self, forKey: .numberOfQuestionsDefaultVersion) ?? 1
+        )
         if let list = try container.decodeIfPresent([String].self, forKey: .categories) {
             categories = list
         } else {
@@ -267,8 +275,26 @@ struct QuizSettings: Codable, Equatable, Sendable {
 
     // MARK: - Validation Helpers
 
-    /// Valid question count options
-    static let questionCountOptions = [5, 10, 15, 20]
+    /// Valid question count options (founder, TestFlight build 90: 10 was
+    /// too many, so 8 is the default and 20 left the list).
+    static let questionCountOptions = [5, 8, 10, 15]
+    static let defaultNumberOfQuestions = 8
+    /// Every build up to 90 saved 10 as its default, with no version.
+    static let legacyDefaultNumberOfQuestions = 10
+    static let currentQuestionCountDefaultVersion = 2
+
+    /// Runs once, on a blob saved before this version. A 10 there is the old
+    /// default, not a choice: the saved data cannot tell a player who picked
+    /// 10 from one who never touched it, and most never did, so it becomes the
+    /// new default (10 stays one tap away). Any other saved value is the
+    /// player's choice and stays; one the list no longer offers (20) becomes
+    /// the nearest that it does.
+    static func migratedQuestionCount(_ saved: Int, defaultVersion: Int) -> Int {
+        guard defaultVersion < currentQuestionCountDefaultVersion else { return saved }
+        if saved == legacyDefaultNumberOfQuestions { return defaultNumberOfQuestions }
+        if questionCountOptions.contains(saved) { return saved }
+        return questionCountOptions.min { abs($0 - saved) < abs($1 - saved) } ?? defaultNumberOfQuestions
+    }
 
     /// Valid difficulty options
     static let difficultyOptions = ["easy", "medium", "hard", "random"]

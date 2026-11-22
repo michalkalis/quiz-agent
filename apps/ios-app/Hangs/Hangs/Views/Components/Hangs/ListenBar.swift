@@ -1005,15 +1005,15 @@ struct ListenBarLevelGlow: View {
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#,
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#,
                       thinkCountdown: .init(remaining: 32, total: 45))
-            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "start" or "next""#)
+            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "answer" or "next""#)
             ListenBar(mode: .command, feedback: .recognizing,
-                      recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip),
-                      commandHint: #"Say "start" or "next""#)
+                      recognizingWord: VoiceCommandLexicon.recognizingCaption(.next),
+                      commandHint: #"Say "answer" or "next""#)
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
@@ -1023,18 +1023,18 @@ struct ListenBarLevelGlow: View {
                       commandWords: ["„zopakuj“", "„ďalšia“"], language: .slovak)
             // #189 — the confirmation sheet right after it opens.
             ListenBar(mode: .readingAnswerBack,
-                      commandHint: "Povedz „potvrď“, „znova“ alebo novú odpoveď",
+                      commandHint: "Povedz „znova“ alebo novú odpoveď",
                       shortCaption: true, language: .slovak)
             ListenBar(mode: .command,
-                      commandWords: ["„štart“", "„zopakuj“", "„ďalšia“"],
+                      commandWords: ["„odpovedz“", "„zopakuj“", "„ďalšia“"],
                       language: .slovak,
                       thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .evaluating)
             ListenBar(mode: .skipping)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#, onDismiss: {})
-            ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „ďalšia""#, language: .slovak)
-            ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)
-            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „štart""#,
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#, onDismiss: {})
+            ListenBar(mode: .command, commandHint: #"Povedz „odpovedz" alebo „ďalšia""#, language: .slovak)
+            ListenBar(mode: .command, commandHint: #"Say "again""#, size: .slim)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „znova""#,
                       size: .slim, language: .slovak)
         }
         .padding(20)

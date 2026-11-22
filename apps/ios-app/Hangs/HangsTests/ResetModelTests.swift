@@ -18,7 +18,7 @@ import Testing
 @Suite("Unified reset model (#113 T7)")
 struct ResetModelTests {
     /// WHY: before T7, resetState missed ≥9 fields (paywall, mic-picker,
-    /// command capture, skip window, no-answer flag, auto-confirm, edit
+    /// command capture, no-answer flag, auto-confirm, edit
     /// flags, error model, MCQ match) — each a sticky-state bug across quiz
     /// teardown. The per-child reset() mechanism must clear every one of them.
     @Test("full teardown leaves zero residual across all previously-missed fields")
@@ -37,9 +37,6 @@ struct ResetModelTests {
         )
         viewModel.showingMicrophonePicker = true
         _ = viewModel.voiceCommandCoordinator.applyCaptureEvent(.arm)
-        // The skip undo-window only opens while the question is being asked.
-        viewModel.quizState = .askingQuestion
-        viewModel.voiceCommandCoordinator.beginSkipUndoWindow()
         viewModel.recordingCoordinator.noAnswerCaptured = true
         viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoConfirmCountdown = 5
@@ -51,7 +48,6 @@ struct ResetModelTests {
         viewModel.setError(message: "boom", context: .general)
 
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .armed)
-        #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow != nil)
         #expect(viewModel.activeErrorModel != nil)
         #expect(viewModel.score == 5.0)
 
@@ -62,7 +58,6 @@ struct ResetModelTests {
         #expect(viewModel.quotaLimitError == nil)
         #expect(viewModel.showingMicrophonePicker == false)
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .idle)
-        #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow == nil)
         #expect(viewModel.recordingCoordinator.noAnswerCaptured == false)
         #expect(viewModel.recordingCoordinator.currentQuestionAudioUrl == nil)
         #expect(viewModel.autoConfirmCountdown == 0)

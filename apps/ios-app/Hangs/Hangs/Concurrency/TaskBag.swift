@@ -24,7 +24,6 @@ enum TaskKey: Hashable, Sendable {
     case bargeIn
     case commandListener
     case volatileSettle
-    case skipUndo
     case voiceFeedbackGlow
     case commandSpeechEvents // #122 follow-up: VAD speechStarted feed for the "hearing" state
     case voiceProcessingCue // #208.7: speech paused → "processing" after a short hold, and its ceiling

@@ -215,28 +215,35 @@ struct VoiceCommandTimelineTests {
 
     // MARK: - Faster commit (#208.7 item 4)
 
-    /// WHY: the founder waited ~1 s for every skip — it waited for the final
-    /// although the 2.5 s undo window already guards a wrong one.
-    @Test("skip fires from a stable volatile on the question screen (the undo window still guards it)")
-    func skipFromStableVolatile() async {
+    /// WHY: the founder waited ~1 s for every skip. With the undo window gone,
+    /// "next" is final-only on every screen (founder 2026-11-22) — it is the
+    /// one command a wrong hypothesis could burn a question with.
+    @Test("next waits for the final on the question screen, even when stable")
+    func nextWaitsForFinalOnQuestion() async {
         let (_, coordinator, _, _) = make()
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: false))
-        #expect(coordinator.pendingSkipWindow == nil, "a first volatile may still grow into a sentence")
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: false))
-        #expect(coordinator.pendingSkipWindow != nil, "a repeated volatile has stopped growing")
+        var fired: [VoiceCommand] = []
+        coordinator.onCommandRecognized = { fired.append($0) }
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
+        #expect(fired.isEmpty, "a stable volatile must not skip")
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
+        #expect(fired == [.next])
     }
 
-    /// WHY: a pause on the answer sheet waited ~1 s for the final; a stable
-    /// volatile already cleared the 0.85 floor and stopped growing.
-    @Test("pause on the confirmation sheet may fire from a stable volatile")
-    func pauseFromStableVolatile() {
-        #expect(!VoiceCommandCoordinator.requiresFinalResult(.pause, on: .confirmation))
+    /// WHY: a pause on the answer sheet waited ~1 s for the final; "again" on
+    /// the error and set-end screens no longer waits either (decision 3).
+    @Test("again never waits for the final, on any screen")
+    func againNeverWaitsForFinal() {
+        for screen in [VoiceCommandScreen.confirmation, .noAnswer, .error, .setEnd] {
+            #expect(!VoiceCommandCoordinator.requiresFinalResult(.again, on: screen))
+        }
     }
 
-    /// WHY: the no-answer sheet skips with no undo window behind it.
-    @Test("skip on the no-answer sheet still waits for the final")
-    func noAnswerSkipStaysFinal() {
-        #expect(VoiceCommandCoordinator.requiresFinalResult(.skip, on: .noAnswer))
-        #expect(!VoiceCommandCoordinator.requiresFinalResult(.skip, on: .question))
+    /// WHY: skipping from the no-answer sheet confirms the empty answer, which
+    /// is as irreversible as a skip — it waits for the final like every "next".
+    @Test("next on the no-answer sheet waits for the final, like on the question")
+    func noAnswerNextStaysFinal() {
+        #expect(VoiceCommandCoordinator.requiresFinalResult(.next, on: .noAnswer))
+        #expect(VoiceCommandCoordinator.requiresFinalResult(.next, on: .question))
     }
 }

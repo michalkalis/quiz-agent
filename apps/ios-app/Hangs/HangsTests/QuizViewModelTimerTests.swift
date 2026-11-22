@@ -292,7 +292,7 @@ struct QuizViewModelAutoStopRecordingTests {
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.quizState = .askingQuestion
-        viewModel.isAutoRecording = false // manual mic tap / "start" / re-record
+        viewModel.isAutoRecording = false // manual mic tap / "answer" / re-record
 
         await viewModel.recordingCoordinator.startRecording()
 

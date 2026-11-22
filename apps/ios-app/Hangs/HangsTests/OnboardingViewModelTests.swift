@@ -215,10 +215,10 @@ struct OnboardingViewModelTests {
 
     @Test("the commands card shows real command words in the command language")
     func commandWordsComeFromTheLexicon() {
-        #expect(OnboardingViewModel.commandWords(language: .slovak) == ["„ďalej“", "„zopakuj“", "„štart“"])
-        #expect(OnboardingViewModel.commandWords(language: .czech) == ["„dál“", "„zopakuj“", "„start“"])
-        #expect(OnboardingViewModel.commandWords(language: .english) == ["“next”", "“repeat”", "“start”"])
-        #expect(OnboardingViewModel.commandWords(language: .ukrainian) == ["«далі»", "«повтори»", "«старт»"])
+        #expect(OnboardingViewModel.commandWords(language: .slovak) == ["„ďalšia“", "„zopakuj“", "„odpovedz“"])
+        #expect(OnboardingViewModel.commandWords(language: .czech) == ["„další“", "„zopakuj“", "„odpověz“"])
+        #expect(OnboardingViewModel.commandWords(language: .english) == ["“next”", "“repeat”", "“answer”"])
+        #expect(OnboardingViewModel.commandWords(language: .ukrainian) == ["«пропусти»", "«повтори»", "«відповідай»"])
     }
 
     @Test("onboarding_finished names how and on which page it ended")

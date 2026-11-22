@@ -1,0 +1,89 @@
+# texts
+denní výzva · Oct 15
+Pět otázek. Stejné pro všechny.
+Dohraj a dnes hraješ 10 otázek navíc.
+Hraj dnešní výzvu
+Kvíz
+Vyber více
+All Categories
+8 otázek
+All Categories
+Science & Nature
+8 otázek
+Science & Nature
+History
+8 otázek
+History
+Geography
+8 otázek
+Geography
+Movies & Music
+8 otázek
+Movies & Music
+Sports
+8 otázek
+Sports
+Food & Drink
+8 otázek
+Food & Drink
+Pop Culture
+8 otázek
+Pop Culture
+English
+Slovenčina
+Čeština
+Jazyk kvízu
+Slovenčina
+Jazyk kvízu
+Slovenčina
+Easy
+Medium
+Hard
+Random
+Obtížnost
+Random
+Obtížnost
+Random
+5
+8
+10
+15
+Počet otázek
+8
+Počet otázek
+8
+Rychlý kvíz
+Po „Další“ hned další otázka, bez vysvětlení
+
+Bez zvuku
+Otázky čteš, odpovědi píšeš
+
+trubbo
+Nastavení
+Start
+# identifiers
+home.daily
+home.daily.bonusOffer
+home.daily.play
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
+home.quickGame
+home.silentMode
+home.settings
+home.startQuiz

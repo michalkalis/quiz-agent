@@ -318,6 +318,31 @@ async def test_voice_command_window_keeps_counts_and_never_text():
     }
 
 
+async def test_voice_command_keeps_language_path_and_latency_never_text():
+    # Founder 2026-11-22: fired commands per command and language, next to the
+    # windows per language, answer "are sk and cs recognised worse than en?";
+    # speech_end_ms is how long a command took after the word. What was heard
+    # must never be stored.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_command"],
+        {
+            "command": "next",
+            "phase": "question",
+            "language": "cs",
+            "path": "final",
+            "speech_end_ms": 640,
+            "text": "další",
+        },
+    )
+    assert cleaned == {
+        "command": "next",
+        "phase": "question",
+        "language": "cs",
+        "path": "final",
+        "speech_end_ms": 640,
+    }
+
+
 async def test_sign_in_prompt_events_keep_only_kind_and_outcome():
     # #217.4: how many buyers of each kind (Plus, credit, custom pack) save their
     # purchase by signing in; nothing about the purchase or the account rides along.

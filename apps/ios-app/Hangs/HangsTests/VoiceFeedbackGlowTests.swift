@@ -38,10 +38,13 @@ struct VoiceFeedbackGlowTests {
     func matchedLightsOnRecognizedCommand() async {
         let (vm, coordinator, _) = makeCoordinator()
         vm.quizState = .askingQuestion
+        // Routing off: "answer" would open the mic and move the screen on, and
+        // this test is about the glow the fire seam lights, not the action.
+        coordinator.voiceStartOnQuestionEnabled = false
 
-        // End-to-end through the transcript path: a final "skip" matches on the
+        // End-to-end through the transcript path: a final "answer" matches on the
         // question screen and must light the glow via the fire seam.
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
 
         #expect(coordinator.voiceFeedbackPhase == .matched)
     }

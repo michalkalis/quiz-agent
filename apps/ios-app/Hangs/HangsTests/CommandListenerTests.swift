@@ -180,14 +180,17 @@ struct CommandListenerTests {
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer
 
-            mock.simulateCommandTranscript("start")
+            mock.simulateCommandTranscript("answer")
             await pumpUntil({ !recognized.isEmpty }, "no command recognized")
 
-            #expect(recognized == [.start])
+            #expect(recognized == [.answer])
         }
     }
 
-    @Test("screen scoping: 'ok' is inert on the question screen, valid on the sheet")
+    /// WHY: a command is only valid on the screens that list it. "again" on
+    /// the question screen would otherwise re-record an answer that was never
+    /// given; on the answer sheet it is the one way out of a wrong transcript.
+    @Test("screen scoping: 'again' is inert on the question screen, valid on the sheet")
     func consumerScreenScoping() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
@@ -196,21 +199,21 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
-            // "ok" is NOT a question-screen command → dropped.
+            // "again" is NOT a question-screen command → dropped.
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
-            mock.simulateCommandTranscript("ok")
+            mock.simulateCommandTranscript("again")
             // Give the consumer a chance to (not) fire.
             for _ in 0 ..< 20 {
                 await Task.yield()
             }
-            #expect(recognized.isEmpty, "‘ok’ must not match on the question screen")
+            #expect(recognized.isEmpty, "‘again’ must not match on the question screen")
 
-            // On the confirmation sheet, "ok" matches.
+            // On the confirmation sheet, "again" matches.
             vm.quizState = .processing
-            mock.simulateCommandTranscript("ok")
-            await pumpUntil({ !recognized.isEmpty }, "‘ok’ never matched on the sheet")
-            #expect(recognized == [.ok])
+            mock.simulateCommandTranscript("again")
+            await pumpUntil({ !recognized.isEmpty }, "‘again’ never matched on the sheet")
+            #expect(recognized == [.again])
         }
     }
 
@@ -250,11 +253,11 @@ struct CommandListenerTests {
 
     /// WHY: the transcriber now reports a GROWING volatile hypothesis several
     /// times per utterance (the build-33 latency fix — waiting for the
-    /// end-of-speech endpoint meant the first "start" never fired). Field data
+    /// end-of-speech endpoint meant the first "answer" never fired). Field data
     /// shows the founder repeating himself when nothing responds
-    /// ("start start start start start"), so firing per hypothesis would run the
+    /// ("answer answer answer answer answer"), so firing per hypothesis would run the
     /// action once per repeat.
-    @Test("a repeated volatile 'start' fires once; later transcripts of the same utterance do not")
+    @Test("a repeated volatile 'answer' fires once; later transcripts of the same utterance do not")
     func volatileFiresOncePerUtterance() async {
         await withMainSerialExecutor {
             let (vm, silence, _) = makeCommandVM()
@@ -274,7 +277,7 @@ struct CommandListenerTests {
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer
 
-            mock.simulateCommandTranscript("start", isFinal: false)
+            mock.simulateCommandTranscript("answer", isFinal: false)
             for _ in 0 ..< 20 {
                 await Task.yield()
             }
@@ -283,17 +286,17 @@ struct CommandListenerTests {
             // Re-emitted unchanged while he is silent: THAT is what proves it was
             // a one-word command, and it still lands long before the end-of-speech
             // endpoint — the latency fix survives the stability gate.
-            mock.simulateCommandTranscript("start", isFinal: false)
+            mock.simulateCommandTranscript("answer", isFinal: false)
             await pumpUntil({ !recognized.isEmpty }, "a repeated volatile hypothesis must fire")
 
             // The hypothesis keeps growing as he repeats himself, then finalizes.
-            mock.simulateCommandTranscript("start start", isFinal: false)
-            mock.simulateCommandTranscript("start start start", isFinal: true)
+            mock.simulateCommandTranscript("answer answer", isFinal: false)
+            mock.simulateCommandTranscript("answer answer answer", isFinal: true)
             for _ in 0 ..< 40 {
                 await Task.yield()
             }
 
-            #expect(recognized == [.start], "one utterance = at most one command, got \(recognized)")
+            #expect(recognized == [.answer], "one utterance = at most one command, got \(recognized)")
         }
     }
 
@@ -302,7 +305,7 @@ struct CommandListenerTests {
     /// GROWING hypothesis — so every utterance passes through a 1-token prefix
     /// state and the cap is a no-op on the leading edge of ALL speech. Without a
     /// stability gate, "Okay, tak to bolo dobré" from the passenger advances the
-    /// quiz from its first half-second, and a radio "Starting now…" starts one. A
+    /// quiz from its first half-second, and a radio "Answering now…" starts one. A
     /// sentence never presents the same hypothesis twice — it keeps growing.
     @Test("a growing sentence's one-word prefix never fires")
     func growingSentencePrefixDoesNotFire() async {
@@ -311,18 +314,18 @@ struct CommandListenerTests {
             let coordinator = vm.voiceCommandCoordinator
             // Isolate the REPEAT signal (see volatileFiresOncePerUtterance); the
             // settle fallback's own supersede path is
-            // `startPrefixCancelsPendingSettle`.
+            // `answerPrefixCancelsPendingSettle`.
             coordinator.volatileSettleDelay = 3600
             vm.quizState = .askingQuestion
 
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            for hypothesis in ["start", "start tak", "start tak to", "start tak to bolo dobre"] {
+            for hypothesis in ["answer", "answer tak", "answer tak to", "answer tak to bolo dobre"] {
                 await coordinator.handleCommandTranscript(CommandTranscript(text: hypothesis, isFinal: false))
             }
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "start tak to bolo dobre", isFinal: true)
+                CommandTranscript(text: "answer tak to bolo dobre", isFinal: true)
             )
 
             #expect(recognized.isEmpty, "conversational speech must not advance the quiz, got \(recognized)")
@@ -330,10 +333,12 @@ struct CommandListenerTests {
     }
 
     /// WHY: a volatile hypothesis is revisable — the transcriber may replace it
-    /// as more audio arrives — and a skip burns one of the 100 free questions a
-    /// month. Destructive commands must wait for the final result.
-    @Test("'skip' fires only from a final result, never from a volatile hypothesis")
-    func skipRequiresFinalResult() async {
+    /// as more audio arrives — and with the undo window gone (founder
+    /// 2026-11-22) a skip is irreversible and burns one of the 100 free
+    /// questions a month. "next" must wait for the final result, even when the
+    /// hypothesis is stable.
+    @Test("'next' fires only from a final result, never from a volatile hypothesis")
+    func nextRequiresFinalResult() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
@@ -342,50 +347,45 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
             #expect(recognized.isEmpty, "a revisable hypothesis must never burn a question")
-            #expect(coordinator.pendingSkipWindow == nil)
+            #expect(vm.quizState == .askingQuestion)
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
-            #expect(recognized == [.skip], "the final result commits the skip")
-            #expect(coordinator.pendingSkipWindow != nil, "…via the 2.5 s undo-window")
-
-            coordinator.abortSkipUndoWindow() // don't let the window commit after the test
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
+            #expect(recognized == [.next], "the final result commits the skip")
+            await pumpUntil({ vm.quizState != .askingQuestion }, "the final 'next' did not skip the question")
         }
     }
 
     /// WHY (#185 track D): in the car "znova" waited for the end-of-speech final
-    /// and lost the race against the countdown. A STABLE volatile "again" /
-    /// "stop" acts at once ("stop" only holds the countdown; "again" asks for
-    /// the answer the driver is giving anyway). "no" opens ordinary sentences,
-    /// so it still waits for the final. (`ok` on this sheet stays final-only —
-    /// see `okRequiresFinalOnConfirmationOnly`.)
-    @Test("stable volatile 'again' / 'stop' fire on the sheet; 'no' waits for the final")
+    /// and lost the race against the countdown. A STABLE volatile "again" acts
+    /// at once (it asks for the answer the driver is giving anyway). "no" opens
+    /// ordinary sentences, so that variant still waits for the final.
+    @Test("a stable volatile 'again' fires on the sheet; 'no' waits for the final")
     func confirmationCommandsOnStableVolatiles() async {
         await withMainSerialExecutor {
-            for (text, expected) in [("again", VoiceCommand.again), ("stop", VoiceCommand.stop)] {
-                let (vm, _, _) = makeCommandVM()
-                let coordinator = vm.voiceCommandCoordinator
-                vm.quizState = .processing // the confirmation sheet
-
-                var recognized: [VoiceCommand] = []
-                coordinator.onCommandRecognized = { recognized.append($0) }
-
-                await coordinator.handleCommandTranscript(CommandTranscript(text: text, isFinal: false))
-                await coordinator.handleCommandTranscript(CommandTranscript(text: text, isFinal: false))
-                #expect(recognized == [expected], "a stable '\(text)' must not wait for the final")
-            }
-
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
-            vm.quizState = .processing
+            vm.quizState = .processing // the confirmation sheet
+
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
-            #expect(recognized.isEmpty, "a volatile 'no' is usually the start of a sentence")
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
-            #expect(recognized == [.again])
+
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "again", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "again", isFinal: false))
+            #expect(recognized == [.again], "a stable 'again' must not wait for the final")
+
+            let (noVM, _, _) = makeCommandVM()
+            let noCoordinator = noVM.voiceCommandCoordinator
+            noVM.quizState = .processing
+            var noRecognized: [VoiceCommand] = []
+            noCoordinator.onCommandRecognized = { noRecognized.append($0) }
+            await noCoordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
+            await noCoordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: false))
+            #expect(noRecognized.isEmpty, "a volatile 'no' is usually the start of a sentence")
+            await noCoordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
+            #expect(noRecognized == [.again])
         }
     }
 
@@ -405,29 +405,25 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            // Same hypothesis twice → proven, so the benign `start` fires.
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(recognized == [.start])
+            // Same hypothesis twice → proven, so the benign `answer` fires.
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(recognized == [.answer])
             #expect(coordinator.commandFiredThisUtterance, "the latch is what must block what follows")
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
 
-            #expect(recognized == [.start], "the same utterance must not also burn the question, got \(recognized)")
-            #expect(coordinator.pendingSkipWindow == nil)
+            #expect(recognized == [.answer], "the same utterance must not also burn the question, got \(recognized)")
+            #expect(vm.quizState == .askingQuestion)
         }
     }
 
-    /// WHY (#119): `ok` on the confirmation sheet SUBMITS the answer. The 10 s
-    /// auto-confirm does NOT make that benign — that timer exists precisely so a
-    /// wrong transcription can be caught with "again", and firing `ok` from a
-    /// revisable hypothesis removes the escape before the founder can use it.
-    /// "okay" is the highest-frequency backchannel in conversation, and `again`
-    /// (the escape) waits for a final, so ambient speech would otherwise race
-    /// the correction and win. A benign command such as `start` stays on
-    /// the low-latency volatile path.
-    @Test("'ok' requires a final on the confirmation sheet, but 'start' does not on the question")
-    func okRequiresFinalOnConfirmationOnly() async {
+    /// WHY (founder 2026-11-22): with the confirm command gone, "ok / yes /
+    /// áno" on the answer sheet are not commands. Filler words are noise (no
+    /// command, no new answer); content words like "yes" or "stop" are a NEW
+    /// answer. Neither may ever re-record or submit by itself.
+    @Test("'ok' on the confirmation sheet is noise, never a command")
+    func okIsInertOnConfirmationSheet() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
@@ -436,25 +432,28 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            // Even a STABLE volatile (delivered twice unchanged) must not submit.
             await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
             await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: false))
-            #expect(recognized.isEmpty, "a revisable hypothesis must not submit the answer")
-
             await coordinator.handleCommandTranscript(CommandTranscript(text: "okay", isFinal: true))
-            #expect(recognized == [.ok], "the final still confirms")
+            #expect(recognized.isEmpty, "‘okay’ confirms nothing any more")
+        }
+    }
 
-            // A benign command (start on the question screen) keeps the
-            // low-latency volatile path.
-            let (questionVM, _, _) = makeCommandVM()
-            let questionCoordinator = questionVM.voiceCommandCoordinator
-            questionVM.quizState = .askingQuestion
-            var started: [VoiceCommand] = []
-            questionCoordinator.onCommandRecognized = { started.append($0) }
+    /// WHY (founder 2026-11-22, decision 3): only "next" waits for a final; the
+    /// benign commands keep the low-latency volatile path, "answer" included.
+    @Test("a stable volatile 'answer' fires on the question screen without a final")
+    func answerFiresFromStableVolatile() async {
+        await withMainSerialExecutor {
+            let (vm, _, _) = makeCommandVM()
+            let coordinator = vm.voiceCommandCoordinator
+            coordinator.voiceStartOnQuestionEnabled = false
+            vm.quizState = .askingQuestion
+            var recognized: [VoiceCommand] = []
+            coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await questionCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            await questionCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(started == [.start], "opening the mic early is harmless — no reason to wait")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(recognized == [.answer], "opening the mic early is harmless — no reason to wait")
         }
     }
 
@@ -476,18 +475,18 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
-            #expect(recognized == [.start])
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
+            #expect(recognized == [.answer])
 
             // Just SHORT of the shipped 1.5 s cooldown — still suppressed.
             await clock.advance(by: .seconds(VoiceCommandCoordinator.commandCooldown - 0.1))
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
-            #expect(recognized == [.start], "a repeat inside the cooldown must not fire twice, got \(recognized)")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
+            #expect(recognized == [.answer], "a repeat inside the cooldown must not fire twice, got \(recognized)")
 
             // …and past it.
             await clock.advance(by: .seconds(0.2))
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
-            #expect(recognized == [.start, .start], "after the cooldown the command must work again")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
+            #expect(recognized == [.answer, .answer], "after the cooldown the command must work again")
         }
     }
 
@@ -497,7 +496,7 @@ struct CommandListenerTests {
     /// Gated in the wrong order, a first-delivery volatile arriving inside the
     /// cooldown is parked instead of rejected and then fires late, converting
     /// cooldown-suppressed repeats into fires for exactly the command he repeats
-    /// most when nothing responds ("start start start …"). So the assertion is
+    /// most when nothing responds ("answer answer answer …"). So the assertion is
     /// that nothing is parked at all, not merely that nothing fired now.
     @Test("a volatile arriving inside the cooldown is rejected outright, not parked for the settle")
     func cooldownRejectsVolatileRatherThanParkingIt() async {
@@ -515,11 +514,11 @@ struct CommandListenerTests {
 
             // A FINAL seeds the cooldown and ends the utterance, so the latch is
             // not what suppresses the volatile below — the cooldown is.
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
-            #expect(recognized == [.start])
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
+            #expect(recognized == [.answer])
 
             await clock.advance(by: .seconds(0.5)) // still inside the 1.5 s cooldown
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
             #expect(coordinator.pendingVolatileSettle == nil,
                     "a cooldown-suppressed volatile must not be parked for later re-evaluation")
             #expect(coordinator.taskBag.contains(.volatileSettle) == false, "…and must arm no timer")
@@ -528,7 +527,7 @@ struct CommandListenerTests {
             // there is nothing left that could fire, because nothing was parked.
             await clock.advance(by: .seconds(VoiceCommandCoordinator.commandCooldown - 0.4))
             coordinator.fireSettledVolatile()
-            #expect(recognized == [.start],
+            #expect(recognized == [.answer],
                     "the cooldown must not be re-litigated after a delay, got \(recognized)")
         }
     }
@@ -540,9 +539,9 @@ struct CommandListenerTests {
     /// CHANGES, so a one-word command followed by silence can be delivered
     /// exactly once and then never again until the end-of-speech final. If a
     /// lone delivery cannot fire, the founder is back to waiting for the end of
-    /// speech — the build-33 bug (he says "start" seven times, each repeat
+    /// speech — the build-33 bug (he says "answer" seven times, each repeat
     /// EXTENDING the segment and pushing finalization past the window).
-    @Test("a single volatile 'start' that is never repeated still fires, via the settle delay")
+    @Test("a single volatile 'answer' that is never repeated still fires, via the settle delay")
     func lonelyVolatileFiresViaSettle() async {
         await withMainSerialExecutor {
             let clock = TestClock()
@@ -556,8 +555,8 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .start,
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .answer,
                     "an unproven volatile must be PARKED for the settle, not dropped")
 
             // Just short of the settle: still parked, nothing fired — the window
@@ -568,17 +567,17 @@ struct CommandListenerTests {
 
             await clock.advance(by: .milliseconds(11)) // past it (integer ms: a fractional Duration can land short)
             await pumpUntil({ !recognized.isEmpty }, "the settle timer never fired the parked command")
-            #expect(recognized == [.start])
+            #expect(recognized == [.answer])
             #expect(coordinator.pendingVolatileSettle == nil, "a fired settle must not stay armed")
         }
     }
 
     /// WHY: the settle fallback must not re-open the growing-hypothesis hole it
-    /// sits next to. "Start telling me about…" reaches the consumer first as the
-    /// bare volatile "start"; the very next, longer hypothesis is proof the
+    /// sits next to. "Answer telling me about…" reaches the consumer first as the
+    /// bare volatile "answer"; the very next, longer hypothesis is proof the
     /// sentence is still growing and must kill the parked command. The assertion
     /// is that the settle is GONE — not that a timer happened to lose a race.
-    @Test("a volatile 'start' superseded by a longer hypothesis never fires")
+    @Test("a volatile 'answer' superseded by a longer hypothesis never fires")
     func growingHypothesisCancelsPendingSettle() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
@@ -589,11 +588,11 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .start)
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .answer)
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "start telling me about", isFinal: false)
+                CommandTranscript(text: "answer telling me about", isFinal: false)
             )
             #expect(coordinator.pendingVolatileSettle == nil, "a growing sentence must supersede the parked command")
             #expect(coordinator.taskBag.contains(.volatileSettle) == false, "…and cancel its timer")
@@ -604,10 +603,10 @@ struct CommandListenerTests {
     }
 
     /// WHY: a benign command fires from a volatile, which is exactly what makes
-    /// a passenger's "Start tak to bolo dobré" dangerous — it arrives as the
-    /// volatile "start" and would open the mic mid-conversation.
-    @Test("a volatile 'start' superseded by 'start tak to bolo dobre' does not fire")
-    func startPrefixCancelsPendingSettle() async {
+    /// a passenger's "Answer tak to bolo dobré" dangerous — it arrives as the
+    /// volatile "answer" and would open the mic mid-conversation.
+    @Test("a volatile 'answer' superseded by 'start tak to bolo dobre' does not fire")
+    func answerPrefixCancelsPendingSettle() async {
         await withMainSerialExecutor {
             let (vm, _, _) = makeCommandVM()
             let coordinator = vm.voiceCommandCoordinator
@@ -616,12 +615,12 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .start,
-                    "the low-latency path IS live for 'start' here — which is why it needs superseding")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .answer,
+                    "the low-latency path IS live for 'answer' here — which is why it needs superseding")
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "start tak to bolo dobre", isFinal: false)
+                CommandTranscript(text: "answer tak to bolo dobre", isFinal: false)
             )
             #expect(coordinator.pendingVolatileSettle == nil)
 
@@ -646,11 +645,11 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
             #expect(recognized.isEmpty, "one delivery is not yet proof")
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(recognized == [.start], "an unchanged re-delivery must fire without any delay")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(recognized == [.answer], "an unchanged re-delivery must fire without any delay")
             #expect(coordinator.pendingVolatileSettle == nil, "and must leave no settle armed behind it")
         }
     }
@@ -671,16 +670,16 @@ struct CommandListenerTests {
             var recognized: [VoiceCommand] = []
             coordinator.onCommandRecognized = { recognized.append($0) }
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
-            #expect(coordinator.pendingVolatileSettle?.command == .start)
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
+            #expect(coordinator.pendingVolatileSettle?.command == .answer)
 
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
-            #expect(recognized == [.start], "the final decides")
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
+            #expect(recognized == [.answer], "the final decides")
             #expect(coordinator.pendingVolatileSettle == nil)
             #expect(coordinator.taskBag.contains(.volatileSettle) == false)
 
             coordinator.fireSettledVolatile()
-            #expect(recognized == [.start], "one utterance = at most one command, got \(recognized)")
+            #expect(recognized == [.answer], "one utterance = at most one command, got \(recognized)")
         }
     }
 
@@ -701,14 +700,14 @@ struct CommandListenerTests {
             coordinator.onCommandRecognized = { recognized.append($0) }
 
             // (1) the utterance ends under a parked command.
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
             #expect(coordinator.pendingVolatileSettle != nil)
             coordinator.endUtterance()
             #expect(coordinator.pendingVolatileSettle == nil, "no settle outlives its utterance")
             #expect(coordinator.taskBag.contains(.volatileSettle) == false)
 
             // (2) the consumer is torn down under a parked command (window closed).
-            await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: false))
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: false))
             #expect(coordinator.pendingVolatileSettle != nil)
             coordinator.stopCommandConsumer()
             #expect(coordinator.pendingVolatileSettle == nil, "no settle outlives its listener")
@@ -754,7 +753,7 @@ struct CommandListenerTests {
 
     /// WHY: the cadence must describe what the TRANSCRIBER emitted, not the
     /// subset that happened to match a command. The growing hypotheses that
-    /// supersede a parked prefix are mostly UNMATCHED ("start telling me
+    /// supersede a parked prefix are mostly UNMATCHED ("answer telling me
     /// about…"), so stamping only on matches would measure the rare case and
     /// leave the settle tuned on a cadence that never occurs in real speech.
     @Test("the interval clock is stamped for transcripts the matcher rejects too")
@@ -791,7 +790,7 @@ struct CommandListenerTests {
             vm.isPlayingFeedbackTTS = true
             #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "feedback TTS must close the window too")
 
-            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
+            await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
             #expect(recognized.isEmpty, "a transcript arriving during feedback must be dropped, not routed")
 
             vm.isPlayingFeedbackTTS = false

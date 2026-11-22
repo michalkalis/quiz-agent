@@ -330,8 +330,8 @@ edit", not a global "abandon this answer".
 **Hypothesis:** A spoken MCQ answer goes through the **confirmation sheet**, not straight to
 the result (issue #171 Track I, founder 2026-09-05, restoring #45 decision D4). Since #208.8 the
 backend transcribes and places the answer among the options (#185 track G); the sheet shows
-exactly what it heard. Confirm — by tap, by the spoken "ok", or by letting the 5 s auto-confirm
-expire — and the quiz reaches the result. A mishearing is therefore always correctable before
+exactly what it heard. Confirm — by tap or by letting the 5 s auto-confirm expire (the spoken
+"ok" is gone since 2026-11-22: silence confirms) — and the quiz reaches the result. A mishearing is therefore always correctable before
 it is graded.
 
 **Preconditions**

@@ -33,6 +33,38 @@ struct DailyChallengeDecodingTests {
         #expect(!RemoteAppConfig.permissive.dailyChallengeEnabled, "before any fetch the card stays hidden")
     }
 
+    @Test("205.8: a state from the current server (no reward keys) still decodes, with nothing on offer")
+    func stateWithoutRewardKeys() throws {
+        let state = try decode(DailyChallengeState.self, #"{"date":"2026-10-15","language":"sk","status":"played","total":5}"#)
+        #expect(state.bonusOffer == nil)
+        #expect(state.bonusLeft == nil)
+        #expect(state.daysPlayed == 0, "a missing days_played must read as none, not fail the whole state")
+    }
+
+    @Test("205.8: the reward keys are read as sent")
+    func stateWithRewardKeys() throws {
+        let json = #"{"date":"2026-10-15","language":"sk","status":"played","total":5,"bonus_offer":10,"bonus_left":7,"days_played":3}"#
+        let state = try decode(DailyChallengeState.self, json)
+        #expect(state.bonusOffer == 10)
+        #expect(state.bonusLeft == 7)
+        #expect(state.daysPlayed == 3)
+        let explicitNull = try decode(DailyChallengeState.self, #"{"date":"2026-10-15","language":"sk","status":"not_played","total":5,"bonus_offer":null,"bonus_left":null}"#)
+        #expect(explicitNull.bonusOffer == nil && explicitNull.bonusLeft == nil, "a subscriber's null must stay silent")
+    }
+
+    @Test("205.8: the start request carries the device's UTC offset in minutes")
+    func startBodyCarriesUtcOffset() throws {
+        let bratislavaWinter = try #require(TimeZone(secondsFromGMT: 3600))
+        let body = try NetworkService.dailyStartBody(date: "2026-10-15", language: "sk", timeZone: bratislavaWinter)
+        let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(json["utc_offset_minutes"] as? Int == 60, "the server ends the extra questions at the player's midnight")
+        #expect(json["date"] as? String == "2026-10-15")
+        #expect(json["language"] as? String == "sk")
+        let newYork = try #require(TimeZone(secondsFromGMT: -5 * 3600))
+        let west = try JSONSerialization.jsonObject(with: NetworkService.dailyStartBody(date: "d", language: "en", timeZone: newYork)) as? [String: Any]
+        #expect(west?["utc_offset_minutes"] as? Int == -300)
+    }
+
     @Test("a not-played state decodes without a summary")
     func notPlayedState() throws {
         let state = try decode(DailyChallengeState.self, #"{"date":"2026-10-15","language":"sk","status":"not_played","total":5}"#)

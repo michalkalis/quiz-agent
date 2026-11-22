@@ -58,7 +58,7 @@ extension VoiceCommandCoordinator {
 
         // #171 Track D / #173: a paused quiz is frozen — every countdown is
         // cancelled and the mic must come down with them, or "paused" would
-        // still be listening for "potvrď". Gating HERE (not in
+        // still be listening for "znova". Gating HERE (not in
         // `currentCommandScreen`) is what makes a foreground return honour the
         // pause: `.active` re-runs `refreshCommandWindow()`, which finds capture
         // disallowed and tears the listener down again instead of re-arming.
@@ -152,7 +152,7 @@ extension VoiceCommandCoordinator {
         if let screen = currentCommandScreen {
             // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app
-            // waits for "again" / "home". In-quiz windows keep whatever session
+            // waits for "again". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
             if screen == .setEnd {
                 configureQuietListeningSession()

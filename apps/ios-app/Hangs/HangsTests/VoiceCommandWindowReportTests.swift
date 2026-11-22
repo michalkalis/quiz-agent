@@ -73,11 +73,13 @@ struct VoiceCommandWindowReportTests {
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
 
+            // Routing off: "odpovedz" must be counted as matched without opening the
+            // mic, which would take the window away before the report is read.
+            vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
             await clock.advance(by: .milliseconds(700))
             silence.simulateCommandTranscript("to bolo ťažké")
             await pumpUntil { vm.voiceCommandCoordinator.commandWindowStats?.transcripts == 1 }
-            // Skip opens its undo window and stays on the question (the clock is held).
-            silence.simulateCommandTranscript("preskoč")
+            silence.simulateCommandTranscript("odpovedz")
             await pumpUntil { vm.voiceCommandCoordinator.commandWindowStats?.matched == 1 }
             vm.audioDeviceState.stopSilenceDetectionListening()
 
@@ -123,7 +125,7 @@ struct VoiceCommandWindowReportTests {
             let (vm, silence, analytics, _) = makeVM()
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
-            // Skip waits for a final; the volatile alone only starts the utterance.
+            // "next" waits for a final; the volatile alone only starts the utterance.
             silence.simulateCommandTranscript("preskoč", isFinal: false)
             await pumpUntil { vm.voiceCommandCoordinator.commandWindowStats?.transcripts == 1 }
             vm.audioDeviceState.stopSilenceDetectionListening()

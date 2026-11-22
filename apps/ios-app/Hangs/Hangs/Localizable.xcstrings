@@ -13081,19 +13081,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce."
+            "value" : "Řekneš „další“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky."
+            "value" : "Povieš „ďalšia“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скажи «далі», і не треба торкатися телефона. Зручно, коли руки зайняті."
+            "value" : "Скажи «пропусти», і не треба торкатися телефона. Зручно, коли руки зайняті."
           }
         }
       }

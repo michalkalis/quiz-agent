@@ -39,10 +39,10 @@ private struct NaturalPhrase {
 private let questionPhrases: [NaturalPhrase] = [
     NaturalPhrase(screen: .question, expected: .repeatQuestion, sk: "Zopakuj otázku.", cs: "Zopakuj otázku.", en: "Repeat the question.", uk: "Повтори питання."),
     NaturalPhrase(screen: .question, expected: .repeatQuestion, sk: "zopakuj otázku", cs: "zopakuj otázku", en: "repeat question", uk: "повтори запитання"),
-    NaturalPhrase(screen: .question, expected: .skip, sk: "Ďalšia otázka.", cs: "Další otázka.", en: "Next question.", uk: "Наступне питання."),
-    NaturalPhrase(screen: .question, expected: .skip, sk: "Preskoč otázku", cs: "Přeskoč otázku", en: "Skip the question", uk: "Пропусти питання"),
-    NaturalPhrase(screen: .question, expected: .skip, sk: "ďalšiu otázku", cs: "další otázku", en: "skip question", uk: "пропусти запитання"),
-    NaturalPhrase(screen: .noAnswer, expected: .skip, sk: "Ďalšia otázka", cs: "Další otázka", en: "Next question", uk: "Наступне питання"),
+    NaturalPhrase(screen: .question, expected: .next, sk: "Ďalšia otázka.", cs: "Další otázka.", en: "Next question.", uk: "Наступне питання."),
+    NaturalPhrase(screen: .question, expected: .next, sk: "Preskoč otázku", cs: "Přeskoč otázku", en: "Skip the question", uk: "Пропусти питання"),
+    NaturalPhrase(screen: .question, expected: .next, sk: "ďalšiu otázku", cs: "další otázku", en: "skip question", uk: "пропусти запитання"),
+    NaturalPhrase(screen: .noAnswer, expected: .next, sk: "Ďalšia otázka", cs: "Další otázka", en: "Next question", uk: "Наступне питання"),
 ]
 
 @Suite("Voice commands — natural phrases and the per-screen bias list")
@@ -64,22 +64,22 @@ struct VoiceCommandPhraseTests {
     }
 
     /// WHY: the word for "question" is not a command. Said alone, or beside a
-    /// command that has nothing to do with the question (start, confirm, again,
-    /// stop), it must stay inert — on the answer sheet anything that is not a
+    /// command that has nothing to do with the question (answer, again), it
+    /// must stay inert — on the answer sheet anything that is not a
     /// command is a new answer, and "nie, otázka" must not re-record one.
     @Test("the question word alone, or with an unrelated command, stays inert", arguments: CommandLanguage.allCases)
     func questionWordIsNotACommand(_ language: CommandLanguage) {
-        let (word, start, confirm, no) = switch language {
-        case .slovak: ("otázka", "štart otázka", "potvrď otázku", "nie, otázka")
-        case .czech: ("otázka", "start otázka", "potvrď otázku", "ne, otázka")
-        case .english: ("the question", "start question", "confirm the question", "no, question")
-        case .ukrainian: ("питання", "старт питання", "підтверди питання", "ні, питання")
+        let (word, answer, again, no) = switch language {
+        case .slovak: ("otázka", "odpovedz otázka", "znova otázku", "nie, otázka")
+        case .czech: ("otázka", "odpověz otázka", "znovu otázku", "ne, otázka")
+        case .english: ("the question", "answer question", "again the question", "no, question")
+        case .ukrainian: ("питання", "відповідай питання", "ще раз питання", "ні, питання")
         }
         for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer, .error, .setEnd] {
             #expect(VoiceCommandMatcher.match(transcript: word, on: screen, language: language) == nil, "\(language) '\(word)' on \(screen)")
         }
-        #expect(VoiceCommandMatcher.match(transcript: start, on: .question, language: language) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: confirm, on: .confirmation, language: language) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: answer, on: .question, language: language) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: again, on: .confirmation, language: language) == nil)
         #expect(VoiceCommandMatcher.match(transcript: no, on: .confirmation, language: language) == nil)
     }
 
@@ -115,37 +115,42 @@ struct VoiceCommandPhraseTests {
     // MARK: - Per-screen bias list
 
     /// WHY: DictationTranscriber is biased toward the strings it is given
-    /// (sk / cs / uk run on it). A backchannel that is no command on this
-    /// screen only pulls the recognizer toward a word we then ignore.
-    @Test("backchannels are biased for only on the answer sheet")
+    /// (sk / cs / uk run on it). The sentence-opening "again" words ("nie",
+    /// "zle") are commands on the answer sheet only; pulling the recognizer
+    /// toward them on the question screen only nudges it toward a word we
+    /// then ignore. The confirm backchannels ("áno", "hej") are no commands at
+    /// all since 2026-11-22 and are biased for on no screen.
+    @Test("sentence-opening words are biased for only on the answer sheet; confirm words nowhere")
     func backchannelsOnlyOnTheSheet() {
-        let cases: [(CommandLanguage, [String])] = [
-            (.slovak, ["áno", "hej", "nie", "zle"]),
-            (.czech, ["ano", "jo", "ne", "špatně"]),
-            (.english, ["yes", "yeah", "no", "wrong"]),
-            (.ukrainian, ["так", "добре", "ні", "неправильно"]),
+        let cases: [(CommandLanguage, [String], [String])] = [
+            (.slovak, ["nie", "zle"], ["áno", "hej"]),
+            (.czech, ["ne", "špatně"], ["ano", "jo"]),
+            (.english, ["no", "wrong"], ["yes", "yeah"]),
+            (.ukrainian, ["ні", "неправильно"], ["так", "добре"]),
         ]
-        for (language, words) in cases {
+        for (language, again, confirm) in cases {
             let question = VoiceCommandLexicon.contextualVocabulary(for: language, on: .question)
             let sheet = VoiceCommandLexicon.contextualVocabulary(for: language, on: .confirmation)
-            for word in words {
+            for word in again {
                 #expect(!question.contains(word), "\(language) '\(word)' is biased for on the question screen")
                 #expect(sheet.contains(word), "\(language) '\(word)' is missing on the answer sheet")
+            }
+            for word in confirm {
+                #expect(!sheet.contains(word), "\(language) '\(word)' is no command but is biased for on the sheet")
             }
         }
     }
 
     /// WHY: a word in the bias list that the matcher then ignores is pure
-    /// dilution. Every entry must be a command on that screen — or, on the
-    /// question screen, the word that aborts a pending skip.
+    /// dilution. Every entry must be a command on that screen.
     @Test("every biased word is a command on its screen", arguments: CommandLanguage.allCases)
     func everyBiasedWordActs(_ language: CommandLanguage) {
         for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer, .error, .setEnd] {
             for word in VoiceCommandLexicon.contextualVocabulary(for: language, on: screen) {
-                let acts = VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: true, language: language) != nil
-                let cancelsSkip = screen == .question
-                    && VoiceCommandLexicon.isCancelWord(VoiceCommandMatcher.normalize(word, language: language), language: language)
-                #expect(acts || cancelsSkip, "\(language) '\(word)' does nothing on \(screen)")
+                #expect(
+                    VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: true, language: language) != nil,
+                    "\(language) '\(word)' does nothing on \(screen)"
+                )
             }
         }
     }
@@ -160,10 +165,7 @@ struct VoiceCommandPhraseTests {
                     .compactMap { VoiceCommandMatcher.match(transcript: $0, on: screen, isFinal: true, language: language) }
             )
             for command in VoiceCommandLexicon.commands(on: screen) {
-                // English "next" is both words on the no-answer sheet; the
-                // strict skip wins and both confirm the empty field there.
-                let covered = heard.contains(command) || (command == .next && heard.contains(.skip))
-                #expect(covered, "\(language) \(command) has no biased word on \(screen)")
+                #expect(heard.contains(command), "\(language) \(command) has no biased word on \(screen)")
             }
         }
     }
@@ -187,8 +189,9 @@ struct VoiceCommandPhraseTests {
     func adapterUsesTheScreen() {
         let slovak = DictationTranscriberCommandAdapter(locale: Locale(identifier: "sk_SK"), language: .slovak)
         #expect(slovak.contextualStrings(on: .question) == VoiceCommandLexicon.contextualVocabulary(for: .slovak, on: .question))
-        #expect(slovak.contextualStrings(on: .question)?.contains("áno") == false)
-        #expect(slovak.contextualStrings(on: .confirmation)?.contains("áno") == true)
+        // "nie" is a command on the answer sheet only.
+        #expect(slovak.contextualStrings(on: .question)?.contains("nie") == false)
+        #expect(slovak.contextualStrings(on: .confirmation)?.contains("nie") == true)
         #expect(SpeechTranscriberCommandAdapter().contextualStrings(on: .question) == nil)
     }
 }

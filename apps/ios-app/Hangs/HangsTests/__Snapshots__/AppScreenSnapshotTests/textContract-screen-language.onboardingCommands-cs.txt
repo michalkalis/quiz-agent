@@ -2,15 +2,15 @@
 trubbo
 “next”
 “repeat”
-“start”
+“answer”
 HLASOVÉ PŘÍKAZY
-Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
+Řekneš „další“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
 iPhone se tě zeptá na rozpoznávání řeči. Odpovídat hlasem můžeš i bez příkazů.
 “next”
 “repeat”
-“start”
+“answer”
 HLASOVÉ PŘÍKAZY
-Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
+Řekneš „další“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce.
 iPhone se tě zeptá na rozpoznávání řeči. Odpovídat hlasem můžeš i bez příkazů.
 Zapni příkazy
 Teď ne

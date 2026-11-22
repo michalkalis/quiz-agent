@@ -5,12 +5,12 @@
 //  Issue #77 (voice commands hands-free), task 77.9 — the confirm / result / repeat
 //  / skip command wiring. Drives `handleRecognizedCommand` directly (routing seam).
 //  Covers:
-//    • Confirmation sheet: "ok" → confirmAnswer, "again" → rerecordAnswer, "stop" →
-//      holds the countdown (#185) — all ON TOP of the auto-confirm + buttons;
+//    • Confirmation sheet: "again" → rerecordAnswer, ON TOP of the auto-confirm
+//      + buttons (the spoken confirm / stop-hold words are gone, 2026-11-22);
 //    • the 10 s auto-confirm still fires with NO speech (regression guard);
-//    • Result: "next" advances (auto-advance untouched);
+//    • Result: no command window, a stray command is inert;
 //    • Question: "repeat" replays the question audio + re-arms the listener;
-//    • Question: "skip" opens the ~2.5 s undo-window (commit / abort seam).
+//    • Question: "next" skips at once (the undo-window is gone, 2026-11-22).
 //
 
 import Clocks
@@ -90,22 +90,6 @@ private func waitForAudioSettle(
 struct ConfirmResultCommandTests {
     // MARK: - Confirmation sheet
 
-    @Test("'ok' on the confirmation sheet confirms the answer")
-    func okConfirms() async {
-        await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
-            vm.quizState = .processing
-            vm.showAnswerConfirmation = true
-            vm.recordingCoordinator.pendingResponse = makePendingResponse()
-
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
-
-            await pumpUntil({ !vm.showAnswerConfirmation }, "ok did not confirm")
-            #expect(vm.showAnswerConfirmation == false)
-            #expect(vm.recordingCoordinator.pendingResponse == nil, "the pending response was consumed by confirm")
-        }
-    }
-
     @Test("'again' on the confirmation sheet re-records immediately (#108A)")
     func againReRecords() async {
         await withMainSerialExecutor {
@@ -132,28 +116,6 @@ struct ConfirmResultCommandTests {
             #expect(vm.isAnswerCaptureActive == true) // #184: capture on the shared engine
             _ = audio
             vm.quizTimersController.cancelAutoStopRecordingTimer()
-        }
-    }
-
-    /// #185 5.3 (founder 2026-09-24): "stop" only holds the auto-confirm — the
-    /// voice cancel that threw the answer away is gone.
-    @Test("'stop' on the confirmation sheet holds the countdown and keeps the answer")
-    func stopHolds() async {
-        await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
-            vm.quizState = .processing
-            vm.showAnswerConfirmation = true
-            vm.recordingCoordinator.pendingResponse = makePendingResponse()
-
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.stop)
-
-            for _ in 0 ..< 40 {
-                await Task.yield()
-            }
-            #expect(vm.showAnswerConfirmation)
-            #expect(vm.quizState == .processing)
-            #expect(vm.recordingCoordinator.pendingResponse != nil, "the answer survives 'stop'")
-            #expect(vm.recordingCoordinator.countdownHold == .driverStop)
         }
     }
 
@@ -186,7 +148,7 @@ struct ConfirmResultCommandTests {
 
     /// WHY (#224, founder TF 2026-11-02): the result is read with a button and
     /// the auto-advance countdown; a listener there only confused. A spoken
-    /// "next" / "ok" must find no window and leave the result where it is.
+    /// "next" / "again" must find no window and leave the result where it is.
     @Test("the result screen has no command window, so a stray command is inert")
     func resultHasNoCommandWindow() async {
         await withMainSerialExecutor {
@@ -195,7 +157,7 @@ struct ConfirmResultCommandTests {
             #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil)
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.ok)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.again)
 
             guard case .showingResult = vm.quizState else {
                 Issue.record("a command advanced the result screen")
@@ -226,60 +188,20 @@ struct ConfirmResultCommandTests {
         }
     }
 
-    // MARK: - Skip undo-window
+    // MARK: - Skip
 
-    @Test("'skip' on the question screen opens the undo-window (does not commit immediately)")
-    func skipOpensUndoWindow() async {
+    /// WHY (founder 2026-11-22): the 2.5 s undo wait made "next" feel broken.
+    /// The routed command skips at once; with the quiz clock parked, a skip
+    /// that still waited on a timer would never leave the question.
+    @Test("'next' on the question screen skips at once, with no undo wait")
+    func nextSkipsAtOnce() async {
         await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
+            let (vm, _, _) = makeVM(clock: AnyClock(TestClock()))
             vm.quizState = .askingQuestion
 
-            var earconFired = false
-            vm.voiceCommandCoordinator.onSkipUndoWindowOpened = { earconFired = true }
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
-            // Use a long window so it can't commit during the assertion.
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
-
-            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil, "skip must open an undo-window, not commit")
-            #expect(earconFired == true, "the skip-confirm earcon seam must fire on open")
-            #expect(vm.quizState == .askingQuestion, "skip must not commit while the window is open")
-        }
-    }
-
-    @Test("aborting the skip undo-window cancels the pending skip")
-    func skipUndoAbort() async {
-        await withMainSerialExecutor {
-            let (vm, _, _) = makeVM()
-            vm.quizState = .askingQuestion
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10)
-            #expect(vm.voiceCommandCoordinator.pendingSkipWindow != nil)
-
-            vm.voiceCommandCoordinator.abortSkipUndoWindow()
-            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil, "abort must clear the pending skip")
-            #expect(vm.quizState == .askingQuestion, "aborted skip never leaves the question")
-        }
-    }
-
-    @Test("the skip undo-window commits the skip on expiry")
-    func skipUndoCommits() async {
-        await withMainSerialExecutor {
-            let clock = TestClock()
-            let (vm, _, _) = makeVM(clock: AnyClock(clock))
-            vm.quizState = .askingQuestion
-
-            // The SHIPPED window, driven rather than shrunk (#180 track A).
-            vm.voiceCommandCoordinator.beginSkipUndoWindow()
-            await pumpUntil { vm.voiceCommandCoordinator.pendingSkipWindow != nil }
-
-            await clock.advance(by: .milliseconds(2400)) // just inside the shipped 2.5 s window
-            #expect(vm.quizState == .askingQuestion, "the window must not commit before it expires")
-
-            await clock.advance(by: .milliseconds(101)) // …and past it (integer ms: a fractional Duration can land short)
-            // On expiry the window commits via skipQuestion() (→ .skipping then advance).
-            await pumpUntil({ vm.voiceCommandCoordinator.pendingSkipWindow == nil && vm.quizState != .askingQuestion },
-                            "skip did not commit on undo-window expiry")
-            #expect(vm.voiceCommandCoordinator.pendingSkipWindow == nil)
-            #expect(vm.quizState != .askingQuestion, "expiry must commit the skip")
+            await pumpUntil({ vm.quizState != .askingQuestion }, "'next' did not skip the question")
         }
     }
 }
@@ -304,28 +226,6 @@ struct ConfirmationPauseTests {
         vm.settings.autoConfirmEnabled = true
         vm.quizTimersController.startAutoConfirmIfEnabled(duration: 5)
         return vm
-    }
-
-    /// WHY: a pause that leaves the 5 s timer running is not a pause — it just
-    /// hides the number and submits the answer anyway.
-    @Test("spoken 'pauza' cancels auto-confirm and closes the command window")
-    func voicePauseFreezesTheSheet() async {
-        await withMainSerialExecutor {
-            let vm = makeSheetVM()
-            #expect(vm.autoConfirmCountdown == 5)
-            #expect(vm.voiceCommandCoordinator.currentCommandScreen == .confirmation)
-
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.pause)
-
-            #expect(vm.isPaused, "the spoken command must pause the quiz")
-            #expect(vm.autoConfirmCountdown == 0, "auto-confirm must be cancelled, not restarted")
-            #expect(vm.showAnswerConfirmation, "the sheet stays up — pause freezes it, it does not dismiss it")
-            #expect(
-                vm.voiceCommandCoordinator.currentCommandScreen == nil,
-                "a paused sheet must not keep listening for 'potvrď'"
-            )
-            #expect(vm.voiceCommandCoordinator.mayCaptureAudio == false, "the mic comes down with the pause")
-        }
     }
 
     /// WHY: resuming must hand back the FULL window. Restarting from whatever

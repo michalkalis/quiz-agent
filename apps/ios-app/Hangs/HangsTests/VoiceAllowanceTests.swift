@@ -113,7 +113,7 @@ struct VoiceAllowanceTests {
         #expect(rig.network.submitVoiceAnswerCallCount == 1)
     }
 
-    // WHY: said ONCE. The next question's Answer tap or "start" must neither
+    // WHY: said ONCE. The next question's Answer tap or "answer" must neither
     // open the mic nor repeat the notice, the line or the event.
     @Test("the notice, the spoken line and the event come once; later questions stay quiet")
     func noticeComesOnce() async {

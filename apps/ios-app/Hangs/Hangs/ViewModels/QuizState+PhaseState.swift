@@ -146,8 +146,6 @@ enum ConfirmationCountdownHold: String, Sendable, Equatable {
     case awaitingListener
     /// 5.1: someone is speaking; resumes when the utterance ends in nothing.
     case speech
-    /// 5.3: the driver said "stop". Holds until the sheet closes.
-    case driverStop
 }
 
 /// #185 5.1: a spoken new answer in flight on the sheet.

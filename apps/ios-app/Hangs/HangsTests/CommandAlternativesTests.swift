@@ -39,8 +39,8 @@ private func makeCommandVM() -> QuizViewModel {
 @Suite("Command n-best alternatives (#184)")
 struct CommandAlternativesTests {
 
-    /// WHY: this is the whole point of n-best. The founder said "next"; the
-    /// engine ranked a wrong word first and "next" second. Before #184 that
+    /// WHY: this is the whole point of n-best. The founder said "answer"; the
+    /// engine ranked a wrong word first and "answer" second. Before #184 that
     /// utterance did nothing at all.
     @Test("A final whose primary text matches nothing fires from an alternative")
     func alternativeFiresOnFinal() async {
@@ -51,10 +51,10 @@ struct CommandAlternativesTests {
             coordinator.onCommandRecognized = { recognized.append($0) }
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "hello there", isFinal: true, alternatives: ["whatever", "start"])
+                CommandTranscript(text: "hello there", isFinal: true, alternatives: ["whatever", "answer"])
             )
 
-            #expect(recognized == [.start], "the n-best list is what carries the real command")
+            #expect(recognized == [.answer], "the n-best list is what carries the real command")
         }
     }
 
@@ -71,7 +71,7 @@ struct CommandAlternativesTests {
             coordinator.onCommandRecognized = { recognized.append($0) }
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "hello there", isFinal: false, alternatives: ["start"])
+                CommandTranscript(text: "hello there", isFinal: false, alternatives: ["answer"])
             )
 
             #expect(recognized.isEmpty, "got \(recognized)")
@@ -90,15 +90,15 @@ struct CommandAlternativesTests {
             coordinator.onCommandRecognized = { recognized.append($0) }
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "start", isFinal: true, alternatives: ["repeat"])
+                CommandTranscript(text: "answer", isFinal: true, alternatives: ["repeat"])
             )
 
-            #expect(recognized == [.start])
+            #expect(recognized == [.answer])
         }
     }
 
     /// WHY: screen scoping is the confusion mitigation for a tiny vocabulary,
-    /// and an alternative must not be a way around it — "ok" is inert on the
+    /// and an alternative must not be a way around it — "again" is inert on the
     /// question screen whether it arrives first or fifth in the n-best list.
     @Test("An alternative inert on the current screen fires nothing")
     func alternativeStillScreenScoped() async {
@@ -109,7 +109,7 @@ struct CommandAlternativesTests {
             coordinator.onCommandRecognized = { recognized.append($0) }
 
             await coordinator.handleCommandTranscript(
-                CommandTranscript(text: "hello there", isFinal: true, alternatives: ["ok"])
+                CommandTranscript(text: "hello there", isFinal: true, alternatives: ["again"])
             )
 
             #expect(recognized.isEmpty, "got \(recognized)")

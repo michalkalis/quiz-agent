@@ -50,13 +50,13 @@ struct VoiceCommandObservabilityTests {
     // MARK: - Indicator hint copy
 
     /// #174: the hint names exactly the words printed on the screen's buttons
-    /// (Confirm / Again) — one vocabulary, seen and heard. #185: the answer
+    /// (Again) — one vocabulary, seen and heard. #185: the answer
     /// sheet also says a new answer can simply be spoken (5.1), and the
     /// no-answer sheet names ITS buttons (Again / Skip), not Confirm.
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
-        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "start" or "next""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "confirm", "again" or a new answer"#)
+        #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "answer" or "next""#)
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "again" or a new answer"#)
         #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "next""#)
     }
 
@@ -68,11 +68,11 @@ struct VoiceCommandObservabilityTests {
 
         await vm.audioDeviceState.startSilenceDetectionListening() // arms the consumer → .listening
         #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening)
-        #expect(vm.commandListenerHint == #"Say "start" or "next""#)
+        #expect(vm.commandListenerHint == #"Say "answer" or "next""#)
 
         // Moving to the confirmation sheet swaps the words shown.
         vm.quizState = .processing
-        #expect(vm.commandListenerHint == #"Say "confirm", "again" or a new answer"#)
+        #expect(vm.commandListenerHint == #"Say "again" or a new answer"#)
 
         // Tearing the listener down hides the indicator.
         vm.audioDeviceState.stopSilenceDetectionListening()
@@ -142,7 +142,7 @@ struct VoiceCommandObservabilityTests {
         mock.commandAvailability = .ready
         await pumpUntil({ vm.commandAvailability == .ready },
                         "the observable mirror did not pick up the .ready flip")
-        #expect(vm.commandListenerHint == #"Say "start" or "next""#, "ready → the hint must now appear")
+        #expect(vm.commandListenerHint == #"Say "answer" or "next""#, "ready → the hint must now appear")
     }
 
     // MARK: - Master toggle
@@ -210,10 +210,10 @@ struct VoiceCommandObservabilityTests {
 
             vm.quizState = .askingQuestion
             await vm.audioDeviceState.startSilenceDetectionListening()
-            mock.simulateCommandTranscript("start")
+            mock.simulateCommandTranscript("answer")
             await pumpUntil({ vm.lastRecognizedCommand != nil }, "no command recorded")
 
-            #expect(vm.lastRecognizedCommand == .start)
+            #expect(vm.lastRecognizedCommand == .answer)
         }
     }
 

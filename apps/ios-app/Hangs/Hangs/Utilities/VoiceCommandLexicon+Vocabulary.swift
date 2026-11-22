@@ -43,13 +43,13 @@ extension VoiceCommandLexicon {
     }
 
     /// Commands about the question itself — the only ones the question word
-    /// may accompany. "Štart otázka" or, on the answer sheet, "nie, otázka"
+    /// may accompany. "Odpovedz otázka" or, on the answer sheet, "nie, otázka"
     /// stay inert: the sheet takes anything that is not a command as a new
     /// answer.
     static func takesQuestionWord(_ command: VoiceCommand) -> Bool {
         switch command {
-        case .repeatQuestion, .skip, .next: true
-        case .start, .ok, .again, .stop, .pause, .home: false
+        case .repeatQuestion, .next: true
+        case .answer, .again: false
         }
     }
 
@@ -66,23 +66,10 @@ extension VoiceCommandLexicon {
 
     /// The bias list for one screen: only the words that ARE a command there,
     /// as the matcher itself decides, so the list cannot drift from the
-    /// grammar. On the question screen the words that abort a pending skip
-    /// ride along (the undo window listens there).
+    /// grammar.
     static func contextualVocabulary(for language: CommandLanguage, on screen: VoiceCommandScreen) -> [String] {
-        let commands = contextualVocabulary(for: language).filter {
+        contextualVocabulary(for: language).filter {
             VoiceCommandMatcher.match(transcript: $0, on: screen, isFinal: true, language: language) != nil
-        }
-        return unique(commands + (screen == .question ? skipCancelVocabulary(for: language) : []))
-    }
-
-    /// The dedicated cancel words of the skip undo window. The plain "no"
-    /// words also abort it, but they are conversation, so they are not biased
-    /// for on the question screen.
-    private static func skipCancelVocabulary(for language: CommandLanguage) -> [String] {
-        switch language {
-        case .english: ["stop", "cancel"]
-        case .slovak, .czech: ["stop", "zruš"]
-        case .ukrainian: ["стоп", "скасуй"]
         }
     }
 
@@ -90,27 +77,23 @@ extension VoiceCommandLexicon {
         switch language {
         case .english:
             [
-                "start", "ok", "okay", "confirm", "yes", "yeah", "next", "again", "retry", "no", "wrong",
-                "one more time", "once more", "try again", "repeat", "skip", "pass", "stop", "wait", "cancel", "pause",
-                "home", "next question", "skip question",
+                "answer", "next", "skip", "pass", "repeat", "again", "retry", "no", "wrong",
+                "one more time", "once more", "try again", "next question", "skip question", "repeat the question",
             ]
         case .slovak:
             [
-                "štart", "ok", "okej", "potvrď", "áno", "hej", "ďalej", "pokračuj",
-                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj", "opakuj", "ďalšia", "preskoč", "vynechaj",
-                "stop", "počkaj", "zruš", "pauza", "domov", "zopakuj otázku", "ďalšia otázka",
+                "odpovedz", "odpovedaj", "odpoveď", "ďalšia", "preskoč", "vynechaj", "zopakuj", "opakuj",
+                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj otázku", "ďalšia otázka",
             ]
         case .czech:
             [
-                "start", "ok", "okej", "potvrď", "ano", "jo", "dál", "dále", "pokračuj",
-                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj", "opakuj", "další", "přeskoč", "vynech",
-                "stop", "počkej", "zruš", "pauza", "domů", "zopakuj otázku", "další otázka",
+                "odpověz", "odpovídej", "odpověď", "další", "přeskoč", "vynech", "zopakuj", "opakuj",
+                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj otázku", "další otázka",
             ]
         case .ukrainian:
             [
-                "старт", "ок", "окей", "підтверди", "так", "добре", "далі", "продовжуй",
-                "ще раз", "знову", "ні", "неправильно", "повтори", "пропусти", "наступне",
-                "стоп", "зачекай", "почекай", "скасуй", "пауза", "додому", "повтори питання", "наступне питання",
+                "відповідай", "відповідь", "пропусти", "наступне", "повтори",
+                "ще раз", "знову", "ні", "неправильно", "повтори питання", "наступне питання",
             ]
         }
     }

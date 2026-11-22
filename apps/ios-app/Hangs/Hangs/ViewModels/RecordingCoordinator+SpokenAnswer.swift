@@ -11,7 +11,8 @@
 //   5.1  anything said on the sheet that is not a command is a NEW answer and
 //        replaces the old one; silence until the countdown ends = confirmed.
 //   5.2  the countdown starts only once the command listener is live.
-//   5.3  "stop" only stops the automatic advance — the sheet then waits.
+//   (5.3, "stop" holds the countdown, went with the stop command on
+//   2026-11-22: "again" is the sheet's one word now.)
 //
 //  How 5.1 works without asking the driver to say it twice: while the sheet is
 //  up, the listener's audio is kept (`beginSheetCapture`, the same tee the
@@ -44,7 +45,7 @@ extension RecordingCoordinator {
     /// comes through here, and so does the resume from a pause.
     func armConfirmationCountdown() {
         guard showAnswerConfirmation, !noAnswerCaptured else { return }
-        if countdownHold != .driverStop { countdownHold = .awaitingListener }
+        countdownHold = .awaitingListener
         cancelAutoConfirm()
         let owner = confirmationOwner ?? attemptLedger.current
         let answer = transcribedAnswer
@@ -55,27 +56,12 @@ extension RecordingCoordinator {
                   self.attemptLedger.owns(owner, "confirmation.listener") else { return }
             self.attemptLedger.record(.speech, live ? "confirmation.listenerLive" : "confirmation.noListener")
             if live { self.beginSheetCapture() }
-            // A "stop" or speech that arrived meanwhile keeps its hold.
+            // Speech that arrived meanwhile keeps its hold.
             guard self.countdownHold == .awaitingListener else { return }
             self.countdownHold = nil
             self.startAutoConfirmIfEnabled()
         }
         taskBag.add(task, key: .confirmationCountdown)
-    }
-
-    // MARK: - 5.3 "stop"
-
-    /// Spoken "stop": the countdown stops and stays stopped while this sheet is
-    /// up. The listener keeps running — "potvrď", "znova", a new answer or a
-    /// tap decide.
-    func holdAutoConfirmByDriver() {
-        // #186: a sent answer is final — a late "stop" is dropped and reported.
-        guard !attemptLedger.refuseAfterAnswerSent("stop.afterAnswerSent") else { return }
-        guard showAnswerConfirmation, !noAnswerCaptured, !isEvaluatingAnswer else { return }
-        countdownHold = .driverStop
-        taskBag.cancel(.confirmationSpeechHold)
-        cancelAutoConfirm()
-        Logger.quiz.info("✋ Auto-confirm stopped by voice")
     }
 
     // MARK: - 5.1 Speech on the sheet
@@ -90,7 +76,7 @@ extension RecordingCoordinator {
             guard autoConfirmCountdown > 0 else { return } // nothing is counting down
         case .awaitingListener:
             break // the countdown must not start under this utterance either
-        case .speech, .driverStop:
+        case .speech:
             return
         }
         countdownHold = .speech
@@ -133,7 +119,7 @@ extension RecordingCoordinator {
     // MARK: - The sheet's audio
 
     /// Keep the live listener's audio while the sheet is up. Rolling, so a sheet
-    /// left open (after "stop") never grows it without bound.
+    /// left open never grows it without bound.
     private func beginSheetCapture() {
         guard silenceDetectionService.isListening else { return }
         let capture = answerCapture
@@ -184,7 +170,7 @@ extension RecordingCoordinator {
         cancelAnswerReadBack()
         cancelAutoConfirm()
         taskBag.cancel(.confirmationSpeechHold)
-        if countdownHold != .driverStop { countdownHold = .awaitingListener }
+        countdownHold = .awaitingListener
         // #204.2: speaking over the shown answer rejects it — the new upload
         // must not come back as the same transcript.
         rememberRejectedTranscript(transcribedAnswer)
@@ -205,10 +191,10 @@ extension RecordingCoordinator {
         }
     }
 
-    /// The new answer's transcript arrived. `true` = handled here: it was a
-    /// command word the on-device recognizer missed ("Potvrď." is a confirm of
-    /// the OLD answer, not an answer), so the old answer comes back and the
-    /// command runs. `false` = a real new answer — present it as usual.
+    /// The new answer's transcript arrived. `true` = handled here: it was the
+    /// command word the on-device recognizer missed ("Znova." asks for the
+    /// answer again, it is not an answer), so the command runs. `false` = a
+    /// real new answer — present it as usual.
     func resolveSpokenReplacement(_ transcript: String) -> Bool {
         guard let replacement = spokenReplacement else { return false }
         spokenReplacement = nil
@@ -219,23 +205,13 @@ extension RecordingCoordinator {
             keepAnswerAfterEcho(replacement)
             return true
         }
-        let command = VoiceCommandMatcher.match(transcript: heard, on: .confirmation, language: language)
-        switch command {
-        case .ok:
-            attemptLedger.record(.command, "sheetAnswer.wasConfirm")
-            restorePreviousAnswer(replacement, readBack: false)
-            Task { [weak self] in await self?.confirmAnswer() }
-        case .again:
+        if VoiceCommandMatcher.match(transcript: heard, on: .confirmation, language: language) == .again {
             attemptLedger.record(.command, "sheetAnswer.wasAgain")
             rerecordAnswer()
-        case .stop:
-            attemptLedger.record(.command, "sheetAnswer.wasStop")
-            countdownHold = .driverStop
-            restorePreviousAnswer(replacement, readBack: true)
-        default:
-            guard heard != transcript else { return false }
-            presentAnswerAfterEcho(heard)
+            return true
         }
+        guard heard != transcript else { return false }
+        presentAnswerAfterEcho(heard)
         return true
     }
 

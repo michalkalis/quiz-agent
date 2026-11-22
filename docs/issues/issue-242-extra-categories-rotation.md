@@ -1,6 +1,6 @@
 # #242 — Extra kategórie zadarmo na striedačku
 
-**Triage:** enhancement · needs-info (čaká na odpovede foundera k striedaniu a umiestneniu)
+**Triage:** enhancement · ready-for-agent
 **Status:** plán (2026-11-22)
 **Session:** quiz-agent-fd · 2026-11-22
 
@@ -45,9 +45,9 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
 
 ## Kroky (malé PR, za vypínačom)
 
-- [ ] 242.1 Odpovede foundera: koľko kategórií naraz a ako často sa menia, kde sa ukážu, zoznam prvých kategórií.
+- [x] 242.1 Odpovede foundera (2026-11-22): tri extra kategórie naraz, raz za mesiac sa vymenia; ukážu sa v tom istom rade za stálymi kategóriami, s označením „nové“ a dátumom, dokedy platia; prvé kategórie: Čarodejnícka škola, Superhrdinovia, Techno a klubová scéna, Rozprávky a animáky (na začiatku bežia tri, štvrtá pribudne pri prvej výmene); detské témy ostávajú v rodinnej sekcii.
 - [x] 242.2 Nezávislá kontrola tohto plánu (`/design-soundness`, 2026-11-22): dva nálezy (extra otázky by pretiekli do miešaného kvízu; prejdená kategória by sa opakovala) a tri pripomienky zapracované v bodoch 4 a 5.
-- [ ] 242.3 Server: filter oddelenia a jeho test ako prvé (ešte pred prvou extra otázkou v databáze), potom katalóg, adresa, vypínač, okno dátumov, kód „prejdené“, testy (prázdna zásoba, mimo okna, neznámy jazyk, prejdená kategória).
+- [~] 242.3 Server: filter oddelenia a jeho test ako prvé (ešte pred prvou extra otázkou v databáze), potom katalóg, adresa, vypínač, okno dátumov, kód „prejdené“, testy (prázdna zásoba, mimo okna, neznámy jazyk, prejdená kategória).
 - [ ] 242.4 Obsah prvej vlny: na kategóriu 60 schválených otázok na jazyk (šesť kôl bez opakovania); zoznam tém na jedno schválenie, potom bez prerušení.
 - [ ] 242.5 Appka: vejár a výber čítajú katalóg, pomalá a zlyhaná odpoveď servera pokrytá testom, meranie.
 - [ ] 242.6 Zapnúť vypínač po teste foundera v bete; prvá výmena kategórií podľa zvoleného rytmu.
@@ -55,8 +55,7 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
 
 ## Otvorené
 
-- Rytmus a počet naraz, umiestnenie vo vejári, prvé kategórie: na stránke rozhodnutí.
-- „Deti a rodina“: detské témy už má rodinná sekcia. Návrh: do všeobecného vejára dať „Rozprávky a animáky“ pre všetkých, nie druhú detskú sekciu.
+- Zatiaľ nič. Odpovede z 242.1 sú zapracované v krokoch vyššie.
 
 ## Riziká
 

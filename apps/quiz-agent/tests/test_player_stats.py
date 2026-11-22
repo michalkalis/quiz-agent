@@ -363,3 +363,25 @@ async def test_ten_thousand_events_compute_fast(db_sessionmaker):
     assert by_kind(stats)["totals"]["data"]["answers"] == 5000
     print(f"stats compute {elapsed * 1000:.0f} ms")
     assert elapsed < 0.5, f"{elapsed:.3f}s"
+
+
+async def test_extra_category_never_becomes_best_or_weakest_card(db_sessionmaker):
+    """A rotating extra category is gone next month and old builds cannot name
+    it: best/weakest compare permanent categories only; answers still count in totals."""
+    rows = game(
+        P,
+        "a",
+        at(1),
+        [ans("correct", "geo")] * 8
+        + [ans("incorrect", "geo")] * 2
+        + [ans("correct", "music")] * 5
+        + [ans("incorrect", "music")] * 5
+        + [ans("incorrect", "history")] * 10
+        + [ans("correct", "extra-techno")] * 10,
+        tz="UTC",
+    )
+    await store(db_sessionmaker, rows)
+    cards = by_kind(await _cards(db_sessionmaker))
+    assert cards["best_category"]["data"]["category"] == "geo"
+    assert cards["weakest_category"]["data"]["category"] == "history"
+    assert cards["totals"]["data"]["answers"] == 40

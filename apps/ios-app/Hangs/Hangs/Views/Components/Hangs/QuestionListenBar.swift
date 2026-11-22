@@ -81,6 +81,24 @@ enum QuestionListenPhase: Equatable {
         }
     }
 
+    /// TF build 90 (founder): the strip between the question card and the
+    /// buttons appears only when it tells the player something they need: the
+    /// think countdown, the open mic, or an answer in flight. Reading the
+    /// question is audible, and the idle command bar advertised commands that
+    /// are heard unreliably, so both are gone (the commands keep working).
+    /// The one exception is the commands permission control (`hasCommandsAccessory`):
+    /// "Turn on" lives nowhere else after onboarding, and "Settings" is how a
+    /// refused microphone is fixed, so it stays, as the plain bar without a
+    /// countdown that carries only that control.
+    static func strip(_ phase: QuestionListenPhase?, hasCommandsAccessory: Bool) -> QuestionListenPhase? {
+        switch phase {
+        case let .thinking(_, total) where total > 0: phase
+        case .listening, .evaluating, .skipping: phase
+        case .readingQuestion, .thinking: hasCommandsAccessory ? .thinking(remaining: 0, total: 0) : nil
+        case nil: nil
+        }
+    }
+
     /// The commands this state actually routes, in the order the driver reads
     /// them. `.question` routes start / repeat / skip (`VoiceCommandLexicon`), but
     /// "start" is deliberately withheld while the question is being read — saying
@@ -145,6 +163,9 @@ struct QuestionListenBar: View {
     /// bar is the quiz's one countdown, so the Stop button no longer carries it.
     var answerRemaining: Int? = nil
 
+    /// TF build 90: the retry or spelling hint, carried by the open mic's bar.
+    var answerNote: ListenBar.AnswerNote? = nil
+
     var onDismiss: (() -> Void)? = nil
 
     /// #237: the commands control while commands wait on the permission
@@ -152,6 +173,13 @@ struct QuestionListenBar: View {
     var commandsAccessory: ListenBar.CommandsAccessory? = nil
     var onTurnOnCommands: (() -> Void)? = nil
     var onOpenSettings: (() -> Void)? = nil
+
+    /// TF build 90: the slot the question screen keeps for this bar while it
+    /// is hidden — as tall as the bar's own floor in its tallest state, so the
+    /// card and the controls never move when it appears.
+    static func slotHeight(size: ListenBar.Size) -> CGFloat {
+        size == .full ? ListenBar.statusHeight : ListenBar.height(size: .slim, hasSubLine: true)
+    }
 
     private var words: [String] {
         guard showsWords else { return [] }
@@ -170,6 +198,7 @@ struct QuestionListenBar: View {
             speechHeard: speechHeard,
             inputLevel: inputLevel,
             answerRemaining: answerRemaining,
+            answerNote: answerNote,
             onDismiss: phase.isDismissable ? onDismiss : nil,
             commandsAccessory: commandsAccessory,
             onTurnOnCommands: onTurnOnCommands,

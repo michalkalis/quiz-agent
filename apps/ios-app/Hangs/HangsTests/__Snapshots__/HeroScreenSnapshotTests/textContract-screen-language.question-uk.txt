@@ -2,7 +2,6 @@
 1/10
 GEOGRAPHY
 What is the capital of France?
-Читаю питання
 Відповідай
 Напиши
 askingQuestion
@@ -14,7 +13,6 @@ question.category
 question.replayGlyph
 question.replay
 question.text
-listen-bar
 question.record
 question.textInputToggle
 question.skip

@@ -421,9 +421,9 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
-    /// #240: the pause is Settings' own (`holdQuestionForSettings`), not the
-    /// player's, so closing Settings ends it.
-    var isHeldBySettings = false
+    /// #240: the pause is the modal's own (`holdQuestionForModal`: Settings,
+    /// the "End Quiz?" alert), not the player's, so closing the modal ends it.
+    var isHeldByModal = false
 
     /// Quiz-level pause (#171 Track D; resets on the next question) — see
     /// `QuizTimersController.isPaused`.
@@ -628,7 +628,10 @@ final class QuizViewModel: ObservableObject {
             stallEnteredAt = nil
             taskBag.cancel(.stallWatchdog)
         }
-        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil } else {
+            // F3: typing belongs to the question it was opened on.
+            quizTimersController.endTypingHold()
+        }
         // #122: "action landed" signal — a matched glow clears as soon as the
         // min-display floor allows once the screen visibly changed.
         voiceCommandCoordinator.noteQuizStateChangedForFeedback()

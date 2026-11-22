@@ -8,9 +8,8 @@
 //  grammar in VoiceCommandLexicon+Display, none of this lives in
 //  Localizable.xcstrings. Synthesised through the backend's generic TTS
 //  (`POST /tts/synthesize`, cached server-side), the same path as the answer
-//  read-back. The same sentence is also SHOWN during the retry
-//  (`EmptyAnswerRetryHint`) — that copy is ordinary UI text and follows the
-//  app language like the rest of the screen.
+//  read-back. On screen the retry is the open mic bar's "Didn't catch that"
+//  (TF build 90), ordinary UI text in the app language.
 //
 
 import Foundation

@@ -10558,6 +10558,29 @@
         }
       }
     },
+    "Or spell it: P, A, R, I, S" : {
+      "comment" : "Under 'Listening…' after the player rejected a transcript: the answer can be spoken letter by letter. Short, it shares one line with the countdown. The example spells Paris as it is written in this language.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nebo ji hláskuj: P, A, Ř, Í, Ž"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alebo ju vyhláskuj: P, A, R, Í, Ž"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Або скажи по літерах: П, А, Р, И, Ж"
+          }
+        }
+      }
+    },
     "Ordering is paused for now." : {
       "comment" : "Settings: under 'Create a pack' while custom-pack orders are switched off on the server (#193 task 193.9)",
       "localizations" : {

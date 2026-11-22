@@ -165,9 +165,9 @@ struct EmptyAnswerRetryTests {
     }
 
     /// WHY: muted means no spoken line — which is exactly when the driver needs
-    /// the written one to know why the mic opened again. It is on the question
-    /// screen itself, next to the mic.
-    @Test("muted: the retry line is on the question screen while the mic is open again")
+    /// the written one to know why the mic opened again. TF build 90: it is
+    /// the open mic's own state line, not a free line under the question.
+    @Test("muted: the open mic's bar says why it opened again")
     func mutedRetryLineOnQuestionScreen() async throws {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
         vm.settings.isMuted = true
@@ -180,8 +180,12 @@ struct EmptyAnswerRetryTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.retryHint") }
-            #expect(throws: Never.self) { try tree.find(text: "I didn't catch your answer, please try again.") }
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(throws: Never.self) { try bar.find(text: "Didn't catch that") }
+            #expect(throws: Never.self) { try bar.find(text: "Say your answer") }
+            #expect(throws: (any Error).self, "no free hint line under the question") {
+                try tree.find(viewWithAccessibilityIdentifier: "question.retryHint")
+            }
         }
     }
 }

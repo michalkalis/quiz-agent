@@ -135,21 +135,36 @@ extension QuizViewModel {
     /// it holds the question with this same pause; closing it goes on where it
     /// stopped. Only before the mic opens: a live recording and the answer
     /// sheet are left as they are. A pause the player chose stays theirs.
-    func holdQuestionForSettings() {
+    /// TF build 90 (founder): the "End Quiz?" alert holds the question the
+    /// same way; its countdown ran on behind the dialog.
+    func holdQuestionForModal() {
         guard !isPaused, quizState == .askingQuestion else { return }
         enterPause()
-        isHeldBySettings = isPaused
+        isHeldByModal = isPaused
     }
 
-    func releaseQuestionAfterSettings() {
-        guard isHeldBySettings else { return }
-        isHeldBySettings = false
+    func releaseQuestionAfterModal() {
+        guard isHeldByModal else { return }
+        isHeldByModal = false
         exitPause()
+    }
+
+    /// Founder F3 + C2 (TF build 90): the think window ran out while the
+    /// player typed and the mic opened on top of the typed answer. Typing
+    /// holds the countdown where it stands and the mic stays shut until the
+    /// question is over: send grades the typed answer, Skip moves on as
+    /// usual, and the next question arms its own window (`transition`).
+    func beginTypingAnswer() {
+        guard quizState == .askingQuestion else { return }
+        quizTimersController.holdThinkingTimeForTyping()
     }
 
     /// The toolbar's single pause/resume control (and the spoken "pauza").
     func togglePause() {
         attemptLedger.record(.tap, "pause") // #186 step 2: replayable black box
+        // The player's own control takes the pause over: a hold an ended quiz
+        // left behind must never let a modal's release undo it.
+        isHeldByModal = false
         if isPaused {
             exitPause()
         } else {

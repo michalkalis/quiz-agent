@@ -23,8 +23,22 @@ extension AppScreen {
         case .dailyEndWeak: Self.roundEnd(marks: DailyChallengeFixtures.weakMarks)
         case .homeDaily: await Self.home(state: nil)
         case .homeDailyPlayed: await Self.home(state: Self.played(DailyChallengeFixtures.goodMarks))
+        case .homeDailyOffer:
+            await Self.home(state: DailyChallengeState(
+                date: Self.day.isoDate, language: "sk", status: .notPlayed, total: 5, summary: nil, bonusOffer: 10
+            ))
+        case .homeDailyPlayedBonus:
+            await Self.home(state: Self.withBonus(Self.played(DailyChallengeFixtures.goodMarks)))
         default: preconditionFailure("\(self) is not a daily challenge screen")
         }
+    }
+
+    /// #205.8: a finished day with the reward still all there and three days played.
+    private static func withBonus(_ base: DailyChallengeState) -> DailyChallengeState {
+        DailyChallengeState(
+            date: base.date, language: base.language, status: base.status, total: base.total, summary: base.summary,
+            bonusOffer: 10, bonusLeft: 10, daysPlayed: 3
+        )
     }
 
     private static func played(_ marks: [Bool?]) -> DailyChallengeState {

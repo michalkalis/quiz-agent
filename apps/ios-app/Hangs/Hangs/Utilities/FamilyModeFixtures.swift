@@ -64,6 +64,21 @@
             return (question(number, entry.text, type: .text, options: nil, why: entry.why), entry.answer)
         }
 
+        /// #242: what a server with the extra-categories switch on lists
+        /// (`--app-config-extra-categories`); `--ui-test-extra-exhausted` makes
+        /// the start answer 409 `extra_category_exhausted`.
+        static let extraCategories = ExtraCategoriesResponse(categories: [
+            ExtraCategory(key: "extra-wizard-school", name: "Čarodejnícka škola", until: "2026-12-06"),
+            ExtraCategory(key: "extra-techno", name: "Techno a klubová scéna", until: nil),
+        ])
+
+        @MainActor
+        static func configureExtraCategories(_ network: MockNetworkService, arguments: [String] = CommandLine.arguments) {
+            guard arguments.contains("--app-config-extra-categories") else { return }
+            network.stubbedExtraCategories = extraCategories
+            if arguments.contains("--ui-test-extra-exhausted") { network.startQuizError = NetworkError.extraCategoryExhausted }
+        }
+
         @MainActor
         static func configure(_ network: MockNetworkService, arguments: [String] = CommandLine.arguments) {
             guard arguments.contains("--app-config-family") else { return }

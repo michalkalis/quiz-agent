@@ -72,6 +72,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     /// #236: App Store countries (StoreKit `Storefront.countryCode`, alpha-3
     /// such as "USA") where the mode stays hidden.
     let familyModeHiddenStorefronts: [String]
+    /// #242: the free rotating extra categories on Home. Off unless the server says on.
+    let extraCategoriesEnabled: Bool
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -98,6 +100,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case familyModeEnabled = "family_mode_enabled"
         case familyModeEnabledAppStore = "family_mode_enabled_app_store"
         case familyModeHiddenStorefronts = "family_mode_hidden_storefronts"
+        case extraCategoriesEnabled = "extra_categories_enabled"
     }
 
     init(
@@ -116,7 +119,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         sharedQuizEnabled: Bool = false,
         familyModeEnabled: Bool = false,
         familyModeEnabledAppStore: Bool = false,
-        familyModeHiddenStorefronts: [String] = []
+        familyModeHiddenStorefronts: [String] = [],
+        extraCategoriesEnabled: Bool = false
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -134,6 +138,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.familyModeEnabled = familyModeEnabled
         self.familyModeEnabledAppStore = familyModeEnabledAppStore
         self.familyModeHiddenStorefronts = familyModeHiddenStorefronts
+        self.extraCategoriesEnabled = extraCategoriesEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -155,5 +160,6 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         familyModeEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .familyModeEnabled)) ?? false
         familyModeEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .familyModeEnabledAppStore)) ?? false
         familyModeHiddenStorefronts = (try? container.decodeIfPresent([String].self, forKey: .familyModeHiddenStorefronts)) ?? []
+        extraCategoriesEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .extraCategoriesEnabled)) ?? false
     }
 }

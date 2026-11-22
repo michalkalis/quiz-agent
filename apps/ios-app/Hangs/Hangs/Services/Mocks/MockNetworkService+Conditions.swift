@@ -23,7 +23,7 @@ import Foundation
         case extendSession, rateQuestion, flagQuestion, transcribeDictation, getUsage
         case syncEntitlements, postAnalyticsEvents, fetchDailyChallenge, startDailyChallenge
         case createSharedQuiz, startSharedQuiz, sharedQuizResults
-        case fetchDailyCrew, removeDailyCrewMember
+        case fetchDailyCrew, removeDailyCrewMember, extraCategories
     }
 
     /// What a bad network does to a call, shaped as the real `NetworkService`

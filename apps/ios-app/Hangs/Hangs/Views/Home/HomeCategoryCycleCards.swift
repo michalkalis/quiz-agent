@@ -120,7 +120,11 @@ struct HomeCategoryCycleCards: View {
                 .minimumScaleFactor(0.6)
                 .opacity(isFront ? 1 : 0)
             Spacer(minLength: Theme.Hangs.Spacing.xs)
-            if isAll {
+            if let extra = card.extra {
+                ExtraCategoryBadge(category: extra)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .opacity(isFront ? 1 : 0)
+            } else if isAll {
                 HStack(spacing: 0) {
                     ForEach(Theme.Hangs.Category.taxonomy, id: \.self) { id in
                         Theme.Hangs.Category.style(for: id).fill

@@ -54,7 +54,7 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
   - **Techno a klubová scéna** (founder: „skor take zaujimavosti nez nejake fakty“): kde to vzniklo, legendárne kluby, festivaly, stroje a zvuky, žánre, DJ-i a skladby, rave 90. rokov, scéna na Slovensku a v Česku.
   - **Rozprávky a animáky** (konkrétne mená a názvy): veľké animované filmy, japonská animácia, večerníčky a československé rozprávky, klasické rozprávky a ich pôvod, pesničky, hlasy a dabing, ako sa robí animácia, vianočné rozprávky.
   - Extra otázky sa smú používať aj v príspevkoch na sociálne siete (founder 2026-11-22).
-- [ ] 242.5 Appka: vejár a výber čítajú katalóg, pomalá a zlyhaná odpoveď servera pokrytá testom, meranie.
+- [x] 242.5 Appka (PR feat/242-ios-extra-categories): vejár a výber čítajú katalóg za stálymi kategóriami so značkou „nové“ a „do dátumu“; pomalá a zlyhaná odpoveď servera = len stále kategórie (testy); uložený `extra-*` výber prežije spustenie, zahodí sa len po úspešnom načítaní bez neho alebo po `extra_category_invalid`; `extra_category_exhausted` = pokojná správa bez ponuky na reset; udalosť `extra_category_quiz_started` (aj v zozname udalostí servera).
 - [ ] 242.6 Zapnúť vypínač po teste foundera v bete; prvá výmena kategórií podľa zvoleného rytmu.
 - [ ] 242.7 Vyhodnotenie po dvoch výmenách: podiel kôl v extra kategóriách, návraty.
 

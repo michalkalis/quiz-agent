@@ -101,6 +101,8 @@ enum AnalyticsEvent: Equatable {
     case familyTopicSelected(band: FamilyBand, topic: String)
     /// #236: `/start` answered `family_topic_empty`; Home hid the topic.
     case familyTopicEmpty(band: FamilyBand, topic: String)
+    /// #242: a quiz started with a free rotating extra category selected.
+    case extraCategoryQuizStarted(category: String)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -145,6 +147,7 @@ enum AnalyticsEvent: Equatable {
         case .familyBandSelected: "family_band_selected"
         case .familyTopicSelected: "family_topic_selected"
         case .familyTopicEmpty: "family_topic_empty"
+        case .extraCategoryQuizStarted: "extra_category_quiz_started"
         }
     }
 
@@ -255,6 +258,8 @@ enum AnalyticsEvent: Equatable {
             [("band", .string(band.rawValue)), ("first_time", .bool(firstTime))]
         case let .familyTopicSelected(band, topic), let .familyTopicEmpty(band, topic):
             [("band", .string(band.rawValue)), ("topic", .string(topic))]
+        case let .extraCategoryQuizStarted(category):
+            [("category", .string(category))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }

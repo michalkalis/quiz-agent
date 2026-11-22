@@ -250,6 +250,8 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "family_band_selected": frozenset({"band", "first_time"}),
     "family_topic_selected": frozenset({"band", "topic"}),
     "family_topic_empty": frozenset({"band", "topic"}),
+    # #242: a quiz started with a free rotating extra category (its extra-* key).
+    "extra_category_quiz_started": frozenset({"category"}),
     # action = other_topic | home, on the end-of-round screen of a band round.
     "family_round_end_action": frozenset({"action"}),
     "voice_experiment_guard": frozenset(

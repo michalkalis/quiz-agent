@@ -251,7 +251,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // Drop ids retired by taxonomy changes (2026-08 revamp): a stale
         // selection like "disney" would silently filter every quiz to empty.
         // Dropping degrades to "All Categories", which always has content.
-        categories = categories.filter { Self.categoryOptions.contains($0) }
+        // #242: a served extra (`extra-*`) survives a launch; only a fetch that
+        // no longer lists it, or the server's refusal, drops it.
+        categories = categories.filter { Self.categoryOptions.contains($0) || ExtraCategory.isExtra($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
         autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
         thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? Self.defaultThinkingTime
@@ -336,15 +338,23 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// one = its name, several = a count). Derives from `Config.categoryOptions`,
     /// the single source of id→display pairs, so each label lives in exactly one
     /// place for localization (#56).
-    func categoryDisplayName() -> String {
+    func categoryDisplayName(extras: [ExtraCategory] = []) -> String {
         switch categories.count {
         case 0:
-            return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
+            return allCategoriesDisplayName
         case 1:
-            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
+            return Config.categoryOptions.first { $0.id == categories[0] }?.display
+                ?? extras.first { $0.key == categories[0] }?.name
+                ?? (ExtraCategory.isExtra(categories[0]) ? allCategoriesDisplayName : nil)
+                ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
         default:
             return String(localized: "\(categories.count) selected", bundle: .interface, locale: .interface, comment: "Home category picker value when several categories are selected; placeholder is the count")
         }
+    }
+
+    /// A saved extra with no remembered name reads as "All categories", never "Unknown" (#242).
+    private var allCategoriesDisplayName: String {
+        Config.categoryOptions.first { $0.id == nil }?.display ?? ""
     }
 
     /// Display name for the active age-appropriate filter.

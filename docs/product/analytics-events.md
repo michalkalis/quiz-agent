@@ -58,6 +58,7 @@ Every app event also carries `build_channel` (app_store / testflight / debug, fr
 | `family_band_selected` | an age band was chosen in the "S deťmi" mode (#236); the band is a content setting, never a person's age | `band` (kids_4_6 / kids_7_9 / kids_10_12), `first_time` (the sheet on the first flip) |
 | `family_topic_selected` | a topic card was chosen in the "S deťmi" mode (#236) | `band`, `topic` (family-* key) |
 | `family_topic_empty` | a round could not start because the topic had no questions; Home hid the topic (#236) | `band`, `topic` |
+| `extra_category_quiz_started` | a quiz started with a free rotating extra category selected, one per key (#242 — free extra categories on rotation) | `category` (the `extra-*` key) |
 | `family_round_end_action` | what the player tapped at the end of a round with kids (#236) | `action` (other_topic / home) |
 | `shared_quiz_pasted` | the first-launch "quiz from a friend?" paste button was used (#232) | `outcome` (opened / not_a_link) |
 | `room_settings_changed` | the host of a game together changed a rule and the server accepted it (#213.8); one per change | `setting` (reveal_mode / thinking_seconds / reads_aloud), `value` (question / round, 15 / 30 / 45 / 60, true / false), `surface` (lobby / in_game) |

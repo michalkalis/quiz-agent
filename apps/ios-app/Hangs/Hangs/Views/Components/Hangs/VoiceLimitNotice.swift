@@ -4,7 +4,7 @@
 //
 //  Free tier split (founder 2026-11-21, D1): this month's free voice answers
 //  are used up. Shown once a month on the question where it happened, next
-//  to the controls it explains, like the retry line (`EmptyAnswerRetryHint`).
+//  to the controls it explains.
 //  It never blocks the question: the Plus link is a quiet text link, the
 //  question stays answerable by typing or tapping. The spoken twin is
 //  `SpokenPrompt.voiceLimitLine` (quiz language); this follows the app one.
@@ -16,7 +16,7 @@ struct VoiceLimitNotice: View {
     let onPlus: () -> Void
 
     private enum Metrics {
-        /// The retry line's size (`EmptyAnswerRetryHint`): both sit above the controls.
+        /// A short line above the controls, the size the old retry line had.
         static let lineSize: CGFloat = 15
     }
 

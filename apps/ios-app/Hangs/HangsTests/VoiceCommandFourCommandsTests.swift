@@ -132,6 +132,26 @@ struct VoiceCommandFourCommandsTests {
         #expect(VoiceCommandMatcher.match(transcript: "skib", on: .question, isFinal: true, language: .english) == nil)
     }
 
+    /// WHY (PR review): "again" is the most lenient, but a one-letter slip on
+    /// a three-letter word is a different word, not a misheard command: on the
+    /// answer sheet "Níl" (the Nile) or "ale" is the player's new answer, and
+    /// reading it as "again" would throw that answer away.
+    @Test("a short word one letter from a short again word is not again", arguments: [
+        ("nil", CommandLanguage.slovak), ("ale", .slovak), ("zlo", .slovak),
+        ("now", .english), ("not", .english),
+    ])
+    func shortNearMissIsNotAgain(word: String, language: CommandLanguage) {
+        #expect(VoiceCommandMatcher.match(transcript: word, on: .confirmation, isFinal: true, language: language) == nil)
+    }
+
+    @Test("the short again words still count when heard exactly")
+    func shortAgainWordsExact() {
+        #expect(VoiceCommandMatcher.match(transcript: "nie", on: .confirmation, isFinal: true, language: .slovak) == .again)
+        #expect(VoiceCommandMatcher.match(transcript: "zle", on: .confirmation, isFinal: true, language: .slovak) == .again)
+        #expect(VoiceCommandMatcher.match(transcript: "no", on: .confirmation, isFinal: true, language: .english) == .again)
+        #expect(VoiceCommandMatcher.match(transcript: "ne", on: .confirmation, isFinal: true, language: .czech) == .again)
+    }
+
     // MARK: - Near ties (decision 3, answer vs next)
 
     /// WHY: answer competes with next and repeat in the same window. A word

@@ -281,7 +281,13 @@ enum VoiceCommandMatcher {
     /// `ukrainianShortWord` letters or fewer, and every `exactOnlyVariants`
     /// word, scores only on an exact match, and a token shorter than that
     /// earns no truncation credit.
+    ///
+    /// In every language a variant of `shortWord` letters or fewer also scores
+    /// only on an exact match: one letter off, it is another word ("Níl" /
+    /// "ale" vs "nie" / "zle", "now" vs "no"), and "again"'s lenient floor
+    /// (0.65) sits under a one-letter miss on three letters (0.67).
     static func score(_ token: String, _ variant: String, isFinal: Bool, language: CommandLanguage = .english) -> Double {
+        if token != variant, variant.count <= shortWord { return 0 }
         if language == .ukrainian, token != variant,
            variant.count <= ukrainianShortWord || VoiceCommandLexicon.exactOnlyVariants(for: language).contains(variant)
         {
@@ -291,6 +297,9 @@ enum VoiceCommandMatcher {
         guard isFinal, isTruncation(token, of: variant, language: language) else { return levenshtein }
         return max(levenshtein, jaroWinkler(token, variant))
     }
+
+    /// A command word this short must be heard exactly (see `score`).
+    static let shortWord = 3
 
     /// Leading characters a shortened token must share with a variant before it
     /// is treated as a truncation rather than a different word.

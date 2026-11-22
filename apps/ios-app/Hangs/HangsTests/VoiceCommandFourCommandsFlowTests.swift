@@ -186,4 +186,39 @@ struct VoiceCommandFourCommandsFlowTests {
             #expect(event?.properties["speech_end_ms"] == .int(640))
         }
     }
+
+    /// WHY (PR review): the latency must belong to the utterance that fired.
+    /// A pause from an earlier utterance (or before a read, which mutes the
+    /// speech edges) would report seconds of "latency" that never happened.
+    @Test("an earlier utterance's end of speech is never reported")
+    func staleSpeechEndIsDropped() async {
+        await withMainSerialExecutor {
+            let clock = TestClock()
+            let analytics = MockAnalyticsClient()
+            let vm = QuizViewModel(
+                networkService: Fixtures.makeFullMockNetwork(),
+                audioService: MockAudioService(),
+                persistenceStore: MockPersistenceStore(),
+                silenceDetectionService: MockSilenceDetectionService(),
+                clock: AnyClock(clock),
+                analytics: analytics
+            )
+            vm.currentSession = Fixtures.makeActiveSession()
+            vm.currentQuestion = Fixtures.makeQuestion()
+            vm.quizState = .askingQuestion
+            let coordinator = vm.voiceCommandCoordinator
+
+            coordinator.noteSpeechActivity(.began(levelDb: -30, noiseFloorDb: -60))
+            coordinator.noteSpeechActivity(.paused(speechSecs: 0.5, peakDb: -20))
+            // That utterance ends as no command.
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "hmm", isFinal: true))
+            await clock.advance(by: .seconds(4))
+            // The next one arrives with no speech edge of its own.
+            await coordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
+
+            let event = analytics.events(named: "voice_command").first
+            #expect(event != nil)
+            #expect(event?.properties["speech_end_ms"] == nil, "4 s from an earlier pause is not this command's latency")
+        }
+    }
 }

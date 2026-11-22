@@ -28,7 +28,7 @@ struct VoiceLimitNotice: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("question.voiceLimitNotice")
-            HangsGhostButton(title: "Unlimited voice with Trubbo Plus", action: onPlus)
+            HangsGhostButton(title: "Get Trubbo Plus", action: onPlus)
                 .accessibilityIdentifier("question.voiceLimitPlus")
         }
         .frame(maxWidth: .infinity)

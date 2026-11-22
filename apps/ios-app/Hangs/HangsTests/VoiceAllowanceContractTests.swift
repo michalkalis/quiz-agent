@@ -40,7 +40,9 @@ struct VoiceAllowanceScreenTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             try tree.find(viewWithAccessibilityIdentifier: "question.record").find(ViewType.Button.self).tap()
-            for _ in 0 ..< 50 { await Task.yield() } // let a started recording land
+            for _ in 0 ..< 50 {
+                await Task.yield()
+            } // let a started recording land
             #expect(vm.quizState == .askingQuestion, "the mic opened")
             // The typed field itself is @State of the screen: RS-47 asserts it.
         }
@@ -55,6 +57,9 @@ struct VoiceAllowanceScreenTests {
             let tree = try view.inspect()
             #expect((try? tree.find(viewWithAccessibilityIdentifier: "question.voiceLimitNotice")) != nil)
             #expect((try? tree.find(viewWithAccessibilityIdentifier: "question.voiceLimitPlus")) != nil)
+            // WHY: one label per concept, the Plus offer reads the same as on
+            // every other Plus button, and promises no "unlimited" (Plus is capped).
+            #expect((try? tree.find(text: "Get Trubbo Plus")) != nil)
         }
     }
 

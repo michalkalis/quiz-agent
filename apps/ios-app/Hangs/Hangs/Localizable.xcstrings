@@ -16106,29 +16106,6 @@
         }
       }
     },
-    "Unlimited voice with Trubbo Plus" : {
-      "comment" : "Quiet link in the voice limit notice on the question screen: opens the Trubbo Plus offer",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hlasem bez limitu s Trubbo Plus"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hlasom bez limitu s Trubbo Plus"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Голосом без ліміту з Trubbo Plus"
-          }
-        }
-      }
-    },
     "VOICE COMMANDS" : {
       "comment" : "Onboarding voice-commands page title",
       "localizations" : {

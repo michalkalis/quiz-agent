@@ -272,5 +272,6 @@ extension VoiceCommandCoordinator {
         // A torn-down listener will never deliver the final that would have
         // ended the utterance, so the latch must not survive it (#119).
         endUtterance()
+        clearUnfiredCommandHeard()
     }
 }

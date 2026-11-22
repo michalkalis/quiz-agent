@@ -151,7 +151,7 @@ enum VoiceCommandMatcher {
     }
 
     /// The best score any token earns against any of `command`'s variants.
-    private static func bestScore(
+    static func bestScore(
         _ tokens: [String], command: VoiceCommand, on screen: VoiceCommandScreen, isFinal: Bool,
         language: CommandLanguage
     ) -> Double {
@@ -199,7 +199,7 @@ enum VoiceCommandMatcher {
     /// start"); DISTINCT rather than consecutive-only so filler between the
     /// repeats ("start um start") doesn't inflate the count either. With a
     /// `screen`, that screen's command words are never filler (#185).
-    private static func contentTokens(
+    static func contentTokens(
         _ tokens: [String], language: CommandLanguage, on screen: VoiceCommandScreen? = nil
     ) -> Set<String> {
         // #184: the filler set is stored pre-folded but NOT phonetically folded,

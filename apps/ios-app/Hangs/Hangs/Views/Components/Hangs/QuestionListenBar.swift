@@ -146,6 +146,9 @@ struct QuestionListenBar: View {
     /// #122 follow-up: the recognized-but-not-yet-fired command caption.
     var recognizingWord: String? = nil
 
+    /// "What the app hears" (founder 2026-11-22).
+    var heard: CommandHeard? = nil
+
     /// Whether the command words may be shown at all: the Settings toggle AND an
     /// armed listener. A chip is a promise that the word will be heard.
     var showsWords: Bool = true
@@ -191,6 +194,7 @@ struct QuestionListenBar: View {
             mode: phase.barMode,
             feedback: feedback,
             recognizingWord: recognizingWord,
+            heard: heard,
             commandWords: words,
             size: size,
             language: language,

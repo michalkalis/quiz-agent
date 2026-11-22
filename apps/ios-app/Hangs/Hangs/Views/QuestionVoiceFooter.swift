@@ -101,10 +101,15 @@ struct QuestionVoiceFooter: View {
                     if let stripPhase {
                         listenBar(stripPhase)
                             .transition(.opacity)
+                    } else if let heard = viewModel.commandHeard {
+                        // "What the app hears" where the strip is hidden.
+                        CommandHeardLine(heard: heard, language: viewModel.commandLanguage)
+                            .transition(.opacity)
                     }
                 }
                 .frame(maxWidth: .infinity, minHeight: QuestionListenBar.slotHeight(size: barSize))
                 .animation(.easeInOut(duration: 0.25), value: stripPhase == nil)
+                .animation(.easeInOut(duration: 0.25), value: viewModel.commandHeard == nil)
 
                 actionRow
                     .padding(.horizontal, Self.gutter)
@@ -120,6 +125,7 @@ struct QuestionVoiceFooter: View {
             phase: phase,
             feedback: viewModel.voiceFeedbackPhase,
             recognizingWord: viewModel.recognizingWord,
+            heard: viewModel.commandHeard,
             showsWords: false,
             size: barSize,
             language: viewModel.commandLanguage,

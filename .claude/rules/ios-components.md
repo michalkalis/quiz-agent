@@ -51,7 +51,8 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length); `reveal:` = the options read-only with the correct and chosen one marked (result question sheet). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
 | `QuestionListenBar` | Voice bar on the question screen: the screen's one home of state, countdown and "Processing…". TF build 90: shown only for the think countdown, the open mic and an answer in flight (`QuestionListenPhase.strip`), never with command words, in a reserved slot; the open mic carries the retry and spelling hints (`answerNote`). |
-| `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
+| `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. `heard:` shows "what the app hears" (the command the words resemble, with a fill toward its threshold). |
+| `CommandHeardLine` | The same "what the app hears" preview as a quiet line where no bar is on screen (the question screen's empty strip slot). Hidden from VoiceOver. |
 | `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6), on the answer sheet only. |
 | `VoiceLimitNotice` | Once-a-month "free voice answers used up" line with a quiet Plus link (2026-11-21 free tier split). |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |

@@ -17,7 +17,7 @@ import random
 logger = logging.getLogger(__name__)
 
 from quiz_shared.languages import NATIVE_ONLY_LANGUAGES
-from quiz_shared.models.question import Question
+from quiz_shared.models.question import EXTRA_CATEGORY_PREFIX, Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.utils.embeddings import generate_embedding_async, calculate_similarity
@@ -656,6 +656,12 @@ class QuestionRetriever:
         # Add category filter if specified
         if session.preferred_categories:
             filters["category"] = {"$in": session.preferred_categories}
+        else:
+            # #242: "all categories" never includes an extra (rotating)
+            # category, so old builds, the daily challenge, shared quizzes and
+            # the availability count stay on the permanent corpus. NULL
+            # categories still pass.
+            filters["category"] = {"$not_prefix_or_null": EXTRA_CATEGORY_PREFIX}
 
         return filters
 

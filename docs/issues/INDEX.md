@@ -14,7 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
-| 242 | [Extra kategórie zadarmo na striedačku](issue-242-extra-categories-rotation.md) | enhancement · needs-info | `[ ]` #242 | 2026-11-22: platené kategórie zatiaľ nie; plán čaká na odpovede foundera a kontrolu |
+| 242 | [Extra kategórie zadarmo na striedačku](issue-242-extra-categories-rotation.md) | enhancement · ready-for-agent | `[~]` #242 | 2026-11-22: tri kategórie naraz, mesačná výmena; rozpracované oddelenie extra otázok, potom katalóg |
 | 241 | [Vianoce 2026: otázky a príspevky](issue-241-christmas-2026.md) | enhancement · in-progress | `[~]` #241 | 2026-11-18: 73 vianočných otázok v produkcii, zvýhodnenie od 1. 12., videá na 29. 11. a Mikuláša |
 | 240 | [Kvalita appky z voľnej kapacity predplatného](issue-240-quality-program-from-subscription.md) | enhancement · in-progress | `[~]` #240 | 2026-11-18: audit kódu kolo 2, prechody appkou, prístupnosť, použiteľnosť, bezpečnosť, robot-hráč pre hlas; len z predplatného |
 | 238 | [Brány kvality otázok + prekontrolovanie fondu](issue-238-question-qa-gates.md) | enhancement · ready-for-agent | `[ ]` #238 | 2026-10-25: 18 chýb v schválených (#210); celá otázka proti stiahnutému zdroju, latka 0,9, jazyk sk/cs všetkých polí pred schválením, schválenie viazané na text; prekontrolovanie 145+316+96 najprv; schválené 10-26; 11-18 founder: po vydaní 1.3, nič nepostavené, etapa 1 (~50 $) skutočný náklad = súhlas pred behom |

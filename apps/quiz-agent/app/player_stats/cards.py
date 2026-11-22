@@ -12,6 +12,8 @@ from collections import Counter, defaultdict
 from statistics import median
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from quiz_shared.models.question import EXTRA_CATEGORY_PREFIX
+
 from .config import (
     AUDIO_ROUTE_GROUPS,
     HARD_DIFFICULTY,
@@ -109,7 +111,9 @@ def _accuracy_by_category(dims: list[DimRow]) -> list[tuple[str, int, int]]:
     """(category, answers, correct) for categories with enough answers."""
     agg: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     for d in dims:
-        if d.category:
+        # #242: a rotating extra category is not one of the permanent categories
+        # the best/weakest cards compare; its answers still count in the totals.
+        if d.category and not d.category.startswith(EXTRA_CATEGORY_PREFIX):
             agg[d.category][0] += d.answers
             agg[d.category][1] += d.correct
     return [(c, n, k) for c, (n, k) in agg.items() if n >= T["category_min_answers"]]
@@ -276,7 +280,12 @@ def improvement_card(total: int, days: int, thirds: list[tuple]) -> dict:
 
 def speed_card(rows: list[SpeedRow]) -> dict:
     ok = sorted(
-        (r for r in rows if r.measured >= T["speed_min_answers"]),
+        (
+            r
+            for r in rows
+            if r.measured >= T["speed_min_answers"]
+            and not r.category.startswith(EXTRA_CATEGORY_PREFIX)  # #242
+        ),
         key=lambda r: (r.median_ms, r.category),
     )
     data = {}

@@ -24,6 +24,10 @@ _ALLOWED_QUESTION_TYPES: frozenset[str] = frozenset(
     {"text", "text_multichoice", "audio", "image", "video"}
 )
 
+# #242: the category key prefix of the free rotating extra categories. Their
+# questions are served only to a session that asks for that category by key.
+EXTRA_CATEGORY_PREFIX = "extra-"
+
 
 class GenerationProvenance(BaseModel):
     """Typed provenance for AI-generated questions.

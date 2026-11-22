@@ -109,6 +109,26 @@ async def test_prefix_is_matched_literally_not_as_a_pattern(store):  # noqa: F81
     assert drawn == {look_alike.id}
 
 
+async def test_extra_counts_follow_the_build_channel_and_language(store):  # noqa: F811
+    """Beta installs may play pending rows, the App Store only approved ones, so
+    the same category can be on offer in the beta and hidden in the store; a
+    row of another language or of a permanent category never counts."""
+    for q in (
+        _question("extra-x", language="sk"),
+        _question("extra-x", language="sk", review_status="pending_review"),
+        _question("extra-x", language="cs"),
+        _question("science", language="sk"),
+    ):
+        assert await store.upsert(q) is True
+    retriever = QuestionRetriever(question_store=store)
+
+    app_store = await retriever.extra_category_counts("sk", None, ["extra-x"])
+    beta = await retriever.extra_category_counts("sk", "testflight", ["extra-x"])
+
+    assert app_store == {("extra-x",): 1}
+    assert beta == {("extra-x",): 2}
+
+
 async def test_prefix_filter_keeps_null_categories():
     """The `questions.category` column is NOT NULL today, but a plain `$ne` /
     NOT LIKE would silently drop NULLs (NULL <> x is never true) the day a row

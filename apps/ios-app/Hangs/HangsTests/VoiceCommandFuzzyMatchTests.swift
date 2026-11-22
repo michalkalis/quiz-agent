@@ -10,7 +10,8 @@
 //  rail that keeps #119's false-fire protection intact:
 //   • Jaro-Winkler rewards a surviving PREFIX, so a truncated command routes,
 //   • but ONLY on a final — a volatile keeps the Levenshtein-only floor #119
-//     tuned on field data, or "star"→"start" re-opens the noise hole,
+//     tuned on field data (per command since 2026-11-22), or a near-word like
+//     "anger"→"answer" re-opens the noise hole,
 //   • and the sk/cs phonetic fold makes spelling flips the driver never hears
 //     (y/i, doubled letters) cost nothing, while English is left untouched.
 //
@@ -47,13 +48,13 @@ struct VoiceCommandFuzzyMatchTests {
     // MARK: - Truncation: final vs volatile
 
     /// WHY: this IS the #184 field failure. "znova" half-heard over road noise
-    /// arrives as "zno"; Levenshtein scores it 0.60 — below the 0.72 final floor
-    /// — so the founder had to shout. Jaro-Winkler scores the surviving prefix
+    /// arrives as "zno"; Levenshtein scores it 0.60 — below again's 0.65 final
+    /// floor — so the founder had to shout. Jaro-Winkler scores the surviving prefix
     /// 0.91 and the command routes.
     @Test("A truncated Slovak command routes on a final, where Levenshtein alone would not")
     func truncatedSlovakCommandRoutesOnFinal() {
         #expect(
-            VoiceCommandMatcher.similarity("zno", "znova") < VoiceCommandMatcher.confidenceFloor,
+            VoiceCommandMatcher.similarity("zno", "znova") < VoiceCommand.again.sensitivity.finalFloor,
             "the premise: Levenshtein alone rejects this truncation"
         )
         #expect(
@@ -65,10 +66,9 @@ struct VoiceCommandFuzzyMatchTests {
 
     /// WHY the conflict is resolved this way: a volatile hypothesis is revisable
     /// and arrives while the mic is still open to the road and the passenger, so
-    /// #119 holds it to a near-exact floor. Jaro-Winkler on a volatile would
-    /// score any sentence's one-word prefix generously and re-open exactly that
-    /// hole. `again` also discards a transcribed answer — it may only fire from
-    /// a final anyway.
+    /// #119 holds it to a stricter floor (again 0.70). Jaro-Winkler on a
+    /// volatile would score any sentence's one-word prefix generously and
+    /// re-open exactly that hole.
     @Test("The same truncation is still rejected as a volatile hypothesis")
     func truncatedSlovakCommandRejectedOnVolatile() {
         #expect(
@@ -78,13 +78,13 @@ struct VoiceCommandFuzzyMatchTests {
         )
     }
 
-    /// WHY: the #119 regression guard. "star" (radio, "Starting now…") must stay
-    /// below the volatile floor although Jaro-Winkler rates it ~0.96 — proving
-    /// the combined scorer really is final-only.
-    @Test("'star' does not start the quiz from a volatile hypothesis (#119 guard)")
-    func starDoesNotStartFromVolatile() {
-        #expect(VoiceCommandMatcher.jaroWinkler("star", "start") > 0.9, "the premise: JW loves this pair")
-        #expect(VoiceCommandMatcher.match(transcript: "star", on: .question, isFinal: false) == nil)
+    /// WHY: the #119 regression guard. "anger" (radio, passenger) must stay
+    /// below the volatile floor although Jaro-Winkler rates it ~0.86 against
+    /// "answer" — proving the combined scorer really is final-only.
+    @Test("'anger' does not open the answer from a volatile hypothesis (#119 guard)")
+    func angerDoesNotAnswerFromVolatile() {
+        #expect(VoiceCommandMatcher.jaroWinkler("anger", "answer") > 0.8, "the premise: JW loves this pair")
+        #expect(VoiceCommandMatcher.match(transcript: "anger", on: .question, isFinal: false) == nil)
     }
 
     /// WHY the JW term is scoped to SHORTER-than-variant tokens: at equal
@@ -152,10 +152,11 @@ struct VoiceCommandFuzzyMatchTests {
                 transcript: "znovy", on: .confirmation, isFinal: true, language: .slovak
             ) == .again
         )
+        // w→v and the doubled letter together: "odpowwedz" is "odpovedz".
         #expect(
             VoiceCommandMatcher.match(
-                transcript: "pauzza", on: .confirmation, isFinal: true, language: .slovak
-            ) == .pause
+                transcript: "odpowwedz", on: .question, isFinal: true, language: .slovak
+            ) == .answer
         )
     }
 

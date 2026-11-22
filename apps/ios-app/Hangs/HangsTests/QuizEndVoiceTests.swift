@@ -5,7 +5,7 @@
 //  #188 track G (founder picks 2026-10-06, audit K1 / K2 / D3 / D4): the
 //  moments where the quiz went silent and waited for a tap. An error, the
 //  paywall and the end of the set each say one short line, and the error and
-//  score screens listen for "znova" / "stop" / "domov"; "hear it" reads the
+//  score screens listen for "znova" only (stop / home words retired 2026-11-22); "hear it" reads the
 //  explanation instead of replaying the verdict.
 //
 
@@ -68,7 +68,7 @@ struct QuizEndVoiceTests {
         failSubmission(rig)
 
         await pumpUntil({ rig.vm.voiceCommandCoordinator.currentCommandScreen == .error }, "the error screen never listened")
-        #expect(rig.network.synthesizedTexts == [SpokenPrompt.errorLine(commands: [.again, .stop], language: rig.language)])
+        #expect(rig.network.synthesizedTexts == [SpokenPrompt.errorLine(commands: [.again], language: rig.language)])
         #expect(rig.audio.playOpusCallCount == 1, "the line was played once, no extra tone")
 
         await pumpUntil({ rig.silence.isListening }, "listener never came up")
@@ -76,15 +76,20 @@ struct QuizEndVoiceTests {
         await pumpUntil({ rig.vm.quizState == .askingQuestion }, "'again' did not retry")
     }
 
-    /// WHY: "stop" is the spoken twin of Go Home.
-    @Test("G1: 'stop' on the error screen goes Home")
-    func errorStopGoesHome() async {
+    /// WHY (founder 2026-11-22): "stop" / "domov" / "home" no longer act on the
+    /// error screen — the only voice way off it is "again"; Home is a tap.
+    @Test("G1: 'stop' on the error screen does nothing", arguments: ["stop", "home"])
+    func errorStopIsInert(_ spoken: String) async {
         let rig = makeRig()
         failSubmission(rig)
         await pumpUntil({ rig.silence.isListening && rig.vm.voiceCommandCoordinator.currentCommandScreen == .error })
+        var recognized: [VoiceCommand] = []
+        rig.vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
 
-        rig.silence.simulateCommandTranscript("stop")
-        await pumpUntil({ rig.vm.quizState == .idle }, "'stop' did not go Home")
+        rig.silence.simulateCommandTranscript(spoken)
+        await drain()
+        #expect(recognized.isEmpty, "'\(spoken)' acted on the error screen")
+        #expect(rig.vm.quizState != .idle)
     }
 
     /// WHY: the most common error is a dropped connection — exactly when the
@@ -157,7 +162,7 @@ struct QuizEndVoiceTests {
     /// WHY (D3): in the per-question flow the set ended in silence; the driver
     /// never learned the score. It is said, the music gets its volume back,
     /// and the score screen listens on the quiet session like Home.
-    @Test("G3: the set end says the score, then 'home' goes Home")
+    @Test("G3: the set end says the score, then a stable 'again' fires without waiting for a final")
     func setEndSpeaksScoreAndListens() async {
         let rig = makeRig()
         rig.vm.sessionCorrectCount = 7
@@ -167,13 +172,20 @@ struct QuizEndVoiceTests {
         await pumpUntil({ rig.silence.isListening && rig.vm.voiceCommandCoordinator.currentCommandScreen == .setEnd },
                         "the score screen never listened")
         #expect(rig.network.synthesizedTexts == [
-            SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: rig.language),
+            SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again], language: rig.language),
         ])
         #expect(rig.audio.deactivateSessionCallCount >= 1, "the quiz session was released")
         #expect(rig.audio.setupQuietListeningSessionCallCount >= 1, "listening must not duck the music")
 
-        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.home, language: rig.language))
-        await pumpUntil({ rig.vm.quizState == .idle }, "'home' did not go Home")
+        // WHY (founder 2026-11-22): "again" is the most lenient command and no
+        // longer waits for a final anywhere — a driver whose recognizer never
+        // finalizes at the quiet score screen must still be able to replay.
+        var recognized: [VoiceCommand] = []
+        rig.vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
+        let again = VoiceCommandLexicon.spokenWord(.again, language: rig.language)
+        rig.silence.simulateCommandTranscript(again, isFinal: false)
+        rig.silence.simulateCommandTranscript(again, isFinal: false)
+        await pumpUntil({ recognized == [.again] }, "a stable volatile 'again' still waited for a final")
     }
 
     /// WHY: the end-of-set recap already reads itself aloud — a score line on
@@ -239,28 +251,22 @@ struct QuizEndCommandWordTests {
 
     /// WHY: the founder's words for the two screens, in every quiz language at
     /// once (the lexicon parity rule).
-    @Test("again / stop / home route in every language", arguments: CommandLanguage.allCases)
+    @Test("again routes on both quiz-end screens in every language", arguments: CommandLanguage.allCases)
     func founderWords(_ language: CommandLanguage) {
         let again = VoiceCommandLexicon.spokenWord(.again, language: language)
-        let home = VoiceCommandLexicon.spokenWord(.home, language: language)
         #expect(match(again, .error, language) == .again)
-        #expect(match(VoiceCommandLexicon.spokenWord(.stop, language: language), .error, language) == .stop)
         #expect(match(again, .setEnd, language) == .again)
-        #expect(match(home, .setEnd, language) == .home)
+        #expect(VoiceCommandLexicon.commands(on: .error) == [.again])
+        #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.again])
     }
 
     /// WHY: on the sheet "nie" re-records an answer; at the set end it would
-    /// start a whole new quiz from a passenger's "no". And "home" must not act
-    /// mid-quiz, where nothing routes it.
-    @Test("sentence openers and 'wait' do nothing at the quiz end; 'home' only there", arguments: CommandLanguage.allCases)
+    /// start a whole new quiz from a passenger's "no".
+    @Test("sentence openers and 'wait' do nothing at the quiz end", arguments: CommandLanguage.allCases)
     func quizEndExclusions(_ language: CommandLanguage) {
         for word in VoiceCommandLexicon.quizEndExcludedVariants(for: language) {
             #expect(match(word, .setEnd, language) == nil, "\(word) must not act at the set end")
             #expect(match(word, .error, language) == nil, "\(word) must not act on the error screen")
-        }
-        let home = VoiceCommandLexicon.spokenWord(.home, language: language)
-        for screen in [VoiceCommandScreen.question, .confirmation, .noAnswer, .error] {
-            #expect(match(home, screen, language) == nil, "\(home) must not act on \(screen)")
         }
     }
 
@@ -269,8 +275,8 @@ struct QuizEndCommandWordTests {
     @Test("spoken lines name valid words, without quote marks", arguments: CommandLanguage.allCases)
     func spokenLinesAreHonest(_ language: CommandLanguage) {
         let lines = [
-            (SpokenPrompt.errorLine(commands: [.again, .stop], language: language), VoiceCommandScreen.error),
-            (SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: language), .setEnd),
+            (SpokenPrompt.errorLine(commands: [.again], language: language), VoiceCommandScreen.error),
+            (SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again], language: language), .setEnd),
         ]
         for (line, screen) in lines {
             #expect(!line.contains("\"") && !line.contains("„") && !line.contains("“") && !line.contains("«"))

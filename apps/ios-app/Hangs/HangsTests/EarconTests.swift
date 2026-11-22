@@ -10,7 +10,6 @@
 //  Seam-to-cue mapping under test:
 //    • startRecording()          → .micLive
 //    • stopRecordingAndSubmit()  → .gotIt
-//    • beginSkipUndoWindow()     → .skipConfirm
 //    • handleRecognizedCommand() → .commandAck
 //
 
@@ -77,31 +76,19 @@ struct EarconTests {
         }
     }
 
-    @Test("opening the skip undo-window gives exactly the skip-confirm cue, as a haptic only")
-    func skipConfirmOnUndoWindow() async {
-        await withMainSerialExecutor {
-            let (vm, earcon) = makeVM()
-            vm.quizState = .askingQuestion
-
-            vm.voiceCommandCoordinator.beginSkipUndoWindow(duration: 10) // long window: no commit during the assertion
-
-            #expect(earcon.hapticsOnly == [.skipConfirm], "opening the skip window must give exactly skip-confirm, got \(earcon.hapticsOnly)")
-            #expect(earcon.played.isEmpty, "skip-confirm makes no sound (#188 G6), got \(earcon.played)")
-        }
-    }
-
-    @Test("recognizing a command gives exactly the command-ack cue, as a haptic only")
+    /// WHY (founder 2026-11-22): a haptic alone is easy to miss on a car mount,
+    /// so the command ack now also carries one quiet tick.
+    @Test("recognizing a command gives exactly the command-ack cue, tick and haptic")
     func commandAckOnRecognition() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
-            vm.quizState = makeResultState() // result: "next" advances, emits no further cue
+            vm.quizState = makeResultState() // no command window here: the routed action is inert, emits no further cue
 
             vm.voiceCommandCoordinator.handleRecognizedCommand(.next)
 
-            // command-ack is emitted synchronously; the routed action (advance) emits
-            // no earcon, so this is the only cue.
-            #expect(earcon.hapticsOnly == [.commandAck], "recognizing a command must give exactly command-ack, got \(earcon.hapticsOnly)")
-            #expect(earcon.played.isEmpty, "command-ack makes no sound (#188 G6), got \(earcon.played)")
+            // command-ack is emitted synchronously, so this is the only cue.
+            #expect(earcon.played == [.commandAck], "recognizing a command must give exactly command-ack, got \(earcon.played)")
+            #expect(earcon.hapticsOnly.isEmpty)
         }
     }
 
@@ -116,7 +103,6 @@ struct EarconTests {
             // Every funnelled cue must be suppressed for the duration of TTS.
             vm.emitEarcon(.micLive)
             vm.emitEarcon(.gotIt)
-            vm.emitEarcon(.skipConfirm)
             vm.emitEarcon(.commandAck)
             vm.emitEarcon(.speechStart)
 
@@ -156,31 +142,33 @@ struct EarconTests {
     // MARK: - "Recording sounds" setting (#68)
 
     /// #188 G6 (founder 2026-10-06, earcons were "really annoying and
-    /// frequent"): of all cues only mic-live has a tone, so one answer carries
-    /// at most ONE sound. The other four are taps, whatever the setting.
-    @Test("only mic-live makes a sound; the other cues are haptic only")
+    /// frequent"): the recording cues are taps except mic-live. Since founder
+    /// 2026-11-22 the command ack also ticks, so a command is heard as well as
+    /// felt; speech-start and got-it stay taps, whatever the setting.
+    @Test("only mic-live and the command tick make a sound; the other cues are haptic only")
     func onlyMicLiveHasATone() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
 
             for cue in Earcon.allCases { vm.emitEarcon(cue) }
 
-            #expect(earcon.played == [.micLive], "only mic-live may play a tone, got \(earcon.played)")
-            #expect(earcon.hapticsOnly == [.speechStart, .gotIt, .skipConfirm, .commandAck])
+            #expect(earcon.played == [.micLive, .commandAck], "only mic-live and the tick may play a tone, got \(earcon.played)")
+            #expect(earcon.hapticsOnly == [.speechStart, .gotIt])
         }
     }
 
     /// WHY: the policy lives in one pure rule; a cue added later must opt in to
     /// a tone explicitly, and every cue (tone or not) must still be felt.
-    @Test("every cue keeps a haptic; exactly one has a tone")
+    @Test("every cue keeps a haptic; exactly mic-live and the command tick have a tone")
     func toneRuleAndHaptics() {
-        #expect(Earcon.allCases.filter(\.hasTone) == [.micLive])
+        #expect(Earcon.allCases == [.micLive, .speechStart, .gotIt, .commandAck])
+        #expect(Earcon.allCases.filter(\.hasTone) == [.micLive, .commandAck])
     }
 
     /// #68: the Settings toggle must actually silence the one remaining tone —
     /// otherwise the user-facing switch is a lie. The tap stays, so the mic
     /// opening is still felt (founder 2026-09-25).
-    @Test("recording sounds off silences the mic-live tone but keeps its haptic")
+    @Test("recording sounds off silences every tone but keeps the haptics")
     func recordingSoundsToggleSilencesMicLiveTone() async {
         await withMainSerialExecutor {
             let (vm, earcon) = makeVM()
@@ -189,10 +177,9 @@ struct EarconTests {
             vm.emitEarcon(.micLive)
             vm.emitEarcon(.gotIt)
             vm.emitEarcon(.commandAck)
-            vm.emitEarcon(.skipConfirm)
 
             #expect(earcon.played.isEmpty, "with recording sounds off nothing may sound, got \(earcon.played)")
-            #expect(earcon.hapticsOnly == [.micLive, .gotIt, .commandAck, .skipConfirm])
+            #expect(earcon.hapticsOnly == [.micLive, .gotIt, .commandAck])
         }
     }
 

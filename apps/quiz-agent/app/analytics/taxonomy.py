@@ -122,7 +122,9 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     # speech_end_ms = end of speech -> fire (absent = not seen). With
     # voice_command_window (windows per language and screen) this answers
     # whether sk / cs are recognised worse than en, per command.
-    "voice_command": frozenset({"command", "phase", "language", "path", "speech_end_ms"}),
+    "voice_command": frozenset(
+        {"command", "phase", "language", "path", "speech_end_ms"}
+    ),
     # One per closed voice-command listening window, for the on-device vs
     # cloud recognizer decision: engine = speech | dictation, language = the
     # command language, screen = question | confirmation | noAnswer | error |

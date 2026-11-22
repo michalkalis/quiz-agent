@@ -89,7 +89,7 @@ struct UITestClient {
 
     /// POST a synthetic voice-command transcript to the in-app HTTP listener,
     /// driving the real `handleCommandTranscript` → `handleRecognizedCommand` →
-    /// `routeCommand` pipeline (issue #111 T3). Lets a UI test fire e.g. "start"
+    /// `routeCommand` pipeline (issue #111 T3). Lets a UI test fire e.g. "next"
     /// even though the on-device recognizer is `nil` under `--ui-test`.
     func sendCommand(_ text: String) async throws {
         var components = URLComponents(url: base.appendingPathComponent("/command/send"), resolvingAgainstBaseURL: false)!

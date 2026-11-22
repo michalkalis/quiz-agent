@@ -194,8 +194,8 @@ struct PackProgressTests {
         #expect(rig.store.askedQuestionIds == ["lib_1"], "starting a pack over leaves the library history")
     }
 
-    /// WHY: the Home voice window stays open under the alert, so a spoken
-    /// "start" can begin a library quiz first. "Start over" must then neither
+    /// WHY: another start path (a tap behind the alert) can begin a library
+    /// quiz first. "Start over" must then neither
     /// wipe the pack's progress nor leave the stale offer up.
     @Test("Start over after another start got there first keeps the pack's progress")
     func startOverAfterAnotherStartKeepsProgress() async {

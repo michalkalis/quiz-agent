@@ -138,22 +138,10 @@ struct VoiceCommandReadingTests {
     @Test("a command merged into echo still fires")
     func commandInsideEcho() async {
         let (_, coordinator, _) = await reading()
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "the capital of France skip", isFinal: true))
-        #expect(coordinator.pendingSkipWindow != nil)
-    }
-
-    /// WHY: a cancel word that also occurs in the question ("no") must still
-    /// abort a skip said over the read.
-    @Test("a cancel word survives the echo guard")
-    func cancelWordSurvivesGuard() async {
-        let (vm, coordinator, _, _) = await make()
-        vm.currentQuestion = Fixtures.makeQuestion(text: "Is the answer no or yes")
-        _ = coordinator.beginQuestionRead()
-        vm.isPlayingQuestionTTS = true
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
-        #expect(coordinator.pendingSkipWindow != nil)
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "no", isFinal: true))
-        #expect(coordinator.pendingSkipWindow == nil)
+        var fired: [VoiceCommand] = []
+        coordinator.onCommandRecognized = { fired.append($0) }
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "the capital of France next", isFinal: true))
+        #expect(fired == [.next])
     }
 
     /// WHY: an echo segment's final can arrive after the read ended.
@@ -167,30 +155,34 @@ struct VoiceCommandReadingTests {
         #expect(coordinator.voiceFeedbackPhase != .unmatched)
     }
 
-    /// WHY: "start" opens the answer mic — over the read it would record the
+    /// WHY: "answer" opens the answer mic — over the read it would record the
     /// question.
-    @Test("start does not route during the read")
-    func startBlocked() async {
+    @Test("answer does not route during the read")
+    func answerBlocked() async {
         let (vm, coordinator, _) = await reading()
         var fired: [VoiceCommand] = []
         coordinator.onCommandRecognized = { fired.append($0) }
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "start", isFinal: true))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "answer", isFinal: true))
         #expect(fired.isEmpty)
         #expect(vm.quizState == .askingQuestion)
     }
 
-    /// WHY: the ack tone is muted under the question, so the read stopping is
-    /// how the driver hears that "skip" worked — and the think window must not
-    /// start under the pending skip.
-    @Test("skip during the read stops the read and starts no think window")
-    func skipStopsRead() async {
+    /// WHY: the ack tick is muted under the question, so the read stopping is
+    /// how the driver hears that "next" worked — and with the undo window gone
+    /// the skip is immediate, so no think window may start under it.
+    @Test("next during the read skips at once and starts no think window")
+    func nextSkipsDuringRead() async {
         let (vm, coordinator, _, audio) = await make()
+        vm.currentSession = Fixtures.makeActiveSession() // a skip needs a session to send
         audio.playbackDurationNs = 2_000_000_000
+        var fired: [VoiceCommand] = []
+        coordinator.onCommandRecognized = { fired.append($0) }
         audio.onPlaybackStarted = {
-            Task { await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true)) }
+            Task { await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true)) }
         }
         await vm.audioDeviceState.playQuestionAudio(from: "https://example.com/q.mp3")
-        #expect(coordinator.pendingSkipWindow != nil)
+        await pumpUntil({ vm.quizState != .askingQuestion }, "'next' over the read did not skip")
+        #expect(fired == [.next])
         #expect(vm.quizTimersController.thinkingTimeCountdown == 0)
     }
 }

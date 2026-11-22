@@ -17,7 +17,7 @@
 //    a transcript before matching, so leaked echo can neither fire a command
 //    nor light a cue; it sticks to an utterance that began during the read,
 //    whose final can land after it ended;
-//  • only repeat / skip route during the read ("start" would open the
+//  • only repeat / next route during the read ("answer" would open the
 //    answer mic over the rest of the sentence);
 //  • the speech detector is suspended for the read (`suspendSpeechEdges`):
 //    the app's voice is not the driver's, and must not hold it "speaking".
@@ -46,10 +46,9 @@ struct CommandUtteranceLog {
 }
 
 extension VoiceCommandCoordinator {
-    /// The question screen's commands while the question is read. "start" is
-    /// left out on purpose — it opens the answer mic over the sentence. (Pause
-    /// is not spoken on the question screen at all — the toolbar's, #171 D.)
-    static let readingCommands: Set<VoiceCommand> = [.repeatQuestion, .skip]
+    /// The question screen's commands while the question is read. "answer"
+    /// is left out on purpose — it opens the answer mic over the sentence.
+    static let readingCommands: Set<VoiceCommand> = [.repeatQuestion, .next]
 
     /// The listener is up through the read in progress.
     var listensThroughQuestionRead: Bool {
@@ -76,7 +75,7 @@ extension VoiceCommandCoordinator {
         listenerKeptThroughRead = keep
         if keep {
             // A volatile parked just before the read must not fire under it
-            // ("start" would open the answer mic over the sentence).
+            // ("answer" would open the answer mic over the sentence).
             cancelVolatileSettle()
             silenceDetectionService.suspendSpeechEdges(true)
             // Speech edges stop here; a hearing / processing cue lit before
@@ -115,14 +114,12 @@ extension VoiceCommandCoordinator {
     /// `normalized` with every word of `read` removed, or `nil` when no read
     /// text is known. Stripping rather than rejecting the whole transcript:
     /// with leaky echo cancellation a command said over the read arrives
-    /// merged into echo residue ("…ktorý napísal preskoč").
+    /// merged into echo residue ("…ktorý napísal ďalšia").
     func strippingReadWords(_ normalized: String, read: String?) -> String? {
         guard let read, !read.isEmpty else { return nil }
         let readWords = Set(VoiceCommandMatcher.normalize(read, language: commandLanguage).split(separator: " "))
-        // Cancel words survive: a question with "nie" in it must not swallow
-        // the "nie" that aborts a skip said over the read.
         return normalized.split(separator: " ")
-            .filter { !readWords.contains($0) || VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
+            .filter { !readWords.contains($0) }
             .joined(separator: " ")
     }
 

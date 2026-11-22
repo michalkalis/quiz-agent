@@ -12,7 +12,7 @@
 //    1. AT MOST ONE COMMAND PER UTTERANCE — the invariant that makes volatile
 //       results safe at all (`suppressionReason` / `noteCommandFired` /
 //       `endUtterance`).
-//    2. DESTRUCTIVE COMMANDS REQUIRE A FINAL RESULT (`requiresFinalResult`).
+//    2. "NEXT" REQUIRES A FINAL RESULT (`requiresFinalResult`).
 //    3. A VOLATILE MUST HAVE STOPPED GROWING before it may fire — the
 //       growing-hypothesis hole the matcher's content-token cap structurally
 //       cannot see. Two INDEPENDENT signals establish that, either one is
@@ -36,77 +36,23 @@ extension VoiceCommandCoordinator {
     ///
     /// A volatile hypothesis is revisable by design — the transcriber replaces
     /// it as more audio arrives — so acting on one is a bet that the word will
-    /// survive. That bet is fine when the worst case merely ACCELERATES what
-    /// would have happened anyway, and unacceptable when it destroys something.
-    /// That is a property of the ACTION, so it is screen-scoped: the same word
-    /// routes to different actions on different screens.
-    static func requiresFinalResult(_ command: VoiceCommand, on screen: VoiceCommandScreen) -> Bool {
-        // `ok` is the one word whose classification flips per screen. On the
-        // confirmation sheet it SUBMITS the answer, and the 10 s auto-confirm
-        // does NOT make that benign: that timer exists precisely so a wrong
-        // transcription can be caught with "again", and an early `ok` removes
-        // the escape before the founder can use it. "okay" is also the single
-        // highest-frequency backchannel in conversation, and since #185 "áno"
-        // / "hej" confirm here too — both open ordinary sentences ("áno, to
-        // bol…"), which on this sheet are a NEW answer (5.1), not a confirm.
-        if screen == .confirmation, command == .ok { return true }
-        // #185: on the no-answer sheet "ďalej" SKIPS the question — and so does
-        // "preskoč" there, with no undo window behind it (#208.7 keeps it final).
-        if screen == .noAnswer, command == .next || command == .skip { return true }
-        // #188 G3: on the set-end screen "znova" starts a whole new quiz — a
-        // revised hypothesis cannot take that back.
-        if screen == .setEnd, command == .again { return true }
-
-        switch command {
-        // Benign — worst case is an early version of the default outcome.
-        case .start: // opens the mic; a stray one is undone by re-recording
-            return false
-        case .ok: // on the RESULT screen only (see the override above), where
-            return false // advancing is the default outcome anyway
-        case .next: // the result screen auto-advances anyway
-            return false
-        case .repeatQuestion: // replays audio; loses nothing
-            return false
-        case .home: // set-end screen only: the quiz is already over
-            return false
-
-        // #208.7 (founder, TF 2026-10-16: "I wait 1-2 s after a command"):
-        // on the question screen a skip opens the 2.5 s undo window, which a
-        // spoken "stop"/"nie" or a tap aborts — so a stable volatile that
-        // cleared the 0.85 volatile floor may open it. Waiting for the final
-        // cost ~1 s every time (2 of the 14 field suppressions).
-        case .skip:
-            return false
-        // #185 track D (car test 2026-09-23): "znova" waited for the end-of-
-        // speech final and lost the race against the 5 s countdown. A STABLE
-        // volatile "znova" / "ešte raz" is not the leading edge of anything
-        // else; the words that do open sentences ("nie", "zle") are kept off
-        // volatiles by the matcher (`finalOnlyVariants`), and a re-record
-        // only asks for the answer the driver is about to give anyway.
-        case .again:
-            return false
-        // #185 5.3: "stop" only HOLDS the countdown — nothing is discarded,
-        // and holding it early is the point.
-        case .stop:
-            return false
-        // #171 Track D: pausing STOPS the command listener, so a false pause
-        // forces a hand to the phone. #208.7: a STABLE volatile (stopped
-        // growing, ≥ 0.85 match) is enough. Spoken only on the confirmation
-        // sheet (`VoiceCommandLexicon.commands`), never over a question read.
-        case .pause:
-            return false
-        }
+    /// survive. Founder 2026-11-22: only "next" takes no such bet (it skips at
+    /// once, with no undo); the lenient commands never wait for a final, on
+    /// any screen (`CommandSensitivity.waitsForFinal`). "Again" at the set end
+    /// and on the error screen used to wait ~2 s. `screen` stays in the
+    /// signature: a rule that differs per screen belongs here.
+    static func requiresFinalResult(_ command: VoiceCommand, on _: VoiceCommandScreen) -> Bool {
+        command.sensitivity.waitsForFinal
     }
 
     /// Why a matched command was not routed. Emitted to Sentry (see
     /// `handleCommandTranscript`) because a true fire and a false fire log
     /// identically today, so field precision is otherwise unmeasurable — the
-    /// suppression counters and the beginSkipUndoWindow/abortSkipUndoWindow
-    /// pair are our only false-fire proxies.
+    /// suppression counters are our only false-fire proxies.
     enum CommandSuppression: String {
         /// A command already fired for this utterance.
         case utteranceLatch = "utterance-latch"
-        /// Destructive command seen on a revisable volatile hypothesis.
+        /// "Next" seen on a revisable volatile hypothesis.
         case awaitingFinal = "awaiting-final"
         /// Volatile hypothesis not yet proven stopped-growing — so still a
         /// possible sentence prefix. Arms the settle fallback.
@@ -365,7 +311,15 @@ extension VoiceCommandCoordinator {
         noteUtteranceMatched() // #208.7 utterance log
         noteCommandFired(command) // latch the utterance + start the cooldown
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
-        handleRecognizedCommand(command)
+        handleRecognizedCommand(
+            command, path: viaAlternative ? "alternative" : path.rawValue, speechEndMs: msSinceSpeechEnded()
+        )
+    }
+
+    /// Milliseconds since the driver stopped speaking, or `nil` when no end of
+    /// speech was seen (still speaking, or the speech detector never fired).
+    private func msSinceSpeechEnded() -> Int? {
+        lastSpeechEndAt.map { Int(($0.duration(to: clock.now).timeInterval * 1000).rounded()) }
     }
 
     // MARK: - What was heard (#185 3.5)

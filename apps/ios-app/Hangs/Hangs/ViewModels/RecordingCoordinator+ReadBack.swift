@@ -34,11 +34,10 @@ extension RecordingCoordinator {
         let owner = owner ?? attemptLedger.current
         cancelAnswerReadBack()
         // #185: a new answer on the sheet — the previous one's audio is done,
-        // and its countdown waits for the read-back and a live mic (5.2). A
-        // spoken "stop" holds for as long as the sheet is up.
+        // and its countdown waits for the read-back and a live mic (5.2).
         stopSheetCapture()
         spokenReplacement = nil
-        if countdownHold != .driverStop { countdownHold = .awaitingListener }
+        countdownHold = .awaitingListener
         transcribedAnswer = text
         noAnswerCaptured = false
         confirmationOwner = owner

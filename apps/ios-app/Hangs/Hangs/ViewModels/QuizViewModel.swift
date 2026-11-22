@@ -5,8 +5,8 @@
 //  Core quiz flow and state management
 //
 
-import Combine
 import Clocks
+import Combine
 import Foundation
 import os
 import Sentry
@@ -1053,9 +1053,9 @@ final class QuizViewModel: ObservableObject {
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
             startThinkingTimeCountdown: { [weak self] afterSilentRead in
                 guard let self else { return }
-                // #208.7: a skip said over the read stops it; its tail must not
-                // start the think window under the pending skip.
-                guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
+                // #208.7: a "next" said over the read skips at once; the read's
+                // tail must not start the think window on the way out.
+                guard self.quizState == .askingQuestion else { return }
                 // Silent mode: no time limit and no mic, the question waits.
                 guard !self.isSilentMode else { return }
                 self.attemptLedger.latency.openWindow(questionId: self.currentQuestion?.id)
@@ -1109,7 +1109,6 @@ final class QuizViewModel: ObservableObject {
             skipQuestion: { [weak self] in await self?.submitSkip() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
-            holdAutoConfirm: { [weak self] in self?.recordingCoordinator.holdAutoConfirmByDriver() },
             isNoAnswerSheet: { [weak self] in
                 self?.recordingCoordinator.showAnswerConfirmation == true
                     && self?.recordingCoordinator.noAnswerCaptured == true
@@ -1119,12 +1118,10 @@ final class QuizViewModel: ObservableObject {
                 self?.recordingCoordinator.handleConfirmationUtterance($0)
             },
             continueToNext: { [weak self] in self?.advanceFromResult() },
-            pauseQuiz: { [weak self] in self?.enterPause() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
             playAgain: { [weak self] in _ = self?.playAgain() },
-            goHome: { [weak self] in self?.resetToHome() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
             isReadingQuestionAloud: { [weak self] in
                 guard let self else { return false }
@@ -1138,8 +1135,7 @@ final class QuizViewModel: ObservableObject {
             answerReadBack: { [weak self] in
                 guard let recording = self?.recordingCoordinator, recording.showAnswerConfirmation else { return nil }
                 return recording.readBackText
-            },
-            stopQuestionRead: { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
+            }
         )
     }
 
@@ -1205,7 +1201,6 @@ final class QuizViewModel: ObservableObject {
             armCommandWindow: { [weak self] in
                 await self?.voiceCommandCoordinator.armCommandWindowReportingLive() ?? false
             },
-            abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
             clearPause: { [weak self] in self?.isPaused = false },
@@ -2005,9 +2000,6 @@ final class QuizViewModel: ObservableObject {
         // cannot absorb that late duplicate by itself.
         guard quizState == .askingQuestion || quizState == .recording else { return }
 
-        // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
-        voiceCommandCoordinator.abortSkipUndoWindow()
-
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
@@ -2356,7 +2348,7 @@ final class QuizViewModel: ObservableObject {
             Logger.quiz.warning("⚠️ Backend end-session failed after early exit (session will TTL out): \(error, privacy: .public)")
         }
 
-        Logger.quiz.info("🎮 Quiz ended early with results — score: \(self.score, privacy: .public)")
+        Logger.quiz.info("🎮 Quiz ended early with results — score: \(score, privacy: .public)")
     }
 
     /// Resume a saved session

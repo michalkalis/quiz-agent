@@ -75,12 +75,15 @@ extension VoiceCommandCoordinator {
     func noteSpeechActivity(_ event: SpeechActivityEvent) {
         switch event {
         case let .began(levelDb, noiseFloorDb):
+            lastSpeechEndAt = nil
             noteUtteranceOnset(levelDb: levelDb, noiseFloorDb: noiseFloorDb)
             noteSpeechStartedForFeedback()
         case let .paused(speechSecs, peakDb):
+            lastSpeechEndAt = clock.now
             noteUtterancePeak(peakDb)
             noteSpeechPausedForFeedback(speechSecs: speechSecs)
         case .resumed:
+            lastSpeechEndAt = nil
             noteSpeechResumedForFeedback()
         case .ended:
             noteSpeechEndedForFeedback()

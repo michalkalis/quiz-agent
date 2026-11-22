@@ -103,6 +103,62 @@ struct CommandHeardPreviewTests {
         #expect(vm.commandHeard == nil)
     }
 
+    /// WHY (PR review): the fired hold's clear task is cancelled with the rest
+    /// of the quiz's tasks on a reset or an early end, and a preview left
+    /// behind would sit on the next quiz's question screen.
+    @Test("a reset or an early end clears a fired preview")
+    func teardownClearsFiredPreview() async {
+        let vm = makeVM()
+        await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
+        #expect(vm.commandHeard == .fired(.repeatQuestion))
+        vm.voiceCommandCoordinator.reset()
+        #expect(vm.commandHeard == nil, "reset")
+
+        let early = makeVM()
+        await early.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
+        await early.endQuizWithResults()
+        #expect(early.voiceCommandCoordinator.commandHeard == nil, "early end with results")
+    }
+
+    /// WHY (PR review): only a command that could fire may show. The same
+    /// command again inside its cooldown is suppressed, so it must not fill.
+    @Test("a command in its cooldown shows nothing")
+    func coolingDownShowsNothing() async {
+        let vm = makeVM()
+        let coordinator = vm.voiceCommandCoordinator
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
+        coordinator.clearCommandHeard()
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "repea", isFinal: false))
+        #expect(vm.commandHeard == nil)
+    }
+
+    /// WHY: over the question read only repeat / next route ("answer" would
+    /// open the mic under the sentence), so "answer" must not be previewed
+    /// there while repeat still is.
+    @Test("during the read 'answer' is never previewed")
+    func answerHiddenDuringRead() async {
+        let silence = MockSilenceDetectionService()
+        silence.voiceProcessingOnStart = VoiceProcessingStatus(mode: .on, armed: true, outputPort: "Speaker")
+        let vm = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(), audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(), silenceDetectionService: silence,
+            clock: AnyClock(TestClock())
+        )
+        vm.quizState = .askingQuestion
+        vm.currentQuestion = Fixtures.makeQuestion()
+        vm.voiceCommandCoordinator.commandsDuringReadingEnabled = { true }
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        let coordinator = vm.voiceCommandCoordinator
+        #expect(coordinator.beginQuestionRead())
+        vm.isPlayingQuestionTTS = true
+        #expect(coordinator.listensThroughQuestionRead)
+
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "answe", isFinal: false))
+        #expect(vm.commandHeard == nil, "answer cannot fire over the read")
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "repea", isFinal: false))
+        #expect(vm.commandHeard?.command == .repeatQuestion)
+    }
+
     /// WHY (decision 3 carried into the preview): the fill maps onto each
     /// command's own threshold, so the strict "next" never looks as certain
     /// as the lenient "again" at the same similarity.

@@ -2337,6 +2337,7 @@ final class QuizViewModel: ObservableObject {
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.
         taskBag.cancelAll()
+        voiceCommandCoordinator.clearCommandHeard() // its hold went with the bag
         audioDeviceState.stopSilenceDetectionListening()
         quizTimersController.reset()
         isAutoRecording = false

@@ -417,6 +417,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         endUtterance() // no utterance survives a reset (#119)
         resetFeedbackGlow() // #122: no glow survives a reset either
         endQuestionRead() // #208.7: nor a kept-up read listener
+        clearCommandHeard() // nor a "what the app hears" preview
     }
 
     // MARK: - Capture Phase

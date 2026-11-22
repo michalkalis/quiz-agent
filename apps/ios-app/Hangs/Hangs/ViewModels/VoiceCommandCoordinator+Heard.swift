@@ -19,9 +19,10 @@ extension VoiceCommandCoordinator {
         // One command per utterance: after a fire the words no longer matter.
         guard !commandFiredThisUtterance else { return }
         guard CommandHeard.screens.contains(screen) else { return clearUnfiredCommandHeard() }
-        // Over the read only repeat / next route, so only they may show.
+        // Only a command that could fire now may show: over the read only
+        // repeat / next route, and a command in its cooldown is suppressed.
         let commands = VoiceCommandLexicon.commands(on: screen).filter {
-            !listensThroughQuestionRead || Self.readingCommands.contains($0)
+            (!listensThroughQuestionRead || Self.readingCommands.contains($0)) && !isCoolingDown($0)
         }
         let heard = VoiceCommandMatcher.resemblance(
             transcript: text, on: screen, among: commands, language: commandLanguage
@@ -47,5 +48,17 @@ extension VoiceCommandCoordinator {
     /// preview is left to its own hold.
     func clearUnfiredCommandHeard() {
         if commandHeard?.hasFired == false { commandHeard = nil }
+    }
+
+    /// The quiz was torn down: the fired hold's task is cancelled with the
+    /// rest, so nothing else would ever clear a preview left on screen.
+    func clearCommandHeard() {
+        taskBag.cancel(.commandHeardClear)
+        commandHeard = nil
+    }
+
+    private func isCoolingDown(_ command: VoiceCommand) -> Bool {
+        guard let last = lastFiredCommand, last.command == command else { return false }
+        return last.at.duration(to: clock.now).timeInterval < Self.commandCooldown
     }
 }

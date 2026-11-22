@@ -571,6 +571,22 @@ class QuestionRetriever:
         filters["age_band"] = {"$ne": None}
         return await self._store.grouped_counts(("age_band", "category"), filters)
 
+    async def extra_category_counts(
+        self, language: str, build_channel: Optional[str], keys: Sequence[str]
+    ) -> dict:
+        """Playable questions per ``(category,)`` for the #242 extra keys, under
+        the filters a session asking for them plays from (language only, as
+        ``band_topic_counts``)."""
+        template = QuizSession(
+            session_id="extra-categories",
+            language=language,
+            build_channel=build_channel,
+            preferred_categories=list(keys),
+        )
+        return await self._store.grouped_counts(
+            ("category",), self._band_filters(template)
+        )
+
     @staticmethod
     def _image_types(session: QuizSession) -> list[str]:
         """Image type is served only when the session opted in (#68, default off)."""

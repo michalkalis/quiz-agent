@@ -47,11 +47,15 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
 
 - [x] 242.1 Odpovede foundera (2026-11-22): tri extra kategórie naraz, raz za mesiac sa vymenia; ukážu sa v tom istom rade za stálymi kategóriami, s označením „nové“ a dátumom, dokedy platia; prvé kategórie: Čarodejnícka škola, Superhrdinovia, Techno a klubová scéna, Rozprávky a animáky (na začiatku bežia tri, štvrtá pribudne pri prvej výmene); detské témy ostávajú v rodinnej sekcii.
 - [x] 242.2 Nezávislá kontrola tohto plánu (`/design-soundness`, 2026-11-22): dva nálezy (extra otázky by pretiekli do miešaného kvízu; prejdená kategória by sa opakovala) a tri pripomienky zapracované v bodoch 4 a 5.
-- [~] 242.3 Server: filter oddelenia a jeho test ako prvé (ešte pred prvou extra otázkou v databáze), potom katalóg, adresa, vypínač, okno dátumov, kód „prejdené“, testy (prázdna zásoba, mimo okna, neznámy jazyk, prejdená kategória).
+- [x] 242.3 Server hotové (PR #948 — oddelenie filtra, PR tento — katalóg): adresa `GET /api/v1/categories/extra?language=` vráti `{key, name, until}`; vypínač `extra_categories_enabled` (predvolene vypnutý, v `/app-config`); okno dátumov v UTC, kategória bez okna sa nikdy neukáže; zobrazí sa až od 60 hrateľných otázok v jazyku (v bete sa rátajú aj nekontrolované). Kódy: 409 `extra_category_exhausted` (prejdená kategória, bez ponuky na reset histórie; aj v predkontrole dostupnosti), 400 `extra_category_invalid` (kľúč mimo okna alebo vypínač vypnutý).
 - [ ] 242.4 Obsah prvej vlny: na kategóriu 60 schválených otázok na jazyk (šesť kôl bez opakovania); zoznam tém na jedno schválenie, potom bez prerušení.
 - [ ] 242.5 Appka: vejár a výber čítajú katalóg, pomalá a zlyhaná odpoveď servera pokrytá testom, meranie.
 - [ ] 242.6 Zapnúť vypínač po teste foundera v bete; prvá výmena kategórií podľa zvoleného rytmu.
 - [ ] 242.7 Vyhodnotenie po dvoch výmenách: podiel kôl v extra kategóriách, návraty.
+
+## Ako vymeniť kategórie
+
+Katalóg je v kóde (`apps/quiz-agent/app/extra_categories.py`). Výmena = v PR upraviť dátumy `starts` a `until` pri kategóriách (do `until` vrátane, čas UTC), zlúčiť, a server sa nasadí; appka si zoznam načíta sama. Kategória sa ukáže, len keď má v danom jazyku aspoň 60 hrateľných otázok, inak ostane skrytá aj v okne. Bez dátumov sa kategória nikdy neukáže.
 
 ## Otvorené
 

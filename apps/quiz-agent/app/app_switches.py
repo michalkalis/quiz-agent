@@ -60,6 +60,7 @@ BOOL_KEYS = (
     "family_mode_enabled",
     "family_mode_enabled_app_store",
     "voice_limit_old_builds",
+    "extra_categories_enabled",
 )
 # #205: lowest app build number that sees the daily challenge before it is on
 # for everyone (see ``daily_challenge.gate``); null = no beta preview.
@@ -151,6 +152,8 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "family_mode_enabled": False,
         "family_mode_enabled_app_store": False,
         "family_mode_hidden_storefronts": [],
+        # #242: free rotating extra categories; off until the founder has tested.
+        "extra_categories_enabled": False,
         # 2026-11-21: refuse voice past the free allowance also on builds
         # without the voice-allowance capability (``usage.voice_allowance``).
         "voice_limit_old_builds": False,
@@ -175,6 +178,7 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
             "family_mode_enabled",
             "family_mode_enabled_app_store",
             "voice_limit_old_builds",
+            "extra_categories_enabled",
         ):
             out[key] = raw == "true"
         elif key in LIST_KEYS:

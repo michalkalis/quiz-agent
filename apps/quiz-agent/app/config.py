@@ -275,6 +275,9 @@ class Settings(BaseSettings):
     # #205 daily challenge: on in dev/tests, off in prod until the founder
     # flips it (fly.toml [env] DAILY_CHALLENGE_ENABLED).
     daily_challenge_enabled: bool = True
+    # #205 205.8: extra questions for the rest of the local day after a player
+    # finishes the daily challenge; spent before the monthly allowance. 0 = off.
+    daily_bonus_questions: int = 10
     # #212 same-room multiplayer: on in dev/tests, off in prod until the
     # founder flips it (fly.toml [env] MULTIPLAYER_ENABLED).
     multiplayer_enabled: bool = True

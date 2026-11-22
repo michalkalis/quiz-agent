@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import func, select, update
@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from quiz_shared.models.question import Question
 from quiz_shared.models.session import QuizSession
 
+from ..config import get_settings
 from ..db.base import utcnow
 from ..db.models import (
     DailyChallengeAnswer,
@@ -26,6 +27,7 @@ from ..db.models import (
 )
 from ..retrieval.question_retriever import QuestionRetriever
 from ..serializers import correct_option_key
+from ..usage.entitlement import account_is_entitled
 from ..shared_quiz.store import person_ids
 from . import copy
 from .rules import (
@@ -96,11 +98,17 @@ class DailyChallengeService:
 
     # ── 205.2 play + record ────────────────────────────────────────────────
     async def begin(
-        self, subject_id: str, language: str, day: date
+        self,
+        subject_id: str,
+        language: str,
+        day: date,
+        utc_offset_minutes: Optional[int] = None,
     ) -> Tuple[DailyChallengePlay, List[str]]:
         """The subject's play for ``day`` (created on first start) and the
         questions still to play. Empty list → the play is finished. A play
-        started in another language keeps that language."""
+        started in another language keeps that language. ``utc_offset_minutes``
+        (None = UTC) fixes when the finish bonus expires: the end of ``day``
+        in the player's local time; never rewritten on resume."""
         async with self._sm() as db:
             play = await self._play(db, subject_id, day)
             if play is None:
@@ -112,6 +120,10 @@ class DailyChallengeService:
                         challenge_date=day,
                         language=language,
                         started_at=utcnow(),
+                        bonus_expires_at=datetime.combine(
+                            day + timedelta(days=1), datetime.min.time(), tzinfo=UTC
+                        )
+                        - timedelta(minutes=utc_offset_minutes or 0),
                     )
                     .on_conflict_do_nothing()
                 )
@@ -266,20 +278,47 @@ class DailyChallengeService:
     ) -> DailyChallengeState:
         async with self._sm() as db:
             play = await self._play(db, subject_id, day)
+            offer = get_settings().daily_bonus_questions
+            entitled = await account_is_entitled(db, subject_id, now=utcnow())
+            ids = await self._identity_ids(db, subject_id)
+            days_played = (
+                await db.execute(
+                    select(func.count()).where(
+                        DailyChallengePlay.subject_id.in_(ids),
+                        DailyChallengePlay.finished_at.is_not(None),
+                    )
+                )
+            ).scalar_one()
+        # Subscribers get no bonus and see nothing about it.
+        extra = dict(
+            bonus_offer=offer if offer > 0 and not entitled else None,
+            days_played=days_played,
+        )
         if play is None:
             return DailyChallengeState(
                 date=day.isoformat(),
                 language=language,
                 status="not_played",
                 total=SET_SIZE,
+                **extra,
             )
         set_ids = await self.question_ids(play.language, day)
-        base = dict(date=day.isoformat(), language=play.language, total=len(set_ids))
+        base = dict(
+            date=day.isoformat(), language=play.language, total=len(set_ids), **extra
+        )
         if play.finished_at is None:
             return DailyChallengeState(status="in_progress", **base)
+        if extra["bonus_offer"] is not None:
+            base["bonus_left"] = self._bonus_left(play, offer)
         return DailyChallengeState(
             status="played", summary=await self._summary(play, set_ids), **base
         )
+
+    @staticmethod
+    def _bonus_left(play: DailyChallengePlay, offer: int) -> int:
+        if play.bonus_expires_at is None or play.bonus_expires_at <= utcnow():
+            return 0
+        return max(0, offer - play.bonus_used)
 
     async def _summary(
         self, play: DailyChallengePlay, set_ids: List[str]

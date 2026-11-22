@@ -42,6 +42,7 @@ extension VoiceCommandCoordinator {
                 flushUtteranceLog(screen: currentCommandScreen, outcome: utteranceOutcome)
                 endUtterance()
                 noteFinalProcessedForFeedback() // #122 follow-up: utterance over, cue stale
+                clearUnfiredCommandHeard() // the preview fades with the utterance
             }
         }
 
@@ -82,6 +83,7 @@ extension VoiceCommandCoordinator {
 
         guard let screen = currentCommandScreen else {
             utteranceOutcome = "windowClosed"
+            clearUnfiredCommandHeard()
             noteWindowTranscript(windowOpen: false, isFinal: transcript.isFinal)
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 SentryLog.info(
@@ -118,6 +120,8 @@ extension VoiceCommandCoordinator {
         if VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage) {
             noteTranscriptHeardForFeedback()
         }
+        // "What the app hears": partials only; a final fires or clears it.
+        if !transcript.isFinal { noteCommandHeard(matchText, on: screen) }
 
         // #185 5.1 (founder 2026-09-24): on the answer sheet anything that is
         // not a command is a NEW answer. Two duties here, the rest is the

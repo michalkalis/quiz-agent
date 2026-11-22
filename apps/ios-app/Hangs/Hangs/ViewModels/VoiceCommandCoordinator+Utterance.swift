@@ -311,6 +311,7 @@ extension VoiceCommandCoordinator {
         noteUtteranceMatched() // #208.7 utterance log
         noteCommandFired(command) // latch the utterance + start the cooldown
         applyCaptureEvent(.recognize) // ack (no phase change) — earcon seam for 77.10
+        showCommandFired(command, on: screen) // the preview fills before it clears
         handleRecognizedCommand(
             command, path: viaAlternative ? "alternative" : path.rawValue, speechEndMs: msSinceSpeechEnded()
         )

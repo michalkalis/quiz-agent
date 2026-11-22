@@ -171,4 +171,18 @@ extension VoiceCommandLexicon {
         case .ukrainian: return "«\(word)»…"
         }
     }
+
+    /// "What the app hears" (founder 2026-11-22): the quiet label naming the
+    /// command the words in progress resemble — always the screen language's
+    /// own word, never what the recognizer wrote. Lowercase where the language
+    /// allows, and the same for every player. Verbatim, never localized.
+    static func heardCaption(_ command: VoiceCommand, language: CommandLanguage = .english) -> String {
+        let word = spokenWord(command, language: language)
+        switch language {
+        case .english: return "I hear: “\(word)”"
+        case .slovak: return "počujem: „\(word)“"
+        case .czech: return "slyším: „\(word)“"
+        case .ukrainian: return "чую: «\(word)»"
+        }
+    }
 }

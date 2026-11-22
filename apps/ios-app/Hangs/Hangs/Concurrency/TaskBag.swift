@@ -43,6 +43,7 @@ enum TaskKey: Hashable, Sendable {
     case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
     case roundEndPaywall // #240.9: the paywall after a round the monthly limit ended
     case voiceLimitPrompt // 2026-11-21: the once-a-month "voice answers used up" line
+    case commandHeardClear // 2026-11-22: the fired preview clears after a short hold
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

@@ -66,6 +66,10 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// The command a transcript matched but that has not fired yet; non-nil only
     /// while `voiceFeedbackPhase == .recognizing` (#122 follow-up).
     @Published var recognizingCommand: VoiceCommand?
+    /// "What the app hears" (founder 2026-11-22): the command the words in
+    /// progress resemble, until it fires or the utterance ends. Written only
+    /// through VoiceCommandCoordinator+Heard.swift.
+    @Published var commandHeard: CommandHeard?
 
     // MARK: - Glow Feedback State (#122 — policy lives in +Feedback)
 

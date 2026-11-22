@@ -485,6 +485,11 @@ final class QuizViewModel: ObservableObject {
 
     /// #122 follow-up (TF 2026-10-07): the recognized-but-not-yet-fired command
     /// as the listen-bar caption (command language, verbatim), or `nil`.
+    /// "What the app hears" (founder 2026-11-22). Never in a silent quiz.
+    var commandHeard: CommandHeard? {
+        isSilentMode ? nil : voiceCommandCoordinator.commandHeard
+    }
+
     var recognizingWord: String? {
         voiceCommandCoordinator.recognizingCommand.map {
             VoiceCommandLexicon.recognizingCaption($0, language: commandLanguage)

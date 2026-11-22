@@ -47,6 +47,8 @@ extension QuizViewModel {
     /// Called once the session exists: a dropped connection is the most common
     /// error, and by then the line can no longer be fetched.
     func prefetchErrorPrompt() {
+        // A silent quiz never says it.
+        guard !isSilentMode else { return }
         let text = errorPromptText(canRetry: true)
         guard prefetchedPromptAudio[text] == nil else { return }
         let language = currentSession?.language ?? settings.language
@@ -145,6 +147,8 @@ extension QuizViewModel {
     /// listener back. A tap is explicit, so it plays even when muted, as the
     /// replay it replaces did. The result waits while it is read.
     func readExplanationAloud(_ explanation: String) {
+        // Silent mode reads nothing; the result offers no "hear it" there.
+        guard !isSilentMode else { return }
         holdResultAutoAdvance()
         holdResultAutoAdvance()
         taskBag.add(Task { [weak self] in

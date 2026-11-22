@@ -40,7 +40,7 @@ extension View {
         isPaused: Bool,
         isPauseEnabled: Bool,
         onClose: @escaping () -> Void,
-        onMute: @escaping () -> Void,
+        onMute: (() -> Void)?,
         onPause: @escaping () -> Void,
         onSettings: @escaping () -> Void,
         onFeedback: (() -> Void)? = nil,
@@ -114,18 +114,21 @@ struct QuizControlPill: View {
     /// Pause is dead in the states that cannot be frozen — but a PAUSED quiz
     /// always keeps its way back (#173 decision 4).
     let isPauseEnabled: Bool
-    let onMute: () -> Void
+    /// nil = no mute: a silent quiz (founder 2026-11-22) has no sound to mute.
+    let onMute: (() -> Void)?
     let onPause: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
-            QuizMuteToolbarButton(isMuted: isMuted, action: onMute)
-                .frame(width: 42, height: 30)
+            if let onMute {
+                QuizMuteToolbarButton(isMuted: isMuted, action: onMute)
+                    .frame(width: 42, height: 30)
 
-            Rectangle()
-                .fill(Theme.Hangs.Colors.hairline)
-                .frame(width: 1, height: 18)
-                .accessibilityHidden(true)
+                Rectangle()
+                    .fill(Theme.Hangs.Colors.hairline)
+                    .frame(width: 1, height: 18)
+                    .accessibilityHidden(true)
+            }
 
             QuizPauseToolbarButton(isPaused: isPaused, action: onPause)
                 .frame(width: 42, height: 30)

@@ -163,6 +163,13 @@ struct QuestionView: View {
             textAnswer = ""
             isTextFieldFocused = false
         }
+        // Silent mode (founder 2026-11-22): the open question's typed field
+        // takes the keyboard at once, first question included.
+        .task(id: viewModel.currentQuestion?.id) {
+            if viewModel.isSilentMode, viewModel.currentQuestion?.isMultipleChoice == false {
+                isTextFieldFocused = true
+            }
+        }
         // The voice paths (confirm sheet, auto-confirm, an edited transcript) all
         // land the final text in `transcribedAnswer` before submitting, and it is
         // cleared on submit — so the last non-empty value IS what was sent.
@@ -186,7 +193,7 @@ struct QuestionView: View {
             isPaused: viewModel.isPaused,
             isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
             onClose: openEndQuizConfirmation,
-            onMute: { Task { await viewModel.toggleMute() } },
+            onMute: viewModel.isSilentMode ? nil : { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.togglePause() },
             onSettings: openQuizSettings,
             onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
@@ -452,15 +459,18 @@ struct QuestionView: View {
             categoryName: identity.chipName,
             categoryIdentifier: "question.category"
         ) {
-            // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
-            Button {
-                Task { await viewModel.replayQuestionAudio() }
-            } label: {
-                replayGlyph
+            // Silent mode (founder 2026-11-22): nothing is read, so no replay.
+            if !viewModel.isSilentMode {
+                // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
+                Button {
+                    Task { await viewModel.replayQuestionAudio() }
+                } label: {
+                    replayGlyph
+                }
+                .buttonStyle(QuestionReplayButtonStyle())
+                .disabled(!viewModel.canReplayAudio)
+                .accessibilityHidden(true)
             }
-            .buttonStyle(QuestionReplayButtonStyle())
-            .disabled(!viewModel.canReplayAudio)
-            .accessibilityHidden(true)
         } content: {
             content()
         }

@@ -24,7 +24,7 @@ import Testing
 private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
-    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game"],
+    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game", "silent_mode"],
     // #240.9: reason + question, and `build_channel` on every event below.
     // Added to the server allowlist in its own backend PR.
     "quiz_abandoned": ["questions_answered", "phase", "reason", "question"],
@@ -61,6 +61,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "home_category_picker_opened": ["source"],
     "result_question_opened": ["kind", "verdict"],
     "quick_game_changed": ["enabled"],
+    "silent_mode_changed": ["enabled"],
     "home_settings_opened": [],
     "voice_limit_notice_shown": [],
     "home_round_length_changed": ["questions"],
@@ -78,7 +79,7 @@ private let backendClientEvents: [String: Set<String>] = [
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
     .onboardingFinished(outcome: .commandsOn, step: "commands"),
-    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
+    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true, silentMode: true),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion", reason: .endQuiz, question: 4),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
@@ -117,6 +118,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .homeCategoryPickerOpened(source: .deckButton),
     .resultQuestionOpened(kind: .mcq, verdict: .correct),
     .quickGameChanged(enabled: true),
+    .silentModeChanged(enabled: true),
     .homeSettingsOpened,
     .voiceLimitNoticeShown,
     .homeRoundLengthChanged(questions: 8),
@@ -225,7 +227,7 @@ struct QuizAnalyticsTests {
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }
         #expect(context.count == 1)
-        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _) = context.first?.event else {
+        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _, _) = context.first?.event else {
             Issue.record("no quiz_context")
             return
         }

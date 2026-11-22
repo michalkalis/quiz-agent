@@ -51,6 +51,9 @@ Number of questions
 Quick quiz
 After "Next": next question, no explanation
 
+No sound
+Read the questions, type the answers
+
 trubbo
 Settings
 Start
@@ -74,5 +77,6 @@ home.questionCount.8
 home.questionCount.10
 home.questionCount.15
 home.quickGame
+home.silentMode
 home.settings
 home.startQuiz

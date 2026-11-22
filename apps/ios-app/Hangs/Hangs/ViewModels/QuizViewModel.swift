@@ -509,7 +509,7 @@ final class QuizViewModel: ObservableObject {
     /// silent, the tap still confirms).
     func emitEarcon(_ earcon: Earcon) {
         guard !isPlayingQuestionTTS else { return }
-        guard earcon.hasTone, settings.recordingSoundsEnabled else {
+        guard earcon.hasTone, audioSettings.recordingSoundsEnabled else {
             earconPlayer.playHaptic(earcon)
             return
         }
@@ -539,8 +539,9 @@ final class QuizViewModel: ObservableObject {
     /// ONE persisted preference again. The quiz header's speaker button and the
     /// Settings "Sound" toggle both write `settings.isMuted`, so a mute tapped in
     /// one quiz holds for the next until the player changes it (this reverses
-    /// #173's per-quiz mute on purpose).
-    var isAudioMuted: Bool { settings.isMuted }
+    /// #173's per-quiz mute on purpose). Silent mode mutes too
+    /// (`audioSettings`), without touching that preference.
+    var isAudioMuted: Bool { audioSettings.isMuted }
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
@@ -1055,6 +1056,8 @@ final class QuizViewModel: ObservableObject {
                 // #208.7: a skip said over the read stops it; its tail must not
                 // start the think window under the pending skip.
                 guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
+                // Silent mode: no time limit and no mic, the question waits.
+                guard !self.isSilentMode else { return }
                 self.attemptLedger.latency.openWindow(questionId: self.currentQuestion?.id)
                 self.quizTimersController.startThinkingTimeCountdown(
                     readingPause: afterSilentRead ? self.silentReadingPause : .zero
@@ -1078,7 +1081,8 @@ final class QuizViewModel: ObservableObject {
             taskBag: taskBag,
             attemptLedger: attemptLedger,
             clock: clock,
-            settings: { [weak self] in self?.settings ?? .default },
+            // Silent mode turns the commands off here (`audioSettings`).
+            settings: { [weak self] in self?.audioSettings ?? .default },
             currentSession: { [weak self] in self?.currentSession },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
@@ -1223,7 +1227,8 @@ final class QuizViewModel: ObservableObject {
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
             answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() },
             isVoiceAllowanceSpent: { [weak self] in self?.isVoiceAllowanceSpent ?? false },
-            voiceAllowanceSpent: { [weak self] in self?.noteVoiceAllowanceSpent($0) }
+            voiceAllowanceSpent: { [weak self] in self?.noteVoiceAllowanceSpent($0) },
+            isSilentMode: { [weak self] in self?.isSilentMode ?? false }
         )
     }
 
@@ -1414,7 +1419,8 @@ final class QuizViewModel: ObservableObject {
             // The status check is synchronous on purpose: awaiting a nonisolated
             // helper hops off the main actor even when it does nothing, which
             // shifted the RS timing for every quiz start.
-            if audioService.microphonePermissionStatus == .undetermined {
+            // Silent mode never opens the mic, so it never asks for it.
+            if audioService.microphonePermissionStatus == .undetermined, !isSilentMode {
                 _ = await audioService.requestMicrophonePermission()
             }
 
@@ -1426,14 +1432,18 @@ final class QuizViewModel: ObservableObject {
             // under (the Home listener above was stopped without it).
             silenceDetectionService.voiceProcessingAllowed = true
 
-            // Configure audio session with user's preferred mode
-            do {
-                try audioService.setupAudioSession(mode: selectedAudioMode)
-                let audioModeName = selectedAudioMode.name
-                Logger.audio.info("🎤 Audio session configured with \(audioModeName, privacy: .public)")
-            } catch {
-                // Log error but continue - audio might still work
-                Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
+            // Configure audio session with user's preferred mode. A silent
+            // quiz plays and records nothing, so it leaves the player's own
+            // audio (music, a podcast) untouched.
+            if !isSilentMode {
+                do {
+                    try audioService.setupAudioSession(mode: selectedAudioMode)
+                    let audioModeName = selectedAudioMode.name
+                    Logger.audio.info("🎤 Audio session configured with \(audioModeName, privacy: .public)")
+                } catch {
+                    // Log error but continue - audio might still work
+                    Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
+                }
             }
 
             // Create session with device ID for usage tracking.
@@ -2055,7 +2065,7 @@ final class QuizViewModel: ObservableObject {
             // #193 task 193.12: and the same transient retry, so a backend deploy
             // (~18 s restart) mid-drive costs a pause, not the tapped answer. Safe:
             // the submit is question-scoped idempotent (#133 1a).
-            let audio = settings.audioMode != "off"
+            let audio = requestsSpokenAudio
             let response = try await withBoundedTransientRetry(label: "mcq answer submit") {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
@@ -2163,7 +2173,7 @@ final class QuizViewModel: ObservableObject {
             // would grade a different question than the first attempt did.
             let answeredQuestionId = currentQuestion?.id
             trackAnswerSubmitted(spoken ? .voice : .typed, questionId: answeredQuestionId)
-            let audio = !suppressAudio && settings.audioMode != "off"
+            let audio = !suppressAudio && requestsSpokenAudio
             // #179 finding 3: bounded, like the MCQ tap (#178) — a wedged confirm
             // used to leave the driver on a dead `.processing` screen forever.
             let response = try await withBoundedTransientRetry(label: "text answer submit") {
@@ -2255,7 +2265,7 @@ final class QuizViewModel: ObservableObject {
             // #133 1a: skip THIS question, never the next one. Read once outside the
             // retry closure so every attempt skips the same question.
             let skippedQuestionId = currentQuestion?.id
-            let audio = settings.audioMode != "off"
+            let audio = requestsSpokenAudio
             // #179 finding 4: bounded — an unanswered skip left the Skip spinner
             // turning and the Start button dead with no exit from `.skipping`.
             let response = try await withBoundedTransientRetry(label: "skip question") {
@@ -2478,6 +2488,10 @@ final class QuizViewModel: ObservableObject {
     /// waits a silent reading pause first (`silentReadingPause`).
     func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
+        // Silent mode (founder 2026-11-22): no time limit and no mic; the
+        // question waits for a typed or tapped answer or Skip. Before the
+        // voice allowance, which has nothing to say in a silent quiz.
+        guard !isSilentMode else { return }
         // Free tier split (2026-11-21): no think window and no mic when the
         // voice answers are used up; the question waits for a typed or tapped
         // answer.
@@ -2817,7 +2831,7 @@ final class QuizViewModel: ObservableObject {
 
     private func pollForNextQuestion(sessionId: String) async {
         var consecutiveErrors = 0
-        let audio = settings.audioMode != "off"
+        let audio = requestsSpokenAudio
 
         while !Task.isCancelled {
             // The state is the poll's licence to run: a quit, a reset or an

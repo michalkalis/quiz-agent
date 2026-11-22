@@ -37,6 +37,9 @@ Topic
 LEGO
 Topic
 LEGO
+No sound
+Read the questions, type the answers
+
 trubbo
 Settings
 You answer, the kids guess along with you.
@@ -61,6 +64,7 @@ home.topic.family-lego
 home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

@@ -95,8 +95,10 @@ extension QuizViewModel {
 
     /// #237 (canvas pick L1): the listen bar's trailing control in this phase
     /// — "Turn on", "Preparing commands…" or "Settings" — or `nil`.
+    /// Silent mode offers none: nothing listens, not even with the mic denied.
     func commandsAccessory(for phase: QuestionListenPhase) -> ListenBar.CommandsAccessory? {
-        voiceCommandCoordinator.commandsBarAccessory(
+        guard !isSilentMode else { return nil }
+        return voiceCommandCoordinator.commandsBarAccessory(
             phaseHasCommands: !phase.commands.isEmpty,
             micDenied: audioService.microphonePermissionStatus == .denied
         )

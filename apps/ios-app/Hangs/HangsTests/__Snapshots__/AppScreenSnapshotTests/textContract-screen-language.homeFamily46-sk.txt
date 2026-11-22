@@ -33,6 +33,9 @@ Téma
 Dinosaury
 Téma
 Dinosaury
+Bez zvuku
+Otázky čítaš, odpovede píšeš
+
 trubbo
 Nastavenia
 Odpovedáš ty, deti hádajú s tebou.
@@ -56,6 +59,7 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

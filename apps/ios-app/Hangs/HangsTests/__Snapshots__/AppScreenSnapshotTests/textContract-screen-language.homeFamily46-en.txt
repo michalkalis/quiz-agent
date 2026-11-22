@@ -33,6 +33,9 @@ Topic
 Dinosaury
 Topic
 Dinosaury
+No sound
+Read the questions, type the answers
+
 trubbo
 Settings
 You answer, the kids guess along with you.
@@ -56,6 +59,7 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

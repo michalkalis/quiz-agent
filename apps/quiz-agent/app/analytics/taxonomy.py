@@ -104,6 +104,8 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
             "timezone",
             # #224.8: the quick quiz was on when the quiz started
             "quick_game",
+            # 2026-11-22: the quiz ran silent (the Home "No sound" switch)
+            "silent_mode",
         }
     ),
     # #240.9: reason = end_quiz | end_with_results | error_screen; question =
@@ -180,6 +182,8 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "result_question_opened": frozenset({"kind", "verdict"}),
     # #224.8: the quick-game switch on Home, and every skip with its mode.
     "quick_game_changed": frozenset({"enabled"}),
+    # 2026-11-22: the Home "No sound" switch (silent mode).
+    "silent_mode_changed": frozenset({"enabled"}),
     # TestFlight build 90 feedback (Home A1): Settings opened from the Home
     # gear, and the round length changed in the Home settings list.
     "home_settings_opened": frozenset(),

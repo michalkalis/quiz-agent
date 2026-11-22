@@ -51,6 +51,9 @@ Počet otázok
 Rýchly kvíz
 Po „Ďalšia“ hneď ďalšia otázka, bez vysvetlenia
 
+Bez zvuku
+Otázky čítaš, odpovede píšeš
+
 trubbo
 Nastavenia
 Štart
@@ -76,5 +79,6 @@ home.questionCount.8
 home.questionCount.10
 home.questionCount.15
 home.quickGame
+home.silentMode
 home.settings
 home.startQuiz

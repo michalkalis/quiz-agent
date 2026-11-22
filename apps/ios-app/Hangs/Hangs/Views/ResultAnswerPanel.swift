@@ -39,7 +39,8 @@ struct ResultAnswerPanel: View {
     /// #235 F3: the last "hear it" could not be fetched; a note says so.
     var hearItFailed = false
 
-    let onHearIt: () -> Void
+    /// nil = no "hear it": a silent quiz (founder 2026-11-22) reads nothing.
+    let onHearIt: (() -> Void)?
 
     private enum Metrics {
         static let blockGap = Theme.Hangs.Spacing.sm
@@ -68,7 +69,9 @@ struct ResultAnswerPanel: View {
                 HStack {
                     HangsSectionLabel(text: "why")
                     Spacer()
-                    hearItControl
+                    if let onHearIt {
+                        hearItControl(onHearIt)
+                    }
                 }
                 if hearItFailed {
                     ReadAloudFailureNote(identifier: "result.hearItFailed")
@@ -125,8 +128,8 @@ struct ResultAnswerPanel: View {
     }
 
     /// "Hear it": a neutral chip on the card.
-    private var hearItControl: some View {
-        ResultCardChip(title: "hear it", systemImage: "speaker.wave.2", action: onHearIt)
+    private func hearItControl(_ action: @escaping () -> Void) -> some View {
+        ResultCardChip(title: "hear it", systemImage: "speaker.wave.2", action: action)
             .accessibilityIdentifier("result.hearIt")
     }
 }

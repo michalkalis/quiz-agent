@@ -47,6 +47,8 @@ extension AppScreen {
             await makeProfile()
         case .homeFamily46, .homeFamily79, .homeFamily1012, .familyBandSheet:
             await makeFamily()
+        case .homeSilent, .questionSilent, .questionSilentMCQ:
+            makeSilent()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }

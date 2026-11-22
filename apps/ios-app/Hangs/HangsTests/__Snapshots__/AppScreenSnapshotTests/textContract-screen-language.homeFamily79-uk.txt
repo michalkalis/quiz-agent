@@ -37,6 +37,9 @@ Superschopnosti zvierat
 LEGO
 Тема
 LEGO
+Без звуку
+Питання читаєш, відповіді пишеш
+
 trubbo
 Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
@@ -61,6 +64,7 @@ home.topic.family-lego
 home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

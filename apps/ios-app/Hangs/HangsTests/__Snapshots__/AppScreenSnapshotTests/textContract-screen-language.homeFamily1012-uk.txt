@@ -29,6 +29,9 @@ Harry Potter
 Harry Potter
 Тема
 Harry Potter
+Без звуку
+Питання читаєш, відповіді пишеш
+
 trubbo
 Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
@@ -51,6 +54,7 @@ home.band.kids_10_12
 home.topic.menu
 home.topic.family-harry-potter
 home.topic.family-spies-and-codes
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

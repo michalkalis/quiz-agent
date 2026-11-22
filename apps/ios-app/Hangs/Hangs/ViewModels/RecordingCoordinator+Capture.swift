@@ -34,6 +34,12 @@ extension RecordingCoordinator {
     /// Handles audio preparation, state transitions, and error rollback
     /// `trigger` decides what happens to a question read-out in progress (+Trigger).
     func startRecording(trigger: RecordingTrigger = .tap) async {
+        // Silent mode (founder 2026-11-22): nothing in the quiz listens. The
+        // think window never arms there; this covers every other way in.
+        guard !isSilentMode() else {
+            Logger.audio.info("🎙️ startRecording refused — silent mode")
+            return
+        }
         // #240: iOS hands an app without mic access silence. Recording it
         // uploaded an empty answer and the player heard "didn't catch that",
         // twice per question. The listen bar says the mic is off instead

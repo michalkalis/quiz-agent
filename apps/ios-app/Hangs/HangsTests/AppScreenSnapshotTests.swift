@@ -55,6 +55,8 @@ enum AppScreen: String, CaseIterable {
     case completionShare, sharedQuizRanking, homeSharedPaste, roomContentPicker
     /// #236: Home in the family mode „S deťmi“ per age band, and the age sheet.
     case homeFamily46, homeFamily79, homeFamily1012, familyBandSheet
+    /// "No sound" (founder 2026-11-22): Home with the switch on, a silent question.
+    case homeSilent, questionSilent, questionSilentMCQ
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for

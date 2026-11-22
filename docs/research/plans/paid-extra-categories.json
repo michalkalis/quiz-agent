@@ -1,0 +1,128 @@
+{
+  "slug": "paid-extra-categories",
+  "question": "Should Trubbo sell extra question categories, and how (single category, bundle, part of subscription), at what price, and which categories do players want enough to pay for?",
+  "appstore": {
+    "search_terms": [
+      "trivia",
+      "trivia quiz game",
+      "pub quiz",
+      "charades heads up",
+      "party game categories",
+      "quizduel",
+      "family trivia",
+      "road trip trivia",
+      "music quiz",
+      "movie trivia",
+      "would you rather party",
+      "guess the word party game"
+    ],
+    "app_ids": [
+      "651510680",
+      "623592465"
+    ],
+    "per_term": 25,
+    "max_apps": 36,
+    "countries": [
+      "us",
+      "gb",
+      "ca",
+      "au",
+      "de",
+      "sk",
+      "cz"
+    ],
+    "pages": 10,
+    "iap_country": "us"
+  },
+  "play": {
+    "search_terms": [
+      "trivia quiz",
+      "charades party game",
+      "pub quiz"
+    ],
+    "per_term": 8,
+    "max_apps": 16,
+    "count": 600,
+    "locales": [
+      [
+        "en",
+        "us"
+      ]
+    ]
+  },
+  "reddit": {
+    "subreddits": [
+      "trivia",
+      "iosgaming",
+      "AndroidGaming",
+      "boardgames",
+      "gamedev",
+      "iOSProgramming",
+      "JackboxGames",
+      "partygames"
+    ],
+    "title_terms": [
+      "trivia",
+      "quiz",
+      "expansion pack",
+      "dlc",
+      "content pack",
+      "charades",
+      "in-app purchase",
+      "monetization"
+    ],
+    "posts_per_term": 40,
+    "comments_per_post": 100
+  },
+  "hn": {
+    "queries": [
+      "trivia app in-app purchase",
+      "content packs monetization",
+      "quiz app monetization"
+    ],
+    "pages": 2
+  },
+  "keywords": [
+    "categor",
+    "topics?\\b",
+    "\\bthemes?\\b|themed",
+    "\\bpacks?\\b",
+    "\\bdecks?\\b",
+    "unlock",
+    "paywall",
+    "premium",
+    "subscri",
+    "in.?app purchas",
+    "pay(ing)? (for|to|extra|more)",
+    "worth (it|the|every)",
+    "\\bbought\\b|\\bpurchased\\b",
+    "more questions",
+    "(same|repeat\\w*) questions",
+    "expansion",
+    "kategóri|kategori|balíč|balík|themen|kaufen|bezahl"
+  ],
+  "min_chars": 40,
+  "codebook": {
+    "too_little_free": "complains that too few categories/decks are free, or that the good ones are locked",
+    "double_pay": "already paid (app price or subscription) and is still asked to pay per category/pack",
+    "pack_price_high": "says a pack, deck or bundle price is too expensive",
+    "happy_buyer": "bought packs/decks/categories or premium for content and says it was worth it, or is glad to pay",
+    "lost_purchases": "bought packs disappeared, restore fails, asked to pay again after new phone/update",
+    "not_delivered_or_misled": "charged but pack not received, accidental purchase, or bundle did not contain what was expected",
+    "sub_resented": "resents a subscription being required to unlock categories/content; wants to pay once",
+    "wants_unlock_all": "asks for one purchase / one price that unlocks everything",
+    "requests_category": "asks for a specific new category, theme or topic (put it in `theme`, e.g. 'anime', '80s music')",
+    "praises_variety": "praises the number or variety of categories/topics",
+    "content_exhausted": "questions repeat, content ran out, no new categories added",
+    "category_quality": "wrong, poor, mis-filed or too US-centric questions within a category",
+    "age_filter": "wants kid-safe or adult content separated/hidden, or praises kids/adult packs",
+    "ads": "complains about ads or pays/would pay to remove them",
+    "currency_grind": "complains about coins/gems/lives/energy economy or pay-to-win",
+    "dev_insight": "a developer or experienced player states what works or fails when selling content (packs vs unlock-all vs subscription, pricing, conversion) - always add a quote",
+    "other": "on the topic of paying for content or categories but none of the above (describe in `quote`)"
+  },
+  "exclude_apps": [
+    "Roadtrippers - Trip Planner",
+    "ReBet: Social Sports & Casino"
+  ]
+}

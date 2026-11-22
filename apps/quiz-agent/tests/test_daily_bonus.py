@@ -13,13 +13,12 @@ import asyncio
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
-from sqlalchemy import select
-
 from app.daily_challenge import service as daily_service
 from app.daily_challenge.service import DailyChallengeService
 from app.db.base import utcnow
-from app.db.models import DailyChallengePlay, DailyUsage, Product, Subscription
-from app.usage.tracker import UsageTracker, _today
+from app.db.models import DailyChallengePlay, Product, Subscription
+from app.usage.tracker import UsageTracker
+from sqlalchemy import select
 
 pytestmark = pytest.mark.asyncio
 

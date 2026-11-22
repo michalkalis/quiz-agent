@@ -40,8 +40,8 @@ class ExtraCategory:
 
 CATALOG: tuple[ExtraCategory, ...] = (
     ExtraCategory(
-        "extra-wizard-school",
-        {"sk": "Čarodejnícka škola", "cs": "Čarodějnická škola", "en": "Wizard School"},
+        "extra-harry-potter",
+        {"sk": "Harry Potter", "cs": "Harry Potter", "en": "Harry Potter"},
     ),
     ExtraCategory(
         "extra-superheroes",

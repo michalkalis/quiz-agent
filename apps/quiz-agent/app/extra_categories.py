@@ -42,10 +42,14 @@ CATALOG: tuple[ExtraCategory, ...] = (
     ExtraCategory(
         "extra-harry-potter",
         {"sk": "Harry Potter", "cs": "Harry Potter", "en": "Harry Potter"},
+        starts=date(2026, 11, 22),
+        until=date(2026, 12, 22),
     ),
     ExtraCategory(
         "extra-superheroes",
         {"sk": "Superhrdinovia", "cs": "Superhrdinové", "en": "Superheroes"},
+        starts=date(2026, 11, 22),
+        until=date(2026, 12, 22),
     ),
     ExtraCategory(
         "extra-techno",
@@ -54,6 +58,9 @@ CATALOG: tuple[ExtraCategory, ...] = (
             "cs": "Techno a klubová scéna",
             "en": "Techno & Club Culture",
         },
+        # Joins at the first monthly swap (founder: three at a time).
+        starts=date(2026, 12, 23),
+        until=date(2027, 1, 22),
     ),
     ExtraCategory(
         "extra-animation",
@@ -62,6 +69,8 @@ CATALOG: tuple[ExtraCategory, ...] = (
             "cs": "Pohádky a animáky",
             "en": "Cartoons & Fairy Tales",
         },
+        starts=date(2026, 11, 22),
+        until=date(2026, 12, 22),
     ),
 )
 KEYS = tuple(c.key for c in CATALOG)

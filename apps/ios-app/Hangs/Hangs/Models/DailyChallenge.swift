@@ -26,6 +26,47 @@ nonisolated struct DailyChallengeState: Codable, Sendable, Equatable {
     /// Questions in the challenge.
     let total: Int
     let summary: DailySummary?
+    /// #205.8: extra questions a free player is promised for finishing today's
+    /// challenge; nil for subscribers or with the reward off (older servers omit it).
+    let bonusOffer: Int?
+    /// Extra questions left today; nil until the challenge is finished, 0 when
+    /// used up or expired.
+    let bonusLeft: Int?
+    /// Finished daily challenges, never resets; 0 when the server omits it.
+    let daysPlayed: Int
+
+    enum CodingKeys: String, CodingKey {
+        case date, language, status, total, summary
+        case bonusOffer = "bonus_offer"
+        case bonusLeft = "bonus_left"
+        case daysPlayed = "days_played"
+    }
+
+    init(
+        date: String, language: String, status: Status, total: Int, summary: DailySummary?,
+        bonusOffer: Int? = nil, bonusLeft: Int? = nil, daysPlayed: Int = 0
+    ) {
+        self.date = date
+        self.language = language
+        self.status = status
+        self.total = total
+        self.summary = summary
+        self.bonusOffer = bonusOffer
+        self.bonusLeft = bonusLeft
+        self.daysPlayed = daysPlayed
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        date = try c.decode(String.self, forKey: .date)
+        language = try c.decode(String.self, forKey: .language)
+        status = try c.decode(Status.self, forKey: .status)
+        total = try c.decode(Int.self, forKey: .total)
+        summary = try c.decodeIfPresent(DailySummary.self, forKey: .summary)
+        bonusOffer = try c.decodeIfPresent(Int.self, forKey: .bonusOffer)
+        bonusLeft = try c.decodeIfPresent(Int.self, forKey: .bonusLeft)
+        daysPlayed = try c.decodeIfPresent(Int.self, forKey: .daysPlayed) ?? 0
+    }
 }
 
 /// A finished challenge, computed live by the server on every request.

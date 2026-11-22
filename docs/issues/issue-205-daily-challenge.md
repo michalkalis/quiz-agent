@@ -60,8 +60,8 @@ Supply of questions never used in a daily set (dry run 2026-11-22): sk about 200
 
 Founder decisions for what comes next:
 
-- **205.8 Reward (next):** finishing the day's challenge gives extra questions for that day, outside the monthly limit. Nothing else for now (no stamps, weekly pack or fact of the day). Open with the founder: how the player is told, and whether a quiet "days played" number is shown now.
-- **Day count:** founder picked "days played, never resets" with the note not to burden players with another feature now. No streak that can be lost.
+- **205.8 Reward (done 2026-11-22, PR #943 server deployed, PR #944 app):** finishing the day's challenge gives 10 extra questions for that day (founder: 10; fine because they add no voice answers, voice stays the reason to pay). Spent before the monthly limit, gone at the player's local midnight (the app sends its UTC offset at the start; older builds count as UTC), none for subscribers, off with `DAILY_BONUS_QUESTIONS=0`. The Home card promises them before playing and shows what is left after; a quiet "Odohrané dni" line shows the count of finished challenges (founder pick). Players see the texts from the next app build on; until then they get the questions unannounced. How many come back: finished plays per day and `bonus_used` in `daily_challenge_plays`.
+- **Day count:** founder picked "days played, never resets", shown as a quiet line on the card after finishing. No streak that can be lost.
 - **Reminders:** none, no push notifications.
 - **Parked, founder liked them:** a widget with a new question every day (needs more thought); answering while the question is still read (after voice commands improve); a spoken hint (later, would complicate the app now).
 

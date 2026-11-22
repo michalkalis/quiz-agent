@@ -109,6 +109,15 @@
                 network.submitTextInputError = limit
             }
 
+            // 2026-11-21 RS-47: the free voice answers are used up; every voice
+            // upload meets the server's 429 `voice_limit_reached`.
+            if CommandLine.arguments.contains("--ui-test-voice-limit") {
+                network.submitVoiceAnswerError = NetworkError.voiceLimitReached(VoiceLimitError(
+                    code: VoiceLimitError.reachedCode, voiceAnswersUsed: 30, voiceAnswersLimit: 30,
+                    resetsAt: "2099-01-01T00:00:00+00:00"
+                ))
+            }
+
             // #123 Track B: seed the Home entitlement card's key visuals for the
             // screenshot-verify sweep. /usage is mocked, so stub the payload (or
             // stall it) instead of hitting a backend. Combine with `--ui-test`.

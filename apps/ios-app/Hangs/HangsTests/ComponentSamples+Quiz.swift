@@ -177,10 +177,15 @@ nonisolated extension ComponentSample {
             ComponentSample("planCard.subscriber") { HomePlanCard(usage: usage(status: "active", premium: true)) },
             ComponentSample("planCard.grace") { HomePlanCard(usage: usage(status: "grace", premium: true)) },
             ComponentSample("planCard.expired") { HomePlanCard(usage: usage(status: "expired")) },
+            // 2026-11-21 free tier split: voice answers left (D2), and the
+            // question screen's once-a-month notice (D1).
+            ComponentSample("planCard.freeVoice") { HomePlanCard(usage: usage(status: "none", voiceRemaining: 12)) },
+            ComponentSample("planCard.freeVoiceSpent") { HomePlanCard(usage: usage(status: "none", voiceRemaining: 0)) },
+            ComponentSample("voiceLimitNotice.default") { VoiceLimitNotice(onPlus: {}) },
         ]
     }
 
-    private static func usage(status: String, premium: Bool = false, credits: Int = 0) -> UsageInfo {
+    private static func usage(status: String, premium: Bool = false, credits: Int = 0, voiceRemaining: Int? = nil) -> UsageInfo {
         let resetsAt = Date().addingTimeInterval(12 * 86400 + 12 * 3600)
         return UsageInfo(
             userId: "snapshot-subject",
@@ -190,7 +195,10 @@ nonisolated extension ComponentSample {
             remaining: premium ? 870 : 18,
             resetsAt: ISO8601DateFormatter().string(from: resetsAt),
             subscriptionStatus: status,
-            creditBalance: credits
+            creditBalance: credits,
+            voiceAnswersUsed: voiceRemaining.map { 30 - $0 },
+            voiceAnswersLimit: voiceRemaining.map { _ in 30 },
+            voiceAnswersRemaining: voiceRemaining
         )
     }
 }

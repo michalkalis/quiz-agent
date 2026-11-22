@@ -93,6 +93,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
 | RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the graded answer throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
 | RS-46 | `RSResultTests.testRS46…` | Home `home.quickGame` on, so the skip skips the result screen |
+| RS-47 | `RSPaywallTests.testRS47…` (+ unit `VoiceAllowanceTests`) | `--ui-test-voice-limit` (every voice upload throws the 429 `voice_limit_reached`) |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -1097,6 +1098,30 @@ build 90: the field stayed open, Type greyed out).
 
 **Asserts:** `question.textField` is gone within 10 s;
 `question.textInputToggle` is enabled. App alive.
+
+---
+
+## RS-47: Voice answers used up: told once, the quiz goes on by typing
+
+**Type:** XCUITest (`RSPaywallTests`). Free tier split (founder 2026-11-21, D1).
+
+**Hypothesis:** a voice answer past the month's free voice answers is refused
+by the server (429 `voice_limit_reached`, nothing charged); the question stays
+on screen with one notice and a quiet Plus link that never blocks it, and
+Answer leads to typing instead of the refused mic.
+
+**Preconditions:** `--ui-test --ui-test-voice-limit` (every voice upload gets
+the 429).
+
+**Steps:** start a quiz, tap `question.record`, say "Paris" over the test
+listener; wait for `question.voiceLimitNotice`; tap `question.voiceLimitPlus`,
+wait for the paywall, tap its ✕; tap `question.record` again; type "Paris"
+into `question.textField`, tap `question.textSubmit`.
+
+**Asserts:** the notice appears and the state probe reads `askingQuestion`
+with no paywall; closing the paywall lands back on the question; the second
+Answer tap opens `question.textField` and the probe stays `askingQuestion`
+(no mic); the typed answer reaches the result. App alive.
 
 ---
 

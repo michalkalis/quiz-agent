@@ -307,6 +307,12 @@ final class RecordingCoordinator: ObservableObject {
     /// #197: a saved car recording got its decision — kick the uploader.
     /// Must return at once; the upload runs on its own task.
     let answerRecordingDecided: @MainActor () -> Void
+    /// Free tier split (2026-11-21): this month's voice answers are used up,
+    /// so no recording opens; the player types or taps.
+    let isVoiceAllowanceSpent: @MainActor () -> Bool
+    /// A voice answer was refused (429 `voice_limit_reached`, or the mic was
+    /// asked for with the allowance spent): the once-a-month notice.
+    let voiceAllowanceSpent: @MainActor (VoiceLimitError?) -> Void
 
     init(
         audioService: AudioServiceProtocol,
@@ -350,7 +356,9 @@ final class RecordingCoordinator: ObservableObject {
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
         stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
-        answerRecordingDecided: @escaping @MainActor () -> Void = {}
+        answerRecordingDecided: @escaping @MainActor () -> Void = {},
+        isVoiceAllowanceSpent: @escaping @MainActor () -> Bool = { false },
+        voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -394,6 +402,8 @@ final class RecordingCoordinator: ObservableObject {
         self.stopQuestionReadOut = stopQuestionReadOut
         self.trackAnalytics = trackAnalytics
         self.answerRecordingDecided = answerRecordingDecided
+        self.isVoiceAllowanceSpent = isVoiceAllowanceSpent
+        self.voiceAllowanceSpent = voiceAllowanceSpent
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

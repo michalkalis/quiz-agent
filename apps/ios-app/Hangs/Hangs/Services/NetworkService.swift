@@ -137,7 +137,10 @@ extension NetworkServiceProtocol {
 actor NetworkService: NetworkServiceProtocol {
     /// `X-Client-Capabilities` sent on session create (#185 track G): coded
     /// "say it again" 400s, and question audio that reads the option labels.
-    nonisolated static let clientCapabilities = "answer-codes, option-labels"
+    /// `voice-allowance` (2026-11-21): this build handles the 429
+    /// `voice_limit_reached`, so the server may refuse a voice answer once the
+    /// free voice answers are used up.
+    nonisolated static let clientCapabilities = "answer-codes, option-labels, voice-allowance"
 
     /// `X-App-Version` on every request (#51), "<short version> (<build>)", so
     /// the server's analytics events carry the build that caused them.
@@ -262,6 +265,13 @@ actor NetworkService: NetworkServiceProtocol {
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
             logHTTPError(endpoint: endpointPath, status: 429)
+            // 2026-11-21: the free voice answers are used up. Not the quota:
+            // the question stays open for a typed or tapped answer.
+            if let voiceLimit = try? JSONDecoder().decode(VoiceLimitErrorWrapper.self, from: data),
+               voiceLimit.detail.code == VoiceLimitError.reachedCode
+            {
+                throw NetworkError.voiceLimitReached(voiceLimit.detail)
+            }
             if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
                 throw NetworkError.quotaLimitReached(limitError.detail)
             }
@@ -1058,6 +1068,11 @@ private nonisolated struct QuotaLimitErrorWrapper: Decodable, Sendable {
     let detail: QuotaLimitError
 }
 
+/// The voice-allowance 429 (`VoiceLimitError`), wrapped the same way.
+private nonisolated struct VoiceLimitErrorWrapper: Decodable, Sendable {
+    let detail: VoiceLimitError
+}
+
 /// Backend 409 for a submit whose `question_id` the session cannot grade (#133 1a):
 /// `{"detail": {"code": "question_mismatch", "current_question_id": "…"}}`.
 /// `current_question_id` is nullable server-side (a session with no open question).
@@ -1081,6 +1096,10 @@ enum NetworkError: LocalizedError {
     case decodingError(Error)
     case serverError(statusCode: Int, message: String)
     case quotaLimitReached(QuotaLimitError)
+    /// HTTP 429 `voice_limit_reached` (2026-11-21): this month's free voice
+    /// answers are used up. Nothing was transcribed or charged; the question
+    /// is still open for a typed or tapped answer.
+    case voiceLimitReached(VoiceLimitError)
     case sessionNotFound
     /// HTTP 409 `question_mismatch` (#133 1a): the submitted `question_id` is
     /// neither the session's current question nor the last one it graded, so the
@@ -1117,6 +1136,8 @@ enum NetworkError: LocalizedError {
             return message
         case .quotaLimitReached:
             return String(localized: "Free question limit reached", bundle: .interface, locale: .interface, comment: "Network error: user hit the free monthly question quota")
+        case .voiceLimitReached:
+            return String(localized: "This month's free voice answers are used up. Keep playing by typing or tapping.", bundle: .interface, locale: .interface, comment: "Question screen notice, shown once a month: the free voice answers are used up and the quiz goes on with typed and tapped answers")
         case .sessionNotFound:
             return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:

@@ -100,6 +100,14 @@ protocol PersistenceStoreProtocol: Sendable {
 
     /// Record one more presentation of the post-purchase sign-in sheet
     func incrementSignInPromptShownCount()
+
+    // MARK: - Voice allowance notice (free tier split, 2026-11-21)
+
+    /// The `resets_at` of the month whose "voice answers used up" notice was
+    /// shown: the notice comes once a month, also across launches.
+    var voiceLimitNoticeMonth: String? { get }
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String)
 }
 
 /// Unified UserDefaults-based persistence storage.
@@ -122,6 +130,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let statsKey = "quiz_stats"
     private let signInPromptCountKey = "sign_in_prompt_shown_count"
     private let familySettingsKey = "family_settings"
+    private let voiceLimitNoticeKey = "voice_limit_notice_month"
 
     /// How many library question ids the history keeps (#200, founder
     /// 2026-10-12). Only an exclusion list: older ids may come back, which is
@@ -363,6 +372,16 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     func incrementSignInPromptShownCount() {
         userDefaults.set(signInPromptShownCount + 1, forKey: signInPromptCountKey)
+    }
+
+    // MARK: - Voice allowance notice
+
+    var voiceLimitNoticeMonth: String? {
+        userDefaults.string(forKey: voiceLimitNoticeKey)
+    }
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String) {
+        userDefaults.set(resetsAt, forKey: voiceLimitNoticeKey)
     }
 }
 

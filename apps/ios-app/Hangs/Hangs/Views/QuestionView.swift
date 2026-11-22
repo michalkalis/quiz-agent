@@ -533,6 +533,14 @@ struct QuestionView: View {
             // countdown starts. Below the grid it was reliably missed (the
             // 2026-09-07 report), and it is the one element that tells the driver
             // the mic is about to open.
+            // 2026-11-21: once a month, the voice answers are used up; the
+            // options below stay tappable.
+            if viewModel.showsVoiceLimitNotice {
+                VoiceLimitNotice(onPlus: viewModel.openPaywallFromVoiceLimitNotice)
+                    .padding(.horizontal, Metrics.gutter)
+                    .padding(.top, Metrics.blockGap)
+                    .transition(.opacity)
+            }
             mcqListenBar(question: question, compact: compact)
 
             mcqOptions(question: question, compact: compact)

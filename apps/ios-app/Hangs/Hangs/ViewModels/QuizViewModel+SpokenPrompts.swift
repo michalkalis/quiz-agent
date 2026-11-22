@@ -94,6 +94,23 @@ extension QuizViewModel {
         await audioDeviceState.playAppSpeech(audio)
     }
 
+    // MARK: - Free voice answers used up (2026-11-21)
+
+    /// The once-a-month line, then the question screen's command window
+    /// again (app speech closes it). Leaving the question cancels it.
+    func announceVoiceLimit() {
+        let questionId = currentQuestion?.id
+        taskBag.add(Task { [weak self] in
+            guard let self, !isAudioMuted,
+                  let audio = await promptAudio(SpokenPrompt.voiceLimitLine(language: promptLanguage)),
+                  !Task.isCancelled, currentQuestion?.id == questionId
+            else { return }
+            await audioDeviceState.playAppSpeech(audio)
+            guard !Task.isCancelled, quizState == .askingQuestion else { return }
+            await voiceCommandCoordinator.syncCommandListenerWindow()
+        }, key: .voiceLimitPrompt)
+    }
+
     // MARK: - G3: set end (per-question flow)
 
     /// Say the score, release the quiz session (music back to full volume),

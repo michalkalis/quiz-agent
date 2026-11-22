@@ -133,6 +133,9 @@ struct HomePlanCard: View {
                     .foregroundStyle(Theme.Hangs.Colors.muted)
                     .accessibilityIdentifier("home.freePlanReset")
             }
+            if let limit = usage.voiceAnswersLimit, let left = usage.voiceAnswersRemaining {
+                PlanVoiceAnswersLine(remaining: left, limit: limit)
+            }
         }
     }
 

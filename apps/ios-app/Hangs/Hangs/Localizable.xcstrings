@@ -3527,6 +3527,35 @@
         }
       }
     },
+    "By voice: %lld of %lld left" : {
+      "comment" : "Profile plan card: voice answers left this month out of the monthly voice limit (free plan)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasem: ještě %1$lld z %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By voice: %1$lld of %2$lld left"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasom: ešte %1$lld z %2$lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Голосом: ще %1$lld з %2$lld"
+          }
+        }
+      }
+    },
     "CAN'T REACH\nTHE STORE" : {
       "localizations" : {
         "cs" : {
@@ -15827,6 +15856,29 @@
         }
       }
     },
+    "This month's free voice answers are used up. Keep playing by typing or tapping." : {
+      "comment" : "Question screen notice, shown once a month: the free voice answers are used up and the quiz goes on with typed and tapped answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovědi zdarma na tento měsíc došly. Hraj dál psaním nebo klepnutím."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovede zadarmo na tento mesiac sa minuli. Hraj ďalej písaním alebo klepnutím."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Безплатні голосові відповіді на цей місяць закінчилися. Грай далі й відповідай текстом або дотиком."
+          }
+        }
+      }
+    },
     "This quiz can't be played any more." : {
       "localizations" : {
         "sk" : {
@@ -16073,6 +16125,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ГОЛОСОВІ КОМАНДИ"
+          }
+        }
+      }
+    },
+    "Voice answers used up this month" : {
+      "comment" : "Profile plan card: the free voice answers of this month are used up",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovědi na tento měsíc došly"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovede na tento mesiac sa minuli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Голосові відповіді на цей місяць закінчилися"
           }
         }
       }

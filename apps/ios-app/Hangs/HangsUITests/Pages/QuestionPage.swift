@@ -57,6 +57,16 @@ struct QuestionPage {
         app.buttons["question.textSubmit"]
     }
 
+    /// Free tier split (2026-11-21): the once-a-month "voice answers used up"
+    /// notice and its quiet Trubbo Plus link.
+    var voiceLimitNotice: XCUIElement {
+        app.staticTexts["question.voiceLimitNotice"]
+    }
+
+    var voiceLimitPlusLink: XCUIElement {
+        app.buttons["question.voiceLimitPlus"]
+    }
+
     /// Current value of the hidden state probe ("" when the probe is absent,
     /// e.g. on Home).
     var stateValue: String {

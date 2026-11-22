@@ -7,7 +7,6 @@ with nothing on offer = an empty list, never an error.
 
 from __future__ import annotations
 
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel

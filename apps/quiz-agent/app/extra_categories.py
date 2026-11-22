@@ -16,7 +16,6 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from quiz_shared.models.question import EXTRA_CATEGORY_PREFIX

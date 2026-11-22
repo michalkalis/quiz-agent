@@ -989,6 +989,10 @@ final class QuizViewModel: ObservableObject {
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
 
+        // #242: the last extra list the server answered names a saved pick
+        // until the next fetch arrives.
+        extraCatalog = persistenceStore.loadExtraCategories()
+
         // #236: the family mode is remembered across launches (founder 2026-11-18).
         familySettings = persistenceStore.loadFamilySettings()
         $familySettings

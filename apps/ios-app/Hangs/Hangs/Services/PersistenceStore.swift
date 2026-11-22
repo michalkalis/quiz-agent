@@ -67,6 +67,8 @@ protocol PersistenceStoreProtocol: Sendable {
     // MARK: - Family mode (#236)
 
     /// The family mode as last left; defaults when nothing (readable) is saved.
+    func loadExtraCategories() -> [ExtraCategory]
+    func saveExtraCategories(_ categories: [ExtraCategory])
     func loadFamilySettings() -> FamilySettings
 
     func saveFamilySettings(_ settings: FamilySettings)
@@ -130,6 +132,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let statsKey = "quiz_stats"
     private let signInPromptCountKey = "sign_in_prompt_shown_count"
     private let familySettingsKey = "family_settings"
+    private let extraCategoriesKey = "extra_categories"
     private let voiceLimitNoticeKey = "voice_limit_notice_month"
 
     /// How many library question ids the history keeps (#200, founder
@@ -297,6 +300,22 @@ final class PersistenceStore: PersistenceStoreProtocol {
         let history = askedQuestionIds
         Logger.persistence.debug("📦 PersistenceStore: Retrieved \(history.count, privacy: .public) excluded question IDs")
         return history
+    }
+
+    // MARK: - Extra categories (#242)
+
+    /// The last list the server answered: names for a saved pick before the
+    /// next fetch arrives.
+    func loadExtraCategories() -> [ExtraCategory] {
+        guard let data = userDefaults.data(forKey: extraCategoriesKey),
+              let categories = try? JSONDecoder().decode([ExtraCategory].self, from: data)
+        else { return [] }
+        return categories
+    }
+
+    func saveExtraCategories(_ categories: [ExtraCategory]) {
+        guard let data = try? JSONEncoder().encode(categories) else { return }
+        userDefaults.set(data, forKey: extraCategoriesKey)
     }
 
     // MARK: - Family mode (#236)

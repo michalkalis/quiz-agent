@@ -341,14 +341,20 @@ struct QuizSettings: Codable, Equatable, Sendable {
     func categoryDisplayName(extras: [ExtraCategory] = []) -> String {
         switch categories.count {
         case 0:
-            return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
+            return allCategoriesDisplayName
         case 1:
             return Config.categoryOptions.first { $0.id == categories[0] }?.display
                 ?? extras.first { $0.key == categories[0] }?.name
+                ?? (ExtraCategory.isExtra(categories[0]) ? allCategoriesDisplayName : nil)
                 ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
         default:
             return String(localized: "\(categories.count) selected", bundle: .interface, locale: .interface, comment: "Home category picker value when several categories are selected; placeholder is the count")
         }
+    }
+
+    /// A saved extra with no remembered name reads as "All categories", never "Unknown" (#242).
+    private var allCategoriesDisplayName: String {
+        Config.categoryOptions.first { $0.id == nil }?.display ?? ""
     }
 
     /// Display name for the active age-appropriate filter.

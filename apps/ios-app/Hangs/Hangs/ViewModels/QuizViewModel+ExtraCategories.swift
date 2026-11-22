@@ -26,6 +26,7 @@ extension QuizViewModel {
         do {
             let response = try await networkService.extraCategories(language: Language.selectable(language).id)
             extraCatalog = response.categories
+            persistenceStore.saveExtraCategories(response.categories)
             dropUnlistedExtras()
         } catch {
             Logger.network.info("extra categories fetch skipped: \(error.localizedDescription, privacy: .public)")

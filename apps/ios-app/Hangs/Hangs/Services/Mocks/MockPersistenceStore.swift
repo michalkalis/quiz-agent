@@ -73,6 +73,18 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
         return askedQuestionIds
     }
 
+    // MARK: - Extra categories (#242)
+
+    var extraCategories: [ExtraCategory] = []
+
+    func loadExtraCategories() -> [ExtraCategory] {
+        extraCategories
+    }
+
+    func saveExtraCategories(_ categories: [ExtraCategory]) {
+        extraCategories = categories
+    }
+
     // MARK: - Family mode (#236)
 
     var familySettings = FamilySettings()

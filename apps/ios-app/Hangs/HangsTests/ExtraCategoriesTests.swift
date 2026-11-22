@@ -21,10 +21,12 @@ private let techno = ExtraCategory(key: "extra-techno", name: "Techno a klubová
 private func makeExtraViewModel(
     listed: [ExtraCategory] = [wizard, techno],
     saved: [String] = [],
+    remembered: [ExtraCategory] = [],
     analytics: MockAnalyticsClient = MockAnalyticsClient()
 ) -> (QuizViewModel, MockNetworkService) {
     let network = Fixtures.makeFullMockNetwork { $0.stubbedExtraCategories = ExtraCategoriesResponse(categories: listed) }
     let store = MockPersistenceStore()
+    store.extraCategories = remembered
     var settings = QuizSettings.default
     settings.categories = saved
     store.savedSettings = settings
@@ -128,6 +130,39 @@ struct ExtraCategoriesHomeStateTests {
         network.stubbedExtraCategories = ExtraCategoriesResponse(categories: [wizard])
         await vm.refreshExtraCategories(enabled: true, language: "sk")
         #expect(vm.settings.categories.isEmpty, "back to All categories")
+    }
+
+    // WHY: right after launch the list has not arrived; a saved pick must read
+    // by its name, not "Unknown", while the fetch is still in flight.
+    @Test("Relaunch with a saved extra and a remembered list: the name shows while the fetch is held")
+    func rememberedNameWhileFetchInFlight() async {
+        let (vm, network) = makeExtraViewModel(saved: ["extra-techno"], remembered: [wizard, techno])
+        let hold = network.hold(.extraCategories)
+        let refresh = Task { await vm.refreshExtraCategories(enabled: true, language: "sk") }
+        await pumpUntil { hold.heldCount == 1 }
+        #expect(vm.settings.categoryDisplayName(extras: vm.extraCatalog) == "Techno a klubová scéna")
+        #expect(HomeDeckCard.categories(extras: vm.extraCatalog).contains { $0.id == "extra-techno" })
+        hold.release()
+        await refresh.value
+    }
+
+    @Test("A fetch that answers is remembered for the next launch")
+    func answeredListIsRemembered() async {
+        let store = MockPersistenceStore()
+        let network = Fixtures.makeFullMockNetwork { $0.stubbedExtraCategories = ExtraCategoriesResponse(categories: [wizard]) }
+        let vm = QuizViewModel(
+            networkService: network, audioService: MockAudioService(), persistenceStore: store,
+            silenceDetectionService: MockSilenceDetectionService(), clock: AnyClock(TestClock())
+        )
+        await vm.refreshExtraCategories(enabled: true, language: "sk")
+        #expect(store.extraCategories == [wizard])
+    }
+
+    @Test("A saved extra with no remembered name reads as All categories, never Unknown")
+    func noRememberedNameReadsAsAll() {
+        let (vm, _) = makeExtraViewModel(saved: ["extra-techno"])
+        #expect(vm.settings.categoryDisplayName(extras: vm.extraCatalog) == Config.categoryOptions[0].display)
+        #expect(vm.settings.categories == ["extra-techno"], "the id itself is kept")
     }
 
     @Test("The pill names a served extra and stays a plain fallback for an unlisted one")

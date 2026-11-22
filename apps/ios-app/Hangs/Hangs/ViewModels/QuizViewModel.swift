@@ -5,8 +5,8 @@
 //  Core quiz flow and state management
 //
 
-import Clocks
 import Combine
+import Clocks
 import Foundation
 import os
 import Sentry
@@ -2348,7 +2348,7 @@ final class QuizViewModel: ObservableObject {
             Logger.quiz.warning("⚠️ Backend end-session failed after early exit (session will TTL out): \(error, privacy: .public)")
         }
 
-        Logger.quiz.info("🎮 Quiz ended early with results — score: \(score, privacy: .public)")
+        Logger.quiz.info("🎮 Quiz ended early with results — score: \(self.score, privacy: .public)")
     }
 
     /// Resume a saved session

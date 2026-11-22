@@ -119,6 +119,24 @@ struct VoiceCommandFourCommandsFlowTests {
         #expect(earcon.hapticsOnly == [.commandAck])
     }
 
+    /// WHY: "No sound" promises a quiz that never makes a sound or listens.
+    /// The command window stays shut, and even a command that reached the
+    /// router anyway (a late result from a window opened before the switch)
+    /// must not tick, though the player's own "Recording sounds" is on.
+    @Test("in a silent quiz no command window opens and no tick plays")
+    func silentQuizNeverTicks() {
+        let (vm, earcon) = makeVM()
+        vm.settings.silentMode = true
+        vm.settings.recordingSoundsEnabled = true
+        vm.quizState = .askingQuestion
+
+        #expect(vm.voiceCommandCoordinator.currentCommandScreen == nil, "no listening in a silent quiz")
+
+        vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
+
+        #expect(earcon.played.isEmpty, "a silent quiz plays no tick, got \(earcon.played)")
+    }
+
     /// WHY (decision 6): "are sk and cs recognised worse than en?" is answered
     /// by fired commands per command AND language next to the windows opened
     /// per language (`voice_command_window`). Without the language on the

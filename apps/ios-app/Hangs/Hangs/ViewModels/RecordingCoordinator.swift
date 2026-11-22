@@ -313,6 +313,8 @@ final class RecordingCoordinator: ObservableObject {
     /// A voice answer was refused (429 `voice_limit_reached`, or the mic was
     /// asked for with the allowance spent): the once-a-month notice.
     let voiceAllowanceSpent: @MainActor (VoiceLimitError?) -> Void
+    /// Silent mode (founder 2026-11-22): the mic never opens.
+    let isSilentMode: @MainActor () -> Bool
 
     init(
         audioService: AudioServiceProtocol,
@@ -358,7 +360,8 @@ final class RecordingCoordinator: ObservableObject {
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         answerRecordingDecided: @escaping @MainActor () -> Void = {},
         isVoiceAllowanceSpent: @escaping @MainActor () -> Bool = { false },
-        voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in }
+        voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in },
+        isSilentMode: @escaping @MainActor () -> Bool = { false }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -404,6 +407,7 @@ final class RecordingCoordinator: ObservableObject {
         self.answerRecordingDecided = answerRecordingDecided
         self.isVoiceAllowanceSpent = isVoiceAllowanceSpent
         self.voiceAllowanceSpent = voiceAllowanceSpent
+        self.isSilentMode = isSilentMode
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

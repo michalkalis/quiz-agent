@@ -1,0 +1,30 @@
+# texts
+1/10
+SCIENCE & NATURE
+What is the largest planet in our solar system?
+1
+Mars
+2
+Jupiter
+3
+Saturn
+4
+Neptune
+askingQuestion
+Налаштування
+# identifiers
+question.progress
+question.counter
+question.category
+question.replay
+question.text
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d
+question.state
+question.skip
+question.closeButton
+question.pause
+question.moreMenu
+question.settingsButton

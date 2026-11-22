@@ -128,6 +128,13 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// note of the right answer instead of a result screen.
     var quickGame: Bool
 
+    /// The Home "No sound" switch (founder 2026-11-22). ON: nothing in the
+    /// quiz makes a sound or listens. No read aloud, no microphone, no voice
+    /// commands, no tones; a question has no time limit and is answered by
+    /// typing or tapping. The quiz applies it through
+    /// `QuizViewModel.isSilentMode`, which also leaves CarPlay out.
+    var silentMode: Bool
+
     /// The one rule for whether the command words are shown: an explicit Settings
     /// choice wins, otherwise they are shown.
     static func voiceHintsVisible(override: Bool?) -> Bool {
@@ -155,7 +162,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceCommandsEnabled: Bool = true,
         answerRevealMode reveal: AnswerRevealMode = .perQuestion,
         voiceHintsEnabled: Bool? = nil,
-        quickGame: Bool = false
+        quickGame: Bool = false,
+        silentMode: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -176,6 +184,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerRevealMode = reveal
         self.voiceHintsEnabled = voiceHintsEnabled
         self.quickGame = quickGame
+        self.silentMode = silentMode
     }
 
     // MARK: - Default Configuration
@@ -271,6 +280,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceHintsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceHintsEnabled)
         // #224.8: absent = off, today's flow.
         quickGame = try container.decodeIfPresent(Bool.self, forKey: .quickGame) ?? false
+        // Absent = off: every quiz before this build had sound.
+        silentMode = try container.decodeIfPresent(Bool.self, forKey: .silentMode) ?? false
     }
 
     // MARK: - Validation Helpers

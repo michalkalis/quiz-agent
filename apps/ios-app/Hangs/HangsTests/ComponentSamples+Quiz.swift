@@ -71,6 +71,10 @@ nonisolated extension ComponentSample {
             ComponentSample("controlPill.pauseDisabled") {
                 QuizControlPill(isMuted: false, isPaused: false, isPauseEnabled: false, onMute: {}, onPause: {})
             },
+            // Silent mode (founder 2026-11-22): nothing to mute, pause alone.
+            ComponentSample("controlPill.silent") {
+                QuizControlPill(isMuted: true, isPaused: false, isPauseEnabled: true, onMute: nil, onPause: {})
+            },
             ComponentSample("reviewBadge.pendingReview") { ReviewBadge(badge: "pending_review") },
             ComponentSample("reviewBadge.machineTranslation") { ReviewBadge(badge: "translation_machine", filled: true) },
             ComponentSample("reviewBadge.englishFallback") { ReviewBadge(badge: "en_fallback") },

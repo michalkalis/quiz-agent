@@ -303,6 +303,17 @@ struct HomeView: View {
         .accessibilityIdentifier("home.quickGame")
     }
 
+    /// Founder 2026-11-22: "No sound", directly under "Quick quiz". Also in the
+    /// family list: a round with kids plays on the same question screen.
+    private var silentModeRow: some View {
+        HangsToggleRow(
+            label: "No sound",
+            subtitle: "Read the questions, type the answers",
+            isOn: Binding(get: { viewModel.settings.silentMode }, set: { viewModel.setSilentMode($0) })
+        )
+        .accessibilityIdentifier("home.silentMode")
+    }
+
     private var settingsButton: some View {
         Button {
             onOpenSettings?()
@@ -415,6 +426,8 @@ struct HomeView: View {
                     bandMenu
                     hairline
                     topicMenu
+                    hairline
+                    silentModeRow
                 } else {
                     difficultyMenu
                     hairline
@@ -425,6 +438,8 @@ struct HomeView: View {
                     questionCountMenu
                     hairline
                     quickGameRow
+                    hairline
+                    silentModeRow
                 }
             }
         }

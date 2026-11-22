@@ -20,7 +20,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `QuestionSkipButton` | Skipping the current question; has its own skipping/disabled states. |
 | `HangsNavChip` | Square icon chip in a top bar (close, back). |
 | `HangsSourceLink` | Tappable source domain under an answer. |
-| `QuizControlPill` | Quiz-screen mute + pause pair (toolbar glass). |
+| `QuizControlPill` | Quiz-screen mute + pause pair (toolbar glass); pause alone in a silent quiz (`onMute: nil`). |
 | `.quizToolbar(…)` | The one quiz top bar (✕, mute + pause, ⋯) on the question AND result screens. Quiz screens also cap Dynamic Type at `QuizTypeSize.screenCap`. |
 | `QuizOverflowMenu` | Quiz "…" menu (settings, feedback, rate question). |
 

@@ -2,7 +2,7 @@
 //  RSResultTests.swift
 //  HangsUITests
 //
-//  RS-12, RS-13, RS-15, RS-16, RS-17 from docs/testing/regression-scenarios.md,
+//  RS-12, RS-13, RS-15, RS-16, RS-17, RS-48 from docs/testing/regression-scenarios.md,
 //  frozen into XCUITest (#180 track D): question-screen geometry, leaving the
 //  quiz, the typed-answer path, and the result screen's read-aloud / pause /
 //  resume controls. The unit halves of RS-11/13/16/17 stay in HangsTests.
@@ -118,6 +118,45 @@ final nonisolated class RSResultTests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 10), .completed, "RS-46: the answer field stayed open on the next question")
         XCTAssertTrue(question.textInputToggle.isEnabled, "RS-46: Type stayed greyed out on the next question")
         RSFlow.assertAlive(app, "RS-46")
+    }
+
+    // MARK: RS-48 — A silent quiz is answered by typing, without a time limit
+
+    // Founder 2026-11-22 ("No sound"): with the Home switch on, the question
+    // opens with the typed field ready and no Answer button, no countdown
+    // moves it on by itself, the typed answer reaches the result, and the
+    // result offers nothing to hear.
+    @MainActor
+    func testRS48SilentQuizIsTypedWithoutTimeLimit() async throws {
+        let app = RSFlow.launch()
+        let home = HomePage(app: app)
+        home.assertVisible()
+        let silent = home.silentModeSwitch
+        if !silent.isHittable { app.swipeUp() }
+        XCTAssertTrue(silent.waitForExistence(timeout: 3), "RS-48: home.silentMode missing")
+        silent.tap()
+        if silent.value as? String != "1" { silent.switches.firstMatch.tap() }
+        XCTAssertEqual(silent.value as? String, "1", "RS-48: No sound did not turn on")
+        if !home.startQuizButton.isHittable { app.swipeDown() }
+
+        let question = RSFlow.startQuiz(app)
+        XCTAssertTrue(question.textField.waitForExistence(timeout: 3), "RS-48: the typed field is not open at once")
+        XCTAssertFalse(question.recordButton.exists, "RS-48: a silent question offers the mic")
+        XCTAssertFalse(question.textInputToggle.exists, "RS-48: Type is shown although the field is open")
+        // Real time on purpose: a sound quiz shows its think countdown by now.
+        try await Task.sleep(for: .seconds(5))
+        question.waitForState("askingQuestion", timeout: 5)
+        XCTAssertFalse(question.stopButton.exists, "RS-48: the mic opened by itself")
+        XCTAssertFalse(app.descendants(matching: .any)["listen-bar"].exists, "RS-48: a countdown runs on a silent question")
+
+        question.textField.tap()
+        question.textField.typeText("Paris")
+        question.textSubmit.tap()
+
+        let result = ResultPage(app: app)
+        result.waitForResult(timeout: 8)
+        XCTAssertFalse(result.hearItButton.exists, "RS-48: the silent result offers read aloud")
+        RSFlow.assertAlive(app, "RS-48")
     }
 
     // MARK: RS-16 — Read-aloud on the result does not advance

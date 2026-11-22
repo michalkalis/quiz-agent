@@ -51,6 +51,9 @@ Random
 Швидка вікторина
 Після «Пропусти» одразу наступне питання, без пояснення
 
+Без звуку
+Питання читаєш, відповіді пишеш
+
 trubbo
 Налаштування
 Старт
@@ -76,5 +79,6 @@ home.questionCount.8
 home.questionCount.10
 home.questionCount.15
 home.quickGame
+home.silentMode
 home.settings
 home.startQuiz

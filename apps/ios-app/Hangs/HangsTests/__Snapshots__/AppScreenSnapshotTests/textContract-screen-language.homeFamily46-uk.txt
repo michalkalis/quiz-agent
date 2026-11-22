@@ -33,6 +33,9 @@ Tvoje telo
 Dinosaury
 Тема
 Dinosaury
+Без звуку
+Питання читаєш, відповіді пишеш
+
 trubbo
 Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
@@ -56,6 +59,7 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

@@ -94,6 +94,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the graded answer throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
 | RS-46 | `RSResultTests.testRS46…` | Home `home.quickGame` on, so the skip skips the result screen |
 | RS-47 | `RSPaywallTests.testRS47…` (+ unit `VoiceAllowanceTests`) | `--ui-test-voice-limit` (every voice upload throws the 429 `voice_limit_reached`) |
+| RS-48 | `RSResultTests.testRS48…` (+ unit `SilentModeTests`) | Home `home.silentMode` on ("No sound") |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -1122,6 +1123,27 @@ into `question.textField`, tap `question.textSubmit`.
 with no paywall; closing the paywall lands back on the question; the second
 Answer tap opens `question.textField` and the probe stays `askingQuestion`
 (no mic); the typed answer reaches the result. App alive.
+
+---
+
+## RS-48: A silent quiz is answered by typing, without a time limit
+
+**Type:** XCUITest (`RSResultTests`). "No sound" (founder 2026-11-22).
+
+**Hypothesis:** with the Home "No sound" switch on, nothing reads, listens or
+counts down: the question opens with the typed field ready, the mic never
+opens by itself, and the typed answer reaches a result that offers nothing
+to hear.
+
+**Preconditions:** `--ui-test`; Home `home.silentMode` switched on.
+
+**Steps:** start a quiz; wait 5 s on the question; type "Paris" into
+`question.textField`, tap `question.textSubmit`.
+
+**Asserts:** `question.textField` exists at once; `question.record` and
+`question.textInputToggle` do not; after 5 s the probe reads `askingQuestion`,
+no `question.stop`, no `listen-bar`; the result appears without
+`result.hearIt`. App alive.
 
 ---
 

@@ -18,7 +18,8 @@ enum AnalyticsEvent: Equatable {
     case onboardingFinished(outcome: OnboardingOutcome, step: String)
     /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
     /// time of day a player plays at needs it (#213.1).
-    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false)
+    /// `silentMode` (founder 2026-11-22): the quiz ran without any sound.
+    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false, silentMode: Bool = false)
     /// #240.9: `reason` = how the round was left, `question` = the 1-based
     /// question on screen.
     case quizAbandoned(questionsAnswered: Int, phase: String, reason: QuizLeaveReason, question: Int)
@@ -69,6 +70,8 @@ enum AnalyticsEvent: Equatable {
     case resultQuestionOpened(kind: ResultQuestionKind, verdict: ResultQuestionVerdict)
     /// #224.8: the Home "Quick quiz" switch was flipped.
     case quickGameChanged(enabled: Bool)
+    /// The Home "No sound" switch was flipped (founder 2026-11-22).
+    case silentModeChanged(enabled: Bool)
     /// TestFlight build 90 feedback: Settings opened from the gear on Home.
     case homeSettingsOpened
     /// Free tier split (2026-11-21): the once-a-month "voice answers used up"
@@ -126,6 +129,7 @@ enum AnalyticsEvent: Equatable {
         case .homeCategoryPickerOpened: "home_category_picker_opened"
         case .resultQuestionOpened: "result_question_opened"
         case .quickGameChanged: "quick_game_changed"
+        case .silentModeChanged: "silent_mode_changed"
         case .homeSettingsOpened: "home_settings_opened"
         case .voiceLimitNoticeShown: "voice_limit_notice_shown"
         case .homeRoundLengthChanged: "home_round_length_changed"
@@ -146,13 +150,14 @@ enum AnalyticsEvent: Equatable {
             [("launch", .string(launch.rawValue))]
         case let .onboardingFinished(outcome, step):
             [("outcome", .string(outcome.rawValue)), ("step", .string(step))]
-        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame):
+        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame, silentMode):
             [
                 ("audio_route", .string(audioRoute.rawValue)),
                 ("voice_commands_enabled", .bool(voiceCommandsEnabled)),
                 ("entry_point", .string(entryPoint.rawValue)),
                 ("timezone", .string(timezone)),
                 ("quick_game", .bool(quickGame)),
+                ("silent_mode", .bool(silentMode)),
             ]
         case let .quizAbandoned(questionsAnswered, phase, reason, question):
             [
@@ -224,6 +229,8 @@ enum AnalyticsEvent: Equatable {
         case let .resultQuestionOpened(kind, verdict):
             [("kind", .string(kind.rawValue)), ("verdict", .string(verdict.rawValue))]
         case let .quickGameChanged(enabled):
+            [("enabled", .bool(enabled))]
+        case let .silentModeChanged(enabled):
             [("enabled", .bool(enabled))]
         case let .questionSkipped(quick):
             [("quick", .bool(quick))]

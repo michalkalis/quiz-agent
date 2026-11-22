@@ -99,7 +99,7 @@ struct ResultView: View {
             isPaused: viewModel.isPaused,
             isPauseEnabled: autoAdvanceActive || viewModel.isPaused,
             onClose: { showEndQuizConfirmation = true },
-            onMute: { Task { await viewModel.toggleMute() } },
+            onMute: viewModel.isSilentMode ? nil : { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.isPaused ? viewModel.resumeAutoAdvance() : viewModel.pauseQuiz() },
             onSettings: { showQuizSettings = true },
             onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
@@ -183,7 +183,7 @@ struct ResultView: View {
                     explanation: explanationText,
                     saidLine: saidLine,
                     hearItFailed: viewModel.readAloudFailure == .explanation,
-                    onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
+                    onHearIt: viewModel.isSilentMode ? nil : { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
                 ResultMetaRow(
                     sourceDomain: sourceDomain,

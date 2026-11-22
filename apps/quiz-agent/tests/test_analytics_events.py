@@ -262,6 +262,19 @@ async def test_quick_game_events_keep_only_the_mode():
     assert ctx == {"quick_game": True}
 
 
+async def test_silent_mode_events_keep_only_the_mode():
+    # 2026-11-22: how many players turn sound off, and how many quizzes run
+    # silent; a dropped key would leave both unanswerable.
+    changed = clean_properties(
+        CLIENT_EVENTS["silent_mode_changed"], {"enabled": True, "name": "x"}
+    )
+    assert changed == {"enabled": True}
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"], {"silent_mode": True, "city": "Bratislava"}
+    )
+    assert ctx == {"silent_mode": True}
+
+
 async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
     # #237: how many players turn commands on, from the onboarding or the quiz
     # listen bar, and how many then refuse speech recognition; nothing about

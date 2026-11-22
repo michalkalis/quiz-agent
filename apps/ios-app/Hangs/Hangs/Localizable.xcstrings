@@ -9563,6 +9563,29 @@
         }
       }
     },
+    "No sound" : {
+      "comment" : "Home: toggle row under Quick quiz; silent mode, no read aloud, no microphone",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без звуку"
+          }
+        }
+      }
+    },
     "Nobody else knew" : {
       "comment" : "Hra spolu (#240.9): award, the only player with the right answer",
       "localizations" : {
@@ -12590,6 +12613,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Читати питання вголос"
+          }
+        }
+      }
+    },
+    "Read the questions, type the answers" : {
+      "comment" : "Home: subtitle of the No sound row",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky čítaš, odpovede píšeš"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky čteš, odpovědi píšeš"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання читаєш, відповіді пишеш"
           }
         }
       }

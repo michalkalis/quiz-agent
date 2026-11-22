@@ -79,7 +79,9 @@ struct QuestionVoiceFooter: View {
                     .transition(.opacity)
             }
 
-            if showTextInput {
+            // Silent mode (founder 2026-11-22): the typed field is the only way
+            // to answer, so it is open from the start and there is no Answer.
+            if showTextInput || viewModel.isSilentMode {
                 // TF build 90 (founder): typing is its own calm state. The field,
                 // send and Skip (F2) sit directly on the keyboard; only the
                 // countdown stays above them, standing still while typing (F3).
@@ -265,7 +267,8 @@ struct QuestionVoiceFooter: View {
                             .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.mutedBorder : Theme.Hangs.Colors.action)
                     )
             }
-            .disabled(textAnswer.isEmpty)
+            // The field stays up while a silent answer is graded; one send.
+            .disabled(textAnswer.isEmpty || !canInteract)
             .accessibilityIdentifier("question.textSubmit")
 
             skipButton
@@ -280,7 +283,7 @@ struct QuestionVoiceFooter: View {
     }
 
     private func submitTypedAnswer() {
-        guard !textAnswer.isEmpty else { return }
+        guard !textAnswer.isEmpty, canInteract else { return }
         let answer = textAnswer
         submittedAnswer = answer
         textAnswer = ""

@@ -37,6 +37,9 @@ Téma
 LEGO
 Téma
 LEGO
+Bez zvuku
+Otázky čteš, odpovědi píšeš
+
 trubbo
 Nastavení
 Odpovídáš ty, děti hádají s tebou.
@@ -61,6 +64,7 @@ home.topic.family-lego
 home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
+home.silentMode
 home.settings
 home.family.adultAnswers
 home.startFamily

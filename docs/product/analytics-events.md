@@ -37,7 +37,7 @@ Every app event also carries `build_channel` (app_store / testflight / debug, fr
 |---|---|---|
 | `app_opened` | app launch / return to foreground | `launch` (cold / foreground) |
 | `onboarding_finished` | onboarding completed or skipped (replay from Settings emits again) | `outcome` (from #237, Microphone → Voice commands: commands_on / commands_later / mic_denied / mic_later; mic_granted / skipped on older builds), `step` |
-| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`), `quick_game` (the Home quick-game switch was on, #224.8; absent on older builds) |
+| `quiz_context` | right after a quiz starts | `audio_route` (carplay / bluetooth / speaker / headphones / …), `voice_commands_enabled`, `entry_point`, `timezone` (IANA id, e.g. Europe/Bratislava; local time of day from UTC `occurred_at`), `quick_game` (the Home quick-game switch was on, #224.8; absent on older builds), `silent_mode` (the quiz ran without sound: the Home "No sound" switch, 2026-11-22; absent on older builds) |
 | `quiz_abandoned` | quiz ended by the player before finishing | `questions_answered`, `phase`; from #240.9 `reason` (end_quiz = ✕ then End quiz / end_with_results = ✕ then End & See Results / error_screen = Go Home from a round's error screen) and `question` (1-based question on screen) |
 | `answer_submitted` | player submits an answer | `input_mode` (voice / tap / typed), `question_id`, `is_retry`, `latency_ms` (ms from when the player could answer to speech onset or tap/submit, pauses excluded; left out on retries or when unknown) |
 | `voice_capture_failed` | on-device capture fails (server rejections are `transcription_failed`) | `reason` (too_short / empty_transcript / stt_timeout / stt_commit_failed / recorder_failed / mic_denied: the microphone is refused in iOS Settings and nothing was recorded, from #240; silent: build 90 only, #240.9 rolled back: the phone measured silence and nothing was uploaded), `question_id` |
@@ -69,6 +69,7 @@ Every app event also carries `build_channel` (app_store / testflight / debug, fr
 | `home_category_picker_opened` | the multi-category picker opened on Home (#224.6) | `source` (deck_button / pill) |
 | `result_question_opened` | the result's "Show question" sheet opened (TF build 90, C1) | `kind` (open / mcq), `verdict` (correct / incorrect / skipped) |
 | `quick_game_changed` | the Home "Quick quiz" switch flipped (#224.8) | `enabled` |
+| `silent_mode_changed` | the Home "No sound" switch flipped (silent mode, 2026-11-22) | `enabled` |
 | `home_settings_opened` | Settings opened from the gear at the top of Home (TestFlight build 90 feedback) | none |
 | `voice_limit_notice_shown` | the free voice answers are used up and the question screen says so (2026-11-21 free tier split), at most once a month per phone; the quiz goes on by typing and tapping | none |
 | `home_round_length_changed` | the round length changed in the Home settings list (TestFlight build 90 feedback) | `questions` (5 / 8 / 10 / 15) |

@@ -1,6 +1,6 @@
 # #242 — Extra kategórie zadarmo na striedačku
 
-**Triage:** enhancement · needs-info (čaká na odpovede foundera k striedaniu a umiestneniu, potom nezávislá kontrola plánu)
+**Triage:** enhancement · needs-info (čaká na odpovede foundera k striedaniu a umiestneniu)
 **Status:** plán (2026-11-22)
 **Session:** quiz-agent-fd · 2026-11-22
 
@@ -24,17 +24,20 @@ Rešerš: [paid-extra-categories-2026-11-22.md](../research/paid-extra-categorie
 
 ## Ako to funguje dnes
 
-- Sedem kategórií je napevno v appke aj na serveri; server appke zoznam neposiela. Staré buildy preto novú kategóriu nikdy neuvidia a nič sa im nepokazí.
+- Sedem kategórií je napevno v appke aj na serveri; server appke zoznam neposiela. Staré buildy novú kategóriu vo výbere neponúknu.
+- „Všetky kategórie“ je prázdny zoznam a výber otázok vtedy kategóriu nefiltruje vôbec. Otázka s novou kategóriou by sa teda bez ďalšieho zásahu dostala do miešaného kvízu všetkých buildov, do dennej výzvy, na web, do zdieľaných kvízov a do štatistík hráča.
 - Otázka nesie kategóriu ako voľný text a výber otázok filtruje podľa hocijakého identifikátora, takže server novú kategóriu zvládne bez zmeny výberu.
-- Rodinná sekcia (#236 — Rodinná sekcia „S deťmi“) už robí presne tento vzor: katalóg tém na serveri, appka si ho stiahne a ukáže len témy s plnou zásobou. Tento plán ho opakuje pre všeobecný vejár.
+- Rodinná sekcia (#236 — Rodinná sekcia „S deťmi“) má katalóg tém na serveri, appka si ho stiahne a ukáže len témy s plnou zásobou. Od ostatných otázok ju však oddeľuje vekové pásmo, nie kľúč témy. Tento plán preberá katalóg, oddelenie si musí postaviť sám.
 
 ## Technický smer (s dôvodom)
 
 1. **Katalóg na serveri, vzor rodinnej sekcie.** Kategória = kľúč s predponou `extra-`, názov v sk/cs/en, voliteľný dátum od a do. Katalóg je v kóde a mení sa cez PR (názvy prejdú kontrolou textov); server sa nasadzuje sám, takže výmena kategórií nepotrebuje vydanie appky.
 2. **Jedna nová adresa pre appku** vráti aktuálne kategórie pre jazyk: len tie, ktoré sú v okne dátumov a majú dosť schválených otázok. Staré buildy ju nevolajú.
 3. **Vypínač** v nastaveniach zo servera, predvolene vypnuté, kým nie je obsah.
-4. **Appka (jedno vydanie):** vejár na Úvode a výber kategórií pridajú za sedem stálych aj kategórie zo servera. Keď server neodpovie, ostane sedem stálych. Uložený výber, ktorý medzitým zo striedania vypadol, sa ticho vráti na „všetky“.
-5. **Miešaný kvíz („všetky kategórie“) extra otázky neberie.** Extra kategória sa hrá, len keď si ju hráč vyberie. Dôvod: stála zásoba ostane vyvážená a tematická otázka nikoho neprekvapí.
+4. **Appka (jedno vydanie):** vejár na Úvode a výber kategórií pridajú za sedem stálych aj kategórie zo servera. Keď server neodpovie, ostane sedem stálych. Uložený výber extra kategórie sa pri štarte appky zachová a zahodí sa až po úspešnom načítaní katalógu, v ktorom už nie je; potom sa ticho vráti na „všetky“. Extra karta má farbu z pevnej palety podľa poradia, vzhľad podľa odpovede foundera.
+5. **Extra otázky sú oddelené od všetkého ostatného, výslovne.** Hrajú sa, len keď si kategóriu hráč vyberie. Úložisko otázok dostane nový filter „kategória nezačína na `extra-`, alebo je prázdna“ (obyčajné „nerovná sa“ by vyhodilo aj otázky bez kategórie). Použije sa vždy, keď hráč kategóriu nevybral, a tiež v: kandidátoch dennej výzvy, počte dostupných otázok, zdieľaných kvízoch, exporte na web, štatistikách hráča a v prehľade pokrytia pri generovaní. Stráži to test oddelenia podľa vzoru testu vekových pásiem. Dôvod: stála zásoba ostane vyvážená a staré buildy extra otázku nikdy nedostanú.
+   - **Prejdená kategória sa neopakuje.** Kolo v extra kategórii, kde hráč už všetko počul, server odmietne s vlastným kódom (ako pri prejdenom balíku), appka ukáže „túto kategóriu máš prejdenú“ a ponuku začať odznova pre extra kategórie neukazuje.
+   - **Zásoba sa počíta podľa kanála buildu**, rovnako ako pri rodinných témach: beta vidí aj otázky čakajúce na schválenie, App Store len schválené. Katalóg aj kontrola pred štartom počítajú tým istým spôsobom.
 6. **Generovanie:** kategória sa pri importe nastaví výslovne (ako pri rodinných témach), klasifikátor ju neprepíše. Generuje sa z predplatného Claude, sk a cs natívne, en vlastná sada.
 7. **Meranie v tom istom PR:** ktorá extra kategória sa začala hrať a koľko kôl; porovnanie s kolami zo stálych kategórií.
 
@@ -43,8 +46,8 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
 ## Kroky (malé PR, za vypínačom)
 
 - [ ] 242.1 Odpovede foundera: koľko kategórií naraz a ako často sa menia, kde sa ukážu, zoznam prvých kategórií.
-- [ ] 242.2 Nezávislá kontrola tohto plánu (`/design-soundness`).
-- [ ] 242.3 Server: katalóg, adresa, vypínač, okno dátumov, testy (prázdna zásoba, mimo okna, neznámy jazyk).
+- [x] 242.2 Nezávislá kontrola tohto plánu (`/design-soundness`, 2026-11-22): dva nálezy (extra otázky by pretiekli do miešaného kvízu; prejdená kategória by sa opakovala) a tri pripomienky zapracované v bodoch 4 a 5.
+- [ ] 242.3 Server: filter oddelenia a jeho test ako prvé (ešte pred prvou extra otázkou v databáze), potom katalóg, adresa, vypínač, okno dátumov, kód „prejdené“, testy (prázdna zásoba, mimo okna, neznámy jazyk, prejdená kategória).
 - [ ] 242.4 Obsah prvej vlny: na kategóriu 60 schválených otázok na jazyk (šesť kôl bez opakovania); zoznam tém na jedno schválenie, potom bez prerušení.
 - [ ] 242.5 Appka: vejár a výber čítajú katalóg, pomalá a zlyhaná odpoveď servera pokrytá testom, meranie.
 - [ ] 242.6 Zapnúť vypínač po teste foundera v bete; prvá výmena kategórií podľa zvoleného rytmu.

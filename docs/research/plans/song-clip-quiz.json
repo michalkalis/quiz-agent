@@ -1,0 +1,138 @@
+{
+  "slug": "song-clip-quiz",
+  "question": "How do 'guess the song from a short clip' games work (audio source, licensing, UX), what do players praise and resent about them, what do they pay for, and how could Trubbo (voice-first quiz, competitor Honk! Road Trip Quiz ships 'Name That Song' with 10 s clips) add it?",
+  "appstore": {
+    "search_terms": [
+      "guess the song",
+      "song quiz",
+      "music quiz",
+      "music trivia",
+      "name that tune",
+      "heardle",
+      "hitster",
+      "guess the year song",
+      "song guessing party game",
+      "road trip games",
+      "car trivia family"
+    ],
+    "app_ids": [
+      "6831106244",
+      "975364678",
+      "1528066727",
+      "1551639567",
+      "1345558380",
+      "1621483628",
+      "6471419531",
+      "6804464432",
+      "6754511325",
+      "6808657554",
+      "6752951225",
+      "1297896111",
+      "1552362023",
+      "1105611375",
+      "6446503414"
+    ],
+    "per_term": 20,
+    "max_apps": 34,
+    "countries": [
+      "us",
+      "gb",
+      "ca",
+      "au",
+      "de",
+      "sk",
+      "cz"
+    ],
+    "pages": 10,
+    "iap_country": "us"
+  },
+  "play": {
+    "search_terms": [
+      "guess the song",
+      "song quiz",
+      "hitster"
+    ],
+    "per_term": 8,
+    "max_apps": 16,
+    "count": 600,
+    "locales": [
+      [
+        "en",
+        "us"
+      ]
+    ]
+  },
+  "reddit": {
+    "subreddits": [
+      "heardle",
+      "iosgaming",
+      "AndroidGaming",
+      "boardgames",
+      "AppleMusic",
+      "spotify",
+      "iOSProgramming",
+      "gamedev",
+      "roadtrip",
+      "Parenting",
+      "alexa"
+    ],
+    "queries": [
+      "guess the song",
+      "song quiz",
+      "heardle",
+      "hitster",
+      "music trivia app",
+      "preview clip",
+      "MusicKit preview",
+      "music licensing game",
+      "road trip game"
+    ],
+    "per_query": 200
+  },
+  "hn": {
+    "queries": [
+      "heardle",
+      "guess the song game",
+      "spotify preview_url",
+      "music licensing game",
+      "MusicKit"
+    ],
+    "pages": 2
+  },
+  "keywords": [
+    "\\bclips?\\b|snippets?|preview|\\bintro\\b",
+    "\\d+ ?(sec|second)s?|seconds?",
+    "same songs?|songs? repeat|repeat\\w* songs?|more songs|new songs",
+    "playlists?|decades?|\\b[5-9]0s\\b|\\b(19|20)\\d0s\\b|genres?|\\bera\\b",
+    "spotify|apple music|deezer|youtube|premium account",
+    "guess(ing|ed)? (the )?(song|title|artist|year)",
+    "spell|typo|close enough|typing|multiple choice|answer",
+    "voice|shout|alexa|siri|carplay|\\bcar\\b|road ?trip|drive|driving",
+    "family|kids|party|friends|group",
+    "volume|audio|sound|loud|quiet|music (cuts|stops)",
+    "pay|paid|premium|subscri|unlock|coins?|ads?\\b|purchas|worth",
+    "lyrics|cover|remix|karaoke|live version|wrong song",
+    "lied|píse|písn|hudb|song"
+  ],
+  "min_chars": 40,
+  "codebook": {
+    "clip_length_part": "about clip length or which part plays (too short/long, not the recognisable part, starts mid-song, fades out, wants intro vs chorus)",
+    "song_selection_narrow": "song library too small, too pop/US-centric, missing big artists or genres, wrong era in a decade playlist",
+    "songs_repeat": "same songs repeat, content runs out, wants new songs added",
+    "requests_genre_playlist": "asks for a specific genre, decade, artist, language or local music (put it in `theme`, e.g. '90s rock', 'German Schlager')",
+    "praises_variety_discovery": "praises the variety of songs/playlists or discovering new music, nostalgia",
+    "answer_input_issue": "problems with how you answer: spelling/typing strictness, voice recognition misses, too few choices, 'close enough' wanted, timing too strict",
+    "audio_quality_wrong": "bad audio: covers/soundalikes/robot voice instead of original, low quality, wrong song or wrong answer key, explicit lyrics",
+    "streaming_account_required": "needs Spotify/Apple Music/premium account, login/connection fails, works only with a streaming subscription",
+    "social_party_play": "about playing together (party, family, couple, car, friends, live shows), praise or problems",
+    "voice_hands_free": "about voice play, Alexa/Siri/CarPlay, playing while driving or without looking at the screen",
+    "kids_family_safe": "kid-friendliness, explicit content, ages, family use",
+    "daily_ritual": "daily puzzle / streak / one-a-day habit, praise or complaints",
+    "paywall_subscription": "complains about VIP/subscription, paywall, features moved behind payment, price too high, trial trap",
+    "happy_payer": "paid (subscription, packs, playlists, premium) and says it was worth it, or willing to pay",
+    "ads": "complains about ads or would pay to remove them",
+    "currency_grind": "coins, tickets, keys, energy, lives economy, pay-to-win or rigged/bots",
+    "tech_bugs": "crashes, lost progress, sync, sound not playing, connection problems",
+    "other": "on topic (song guessing game experience) but none of the above (describe in `quote`)"
+  }
+}

@@ -18,12 +18,11 @@ extension QuizViewModel {
     /// countdown), then `Config.pauseAfterSpokenVerdict`. Muted or no audio:
     /// the countdown starts at once with `settings.autoAdvanceDelay`.
     func playVerdictThenPace(_ audio: AudioInfo?) async -> Int {
-        // Silent mode speaks no verdict (founder 2026-11-22); the result keeps
-        // its pause and auto-advance. The read-aloud mute alone still plays it,
-        // as it always has.
-        guard !isSilentMode else { return settings.autoAdvanceDelay }
+        // Read aloud off, or silent mode, speaks no verdict (founder
+        // 2026-11-22); the result keeps its pause and auto-advance.
+        guard !isAudioMuted else { return settings.autoAdvanceDelay }
         let playback = Task { await playFeedback(audio) }
-        guard hasFeedbackAudio(audio), !isAudioMuted else { return settings.autoAdvanceDelay }
+        guard hasFeedbackAudio(audio) else { return settings.autoAdvanceDelay }
 
         isAwaitingSpokenVerdict = true
         defer { isAwaitingSpokenVerdict = false }

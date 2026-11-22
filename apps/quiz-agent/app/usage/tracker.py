@@ -27,11 +27,13 @@ from dataclasses import dataclass
 
 import uuid
 
-from sqlalchemy import func, insert, literal, select
+from sqlalchemy import func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from ..db.models import CreditLedger, DailyUsage
+from ..config import get_settings
+from ..db.models import CreditLedger, DailyChallengePlay, DailyUsage
+from ..shared_quiz.store import person_ids
 from .entitlement import (
     account_credit_balance,
     account_is_entitled,
@@ -138,6 +140,58 @@ class UsageTracker:
         ).scalar_one_or_none()
         return int(count), bool(premium)
 
+    @staticmethod
+    def _active_bonus(ids: list[str], now: datetime, offer: int) -> list:
+        """WHERE clauses of a usable daily-challenge bonus (205.8): a FINISHED
+        play of this person, not yet past their local midnight, not spent."""
+        return [
+            DailyChallengePlay.subject_id.in_(ids),
+            DailyChallengePlay.finished_at.is_not(None),
+            DailyChallengePlay.bonus_expires_at > now,
+            DailyChallengePlay.bonus_used < offer,
+        ]
+
+    async def _bonus_left(
+        self, session: AsyncSession, subject_id: str, now: datetime
+    ) -> int:
+        offer = get_settings().daily_bonus_questions
+        if offer <= 0:
+            return 0
+        ids = await person_ids(session, subject_id)
+        used = (
+            await session.execute(
+                select(func.max(DailyChallengePlay.bonus_used)).where(
+                    *self._active_bonus(ids, now, offer)
+                )
+            )
+        ).scalar_one_or_none()
+        return 0 if used is None else offer - int(used)
+
+    async def _spend_bonus(
+        self, session: AsyncSession, subject_id: str, now: datetime
+    ) -> bool:
+        """One guarded UPDATE: the bonus condition is re-checked on the row
+        under its lock, so two concurrent records cannot overspend it."""
+        offer = get_settings().daily_bonus_questions
+        if offer <= 0:
+            return False
+        ids = await person_ids(session, subject_id)
+        active = self._active_bonus(ids, now, offer)
+        pick = (
+            select(DailyChallengePlay.id)
+            .where(*active)
+            .order_by(DailyChallengePlay.challenge_date.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        spent = await session.execute(
+            update(DailyChallengePlay)
+            .where(DailyChallengePlay.id == pick, *active)
+            .values(bonus_used=DailyChallengePlay.bonus_used + 1)
+            .returning(DailyChallengePlay.id)
+        )
+        return spent.first() is not None
+
     async def check_limit(self, subject_id: str) -> tuple[bool, int, datetime]:
         """Check whether ``subject_id`` may ask another question — NON-MUTATING.
 
@@ -161,6 +215,10 @@ class UsageTracker:
             entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
             remaining = max(0, self._limit_for(entitled) - count)
+            if not entitled:
+                bonus = await self._bonus_left(session, subject_id, now)
+                if bonus > 0:
+                    return True, bonus + remaining, _next_reset(now)
             if remaining > 0:
                 return True, remaining, _next_reset(now)
             balance = await account_credit_balance(session, subject_id)
@@ -188,6 +246,11 @@ class UsageTracker:
         async with self._sessionmaker() as session:
             entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
+            if not entitled and await self._spend_bonus(session, subject_id, now):
+                # 205.8: the daily-challenge bonus is spent first; the monthly
+                # counter and credits stay untouched.
+                await session.commit()
+                return count
             limit = self._limit_for(entitled)
             if count < limit:
                 stmt = (

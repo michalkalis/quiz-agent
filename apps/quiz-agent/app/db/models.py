@@ -503,6 +503,14 @@ class DailyChallengePlay(Base):
     spoken_lines: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    # 205.8: the extra questions earned by finishing run until the player's
+    # local midnight (set at creation); ``bonus_used`` of them are spent.
+    bonus_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    bonus_used: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
 
 
 class DailyChallengeAnswer(Base):

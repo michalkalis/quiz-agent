@@ -56,6 +56,19 @@ class DailyChallengeState(BaseModel):
     status: Literal["not_played", "in_progress", "played"]
     total: int = Field(description="Questions in the challenge")
     summary: Optional[DailySummary] = None
+    bonus_offer: Optional[int] = Field(
+        default=None,
+        description="Extra questions for the rest of the day after finishing; "
+        "null for subscribers or when the reward is off",
+    )
+    bonus_left: Optional[int] = Field(
+        default=None,
+        description="Null until today's challenge is finished, then the bonus "
+        "questions still left (0 after midnight or when used up); null for subscribers",
+    )
+    days_played: int = Field(
+        default=0, description="Finished daily challenges, all dates, never resets"
+    )
 
 
 class DailyCrewMember(BaseModel):

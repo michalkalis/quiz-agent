@@ -165,6 +165,7 @@ async def test_family_mode_events_carry_the_content_setting_and_nothing_personal
         "family_band_selected",
         "family_topic_selected",
         "family_topic_empty",
+        "extra_category_quiz_started",
         "family_round_end_action",
     ):
         assert name in CLIENT_EVENTS

@@ -11,7 +11,7 @@ extension QuizViewModel {
     /// Home deck tap (right half = next, left = previous) or VoiceOver
     /// increment / decrement.
     func stepCategory(_ direction: CategoryCycle.Direction, input: CategoryStepInput = .tap) {
-        settings.categories = CategoryCycle.stepped(from: settings.categories, direction)
+        settings.categories = CategoryCycle.stepped(from: settings.categories, direction, in: CategoryCycle.order(extras: extraCatalog))
         analytics.track(.homeCategoryStepped(
             direction: direction,
             input: input,

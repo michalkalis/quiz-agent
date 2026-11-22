@@ -18,6 +18,9 @@ protocol NetworkServiceProtocol: Sendable {
     /// #236: `GET /family/topics?language=` — per band the topics with a whole
     /// round in that language for this build's channel; empty with the switch off.
     func familyTopics(language: String) async throws -> FamilyTopicsResponse
+    /// #242: `GET /categories/extra?language=` — the free rotating categories
+    /// on offer now (empty while the server switch is off).
+    func extraCategories(language: String) async throws -> ExtraCategoriesResponse
     /// #174: how many unseen questions this configuration still has, asked
     /// BEFORE the session is created. Read-only and cheap (one COUNT server
     /// side) so it can sit on the tap-to-start path.
@@ -109,6 +112,11 @@ extension NetworkServiceProtocol {
     /// #236: like the server with the switch off.
     func familyTopics(language _: String) async throws -> FamilyTopicsResponse {
         FamilyTopicsResponse(bands: [])
+    }
+
+    /// #242: like the server with the switch off.
+    func extraCategories(language _: String) async throws -> ExtraCategoriesResponse {
+        ExtraCategoriesResponse(categories: [])
     }
 
     func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
@@ -330,6 +338,21 @@ actor NetworkService: NetworkServiceProtocol {
             throw NetworkError.familyTopicEmpty
         }
 
+        // #242: a rotating extra category that is gone (400) or has nothing
+        // left this phone has not played (409). Neither is a failure.
+        if [400, 409].contains(httpResponse.statusCode),
+           let coded = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data)
+        {
+            if coded.detail.code == "extra_category_invalid" {
+                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: coded.detail.code)
+                throw NetworkError.extraCategoryInvalid
+            }
+            if coded.detail.code == "extra_category_exhausted" {
+                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: coded.detail.code)
+                throw NetworkError.extraCategoryExhausted
+            }
+        }
+
         // #232: a shared quiz that cannot be created or started; the code
         // decides what the player is told. A 404 also means the switch is off.
         if endpointPath.hasPrefix("/api/v1/shared-quizzes"), [404, 409].contains(httpResponse.statusCode) {
@@ -458,6 +481,25 @@ actor NetworkService: NetworkServiceProtocol {
 
         let data = try await performRequestData(request, endpointPath: "/api/v1/family/topics")
         return try JSONDecoder().decode(FamilyTopicsResponse.self, from: data)
+    }
+
+    func extraCategories(language: String) async throws -> ExtraCategoriesResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/categories/extra"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        components.queryItems = [URLQueryItem(name: "language", value: language)]
+        guard let url = components.url else { throw NetworkError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Same header contract as createSession: a category is offered only
+        // when this build's channel has its questions.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+
+        let data = try await performRequestData(request, endpointPath: "/api/v1/categories/extra")
+        return try JSONDecoder().decode(ExtraCategoriesResponse.self, from: data)
     }
 
     func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
@@ -1122,6 +1164,20 @@ enum NetworkError: LocalizedError {
     /// HTTP 409 `family_topic_empty` (#236): the family topic has no question
     /// in this language. Not a failure — Home hides the topic.
     case familyTopicEmpty
+    /// HTTP 400 `extra_category_invalid` (#242): the extra category is no
+    /// longer on offer. Not a failure — Home falls back to all categories.
+    case extraCategoryInvalid
+    /// HTTP 409 `extra_category_exhausted` (#242): this phone has played every
+    /// question of the extra category. Not a failure — a calm message, never
+    /// the reset-history offer.
+    case extraCategoryExhausted
+
+    var isExtraCategoryAnswer: Bool {
+        switch self {
+        case .extraCategoryInvalid, .extraCategoryExhausted: true
+        default: false
+        }
+    }
 
     var errorDescription: String? {
         switch self {
@@ -1152,6 +1208,10 @@ enum NetworkError: LocalizedError {
             return reason.message
         case .familyTopicEmpty:
             return String(localized: "This topic has no questions in your quiz language yet.", bundle: .interface, locale: .interface, comment: "#236 family mode: the chosen topic has no question in the quiz language")
+        case .extraCategoryInvalid:
+            return ExtraCategoryNotice.invalid
+        case .extraCategoryExhausted:
+            return ExtraCategoryNotice.exhausted
         }
     }
 }

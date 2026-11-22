@@ -17,7 +17,12 @@ enum CategoryCycle {
 
     /// The cycle order: `nil` (all categories) first, then the taxonomy.
     static var order: [String?] {
-        Config.categoryOptions.map(\.id)
+        order(extras: [])
+    }
+
+    /// #242: the served extra categories follow the permanent ones.
+    static func order(extras: [ExtraCategory]) -> [String?] {
+        Config.categoryOptions.map(\.id) + extras.map(\.key)
     }
 
     /// Where a selection sits in the cycle. Empty = All (0); a multi-selection

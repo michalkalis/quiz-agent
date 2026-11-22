@@ -262,6 +262,16 @@ import os
             return stubbedFamilyTopics
         }
 
+        /// #242: what `extraCategories` answers (the server with the switch off by default).
+        var stubbedExtraCategories = ExtraCategoriesResponse(categories: [])
+        var extraCategoriesCallCount = 0
+
+        func extraCategories(language _: String) async throws -> ExtraCategoriesResponse {
+            extraCategoriesCallCount += 1
+            try await simulateNetwork(.extraCategories)
+            return stubbedExtraCategories
+        }
+
         /// #174: when set, the pre-flight probe reports this instead of "plenty".
         /// `nil` means the corpus can serve whatever was requested, so the
         /// existing tests keep starting quizzes without touching the alert path.

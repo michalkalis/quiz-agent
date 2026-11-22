@@ -85,6 +85,9 @@ final class AppConfigStore: ObservableObject {
     /// #232: share a quiz by link; every surface of it hides while off.
     var sharedQuizEnabled: Bool { config.sharedQuizEnabled }
 
+    /// #242: the free rotating extra categories may show on Home.
+    var extraCategoriesEnabled: Bool { config.extraCategoriesEnabled }
+
     /// #236: family mode „S deťmi“ may show on Home: on for this build's
     /// channel (the server's own test, `family/rounds.py` family_mode_on) and
     /// not hidden in this App Store country. With a country list set and the
@@ -205,7 +208,7 @@ final class AppConfigStore: ObservableObject {
         /// backend: `--app-config-update-required`, `--app-config-orders-off`,
         /// `--app-config-notice`, `--app-config-update-recommended`,
         /// `--app-config-maintenance` (#214), `--app-config-multiplayer` (#212),
-        /// `--app-config-family` (#236); any `--ui-test-daily-*` flag
+        /// `--app-config-family` (#236), `--app-config-extra-categories` (#242); any `--ui-test-daily-*` flag
         /// turns the #205 daily challenge on.
         static func debugSeed(arguments: [String]) -> RemoteAppConfig? {
             let update = arguments.contains("--app-config-update-required")
@@ -217,7 +220,8 @@ final class AppConfigStore: ObservableObject {
             let multiplayer = arguments.contains("--app-config-multiplayer")
             let sharedQuiz = arguments.contains("--app-config-shared-quiz")
             let family = arguments.contains("--app-config-family")
-            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz || family else { return nil }
+            let extraCategories = arguments.contains("--app-config-extra-categories")
+            guard update || ordersOff || notice || recommended || maintenance || daily || multiplayer || sharedQuiz || family || extraCategories else { return nil }
             return RemoteAppConfig(
                 minVersionAppStore: update ? "999" : nil,
                 minVersionTestflight: update ? "999" : nil,
@@ -235,7 +239,8 @@ final class AppConfigStore: ObservableObject {
                 multiplayerEnabled: multiplayer,
                 sharedQuizEnabled: sharedQuiz,
                 familyModeEnabled: family,
-                familyModeEnabledAppStore: family
+                familyModeEnabledAppStore: family,
+                extraCategoriesEnabled: extraCategories
             )
         }
     #endif

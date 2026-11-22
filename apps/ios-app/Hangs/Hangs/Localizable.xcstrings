@@ -15902,6 +15902,29 @@
         }
       }
     },
+    "This category is no longer on offer. Back to all categories." : {
+      "comment" : "#242: Home alert, the free extra category rotated out; the selection went back to all categories",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahle kategorie už není v nabídce. Vracíme se ke všem kategoriím."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto kategória už nie je v ponuke. Vraciame sa na všetky kategórie."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця категорія більше не доступна. Повертаємось до всіх категорій."
+          }
+        }
+      }
+    },
     "This month's free voice answers are used up. Keep playing by typing or tapping." : {
       "comment" : "Question screen notice, shown once a month: the free voice answers are used up and the quiz goes on with typed and tapped answers",
       "localizations" : {
@@ -16429,6 +16452,29 @@
         }
       }
     },
+    "You have played through this category. Try another." : {
+      "comment" : "#242: Home alert, the free extra category has no question left this phone has not played",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuhle kategorii máš prošlou. Zkus jinou."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Túto kategóriu máš prejdenú. Skús inú."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі запитання цієї категорії вже пройдено. Спробуй іншу."
+          }
+        }
+      }
+    },
     "You will no longer see each other in the table." : {
       "comment" : "Denná výzva: partia (#239)",
       "localizations" : {
@@ -16492,6 +16538,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Твої відповіді й теми наборів обробляють сторонні сервіси ШІ. Продовжуючи, ти з цим погоджуєшся."
+          }
+        }
+      }
+    },
+    "new" : {
+      "comment" : "#242: small label on a free rotating extra category",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nové"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nové"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "нове"
           }
         }
       }
@@ -19217,6 +19286,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Кредит поки що тільки на цьому телефоні. Увійди через Apple, і він залишиться з тобою на новому телефоні чи після перевстановлення."
+          }
+        }
+      }
+    },
+    "until %@" : {
+      "comment" : "#242: the last day a free extra category is on offer; placeholder is a short date",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "do %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "do %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "до %@"
           }
         }
       }

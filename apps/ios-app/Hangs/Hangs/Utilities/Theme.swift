@@ -59,6 +59,13 @@ private enum Palette {
     static let violetDark = "#7052F5"
     static let lime = "#A3E635"
     static let limeDark = "#8FCB2C"
+    // #242: the free rotating extra categories, apart from the seven above.
+    static let sky = "#4CC9F0"
+    static let skyDark = "#3DB8DE"
+    static let peach = "#FFB59E"
+    static let peachDark = "#F0A38B"
+    static let graphite = "#3B3F4B"
+    static let graphiteDark = "#4A4E5B"
 
     // Links and the selected choice
     static let cobalt = "#2C45F5"
@@ -246,6 +253,18 @@ extension Theme.Hangs {
             // black card read as "broken" (founder, 2026-10-10).
             default: return Style(fill: Color(light: Palette.cobalt, dark: Palette.cobaltDark), text: .white)
             }
+        }
+
+        /// #242: the extra categories take these in turn, by their position in
+        /// the served list, so neighbours in the deck never share a colour and
+        /// none looks like one of the seven.
+        static func extraStyle(position: Int) -> Style {
+            let palette = [
+                Style(fill: Color(light: Palette.sky, dark: Palette.skyDark), text: inkText),
+                Style(fill: Color(light: Palette.peach, dark: Palette.peachDark), text: inkText),
+                Style(fill: Color(light: Palette.graphite, dark: Palette.graphiteDark), text: .white),
+            ]
+            return palette[((position % palette.count) + palette.count) % palette.count]
         }
 
         /// #212: a player's colour in a game together. The server deals out

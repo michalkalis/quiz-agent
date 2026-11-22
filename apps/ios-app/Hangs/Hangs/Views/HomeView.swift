@@ -123,6 +123,9 @@ struct HomeView: View {
         .task(id: familyTopicsRequest) {
             await viewModel.refreshFamilyTopics(enabled: familyTopicsRequest.enabled, language: familyTopicsRequest.language)
         }
+        .task(id: extraCategoriesRequest) {
+            await viewModel.refreshExtraCategories(enabled: extraCategoriesRequest.enabled, language: extraCategoriesRequest.language)
+        }
         .sheet(isPresented: $viewModel.showingFamilyBandSheet) {
             FamilyBandSheet(
                 bands: viewModel.familyBands,
@@ -137,7 +140,8 @@ struct HomeView: View {
         .sheet(isPresented: $showingCategoryPicker) {
             HomeCategoryPicker(
                 categories: $viewModel.settings.categories,
-                includeLocalQuestions: $viewModel.settings.includeLocalQuestions
+                includeLocalQuestions: $viewModel.settings.includeLocalQuestions,
+                extras: viewModel.extraCatalog
             )
         }
     }
@@ -181,6 +185,14 @@ struct HomeView: View {
     private var familyTopicsRequest: FamilyTopicsRequest {
         FamilyTopicsRequest(
             enabled: appConfig?.familyModeEnabled == true,
+            language: Language.selectable(viewModel.settings.language).id
+        )
+    }
+
+    /// #242: what the extra categories fetch depends on: the server switch and the quiz language.
+    private var extraCategoriesRequest: FamilyTopicsRequest {
+        FamilyTopicsRequest(
+            enabled: appConfig?.extraCategoriesEnabled == true,
             language: Language.selectable(viewModel.settings.language).id
         )
     }
@@ -259,8 +271,9 @@ struct HomeView: View {
                 if !dynamicTypeSize.isAccessibilitySize {
                     HomeCategoryDeck(
                         selectedCategories: viewModel.settings.categories,
-                        title: viewModel.settings.categoryDisplayName(),
+                        title: viewModel.settings.categoryDisplayName(extras: viewModel.extraCatalog),
                         questionCount: viewModel.settings.numberOfQuestions,
+                        extras: viewModel.extraCatalog,
                         onStep: { viewModel.stepCategory($0, input: $1) }
                     )
                     .frame(height: Metrics.deckHeight)
@@ -567,7 +580,7 @@ struct HomeView: View {
     }
 
     private var categoriesButton: some View {
-        HangsConfigRow(label: "Categories", value: viewModel.settings.categoryDisplayName()) {
+        HangsConfigRow(label: "Categories", value: viewModel.settings.categoryDisplayName(extras: viewModel.extraCatalog)) {
             viewModel.categoryPickerOpened(from: .pill)
             showingCategoryPicker = true
         }

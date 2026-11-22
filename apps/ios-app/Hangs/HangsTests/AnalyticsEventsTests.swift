@@ -73,6 +73,7 @@ private let backendClientEvents: [String: Set<String>] = [
     "family_band_selected": ["band", "first_time"],
     "family_topic_selected": ["band", "topic"],
     "family_topic_empty": ["band", "topic"],
+    "extra_category_quiz_started": ["category"],
 ]
 
 /// One instance of every case, with every optional property present.
@@ -129,6 +130,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .familyBandSelected(band: .kids7to9, firstTime: true),
     .familyTopicSelected(band: .kids4to6, topic: "family-dinosaurs"),
     .familyTopicEmpty(band: .kids10to12, topic: "family-harry-potter"),
+    .extraCategoryQuizStarted(category: "extra-techno"),
 ]
 
 @MainActor

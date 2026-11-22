@@ -49,7 +49,7 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
 - [x] 242.2 Nezávislá kontrola tohto plánu (`/design-soundness`, 2026-11-22): dva nálezy (extra otázky by pretiekli do miešaného kvízu; prejdená kategória by sa opakovala) a tri pripomienky zapracované v bodoch 4 a 5.
 - [x] 242.3 Server hotové (PR #948 — oddelenie filtra, PR tento — katalóg): adresa `GET /api/v1/categories/extra?language=` vráti `{key, name, until}`; vypínač `extra_categories_enabled` (predvolene vypnutý, v `/app-config`); okno dátumov v UTC, kategória bez okna sa nikdy neukáže; zobrazí sa až od 60 hrateľných otázok v jazyku (v bete sa rátajú aj nekontrolované). Kódy: 409 `extra_category_exhausted` (prejdená kategória, bez ponuky na reset histórie; aj v predkontrole dostupnosti), 400 `extra_category_invalid` (kľúč mimo okna alebo vypínač vypnutý).
 - [ ] 242.4 Obsah prvej vlny: na kategóriu 60 schválených otázok na jazyk (šesť kôl bez opakovania); zoznam tém na jedno schválenie, potom bez prerušení.
-- [ ] 242.5 Appka: vejár a výber čítajú katalóg, pomalá a zlyhaná odpoveď servera pokrytá testom, meranie.
+- [x] 242.5 Appka (PR feat/242-ios-extra-categories): vejár a výber čítajú katalóg za stálymi kategóriami so značkou „nové“ a „do dátumu“; pomalá a zlyhaná odpoveď servera = len stále kategórie (testy); uložený `extra-*` výber prežije spustenie, zahodí sa len po úspešnom načítaní bez neho alebo po `extra_category_invalid`; `extra_category_exhausted` = pokojná správa bez ponuky na reset; udalosť `extra_category_quiz_started` (aj v zozname udalostí servera).
 - [ ] 242.6 Zapnúť vypínač po teste foundera v bete; prvá výmena kategórií podľa zvoleného rytmu.
 - [ ] 242.7 Vyhodnotenie po dvoch výmenách: podiel kôl v extra kategóriách, návraty.
 

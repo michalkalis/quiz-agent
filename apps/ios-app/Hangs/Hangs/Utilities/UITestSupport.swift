@@ -81,6 +81,7 @@
 
             SharedQuizFixtures.configure(network)
             FamilyModeFixtures.configure(network)
+            FamilyModeFixtures.configureExtraCategories(network)
 
             if CommandLine.arguments.contains("--ui-test-paywall") {
                 network.createSessionError = NetworkError.quotaLimitReached(QuotaLimitError(

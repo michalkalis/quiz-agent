@@ -173,6 +173,14 @@ final class QuizViewModel: ObservableObject {
     /// quiz". The server deactivates it, so a link made from it always fails.
     var endedEarlySessionId: String?
 
+    // MARK: Extra categories (#242, rules in QuizViewModel+ExtraCategories)
+
+    /// The free rotating categories the server offers now for the quiz
+    /// language; empty while the switch is off or the list has not arrived.
+    @Published var extraCatalog: [ExtraCategory] = []
+    /// Home's calm alert for an extra category that is gone or played through.
+    @Published var extraCategoryNotice: String?
+
     // MARK: Family mode (#236, rules in QuizViewModel+Family)
 
     /// The mode as the parent left it; saved on every change.
@@ -1330,15 +1338,23 @@ final class QuizViewModel: ObservableObject {
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, daily == nil, shared == nil, activeFamily == nil, !skipAvailabilityCheck,
-           let shortfall = await probeQuestionShortfall(
-               requestedCount: quizMaxQuestions,
-               difficulty: quizDifficulty,
-               language: quizLanguage,
-               requestedDifficulty: difficulty,
-               requestedLanguage: language
-           )
-        {
+        var shortfall: QuestionShortfall?
+        if pack == nil, daily == nil, shared == nil, activeFamily == nil, !skipAvailabilityCheck {
+            do {
+                shortfall = try await probeQuestionShortfall(
+                    requestedCount: quizMaxQuestions,
+                    difficulty: quizDifficulty,
+                    language: quizLanguage,
+                    requestedDifficulty: difficulty,
+                    requestedLanguage: language
+                )
+            } catch {
+                // Only the extra-category answers escape the probe (#242).
+                extraCategoryUnavailable(error as? NetworkError ?? .invalidResponse)
+                return
+            }
+        }
+        if let shortfall {
             questionShortfall = shortfall
             transition(to: .idle)
             return
@@ -1501,6 +1517,7 @@ final class QuizViewModel: ObservableObject {
             nextQuestion = nil
             awaitingNextQuestion = response.awaitingQuestion
             trackQuizContext(entryPoint: entryPoint)
+            if pack == nil, daily == nil, shared == nil, activeFamily == nil { trackExtraCategoryStart() }
 
             // #182: a pack whose first question is not persisted yet — wait for
             // it rather than dropping the player on an empty quiz screen.
@@ -1550,6 +1567,11 @@ final class QuizViewModel: ObservableObject {
                 return
             }
 
+            if let failure = error as? NetworkError, failure.isExtraCategoryAnswer {
+                extraCategoryUnavailable(failure)
+                return
+            }
+
             if let round = activeFamily, case .familyTopicEmpty? = error as? NetworkError {
                 familyTopicWasEmpty(round)
                 return
@@ -1587,7 +1609,7 @@ final class QuizViewModel: ObservableObject {
         language: String,
         requestedDifficulty: String?,
         requestedLanguage: String?
-    ) async -> QuestionShortfall? {
+    ) async throws -> QuestionShortfall? {
         do {
             let availability = try await networkService.questionAvailability(
                 requestedCount: requestedCount,
@@ -1611,12 +1633,14 @@ final class QuizViewModel: ObservableObject {
             return QuestionShortfall(
                 available: availability.available,
                 requested: requestedCount,
-                categoryName: settings.categoryDisplayName(),
+                categoryName: settings.categoryDisplayName(extras: extraCatalog),
                 difficulty: requestedDifficulty,
                 language: requestedLanguage,
                 reason: reason
             )
         } catch {
+            // #242: the server's word on an extra category is not an outage.
+            if (error as? NetworkError)?.isExtraCategoryAnswer == true { throw error }
             Logger.quiz.warning("⚠️ Availability probe failed, starting anyway: \(error, privacy: .public)")
             return nil
         }

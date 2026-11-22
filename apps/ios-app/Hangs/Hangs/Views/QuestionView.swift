@@ -225,6 +225,7 @@ struct QuestionView: View {
                 commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 recognizingWord: viewModel.recognizingWord,
+                commandHeard: viewModel.commandHeard,
                 matchedOption: viewModel.matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
@@ -686,6 +687,7 @@ struct QuestionView: View {
                     phase: phase,
                     feedback: viewModel.voiceFeedbackPhase,
                     recognizingWord: viewModel.recognizingWord,
+                    heard: viewModel.commandHeard,
                     showsWords: false,
                     size: size,
                     language: viewModel.commandLanguage,
@@ -699,10 +701,14 @@ struct QuestionView: View {
                     onOpenSettings: openSystemSettings
                 )
                 .transition(.opacity)
+            } else if let heard = viewModel.commandHeard {
+                CommandHeardLine(heard: heard, language: viewModel.commandLanguage)
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, minHeight: QuestionListenBar.slotHeight(size: size))
         .animation(.easeInOut(duration: 0.25), value: phase == nil)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.commandHeard == nil)
         .padding(.horizontal, Metrics.gutter)
         .padding(.top, Metrics.blockGap)
     }

@@ -101,11 +101,15 @@ struct ListenBarDismissal: Equatable {
 
 struct ListenBar: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Metrics {
         /// #188 G11: the countdown beside the 17pt status line — one step
         /// larger, so the number is what the eye lands on.
         static let statusSeconds: CGFloat = 20
+        /// "What the app hears" under a think countdown: a band thin enough
+        /// to read as an edge, not as a second fill.
+        static let heardBand: CGFloat = 3
     }
 
     /// The answer form the driver should speak — drives the answer-mode caption.
@@ -192,6 +196,11 @@ struct ListenBar: View {
     /// as a ready caption (`VoiceCommandLexicon.recognizingCaption`, command
     /// language, verbatim). Shown with a spinner while `feedback == .recognizing`.
     var recognizingWord: String? = nil
+
+    /// "What the app hears" (founder 2026-11-22): the command the words in
+    /// progress resemble. Its label takes the caption, its certainty a soft
+    /// fill; VoiceOver keeps the state caption (a guess is not announced).
+    var heard: CommandHeard? = nil
 
     /// The screen's concrete command words, already rendered by
     /// `VoiceCommandLexicon.hint(on:language:)` (the same string the caller gates
@@ -476,12 +485,28 @@ struct ListenBar: View {
     /// catalog-localized like the answer captions, since it narrates the answer
     /// flow ("listening in N s"), not the command engine.
     private var captionText: Text {
+        // The status layout keeps its large state and shows the label on the
+        // small line under it (`statusContent`); the "hearing" / recognizing
+        // caption would only say the label twice.
+        guard let heardCaption else { return stateCaption() }
+        return usesStatusLayout ? stateCaption(showsMicState: false) : heardCaption
+    }
+
+    /// The heard label, while there is one and the bar is listening.
+    private var heardCaption: Text? {
+        guard let heard, !isBusy else { return nil }
+        return Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language))
+    }
+
+    /// The caption for the bar's state, without the live preview — also what
+    /// VoiceOver reads.
+    private func stateCaption(showsMicState: Bool = true) -> Text {
         // #208.7: what the mic is doing right now outranks the countdown — on
         // the question screen the think caption used to hide both cues.
-        if isRecognizing {
+        if showsMicState, isRecognizing {
             return Text(verbatim: recognizingWord ?? VoiceCommandLexicon.processingCaption(language: language))
         }
-        if isHearing { return Text(verbatim: VoiceCommandLexicon.hearingCaption(language: language)) }
+        if showsMicState, isHearing { return Text(verbatim: VoiceCommandLexicon.hearingCaption(language: language)) }
         if let countdown = activeThinkCountdown {
             // #188 G11: in the status layout the seconds are their own large
             // number, so the state line is the one word.
@@ -572,6 +597,19 @@ struct ListenBar: View {
                         }
                         .clipShape(Capsule())
                     }
+                    // "What the app hears": grows with the certainty, full on a
+                    // fire. Under a draining think window it is a thin band on
+                    // the bottom edge, so the two fills never read as one.
+                    // Under Reduce Motion only the label shows.
+                    if let heard, heardCaption != nil, !reduceMotion {
+                        Rectangle()
+                            .fill(live.opacity(thinkFillFraction == nil ? 0.16 : 0.5))
+                            .frame(height: thinkFillFraction == nil ? nil : Metrics.heardBand)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
+                            .scaleEffect(x: heard.certainty, anchor: .leading)
+                            .clipShape(Capsule())
+                            .animation(.easeOut(duration: 0.2), value: heard.certainty)
+                    }
                 }
             )
             .overlay(Capsule().strokeBorder(border, lineWidth: 1))
@@ -587,6 +625,7 @@ struct ListenBar: View {
             }
             .animation(.easeInOut(duration: 0.25), value: feedback)
             .animation(.easeInOut(duration: 0.25), value: speechHeard)
+            .animation(.easeInOut(duration: 0.25), value: heard == nil)
     }
 
     /// Room for the ✕ when there is one (F2 widens it with the larger bar).
@@ -616,7 +655,13 @@ struct ListenBar: View {
                     .foregroundColor(statusTextColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if !chipWords.isEmpty {
+                if let heardCaption {
+                    heardCaption
+                        .font(.hangsMonoMini)
+                        .foregroundColor(accent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                } else if !chipWords.isEmpty {
                     words
                 } else if let subLine {
                     subLine
@@ -725,7 +770,7 @@ struct ListenBar: View {
 
     /// The bar as one VoiceOver element: state, seconds left, then what to say.
     private var accessibilityText: Text {
-        var text = captionText
+        var text = stateCaption()
         if let trailingSeconds {
             text = text + Text(verbatim: ", ") + Text("\(trailingSeconds) seconds left")
         }
@@ -853,7 +898,8 @@ struct ListenBar: View {
         captionText
             .font(.hangsMono(11, weight: .medium))
             .tracking(0.6)
-            .textCase(.uppercase)
+            // The heard label stays lowercase: it is a quiet aside, not a state.
+            .textCase(heardCaption == nil || usesStatusLayout ? .uppercase : nil)
             .foregroundColor(accent)
             .lineLimit(1)
             .minimumScaleFactor(0.7)

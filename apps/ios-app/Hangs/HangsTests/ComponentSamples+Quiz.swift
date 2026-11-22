@@ -119,6 +119,23 @@ nonisolated extension ComponentSample {
                                   recognizingWord: VoiceCommandLexicon.recognizingCaption(.next, language: .slovak),
                                   language: .slovak)
             },
+            // "What the app hears" (founder 2026-11-22): the guess on the
+            // strip's small line with its fill, on a bar, and as the quiet
+            // line where no bar shows.
+            ComponentSample("questionListenBar.thinkingHeard") {
+                QuestionListenBar(phase: .thinking(remaining: 21, total: 30), feedback: .hearing,
+                                  heard: CommandHeard(command: .repeatQuestion, certainty: 0.6), language: .slovak)
+            },
+            ComponentSample("listenBar.commandHeard") {
+                ListenBar(mode: .command, feedback: .hearing, heard: CommandHeard(command: .again, certainty: 0.6),
+                          commandHint: #"Say "again" or a new answer"#)
+            },
+            ComponentSample("commandHeardLine.partial") {
+                CommandHeardLine(heard: CommandHeard(command: .repeatQuestion, certainty: 0.6))
+            },
+            ComponentSample("commandHeardLine.fired") {
+                CommandHeardLine(heard: .fired(.next), language: .slovak)
+            },
             ComponentSample("listenBar.commandProcessing") {
                 ListenBar(mode: .command, feedback: .recognizing, commandWords: ["skip", "repeat", "pause"])
             },

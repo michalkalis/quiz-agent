@@ -493,6 +493,11 @@ final class QuizViewModel: ObservableObject {
 
     /// #122 follow-up (TF 2026-10-07): the recognized-but-not-yet-fired command
     /// as the listen-bar caption (command language, verbatim), or `nil`.
+    /// "What the app hears" (founder 2026-11-22). Never in a silent quiz.
+    var commandHeard: CommandHeard? {
+        isSilentMode ? nil : voiceCommandCoordinator.commandHeard
+    }
+
     var recognizingWord: String? {
         voiceCommandCoordinator.recognizingCommand.map {
             VoiceCommandLexicon.recognizingCaption($0, language: commandLanguage)
@@ -2360,6 +2365,7 @@ final class QuizViewModel: ObservableObject {
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.
         taskBag.cancelAll()
+        voiceCommandCoordinator.clearCommandHeard() // its hold went with the bag
         audioDeviceState.stopSilenceDetectionListening()
         quizTimersController.reset()
         isAutoRecording = false

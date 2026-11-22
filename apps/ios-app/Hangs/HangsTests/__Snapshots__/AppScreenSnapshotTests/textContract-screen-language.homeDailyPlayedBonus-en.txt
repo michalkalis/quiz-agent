@@ -1,0 +1,92 @@
+# texts
+daily challenge · Oct 15
+4/5
+Lepšie skóre ako 2 z 3 hráčov.
+You have 10 extra questions today.
+Days played: 3
+Quiz
+Choose several
+All Categories
+8 questions
+All Categories
+Science & Nature
+8 questions
+Science & Nature
+History
+8 questions
+History
+Geography
+8 questions
+Geography
+Movies & Music
+8 questions
+Movies & Music
+Sports
+8 questions
+Sports
+Food & Drink
+8 questions
+Food & Drink
+Pop Culture
+8 questions
+Pop Culture
+English
+Slovenčina
+Čeština
+Quiz language
+Slovenčina
+Quiz language
+Slovenčina
+Easy
+Medium
+Hard
+Random
+Difficulty
+Random
+Difficulty
+Random
+5
+8
+10
+15
+Number of questions
+8
+Number of questions
+8
+Quick quiz
+After "Next": next question, no explanation
+
+No sound
+Read the questions, type the answers
+
+trubbo
+Settings
+Start
+# identifiers
+home.daily.open
+home.daily.score
+home.daily.comparison
+home.daily.bonusLeft
+home.daily.daysPlayed
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
+home.quickGame
+home.silentMode
+home.settings
+home.startQuiz

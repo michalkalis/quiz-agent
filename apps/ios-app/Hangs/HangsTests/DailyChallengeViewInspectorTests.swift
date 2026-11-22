@@ -202,6 +202,53 @@ struct HomeDailyChallengeSectionInspectorTests {
         }
     }
 
+    @Test("205.8: the promise shows before playing only when an offer is on, and no after-lines")
+    func promiseOnCard() async throws {
+        let network = MockNetworkService()
+        network.stubbedDailyState = DailyChallengeState(date: "2026-10-15", language: "sk", status: .notPlayed, total: 5, summary: nil, bonusOffer: 10)
+        let withOffer = DailyChallengeViewModel(network: network, now: { Date(timeIntervalSince1970: 1_792_058_400) })
+        await withOffer.refreshToday(language: "sk")
+        let view = await section(store(enabled: true), withOffer)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.bonusOffer") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.bonusLeft") }
+        }
+        let none = await section(store(enabled: true), DailyChallengeViewModel(network: MockNetworkService()))
+        try await ViewHosting.host(none) {
+            #expect(throws: (any Error).self, "a subscriber or older server hears nothing about a reward") {
+                try none.inspect().find(viewWithAccessibilityIdentifier: "home.daily.bonusOffer")
+            }
+        }
+    }
+
+    @Test("205.8: finished: the left line and days played; none left means no reward line")
+    func leftAndDaysOnCard() async throws {
+        let base = DailyChallengeFixtures.playedState(date: "2026-10-15", language: "sk", marks: DailyChallengeFixtures.goodMarks)
+        func model(left: Int?) -> DailyChallengeViewModel {
+            let state = DailyChallengeState(
+                date: base.date, language: base.language, status: base.status, total: base.total, summary: base.summary,
+                bonusOffer: 10, bonusLeft: left, daysPlayed: 3
+            )
+            let network = MockNetworkService()
+            network.stubbedDailyState = state
+            return DailyChallengeViewModel(network: network, now: { Date(timeIntervalSince1970: 1_792_058_400) }, state: state)
+        }
+        let withLeft = await section(store(enabled: true), model(left: 10))
+        try await ViewHosting.host(withLeft) {
+            let tree = try withLeft.inspect()
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.bonusLeft") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.daysPlayed") }
+            #expect(throws: (any Error).self, "the promise is gone once played") { try tree.find(viewWithAccessibilityIdentifier: "home.daily.bonusOffer") }
+        }
+        let used = await section(store(enabled: true), model(left: 0))
+        try await ViewHosting.host(used) {
+            let tree = try used.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.bonusLeft") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.daily.daysPlayed") }
+        }
+    }
+
     @Test("played: the score and the crowd line, the card opens the round end")
     func playedCard() async throws {
         let state = DailyChallengeFixtures.playedState(date: "2026-10-15", language: "sk", marks: DailyChallengeFixtures.goodMarks)

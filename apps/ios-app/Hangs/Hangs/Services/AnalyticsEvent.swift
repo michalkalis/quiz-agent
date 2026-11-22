@@ -30,7 +30,12 @@ enum AnalyticsEvent: Equatable {
     case answerCaptured(AnswerCapturedReport)
     /// #204.9: the app turned an experiment arm off on this device.
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
-    case voiceCommand(command: VoiceCommand, phase: String)
+    /// A command fired. `language` = the command language (sk / cs / en / uk);
+    /// `path` = which result fired it (final, volatile-repeat, volatile-settle,
+    /// alternative); `speechEndMs` = end of speech → fire, nil when no end of
+    /// speech was seen. Founder 2026-11-22: with `voice_command_window`, this
+    /// answers whether sk and cs are recognised worse than en, per command.
+    case voiceCommand(command: VoiceCommand, phase: String, language: String? = nil, path: String? = nil, speechEndMs: Int? = nil)
     /// One closed listening window of the command recognizer.
     case voiceCommandWindow(CommandWindowReport)
     /// #237: the player turned voice commands on — where, and what iOS
@@ -185,8 +190,14 @@ enum AnalyticsEvent: Equatable {
                 ("to_route", .string(toRoute)),
                 ("exp_gen", .int(expGen)),
             ]
-        case let .voiceCommand(command, phase):
-            [("command", .string(command.rawValue)), ("phase", .string(phase))]
+        case let .voiceCommand(command, phase, language, path, speechEndMs):
+            [
+                ("command", .string(command.rawValue)),
+                ("phase", .string(phase)),
+                ("language", language.map { .string($0) }),
+                ("path", path.map { .string($0) }),
+                ("speech_end_ms", speechEndMs.map { .int($0) }),
+            ]
         case let .voiceCommandWindow(report):
             report.propertyPairs
         case let .voiceCommandsTurnedOn(source, result):

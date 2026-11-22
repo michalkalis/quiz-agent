@@ -115,7 +115,16 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
         {"input_mode", "question_id", "is_retry", "latency_ms"}
     ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
-    "voice_command": frozenset({"command", "phase"}),
+    # command = answer | next | repeatQuestion | again (founder 2026-11-22;
+    # older builds also send start | skip | ok | stop | pause | home), phase =
+    # the screen. language = the command language, path = which recognizer
+    # result fired it (final | volatile-repeat | volatile-settle | alternative),
+    # speech_end_ms = end of speech -> fire (absent = not seen). With
+    # voice_command_window (windows per language and screen) this answers
+    # whether sk / cs are recognised worse than en, per command.
+    "voice_command": frozenset(
+        {"command", "phase", "language", "path", "speech_end_ms"}
+    ),
     # One per closed voice-command listening window, for the on-device vs
     # cloud recognizer decision: engine = speech | dictation, language = the
     # command language, screen = question | confirmation | noAnswer | error |

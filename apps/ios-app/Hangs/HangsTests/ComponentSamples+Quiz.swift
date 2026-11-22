@@ -116,7 +116,7 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("questionListenBar.readingRecognizing") {
                 QuestionListenBar(phase: .readingQuestion, feedback: .recognizing,
-                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak),
+                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.next, language: .slovak),
                                   language: .slovak)
             },
             ComponentSample("listenBar.commandProcessing") {

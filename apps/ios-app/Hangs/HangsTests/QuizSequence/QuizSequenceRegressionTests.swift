@@ -121,12 +121,13 @@ struct QuizSequenceRegressionTests {
 
     /// WHY (harness seed 186115, founder decision 2026-09-25): with reveal at
     /// the end, the auto-confirm sent question 2's answer and the advance to
-    /// question 3 was already on its way when the driver said "stop" (or
-    /// "again"). That reopened question 2 for a moment — a new attempt, the
+    /// question 3 was already on its way when the driver said "again" (the
+    /// spoken "stop" that also hit this was retired 2026-11-22). That
+    /// reopened question 2 for a moment — a new attempt, the
     /// advance then landing on top of it (rejected transition), and "again"
     /// even starting a recording the advance cut off. A sent answer is final:
     /// the late command is dropped and reported, the quiz moves on.
-    @Test("stop / again after the answer is sent are dropped, never reopen the question", arguments: ["stop", "again"])
+    @Test("'again' after the answer is sent is dropped, never reopens the question", arguments: ["again"])
     func commandAfterAnswerSentIsDropped(command: String) async {
         // #200: recorded with auto-record off, whose 30 s answer timer opened the
         // mic; auto-record is always on now, so a 30 s think window replays it.

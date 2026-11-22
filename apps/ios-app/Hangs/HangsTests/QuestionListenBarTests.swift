@@ -75,7 +75,7 @@ struct QuestionListenPhaseTests {
     @Test("every state only offers commands the question screen really routes")
     func chipsOnlyOfferRoutedCommands() {
         let routed = VoiceCommandLexicon.commands(on: .question)
-        #expect(routed == [.start, .repeatQuestion, .skip], "the screen's real grammar")
+        #expect(routed == [.answer, .repeatQuestion, .next], "the screen's real grammar")
 
         for phase in [QuestionListenPhase.readingQuestion,
                       .thinking(remaining: 5, total: 30),
@@ -88,11 +88,11 @@ struct QuestionListenPhaseTests {
             }
         }
 
-        // "repeat" and "skip" work throughout; "start" is withheld during the
+        // "repeat" and "next" work throughout; "answer" is withheld during the
         // read on purpose — saying it there cuts the question off mid-sentence.
-        #expect(QuestionListenPhase.readingQuestion.commands == [.repeatQuestion, .skip])
+        #expect(QuestionListenPhase.readingQuestion.commands == [.repeatQuestion, .next])
         #expect(QuestionListenPhase.thinking(remaining: 5, total: 30).commands
-            == [.start, .repeatQuestion, .skip])
+            == [.answer, .repeatQuestion, .next])
 
         // The 2026-07-28 rule: the app hears EITHER commands or the answer, never
         // both — so the two states where the mic is not on commands offer none.
@@ -133,15 +133,15 @@ struct QuestionListenBarRenderTests {
 
     /// State 1 — the bar that did not exist. It must name what the app is doing
     /// and the two commands that work while a question is being read.
-    @Test("state 1 reads the question and offers repeat + skip")
+    @Test("state 1 reads the question and offers repeat + next")
     func readingQuestionState() async throws {
         try await host(.readingQuestion, language: .slovak) { tree in
             #expect(throws: Never.self) { try tree.find(text: "Reading the question") }
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(throws: Never.self) { try chips.find(text: "„zopakuj“") }
             #expect(throws: Never.self) { try chips.find(text: "„ďalšia“") }
-            #expect(throws: (any Error).self, "start would cut the read off mid-sentence") {
-                try chips.find(text: "„štart“")
+            #expect(throws: (any Error).self, "answer would cut the read off mid-sentence") {
+                try chips.find(text: "„odpovedz“")
             }
         }
     }
@@ -156,7 +156,7 @@ struct QuestionListenBarRenderTests {
             let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
             #expect(try seconds.text().string() == "32 s")
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            for word in ["„štart“", "„zopakuj“", "„ďalšia“"] {
+            for word in ["„odpovedz“", "„zopakuj“", "„ďalšia“"] {
                 #expect(throws: Never.self, "\(word) missing") { try chips.find(text: word) }
             }
         }
@@ -221,8 +221,8 @@ struct QuestionListenBarRenderTests {
     func chipsFollowCommandLanguage() async throws {
         try await host(.thinking(remaining: 5, total: 30), language: .english) { tree in
             let chips = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            #expect(throws: Never.self) { try chips.find(text: "“start”") }
-            #expect(throws: (any Error).self) { try chips.find(text: "„štart“") }
+            #expect(throws: Never.self) { try chips.find(text: "“answer”") }
+            #expect(throws: (any Error).self) { try chips.find(text: "„odpovedz“") }
         }
     }
 

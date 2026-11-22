@@ -56,6 +56,14 @@ struct HomeDailyChallengeSection: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let offer = viewModel.bonusPromise {
+                        Text("Finish it and play \(offer) extra questions today.")
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .accessibilityIdentifier("home.daily.bonusOffer")
+                    }
                     DailyMarkTiles(marks: Array(repeating: nil, count: viewModel.questionCount))
                         .accessibilityHidden(true)
                     HangsPrimaryButton(
@@ -100,6 +108,18 @@ struct HomeDailyChallengeSection: View {
                                 .foregroundStyle(Theme.Hangs.Colors.muted)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .accessibilityIdentifier("home.daily.comparison")
+                        }
+                        if let left = viewModel.bonusLeft {
+                            DailyBonusLeftLine(left: left)
+                                .accessibilityIdentifier("home.daily.bonusLeft")
+                        }
+                        if let days = viewModel.daysPlayed {
+                            Text("Days played: \(days)")
+                                .font(.hangsCaption)
+                                .foregroundStyle(Theme.Hangs.Colors.muted)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .accessibilityIdentifier("home.daily.daysPlayed")
                         }
                     }
                 }

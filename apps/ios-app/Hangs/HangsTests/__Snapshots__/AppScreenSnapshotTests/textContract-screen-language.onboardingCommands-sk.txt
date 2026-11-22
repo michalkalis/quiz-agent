@@ -2,15 +2,15 @@
 trubbo
 “next”
 “repeat”
-“start”
+“answer”
 HLASOVÉ PRÍKAZY
-Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
+Povieš „ďalšia“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
 iPhone sa ťa spýta na rozpoznávanie reči. Odpovedať hlasom môžeš aj bez príkazov.
 “next”
 “repeat”
-“start”
+“answer”
 HLASOVÉ PRÍKAZY
-Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
+Povieš „ďalšia“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky.
 iPhone sa ťa spýta na rozpoznávanie reči. Odpovedať hlasom môžeš aj bez príkazov.
 Zapni príkazy
 Teraz nie

@@ -119,23 +119,26 @@ struct AnswerReadBackEchoTests {
         #expect(vm.quizState == .processing)
     }
 
-    /// WHY (screenshot 4): "confirm" said while the read-back still sounded
-    /// arrived as "Capitalism. Confirm." — a confirm, not a new answer.
-    @Test("'confirm' said over the read-back's tail confirms the answer")
-    func confirmOverEchoTail() async {
+    /// WHY (screenshot 4, founder 2026-11-22): "confirm" said over the
+    /// read-back's tail arrived as "Capitalism. Confirm.". The spoken confirm is
+    /// gone, so once the echo is stripped what is left — "Confirm." — is a new
+    /// answer to upload, never a confirm of the old one.
+    @Test("'confirm' said over the read-back's tail is a new answer, not a confirm")
+    func confirmOverEchoTailIsAnAnswer() async {
         let (vm, silence, network) = makeVM()
         await openSheet(vm, silence, answer: "Capitalism")
+        network.mockResponse = response(answer: "Confirm.")
 
         silence.simulateAnswerAudio(Data(count: 16000))
         silence.simulateCommandTranscript("Capitalism. Confirm.")
-        await pumpUntil({ vm.quizState.isShowingResult }, "'confirm' over the echo did not confirm")
-        #expect(network.submitVoiceAnswerCallCount == 0, "the echo + confirm was uploaded as a new answer")
+        await pumpUntil({ network.submitVoiceAnswerCallCount == 1 }, "'Confirm.' was not taken as a new answer")
+        #expect(!vm.quizState.isShowingResult, "'confirm' still confirms the answer")
     }
 
-    /// WHY (screenshot 4, server side): when only the upload caught the
-    /// command, the transcript is the read-back plus "Confirm." — it confirms
-    /// the answer on the sheet and never becomes the answer.
-    @Test("a 'confirm' the upload heard after the read-back confirms the old answer")
+    /// WHY (screenshot 4, server side): when only the upload caught the words,
+    /// the transcript is the read-back plus "Confirm.". The echo is dropped and
+    /// "Confirm." stands as the answer; the old answer is not re-graded.
+    @Test("a 'confirm' the upload heard after the read-back becomes the answer, echo dropped")
     func confirmGluedToEchoInTranscript() async {
         let (vm, silence, network) = makeVM()
         await openSheet(vm, silence, answer: "Capitalism")
@@ -143,9 +146,8 @@ struct AnswerReadBackEchoTests {
 
         silence.simulateAnswerAudio(Data(count: 16000))
         silence.simulateCommandTranscript("the firm")
-        await pumpUntil({ network.submitTextInputCallCount == 1 }, "the old answer was not confirmed")
-        #expect(network.capturedTextInputInput == "Capitalism")
-        #expect(vm.transcribedAnswer != "Capitalism. Confirm.")
+        await pumpUntil({ vm.transcribedAnswer == "Confirm." }, "the echo stayed in the new answer")
+        #expect(network.submitTextInputCallCount == 0, "the old answer was re-graded as if confirmed")
     }
 
     /// WHY: the same merge with a real new answer — the driver's words count,

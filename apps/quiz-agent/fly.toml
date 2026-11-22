@@ -45,7 +45,7 @@ kill_timeout = 30
   # entertainment per language) -> Sentry alert before questions run out.
   QUESTION_STOCK_CHECK_ENABLED = "true"
   # #205: daily challenge. Off until the founder turns it on ("true").
-  DAILY_CHALLENGE_ENABLED = "false"
+  DAILY_CHALLENGE_ENABLED = "true"
   # #212 same-room multiplayer: on since 2026-10-29 for the founder's first
   # TestFlight build with it; older builds have no Spolu code at all.
   MULTIPLAYER_ENABLED = "true"

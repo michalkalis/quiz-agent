@@ -110,18 +110,55 @@ struct SoloPaceAndRewardTests {
         }, "the result did not move on 3 s after the verdict ended")
     }
 
-    /// WHY: with the sound off there is no verdict to wait for, and the
-    /// result is read instead: it keeps the Settings pause for that.
-    @Test("muted: the result keeps the Settings pause, counted at once")
-    func mutedResultKeepsTheSettingsPause() async {
+    /// WHY (founder 2026-11-22): "Read aloud" off promises the app reads
+    /// nothing, the result included. The verdict the server sent stays
+    /// unspoken, the result is read on screen instead: it keeps the Settings
+    /// pause for that, counted at once, and moves on without waiting for audio.
+    @Test("read aloud off: the result speaks no verdict, keeps the Settings pause and moves on")
+    func mutedResultSpeaksNothingAndMovesOn() async {
         let clock = TestClock()
         let rig = makeRig(clock: clock)
         rig.vm.settings.isMuted = true
         await showResult(rig, audio: spokenVerdict)
 
         await pumpUntil({ rig.vm.autoAdvanceCountdown == rig.vm.settings.autoAdvanceDelay }, "the countdown did not start at once")
+        #expect(rig.audio.playOpusCallCount == 0, "the verdict was spoken with read aloud off")
         #expect(!rig.vm.isAwaitingSpokenVerdict)
         #expect(rig.vm.autoAdvanceTotal == rig.vm.settings.autoAdvanceDelay)
+
+        await clock.advance(by: .milliseconds(rig.vm.settings.autoAdvanceDelay * 1000 - 100))
+        #expect(rig.vm.quizState.isShowingResult, "moved on before the Settings pause was over")
+        _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(2), {
+            rig.vm.currentQuestion?.id == "q_002"
+        }, "the unspoken result did not move on after its pause")
+        #expect(rig.audio.playOpusCallCount == 0, "the verdict was spoken late")
+    }
+
+    /// WHY: CarPlay plays through the same result and reads the same switch,
+    /// so read aloud off is silent in the car too (silent mode is not).
+    @Test("read aloud off in CarPlay: the result speaks no verdict")
+    func mutedCarPlayResultSpeaksNothing() async {
+        let clock = TestClock()
+        let rig = makeRig(clock: clock)
+        rig.vm.isCarPlaySceneForeground = true
+        rig.vm.settings.isMuted = true
+        await showResult(rig, audio: spokenVerdict)
+
+        await pumpUntil({ rig.vm.autoAdvanceCountdown == rig.vm.settings.autoAdvanceDelay }, "the countdown did not start at once")
+        #expect(rig.audio.playOpusCallCount == 0, "the verdict was spoken in CarPlay with read aloud off")
+        rig.vm.taskBag.cancel(.autoAdvance)
+    }
+
+    /// WHY: read aloud on is unchanged, the verdict is spoken.
+    @Test("read aloud on: the result speaks its verdict")
+    func unmutedResultSpeaksTheVerdict() async {
+        let clock = TestClock()
+        let rig = makeRig(clock: clock)
+        await showResult(rig, audio: spokenVerdict)
+
+        await pumpUntil({ rig.audio.playOpusCallCount == 1 }, "the verdict was not spoken with read aloud on")
+        await pumpUntil({ rig.vm.autoAdvanceCountdown == Config.pauseAfterSpokenVerdict }, "the short countdown never started")
+        rig.vm.taskBag.cancel(.autoAdvance)
     }
 
     /// WHY: a verdict whose download stalls must not keep the result still

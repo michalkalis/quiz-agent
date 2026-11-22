@@ -46,6 +46,8 @@ enum AppScreen: String, CaseIterable {
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
     case myPacks, myPacksLoadFailed
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
+    /// #205.8: the card promising the extra questions, and after finishing with them left.
+    case homeDailyOffer, homeDailyPlayedBonus
     case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
     /// #240.9: reading and grading in progress, a cancelled question, a guest at the end, the ranking picture.
     case roomQuestionReading, roomQuestionGrading, roomRevealCancelled, roomFinalGuest, roomRankingShareImage
@@ -78,7 +80,7 @@ private func buildTextContract(of screen: AppScreen, in language: HeroLanguage) 
     let view = await screen.make()
     let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 
-    var lines: [String] = ["# texts"]
+    var lines = ["# texts"]
     try await ViewHosting.host(view, function: "\(screen.rawValue)-\(language.rawValue)") {
         let tree = try view.inspect()
         for text in tree.findAll(ViewType.Text.self) {

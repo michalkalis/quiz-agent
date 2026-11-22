@@ -100,13 +100,13 @@ enum QuestionListenPhase: Equatable {
     }
 
     /// The commands this state actually routes, in the order the driver reads
-    /// them. `.question` routes start / repeat / skip (`VoiceCommandLexicon`), but
-    /// "start" is deliberately withheld while the question is being read — saying
+    /// them. `.question` routes answer / repeat / next (`VoiceCommandLexicon`), but
+    /// "answer" is deliberately withheld while the question is being read — saying
     /// it there opens the mic over the rest of the sentence.
     var commands: [VoiceCommand] {
         switch self {
-        case .readingQuestion: return [.repeatQuestion, .skip]
-        case .thinking: return [.start, .repeatQuestion, .skip]
+        case .readingQuestion: return [.repeatQuestion, .next]
+        case .thinking: return [.answer, .repeatQuestion, .next]
         case .listening, .evaluating, .skipping: return []
         }
     }

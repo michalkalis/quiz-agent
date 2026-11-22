@@ -100,7 +100,7 @@ struct CommandTranscriberAdapterTests {
             locale: Locale(identifier: "en_US"), language: .english
         )
         #expect(english.engineTag == "dictation")
-        #expect(english.contextualStrings?.contains("start") == true)
+        #expect(english.contextualStrings?.contains("answer") == true)
         #expect(english.contextualStrings?.contains("skip") == true)
 
         let slovak = DictationTranscriberCommandAdapter(
@@ -110,7 +110,7 @@ struct CommandTranscriberAdapterTests {
         // Real diacritics — the recognizer is biased toward the SPOKEN forms;
         // folding is the matcher's job, not the engine's.
         #expect(slovak.contextualStrings?.contains("preskoč") == true)
-        #expect(slovak.contextualStrings?.contains("štart") == true)
+        #expect(slovak.contextualStrings?.contains("odpovedz") == true)
         #expect(slovak.contextualStrings?.contains("ďalej") == true)
     }
 
@@ -166,32 +166,39 @@ struct SlovakCommandGrammarTests {
     func slovakCommandsRoute() {
         // Raw transcripts as a Slovak recognizer would render them — normalize
         // folds the diacritics before matching.
-        #expect(VoiceCommandMatcher.match(transcript: "Štart", on: .question, language: .slovak) == .start)
-        #expect(VoiceCommandMatcher.match(transcript: "Ďalšia", on: .question, language: .slovak) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "Odpovedz", on: .question, language: .slovak) == .answer)
+        #expect(VoiceCommandMatcher.match(transcript: "Odpoveď", on: .question, language: .slovak) == .answer)
+        #expect(VoiceCommandMatcher.match(transcript: "Ďalšia", on: .question, language: .slovak) == .next)
         // The old words stay as hidden synonyms (muscle memory, #224).
-        #expect(VoiceCommandMatcher.match(transcript: "Preskoč", on: .question, language: .slovak) == .skip)
-        #expect(VoiceCommandMatcher.match(transcript: "vynechaj", on: .question, language: .slovak) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "Preskoč", on: .question, language: .slovak) == .next)
+        #expect(VoiceCommandMatcher.match(transcript: "vynechaj", on: .question, language: .slovak) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "Zopakuj", on: .question, language: .slovak) == .repeatQuestion)
         #expect(VoiceCommandMatcher.match(transcript: "Ďalej", on: .noAnswer, language: .slovak) == .next)
-        #expect(VoiceCommandMatcher.match(transcript: "pokračuj", on: .noAnswer, language: .slovak) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "Znova", on: .confirmation, language: .slovak) == .again)
-        #expect(VoiceCommandMatcher.match(transcript: "potvrď", on: .confirmation, language: .slovak) == .ok)
-        #expect(VoiceCommandMatcher.match(transcript: "Stop", on: .confirmation, language: .slovak) == .stop)
-        // #185 5.3: no voice cancel — "zruš" is not a sheet command any more.
-        #expect(VoiceCommandMatcher.match(transcript: "zruš", on: .confirmation, language: .slovak) == nil)
+    }
+
+    /// WHY (founder 2026-11-22): confirm, stop, pause and home are gone, and
+    /// "štart" is no longer the answer word. On the sheet they are filler or a
+    /// new answer; "zruš" stays dead since #185 5.3 (no voice cancel).
+    @Test("removed Slovak words are no command")
+    func slovakRemovedWordsAreInert() {
+        for (word, screen) in [
+            ("potvrď", VoiceCommandScreen.confirmation), ("Stop", .confirmation), ("Pauza", .confirmation),
+            ("zruš", .confirmation), ("Štart", .question), ("Domov", .setEnd),
+        ] {
+            #expect(VoiceCommandMatcher.match(transcript: word, on: screen, language: .slovak) == nil, "'\(word)' on \(screen)")
+        }
     }
 
     @Test("precision: Slovak backchannels and particles never fire a command")
     func slovakConversationIsInert() {
         // The words a passenger conversation is MADE of — deliberately filler,
         // so a backchannel-only utterance strips to zero content tokens. "áno"
-        // must NOT confirm an answer; that is the precision-over-recall trade
-        // the Slovak set is built on (#120).
-        // #185 5.3 (founder): on the confirmation sheet "áno"/"hej" DO confirm —
-        // covered in VoiceCommandLexiconParityTests; every other screen keeps
-        // them inert.
+        // must NOT fire anything; that is the precision-over-recall trade the
+        // Slovak set is built on (#120). Founder 2026-11-22: confirm is gone,
+        // so they are inert on the answer sheet too.
         for phrase in ["áno", "dobre", "hej", "jasné", "no", "tak", "no tak", "áno áno", "dobre dobre"] {
-            for screen: VoiceCommandScreen in [.question, .noAnswer] {
+            for screen: VoiceCommandScreen in [.question, .noAnswer, .confirmation] {
                 #expect(
                     VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .slovak) == nil,
                     "'\(phrase)' must be inert on \(screen)"
@@ -212,22 +219,23 @@ struct SlovakCommandGrammarTests {
         }
     }
 
-    @Test("strict skip tolerates filler padding but not content words (Slovak)")
-    func slovakStrictSkip() {
+    @Test("strict next tolerates filler padding but not content words (Slovak)")
+    func slovakStrictNext() {
         // "no preskoč" — particle + imperative: filler strips, skip fires.
-        #expect(VoiceCommandMatcher.match(transcript: "no preskoč", on: .question, language: .slovak) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "no preskoč", on: .question, language: .slovak) == .next)
         // "preskoč túto otázku" — content words remain → NOT a skip (it burns
         // a freemium question; the utterance must BE the skip word).
         #expect(VoiceCommandMatcher.match(transcript: "preskoč túto otázku", on: .question, language: .slovak) == nil)
     }
 
-    /// WHY (#224): "ďalšia" (skip) and "ďalej" (next) share a stem. On the
-    /// question screen only skip exists, so "ďalej" must not skip there; on the
-    /// no-answer sheet both are valid and each must resolve, not collide.
-    @Test("'ďalšia' skips and 'ďalej' does not steal it, and vice versa")
-    func slovakNextVersusSkipWords() {
+    /// WHY (#224): "ďalšia" and "ďalej" share a stem. "ďalej" is the
+    /// empty-answer sheet's button word only: on the question screen it is
+    /// conversation ("go on"), and a skip there has no undo. On the sheet both
+    /// are Next and each must resolve.
+    @Test("'ďalšia' skips everywhere; 'ďalej' only on the no-answer sheet")
+    func slovakNextVersusSheetNextWords() {
         #expect(VoiceCommandMatcher.match(transcript: "ďalej", on: .question, language: .slovak) == nil)
-        #expect(VoiceCommandMatcher.match(transcript: "ďalšia", on: .noAnswer, language: .slovak) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "ďalšia", on: .noAnswer, language: .slovak) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "ďalej", on: .noAnswer, language: .slovak) == .next)
         // "dal" ("he gave") is an everyday word, not a half-heard "ďalšia".
         #expect(VoiceCommandMatcher.match(transcript: "dal", on: .question, language: .slovak) == nil)
@@ -235,33 +243,23 @@ struct SlovakCommandGrammarTests {
 
     @Test("volatile floor holds for Slovak: near-miss fires only from a final")
     func slovakVolatileFloor() {
-        // One edit on "preskoc" ("preskok" — a real Slovak noun, 'a jump').
-        // Skip is final-only anyway, so probe the floor on a benign command:
-        // "dalej" vs "dale" (one edit, 0.8): passes the 0.72 final floor,
-        // fails the 0.85 volatile floor.
+        // "dale" vs "dalej" (one edit, 0.8): a cut-off word earns the
+        // truncation credit on a final (next's floor 0.8), but a volatile is
+        // held to next's 0.85 volatile floor and edit distance alone.
         #expect(VoiceCommandMatcher.match(transcript: "dale", on: .noAnswer, isFinal: true, language: .slovak) == .next)
         #expect(VoiceCommandMatcher.match(transcript: "dale", on: .noAnswer, isFinal: false, language: .slovak) == nil)
     }
 
-    @Test("undo-abort accepts the Slovak no-word 'nie' (fail-safe direction only)")
-    func slovakCancelWords() {
-        #expect(VoiceCommandLexicon.isCancelWord("nie", language: .slovak))
-        #expect(VoiceCommandLexicon.isCancelWord("stop", language: .slovak))
-        #expect(VoiceCommandLexicon.isCancelWord("zrus", language: .slovak))
-        // …and "nie" is NOT a `.stop` variant (#185: it re-records instead).
-        #expect(!VoiceCommandLexicon.variants(for: .stop, language: .slovak).contains("nie"))
-    }
-
     @Test("driver-facing strings are language-scoped: hints and spoken words")
     func slovakDisplayStrings() {
-        #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("štart"))
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("odpovedz"))
         #expect(VoiceCommandLexicon.hint(on: .question, language: .slovak).contains("ďalšia"))
-        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .slovak) == "ďalšia")
-        #expect(VoiceCommandLexicon.spokenWord(.next, language: .slovak) == "ďalej")
+        #expect(VoiceCommandLexicon.spokenWord(.next, language: .slovak) == "ďalšia")
+        #expect(VoiceCommandLexicon.spokenWord(.answer, language: .slovak) == "odpovedz")
         // English is untouched (the default path — pinned explicitly here, and
         // implicitly by every pre-#120 test that omits the language argument).
-        #expect(VoiceCommandLexicon.hint(on: .question, language: .english) == #"Say "start" or "next""#)
-        #expect(VoiceCommandLexicon.spokenWord(.skip, language: .english) == "next")
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .english) == #"Say "answer" or "next""#)
+        #expect(VoiceCommandLexicon.spokenWord(.next, language: .english) == "next")
     }
 }
 

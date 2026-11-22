@@ -93,9 +93,6 @@ extension RecordingCoordinator {
             return
         }
 
-        // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
-        abortSkipUndoWindow()
-
         backgroundSuppressedRecordingAt = nil
         setErrorMessage(nil)
         // #186 step 1: a rejected edge (the quiz already left the question)

@@ -255,10 +255,8 @@ final class QuizSequenceRun {
         case let .command(command):
             guard isCommandWindowOpen else { return false }
             let screen = vm.voiceCommandCoordinator.currentCommandScreen
-            if command == .skip, screen == .question { noteSkipIntent() }
-            if command == .ok, screen == .confirmation, vm.showAnswerConfirmation, isSheetEmpty { noteSkipIntent() }
-            // #185: on the Again/Skip sheet "preskoč" / "ďalej" skip ("potvrď" no longer does).
-            if command == .skip || command == .next, screen == .noAnswer { noteSkipIntent() }
+            // 2026-11-22: "next" skips at once on the question and on the Again/Skip sheet.
+            if command == .next, screen == .question || screen == .noAnswer { noteSkipIntent() }
             vm.voiceCommandCoordinator.handleRecognizedCommand(command)
         case .speech(.speechStarted):
             guard silence.isAnswerCaptureActive else { return false }

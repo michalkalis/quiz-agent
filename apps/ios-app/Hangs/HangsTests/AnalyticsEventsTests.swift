@@ -39,7 +39,7 @@ private let backendClientEvents: [String: Set<String>] = [
         "trigger", "mic_open_delay_ms", "peak_db", "mic_permission",
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
-    "voice_command": ["command", "phase"],
+    "voice_command": ["command", "phase", "language", "path", "speech_end_ms"],
     "voice_command_window": ["engine", "language", "screen", "transcripts", "matched", "unmatched", "late", "cut_off", "first_transcript_ms"],
     "voice_commands_turned_on": ["source", "result"],
     "paywall_viewed": ["source"],
@@ -96,7 +96,7 @@ private let everyEvent: [AnalyticsEvent] = [
         trigger: "auto", micOpenDelayMs: 600, peakDb: -24, micPermission: "granted"
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
-    .voiceCommand(command: .next, phase: "result"),
+    .voiceCommand(command: .next, phase: "question", language: "sk", path: "final", speechEndMs: 420),
     .voiceCommandWindow(CommandWindowReport(
         engine: "dictation", language: "sk", screen: "question",
         transcripts: 3, matched: 1, unmatched: 1, late: 1, cutOff: 1, firstTranscriptMs: 900
@@ -384,7 +384,7 @@ struct QuizAnalyticsTests {
 
         vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
 
-        #expect(analytics.events(named: "voice_command") == [.voiceCommand(command: .repeatQuestion, phase: "question")])
+        #expect(analytics.events(named: "voice_command") == [.voiceCommand(command: .repeatQuestion, phase: "question", language: "en")])
         #expect(analytics.events(named: "voice_command").first?.properties["command"] == .string("repeatQuestion"))
     }
 }

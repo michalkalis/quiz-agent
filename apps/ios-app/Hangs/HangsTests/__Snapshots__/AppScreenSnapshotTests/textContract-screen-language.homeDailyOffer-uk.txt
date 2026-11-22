@@ -1,0 +1,85 @@
+# texts
+щоденний виклик · Oct 15
+П'ять питань. Однакові для всіх.
+Заверши й сьогодні грай ще 10 питання.
+Зіграй сьогодні
+Вікторина
+Вибери кілька
+All Categories
+8 питання
+All Categories
+Science & Nature
+8 питання
+Science & Nature
+History
+8 питання
+History
+Geography
+8 питання
+Geography
+Movies & Music
+8 питання
+Movies & Music
+Sports
+8 питання
+Sports
+Food & Drink
+8 питання
+Food & Drink
+Pop Culture
+8 питання
+Pop Culture
+English
+Slovenčina
+Čeština
+Мова вікторини
+Slovenčina
+Мова вікторини
+Slovenčina
+Easy
+Medium
+Hard
+Random
+Складність
+Random
+Складність
+Random
+5
+8
+10
+15
+Кількість питань
+8
+Кількість питань
+8
+Швидка вікторина
+Після «Пропусти» одразу наступне питання, без пояснення
+
+trubbo
+Налаштування
+Старт
+# identifiers
+home.daily
+home.daily.bonusOffer
+home.daily.play
+home.categories.chooseSeveral
+home.categoryDeck
+home.categoryDeck.previous
+home.categoryDeck.next
+home-language-menu
+home.language.en
+home.language.sk
+home.language.cs
+home-difficulty-menu
+home.difficulty.easy
+home.difficulty.medium
+home.difficulty.hard
+home.difficulty.random
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
+home.quickGame
+home.settings
+home.startQuiz

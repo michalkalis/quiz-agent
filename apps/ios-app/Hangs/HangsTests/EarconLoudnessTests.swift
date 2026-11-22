@@ -28,8 +28,8 @@ struct EarconLoudnessTests {
 
     nonisolated static let speechFixtures = ["speech_en_george", "speech_sk_george", "speech_cs_josef"]
 
-    private func toneLoudness() -> Double {
-        let data = EarconTone.wavData(for: .micLive)
+    private func toneLoudness(_ earcon: Earcon = .micLive) -> Double {
+        let data = EarconTone.wavData(for: earcon)
         let samples: [Float] = stride(from: 44, to: data.count, by: 2).map { offset in
             Float(Int16(bitPattern: UInt16(data[offset]) | UInt16(data[offset + 1]) << 8)) / Float(Int16.max)
         }
@@ -60,5 +60,19 @@ struct EarconLoudnessTests {
     func toneStaysAudible(_ fixture: String) throws {
         let speech = try speechLoudness(fixture)
         #expect(toneLoudness() > speech - 20, "the tone would vanish under road noise")
+    }
+
+    /// WHY (founder 2026-11-22, decision 4): a recognised command answers with
+    /// one quiet, very short tick. It confirms a word the player just said, so
+    /// it must sit under the mic tone (which asks them to start talking) and
+    /// be over before the action it confirms is heard.
+    @Test("The command tick is quieter and much shorter than the mic-live tone")
+    func tickSitsUnderMicTone() {
+        #expect(Earcon.commandAck.hasTone)
+        #expect(toneLoudness(.commandAck) <= toneLoudness(.micLive) - 3, "the tick must be quieter than the mic tone")
+        let tickSecs = EarconTone.segments(for: .commandAck).map(\.duration).reduce(0, +)
+        let micSecs = EarconTone.segments(for: .micLive).map(\.duration).reduce(0, +)
+        #expect(tickSecs > 0 && tickSecs <= 0.05, "a tick, not a beep: \(tickSecs) s")
+        #expect(tickSecs < micSecs / 2)
     }
 }

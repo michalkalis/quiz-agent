@@ -259,7 +259,6 @@ final class RecordingCoordinator: ObservableObject {
     /// #185 5.2: bring the command window up and report whether the listener
     /// is live — the auto-confirm countdown waits for it.
     let armCommandWindow: @MainActor () async -> Bool
-    let abortSkipUndoWindow: @MainActor () -> Void
     let startAutoConfirmIfEnabled: @MainActor () -> Void
     let cancelAutoConfirm: @MainActor () -> Void
     /// #171 Track D: drop the quiz-level pause. Leaving the sheet by ANY
@@ -342,7 +341,6 @@ final class RecordingCoordinator: ObservableObject {
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
         refreshCommandWindow: @escaping @MainActor () -> Void,
         armCommandWindow: @escaping @MainActor () async -> Bool,
-        abortSkipUndoWindow: @escaping @MainActor () -> Void,
         startAutoConfirmIfEnabled: @escaping @MainActor () -> Void,
         cancelAutoConfirm: @escaping @MainActor () -> Void,
         clearPause: @escaping @MainActor () -> Void,
@@ -388,7 +386,6 @@ final class RecordingCoordinator: ObservableObject {
         self.emitEarcon = emitEarcon
         self.refreshCommandWindow = refreshCommandWindow
         self.armCommandWindow = armCommandWindow
-        self.abortSkipUndoWindow = abortSkipUndoWindow
         self.startAutoConfirmIfEnabled = startAutoConfirmIfEnabled
         self.cancelAutoConfirm = cancelAutoConfirm
         self.clearPause = clearPause

@@ -387,7 +387,7 @@
         ///   flight from now on, as with `--ui-test-network-hold` (RS-16)
         /// - `hangs-test://network/release` → the calls held since launch
         ///   (`--ui-test-network-hold`) answer (#235.5)
-        /// - `hangs-test://command/send?text=start` → registered command sink("start"),
+        /// - `hangs-test://command/send?text=next` → registered command sink("next"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
         /// Returns `false` when the request was NOT actually handled (unknown

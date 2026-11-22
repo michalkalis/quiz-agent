@@ -92,6 +92,10 @@ struct DailyRoundEndView: View {
                     if let bestHit = content.bestHit {
                         bestHitCard(bestHit)
                     }
+                    if let left = daily.bonusLeft {
+                        DailyBonusLeftLine(left: left)
+                            .accessibilityIdentifier("daily.bonusLeft")
+                    }
                     DailyCrewCard(
                         model: crew,
                         playerName: playerName,

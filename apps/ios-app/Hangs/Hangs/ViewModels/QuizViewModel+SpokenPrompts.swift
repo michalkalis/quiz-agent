@@ -6,10 +6,10 @@
 //  moments where the quiz used to go silent and wait for a tap. Each says ONE
 //  short line in the quiz language, and no extra tone: "radšej menej zvukov".
 //
-//  - G1: the error screen says what happened and listens for "znova" / "stop".
+//  - G1: the error screen says what happened and listens for "znova".
 //  - G2: the free questions ran out: one line, then the paywall.
 //  - G3: the per-question flow's set end says the score and listens for
-//    "znova" / "domov". The end-of-set recap already narrates itself.
+//    "znova". The end-of-set recap already narrates itself.
 //  - G4: "hear it" on the result reads the explanation, not the verdict again.
 //
 //  Lines are synthesized by the backend's generic TTS, like the retry prompt.
@@ -37,7 +37,7 @@ extension QuizViewModel {
 
     private func errorPromptText(canRetry: Bool) -> String {
         SpokenPrompt.errorLine(
-            commands: spokenCommands(canRetry ? [.again, .stop] : [.stop]),
+            commands: spokenCommands(canRetry ? [.again] : []),
             language: promptLanguage
         )
     }
@@ -123,7 +123,7 @@ extension QuizViewModel {
         let text = SpokenPrompt.setFinishedLine(
             correct: sessionCorrectCount,
             total: currentSession?.maxQuestions ?? settings.numberOfQuestions,
-            commands: spokenCommands([.again, .home]),
+            commands: spokenCommands([.again]),
             language: promptLanguage
         )
         taskBag.add(Task { [weak self] in

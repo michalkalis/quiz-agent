@@ -1029,7 +1029,7 @@ actor NetworkService: NetworkServiceProtocol {
             request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
         }
         request.setValue(Self.clientCapabilities, forHTTPHeaderField: "X-Client-Capabilities")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["date": date, "language": language])
+        request.httpBody = try Self.dailyStartBody(date: date, language: language)
 
         let data = try await performRequestData(request, endpointPath: "/api/v1/daily-challenge/start")
         return try await MainActor.run {
@@ -1037,6 +1037,16 @@ actor NetworkService: NetworkServiceProtocol {
             decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(DailyStartResult.self, from: data)
         }
+    }
+
+    /// #205.8: the device's offset from UTC rides along, so the server knows
+    /// where the player's day ends (the extra questions expire then).
+    nonisolated static func dailyStartBody(date: String, language: String, timeZone: TimeZone = .current) throws -> Data {
+        try JSONSerialization.data(withJSONObject: [
+            "date": date,
+            "language": language,
+            "utc_offset_minutes": timeZone.secondsFromGMT() / 60,
+        ] as [String: Any])
     }
 
     // MARK: - Helper Methods

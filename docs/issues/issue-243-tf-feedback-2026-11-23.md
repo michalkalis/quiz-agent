@@ -51,6 +51,6 @@ Poznámka: posúva to rozhodnutie z 10-06 „minimum zvukov“. Founder teraz v�
 
 ## Postup (návrh)
 
-1. **Stavový diagram appky** (founder ho výslovne chce pred rozhodnutím o hlasovej navigácii): Home → kvíz (čítanie, premýšľanie, odpoveď, potvrdenie, výsledok otázky) → koniec kvízu → ďalšie kroky; pri každom stave čo appka povie, čo počúva, aké tlačidlá. Vizuálne, cez `/decide`, s návrhom hlasových výziev sk/cs/en.
+1. **Stavový diagram appky** — HOTOVÉ 2026-11-23: rozhodovacia stránka `/decide` (dnes vs. návrh, poznámky, rešerš, 6 otázok: ohlásenie fáz, ticho, potvrdenie, výsledok, koniec kvízu, predvoľby časov); čaká na odpovede foundera. Rešerš: [hlasová navigácia v iných appkách](../research/voice-navigation-patterns-2026-11-23.md).
 2. Opraviť chyby, ktoré nečakajú na rozhodnutie (označené **chyba** nižšie), samostatnými PR.
 3. Po rozhodnutí foundera: hlasové výzvy stavov, výsledková obrazovka, predvoľby časov, skrátenie vysvetlení.

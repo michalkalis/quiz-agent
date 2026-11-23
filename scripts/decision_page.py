@@ -19,6 +19,13 @@ Spec (every text field accepts markdown; only `title` and `questions` are requir
       "done": ["what now works", "..."],            # optional, short
       "how": ["how it works now, plain words"],     # optional: technical direction, no detail
       "risks": ["what players could feel"],         # optional: product/UX impact only
+      "sections": [{                                 # optional: free content before the questions
+        "title": "Stavový diagram",
+        "body": "markdown",
+        "html": "<svg>…</svg>",                      # inline (diagrams, tables); trusted agent content
+        "collapsed": false                           # true = folded <details>
+      }],
+      "head": "<script src=…></script>",            # optional: extra <head> markup (e.g. a diagram lib)
       "questions": [{
         "id": "entry",                               # stable key, echoed in the answers
         "title": "Kde má byť vstup do režimu?",
@@ -107,6 +114,12 @@ button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:.65rem 1
 background:var(--accent);color:#0b1220;cursor:pointer}
 button.done{background:var(--ok)}
 #out{margin-top:1rem;display:none;font:13px/1.5 ui-monospace,Menlo,monospace}
+section.sec{margin-top:2.4rem;border-top:1px solid var(--border);padding-top:1.4rem}
+section.sec>h2,section.sec>details>summary{font-size:1.25rem;margin:0 0 .5rem;font-weight:700;cursor:pointer}
+section.sec .body{max-width:80ch}
+section.sec table{border-collapse:collapse;width:100%;font-size:.9rem;margin:.6rem 0}
+section.sec th,section.sec td{border:1px solid var(--border);padding:.4rem .55rem;vertical-align:top;text-align:left}
+section.sec th{background:var(--panel);color:var(--dim);font-weight:600}
 #zoom{position:fixed;inset:0;background:#000d;display:none;place-items:center;cursor:zoom-out;z-index:9}
 #zoom img{max-width:96vw;max-height:96vh}
 """
@@ -173,12 +186,13 @@ zoom.addEventListener('click', () => { zoom.style.display = 'none'; });
 PAGE = """<!doctype html>
 <html lang="sk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{session} · {title}</title><style>{css}</style></head>
+<title>{session} · {title}</title><style>{css}</style>{head}</head>
 <body><main>
 <span class="session">Session: {session}</span>
 <h1>{title}</h1>
 <div class="summary">{summary}</div>
 <div class="cols">{boxes}</div>
+{sections}
 <form id="f" onsubmit="return false">
 {questions}
 <section class="q"><h2>Ešte niečo?</h2>
@@ -273,6 +287,14 @@ def question(index: int, q: dict, base: Path) -> str:
     )
 
 
+def section(sec: dict) -> str:
+    inner = f'<div class="body">{md(sec.get("body", ""))}</div>{sec.get("html", "")}'
+    title = html.escape(sec["title"])
+    if sec.get("collapsed"):
+        return f'<section class="sec"><details><summary>{title}</summary>{inner}</details></section>'
+    return f'<section class="sec"><h2>{title}</h2>{inner}</section>'
+
+
 def box(heading: str, items: list[str]) -> str:
     if not items:
         return ""
@@ -316,6 +338,8 @@ def main() -> None:
         session=html.escape(session),
         title=html.escape(spec["title"]),
         css=CSS,
+        head=spec.get("head", ""),
+        sections="\n".join(section(sec) for sec in spec.get("sections", [])),
         summary=md(spec.get("summary", "")),
         boxes=box("Čo je hotové", spec.get("done", []))
         + box("Ako to funguje", spec.get("how", []))

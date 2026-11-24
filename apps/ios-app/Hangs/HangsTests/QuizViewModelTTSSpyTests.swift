@@ -73,14 +73,15 @@ struct QuizViewModelTTSSpyTests {
         // with the countdown running (the founder's TF report), so the attempt
         // count is 2, not 1.
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q1.mp3")
-        #expect(mockAudio.playOpusCallCount == 2, "a silent question must be retried once before we give up")
+        // #243.3: the think window's spoken line also reaches the player; only question reads count here.
+        #expect(mockAudio.nonPhasePlayCount == 2, "a silent question must be retried once before we give up")
         #expect(viewModel.quizState == .askingQuestion)
         viewModel.quizTimersController.cancelThinkingTime()
 
         // Next question: TTS is attempted again (it is not disabled by a prior fail).
         viewModel.quizState = .askingQuestion
         await viewModel.audioDeviceState.playQuestionAudio(from: "https://example.com/q2.mp3")
-        #expect(mockAudio.playOpusCallCount == 4)
+        #expect(mockAudio.nonPhasePlayCount == 4)
         viewModel.quizTimersController.cancelThinkingTime()
     }
 

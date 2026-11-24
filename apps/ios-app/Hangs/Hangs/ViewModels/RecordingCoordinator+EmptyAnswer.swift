@@ -254,16 +254,20 @@ extension RecordingCoordinator {
     /// keeps it shut until play). Shares the retry prompt's latch, so a tap
     /// or a teardown stops it like that line.
     private func offerNoAnswerChoices(owner: AttemptID) {
-        guard !isMuted(), !isSilentMode(), !isPaused(),
-              let audio = PhasePrompt.noAnswerOffer.audio(language: promptLanguage)
-        else {
+        guard !isMuted(), !isSilentMode(), !isPaused() else {
+            refreshCommandWindow()
+            return
+        }
+        // Long the first times a player hears it, short after (counted here).
+        let offer = takeNoAnswerOffer()
+        guard let audio = offer.audio(language: promptLanguage) else {
             refreshCommandWindow()
             return
         }
         stopSilenceDetectionListening()
         isSpeakingRetryPrompt = true
         setPlayingAnswerReadBack(true)
-        attemptLedger.record(.prompt, "phase", PhasePrompt.noAnswerOffer.resourceName)
+        attemptLedger.record(.prompt, "phase", offer.resourceName)
         let task = Task { [weak self] in
             guard let self else { return }
             do {

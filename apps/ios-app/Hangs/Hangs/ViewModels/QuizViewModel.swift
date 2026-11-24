@@ -1248,7 +1248,11 @@ final class QuizViewModel: ObservableObject {
             answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() },
             isVoiceAllowanceSpent: { [weak self] in self?.isVoiceAllowanceSpent ?? false },
             voiceAllowanceSpent: { [weak self] in self?.noteVoiceAllowanceSpent($0) },
-            isSilentMode: { [weak self] in self?.isSilentMode ?? false }
+            isSilentMode: { [weak self] in self?.isSilentMode ?? false },
+            takeNoAnswerOffer: { [persistenceStore] in
+                defer { persistenceStore.incrementNoAnswerOfferHeardCount() }
+                return PhasePrompt.noAnswerOffer(heardCount: persistenceStore.noAnswerOfferHeardCount)
+            }
         )
     }
 

@@ -77,13 +77,20 @@ PHASE_PROMPTS: dict[str, dict[str, str]] = {
         "en": "Answer.",
         "uk": "Відповідай.",
     },
-    # The offer names the exact command words (copy rule 4): "zopakuj
-    # (otázku)", "znova", "ďalšia".
+    # The second silence (#243.4, founder 2026-11-24): the offer names the
+    # exact command words, the long line the first times a player hears it
+    # (iOS counts), the short one after.
     "no-answer-offer": {
-        "sk": "Zopakuj otázku, znova, alebo ďalšia?",
-        "cs": "Zopakuj otázku, znovu, nebo další?",
-        "en": "Repeat the question, again, or next?",
-        "uk": "Повтори питання, знову чи наступне?",
+        "sk": "Nepočujem odpoveď. Povedz: zopakuj, a prečítam otázku. Povedz: znova, a môžeš odpovedať. Alebo povedz: ďalšia.",
+        "cs": "Neslyším odpověď. Řekni: zopakuj, a přečtu otázku. Řekni: znovu, a můžeš odpovědět. Nebo řekni: další.",
+        "en": "I can't hear an answer. Say: repeat, and I'll read the question. Say: again, and you can answer. Or say: next.",
+        "uk": "Не чую відповіді. Скажи: повтори, і я прочитаю питання. Скажи: ще раз, і зможеш відповісти. Або скажи: пропусти.",
+    },
+    "no-answer-offer-short": {
+        "sk": "Nepočujem odpoveď. Povedz: zopakuj. Znova. Alebo ďalšia.",
+        "cs": "Neslyším odpověď. Řekni: zopakuj. Znovu. Nebo další.",
+        "en": "I can't hear an answer. Say: repeat. Again. Or next.",
+        "uk": "Не чую відповіді. Скажи: повтори. Ще раз. Або пропусти.",
     },
 }
 
@@ -103,6 +110,7 @@ VOICE_SETTINGS = {
     "think-30": CALM,
     "think-more": CALM,
     "no-answer-offer": CALM,
+    "no-answer-offer-short": CALM,
     "answer": SLOWER,
 }
 

@@ -266,6 +266,12 @@ import os
         var holdsPlaybackUntilStopped = false
         private var stoppableClip: CheckedContinuation<Bool, Never>?
 
+        /// #243.4: the held clip plays to its end (its caller returns normally).
+        func finishHeldClip() {
+            stoppableClip?.resume(returning: true)
+            stoppableClip = nil
+        }
+
         private(set) var isPlaybackPaused = false
         private var heldClip: CheckedContinuation<Bool, Never>?
 

@@ -329,6 +329,9 @@ final class RecordingCoordinator: ObservableObject {
     let voiceAllowanceSpent: @MainActor (VoiceLimitError?) -> Void
     /// Silent mode (founder 2026-11-22): the mic never opens.
     let isSilentMode: @MainActor () -> Bool
+    /// #243.4: the no-answer offer to play now — long the first times a player
+    /// hears it, short after — counted as heard by this call.
+    let takeNoAnswerOffer: @MainActor () -> PhasePrompt
 
     init(
         audioService: AudioServiceProtocol,
@@ -375,7 +378,8 @@ final class RecordingCoordinator: ObservableObject {
         answerRecordingDecided: @escaping @MainActor () -> Void = {},
         isVoiceAllowanceSpent: @escaping @MainActor () -> Bool = { false },
         voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in },
-        isSilentMode: @escaping @MainActor () -> Bool = { false }
+        isSilentMode: @escaping @MainActor () -> Bool = { false },
+        takeNoAnswerOffer: @escaping @MainActor () -> PhasePrompt = { .noAnswerOffer }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -422,6 +426,7 @@ final class RecordingCoordinator: ObservableObject {
         self.isVoiceAllowanceSpent = isVoiceAllowanceSpent
         self.voiceAllowanceSpent = voiceAllowanceSpent
         self.isSilentMode = isSilentMode
+        self.takeNoAnswerOffer = takeNoAnswerOffer
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

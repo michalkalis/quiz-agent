@@ -110,6 +110,14 @@ protocol PersistenceStoreProtocol: Sendable {
     var voiceLimitNoticeMonth: String? { get }
 
     func setVoiceLimitNoticeMonth(_ resetsAt: String)
+
+    // MARK: - No-answer offer (#243.4)
+
+    /// How many times the player has heard the spoken no-answer offer, across
+    /// quizzes: the long line the first times, the short one after.
+    var noAnswerOfferHeardCount: Int { get }
+
+    func incrementNoAnswerOfferHeardCount()
 }
 
 /// Unified UserDefaults-based persistence storage.
@@ -134,6 +142,7 @@ final class PersistenceStore: PersistenceStoreProtocol {
     private let familySettingsKey = "family_settings"
     private let extraCategoriesKey = "extra_categories"
     private let voiceLimitNoticeKey = "voice_limit_notice_month"
+    private let noAnswerOfferCountKey = "no_answer_offer_heard_count"
 
     /// How many library question ids the history keeps (#200, founder
     /// 2026-10-12). Only an exclusion list: older ids may come back, which is
@@ -401,6 +410,16 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     func setVoiceLimitNoticeMonth(_ resetsAt: String) {
         userDefaults.set(resetsAt, forKey: voiceLimitNoticeKey)
+    }
+
+    // MARK: - No-answer offer (#243.4)
+
+    var noAnswerOfferHeardCount: Int {
+        userDefaults.integer(forKey: noAnswerOfferCountKey)
+    }
+
+    func incrementNoAnswerOfferHeardCount() {
+        userDefaults.set(noAnswerOfferHeardCount + 1, forKey: noAnswerOfferCountKey)
     }
 }
 

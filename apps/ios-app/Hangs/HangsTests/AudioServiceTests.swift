@@ -186,6 +186,35 @@ struct PlaybackStallVerdictTests {
     }
 }
 
+// MARK: - Recording settle after a spoken line (#243.4)
+
+/// TF drive 2026-11-23: the phone mic recorded the tail of the app's own
+/// retry hint as the answer ("…skús to znova. Parmezán."). The app already
+/// waits for the clip's end, but AVPlayer reports the end when its last
+/// sample left the app; a Bluetooth car keeps sounding the route's output
+/// latency after that. The recording settle must cover that tail.
+@Suite("Recording settle after playback")
+struct RecordingSettleTests {
+    @Test("no clip just played → the plain hardware settle")
+    func noRecentClip() {
+        #expect(AudioService.recordingSettle(sincePlaybackEnded: nil, outputLatency: 0.4) == .milliseconds(200))
+    }
+
+    @Test("a clip just ended on a slow route → wait out the route's tail")
+    func slowRouteTail() {
+        // 400 ms of output latency, the clip ended 50 ms ago: the speakers still
+        // play its last ~350 ms, plus the margin.
+        let settle = AudioService.recordingSettle(sincePlaybackEnded: .milliseconds(50), outputLatency: 0.4)
+        #expect(settle == .milliseconds(400) + AudioService.playbackDrainMargin - .milliseconds(50))
+        #expect(settle > .milliseconds(200), "the mic would open under the hint's tail")
+    }
+
+    @Test("the tail already played out → no extra wait beyond the hardware settle")
+    func tailAlreadyOver() {
+        #expect(AudioService.recordingSettle(sincePlaybackEnded: .seconds(2), outputLatency: 0.4) == .milliseconds(200))
+    }
+}
+
 // MARK: - Audio Session Category Options (#104 founder decision)
 
 //

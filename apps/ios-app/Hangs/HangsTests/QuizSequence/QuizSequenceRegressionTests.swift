@@ -133,14 +133,16 @@ struct QuizSequenceRegressionTests {
         // mic; auto-record is always on now, so a 30 s think window replays it.
         // #243.4: question 1 was skipped from the second-miss sheet; a silent
         // window now goes back to thinking, so it is skipped by the Skip tap —
-        // the prelude only has to get question 2 on screen.
+        // the prelude only has to get question 2 on screen. The mic tap moved
+        // 3 s later: the speech at 01:12.9 used to land in the spoken retry's
+        // recording, which a silent window no longer opens.
         let dump = """
         # quiz-sequence seed=186115 questions=4 mcq=4 thinking=30 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:32.242 tap mute attempt=q_001#1 state=askingQuestion
         00:00:52.891 tap skip attempt=q_001#3 state=askingQuestion
         00:01:00.605 network quizResponse attempt=q_001#4 state=skipping correct
-        00:01:06.533 tap mic attempt=q_002#5 state=askingQuestion
+        00:01:09.533 tap mic attempt=q_002#5 state=askingQuestion
         00:01:12.919 speech vad.speechStarted attempt=q_002#7 state=recording
         00:01:14.234 speech vad.silenceAfterSpeech attempt=q_002#7 state=recording
         00:01:18.489 network voiceSubmit.transcript attempt=q_002#7 state=processing

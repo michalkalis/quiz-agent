@@ -24,7 +24,10 @@ import ViewInspector
 struct SilenceBackToThinkingTests {
     private static let questionURL = "https://example.com/q_001.mp3"
 
-    private func makeVM(clock: TestClock<Duration>) -> (QuizViewModel, MockSilenceDetectionService, MockNetworkService, MockAudioService) {
+    private func makeVM(
+        clock: TestClock<Duration>,
+        store: PersistenceStoreProtocol = MockPersistenceStore()
+    ) -> (QuizViewModel, MockSilenceDetectionService, MockNetworkService, MockAudioService) {
         let silence = MockSilenceDetectionService()
         let audio = MockAudioService()
         audio.playbackDurationNs = 0
@@ -32,7 +35,7 @@ struct SilenceBackToThinkingTests {
         let vm = QuizViewModel(
             networkService: network,
             audioService: audio,
-            persistenceStore: MockPersistenceStore(),
+            persistenceStore: store,
             silenceDetectionService: silence,
             clock: AnyClock(clock)
         )
@@ -133,6 +136,31 @@ struct SilenceBackToThinkingTests {
         #expect(!audio.playedData.contains(clip(.thinkMore) ?? Data()), "a heard miss went back to thinking")
     }
 
+    /// WHY (TF drive 2026-11-23): the phone mic recorded the tail of the
+    /// app's own hint as the answer ("…skús to znova. Parmezán."). The retry
+    /// recording may open only once the hint has played to its end.
+    @Test("heard miss: the retry mic opens only after the hint has finished playing")
+    func retryWaitsForHintToEnd() async {
+        let clock = TestClock()
+        let (vm, silence, network, audio) = makeVM(clock: clock)
+        network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
+        audio.holdsPlaybackUntilStopped = true
+
+        await missAnswer(vm, silence, heard: true)
+        await pumpUntil({ audio.isPlaying && vm.recordingCoordinator.isSpeakingRetryPrompt }, "the hint never played")
+        let prepares = audio.prepareForRecordingCallCount
+        await clock.advance(by: .seconds(30))
+        for _ in 0 ..< 30 {
+            await Task.yield()
+        }
+        #expect(vm.quizState == .askingQuestion, "the retry recording started under the hint")
+        #expect(silence.isAnswerCaptureActive == false)
+        #expect(audio.prepareForRecordingCallCount == prepares)
+
+        audio.finishHeldClip()
+        await pumpUntil({ vm.quizState == .recording && silence.isAnswerCaptureActive }, "no retry after the hint ended")
+    }
+
     /// WHY: an MCQ answer naming no option was heard by the server whatever
     /// the voice detector said; it keeps its own line and the retry.
     @Test("an MCQ answer matching no option keeps its line even without detected speech")
@@ -168,6 +196,35 @@ struct SilenceBackToThinkingTests {
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .noAnswer)
         #expect(vm.noAnswerCaptured && vm.showAnswerConfirmation)
         #expect(vm.taskBag.contains(.autoConfirm) == false, "the sheet waits for the player")
+    }
+
+    /// WHY (founder 2026-11-24): the long offer explains the three words the
+    /// first two times a player ever hears it — across quizzes — then the
+    /// short one is enough.
+    @Test("the long offer plays the first two times across quizzes, then the short one")
+    func longOfferThenShort() async throws {
+        let suite = "test.NoAnswerOffer.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var heard: [Data?] = []
+        for _ in 0 ..< 3 { // a fresh view model per quiz, one store on disk
+            let (vm, _, _, audio) = makeVM(clock: TestClock(), store: PersistenceStore(userDefaults: defaults))
+            await openNoAnswerSheet(vm)
+            heard.append(audio.lastPlayedData)
+        }
+        #expect(heard == [clip(.noAnswerOffer), clip(.noAnswerOffer), clip(.noAnswerOfferShort)])
+        #expect(PersistenceStore(userDefaults: defaults).noAnswerOfferHeardCount == 3, "the count is not kept")
+    }
+
+    /// WHY: an offer read-aloud kept silent was never heard — it must not use
+    /// up one of the long explanations.
+    @Test("a muted offer does not count as heard")
+    func mutedOfferNotCounted() async {
+        let store = MockPersistenceStore()
+        let (vm, _, _, _) = makeVM(clock: TestClock(), store: store)
+        vm.settings.isMuted = true
+        await openNoAnswerSheet(vm)
+        #expect(store.noAnswerOfferHeardCount == 0)
     }
 
     /// WHY: read-aloud off says nothing, and the sheet must still listen.
@@ -285,6 +342,8 @@ struct SilenceBackToThinkingTests {
         )
         vm.startRecordingOrTimer()
         await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "no think window")
+        // The window opens once the think line has been said.
+        await pumpUntil({ vm.voiceCommandCoordinator.currentCommandScreen == .question }, "the question never listened")
 
         await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
 

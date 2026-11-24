@@ -36,7 +36,7 @@ struct PhasePromptTests {
 
     private static let allPrompts: [PhasePrompt] =
         PhasePrompt.spokenThinkSeconds.sorted().map { .think(seconds: $0) }
-            + [.think(seconds: nil), .thinkMore, .answer, .noAnswerOffer]
+            + [.think(seconds: nil), .thinkMore, .answer, .noAnswerOffer, .noAnswerOfferShort]
 
     /// WHY: the lines must play at once and without signal, in the app voice.
     /// A clip missing for one language would leave that quiz silent exactly
@@ -149,7 +149,7 @@ extension MockAudioService {
     /// "Answer."), e.g. how often the question itself was read.
     var nonPhasePlayCount: Int {
         let lines = Set(CommandLanguage.allCases.flatMap { language in
-            [PhasePrompt.think(seconds: nil), .answer, .thinkMore, .noAnswerOffer]
+            [PhasePrompt.think(seconds: nil), .answer, .thinkMore, .noAnswerOffer, .noAnswerOfferShort]
                 .map { $0.audio(language: language) }
                 + PhasePrompt.spokenThinkSeconds.map { PhasePrompt.think(seconds: $0).audio(language: language) }
         }.compactMap(\.self))

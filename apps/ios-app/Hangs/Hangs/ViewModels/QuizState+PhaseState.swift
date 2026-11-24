@@ -25,6 +25,10 @@ struct RecordingState {
     /// the empty-answer funnel tells silence from a misunderstanding by it.
     var stoppedRecordingHeardSpeech: Bool = false
 
+    /// #243.4: the app line spoken right before this recording opened the mic
+    /// — its words in front of the transcript are the app's echo.
+    var recordingEchoLine: String?
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
@@ -67,6 +71,10 @@ struct RecordingState {
     /// instead of "Think." — set when an answer window heard nothing.
     var thinkMoreQuestionKey: String?
 
+    /// #243.4: the last app line spoken on a question (`questionId ?? ""`),
+    /// taken by the next recording as its `recordingEchoLine`.
+    var lastSpokenLine: (questionKey: String, text: String)?
+
     /// #204.2: the transcripts the player rejected on the current question —
     /// sent with the next upload. Question-scoped for the same reason: the
     /// re-record leaves the recording/processing pair before its upload.
@@ -76,6 +84,7 @@ struct RecordingState {
     mutating func resetCaptureState() {
         speechDetectedDuringAutoRecord = false
         stoppedRecordingHeardSpeech = false
+        recordingEchoLine = nil
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
         emptyAnswerRetryHintQuestionKey = nil

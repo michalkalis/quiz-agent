@@ -55,6 +55,31 @@ enum PhasePrompt: Equatable, Sendable {
         }
     }
 
+    /// What the clip says — the lines the echo guard looks for in front of an
+    /// answer (#243.4). Same texts as `scripts/generate_phase_prompts.py`
+    /// (`SpokenLineEchoTests` compares them); the think lines are not needed.
+    func text(language: CommandLanguage) -> String {
+        switch (self, language) {
+        case (.answer, .slovak): "Odpovedaj."
+        case (.answer, .czech): "Odpovídej."
+        case (.answer, .english): "Answer."
+        case (.answer, .ukrainian): "Відповідай."
+        case (.noAnswerOffer, .slovak):
+            "Nepočujem odpoveď. Povedz: zopakuj, a prečítam otázku. Povedz: znova, a môžeš odpovedať. Alebo povedz: ďalšia."
+        case (.noAnswerOffer, .czech):
+            "Neslyším odpověď. Řekni: zopakuj, a přečtu otázku. Řekni: znovu, a můžeš odpovědět. Nebo řekni: další."
+        case (.noAnswerOffer, .english):
+            "I can't hear an answer. Say: repeat, and I'll read the question. Say: again, and you can answer. Or say: next."
+        case (.noAnswerOffer, .ukrainian):
+            "Не чую відповіді. Скажи: повтори, і я прочитаю питання. Скажи: ще раз, і зможеш відповісти. Або скажи: пропусти."
+        case (.noAnswerOfferShort, .slovak): "Nepočujem odpoveď. Povedz: zopakuj. Znova. Alebo ďalšia."
+        case (.noAnswerOfferShort, .czech): "Neslyším odpověď. Řekni: zopakuj. Znovu. Nebo další."
+        case (.noAnswerOfferShort, .english): "I can't hear an answer. Say: repeat. Again. Or next."
+        case (.noAnswerOfferShort, .ukrainian): "Не чую відповіді. Скажи: повтори. Ще раз. Або пропусти."
+        case (.think, _), (.thinkMore, _): ""
+        }
+    }
+
     /// The clip in `language`, or nil when the bundle lacks it (the phase
     /// then starts without a line rather than waiting on a network voice).
     func audio(language: CommandLanguage, bundle: Bundle = .main) -> Data? {

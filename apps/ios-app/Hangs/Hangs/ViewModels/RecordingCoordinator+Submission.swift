@@ -256,6 +256,7 @@ extension RecordingCoordinator {
                     // #185 5.1: a new answer spoken on the sheet may turn out
                     // to be a command word the on-device recognizer missed.
                     if self.resolveSpokenReplacement(evaluation.userAnswer) { return }
+                    if self.handleSpokenLineEcho(in: evaluation.userAnswer, owner: owner) { return }
                     self.pendingResponse = response
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.

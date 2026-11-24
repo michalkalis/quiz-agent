@@ -36,7 +36,7 @@ struct QuizSequenceRegressionTests {
         let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
 
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
-        #expect(outcome.run.vm.recapEntries.first?.userAnswerDisplay == "answer 1",
+        #expect(outcome.run.vm.recapEntries.first?.userAnswerDisplay == "reply 1",
                 "the countdown must still confirm the heard answer")
         #expect(outcome.run.vm.isPlayingAnswerReadBack == false, "a latched read-back keeps voice commands off")
     }

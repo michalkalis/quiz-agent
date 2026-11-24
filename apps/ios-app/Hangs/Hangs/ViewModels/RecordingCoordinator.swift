@@ -87,6 +87,26 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
     }
 
+    /// See `RecordingState.recordingEchoLine` (#243.4).
+    var recordingEchoLine: String? {
+        get { recordingState.recordingEchoLine }
+        set { recordingState.recordingEchoLine = newValue }
+    }
+
+    /// #243.4: the app just said `text` on the open question — the next
+    /// recording strips it from the front of its transcript.
+    func noteSpokenLine(_ text: String) {
+        guard !text.isEmpty else { return }
+        recordingState.lastSpokenLine = (currentQuestion()?.id ?? "", text)
+    }
+
+    /// The line said right before this recording on this question, once.
+    func takeLastSpokenLine() -> String? {
+        defer { recordingState.lastSpokenLine = nil }
+        guard let line = recordingState.lastSpokenLine, line.questionKey == (currentQuestion()?.id ?? "") else { return nil }
+        return line.text
+    }
+
     /// See `RecordingState.thinkMoreQuestionKey` (#243.4).
     var thinkMoreQuestionKey: String? {
         get { recordingState.thinkMoreQuestionKey }

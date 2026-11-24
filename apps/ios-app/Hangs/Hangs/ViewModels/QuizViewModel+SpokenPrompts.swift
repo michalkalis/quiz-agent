@@ -275,6 +275,7 @@ extension QuizViewModel {
             return
         }
         attemptLedger.record(.prompt, "phase", prompt.resourceName)
+        recordingCoordinator.noteSpokenLine(prompt.text(language: promptLanguage)) // #243.4 echo guard
         await audioDeviceState.playAppSpeech(audio)
     }
 

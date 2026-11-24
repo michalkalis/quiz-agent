@@ -154,6 +154,7 @@ extension RecordingCoordinator {
         attemptLedger.record(.prompt, "emptyAnswer.retry", prompt.rawValue)
 
         let text = prompt.text(language: promptLanguage)
+        if speaks { noteSpokenLine(text) }
         let task = Task { [weak self] in
             guard let self else { return }
             if speaks { await self.speakRetryPrompt(text) }
@@ -268,6 +269,7 @@ extension RecordingCoordinator {
         isSpeakingRetryPrompt = true
         setPlayingAnswerReadBack(true)
         attemptLedger.record(.prompt, "phase", offer.resourceName)
+        noteSpokenLine(offer.text(language: promptLanguage))
         let task = Task { [weak self] in
             guard let self else { return }
             do {

@@ -137,16 +137,28 @@ extension QuizViewModel {
     /// sheet are left as they are. A pause the player chose stays theirs.
     /// TF build 90 (founder): the "End Quiz?" alert holds the question the
     /// same way; its countdown ran on behind the dialog.
+    /// #243.13 (founder TF 2026-11-22): the result's ✕ does the same — its
+    /// auto-advance ran on behind "End Quiz?" and could leave the screen.
     func holdQuestionForModal() {
-        guard !isPaused, quizState == .askingQuestion else { return }
-        enterPause()
+        guard !isPaused else { return }
+        if quizState == .askingQuestion {
+            enterPause()
+        } else if quizState.isShowingResult {
+            holdResultAutoAdvance()
+        } else {
+            return
+        }
         isHeldByModal = isPaused
     }
 
     func releaseQuestionAfterModal() {
         guard isHeldByModal else { return }
         isHeldByModal = false
-        exitPause()
+        if quizState.isShowingResult {
+            resumeAutoAdvance()
+        } else {
+            exitPause()
+        }
     }
 
     /// Founder F3 + C2 (TF build 90): the think window ran out while the

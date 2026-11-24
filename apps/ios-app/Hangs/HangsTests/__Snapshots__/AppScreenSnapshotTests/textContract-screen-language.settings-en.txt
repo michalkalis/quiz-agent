@@ -7,10 +7,6 @@ Control the quiz by voice, without tapping
 Command hints
 Show the voice commands you can say
 
-Speech recognition
-Ready
-Speech recognition
-Ready
 Auto-confirm answers
 Your answer is sent automatically after 5 seconds unless you change it
 
@@ -126,7 +122,6 @@ Send feedback
 # identifiers
 settings.voiceCommands
 settings.voiceHints
-settings-voice-commands-status
 settings.autoConfirm
 settings-microphone-row
 settings-call-mode-toggle
@@ -173,3 +168,4 @@ settings.termsOfUse
 settings.aiDisclosure
 settings.aiServices
 settings.sendFeedback
+settings-voice-commands-status

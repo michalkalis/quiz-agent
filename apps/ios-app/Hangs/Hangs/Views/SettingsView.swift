@@ -207,14 +207,6 @@ struct SettingsView: View {
 
             hairline
 
-            // Release-visible recognizer diagnostics (#96 P2): asset state + the
-            // last command heard, so the founder can confirm on-device that
-            // recognition is armed and firing. Full failure reason → Sentry.
-            HangsValueRow(label: "Speech recognition", value: voiceCommandsDiagnostic)
-                .accessibilityIdentifier("settings-voice-commands-status")
-
-            hairline
-
             HangsToggleRow(
                 label: "Auto-confirm answers",
                 subtitle: "Your answer is sent automatically after \(Config.autoConfirmDelaySecs) seconds unless you change it",
@@ -698,7 +690,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Release-visible readout of the voice-command recognizer state (#96 P2):
+    /// Tester-only readout of the voice-command recognizer state (#96 P2):
     /// master-toggle state, on-device asset availability, and the last command
     /// heard. Kept short for the row; the full failure reason goes to Sentry via
     /// `SilenceDetectionService.markCommandsUnavailable`.
@@ -740,6 +732,15 @@ struct SettingsView: View {
     /// for the replay tests (#197); unsent ones can still be exported here.
     private var voiceDiagnosticsGroup: some View {
         groupSection(label: "voice diagnostics") {
+            // Recognizer diagnostics (#96 P2): asset state + the last command
+            // heard, so the founder can confirm on-device that recognition is
+            // armed and firing. Full failure reason → Sentry. Tester-only since
+            // #243.2 (founder, TF 2026-11-22: players read it as noise).
+            HangsValueRow(label: "Speech recognition", value: voiceCommandsDiagnostic)
+                .accessibilityIdentifier("settings-voice-commands-status")
+
+            hairline
+
             HangsToggleRow(
                 label: "Mic voice processing",
                 subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone, while sound plays from the iPhone or in Call Mode",

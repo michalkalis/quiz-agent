@@ -771,12 +771,15 @@ struct QuizViewModelRecordingTests {
         #expect(viewModel.errorMessage!.contains("Recording failed"))
     }
 
-    @Test("a capture with no audio in it says it heard nothing and records again, never an error banner")
+    @Test("a capture with no audio in it goes back to thinking, never an error banner")
     @MainActor
-    func toggleRecordingEmptyCaptureRetries() async throws {
+    func toggleRecordingEmptyCaptureThinksAgain() async throws {
         // #184 + #185 track B: the engine delivered nothing (dead air, or it
-        // never came up) — that is "no answer", not a broken recorder, and the
-        // first one on a question earns the spoken prompt and a re-record.
+        // never came up) — that is "no answer", not a broken recorder.
+        // #243.4 (founder 2026-11-24, decision 2): nothing heard means the
+        // player is still thinking, so it no longer earns the spoken prompt and
+        // an at-once re-record: the quiz goes back to the question with a fresh
+        // think window, and the mic stays shut until that window runs out.
         let (viewModel, mockAudio) = Fixtures.makeViewModelWithAudio()
         mockAudio.playbackDurationNs = 0
         viewModel.currentSession = Fixtures.makeActiveSession()
@@ -790,8 +793,10 @@ struct QuizViewModelRecordingTests {
 
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.errorMessage == nil)
-        await pumpUntil({ viewModel.quizState == .recording && viewModel.isAnswerCaptureActive },
-                        "the mic never re-opened after the prompt")
+        await pumpUntil({ viewModel.quizState == .askingQuestion && viewModel.taskBag.contains(.thinkingTime) },
+                        "silence did not go back to thinking")
+        #expect(viewModel.isAnswerCaptureActive == false, "the mic reopened at once")
+        viewModel.quizTimersController.cancelThinkingTime()
     }
 
     @Test("toggleRecording from processing does nothing")

@@ -13791,19 +13791,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zopakovat otázku"
+            "value" : "Zopakuj otázku"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zopakovať otázku"
+            "value" : "Zopakuj otázku"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повторити питання"
+            "value" : "Повтори питання"
           }
         }
       }

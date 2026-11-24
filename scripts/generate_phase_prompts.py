@@ -90,6 +90,22 @@ PHASE_PROMPTS: dict[str, dict[str, str]] = {
 
 MAX_TAKES = 8
 
+# Founder 2026-11-24 picked these by ear: the think lines calmer and steadier
+# (B), the answer line a little slower (C). Flash, language code as in the app.
+# Ukrainian keeps the app's v3 settings (no native ear yet).
+CALM = {"speed": 1.0, "stability": 0.85, "similarity_boost": 0.75}
+SLOWER = {"speed": 0.95, "stability": 0.6, "similarity_boost": 0.8}
+VOICE_SETTINGS = {
+    "think": CALM,
+    "think-5": CALM,
+    "think-10": CALM,
+    "think-20": CALM,
+    "think-30": CALM,
+    "think-more": CALM,
+    "no-answer-offer": CALM,
+    "answer": SLOWER,
+}
+
 
 def _words(text: str) -> str:
     return re.sub(r"[^\w]+", " ", unicodedata.normalize("NFC", text.lower())).strip()
@@ -100,6 +116,11 @@ async def main() -> int:
     parser.add_argument("--only", help="one language (sk, cs, en, uk)")
     parser.add_argument("--key", help="one prompt key (e.g. no-answer-offer)")
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--keep-unverified",
+        action="store_true",
+        help="keep the last take when none reads back exactly (only after a human listened)",
+    )
     args = parser.parse_args()
 
     from dotenv import load_dotenv
@@ -134,7 +155,18 @@ async def main() -> int:
             # transcribed with the language given and the first that reads
             # back exactly is kept. Never checked by playing it out loud.
             style = service.style_for(language)
+            settings = VOICE_SETTINGS.get(key) if language != "uk" else None
+            base_payload = service.provider.payload_for
+
+            def payload_for(text, style=None, settings=settings, base=base_payload):
+                payload = base(text, style)
+                if settings:
+                    payload["voice_settings"] = dict(settings)
+                return payload
+
+            service.provider.payload_for = payload_for
             kept = None
+            audio = None
             for take in range(MAX_TAKES):
                 try:
                     audio = await service._synthesize_with(
@@ -156,6 +188,10 @@ async def main() -> int:
                 if _words(heard) == _words(text):
                     kept = audio
                     break
+            service.provider.payload_for = base_payload
+            if kept is None and args.keep_unverified and audio is not None:
+                print(f"! {path.name}: kept the last take unverified")
+                kept = audio
             if kept is None:
                 print(f"✗ {path.name}: no take read back as {text!r}")
                 failures += 1

@@ -98,7 +98,7 @@ struct ResultView: View {
             isMuted: viewModel.isAudioMuted,
             isPaused: viewModel.isPaused,
             isPauseEnabled: autoAdvanceActive || viewModel.isPaused,
-            onClose: { showEndQuizConfirmation = true },
+            onClose: confirmEndQuiz,
             onMute: viewModel.isSilentMode ? nil : { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.isPaused ? viewModel.resumeAutoAdvance() : viewModel.pauseQuiz() },
             onSettings: { showQuizSettings = true },
@@ -142,11 +142,17 @@ struct ResultView: View {
         }
         // #81 follow-up (founder 2026-07-06): the X must confirm before quitting.
         .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
-            Button("Continue", role: .cancel) {}
+            Button("Continue", role: .cancel, action: viewModel.releaseQuestionAfterModal)
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
         }
+    }
+
+    /// #243.13: the dialog holds the auto-advance, as on the question.
+    private func confirmEndQuiz() {
+        viewModel.holdQuestionForModal()
+        showEndQuizConfirmation = true
     }
 
     /// The #155 gate: TestFlight/Debug only, and only with a question to rate —

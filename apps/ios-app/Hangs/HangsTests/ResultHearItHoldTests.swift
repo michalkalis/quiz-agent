@@ -105,6 +105,26 @@ struct ResultHearItHoldTests {
         #expect(rig.vm.isPaused)
     }
 
+    /// #243.13 (founder TF 2026-11-22): on the result the ✕'s "End Quiz?"
+    /// let the auto-advance run on behind the dialog, unlike the question.
+    /// Asking whether to quit holds the result; Continue goes on counting.
+    @Test("the ✕ holds the result while End Quiz? is open, and Continue re-arms the countdown")
+    func endQuizDialogHoldsTheResult() async {
+        let clock = TestClock()
+        let rig = makeRig(clock: clock)
+        await showResult(rig, audio: nil)
+        await pumpUntil({ rig.vm.autoAdvanceCountdown > 0 }, "precondition: the countdown runs")
+
+        rig.vm.holdQuestionForModal() // what the ✕ does before the dialog
+        await advance(clock, by: .seconds(rig.vm.settings.autoAdvanceDelay + 5))
+        #expect(rig.vm.quizState.isShowingResult, "the result moved on behind End Quiz?")
+        #expect(rig.vm.currentQuestion?.id == "q_001")
+
+        rig.vm.releaseQuestionAfterModal() // Continue
+        await pumpUntil({ rig.vm.autoAdvanceCountdown > 0 }, "Continue did not re-arm the countdown")
+        #expect(!rig.vm.isPaused)
+    }
+
     /// The player's own pause and resume stay theirs: a read on a held result
     /// changes nothing, and Next still goes on at once.
     @Test("'hear it' on a paused result leaves the pause alone, Next still moves on")

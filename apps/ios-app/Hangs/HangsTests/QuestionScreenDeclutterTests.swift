@@ -5,8 +5,8 @@
 //  TF build 90 (founder): the question screen was "full of nonsense". The
 //  strip between the card and the buttons now appears only when it tells the
 //  player something they need (think countdown, open mic, answer in flight);
-//  it no longer says "Reading the question" over an audible read, never offers
-//  the voice command words (heard unreliably), and the retry and spelling
+//  it no longer says "Reading the question" over an audible read when nothing
+//  listens (#243.6: a live command window shows it, with the words), and the retry and spelling
 //  hints live in the open mic's bar instead of as free lines. Typing an
 //  answer is one calm state above the keyboard, and the "End Quiz?" alert
 //  holds the question like Settings does.
@@ -45,11 +45,17 @@ struct QuestionScreenDeclutterTests {
     /// WHY: the founder's rule, as a table. Reading is audible and the idle
     /// command bar advertised words that are heard unreliably, so both are
     /// gone; the countdown, the open mic and the wait for a verdict stay.
-    @Test("the strip keeps the countdown, the mic and the wait, and drops reading and the idle command bar")
+    @Test("the strip keeps the countdown, the mic and the wait, and drops reading and the idle bar when nothing listens")
     func stripStates() {
         let strip = { (phase: QuestionListenPhase) in QuestionListenPhase.strip(phase, hasCommandsAccessory: false) }
         #expect(strip(.readingQuestion) == nil)
         #expect(strip(.thinking(remaining: 0, total: 0)) == nil)
+        // #243.6: a live command window keeps the strip in both.
+        let listening = { (phase: QuestionListenPhase) in
+            QuestionListenPhase.strip(phase, hasCommandsAccessory: false, commandsListening: true)
+        }
+        #expect(listening(.readingQuestion) == .readingQuestion)
+        #expect(listening(.thinking(remaining: 0, total: 0)) == .thinking(remaining: 0, total: 0))
         #expect(strip(.thinking(remaining: 6, total: 10)) == .thinking(remaining: 6, total: 10))
         #expect(strip(.listening(.open)) == .listening(.open))
         #expect(strip(.evaluating) == .evaluating)
@@ -83,26 +89,45 @@ struct QuestionScreenDeclutterTests {
         }
     }
 
-    /// WHY: a chip is a promise that the word will be heard, and the founder
-    /// found that promise broken. Even with the listener armed and the hints
-    /// switched on, the think countdown names no command.
-    @Test("the think countdown shows no command words, even with the listener armed")
-    func noCommandChips() async throws {
+    /// WHY (#243.6, founder 2026-11-24, C4): after build 90 hid the strip the
+    /// founder asked where it went: the app listened with nothing on screen
+    /// saying so. Whenever a command window is live, the strip is there and
+    /// names the words, on the countdown and without one.
+    @Test("a live command window shows the strip with its words, with or without a countdown",
+          arguments: [10, 0])
+    func commandWordsWhileListening(thinkingTime: Int) async throws {
         let clock = TestClock()
         let (vm, _, _) = makeVM(clock: clock)
+        vm.settings.thinkingTime = thinkingTime
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.commandListenerHint != nil, "precondition: a command window is armed")
         #expect(vm.showsVoiceHints, "precondition: the hints setting is on")
         vm.startRecordingOrTimer()
-        await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the think window never started")
+        if thinkingTime > 0 {
+            await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the think window never started")
+        }
 
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar") }
-            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands") }
         }
         vm.quizTimersController.cancelThinkingTime()
+    }
+
+    /// WHY: a word on screen is a promise that it is heard. With the hints
+    /// switched off in Settings, the strip stays but names nothing.
+    @Test("the hints setting off keeps the strip but drops the words")
+    func hintsOffDropsWords() async throws {
+        let (vm, _, _) = makeVM()
+        vm.settings.thinkingTime = 0
+        vm.settings.voiceHintsEnabled = false
+        await vm.audioDeviceState.startSilenceDetectionListening()
+        #expect(vm.commandListenerHint != nil, "precondition: a command window is armed")
+
+        #expect(vm.questionStripPhase(vm.listenPhase(for: try #require(vm.currentQuestion))) != nil)
+        #expect(!vm.questionStripShowsWords)
     }
 
     // MARK: - Pause (problem 2)

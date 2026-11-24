@@ -81,20 +81,25 @@ enum QuestionListenPhase: Equatable {
         }
     }
 
-    /// TF build 90 (founder): the strip between the question card and the
-    /// buttons appears only when it tells the player something they need: the
-    /// think countdown, the open mic, or an answer in flight. Reading the
-    /// question is audible, and the idle command bar advertised commands that
-    /// are heard unreliably, so both are gone (the commands keep working).
-    /// The one exception is the commands permission control (`hasCommandsAccessory`):
+    /// The strip between the question card and the buttons. TF build 90
+    /// (founder) hid it unless it told the player something they need: the
+    /// think countdown, the open mic, or an answer in flight. #243.6 (founder
+    /// 2026-11-24, C4): it is also on whenever the app listens for commands
+    /// (`commandsListening`), with the words, so the player always sees that
+    /// the app hears them and what to say. The commands permission control
+    /// (`hasCommandsAccessory`) keeps the plain bar without a countdown:
     /// "Turn on" lives nowhere else after onboarding, and "Settings" is how a
-    /// refused microphone is fixed, so it stays, as the plain bar without a
-    /// countdown that carries only that control.
-    static func strip(_ phase: QuestionListenPhase?, hasCommandsAccessory: Bool) -> QuestionListenPhase? {
+    /// refused microphone is fixed.
+    static func strip(
+        _ phase: QuestionListenPhase?,
+        hasCommandsAccessory: Bool,
+        commandsListening: Bool = false
+    ) -> QuestionListenPhase? {
         switch phase {
         case let .thinking(_, total) where total > 0: phase
         case .listening, .evaluating, .skipping: phase
-        case .readingQuestion, .thinking: hasCommandsAccessory ? .thinking(remaining: 0, total: 0) : nil
+        case .readingQuestion, .thinking:
+            if commandsListening { phase } else { hasCommandsAccessory ? .thinking(remaining: 0, total: 0) : nil }
         case nil: nil
         }
     }

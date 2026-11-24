@@ -343,10 +343,10 @@ struct QuestionViewVoiceInspectorTests {
     /// docked bar (id "listen-bar") appears. This is the unit-level cover for the
     /// sim state the UI-test harness cannot produce (its mock forces
     /// `commandAvailability = .unavailable`).
-    /// TF build 90 (founder): an armed command window alone no longer puts the
-    /// command bar on screen; commands keep working without being advertised.
-    @Test("Voice body shows no command ListenBar for an armed command window alone")
-    func voiceShowsNoCommandListenBarWhenArmed() async throws {
+    /// #243.6 (founder 2026-11-24) reverses TF build 90: an armed command
+    /// window shows the bar with the words the app listens for.
+    @Test("Voice body shows the command ListenBar for an armed command window")
+    func voiceShowsCommandListenBarWhenArmed() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
             audioService: MockAudioService(),
@@ -361,7 +361,7 @@ struct QuestionViewVoiceInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
+            #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }

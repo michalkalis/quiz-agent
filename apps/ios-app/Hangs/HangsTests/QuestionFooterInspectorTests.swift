@@ -214,10 +214,10 @@ struct QuestionFooterInspectorTests {
         }
     }
 
-    /// TF build 90 (founder): commands are heard unreliably, so the screen no
-    /// longer advertises them. With a command window armed and nothing to
-    /// count down, the strip is not on screen at all (its slot stays).
-    @Test("an armed command window puts no command bar and no words on screen")
+    /// #243.6 (founder 2026-11-24) reverses TF build 90: whenever the app
+    /// listens for commands the strip shows the words it listens for, so the
+    /// player knows what to say.
+    @Test("an armed command window shows the command bar with its words")
     func commandBarShowsCommands() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
@@ -233,10 +233,10 @@ struct QuestionFooterInspectorTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: (any Error).self) {
+            #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             }
-            #expect(throws: (any Error).self) {
+            #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }

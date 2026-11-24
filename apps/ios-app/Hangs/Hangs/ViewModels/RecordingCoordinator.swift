@@ -43,6 +43,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.speechDetectedDuringAutoRecord = newValue }
     }
 
+    /// See `RecordingState.stoppedRecordingHeardSpeech` (#243.4).
+    var stoppedRecordingHeardSpeech: Bool {
+        get { recordingState.stoppedRecordingHeardSpeech }
+        set { recordingState.stoppedRecordingHeardSpeech = newValue }
+    }
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool {
         get { recordingState.isStoppingRecording }
@@ -79,6 +85,12 @@ final class RecordingCoordinator: ObservableObject {
     var emptyAnswerRetryQuestionKey: String? {
         get { recordingState.emptyAnswerRetryQuestionKey }
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
+    }
+
+    /// See `RecordingState.thinkMoreQuestionKey` (#243.4).
+    var thinkMoreQuestionKey: String? {
+        get { recordingState.thinkMoreQuestionKey }
+        set { recordingState.thinkMoreQuestionKey = newValue }
     }
 
     /// See `RecordingState.recordingTrigger` (#240.9).
@@ -270,6 +282,9 @@ final class RecordingCoordinator: ObservableObject {
     /// mic under a pause (see RecordingCoordinator+EmptyAnswer).
     let isPaused: @MainActor () -> Bool
     let cancelThinkingTime: @MainActor () -> Void
+    /// #243.4: arm a fresh think window on the open question (the façade's
+    /// `startRecordingOrTimer`), after an answer window heard nothing.
+    let startThinkingTime: @MainActor () -> Void
     /// Test seam (#173): the two window lengths this coordinator arms —
     /// `speechStartWindow` is the visible "time to start speaking",
     /// `deadAirCap` is the hidden cap under it. Production never assigns them;
@@ -346,6 +361,7 @@ final class RecordingCoordinator: ObservableObject {
         clearPause: @escaping @MainActor () -> Void,
         isPaused: @escaping @MainActor () -> Bool,
         cancelThinkingTime: @escaping @MainActor () -> Void,
+        startThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval, TimeInterval) -> Void,
         armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
@@ -391,6 +407,7 @@ final class RecordingCoordinator: ObservableObject {
         self.clearPause = clearPause
         self.isPaused = isPaused
         self.cancelThinkingTime = cancelThinkingTime
+        self.startThinkingTime = startThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.armRecordingDeadAirCap = armRecordingDeadAirCap
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer

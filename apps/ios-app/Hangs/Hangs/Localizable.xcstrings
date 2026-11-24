@@ -13785,6 +13785,29 @@
         }
       }
     },
+    "Repeat question" : {
+      "comment" : "No-answer sheet button (#243.4): closes the sheet and reads the question again, then a fresh think window",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zopakovat otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zopakovať otázku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторити питання"
+          }
+        }
+      }
+    },
     "Request timed out" : {
       "comment" : "Error title: the request exceeded its timeout",
       "localizations" : {

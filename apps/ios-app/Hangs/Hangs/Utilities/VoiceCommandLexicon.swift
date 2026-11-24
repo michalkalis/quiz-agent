@@ -73,7 +73,7 @@ enum VoiceCommandScreen: Sendable, Equatable {
     case question // askingQuestion, after TTS
     case confirmation // processing — the answer-confirmation sheet
     /// #185 track B: the same sheet after a second empty recording — Again /
-    /// Next, no countdown.
+    /// Next (#243.4: and Repeat question), no countdown.
     case noAnswer
     /// #188 G1 (founder 2026-10-06): the error screen — "znova" retries, so a
     /// failure does not need a tap.
@@ -94,9 +94,9 @@ enum VoiceCommandLexicon {
         // Founder 2026-11-22: silence confirms, anything else said is a new
         // answer; "again" is the one word the sheet acts on.
         case .confirmation: [.again]
-        // The sheet's two buttons, Again / Next. No confirm: confirming an
-        // empty field IS a skip.
-        case .noAnswer: [.again, .next]
+        // The sheet's buttons, Repeat question / Again / Next (#243.4). No
+        // confirm: confirming an empty field IS a skip.
+        case .noAnswer: [.repeatQuestion, .again, .next]
         case .error: [.again]
         // #243 decision 5: the line asks "Znova, alebo domov?" in this order.
         case .setEnd: [.again, .home]

@@ -43,8 +43,11 @@ struct EmptyAnswerRetryTests {
         return (vm, silence, network, audio)
     }
 
-    /// Record something the backend cannot understand (the car-test 400).
+    /// Record speech the backend cannot understand (the car-test 400). #243.4:
+    /// the voice detector heard the player — a window that heard nothing goes
+    /// back to thinking instead (`SilenceBackToThinkingTests`).
     private func recordUnderstoodAsNothing(_ vm: QuizViewModel, _ silence: MockSilenceDetectionService) async {
+        vm.recordingCoordinator.noteSpeechStarted()
         silence.simulateAnswerAudio(Data(count: 16000))
         await vm.recordingCoordinator.stopRecordingAndSubmit()
     }
@@ -286,7 +289,8 @@ struct NoAnswerSheetViewTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            noAnswerCaptured: noAnswer
+            noAnswerCaptured: noAnswer,
+            onRepeatQuestion: {}
         )
     }
 
@@ -309,6 +313,37 @@ struct NoAnswerSheetViewTests {
             return ids.contains(id)
         }).compactMap { try? $0.accessibilityIdentifier() }
         #expect(order == ids, "Again must keep its place on the left")
+    }
+
+    /// WHY (#243.4, B2): the sheet had no way back to the question. "Repeat
+    /// question" sits above the Again / Next row, first as in the spoken offer,
+    /// and calls back so the question is read again.
+    @Test("the second-miss sheet also offers Repeat question, above Again / Next")
+    func offersRepeatQuestion() throws {
+        var repeated = false
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            noAnswerCaptured: true,
+            onRepeatQuestion: { repeated = true }
+        )
+        let tree = try view.inspect()
+        try tree.find(viewWithAccessibilityIdentifier: "confirmation.repeatQuestion").find(ViewType.Button.self).tap()
+        #expect(repeated)
+        let ids = ["confirmation.repeatQuestion", "confirmation.reRecord", "confirmation.skip"]
+        let order = tree.findAll(where: { view in
+            guard let id = try? view.accessibilityIdentifier() else { return false }
+            return ids.contains(id)
+        }).compactMap { try? $0.accessibilityIdentifier() }
+        #expect(order == ids)
+        #expect(throws: (any Error).self, "only the no-answer sheet offers it") {
+            try makeView(noAnswer: false).inspect().find(viewWithAccessibilityIdentifier: "confirmation.repeatQuestion")
+        }
     }
 
     /// WHY: an empty field the driver cleared while editing is not a miss —

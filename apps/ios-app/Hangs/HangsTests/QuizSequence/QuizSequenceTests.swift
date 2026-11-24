@@ -108,9 +108,10 @@ struct QuizSequenceTests {
     /// 400 "speech not understood", then silence while the old build's empty
     /// sheet counted down and SKIPPED the question, and the driver repeating
     /// question 1's answer into question 2's mic. Played against today's build,
-    /// the same inputs must never skip question 1: the first miss is met with
-    /// the spoken retry on the same question, the second with the Again/Skip
-    /// sheet that waits for the driver, and nothing lands on question 2.
+    /// the same inputs must never skip question 1, and nothing lands on
+    /// question 2. #243.4 (founder 2026-11-24, decision 2): the detector heard
+    /// nothing, so that miss now goes back to thinking on question 1 without a
+    /// spoken retry (it was the spoken retry before).
     @Test("the car-test black box replays as a regression test")
     func carTestDumpReplays() async throws {
         let url = try #require(Bundle(for: QuizSequenceBundleToken.self)
@@ -131,11 +132,11 @@ struct QuizSequenceTests {
 
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
         #expect(!run.network.requests.contains { $0.input == "skip" }, "question 1 was skipped — the car-test bug")
-        #expect(run.recorder.entries.filter { $0.kind == .prompt && $0.name == "emptyAnswer.retry" }.count == 1,
-                "the first empty answer must be met with exactly one spoken retry\n\(run.recorder.dump())")
-        #expect(run.sheetsSeen == ["q_001 (nothing heard)"], "the second miss must open Again/Skip on question 1")
-        #expect(run.vm.currentQuestion?.id == "q_001" && run.vm.showAnswerConfirmation,
-                "a minute later the sheet still waits for the driver")
+        #expect(run.recorder.entries.filter { $0.kind == .prompt && $0.name == "emptyAnswer.thinkAgain" }.count == 1,
+                "the unheard answer must send the driver back to thinking once\n\(run.recorder.dump())")
+        #expect(!run.recorder.entries.contains { $0.kind == .prompt && $0.name == "emptyAnswer.retry" },
+                "silence got the spoken retry")
+        #expect(run.vm.currentQuestion?.id == "q_001", "question 1 is still the driver's")
         #expect(run.network.requests.allSatisfy { $0.questionId == "q_001" }, "nothing may be sent for question 2")
     }
 

@@ -1230,6 +1230,7 @@ final class QuizViewModel: ObservableObject {
             clearPause: { [weak self] in self?.isPaused = false },
             isPaused: { [weak self] in self?.isPaused ?? false },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
+            startThinkingTime: { [weak self] in self?.startRecordingOrTimer() },
             startAutoStopRecordingTimer: { [weak self] duration, hardCap in
                 self?.quizTimersController.startAutoStopRecordingTimer(duration: duration, hardCap: hardCap)
             },
@@ -2229,7 +2230,8 @@ final class QuizViewModel: ObservableObject {
             recordingCoordinator.handleTranscriptionFailure(
                 owner: attempt,
                 prompt: .retry(for: code, question: currentQuestion),
-                allowAutoRetry: spoken
+                allowAutoRetry: spoken,
+                heardSpeech: true // a transcript was sent: the player was heard (#243.4)
             )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
@@ -2942,6 +2944,16 @@ final class QuizViewModel: ObservableObject {
 
     /// Repeat the current question audio (public for UI button)
     func repeatQuestion() async {
+        // #243.4 (B2): from the no-answer sheet, back to the question: read it
+        // again, then a fresh think window, as after any read.
+        if quizState == .processing {
+            guard await recordingCoordinator.leaveNoAnswerSheetForQuestion() else { return }
+            if recordingCoordinator.currentQuestionAudioUrl == nil {
+                refreshCommandWindow()
+                startRecordingOrTimer(afterSilentRead: true)
+                return
+            }
+        }
         if quizState == .askingQuestion, let audioUrl = recordingCoordinator.currentQuestionAudioUrl {
             quizTimersController.cancelThinkingTime()
             await audioDeviceState.stopAnyPlayingAudio()

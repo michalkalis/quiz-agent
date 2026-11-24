@@ -35,6 +35,7 @@ extension RecordingCoordinator {
         setIsAutoRecording(false)
         let heardSpeech = speechDetectedDuringAutoRecord
         speechDetectedDuringAutoRecord = false
+        stoppedRecordingHeardSpeech = heardSpeech
 
         if usesLegacyRecorder {
             // The no-engine fallback (see startLegacyRecorderFallback): M4A upload.

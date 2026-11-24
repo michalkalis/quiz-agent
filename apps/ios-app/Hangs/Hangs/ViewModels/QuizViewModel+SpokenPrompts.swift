@@ -242,7 +242,10 @@ extension QuizViewModel {
 
     /// "Think." / "Answer." in the app voice, from the bundle. Nothing in a
     /// silent quiz or with read-aloud off: the screen says the phase there.
+    /// After an answer window heard nothing it is "Think more." (#243.4).
     func announcePhase(_ cue: QuizTimersController.PhaseCue) async {
+        // #243.4: taken before the mute guard, so it never reaches a later window.
+        let thinksMore = recordingCoordinator.takeThinkMore(questionId: currentQuestion?.id)
         guard !isSilentMode, !isAudioMuted else { return }
         // A line is a new clip, and a new clip stops the one playing: said
         // over a replay the player tapped, it would cut the question off.
@@ -252,7 +255,7 @@ extension QuizViewModel {
             // window drains under it unannounced, as it did before #243.3.
             guard !isPlayingQuestionTTS else { return }
             let long = questionScreenNumber <= Self.longThinkPromptQuestions
-            await playPhasePrompt(.think(seconds: long ? seconds : nil))
+            await playPhasePrompt(thinksMore ? .thinkMore : .think(seconds: long ? seconds : nil))
             // App speech closes the command window; thinking listens again.
             guard !Task.isCancelled, quizState == .askingQuestion else { return }
             await voiceCommandCoordinator.syncCommandListenerWindow()

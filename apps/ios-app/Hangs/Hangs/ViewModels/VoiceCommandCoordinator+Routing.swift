@@ -334,8 +334,9 @@ extension VoiceCommandCoordinator {
             Task { [weak self] in await self?.startRecording() }
 
         // Question — replay the question audio + re-arm the listener via
-        // repeatQuestion(). playQuestionAudio re-arms after TTS.
-        case (.question, .repeatQuestion):
+        // repeatQuestion(). playQuestionAudio re-arms after TTS. #243.4 (B2):
+        // on the no-answer sheet it leads back to the question the same way.
+        case (.question, .repeatQuestion), (.noAnswer, .repeatQuestion):
             Task { [weak self] in await self?.repeatQuestion() }
 
         // Question — skip at once (founder 2026-11-22: the 2.5 s undo wait is

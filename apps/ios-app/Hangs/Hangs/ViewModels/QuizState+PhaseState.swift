@@ -21,6 +21,10 @@ struct RecordingState {
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
+    /// #243.4: whether the recording that just stopped heard speech at all —
+    /// the empty-answer funnel tells silence from a misunderstanding by it.
+    var stoppedRecordingHeardSpeech: Bool = false
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
@@ -59,6 +63,10 @@ struct RecordingState {
     /// the SECOND miss must still find the budget used and open the sheet.
     var emptyAnswerRetryQuestionKey: String?
 
+    /// #243.4: the question whose next think window says "Think more."
+    /// instead of "Think." — set when an answer window heard nothing.
+    var thinkMoreQuestionKey: String?
+
     /// #204.2: the transcripts the player rejected on the current question —
     /// sent with the next upload. Question-scoped for the same reason: the
     /// re-record leaves the recording/processing pair before its upload.
@@ -67,6 +75,7 @@ struct RecordingState {
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         speechDetectedDuringAutoRecord = false
+        stoppedRecordingHeardSpeech = false
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
         emptyAnswerRetryHintQuestionKey = nil

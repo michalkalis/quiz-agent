@@ -66,15 +66,17 @@ Pásik so slovami povelov vždy, keď appka počúva (bod 7), a opravy označen�
 Implementácia, jeden PR na riadok (stav `[ ]` todo · `[x]` hotové):
 
 - [x] 243.1 Hudba sa pri štarte kvízu zastaví (nie len stíši), po konci kvízu môže pokračovať
-- [ ] 243.2 Diagnostický riadok „Rozpoznávanie reči“ len v ladiacej sekcii
-- [ ] 243.3 Hlasové výzvy fáz (rozhodnutie 1): klipy sk/cs/en/uk hlasom appky z ElevenLabs (vygenerované vopred a pribalené, aby zazneli hneď aj bez signálu), nikdy systémový hlas iPhonu (founder 2026-11-24); dlhšia verzia pre prvé dve otázky; ticho pri vypnutom „Čítať nahlas“ a Bez zvuku
+- [x] 243.2 Diagnostický riadok „Rozpoznávanie reči“ len v ladiacej sekcii
+- [x] 243.3 Hlasové výzvy fáz (rozhodnutie 1): klipy sk/cs/en/uk hlasom appky z ElevenLabs (vygenerované vopred a pribalené, aby zazneli hneď aj bez signálu), nikdy systémový hlas iPhonu (founder 2026-11-24); dlhšia verzia pre prvé dve otázky; ticho pri vypnutom „Čítať nahlas“ a Bez zvuku
 - [ ] 243.4 Ticho pri odpovedi (rozhodnutie 2) + cesta späť k otázke z ponuky (B2). Nápoveda hlasom appky len keď appka hráčovi nerozumie (zachytila reč, ale nevie z nej odpoveď, napr. nejasná možnosť pri výbere); pri tichu žiadna hláška, len návrat do premýšľania (founder 2026-11-24)
 - [ ] 243.5 Potvrdenie počúva len „znova“ (rozhodnutie 3)
-- [ ] 243.6 Pásik so slovami povelov vždy, keď appka počúva (C4)
-- [ ] 243.7 Koniec kvízu hlasom (rozhodnutie 5), aj súhrn a denná výzva; nový povel „domov“ len tu
+- [x] 243.6 Pásik so slovami povelov vždy, keď appka počúva (C4)
+- [x] 243.7 Koniec kvízu hlasom (rozhodnutie 5), aj súhrn a denná výzva; nový povel „domov“ len tu
 - [ ] 243.8 Predvoľby časov (rozhodnutie 6) + prevod uložených hodnôt
-- [ ] 243.9 Ťuk na text vysvetlenia ho prečíta (rozhodnutie 4)
-- [ ] 243.10 Vysvetlenia 1 až 2 vety: pravidlo v generovaní + prepísanie existujúcich (dávka z predplatného, nie API; kvalita otázok sa nemení)
-- [ ] 243.11 Prieskum: odpoveď prepísaná po česky v sk kvíze (C5); záznamy z jazdy 140 km/h (D3); čísla a roky – vzorka cez prepis hlasu (D2)
-- [ ] 243.12 Oprava otázky „po žúre“ + kontrola výplňových vsuviek (C2)
-- [ ] 243.13 Krížik na výsledku: rovnaké správanie ako na otázke (podrží odpočet)
+- [x] 243.9 Ťuk na text vysvetlenia ho prečíta (rozhodnutie 4)
+- [x] 243.10 Vysvetlenia 1 až 2 vety: pravidlo v generovaní + prepísanie existujúcich (dávka z predplatného, nie API; kvalita otázok sa nemení)
+- [x] 243.11 Prieskum: odpoveď prepísaná po česky v sk kvíze (C5); záznamy z jazdy 140 km/h (D3); čísla a roky – vzorka cez prepis hlasu (D2)
+- [x] 243.12 Oprava otázky „po žúre“ + kontrola výplňových vsuviek (C2)
+- [x] 243.13 Krížik na výsledku: rovnaké správanie ako na otázke (podrží odpočet)
+
+Stav 2026-11-24 (session quiz-agent-49): zlúčené kroky 243.1–243.3, 243.6, 243.7 a 243.9–243.13 (PR pri každom kroku v git histórii); v prod zapísaných 103 skrátených vysvetlení + oprava döner otázky (súhlas foundera). Otvorené: 243.4 ticho pri odpovedi (ponuka po tichu dlhá → po 2 vypočutiach krátka, „Nepočujem odpoveď. Povedz: zopakuj…“; vlastný hlas appky sa z prepisu vyškrtne), 243.5 potvrdenie len „znova“, 243.8 predvoľby časov (+ „Povedz: ďalšia.“). Hlas ostáva George; pokyny jedno slovo, ElevenLabs nastavenie B (premýšľanie) / C (odpovedaj). 243.11: čísla OK, chybné boli mená/kódy s číslicami (opravené); Sentry záznamy z jazdy neprečítané (chýba povolenie na kľúč), jazda išla cez mikrofón telefónu.

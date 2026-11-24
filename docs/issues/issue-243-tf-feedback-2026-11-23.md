@@ -1,6 +1,6 @@
 # #243 — TF test 2026-11-22/23: hlasová navigácia, potvrdenie, výsledky
 
-**Triage:** needs-founder-decision (stavový diagram → rozhodnutie o hlasovej navigácii) · zatiaľ len zapísané, neopravovať
+**Triage:** enhancement · ready-for-agent (rozhodnuté 2026-11-24, viď nižšie)
 **Zdroj:** founder, TF build z 2026-11-22 (PR #929–#956), jazda v aute aj doma; nadväzuje na TODO riadok „TF test 2026-11-22: hlasom navádzať“ (zlúčený sem).
 **Súvisí:** [#208 — TF test hlasových povelov](issue-208-tf-voice-feedback-2026-10-16.md) · [#185 — test v aute](issue-185-car-test-2026-09-23.md) · rozhodnutia: žiadny moderovaný kvíz (11-21), povely len na telefóne a okamžite (11-22), minimum zvukov (10-06).
 
@@ -49,8 +49,32 @@ Poznámka: posúva to rozhodnutie z 10-06 „minimum zvukov“. Founder teraz v�
 | D2 | Zle číta číslice, čísla, roky | sk/cs/uk čísla sa prepisujú na slová na serveri, roky ako bežné čísla; angličtinu neupravuje nič. Chýbajú konkrétne príklady | chyba na preverenie: zozbierať príklady (founder alebo vzorka otázok cez prepis hlasu, nie prehrávanie nahlas) |
 | D3 | Pri 140 km/h v aute appka rozpoznala len každú druhú-tretiu odpoveď | Odpovede prepisuje server (OpenAI), začiatok a koniec reči určuje telefón podľa hlasitosti voči šumu; ladenie na hluk v aute je podľa kódu stále len „východiskový bod“ (#185) | chyba na preverenie: záznamy z buildu (Sentry, záznam letu kvízu) z tej jazdy; zistiť, či to bolo cez Bluetooth/CarPlay alebo mikrofón telefónu
 
+## Rozhodnutia foundera (2026-11-24, stránka /decide)
+
+1. **Ohlásenie fáz:** slovo + tichý tón, na začiatku dlhšie. Prvé dve otázky kvízu: „Premýšľaj, máš desať sekúnd.“ a „Odpovedaj.“; potom len „Premýšľaj.“ / „Odpovedaj.“ a tón pri zapnutí mikrofónu.
+2. **Ticho pri odpovedi:** späť do premýšľania („Premýšľaj ešte.“ a nový odpočet), mikrofón sa hneď znova neotvára. Po druhom tichu ponuka „Zopakovať otázku, znova, alebo ďalšia?“ (povely zopakuj · znova · ďalšia), appka čaká. „Ďalšia“ počas premýšľania = neviem.
+3. **Potvrdenie:** počúva len „znova“; iná reč sa ignoruje (ruší zámer z #185, že reč na potvrdení = nová odpoveď).
+4. **Výsledok otázky:** vysvetlenie vždy 1 až 2 vety (nové otázky aj prepísanie existujúcich); ťuk na text vysvetlenia ho prečíta. Povely na výsledku otázky **nie** (D nevybraté). Zásada od foundera: povely sa počúvajú až **po hlasovej výzve, ktorá ich pomenuje**, a až po prečítaní skóre či vysvetlenia (príklad: „Pre ďalšie kolo povedz znova.“).
+5. **Koniec kvízu:** „Hotovo, 7 z 10. Znova, alebo domov?“ (povely znova · domov; pri tichu sa raz spýta, potom čaká). Zmena kategórie hlasom pred ďalším kolom: founder váha („obávam sa, že by to bolo moc komplikované“), stačí „domov“. Rešerš (doplnok 11-24): iné hlasové kvízy zoznam kategórií nečítajú; teraz bez zmeny kategórie hlasom, neskôr prípadne „nová téma“ s jednou náhodnou ponukou. Platí pre všetky konce (bežný, súhrn, denná výzva).
+6. **Predvoľby časov:** premýšľanie 5 · 10 (predvolené) · 20 · 30 s · Bez limitu (čaká na „odpovedz“); posun po výsledku: Hneď po verdikte (predvolené) · 8 s · 15 s · Čakať na „ďalšia“.
+
+Pásik so slovami povelov vždy, keď appka počúva (bod 7), a opravy označené **chyba** idú bez ďalšieho rozhodovania.
+
 ## Postup (návrh)
 
 1. **Stavový diagram appky** — HOTOVÉ 2026-11-23: rozhodovacia stránka `/decide` (dnes vs. návrh, poznámky, rešerš, 6 otázok: ohlásenie fáz, ticho, potvrdenie, výsledok, koniec kvízu, predvoľby časov); čaká na odpovede foundera. Rešerš: [hlasová navigácia v iných appkách](../research/voice-navigation-patterns-2026-11-23.md).
-2. Opraviť chyby, ktoré nečakajú na rozhodnutie (označené **chyba** nižšie), samostatnými PR.
-3. Po rozhodnutí foundera: hlasové výzvy stavov, výsledková obrazovka, predvoľby časov, skrátenie vysvetlení.
+Implementácia, jeden PR na riadok (stav `[ ]` todo · `[x]` hotové):
+
+- [ ] 243.1 Hudba sa pri štarte kvízu zastaví (nie len stíši), po konci kvízu môže pokračovať
+- [ ] 243.2 Diagnostický riadok „Rozpoznávanie reči“ len v ladiacej sekcii
+- [ ] 243.3 Hlasové výzvy fáz (rozhodnutie 1): vopred nahraté klipy sk/cs/en/uk hlasom appky, dlhšia verzia pre prvé dve otázky; ticho pri vypnutom „Čítať nahlas“ a Bez zvuku
+- [ ] 243.4 Ticho pri odpovedi (rozhodnutie 2) + cesta späť k otázke z ponuky (B2)
+- [ ] 243.5 Potvrdenie počúva len „znova“ (rozhodnutie 3)
+- [ ] 243.6 Pásik so slovami povelov vždy, keď appka počúva (C4)
+- [ ] 243.7 Koniec kvízu hlasom (rozhodnutie 5), aj súhrn a denná výzva; nový povel „domov“ len tu
+- [ ] 243.8 Predvoľby časov (rozhodnutie 6) + prevod uložených hodnôt
+- [ ] 243.9 Ťuk na text vysvetlenia ho prečíta (rozhodnutie 4)
+- [ ] 243.10 Vysvetlenia 1 až 2 vety: pravidlo v generovaní + prepísanie existujúcich (dávka z predplatného, nie API; kvalita otázok sa nemení)
+- [ ] 243.11 Prieskum: odpoveď prepísaná po česky v sk kvíze (C5); záznamy z jazdy 140 km/h (D3); čísla a roky – vzorka cez prepis hlasu (D2)
+- [ ] 243.12 Oprava otázky „po žúre“ + kontrola výplňových vsuviek (C2)
+- [ ] 243.13 Krížik na výsledku: rovnaké správanie ako na otázke (podrží odpočet)

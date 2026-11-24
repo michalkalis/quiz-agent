@@ -76,3 +76,8 @@ Zoradené podľa dopadu. Značky: [A] Alexa, [G] Google, [AA] Android Auto, [D] 
 
 ## Medzery (neoverené)
 Peloton/Strava/Zwift/NRC hovorené odpočty a oznamovanie intervalov; Waze/Google Maps krátkosť pokynov; Duolingo oficiálna pravidlá opakovania (15 minút pochádza z neoficiálnych zdrojov); NHTSA číselné limity hlasovej úlohy; presnosť malých slovníkov v aute a tlačidlo na volante; Alexa `say-as date` pre roky; konkrétne časovanie ticha pre koncové menu.
+
+## Doplnok 2026-11-24: koniec kola a zmena kategórie hlasom
+- Žiadny zdroj nepopisuje, ako hlasové kvízy (Drivetime, Song Quiz, Jeopardy na Alexe) končia kolo; Drivetime vyberá obsah za hráča (denné relácie), Song Quiz pýta žáner len pri štarte ([AppleVis](https://applevis.com/apps/ios/entertainment/drivefm-car-home-trivia), [Volley](https://www.volleygames.com/skills/faceoff-song-quiz); neoverené).
+- Alexa: možnosti povedať pred otázkou, otázka na konci a potom ticho ([simplify choices](https://developer.amazon.com/blogs/alexa/post/151868d3-9a6e-45b7-8eb4-67542eeebe2e/things-every-alexa-skill-should-do-simplify-choices)); hovorené zoznamy po troch ([Alexa lists](https://developer.amazon.com/en-US/alexa/alexa-haus/patterns-and-components/patterns-lists)).
+- Záver: zoznam kategórií nahlas nečítať. Ak niekedy zmena hlasom, tak len „nová téma“ = jedna náhodná ponuka („Čo tak filmy deväťdesiatych rokov?“), najviac tri možnosti v ponuke.

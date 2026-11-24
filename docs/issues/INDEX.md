@@ -14,6 +14,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
+| 243 | [TF test 2026-11-22/23: hlasová navigácia, potvrdenie, výsledky](issue-243-tf-feedback-2026-11-23.md) | enhancement · ready-for-agent | `[ ]` #243 | 2026-11-24: founder rozhodol 6 otázok (fázy hlasom, ticho → premýšľanie, potvrdenie len znova, kratšie vysvetlenia, koniec „Znova, alebo domov?“, predvoľby); 13 krokov |
 | 242 | [Extra kategórie zadarmo na striedačku](issue-242-extra-categories-rotation.md) | enhancement · ready-for-agent | `[~]` #242 | 2026-11-22: tri kategórie naraz, mesačná výmena; rozpracované oddelenie extra otázok, potom katalóg |
 | 241 | [Vianoce 2026: otázky a príspevky](issue-241-christmas-2026.md) | enhancement · in-progress | `[~]` #241 | 2026-11-18: 73 vianočných otázok v produkcii, zvýhodnenie od 1. 12., videá na 29. 11. a Mikuláša |
 | 240 | [Kvalita appky z voľnej kapacity predplatného](issue-240-quality-program-from-subscription.md) | enhancement · in-progress | `[~]` #240 | 2026-11-18: audit kódu kolo 2, prechody appkou, prístupnosť, použiteľnosť, bezpečnosť, robot-hráč pre hlas; len z predplatného |

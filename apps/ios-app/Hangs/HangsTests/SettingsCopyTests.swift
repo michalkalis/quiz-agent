@@ -60,6 +60,18 @@ struct SettingsCopyTests {
         #expect(!texts.contains("Status"))
     }
 
+    // #243.2 (founder, TF 2026-11-22): "Speech recognition · Ready · heard
+    // 'answer'" in the voice group read as noise to a player. It is a tester
+    // readout, so it lives only in the voice diagnostics group, which the
+    // App Store build never shows (`BuildChannel.debugSurfacesEnabled`).
+    @Test("the recognizer readout sits in the tester-only voice diagnostics group, not among the player's voice settings")
+    func recognizerRowIsTesterOnly() async throws {
+        let texts = try await settingsTexts()
+        let diagnostics = try #require(texts.firstIndex(of: "voice diagnostics"))
+        let row = try #require(texts.firstIndex(of: "Speech recognition"))
+        #expect(row > diagnostics)
+    }
+
     @Test("the auto-confirm subtitle quotes the real countdown")
     func autoConfirmSubtitleUsesConfig() async throws {
         let texts = try await settingsTexts()

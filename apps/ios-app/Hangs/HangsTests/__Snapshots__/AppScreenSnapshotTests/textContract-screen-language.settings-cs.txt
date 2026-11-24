@@ -7,10 +7,6 @@ Ovládej kvíz hlasem, bez klepání
 Nápověda příkazů
 Zobrazovat hlasové příkazy, které můžeš říct
 
-Rozpoznávání řeči
-Ready
-Rozpoznávání řeči
-Ready
 Automaticky potvrzovat odpovědi
 Odpověď se odešle sama po 5 sekundách, pokud ji nezměníš
 
@@ -126,7 +122,6 @@ Odešli zpětnou vazbu
 # identifiers
 settings.voiceCommands
 settings.voiceHints
-settings-voice-commands-status
 settings.autoConfirm
 settings-microphone-row
 settings-call-mode-toggle
@@ -173,3 +168,4 @@ settings.termsOfUse
 settings.aiDisclosure
 settings.aiServices
 settings.sendFeedback
+settings-voice-commands-status

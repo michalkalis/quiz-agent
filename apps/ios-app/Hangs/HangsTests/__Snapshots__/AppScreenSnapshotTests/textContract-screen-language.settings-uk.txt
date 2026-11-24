@@ -7,10 +7,6 @@
 Підказки команд
 Показувати голосові команди, які можна сказати
 
-Розпізнавання мовлення
-Ready
-Розпізнавання мовлення
-Ready
 Автопідтвердження відповідей
 Відповідь надсилається автоматично через 5 секунди, якщо ти її не зміниш
 
@@ -126,7 +122,6 @@ Loading…
 # identifiers
 settings.voiceCommands
 settings.voiceHints
-settings-voice-commands-status
 settings.autoConfirm
 settings-microphone-row
 settings-call-mode-toggle
@@ -173,3 +168,4 @@ settings.termsOfUse
 settings.aiDisclosure
 settings.aiServices
 settings.sendFeedback
+settings-voice-commands-status

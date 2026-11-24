@@ -51,9 +51,9 @@ Every open question MUST return BOTH:
   **≤ 8 words**. This is what the evaluator scores. It is the "did they get it?"
   core, stripped of justification. Example: *"It was the Italian national racing
   colour."* → headline `"Italian racing colour"`.
-- **`explanation`** — the full context read aloud AFTER the reveal: the
-  reasoning, the surprise, the detail. Sentences are fine here. This is the ONLY
-  place verbose prose belongs.
+- **`explanation`** — the context read aloud AFTER the reveal: the reasoning,
+  the surprise. **1–2 spoken sentences**, never more (#243.10: a longer one
+  overwhelms the listener). This is the ONLY place prose belongs.
 
 Also populate:
 

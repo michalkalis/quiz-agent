@@ -45,7 +45,7 @@ Respond in JSON only:
 {{
   "divisible": true | false,
   "head": "the canonical short answer (<= {cap} words), or null if indivisible",
-  "explanation": "the remaining context, or null",
+  "explanation": "the remaining context as one short spoken sentence, or null",
   "confidence": 0.0-1.0
 }}
 

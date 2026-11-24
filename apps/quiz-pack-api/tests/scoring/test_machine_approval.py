@@ -151,6 +151,16 @@ def test_craft_finding_is_recomputed_for_a_pre_177_batch() -> None:
     assert reason is not None and reason.startswith(f"{CRAFT_FLAG_KEY}=")
 
 
+def test_long_explanation_waits_for_a_human() -> None:
+    # #243.10 (founder 2026-11-24): explanations are read aloud after the
+    # answer; past two sentences they overwhelm the player, so such a row is
+    # not machine-approved.
+    long = _q(explanation="Venus is hottest. Its air is CO2. That traps heat.")
+    assert machine_approval_block_reason(long) == f"{CRAFT_FLAG_KEY}=long_explanation(3s)"
+    short = _q(explanation="Venus is hottest. Its CO2 air traps heat.")
+    assert machine_approval_block_reason(short) is None
+
+
 def test_undated_record_is_recomputed_for_a_pre_177_batch() -> None:
     """Same for the undated-record heuristic: it is shadow-only in the pipeline
     (it never drops), so import is the first place it can change an outcome."""

@@ -5745,6 +5745,29 @@
         }
       }
     },
+    "No limit" : {
+      "comment" : "Thinking time setting: no countdown, the question waits for the spoken answer command or a tap",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez limitu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez limitu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без обмеження"
+          }
+        }
+      }
+    },
     "Pop Culture" : {
       "comment" : "Quiz category option",
       "localizations" : {
@@ -6579,6 +6602,52 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Right after the verdict" : {
+      "comment" : "Auto-advance setting: the next question follows a short moment after the spoken verdict",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hned po verdiktu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hneď po verdikte"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одразу після вердикту"
+          }
+        }
+      }
+    },
+    "Wait for \"next\"" : {
+      "comment" : "Auto-advance setting: the result stays until the player taps Next or says the next command",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čekat na „další“"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čakať na „ďalšia“"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чекати на «наступне»"
           }
         }
       }

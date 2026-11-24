@@ -211,6 +211,9 @@
             // observable PRE-reveal window (options + listening pill still hidden
             // while the countdown runs), so that combination gets a few seconds.
             seededSettings.thinkingTime = wantsMCQ ? (wantsLong ? 5 : 1) : 30
+            // #243.8 made "right after the verdict" the default; the result
+            // scenarios keep the 8 s pause they were written against.
+            seededSettings.autoAdvanceDelay = 8
             // #190: store-screenshot mode — listing-quality content in the quiz
             // language, calm frames (no ticking pills), populated Home.
             if StoreScreenshotFixtures.isActive {

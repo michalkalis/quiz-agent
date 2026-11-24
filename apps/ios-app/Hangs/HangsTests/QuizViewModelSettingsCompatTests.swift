@@ -340,19 +340,20 @@ struct QuizSettingsBackwardCompatTests {
         #expect(try decoded(thinkingTime: 0, version: 2) == 10, "build 90's default (or its rewrite of 10)")
         #expect(try decoded(thinkingTime: 30, version: 2) == 30, "a choice made on build 90")
         #expect(try decoded(thinkingTime: 10, version: nil) == 10, "builds up to 89 keep their value")
-        #expect(try decoded(thinkingTime: 0, version: nil) == 0, "a 0 picked on a build up to 89 that build 90 never re-saved")
-        #expect(try decoded(thinkingTime: 0, version: QuizSettings.currentThinkingTimeDefaultVersion) == 0, "a 0 picked from now on")
+        #expect(try decoded(thinkingTime: 0, version: nil) == 5, "a 0 picked on a build up to 89: the shortest #243.8 preset")
+        #expect(try decoded(thinkingTime: QuizSettings.unlimitedThinkingTime, version: QuizSettings.currentThinkingTimeDefaultVersion)
+            == QuizSettings.unlimitedThinkingTime, "a choice made from now on")
     }
 
     /// WHY: the rollback must run once. A blob this build saves carries the
-    /// current version, so a 0 the player picks after it is never undone.
+    /// current version, so a 5 s the player picks after it is never undone.
     @Test("a saved blob carries the current think-time version")
     func savedBlobCarriesCurrentVersion() throws {
         var settings = QuizSettings.default
-        settings.thinkingTime = 0
+        settings.thinkingTime = 5
         let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
         #expect(json["thinkingTimeDefaultVersion"] as? Int == QuizSettings.currentThinkingTimeDefaultVersion)
-        #expect(try decodeSettings(json).thinkingTime == 0)
+        #expect(try decodeSettings(json).thinkingTime == 5)
     }
 
     // MARK: - Round length: 8 by default (TestFlight build 90 feedback)

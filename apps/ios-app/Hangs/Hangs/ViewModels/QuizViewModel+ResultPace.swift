@@ -13,16 +13,22 @@ import Foundation
 
 extension QuizViewModel {
     /// Plays the result's verdict and returns the auto-advance countdown that
-    /// follows it. A spoken verdict is waited for (at most
-    /// `Config.spokenVerdictWaitCap`; past that it keeps playing under the
-    /// countdown), then `Config.pauseAfterSpokenVerdict`. Muted or no audio:
-    /// the countdown starts at once with `settings.autoAdvanceDelay`.
-    func playVerdictThenPace(_ audio: AudioInfo?) async -> Int {
+    /// follows it, or nil when the result waits for "next" (#243.8). A spoken
+    /// verdict is waited for (at most `Config.spokenVerdictWaitCap`; past that
+    /// it keeps playing under the countdown), then the Settings pace
+    /// (`resultPaceSeconds`). Muted or no audio: the countdown starts at once.
+    func playVerdictThenPace(_ audio: AudioInfo?) async -> Int? {
         // Read aloud off, or silent mode, speaks no verdict (founder
         // 2026-11-22); the result keeps its pause and auto-advance.
-        guard !isAudioMuted else { return settings.autoAdvanceDelay }
+        guard !isAudioMuted else { return resultPaceSeconds(afterSpokenVerdict: false) }
         let playback = Task { await playFeedback(audio) }
-        guard hasFeedbackAudio(audio) else { return settings.autoAdvanceDelay }
+        guard hasFeedbackAudio(audio) else { return resultPaceSeconds(afterSpokenVerdict: false) }
+        // #243.8: no countdown follows, so none is shown or held while the
+        // verdict plays; the "next" window opens once it has ended.
+        guard let pace = resultPaceSeconds(afterSpokenVerdict: true) else {
+            _ = await playback.value
+            return nil
+        }
 
         isAwaitingSpokenVerdict = true
         defer { isAwaitingSpokenVerdict = false }
@@ -41,7 +47,30 @@ extension QuizViewModel {
         }
         watcher.cancel()
         cap.cancel()
-        return Config.pauseAfterSpokenVerdict
+        return pace
+    }
+
+    /// #243.8 (founder 2026-11-24): the seconds the result counts down
+    /// before it moves on, or nil when it waits for "next". "Right after the
+    /// verdict" is a short beat after a spoken verdict and a reading pause
+    /// without one; 8 / 15 s count from the verdict's end either way.
+    func resultPaceSeconds(afterSpokenVerdict spoken: Bool) -> Int? {
+        let delay = settings.autoAdvanceDelay
+        if delay > 0 { return delay }
+        if delay == QuizSettings.rightAfterVerdictAutoAdvance {
+            return spoken ? Config.pauseAfterSpokenVerdict : Config.resultReadingPause
+        }
+        return nil
+    }
+
+    /// #243.8: the result waits for "next" — open its command window, which
+    /// hears only "next" (`VoiceCommandScreen.result`). Called once nothing
+    /// is spoken on the result any more.
+    func armResultNextCommand() async {
+        guard quizState.isShowingResult else { return }
+        // #243.8: spoken "Povedz ďalšia." added with the clip
+        resultNextCommandArmed = true
+        await voiceCommandCoordinator.syncCommandListenerWindow()
     }
 
     private func hasFeedbackAudio(_ audio: AudioInfo?) -> Bool {

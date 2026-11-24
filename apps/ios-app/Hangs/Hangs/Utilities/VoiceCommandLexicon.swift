@@ -81,12 +81,15 @@ enum VoiceCommandScreen: Sendable, Equatable {
     /// #188 G3, #243 decision 5: every round end (score, recap, daily
     /// challenge) — "znova" plays again, "domov" goes Home.
     case setEnd
+    /// #243.8: a result set to wait for "next", once its verdict has ended.
+    case result
 }
 
 enum VoiceCommandLexicon {
     /// Commands that may be spoken on a given screen. Anything else on that
     /// screen resolves to `nil` (screen scoping). Home and the result
-    /// screen have no command window at all (#224: the buttons are enough).
+    /// screen have no command window at all (#224: the buttons are enough),
+    /// except a result set to wait for "next" (#243.8).
     /// Language-independent — the grammar's SHAPE is fixed, only its words vary.
     static func commands(on screen: VoiceCommandScreen) -> [VoiceCommand] {
         switch screen {
@@ -100,6 +103,7 @@ enum VoiceCommandLexicon {
         case .error: [.again]
         // #243 decision 5: the line asks "Znova, alebo domov?" in this order.
         case .setEnd: [.again, .home]
+        case .result: [.next]
         }
     }
 

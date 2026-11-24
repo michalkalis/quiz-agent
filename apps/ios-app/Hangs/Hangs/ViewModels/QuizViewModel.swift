@@ -389,11 +389,11 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// #240.9: the result's countdown length for its fill; while the verdict
-    /// is still spoken, the short pause that will follow it.
+    /// is still spoken, the pause that will follow it (#243.8: the preset's).
     var autoAdvanceTotal: Int {
-        if isAwaitingSpokenVerdict { return Config.pauseAfterSpokenVerdict }
+        if isAwaitingSpokenVerdict { return resultPaceSeconds(afterSpokenVerdict: true) ?? 0 }
         let running = quizTimersController.autoAdvanceTotal
-        return running > 0 ? running : settings.autoAdvanceDelay
+        return running > 0 ? running : resultPaceSeconds(afterSpokenVerdict: false) ?? 0
     }
 
     /// Thinking time countdown (visible on QuestionView before auto-recording)
@@ -622,6 +622,7 @@ final class QuizViewModel: ObservableObject {
         quizState = newState
         quizEndCommandsArmed = false
         roundEndLineStarted = false
+        resultNextCommandArmed = false
         // T7 (decision 8): leaving the recording/processing phase-pair drops the
         // confirmation + capture subsets atomically via the owner child — never
         // mid-pair (recording → processing keeps in-flight state), and never the
@@ -922,6 +923,10 @@ final class QuizViewModel: ObservableObject {
     /// change drops it (`transition`).
     var roundEndLineStarted = false
 
+    /// #243.8: the result waits for "next" and its verdict has ended, so the
+    /// result screen may listen for "next". Any state change drops it.
+    var resultNextCommandArmed = false
+
     /// #188 G1: the error line, synthesized while the quiz could still reach
     /// the server — the network is usually what just failed. Keyed by text.
     var prefetchedPromptAudio: [String: Data] = [:]
@@ -1142,6 +1147,7 @@ final class QuizViewModel: ObservableObject {
             continueToNext: { [weak self] in self?.advanceFromResult() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
+            resultNextCommandArmed: { [weak self] in self?.resultNextCommandArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
             playAgain: { [weak self] in self?.playAgainFromRoundEnd() },
             goHome: { [weak self] in self?.resetToHome() },
@@ -2468,7 +2474,13 @@ final class QuizViewModel: ObservableObject {
         isPaused = false
 
         Task {
-            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            // #243.8: the pace after a verdict; a result that waits for
+            // "next" gets its command window back instead of a countdown.
+            guard let pace = resultPaceSeconds(afterSpokenVerdict: true) else {
+                await armResultNextCommand()
+                return
+            }
+            await quizTimersController.startAutoAdvanceCountdown(duration: pace, audioDuration: 0)
         }
 
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
@@ -2693,7 +2705,8 @@ final class QuizViewModel: ObservableObject {
         // This ensures ResultView is visible when audio starts playing
         transition(to: .showingResult(question: question, evaluation: evaluation))
         // #224: the result screen has no command window (buttons + auto-advance
-        // only); this refresh tears the previous question's listener down.
+        // only; #243.8: "next" once a result that waits has spoken its
+        // verdict); this refresh tears the previous question's listener down.
         refreshCommandWindow()
 
         // #240.9: the countdown follows the spoken verdict (a short pause
@@ -2709,6 +2722,10 @@ final class QuizViewModel: ObservableObject {
             let countdown = await playVerdictThenPace(response.audio)
             guard !Task.isCancelled,
                   attemptLedger.ownsQuestion(resultOwner, "resultFeedback.countdown") else { return }
+            guard let countdown else {
+                await armResultNextCommand()
+                return
+            }
             await quizTimersController.startAutoAdvanceCountdown(duration: countdown, audioDuration: 0)
         }, key: .autoAdvance)
     }

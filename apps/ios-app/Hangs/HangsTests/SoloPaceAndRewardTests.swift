@@ -112,22 +112,23 @@ struct SoloPaceAndRewardTests {
 
     /// WHY (founder 2026-11-22): "Read aloud" off promises the app reads
     /// nothing, the result included. The verdict the server sent stays
-    /// unspoken, the result is read on screen instead: it keeps the Settings
-    /// pause for that, counted at once, and moves on without waiting for audio.
-    @Test("read aloud off: the result speaks no verdict, keeps the Settings pause and moves on")
+    /// unspoken, the result is read on screen instead: "right after the
+    /// verdict" (#243.8 default) gives it the reading pause, counted at once,
+    /// and moves on without waiting for audio.
+    @Test("read aloud off: the result speaks no verdict, keeps the reading pause and moves on")
     func mutedResultSpeaksNothingAndMovesOn() async {
         let clock = TestClock()
         let rig = makeRig(clock: clock)
         rig.vm.settings.isMuted = true
         await showResult(rig, audio: spokenVerdict)
 
-        await pumpUntil({ rig.vm.autoAdvanceCountdown == rig.vm.settings.autoAdvanceDelay }, "the countdown did not start at once")
+        await pumpUntil({ rig.vm.autoAdvanceCountdown == Config.resultReadingPause }, "the countdown did not start at once")
         #expect(rig.audio.playOpusCallCount == 0, "the verdict was spoken with read aloud off")
         #expect(!rig.vm.isAwaitingSpokenVerdict)
-        #expect(rig.vm.autoAdvanceTotal == rig.vm.settings.autoAdvanceDelay)
+        #expect(rig.vm.autoAdvanceTotal == Config.resultReadingPause)
 
-        await clock.advance(by: .milliseconds(rig.vm.settings.autoAdvanceDelay * 1000 - 100))
-        #expect(rig.vm.quizState.isShowingResult, "moved on before the Settings pause was over")
+        await clock.advance(by: .milliseconds(Config.resultReadingPause * 1000 - 100))
+        #expect(rig.vm.quizState.isShowingResult, "moved on before the reading pause was over")
         _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(2), {
             rig.vm.currentQuestion?.id == "q_002"
         }, "the unspoken result did not move on after its pause")
@@ -144,7 +145,7 @@ struct SoloPaceAndRewardTests {
         rig.vm.settings.isMuted = true
         await showResult(rig, audio: spokenVerdict)
 
-        await pumpUntil({ rig.vm.autoAdvanceCountdown == rig.vm.settings.autoAdvanceDelay }, "the countdown did not start at once")
+        await pumpUntil({ rig.vm.autoAdvanceCountdown == Config.resultReadingPause }, "the countdown did not start at once")
         #expect(rig.audio.playOpusCallCount == 0, "the verdict was spoken in CarPlay with read aloud off")
         rig.vm.taskBag.cancel(.autoAdvance)
     }
@@ -334,7 +335,7 @@ struct SoloPaceAndRewardTests {
         #expect(rig.vm.score == 1, "the answer the server scored counts in the round")
         #expect(rig.vm.recapEntries.count == 1)
 
-        _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(rig.vm.settings.autoAdvanceDelay + 2), {
+        _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(Config.resultReadingPause + 2), {
             rig.vm.quizState == .finished
         }, "the round never ended after the last verdict")
         #expect(!rig.vm.showPaywall, "the paywall covered the end of the round at once")
@@ -361,7 +362,7 @@ struct SoloPaceAndRewardTests {
             NetworkError.quotaLimitReached(limit(with: evaluation(.incorrect))),
             context: .submission, fallbackMessage: "Failed to submit answer"
         )
-        _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(rig.vm.settings.autoAdvanceDelay + 2), {
+        _ = await advanceUntil(clock, step: .milliseconds(100), limit: .seconds(Config.resultReadingPause + 2), {
             rig.vm.quizState == .finished
         }, "the round never ended after the last verdict")
         rig.vm.resetToHome()

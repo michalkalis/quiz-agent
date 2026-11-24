@@ -357,6 +357,10 @@ extension VoiceCommandCoordinator {
         case (.error, .again):
             Task { [weak self] in await self?.retryFromError() }
 
+        // #243.8: a result that waits for "next" — its Next button.
+        case (.result, .next):
+            continueToNext()
+
         // #188 G3: the round end — play again (the Play Again button's path,
         // the same pack since #200).
         case (.setEnd, .again):

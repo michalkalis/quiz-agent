@@ -158,7 +158,8 @@ final class QuizTimersController: ObservableObject {
         // F3: a window armed while the player types (the read's tail, play
         // after a pause) stands still at what it would have started from.
         if isHeldForTyping {
-            heldThinkingSeconds = heldSeconds > 0 ? heldSeconds : settings().thinkingTime
+            // #243.8: a window without a limit holds nothing (never -1).
+            heldThinkingSeconds = max(heldSeconds > 0 ? heldSeconds : settings().thinkingTime, 0)
             thinkingTimeCountdown = 0
             return
         }
@@ -168,7 +169,7 @@ final class QuizTimersController: ObservableObject {
         cancelThinkingTime()
         let owner = attemptLedger.current
         // #208: full and still from the first frame of the reading pause.
-        if readingPause > .zero { thinkingTimeCountdown = thinkingSeconds }
+        if readingPause > .zero { thinkingTimeCountdown = max(thinkingSeconds, 0) }
 
         let task = Task { [weak self] in
             guard let self else { return }
@@ -185,8 +186,19 @@ final class QuizTimersController: ObservableObject {
                 }
             }
 
+            // #243.8 (founder 2026-11-24): "No limit"
+            // (`QuizSettings.unlimitedThinkingTime`) says the short "Think."
+            // and shows no countdown; the mic opens only on "answer" or a
+            // tap, which the question's command window and button handle.
+            guard thinkingSeconds >= 0 else {
+                await self.announcePhase(.thinkStart(seconds: thinkingSeconds))
+                return
+            }
+
             guard thinkingSeconds > 0 else {
-                // No thinking time — start recording immediately (500ms delay like before)
+                // No thinking time — start recording immediately (500ms delay
+                // like before). No preset is 0 since #243.8; a stray 0 still
+                // ends in the answer window rather than a stuck question.
                 try? await self.clock.sleep(for: .milliseconds(Config.autoRecordDelayMs))
                 if Task.isCancelled { return }
                 guard self.quizState() == .askingQuestion,

@@ -142,8 +142,10 @@ struct RoomViewModelTests {
 
         // After the reveal the host's phone counts down and moves on alone.
         for _ in 0 ..< 5 { await Task.yield() }
-        #expect(model.autoAdvanceLeft == QuizSettings.default.autoAdvanceDelay)
-        await clock.advance(by: .seconds(QuizSettings.default.autoAdvanceDelay))
+        // #243.8: solo's default "right after the verdict" names no length;
+        // a room reveal gets its reading time.
+        #expect(model.autoAdvanceLeft == RoomViewModel.revealReadingSeconds)
+        await clock.advance(by: .seconds(RoomViewModel.revealReadingSeconds))
         await model.advanceTask?.value
         await model.readTask?.value
         #expect(model.round?.number == 2)

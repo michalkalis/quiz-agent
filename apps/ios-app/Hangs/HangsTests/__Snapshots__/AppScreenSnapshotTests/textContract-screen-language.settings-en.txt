@@ -27,14 +27,11 @@ Quiz language
 English
 Questions, voice and the whole app
 quiz
-0s
+5s
 10s
-15s
+20s
 30s
-45s
-60s
-90s
-120s
+No limit
 Thinking time
 10s
 Thinking time
@@ -48,14 +45,14 @@ Questions per quiz
 8 questions
 Questions per quiz
 8 questions
-5s
+Right after the verdict
 8s
-10s
 15s
+Wait for "next"
 Auto-advance delay
-8s
+Right after the verdict
 Auto-advance delay
-8s
+Right after the verdict
 Pause on the result before the next question
 After each question
 At the end of the quiz
@@ -130,24 +127,21 @@ settings.language.en
 settings.language.sk
 settings.language.cs
 settings-thinking-time-menu
-settings.thinkingTime.0
+settings.thinkingTime.5
 settings.thinkingTime.10
-settings.thinkingTime.15
+settings.thinkingTime.20
 settings.thinkingTime.30
-settings.thinkingTime.45
-settings.thinkingTime.60
-settings.thinkingTime.90
-settings.thinkingTime.120
+settings.thinkingTime.noLimit
 settings-question-count-menu
 settings.questionCount.5
 settings.questionCount.8
 settings.questionCount.10
 settings.questionCount.15
 settings-auto-advance-menu
-settings.autoAdvance.5
+settings.autoAdvance.0
 settings.autoAdvance.8
-settings.autoAdvance.10
 settings.autoAdvance.15
+settings.autoAdvance.waitForNext
 settings-answer-reveal-menu
 settings.answerReveal.per_question
 settings.answerReveal.end_of_set

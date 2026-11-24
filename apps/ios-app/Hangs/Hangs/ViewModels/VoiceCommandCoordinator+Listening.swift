@@ -93,6 +93,7 @@ extension VoiceCommandCoordinator {
         switch quizState() {
         case .askingQuestion: return .question
         case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
+        case .showingResult: return resultNextCommandArmed() ? .result : nil
         case .error: return .error
         case .finished: return .setEnd
         default: return nil // startingQuiz / skipping / recording

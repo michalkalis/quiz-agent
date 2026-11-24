@@ -34,8 +34,14 @@ struct UkrainianCommandGrammarTests {
             #expect(ukrainian.contextualStrings?.contains(word) == true, "'\(word)' is not in the bias list")
         }
         // Founder 2026-11-22: these are no commands any more, so no bias.
-        for word in ["старт", "стоп", "пауза", "додому"] {
+        for word in ["старт", "стоп", "пауза"] {
             #expect(ukrainian.contextualStrings?.contains(word) != true, "'\(word)' must not be biased")
+        }
+        // #243 decision 5: «додому» is a command at the round end only, so
+        // only that screen's bias list carries it.
+        #expect(ukrainian.contextualStrings(on: .setEnd)?.contains("додому") == true)
+        for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer, .error] {
+            #expect(ukrainian.contextualStrings(on: screen)?.contains("додому") != true, "«додому» biased on \(screen)")
         }
     }
 
@@ -190,8 +196,9 @@ struct UkrainianCommandGrammarTests {
         #expect(VoiceCommandLexicon.spokenChips([.again], language: .ukrainian) == ["«ще раз»"])
         #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .ukrainian) == "«пропусти»…")
         #expect(VoiceCommandLexicon.listeningCaption(language: .ukrainian) == "СЛУХАЮ КОМАНДИ")
-        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again], language: .ukrainian)
-            == "Готово, 7 з 10 правильно. Скажи ще раз.")
+        // #243 decision 5: the founder's Ukrainian round-end line.
+        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: .ukrainian)
+            == "Готово, 7 з 10. Ще раз чи додому?")
     }
 
     /// WHY: the app runs from iOS 26, and a device whose dictation lacks

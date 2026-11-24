@@ -184,7 +184,9 @@ struct SlovakCommandGrammarTests {
     func slovakRemovedWordsAreInert() {
         for (word, screen) in [
             ("potvrď", VoiceCommandScreen.confirmation), ("Stop", .confirmation), ("Pauza", .confirmation),
-            ("zruš", .confirmation), ("Štart", .question), ("Domov", .setEnd),
+            ("zruš", .confirmation), ("Štart", .question),
+            // #243 decision 5: "domov" acts at the round end only.
+            ("Domov", .error),
         ] {
             #expect(VoiceCommandMatcher.match(transcript: word, on: screen, language: .slovak) == nil, "'\(word)' on \(screen)")
         }

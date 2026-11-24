@@ -143,9 +143,16 @@ struct QuizViewModelDailyChallengeTests {
         vm.taskBag.cancelAll()
     }
 
-    @Test("the last answer ends on the daily round end, silently, with no 'again' armed")
+    /// WHY: the daily round end is its own screen, never the score screen
+    /// with Play Again and the upsell (one challenge a day). #243 decision 5
+    /// (founder 2026-11-24) changed what it says: it used to stay silent with
+    /// nothing armed; now, like every round end, it says "Hotovo, X z 5.
+    /// Znova, alebo domov?" and listens ("znova" starts an ordinary round,
+    /// `QuizEndVoiceTests`).
+    @Test("the last answer ends on the daily round end, which says the round-end line and listens")
     func lastAnswerEndsOnDailyRoundEnd() async {
         let (vm, network) = makeDailyViewModel()
+        (vm.audioService as? MockAudioService)?.playbackDurationNs = 0
         vm.activeDaily = DailyRound(day: day, language: "sk")
         vm.currentSession = Fixtures.makeQuizSession(maxQuestions: 5)
         vm.currentQuestion = Fixtures.makeQuestion(id: "q_005")
@@ -156,12 +163,12 @@ struct QuizViewModelDailyChallengeTests {
 
         #expect(vm.quizState == .finished)
         #expect(vm.quizScreen == .dailyEnd, "never the score screen with its Play Again and upsell")
-        // A set-end line would be on its way by now.
-        for _ in 0 ..< 20 {
-            await Task.yield()
-        }
-        #expect(network.synthesizedTexts.isEmpty, "the regular set-end line names 'again'")
-        #expect(!vm.quizEndCommandsArmed, "a spoken 'again' must not start a second attempt")
+        await pumpUntil({ vm.quizEndCommandsArmed }, "the daily round end never listened")
+        #expect(network.synthesizedTexts == [SpokenPrompt.setFinishedLine(
+            correct: vm.sessionCorrectCount, total: 5,
+            commands: VoiceCommandLexicon.commands(on: .setEnd),
+            language: .forQuizLanguage(vm.currentSession?.language ?? vm.settings.language)
+        )])
         vm.taskBag.cancelAll()
     }
 

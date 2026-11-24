@@ -24,18 +24,22 @@ extension VoiceCommandLexicon {
         case (.english, .next): return "next"
         case (.english, .repeatQuestion): return "repeat"
         case (.english, .again): return "again"
+        case (.english, .home): return "home"
         case (.slovak, .answer): return "odpovedz"
         case (.slovak, .next): return "ďalšia"
         case (.slovak, .repeatQuestion): return "zopakuj"
         case (.slovak, .again): return "znova"
+        case (.slovak, .home): return "domov"
         case (.czech, .answer): return "odpověz"
         case (.czech, .next): return "další"
         case (.czech, .repeatQuestion): return "zopakuj"
         case (.czech, .again): return "znovu"
+        case (.czech, .home): return "domů"
         case (.ukrainian, .answer): return "відповідай"
         case (.ukrainian, .next): return "пропусти"
         case (.ukrainian, .repeatQuestion): return "повтори"
         case (.ukrainian, .again): return "ще раз"
+        case (.ukrainian, .home): return "додому"
         }
     }
 
@@ -57,19 +61,24 @@ extension VoiceCommandLexicon {
         case (.english, .confirmation): return #"Say "again" or a new answer"#
         // #185: the no-answer sheet's buttons are Again / Next.
         case (.english, .noAnswer): return #"Say "again" or "next""#
-        case (.english, .error), (.english, .setEnd): return #"Say "again""#
+        case (.english, .error): return #"Say "again""#
+        // #243 decision 5: the round end's two words.
+        case (.english, .setEnd): return #"Say "again" or "home""#
         case (.slovak, .question): return "Povedz „odpovedz“ alebo „ďalšia“"
         case (.slovak, .confirmation): return "Povedz „znova“ alebo novú odpoveď"
         case (.slovak, .noAnswer): return "Povedz „znova“ alebo „ďalšia“"
-        case (.slovak, .error), (.slovak, .setEnd): return "Povedz „znova“"
+        case (.slovak, .error): return "Povedz „znova“"
+        case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
         case (.czech, .question): return "Řekni „odpověz“ nebo „další“"
         case (.czech, .confirmation): return "Řekni „znovu“ nebo novou odpověď"
         case (.czech, .noAnswer): return "Řekni „znovu“ nebo „další“"
-        case (.czech, .error), (.czech, .setEnd): return "Řekni „znovu“"
+        case (.czech, .error): return "Řekni „znovu“"
+        case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
         case (.ukrainian, .question): return "Скажи «відповідай» або «пропусти»"
         case (.ukrainian, .confirmation): return "Скажи «ще раз» або нову відповідь"
         case (.ukrainian, .noAnswer): return "Скажи «ще раз» або «пропусти»"
-        case (.ukrainian, .error), (.ukrainian, .setEnd): return "Скажи «ще раз»"
+        case (.ukrainian, .error): return "Скажи «ще раз»"
+        case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
         }
     }
 

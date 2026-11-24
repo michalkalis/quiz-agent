@@ -45,6 +45,7 @@ extension VoiceCommandCoordinator {
             closeCommandWindowReport()
             return
         }
+        if windowOpen { transcriptsHeard += 1 }
         guard var stats = commandWindowStats else { return }
         stats.utteranceInProgress = !isFinal
         if windowOpen {

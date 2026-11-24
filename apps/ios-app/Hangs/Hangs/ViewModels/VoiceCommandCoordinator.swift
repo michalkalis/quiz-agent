@@ -124,6 +124,10 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// The listening window in progress, for `voice_command_window`
     /// (+WindowReport); `nil` while no listener is live.
     var commandWindowStats: CommandWindowStats?
+    /// Recognizer results heard in any open window since launch. Only ever
+    /// grows, so a caller can tell "nothing heard since then" across window
+    /// re-arms (#243 decision 5: the round end asks once more on silence).
+    var transcriptsHeard = 0
 
     /// P4a founder-overridable flag: spoken "answer" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
@@ -295,9 +299,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     let quizEndCommandsArmed: @MainActor () -> Bool
     /// #188 G1: spoken "znova" on the error screen — what its primary button does.
     let retryFromError: @MainActor () async -> Void
-    /// #188 G3 / #200: spoken "znova" at the set end — the Play Again button's
-    /// path, which replays the same pack.
+    /// #188 G3 / #200: spoken "znova" at the round end — the Play Again
+    /// button's path, which replays the same pack.
     let playAgain: @MainActor () -> Void
+    /// #243 decision 5: spoken "domov" at the round end — its Home button.
+    let goHome: @MainActor () -> Void
     /// #51 product analytics — the façade attaches the session id.
     let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
     /// #208.7: the QUESTION is being read aloud (not feedback, not the
@@ -350,6 +356,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         quizEndCommandsArmed: @escaping @MainActor () -> Bool,
         retryFromError: @escaping @MainActor () async -> Void,
         playAgain: @escaping @MainActor () -> Void,
+        goHome: @escaping @MainActor () -> Void,
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         isReadingQuestionAloud: @escaping @MainActor () -> Bool = { false },
         textBeingRead: @escaping @MainActor () -> String? = { nil },
@@ -383,6 +390,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.quizEndCommandsArmed = quizEndCommandsArmed
         self.retryFromError = retryFromError
         self.playAgain = playAgain
+        self.goHome = goHome
         self.trackAnalytics = trackAnalytics
         self.isReadingQuestionAloud = isReadingQuestionAloud
         self.textBeingRead = textBeingRead

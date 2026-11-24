@@ -11,6 +11,8 @@
 //  confused (#240, 240.9); only what is still missing is fetched, and the next
 //  opening shows the new numbers. No Play Again (one challenge a day) and no
 //  upsell; Share sends the tiles and the score without the answers (#205.6).
+//  #243 decision 5: it still says "Hotovo, 3 z 5. Znova, alebo domov?";
+//  spoken "znova" starts an ordinary round (`playAgainFromRoundEnd`).
 //
 
 import SwiftUI
@@ -204,7 +206,20 @@ struct DailyRoundEndView: View {
             shareButton
             homeButton
         }
-        return Group {
+        return VStack(spacing: Theme.Hangs.Spacing.sm) {
+            // #243 decision 5: the round end listens for "znova" / "domov",
+            // named here as on the regular round end.
+            if viewModel.commandListenerHint != nil {
+                ListenBar(
+                    mode: .command,
+                    feedback: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
+                    heard: viewModel.commandHeard,
+                    commandHint: viewModel.voiceHintWords,
+                    language: viewModel.commandLanguage
+                )
+                .transition(.opacity)
+            }
             if HangsButtonTitle.wraps(at: dynamicTypeSize) {
                 stacked
             } else {

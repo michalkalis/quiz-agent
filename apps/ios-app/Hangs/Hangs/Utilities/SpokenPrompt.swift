@@ -102,18 +102,35 @@ enum SpokenPrompt: String, Sendable {
         return [opening, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
     }
 
-    /// The set-end score (#188 G3): "Hotovo, 7 z 10 správne." then the words
-    /// the score screen acts on.
+    /// The round-end line (#243 decision 5, founder 2026-11-24): "Hotovo, 7 z
+    /// 10. Znova, alebo domov?" — the score, then the question naming the
+    /// words the screen acts on. Every round end says it (score, recap, daily
+    /// challenge).
     static func setFinishedLine(
         correct: Int, total: Int, commands: [VoiceCommand], language: CommandLanguage
     ) -> String {
         let score = switch language {
-        case .slovak: "Hotovo, \(correct) z \(total) správne."
-        case .czech: "Hotovo, \(correct) z \(total) správně."
-        case .ukrainian: "Готово, \(correct) з \(total) правильно."
-        case .english: "Done, \(correct) out of \(total) right."
+        case .slovak, .czech: "Hotovo, \(correct) z \(total)."
+        case .ukrainian: "Готово, \(correct) з \(total)."
+        case .english: "Done, \(correct) out of \(total)."
         }
-        return [score, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
+        return [score, setEndQuestion(commands: commands, language: language)].compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// "Znova, alebo domov?" — the question alone, also said once more when
+    /// the round end hears nothing. Nil when nothing listens. The words come
+    /// from the lexicon, so the line and the matcher cannot drift.
+    static func setEndQuestion(commands: [VoiceCommand], language: CommandLanguage) -> String? {
+        let words = commands.map { VoiceCommandLexicon.spokenWord($0, language: language) }
+        guard let last = words.last else { return nil }
+        let or = switch language {
+        case .slovak: ", alebo "
+        case .czech: ", nebo "
+        case .ukrainian: " чи "
+        case .english: ", or "
+        }
+        let list = words.count > 1 ? words.dropLast().joined(separator: ", ") + or + last : last
+        return list.prefix(1).uppercased() + list.dropFirst() + "?"
     }
 
     /// "Povedz znova alebo stop." — no quote marks, the voice would read them

@@ -8,8 +8,10 @@
 //
 //  - G1: the error screen says what happened and listens for "znova".
 //  - G2: the free questions ran out: one line, then the paywall.
-//  - G3: the per-question flow's set end says the score and listens for
-//    "znova". The end-of-set recap already narrates itself.
+//  - G3: every round end says "Hotovo, 7 z 10. Znova, alebo domov?" and
+//    listens for those two words (#243 decision 5, founder 2026-11-24); on
+//    silence it asks once more, then waits. The recap says it after its
+//    summary read.
 //  - G4: "hear it" on the result reads the explanation, not the verdict again.
 //
 //  Lines are synthesized by the backend's generic TTS, like the retry prompt.
@@ -22,6 +24,10 @@ extension QuizViewModel {
     /// A slow TTS round trip skips the line rather than holding the screen
     /// silent (same bound as the retry prompt).
     static let promptFetchTimeoutSeconds = 3
+
+    /// #243 decision 5: how long the round end waits without hearing anything
+    /// before it asks its question once more (the default think time is 10 s).
+    static let roundEndReaskDelay: Duration = .seconds(8)
 
     private var promptLanguage: CommandLanguage {
         .forQuizLanguage(currentSession?.language ?? settings.language)
@@ -113,32 +119,79 @@ extension QuizViewModel {
         }, key: .voiceLimitPrompt)
     }
 
-    // MARK: - G3: set end (per-question flow)
+    // MARK: - G3: round end (#243 decision 5)
 
-    /// Say the score, release the quiz session (music back to full volume),
-    /// then listen on the quiet session like Home does.
+    /// Say "Hotovo, 7 z 10. Znova, alebo domov?", release the quiz session
+    /// (music back to full volume), then listen on the quiet session like
+    /// Home does. A line that cannot be fetched is skipped; the screen listens
+    /// all the same. Heard nothing: the question once more, then silence.
     /// #240.9: `thenPaywall` = the round ended at the monthly limit; after
     /// the score the paywall follows (`showRoundEndPaywall`).
     func announceSetFinished(thenPaywall quotaLimit: QuotaLimitError? = nil) {
+        roundEndLineStarted = true
+        let commands = spokenCommands(VoiceCommandLexicon.commands(on: .setEnd))
         let text = SpokenPrompt.setFinishedLine(
             correct: sessionCorrectCount,
             total: currentSession?.maxQuestions ?? settings.numberOfQuestions,
-            commands: spokenCommands([.again]),
+            commands: commands,
             language: promptLanguage
         )
+        let question = SpokenPrompt.setEndQuestion(commands: commands, language: promptLanguage)
         taskBag.add(Task { [weak self] in
             guard let self else { return }
-            if !isAudioMuted, let audio = await promptAudio(text) {
-                guard !Task.isCancelled, quizState == .finished else { return }
-                await audioDeviceState.playAppSpeech(audio)
-            }
+            await sayAtRoundEnd(text)
             guard !Task.isCancelled, quizState == .finished else { return }
             if let quotaLimit { await showRoundEndPaywall(quotaLimit) }
             guard !Task.isCancelled, quizState == .finished else { return }
             audioService.deactivateSession()
             quizEndCommandsArmed = true
             await voiceCommandCoordinator.syncCommandListenerWindow()
+            if let question { await reaskRoundEndOnSilence(question) }
         }, key: .quizEndPrompt)
+    }
+
+    /// The recap's summary read (or the row read that replaced it) ended or
+    /// was stopped: the round-end line follows the first one; after a later
+    /// read the screen listens again (app speech closed the window).
+    func resumeRoundEndAfterRecapRead() async {
+        guard quizState == .finished else { return }
+        if !roundEndLineStarted {
+            announceSetFinished()
+        } else if quizEndCommandsArmed {
+            await voiceCommandCoordinator.syncCommandListenerWindow()
+        }
+    }
+
+    /// Spoken "znova" at a round end does what Play Again does. The daily
+    /// challenge end has no Play Again (one challenge a day), so there it
+    /// starts an ordinary round, as Home's Start does.
+    func playAgainFromRoundEnd() {
+        if activeDaily != nil {
+            beginQuizStart()
+        } else {
+            playAgain()
+        }
+    }
+
+    private func sayAtRoundEnd(_ text: String) async {
+        guard !isAudioMuted, let audio = await promptAudio(text),
+              !Task.isCancelled, quizState == .finished else { return }
+        await audioDeviceState.playAppSpeech(audio)
+    }
+
+    /// Founder decision 5: "pri tichu sa raz spýta, potom čaká". Only while
+    /// the screen still listens, nothing was heard, and nothing else talks
+    /// or covers it (a recap read, the paywall).
+    private func reaskRoundEndOnSilence(_ question: String) async {
+        let heardBefore = voiceCommandCoordinator.transcriptsHeard
+        try? await clock.sleep(for: Self.roundEndReaskDelay)
+        guard !Task.isCancelled, quizState == .finished, !isAudioMuted, !isNarratingRecap, !showPaywall,
+              voiceCommandCoordinator.currentCommandScreen == .setEnd,
+              voiceCommandCoordinator.transcriptsHeard == heardBefore
+        else { return }
+        await sayAtRoundEnd(question)
+        guard !Task.isCancelled, quizState == .finished else { return }
+        await voiceCommandCoordinator.syncCommandListenerWindow()
     }
 
     // MARK: - G4: "hear it" reads the explanation

@@ -356,10 +356,14 @@ extension VoiceCommandCoordinator {
         case (.error, .again):
             Task { [weak self] in await self?.retryFromError() }
 
-        // #188 G3: the set-end score screen — play again (the Play Again
-        // button's path, the same pack since #200).
+        // #188 G3: the round end — play again (the Play Again button's path,
+        // the same pack since #200).
         case (.setEnd, .again):
             playAgain()
+
+        // #243 decision 5: the round end — Home, like its Home button.
+        case (.setEnd, .home):
+            goHome()
 
         default:
             // Command not valid on this screen — inert. Logged so a matched

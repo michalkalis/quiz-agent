@@ -35,7 +35,7 @@ Poznámka: posúva to rozhodnutie z 10-06 „minimum zvukov“. Founder teraz v�
 | # | Obrázok | Founder | Ako je to dnes | Stav |
 |---|---|---|---|---|
 | C1 | 2, 3 | Predvoľby časov nie sú praktické | Premýšľanie: 0, 10, 15, 30, 45, 60, 90, 120 s (predvolené 10). Automatický posun po výsledku: 5, 8, 10, 15 s (predvolené 8; po vyslovenom verdikte ide ďalej už po 3 s). Automatické potvrdenie fixne 5 s | rozhodnutie (navrhnúť menej a rozumnejších hodnôt) |
-| C2 | 4 | Vsuvka v otázke „aký si dáte po žúre“ je blbosť | Výplňová fráza z generovania (jedlo a pitie, sk) | chyba obsahu: opraviť otázku; skontrolovať, či recept a kontrola textov zachytia podobné vsuvky (#238) |
+| C2 | 4 | Vsuvka v otázke „aký si dáte po žúre“ je blbosť | Výplňová fráza z generovania (jedlo a pitie, sk) | chyba obsahu: opraviť otázku; skontrolovať, či recept a kontrola textov zachytia podobné vsuvky (#238 — brány kvality otázok) |
 | C3 | 5 | „Rozpoznávanie reči · Pripravené · počul ‚odpovedz‘“ — čo je to? | Diagnostický riadok rozpoznávania povelov, zámerne viditeľný v každom builde (aby šlo na zariadení overiť, že povely počúvajú) | chyba: skryť pre hráčov, nechať len v ladiacej sekcii |
 | C4 | 7 | Chýba stavový pásik nad tlačidlami? | Pásik sa schováva, keď niet odpočtu (premýšľanie 0 s, po odpočte, stlmené). Povely pritom počúvajú ďalej. Schované zámerne v builde 90 (ponúkal povely, ktoré sa zle rozpoznávali) | rozhodnutie (podľa diagramu: čo má hráč vidieť, keď appka počúva) |
 | C5 | 8 | Dlhá správna odpoveď, „snáď ok“ | OK. Všimnuté navyše: tvoja odpoveď bola prepísaná **po česky** („Vyšel v pondělí.“) v slovenskom kvíze | chyba na preverenie (jazyk prepisu odpovede) |

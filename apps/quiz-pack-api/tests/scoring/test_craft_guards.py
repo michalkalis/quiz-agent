@@ -391,3 +391,33 @@ def test_pravda_nepravda_counts_as_true_false() -> None:
     assert craft_guards.true_false_key("Pravda") == "true"
     assert craft_guards.true_false_key("Nepravda – vznikla v roku 1993") == "false"
     assert craft_guards.true_false_key("Pravdepodobne") is None
+
+
+# #243.10 (founder 2026-11-24): an explanation is read aloud right after the
+# answer; more than two sentences overwhelmed the player in the car, so a
+# longer one must not be machine-approved.
+def test_two_sentence_explanation_passes():
+    text = "Venus has a thick CO2 atmosphere. It traps heat like a greenhouse."
+    assert craft_guards.long_explanation_reason(text) is None
+
+
+def test_three_sentence_explanation_is_flagged():
+    text = "Venus is hottest. Its air is CO2. That traps heat!"
+    assert craft_guards.long_explanation_reason(text) == "long_explanation(3s)"
+
+
+def test_initials_and_abbreviations_are_not_sentence_ends():
+    # WHY: "J. R. R. Tolkien" or sk "napr." must not hold back a clean row.
+    assert (
+        craft_guards.explanation_sentence_count(
+            "J. R. R. Tolkien wrote it in St. Andrews. Napr. hobiti sú malí."
+        )
+        == 2
+    )
+    assert (
+        craft_guards.explanation_sentence_count(
+            "Edna kričí „Žiadne plášte!“ a vymenúva hrdinov. Vtip sa ujal."
+        )
+        == 2
+    )
+    assert craft_guards.explanation_sentence_count("") == 0

@@ -169,6 +169,8 @@ def _recomputed_guard_reason(q: Question, tf_excess: Collection[str]) -> str | N
         craft_reason = craft_guards.units_reason(
             q.question, q.correct_answer, q.possible_answers, language=q.language
         )
+    if craft_reason is None:
+        craft_reason = craft_guards.long_explanation_reason(q.explanation)
     if craft_reason is not None:
         return f"{CRAFT_FLAG_KEY}={craft_reason}"
     if q.id in tf_excess:

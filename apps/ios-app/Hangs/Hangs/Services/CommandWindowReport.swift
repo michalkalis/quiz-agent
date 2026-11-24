@@ -21,8 +21,8 @@ nonisolated struct CommandWindowReport: Equatable, Sendable {
     var transcripts: Int
     /// Commands that fired.
     var matched: Int
-    /// Finished utterances that were no command (a new answer on the answer
-    /// sheet is not one of them).
+    /// Finished utterances that were no command (#243.5: on the answer sheet
+    /// too — speech there is no longer a new answer).
     var unmatched: Int
     /// Results that arrived after the window had closed.
     var late: Int

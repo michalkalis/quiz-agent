@@ -22,12 +22,6 @@ extension RecordingCoordinator {
         rejectedTranscripts.add(transcript, questionKey: rejectionQuestionKey)
     }
 
-    /// The player kept `transcript` after all (a spoken new answer turned out
-    /// to be "potvrď" or "stop", and the old answer came back).
-    func forgetRejectedTranscript(_ transcript: String) {
-        rejectedTranscripts.remove(transcript, questionKey: rejectionQuestionKey)
-    }
-
     /// What the next upload sends as `rejected_transcripts`: nothing when the
     /// diagnostics switch is off, so the upload is exactly today's.
     func rejectedTranscriptsForUpload() -> [String] {

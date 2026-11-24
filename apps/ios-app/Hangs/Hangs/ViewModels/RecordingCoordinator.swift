@@ -194,11 +194,6 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.countdownHold = newValue }
     }
 
-    /// See `ConfirmationState.spokenReplacement` (#185 5.1).
-    var spokenReplacement: SpokenReplacement? {
-        get { confirmationState.spokenReplacement }
-        set { confirmationState.spokenReplacement = newValue }
-    }
 
     /// See `ConfirmationState.readBackText` (car test 2026-10-30).
     var readBackText: String? {
@@ -249,11 +244,6 @@ final class RecordingCoordinator: ObservableObject {
     /// #185 track B: the "didn't catch that" prompt before the automatic
     /// re-record is playing (see RecordingCoordinator+EmptyAnswer).
     var isSpeakingRetryPrompt = false
-
-    /// #185 5.1: the listener's audio is being kept while the answer sheet is
-    /// up, so a new spoken answer can be transcribed without saying it twice
-    /// (see RecordingCoordinator+SpokenAnswer).
-    var isSheetCaptureActive = false
 
     /// This recording runs on the plain `AVAudioRecorder` because the shared
     /// mic engine could not come up (recognizer setup failed). No voice
@@ -480,7 +470,6 @@ final class RecordingCoordinator: ObservableObject {
         // window closed for the rest of the session. Idempotent.
         cancelAnswerReadBack()
         cancelRetryPrompt() // #185 — same latch hazard as the read-back
-        stopSheetCapture() // #185 5.1 — before the capture it shares is abandoned
         abandonAnswerCapture()
         inputLevel.reset() // #185 track F — the façade's cancelAll ended its feed
         recordingState.reset()
@@ -494,7 +483,6 @@ final class RecordingCoordinator: ObservableObject {
     /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
         cancelAnswerReadBack() // #184 — see reset()
-        stopSheetCapture() // #185 5.1: the sheet it listened for is gone
         recordingState.resetCaptureState()
         confirmationState.reset()
     }

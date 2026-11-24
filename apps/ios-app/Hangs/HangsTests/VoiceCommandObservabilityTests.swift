@@ -50,13 +50,14 @@ struct VoiceCommandObservabilityTests {
     // MARK: - Indicator hint copy
 
     /// #174: the hint names exactly the words printed on the screen's buttons
-    /// (Again) — one vocabulary, seen and heard. #185: the answer
-    /// sheet also says a new answer can simply be spoken (5.1), and the
-    /// no-answer sheet names ITS buttons (Again / Skip), not Confirm.
+    /// (Again) — one vocabulary, seen and heard. The no-answer sheet names
+    /// ITS words (repeat / again / next), not Confirm; #243.5: the answer
+    /// sheet no longer offers "a new answer".
     @Test("lexicon hint names the valid words for each screen")
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "answer" or "next""#)
-        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "again" or a new answer"#)
+        // #243.5: "again" is all the answer sheet listens for.
+        #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "again""#)
         // #243.4: the no-answer sheet also leads back to the question.
         #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "repeat", "again" or "next""#)
     }
@@ -73,7 +74,7 @@ struct VoiceCommandObservabilityTests {
 
         // Moving to the confirmation sheet swaps the words shown.
         vm.quizState = .processing
-        #expect(vm.commandListenerHint == #"Say "again" or a new answer"#)
+        #expect(vm.commandListenerHint == #"Say "again""#)
 
         // Tearing the listener down hides the indicator.
         vm.audioDeviceState.stopSilenceDetectionListening()

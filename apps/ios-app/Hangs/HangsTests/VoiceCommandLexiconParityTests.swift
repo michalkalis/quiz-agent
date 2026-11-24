@@ -195,11 +195,11 @@ struct VoiceCommandLexiconParityTests {
         }
     }
 
-    /// WHY (#189 founder 2026-09-29): the hint must still say a new answer may
-    /// simply be spoken (5.1) and never resurrect the removed voice cancel; the
-    /// no-answer sheet must name ITS buttons. Which words the confirmation hint
+    /// WHY (#189 founder 2026-09-29): the hint quotes "again" and never
+    /// resurrects the removed voice cancel (#243.5: it no longer offers a new
+    /// answer either); the no-answer sheet must name ITS buttons. Which words the confirmation hint
     /// quotes is covered by `confirmationHintQuotesButtonWords` below.
-    @Test("hints: the answer sheet invites a new answer, the no-answer sheet names again/next", arguments: CommandLanguage.allCases)
+    @Test("hints: the answer sheet names again, the no-answer sheet names again/next", arguments: CommandLanguage.allCases)
     func hints(_ language: CommandLanguage) {
         let sheet = VoiceCommandLexicon.hint(on: .confirmation, language: language)
         #expect(sheet.contains(VoiceCommandLexicon.spokenWord(.again, language: language)))

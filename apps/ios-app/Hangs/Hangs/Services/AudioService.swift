@@ -247,15 +247,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     ///   is reachable via HFP and the car shows a "phone call" UI, which the user
     ///   accepts by design.
     nonisolated static func categoryOptions(for mode: AudioMode) -> AVAudioSession.CategoryOptions {
-        // Duck background audio (Spotify/podcasts) while the quiz is active.
-        // .duckOthers lowers music; .interruptSpokenAudioAndMixWithOthers pauses
-        // podcasts (two simultaneous voices = unintelligible). Apple HIG recommends
-        // this combination for apps with spoken-audio prompts.
-        let duckingOptions: AVAudioSession.CategoryOptions = [
-            .duckOthers,
-            .interruptSpokenAudioAndMixWithOthers,
-        ]
-
+        // #243.1 (founder, TF 2026-11-22): the quiz STOPS music and podcasts,
+        // it no longer ducks them — ducked music under the questions was still
+        // too much. No mixing option at all makes the session non-mixable, so
+        // activating it interrupts other audio; `deactivateSession()` notifies
+        // others at quiz end so the player's music may resume. A silent quiz
+        // never applies this session and leaves music playing.
         var options: AVAudioSession.CategoryOptions
         switch mode.id {
         case "media":
@@ -271,7 +268,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // Fallback to call mode.
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
         }
-        options.formUnion(duckingOptions)
         return options
     }
 
@@ -337,8 +333,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // .defaultToSpeaker forces output to speaker instead of receiver (louder audio)
         // .allowBluetoothHFP enables Bluetooth microphone input (Hands-Free Profile)
         // .allowBluetoothA2DP enables high-quality Bluetooth playback (A2DP)
-        // Ducking options are applied above — replaces previous .mixWithOthers
-        // because mixing at equal volume made TTS inaudible over music.
+        // No mixing option (see categoryOptions): activating stops other audio.
         try session.setCategory(
             configuration.category,
             mode: configuration.mode,
@@ -361,7 +356,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// decision B): `.playAndRecord` so the command mic can run, but with
     /// `quietListeningCategoryOptions` — external audio keeps playing, nothing
     /// is ducked or interrupted. The full quiz session (with ducking) is
-    /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`.
+    /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`;
+    /// that one stops other audio (#243.1).
     func setupQuietListeningSession() throws {
         let session = AVAudioSession.sharedInstance()
         let configuration = SessionConfiguration(

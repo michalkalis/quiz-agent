@@ -592,7 +592,7 @@ it pins the exact option set `setupAudioSession` applies, with zero hang surface
 **Asserts**
 - Media options contain `.allowBluetoothHFP` (and still `.allowBluetoothA2DP`).
 - `AudioMode.default` is `media` and carries HFP (pins the default against regression).
-- Every mode ducks others + defaults to speaker.
+- Every mode stops other audio (no mixing, no ducking — #243.1) + defaults to speaker.
 - (Test body documents *why* HFP must stay: Bluetooth mic access, not phone-call UI — fails the instant anyone strips it.)
 
 ---

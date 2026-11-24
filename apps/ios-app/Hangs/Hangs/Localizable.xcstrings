@@ -6635,19 +6635,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Čekat na „další“"
+            "value" : "Čekej na „další“"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Čakať na „ďalšia“"
+            "value" : "Čakaj na „ďalšia“"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Чекати на «пропусти»"
+            "value" : "Чекай на «пропусти»"
           }
         }
       }

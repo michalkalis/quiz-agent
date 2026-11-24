@@ -58,7 +58,7 @@ DEFAULT_BATCH_SIZE = 20
 #: Stamped on every verdict. 2 = smallest-edit rewrites (10-23 round 1);
 #: 3 = v1's sensitivity back: round 2 showed v2's "when in doubt, ok" let
 #: through 4/4 rows whose v1 rewrite the founder preferred.
-PROMPT_VERSION = 3
+PROMPT_VERSION = 4
 
 _PROMPT_HEADER = """You are a native Slovak and Czech editor of a voice quiz \
 read aloud to friends in a car. Judge each question as a native speaker of its \
@@ -75,7 +75,10 @@ local (sk "Krčmové kvízy … dnes nájdete v Bratislave, Košiciach aj v men�
 mestách. Z ktorej krajiny pochádzajú?"). A home reference that builds the \
 point is fine ("Kým na Slovensku je na Štedrý večer kapor so šalátom, v ktorej \
 ázijskej krajine si rodiny objednávajú vianočnú večeru z KFC?").
-- "padding": any other part that neither helps answer nor is part of the fun.
+- "padding": any other part that neither helps answer nor is part of the fun, \
+including a chummy aside that only tries to sound relatable (sk "ten klasický \
+döner v chlebe, aký si dáte po žúre, preslávili…", proper "ten klasický döner \
+v chlebe preslávili…").
 - "unnatural": stiff, bookish or translated-sounding wording, chains of \
 participles, needless passive, a collocation natives would not use.
 - "grammar": a grammar or spelling error.

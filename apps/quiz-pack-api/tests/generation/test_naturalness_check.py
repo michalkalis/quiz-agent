@@ -199,7 +199,7 @@ async def test_prompt_asks_for_the_smallest_meaning_preserving_edit() -> None:
     assert "When in doubt" not in prompt and "small ones too" in prompt
     q = _question(POPRAD)
     apply_naturalness(q, Naturalness(ok=True))
-    assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 3
+    assert q.generation_metadata.extra["naturalness"]["version"] == PROMPT_VERSION == 4
 
 
 @pytest.mark.asyncio

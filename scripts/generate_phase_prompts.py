@@ -18,6 +18,7 @@ founder's ear on device (#243.3).
 Usage (repo root; reads the ElevenLabs key from the root .env like the app):
     cd apps/quiz-agent && uv run --no-sync python ../../scripts/generate_phase_prompts.py
     ... --only sk          # one language
+    ... --key answer       # one prompt
     ... --force            # regenerate files that already exist
 """
 
@@ -76,11 +77,13 @@ PHASE_PROMPTS: dict[str, dict[str, str]] = {
         "en": "Answer.",
         "uk": "Відповідай.",
     },
+    # The offer names the exact command words (copy rule 4): "zopakuj
+    # (otázku)", "znova", "ďalšia".
     "no-answer-offer": {
-        "sk": "Zopakovať otázku, znova, alebo ďalšia?",
-        "cs": "Zopakovat otázku, znovu, nebo další?",
+        "sk": "Zopakuj otázku, znova, alebo ďalšia?",
+        "cs": "Zopakuj otázku, znovu, nebo další?",
         "en": "Repeat the question, again, or next?",
-        "uk": "Повторити питання, знову чи наступне?",
+        "uk": "Повтори питання, знову чи наступне?",
     },
 }
 
@@ -95,6 +98,7 @@ def _words(text: str) -> str:
 async def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", help="one language (sk, cs, en, uk)")
+    parser.add_argument("--key", help="one prompt key (e.g. no-answer-offer)")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
@@ -118,6 +122,8 @@ async def main() -> int:
     for key, texts in PHASE_PROMPTS.items():
         for language, text in texts.items():
             if args.only and language != args.only:
+                continue
+            if args.key and key != args.key:
                 continue
             path = OUTPUT_DIR / f"{key}.{language}.mp3"
             if path.exists() and not args.force:

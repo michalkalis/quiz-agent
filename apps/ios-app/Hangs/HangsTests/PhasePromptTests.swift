@@ -103,6 +103,35 @@ struct PhasePromptTests {
         #expect(audio.lastPlayedData == nil)
     }
 
+    /// WHY (review of the #243.3 PR): a pause while "Answer." plays used to
+    /// hold 0 seconds, which the resume read as a fresh window: the player
+    /// got a whole new think window and heard "Think." again.
+    @Test("a pause during the answer line resumes at the answer, not a fresh window")
+    func pauseDuringAnswerLineResumesAtAnswer() async throws {
+        let clock = TestClock()
+        let (vm, audio) = makeVM(clock: clock)
+        let think = try #require(PhasePrompt.think(seconds: 10).audio(language: .english))
+        let answer = try #require(PhasePrompt.answer.audio(language: .english))
+
+        vm.startRecordingOrTimer()
+        await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the window never started")
+        audio.holdsPlaybackUntilStopped = true
+        await clock.advance(by: .seconds(11))
+        await pumpUntil({ audio.lastPlayedData == answer }, "the answer line never started")
+
+        vm.togglePause()
+        audio.holdsPlaybackUntilStopped = false
+        await audio.stopPlayback()
+        #expect(vm.quizState == .askingQuestion, "the mic stays shut while paused")
+        let thinkLines = audio.playedData.count { $0 == think }
+
+        vm.togglePause()
+        await pumpUntil({ vm.thinkingTimeCountdown == 1 }, "the resume did not go back to the answer")
+        await clock.advance(by: .seconds(2))
+        await pumpUntil({ vm.quizState == .recording }, "the mic never opened after the resume")
+        #expect(audio.playedData.count { $0 == think } == thinkLines, "no second think line")
+    }
+
     /// WHY: a pause holds the window; resuming it must not repeat the line
     /// for seconds the player already heard.
     @Test("a held window resumes without a word")

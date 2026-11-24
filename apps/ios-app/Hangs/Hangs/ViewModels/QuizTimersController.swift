@@ -53,6 +53,8 @@ final class QuizTimersController: ObservableObject {
     /// #200 (founder, TF 2026-10-12): what the think window still had when the
     /// quiz was paused. Play continues from it instead of a fresh full window.
     private var heldThinkingSeconds = 0
+    /// #243.3: "Answer." is playing; the window has already run out.
+    private var isAnnouncingAnswer = false
 
     /// Founder F3 + C2 (TF build 90): the player is typing an answer, so the
     /// think window stands still and never opens the mic. Ends with the
@@ -240,7 +242,9 @@ final class QuizTimersController: ObservableObject {
     /// (with its tone). A pause, a tap or a command that took over while the
     /// line played wins: the mic then stays theirs.
     private func announceAnswer(owner: AttemptID) async {
+        isAnnouncingAnswer = true
         await announcePhase(.answerStart)
+        isAnnouncingAnswer = false
         guard !Task.isCancelled,
               quizState() == .askingQuestion,
               attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
@@ -270,7 +274,13 @@ final class QuizTimersController: ObservableObject {
         // A typing hold already keeps the seconds; the stopped window reads 0.
         if !isHeldForTyping {
             heldThinkingSeconds = quizState() == .askingQuestion ? thinkingTimeCountdown : 0
+            // A pause during "Answer." resumes at the answer (one silent
+            // second, then the line and the mic), not a whole new window.
+            if isAnnouncingAnswer, quizState() == .askingQuestion {
+                heldThinkingSeconds = max(heldThinkingSeconds, 1)
+            }
         }
+        isAnnouncingAnswer = false
         cancelThinkingTime()
     }
 

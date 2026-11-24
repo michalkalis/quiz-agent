@@ -117,16 +117,15 @@ struct QuestionVoiceFooter: View {
         }
     }
 
-    /// #179 D1: the docked bar in whichever state the strip shows. The
-    /// command words are never offered (TF build 90): commands are heard
-    /// unreliably, so the screen does not advertise them.
+    /// #179 D1: the docked bar in whichever state the strip shows, with the
+    /// command words while a command window is live (#243.6).
     private func listenBar(_ phase: QuestionListenPhase) -> some View {
         QuestionListenBar(
             phase: phase,
             feedback: viewModel.voiceFeedbackPhase,
             recognizingWord: viewModel.recognizingWord,
             heard: viewModel.commandHeard,
-            showsWords: false,
+            showsWords: viewModel.questionStripShowsWords,
             size: barSize,
             language: viewModel.commandLanguage,
             speechHeard: viewModel.isHearingAnswer,

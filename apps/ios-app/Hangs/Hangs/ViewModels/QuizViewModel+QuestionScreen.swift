@@ -69,8 +69,16 @@ extension QuizViewModel {
     func questionStripPhase(_ phase: QuestionListenPhase?) -> QuestionListenPhase? {
         QuestionListenPhase.strip(
             phase,
-            hasCommandsAccessory: phase.flatMap { commandsAccessory(for: $0) } != nil
+            hasCommandsAccessory: phase.flatMap { commandsAccessory(for: $0) } != nil,
+            commandsListening: commandListenerHint != nil
         )
+    }
+
+    /// #243.6 (founder 2026-11-24): the strip names the command words whenever
+    /// a command window is live, unless the player switched the hints off. A
+    /// word is shown only while it is really heard (`commandListenerHint`).
+    var questionStripShowsWords: Bool {
+        showsVoiceHints && commandListenerHint != nil
     }
 
     /// TF build 90: the hint the open mic's bar carries. The retry line wins,

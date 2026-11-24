@@ -672,7 +672,8 @@ struct QuestionView: View {
     /// names the voice commands.
     ///
     /// TF build 90 (founder): it shows only what the player needs
-    /// (`QuestionListenPhase.strip`), never the command words, and carries the
+    /// (`QuestionListenPhase.strip`), the command words while commands are heard
+    /// (#243.6), and carries the
     /// retry line itself. Its slot is reserved, so the options never move when
     /// it comes and goes.
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
@@ -688,7 +689,7 @@ struct QuestionView: View {
                     feedback: viewModel.voiceFeedbackPhase,
                     recognizingWord: viewModel.recognizingWord,
                     heard: viewModel.commandHeard,
-                    showsWords: false,
+                    showsWords: viewModel.questionStripShowsWords,
                     size: size,
                     language: viewModel.commandLanguage,
                     speechHeard: viewModel.isHearingAnswer,

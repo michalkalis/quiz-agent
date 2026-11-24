@@ -82,7 +82,7 @@ struct QuizPauseResumeTests {
         vm.togglePause()
         await readOut.value
 
-        #expect(audio.playOpusCallCount == 1, "play continues the SAME clip — the question is not restarted")
+        #expect(audio.nonPhasePlayCount == 1, "play continues the SAME clip — the question is not restarted")
         await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the finished read never armed the think window")
     }
 
@@ -127,7 +127,7 @@ struct QuizPauseResumeTests {
         vm.togglePause()
 
         await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "play did not arm the think window")
-        #expect(audio.playOpusCallCount == 1, "play read the question again although nothing was cut")
+        #expect(audio.nonPhasePlayCount == 1, "play read the question again although nothing was cut")
         vm.quizTimersController.cancelThinkingTime()
     }
 

@@ -53,6 +53,8 @@ final class QuizTimersController: ObservableObject {
     /// #200 (founder, TF 2026-10-12): what the think window still had when the
     /// quiz was paused. Play continues from it instead of a fresh full window.
     private var heldThinkingSeconds = 0
+    /// #243.3: "Answer." is playing; the window has already run out.
+    private var isAnnouncingAnswer = false
 
     /// Founder F3 + C2 (TF build 90): the player is typing an answer, so the
     /// think window stands still and never opens the mic. Ends with the
@@ -82,6 +84,15 @@ final class QuizTimersController: ObservableObject {
     /// Auto-confirm fire, carrying the attempt the countdown was armed for.
     let confirmAnswer: @MainActor (AttemptID) async -> Void
     let proceedToNextQuestion: @MainActor () async -> Void
+    /// #243.3: says the phase that starts ("Think." / "Answer."), returning
+    /// when the line has played or at once when nothing is said.
+    let announcePhase: @MainActor (PhaseCue) async -> Void
+
+    /// #243.3: the two moments of the think window the quiz speaks.
+    enum PhaseCue: Equatable {
+        case thinkStart(seconds: Int)
+        case answerStart
+    }
 
     init(
         taskBag: TaskBag,
@@ -95,7 +106,8 @@ final class QuizTimersController: ObservableObject {
         startRecording: @escaping @MainActor () async -> Void,
         stopRecordingAndSubmit: @escaping @MainActor (RecordingStopReason) async -> Void,
         confirmAnswer: @escaping @MainActor (AttemptID) async -> Void,
-        proceedToNextQuestion: @escaping @MainActor () async -> Void
+        proceedToNextQuestion: @escaping @MainActor () async -> Void,
+        announcePhase: @escaping @MainActor (PhaseCue) async -> Void = { _ in }
     ) {
         self.taskBag = taskBag
         self.clock = clock
@@ -109,6 +121,7 @@ final class QuizTimersController: ObservableObject {
         self.stopRecordingAndSubmit = stopRecordingAndSubmit
         self.confirmAnswer = confirmAnswer
         self.proceedToNextQuestion = proceedToNextQuestion
+        self.announcePhase = announcePhase
     }
 
     /// T7 unified reset model: clears this child's own scoped state; task
@@ -178,13 +191,21 @@ final class QuizTimersController: ObservableObject {
                 if Task.isCancelled { return }
                 guard self.quizState() == .askingQuestion,
                       self.attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
-                self.attemptLedger.record(.timer, "thinkingTime.fire")
-                self.setIsAutoRecording(true)
-                await self.startRecording()
+                await self.announceAnswer(owner: owner)
                 return
             }
 
             self.thinkingTimeCountdown = thinkingSeconds
+            // #243.3: a fresh window says so first and drains after the line,
+            // so the player keeps every second it names. A window a pause or
+            // typing held resumes without a word.
+            if heldSeconds == 0 {
+                await self.announcePhase(.thinkStart(seconds: thinkingSeconds))
+                guard !Task.isCancelled,
+                      self.quizState() == .askingQuestion,
+                      self.attemptLedger.ownsQuestion(owner, "thinkingTime.announced")
+                else { return }
+            }
             for i in stride(from: thinkingSeconds, through: 1, by: -1) {
                 if Task.isCancelled {
                     self.thinkingTimeCountdown = 0
@@ -212,11 +233,24 @@ final class QuizTimersController: ObservableObject {
 
             guard self.quizState() == .askingQuestion,
                   self.attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
-            self.attemptLedger.record(.timer, "thinkingTime.fire")
-            self.setIsAutoRecording(true)
-            await self.startRecording()
+            await self.announceAnswer(owner: owner)
         }
         taskBag.add(task, key: .thinkingTime)
+    }
+
+    /// #243.3: "Answer." right before the mic opens on its own, then the mic
+    /// (with its tone). A pause, a tap or a command that took over while the
+    /// line played wins: the mic then stays theirs.
+    private func announceAnswer(owner: AttemptID) async {
+        isAnnouncingAnswer = true
+        await announcePhase(.answerStart)
+        isAnnouncingAnswer = false
+        guard !Task.isCancelled,
+              quizState() == .askingQuestion,
+              attemptLedger.ownsQuestion(owner, "thinkingTime.fire") else { return }
+        attemptLedger.record(.timer, "thinkingTime.fire")
+        setIsAutoRecording(true)
+        await startRecording()
     }
 
     /// #208: how long a silent question gets to be read off the screen before
@@ -240,7 +274,13 @@ final class QuizTimersController: ObservableObject {
         // A typing hold already keeps the seconds; the stopped window reads 0.
         if !isHeldForTyping {
             heldThinkingSeconds = quizState() == .askingQuestion ? thinkingTimeCountdown : 0
+            // A pause during "Answer." resumes at the answer (one silent
+            // second, then the line and the mic), not a whole new window.
+            if isAnnouncingAnswer, quizState() == .askingQuestion {
+                heldThinkingSeconds = max(heldThinkingSeconds, 1)
+            }
         }
+        isAnnouncingAnswer = false
         cancelThinkingTime()
     }
 

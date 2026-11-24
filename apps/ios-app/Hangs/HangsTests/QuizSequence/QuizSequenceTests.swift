@@ -118,7 +118,15 @@ struct QuizSequenceTests {
         let parsed = try QuizSequenceDump.parse(String(contentsOf: url, encoding: .utf8))
         #expect(parsed.inputs.count == 9, "the fixture's input lines no longer parse")
 
-        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+        // #243.3 (founder 2026-11-24): today's build says "Think." before the
+        // window drains and "Answer." before the mic opens, so the mic opens
+        // two lines later than on the drive. The driver spoke into the mic as
+        // it opened; keep that by moving the drive's inputs by the two lines
+        // (the fixture stays as recorded).
+        let linesMs = Int(SequenceAudio.length(of: .speech) * 2 / .milliseconds(1))
+        let inputs = parsed.inputs.map { TimedInput(atMs: $0.atMs + linesMs, input: $0.input, detail: $0.detail) }
+
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: inputs)
         let run = outcome.run
 
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")

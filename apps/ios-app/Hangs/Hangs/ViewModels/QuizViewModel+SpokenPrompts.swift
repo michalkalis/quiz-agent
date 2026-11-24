@@ -181,6 +181,47 @@ extension QuizViewModel {
         }
     }
 
+    // MARK: - #243.3: phase prompts
+
+    /// Questions at the start of a quiz that hear the longer think line with
+    /// the seconds (founder 2026-11-24: the first two).
+    static let longThinkPromptQuestions = 2
+
+    /// "Think." / "Answer." in the app voice, from the bundle. Nothing in a
+    /// silent quiz or with read-aloud off: the screen says the phase there.
+    func announcePhase(_ cue: QuizTimersController.PhaseCue) async {
+        guard !isSilentMode, !isAudioMuted else { return }
+        // A line is a new clip, and a new clip stops the one playing: said
+        // over a replay the player tapped, it would cut the question off.
+        switch cue {
+        case let .thinkStart(seconds):
+            // The replay took this window's start over (a tap wins): the
+            // window drains under it unannounced, as it did before #243.3.
+            guard !isPlayingQuestionTTS else { return }
+            let long = questionScreenNumber <= Self.longThinkPromptQuestions
+            await playPhasePrompt(.think(seconds: long ? seconds : nil))
+            // App speech closes the command window; thinking listens again.
+            guard !Task.isCancelled, quizState == .askingQuestion else { return }
+            await voiceCommandCoordinator.syncCommandListenerWindow()
+        case .answerStart:
+            // The hands-free mic waits for a read in progress (#185); the line
+            // waits with it, so it still comes right before the mic.
+            guard await recordingCoordinator.resolveQuestionReadOut(for: .autoRecord) == .proceed,
+                  !Task.isCancelled, quizState == .askingQuestion
+            else { return }
+            await playPhasePrompt(.answer)
+        }
+    }
+
+    func playPhasePrompt(_ prompt: PhasePrompt) async {
+        guard let audio = prompt.audio(language: promptLanguage) else {
+            Logger.audio.warning("🔈 Phase prompt \(prompt.resourceName, privacy: .public) missing from the bundle")
+            return
+        }
+        attemptLedger.record(.prompt, "phase", prompt.resourceName)
+        await audioDeviceState.playAppSpeech(audio)
+    }
+
     // MARK: - Fetch
 
     private func promptAudio(_ text: String) async -> Data? {

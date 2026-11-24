@@ -1175,7 +1175,8 @@ final class QuizViewModel: ObservableObject {
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .autoRecord) },
             stopRecordingAndSubmit: { [weak self] reason in await self?.recordingCoordinator.stopRecordingAndSubmit(reason: reason) },
             confirmAnswer: { [weak self] owner in await self?.recordingCoordinator.confirmAnswer(trigger: .autoConfirm(owner)) },
-            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
+            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() },
+            announcePhase: { [weak self] cue in await self?.announcePhase(cue) }
         )
     }
 

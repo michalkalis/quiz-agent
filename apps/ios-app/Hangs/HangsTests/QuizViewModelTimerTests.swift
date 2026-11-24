@@ -174,6 +174,9 @@ struct QuizViewModelNoModalFreezeTests {
         let clock = TestClock()
         let viewModel = Fixtures.makeViewModelForTimerTests(clock: AnyClock(clock))
         viewModel.settings.thinkingTime = 30
+        // #243.3: the spoken think line plays before the window drains; with
+        // read-aloud off it starts at once, which is the window this pins.
+        await viewModel.toggleMute()
 
         viewModel.quizTimersController.startThinkingTimeCountdown()
         await pumpUntil({ viewModel.thinkingTimeCountdown == 30 }, "thinking countdown never seeded")

@@ -83,7 +83,7 @@ extension VoiceCommandLexicon {
         case (.ukrainian, .noAnswer): return "Скажи «повтори», «ще раз» або «пропусти»"
         case (.ukrainian, .error): return "Скажи «ще раз»"
         case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
-        case (.ukrainian, .result): return "Скажи «наступне»"
+        case (.ukrainian, .result): return "Скажи «пропусти»"
         }
     }
 

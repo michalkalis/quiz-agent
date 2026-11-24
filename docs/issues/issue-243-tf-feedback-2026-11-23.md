@@ -27,7 +27,7 @@ Poznámka: posúva to rozhodnutie z 10-06 „minimum zvukov“. Founder teraz v�
 |---|---|---|---|
 | B1 | Keď nestihnem vymyslieť odpoveď, raz vyskočí „Nič nebolo počuť“, inokedy znova nahráva; nechcem stále dookola nahrávať, chcem viac času alebo pauzu | Prvé prázdne nahrávanie: appka povie „Odpoveď sa nepodarilo zachytiť, skús to znova“ a hneď nahráva znova. Druhé: obrazovka Znova / Ďalšia. Pauza ani „daj mi čas“ tam nie je | rozhodnutie (napr. po prvom zlyhaní vrátiť sa do premýšľania, alebo voľba „pauza“) |
 | B2 | Z obrazovky „Nič nebolo počuť“ sa nedá dostať k prečítaniu otázky; „Znova“ hneď nahráva bez zopakovania otázky | Potvrdzuje kód: na tejto obrazovke počúva len „znova“ a „ďalšia“, „zopakuj“ funguje len počas otázky; „Znova“ spustí nahrávanie hneď | chyba (chýba cesta späť k otázke) |
-| B3 | Na potvrdzovacej obrazovke niekedy nahráva odpoveď namiesto povelov | Obrazovka „Nič nebolo počuť“ počúva len povely. Obrazovka s prepisom odpovede berie každú vetu, ktorá nie je povel, ako **novú odpoveď** (zámer z #185). Pravdepodobne to founder zažil tam, alebo pri automatickom druhom pokuse | zámer, ale mätúci → rozhodnutie |
+| B3 | Na potvrdzovacej obrazovke niekedy nahráva odpoveď namiesto povelov | Obrazovka „Nič nebolo počuť“ počúva len povely. Obrazovka s prepisom odpovede berie každú vetu, ktorá nie je povel, ako **novú odpoveď** (zámer z #185 — test v aute). Pravdepodobne to founder zažil tam, alebo pri automatickom druhom pokuse | zámer, ale mätúci → rozhodnutie |
 | B4 | Keď appka nič nepočuje, možno predĺžiť čas na odpoveď („nie som si istý“) | Na začiatok reči čaká 5 s, odpoveď končí po 0,8 s ticha, tvrdý strop 8 s | rozhodnutie (súvisí s B1) |
 
 ### C. Obrazovky a nastavenia
@@ -47,13 +47,13 @@ Poznámka: posúva to rozhodnutie z 10-06 „minimum zvukov“. Founder teraz v�
 |---|---|---|---|
 | D1 | Nevypína hudbu pri spustení kvízu (pri štarte appky netreba) | Hudba sa pri kvíze len stíši, nezastaví; zastavia sa len podcasty. Po konci kvízu sa vráti na plnú hlasitosť | chyba (zastaviť hudbu pri štarte kvízu, po konci ju nechať pokračovať) |
 | D2 | Zle číta číslice, čísla, roky | sk/cs/uk čísla sa prepisujú na slová na serveri, roky ako bežné čísla; angličtinu neupravuje nič. Chýbajú konkrétne príklady | chyba na preverenie: zozbierať príklady (founder alebo vzorka otázok cez prepis hlasu, nie prehrávanie nahlas) |
-| D3 | Pri 140 km/h v aute appka rozpoznala len každú druhú-tretiu odpoveď | Odpovede prepisuje server (OpenAI), začiatok a koniec reči určuje telefón podľa hlasitosti voči šumu; ladenie na hluk v aute je podľa kódu stále len „východiskový bod“ (#185) | chyba na preverenie: záznamy z buildu (Sentry, záznam letu kvízu) z tej jazdy; zistiť, či to bolo cez Bluetooth/CarPlay alebo mikrofón telefónu
+| D3 | Pri 140 km/h v aute appka rozpoznala len každú druhú-tretiu odpoveď | Odpovede prepisuje server (OpenAI), začiatok a koniec reči určuje telefón podľa hlasitosti voči šumu; ladenie na hluk v aute je podľa kódu stále len „východiskový bod“ (#185 — test v aute) | chyba na preverenie: záznamy z buildu (Sentry, záznam letu kvízu) z tej jazdy; zistiť, či to bolo cez Bluetooth/CarPlay alebo mikrofón telefónu
 
 ## Rozhodnutia foundera (2026-11-24, stránka /decide)
 
 1. **Ohlásenie fáz:** slovo + tichý tón, na začiatku dlhšie. Prvé dve otázky kvízu: „Premýšľaj, máš desať sekúnd.“ a „Odpovedaj.“; potom len „Premýšľaj.“ / „Odpovedaj.“ a tón pri zapnutí mikrofónu.
 2. **Ticho pri odpovedi:** späť do premýšľania („Premýšľaj ešte.“ a nový odpočet), mikrofón sa hneď znova neotvára. Po druhom tichu ponuka „Zopakovať otázku, znova, alebo ďalšia?“ (povely zopakuj · znova · ďalšia), appka čaká. „Ďalšia“ počas premýšľania = neviem.
-3. **Potvrdenie:** počúva len „znova“; iná reč sa ignoruje (ruší zámer z #185, že reč na potvrdení = nová odpoveď).
+3. **Potvrdenie:** počúva len „znova“; iná reč sa ignoruje (ruší zámer z #185 — test v aute, že reč na potvrdení = nová odpoveď).
 4. **Výsledok otázky:** vysvetlenie vždy 1 až 2 vety (nové otázky aj prepísanie existujúcich); ťuk na text vysvetlenia ho prečíta. Povely na výsledku otázky **nie** (D nevybraté). Zásada od foundera: povely sa počúvajú až **po hlasovej výzve, ktorá ich pomenuje**, a až po prečítaní skóre či vysvetlenia (príklad: „Pre ďalšie kolo povedz znova.“).
 5. **Koniec kvízu:** „Hotovo, 7 z 10. Znova, alebo domov?“ (povely znova · domov; pri tichu sa raz spýta, potom čaká). Zmena kategórie hlasom pred ďalším kolom: founder váha („obávam sa, že by to bolo moc komplikované“), stačí „domov“. Rešerš (doplnok 11-24): iné hlasové kvízy zoznam kategórií nečítajú; teraz bez zmeny kategórie hlasom, neskôr prípadne „nová téma“ s jednou náhodnou ponukou. Platí pre všetky konce (bežný, súhrn, denná výzva).
 6. **Predvoľby časov:** premýšľanie 5 · 10 (predvolené) · 20 · 30 s · Bez limitu (čaká na „odpovedz“); posun po výsledku: Hneď po verdikte (predvolené) · 8 s · 15 s · Čakať na „ďalšia“.

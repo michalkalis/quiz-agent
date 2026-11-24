@@ -67,9 +67,10 @@ struct TimePresetsMigrationTests {
         #expect(try decode(json).autoAdvanceDelay == expected)
     }
 
-    /// WHY: the move must run once. A blob this build saves carries the new
-    /// versions, so the player's own choice, the sentinels included, is
-    /// never moved again (an 8 s chosen now must not become "right after").
+    /// WHY: the move must run once. A blob this build saves carries the
+    /// choice under its own keys, so the player's own choice, the sentinels
+    /// included, is never moved again (an 8 s chosen now must not become
+    /// "right after").
     /// (-1 = no limit / wait for "next", 0 = right after the verdict.)
     @Test("a re-saved blob keeps the player's choice", arguments: [(-1, -1), (20, 8), (5, 0)])
     func migrationRunsOnce(thinkingTime: Int, autoAdvance: Int) throws {
@@ -81,6 +82,54 @@ struct TimePresetsMigrationTests {
         #expect(decoded.thinkingTime == thinkingTime)
         #expect(decoded.autoAdvanceDelay == autoAdvance)
         #expect(try decode(json) == settings)
+    }
+
+    /// WHY (CLAUDE.md: live builds must keep working): older TestFlight
+    /// builds read the same saved settings from the old keys. They count
+    /// `0 ... delay` on the result (a negative delay traps) and run the think
+    /// window from the old key, so whatever the player picks here, the old
+    /// keys hold positive seconds those builds can run.
+    @Test("the old keys always hold seconds an older build can run")
+    func legacyKeysStayRunnable() throws {
+        for think in QuizSettings.thinkingTimeOptions {
+            for advance in QuizSettings.autoAdvanceDelayOptions {
+                var settings = QuizSettings.default
+                settings.thinkingTime = think
+                settings.autoAdvanceDelay = advance
+                let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+                let legacyThink = try #require(json["thinkingTime"] as? Int)
+                let legacyAdvance = try #require(json["autoAdvanceDelay"] as? Int)
+                #expect(legacyThink > 0, "think \(think) saved \(legacyThink) under the old key")
+                #expect(legacyAdvance > 0, "auto-advance \(advance) saved \(legacyAdvance) under the old key")
+                #expect(json["thinkingTimePreset"] as? Int == think)
+                #expect(json["autoAdvancePreset"] as? Int == advance)
+            }
+        }
+        var settings = QuizSettings.default
+        settings.thinkingTime = QuizSettings.unlimitedThinkingTime
+        settings.autoAdvanceDelay = QuizSettings.waitForNextAutoAdvance
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        #expect(json["thinkingTime"] as? Int == 120, "no limit: an older build's longest window")
+        #expect(json["autoAdvanceDelay"] as? Int == 15, "wait for next: an older build's longest pause")
+        settings.autoAdvanceDelay = QuizSettings.rightAfterVerdictAutoAdvance
+        let quick = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        #expect(quick["autoAdvanceDelay"] as? Int == 5, "right after the verdict: an older build's shortest pause")
+    }
+
+    /// WHY: an older build re-saves without the keys it does not know. Back
+    /// on this build the old keys move to the presets again, so "No limit"
+    /// survives the trip and nothing lands on a value this build lacks.
+    @Test("a blob an older build re-saved comes back through the old keys")
+    func olderBuildRoundTrip() throws {
+        var settings = QuizSettings.default
+        settings.thinkingTime = QuizSettings.unlimitedThinkingTime
+        settings.autoAdvanceDelay = QuizSettings.rightAfterVerdictAutoAdvance
+        var json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        json["thinkingTimePreset"] = nil
+        json["autoAdvancePreset"] = nil
+        let decoded = try decode(json)
+        #expect(decoded.thinkingTime == QuizSettings.unlimitedThinkingTime)
+        #expect(decoded.autoAdvanceDelay == QuizSettings.rightAfterVerdictAutoAdvance)
     }
 
     /// WHY: guards the founder's lists and defaults (10 s to think, right

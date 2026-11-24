@@ -341,8 +341,7 @@ struct QuizSettingsBackwardCompatTests {
         #expect(try decoded(thinkingTime: 30, version: 2) == 30, "a choice made on build 90")
         #expect(try decoded(thinkingTime: 10, version: nil) == 10, "builds up to 89 keep their value")
         #expect(try decoded(thinkingTime: 0, version: nil) == 5, "a 0 picked on a build up to 89: the shortest #243.8 preset")
-        #expect(try decoded(thinkingTime: QuizSettings.unlimitedThinkingTime, version: QuizSettings.currentThinkingTimeDefaultVersion)
-            == QuizSettings.unlimitedThinkingTime, "a choice made from now on")
+        #expect(try decoded(thinkingTime: 0, version: QuizSettings.currentThinkingTimeDefaultVersion) == 5, "a 0 picked on build 91+: the shortest #243.8 preset")
     }
 
     /// WHY: the rollback must run once. A blob this build saves carries the

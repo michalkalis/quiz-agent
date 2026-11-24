@@ -7,6 +7,7 @@ synthesis; these tests pin that transform (and its fail-safe passthroughs) so
 a regression here re-breaks Slovak audio, not just formatting.
 """
 
+import pytest
 from app.tts.number_normalization import normalize_numbers_for_tts
 
 
@@ -235,3 +236,26 @@ class TestSymbols:
         assert normalize_numbers_for_tts("Tom & Jerry @ home", "en") == (
             "Tom & Jerry @ home"
         )
+
+
+# #243.11 (founder TF 2026-11-22): "50 Cent" came out as "päťdesiat Cent". A
+# name with digits is said the English way in every language, so it reaches
+# the voice as written; a code glued to its letters keeps a space ("Djedna").
+@pytest.mark.parametrize("language", ["sk", "cs", "uk"])
+def test_names_with_digits_stay_as_written(language):
+    out = normalize_numbers_for_tts(
+        "Raper 50 Cent a skupina Blink-182 v roku 2003.", language
+    )
+    assert "50 Cent" in out and "Blink-182" in out
+    assert "2003" not in out  # the year is still spelled out
+
+
+def test_code_glued_to_letters_gets_a_space():
+    assert normalize_numbers_for_tts("Diaľnica D1.", "sk").startswith("Diaľnica D jed")
+    assert normalize_numbers_for_tts("Bicí automat TR-808.", "cs").startswith(
+        "Bicí automat TR osm"
+    )
+
+
+def test_a_number_not_in_a_name_is_still_spelled():
+    assert normalize_numbers_for_tts("Má 50 centov.", "sk") == "Má päťdesiat centov."

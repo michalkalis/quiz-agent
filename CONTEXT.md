@@ -59,7 +59,7 @@ A timer that fires `confirmAnswer()` ~10s after the confirmation sheet appears w
 Interrupting the question being read aloud to start answering early.
 
 **Voice commands**
-A small spoken grammar layered on top of the on-screen buttons (buttons always work as the fallback). Since 2026-11-22 it is four commands, each in the quiz language, screen-scoped: on the question "answer" opens the answer early (the Answer button's word), "repeat" replays the question, "next" skips it at once; "again" re-records on the answer sheet and retries / plays again on the error and set-end screens (and "next" moves on from the empty-answer sheet). Silence confirms an answer; anything else said on the sheet is a new answer. Each command has its own sensitivity: next strict, repeat lenient, again the most lenient (`VoiceCommandSensitivity.swift`).
+A small spoken grammar layered on top of the on-screen buttons (buttons always work as the fallback). Since 2026-11-22 it is four commands, each in the quiz language, screen-scoped: on the question "answer" opens the answer early (the Answer button's word), "repeat" replays the question, "next" skips it at once; "again" re-records on the answer sheet and retries / plays again on the error and set-end screens (and "next" moves on from the empty-answer sheet). Since 2026-11-24 (#243 decision 5) every round end (score, recap, daily challenge) asks "Znova, alebo domov?" and also takes a fifth command, "home", there only; on silence it asks once more, then waits. Silence confirms an answer; anything else said on the sheet is a new answer. Each command has its own sensitivity: next strict, repeat lenient, again the most lenient (`VoiceCommandSensitivity.swift`).
 
 ## Question pipeline
 

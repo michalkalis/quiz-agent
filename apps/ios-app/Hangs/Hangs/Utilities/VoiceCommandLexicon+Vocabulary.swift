@@ -49,7 +49,7 @@ extension VoiceCommandLexicon {
     static func takesQuestionWord(_ command: VoiceCommand) -> Bool {
         switch command {
         case .repeatQuestion, .next: true
-        case .answer, .again: false
+        case .answer, .again, .home: false
         }
     }
 
@@ -78,22 +78,22 @@ extension VoiceCommandLexicon {
         case .english:
             [
                 "answer", "next", "skip", "pass", "repeat", "again", "retry", "no", "wrong",
-                "one more time", "once more", "try again", "next question", "skip question", "repeat the question",
+                "one more time", "once more", "try again", "next question", "skip question", "repeat the question", "home",
             ]
         case .slovak:
             [
                 "odpovedz", "odpovedaj", "odpoveď", "ďalšia", "preskoč", "vynechaj", "zopakuj", "opakuj",
-                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj otázku", "ďalšia otázka",
+                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj otázku", "ďalšia otázka", "domov",
             ]
         case .czech:
             [
                 "odpověz", "odpovídej", "odpověď", "další", "přeskoč", "vynech", "zopakuj", "opakuj",
-                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj otázku", "další otázka",
+                "znovu", "znova", "ne", "špatně", "ještě jednou", "zopakuj otázku", "další otázka", "domů",
             ]
         case .ukrainian:
             [
                 "відповідай", "відповідь", "пропусти", "наступне", "повтори",
-                "ще раз", "знову", "ні", "неправильно", "повтори питання", "наступне питання",
+                "ще раз", "знову", "ні", "неправильно", "повтори питання", "наступне питання", "додому",
             ]
         }
     }

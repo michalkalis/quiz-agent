@@ -10,8 +10,10 @@
 //  never fires a command on another — except the retry titles, which mean
 //  "znova" everywhere "znova" is a command. Founder 2026-11-22: only buttons
 //  that do what one of the four commands does are words (Answer, Next, Again);
-//  "Na úvod" / "Home" are buttons only now. Every entry exists in sk / cs /
-//  en / uk (`VoiceCommandButtonWordTests`).
+//  "Na úvod" / "Home" are buttons only now. #243 decision 5 (2026-11-24) made
+//  "home" a command at the round end, so there the Home button's "Úvod" is a
+//  word again. Every entry exists in sk / cs / en / uk
+//  (`VoiceCommandButtonWordTests`).
 //
 
 import Foundation
@@ -31,6 +33,9 @@ extension VoiceCommandLexicon {
         case (.noAnswer, .next, .slovak): return ["dalej"]
         case (.noAnswer, .next, .czech): return ["dal", "dale"]
         case (.noAnswer, .next, .ukrainian): return ["далі"]
+        // The round end's Home button reads "Úvod" in sk / cs; en "Home" and
+        // uk "Додому" are the command words themselves.
+        case (.setEnd, .home, .slovak), (.setEnd, .home, .czech): return ["uvod"]
         default: return []
         }
     }
@@ -55,8 +60,8 @@ extension VoiceCommandLexicon {
     static func buttonVocabulary(for language: CommandLanguage) -> [String] {
         switch language {
         case .english: return ["try again", "play again"]
-        case .slovak: return ["ďalej", "skús znova", "hraj znova"]
-        case .czech: return ["dál", "dále", "zkus znovu", "hraj znovu"]
+        case .slovak: return ["ďalej", "skús znova", "hraj znova", "úvod"]
+        case .czech: return ["dál", "dále", "zkus znovu", "hraj znovu", "úvod"]
         case .ukrainian: return ["далі", "спробуй ще раз", "зіграй ще раз"]
         }
     }

@@ -621,6 +621,7 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
         quizEndCommandsArmed = false
+        roundEndLineStarted = false
         // T7 (decision 8): leaving the recording/processing phase-pair drops the
         // confirmation + capture subsets atomically via the owner child — never
         // mid-pair (recording → processing keeps in-flight state), and never the
@@ -916,6 +917,10 @@ final class QuizViewModel: ObservableObject {
     /// at the set end, the quiet session is up), so that screen may listen.
     /// Any state change drops it (`transition`).
     var quizEndCommandsArmed = false
+    /// #243 decision 5: this round end's line has been started — once per
+    /// round end, also when the recap's summary read delays it. Any state
+    /// change drops it (`transition`).
+    var roundEndLineStarted = false
 
     /// #188 G1: the error line, synthesized while the quiz could still reach
     /// the server — the network is usually what just failed. Keyed by text.
@@ -1138,7 +1143,8 @@ final class QuizViewModel: ObservableObject {
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
-            playAgain: { [weak self] in _ = self?.playAgain() },
+            playAgain: { [weak self] in self?.playAgainFromRoundEnd() },
+            goHome: { [weak self] in self?.resetToHome() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
             isReadingQuestionAloud: { [weak self] in
                 guard let self else { return false }
@@ -2785,17 +2791,18 @@ final class QuizViewModel: ObservableObject {
         // mic stayed hot on the results and the recap played over a running
         // engine. Down before the session goes, like `endQuizWithResults`.
         audioDeviceState.stopSilenceDetectionListening()
-        // #205: the daily round end has no "again" to listen for and says
-        // nothing (the crowd lines rode the answers' feedback).
+        // #243 decision 5 (founder 2026-11-24): every round end (score, recap,
+        // daily challenge) says "Hotovo, 7 z 10. Znova, alebo domov?" and
+        // listens for those words. It releases the session once it has spoken.
         let quotaLimit = roundEndQuotaLimit
         roundEndQuotaLimit = nil
-        if endsOnRecap || activeDaily != nil {
-            // Release the audio session so Spotify/podcasts resume full volume.
+        if endsOnRecap, recapReadsItself {
+            // The recap reads its summary first (SetRecapView starts it); the
+            // line follows the read (`resumeRoundEndAfterRecapRead`). Release
+            // the audio session so Spotify/podcasts resume full volume.
             audioService.deactivateSession()
             if let quotaLimit { scheduleRoundEndPaywall(quotaLimit) }
         } else {
-            // #188 G3: the score screen says the score first (it releases the
-            // session once it has spoken).
             announceSetFinished(thenPaywall: quotaLimit)
         }
 

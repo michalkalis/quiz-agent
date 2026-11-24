@@ -42,13 +42,17 @@
 //  The confirm words of #185 ("áno", "potvrď", "ok") are filler again
 //  everywhere: silence confirms an answer.
 //
+//  #243 decision 5 (founder 2026-11-24): the round end asks "Znova, alebo
+//  domov?", so "home" is back as a fifth command, on that screen only.
+//
 
 import Foundation
 
 /// The small hands-free command grammar. Screen-scoped by `VoiceCommandScreen`.
-/// Founder 2026-11-22: four commands, in the quiz language. Confirm, stop,
-/// pause and home are gone: silence confirms an answer, the toolbar pauses,
-/// the buttons leave. How readily each one fires: `VoiceCommandSensitivity.swift`.
+/// Founder 2026-11-22: four commands, in the quiz language. Confirm, stop and
+/// pause are gone: silence confirms an answer, the toolbar pauses. #243
+/// decision 5 (2026-11-24) added "home", heard at the round end only. How
+/// readily each one fires: `VoiceCommandSensitivity.swift`.
 enum VoiceCommand: String, Sendable, CaseIterable, Equatable {
     /// Opens the answer recording early. Was "start" until 2026-11-22; it is
     /// the Answer button's word now, because "start" was not intuitive.
@@ -57,6 +61,9 @@ enum VoiceCommand: String, Sendable, CaseIterable, Equatable {
     case next
     case repeatQuestion // "repeat" — replay the question audio
     case again // re-record / retry / play again
+    /// #243 decision 5: leave the round end for Home, like its Home button.
+    /// The round end only (`commands(on:)`); retired everywhere else 2026-11-22.
+    case home
 }
 
 /// The screen a command is heard on. Command routing is screen-scoped so an
@@ -71,8 +78,8 @@ enum VoiceCommandScreen: Sendable, Equatable {
     /// #188 G1 (founder 2026-10-06): the error screen — "znova" retries, so a
     /// failure does not need a tap.
     case error
-    /// #188 G3: the per-question flow's end-of-set score screen — "znova"
-    /// plays again.
+    /// #188 G3, #243 decision 5: every round end (score, recap, daily
+    /// challenge) — "znova" plays again, "domov" goes Home.
     case setEnd
 }
 
@@ -90,7 +97,9 @@ enum VoiceCommandLexicon {
         // The sheet's two buttons, Again / Next. No confirm: confirming an
         // empty field IS a skip.
         case .noAnswer: [.again, .next]
-        case .error, .setEnd: [.again]
+        case .error: [.again]
+        // #243 decision 5: the line asks "Znova, alebo domov?" in this order.
+        case .setEnd: [.again, .home]
         }
     }
 
@@ -119,6 +128,8 @@ enum VoiceCommandLexicon {
         // (`phrases(for:)`). "no" and "wrong" start sentences, so they act on a
         // final only (`finalOnlyVariants`).
         case (.english, .again): return ["again", "retry", "no", "wrong", "onemoretime", "oncemore", "tryagain", "playagain"]
+        // #243 decision 5: the round end only.
+        case (.english, .home): return ["home"]
         // „odpovedz“ (the button), „odpovedaj“, „odpoveď“.
         case (.slovak, .answer): return ["odpovedz", "odpovedaj", "odpoved"]
         // The question button reads "Ďalšia"; "preskoč" / "vynechaj" stay as
@@ -130,12 +141,15 @@ enum VoiceCommandLexicon {
         // #185 5.3: "nie", "zle", "ešte raz", "znova" = record the answer again.
         // Founder 2026-10-13: the "Skús znova" / "Hraj znova" buttons.
         case (.slovak, .again): return ["znova", "znovu", "nie", "zle", "esteraz", "skusznova", "hrajznova"]
+        case (.slovak, .home): return ["domov"]
         // Czech (#175): "odpověz" folds to "odpovez", "přeskoč" to "preskoc" —
         // the same folding the Slovak set relies on.
         case (.czech, .answer): return ["odpovez", "odpovidej", "odpoved"]
         case (.czech, .next): return ["dalsi", "preskoc", "vynech"]
         case (.czech, .repeatQuestion): return ["zopakuj", "opakuj"]
         case (.czech, .again): return ["znovu", "znova", "ne", "spatne", "jestejednou", "zkusznovu", "hrajznovu"]
+        // „domů“ folds to "domu", so a recognizer writing „domu“ matches too.
+        case (.czech, .home): return ["domu"]
         // Ukrainian (#231): «відповідай» (the button) and «відповідь».
         // Stored unfolded: Cyrillic is never diacritic-folded.
         case (.ukrainian, .answer): return ["відповідай", "відповідь"]
@@ -146,6 +160,7 @@ enum VoiceCommandLexicon {
         // "неправильно" act on a final only, like sk "nie" / "zle", and only
         // when heard exactly (`exactOnlyVariants`: «правильно», «неправда» are answers).
         case (.ukrainian, .again): return ["щераз", "знову", "ні", "неправильно", "спробуйщераз", "зіграйщераз"]
+        case (.ukrainian, .home): return ["додому"]
         }
     }
 

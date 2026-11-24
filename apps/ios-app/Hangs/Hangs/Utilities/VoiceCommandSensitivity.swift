@@ -48,6 +48,12 @@ extension VoiceCommand {
         // anyway (or retries, or plays again), so it should catch an imperfect
         // or cut-off word, and never waits for the final result.
         case .again: CommandSensitivity(finalFloor: 0.65, volatileFloor: 0.7, waitsForFinal: false, falseFireCost: 0)
+        // #243 decision 5, the round end only: a false fire leaves the score
+        // for Home (the round is over, nothing is lost), a miss makes the
+        // player tap. One slip on a five-letter word ("domov") still fires,
+        // while a four-letter one ("home", "domu") must be exact: "come",
+        // "hole" are conversation. No wait for the final, like "again".
+        case .home: CommandSensitivity(finalFloor: 0.8, volatileFloor: 0.85, waitsForFinal: false, falseFireCost: 1)
         }
     }
 }

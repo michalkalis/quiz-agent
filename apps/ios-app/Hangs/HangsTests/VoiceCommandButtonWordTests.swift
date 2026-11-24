@@ -41,6 +41,8 @@ private let buttonTitles: [ButtonTitle] = [
     ButtonTitle(button: "Next (sheet)", screen: .noAnswer, expected: .next, sk: "Ďalej", cs: "Dál", en: "Next", uk: "Далі"),
     ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again", uk: "Спробуй ще раз"),
     ButtonTitle(button: "Play Again", screen: .setEnd, expected: .again, sk: "Hraj znova", cs: "Hraj znovu", en: "Play Again", uk: "Зіграй ще раз"),
+    // #243 decision 5: "home" is a command at the round end again, so its Home button's title is too.
+    ButtonTitle(button: "Home", screen: .setEnd, expected: .home, sk: "Úvod", cs: "Úvod", en: "Home", uk: "Додому"),
 ]
 
 private func title(_ button: String, on screen: VoiceCommandScreen) -> ButtonTitle {

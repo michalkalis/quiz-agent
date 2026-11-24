@@ -18,11 +18,16 @@ struct VoiceCommandFourCommandsTests {
     // MARK: - The grammar
 
     /// WHY: the founder cut the grammar to the four commands a player actually
-    /// needs; confirm, stop, pause and home are gone (silence confirms, the
-    /// toolbar pauses, the buttons leave).
-    @Test("only four commands remain")
+    /// needs; confirm, stop and pause are gone (silence confirms, the toolbar
+    /// pauses). #243 decision 5 (founder 2026-11-24) brought "home" back for
+    /// the round end's "Znova, alebo domov?" — there only, so it must never
+    /// creep onto another screen.
+    @Test("four commands in the quiz, plus home at the round end only")
     func onlyFourCommands() {
-        #expect(Set(VoiceCommand.allCases) == [.next, .repeatQuestion, .answer, .again])
+        #expect(Set(VoiceCommand.allCases) == [.next, .repeatQuestion, .answer, .again, .home])
+        for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer, .error] {
+            #expect(!VoiceCommandLexicon.commands(on: screen).contains(.home), "home must not act on \(screen)")
+        }
     }
 
     /// WHY: a command heard on a screen it does nothing on is a false fire
@@ -33,7 +38,8 @@ struct VoiceCommandFourCommandsTests {
         #expect(VoiceCommandLexicon.commands(on: .confirmation) == [.again])
         #expect(Set(VoiceCommandLexicon.commands(on: .noAnswer)) == [.again, .next])
         #expect(VoiceCommandLexicon.commands(on: .error) == [.again])
-        #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.again])
+        // #243 decision 5: the round end asks "Znova, alebo domov?".
+        #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.again, .home])
     }
 
     // MARK: - "answer" replaces "start"
@@ -65,17 +71,18 @@ struct VoiceCommandFourCommandsTests {
 
     nonisolated static let removedWords: [(CommandLanguage, VoiceCommandScreen, String)] = [
         (.english, .confirmation, "ok"), (.english, .confirmation, "confirm"), (.english, .confirmation, "yes"),
-        (.english, .confirmation, "stop"), (.english, .confirmation, "pause"), (.english, .setEnd, "home"),
+        (.english, .confirmation, "stop"), (.english, .confirmation, "pause"), (.english, .error, "home"),
         (.english, .error, "stop"), (.english, .question, "pause"),
         (.slovak, .confirmation, "potvrď"), (.slovak, .confirmation, "áno"), (.slovak, .confirmation, "stop"),
-        (.slovak, .confirmation, "pauza"), (.slovak, .setEnd, "domov"), (.slovak, .setEnd, "úvod"),
-        (.czech, .confirmation, "potvrď"), (.czech, .confirmation, "pauza"), (.czech, .setEnd, "domů"),
-        (.ukrainian, .confirmation, "підтверди"), (.ukrainian, .confirmation, "пауза"), (.ukrainian, .setEnd, "додому"),
+        (.slovak, .confirmation, "pauza"), (.slovak, .error, "domov"), (.slovak, .error, "úvod"),
+        (.czech, .confirmation, "potvrď"), (.czech, .confirmation, "pauza"), (.czech, .question, "domů"),
+        (.ukrainian, .confirmation, "підтверди"), (.ukrainian, .confirmation, "пауза"), (.ukrainian, .error, "додому"),
     ]
 
-    /// WHY (decision 1): confirm, stop, pause and home are removed. On the
-    /// answer sheet such a word is now simply speech (a new answer or noise),
-    /// never a command.
+    /// WHY (decision 1): confirm, stop and pause are removed. On the answer
+    /// sheet such a word is now simply speech (a new answer or noise), never a
+    /// command. Home stays removed everywhere but the round end (#243
+    /// decision 5, `QuizEndCommandWordTests`).
     @Test("removed words are no command anywhere", arguments: removedWords)
     func removedWordsAreInert(_ language: CommandLanguage, _ screen: VoiceCommandScreen, _ word: String) {
         #expect(VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: true, language: language) == nil)

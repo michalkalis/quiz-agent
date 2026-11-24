@@ -67,8 +67,8 @@ Implementácia, jeden PR na riadok (stav `[ ]` todo · `[x]` hotové):
 
 - [ ] 243.1 Hudba sa pri štarte kvízu zastaví (nie len stíši), po konci kvízu môže pokračovať
 - [ ] 243.2 Diagnostický riadok „Rozpoznávanie reči“ len v ladiacej sekcii
-- [ ] 243.3 Hlasové výzvy fáz (rozhodnutie 1): vopred nahraté klipy sk/cs/en/uk hlasom appky, dlhšia verzia pre prvé dve otázky; ticho pri vypnutom „Čítať nahlas“ a Bez zvuku
-- [ ] 243.4 Ticho pri odpovedi (rozhodnutie 2) + cesta späť k otázke z ponuky (B2)
+- [ ] 243.3 Hlasové výzvy fáz (rozhodnutie 1): klipy sk/cs/en/uk hlasom appky z ElevenLabs (vygenerované vopred a pribalené, aby zazneli hneď aj bez signálu), nikdy systémový hlas iPhonu (founder 2026-11-24); dlhšia verzia pre prvé dve otázky; ticho pri vypnutom „Čítať nahlas“ a Bez zvuku
+- [ ] 243.4 Ticho pri odpovedi (rozhodnutie 2) + cesta späť k otázke z ponuky (B2). Nápoveda hlasom appky len keď appka hráčovi nerozumie (zachytila reč, ale nevie z nej odpoveď, napr. nejasná možnosť pri výbere); pri tichu žiadna hláška, len návrat do premýšľania (founder 2026-11-24)
 - [ ] 243.5 Potvrdenie počúva len „znova“ (rozhodnutie 3)
 - [ ] 243.6 Pásik so slovami povelov vždy, keď appka počúva (C4)
 - [ ] 243.7 Koniec kvízu hlasom (rozhodnutie 5), aj súhrn a denná výzva; nový povel „domov“ len tu

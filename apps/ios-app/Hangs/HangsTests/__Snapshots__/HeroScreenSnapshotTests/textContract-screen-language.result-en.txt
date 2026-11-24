@@ -19,6 +19,7 @@ result.verdict
 result.answer
 result.hearIt
 result.explanation
+result.explanationRead
 result.metaRow
 result.showQuestion
 result.source

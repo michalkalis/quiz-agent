@@ -77,7 +77,7 @@ struct ResultAnswerPanel: View {
                     ReadAloudFailureNote(identifier: "result.hearItFailed")
                         .padding(.top, Metrics.labelGap)
                 }
-                explanationScroll(explanation)
+                explanationScroll(explanation, onRead: onHearIt)
                     .padding(.top, Metrics.labelGap)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else {
@@ -110,11 +110,17 @@ struct ResultAnswerPanel: View {
 
     /// The explanation scrolls WITHIN the card when it overflows: the visible
     /// affordance is the scroll indicator plus a bottom fade into the card.
-    private func explanationScroll(_ text: String) -> some View {
+    /// #243.9 (founder 2026-11-24, decision 4): a tap on the text reads it,
+    /// like "hear it" (none in a silent quiz, where `onRead` is nil).
+    private func explanationScroll(_ text: String, onRead: (() -> Void)?) -> some View {
         ScrollView(.vertical, showsIndicators: true) {
-            Text(text)
-                .font(.hangsBodyLG)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if let onRead {
+                Button(action: onRead) { explanationText(text) }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("result.explanationRead")
+            } else {
+                explanationText(text)
+            }
         }
         .overlay(alignment: .bottom) {
             LinearGradient(
@@ -125,6 +131,13 @@ struct ResultAnswerPanel: View {
             .allowsHitTesting(false)
         }
         .accessibilityIdentifier("result.explanation")
+    }
+
+    private func explanationText(_ text: String) -> some View {
+        Text(text)
+            .font(.hangsBodyLG)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
     }
 
     /// "Hear it": a neutral chip on the card.

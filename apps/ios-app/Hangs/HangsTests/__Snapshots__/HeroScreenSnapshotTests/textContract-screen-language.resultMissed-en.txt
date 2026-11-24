@@ -21,6 +21,7 @@ result.answer
 result.said
 result.hearIt
 result.explanation
+result.explanationRead
 result.metaRow
 result.showQuestion
 result.source

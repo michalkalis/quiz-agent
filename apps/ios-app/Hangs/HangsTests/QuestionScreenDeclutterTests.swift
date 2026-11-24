@@ -105,6 +105,9 @@ struct QuestionScreenDeclutterTests {
         vm.startRecordingOrTimer()
         if thinkingTime > 0 {
             await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the think window never started")
+            // #243.3: „Think.“ is app speech, so it closes the window while it
+            // plays; thinking listens again right after the line.
+            await pumpUntil({ vm.commandListenerHint != nil }, "thinking never listened again after the think line")
         }
 
         let view = QuestionView(viewModel: vm)

@@ -101,6 +101,8 @@ import os
         // when shouldFailPlayback throws (the attempt still happened).
         var playOpusCallCount = 0
         var lastPlayedData: Data?
+        /// Every clip handed to `playOpusAudio`, in order.
+        var playedData: [Data] = []
 
         /// Stop spy (tap-to-replay restart contract): proves an in-flight TTS was
         /// actually stopped before the restarted playback, which is otherwise
@@ -233,6 +235,7 @@ import os
         func playOpusAudio(_ data: Data) async throws -> TimeInterval {
             playOpusCallCount += 1
             lastPlayedData = data
+            playedData.append(data)
             if shouldFailPlayback {
                 throw AudioError.playbackFailed
             }

@@ -243,14 +243,18 @@ class TestSymbols:
 # the voice as written; a code glued to its letters keeps a space ("Djedna").
 @pytest.mark.parametrize("language", ["sk", "cs", "uk"])
 def test_names_with_digits_stay_as_written(language):
-    out = normalize_numbers_for_tts("Raper 50 Cent a skupina Blink-182 v roku 2003.", language)
+    out = normalize_numbers_for_tts(
+        "Raper 50 Cent a skupina Blink-182 v roku 2003.", language
+    )
     assert "50 Cent" in out and "Blink-182" in out
     assert "2003" not in out  # the year is still spelled out
 
 
 def test_code_glued_to_letters_gets_a_space():
     assert normalize_numbers_for_tts("Diaľnica D1.", "sk").startswith("Diaľnica D jed")
-    assert normalize_numbers_for_tts("Bicí automat TR-808.", "cs").startswith("Bicí automat TR osm")
+    assert normalize_numbers_for_tts("Bicí automat TR-808.", "cs").startswith(
+        "Bicí automat TR osm"
+    )
 
 
 def test_a_number_not_in_a_name_is_still_spelled():

@@ -336,6 +336,8 @@ struct ResultPacePresetTests {
 
         await endVerdict(rig)
         await pumpUntil({ rig.vm.voiceCommandCoordinator.currentCommandScreen == .result }, "the 'next' window never opened")
+        // Commands are heard only after a line that names them (founder 2026-11-24).
+        #expect(rig.audio.lastPlayedData == PhasePrompt.sayNext.audio(language: .english), "the result never said 'Say: next.'")
         await rig.clock.advance(by: .seconds(600))
         await pumpUntil { true }
         #expect(rig.vm.quizState.isShowingResult, "the result moved on by itself")

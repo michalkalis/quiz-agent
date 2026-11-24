@@ -68,7 +68,12 @@ extension QuizViewModel {
     /// is spoken on the result any more.
     func armResultNextCommand() async {
         guard quizState.isShowingResult else { return }
-        // #243.8: spoken "Povedz ďalšia." added with the clip
+        // Commands are heard only after a line that names them (founder
+        // 2026-11-24): "Povedz: ďalšia." Nothing is said with read-aloud off.
+        if !isSilentMode, !isAudioMuted {
+            await playPhasePrompt(.sayNext)
+            guard quizState.isShowingResult else { return }
+        }
         resultNextCommandArmed = true
         await voiceCommandCoordinator.syncCommandListenerWindow()
     }

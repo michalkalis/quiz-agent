@@ -32,6 +32,10 @@ swift-concurrency/, ios-mvvm/, ios-networking/, ios-audio/, ios-debugging/
 
 **Tests never wait on real time (#180 track A).** Every quiz-path timer, backoff and deadline sleeps on the one injected `AnyClock<Duration>` (`QuizViewModel(clock:)`, `Fixtures.makeViewModel(clock:)`; pack view models and `SilenceDetectionService` take `clock:` too). A test that owns time builds the model with `AnyClock(TestClock())` and `await clock.advance(by:)` to the SHIPPED boundary — just before it (nothing fired) and past it — instead of shrinking durations. Use integer `.milliseconds(...)` at a boundary (a fractional `Duration` can land 1 as short). Scheduling-only waits use `pumpUntil` (turn-bounded), never `Task.sleep`. `AnyClock(ImmediateClock())` is unsafe on any submit path (the user-facing timeout would fire at once). Audio hardware settles in `QuizViewModel` and the audio mock stay real time by design.
 
+### Build folders (disk space, founder 2026-11-25)
+
+Never pass a fresh `-derivedDataPath` per run (`dd1`, `dd2`, `dd-fix`…): each copy is ~6 GB, and one session filled ~100 GB of disk overnight. Use Xcode's default DerivedData, or one fixed folder per worktree that every build and test run of that worktree reuses. A second folder only for a genuinely separate build (e.g. Release vs Debug); delete it when that build is done.
+
 ## Accessibility identifiers (#180 track E)
 
 The UI ships in sk/cs/en, so visible text is never a locator. `scripts/lint-a11y-ids.py` runs in `ios-ci.yml` and fails the PR on any miss; run it locally before pushing.

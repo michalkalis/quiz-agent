@@ -51,7 +51,9 @@ struct RoomPauseTests {
     func stayStopsAutoAdvance() async {
         let model = await hostAtReveal()
         defer { model.stopAll() }
-        let delay = QuizSettings.default.autoAdvanceDelay
+        // #243.8: solo's default "right after the verdict" names no length;
+        // a room reveal gets its reading time.
+        let delay = RoomViewModel.revealReadingSeconds
         #expect(model.autoAdvanceLeft == delay)
 
         await model.togglePause()

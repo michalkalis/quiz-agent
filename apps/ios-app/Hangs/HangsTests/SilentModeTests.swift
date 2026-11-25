@@ -194,7 +194,7 @@ struct SilentModeTests {
         rig.vm.quizState = .processing
 
         await rig.vm.handleQuizResponse(gradedResponse())
-        await pumpUntil({ rig.vm.autoAdvanceCountdown == rig.vm.settings.autoAdvanceDelay }, "the result did not count its pause")
+        await pumpUntil({ rig.vm.autoAdvanceCountdown == Config.resultReadingPause }, "the result did not count its pause")
         rig.vm.readExplanationAloud("Two and two make four.")
         await pumpUntil { true }
 

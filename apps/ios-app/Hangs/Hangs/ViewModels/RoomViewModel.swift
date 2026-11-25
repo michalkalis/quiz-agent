@@ -177,8 +177,18 @@ final class RoomViewModel: ObservableObject, Identifiable {
     var isHost: Bool { role == .host }
     /// #224.4: the host stays on this reveal; every phone says so.
     var isPaused: Bool { round?.isPaused == true }
-    /// After a reveal the host's phone moves on by itself after this long (solo's pause).
-    var autoAdvanceSeconds: Int { solo.autoAdvanceDelay }
+    /// After a reveal the host's phone moves on by itself after this long
+    /// (solo's pause). #243.8: solo's "right after the verdict" (0) and "wait
+    /// for next" (-1) have no length; a room reveal has no spoken verdict to
+    /// follow and must never count down from 0 or below, so both get the
+    /// reveal's reading time.
+    var autoAdvanceSeconds: Int {
+        solo.autoAdvanceDelay > 0 ? solo.autoAdvanceDelay : Self.revealReadingSeconds
+    }
+
+    /// The reading time of a reveal when solo's pace names none (#243.8):
+    /// the 8 s every room had before the presets.
+    static let revealReadingSeconds = 8
     var players: [RoomState.Player] { state?.players ?? [] }
     var me: RoomState.Player? { players.first { $0.participantId == state?.you } }
     var host: RoomState.Player? { players.first(where: \.isHost) }

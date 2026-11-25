@@ -99,7 +99,7 @@ struct ResultHearItHoldTests {
         await pumpUntil({ rig.vm.autoAdvanceCountdown > 0 }, "precondition: the countdown runs")
 
         rig.vm.readExplanationAloud("Four is two plus two.")
-        await advance(clock, by: .seconds(rig.vm.settings.autoAdvanceDelay + 5))
+        await advance(clock, by: .seconds(Config.resultReadingPause + 5))
 
         #expect(rig.vm.quizState.isShowingResult, "the countdown ran out under the explanation")
         #expect(rig.vm.isPaused)

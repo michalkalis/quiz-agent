@@ -39,6 +39,8 @@ enum PhasePrompt: Equatable, Sendable {
     static func noAnswerOffer(heardCount: Int) -> PhasePrompt {
         heardCount < longNoAnswerOfferPlays ? .noAnswerOffer : .noAnswerOfferShort
     }
+    /// #243.8: the result waits for "next" and says so.
+    case sayNext
 
     /// Think windows with a longer clip, the think-time presets (#243.8).
     static let spokenThinkSeconds: Set<Int> = [5, 10, 20, 30]
@@ -52,6 +54,7 @@ enum PhasePrompt: Equatable, Sendable {
         case .answer: "answer"
         case .noAnswerOffer: "no-answer-offer"
         case .noAnswerOfferShort: "no-answer-offer-short"
+        case .sayNext: "say-next"
         }
     }
 
@@ -76,6 +79,10 @@ enum PhasePrompt: Equatable, Sendable {
         case (.noAnswerOfferShort, .czech): "Neslyším odpověď. Řekni: zopakuj. Znovu. Nebo další."
         case (.noAnswerOfferShort, .english): "I can't hear an answer. Say: repeat. Again. Or next."
         case (.noAnswerOfferShort, .ukrainian): "Не чую відповіді. Скажи: повтори. Ще раз. Або пропусти."
+        case (.sayNext, .slovak): "Povedz: ďalšia."
+        case (.sayNext, .czech): "Řekni: další."
+        case (.sayNext, .english): "Say: next."
+        case (.sayNext, .ukrainian): "Скажи: пропусти."
         case (.think, _), (.thinkMore, _): ""
         }
     }

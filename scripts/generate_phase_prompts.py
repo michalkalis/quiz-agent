@@ -92,6 +92,12 @@ PHASE_PROMPTS: dict[str, dict[str, str]] = {
         "en": "I can't hear an answer. Say: repeat. Again. Or next.",
         "uk": "Не чую відповіді. Скажи: повтори. Ще раз. Або пропусти.",
     },
+    "say-next": {
+        "sk": "Povedz: ďalšia.",
+        "cs": "Řekni: další.",
+        "en": "Say: next.",
+        "uk": "Скажи: пропусти.",
+    },
 }
 
 
@@ -112,6 +118,7 @@ VOICE_SETTINGS = {
     "no-answer-offer": CALM,
     "no-answer-offer-short": CALM,
     "answer": SLOWER,
+    "say-next": CALM,
 }
 
 

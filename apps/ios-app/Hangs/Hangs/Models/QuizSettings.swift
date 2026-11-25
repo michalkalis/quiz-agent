@@ -57,8 +57,18 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Difficulty level ("easy", "medium", "hard", "random")
     var difficulty: String
 
-    /// Auto-advance delay in seconds for result screen
-    var autoAdvanceDelay: Int
+    /// How the result screen moves on (#243.8): seconds after the verdict,
+    /// or a sentinel — `rightAfterVerdictAutoAdvance` (0) and
+    /// `waitForNextAutoAdvance` (-1). Saved under its own key
+    /// (`autoAdvancePreset`) that older builds ignore.
+    var autoAdvanceDelay: Int {
+        didSet { legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay) }
+    }
+
+    /// #243.8: what older builds read under the old `autoAdvanceDelay` key —
+    /// always a positive number of seconds, never a sentinel. They count
+    /// `0 ... delay`, which traps below 0, and a 1.0 decoder requires the key.
+    private var legacyAutoAdvanceDelay: Int
 
     /// Retired with the "Answer time limit" setting (#200 — auto-record is
     /// always on, so the think window is the only answer window). Nothing
@@ -67,8 +77,17 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// otherwise lose every setting.
     private var answerTimeLimit = 30
 
-    /// Thinking time in seconds before auto-recording starts (0 = immediate 500ms delay)
-    var thinkingTime: Int
+    /// Thinking time in seconds before auto-recording starts;
+    /// `unlimitedThinkingTime` (-1) = no countdown, the mic never opens on
+    /// its own (#243.8). Saved under its own key (`thinkingTimePreset`)
+    /// that older builds ignore.
+    var thinkingTime: Int {
+        didSet { legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime) }
+    }
+
+    /// #243.8: what older builds read under the old `thinkingTime` key —
+    /// seconds they can run, never the no-limit sentinel.
+    private var legacyThinkingTime: Int
 
     /// Which think-time default the saved value was made under: none = 10 s
     /// (every build up to 89), 2 = 0 s (build 90, #240.9), 3 = 10 s again.
@@ -171,7 +190,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.categories = categories
         self.difficulty = difficulty
         self.autoAdvanceDelay = autoAdvanceDelay
+        legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay)
         self.thinkingTime = thinkingTime
+        legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime)
         self.preferredInputDeviceId = preferredInputDeviceId
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
@@ -207,7 +228,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         numberOfQuestions: Self.defaultNumberOfQuestions,
         categories: [],
         difficulty: Config.defaultDifficulty,
-        autoAdvanceDelay: 8,
+        autoAdvanceDelay: Self.rightAfterVerdictAutoAdvance,
         thinkingTime: Self.defaultThinkingTime,
         preferredInputDeviceId: nil,
         autoConfirmEnabled: true,
@@ -228,6 +249,21 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Pre-multi-select persisted blobs carry a single `category` string.
     private enum LegacyKeys: String, CodingKey {
         case category
+    }
+
+    /// Spelled out for #243.8 only: the two preset choices take new keys and
+    /// their old keys carry the legacy-safe values. Every other key is the
+    /// property's own name.
+    private enum CodingKeys: String, CodingKey {
+        case language, audioMode, numberOfQuestions, numberOfQuestionsDefaultVersion, categories
+        case ageAppropriate, difficulty, answerTimeLimit, thinkingTimeDefaultVersion
+        case autoAdvanceDelay = "autoAdvancePreset"
+        case legacyAutoAdvanceDelay = "autoAdvanceDelay"
+        case thinkingTime = "thinkingTimePreset"
+        case legacyThinkingTime = "thinkingTime"
+        case preferredInputDeviceId, autoConfirmEnabled, showConfirmSheet, isMuted
+        case recordingSoundsEnabled, includeImageQuestions, includeLocalQuestions
+        case voiceCommandsEnabled, answerRevealMode, voiceHintsEnabled, quickGame, silentMode
     }
 
     init(from decoder: Decoder) throws {
@@ -255,17 +291,31 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // no longer lists it, or the server's refusal, drops it.
         categories = categories.filter { Self.categoryOptions.contains($0) || ExtraCategory.isExtra($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
-        autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
-        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? Self.defaultThinkingTime
-        // Build 90 (#240.9) made 0 s the default and rewrote every saved 10 s
-        // to 0. The founder rejected that flow after testing it (2026-11-21),
-        // so a 0 saved under build 90's default goes back to 10 s. A 0 the
-        // player picked on purpose cannot be told apart from build 90's
-        // default; build 90 was TestFlight only, and 0 stays one tap away.
-        let defaultVersion = try container.decodeIfPresent(Int.self, forKey: .thinkingTimeDefaultVersion) ?? 1
-        if defaultVersion == Self.immediateMicDefaultVersion, thinkingTime == Self.immediateMicDefaultThinkingTime {
-            thinkingTime = Self.defaultThinkingTime
+        // #243.8: the preset keys are this build's choice. Without them (a
+        // blob from an older build, or one an older build re-saved) the old
+        // keys move to the presets.
+        if let preset = try container.decodeIfPresent(Int.self, forKey: .autoAdvanceDelay) {
+            autoAdvanceDelay = preset
+        } else {
+            autoAdvanceDelay = Self.migratedAutoAdvanceDelay(try container.decode(Int.self, forKey: .legacyAutoAdvanceDelay))
         }
+        legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay)
+        if let preset = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) {
+            thinkingTime = preset
+        } else {
+            var saved = try container.decodeIfPresent(Int.self, forKey: .legacyThinkingTime) ?? Self.defaultThinkingTime
+            // Build 90 (#240.9) made 0 s the default and rewrote every saved 10 s
+            // to 0. The founder rejected that flow after testing it (2026-11-21),
+            // so a 0 saved under build 90's default goes back to 10 s. A 0 the
+            // player picked on purpose cannot be told apart from build 90's
+            // default; build 90 was TestFlight only.
+            let defaultVersion = try container.decodeIfPresent(Int.self, forKey: .thinkingTimeDefaultVersion) ?? 1
+            if defaultVersion == Self.immediateMicDefaultVersion, saved == Self.immediateMicDefaultThinkingTime {
+                saved = Self.defaultThinkingTime
+            }
+            thinkingTime = Self.migratedThinkingTime(saved)
+        }
+        legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime)
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
@@ -312,8 +362,22 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Valid difficulty options
     static let difficultyOptions = ["easy", "medium", "hard", "random"]
 
-    /// Valid auto-advance delay options (seconds)
-    static let autoAdvanceDelayOptions = [5, 8, 10, 15]
+    /// #243.8 (founder 2026-11-24): the result moves on right after the
+    /// verdict (the default), 8 s or 15 s after it, or waits for "next".
+    static let autoAdvanceDelayOptions = [rightAfterVerdictAutoAdvance, 8, 15, waitForNextAutoAdvance]
+    static let rightAfterVerdictAutoAdvance = 0
+    static let waitForNextAutoAdvance = -1
+
+    /// A blob without the preset key (saved by an older build): 5 s and the
+    /// old untouched default 8 s become "right after the verdict", 10 s the
+    /// nearest longer pause (8 s), 15 s stays; anything else the default.
+    static func migratedAutoAdvanceDelay(_ saved: Int) -> Int {
+        switch saved {
+        case 10: return 8
+        case 15: return 15
+        default: return rightAfterVerdictAutoAdvance
+        }
+    }
 
     /// Think time before the mic opens on its own (#68, driving-critical).
     static let defaultThinkingTime = 10
@@ -322,8 +386,36 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let immediateMicDefaultVersion = 2
     static let currentThinkingTimeDefaultVersion = 3
 
-    /// Valid thinking time options (seconds, 0 = immediate recording)
-    static let thinkingTimeOptions = [0, 10, 15, 30, 45, 60, 90, 120]
+    /// #243.8 (founder 2026-11-24): 5 · 10 (default) · 20 · 30 s or no limit.
+    static let thinkingTimeOptions = [5, 10, 20, 30, unlimitedThinkingTime]
+    /// No countdown: the question waits for "answer" or a tap.
+    static let unlimitedThinkingTime = -1
+
+    /// A blob without the preset key (saved by an older build; after build
+    /// 90's fix-up): 0 s → 5 s, 15 s → 20 s, anything above 30 s → no limit,
+    /// any other value the nearest preset.
+    static func migratedThinkingTime(_ saved: Int) -> Int {
+        if saved > 30 { return unlimitedThinkingTime }
+        if saved == 15 { return 20 }
+        let timed = thinkingTimeOptions.filter { $0 > 0 }
+        return timed.min { abs($0 - saved) < abs($1 - saved) } ?? defaultThinkingTime
+    }
+
+    /// #243.8: the old-key values older builds read. No limit is their
+    /// longest window, "right after the verdict" their shortest pause and
+    /// "wait for next" their longest; seconds pass through.
+    static let legacyUnlimitedThinkingTime = 120
+    static let legacyRightAfterVerdictDelay = 5
+    static let legacyWaitForNextDelay = 15
+
+    static func legacyThinkingTime(for time: Int) -> Int {
+        time < 0 ? legacyUnlimitedThinkingTime : time
+    }
+
+    static func legacyAutoAdvanceDelay(for delay: Int) -> Int {
+        if delay > 0 { return delay }
+        return delay == rightAfterVerdictAutoAdvance ? legacyRightAfterVerdictDelay : legacyWaitForNextDelay
+    }
 
     /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
     static let categoryOptions: [String?] = [
@@ -389,7 +481,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
             numberOfQuestions: 20,
             categories: ["science-nature"],
             difficulty: "hard",
-            autoAdvanceDelay: 5,
+            autoAdvanceDelay: 8,
             preferredInputDeviceId: nil
         )
     }

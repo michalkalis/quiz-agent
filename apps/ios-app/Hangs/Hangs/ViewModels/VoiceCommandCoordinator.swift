@@ -295,6 +295,8 @@ final class VoiceCommandCoordinator: ObservableObject {
     let cancelThinkingTime: @MainActor () -> Void
     /// #188 G1/G3: the error / set-end screen has spoken its line and may listen.
     let quizEndCommandsArmed: @MainActor () -> Bool
+    /// #243.8: the result waits for "next" and has spoken its verdict.
+    let resultNextCommandArmed: @MainActor () -> Bool
     /// #188 G1: spoken "znova" on the error screen — what its primary button does.
     let retryFromError: @MainActor () async -> Void
     /// #188 G3 / #200: spoken "znova" at the round end — the Play Again
@@ -352,6 +354,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         continueToNext: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         quizEndCommandsArmed: @escaping @MainActor () -> Bool,
+        resultNextCommandArmed: @escaping @MainActor () -> Bool,
         retryFromError: @escaping @MainActor () async -> Void,
         playAgain: @escaping @MainActor () -> Void,
         goHome: @escaping @MainActor () -> Void,
@@ -386,6 +389,7 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.continueToNext = continueToNext
         self.cancelThinkingTime = cancelThinkingTime
         self.quizEndCommandsArmed = quizEndCommandsArmed
+        self.resultNextCommandArmed = resultNextCommandArmed
         self.retryFromError = retryFromError
         self.playAgain = playAgain
         self.goHome = goHome

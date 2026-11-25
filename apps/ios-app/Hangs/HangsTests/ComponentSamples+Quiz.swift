@@ -37,7 +37,7 @@ nonisolated extension ComponentSample {
             // (white on cobalt, ink on yellow); #198.4: a custom pack in its own
             // palette colour with the "Custom pack" chip.
             ComponentSample("deckCard.question") {
-                HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Geografia a svet") {
+                HangsDeckCard(style: Theme.Hangs.Category.style(for: "geography-world"), categoryName: "Zemepis") {
                     Text(verbatim: "Ktoré mesto je hlavným mestom Austrálie?").font(.hangsDisplay(40))
                 }
                 .frame(height: 260)
@@ -70,6 +70,10 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("controlPill.pauseDisabled") {
                 QuizControlPill(isMuted: false, isPaused: false, isPauseEnabled: false, onMute: {}, onPause: {})
+            },
+            // Silent mode (founder 2026-11-22): nothing to mute, pause alone.
+            ComponentSample("controlPill.silent") {
+                QuizControlPill(isMuted: true, isPaused: false, isPauseEnabled: true, onMute: nil, onPause: {})
             },
             ComponentSample("reviewBadge.pendingReview") { ReviewBadge(badge: "pending_review") },
             ComponentSample("reviewBadge.machineTranslation") { ReviewBadge(badge: "translation_machine", filled: true) },
@@ -112,8 +116,25 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("questionListenBar.readingRecognizing") {
                 QuestionListenBar(phase: .readingQuestion, feedback: .recognizing,
-                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak),
+                                  recognizingWord: VoiceCommandLexicon.recognizingCaption(.next, language: .slovak),
                                   language: .slovak)
+            },
+            // "What the app hears" (founder 2026-11-22): the guess on the
+            // strip's small line with its fill, on a bar, and as the quiet
+            // line where no bar shows.
+            ComponentSample("questionListenBar.thinkingHeard") {
+                QuestionListenBar(phase: .thinking(remaining: 21, total: 30), feedback: .hearing,
+                                  heard: CommandHeard(command: .repeatQuestion, certainty: 0.6), language: .slovak)
+            },
+            ComponentSample("listenBar.commandHeard") {
+                ListenBar(mode: .command, feedback: .hearing, heard: CommandHeard(command: .again, certainty: 0.6),
+                          commandHint: #"Say "again" or a new answer"#)
+            },
+            ComponentSample("commandHeardLine.partial") {
+                CommandHeardLine(heard: CommandHeard(command: .repeatQuestion, certainty: 0.6))
+            },
+            ComponentSample("commandHeardLine.fired") {
+                CommandHeardLine(heard: .fired(.next), language: .slovak)
             },
             ComponentSample("listenBar.commandProcessing") {
                 ListenBar(mode: .command, feedback: .recognizing, commandWords: ["skip", "repeat", "pause"])
@@ -122,6 +143,17 @@ nonisolated extension ComponentSample {
             ComponentSample("questionListenBar.listeningCountdown") {
                 // With the ✕: the countdown and the ✕ each need their own room.
                 QuestionListenBar(phase: .listening(.open), answerRemaining: 12, onDismiss: {})
+            },
+            // TF build 90: the question screen's hints live in the open mic's bar.
+            ComponentSample("questionListenBar.listeningSpelling") {
+                QuestionListenBar(phase: .listening(.open), answerRemaining: 12, answerNote: .spelling, onDismiss: {})
+            },
+            ComponentSample("questionListenBar.listeningRetry") {
+                QuestionListenBar(phase: .listening(.mcq), answerRemaining: 12, answerNote: .didNotCatch, onDismiss: {})
+            },
+            ComponentSample("questionListenBar.slimSpelling") {
+                QuestionListenBar(phase: .listening(.open), size: .slim, answerRemaining: 12,
+                                  answerNote: .spelling, onDismiss: {})
             },
             // #237 (canvas pick L1): commands wait on the speech-recognition
             // permission — the bar's trailing control, with the ✕ beside it.
@@ -145,10 +177,7 @@ nonisolated extension ComponentSample {
             },
             ComponentSample("questionListenBar.evaluating") { QuestionListenBar(phase: .evaluating) },
             ComponentSample("questionListenBar.skipping") { QuestionListenBar(phase: .skipping) },
-            ComponentSample("retryHint.default") { EmptyAnswerRetryHint() },
             ComponentSample("spellingHint.default") { AnswerSpellingHint() },
-            ComponentSample("silencePrompt.open") { SilentAnswerPrompt(isMultipleChoice: false) },
-            ComponentSample("silencePrompt.mcq") { SilentAnswerPrompt(isMultipleChoice: true, onSpeak: {}) },
         ]
     }
 
@@ -169,10 +198,15 @@ nonisolated extension ComponentSample {
             ComponentSample("planCard.subscriber") { HomePlanCard(usage: usage(status: "active", premium: true)) },
             ComponentSample("planCard.grace") { HomePlanCard(usage: usage(status: "grace", premium: true)) },
             ComponentSample("planCard.expired") { HomePlanCard(usage: usage(status: "expired")) },
+            // 2026-11-21 free tier split: voice answers left (D2), and the
+            // question screen's once-a-month notice (D1).
+            ComponentSample("planCard.freeVoice") { HomePlanCard(usage: usage(status: "none", voiceRemaining: 12)) },
+            ComponentSample("planCard.freeVoiceSpent") { HomePlanCard(usage: usage(status: "none", voiceRemaining: 0)) },
+            ComponentSample("voiceLimitNotice.default") { VoiceLimitNotice(onPlus: {}) },
         ]
     }
 
-    private static func usage(status: String, premium: Bool = false, credits: Int = 0) -> UsageInfo {
+    private static func usage(status: String, premium: Bool = false, credits: Int = 0, voiceRemaining: Int? = nil) -> UsageInfo {
         let resetsAt = Date().addingTimeInterval(12 * 86400 + 12 * 3600)
         return UsageInfo(
             userId: "snapshot-subject",
@@ -182,7 +216,10 @@ nonisolated extension ComponentSample {
             remaining: premium ? 870 : 18,
             resetsAt: ISO8601DateFormatter().string(from: resetsAt),
             subscriptionStatus: status,
-            creditBalance: credits
+            creditBalance: credits,
+            voiceAnswersUsed: voiceRemaining.map { 30 - $0 },
+            voiceAnswersLimit: voiceRemaining.map { _ in 30 },
+            voiceAnswersRemaining: voiceRemaining
         )
     }
 }

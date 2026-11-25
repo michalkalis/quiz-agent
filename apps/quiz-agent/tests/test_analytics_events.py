@@ -165,6 +165,7 @@ async def test_family_mode_events_carry_the_content_setting_and_nothing_personal
         "family_band_selected",
         "family_topic_selected",
         "family_topic_empty",
+        "extra_category_quiz_started",
         "family_round_end_action",
     ):
         assert name in CLIENT_EVENTS
@@ -223,6 +224,28 @@ async def test_home_category_events_keep_only_the_step_and_the_entry_point():
     assert opened == {"source": "deck_button"}
 
 
+async def test_result_question_opened_keeps_only_kind_and_verdict():
+    # TF build 90 (C1): the result no longer prints the question; this counts
+    # how often players still open it, per question type and verdict, and
+    # nothing about the question or the player rides along.
+    opened = clean_properties(
+        CLIENT_EVENTS["result_question_opened"],
+        {"kind": "mcq", "verdict": "incorrect", "question_id": "q1", "answer": "x"},
+    )
+    assert opened == {"kind": "mcq", "verdict": "incorrect"}
+
+
+async def test_home_settings_events_keep_only_the_round_length():
+    # TestFlight build 90 feedback (Home A1): how often Home's own gear and
+    # round-length row get used; the count is the only property that rides.
+    opened = clean_properties(CLIENT_EVENTS["home_settings_opened"], {"name": "x"})
+    assert opened == {}
+    changed = clean_properties(
+        CLIENT_EVENTS["home_round_length_changed"], {"questions": 8, "name": "x"}
+    )
+    assert changed == {"questions": 8}
+
+
 async def test_quick_game_events_keep_only_the_mode():
     # #224.8: compares skipping and finishing in the quick quiz with the
     # normal flow, and whether the switch gets used; nothing else rides along.
@@ -240,6 +263,19 @@ async def test_quick_game_events_keep_only_the_mode():
     assert ctx == {"quick_game": True}
 
 
+async def test_silent_mode_events_keep_only_the_mode():
+    # 2026-11-22: how many players turn sound off, and how many quizzes run
+    # silent; a dropped key would leave both unanswerable.
+    changed = clean_properties(
+        CLIENT_EVENTS["silent_mode_changed"], {"enabled": True, "name": "x"}
+    )
+    assert changed == {"enabled": True}
+    ctx = clean_properties(
+        CLIENT_EVENTS["quiz_context"], {"silent_mode": True, "city": "Bratislava"}
+    )
+    assert ctx == {"silent_mode": True}
+
+
 async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
     # #237: how many players turn commands on, from the onboarding or the quiz
     # listen bar, and how many then refuse speech recognition; nothing about
@@ -249,6 +285,63 @@ async def test_voice_commands_turned_on_keeps_only_where_and_the_answer():
         {"source": "listen_bar", "result": "denied", "language": "sk"},
     )
     assert cleaned == {"source": "listen_bar", "result": "denied"}
+
+
+async def test_voice_command_window_keeps_counts_and_never_text():
+    # One report per listening window decides whether sk / cs / uk stay on the
+    # on-device recognizer: counts and one latency per language and engine.
+    # What was heard must never be stored, whatever key a build sends it under.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_command_window"],
+        {
+            "engine": "dictation",
+            "language": "sk",
+            "screen": "question",
+            "transcripts": 0,
+            "matched": 0,
+            "unmatched": 0,
+            "late": 1,
+            "cut_off": 0,
+            "first_transcript_ms": None,
+            "transcript": "zopakuj otázku",
+            "heard": "zopakuj",
+        },
+    )
+    assert cleaned == {
+        "engine": "dictation",
+        "language": "sk",
+        "screen": "question",
+        "transcripts": 0,
+        "matched": 0,
+        "unmatched": 0,
+        "late": 1,
+        "cut_off": 0,
+    }
+
+
+async def test_voice_command_keeps_language_path_and_latency_never_text():
+    # Founder 2026-11-22: fired commands per command and language, next to the
+    # windows per language, answer "are sk and cs recognised worse than en?";
+    # speech_end_ms is how long a command took after the word. What was heard
+    # must never be stored.
+    cleaned = clean_properties(
+        CLIENT_EVENTS["voice_command"],
+        {
+            "command": "next",
+            "phase": "question",
+            "language": "cs",
+            "path": "final",
+            "speech_end_ms": 640,
+            "text": "další",
+        },
+    )
+    assert cleaned == {
+        "command": "next",
+        "phase": "question",
+        "language": "cs",
+        "path": "final",
+        "speech_end_ms": 640,
+    }
 
 
 async def test_sign_in_prompt_events_keep_only_kind_and_outcome():

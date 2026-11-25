@@ -19,6 +19,11 @@
 //  (✕, sound + pause, ⋯) over `HangsQuizProgressHeader`. The old hand-drawn row
 //  (✕ + logo + "03 / 10", TestFlight chips floated on top) broke at large text.
 //
+//  TF build 90 (founder pick C1, docs/artifacts/tf90-layouts.html): the card is
+//  verdict, the question's correct answer, what was heard when it differs, why
+//  and the source. The question is one tap away ("Show question" sheet). The
+//  STAY/RESUME pill is gone: the toolbar's pause does the same thing.
+//
 
 import SwiftUI
 
@@ -42,6 +47,7 @@ struct ResultView: View {
     @State private var showSourceWebView = false
     @State private var showEndQuizConfirmation = false
     @State private var showQuizSettings = false
+    @State private var showQuestionSheet = false
     /// The ⋯ menu's "Rate question" row (TestFlight/Debug), as on the question screen.
     @State private var ratingPresentation: QuestionRatingPresentation?
 
@@ -68,18 +74,16 @@ struct ResultView: View {
                 resultCard
                     .padding(.horizontal, Theme.Hangs.Spacing.md)
                     .padding(.top, Theme.Hangs.Spacing.sm)
-                    .padding(.bottom, Theme.Hangs.Spacing.xs)
+                    // TF build 90: the screen's standard gap between the card and Next.
+                    .padding(.bottom, Theme.Hangs.Spacing.md)
                     .frame(maxHeight: .infinity)
 
                 ResultFooter(
                     autoAdvanceActive: autoAdvanceActive,
-                    isPaused: viewModel.isPaused,
                     countdownRemaining: viewModel.isAwaitingSpokenVerdict
                         ? viewModel.autoAdvanceTotal : viewModel.autoAdvanceCountdown,
                     countdownTotal: viewModel.autoAdvanceTotal,
-                    onNext: { viewModel.continueToNext() },
-                    onStay: { viewModel.pauseQuiz() },
-                    onResume: { viewModel.resumeAutoAdvance() }
+                    onNext: { viewModel.continueToNext() }
                 )
             }
         }
@@ -88,13 +92,14 @@ struct ResultView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         // #188 G9 (D9): the question screen's bar, with sound and pause in the
-        // same places. Pause here holds the auto-advance (the STAY pill's job).
+        // same places. Pause here holds the auto-advance (TF build 90: the
+        // only pause, the footer's STAY pill duplicated it).
         .quizToolbar(
             isMuted: viewModel.isAudioMuted,
             isPaused: viewModel.isPaused,
             isPauseEnabled: autoAdvanceActive || viewModel.isPaused,
-            onClose: { showEndQuizConfirmation = true },
-            onMute: { Task { await viewModel.toggleMute() } },
+            onClose: confirmEndQuiz,
+            onMute: viewModel.isSilentMode ? nil : { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.isPaused ? viewModel.resumeAutoAdvance() : viewModel.pauseQuiz() },
             onSettings: { showQuizSettings = true },
             onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
@@ -120,6 +125,16 @@ struct ResultView: View {
             guard cardMotion, !reduceMotion else { return }
             cardReveal += 1
         }
+        .sheet(isPresented: $showQuestionSheet) {
+            if let question = resultQuestionModel {
+                ResultQuestionSheet(
+                    question: question,
+                    identity: deckIdentity,
+                    correctAnswer: answerText,
+                    reveal: optionReveal(for: question)
+                )
+            }
+        }
         .sheet(isPresented: $showSourceWebView) {
             if let sourceUrl = viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl {
                 SourceWebView(url: sourceUrl, isPresented: $showSourceWebView)
@@ -127,11 +142,17 @@ struct ResultView: View {
         }
         // #81 follow-up (founder 2026-07-06): the X must confirm before quitting.
         .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
-            Button("Continue", role: .cancel) {}
+            Button("Continue", role: .cancel, action: viewModel.releaseQuestionAfterModal)
             Button("End Quiz", role: .destructive) {
                 Task { await viewModel.endQuiz() }
             }
         }
+    }
+
+    /// #243.13: the dialog holds the auto-advance, as on the question.
+    private func confirmEndQuiz() {
+        viewModel.holdQuestionForModal()
+        showEndQuizConfirmation = true
     }
 
     /// The #155 gate: TestFlight/Debug only, and only with a question to rate —
@@ -161,26 +182,43 @@ struct ResultView: View {
         } content: {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 ResultAnswerPanel(
-                    questionStem: questionStem,
                     answerLabel: answerLabel,
                     answerText: answerText,
                     isRecap: isRecap,
                     isCorrect: verdict == .correct,
                     explanation: explanationText,
-                    userAnswer: metaUserAnswer,
+                    saidLine: saidLine,
                     hearItFailed: viewModel.readAloudFailure == .explanation,
-                    onHearIt: { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
+                    onHearIt: viewModel.isSilentMode ? nil : { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
                 )
                 ResultMetaRow(
                     sourceDomain: sourceDomain,
                     crowd: isRecap ? nil : viewModel.resultCrowd,
                     reviewBadge: reviewBadge,
                     reviewNote: reviewNote,
+                    onShowQuestion: showQuestionAction,
                     onOpenSource: { showSourceWebView = true }
                 )
             }
         }
         .hangsCardArrival(trigger: cardReveal)
+    }
+
+    /// Recap has none: the question is already the card's text.
+    private var showQuestionAction: (() -> Void)? {
+        guard !isRecap else { return nil }
+        return {
+            viewModel.openResultQuestion()
+            showQuestionSheet = true
+        }
+    }
+
+    /// MCQ only: the correct option and, on a miss, the one the player chose.
+    private func optionReveal(for question: Question) -> MCQOptionPicker.Reveal? {
+        guard !question.sortedAnswerOptions.isEmpty, let evaluation = viewModel.resultEvaluation else { return nil }
+        let correctKey = question.optionKey(matching: evaluation.correctAnswer)
+        let chosenKey = evaluation.wasSkipped ? nil : question.optionKey(matching: evaluation.userAnswer)
+        return MCQOptionPicker.Reveal(correctKey: correctKey, chosenKey: chosenKey)
     }
 
     private var rateQuestionAction: (() -> Void)? {
@@ -209,11 +247,16 @@ struct ResultView: View {
         return evaluation.isCorrect ? .correct : .incorrect
     }
 
-    /// The 46pt answer: the user's (correct) answer on a correct result, the
-    /// revealed correct answer on a wrong one. Empty in the neutral path.
+    /// The big answer: always the question's correct answer, also when the
+    /// player's was accepted (TF build 90: an accepted "solo" was printed as
+    /// the answer to a question whose answer is "soľ"). Only a backend that sent
+    /// no correct answer falls back to the accepted one. Empty in the neutral path.
     private var canonicalAnswer: String {
         guard let evaluation = viewModel.resultEvaluation else { return "" }
-        return evaluation.isCorrect ? evaluation.userAnswer : revealedAnswer
+        if revealedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, evaluation.isCorrect {
+            return evaluation.userAnswer
+        }
+        return revealedAnswer
     }
 
     /// Recap fallback: nil evaluation OR an empty canonical answer. The question
@@ -224,8 +267,7 @@ struct ResultView: View {
     }
 
     private var answerLabel: LocalizedStringKey {
-        if isRecap { return "the question" }
-        return verdict == .correct ? "your answer" : "the answer"
+        isRecap ? "the question" : "the answer"
     }
 
     private var answerText: String {
@@ -240,14 +282,32 @@ struct ResultView: View {
         return question.labelledAnswer(raw)
     }
 
-    /// "you said" (under the answer since #194) appears only when the driver actually said
-    /// something that was wrong — never on a correct answer (it is already the
-    /// headline answer) and never on a skip (#131 Track D: nothing was said).
-    private var metaUserAnswer: String? {
-        guard verdict == .incorrect || verdict == .neutral,
-              let said = viewModel.resultEvaluation?.userAnswer,
+    /// What the driver said, under the answer: struck through on a miss; on an
+    /// accepted answer only when it was heard as something else (TF build 90);
+    /// never on a skip (#131 Track D: nothing was said).
+    private var saidLine: ResultAnswerPanel.SaidLine? {
+        guard let said = viewModel.resultEvaluation?.userAnswer,
               !said.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        return said
+        switch verdict {
+        case .incorrect, .neutral: return .missed(said)
+        case .correct: return heardDiffers(said) ? .heard(said) : nil
+        case .skipped: return nil
+        }
+    }
+
+    /// Whether the transcript reads differently from the answer on the card:
+    /// case, accents and surrounding spaces don't count, and on MCQ a key and
+    /// its option text are the same answer.
+    private func heardDiffers(_ said: String) -> Bool {
+        if let question = resultQuestionModel, let saidKey = question.optionKey(matching: said) {
+            return saidKey != question.optionKey(matching: canonicalAnswer)
+        }
+        return Self.comparable(said) != Self.comparable(canonicalAnswer)
+    }
+
+    private static func comparable(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
     }
 
     private var questionStem: String? {

@@ -12,7 +12,7 @@ its numerals.
 import logging
 import re
 
-from .ordinals import spell_ordinals
+from .ordinals import F_LOC, ordinal_words, spell_ordinals
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,30 @@ _UK_PERCENT_FORMS = ("відсоток", "відсотки", "відсотків
 _UK_PERCENT_RE = re.compile(r"(?<![\d,.])(\d+)([,.]\d+)?\s?%")
 # "3.5" is a decimal too; a dot before exactly three digits groups thousands.
 _UK_DECIMAL_DOT_RE = re.compile(r"(?<![\d,.])(\d+)\.(\d{1,2}|\d{4,})(?![\d,]|\.\d)")
+# …except a clock time after "о/об": "о 10.30" is "о десятій тридцять".
+_UK_TIME_RE = re.compile(
+    r"(?<![^\W\d_])(о|об)(\s+)([01]?\d|2[0-4])[.:]([0-5]\d)(?!\d|[.:,]\d)",
+    re.IGNORECASE,
+)
+
+
+def _spell_time_uk(match: re.Match, num2words) -> str:
+    """The hour as a feminine ordinal in the locative ("годині" left out), the
+    minutes as a feminine count ("хвилин"): "о сьомій нуль п'ять", "об
+    одинадцятій двадцять дві"; a full hour is just "о десятій"."""
+    hour, minutes = int(match.group(3)), match.group(4)
+    if hour == 0:
+        return match.group(0)
+    words = ordinal_words(hour, "uk", F_LOC)
+    preposition = "об" if words.startswith("о") else "о"  # "об одинадцятій"
+    if match.group(1)[0].isupper():
+        preposition = preposition.capitalize()
+    if minutes != "00":
+        zero = "нуль " if minutes[0] == "0" else ""
+        words += f" {zero}{_uk_feminine(_uk_cardinal(int(minutes), num2words))}"
+    return f"{preposition}{match.group(2)}{words}"
+
+
 # "7 з 10", "2 із 9": "out of" takes the genitive ("сім з десяти"); the first
 # number stays as written.
 _UK_OUT_OF_RE = re.compile(
@@ -250,6 +274,34 @@ def _spell_symbols(text: str, language: str) -> str:
     return _AMPERSAND_RE.sub(f" {_AND_WORD[language]} ", text)
 
 
+# #243.11 (founder TF 2026-11-22): names with digits are said the English way
+# in every language ("50 Cent" came out as "päťdesiat Cent"). Left as written,
+# the voice reads them as the name. Artists mostly; extend when one turns up.
+_NAMES_WITH_DIGITS_RE = re.compile(
+    r"(?<!\w)(?:50 Cent|Blink-182|Maroon 5|Sum 41|U2|UB40|deadmau5|East 17"
+    r"|Level 42|S Club 7|Matchbox 20|Front 242|Jackson 5)(?!\w)"
+)
+# A code or model glued to its letters ("D1", "H0", "TR-808") kept the letters
+# glued to the spelled number ("Djedna"); a space keeps both readable.
+_LETTER_THEN_DIGIT_RE = re.compile(r"(?<=[^\W\d_])-?(?=\d)")
+_PLACEHOLDER = "\ue000{}\ue001"
+_PLACEHOLDER_RE = re.compile("\ue000([\ue100-\ue1ff])\ue001")
+
+
+def _protect_names(text: str) -> tuple[str, list[str]]:
+    names: list[str] = []
+
+    def keep(match: re.Match) -> str:
+        names.append(match.group(0))
+        return _PLACEHOLDER.format(chr(0xE100 + len(names) - 1))
+
+    return _NAMES_WITH_DIGITS_RE.sub(keep, text), names
+
+
+def _restore_names(text: str, names: list[str]) -> str:
+    return _PLACEHOLDER_RE.sub(lambda m: names[ord(m.group(1)) - 0xE100], text)
+
+
 def normalize_numbers_for_tts(text: str, language: str) -> str:
     """Replace digit runs (and a few symbols) with spelled-out words for `language`.
 
@@ -258,6 +310,13 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
     """
     if language not in _PERCENT_WORD:
         return text
+    original = text
+    text, names = _protect_names(text)
+    text = _LETTER_THEN_DIGIT_RE.sub(" ", text)
+    return _restore_names(_normalize(text, language, original), names)
+
+
+def _normalize(text: str, language: str, original: str) -> str:
     text = _spell_symbols(text, language)
     # uk also writes centuries in Roman numerals ("XX століття").
     if not any(ch.isdigit() for ch in text) and language != "uk":
@@ -281,6 +340,8 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
             return token
 
     try:
+        if language == "uk":
+            text = _UK_TIME_RE.sub(lambda m: _spell_time_uk(m, num2words), text)
         # Ordinals first (#200): "19. storočí" must become one declined word,
         # not the cardinal plus a sentence-end period ("devätnásť. storočí").
         text = spell_ordinals(text, language)
@@ -297,4 +358,4 @@ def normalize_numbers_for_tts(text: str, language: str) -> str:
         return result.replace("%", " " + _PERCENT_WORD[language]).replace("  ", " ")
     except Exception:
         logger.exception("TTS number normalization failed — using original text")
-        return text
+        return original

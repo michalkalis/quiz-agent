@@ -57,19 +57,14 @@ struct QuestionPage {
         app.buttons["question.textSubmit"]
     }
 
-    /// #240.9: the calm line after a recording the phone measured as silent
-    /// (nothing uploaded), and the MCQ screen's button to speak again.
-    var silencePrompt: XCUIElement {
-        app.staticTexts["question.silencePrompt"]
+    /// Free tier split (2026-11-21): the once-a-month "voice answers used up"
+    /// notice and its quiet Trubbo Plus link.
+    var voiceLimitNotice: XCUIElement {
+        app.staticTexts["question.voiceLimitNotice"]
     }
 
-    var speakAgainButton: XCUIElement {
-        app.buttons["question.speakAgain"]
-    }
-
-    /// "Didn't catch that" line of the automatic retry after a server rejection.
-    var retryHint: XCUIElement {
-        app.staticTexts["question.retryHint"]
+    var voiceLimitPlusLink: XCUIElement {
+        app.buttons["question.voiceLimitPlus"]
     }
 
     /// Current value of the hidden state probe ("" when the probe is absent,
@@ -100,15 +95,17 @@ struct QuestionPage {
     /// object silently blind to the MCQ bar.
     ///
     /// #185 track F (F2): the answer bar now leads with its STATE —
-    /// "Speak now" (#240.9) until speech is heard, "Hearing you…" after — and the
+    /// "Listening…" until speech is heard, "Hearing you…" after — and the
     /// instruction follows it. Both mean the mic is live for the answer.
+    /// TF build 90: on the retry after an empty answer it leads with "Didn't
+    /// catch that" instead, the mic open all the same.
     var answerListenBarExists: Bool {
         app.descendants(matching: .any).matching(Self.answerListenBarPredicate).count > 0
     }
 
     private static let answerListenBarPredicate = NSPredicate(
-        format: "identifier == %@ AND (label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@)",
-        "listen-bar", "speak now", "capturing…"
+        format: "identifier == %@ AND (label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@ OR label BEGINSWITH[c] %@)",
+        "listen-bar", "listening…", "capturing…", "didn't catch that"
     )
 
     /// Wait for the question screen to appear (question.text must exist).

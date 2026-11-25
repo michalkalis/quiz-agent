@@ -334,6 +334,11 @@ def _row_matches(filters: dict, row: dict) -> bool:
         elif isinstance(value, dict) and "$in" in value:
             if row.get(key) not in value["$in"]:
                 return False
+        elif isinstance(value, dict) and "$not_prefix_or_null" in value:
+            if row.get(key) is not None and row[key].startswith(
+                value["$not_prefix_or_null"]
+            ):
+                return False
         elif row.get(key) != value:
             return False
     return True
@@ -379,6 +384,33 @@ def test_native_rows_reach_only_their_own_language(
         assert _row_matches(filters, row) is (session_language in served_to), (
             session_language
         )
+
+
+@pytest.mark.parametrize(
+    "preferred,row_category,served",
+    [
+        # #242: "all categories" never reaches a rotating extra category ...
+        ([], "extra-techno", False),
+        ([], "science", True),
+        # ... but an unlabelled row (classifier miss) stays playable ...
+        ([], None, True),
+        # ... and a player who picked the extra category on purpose gets it.
+        (["extra-techno"], "extra-techno", True),
+        (["extra-techno"], "science", False),
+    ],
+)
+def test_extra_category_only_served_when_asked_for(preferred, row_category, served):
+    session = QuizSession(
+        session_id="sess_test",
+        current_difficulty="medium",
+        language="en",
+        preferred_categories=preferred,
+    )
+    row = {**_BASE_ROW, "category": row_category}
+
+    filters = _retriever()._build_metadata_filters("medium", session)
+
+    assert _row_matches(filters, row) is served
 
 
 def test_custom_pack_branch_has_no_language_filter():

@@ -43,6 +43,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.speechDetectedDuringAutoRecord = newValue }
     }
 
+    /// See `RecordingState.stoppedRecordingHeardSpeech` (#243.4).
+    var stoppedRecordingHeardSpeech: Bool {
+        get { recordingState.stoppedRecordingHeardSpeech }
+        set { recordingState.stoppedRecordingHeardSpeech = newValue }
+    }
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool {
         get { recordingState.isStoppingRecording }
@@ -81,6 +87,32 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
     }
 
+    /// See `RecordingState.recordingEchoLine` (#243.4).
+    var recordingEchoLine: String? {
+        get { recordingState.recordingEchoLine }
+        set { recordingState.recordingEchoLine = newValue }
+    }
+
+    /// #243.4: the app just said `text` on the open question — the next
+    /// recording strips it from the front of its transcript.
+    func noteSpokenLine(_ text: String) {
+        guard !text.isEmpty else { return }
+        recordingState.lastSpokenLine = (currentQuestion()?.id ?? "", text)
+    }
+
+    /// The line said right before this recording on this question, once.
+    func takeLastSpokenLine() -> String? {
+        defer { recordingState.lastSpokenLine = nil }
+        guard let line = recordingState.lastSpokenLine, line.questionKey == (currentQuestion()?.id ?? "") else { return nil }
+        return line.text
+    }
+
+    /// See `RecordingState.thinkMoreQuestionKey` (#243.4).
+    var thinkMoreQuestionKey: String? {
+        get { recordingState.thinkMoreQuestionKey }
+        set { recordingState.thinkMoreQuestionKey = newValue }
+    }
+
     /// See `RecordingState.recordingTrigger` (#240.9).
     var recordingTrigger: RecordingTrigger? {
         get { recordingState.recordingTrigger }
@@ -91,12 +123,6 @@ final class RecordingCoordinator: ObservableObject {
     var micOpenDelayMs: Int? {
         get { recordingState.micOpenDelayMs }
         set { recordingState.micOpenDelayMs = newValue }
-    }
-
-    /// See `RecordingState.silencePromptQuestionKey` (#240.9).
-    var silencePromptQuestionKey: String? {
-        get { recordingState.silencePromptQuestionKey }
-        set { recordingState.silencePromptQuestionKey = newValue }
     }
 
     /// See `RecordingState.rejectedTranscripts` (#204.2).
@@ -168,11 +194,6 @@ final class RecordingCoordinator: ObservableObject {
         set { confirmationState.countdownHold = newValue }
     }
 
-    /// See `ConfirmationState.spokenReplacement` (#185 5.1).
-    var spokenReplacement: SpokenReplacement? {
-        get { confirmationState.spokenReplacement }
-        set { confirmationState.spokenReplacement = newValue }
-    }
 
     /// See `ConfirmationState.readBackText` (car test 2026-10-30).
     var readBackText: String? {
@@ -224,11 +245,6 @@ final class RecordingCoordinator: ObservableObject {
     /// re-record is playing (see RecordingCoordinator+EmptyAnswer).
     var isSpeakingRetryPrompt = false
 
-    /// #185 5.1: the listener's audio is being kept while the answer sheet is
-    /// up, so a new spoken answer can be transcribed without saying it twice
-    /// (see RecordingCoordinator+SpokenAnswer).
-    var isSheetCaptureActive = false
-
     /// This recording runs on the plain `AVAudioRecorder` because the shared
     /// mic engine could not come up (recognizer setup failed). No voice
     /// processing, no VAD — the dead-air cap ends it — but the mic button works.
@@ -265,7 +281,6 @@ final class RecordingCoordinator: ObservableObject {
     /// #185 5.2: bring the command window up and report whether the listener
     /// is live — the auto-confirm countdown waits for it.
     let armCommandWindow: @MainActor () async -> Bool
-    let abortSkipUndoWindow: @MainActor () -> Void
     let startAutoConfirmIfEnabled: @MainActor () -> Void
     let cancelAutoConfirm: @MainActor () -> Void
     /// #171 Track D: drop the quiz-level pause. Leaving the sheet by ANY
@@ -277,6 +292,9 @@ final class RecordingCoordinator: ObservableObject {
     /// mic under a pause (see RecordingCoordinator+EmptyAnswer).
     let isPaused: @MainActor () -> Bool
     let cancelThinkingTime: @MainActor () -> Void
+    /// #243.4: arm a fresh think window on the open question (the façade's
+    /// `startRecordingOrTimer`), after an answer window heard nothing.
+    let startThinkingTime: @MainActor () -> Void
     /// Test seam (#173): the two window lengths this coordinator arms —
     /// `speechStartWindow` is the visible "time to start speaking",
     /// `deadAirCap` is the hidden cap under it. Production never assigns them;
@@ -313,6 +331,17 @@ final class RecordingCoordinator: ObservableObject {
     /// #197: a saved car recording got its decision — kick the uploader.
     /// Must return at once; the upload runs on its own task.
     let answerRecordingDecided: @MainActor () -> Void
+    /// Free tier split (2026-11-21): this month's voice answers are used up,
+    /// so no recording opens; the player types or taps.
+    let isVoiceAllowanceSpent: @MainActor () -> Bool
+    /// A voice answer was refused (429 `voice_limit_reached`, or the mic was
+    /// asked for with the allowance spent): the once-a-month notice.
+    let voiceAllowanceSpent: @MainActor (VoiceLimitError?) -> Void
+    /// Silent mode (founder 2026-11-22): the mic never opens.
+    let isSilentMode: @MainActor () -> Bool
+    /// #243.4: the no-answer offer to play now — long the first times a player
+    /// hears it, short after — counted as heard by this call.
+    let takeNoAnswerOffer: @MainActor () -> PhasePrompt
 
     init(
         audioService: AudioServiceProtocol,
@@ -340,12 +369,12 @@ final class RecordingCoordinator: ObservableObject {
         emitEarcon: @escaping @MainActor (Earcon) -> Void,
         refreshCommandWindow: @escaping @MainActor () -> Void,
         armCommandWindow: @escaping @MainActor () async -> Bool,
-        abortSkipUndoWindow: @escaping @MainActor () -> Void,
         startAutoConfirmIfEnabled: @escaping @MainActor () -> Void,
         cancelAutoConfirm: @escaping @MainActor () -> Void,
         clearPause: @escaping @MainActor () -> Void,
         isPaused: @escaping @MainActor () -> Bool,
         cancelThinkingTime: @escaping @MainActor () -> Void,
+        startThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval, TimeInterval) -> Void,
         armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
@@ -356,7 +385,11 @@ final class RecordingCoordinator: ObservableObject {
         isPlayingQuestionTTS: @escaping @MainActor () -> Bool = { false },
         stopQuestionReadOut: @escaping @MainActor () async -> Void = {},
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
-        answerRecordingDecided: @escaping @MainActor () -> Void = {}
+        answerRecordingDecided: @escaping @MainActor () -> Void = {},
+        isVoiceAllowanceSpent: @escaping @MainActor () -> Bool = { false },
+        voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in },
+        isSilentMode: @escaping @MainActor () -> Bool = { false },
+        takeNoAnswerOffer: @escaping @MainActor () -> PhasePrompt = { .noAnswerOffer }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -383,12 +416,12 @@ final class RecordingCoordinator: ObservableObject {
         self.emitEarcon = emitEarcon
         self.refreshCommandWindow = refreshCommandWindow
         self.armCommandWindow = armCommandWindow
-        self.abortSkipUndoWindow = abortSkipUndoWindow
         self.startAutoConfirmIfEnabled = startAutoConfirmIfEnabled
         self.cancelAutoConfirm = cancelAutoConfirm
         self.clearPause = clearPause
         self.isPaused = isPaused
         self.cancelThinkingTime = cancelThinkingTime
+        self.startThinkingTime = startThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.armRecordingDeadAirCap = armRecordingDeadAirCap
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
@@ -400,6 +433,10 @@ final class RecordingCoordinator: ObservableObject {
         self.stopQuestionReadOut = stopQuestionReadOut
         self.trackAnalytics = trackAnalytics
         self.answerRecordingDecided = answerRecordingDecided
+        self.isVoiceAllowanceSpent = isVoiceAllowanceSpent
+        self.voiceAllowanceSpent = voiceAllowanceSpent
+        self.isSilentMode = isSilentMode
+        self.takeNoAnswerOffer = takeNoAnswerOffer
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)
@@ -433,7 +470,6 @@ final class RecordingCoordinator: ObservableObject {
         // window closed for the rest of the session. Idempotent.
         cancelAnswerReadBack()
         cancelRetryPrompt() // #185 — same latch hazard as the read-back
-        stopSheetCapture() // #185 5.1 — before the capture it shares is abandoned
         abandonAnswerCapture()
         inputLevel.reset() // #185 track F — the façade's cancelAll ended its feed
         recordingState.reset()
@@ -447,7 +483,6 @@ final class RecordingCoordinator: ObservableObject {
     /// `.showingResult` ("read aloud" / voice "repeat").
     func resetOnPhaseExit() {
         cancelAnswerReadBack() // #184 — see reset()
-        stopSheetCapture() // #185 5.1: the sheet it listened for is gone
         recordingState.resetCaptureState()
         confirmationState.reset()
     }

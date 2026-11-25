@@ -205,6 +205,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
     private var recordingStartedAt: Date?
     private var playbackStartedAt: Date?
+    /// When the last clip played to its end — `prepareForRecording` waits out
+    /// the route's tail after it (#243.4).
+    private var playbackEndedAt: ContinuousClock.Instant?
 
     // Session-level NotificationCenter observer tokens.
     // NSObjectProtocol is not Sendable in Swift 6, and `deinit` runs nonisolated even
@@ -247,15 +250,12 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     ///   is reachable via HFP and the car shows a "phone call" UI, which the user
     ///   accepts by design.
     nonisolated static func categoryOptions(for mode: AudioMode) -> AVAudioSession.CategoryOptions {
-        // Duck background audio (Spotify/podcasts) while the quiz is active.
-        // .duckOthers lowers music; .interruptSpokenAudioAndMixWithOthers pauses
-        // podcasts (two simultaneous voices = unintelligible). Apple HIG recommends
-        // this combination for apps with spoken-audio prompts.
-        let duckingOptions: AVAudioSession.CategoryOptions = [
-            .duckOthers,
-            .interruptSpokenAudioAndMixWithOthers,
-        ]
-
+        // #243.1 (founder, TF 2026-11-22): the quiz STOPS music and podcasts,
+        // it no longer ducks them — ducked music under the questions was still
+        // too much. No mixing option at all makes the session non-mixable, so
+        // activating it interrupts other audio; `deactivateSession()` notifies
+        // others at quiz end so the player's music may resume. A silent quiz
+        // never applies this session and leaves music playing.
         var options: AVAudioSession.CategoryOptions
         switch mode.id {
         case "media":
@@ -271,7 +271,6 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             // Fallback to call mode.
             options = [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
         }
-        options.formUnion(duckingOptions)
         return options
     }
 
@@ -337,8 +336,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         // .defaultToSpeaker forces output to speaker instead of receiver (louder audio)
         // .allowBluetoothHFP enables Bluetooth microphone input (Hands-Free Profile)
         // .allowBluetoothA2DP enables high-quality Bluetooth playback (A2DP)
-        // Ducking options are applied above — replaces previous .mixWithOthers
-        // because mixing at equal volume made TTS inaudible over music.
+        // No mixing option (see categoryOptions): activating stops other audio.
         try session.setCategory(
             configuration.category,
             mode: configuration.mode,
@@ -361,7 +359,8 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// decision B): `.playAndRecord` so the command mic can run, but with
     /// `quietListeningCategoryOptions` — external audio keeps playing, nothing
     /// is ducked or interrupted. The full quiz session (with ducking) is
-    /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`.
+    /// applied only by the `startNewQuiz` path via `setupAudioSession(mode:)`;
+    /// that one stops other audio (#243.1).
     func setupQuietListeningSession() throws {
         let session = AVAudioSession.sharedInstance()
         let configuration = SessionConfiguration(
@@ -775,8 +774,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         // Hardware settle time - AVAudioSession needs time to release playback resources
         // and transition to recording mode. Without this delay, recording may start
-        // before hardware is ready, resulting in empty/corrupt recordings (28 bytes)
-        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+        // before hardware is ready, resulting in empty/corrupt recordings (28 bytes).
+        // #243.4: after a clip, also until the route has finished sounding it.
+        let settle = Self.recordingSettle(
+            sincePlaybackEnded: playbackEndedAt.map { ContinuousClock.now - $0 },
+            outputLatency: AVAudioSession.sharedInstance().outputLatency
+        )
+        try? await Task.sleep(for: settle)
 
         Logger.audio.debug("🎤 Audio system ready for recording")
     }
@@ -1219,6 +1223,21 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// - `playerIsPlaying` — within its own operation, only a player that never
     ///   reached `.playing` is a stall. Failing unconditionally aborted every TTS
     ///   longer than 5 s and started the thinking-timer mid-read.
+    /// Headroom on top of the route's reported output latency (#243.4).
+    nonisolated static let playbackDrainMargin: Duration = .milliseconds(150)
+
+    /// The wait before a recording opens the mic: the 200 ms hardware settle,
+    /// and after a clip that just ended, long enough for the route to finish
+    /// sounding it. AVPlayer reports the end when its last sample left the app;
+    /// a Bluetooth car plays the route's output latency after that (TF drive
+    /// 2026-11-23: the mic recorded "…skús to znova." under the answer).
+    nonisolated static func recordingSettle(sincePlaybackEnded: Duration?, outputLatency: TimeInterval) -> Duration {
+        let hardware = Duration.milliseconds(200)
+        guard let sincePlaybackEnded else { return hardware }
+        let tail = Duration.milliseconds(Int((outputLatency * 1000).rounded())) + playbackDrainMargin - sincePlaybackEnded
+        return max(hardware, tail)
+    }
+
     nonisolated static func shouldFailStalledPlayback(isCurrentOperation: Bool, playerIsPlaying: Bool) -> Bool {
         isCurrentOperation && !playerIsPlaying
     }
@@ -1346,6 +1365,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Task { @MainActor [weak self] in
                 self?.isPlaying = false
                 self?.playbackState = .idle
+                self?.playbackEndedAt = .now
                 Logger.audio.info("🔊 Playback completed")
                 self?.emitPlaybackEndBreadcrumb(reason: "completed")
                 continuation.yield(durationSeconds)
@@ -1457,6 +1477,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         isPlaying = false
         isPlaybackPaused = false
         playbackState = .idle
+        playbackEndedAt = .now // a cut clip's last samples are still in the route
 
         Logger.audio.info("🔊 Stopped playback")
         emitPlaybackEndBreadcrumb(reason: "stopped")

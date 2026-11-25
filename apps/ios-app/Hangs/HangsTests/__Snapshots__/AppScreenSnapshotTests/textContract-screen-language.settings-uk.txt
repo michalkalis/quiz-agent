@@ -7,10 +7,6 @@
 Підказки команд
 Показувати голосові команди, які можна сказати
 
-Розпізнавання мовлення
-Ready
-Розпізнавання мовлення
-Ready
 Автопідтвердження відповідей
 Відповідь надсилається автоматично через 5 секунди, якщо ти її не зміниш
 
@@ -31,35 +27,32 @@ English
 English
 Питання, голос і весь застосунок
 вікторина
-0s
+5s
 10s
-15s
+20s
 30s
-45s
-60s
-90s
-120s
+No limit
 Час на роздуми
-0s
+10s
 Час на роздуми
-0s
+10s
 Пауза, перш ніж увімкнеться мікрофон
 5 questions
+8 questions
 10 questions
 15 questions
-20 questions
 Кількість питань у вікторині
-10 questions
+8 questions
 Кількість питань у вікторині
-10 questions
-5s
+8 questions
+Right after the verdict
 8s
-10s
 15s
+Wait for "next"
 Автоперехід
-8s
+Right after the verdict
 Автоперехід
-8s
+Right after the verdict
 Пауза на результаті перед наступним питанням
 After each question
 At the end of the quiz
@@ -126,7 +119,6 @@ Loading…
 # identifiers
 settings.voiceCommands
 settings.voiceHints
-settings-voice-commands-status
 settings.autoConfirm
 settings-microphone-row
 settings-call-mode-toggle
@@ -135,24 +127,21 @@ settings.language.en
 settings.language.sk
 settings.language.cs
 settings-thinking-time-menu
-settings.thinkingTime.0
+settings.thinkingTime.5
 settings.thinkingTime.10
-settings.thinkingTime.15
+settings.thinkingTime.20
 settings.thinkingTime.30
-settings.thinkingTime.45
-settings.thinkingTime.60
-settings.thinkingTime.90
-settings.thinkingTime.120
+settings.thinkingTime.noLimit
 settings-question-count-menu
 settings.questionCount.5
+settings.questionCount.8
 settings.questionCount.10
 settings.questionCount.15
-settings.questionCount.20
 settings-auto-advance-menu
-settings.autoAdvance.5
+settings.autoAdvance.0
 settings.autoAdvance.8
-settings.autoAdvance.10
 settings.autoAdvance.15
+settings.autoAdvance.waitForNext
 settings-answer-reveal-menu
 settings.answerReveal.per_question
 settings.answerReveal.end_of_set
@@ -173,3 +162,4 @@ settings.termsOfUse
 settings.aiDisclosure
 settings.aiServices
 settings.sendFeedback
+settings-voice-commands-status

@@ -207,14 +207,6 @@ struct SettingsView: View {
 
             hairline
 
-            // Release-visible recognizer diagnostics (#96 P2): asset state + the
-            // last command heard, so the founder can confirm on-device that
-            // recognition is armed and firing. Full failure reason → Sentry.
-            HangsValueRow(label: "Speech recognition", value: voiceCommandsDiagnostic)
-                .accessibilityIdentifier("settings-voice-commands-status")
-
-            hairline
-
             HangsToggleRow(
                 label: "Auto-confirm answers",
                 subtitle: "Your answer is sent automatically after \(Config.autoConfirmDelaySecs) seconds unless you change it",
@@ -289,7 +281,8 @@ struct SettingsView: View {
                 idPrefix: "settings.thinkingTime",
                 options: QuizSettings.thinkingTimeOptions,
                 selection: $viewModel.settings.thinkingTime,
-                display: Self.secondsDisplay
+                display: Self.thinkingTimeDisplay,
+                optionId: { $0 == QuizSettings.unlimitedThinkingTime ? "noLimit" : "\($0)" }
             )
             .accessibilityIdentifier("settings-thinking-time-menu")
 
@@ -312,7 +305,8 @@ struct SettingsView: View {
                 idPrefix: "settings.autoAdvance",
                 options: QuizSettings.autoAdvanceDelayOptions,
                 selection: $viewModel.settings.autoAdvanceDelay,
-                display: Self.secondsDisplay
+                display: Self.autoAdvanceDisplay,
+                optionId: { $0 == QuizSettings.waitForNextAutoAdvance ? "waitForNext" : "\($0)" }
             )
             .accessibilityIdentifier("settings-auto-advance-menu")
 
@@ -345,13 +339,14 @@ struct SettingsView: View {
         idPrefix: String,
         options: [Int],
         selection: Binding<Int>,
-        display: @escaping (Int) -> String
+        display: @escaping (Int) -> String,
+        optionId: @escaping (Int) -> String = { "\($0)" }
     ) -> some View {
         // a11y-id: call-site — each caller names the menu (settings-*-menu)
         Menu {
             ForEach(options, id: \.self) { option in
                 Button(display(option)) { selection.wrappedValue = option }
-                    .accessibilityIdentifier("\(idPrefix).\(option)")
+                    .accessibilityIdentifier("\(idPrefix).\(optionId(option))")
             }
         } label: {
             // a11y-id: menu label, not tappable (allowsHitTesting false); the caller names the menu
@@ -365,9 +360,27 @@ struct SettingsView: View {
         }
     }
 
-    /// "10s"; 0 stays literal ("0s" = record immediately for thinking time).
+    /// "10s".
     private static func secondsDisplay(_ seconds: Int) -> String {
         String(localized: "\(seconds)s", bundle: .interface, locale: .interface, comment: "Seconds value in session settings, e.g. 10s")
+    }
+
+    /// #243.8: "10s", or "No limit".
+    private static func thinkingTimeDisplay(_ seconds: Int) -> String {
+        guard seconds == QuizSettings.unlimitedThinkingTime else { return secondsDisplay(seconds) }
+        return String(localized: "No limit", bundle: .interface, locale: .interface, comment: "Thinking time setting: no countdown, the question waits for the spoken answer command or a tap")
+    }
+
+    /// #243.8: "8s", "Right after the verdict" or "Wait for "next"".
+    private static func autoAdvanceDisplay(_ seconds: Int) -> String {
+        switch seconds {
+        case QuizSettings.rightAfterVerdictAutoAdvance:
+            String(localized: "Right after the verdict", bundle: .interface, locale: .interface, comment: "Auto-advance setting: the next question follows a short moment after the spoken verdict")
+        case QuizSettings.waitForNextAutoAdvance:
+            String(localized: "Wait for \"next\"", bundle: .interface, locale: .interface, comment: "Auto-advance setting: the result stays until the player taps Next or says the next command")
+        default:
+            secondsDisplay(seconds)
+        }
     }
 
     /// "10 questions" per the approved frame.
@@ -698,7 +711,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Release-visible readout of the voice-command recognizer state (#96 P2):
+    /// Tester-only readout of the voice-command recognizer state (#96 P2):
     /// master-toggle state, on-device asset availability, and the last command
     /// heard. Kept short for the row; the full failure reason goes to Sentry via
     /// `SilenceDetectionService.markCommandsUnavailable`.
@@ -740,6 +753,15 @@ struct SettingsView: View {
     /// for the replay tests (#197); unsent ones can still be exported here.
     private var voiceDiagnosticsGroup: some View {
         groupSection(label: "voice diagnostics") {
+            // Recognizer diagnostics (#96 P2): asset state + the last command
+            // heard, so the founder can confirm on-device that recognition is
+            // armed and firing. Full failure reason → Sentry. Tester-only since
+            // #243.2 (founder, TF 2026-11-22: players read it as noise).
+            HangsValueRow(label: "Speech recognition", value: voiceCommandsDiagnostic)
+                .accessibilityIdentifier("settings-voice-commands-status")
+
+            hairline
+
             HangsToggleRow(
                 label: "Mic voice processing",
                 subtitle: "Apple echo cancellation, noise suppression and gain control on the microphone, while sound plays from the iPhone or in Call Mode",

@@ -43,6 +43,12 @@ router = APIRouter()
 class DailyStartRequest(BaseModel):
     date: str = Field(description="The player's local date, YYYY-MM-DD")
     language: str = Field(description="Quiz language (en, sk, cs)")
+    utc_offset_minutes: Optional[int] = Field(
+        default=None,
+        ge=-720,
+        le=840,
+        description="The player's UTC offset; the day's bonus ends at their midnight",
+    )
 
 
 class DailyStartResponse(BaseModel):
@@ -123,7 +129,9 @@ async def start_daily_challenge(
     day = _parse_day(body.date)
     language = _check_language(body.language)
     try:
-        play, remaining = await svc.begin(subject.subject_id, language, day)
+        play, remaining = await svc.begin(
+            subject.subject_id, language, day, body.utc_offset_minutes
+        )
         if not remaining:
             return DailyStartResponse(
                 state=await svc.state(subject.subject_id, language, day)

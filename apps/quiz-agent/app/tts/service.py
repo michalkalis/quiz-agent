@@ -124,6 +124,8 @@ def primary_cache_voice(
     keys by what is sent, so it needs the text."""
     settings = settings or get_settings()
     style = speech_style(language, settings.tts_language_styles)
+    if style and style.voice:
+        voice = style.voice
     if text and is_cyrillic(text):
         provider = build_provider(
             "elevenlabs",
@@ -282,8 +284,8 @@ class TTSService:
         if not text.strip():
             raise ValueError("Text cannot be empty")
 
-        primary_voice = voice or self.provider.default_voice
         style = self.style_for(language)
+        primary_voice = voice or self._primary_voice(style)
         if self._primary_paused():
             # Same path as a user over their own budget: cached primary audio
             # is still free to serve, anything new goes to the fallback.
@@ -313,6 +315,12 @@ class TTSService:
     def style_for(self, language: Optional[str]) -> Optional[SpeechStyle]:
         return speech_style(language, self.styles)
 
+    def _primary_voice(self, style: Optional[SpeechStyle]) -> str:
+        """The language's own voice (an ElevenLabs id), else the default."""
+        if style and style.voice and self.provider.name == "elevenlabs":
+            return style.voice
+        return self.provider.default_voice
+
     @staticmethod
     def _cache_voice(
         provider: TTSProvider,
@@ -335,8 +343,8 @@ class TTSService:
         self, text: str, language: Optional[str], voice: Optional[str] = None
     ) -> str:
         """R2 key of the primary voice's clip of ``text`` in ``language``."""
-        voice = voice or self.provider.default_voice
         style = self.style_for(language)
+        voice = voice or self._primary_voice(style)
         return self._remote_key(
             text, self._cache_voice(self.provider, voice, style, text)
         )
@@ -380,8 +388,9 @@ class TTSService:
                     await self._cached_audio(text, primary_key) if use_cache else None
                 )
                 if not cached and use_cache and style is not None:
-                    # George at the old speed beats the fallback voice.
-                    cached = await self._cached_audio(text, primary_voice)
+                    # George at the old speed beats the fallback voice (also
+                    # for Czech until its clips are re-recorded by Josef).
+                    cached = await self._cached_audio(text, self.provider.default_voice)
                 if cached:
                     return cached
                 if self.fallback is None:

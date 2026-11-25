@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
@@ -36,6 +37,7 @@ from app.rooms.service import RoomService
 from app.rooms.store import MemoryRoomStore
 from app.session import manager as session_manager
 from app.session.manager import SessionManager
+from app.usage.tracker import VoiceCheck
 
 pytestmark = pytest.mark.asyncio
 
@@ -107,6 +109,12 @@ class Usage:
 
     async def record_question(self, user_id):
         self.used[user_id] += 1
+
+    async def check_voice_answer(self, user_id, key):
+        return VoiceCheck(True, 0, None, datetime.now(timezone.utc))
+
+    async def record_voice_answer(self, user_id, key):
+        return True
 
     async def get_usage(self, user_id):
         return {
@@ -304,6 +312,40 @@ async def test_equal_answers_are_graded_once(game):
         await game.answer(who, "q_open", text)
     # One judge call per distinct answer, not per player.
     assert sorted(normalize_text(c) for c in game.judge.calls) == ["lyon", "paris"]
+
+
+async def test_a_native_answer_in_its_own_language_is_never_machine_translated(game):
+    """#231: in a Ukrainian room a native Ukrainian question's answer is shown
+    exactly as written and gate-checked: the reveal must not run the live
+    "translate to Ukrainian" LLM call (hot path, and it could reword the answer)."""
+    native = Question(
+        id="q_uk",
+        question="Яке місто є столицею України?",
+        type="text",
+        correct_answer="Київ",
+        topic="geo",
+        category="geography",
+        difficulty="easy",
+        language="uk",
+    )
+    flow = game.service.play.flow
+    flow.question_retriever.questions[:] = [native]
+    flow.translation_service = MagicMock()
+    flow.translation_service.translate_feedback = AsyncMock(return_value="LLM:Київ")
+    await game.setup(max_questions=1, start=False)
+    session = await game.sessions.get_session(game.session_id)
+    session.language = "uk"
+    await game.sessions.update_session(session)
+    start = await game.c.post(
+        f"/api/v1/sessions/{game.session_id}/start", json={}, headers=_h("host")
+    )
+    assert start.status_code == 200, start.text
+
+    for who in ("host", "jana", "peto"):
+        last = await game.answer(who, "q_uk", "Київ")
+    rnd = last.json()["round"]
+    assert rnd["phase"] == "revealed" and rnd["correct_answer"] == "Київ"
+    flow.translation_service.translate_feedback.assert_not_called()
 
 
 async def test_time_up_closes_once_and_silence_scores_zero(game):

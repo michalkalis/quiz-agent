@@ -63,11 +63,29 @@ extension QuizViewModel {
         return "\(question.optionLabel(for: key)) · \(value)"
     }
 
-    /// A chip is a promise the word will be heard: it needs the Settings toggle
-    /// AND an armed listener (`commandListenerHint`), which is what the bar was
-    /// gated on wholesale before #179 D1 — the bar stays either way now.
-    var showsCommandWords: Bool {
+    /// TF build 90: what the strip between the card and the buttons shows, or
+    /// nil when it is not on screen (`QuestionListenPhase.strip`), for the
+    /// bar phase the screen derived. Both question types ask this one function.
+    func questionStripPhase(_ phase: QuestionListenPhase?) -> QuestionListenPhase? {
+        QuestionListenPhase.strip(
+            phase,
+            hasCommandsAccessory: phase.flatMap { commandsAccessory(for: $0) } != nil,
+            commandsListening: commandListenerHint != nil
+        )
+    }
+
+    /// #243.6 (founder 2026-11-24): the strip names the command words whenever
+    /// a command window is live, unless the player switched the hints off. A
+    /// word is shown only while it is really heard (`commandListenerHint`).
+    var questionStripShowsWords: Bool {
         showsVoiceHints && commandListenerHint != nil
+    }
+
+    /// TF build 90: the hint the open mic's bar carries. The retry line wins,
+    /// as it did when both were lines of their own.
+    var answerBarNote: ListenBar.AnswerNote? {
+        if showsEmptyAnswerRetryHint { return .didNotCatch }
+        return showsSpellingHint ? .spelling : nil
     }
 
     /// #179 D1: the one state model, asked the same way by both question types.
@@ -85,8 +103,10 @@ extension QuizViewModel {
 
     /// #237 (canvas pick L1): the listen bar's trailing control in this phase
     /// — "Turn on", "Preparing commands…" or "Settings" — or `nil`.
+    /// Silent mode offers none: nothing listens, not even with the mic denied.
     func commandsAccessory(for phase: QuestionListenPhase) -> ListenBar.CommandsAccessory? {
-        voiceCommandCoordinator.commandsBarAccessory(
+        guard !isSilentMode else { return nil }
+        return voiceCommandCoordinator.commandsBarAccessory(
             phaseHasCommands: !phase.commands.isEmpty,
             micDenied: audioService.microphonePermissionStatus == .denied
         )

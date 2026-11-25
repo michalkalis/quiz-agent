@@ -3,13 +3,13 @@ Categories
 All Categories
 Science & Nature
 History
-Geography & World
+Geography
 Movies & Music
 Sports
-Food & Everyday Life
-Entertainment
-Local questions
-For example, a city's bus routes or a local card game
+Food & Drink
+Pop Culture
+Questions for locals
+Things only people who live in that country or city know. For example, bus and tram routes.
 
 Done
 # identifiers

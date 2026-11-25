@@ -1,8 +1,7 @@
 # texts
 1/10
-GEOGRAPHY & WORLD
+GEOGRAPHY
 What is the capital of France?
-Reading the question
 Answer
 Type
 askingQuestion
@@ -14,7 +13,6 @@ question.category
 question.replayGlyph
 question.replay
 question.text
-listen-bar
 question.record
 question.textInputToggle
 question.skip

@@ -47,11 +47,12 @@ struct HomeCategoryDeck: View {
         selectedCategories: [String],
         title: String,
         questionCount: Int,
+        extras: [ExtraCategory] = [],
         onStep: @escaping (CategoryCycle.Direction, CategoryStepInput) -> Void
     ) {
         self.init(
-            cards: HomeDeckCard.categories,
-            front: CategoryCycle.position(of: selectedCategories),
+            cards: HomeDeckCard.categories(extras: extras),
+            front: CategoryCycle.position(of: selectedCategories, in: CategoryCycle.order(extras: extras)),
             selectedCategories: selectedCategories,
             title: title,
             questionCount: questionCount,
@@ -202,9 +203,18 @@ struct HomeCategoryDeck: View {
         selectedCategories.isEmpty ? Theme.Hangs.Category.taxonomy : selectedCategories
     }
 
+    private func card(_ id: String) -> HomeDeckCard? {
+        cards.first { $0.id == id }
+    }
+
+    /// #242: an extra category's colour comes from its card (by position).
+    private func style(for id: String) -> Theme.Hangs.Category.Style {
+        card(id)?.style ?? Theme.Hangs.Category.style(for: id)
+    }
+
     private func backCard(_ id: String) -> some View {
-        let style = Theme.Hangs.Category.style(for: id)
-        return Text(verbatim: Config.categoryDisplayName(for: id, locale: locale) ?? "")
+        let style = style(for: id)
+        return Text(verbatim: Config.categoryDisplayName(for: id, locale: locale) ?? card(id)?.name ?? "")
             .textCase(.uppercase)
             .font(.hangsOverline)
             .lineLimit(1)
@@ -229,7 +239,7 @@ struct HomeCategoryDeck: View {
             Spacer(minLength: Theme.Hangs.Spacing.xs)
             HStack(spacing: 0) {
                 ForEach(stripCategories, id: \.self) { id in
-                    Theme.Hangs.Category.style(for: id).fill
+                    style(for: id).fill
                 }
             }
             .frame(height: Metrics.stripHeight)
@@ -249,6 +259,8 @@ struct HomeDeckCard {
     let name: String
     /// The card's colours; nil = the white "All categories" card with the strip.
     let style: Theme.Hangs.Category.Style?
+    /// #242: the served extra category behind the card; it carries the "new" label.
+    var extra: ExtraCategory? = nil
     /// #240: a category card's name, resolved in the locale the card is drawn
     /// in: `name` was built in the language of the moment and stayed English
     /// after a switch to Slovak or Czech. nil = `name` as given (family topics
@@ -257,12 +269,26 @@ struct HomeDeckCard {
 
     /// All categories, then each category (`CategoryCycle.order`).
     static var categories: [HomeDeckCard] {
-        Config.categoryOptions.map { option in
+        categories(extras: [])
+    }
+
+    /// #242: the served extra categories follow the permanent ones, each in a
+    /// colour of the extra palette by its position.
+    static func categories(extras: [ExtraCategory]) -> [HomeDeckCard] {
+        let permanent = Config.categoryOptions.map { option in
             HomeDeckCard(
                 id: option.id ?? HomeCategoryCycleCards.allID,
                 name: option.display,
                 style: option.id.map { Theme.Hangs.Category.style(for: $0) },
                 nameResource: Config.categoryNameResource(for: option.id)
+            )
+        }
+        return permanent + extras.enumerated().map { index, extra in
+            HomeDeckCard(
+                id: extra.key,
+                name: extra.name,
+                style: Theme.Hangs.Category.extraStyle(position: index),
+                extra: extra
             )
         }
     }

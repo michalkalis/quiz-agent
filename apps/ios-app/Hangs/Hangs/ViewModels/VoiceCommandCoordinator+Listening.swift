@@ -58,7 +58,7 @@ extension VoiceCommandCoordinator {
 
         // #171 Track D / #173: a paused quiz is frozen — every countdown is
         // cancelled and the mic must come down with them, or "paused" would
-        // still be listening for "potvrď". Gating HERE (not in
+        // still be listening for "znova". Gating HERE (not in
         // `currentCommandScreen`) is what makes a foreground return honour the
         // pause: `.active` re-runs `refreshCommandWindow()`, which finds capture
         // disallowed and tears the listener down again instead of re-arming.
@@ -93,6 +93,7 @@ extension VoiceCommandCoordinator {
         switch quizState() {
         case .askingQuestion: return .question
         case .processing: return isNoAnswerSheet() ? .noAnswer : .confirmation
+        case .showingResult: return resultNextCommandArmed() ? .result : nil
         case .error: return .error
         case .finished: return .setEnd
         default: return nil // startingQuiz / skipping / recording
@@ -152,7 +153,7 @@ extension VoiceCommandCoordinator {
         if let screen = currentCommandScreen {
             // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app
-            // waits for "again" / "home". In-quiz windows keep whatever session
+            // waits for "again". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
             if screen == .setEnd {
                 configureQuietListeningSession()
@@ -162,6 +163,8 @@ extension VoiceCommandCoordinator {
                     stopSilenceDetectionListening()
                 }
             }
+            // The recognizer is biased toward this screen's commands only.
+            silenceDetectionService.setCommandScreen(screen)
             await startSilenceDetectionListening()
         } else {
             stopSilenceDetectionListening()
@@ -209,6 +212,10 @@ extension VoiceCommandCoordinator {
     /// the capture phase to `.armed → .listening`.
     func startCommandConsumer() {
         let service = silenceDetectionService
+        if let screen = currentCommandScreen {
+            service.setCommandScreen(screen)
+            openCommandWindowReport(on: screen)
+        }
         applyCaptureEvent(.arm)
         applyCaptureEvent(.listen)
 
@@ -258,6 +265,7 @@ extension VoiceCommandCoordinator {
         taskBag.cancel(.commandListener)
         taskBag.cancel(.commandSpeechEvents)
         flushUtteranceLog(screen: currentCommandScreen, outcome: "listenerStopped") // #208.7
+        closeCommandWindowReport()
         // #208.7: a listener kept up through a read is gone — nothing may
         // start a new one under the clip (`mayCaptureAudio`).
         endQuestionRead()
@@ -265,5 +273,6 @@ extension VoiceCommandCoordinator {
         // A torn-down listener will never deliver the final that would have
         // ended the utterance, so the latch must not survive it (#119).
         endUtterance()
+        clearUnfiredCommandHeard()
     }
 }

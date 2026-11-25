@@ -1,0 +1,582 @@
+[
+ {
+  "kind": "same_fact",
+  "ids": [
+   "347dcb1b",
+   "06cc3905"
+  ],
+  "action": "drop",
+  "target": "06cc3905",
+  "why": "Both ask about the geographic centre of Europe marker from Austria-Hungary times; the other question is the more specific one."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "30cefb0d",
+   "2dfe4211"
+  ],
+  "action": "drop",
+  "target": "2dfe4211",
+  "why": "LIVE 30cefb0d already asks about the Chernivtsi university palace built for metropolitans."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "30cefb0d",
+   "3e96bd30"
+  ],
+  "action": "drop",
+  "target": "3e96bd30",
+  "why": "Same fact as LIVE 30cefb0d: the university sits in the former metropolitans residence."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "416fe7ee",
+   "48b95f4c"
+  ],
+  "action": "drop",
+  "target": "48b95f4c",
+  "why": "LIVE 416fe7ee already covers the Kolomyia pysanka-shaped museum."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "460cf6cb",
+   "a897961d"
+  ],
+  "action": "drop",
+  "target": "a897961d",
+  "why": "Same fact as LIVE 460cf6cb: Gogol wrote the Sorochyntsi Fair story."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "bd072f11",
+   "86417d34"
+  ],
+  "action": "drop",
+  "target": "86417d34",
+  "why": "Same fact as LIVE bd072f11: Shum was an invocation of spring."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "2dd29bde",
+   "edce2001"
+  ],
+  "action": "drop",
+  "target": "edce2001",
+  "why": "Same Jack Palance one-arm push-ups at the 1992 Oscars as LIVE 2dd29bde."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "dda621e9",
+   "0f50ccd3"
+  ],
+  "action": "drop",
+  "target": "0f50ccd3",
+  "why": "Mila Kunis born in Chernivtsi is the LIVE dda621e9 fact; its text also names Mila Kunis."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "d2cd6482",
+   "59b64e95"
+  ],
+  "action": "drop",
+  "target": "59b64e95",
+  "why": "Both ask who wrote the story behind Spiymaty Kaydasha; keep the plain version."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "6c312982",
+   "8be9245f"
+  ],
+  "action": "drop",
+  "target": "8be9245f",
+  "why": "Same fact: Lukash plays the sopilka for Mavka."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "cbe7f21f",
+   "c4cf1bcf"
+  ],
+  "action": "drop",
+  "target": "c4cf1bcf",
+  "why": "Same fact as LIVE cbe7f21f: the dance ensemble is named after Virsky."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "603dd198",
+   "307d93e3"
+  ],
+  "action": "drop",
+  "target": "307d93e3",
+  "why": "Same fact: the Minecraft creeper was meant to be a pig."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "09c54494",
+   "ca950535"
+  ],
+  "action": "drop",
+  "target": "ca950535",
+  "why": "Same fact as LIVE 09c54494: Klochkova won in the medley (komplexne plavannya)."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "816408eb",
+   "57e51672"
+  ],
+  "action": "drop",
+  "target": "57e51672",
+  "why": "Same fact as LIVE 816408eb: Oksana Baiul 1994 Olympic gold; LIVE text names her."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "ff56c907",
+   "72c498e3"
+  ],
+  "action": "drop",
+  "target": "72c498e3",
+  "why": "Near-verbatim copy of LIVE ff56c907 (Bubka improving the record by 1 cm for bonuses)."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "50468497",
+   "edde9544"
+  ],
+  "action": "drop",
+  "target": "edde9544",
+  "why": "Same fact as LIVE 50468497: trembita from a spruce struck by lightning."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "21603162",
+   "8d015722"
+  ],
+  "action": "drop",
+  "target": "8d015722",
+  "why": "Same fact as LIVE 21603162: waiting for the first star on Holy Eve."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "21603162",
+   "d033a1fe"
+  ],
+  "action": "drop",
+  "target": "d033a1fe",
+  "why": "LIVE 21603162 text states \"на покуті\", the answer here."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "a747a97c",
+   "c380f4b7"
+  ],
+  "action": "drop",
+  "target": "c380f4b7",
+  "why": "Same fact as LIVE a747a97c: the swallow in Shchedryk."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "7df4c95a",
+   "55619649"
+  ],
+  "action": "drop",
+  "target": "55619649",
+  "why": "Same fact as LIVE 7df4c95a: Death beheads Herod in the vertep."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "9752a1bb",
+   "0553fd40"
+  ],
+  "action": "drop",
+  "target": "0553fd40",
+  "why": "Same fact as LIVE 9752a1bb: Malanka is played by a boy."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "0c06e77e",
+   "76cf90fc"
+  ],
+  "action": "drop",
+  "target": "76cf90fc",
+  "why": "Same fact as LIVE 0c06e77e: spiders decorate the widow's tree."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "f607d864",
+   "8eac9162"
+  ],
+  "action": "drop",
+  "target": "8eac9162",
+  "why": "Same fact as LIVE f607d864: Verka Serduchka was a train conductor."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "dd2a955d",
+   "bfa3aa10"
+  ],
+  "action": "drop",
+  "target": "dd2a955d",
+  "why": "Same narcissus valley near Khust; this one is the weaker, vaguer question and its answer is given away by the other."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "bfc23779",
+   "a9584aed"
+  ],
+  "action": "drop",
+  "target": "a9584aed",
+  "why": "Both ask for sand drawing (Simonova); the Eurovision one is wordier and does not name the artist."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "3c53c007",
+   "f1f2f44e"
+  ],
+  "action": "drop",
+  "target": "f1f2f44e",
+  "why": "Both rest on Dynamo Kyiv winning the 1986 Cup Winners' Cup; each text gives the other's answer."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "bdcd541c",
+   "179cf1b7"
+  ],
+  "action": "drop",
+  "target": "179cf1b7",
+  "why": "Same fact as LIVE bdcd541c: Ukraine reached the 2006 World Cup quarter-final."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "f5be1f4c",
+   "910b7191"
+  ],
+  "action": "drop",
+  "target": "910b7191",
+  "why": "Both resolve to the 200 hryvnia banknote design; LIVE f5be1f4c stays."
+ },
+ {
+  "kind": "same_fact",
+  "ids": [
+   "2215a3cd",
+   "d033a1fe"
+  ],
+  "action": "drop",
+  "target": "d033a1fe",
+  "why": "Both about the didukh sheaf; the text of this one states \"Дідуха\", the answer of the other."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "3bb9ee4f",
+   "dbfa2048"
+  ],
+  "action": "drop",
+  "target": "dbfa2048",
+  "why": "Text says \"у Мукачеві\", the answer of LIVE 3bb9ee4f."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "14948045",
+   "18970fff"
+  ],
+  "action": "drop",
+  "target": "18970fff",
+  "why": "LIVE 14948045 and 40ba2b4b texts say \"Трипільські/трипільці\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "0f84fa50",
+   "de729fb0"
+  ],
+  "action": "drop",
+  "target": "de729fb0",
+  "why": "LIVE 0f84fa50 text names Сагайдачний, the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "460cf6cb",
+   "7a413a4b"
+  ],
+  "action": "drop",
+  "target": "7a413a4b",
+  "why": "Text says \"Гоголь\", the answer of LIVE 460cf6cb."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "460cf6cb",
+   "fe53ed67"
+  ],
+  "action": "drop",
+  "target": "fe53ed67",
+  "why": "Text says \"повість Гоголя\", the answer of LIVE 460cf6cb."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "460cf6cb",
+   "13035780"
+  ],
+  "action": "drop",
+  "target": "13035780",
+  "why": "Text says \"Гоголя\", the answer of LIVE 460cf6cb."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "02e9a1fa",
+   "06eb30ea"
+  ],
+  "action": "drop",
+  "target": "06eb30ea",
+  "why": "LIVE 02e9a1fa text names Тараса Шевченка, the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "9e32ef1d",
+   "0e9eb2ec"
+  ],
+  "action": "drop",
+  "target": "0e9eb2ec",
+  "why": "LIVE 9e32ef1d / 02e9a1fa texts name Шевченко, the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "766ae7ce",
+   "98757607"
+  ],
+  "action": "drop",
+  "target": "98757607",
+  "why": "Text says \"на Дністрі\", the answer of LIVE 766ae7ce."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "4e51335d",
+   "6c312982"
+  ],
+  "action": "drop",
+  "target": "6c312982",
+  "why": "Text says \"Лісовій пісні\", the answer of LIVE 4e51335d."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "4e51335d",
+   "8be9245f"
+  ],
+  "action": "drop",
+  "target": "8be9245f",
+  "why": "Title \"Мавка. Лісова пісня\" is the answer of LIVE 4e51335d."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "dda621e9",
+   "1cfb606a"
+  ],
+  "action": "drop",
+  "target": "1cfb606a",
+  "why": "Text says \"в Чернівцях\", the answer of LIVE dda621e9."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "98783c05",
+   "68c395e3"
+  ],
+  "action": "drop",
+  "target": "68c395e3",
+  "why": "LIVE 98783c05 text says \"у Чернівцях\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "dda621e9",
+   "2f34f41e"
+  ],
+  "action": "drop",
+  "target": "2f34f41e",
+  "why": "LIVE dda621e9 text says \"над Прутом\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "963ceccf",
+   "e9659d75"
+  ],
+  "action": "drop",
+  "target": "e9659d75",
+  "why": "LIVE 963ceccf text says \"вишитий рушник\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "b1d9c38d",
+   "b00eae08"
+  ],
+  "action": "drop",
+  "target": "b00eae08",
+  "why": "LIVE b1d9c38d text says \"У купальську ніч\", the answer here (also names Івасюка, giving away 2bbaf750)."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "4a9e2dd4",
+   "a876a7cc"
+  ],
+  "action": "drop",
+  "target": "a876a7cc",
+  "why": "Text says \"Андріївських вечорницях\" and калита, giving away LIVE 4a9e2dd4 (Андрія)."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "4a9e2dd4",
+   "0188268a"
+  ],
+  "action": "drop",
+  "target": "0188268a",
+  "why": "Text says \"На Андрія\", the answer of LIVE 4a9e2dd4."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "8ae4e4d4",
+   "20a77da2"
+  ],
+  "action": "drop",
+  "target": "20a77da2",
+  "why": "Text says \"гуцула Івана\", the answer of LIVE 8ae4e4d4."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "b7302e86",
+   "fa438ed6"
+  ],
+  "action": "drop",
+  "target": "fa438ed6",
+  "why": "LIVE b7302e86 text says \"Буряковий квас\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "3bb9ee4f",
+   "bb7d7856"
+  ],
+  "action": "drop",
+  "target": "bb7d7856",
+  "why": "LIVE 3bb9ee4f / 7c4cbfd2 texts say \"Океан Ельзи\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "b9971fa1",
+   "6d73d814"
+  ],
+  "action": "drop",
+  "target": "6d73d814",
+  "why": "Text says Ukraine took part \"лише вдруге\", the answer of LIVE b9971fa1."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "6d98daeb",
+   "90ff3b1d"
+  ],
+  "action": "drop",
+  "target": "90ff3b1d",
+  "why": "Text of 6d98daeb and e3458491 names \"Вернадський\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "416fe7ee",
+   "67c6c5c7"
+  ],
+  "action": "drop",
+  "target": "67c6c5c7",
+  "why": "LIVE 416fe7ee text says \"писанки\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "7df4c95a",
+   "594c78d4"
+  ],
+  "action": "drop",
+  "target": "594c78d4",
+  "why": "LIVE 7df4c95a text says \"вертеп\", the answer here."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "3653c0b6",
+   "fd6098df"
+  ],
+  "action": "reword",
+  "target": "3653c0b6",
+  "why": "Text names Селін Діон and \"Титаніка\", the answer of fd6098df; drop both name and Titanic clue."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "fd6098df",
+   "7694b8db"
+  ],
+  "action": "reword",
+  "target": "fd6098df",
+  "why": "Text names \"Джеймс Кемерон\", the answer of 7694b8db; say \"режисер\" instead."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "fa5b83eb",
+   "3c53c007"
+  ],
+  "action": "reword",
+  "target": "3c53c007",
+  "why": "Text names \"Блохін\", the answer of fa5b83eb; say \"один гравець київського «Динамо»\" without the name."
+ },
+ {
+  "kind": "spoiler",
+  "ids": [
+   "4e0638c8",
+   "a0e4d92b"
+  ],
+  "action": "reword",
+  "target": "a0e4d92b",
+  "why": "Text says \"із суахілі\", the answer of 4e0638c8; say \"з африканської мови\"."
+ }
+]

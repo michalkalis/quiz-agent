@@ -1,0 +1,153 @@
+{
+  "keep": [
+    "677be2e2-4e55-4bfe-b5dd-c5ee4930fbf2",
+    "aac2df59-7778-4317-a940-fba0b98933e5",
+    "de75da03-7d78-461f-b23d-d5e96518c58c",
+    "62a89472-436b-4c05-886e-0b2147845eec",
+    "42c28102-e999-466c-bbfc-88b4598413e5",
+    "59faa0d7-fe2f-42b2-bd36-000ecb4ca2b0",
+    "68f6eb73-2377-4682-8956-927fef6f6af1",
+    "f81ffe99-c9a7-487a-b722-d986f7c469bd",
+    "f06d66c7-3105-43e9-9c2f-cf267b98ed58",
+    "81ce89f2-4c5c-4e86-9f42-a7da8f8c7db4",
+    "17613aa9-803d-4b62-907f-1ce524ac64b1",
+    "7fd14308-3807-429e-911e-b68a9070e35e",
+    "9b11f822-d4d2-4b56-80a8-9fc6247b1a76",
+    "be19aebb-ece1-49d7-a6b5-b3d54ecfb36c",
+    "e157e0be-7b4f-49d8-a03d-8319663be985",
+    "69ed9ecb-e225-4546-87ff-1106f2f68e52",
+    "fdcdad3a-b117-4cf5-b473-6974964af6ab"
+  ],
+  "drop": [
+    {
+      "id": "ff3b5097-30ac-4833-9fb7-bb1eb6486bec",
+      "why": "Same fact as a live sk question (Habera is the frontman of Team)."
+    },
+    {
+      "id": "c7c64407-37dd-432b-a418-eca835d43c9e",
+      "why": "Same fact as a live sk question (Adéla and the group KATSEYE)."
+    },
+    {
+      "id": "ad314b6b-41cc-4e37-89e3-dfe47e45b6d6",
+      "why": "Same fact as a live sk question (Farma format comes from Sweden)."
+    },
+    {
+      "id": "c8478ef9-2334-4684-9a0c-bdf19f460596",
+      "why": "Same fact as a live cs question (Casino Royale poker scenes shot in Karlovy Vary)."
+    },
+    {
+      "id": "9b127bed-e2f3-4d3b-a81a-ef5329900618",
+      "why": "Weak true/false on show rules that varied by season (live question notes a viewer-vote twist in series 18); source excerpt is English text that is not on the cited sk page."
+    },
+    {
+      "id": "4669032f-52c7-445a-9404-be0906702915",
+      "why": "Insider show-rule recall with no surprise, and the source_url is a made-up Wikipedia address."
+    },
+    {
+      "id": "8c22b1b8-1db8-4c4c-817f-5b58a137668e",
+      "why": "The stem gives the answer away (sister station of Markíza = Nova), so nothing is left to guess."
+    },
+    {
+      "id": "b749842a-6726-486f-b54d-59cf04f0a8f5",
+      "why": "Clooney and Bale in the stem give the answer away; the source is a news piece about a sequel delay."
+    },
+    {
+      "id": "ab0d3b26-f8ce-4ed1-b68c-640dab8a6a8e",
+      "why": "Beaches, swamps and alligators plus Vice City give away Florida, and it is close to the live Vice City = Miami question."
+    },
+    {
+      "id": "422b985f-aa3d-4364-b0d4-ea3baebcaf62",
+      "why": "News-style view-count record from a 403 source, the answer sits right at the 100 million bucket edge, and \"more than any film trailer\" is not supported."
+    },
+    {
+      "id": "9345cf3b-b904-4d5b-9942-fd9f578c066f",
+      "why": "Plain first-degree recall (who won season 1) with no hook, and the stem reads awkwardly."
+    }
+  ],
+  "fix": [
+    {
+      "id": "aac2df59-7778-4317-a940-fba0b98933e5",
+      "field": "alternative_answers",
+      "new": [
+        "odvody do armády",
+        "pre armádu",
+        "verbovanie vojakov",
+        "súpis mužov pre armádu",
+        "kvôli vojsku",
+        "branná povinnosť",
+        "kvôli armáde",
+        "pre vojsko",
+        "kvôli vojakom",
+        "kvôli odvodom",
+        "verbovanie"
+      ],
+      "why": "Adds common short spoken variants."
+    },
+    {
+      "id": "de75da03-7d78-461f-b23d-d5e96518c58c",
+      "field": "source_url",
+      "new": "https://www.fembio.org/english/biography.php/woman/biography/maria-theresia",
+      "why": "English Wikipedia lists her as Empress consort and does not state the refused coronation; this page does."
+    },
+    {
+      "id": "de75da03-7d78-461f-b23d-d5e96518c58c",
+      "field": "source_excerpt",
+      "new": "Maria Theresa traveled to Frankfurt am Main for the coronation festivities, her only trip abroad. However, she refused to be crowned empress by her husband.",
+      "why": "Excerpt now quotes the cited page word for word."
+    },
+    {
+      "id": "59faa0d7-fe2f-42b2-bd36-000ecb4ca2b0",
+      "field": "explanation",
+      "new": "Presne pred päťdesiatimi rokmi, v roku 1939, nacisti po pohrebe študenta Jana Opletala zatvorili české vysoké školy a vyše tisíc študentov poslali do koncentračných táborov. Preto je 17. november Medzinárodným dňom študentstva.",
+      "why": "Over 1,200 students were deported per the source, not \"hundreds\"."
+    },
+    {
+      "id": "f81ffe99-c9a7-487a-b722-d986f7c469bd",
+      "field": "question",
+      "new": "Najslávnejší verš piesne Modlitba pre Martu, sľub, že sa vláda nad vlastnými vecami vráti ľudu, nie je pôvodný. Vyše tristo rokov pred Martou Kubišovou ho napísal posledný biskup Jednoty bratskej, ktorý zomrel v exile v Holandsku. Kto?",
+      "why": "\"Učiteľ národov\" handed every Slovak the answer; the new clue still leads to Komenský but makes the player think."
+    },
+    {
+      "id": "f81ffe99-c9a7-487a-b722-d986f7c469bd",
+      "field": "explanation",
+      "new": "Textár Petr Rada si verš požičal z Komenského diela Kšaft umierajúcej matky Jednoty bratskej. Ten istý sľub zopakoval aj Václav Havel v novoročnom prejave v roku 1990.",
+      "why": "Fixes the Czech form \"umírajúcej\" to Slovak \"umierajúcej\"."
+    },
+    {
+      "id": "81ce89f2-4c5c-4e86-9f42-a7da8f8c7db4",
+      "field": "question",
+      "new": "Ešte pred Twilightom sa Robert Pattinson objavil v jednom z filmov o Harrym Potterovi. Hral pekného študenta a súpera v Turnaji troch čarodejníkov, ktorý na konci filmu zahynie na Voldemortov rozkaz. Ako sa táto postava volá?",
+      "why": "Cedric is killed by Wormtail on Voldemort's orders, not by Voldemort himself."
+    },
+    {
+      "id": "17613aa9-803d-4b62-907f-1ce524ac64b1",
+      "field": "question",
+      "new": "Ian Fleming chcel pre svojho špióna čo najobyčajnejšie a najnudnejšie meno. Napokon si ho požičal od skutočného amerického vedca, ktorého knihu mal vo svojej vile na Jamajke. Čo tento skutočný James Bond skúmal?",
+      "why": "\"Na svojej vile\" is unnatural Slovak; \"vo svojej vile\"."
+    },
+    {
+      "id": "9b11f822-d4d2-4b56-80a8-9fc6247b1a76",
+      "field": "explanation",
+      "new": "Stačili jej tri dni a Guinnessova kniha rekordov ju zapísala ako najrýchlejší zábavný produkt, ktorý zarobil miliardu. Aj najväčšie filmové trháky na to potrebovali dlhšie.",
+      "why": "\"No film came close\" is overstated (Avengers: Endgame passed a billion in about five days)."
+    },
+    {
+      "id": "be19aebb-ece1-49d7-a6b5-b3d54ecfb36c",
+      "field": "question",
+      "new": "Kazachstan je najväčšia krajina sveta bez prístupu k oceánu, a predsa má takmer dvetisíc kilometrov pobrežia. Pri ktorom „mori“ leží, hoci je to v skutočnosti jazero?",
+      "why": "Its Caspian coastline is about 1,900 km, so \"stovky kilometrov\" understated it."
+    },
+    {
+      "id": "e157e0be-7b4f-49d8-a03d-8319663be985",
+      "field": "explanation",
+      "new": "„Alma“ znamená po kazašsky jablko a starý názov Alma-Ata sa často prekladá ako otec jabĺk, hoci jazykovedci sa o pôvode mena stále sporia. V okolitých horách dodnes rastú divé jablone, z ktorých pochádzajú naše odrody.",
+      "why": "Wikipedia calls the apple etymology disputed; the explanation should not state it as settled."
+    },
+    {
+      "id": "e157e0be-7b4f-49d8-a03d-8319663be985",
+      "field": "source_excerpt",
+      "new": "A disputed theory holds that the name is derived from the Kazakh word for 'apple' (алма), and is often translated as 'full of apples'. Its former name, Alma-Ata, translates to 'father of the apples'.",
+      "why": "The old excerpt only said Almaty is the largest city and did not support the apple link."
+    }
+  ]
+}

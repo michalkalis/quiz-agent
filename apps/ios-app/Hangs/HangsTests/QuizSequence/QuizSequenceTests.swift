@@ -108,11 +108,10 @@ struct QuizSequenceTests {
     /// 400 "speech not understood", then silence while the old build's empty
     /// sheet counted down and SKIPPED the question, and the driver repeating
     /// question 1's answer into question 2's mic. Played against today's build,
-    /// the same inputs must never skip question 1 and nothing may land on
-    /// question 2. #240.9 (founder 2026-11-18): the replay's detector stays
-    /// live and measures the window as quiet, so that recording is silence the
-    /// phone vouched for: nothing is uploaded, no spoken retry, and question 1
-    /// waits with the calm speak / type / move on line for the driver.
+    /// the same inputs must never skip question 1, and nothing lands on
+    /// question 2. #243.4 (founder 2026-11-24, decision 2): the detector heard
+    /// nothing, so that miss now goes back to thinking on question 1 without a
+    /// spoken retry (it was the spoken retry before).
     @Test("the car-test black box replays as a regression test")
     func carTestDumpReplays() async throws {
         let url = try #require(Bundle(for: QuizSequenceBundleToken.self)
@@ -120,16 +119,24 @@ struct QuizSequenceTests {
         let parsed = try QuizSequenceDump.parse(String(contentsOf: url, encoding: .utf8))
         #expect(parsed.inputs.count == 9, "the fixture's input lines no longer parse")
 
-        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
+        // #243.3 (founder 2026-11-24): today's build says "Think." before the
+        // window drains and "Answer." before the mic opens, so the mic opens
+        // two lines later than on the drive. The driver spoke into the mic as
+        // it opened; keep that by moving the drive's inputs by the two lines
+        // (the fixture stays as recorded).
+        let linesMs = Int(SequenceAudio.length(of: .speech) * 2 / .milliseconds(1))
+        let inputs = parsed.inputs.map { TimedInput(atMs: $0.atMs + linesMs, input: $0.input, detail: $0.detail) }
+
+        let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: inputs)
         let run = outcome.run
 
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
         #expect(!run.network.requests.contains { $0.input == "skip" }, "question 1 was skipped — the car-test bug")
-        #expect(!run.network.requests.contains { $0.isVoice }, "measured silence was uploaded\n\(run.recorder.dump())")
+        #expect(run.recorder.entries.filter { $0.kind == .prompt && $0.name == "emptyAnswer.thinkAgain" }.count == 1,
+                "the unheard answer must send the driver back to thinking once\n\(run.recorder.dump())")
         #expect(!run.recorder.entries.contains { $0.kind == .prompt && $0.name == "emptyAnswer.retry" },
-                "measured silence must not be met with a spoken retry")
-        #expect(run.vm.currentQuestion?.id == "q_001" && run.vm.showsSilencePrompt,
-                "a minute later question 1 still waits for the driver")
+                "silence got the spoken retry")
+        #expect(run.vm.currentQuestion?.id == "q_001", "question 1 is still the driver's")
         #expect(run.network.requests.allSatisfy { $0.questionId == "q_001" }, "nothing may be sent for question 2")
     }
 

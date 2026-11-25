@@ -17,9 +17,13 @@ Slovenčina
 Čeština
 Quiz language
 Slovenčina
+Quiz language
+Slovenčina
 4–6
 7–9
 10–12
+Age
+4–6
 Age
 4–6
 Dinosaury
@@ -27,7 +31,13 @@ Fuj, ale pravda
 Tvoje telo
 Topic
 Dinosaury
+Topic
+Dinosaury
+No sound
+Read the questions, type the answers
+
 trubbo
+Settings
 You answer, the kids guess along with you.
 Start with kids
 # identifiers
@@ -49,5 +59,7 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.silentMode
+home.settings
 home.family.adultAnswers
 home.startFamily

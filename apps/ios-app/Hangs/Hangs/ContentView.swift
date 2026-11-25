@@ -145,6 +145,12 @@ struct ContentView: View {
         navModel.orderFlowPresented = true
     }
 
+    /// The gear on Home pushes Settings onto the Play tab's stack.
+    private func openSettingsFromHome() {
+        viewModel.settingsOpenedFromHome()
+        navModel.path.append(.settings)
+    }
+
     private func openRoom(invite: RoomInvite?) {
         guard room == nil else { return }
         let game = appState.makeRoomViewModel(for: viewModel)
@@ -272,7 +278,8 @@ struct ContentView: View {
                                 appConfig: appState.appConfig,
                                 dailyChallenge: dailyChallenge,
                                 sharedQuiz: sharedQuiz,
-                                onCreatePack: presentOrderFlow
+                                onCreatePack: presentOrderFlow,
+                                onOpenSettings: openSettingsFromHome
                             )
                         case .question:
                             QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
@@ -461,6 +468,16 @@ struct ContentView: View {
         ) {
             Button("OK", role: .cancel) { viewModel.dismissSharedQuizNotice() }
         }
+        // #242: a free extra category that is gone or played through.
+        .alert(
+            viewModel.extraCategoryNotice ?? "",
+            isPresented: Binding(
+                get: { viewModel.extraCategoryNotice != nil },
+                set: { if !$0 { viewModel.dismissExtraCategoryNotice() } }
+            )
+        ) {
+            Button("OK", role: .cancel) { viewModel.dismissExtraCategoryNotice() }
+        }
         .onChange(of: appConfig.multiplayerHiddenByChannel) { _, _ in openPendingInvite() }
         // #174: the corpus ran out mid-quiz and a 10-question set ended after 3.
         // Mounted here, on the root, because `startNewQuiz` has 9 call sites
@@ -481,7 +498,8 @@ struct ContentView: View {
                 }
             }
             // #180 track C: a reset frees corpus history, not the free quota.
-            if shortfall.reason == .corpus {
+            // #242: never for an extra category: it has no history to start over.
+            if shortfall.reason == .corpus, !viewModel.settings.categories.contains(where: ExtraCategory.isExtra) {
                 Button("Reset seen questions") {
                     viewModel.resetSeenQuestionsAndStart(shortfall)
                 }

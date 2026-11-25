@@ -35,6 +35,7 @@ extension RecordingCoordinator {
         setIsAutoRecording(false)
         let heardSpeech = speechDetectedDuringAutoRecord
         speechDetectedDuringAutoRecord = false
+        stoppedRecordingHeardSpeech = heardSpeech
 
         if usesLegacyRecorder {
             // The no-engine fallback (see startLegacyRecorderFallback): M4A upload.
@@ -97,16 +98,6 @@ extension RecordingCoordinator {
                 outputPort: outputPort,
                 mic: mic
             )
-
-            // #240.9: the phone's own detector vouches that nothing was said
-            // in the window (`noSpeechWindowMayEndRecording` let it end the
-            // recording). Not a failed attempt and no server question: the
-            // capture is dropped and the question offers speak, type or skip.
-            if reason == .noSpeechWindow, !heardSpeech {
-                Logger.audio.info("🎙️ Silent recording, nothing uploaded")
-                offerAnswerAfterSilence(owner: attempt)
-                return
-            }
 
             // Under a fifth of a second of audio is dead air or an engine that
             // never delivered — not a transcription job. #171 Track B funnel.
@@ -183,9 +174,8 @@ extension RecordingCoordinator {
         let recordingStamp = savedRecordingStamp
         savedRecordingStamp = nil
 
-        // #185 5.1: a new answer spoken on the confirmation sheet is uploaded
-        // from `.processing` already, and `.processing → .processing` is not a
-        // legal edge.
+        // An upload may start from `.processing` already (#185), and
+        // `.processing → .processing` is not a legal edge.
         if quizState() != .processing {
             transition(to: .processing)
         }
@@ -262,9 +252,7 @@ extension RecordingCoordinator {
                         return
                     }
                     self.attemptLedger.record(.network, "voiceSubmit.transcript", "len=\(evaluation.userAnswer.count)")
-                    // #185 5.1: a new answer spoken on the sheet may turn out
-                    // to be a command word the on-device recognizer missed.
-                    if self.resolveSpokenReplacement(evaluation.userAnswer) { return }
+                    if self.handleSpokenLineEcho(in: evaluation.userAnswer, owner: owner) { return }
                     self.pendingResponse = response
                     // #184 track D: the sheet opens AND the recognised answer is
                     // read back; auto-confirm + the "ok"/"again" window arm after.
@@ -305,6 +293,21 @@ extension RecordingCoordinator {
                 if case .quotaLimitReached = error {
                     guard self.attemptLedger.owns(owner, "voiceSubmit.quota") else { return }
                     await self.handleError(error, context: .submission, fallbackMessage: String(localized: "Failed to submit answer", bundle: .interface, locale: .interface, comment: "Error prefix when submitting a voice answer fails; error detail is appended"))
+                    return
+                }
+
+                // 2026-11-21: the free voice answers are used up. Nothing was
+                // transcribed or charged: back to the same question, which the
+                // player answers by typing or tapping. No retry, no error screen.
+                if case let .voiceLimitReached(limit) = error {
+                    outcome = .notCaptured(VoiceLimitError.reachedCode)
+                    guard self.attemptLedger.owns(owner, "voiceSubmit.voiceLimit") else { return }
+                    self.cancelAutoStopRecordingTimer()
+                    self.setIsAutoRecording(false)
+                    self.setErrorMessage(nil)
+                    self.transition(to: .askingQuestion)
+                    self.voiceAllowanceSpent(limit)
+                    Logger.network.info("🎙️ Voice answer refused — voice answers are used up this month")
                     return
                 }
 

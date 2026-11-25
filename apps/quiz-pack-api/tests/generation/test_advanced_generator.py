@@ -1131,8 +1131,11 @@ async def test_mcq_structured_contract_carries_topic_category_difficulty() -> No
     assert (questions[0].topic, questions[0].category, questions[0].difficulty) == (
         "Food", "kids", "easy",
     )
+    # No category emitted stays empty (2026-11-21), never a stand-in
+    # `general`: GenerationStage drops it instead of storing an id no picker
+    # offers.
     assert (questions[1].topic, questions[1].category, questions[1].difficulty) == (
-        "General", "general", "medium",
+        "General", "", "medium",
     )
 
 

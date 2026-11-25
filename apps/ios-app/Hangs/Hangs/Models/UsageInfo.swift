@@ -19,6 +19,13 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
     let subscriptionStatus: String
     /// Pack-credit balance = SUM(credit_ledger.delta) (issue #93).
     let creditBalance: Int
+    /// Free tier split (founder 2026-11-21): of the free questions, only
+    /// `voiceAnswersLimit` a month may be answered by voice. A nil limit means
+    /// voice is not limited (Trubbo Plus, pack credits, or a server older than
+    /// the split, which sends none of the three).
+    var voiceAnswersUsed: Int? = nil
+    var voiceAnswersLimit: Int? = nil
+    var voiceAnswersRemaining: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -29,6 +36,9 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
         case resetsAt = "resets_at"
         case subscriptionStatus = "subscription_status"
         case creditBalance = "credit_balance"
+        case voiceAnswersUsed = "voice_answers_used"
+        case voiceAnswersLimit = "voice_answers_limit"
+        case voiceAnswersRemaining = "voice_answers_remaining"
     }
 
     /// Parsed reset time
@@ -53,6 +63,33 @@ nonisolated struct UsageInfo: Codable, Sendable, Equatable {
     var isLimitReached: Bool {
         guard let remaining else { return false }
         return remaining <= 0
+    }
+
+    /// This month's voice answers are used up: the player answers by typing
+    /// or tapping until the reset. Never true when voice is not limited.
+    var isVoiceAllowanceSpent: Bool {
+        guard voiceAnswersLimit != nil, let voiceAnswersRemaining else { return false }
+        return voiceAnswersRemaining <= 0
+    }
+}
+
+/// The 429 a voice answer gets once the free voice allowance is used up
+/// (`{"detail": {"code": "voice_limit_reached", ...}}`, sent only to a session
+/// that declared the `voice-allowance` capability). Nothing was transcribed
+/// or charged; the question is still open for a typed or tapped answer.
+nonisolated struct VoiceLimitError: Codable, Sendable, Equatable {
+    let code: String
+    let voiceAnswersUsed: Int
+    let voiceAnswersLimit: Int
+    let resetsAt: String
+
+    static let reachedCode = "voice_limit_reached"
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case voiceAnswersUsed = "voice_answers_used"
+        case voiceAnswersLimit = "voice_answers_limit"
+        case resetsAt = "resets_at"
     }
 }
 

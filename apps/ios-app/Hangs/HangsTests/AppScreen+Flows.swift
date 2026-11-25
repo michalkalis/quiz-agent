@@ -34,7 +34,7 @@ extension AppScreen {
             await makePacks()
         case .myPacksLoadFailed:
             await makePacksLoadFailed()
-        case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed:
+        case .dailyEndGood, .dailyEndWeak, .homeDaily, .homeDailyPlayed, .homeDailyOffer, .homeDailyPlayedBonus:
             await makeDaily()
         case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomQuestionHost, .roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomFinalExpanded, .roomRules, .roomRulesLobby, .roomLobbyHostFull,
              .roomQuestionReading, .roomQuestionGrading, .roomRevealCancelled, .roomFinalGuest, .roomRankingShareImage:
@@ -47,6 +47,8 @@ extension AppScreen {
             await makeProfile()
         case .homeFamily46, .homeFamily79, .homeFamily1012, .familyBandSheet:
             await makeFamily()
+        case .homeSilent, .questionSilent, .questionSilentMCQ:
+            makeSilent()
         default: preconditionFailure("\(self) is built in AppScreen+Quiz")
         }
     }
@@ -127,9 +129,9 @@ extension AppScreen {
             // Fire-and-forget: `submit()` only returns once the order is terminal,
             // and the parked poll never gets there. Retained by the VM's `pollTask`.
             Task { await vm.submit() }
-            await pumpUntil({ vm.state != .confirming && vm.state != .submitting })
+            await pumpUntil { vm.state != .confirming && vm.state != .submitting }
             if case .polling(nil) = vm.state {
-                await pumpUntil({ if case .polling(nil) = vm.state { false } else { true } })
+                await pumpUntil { if case .polling(nil) = vm.state { false } else { true } }
             }
         }
         return AnyView(OrderPackFlowView(viewModel: vm, onPlayPack: { _ in }, onClose: {}))

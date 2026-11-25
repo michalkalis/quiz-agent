@@ -14,6 +14,16 @@ struct HomePage {
         app.buttons["home.startQuiz"]
     }
 
+    /// "No sound" (founder 2026-11-22): the silent mode switch under Quick quiz.
+    var silentModeSwitch: XCUIElement {
+        app.switches["home.silentMode"].firstMatch
+    }
+
+    /// TestFlight build 90 (Home A1): the gear at the top opens Settings.
+    var settingsButton: XCUIElement {
+        app.buttons["home.settings"]
+    }
+
     /// While a start is in flight, Start turns into this Cancel control.
     var cancelStartButton: XCUIElement {
         app.buttons["home.cancelStart"]

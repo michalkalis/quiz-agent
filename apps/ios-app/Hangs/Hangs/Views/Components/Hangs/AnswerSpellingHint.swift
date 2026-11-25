@@ -6,7 +6,7 @@
 //  question away once, the question screen and the answer sheet say the answer
 //  can be spelled letter by letter. The backend joins spelled letters into a
 //  word, so the app only shows the line. Ordinary UI text in the app language,
-//  like `EmptyAnswerRetryHint`, but muted: a tip, not a miss.
+//  like the old retry line, but muted: a tip, not a miss.
 //
 
 import SwiftUI

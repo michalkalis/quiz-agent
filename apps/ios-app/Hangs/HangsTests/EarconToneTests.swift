@@ -64,33 +64,24 @@ struct EarconToneTests {
             (EarconTone.wavData(for: earcon).count - 44) / 2
         }
         #expect(samples(.micLive) == 2 * Int((0.070 * rate).rounded()))
+        #expect(samples(.commandAck) == Int((0.040 * rate).rounded()), "the command tick is one 40 ms step")
         for earcon in Earcon.allCases where !earcon.hasTone {
             #expect(samples(earcon) == 0, "\(earcon) is haptic-only and must have no tone")
         }
     }
 
-    /// WHY (#185 track F, founder 2026-09-24): the tones were loud and grew
-    /// tiresome over a quiz. The remaining tone plays at no more than a quarter
-    /// of full scale (6 dB under the old half scale).
-    @Test("The mic-live cue is at most quarter scale")
-    func cuesAreQuiet() {
-        let data = EarconTone.wavData(for: .micLive)
-        let peak = stride(from: 44, to: data.count, by: 2).map { offset in
-            abs(Int(Int16(bitPattern: UInt16(data[offset]) | UInt16(data[offset + 1]) << 8)))
-        }.max() ?? 0
-        #expect(peak <= Int(0.25 * Double(Int16.max)) + 1, "mic-live is louder than quarter scale")
-    }
+    // The loudness itself is guarded against real speech in
+    // EarconLoudnessTests (TestFlight build 90: the tone was as loud as the
+    // questions).
 
     /// WHY (#185 track F): every cue has a haptic now, and the recording cues
     /// — mic open, speech heard, mic closed — fire on EVERY question, so they
     /// must be the soft generator: a firm tap that often becomes a buzz the
     /// driver learns to ignore.
-    /// #188 G5 (founder 2026-10-06): a skip is not an error, so the skip cue
-    /// taps softly too — the warning buzz it had read as "you did wrong".
-    @Test("Recording and skip cues tap softly; the command ack keeps its firmer tap")
+    @Test("Recording cues tap softly; the command ack keeps its firmer tap")
     func haptics() {
         // Every cue, tone or not, still has its haptic (#188 G6 kept them all).
-        for earcon in [Earcon.micLive, .speechStart, .gotIt, .skipConfirm] {
+        for earcon in [Earcon.micLive, .speechStart, .gotIt] {
             guard case let .soft(intensity) = EarconHaptic.haptic(for: earcon) else {
                 Issue.record("\(earcon) must use the soft generator")
                 continue
@@ -98,6 +89,21 @@ struct EarconToneTests {
             #expect(intensity > 0 && intensity < 1)
         }
         #expect(EarconHaptic.haptic(for: .commandAck) == .light)
+    }
+
+    /// WHY (founder 2026-11-22): the command acknowledgement must be heard in a
+    /// car, but never compete with the mic-live cue — so it is a tick at half
+    /// the mic peak, not a copy of the mic tone.
+    @Test("The command tick is a quiet tone at half the mic peak")
+    func commandTickIsQuieter() {
+        #expect(Earcon.commandAck.hasTone)
+        let data = EarconTone.wavData(for: .commandAck)
+        let peak = stride(from: 44, to: data.count, by: 2)
+            .map { abs(Int(Int16(bitPattern: UInt16(data[$0]) | UInt16(data[$0 + 1]) << 8))) }
+            .max() ?? 0
+        let expected = Int(EarconTone.peak / 2 * Double(Int16.max))
+        #expect(peak <= expected + 1, "must never clip or exceed half the mic peak")
+        #expect(peak > expected * 9 / 10)
     }
 
     /// WHY: a waveform that starts or ends mid-cycle clicks, and on a car

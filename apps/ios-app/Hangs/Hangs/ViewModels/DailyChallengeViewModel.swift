@@ -74,6 +74,25 @@ final class DailyChallengeViewModel: ObservableObject {
         return .notPlayed
     }
 
+    /// #205.8: extra questions promised before playing; nil = say nothing
+    /// (played already, a subscriber, reward off or an older server).
+    var bonusPromise: Int? {
+        guard case .notPlayed = card, let offer = state?.bonusOffer, offer > 0 else { return nil }
+        return offer
+    }
+
+    /// Extra questions still left after finishing; nil when none (0 = used up).
+    var bonusLeft: Int? {
+        guard case .played = card, let left = state?.bonusLeft, left > 0 else { return nil }
+        return left
+    }
+
+    /// Finished challenges, shown quietly once there is one.
+    var daysPlayed: Int? {
+        guard case .played = card, let days = state?.daysPlayed, days >= 1 else { return nil }
+        return days
+    }
+
     /// Home: today's challenge in the quiz language.
     func refreshToday(language: String) async {
         followsToday = true
@@ -89,7 +108,9 @@ final class DailyChallengeViewModel: ObservableObject {
     /// The daily round end: the challenge of `day` once, unless it already
     /// shows one (the start brought it, or an earlier fetch).
     func loadIfMissing(day: DailyChallengeDay, language: String) async {
-        guard state == nil || day != self.day || language != self.language else { return }
+        // The start's state is still "in progress" (no summary, no extra
+        // questions left): until the finished state is here, fetch it.
+        guard state?.status != .played || day != self.day || language != self.language else { return }
         await refresh(day: day, language: language)
     }
 

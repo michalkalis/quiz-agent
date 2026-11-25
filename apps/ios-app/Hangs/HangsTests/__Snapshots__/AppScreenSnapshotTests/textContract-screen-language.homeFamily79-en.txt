@@ -20,9 +20,13 @@ Slovenčina
 Čeština
 Quiz language
 Slovenčina
+Quiz language
+Slovenčina
 4–6
 7–9
 10–12
+Age
+7–9
 Age
 7–9
 LEGO
@@ -31,7 +35,13 @@ Ako sa čo vyrába
 Superschopnosti zvierat
 Topic
 LEGO
+Topic
+LEGO
+No sound
+Read the questions, type the answers
+
 trubbo
+Settings
 You answer, the kids guess along with you.
 Start with kids
 # identifiers
@@ -54,5 +64,7 @@ home.topic.family-lego
 home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
+home.silentMode
+home.settings
 home.family.adultAnswers
 home.startFamily

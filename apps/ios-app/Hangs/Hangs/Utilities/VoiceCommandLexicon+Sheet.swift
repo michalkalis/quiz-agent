@@ -3,10 +3,11 @@
 //  Hangs
 //
 //  #185 (car test 2026-09-23, founder decision 5.3 of 2026-09-24): the answer
-//  confirmation sheet is answered the way people answer a question — "áno",
-//  "nie, znova", "ešte raz" — so the sheet gets words no other screen has, the
-//  two-word phrases arrive as one token, and the words that usually START a
-//  longer sentence may only act once the recognizer has finished the sentence.
+//  confirmation sheet is answered the way people answer a question — "nie,
+//  znova", "ešte raz" — so the two-word phrases arrive as one token, and the
+//  words that usually START a longer sentence may only act once the
+//  recognizer has finished the sentence. (Its confirm words "áno" / "hej"
+//  went with the confirm command, founder 2026-11-22.)
 //  Every table here has an entry for every quiz language
 //  (`VoiceCommandLexiconParityTests`).
 //
@@ -14,26 +15,9 @@
 import Foundation
 
 extension VoiceCommandLexicon {
-    /// Words that are a command ONLY on the answer confirmation sheet. Anywhere
-    /// else they stay filler: "áno" / "hej" / "jo" / "yeah" are what passenger
-    /// conversation is made of (#120), and on the result screen an "áno" would
-    /// skip the explanation.
-    static func confirmationOnlyVariants(
-        for command: VoiceCommand,
-        language: CommandLanguage
-    ) -> [String] {
-        switch (language, command) {
-        case (.english, .ok): return ["yes", "yeah"]
-        case (.slovak, .ok): return ["ano", "hej"]
-        case (.czech, .ok): return ["ano", "jo"]
-        case (.ukrainian, .ok): return ["так", "добре"]
-        default: return []
-        }
-    }
-
-    /// The variants the matcher scores on `screen`: the command's own words,
-    /// plus the confirmation-only ones on the sheet, minus the sheet words
-    /// that mean nothing on the quiz-end screens.
+    /// The variants the matcher scores on `screen`: the command's own words
+    /// plus that screen's button words, minus the sheet words that mean
+    /// nothing on the quiz-end screens.
     static func variants(
         for command: VoiceCommand,
         language: CommandLanguage,
@@ -42,8 +26,6 @@ extension VoiceCommandLexicon {
         let base = variants(for: command, language: language)
         let buttons = buttonVariants(for: command, language: language, on: screen)
         switch screen {
-        case .confirmation:
-            return base + confirmationOnlyVariants(for: command, language: language) + buttons
         case .error, .setEnd:
             let excluded = quizEndExcludedVariants(for: language)
             return base.filter { !excluded.contains($0) } + buttons
@@ -53,17 +35,11 @@ extension VoiceCommandLexicon {
     }
 
     /// #188 G1/G3: words the error and set-end screens do NOT take. On the
-    /// sheet "nie" / "zle" answer the read-back and "počkaj" holds the
-    /// countdown; on a screen that retries or restarts the whole quiz, a
-    /// passenger's "nie" must not start a new set and there is no countdown
-    /// to hold. "znova" / "ešte raz" / "stop" stay.
+    /// sheet "nie" / "zle" answer the read-back; on a screen that retries or
+    /// restarts the whole quiz, a passenger's "nie" must not start a new set.
+    /// "znova" / "ešte raz" stay.
     static func quizEndExcludedVariants(for language: CommandLanguage) -> Set<String> {
-        switch language {
-        case .english: return finalOnlyVariants(for: language).union(["wait"])
-        case .slovak: return finalOnlyVariants(for: language).union(["pockaj"])
-        case .czech: return finalOnlyVariants(for: language).union(["pockej"])
-        case .ukrainian: return finalOnlyVariants(for: language).union(["зачекай", "почекай"])
-        }
+        finalOnlyVariants(for: language)
     }
 
     /// Variants that may only act on a FINAL result. They open ordinary
@@ -84,13 +60,12 @@ extension VoiceCommandLexicon {
     /// #231 (PR #862 review): words that count only when heard EXACTLY — never
     /// by edit distance or as a cut-off. The Ukrainian conversational words sit
     /// one letter from ordinary answers: «правильно» ("right") and «неправда»
-    /// (a true/false answer) from «неправильно», «добро» from «добре», «таки»
-    /// from «так». sk / cs / en keep their field-tuned fuzzy match.
+    /// (a true/false answer) from «неправильно». sk / cs / en keep their
+    /// field-tuned fuzzy match.
     static func exactOnlyVariants(for language: CommandLanguage) -> Set<String> {
         switch language {
         case .english, .slovak, .czech: return []
-        case .ukrainian:
-            return finalOnlyVariants(for: language).union(confirmationOnlyVariants(for: .ok, language: language))
+        case .ukrainian: return finalOnlyVariants(for: language)
         }
     }
 
@@ -116,8 +91,7 @@ extension VoiceCommandLexicon {
     }
 
     /// Filler on `screen`: the language's filler minus every word that is a
-    /// command there. "áno" is filler on the result screen and a confirm on the
-    /// sheet — never both on one screen.
+    /// command there — never both on one screen.
     static func fillerWords(
         for language: CommandLanguage,
         on screen: VoiceCommandScreen

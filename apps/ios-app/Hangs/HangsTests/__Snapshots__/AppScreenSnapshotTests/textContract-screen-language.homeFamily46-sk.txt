@@ -17,9 +17,13 @@ Slovenčina
 Čeština
 Jazyk kvízu
 Slovenčina
+Jazyk kvízu
+Slovenčina
 4–6
 7–9
 10–12
+Vek
+4–6
 Vek
 4–6
 Dinosaury
@@ -27,7 +31,13 @@ Fuj, ale pravda
 Tvoje telo
 Téma
 Dinosaury
+Téma
+Dinosaury
+Bez zvuku
+Otázky čítaš, odpovede píšeš
+
 trubbo
+Nastavenia
 Odpovedáš ty, deti hádajú s tebou.
 Štart s deťmi
 # identifiers
@@ -49,5 +59,7 @@ home.topic.menu
 home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
+home.silentMode
+home.settings
 home.family.adultAnswers
 home.startFamily

@@ -2,7 +2,8 @@
 //  RSPaywallTests.swift
 //  HangsUITests
 //
-//  RS-19..RS-21 — new paywall / purchase / restore scenarios (#180 track D).
+//  RS-19..RS-21 — new paywall / purchase / restore scenarios (#180 track D);
+//  RS-47 — the free voice answers used up (2026-11-21).
 //  Products come from Hangs.storekit, attached to the Hangs-Local scheme's Test
 //  action, so the sheet is the REAL paywall over StoreKit Testing — not a mock.
 //  The quota wall itself is seeded by `--ui-test-paywall` (createSession throws
@@ -156,6 +157,38 @@ final nonisolated class RSPaywallTests: XCTestCase {
         paywall.tapClose()
         XCTAssertTrue(roundEnd.homeButton.waitForExistence(timeout: 5), "RS-45: closing the paywall did not land on the end of the round")
         RSFlow.assertAlive(app, "RS-45")
+    }
+
+    // MARK: RS-47 — Voice answers used up: told once, the quiz goes on by typing
+
+    // Guarded (free tier split, founder 2026-11-21, D1): a voice answer past
+    // the month's free voice answers is refused by the server. The question
+    // must stay on screen with one quiet notice and a Plus link that never
+    // blocks it, and Answer must lead to typing instead of the refused mic.
+    @MainActor
+    func testRS47VoiceLimitKeepsQuestionAnswerableByTyping() async throws {
+        let app = RSFlow.launch(["--ui-test-voice-limit"])
+        let question = RSFlow.startQuiz(app)
+        RSFlow.startRecording(question)
+        try await UITestClient().sendSpokenAnswer("Paris")
+
+        XCTAssertTrue(question.voiceLimitNotice.waitForExistence(timeout: 15), "RS-47: no notice after the refusal")
+        question.waitForState("askingQuestion", timeout: 5)
+        let paywall = PaywallPage(app: app)
+        XCTAssertFalse(paywall.closeButton.exists, "RS-47: a paywall covered the question")
+
+        question.voiceLimitPlusLink.tap()
+        paywall.waitForPaywall(timeout: 15)
+        paywall.tapClose()
+        XCTAssertTrue(question.recordButton.waitForExistence(timeout: 5), "RS-47: closing the paywall left the question")
+
+        question.recordButton.tap()
+        XCTAssertTrue(question.textField.waitForExistence(timeout: 5), "RS-47: Answer did not open the typed field")
+        XCTAssertEqual(question.stateValue, "askingQuestion", "RS-47: Answer opened the refused mic")
+        question.textField.typeText("Paris")
+        question.textSubmit.tap()
+        ResultPage(app: app).waitForResult(timeout: 15)
+        RSFlow.assertAlive(app, "RS-47")
     }
 
     /// The paywall is still usable and nothing was unlocked: no success branch,

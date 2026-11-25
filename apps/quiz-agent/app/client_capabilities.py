@@ -17,6 +17,10 @@ Tokens:
 - ``option-labels`` — question audio reads the MCQ options with the served
   ``option_labels`` ("1".."4", or "A".."D" when the options are numbers)
   instead of the raw keys, matching what the client now displays.
+- ``voice-allowance`` — a voice answer past the free monthly voice allowance
+  is refused with 429 ``voice_limit_reached`` (the client offers typing and
+  tapping). Without it the refusal waits for the ``voice_limit_old_builds``
+  switch (``usage.voice_allowance``).
 """
 
 from __future__ import annotations
@@ -26,7 +30,8 @@ from typing import Any, Optional
 CAPABILITIES_HEADER = "X-Client-Capabilities"
 ANSWER_CODES = "answer-codes"
 OPTION_LABELS = "option-labels"
-KNOWN_CAPABILITIES = frozenset({ANSWER_CODES, OPTION_LABELS})
+VOICE_ALLOWANCE = "voice-allowance"
+KNOWN_CAPABILITIES = frozenset({ANSWER_CODES, OPTION_LABELS, VOICE_ALLOWANCE})
 
 
 def parse_capabilities(header_value: Optional[str]) -> list[str]:

@@ -57,6 +57,11 @@ struct UITestClient {
         try await post(path: "/network/condition", text: profile, calls: calls)
     }
 
+    /// RS-16: `calls` (mock call names) stay in flight until `releaseNetwork()`.
+    func holdNetwork(_ calls: [String]) async throws {
+        try await post(path: "/network/hold", text: calls.joined(separator: ","))
+    }
+
     /// #235.5: the calls held since launch (`--ui-test-network-hold`) answer.
     func releaseNetwork() async throws {
         try await post(path: "/network/release", text: nil)
@@ -84,7 +89,7 @@ struct UITestClient {
 
     /// POST a synthetic voice-command transcript to the in-app HTTP listener,
     /// driving the real `handleCommandTranscript` → `handleRecognizedCommand` →
-    /// `routeCommand` pipeline (issue #111 T3). Lets a UI test fire e.g. "start"
+    /// `routeCommand` pipeline (issue #111 T3). Lets a UI test fire e.g. "next"
     /// even though the on-device recognizer is `nil` under `--ui-test`.
     func sendCommand(_ text: String) async throws {
         var components = URLComponents(url: base.appendingPathComponent("/command/send"), resolvingAgainstBaseURL: false)!

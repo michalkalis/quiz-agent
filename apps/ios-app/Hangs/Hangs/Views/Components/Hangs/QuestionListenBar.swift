@@ -81,14 +81,37 @@ enum QuestionListenPhase: Equatable {
         }
     }
 
+    /// The strip between the question card and the buttons. TF build 90
+    /// (founder) hid it unless it told the player something they need: the
+    /// think countdown, the open mic, or an answer in flight. #243.6 (founder
+    /// 2026-11-24, C4): it is also on whenever the app listens for commands
+    /// (`commandsListening`), with the words, so the player always sees that
+    /// the app hears them and what to say. The commands permission control
+    /// (`hasCommandsAccessory`) keeps the plain bar without a countdown:
+    /// "Turn on" lives nowhere else after onboarding, and "Settings" is how a
+    /// refused microphone is fixed.
+    static func strip(
+        _ phase: QuestionListenPhase?,
+        hasCommandsAccessory: Bool,
+        commandsListening: Bool = false
+    ) -> QuestionListenPhase? {
+        switch phase {
+        case let .thinking(_, total) where total > 0: phase
+        case .listening, .evaluating, .skipping: phase
+        case .readingQuestion, .thinking:
+            if commandsListening { phase } else { hasCommandsAccessory ? .thinking(remaining: 0, total: 0) : nil }
+        case nil: nil
+        }
+    }
+
     /// The commands this state actually routes, in the order the driver reads
-    /// them. `.question` routes start / repeat / skip (`VoiceCommandLexicon`), but
-    /// "start" is deliberately withheld while the question is being read — saying
+    /// them. `.question` routes answer / repeat / next (`VoiceCommandLexicon`), but
+    /// "answer" is deliberately withheld while the question is being read — saying
     /// it there opens the mic over the rest of the sentence.
     var commands: [VoiceCommand] {
         switch self {
-        case .readingQuestion: return [.repeatQuestion, .skip]
-        case .thinking: return [.start, .repeatQuestion, .skip]
+        case .readingQuestion: return [.repeatQuestion, .next]
+        case .thinking: return [.answer, .repeatQuestion, .next]
         case .listening, .evaluating, .skipping: return []
         }
     }
@@ -128,6 +151,9 @@ struct QuestionListenBar: View {
     /// #122 follow-up: the recognized-but-not-yet-fired command caption.
     var recognizingWord: String? = nil
 
+    /// "What the app hears" (founder 2026-11-22).
+    var heard: CommandHeard? = nil
+
     /// Whether the command words may be shown at all: the Settings toggle AND an
     /// armed listener. A chip is a promise that the word will be heard.
     var showsWords: Bool = true
@@ -145,6 +171,9 @@ struct QuestionListenBar: View {
     /// bar is the quiz's one countdown, so the Stop button no longer carries it.
     var answerRemaining: Int? = nil
 
+    /// TF build 90: the retry or spelling hint, carried by the open mic's bar.
+    var answerNote: ListenBar.AnswerNote? = nil
+
     var onDismiss: (() -> Void)? = nil
 
     /// #237: the commands control while commands wait on the permission
@@ -152,6 +181,13 @@ struct QuestionListenBar: View {
     var commandsAccessory: ListenBar.CommandsAccessory? = nil
     var onTurnOnCommands: (() -> Void)? = nil
     var onOpenSettings: (() -> Void)? = nil
+
+    /// TF build 90: the slot the question screen keeps for this bar while it
+    /// is hidden — as tall as the bar's own floor in its tallest state, so the
+    /// card and the controls never move when it appears.
+    static func slotHeight(size: ListenBar.Size) -> CGFloat {
+        size == .full ? ListenBar.statusHeight : ListenBar.height(size: .slim, hasSubLine: true)
+    }
 
     private var words: [String] {
         guard showsWords else { return [] }
@@ -163,6 +199,7 @@ struct QuestionListenBar: View {
             mode: phase.barMode,
             feedback: feedback,
             recognizingWord: recognizingWord,
+            heard: heard,
             commandWords: words,
             size: size,
             language: language,
@@ -170,6 +207,7 @@ struct QuestionListenBar: View {
             speechHeard: speechHeard,
             inputLevel: inputLevel,
             answerRemaining: answerRemaining,
+            answerNote: answerNote,
             onDismiss: phase.isDismissable ? onDismiss : nil,
             commandsAccessory: commandsAccessory,
             onTurnOnCommands: onTurnOnCommands,

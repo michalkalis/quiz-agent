@@ -50,6 +50,13 @@ extension SilenceDetectionService {
         startInFlight = true
         defer { startInFlight = false }
 
+        // A stopped window's analyzer may still be finalizing (+Drain,
+        // bounded by `drainBudget`): never run two analyses at once — the
+        // system limits simultaneous analyses and would fail the new one.
+        if let drainTask { await drainTask.value }
+        listeningWindow += 1
+        let window = listeningWindow
+
         resetSpeechDetection()
         loggedVolatileThisSegment = false
 
@@ -83,26 +90,17 @@ extension SilenceDetectionService {
             speechDetectorPaired = speechDetector != nil
             let modules: [any SpeechModule] = [transcriberSession.module] + (speechDetector.map { [$0] } ?? [])
 
-            let speechAnalyzer = SpeechAnalyzer(modules: modules)
+            let speechAnalyzer = SpeechAnalyzer(modules: modules, options: Self.analyzerOptions)
             self.analyzer = speechAnalyzer
 
             // Vocabulary biasing (#120): fed ONLY to an engine that declares the
             // capability — DictationTranscriber honors contextual strings,
             // SpeechTranscriber ignores them (adapter returns nil; no call at all).
-            // Failure is non-fatal: an unbiased recognizer still recognizes, so log
-            // and continue rather than degrade to buttons.
-            if let vocabulary = transcriberEngine.contextualStrings {
-                let context = AnalysisContext()
-                context.contextualStrings = [.general: vocabulary]
-                do {
-                    try await speechAnalyzer.setContext(context)
-                } catch {
-                    SentryLog.warn(
-                        "contextual strings rejected",
-                        category: .voice,
-                        attributes: ["error": error.localizedDescription, "count": vocabulary.count]
-                    )
-                }
+            // Only the words that are commands on the window's screen.
+            appliedContextualStrings = nil
+            if let vocabulary = transcriberEngine.contextualStrings(on: commandScreen) {
+                appliedContextualStrings = vocabulary
+                await Self.applyContextualStrings(vocabulary, to: speechAnalyzer)
             }
 
             guard let bestFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
@@ -117,6 +115,40 @@ extension SilenceDetectionService {
             analyzerFormat = bestFormat
         } else {
             analyzerFormat = Self.answerOnlyFormat
+        }
+
+        let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
+        inputContinuation = continuation
+
+        // Fail loud (#77): a swallowed throw here was the silent death of both
+        // VAD and voice commands on device. Cancellation (normal teardown via
+        // stopListening) is not a failure. Started BEFORE the engine so the
+        // model loads (`prepareToAnalyze`, Apple's "preheat") while the mic
+        // settles — up to seconds on Bluetooth — instead of on the first
+        // buffer; the audio captured meanwhile waits in the input stream.
+        analyzerStarted = false
+        if let analyzer {
+            analyzerTask = Task { [weak self] in
+                do {
+                    try await analyzer.prepareToAnalyze(in: analyzerFormat)
+                } catch {
+                    if Task.isCancelled { return }
+                    SentryLog.warn("analyzer preheat failed", category: .voice, attributes: ["error": error.localizedDescription])
+                }
+                do {
+                    try Task.checkCancellation()
+                    try await analyzer.start(inputSequence: inputSequence)
+                    if self?.listeningWindow == window { self?.analyzerStarted = true }
+                } catch is CancellationError {
+                    // normal stopListening() teardown
+                } catch {
+                    self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            // #237 answer-only engine: nobody reads the analyzer input, so it
+            // must not buffer the whole window's audio.
+            continuation.finish()
         }
 
         // #204: before the engine exists, like the other suspensions above.
@@ -177,9 +209,6 @@ extension SilenceDetectionService {
             )
         }
 
-        let (inputSequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
-        inputContinuation = continuation
-
         // #185: the tap measures every buffer's level for the energy VAD; the
         // main actor drains them in order (audio time drives the detector).
         let (levelSequence, levels) = AsyncStream<InputLevelSample>.makeStream(
@@ -199,25 +228,6 @@ extension SilenceDetectionService {
             continuation: continuation, levels: levels, answerSink: answerAudioSink,
             neuralVAD: neuralVAD
         )
-
-        // Fail loud (#77): a swallowed throw here was the silent death of both
-        // VAD and voice commands on device. Cancellation (normal teardown via
-        // stopListening) is not a failure.
-        if let analyzer {
-            analyzerTask = Task { [weak self] in
-                do {
-                    try await analyzer.start(inputSequence: inputSequence)
-                } catch is CancellationError {
-                    // normal stopListening() teardown
-                } catch {
-                    self?.markCommandsUnavailable(reason: "SpeechAnalyzer start failed: \(error.localizedDescription)")
-                }
-            }
-        } else {
-            // #237 answer-only engine: nobody reads the analyzer input, so it
-            // must not buffer the whole window's audio.
-            continuation.finish()
-        }
 
         // NOTE: SpeechDetector delivers results on its own queue; route back to
         // @MainActor before touching our state.
@@ -250,7 +260,7 @@ extension SilenceDetectionService {
                         guard let self, !Task.isCancelled else { break }
                         guard !transcript.text.isEmpty else { continue }
                         await MainActor.run { [weak self] in
-                            self?.handleEngineTranscript(transcript)
+                            self?.handleEngineTranscript(transcript, window: window)
                         }
                     }
                 } catch is CancellationError {
@@ -334,6 +344,44 @@ extension SilenceDetectionService {
         commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: false
     )!
 
+    func setCommandScreen(_ screen: VoiceCommandScreen?) {
+        commandScreen = screen
+        // A live analyzer is re-biased in place — Apple documents no
+        // restriction on `setContext` mid-analysis, unconfirmed on device; a
+        // rejection only logs. One not built yet reads `commandScreen`.
+        guard let analyzer,
+              let vocabulary = transcriberEngine.contextualStrings(on: screen),
+              vocabulary != appliedContextualStrings else { return }
+        appliedContextualStrings = vocabulary
+        Task { await Self.applyContextualStrings(vocabulary, to: analyzer) }
+    }
+
+    /// Vocabulary biasing (#120). Failure is non-fatal: an unbiased
+    /// recognizer still recognizes, so log and continue rather than degrade
+    /// to buttons.
+    private static func applyContextualStrings(_ vocabulary: [String], to analyzer: SpeechAnalyzer) async {
+        let context = AnalysisContext()
+        context.contextualStrings = [.general: vocabulary]
+        do {
+            try await analyzer.setContext(context)
+        } catch {
+            SentryLog.warn(
+                "contextual strings rejected",
+                category: .voice,
+                attributes: ["error": error.localizedDescription, "count": vocabulary.count]
+            )
+        }
+    }
+
+    /// Keep the recognizer's models loaded for the next window's analyzer
+    /// (Apple: `.lingering` keeps them "for a time so that they can be reused
+    /// by another compatible analyzer session") instead of reloading them
+    /// after every question read. The analyzer itself stays per window: one
+    /// kept across the read would need a different lifecycle (see the PR).
+    nonisolated static var analyzerOptions: SpeechAnalyzer.Options {
+        SpeechAnalyzer.Options(priority: .userInitiated, modelRetention: .lingering)
+    }
+
     /// The optional command-gate SpeechDetector (`VADTuning.commandGateSensitivity`).
     private static func makeSpeechDetector() -> SpeechDetector? {
         guard let sensitivity = VADTuning.commandGateSensitivity else { return nil }
@@ -358,7 +406,12 @@ extension SilenceDetectionService {
     /// (`shouldLogDroppedTranscript`). A transcript carrying the one-shot
     /// first-hypothesis measurement is always logged — dropping it would lose
     /// the engine-comparison data point #120 exists for.
-    func handleEngineTranscript(_ transcript: CommandTranscript) {
+    func handleEngineTranscript(_ transcript: CommandTranscript, window: Int) {
+        // A window already torn down is finishing what it heard (+Drain).
+        guard window == listeningWindow else {
+            noteDrainedTranscript(transcript)
+            return
+        }
         answerSession?.transcriberResults += 1 // #189: results out (+Telemetry)
         let firstHypothesisMs = consumeFirstHypothesisLatencyMs()
         if transcript.isFinal || !loggedVolatileThisSegment || firstHypothesisMs != nil {
@@ -401,12 +454,8 @@ extension SilenceDetectionService {
         detectionTask?.cancel()
         detectionTask = nil
 
-        transcriptionTask?.cancel()
-        transcriptionTask = nil
-
-        analyzerTask?.cancel()
-        analyzerTask = nil
-
+        // End of input: the mic comes down NOW, whatever the analyzer is
+        // still doing — the app never listens under its own speech.
         inputContinuation?.finish()
         inputContinuation = nil
         stopLevelStream()
@@ -417,7 +466,8 @@ extension SilenceDetectionService {
         audioEngine = nil
         voiceProcessingStatus = nil
 
-        analyzer = nil
+        // Finalize what was already heard instead of cancelling it (+Drain).
+        drainAnalyzer()
         neuralVADActive = false
         speechEdgesSuspended = false // #208.7: a suspension never outlives its engine
         resetSpeechDetection()

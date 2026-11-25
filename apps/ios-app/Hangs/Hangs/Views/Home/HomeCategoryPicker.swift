@@ -17,6 +17,8 @@ struct HomeCategoryPicker: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var categories: [String]
     @Binding var includeLocalQuestions: Bool
+    /// #242: the served extra categories, after the permanent tiles.
+    var extras: [ExtraCategory] = []
 
     var body: some View {
         ScrollView {
@@ -31,7 +33,10 @@ struct HomeCategoryPicker: View {
                 allCategoriesRow
                 LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
                     ForEach(Config.categoryOptions.compactMap(\.id), id: \.self) { id in
-                        tile(id)
+                        tile(id, name: Config.categoryDisplayName(for: id) ?? "", style: Theme.Hangs.Category.style(for: id))
+                    }
+                    ForEach(Array(extras.enumerated()), id: \.element.key) { index, extra in
+                        tile(extra.key, name: extra.name, style: Theme.Hangs.Category.extraStyle(position: index), extra: extra)
                     }
                 }
                 localQuestionsRow
@@ -80,9 +85,8 @@ struct HomeCategoryPicker: View {
         .accessibilityIdentifier("home.category.all")
     }
 
-    private func tile(_ id: String) -> some View {
+    private func tile(_ id: String, name: String, style: Theme.Hangs.Category.Style, extra: ExtraCategory? = nil) -> some View {
         let isOn = categories.contains(id)
-        let style = Theme.Hangs.Category.style(for: id)
         return Button {
             toggle(id)
         } label: {
@@ -90,10 +94,13 @@ struct HomeCategoryPicker: View {
                 checkMark(isOn: isOn, style: style)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer(minLength: 0)
-                Text(verbatim: Config.categoryDisplayName(for: id) ?? "")
+                Text(verbatim: name)
                     .font(.hangsLabel)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                if let extra {
+                    ExtraCategoryBadge(category: extra)
+                }
             }
             .foregroundStyle(isOn ? style.text : Theme.Hangs.Colors.ink)
             .padding(EdgeInsets(top: Theme.Hangs.Spacing.sm, leading: Theme.Hangs.Spacing.md, bottom: Theme.Hangs.Spacing.md, trailing: Theme.Hangs.Spacing.sm))
@@ -115,8 +122,8 @@ struct HomeCategoryPicker: View {
 
     private var localQuestionsRow: some View {
         HangsToggleRow(
-            label: "Local questions",
-            subtitle: "For example, a city's bus routes or a local card game",
+            label: "Questions for locals",
+            subtitle: "Things only people who live in that country or city know. For example, bus and tram routes.",
             isOn: $includeLocalQuestions
         )
         .background(surface(cornerRadius: Theme.Hangs.Radius.card))

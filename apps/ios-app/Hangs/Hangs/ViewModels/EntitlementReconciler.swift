@@ -44,6 +44,12 @@ final class EntitlementReconciler: ObservableObject {
     /// a failed *refresh* over an already-loaded value keeps the stale card
     /// rather than blanking it.
     @Published private(set) var usageLoadState: UsageLoadState = .loading
+    /// The server refused a voice answer: this month's free voice answers are
+    /// used up (429 `voice_limit_reached`). Kept until a fresh `/usage` says
+    /// voice is open again (a new month, or Plus bought).
+    @Published var voiceRefusal: VoiceLimitError?
+    /// The question that shows the once-a-month voice limit notice.
+    @Published var voiceLimitNoticeQuestionId: String?
 
     private let networkService: NetworkServiceProtocol
 
@@ -121,6 +127,12 @@ final class EntitlementReconciler: ObservableObject {
         quotaLimitError = nil
     }
 
+    /// No voice answer this month: the server refused one, or `/usage` says
+    /// none is left. The mic then stays closed and the player types or taps.
+    var isVoiceAllowanceSpent: Bool {
+        voiceRefusal != nil || usageInfo?.isVoiceAllowanceSpent == true
+    }
+
     /// Proactive paywall entry (#93 subscription IAP — paywall was reachable
     /// only via the 429 quota handlers). Called from the Home free-plan card
     /// and the Settings subscription row. Clears any stale quota error first
@@ -192,8 +204,10 @@ final class EntitlementReconciler: ObservableObject {
         for attempt in 1 ... maxAttempts {
             guard !Task.isCancelled else { return }
             do {
-                usageInfo = try await networkService.getUsage()
+                let usage = try await networkService.getUsage()
+                usageInfo = usage
                 usageLoadState = .loaded
+                if !usage.isVoiceAllowanceSpent { voiceRefusal = nil }
                 return
             } catch {
                 guard attempt < maxAttempts else {

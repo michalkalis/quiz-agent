@@ -101,7 +101,7 @@ _WEAK_LETTER_WORDS = {
     "де": "d", "ей": "a", "бі": "b", "сі": "c", "ді": "d",
 }
 # «це» is also the everyday "this is" ("це Київ"), so it is the letter C only
-# as the whole utterance of a lettered question.
+# as the last word of a lettered question's answer, after lead-in words alone.
 _UK_LETTER_C = "це"
 # English verbs that sound like letters: dropped when another label is said
 # ("it could be C", "let me see, B").
@@ -352,7 +352,13 @@ def _is_directive(token: str) -> bool:
 
 
 def _directive_match(tokens: list[str], keys: list[str], scheme: str) -> Optional[str]:
-    if tokens == [_UK_LETTER_C] and scheme == "letters":
+    if (
+        scheme == "letters"
+        and tokens[-1:] == [_UK_LETTER_C]
+        and all(t in _FILLERS for t in tokens[:-1])
+    ):
+        # «варіант Це», «я думаю, це Це»: a closing «це» after nothing but
+        # lead-in words is the letter, not "this is".
         return _key_for_letter("c", keys)
     content: list[str] = []
     for i, token in enumerate(tokens):

@@ -151,19 +151,20 @@ def _tracker(db_sessionmaker, limit=FREE_MONTHLY_LIMIT) -> UsageTracker:
 # --- free-tier sizing --------------------------------------------------------
 
 
-async def test_free_cap_is_30(db_sessionmaker):
-    """The free monthly cap is 30 (issue #93, down from 100): allowed at 29
-    used, denied once 30 are used."""
-    assert FREE_MONTHLY_LIMIT == 30
+async def test_free_cap_is_150(db_sessionmaker):
+    """The free monthly cap is 150 (2026-11-21 experiment, up from 30 now that
+    only 30 of them may be voice answers): allowed at 149 used, denied once 150
+    are used."""
+    assert FREE_MONTHLY_LIMIT == 150
 
     t = _tracker(db_sessionmaker)
-    await _seed_daily(db_sessionmaker, 29)
+    await _seed_daily(db_sessionmaker, 149)
 
     allowed, remaining, _ = await t.check_limit(SUBJECT)
     assert allowed and remaining == 1
 
-    # The 30th question records, then the gate closes.
-    assert await t.record_question(SUBJECT) == 30
+    # The 150th question records, then the gate closes.
+    assert await t.record_question(SUBJECT) == 150
     allowed, remaining, _ = await t.check_limit(SUBJECT)
     assert not allowed and remaining == 0
 

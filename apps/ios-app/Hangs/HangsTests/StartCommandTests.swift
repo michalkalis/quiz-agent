@@ -2,15 +2,14 @@
 //  StartCommandTests.swift
 //  HangsTests
 //
-//  Issue #77 (voice commands hands-free), task 77.8 — the spoken "start" wiring.
+//  Issue #77 (voice commands hands-free), task 77.8 — the spoken "answer" wiring (was "start" before founder 2026-11-22).
 //  The Apple recognizer is MOCKED / bypassed: these tests drive
 //  `handleRecognizedCommand` directly (the routing seam) so the per-screen START
 //  routing is deterministic. Covers:
-//    • flag ON  → "start" on askingQuestion opens the mic (startRecording path);
-//    • flag OFF → "start" on askingQuestion is inert (button-only START, P4a);
-//    • "start" is inert in every other quiz-flow state…
-//    • …EXCEPT Home (idle), where it always begins the quiz (separate flag);
-//    • NO instant mic-open: a TTS finish arms the think window first (P1).
+//    • flag ON  → "answer" on askingQuestion opens the mic (startRecording path);
+//    • flag OFF → "answer" on askingQuestion is inert (button-only mic, P4a);
+//    • "answer" is inert in every other quiz-flow state…
+////    • NO instant mic-open: a TTS finish arms the think window first (P1).
 //
 
 import Clocks
@@ -38,34 +37,34 @@ private func makeStartVM() -> (QuizViewModel, MockAudioService) {
     return (vm, audio)
 }
 
-@Suite("Start command — spoken START wiring (77.8)")
+@Suite("Start command — spoken ANSWER wiring (77.8)")
 @MainActor
 struct StartCommandTests {
 
-    @Test("flag ON: 'start' on askingQuestion opens the mic (startRecording)")
+    @Test("flag ON: 'answer' on askingQuestion opens the mic (startRecording)")
     func flagOnStartsRecording() async {
         await withMainSerialExecutor {
             let (vm, audio) = makeStartVM()
             vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = true
             vm.quizState = .askingQuestion
 
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.answer)
 
-            await pumpUntil({ vm.quizState == .recording }, turns: 2000, "start did not open the mic")
+            await pumpUntil({ vm.quizState == .recording }, turns: 2000, "answer did not open the mic")
             #expect(vm.quizState == .recording)
             #expect(vm.isAnswerCaptureActive == true) // #184: capture on the shared engine
             _ = audio
         }
     }
 
-    @Test("flag OFF: 'start' on askingQuestion is inert (button-only START)")
+    @Test("flag OFF: 'answer' on askingQuestion is inert (button-only mic)")
     func flagOffIsInert() async {
         await withMainSerialExecutor {
             let (vm, audio) = makeStartVM()
             vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = false
             vm.quizState = .askingQuestion
 
-            vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
+            vm.voiceCommandCoordinator.handleRecognizedCommand(.answer)
 
             // Give any (wrongly) spawned Task a chance to run — it must not.
             for _ in 0..<40 { await Task.yield() }
@@ -83,7 +82,7 @@ struct StartCommandTests {
             vm.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.opus"
 
             // 'repeat' is a separate question-screen command — unaffected by the
-            // start flag. It must still drive the TTS-replay path (durable signal:
+            // answer flag. It must still drive the TTS-replay path (durable signal:
             // the question audio was played back).
             vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
             await pumpUntil({ audio.playOpusCallCount >= 1 }, turns: 2000, "repeat did not replay the question")
@@ -91,7 +90,7 @@ struct StartCommandTests {
         }
     }
 
-    @Test("'start' is inert in non-Home quiz-flow states")
+    @Test("'answer' is inert in non-question quiz-flow states")
     func startInertInOtherStates() async {
         await withMainSerialExecutor {
             for state in [QuizState.processing, .startingQuiz, .finished] {
@@ -99,10 +98,10 @@ struct StartCommandTests {
                 vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = true
                 vm.quizState = state
 
-                vm.voiceCommandCoordinator.handleRecognizedCommand(.start)
+                vm.voiceCommandCoordinator.handleRecognizedCommand(.answer)
 
                 for _ in 0..<40 { await Task.yield() }
-                #expect(vm.quizState == state, "start must be inert in \(state.label)")
+                #expect(vm.quizState == state, "answer must be inert in \(state.label)")
                 #expect(audio.isRecording == false)
             }
         }

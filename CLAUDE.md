@@ -32,6 +32,8 @@ Stack-specific commands (iOS build / test / schemes, Fly.io deploy) live in the 
 
 **HTML artifacts only on explicit request** (user asks for a report/dashboard/recap) or when the content is genuinely visual (status board, dependency diagram). Never hand-write the HTML shell: write the content as plain markdown, then wrap it via `uv run scripts/md2report.py <in.md> [out.html]` — dark theme, sticky TOC, tables, `<details>`, status badges (`<span class="badge ok|warn|bad|info">`) come from the template. Output lands in `docs/artifacts/<slug>.html` (gitignored); reply `open <path>`. **MD = persistent. HTML = throwaway.**
 
+**Founder decisions go on a decision page, not in chat (founder, 2026-11-21).** When a session needs the founder's product/UX judgment, has any question about the product or a change to it, has variants or screenshots to show, or has two or more questions, run `/decide`: it builds a local page (session name in the heading, what this is about, clickable visual options) via `uv run scripts/decision_page.py <spec.json>` and opens it; the founder pastes the copied answers back. The chat reply is then ≤ 3 lines. The page also carries a plain-words overview of how the thing works and which technical direction was taken (never the detail or how you got there). Not for everything: one quick question with no visual, UX or product weight stays an in-session prompt, and a session with nothing to decide or look at ends with the normal short reply.
+
 **Length caps (fail loud, don't silently exceed):**
 - Issue plans `docs/issues/issue-NN-*.md` — ≤ ~300 lines; link research/artifacts instead of inlining them.
 - Handoffs — ≤ ~80 lines.
@@ -111,7 +113,7 @@ If a task genuinely won't fit, split it at a clean boundary, commit what's valid
 Keep going while a step doesn't need the founder; stop only when you can't continue without them, or before anything destructive. A turn that ends in text alone is a progress report, not a done-state — finish the whole task you were given.
 Before asking the user for anything — a decision, an answer, or an action for them to perform — first confirm you genuinely can't resolve it better yourself from the code, conventions, or a sensible default. Most questions never need to reach them: decide what you can, state the assumption, and proceed.
 **Always decide product matters *with* the user** (UX, scope, feature behavior, monetization, vision) — these need their input even when a reasonable default exists.
-When you do need them, **ask interactively during the session** (e.g. an in-session question prompt) with enough context to answer without digging. Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
+When you do need them, **ask interactively during the session** (e.g. an in-session question prompt) with enough context to answer without digging; visual or multi-question decisions go on a `/decide` page. Never bury a question for the user inside a plan/issue/handoff doc where it gets lost — surface it live.
 When the user must perform an action outside the code (set a secret or API key, change a console/dashboard setting, run an auth or login flow), give **exact, numbered, step-by-step instructions** and assume zero prior knowledge — they rarely know how on their own.
 
 ## Rules files

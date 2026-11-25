@@ -370,6 +370,7 @@ struct RoundCompleteView: View {
                     mode: .command,
                     feedback: viewModel.voiceFeedbackPhase,
                     recognizingWord: viewModel.recognizingWord,
+                    heard: viewModel.commandHeard,
                     commandHint: viewModel.voiceHintWords,
                     language: viewModel.commandLanguage
                 )

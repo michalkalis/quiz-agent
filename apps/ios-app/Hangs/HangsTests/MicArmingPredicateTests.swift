@@ -41,7 +41,6 @@ private func makeMicVM() -> (QuizViewModel, MockSilenceDetectionService, MockAud
 @Suite("Mic arming — single capture predicate (#149)")
 @MainActor
 struct MicArmingPredicateTests {
-
     // MARK: F3 — the master switch stays off
 
     // WHY: this is the reported defect. `playQuestionAudio`'s tail is the path
@@ -96,9 +95,16 @@ struct MicArmingPredicateTests {
     @Test("barge-in still arms on the question tail and fires")
     func bargeInStillArmsAndFires() async {
         let (vm, silence, audio) = makeMicVM()
+        audio.playbackDurationNs = 0
 
         await vm.audioDeviceState.playQuestionAudio(from: "https://example.invalid/q.opus")
         #expect(silence.isListening, "the question tail must still arm capture when commands are on")
+
+        // #243.3 (founder 2026-11-24): the think window now opens with a spoken
+        // "Think.", and app speech takes the mic down while it plays so the app
+        // never hears itself. Barge-in must be armed again once the line ends.
+        await pumpUntil({ audio.playOpusCallCount == 2 && !vm.isPlayingFeedbackTTS && silence.isListening },
+                        turns: 2000, "the think line never ended with capture armed again")
 
         let stopsBefore = audio.stopPlaybackCallCount
         silence.simulateBargeIn()

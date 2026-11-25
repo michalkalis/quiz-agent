@@ -21,6 +21,7 @@ from quiz_shared.llm import factory as llm_factory
 import os
 
 from quiz_shared.models.question import GenerationProvenance, Question
+from .classification import CATEGORIES
 from .prompt_builder import PromptBuilder, STRUCTURED_MCQ_FORMAT_NOTE
 from . import inline_options
 from .mcq_answer import resolve_mcq_answer
@@ -223,9 +224,8 @@ class MCQQuestionItem(BaseModel):
         description=(
             "Player-facing category filter id. When the prompt names an order "
             "category, copy it exactly; otherwise classify this question as "
-            "one of: general | adults | kids | wizarding-world | superheroes "
-            "| disney | football | sports-mix (use 'general' when nothing "
-            "themed fits)"
+            "exactly one of: " + " | ".join(CATEGORIES) + " (see DIFFICULTY & "
+            "CATEGORY in the prompt)"
         ),
     )
     difficulty: Optional[str] = Field(
@@ -1111,7 +1111,7 @@ class AdvancedQuestionGenerator:
         questions = self._parse_response(
             llm_factory.message_text(response),
             default_difficulty=difficulty or "medium",
-            default_category=categories[0] if categories else "general"
+            default_category=categories[0] if categories else ""
         )
 
         return self._finalize_questions(
@@ -1451,7 +1451,7 @@ class AdvancedQuestionGenerator:
         ])
         items = self._mcq_items_from_structured_result(result)
 
-        default_category = categories[0] if categories else "general"
+        default_category = categories[0] if categories else ""
         pinned_pattern = sorted(mcq_patterns)[0] if mcq_patterns else None
 
         questions: List[Question] = []
@@ -2013,7 +2013,7 @@ Respond in JSON only:
         self,
         content: str,
         default_difficulty: str = "medium",
-        default_category: str = "general"
+        default_category: str = ""
     ) -> List[Question]:
         """Parse LLM response into Question objects.
 

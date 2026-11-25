@@ -21,9 +21,15 @@ struct ResultPage {
         app.buttons["result.hearIt"]
     }
 
-    /// One control that toggles STAY (pause auto-advance) ⇄ RESUME.
-    var stayHereButton: XCUIElement {
-        app.buttons["result.stayHere"]
+    /// The quiz toolbar's pause: holds the auto-advance ⇄ resumes it (TF
+    /// build 90: the footer's STAY/RESUME pill is gone).
+    var pauseButton: XCUIElement {
+        app.buttons["question.pause"]
+    }
+
+    /// TF build 90 (C1): opens the sheet with the question just answered.
+    var showQuestionButton: XCUIElement {
+        app.buttons["result.showQuestion"]
     }
 
     /// The verdict label in the result card header ("Nailed it" / "Missed" /

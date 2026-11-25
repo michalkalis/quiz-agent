@@ -24,7 +24,6 @@ enum TaskKey: Hashable, Sendable {
     case bargeIn
     case commandListener
     case volatileSettle
-    case skipUndo
     case voiceFeedbackGlow
     case commandSpeechEvents // #122 follow-up: VAD speechStarted feed for the "hearing" state
     case voiceProcessingCue // #208.7: speech paused → "processing" after a short hold, and its ceiling
@@ -43,6 +42,8 @@ enum TaskKey: Hashable, Sendable {
     case quickSkipNote // #224.8: the "Skipped, correct: X" note leaves by itself
     case explanationReadOut // #188 G4: "hear it" on the result reads the explanation
     case roundEndPaywall // #240.9: the paywall after a round the monthly limit ended
+    case voiceLimitPrompt // 2026-11-21: the once-a-month "voice answers used up" line
+    case commandHeardClear // 2026-11-22: the fired preview clears after a short hold
 }
 
 /// Owns a set of `Task<Void, Never>` handles keyed by `TaskKey`. Adding a

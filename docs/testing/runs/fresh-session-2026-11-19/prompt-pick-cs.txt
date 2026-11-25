@@ -1,0 +1,81 @@
+Today is 2026-11-19. From the news digest below, pick 36 seed facts for a voice trivia quiz played by adults who live in Czechia and play in Czech.
+
+A seed is one thing people talked about, one surprising angle a question can ask about, and the digest URL of the page that states the fact.
+
+What to pick:
+- Fame first: pick a subject an ordinary adult who follows film, TV, music and celebrities only loosely has heard of, then find the surprising angle.
+- About 7 in 10 seeds come from the Czech scene (scope "domestic"): Czech celebrities, reality and TV shows, domestic hits and moments people in Czechia talked about. The rest are world mega-hits well known in Czechia (scope "world"). Skip the Slovak scene unless it is genuinely shared.
+- Freshness: most seeds are about things that happened or came out mostly between September and November 2026 (today is 2026-11-19); the rest may be surprising facts about mega-famous films, songs, shows or games.
+- Skip award categories ("who won X"), directors, producers, puppeteers and other crew (famous singers and songwriters are fine), and topics only US audiences or fans would know.
+- Skip current politics and current wars or armed conflicts (including countries involved in one); historical events and dark themes inside films, series or games are fine. No gossip.
+- At most 2 seeds about the same subject.
+- Sources: Wikipedia first, then domain authorities, then reputable media. Never tabloids, aggregators, social media or Reddit.
+- Every source_url MUST be copied exactly from one digest line, and that line must support the fact. Lines without a fact sentence are bare search results: use one only when its title states the fact. Never invent a URL.
+
+Ideas: the most-read Czech Wikipedia articles of the last week and the last month (many are politics, crime or sport; ignore those):
+- Hana Dvorská (220598 views)
+- Jiří Štěpnička (137535 views)
+- Luciana Tomášová (87656 views)
+- Tom Sean (73738 views)
+- Calin (59906 views)
+- Jakub Prachař (54858 views)
+- Jiřina Štěpničková (51322 views)
+- Jan Grolich (49843 views)
+- Marie Rottrová (44903 views)
+- Vojtěch Dyk (43602 views)
+- Ota Jirák (42690 views)
+- Lizzie Bordenová (42200 views)
+- Catharina Málek (40934 views)
+- Volby do zastupitelstev obcí v Česku 2026 (39835 views)
+- Česko (38740 views)
+- Ewa Farna (38556 views)
+- Tomáš Matonoha (38109 views)
+- David Prachař (38026 views)
+- Robert Oppenheimer (38003 views)
+- Václav Havel (37993 views)
+- Tomáš Polák (hudebník) (37444 views)
+- StarDance …když hvězdy tančí (36810 views)
+- Radek Štěpánek (35738 views)
+- Marta Jandová (35669 views)
+- Sara Prachař Sandeva (35299 views)
+- Zrádci (3. řada) (34570 views)
+- Vysílač Liblice B (34020 views)
+- Na východ od ráje (33380 views)
+- Den boje za svobodu a demokracii a Mezinárodní den studentstva (33304 views)
+- Tatiana Dyková (32859 views)
+- Gerta Schnirch (31115 views)
+- Josefína Prachařová (30889 views)
+- David Gránský (29985 views)
+- Den vzniku samostatného československého státu (29447 views)
+- Adéla (zpěvačka) (29064 views)
+- Wikipedie (27809 views)
+- Sarah Haváčová (26922 views)
+- Praha (26900 views)
+- Veronika Žilková (26862 views)
+- Petr Pavel (26749 views)
+- Jiří Suchý (24905 views)
+- Halloween (24435 views)
+- Pohlavní styk (23946 views)
+- Volby do Senátu Parlamentu České republiky 2026 (23680 views)
+- Annelie Paurová Herz (22914 views)
+- Petr Hlaváček (architekt) (22352 views)
+- StarDance …když hvězdy tančí (14. řada) (22223 views)
+- Petra Nesvačilová (21893 views)
+- Vojtěch Kotek (21197 views)
+- Klára Issová (20737 views)
+- Martin C. Putna (20708 views)
+- Alexander Choupenitch (20673 views)
+- Sara Sandeva (20464 views)
+- Senát Parlamentu České republiky (20175 views)
+- O5 a Radeček (19661 views)
+- Boží plán (19489 views)
+- Leon Tsoukernik (19210 views)
+- Jan Samec (19015 views)
+- Eva Burešová (19003 views)
+- Vyhnání Gerty Schnirch (18959 views)
+
+Digest (headline | date | URL | fact):
+<YOUR OWN DIGEST LINES FROM STEP 1>
+
+Reply with ONLY a JSON array, no prose and no code fence, one object per seed:
+[{"subject": "<the famous thing>", "wiki_title": "<exact title of the subject's article on Czech Wikipedia, or null>", "scope": "domestic|world", "event_date": "<YYYY-MM-DD, or null if evergreen>", "fact": "<one checkable sentence>", "angle": "<the surprising detail a question would ask about>", "source_url": "<URL copied from the digest line that states the fact>"}]

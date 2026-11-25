@@ -25,6 +25,7 @@ from app.tts.service import TTSService, primary_cache_voice
 from app.tts.voices import ELEVENLABS_VOICES, SpeechStyle
 
 GEORGE = ELEVENLABS_VOICES["george"]
+JOSEF = ELEVENLABS_VOICES["josef"]
 FLASH = "eleven_flash_v2_5"
 
 
@@ -62,7 +63,13 @@ def test_default_config_is_the_founders_decision():
     styles = get_settings().tts_language_styles
     assert styles["en"] == {"model": FLASH, "speed": 1.1}
     assert styles["sk"] == {"model": FLASH, "speed": 1.07, "language_code": "sk"}
-    assert styles["cs"] == {"model": FLASH, "speed": 1.07, "language_code": "cs"}
+    # Founder 2026-11-19: George reading Czech sounds foreign; Josef reads it.
+    assert styles["cs"] == {
+        "model": FLASH,
+        "speed": 1.07,
+        "language_code": "cs",
+        "voice": JOSEF,
+    }
     # Ukrainian keeps the v3 reading a native speaker chose (#231).
     assert "uk" not in styles
 
@@ -142,6 +149,44 @@ async def test_over_budget_the_old_george_clip_beats_the_fallback_voice():
     svc.cache.set("Otázka?", GEORGE, b"old-clip")
     billing = TTSBilling(allow_primary=False)
     assert await svc.synthesize("Otázka?", language="sk", billing=billing) == (
+        b"old-clip"
+    )
+    assert primary.calls == []
+
+
+@pytest.mark.asyncio
+async def test_czech_is_read_by_josef_and_the_rest_by_george():
+    """A Czech question must reach ElevenLabs as Josef's voice, or Czech players
+    keep hearing George's foreign accent; other languages keep George."""
+    svc, primary = _service()
+    await svc.synthesize("Otázka?", language="cs")
+    await svc.synthesize("Otázka?", language="sk")
+    await svc.synthesize("Question?", language="en")
+    assert [voice for _, voice, _ in primary.calls] == [JOSEF, GEORGE, GEORGE]
+
+
+@pytest.mark.asyncio
+async def test_czech_does_not_replay_georges_clip_but_keeps_it_for_a_rollback():
+    """George's styled Czech clip already sits in the cache for every voiced
+    question; if Josef's key matched it, nothing would change for players."""
+    svc, primary = _service()
+    george_cs = svc._cache_voice(primary, GEORGE, svc.style_for("cs"))
+    svc.cache.set("Otázka?", george_cs, b"george-clip")
+    assert svc.remote_key_for("Otázka?", "cs") != svc._remote_key("Otázka?", george_cs)
+    assert await svc.synthesize("Otázka?", language="cs") == b"new-clip"
+    assert svc.cache.get("Otázka?", george_cs) is not None
+
+
+@pytest.mark.asyncio
+async def test_over_budget_czech_still_gets_the_old_george_clip():
+    """Until Josef re-records a Czech clip, a player over budget hears the old
+    George clip rather than the backup voice."""
+    from app.tts.service import TTSBilling
+
+    svc, primary = _service()
+    svc.cache.set("Otázka?", GEORGE, b"old-clip")
+    billing = TTSBilling(allow_primary=False)
+    assert await svc.synthesize("Otázka?", language="cs", billing=billing) == (
         b"old-clip"
     )
     assert primary.calls == []

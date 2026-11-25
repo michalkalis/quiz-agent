@@ -52,6 +52,19 @@ Backend live on prod with the switch OFF (`DAILY_CHALLENGE_ENABLED = "false"` in
 
 Founder: beta first, then everyone. DB switch `daily_challenge_beta_min_build` (PR #848) turns the challenge on for app builds at or above that number (CFNetwork User-Agent) while `DAILY_CHALLENGE_ENABLED` stays off; store builds are ≤ 86, Trubbo Beta is 89. Raise or clear the switch before a store build at or above it ships; for everyone set the env switch to true. First-player line is now "Prvý výsledok dňa." (founder). Next ideas: friend leagues ([návrhy A/B/C](https://claude.ai/artifact/RkMrXQ8LhGmcvQdHdBJDzp), [rešerš](../research/seasonal-themes-and-competition-2026-11-18.md)).
 
+## Status (2026-11-22): on for everyone
+
+Founder decided on the page "Dôvod vracať sa každý deň" ([research](../research/daily-return-rewards-2026-11-22.md)): the challenge is on for all players. `DAILY_CHALLENGE_ENABLED=true` in the server's `env/quiz-agent.env` on Hetzner (the value `fly.toml` carries is only the record; prod no longer reads it), service restarted, smoke test green, store builds get `daily_challenge_enabled: true`. Before the switch only two players had played, one day, in Slovak; a dry run on prod built a set in en, sk and cs.
+
+Supply of questions never used in a daily set (dry run 2026-11-22): sk about 200, cs about 225, en 300 or more. At 5 a day that is roughly 40 days in sk before sets start repeating old questions; the weekly top-up adds about 15 per language, the challenge uses 35. Needs a larger batch before early January 2027.
+
+Founder decisions for what comes next:
+
+- **205.8 Reward (done 2026-11-22, PR #943 server deployed, PR #944 app):** finishing the day's challenge gives 10 extra questions for that day (founder: 10; fine because they add no voice answers, voice stays the reason to pay). Spent before the monthly limit, gone at the player's local midnight (the app sends its UTC offset at the start; older builds count as UTC), none for subscribers, off with `DAILY_BONUS_QUESTIONS=0`. The Home card promises them before playing and shows what is left after; a quiet "Odohrané dni" line shows the count of finished challenges (founder pick). Players see the texts from the next app build on; until then they get the questions unannounced. How many come back: finished plays per day and `bonus_used` in `daily_challenge_plays`.
+- **Day count:** founder picked "days played, never resets", shown as a quiet line on the card after finishing. No streak that can be lost.
+- **Reminders:** none, no push notifications.
+- **Parked, founder liked them:** a widget with a new question every day (needs more thought); answering while the question is still read (after voice commands improve); a spoken hint (later, would complicate the app now).
+
 ## Done when
 
 - Backend tests green (targeted suites), deployed to prod with the switch per 205.1.

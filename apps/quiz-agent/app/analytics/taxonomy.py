@@ -52,6 +52,11 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
         {"reason", "questions_asked", "score", "is_pack", "age_band"}
     ),
     "quota_hit": frozenset({"stage", "questions_used", "questions_limit", "plan"}),
+    # 2026-11-21: a voice answer met the spent free voice allowance; enforced =
+    # it was refused (false: a build the refusal is not switched on for).
+    "voice_quota_hit": frozenset(
+        {"voice_answers_used", "voice_answers_limit", "enforced"}
+    ),
     # #240: reason = why the voice answer was turned away (see the doc);
     # transcript_chars = its length, never the text.
     "transcription_failed": frozenset({"reason", "question_id", "transcript_chars"}),
@@ -99,6 +104,8 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
             "timezone",
             # #224.8: the quick quiz was on when the quiz started
             "quick_game",
+            # 2026-11-22: the quiz ran silent (the Home "No sound" switch)
+            "silent_mode",
         }
     ),
     # #240.9: reason = end_quiz | end_with_results | error_screen; question =
@@ -108,7 +115,36 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
         {"input_mode", "question_id", "is_retry", "latency_ms"}
     ),
     "voice_capture_failed": frozenset({"reason", "question_id"}),
-    "voice_command": frozenset({"command", "phase"}),
+    # command = answer | next | repeatQuestion | again (founder 2026-11-22;
+    # older builds also send start | skip | ok | stop | pause | home), phase =
+    # the screen. language = the command language, path = which recognizer
+    # result fired it (final | volatile-repeat | volatile-settle | alternative),
+    # speech_end_ms = end of speech -> fire (absent = not seen). With
+    # voice_command_window (windows per language and screen) this answers
+    # whether sk / cs are recognised worse than en, per command.
+    "voice_command": frozenset(
+        {"command", "phase", "language", "path", "speech_end_ms"}
+    ),
+    # One per closed voice-command listening window, for the on-device vs
+    # cloud recognizer decision: engine = speech | dictation, language = the
+    # command language, screen = question | confirmation | noAnswer | error |
+    # setEnd; counts (transcripts while open, matched commands, unmatched
+    # finished utterances, late = results after the window closed, cut_off =
+    # an utterance still in progress when the window ended) and
+    # first_transcript_ms (window live -> first result; absent = none came).
+    "voice_command_window": frozenset(
+        {
+            "engine",
+            "language",
+            "screen",
+            "transcripts",
+            "matched",
+            "unmatched",
+            "late",
+            "cut_off",
+            "first_transcript_ms",
+        }
+    ),
     # #237: the player turned voice commands on (source = onboarding |
     # listen_bar) and what iOS answered the speech-recognition request
     # (result = granted | denied).
@@ -152,8 +188,19 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     # the multi-category picker opening (deck_button | pill).
     "home_category_stepped": frozenset({"direction", "input", "to"}),
     "home_category_picker_opened": frozenset({"source"}),
+    "result_question_opened": frozenset({"kind", "verdict"}),
     # #224.8: the quick-game switch on Home, and every skip with its mode.
     "quick_game_changed": frozenset({"enabled"}),
+    # 2026-11-22: the Home "No sound" switch (silent mode).
+    "silent_mode_changed": frozenset({"enabled"}),
+    # TestFlight build 90 feedback (Home A1): Settings opened from the Home
+    # gear, and the round length changed in the Home settings list.
+    "home_settings_opened": frozenset(),
+    # 2026-11-21 free tier split: the once-a-month "voice answers used up"
+    # notice came on the question screen (its Plus link = paywall_viewed with
+    # source voice_limit).
+    "voice_limit_notice_shown": frozenset(),
+    "home_round_length_changed": frozenset({"questions"}),
     "question_skipped": frozenset({"quick"}),
     # #204.9: one per recorded answer, for the automatic voice-settings test.
     "answer_captured": frozenset(
@@ -203,6 +250,8 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     "family_band_selected": frozenset({"band", "first_time"}),
     "family_topic_selected": frozenset({"band", "topic"}),
     "family_topic_empty": frozenset({"band", "topic"}),
+    # #242: a quiz started with a free rotating extra category (its extra-* key).
+    "extra_category_quiz_started": frozenset({"category"}),
     # action = other_topic | home, on the end-of-round screen of a band round.
     "family_round_end_action": frozenset({"action"}),
     "voice_experiment_guard": frozenset(

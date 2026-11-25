@@ -41,7 +41,7 @@ def _q(idx: int, text: str = "Which animal says moo?", **kw: Any) -> Question:
         "question": text,
         "correct_answer": "cow",
         "topic": "animals",
-        "category": "general",
+        "category": "science-nature",  # a real id: the stage drops `general` (2026-11-21)
         "difficulty": "easy",
         "explanation": "Cows moo to talk to each other.",
         "source_url": None,

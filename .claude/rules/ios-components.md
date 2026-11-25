@@ -20,7 +20,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `QuestionSkipButton` | Skipping the current question; has its own skipping/disabled states. |
 | `HangsNavChip` | Square icon chip in a top bar (close, back). |
 | `HangsSourceLink` | Tappable source domain under an answer. |
-| `QuizControlPill` | Quiz-screen mute + pause pair (toolbar glass). |
+| `QuizControlPill` | Quiz-screen mute + pause pair (toolbar glass); pause alone in a silent quiz (`onMute: nil`). |
 | `.quizToolbar(…)` | The one quiz top bar (✕, mute + pause, ⋯) on the question AND result screens. Quiz screens also cap Dynamic Type at `QuizTypeSize.screenCap`. |
 | `QuizOverflowMenu` | Quiz "…" menu (settings, feedback, rate question). |
 
@@ -48,13 +48,13 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | `HangsQuestionPrompt` | The question text with its accent bar; scales down, never wraps off screen. |
 | `HangsDeckCard` | #194: the opaque category-colour card a question sits on (category chip + optional accessory); glass stays on the controls around it. `isCalm: true` (#224) = neutral surface with a category dot and name: the solo result. |
 | `HangsAnswerSticker` | #194: the answer on its own plate inside a result card, so it reads first on any category colour. |
-| `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length). Don't use `AnswerOption`/`AnswerTile` directly. |
+| `MCQOptionPicker` | Multiple-choice answers (picks `AnswerOption` rows or `AnswerTile` grid by option count/length); `reveal:` = the options read-only with the correct and chosen one marked (result question sheet). Don't use `AnswerOption`/`AnswerTile` directly. |
 | `AnswerOption`, `AnswerTile` | One answer row / grid tile inside `MCQOptionPicker` (default, selected, correct, incorrect, loading). Building blocks only, never placed on a screen directly. |
-| `QuestionListenBar` | Voice bar on the question screen (reading → thinking → listening → evaluating/skipping): the screen's one home of state, countdown and "Processing…". |
-| `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. |
-| `EmptyAnswerRetryHint` | "Didn't catch that" hint after an empty answer. |
-| `SilentAnswerPrompt` | #240.9: calm "take your time" line after a recording the phone measured as silent (nothing uploaded); on MCQ with its own "Answer by voice" button. |
-| `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6). |
+| `QuestionListenBar` | Voice bar on the question screen: the screen's one home of state, countdown and "Processing…". TF build 90: shown only for the think countdown, the open mic and an answer in flight (`QuestionListenPhase.strip`), never with command words, in a reserved slot; the open mic carries the retry and spelling hints (`answerNote`). |
+| `ListenBar` | Voice bar elsewhere: Home slim command bar, answer confirmation read-back, result footer. `heard:` shows "what the app hears" (the command the words resemble, with a fill toward its threshold). |
+| `CommandHeardLine` | The same "what the app hears" preview as a quiet line where no bar is on screen (the question screen's empty strip slot). Hidden from VoiceOver. |
+| `AnswerSpellingHint` | "You can also spell your answer" tip after a rejected transcript (#208.6), on the answer sheet only. |
+| `VoiceLimitNotice` | Once-a-month "free voice answers used up" line with a quiet Plus link (2026-11-21 free tier split). |
 | `HangsResultBanner`, `HangsInlineBadge` | Correct/incorrect verdict: banner on the result, small badge inline. |
 | `ReviewBadge`, `QuestionProvenanceRow` | TestFlight-only review/translation badge and the question's provenance row. |
 | `AmbientGlowWash`, `GlowSweepLine` | Voice feedback glow (animated; no snapshot). |
@@ -64,6 +64,7 @@ images the design catalog is built from). Tokens: `Utilities/Theme.swift` only.
 | Component | Use for |
 |---|---|
 | `HomePlanCard` | The plan/quota card (free, credits, subscriber, grace, expired). |
+| `PlanVoiceAnswersLine` | Voice answers left this month, inside the free plan card (Profile only). |
 | `HomePacksSection` | The user's question packs on Home (owns `MyPacksViewModel`). |
 
 ## Unused — don't build on these

@@ -1,0 +1,83 @@
+Today is 2026-11-19. From the news digest below, pick 36 seed facts for a voice trivia quiz played by adults who live in Ukraine and play in Ukrainian.
+
+A seed is one thing people talked about, one surprising angle a question can ask about, and the digest URL of the page that states the fact.
+
+What to pick:
+- Fame first: pick a subject an ordinary adult who follows film, TV, music and celebrities only loosely has heard of, then find the surprising angle.
+- About 7 in 10 seeds come from the Ukrainian scene (scope "domestic"): Ukrainian celebrities, TV shows, music, domestic hits and moments people in Ukraine talked about. The rest are world mega-hits well known in Ukraine (scope "world"). Skip the Russian scene entirely.
+- Freshness: most seeds are about things that happened or came out mostly between September and November 2026 (today is 2026-11-19); the rest may be surprising facts about mega-famous films, songs, shows or games.
+- Skip award categories ("who won X"), directors, producers, puppeteers and other crew (famous singers and songwriters are fine), and topics only US audiences or fans would know.
+- Skip current politics and current wars or armed conflicts (including countries involved in one); historical events and dark themes inside films, series or games are fine. No gossip.
+- At most 2 seeds about the same subject.
+- Sources: Wikipedia first, then domain authorities, then reputable media. Never tabloids, aggregators, social media or Reddit.
+- Every source_url MUST be copied exactly from one digest line, and that line must support the fact. Lines without a fact sentence are bare search results: use one only when its title states the fact. Never invent a URL.
+
+Ideas: the most-read Ukrainian Wikipedia articles of the last week and the last month (many are politics, crime or sport; ignore those):
+- Головна сторінка (441504 views)
+- Спеціальна:Пошук (145088 views)
+- Вікіпедія:Вікі любить пам'ятки (92065 views)
+- Кашпіровський Анатолій Михайлович (51660 views)
+- Кемпе Лаврентій Гнатович (45730 views)
+- Борщ (41762 views)
+- Україна (37717 views)
+- Національна суспільна телерадіокомпанія України (36524 views)
+- Олешки (33650 views)
+- Кравцов В'ячеслав Валерійович (31052 views)
+- Радіо «Свобода» (27818 views)
+- Веріті (фільм) (27797 views)
+- Південний міст (Київ) (25405 views)
+- Чума (25243 views)
+- Київ (24859 views)
+- Кім Чен Ин (24271 views)
+- Астаф'єва Дарія Вікторівна (24238 views)
+- Секс (23785 views)
+- Дирда Єгор Олександрович (22341 views)
+- Дональд Трамп (22320 views)
+- Федишин Ірина Петрівна (21649 views)
+- Mellstroy (21404 views)
+- Терех Ірина Вячеславівна (21225 views)
+- Білецький Андрій Євгенійович (21213 views)
+- Хелловін (21024 views)
+- Список 250 найрейтинговіших фільмів IMDb (19635 views)
+- Шевченко Тарас Григорович (19266 views)
+- Путін Володимир Володимирович (19162 views)
+- Список померлих 2026 року (19041 views)
+- Ламін Ямаль (18938 views)
+- Спеціальна:Нові редагування (18918 views)
+- На схід від Едему (роман) (18470 views)
+- Герань-5 (18334 views)
+- На схід від Едему (телесеріал) (18243 views)
+- Бука Сука Дімка (17896 views)
+- Штілерман Денис Леонідович (17385 views)
+- Серце звіра (фільм) (17134 views)
+- Ліззі Борден (17124 views)
+- 2026 у телебаченні (17007 views)
+- Лубінець Дмитро Валерійович (16736 views)
+- Гончаренко Олексій Олексійович (16107 views)
+- Ар Джей Мітт (16045 views)
+- Прилуки (15911 views)
+- Президентські вибори у США 2028 (15901 views)
+- Дука Сергій Олександрович (15738 views)
+- Зеленський Володимир Олександрович (15643 views)
+- Військові звання України (15312 views)
+- Галустян Михайло Сергійович (14968 views)
+- Бандероль (БПЛА) (14589 views)
+- Максимюк Роман Васильович (14487 views)
+- МобЛенд (14459 views)
+- День захисників і захисниць України (14446 views)
+- Покрова Пресвятої Богородиці (14398 views)
+- Українська абетка (14157 views)
+- Список українських чоловічих імен (13768 views)
+- Леся Українка (13762 views)
+- Корецький Сергій Федорович (13541 views)
+- Фаріон Ірина Дмитрівна (13358 views)
+- Наливайківка (13290 views)
+- Львів (13134 views)
+
+Digest (headline | date | URL | fact):
+<YOUR OWN DIGEST LINES FROM STEP 1>
+
+Reply with ONLY a JSON array, no prose and no code fence, one object per seed:
+[{"subject": "<the famous thing>", "wiki_title": "<exact title of the subject's article on Ukrainian Wikipedia, or null>", "scope": "domestic|world", "event_date": "<YYYY-MM-DD, or null if evergreen>", "fact": "<one checkable sentence>", "angle": "<the surprising detail a question would ask about>", "source_url": "<URL copied from the digest line that states the fact>"}]
+
+TOPIC POLICY (Ukrainian pack): history, culture, science, nature, food and sport are welcome. Do NOT write questions about the war since 2014 (invasion, occupation, annexation, front-line events, wartime heroes or stories, even heroic ones), about current politics (politicians in office, elections, parties, laws in force), or about relations with Russia, and do not use Russia as a topic or as the answer. If a seed or a request points there, pick a different fact.

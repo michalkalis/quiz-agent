@@ -42,6 +42,7 @@ extension VoiceCommandCoordinator {
                 flushUtteranceLog(screen: currentCommandScreen, outcome: utteranceOutcome)
                 endUtterance()
                 noteFinalProcessedForFeedback() // #122 follow-up: utterance over, cue stale
+                clearUnfiredCommandHeard() // the preview fades with the utterance
             }
         }
 
@@ -82,6 +83,8 @@ extension VoiceCommandCoordinator {
 
         guard let screen = currentCommandScreen else {
             utteranceOutcome = "windowClosed"
+            clearUnfiredCommandHeard()
+            noteWindowTranscript(windowOpen: false, isFinal: transcript.isFinal)
             if shouldLogDroppedTranscript(isFinal: transcript.isFinal) {
                 SentryLog.info(
                     "voice cmd transcript dropped — window closed",
@@ -93,6 +96,7 @@ extension VoiceCommandCoordinator {
             }
             return
         }
+        noteWindowTranscript(windowOpen: true, isFinal: transcript.isFinal)
 
         // #208.7 echo guard (+Reading): the read's words are stripped before
         // matching. Nothing left = the app heard itself; drop it silently.
@@ -101,13 +105,10 @@ extension VoiceCommandCoordinator {
         var matchText = transcript.text
         var guardedNormalized = normalized
         if let stripped = strippingReadWords(normalized, read: echoText) {
-            let keepsCancelWord = stripped.split(separator: " ")
-                .contains { VoiceCommandLexicon.isCancelWord(String($0), language: commandLanguage) }
-            guard keepsCancelWord || VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
+            guard VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
                 utteranceLog.echoDrops += 1
                 utteranceOutcome = "echo"
-                // The sheet keeps the listener's audio per utterance: the
-                // echo's audio must not open the driver's next answer.
+                // The echo held nothing: the sheet's countdown resumes.
                 if screen == .confirmation, transcript.isFinal { noteConfirmationUtteranceEnded(.noise) }
                 return
             }
@@ -118,42 +119,24 @@ extension VoiceCommandCoordinator {
         if VoiceCommandMatcher.hasContentTokens(normalized, language: commandLanguage) {
             noteTranscriptHeardForFeedback()
         }
+        // "What the app hears": partials only; a final fires or clears it.
+        if !transcript.isFinal { noteCommandHeard(matchText, on: screen) }
 
-        // #185 5.1 (founder 2026-09-24): on the answer sheet anything that is
-        // not a command is a NEW answer. Two duties here, the rest is the
-        // recording side's: (1) any content-bearing speech holds the countdown,
-        // so it never confirms the old answer under a new one; (2) every final
-        // ends an utterance the sheet cares about, reported as what it turned
-        // out to be. Declared after the `endUtterance` defer, so it runs BEFORE
-        // the latch is cleared.
+        // #185 on the answer sheet: (1) any content-bearing speech holds the
+        // countdown, so a slow "again" is never beaten by the auto-confirm;
+        // (2) every final ends the utterance — "again" or nothing (#243.5,
+        // founder 2026-11-24: other speech is no longer a new answer).
+        // Declared after the `endUtterance` defer, so it runs BEFORE the latch
+        // is cleared.
         let onAnswerSheet = screen == .confirmation
         let hasContent = VoiceCommandMatcher.hasContentTokens(guardedNormalized, language: commandLanguage)
-        var spokenAnswer: String?
         defer {
             if onAnswerSheet, transcript.isFinal {
-                noteConfirmationUtteranceEnded(
-                    commandFiredThisUtterance ? .command : spokenAnswer.map { .newAnswer($0) } ?? .noise
-                )
+                noteConfirmationUtteranceEnded(commandFiredThisUtterance ? .command : .noise)
             }
         }
         if onAnswerSheet, hasContent, !commandFiredThisUtterance {
             noteConfirmationSpeech()
-        }
-
-        // Spoken-cancel path (77.10 carry-over): while a skip undo-window is
-        // open on the question screen, a spoken cancel word ("stop"/"no")
-        // aborts the pending skip — the spoken twin of the tap-abort. "stop" is
-        // NOT in the question screen's normal command set, so this must be
-        // checked BEFORE the matcher (which would otherwise drop it).
-        if pendingSkipWindow != nil {
-            let cancelTokens = guardedNormalized.split(separator: " ").map(String.init)
-            if cancelTokens.contains(where: { VoiceCommandLexicon.isCancelWord($0, language: commandLanguage) }) {
-                emitEarcon(.commandAck) // acknowledge the recognized cancel
-                noteMatchedForFeedback() // #122: visual twin of the ack earcon
-                trackAnalytics(.voiceCommand(command: .stop, phase: String(describing: screen)))
-                abortSkipUndoWindow()
-                return
-            }
         }
 
         // #184 n-best: a car-noise final often ranks a near-miss first and the
@@ -183,19 +166,17 @@ extension VoiceCommandCoordinator {
             }
         }
 
-        // #208.7: over the read only repeat / skip route — "start" would
+        // #208.7: over the read only repeat / next route — "answer" would
         // open the answer mic under the rest of the sentence.
         if let command = matched, listensThroughQuestionRead, !Self.readingCommands.contains(command) {
             matched = nil
         }
 
         guard let command = matched else {
-            // #185 5.1: a finished non-command utterance on the answer sheet is
-            // the driver's new answer — understood, so no "didn't get that" glow.
-            let isNewAnswer = onAnswerSheet && transcript.isFinal && hasContent && !commandFiredThisUtterance
-            if isNewAnswer {
-                spokenAnswer = transcript.text
-            } else if !underEchoGuard { // over the read, a miss is most likely the app's own voice
+            if transcript.isFinal, !commandFiredThisUtterance {
+                noteWindowUtteranceUnmatched()
+            }
+            if !underEchoGuard { // over the read, a miss is most likely the app's own voice
                 // #122: the "heard you, didn't understand" glow — throttled inside.
                 noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
             }
@@ -204,7 +185,6 @@ extension VoiceCommandCoordinator {
                     transcript, normalized: normalized, tokens: tokens, sincePrevMs: sincePrevMs
                 )
                 attributes["screen"] = String(describing: screen)
-                if isNewAnswer { attributes["outcome"] = "newAnswer" }
                 SentryLog.info("voice cmd transcript unmatched", category: .voice, attributes: attributes)
             }
             return
@@ -300,22 +280,29 @@ extension VoiceCommandCoordinator {
     /// `onCommandRecognized` observation hook (tests + future earcons), then
     /// routes it to an action (77.8–77.9). Routing is screen-scoped a second
     /// time via `routeCommand` so a transcript that lands as the window closes
-    /// can't fire the wrong action.
-    func handleRecognizedCommand(_ command: VoiceCommand) {
+    /// can't fire the wrong action. `path` and `speechEndMs` ride on the
+    /// `voice_command` event (founder 2026-11-22: recognition per language).
+    func handleRecognizedCommand(_ command: VoiceCommand, path: String? = nil, speechEndMs: Int? = nil) {
         Logger.voice.info("🎙️ Command recognized: \(command.rawValue, privacy: .public)")
         attemptLedger.record(.command, command.rawValue, currentCommandScreen.map { String(describing: $0) })
         noteRecognizedCommand(command) // release diagnostics (#96 P2)
+        noteWindowCommandMatched()
         if let screen = currentCommandScreen {
-            trackAnalytics(.voiceCommand(command: command, phase: String(describing: screen)))
+            trackAnalytics(.voiceCommand(
+                command: command, phase: String(describing: screen), language: commandLanguage.rawValue,
+                path: path, speechEndMs: speechEndMs
+            ))
         }
-        emitEarcon(.commandAck) // 77.10 command-ack tone
+        // 77.10 + founder 2026-11-22: one quiet tick (and the haptic) within
+        // the same main-actor turn as the match.
+        emitEarcon(.commandAck)
         noteMatchedForFeedback() // #122: visual twin of the ack earcon
         onCommandRecognized?(command)
         routeCommand(command)
     }
 
     /// Map a recognized command to its per-screen action (77.8 / 77.9). Buttons
-    /// + the 10 s auto-confirm + auto-advance remain the untouched fallbacks;
+    /// + the auto-confirm + auto-advance remain the untouched fallbacks;
     /// this is additive. Async actions hop to a Task so the @MainActor-sync
     /// consumer path is never blocked on network/audio. Every fan-out target is
     /// an injected façade closure (decision 4).
@@ -329,60 +316,47 @@ extension VoiceCommandCoordinator {
             return
         }
         switch (screen, command) {
-        // Question — hands-free START recovery (P4a, founder-overridable flag).
-        case (.question, .start):
+        // Question — open the answer recording early (P4a, founder-overridable flag).
+        case (.question, .answer):
             guard voiceStartOnQuestionEnabled else { return }
             cancelThinkingTime()
             Task { [weak self] in await self?.startRecording() }
 
         // Question — replay the question audio + re-arm the listener via
-        // repeatQuestion(). playQuestionAudio re-arms after TTS.
-        case (.question, .repeatQuestion):
+        // repeatQuestion(). playQuestionAudio re-arms after TTS. #243.4 (B2):
+        // on the no-answer sheet it leads back to the question the same way.
+        case (.question, .repeatQuestion), (.noAnswer, .repeatQuestion):
             Task { [weak self] in await self?.repeatQuestion() }
 
-        // Question — skip via the ~2.5 s undo-window (commit / abort). #208.7:
-        // said over the read, the read stops first — that the read stops is
-        // how the driver hears it worked (the ack tone stays muted under the
-        // question, `emitEarcon`).
-        case (.question, .skip):
-            if listensThroughQuestionRead {
-                Task { [weak self] in await self?.stopQuestionRead() }
-            }
-            beginSkipUndoWindow()
-
-        // Confirmation sheet — on top of the 5 s auto-confirm + buttons.
-        case (.confirmation, .ok):
-            Task { [weak self] in await self?.confirmAnswer() }
+        // Question — skip at once (founder 2026-11-22: the 2.5 s undo wait is
+        // gone; "next" waits for a final result instead). Said over the read,
+        // the skip itself stops the read.
+        case (.question, .next):
+            cancelThinkingTime()
+            Task { [weak self] in await self?.skipQuestion() }
 
         case (.confirmation, .again), (.noAnswer, .again):
             rerecordAnswer()
 
-        // #185 5.3: "stop" only stops the automatic advance; the sheet then
-        // waits for another command, a new answer or a tap.
-        case (.confirmation, .stop):
-            holdAutoConfirm()
-
         // #185: the no-answer sheet — confirming its empty field IS the skip.
-        case (.noAnswer, .skip), (.noAnswer, .next):
+        case (.noAnswer, .next):
             Task { [weak self] in await self?.confirmAnswer() }
 
-        // Freeze the quiz (#171 Track D, widened to the question screen by #173
-        // now that pause lives in the toolbar). Not offered as a spoken RESUME:
-        // pausing stops the listener, so "pokračuj" would never be heard; the
-        // toolbar's play button is the way back.
-        case (.question, .pause), (.confirmation, .pause):
-            pauseQuiz()
-
-        // #188 G1: the error screen — retry like its primary button, or leave.
+        // #188 G1: the error screen — retry like its primary button.
         case (.error, .again):
             Task { [weak self] in await self?.retryFromError() }
 
-        // #188 G3: the set-end score screen — play again (the Play Again
-        // button's path, the same pack since #200), or go Home.
+        // #243.8: a result that waits for "next" — its Next button.
+        case (.result, .next):
+            continueToNext()
+
+        // #188 G3: the round end — play again (the Play Again button's path,
+        // the same pack since #200).
         case (.setEnd, .again):
             playAgain()
 
-        case (.error, .stop), (.setEnd, .home):
+        // #243 decision 5: the round end — Home, like its Home button.
+        case (.setEnd, .home):
             goHome()
 
         default:

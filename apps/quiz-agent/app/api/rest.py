@@ -14,6 +14,7 @@ from .routes import (
     daily_challenge,
     dictation,
     entitlements,
+    extra_categories,
     family,
     feedback,
     hooks,
@@ -60,6 +61,7 @@ router.include_router(rooms.router)
 router.include_router(room_play.router)
 router.include_router(shared_quiz.router)
 router.include_router(family.router)
+router.include_router(extra_categories.router)
 router.include_router(me_recaps.router)
 router.include_router(me_stats.router)
 router.include_router(pack_watch.router)  # #207: pack worker's minute ping

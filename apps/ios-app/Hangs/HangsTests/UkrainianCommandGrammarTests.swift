@@ -30,8 +30,18 @@ struct UkrainianCommandGrammarTests {
     @MainActor
     func adapterDeclaresUkrainianVocabulary() {
         let ukrainian = DictationTranscriberCommandAdapter(locale: Locale(identifier: "uk_UA"), language: .ukrainian)
-        for word in ["старт", "далі", "повтори", "пропусти", "ще раз", "добре", "стоп", "пауза", "додому"] {
+        for word in ["відповідай", "далі", "повтори", "пропусти", "ще раз"] {
             #expect(ukrainian.contextualStrings?.contains(word) == true, "'\(word)' is not in the bias list")
+        }
+        // Founder 2026-11-22: these are no commands any more, so no bias.
+        for word in ["старт", "стоп", "пауза"] {
+            #expect(ukrainian.contextualStrings?.contains(word) != true, "'\(word)' must not be biased")
+        }
+        // #243 decision 5: «додому» is a command at the round end only, so
+        // only that screen's bias list carries it.
+        #expect(ukrainian.contextualStrings(on: .setEnd)?.contains("додому") == true)
+        for screen: VoiceCommandScreen in [.question, .confirmation, .noAnswer, .error] {
+            #expect(ukrainian.contextualStrings(on: screen)?.contains("додому") != true, "«додому» biased on \(screen)")
         }
     }
 
@@ -44,15 +54,13 @@ struct UkrainianCommandGrammarTests {
         }
     }
 
-    /// WHY: the nine words measured with Apple dictation must each do their job
+    /// WHY: the words measured with Apple dictation must each do their job
     /// on their own screen, as the recognizer writes them (capital, full stop).
     @Test("recall: every measured command word routes on its screen")
     func measuredWordsRoute() {
         let cases: [(String, VoiceCommandScreen, VoiceCommand)] = [
-            ("Старт", .question, .start), ("Повтори.", .question, .repeatQuestion), ("Пропусти", .question, .skip),
-            ("Далі", .noAnswer, .next), ("Ще раз", .confirmation, .again), ("Добре.", .confirmation, .ok),
-            ("Стоп", .confirmation, .stop), ("Пауза", .confirmation, .pause), ("Додому", .setEnd, .home),
-            ("Відповідай", .question, .start),
+            ("Відповідай", .question, .answer), ("Повтори.", .question, .repeatQuestion), ("Пропусти", .question, .next),
+            ("Наступне", .question, .next), ("Далі", .noAnswer, .next), ("Ще раз", .confirmation, .again),
         ]
         for (phrase, screen, expected) in cases {
             #expect(VoiceCommandMatcher.match(transcript: phrase, on: screen, language: .ukrainian) == expected, "'\(phrase)' on \(screen)")
@@ -60,16 +68,17 @@ struct UkrainianCommandGrammarTests {
     }
 
     /// WHY (#120 precision): the mic is open to the language being spoken.
-    /// "так" and "добре" are what a Ukrainian conversation is made of; off the
-    /// answer sheet they are filler and must never fire.
-    @Test("backchannels are filler off the sheet")
+    /// "так" and "добре" are what a Ukrainian conversation is made of. Founder
+    /// 2026-11-22: confirm is gone, so they are filler on every screen,
+    /// the answer sheet included, and "ок" / "окей" with them.
+    @Test("backchannels are filler on every screen")
     func backchannelsAreFiller() {
-        for word in ["так", "Добре", "ну", "ага", "гаразд"] {
-            for screen in [VoiceCommandScreen.question, .noAnswer, .error, .setEnd] {
+        for word in ["так", "Добре", "ну", "ага", "гаразд", "ок", "Окей"] {
+            for screen in [VoiceCommandScreen.question, .noAnswer, .error, .setEnd, .confirmation] {
                 #expect(VoiceCommandMatcher.match(transcript: word, on: screen, language: .ukrainian) == nil, "'\(word)' on \(screen)")
             }
         }
-        #expect(VoiceCommandMatcher.match(transcript: "Ну, пропусти", on: .question, language: .ukrainian) == .skip)
+        #expect(VoiceCommandMatcher.match(transcript: "Ну, пропусти", on: .question, language: .ukrainian) == .next)
     }
 
     /// WHY (#231): й and ї are distinct letters. A Latin-style diacritic fold
@@ -114,26 +123,22 @@ struct UkrainianCommandGrammarTests {
                 }
             }
         }
-        // The exact words keep working.
-        #expect(VoiceCommandMatcher.match(transcript: "Так.", on: .confirmation, language: .ukrainian) == .ok)
-        #expect(VoiceCommandMatcher.match(transcript: "Добре", on: .confirmation, language: .ukrainian) == .ok)
+        // The exact words keep working. «Так» / «Добре» no longer confirm:
+        // they are filler (founder 2026-11-22).
         #expect(VoiceCommandMatcher.match(transcript: "Неправильно.", on: .confirmation, language: .ukrainian) == .again)
         #expect(VoiceCommandMatcher.match(transcript: "Ні", on: .noAnswer, language: .ukrainian) == .again)
     }
 
     /// WHY (PR #862 review): a short answer must not be taken for a command it
-    /// shares letters with. «Сто» (100) dropped the new answer as «стоп»,
-    /// «Око» confirmed the old one as «ок», «Дах» skipped as «далі». A
-    /// Ukrainian word of four letters or fewer is usually another word one
-    /// letter away (сто/стоп, стопа, даль/далі), so short commands match exactly.
+    /// shares letters with: «Дах» skipped as «далі». A Ukrainian word of four
+    /// letters or fewer is usually another word one letter away (даль/далі), so
+    /// a short command matches exactly. «далі» is the empty-answer sheet's Next.
     @Test("short answers one letter or a cut-off away from a command never fire it")
     func shortAnswersAreNotCommands() {
-        for word in ["Сто", "Око", "Ока", "Стопа", "Стовп", "Да", "Дам", "Дар", "Дах", "Даль", "Дали"] {
-            for screen in [VoiceCommandScreen.confirmation, .noAnswer] {
-                for isFinal in [true, false] {
-                    #expect(VoiceCommandMatcher.match(transcript: word, on: screen, isFinal: isFinal, language: .ukrainian) == nil,
-                            "'\(word)' on \(screen), final \(isFinal)")
-                }
+        for word in ["Да", "Дам", "Дар", "Дах", "Даль", "Дали"] {
+            for isFinal in [true, false] {
+                #expect(VoiceCommandMatcher.match(transcript: word, on: .noAnswer, isFinal: isFinal, language: .ukrainian) == nil,
+                        "'\(word)' on noAnswer, final \(isFinal)")
             }
         }
     }
@@ -142,10 +147,11 @@ struct UkrainianCommandGrammarTests {
     /// in cabin noise (#184). A cut-off of four letters or more keeps it.
     @Test("a genuinely cut-off long command still works on a final")
     func longCutOffStillWorks() {
-        #expect(VoiceCommandMatcher.match(transcript: "Підтвер", on: .confirmation, language: .ukrainian) == .ok)
-        #expect(VoiceCommandMatcher.match(transcript: "Зачека", on: .confirmation, language: .ukrainian) == .stop)
-        #expect(VoiceCommandMatcher.match(transcript: "Пропуст", on: .question, language: .ukrainian) == .skip)
-        #expect(VoiceCommandMatcher.match(transcript: "Підтвер", on: .confirmation, isFinal: false, language: .ukrainian) == nil)
+        #expect(VoiceCommandMatcher.match(transcript: "Пропуст", on: .question, language: .ukrainian) == .next)
+        // «Відпові» (0.70 by edit distance) earns the truncation credit on a
+        // final only: a volatile hypothesis is held to answer's 0.8 floor.
+        #expect(VoiceCommandMatcher.match(transcript: "Відпові", on: .question, language: .ukrainian) == .answer)
+        #expect(VoiceCommandMatcher.match(transcript: "Відпові", on: .question, isFinal: false, language: .ukrainian) == nil)
     }
 
     /// WHY: a sentence answer opens with filler or a backchannel ("Ну, це
@@ -186,12 +192,13 @@ struct UkrainianCommandGrammarTests {
 
     @Test("hints and captions speak Ukrainian with Ukrainian quotes")
     func display() {
-        #expect(VoiceCommandLexicon.hint(on: .question, language: .ukrainian) == "Скажи «старт» або «пропусти»")
+        #expect(VoiceCommandLexicon.hint(on: .question, language: .ukrainian) == "Скажи «відповідай» або «пропусти»")
         #expect(VoiceCommandLexicon.spokenChips([.again], language: .ukrainian) == ["«ще раз»"])
-        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .ukrainian) == "«пропусти»…")
+        #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .ukrainian) == "«пропусти»…")
         #expect(VoiceCommandLexicon.listeningCaption(language: .ukrainian) == "СЛУХАЮ КОМАНДИ")
+        // #243 decision 5: the founder's Ukrainian round-end line.
         #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: .ukrainian)
-            == "Готово, 7 з 10 правильно. Скажи ще раз або додому.")
+            == "Готово, 7 з 10. Ще раз чи додому?")
     }
 
     /// WHY: the app runs from iOS 26, and a device whose dictation lacks

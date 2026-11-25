@@ -54,7 +54,7 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS | Frozen as | Notes |
 |---|---|---|
 | RS-01 | `RSRecordingTests.testRS01…` | |
-| RS-02 | `RSRecordingTests.testRS02…` | real 5 s window (a tap, not shortened under `--ui-test`); #240.9: lands on the question with `question.silencePrompt`, no retry |
+| RS-02 | `RSRecordingTests.testRS02…` | real 15 s auto-stop (not shortened under `--ui-test`) |
 | RS-03 | `RSRecordingTests.testRS03…` | |
 | RS-04 | `RSRecordingTests.testRS04…` | second tap lands on `question.stop` |
 | RS-05 | `RSRecordingTests.testRS05…` | "Again" bridges askingQuestion → recording; `confirmation.cancel` only in the transcribing branch, never shown by the instant mock |
@@ -92,6 +92,9 @@ scenarios**; once a scenario is verified it is frozen here, not re-driven.
 | RS-42 | `RSRoomTests.testRS42…` | Home button press; the host moves on over the test listener while the guest is away |
 | RS-43 | `RSSharedQuizTests.testRS43…` | slow `startSharedQuiz` so the waiting link's start is seen on Home |
 | RS-45 | `RSPaywallTests.testRS45…` (+ unit `SoloPaceAndRewardTests`) | `--ui-test-quota-mid-round` (the graded answer throws the 429 with a verdict); the timing of the paywall after the round end is unit only |
+| RS-46 | `RSResultTests.testRS46…` | Home `home.quickGame` on, so the skip skips the result screen |
+| RS-47 | `RSPaywallTests.testRS47…` (+ unit `VoiceAllowanceTests`) | `--ui-test-voice-limit` (every voice upload throws the 429 `voice_limit_reached`) |
+| RS-48 | `RSResultTests.testRS48…` (+ unit `SilentModeTests`) | Home `home.silentMode` on ("No sound") |
 | RS-start / correct / incorrect / long / mcq-long / mcq-long-options / paywall / pack-nav-start | `RegressionTests.testRS<Slug>` | older slug-named family, unchanged |
 | (a11y) | `A11yIdentifierTests.testHomeMenuItemsAreLocatableByIdentifier` | #180 track E guard: SwiftUI Menu items still expose their identifier to XCUITest |
 
@@ -137,31 +140,26 @@ crash.
 
 ---
 
-## RS-02: Silence ends the recording with a calm way on
+## RS-02: Hard auto-stop fires when no STT events arrive
 
-**Hypothesis:** When nothing is said, the window to start speaking
-(`Config.speechStartWindow`, 5 s after a tap) must stop recording. #240.9
-(founder 2026-11-18): silence the phone measured is not a failed attempt.
-Nothing is uploaded, there is no automatic "didn't catch that" retry and no
-Again/Skip sheet; the question stays on screen with a calm line offering
-speak, type or move on, and the mic stays closed until the player asks.
+**Hypothesis:** When no committed transcript ever lands, the 15s safety
+timer (`Config.autoRecordingDuration`) must stop recording and route to
+a recoverable state.
 
 **Preconditions**
-- Launch with `--ui-test` (the mock detector vouches "quiet")
+- Launch with `--ui-test`
 
 **Steps**
 1. Tap `home.startQuiz`
-2. Tap `question.record`
+2. Tap `question.micButton`
 3. Wait for `question.state` label `recording`
 4. **Do not** inject any STT events
-5. Wait until `question.state` leaves `recording` (up to 20 s)
+5. Wait 18s
 
 **Asserts**
-- `question.state` label is `askingQuestion`
-- `question.silencePrompt` is visible; `question.retryHint` is **not**
-- `question.errorBanner` is **not** present
-- `question.stop` does not appear within 8 s (no automatic retry)
+- `question.state` label is **not** `recording` (one of: `processing`, `askingQuestion`, `error`)
 - App process is alive; no `EXC_*` in log
+- If `error`, `question.errorBanner` text is human-readable (not empty, not "Optional(...)")
 
 ---
 
@@ -332,8 +330,8 @@ edit", not a global "abandon this answer".
 **Hypothesis:** A spoken MCQ answer goes through the **confirmation sheet**, not straight to
 the result (issue #171 Track I, founder 2026-09-05, restoring #45 decision D4). Since #208.8 the
 backend transcribes and places the answer among the options (#185 track G); the sheet shows
-exactly what it heard. Confirm — by tap, by the spoken "ok", or by letting the 5 s auto-confirm
-expire — and the quiz reaches the result. A mishearing is therefore always correctable before
+exactly what it heard. Confirm — by tap or by letting the 5 s auto-confirm expire (the spoken
+"ok" is gone since 2026-11-22: silence confirms) — and the quiz reaches the result. A mishearing is therefore always correctable before
 it is graded.
 
 **Preconditions**
@@ -515,26 +513,31 @@ must not appear frozen until the result lands.
 
 ---
 
-## RS-16: Result read-aloud replays the question without disturbing the countdown
+## RS-16: "Hear it" on the result reads the explanation and holds the result
 
-**Type:** Unit (HangsTests) + Sim. Guards issue #59.7.
+**Type:** Unit (HangsTests) + Sim. Guards issue #59.7 (read-aloud jumped to the
+next question) and the CI flake after #240.9.
 
-**Hypothesis:** `ResultView` read-aloud must call the timer-safe
-`replayQuestionAudio()` (not `playQuestionAudio`) — it plays the question
-audio once and leaves the running auto-advance countdown untouched; tapping
-it must not advance to the next question.
+**Hypothesis:** "hear it" (`result.hearIt`) reads the explanation, never advances,
+and holds the auto-advance while it reads (`QuizViewModel.holdResultAutoAdvance`),
+as any touch on the result does. Since #240.9 the countdown is 3 s after the
+spoken verdict, so a hold that only came from the screen's tap gesture let an
+activation without a touch (VoiceOver) leave mid-explanation, and the old
+1.5 s wall-clock check raced the countdown.
 
 **Preconditions**
-- `playOpusCallCount` spy from RS-11 in place.
 - Launch with `--ui-test`.
+- (Sim) Before confirming the answer, hold the spoken verdict's download
+  (`network/hold?text=downloadAudio`), so no countdown can start before the tap.
 
 **Steps**
-1. (Unit) On the result screen, capture `autoAdvanceCountdown`; call `replayQuestionAudio()`.
-2. (Sim) Reach `showingResult`; tap `result.readAloud`.
+1. (Unit, `ResultHearItHoldTests`, test clock) "hear it" during the spoken verdict
+   and during the countdown, then run the clock past the countdown.
+2. (Sim) Reach `showingResult`; tap `result.hearIt`; release the network.
 
 **Asserts**
-- (Unit) `playOpusCallCount == 1` after the call AND `autoAdvanceCountdown` unchanged.
-- (Sim) state stays `showingResult`; countdown value preserved (not reset/aborted).
+- (Unit) still `showingResult`, `isPaused`; Next still moves on from a held result.
+- (Sim) `question.pause` reads "Continue" at once; the result and its verdict stay.
 - App process is alive; no `EXC_*` in log.
 
 ---
@@ -589,7 +592,7 @@ it pins the exact option set `setupAudioSession` applies, with zero hang surface
 **Asserts**
 - Media options contain `.allowBluetoothHFP` (and still `.allowBluetoothA2DP`).
 - `AudioMode.default` is `media` and carries HFP (pins the default against regression).
-- Every mode ducks others + defaults to speaker.
+- Every mode stops other audio (no mixing, no ducking — #243.1) + defaults to speaker.
 - (Test body documents *why* HFP must stay: Bluetooth mic access, not phone-call UI — fails the instant anyone strips it.)
 
 ---
@@ -783,16 +786,18 @@ present, `room.final.away` absent. App alive.
 **Type:** XCUITest (`RSProfileTests`). #213.4 (tab bar and Profile), #216.3
 (plan moved to Profile, stat cards behind All stats).
 
-**Hypothesis:** Settings left Home for the Profile tab, so its gear is the only
-way in; the plan now lives on the Profile, the stat cards behind "All stats"
+**Hypothesis:** Settings opens from the gear on Home (TestFlight build 90
+feedback: Home had no way in) and from the Profile's gear; the plan now lives on the Profile, the stat cards behind "All stats"
 (open and locked, without the retired ones); a quiz keeps the full screen with
 no tab bar to wander off to.
 
-**Steps:** launch (mock stats: a seasoned player); tap `tab.profile`; tap
+**Steps:** launch (mock stats: a seasoned player); tap `home.settings`, then
+back; tap `tab.profile`; tap
 `profile.allStats`, then back; tap `profile.settings`; tap `tab.play`; start a
 quiz.
 
-**Asserts:** `home.moreSettings` and `home.planLabel` absent on Home;
+**Asserts:** `settings.voiceCommands` after the Home gear, back on Home;
+`home.planLabel` absent on Home;
 `home.planLabel` on the Profile; `profile.myPacks` absent;
 `profile.card.totals` in All stats, `profile.card.hard_questions` absent;
 `settings.voiceCommands` after the gear; `tab.profile` not hittable on the
@@ -1077,6 +1082,68 @@ confirmation sheet); wait for the round end; wait for the paywall; tap
 **Asserts:** `result.verdict` present with no paywall; `completion.highlight`
 appears with no paywall; the paywall follows (purchase or offline branch);
 after ✕ `completion.home` is on screen. App alive.
+
+---
+
+## RS-46: An open answer field closes when a quick skip moves on
+
+**Hypothesis:** A quick-game skip goes to the next question without the
+result screen, so the question screen stays up; the answer field the player
+opened must still close when the next question arrives (founder, TestFlight
+build 90: the field stayed open, Type greyed out).
+
+**Preconditions:** `--ui-test`; Home `home.quickGame` switched on.
+
+**Steps:** start a quiz, tap `question.textInputToggle`, wait for
+`question.textField`, tap `question.skip`.
+
+**Asserts:** `question.textField` is gone within 10 s;
+`question.textInputToggle` is enabled. App alive.
+
+---
+
+## RS-47: Voice answers used up: told once, the quiz goes on by typing
+
+**Type:** XCUITest (`RSPaywallTests`). Free tier split (founder 2026-11-21, D1).
+
+**Hypothesis:** a voice answer past the month's free voice answers is refused
+by the server (429 `voice_limit_reached`, nothing charged); the question stays
+on screen with one notice and a quiet Plus link that never blocks it, and
+Answer leads to typing instead of the refused mic.
+
+**Preconditions:** `--ui-test --ui-test-voice-limit` (every voice upload gets
+the 429).
+
+**Steps:** start a quiz, tap `question.record`, say "Paris" over the test
+listener; wait for `question.voiceLimitNotice`; tap `question.voiceLimitPlus`,
+wait for the paywall, tap its ✕; tap `question.record` again; type "Paris"
+into `question.textField`, tap `question.textSubmit`.
+
+**Asserts:** the notice appears and the state probe reads `askingQuestion`
+with no paywall; closing the paywall lands back on the question; the second
+Answer tap opens `question.textField` and the probe stays `askingQuestion`
+(no mic); the typed answer reaches the result. App alive.
+
+---
+
+## RS-48: A silent quiz is answered by typing, without a time limit
+
+**Type:** XCUITest (`RSResultTests`). "No sound" (founder 2026-11-22).
+
+**Hypothesis:** with the Home "No sound" switch on, nothing reads, listens or
+counts down: the question opens with the typed field ready, the mic never
+opens by itself, and the typed answer reaches a result that offers nothing
+to hear.
+
+**Preconditions:** `--ui-test`; Home `home.silentMode` switched on.
+
+**Steps:** start a quiz; wait 5 s on the question; type "Paris" into
+`question.textField`, tap `question.textSubmit`.
+
+**Asserts:** `question.textField` exists at once; `question.record` and
+`question.textInputToggle` do not; after 5 s the probe reads `askingQuestion`,
+no `question.stop`, no `listen-bar`; the result appears without
+`result.hearIt`. App alive.
 
 ---
 

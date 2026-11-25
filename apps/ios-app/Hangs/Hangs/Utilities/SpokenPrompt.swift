@@ -8,9 +8,8 @@
 //  grammar in VoiceCommandLexicon+Display, none of this lives in
 //  Localizable.xcstrings. Synthesised through the backend's generic TTS
 //  (`POST /tts/synthesize`, cached server-side), the same path as the answer
-//  read-back. The same sentence is also SHOWN during the retry
-//  (`EmptyAnswerRetryHint`) — that copy is ordinary UI text and follows the
-//  app language like the rest of the screen.
+//  read-back. On screen the retry is the open mic bar's "Didn't catch that"
+//  (TF build 90), ordinary UI text in the app language.
 //
 
 import Foundation
@@ -36,19 +35,19 @@ enum SpokenPrompt: String, Sendable {
         switch (self, language) {
         // Founder wording 2026-09-24. The on-screen twin is the xcstrings key
         // "I didn't catch your answer, please try again." (app language).
-        case (.didNotCatch, .slovak): "Nezachytil som odpoveď, skús to znova."
-        case (.didNotCatch, .czech): "Nezachytil jsem odpověď, zkus to znovu."
-        case (.didNotCatch, .ukrainian): "Я не розчув відповіді, спробуй ще раз."
+        case (.didNotCatch, .slovak): "Odpoveď sa nepodarilo zachytiť, skús to znova."
+        case (.didNotCatch, .czech): "Odpověď se nepodařilo zachytit, zkus to znovu."
+        case (.didNotCatch, .ukrainian): "Не вдалося розчути відповідь, спробуй ще раз."
         case (.didNotCatch, .english): "I didn't catch your answer, please try again."
         // Founder wording 2026-09-24; on-screen twins "…Please say its
         // number." / "…Please say its letter." (app language).
-        case (.mcqUnmatchedNumber, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
-        case (.mcqUnmatchedNumber, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
-        case (.mcqUnmatchedNumber, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його номер."
+        case (.mcqUnmatchedNumber, .slovak): "Nebolo jasné, ktorú možnosť myslíš. Povedz jej číslo."
+        case (.mcqUnmatchedNumber, .czech): "Nebylo jasné, kterou možnost myslíš. Řekni její číslo."
+        case (.mcqUnmatchedNumber, .ukrainian): "Незрозуміло, який варіант ти маєш на увазі. Назви його номер."
         case (.mcqUnmatchedNumber, .english): "I didn't catch which option you meant. Please say its number."
-        case (.mcqUnmatchedLetter, .slovak): "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
-        case (.mcqUnmatchedLetter, .czech): "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
-        case (.mcqUnmatchedLetter, .ukrainian): "Я не розчув, який варіант ти маєш на увазі. Назви його літеру."
+        case (.mcqUnmatchedLetter, .slovak): "Nebolo jasné, ktorú možnosť myslíš. Povedz jej písmeno."
+        case (.mcqUnmatchedLetter, .czech): "Nebylo jasné, kterou možnost myslíš. Řekni její písmeno."
+        case (.mcqUnmatchedLetter, .ukrainian): "Незрозуміло, який варіант ти маєш на увазі. Назви його літеру."
         case (.mcqUnmatchedLetter, .english): "I didn't catch which option you meant. Please say its letter."
         }
     }
@@ -77,6 +76,18 @@ enum SpokenPrompt: String, Sendable {
         }
     }
 
+    /// Free tier split (founder 2026-11-21): the month's free voice answers
+    /// are used up. Said once a month, the quiz goes on by typing and tapping.
+    /// The on-screen twin is `VoiceLimitNotice` (app language).
+    static func voiceLimitLine(language: CommandLanguage) -> String {
+        switch language {
+        case .slovak: "Hlasové odpovede zadarmo na tento mesiac sa minuli. Hraj ďalej písaním alebo klepnutím."
+        case .czech: "Hlasové odpovědi zdarma na tento měsíc došly. Hraj dál psaním nebo klepnutím."
+        case .ukrainian: "Безплатні голосові відповіді на цей місяць закінчилися. Грай далі й відповідай текстом або дотиком."
+        case .english: "This month's free voice answers are used up. Keep playing by typing or tapping."
+        }
+    }
+
     /// The error screen's line (#188 G1, founder 2026-10-06). `commands` are
     /// the words that screen will act on — empty when voice commands are off,
     /// so the line never promises a word nobody listens for. Command words
@@ -91,18 +102,35 @@ enum SpokenPrompt: String, Sendable {
         return [opening, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
     }
 
-    /// The set-end score (#188 G3): "Hotovo, 7 z 10 správne." then the words
-    /// the score screen acts on.
+    /// The round-end line (#243 decision 5, founder 2026-11-24): "Hotovo, 7 z
+    /// 10. Znova, alebo domov?" — the score, then the question naming the
+    /// words the screen acts on. Every round end says it (score, recap, daily
+    /// challenge).
     static func setFinishedLine(
         correct: Int, total: Int, commands: [VoiceCommand], language: CommandLanguage
     ) -> String {
         let score = switch language {
-        case .slovak: "Hotovo, \(correct) z \(total) správne."
-        case .czech: "Hotovo, \(correct) z \(total) správně."
-        case .ukrainian: "Готово, \(correct) з \(total) правильно."
-        case .english: "Done, \(correct) out of \(total) right."
+        case .slovak, .czech: "Hotovo, \(correct) z \(total)."
+        case .ukrainian: "Готово, \(correct) з \(total)."
+        case .english: "Done, \(correct) out of \(total)."
         }
-        return [score, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
+        return [score, setEndQuestion(commands: commands, language: language)].compactMap { $0 }.joined(separator: " ")
+    }
+
+    /// "Znova, alebo domov?" — the question alone, also said once more when
+    /// the round end hears nothing. Nil when nothing listens. The words come
+    /// from the lexicon, so the line and the matcher cannot drift.
+    static func setEndQuestion(commands: [VoiceCommand], language: CommandLanguage) -> String? {
+        let words = commands.map { VoiceCommandLexicon.spokenWord($0, language: language) }
+        guard let last = words.last else { return nil }
+        let or = switch language {
+        case .slovak: ", alebo "
+        case .czech: ", nebo "
+        case .ukrainian: " чи "
+        case .english: ", or "
+        }
+        let list = words.count > 1 ? words.dropLast().joined(separator: ", ") + or + last : last
+        return list.prefix(1).uppercased() + list.dropFirst() + "?"
     }
 
     /// "Povedz znova alebo stop." — no quote marks, the voice would read them

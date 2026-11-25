@@ -173,6 +173,14 @@ final class QuizViewModel: ObservableObject {
     /// quiz". The server deactivates it, so a link made from it always fails.
     var endedEarlySessionId: String?
 
+    // MARK: Extra categories (#242, rules in QuizViewModel+ExtraCategories)
+
+    /// The free rotating categories the server offers now for the quiz
+    /// language; empty while the switch is off or the list has not arrived.
+    @Published var extraCatalog: [ExtraCategory] = []
+    /// Home's calm alert for an extra category that is gone or played through.
+    @Published var extraCategoryNotice: String?
+
     // MARK: Family mode (#236, rules in QuizViewModel+Family)
 
     /// The mode as the parent left it; saved on every change.
@@ -314,16 +322,6 @@ final class QuizViewModel: ObservableObject {
         return quizState == .askingQuestion || quizState == .recording
     }
 
-    /// #240.9 (founder 2026-11-18): the last recording on this question was
-    /// silence the phone measured, so the question offers speak, type or skip
-    /// in a calm line until the player does one of them.
-    var showsSilencePrompt: Bool {
-        guard let key = recordingCoordinator.silencePromptQuestionKey,
-              key == (currentQuestion?.id ?? "")
-        else { return false }
-        return quizState == .askingQuestion
-    }
-
     /// #208.6 (founder 2026-10-16): once the player has thrown a transcript of
     /// this question away (Again, "znova", "nie", a new answer over it), the
     /// question screen and the answer sheet say the answer can be spelled. The
@@ -391,11 +389,11 @@ final class QuizViewModel: ObservableObject {
     }
 
     /// #240.9: the result's countdown length for its fill; while the verdict
-    /// is still spoken, the short pause that will follow it.
+    /// is still spoken, the pause that will follow it (#243.8: the preset's).
     var autoAdvanceTotal: Int {
-        if isAwaitingSpokenVerdict { return Config.pauseAfterSpokenVerdict }
+        if isAwaitingSpokenVerdict { return resultPaceSeconds(afterSpokenVerdict: true) ?? 0 }
         let running = quizTimersController.autoAdvanceTotal
-        return running > 0 ? running : settings.autoAdvanceDelay
+        return running > 0 ? running : resultPaceSeconds(afterSpokenVerdict: false) ?? 0
     }
 
     /// Thinking time countdown (visible on QuestionView before auto-recording)
@@ -431,9 +429,9 @@ final class QuizViewModel: ObservableObject {
         return 0
     }
 
-    /// #240: the pause is Settings' own (`holdQuestionForSettings`), not the
-    /// player's, so closing Settings ends it.
-    var isHeldBySettings = false
+    /// #240: the pause is the modal's own (`holdQuestionForModal`: Settings,
+    /// the "End Quiz?" alert), not the player's, so closing the modal ends it.
+    var isHeldByModal = false
 
     /// Quiz-level pause (#171 Track D; resets on the next question) — see
     /// `QuizTimersController.isPaused`.
@@ -495,6 +493,11 @@ final class QuizViewModel: ObservableObject {
 
     /// #122 follow-up (TF 2026-10-07): the recognized-but-not-yet-fired command
     /// as the listen-bar caption (command language, verbatim), or `nil`.
+    /// "What the app hears" (founder 2026-11-22). Never in a silent quiz.
+    var commandHeard: CommandHeard? {
+        isSilentMode ? nil : voiceCommandCoordinator.commandHeard
+    }
+
     var recognizingWord: String? {
         voiceCommandCoordinator.recognizingCommand.map {
             VoiceCommandLexicon.recognizingCaption($0, language: commandLanguage)
@@ -519,7 +522,7 @@ final class QuizViewModel: ObservableObject {
     /// silent, the tap still confirms).
     func emitEarcon(_ earcon: Earcon) {
         guard !isPlayingQuestionTTS else { return }
-        guard earcon.hasTone, settings.recordingSoundsEnabled else {
+        guard earcon.hasTone, audioSettings.recordingSoundsEnabled else {
             earconPlayer.playHaptic(earcon)
             return
         }
@@ -549,8 +552,9 @@ final class QuizViewModel: ObservableObject {
     /// ONE persisted preference again. The quiz header's speaker button and the
     /// Settings "Sound" toggle both write `settings.isMuted`, so a mute tapped in
     /// one quiz holds for the next until the player changes it (this reverses
-    /// #173's per-quiz mute on purpose).
-    var isAudioMuted: Bool { settings.isMuted }
+    /// #173's per-quiz mute on purpose). Silent mode mutes too
+    /// (`audioSettings`), without touching that preference.
+    var isAudioMuted: Bool { audioSettings.isMuted }
 
     // Computed properties for backward compatibility
     var selectedLanguage: Language {
@@ -617,6 +621,8 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
         quizEndCommandsArmed = false
+        roundEndLineStarted = false
+        resultNextCommandArmed = false
         // T7 (decision 8): leaving the recording/processing phase-pair drops the
         // confirmation + capture subsets atomically via the owner child — never
         // mid-pair (recording → processing keeps in-flight state), and never the
@@ -638,7 +644,10 @@ final class QuizViewModel: ObservableObject {
             stallEnteredAt = nil
             taskBag.cancel(.stallWatchdog)
         }
-        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil }
+        if case .askingQuestion = newState { mcqVoiceMatchedKey = nil } else {
+            // F3: typing belongs to the question it was opened on.
+            quizTimersController.endTypingHold()
+        }
         // #122: "action landed" signal — a matched glow clears as soon as the
         // min-display floor allows once the screen visibly changed.
         voiceCommandCoordinator.noteQuizStateChangedForFeedback()
@@ -909,6 +918,14 @@ final class QuizViewModel: ObservableObject {
     /// at the set end, the quiet session is up), so that screen may listen.
     /// Any state change drops it (`transition`).
     var quizEndCommandsArmed = false
+    /// #243 decision 5: this round end's line has been started — once per
+    /// round end, also when the recap's summary read delays it. Any state
+    /// change drops it (`transition`).
+    var roundEndLineStarted = false
+
+    /// #243.8: the result waits for "next" and its verdict has ended, so the
+    /// result screen may listen for "next". Any state change drops it.
+    var resultNextCommandArmed = false
 
     /// #188 G1: the error line, synthesized while the quiz could still reach
     /// the server — the network is usually what just failed. Keyed by text.
@@ -987,6 +1004,10 @@ final class QuizViewModel: ObservableObject {
             .sink { [persistenceStore] in persistenceStore.saveSettings($0) }
             .store(in: &cancellables)
 
+        // #242: the last extra list the server answered names a saved pick
+        // until the next fetch arrives.
+        extraCatalog = persistenceStore.loadExtraCategories()
+
         // #236: the family mode is remembered across launches (founder 2026-11-18).
         familySettings = persistenceStore.loadFamilySettings()
         $familySettings
@@ -1059,9 +1080,11 @@ final class QuizViewModel: ObservableObject {
             stopCommandConsumer: { [weak self] in self?.voiceCommandCoordinator.stopCommandConsumer() },
             startThinkingTimeCountdown: { [weak self] afterSilentRead in
                 guard let self else { return }
-                // #208.7: a skip said over the read stops it; its tail must not
-                // start the think window under the pending skip.
-                guard self.voiceCommandCoordinator.pendingSkipWindow == nil else { return }
+                // #208.7: a "next" said over the read skips at once; the read's
+                // tail must not start the think window on the way out.
+                guard self.quizState == .askingQuestion else { return }
+                // Silent mode: no time limit and no mic, the question waits.
+                guard !self.isSilentMode else { return }
                 self.attemptLedger.latency.openWindow(questionId: self.currentQuestion?.id)
                 self.quizTimersController.startThinkingTimeCountdown(
                     readingPause: afterSilentRead ? self.silentReadingPause : .zero
@@ -1085,7 +1108,8 @@ final class QuizViewModel: ObservableObject {
             taskBag: taskBag,
             attemptLedger: attemptLedger,
             clock: clock,
-            settings: { [weak self] in self?.settings ?? .default },
+            // Silent mode turns the commands off here (`audioSettings`).
+            settings: { [weak self] in self?.audioSettings ?? .default },
             currentSession: { [weak self] in self?.currentSession },
             isAppForeground: { [weak self] in self?.isAppForeground ?? false },
             isPlayingTTS: { [weak self] in self?.isPlayingAnyTTS ?? false },
@@ -1112,7 +1136,6 @@ final class QuizViewModel: ObservableObject {
             skipQuestion: { [weak self] in await self?.submitSkip() },
             confirmAnswer: { [weak self] in await self?.recordingCoordinator.confirmAnswer() },
             rerecordAnswer: { [weak self] in self?.recordingCoordinator.rerecordAnswer() },
-            holdAutoConfirm: { [weak self] in self?.recordingCoordinator.holdAutoConfirmByDriver() },
             isNoAnswerSheet: { [weak self] in
                 self?.recordingCoordinator.showAnswerConfirmation == true
                     && self?.recordingCoordinator.noAnswerCaptured == true
@@ -1122,11 +1145,11 @@ final class QuizViewModel: ObservableObject {
                 self?.recordingCoordinator.handleConfirmationUtterance($0)
             },
             continueToNext: { [weak self] in self?.advanceFromResult() },
-            pauseQuiz: { [weak self] in self?.enterPause() },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
             quizEndCommandsArmed: { [weak self] in self?.quizEndCommandsArmed ?? false },
+            resultNextCommandArmed: { [weak self] in self?.resultNextCommandArmed ?? false },
             retryFromError: { [weak self] in await self?.retryFromErrorByVoice() },
-            playAgain: { [weak self] in _ = self?.playAgain() },
+            playAgain: { [weak self] in self?.playAgainFromRoundEnd() },
             goHome: { [weak self] in self?.resetToHome() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
             isReadingQuestionAloud: { [weak self] in
@@ -1141,8 +1164,7 @@ final class QuizViewModel: ObservableObject {
             answerReadBack: { [weak self] in
                 guard let recording = self?.recordingCoordinator, recording.showAnswerConfirmation else { return nil }
                 return recording.readBackText
-            },
-            stopQuestionRead: { [weak self] in await self?.audioDeviceState.stopAnyPlayingAudio() }
+            }
         )
     }
 
@@ -1165,7 +1187,8 @@ final class QuizViewModel: ObservableObject {
             startRecording: { [weak self] in await self?.recordingCoordinator.startRecording(trigger: .autoRecord) },
             stopRecordingAndSubmit: { [weak self] reason in await self?.recordingCoordinator.stopRecordingAndSubmit(reason: reason) },
             confirmAnswer: { [weak self] owner in await self?.recordingCoordinator.confirmAnswer(trigger: .autoConfirm(owner)) },
-            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() }
+            proceedToNextQuestion: { [weak self] in await self?.proceedToNextQuestion() },
+            announcePhase: { [weak self] cue in await self?.announcePhase(cue) }
         )
     }
 
@@ -1208,12 +1231,12 @@ final class QuizViewModel: ObservableObject {
             armCommandWindow: { [weak self] in
                 await self?.voiceCommandCoordinator.armCommandWindowReportingLive() ?? false
             },
-            abortSkipUndoWindow: { [weak self] in self?.voiceCommandCoordinator.abortSkipUndoWindow() },
             startAutoConfirmIfEnabled: { [weak self] in self?.quizTimersController.startAutoConfirmIfEnabled() },
             cancelAutoConfirm: { [weak self] in self?.quizTimersController.cancelAutoConfirm() },
             clearPause: { [weak self] in self?.isPaused = false },
             isPaused: { [weak self] in self?.isPaused ?? false },
             cancelThinkingTime: { [weak self] in self?.quizTimersController.cancelThinkingTime() },
+            startThinkingTime: { [weak self] in self?.startRecordingOrTimer() },
             startAutoStopRecordingTimer: { [weak self] duration, hardCap in
                 self?.quizTimersController.startAutoStopRecordingTimer(duration: duration, hardCap: hardCap)
             },
@@ -1228,7 +1251,14 @@ final class QuizViewModel: ObservableObject {
             isPlayingQuestionTTS: { [weak self] in self?.isPlayingQuestionTTS ?? false },
             stopQuestionReadOut: { [weak self] in await self?.stopQuestionReadOut() },
             trackAnalytics: { [weak self] in self?.trackAnalytics($0) },
-            answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() }
+            answerRecordingDecided: { [answerRecordingUploader] in answerRecordingUploader?.requestUpload() },
+            isVoiceAllowanceSpent: { [weak self] in self?.isVoiceAllowanceSpent ?? false },
+            voiceAllowanceSpent: { [weak self] in self?.noteVoiceAllowanceSpent($0) },
+            isSilentMode: { [weak self] in self?.isSilentMode ?? false },
+            takeNoAnswerOffer: { [persistenceStore] in
+                defer { persistenceStore.incrementNoAnswerOfferHeardCount() }
+                return PhasePrompt.noAnswerOffer(heardCount: persistenceStore.noAnswerOfferHeardCount)
+            }
         )
     }
 
@@ -1330,15 +1360,23 @@ final class QuizViewModel: ObservableObject {
         // finished the session) is the bug this prevents; the user gets the
         // honest count and decides. Packs are exempt — a pack is a closed,
         // paid, exactly-sized set, so there is nothing to under-deliver.
-        if pack == nil, daily == nil, shared == nil, activeFamily == nil, !skipAvailabilityCheck,
-           let shortfall = await probeQuestionShortfall(
-               requestedCount: quizMaxQuestions,
-               difficulty: quizDifficulty,
-               language: quizLanguage,
-               requestedDifficulty: difficulty,
-               requestedLanguage: language
-           )
-        {
+        var shortfall: QuestionShortfall?
+        if pack == nil, daily == nil, shared == nil, activeFamily == nil, !skipAvailabilityCheck {
+            do {
+                shortfall = try await probeQuestionShortfall(
+                    requestedCount: quizMaxQuestions,
+                    difficulty: quizDifficulty,
+                    language: quizLanguage,
+                    requestedDifficulty: difficulty,
+                    requestedLanguage: language
+                )
+            } catch {
+                // Only the extra-category answers escape the probe (#242).
+                extraCategoryUnavailable(error as? NetworkError ?? .invalidResponse)
+                return
+            }
+        }
+        if let shortfall {
             questionShortfall = shortfall
             transition(to: .idle)
             return
@@ -1419,7 +1457,8 @@ final class QuizViewModel: ObservableObject {
             // The status check is synchronous on purpose: awaiting a nonisolated
             // helper hops off the main actor even when it does nothing, which
             // shifted the RS timing for every quiz start.
-            if audioService.microphonePermissionStatus == .undetermined {
+            // Silent mode never opens the mic, so it never asks for it.
+            if audioService.microphonePermissionStatus == .undetermined, !isSilentMode {
                 _ = await audioService.requestMicrophonePermission()
             }
 
@@ -1431,14 +1470,18 @@ final class QuizViewModel: ObservableObject {
             // under (the Home listener above was stopped without it).
             silenceDetectionService.voiceProcessingAllowed = true
 
-            // Configure audio session with user's preferred mode
-            do {
-                try audioService.setupAudioSession(mode: selectedAudioMode)
-                let audioModeName = selectedAudioMode.name
-                Logger.audio.info("🎤 Audio session configured with \(audioModeName, privacy: .public)")
-            } catch {
-                // Log error but continue - audio might still work
-                Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
+            // Configure audio session with user's preferred mode. A silent
+            // quiz plays and records nothing, so it leaves the player's own
+            // audio (music, a podcast) untouched.
+            if !isSilentMode {
+                do {
+                    try audioService.setupAudioSession(mode: selectedAudioMode)
+                    let audioModeName = selectedAudioMode.name
+                    Logger.audio.info("🎤 Audio session configured with \(audioModeName, privacy: .public)")
+                } catch {
+                    // Log error but continue - audio might still work
+                    Logger.audio.warning("⚠️ Failed to configure audio session: \(error, privacy: .public)")
+                }
             }
 
             // Create session with device ID for usage tracking.
@@ -1496,6 +1539,7 @@ final class QuizViewModel: ObservableObject {
             nextQuestion = nil
             awaitingNextQuestion = response.awaitingQuestion
             trackQuizContext(entryPoint: entryPoint)
+            if pack == nil, daily == nil, shared == nil, activeFamily == nil { trackExtraCategoryStart() }
 
             // #182: a pack whose first question is not persisted yet — wait for
             // it rather than dropping the player on an empty quiz screen.
@@ -1545,6 +1589,11 @@ final class QuizViewModel: ObservableObject {
                 return
             }
 
+            if let failure = error as? NetworkError, failure.isExtraCategoryAnswer {
+                extraCategoryUnavailable(failure)
+                return
+            }
+
             if let round = activeFamily, case .familyTopicEmpty? = error as? NetworkError {
                 familyTopicWasEmpty(round)
                 return
@@ -1582,7 +1631,7 @@ final class QuizViewModel: ObservableObject {
         language: String,
         requestedDifficulty: String?,
         requestedLanguage: String?
-    ) async -> QuestionShortfall? {
+    ) async throws -> QuestionShortfall? {
         do {
             let availability = try await networkService.questionAvailability(
                 requestedCount: requestedCount,
@@ -1606,12 +1655,14 @@ final class QuizViewModel: ObservableObject {
             return QuestionShortfall(
                 available: availability.available,
                 requested: requestedCount,
-                categoryName: settings.categoryDisplayName(),
+                categoryName: settings.categoryDisplayName(extras: extraCatalog),
                 difficulty: requestedDifficulty,
                 language: requestedLanguage,
                 reason: reason
             )
         } catch {
+            // #242: the server's word on an extra category is not an outage.
+            if (error as? NetworkError)?.isExtraCategoryAnswer == true { throw error }
             Logger.quiz.warning("⚠️ Availability probe failed, starting anyway: \(error, privacy: .public)")
             return nil
         }
@@ -2000,9 +2051,6 @@ final class QuizViewModel: ObservableObject {
         // cannot absorb that late duplicate by itself.
         guard quizState == .askingQuestion || quizState == .recording else { return }
 
-        // #110 Bug 2: starting an answer (voice or tap) supersedes any pending skip.
-        voiceCommandCoordinator.abortSkipUndoWindow()
-
         guard let sessionId = currentSession?.id else {
             errorMessage = String(localized: "No active session", bundle: .interface, locale: .interface, comment: "Inline error: no quiz session is currently active")
             return
@@ -2060,7 +2108,7 @@ final class QuizViewModel: ObservableObject {
             // #193 task 193.12: and the same transient retry, so a backend deploy
             // (~18 s restart) mid-drive costs a pause, not the tapped answer. Safe:
             // the submit is question-scoped idempotent (#133 1a).
-            let audio = settings.audioMode != "off"
+            let audio = requestsSpokenAudio
             let response = try await withBoundedTransientRetry(label: "mcq answer submit") {
                 try await self.networkService.submitTextInput(
                     sessionId: sessionId,
@@ -2168,7 +2216,7 @@ final class QuizViewModel: ObservableObject {
             // would grade a different question than the first attempt did.
             let answeredQuestionId = currentQuestion?.id
             trackAnswerSubmitted(spoken ? .voice : .typed, questionId: answeredQuestionId)
-            let audio = !suppressAudio && settings.audioMode != "off"
+            let audio = !suppressAudio && requestsSpokenAudio
             // #179 finding 3: bounded, like the MCQ tap (#178) — a wedged confirm
             // used to leave the driver on a dead `.processing` screen forever.
             let response = try await withBoundedTransientRetry(label: "text answer submit") {
@@ -2192,7 +2240,8 @@ final class QuizViewModel: ObservableObject {
             recordingCoordinator.handleTranscriptionFailure(
                 owner: attempt,
                 prompt: .retry(for: code, question: currentQuestion),
-                allowAutoRetry: spoken
+                allowAutoRetry: spoken,
+                heardSpeech: true // a transcript was sent: the player was heard (#243.4)
             )
         } catch {
             guard attemptLedger.owns(attempt, "textSubmit.error") else { return }
@@ -2260,7 +2309,7 @@ final class QuizViewModel: ObservableObject {
             // #133 1a: skip THIS question, never the next one. Read once outside the
             // retry closure so every attempt skips the same question.
             let skippedQuestionId = currentQuestion?.id
-            let audio = settings.audioMode != "off"
+            let audio = requestsSpokenAudio
             // #179 finding 4: bounded — an unanswered skip left the Skip spinner
             // turning and the Start button dead with no exit from `.skipping`.
             let response = try await withBoundedTransientRetry(label: "skip question") {
@@ -2335,6 +2384,7 @@ final class QuizViewModel: ObservableObject {
         // Tear down everything answer-related (we may arrive mid-recording),
         // but leave the session tallies alone — the results screen reads them.
         taskBag.cancelAll()
+        voiceCommandCoordinator.clearCommandHeard() // its hold went with the bag
         audioDeviceState.stopSilenceDetectionListening()
         quizTimersController.reset()
         isAutoRecording = false
@@ -2391,6 +2441,30 @@ final class QuizViewModel: ObservableObject {
         Logger.quiz.info("⏸️ Current question paused - auto-advance will resume on next question")
     }
 
+    /// TF build 90 (C1): the result's "Show question" sheet. Reading the
+    /// question holds the auto-advance; the player goes on with Next or the
+    /// toolbar's resume.
+    func openResultQuestion() {
+        if let question = resultQuestion ?? currentQuestion, let evaluation = resultEvaluation {
+            trackAnalytics(.resultQuestionOpened(
+                kind: question.sortedAnswerOptions.isEmpty ? .open : .mcq,
+                verdict: evaluation.wasSkipped ? .skipped : evaluation.isCorrect ? .correct : .incorrect
+            ))
+        }
+        holdResultAutoAdvance()
+    }
+
+    /// The result waits while the player reads the question or listens to the
+    /// explanation, as on any touch on the result (`ResultView`'s tap
+    /// gesture). Held here, not only by that gesture: an activation that is
+    /// no touch (VoiceOver) let the 3 s countdown after the spoken verdict
+    /// leave mid-explanation.
+    func holdResultAutoAdvance() {
+        guard quizState.isShowingResult, !isPaused,
+              autoAdvanceCountdown > 0 || isAwaitingSpokenVerdict else { return }
+        pauseQuiz()
+    }
+
     /// Resume the auto-advance countdown for the *current* result without jumping to the
     /// next question. Distinct from `continueToNext()` (which advances immediately): the
     /// "Resume auto-advance" button must re-arm the countdown so the user stays on the
@@ -2400,7 +2474,13 @@ final class QuizViewModel: ObservableObject {
         isPaused = false
 
         Task {
-            await quizTimersController.startAutoAdvanceCountdown(duration: settings.autoAdvanceDelay, audioDuration: 0)
+            // #243.8: the pace after a verdict; a result that waits for
+            // "next" gets its command window back instead of a countdown.
+            guard let pace = resultPaceSeconds(afterSpokenVerdict: true) else {
+                await armResultNextCommand()
+                return
+            }
+            await quizTimersController.startAutoAdvanceCountdown(duration: pace, audioDuration: 0)
         }
 
         Logger.quiz.info("▶️ Resuming auto-advance countdown (staying on result)")
@@ -2459,6 +2539,17 @@ final class QuizViewModel: ObservableObject {
     /// waits a silent reading pause first (`silentReadingPause`).
     func startRecordingOrTimer(resumingAt heldSeconds: Int = 0, afterSilentRead: Bool = false) {
         guard quizState == .askingQuestion, !isRerecording else { return }
+        // Silent mode (founder 2026-11-22): no time limit and no mic; the
+        // question waits for a typed or tapped answer or Skip. Before the
+        // voice allowance, which has nothing to say in a silent quiz.
+        guard !isSilentMode else { return }
+        // Free tier split (2026-11-21): no think window and no mic when the
+        // voice answers are used up; the question waits for a typed or tapped
+        // answer.
+        guard !isVoiceAllowanceSpent else {
+            noteVoiceAllowanceSpent(nil)
+            return
+        }
         attemptLedger.latency.openWindow(questionId: currentQuestion?.id)
         quizTimersController.startThinkingTimeCountdown(
             resumingAt: heldSeconds,
@@ -2614,7 +2705,8 @@ final class QuizViewModel: ObservableObject {
         // This ensures ResultView is visible when audio starts playing
         transition(to: .showingResult(question: question, evaluation: evaluation))
         // #224: the result screen has no command window (buttons + auto-advance
-        // only); this refresh tears the previous question's listener down.
+        // only; #243.8: "next" once a result that waits has spoken its
+        // verdict); this refresh tears the previous question's listener down.
         refreshCommandWindow()
 
         // #240.9: the countdown follows the spoken verdict (a short pause
@@ -2630,6 +2722,10 @@ final class QuizViewModel: ObservableObject {
             let countdown = await playVerdictThenPace(response.audio)
             guard !Task.isCancelled,
                   attemptLedger.ownsQuestion(resultOwner, "resultFeedback.countdown") else { return }
+            guard let countdown else {
+                await armResultNextCommand()
+                return
+            }
             await quizTimersController.startAutoAdvanceCountdown(duration: countdown, audioDuration: 0)
         }, key: .autoAdvance)
     }
@@ -2718,17 +2814,18 @@ final class QuizViewModel: ObservableObject {
         // mic stayed hot on the results and the recap played over a running
         // engine. Down before the session goes, like `endQuizWithResults`.
         audioDeviceState.stopSilenceDetectionListening()
-        // #205: the daily round end has no "again" to listen for and says
-        // nothing (the crowd lines rode the answers' feedback).
+        // #243 decision 5 (founder 2026-11-24): every round end (score, recap,
+        // daily challenge) says "Hotovo, 7 z 10. Znova, alebo domov?" and
+        // listens for those words. It releases the session once it has spoken.
         let quotaLimit = roundEndQuotaLimit
         roundEndQuotaLimit = nil
-        if endsOnRecap || activeDaily != nil {
-            // Release the audio session so Spotify/podcasts resume full volume.
+        if endsOnRecap, recapReadsItself {
+            // The recap reads its summary first (SetRecapView starts it); the
+            // line follows the read (`resumeRoundEndAfterRecapRead`). Release
+            // the audio session so Spotify/podcasts resume full volume.
             audioService.deactivateSession()
             if let quotaLimit { scheduleRoundEndPaywall(quotaLimit) }
         } else {
-            // #188 G3: the score screen says the score first (it releases the
-            // session once it has spoken).
             announceSetFinished(thenPaywall: quotaLimit)
         }
 
@@ -2791,7 +2888,7 @@ final class QuizViewModel: ObservableObject {
 
     private func pollForNextQuestion(sessionId: String) async {
         var consecutiveErrors = 0
-        let audio = settings.audioMode != "off"
+        let audio = requestsSpokenAudio
 
         while !Task.isCancelled {
             // The state is the poll's licence to run: a quit, a reset or an
@@ -2868,6 +2965,16 @@ final class QuizViewModel: ObservableObject {
 
     /// Repeat the current question audio (public for UI button)
     func repeatQuestion() async {
+        // #243.4 (B2): from the no-answer sheet, back to the question: read it
+        // again, then a fresh think window, as after any read.
+        if quizState == .processing {
+            guard await recordingCoordinator.leaveNoAnswerSheetForQuestion() else { return }
+            if recordingCoordinator.currentQuestionAudioUrl == nil {
+                refreshCommandWindow()
+                startRecordingOrTimer(afterSilentRead: true)
+                return
+            }
+        }
         if quizState == .askingQuestion, let audioUrl = recordingCoordinator.currentQuestionAudioUrl {
             quizTimersController.cancelThinkingTime()
             await audioDeviceState.stopAnyPlayingAudio()

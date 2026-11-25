@@ -183,6 +183,11 @@ protocol SilenceDetectionServiceProtocol: AnyObject, Sendable {
     func startListening() async
     func stopListening()
 
+    /// The command screen the next (or the live) window listens for, so the
+    /// recognizer is biased toward that screen's commands only. `nil` = no
+    /// window: the whole grammar.
+    func setCommandScreen(_ screen: VoiceCommandScreen?)
+
     /// #175: make the command recognizer match the quiz language. No-op when
     /// it already does; deferred (retried at the next window) while a
     /// listening window is open. Called before every window start. Never
@@ -254,7 +259,11 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     func makeSilenceEventStream() -> AsyncStream<SilenceEvent> { silenceChannel.makeStream() }
     func makeSpeechActivityStream() -> AsyncStream<SpeechActivityEvent> { speechActivityChannel.makeStream() }
     func makeBargeInStream() -> AsyncStream<Void> { bargeInChannel.makeStream() }
-    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> { commandChannel.makeStream() }
+    func makeCommandTranscriptStream() -> AsyncStream<CommandTranscript> {
+        let stream = commandChannel.makeStream()
+        redeliverDrainedFinal() // +Drain: a final the last teardown finished
+        return stream
+    }
     func makeCommandAvailabilityStream() -> AsyncStream<VoiceCommandAvailability> { commandAvailabilityChannel.makeStream() }
     func makeInputLevelStream() -> AsyncStream<InputLevel> { inputLevelChannel.makeStream() }
 
@@ -264,10 +273,27 @@ final class SilenceDetectionService: SilenceDetectionServiceProtocol {
     // reach an extension in another file.
     var audioEngine: AVAudioEngine?
     var analyzer: SpeechAnalyzer?
+    /// The command screen the recognizer is biased for (`setCommandScreen`),
+    /// and the list the live analyzer last received, so an unchanged screen
+    /// costs no `setContext` call.
+    var commandScreen: VoiceCommandScreen?
+    var appliedContextualStrings: [String]?
     var analyzerTask: Task<Void, Never>?
     var detectionTask: Task<Void, Never>?
     var transcriptionTask: Task<Void, Never>?
     var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+    /// The listening window results belong to (+Drain): bumped at every start
+    /// and stop, so a result of a window already torn down is told apart.
+    var listeningWindow = 0
+    /// A stopped window's analyzer finishing what it already heard (+Drain),
+    /// its last final, and that final kept for the next window on the same
+    /// screen.
+    var drainTask: Task<Void, Never>?
+    /// The live analyzer has started on this window's audio; one that never
+    /// did has nothing to finalize and is cancelled as before.
+    var analyzerStarted = false
+    var drainedFinal: CommandTranscript?
+    var pendingDrainedFinal: DrainedFinal?
     /// #185: the tap's per-buffer levels, drained on the main actor into the VAD.
     var levelTask: Task<Void, Never>?
     var levelContinuation: AsyncStream<InputLevelSample>.Continuation?

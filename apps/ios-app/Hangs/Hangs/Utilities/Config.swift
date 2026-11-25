@@ -79,7 +79,7 @@ nonisolated enum Config {
     // MARK: - App Configuration
 
     /// Default number of questions per quiz
-    static let defaultQuestions = 10
+    static let defaultQuestions = 8
 
     /// Default quiz difficulty: a mix, each question's level picked by the
     /// server (#216, founder 2026-10-30).
@@ -97,7 +97,7 @@ nonisolated enum Config {
     // MARK: - Settings Options
 
     /// Available question count options for quiz settings
-    static let questionCountOptions = [5, 10, 15, 20]
+    static let questionCountOptions = [5, 8, 10, 15]
 
     /// Available difficulty options for quiz settings
     static var difficultyOptions: [(String, String)] {
@@ -119,11 +119,11 @@ nonisolated enum Config {
             (nil, String(localized: "All Categories", bundle: .interface, locale: .interface, comment: "Quiz category option: no category filter")),
             ("science-nature", String(localized: "Science & Nature", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("history", String(localized: "History", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("geography-world", String(localized: "Geography & World", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("geography-world", String(localized: "Geography", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("movies-music", String(localized: "Movies & Music", bundle: .interface, locale: .interface, comment: "Quiz category option")),
             ("sports", String(localized: "Sports", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("food-everyday", String(localized: "Food & Everyday Life", bundle: .interface, locale: .interface, comment: "Quiz category option")),
-            ("entertainment", String(localized: "Entertainment", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("food-everyday", String(localized: "Food & Drink", bundle: .interface, locale: .interface, comment: "Quiz category option")),
+            ("entertainment", String(localized: "Pop Culture", bundle: .interface, locale: .interface, comment: "Quiz category option")),
         ]
     }
 
@@ -141,11 +141,11 @@ nonisolated enum Config {
     private static let categoryResources: [String: LocalizedStringResource] = [
         "science-nature": "Science & Nature",
         "history": "History",
-        "geography-world": "Geography & World",
+        "geography-world": "Geography",
         "movies-music": "Movies & Music",
         "sports": "Sports",
-        "food-everyday": "Food & Everyday Life",
-        "entertainment": "Entertainment",
+        "food-everyday": "Food & Drink",
+        "entertainment": "Pop Culture",
     ]
 
     /// #240: the resource behind a `categoryOptions` name (nil id = All
@@ -202,19 +202,14 @@ nonisolated enum Config {
     /// empty transcript → confirmation sheet with an empty field (#171 B).
     static let speechStartWindow: TimeInterval = 5.0
 
-    /// #240.9 (founder 2026-11-18): with no think time, the new default, the
-    /// mic opens as soon as the question has been read, and the time to start
-    /// speaking also covers the think time it replaces: 10 + 5 = 15 s. The
-    /// hidden cap moves out by the same amount, so a late start keeps the
-    /// answer time it had. Only the hands-free opening gets it; a tap or a
-    /// spoken "start" means the player is ready.
-    static let immediateMicExtraWindow: TimeInterval = 10
-
     /// #240.9 (founder 2026-11-18): the result moves on a short moment after
     /// the spoken verdict ends, instead of a fixed 8 s from the moment the
-    /// result appears. Without a spoken verdict (muted, no audio) the result
-    /// keeps the Settings pause (`autoAdvanceDelay`), the time to read it.
+    /// result appears. #243.8: this is the "right after the verdict" preset.
     static let pauseAfterSpokenVerdict = 3
+
+    /// #243.8: "right after the verdict" with no spoken verdict (read aloud
+    /// off, no audio): the time to read the result off the screen.
+    static let resultReadingPause = 5
 
     /// #240.9: the longest the result waits for its spoken verdict (a slow
     /// download included) before the countdown starts anyway, so the result

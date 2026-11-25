@@ -206,7 +206,7 @@ struct QuestionFooterInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self, "the bar is the recording surface") {
-                try tree.find(text: "Speak now")
+                try tree.find(text: "Listening…")
             }
             #expect(throws: (any Error).self, "the empty transcript card is gone") {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
@@ -214,8 +214,10 @@ struct QuestionFooterInspectorTests {
         }
     }
 
-    /// The command bar keeps its slot while idle — and now names the words.
-    @Test("the command bar carries the concrete commands sub-line")
+    /// #243.6 (founder 2026-11-24) reverses TF build 90: whenever the app
+    /// listens for commands the strip shows the words it listens for, so the
+    /// player knows what to say.
+    @Test("an armed command window shows the command bar with its words")
     func commandBarShowsCommands() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),
@@ -233,6 +235,9 @@ struct QuestionFooterInspectorTests {
             let tree = try view.inspect()
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
+            }
+            #expect(throws: Never.self) {
+                try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
             }
         }
     }

@@ -1,0 +1,81 @@
+Today is 2026-11-19. From the news digest below, pick 36 seed facts for a voice trivia quiz played by adults anywhere in the world.
+
+A seed is one thing people talked about, one surprising angle a question can ask about, and the digest URL of the page that states the fact.
+
+What to pick:
+- Fame first: pick a subject an ordinary adult who follows film, TV, music and celebrities only loosely has heard of, then find the surprising angle.
+- Every seed is global entertainment (film, TV and streaming, music, video games, viral pop-culture moments) that a casual fan anywhere in the world, not only in the US, would recognise. Use scope "world".
+- Freshness: most seeds are about things that happened or came out mostly between September and November 2026 (today is 2026-11-19); the rest may be surprising facts about mega-famous films, songs, shows or games.
+- Skip award categories ("who won X"), directors, producers, puppeteers and other crew (famous singers and songwriters are fine), and topics only US audiences or fans would know.
+- Skip current politics and current wars or armed conflicts (including countries involved in one); historical events and dark themes inside films, series or games are fine. No gossip.
+- At most 2 seeds about the same subject.
+- Sources: Wikipedia first, then domain authorities, then reputable media. Never tabloids, aggregators, social media or Reddit.
+- Every source_url MUST be copied exactly from one digest line, and that line must support the fact. Lines without a fact sentence are bare search results: use one only when its title states the fact. Never invent a URL.
+
+Ideas: the most-read English Wikipedia articles of the last week and the last month (many are politics, crime or sport; ignore those):
+- Christa Pike (10328998 views)
+- .xxx (5836055 views)
+- Deaths in 2026 (5156736 views)
+- Patrick Stewart (4793769 views)
+- Jailer 2 (4775981 views)
+- RJ Mitte (4741371 views)
+- Elizabeth Holmes (4089121 views)
+- Katie Zacharia (4008472 views)
+- Ramayana: Part 1 (3942285 views)
+- You Can See Everything (3359943 views)
+- Ansel Adams (3117988 views)
+- ChatGPT (2767304 views)
+- Jensen Huang (2714927 views)
+- Nidal Hasan (2633720 views)
+- Digger (2026 film) (2558996 views)
+- Robert Pattinson (2542143 views)
+- 2026 Israeli legislative election (2492404 views)
+- Drishyam: The Conclusion (2484550 views)
+- East of Eden (novel) (2434473 views)
+- Lizzie Borden (2423771 views)
+- East of Eden (2026 miniseries) (2360138 views)
+- Portal:Current events (2305993 views)
+- Nana Patekar (2285714 views)
+- Clayface (film) (2244142 views)
+- Carrie (miniseries) (2107822 views)
+- 2026 Asian Games medal table (2082682 views)
+- Anna's Archive (2037713 views)
+- Neatsville, Kentucky (2008984 views)
+- Ted Kaczynski (1957004 views)
+- 2026 Brazilian general election (1918630 views)
+- VisionQuest (1894193 views)
+- Limonene (1891615 views)
+- Jeff Bezos (1855567 views)
+- Street Fighter (2026 film) (1854848 views)
+- Abdul El-Sayed (1845200 views)
+- YouTube (1758124 views)
+- Mathematics (1737819 views)
+- 2026 United States elections (1693566 views)
+- United States (1667895 views)
+- List of equations (1646388 views)
+- Below (miniseries) (1592642 views)
+- Archive of Our Own (1554646 views)
+- Verity (film) (1547798 views)
+- XXXX (beer) (1542264 views)
+- Mike Ditka (1465709 views)
+- Kimberly Guilfoyle (1410449 views)
+- India at the 2026 Asian Games (1379663 views)
+- Wikipedia (1368361 views)
+- .xyz (1326374 views)
+- Nathan Fielder (1307685 views)
+- XNXX (1285846 views)
+- The Celebrity Traitors series 2 (1278751 views)
+- 2026 Asian Games (1276156 views)
+- Bella Ramsey (1259689 views)
+- Slow Horses (1253113 views)
+- Crystal Lake (TV series) (1232562 views)
+- Wildwood (film) (1226867 views)
+- List of S&P 500 companies (1223029 views)
+- Dakota Johnson (1211129 views)
+- File:Traffic Sign GR - KOK 2009 - R-54.svg (1208381 views)
+
+Digest (headline | date | URL | fact):
+<YOUR OWN DIGEST LINES FROM STEP 1>
+
+Reply with ONLY a JSON array, no prose and no code fence, one object per seed:
+[{"subject": "<the famous thing>", "wiki_title": "<exact title of the subject's article on English Wikipedia, or null>", "scope": "domestic|world", "event_date": "<YYYY-MM-DD, or null if evergreen>", "fact": "<one checkable sentence>", "angle": "<the surprising detail a question would ask about>", "source_url": "<URL copied from the digest line that states the fact>"}]

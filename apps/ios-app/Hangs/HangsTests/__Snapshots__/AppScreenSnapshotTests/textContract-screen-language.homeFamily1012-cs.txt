@@ -14,8 +14,12 @@ Slovenčina
 Čeština
 Jazyk kvízu
 Slovenčina
+Jazyk kvízu
+Slovenčina
 4–6
 7–9
+10–12
+Věk
 10–12
 Věk
 10–12
@@ -23,7 +27,13 @@ Harry Potter
 Špióni a šifry
 Téma
 Harry Potter
+Téma
+Harry Potter
+Bez zvuku
+Otázky čteš, odpovědi píšeš
+
 trubbo
+Nastavení
 Odpovídáš ty, děti hádají s tebou.
 Start s dětmi
 # identifiers
@@ -44,5 +54,7 @@ home.band.kids_10_12
 home.topic.menu
 home.topic.family-harry-potter
 home.topic.family-spies-and-codes
+home.silentMode
+home.settings
 home.family.adultAnswers
 home.startFamily

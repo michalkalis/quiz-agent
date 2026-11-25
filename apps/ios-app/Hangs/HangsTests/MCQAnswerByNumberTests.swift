@@ -147,21 +147,6 @@ struct MCQOptionLabelTests {
         #expect(mcq(labels: nil).labelledAnswer("Jupiter") == "B — Jupiter")
     }
 
-    /// WHY: hand-added catalog entries have shipped untranslated before — the
-    /// on-screen twin of each spoken line must resolve in every app language.
-    @Test("the on-screen retry lines resolve in en, sk and cs", arguments: [
-        (SpokenPrompt.mcqUnmatchedNumber, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."),
-        (SpokenPrompt.mcqUnmatchedNumber, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."),
-        (SpokenPrompt.mcqUnmatchedNumber, "en", "I didn't catch which option you meant. Please say its number."),
-        (SpokenPrompt.mcqUnmatchedLetter, "sk", "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."),
-        (SpokenPrompt.mcqUnmatchedLetter, "cs", "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."),
-        (SpokenPrompt.mcqUnmatchedLetter, "en", "I didn't catch which option you meant. Please say its letter."),
-    ])
-    func retryLineResolves(prompt: SpokenPrompt, language: String, expected: String) throws {
-        let text = try EmptyAnswerRetryHint(prompt: prompt).inspect().find(ViewType.Text.self)
-        #expect(try text.string(locale: Locale(identifier: language)) == expected)
-    }
-
     @Test("the 1–4 listen-bar caption resolves in en, sk and cs")
     func captionResolves() throws {
         let text = try ListenBar(mode: .answer(.mcq)).inspect().find(text: "Say 1–4 or the answer")
@@ -180,15 +165,15 @@ struct MCQOptionLabelTests {
         #expect(SpokenPrompt.retry(for: .noSpeech, question: mcq(labels: numberLabels)) == .didNotCatch)
         #expect(SpokenPrompt.retry(for: .noAnswer, question: nil) == .didNotCatch)
 
-        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .slovak) == "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo.")
-        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .czech) == "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo.")
+        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .slovak) == "Nebolo jasné, ktorú možnosť myslíš. Povedz jej číslo.")
+        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .czech) == "Nebylo jasné, kterou možnost myslíš. Řekni její číslo.")
         #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .english) == "I didn't catch which option you meant. Please say its number.")
-        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .slovak) == "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno.")
-        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .czech) == "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno.")
+        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .slovak) == "Nebolo jasné, ktorú možnosť myslíš. Povedz jej písmeno.")
+        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .czech) == "Nebylo jasné, kterou možnost myslíš. Řekni její písmeno.")
         #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .english) == "I didn't catch which option you meant. Please say its letter.")
         // #231: the spoken line equals its on-screen twin in Localizable.xcstrings.
-        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .ukrainian) == "Я не розчув, який варіант ти маєш на увазі. Назви його номер.")
-        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .ukrainian) == "Я не розчув, який варіант ти маєш на увазі. Назви його літеру.")
+        #expect(SpokenPrompt.mcqUnmatchedNumber.text(language: .ukrainian) == "Незрозуміло, який варіант ти маєш на увазі. Назви його номер.")
+        #expect(SpokenPrompt.mcqUnmatchedLetter.text(language: .ukrainian) == "Незрозуміло, який варіант ти маєш на увазі. Назви його літеру.")
     }
 }
 
@@ -259,7 +244,11 @@ struct MCQUnmatchedRetryTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "I didn't catch which option you meant. Please say its letter.") }
+            // TF build 90: the open mic's bar says why it opened again and
+            // asks for the letter; there is no free line under the question.
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(throws: Never.self) { try bar.find(text: "Didn't catch that") }
+            #expect(throws: Never.self) { try bar.find(text: "Say A–D or the answer") }
         }
     }
 

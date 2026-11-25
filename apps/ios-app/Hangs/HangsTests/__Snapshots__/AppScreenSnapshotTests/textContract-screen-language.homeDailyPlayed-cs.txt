@@ -5,32 +5,34 @@ Lepšie skóre ako 2 z 3 hráčov.
 Kvíz
 Vyber více
 All Categories
-10 otázek
+8 otázek
 All Categories
 Science & Nature
-10 otázek
+8 otázek
 Science & Nature
 History
-10 otázek
+8 otázek
 History
-Geography & World
-10 otázek
-Geography & World
+Geography
+8 otázek
+Geography
 Movies & Music
-10 otázek
+8 otázek
 Movies & Music
 Sports
-10 otázek
+8 otázek
 Sports
-Food & Everyday Life
-10 otázek
-Food & Everyday Life
-Entertainment
-10 otázek
-Entertainment
+Food & Drink
+8 otázek
+Food & Drink
+Pop Culture
+8 otázek
+Pop Culture
 English
 Slovenčina
 Čeština
+Jazyk kvízu
+Slovenčina
 Jazyk kvízu
 Slovenčina
 Easy
@@ -39,12 +41,24 @@ Hard
 Random
 Obtížnost
 Random
-Kategorie
-All Categories
+Obtížnost
+Random
+5
+8
+10
+15
+Počet otázek
+8
+Počet otázek
+8
 Rychlý kvíz
 Po „Další“ hned další otázka, bez vysvětlení
 
+Bez zvuku
+Otázky čteš, odpovědi píšeš
+
 trubbo
+Nastavení
 Start
 # identifiers
 home.daily.open
@@ -63,6 +77,12 @@ home.difficulty.easy
 home.difficulty.medium
 home.difficulty.hard
 home.difficulty.random
-home-categories-menu
+home.questionCount
+home.questionCount.5
+home.questionCount.8
+home.questionCount.10
+home.questionCount.15
 home.quickGame
+home.silentMode
+home.settings
 home.startQuiz

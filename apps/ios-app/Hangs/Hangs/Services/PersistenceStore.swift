@@ -75,6 +75,8 @@ protocol PersistenceStoreProtocol: Sendable {
     // MARK: - Family mode (#236)
 
     /// The family mode as last left; defaults when nothing (readable) is saved.
+    func loadExtraCategories() -> [ExtraCategory]
+    func saveExtraCategories(_ categories: [ExtraCategory])
     func loadFamilySettings() -> FamilySettings
 
     func saveFamilySettings(_ settings: FamilySettings)
@@ -108,6 +110,22 @@ protocol PersistenceStoreProtocol: Sendable {
 
     /// Record one more presentation of the post-purchase sign-in sheet
     func incrementSignInPromptShownCount()
+
+    // MARK: - Voice allowance notice (free tier split, 2026-11-21)
+
+    /// The `resets_at` of the month whose "voice answers used up" notice was
+    /// shown: the notice comes once a month, also across launches.
+    var voiceLimitNoticeMonth: String? { get }
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String)
+
+    // MARK: - No-answer offer (#243.4)
+
+    /// How many times the player has heard the spoken no-answer offer, across
+    /// quizzes: the long line the first times, the short one after.
+    var noAnswerOfferHeardCount: Int { get }
+
+    func incrementNoAnswerOfferHeardCount()
 }
 
 /// Unified UserDefaults-based persistence storage.
@@ -133,6 +151,9 @@ final class PersistenceStore: PersistenceStoreProtocol {
     /// true: the quiz language follows the phone; false: the player chose one;
     /// absent: an install from before #231, never switched.
     private let languageFollowsPhoneKey = "quiz_language_follows_phone_231"
+    private let extraCategoriesKey = "extra_categories"
+    private let voiceLimitNoticeKey = "voice_limit_notice_month"
+    private let noAnswerOfferCountKey = "no_answer_offer_heard_count"
 
     /// How many library question ids the history keeps (#200, founder
     /// 2026-10-12). Only an exclusion list: older ids may come back, which is
@@ -312,6 +333,22 @@ final class PersistenceStore: PersistenceStoreProtocol {
         return history
     }
 
+    // MARK: - Extra categories (#242)
+
+    /// The last list the server answered: names for a saved pick before the
+    /// next fetch arrives.
+    func loadExtraCategories() -> [ExtraCategory] {
+        guard let data = userDefaults.data(forKey: extraCategoriesKey),
+              let categories = try? JSONDecoder().decode([ExtraCategory].self, from: data)
+        else { return [] }
+        return categories
+    }
+
+    func saveExtraCategories(_ categories: [ExtraCategory]) {
+        guard let data = try? JSONEncoder().encode(categories) else { return }
+        userDefaults.set(data, forKey: extraCategoriesKey)
+    }
+
     // MARK: - Family mode (#236)
 
     func loadFamilySettings() -> FamilySettings {
@@ -385,6 +422,26 @@ final class PersistenceStore: PersistenceStoreProtocol {
 
     func incrementSignInPromptShownCount() {
         userDefaults.set(signInPromptShownCount + 1, forKey: signInPromptCountKey)
+    }
+
+    // MARK: - Voice allowance notice
+
+    var voiceLimitNoticeMonth: String? {
+        userDefaults.string(forKey: voiceLimitNoticeKey)
+    }
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String) {
+        userDefaults.set(resetsAt, forKey: voiceLimitNoticeKey)
+    }
+
+    // MARK: - No-answer offer (#243.4)
+
+    var noAnswerOfferHeardCount: Int {
+        userDefaults.integer(forKey: noAnswerOfferCountKey)
+    }
+
+    func incrementNoAnswerOfferHeardCount() {
+        userDefaults.set(noAnswerOfferHeardCount + 1, forKey: noAnswerOfferCountKey)
     }
 }
 

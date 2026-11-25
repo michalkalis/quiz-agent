@@ -40,6 +40,7 @@ from ...usage.tracker import UsageTracker
 from ...usage.ai_grading_cap import bind_ai_grading
 from ...usage.caps import UsageCaps, answer_attempts
 from ...config import get_settings
+from ...extra_categories import exhausted_error, only_extra
 from ...family.rounds import start_family_round
 from ...tts.service import TTSService
 from ...quiz.flow import QuizFlowService, prefetch_question_audio
@@ -202,6 +203,12 @@ async def start_quiz(
                         "pack_id": session.pack_id,
                     },
                 )
+
+            if not question and only_extra(session.preferred_categories):
+                # #242: an extra category the player has played through ends
+                # here, never in the history-reset offer below (the player did
+                # not run out of the library, only of this category).
+                raise exhausted_error()
 
             if not question:
                 logger.error(

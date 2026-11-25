@@ -1,0 +1,159 @@
+{
+ "keep": [
+  "243eb783-d1d9-47de-ae6e-5f6a08c08fed",
+  "e930ae44-d1ad-4086-a2fd-07c03003722b",
+  "46542cd2-8b19-49ed-8f9d-295803ac760d",
+  "399dc8d9-412d-47a3-b1b8-eb58df5c951e",
+  "c1612477-a359-4211-bfd0-0641c1d502b6",
+  "aa760209-3001-4442-8ac5-a5f869c000cd",
+  "e39f514d-2b66-4178-af1a-a59c1148302c",
+  "7e64fd3e-fd28-4a96-9238-95d43c795e83",
+  "86006328-945c-4ac3-ad6b-2338630cb663",
+  "3434b629-95df-4a4f-9546-03808b7e34ea",
+  "c05ee8fc-d089-4905-976d-724deb2f07cf",
+  "d7ceb10c-5bd1-4a42-8b46-cc982b3894d0",
+  "87fca823-990d-4f04-b265-9878078767c9",
+  "583de6fc-9dfd-4858-80f1-fd15ce464ead",
+  "f2f65167-311a-47d2-81e2-48cfd951f928",
+  "e11bbc19-019a-4b4d-8b9b-71abdc08a2d3"
+ ],
+ "drop": [
+  {
+   "id": "5be7fa5b-9a13-4228-9b92-24441774ae23",
+   "why": "Same fact as the live Czech question about the language spoken at Ewa Farna's home (Polish)."
+  },
+  {
+   "id": "533e7750-564d-4bef-a3d9-9b83cde24368",
+   "why": "Same 'česká Lady Soul' fact as the live Rottrová question, and the nickname makes the genre easy to guess."
+  },
+  {
+   "id": "7e5bde49-fa9a-4595-a60f-7096bd169d7c",
+   "why": "Same fact as the live Czech question on which country Marta Jandová's Die Happy comes from."
+  },
+  {
+   "id": "3c8043df-69cc-44a4-83f8-38db1b329360",
+   "why": "Answer is a two-name list that is hard to judge by voice when only one name is given, and the explanation wrongly says Vondráčková and Neckář kept performing together."
+  },
+  {
+   "id": "441d3431-45ca-4a02-b43e-ca84caf8ef90",
+   "why": "Same fact as the live Czech question about Casino Royale being filmed in Karlovy Vary."
+  },
+  {
+   "id": "622aa64d-e0e9-4a8d-b7b8-f275b3375c7e",
+   "why": "Several answers are equally right (fans also mocked his height and looks), so 'what bothered them most' cannot be judged fairly."
+  },
+  {
+   "id": "8848e0dd-add5-4811-a10f-8546e8818641",
+   "why": "'Teenager who wrote it with her brother' gives away Billie Eilish, and a 'youngest ever' record can fall with the next Bond song."
+  },
+  {
+   "id": "a00be15d-7600-46f3-87ac-6be2d246aece",
+   "why": "'Riddles' in the question gives away Riddler/Hádankář, and the claim in the explanation about 'world's greatest detective' is doubtful."
+  }
+ ],
+ "fix": [
+  {
+   "id": "243eb783-d1d9-47de-ae6e-5f6a08c08fed",
+   "field": "question",
+   "new": "František Josef byl ve Vídni císařem a v Budapešti se nechal slavnostně korunovat uherským králem. Kde se ale korunovat nenechal, i když to Čechům opakovaně sliboval?",
+   "why": "'nenechal' is the standard form and matches the first sentence."
+  },
+  {
+   "id": "46542cd2-8b19-49ed-8f9d-295803ac760d",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Empress_Elisabeth_of_Austria",
+   "why": "Wikipedia first; the current excerpt is only a page title."
+  },
+  {
+   "id": "46542cd2-8b19-49ed-8f9d-295803ac760d",
+   "field": "source_excerpt",
+   "new": "While in Greece during her travels at the age of 51 (1888), Elisabeth got a tattoo of an anchor on her shoulder to reflect her love of the sea.",
+   "why": "Excerpt that actually states the fact."
+  },
+  {
+   "id": "aa760209-3001-4442-8ac5-a5f869c000cd",
+   "field": "question",
+   "new": "Jan Opletal, jehož smrt v roce 1939 stojí za Mezinárodním dnem studentstva, nestudoval práva ani filozofii. Na jaké povolání se připravoval?",
+   "why": "Grammar: 'na jaké povolání', not 'na jakého'."
+  },
+  {
+   "id": "aa760209-3001-4442-8ac5-a5f869c000cd",
+   "field": "explanation",
+   "new": "Opletal studoval medicínu na Univerzitě Karlově. Budoucímu lékaři už lékaři po postřelení na demonstraci nedokázali pomoct.",
+   "why": "Grammar: 'na Univerzitě Karlově'."
+  },
+  {
+   "id": "aa760209-3001-4442-8ac5-a5f869c000cd",
+   "field": "source_excerpt",
+   "new": "Hned po skončení vojenské služby se dal Jan Opletal v roce 1936 zapsat na Lékařskou fakultu Univerzity Karlovy.",
+   "why": "Use the actual Czech sentence from the cited cs.wikipedia page."
+  },
+  {
+   "id": "e39f514d-2b66-4178-af1a-a59c1148302c",
+   "field": "question",
+   "new": "Modlitba pro Martu slibuje, že se vláda věcí tvých k tobě, lide, zase navrátí. Ta myšlenka je ale o tři sta let starší. Od kterého slavného Čecha pochází?",
+   "why": "The quoted line was not the real lyric; paraphrase avoids a misquote."
+  },
+  {
+   "id": "e39f514d-2b66-4178-af1a-a59c1148302c",
+   "field": "source_excerpt",
+   "new": "Věřím i já v Bohu, že po přejití vichřic hněvu […] vláda věcí tvých k tobě se zase navrátí, ó lide český! (Komenský, Kšaft umírající matky Jednoty bratrské)",
+   "why": "The excerpt now quotes what the page actually cites."
+  },
+  {
+   "id": "7e64fd3e-fd28-4a96-9238-95d43c795e83",
+   "field": "source_url",
+   "new": "https://cs.wikipedia.org/wiki/Modlitba_pro_Martu",
+   "why": "The ČT24 article does not say she sang Modlitba pro Martu from the balcony; Wikipedia does."
+  },
+  {
+   "id": "7e64fd3e-fd28-4a96-9238-95d43c795e83",
+   "field": "source_excerpt",
+   "new": "Kubišová zpívala Modlitbu z balkonu budovy Melantrichu na Václavském náměstí během demonstrací 22., 23. a 24. listopadu 1989.",
+   "why": "Excerpt that supports both the song and the Melantrich building."
+  },
+  {
+   "id": "c05ee8fc-d089-4905-976d-724deb2f07cf",
+   "field": "question",
+   "new": "Juraj Herz natočil v osmdesátých letech horor o závodním autě Ferat, které má neuvěřitelný výkon. Čím je to auto ve skutečnosti poháněné?",
+   "why": "The film title 'Upír z Feratu' gave away the blood answer."
+  },
+  {
+   "id": "c05ee8fc-d089-4905-976d-724deb2f07cf",
+   "field": "explanation",
+   "new": "Ferat saje krev přímo z řidiče přes pedály, a čím rychleji jede, tím víc jí spotřebuje. Film se proto jmenuje Upír z Feratu a pátrajícího lékaře v něm hraje režisér Jiří Menzel.",
+   "why": "Title moved from the question into the explanation."
+  },
+  {
+   "id": "d7ceb10c-5bd1-4a42-8b46-cc982b3894d0",
+   "field": "explanation",
+   "new": "Kopfrkingl v podání Rudolfa Hrušínského říká ženě Lakmé, podle opery Léa Delibese. Ta sladká něha je tím mrazivější, čím dál příběh pokračuje.",
+   "why": "Grammar: 'tím mrazivější, čím'."
+  },
+  {
+   "id": "583de6fc-9dfd-4858-80f1-fd15ce464ead",
+   "field": "alternative_answers",
+   "new": [
+    "třpytí se",
+    "třpytí se na slunci",
+    "lesknou se",
+    "jiskří",
+    "září",
+    "třpytí se jako diamanty"
+   ],
+   "why": "Drop the vague 'prozradilo by je to', which would accept an answer without the fact; add common spoken variants."
+  },
+  {
+   "id": "f2f65167-311a-47d2-81e2-48cfd951f928",
+   "field": "explanation",
+   "new": "Cedric byl pýchou Mrzimoru, koleje, kterou ostatní často shazovali. Pohár turnaje chytil společně s Harrym, ale na hřbitově ho na Voldemortův rozkaz zabil Červíček, a dodnes je to jedna z nejsmutnějších scén celé série.",
+   "why": "Fact fix: Wormtail (Červíček) killed Cedric on Voldemort's order, not Voldemort himself."
+  },
+  {
+   "id": "e11bbc19-019a-4b4d-8b9b-71abdc08a2d3",
+   "field": "question",
+   "new": "Ve sci-fi Mickey 17 od režiséra Parazita dělá Pattinson na vesmírné misi ty nejnebezpečnější práce a často při nich umírá. Co se s ním po každé smrti stane?",
+   "why": "Two questions in one is confusing when read aloud; keep one."
+  }
+ ]
+}

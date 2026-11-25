@@ -1,0 +1,105 @@
+{
+ "keep": [
+  "54c93c3a-c3f2-458b-8fad-4435f5515dcd",
+  "9f278682-2917-48cb-9855-ea7971aef15b",
+  "73edaec4-a0a8-442a-b438-7bae52e4575e",
+  "84b101c3-1e08-4d3f-b2d3-796d5396a5b5",
+  "43901306-d2a2-4edf-921b-bc62e4c88681",
+  "90922572-e0ce-4fc8-ba6f-95fe5798ba3e",
+  "25490d07-f587-4d65-a649-41f70e00d2ca",
+  "bc337c60-78cc-4b45-809c-1d3a8d0b8b36",
+  "d5dcc2ab-3e4c-4eeb-893a-d7adb8fb3dd9",
+  "6b5cb7cb-8559-4121-a4a4-742214b8c5c5",
+  "fccfbfab-f1c8-45bd-a59b-28345e865fb4"
+ ],
+ "fix": [
+  {
+   "id": "9f278682-2917-48cb-9855-ea7971aef15b",
+   "field": "question",
+   "new": "Šošovicu pre peniaze na prelome roka nejedia len Slováci. V ktorej európskej krajine ju k silvestrovskej večeri tradične podávajú s mastnou bravčovou klobásou, aby drobné zrnká priniesli do domu mince?",
+   "why": "Cotechino with lentils is the New Year's Eve dish; 'novoročná večera' reads as New Year's Day and contradicts the explanation"
+  },
+  {
+   "id": "9f278682-2917-48cb-9855-ea7971aef15b",
+   "field": "alternative_answers",
+   "new": [
+    "v Taliansku"
+   ],
+   "why": "'Itália' is Portuguese, not a Slovak form"
+  },
+  {
+   "id": "9f278682-2917-48cb-9855-ea7971aef15b",
+   "field": "explanation",
+   "new": "Taliani jedia na Silvestra cotechino con lenticchie, teda klobásu so šošovicou. Zrnká im rovnako ako nám pripomínajú mince, takže čím viac ich zješ, tým bohatší rok ťa čaká.",
+   "why": "Informal address (zjete/vás -> zješ/ťa)"
+  },
+  {
+   "id": "9f278682-2917-48cb-9855-ea7971aef15b",
+   "field": "source_excerpt",
+   "new": "Lentils are the common choice on New Year's Eve,",
+   "why": "Excerpt said 'Not checked online'; replaced with verified text from the page"
+  },
+  {
+   "id": "73edaec4-a0a8-442a-b438-7bae52e4575e",
+   "field": "explanation",
+   "new": "Hydina vraj šťastie odnesie, lebo lieta a navyše hrabe dozadu, takže by sa ti celý rok darilo naopak. Bravčové je v poriadku, prasa totiž rýpe dopredu.",
+   "why": "Informal address (vám -> ti)"
+  },
+  {
+   "id": "43901306-d2a2-4edf-921b-bc62e4c88681",
+   "field": "question",
+   "new": "Mnohí si myslia, že Nový rok vítajú prví Novozélanďania. Ešte skôr však oslavujú obyvatelia malého tichomorského ostrovného štátu, ktorý si v roku 1995 posunul dátumovú hranicu. Ktorý štát to je?",
+   "why": "Czech 'kvôli tomu'; 'dátová' is wrong (dátumová); the 1995 date line move was a campaign promise to put the country on one day, not done in order to be first"
+  },
+  {
+   "id": "43901306-d2a2-4edf-921b-bc62e4c88681",
+   "field": "alternative_answers",
+   "new": [
+    "Republika Kiribati"
+   ],
+   "why": "Kiritimati, Vianočný ostrov and Líniové ostrovy are islands, not the state asked for; 'Vianočný ostrov' also matches Australia's Christmas Island"
+  },
+  {
+   "id": "43901306-d2a2-4edf-921b-bc62e4c88681",
+   "field": "explanation",
+   "new": "Na ostrove Kiritimati, ktorý patrí ku Kiribati, je polnoc o 14 hodín skôr ako v Londýne. Takže keď sa tam už oslavuje, na Slovensku je ešte len Silvester dopoludnia.",
+   "why": "UTC+14 midnight is 11:00 in Slovakia, morning not afternoon"
+  },
+  {
+   "id": "43901306-d2a2-4edf-921b-bc62e4c88681",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Kiritimati",
+   "why": "Old excerpt was a paraphrase not on the page; Kiritimati article states both facts"
+  },
+  {
+   "id": "43901306-d2a2-4edf-921b-bc62e4c88681",
+   "field": "source_excerpt",
+   "new": "one of the first inhabited places on Earth to experience New Year's Day ... the Republic of Kiribati realigned the International Date Line in 1995",
+   "why": "Verbatim from the new source"
+  },
+  {
+   "id": "90922572-e0ce-4fc8-ba6f-95fe5798ba3e",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Chalking_the_door",
+   "why": "Was an unofficial Wikipedia mirror; use the original article"
+  },
+  {
+   "id": "90922572-e0ce-4fc8-ba6f-95fe5798ba3e",
+   "field": "source_excerpt",
+   "new": "the Latin blessing Christus mansionem benedicat ('May Christ bless this house')",
+   "why": "Verbatim from the new source"
+  },
+  {
+   "id": "fccfbfab-f1c8-45bd-a59b-28345e865fb4",
+   "field": "question",
+   "new": "Vietnamci oslavujú lunárny Nový rok s takmer rovnakým zverokruhom ako Číňania. Chýba v ňom však zajac. Ktoré domáce zviera je tam namiesto neho?",
+   "why": "False claim of 'one change only': the Vietnamese zodiac also replaces the ox with the water buffalo"
+  }
+ ],
+ "drop": [
+  {
+   "id": "076e3e4d-b2ae-4cc5-b1c8-ca3e2d90136c",
+   "why": "Danish plate custom and its 'many friends' meaning found only in listicles; Danish Wikipedia describes throwing pottery at doors as a former custom to make noise"
+  }
+ ]
+}

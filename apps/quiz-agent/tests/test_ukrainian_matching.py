@@ -69,6 +69,26 @@ def test_tse_is_a_letter_only_as_the_whole_answer():
     assert match_option("це 1971", YEARS) == "c"
 
 
+HISTORY = {"a": "1918", "b": "1991", "c": "2004", "d": "2014"}
+
+
+@pytest.mark.parametrize(
+    "said", ["варіант Це", "Відповідь Це", "мабуть Це", "Я думаю, це Це"]
+)
+def test_tse_after_lead_in_words_is_option_c(said):
+    """#231 review: «варіант Бе» and «варіант Де» picked their options but
+    «варіант Це» did not, because «це» is also a filler. A player naming C the
+    natural way must not be asked again or sent to the judge."""
+    assert match_option(said, HISTORY) == "c"
+
+
+def test_tse_before_a_value_still_picks_by_value():
+    """«це 1991» is "this is 1991": the value decides, never the letter C."""
+    assert match_option("це 1991", HISTORY) == "b"
+    assert match_option("варіант Бе", HISTORY) == "b"
+    assert match_option("варіант Де", HISTORY) == "d"
+
+
 @pytest.mark.parametrize("label", ["A", "B", "C", "D"])
 def test_spoken_letter_label_round_trips_to_its_option(label):
     """What the question audio says for a label must select that option."""

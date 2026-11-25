@@ -80,6 +80,18 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
         return askedQuestionIds
     }
 
+    // MARK: - Extra categories (#242)
+
+    var extraCategories: [ExtraCategory] = []
+
+    func loadExtraCategories() -> [ExtraCategory] {
+        extraCategories
+    }
+
+    func saveExtraCategories(_ categories: [ExtraCategory]) {
+        extraCategories = categories
+    }
+
     // MARK: - Family mode (#236)
 
     var familySettings = FamilySettings()
@@ -125,6 +137,22 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
 
     func incrementSignInPromptShownCount() {
         signInPromptShownCount += 1
+    }
+
+    // MARK: - Voice allowance notice
+
+    var voiceLimitNoticeMonth: String?
+
+    func setVoiceLimitNoticeMonth(_ resetsAt: String) {
+        voiceLimitNoticeMonth = resetsAt
+    }
+
+    // MARK: - No-answer offer (#243.4)
+
+    var noAnswerOfferHeardCount: Int = 0
+
+    func incrementNoAnswerOfferHeardCount() {
+        noAnswerOfferHeardCount += 1
     }
 }
 #endif

@@ -21,6 +21,14 @@ struct RecordingState {
     /// Whether speech has been detected during auto-record (for UI hints)
     var speechDetectedDuringAutoRecord: Bool = false
 
+    /// #243.4: whether the recording that just stopped heard speech at all —
+    /// the empty-answer funnel tells silence from a misunderstanding by it.
+    var stoppedRecordingHeardSpeech: Bool = false
+
+    /// #243.4: the app line spoken right before this recording opened the mic
+    /// — its words in front of the transcript are the app's echo.
+    var recordingEchoLine: String?
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool = false
 
@@ -59,21 +67,24 @@ struct RecordingState {
     /// the SECOND miss must still find the budget used and open the sheet.
     var emptyAnswerRetryQuestionKey: String?
 
+    /// #243.4: the question whose next think window says "Think more."
+    /// instead of "Think." — set when an answer window heard nothing.
+    var thinkMoreQuestionKey: String?
+
+    /// #243.4: the last app line spoken on a question (`questionId ?? ""`),
+    /// taken by the next recording as its `recordingEchoLine`.
+    var lastSpokenLine: (questionKey: String, text: String)?
+
     /// #204.2: the transcripts the player rejected on the current question —
     /// sent with the next upload. Question-scoped for the same reason: the
     /// re-record leaves the recording/processing pair before its upload.
     var rejectedTranscripts = RejectedTranscripts()
 
-    /// #240.9 (founder 2026-11-18): the recording on this question
-    /// (`questionId ?? ""`) ended in silence the phone itself measured, so
-    /// nothing was uploaded and the question offers speak again, type or skip.
-    /// Question-scoped: the prompt lives in `.askingQuestion`, outside the
-    /// recording/processing pair. Cleared when the next recording starts.
-    var silencePromptQuestionKey: String?
-
     /// Drop only the capture-scoped subset (phase exit, decision 8).
     mutating func resetCaptureState() {
         speechDetectedDuringAutoRecord = false
+        stoppedRecordingHeardSpeech = false
+        recordingEchoLine = nil
         isStoppingRecording = false
         backgroundSuppressedRecordingAt = nil
         emptyAnswerRetryHintQuestionKey = nil
@@ -132,11 +143,6 @@ struct ConfirmationState {
     /// sheet, or `nil` when it runs (or is off in Settings).
     var countdownHold: ConfirmationCountdownHold?
 
-    /// #185 5.1: the driver said a new answer on the sheet and it is being
-    /// transcribed — carries the answer it replaces, which comes back if the
-    /// new one turns out to be nothing (or a command word).
-    var spokenReplacement: SpokenReplacement?
-
     /// Car test 2026-10-30: the answer this sheet last read back aloud, `nil`
     /// when nothing was read (muted, empty). Its words are the app's own voice
     /// to the sheet's listener — see RecordingCoordinator+ReadBackEcho.
@@ -151,14 +157,7 @@ enum ConfirmationCountdownHold: String, Sendable, Equatable {
     /// 5.2: the answer is being read back or the mic is still coming up — the
     /// countdown starts once the command listener is live.
     case awaitingListener
-    /// 5.1: someone is speaking; resumes when the utterance ends in nothing.
+    /// Someone is speaking (it may be "again"); resumes when the utterance
+    /// ends in anything else.
     case speech
-    /// 5.3: the driver said "stop". Holds until the sheet closes.
-    case driverStop
-}
-
-/// #185 5.1: a spoken new answer in flight on the sheet.
-struct SpokenReplacement: Sendable, Equatable {
-    /// The answer on the sheet when the driver spoke.
-    let previousAnswer: String
 }

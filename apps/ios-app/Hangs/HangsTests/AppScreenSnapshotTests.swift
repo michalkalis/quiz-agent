@@ -46,6 +46,8 @@ enum AppScreen: String, CaseIterable {
     case homeCredits, homeSubscriber, homeGrace, homeExpired, homePacks, homeCategories
     case myPacks, myPacksLoadFailed
     case dailyEndGood, dailyEndWeak, homeDaily, homeDailyPlayed
+    /// #205.8: the card promising the extra questions, and after finishing with them left.
+    case homeDailyOffer, homeDailyPlayedBonus
     case roomLobbyHost, roomLobbyGuest, roomQuestion, roomQuestionHost, roomReveal, roomRevealTyped, roomRevealPaused, roomFinal, roomFinalExpanded, roomRules, roomRulesLobby, roomLobbyHostFull
     /// #240.9: reading and grading in progress, a cancelled question, a guest at the end, the ranking picture.
     case roomQuestionReading, roomQuestionGrading, roomRevealCancelled, roomFinalGuest, roomRankingShareImage
@@ -55,6 +57,8 @@ enum AppScreen: String, CaseIterable {
     case completionShare, sharedQuizRanking, homeSharedPaste, roomContentPicker
     /// #236: Home in the family mode „S deťmi“ per age band, and the age sheet.
     case homeFamily46, homeFamily79, homeFamily1012, familyBandSheet
+    /// "No sound" (founder 2026-11-22): Home with the switch on, a silent question.
+    case homeSilent, questionSilent, questionSilentMCQ
 
     /// Settings is a long scroll view; a device-height frame would freeze only its
     /// first screenful, so it renders on a tall canvas instead — tall enough for
@@ -76,7 +80,7 @@ private func buildTextContract(of screen: AppScreen, in language: HeroLanguage) 
     let view = await screen.make()
     let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 
-    var lines: [String] = ["# texts"]
+    var lines = ["# texts"]
     try await ViewHosting.host(view, function: "\(screen.rawValue)-\(language.rawValue)") {
         let tree = try view.inspect()
         for text in tree.findAll(ViewType.Text.self) {

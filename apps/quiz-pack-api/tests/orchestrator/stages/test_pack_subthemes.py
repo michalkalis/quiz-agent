@@ -58,7 +58,7 @@ def _question(
         question=text or f"fact{n} alpha{n}x beta{n}y?",
         correct_answer=answer or f"answer{n}",
         topic=topic or f"label {n}",
-        category="general",
+        category="history",  # a real id: the stage drops `general` (2026-11-21)
         difficulty="medium",
     )
 

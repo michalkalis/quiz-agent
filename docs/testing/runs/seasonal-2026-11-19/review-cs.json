@@ -1,0 +1,101 @@
+{
+ "keep": [
+  "78620862-e410-404e-9af8-c2a5a59b5659",
+  "5712de3e-dd8e-47a8-bff4-8aa569016e08",
+  "585c50ae-45c5-463c-9d3b-9079a40f6224",
+  "04a9736a-c00d-45df-9d27-5ab0824a7448",
+  "9e3cf0f6-1a2a-4d5e-a713-70709ba94dfc",
+  "e62968df-4acd-4c6f-ba24-adcc5216328d",
+  "588d9d10-4f07-4baf-b5b4-5fb1b8358b89",
+  "74b7d99b-098f-432f-8c03-edfff28836e0",
+  "f05f56b9-ae23-4790-8206-f6d7bdde8acc",
+  "a4caf45c-dcb9-4335-8d2c-34d363073fab"
+ ],
+ "fix": [
+  {
+   "id": "585c50ae-45c5-463c-9d3b-9079a40f6224",
+   "field": "source_excerpt",
+   "new": "In Buddhism, there are 108 sins known as kleshas or bonnou (煩悩) in Japanese.",
+   "why": "Old excerpt is not on the page; verbatim text that supports the fact"
+  },
+  {
+   "id": "04a9736a-c00d-45df-9d27-5ab0824a7448",
+   "field": "alternative_answers",
+   "new": [
+    "Kiribatská republika"
+   ],
+   "why": "Kiritimati and Vánoční ostrov are islands, not the country asked for; 'Vánoční ostrov' also matches Australia's Christmas Island"
+  },
+  {
+   "id": "04a9736a-c00d-45df-9d27-5ab0824a7448",
+   "field": "explanation",
+   "new": "Její Liniové ostrovy mají čas posunutý o čtrnáct hodin před Greenwichem, nejvíc na světě. Mezi prvními slaví ostrov Kiritimati, česky známý jako Vánoční ostrov.",
+   "why": "Czech name is 'Liniové ostrovy'; Kiritimati shares UTC+14 with the other Line Islands, so 'among the first'"
+  },
+  {
+   "id": "04a9736a-c00d-45df-9d27-5ab0824a7448",
+   "field": "source_url",
+   "new": "https://cs.wikipedia.org/wiki/Liniov%C3%A9_ostrovy",
+   "why": "Old excerpt not on the English page; Czech article states it directly"
+  },
+  {
+   "id": "04a9736a-c00d-45df-9d27-5ab0824a7448",
+   "field": "source_excerpt",
+   "new": "Ostrovy patřící Kiribati se nacházejí v UTC+14, což je časové pásmo, kde nejdříve začíná nový den.",
+   "why": "Verbatim from the new source"
+  },
+  {
+   "id": "9e3cf0f6-1a2a-4d5e-a713-70709ba94dfc",
+   "field": "alternative_answers",
+   "new": [
+    "Den",
+    "Den se prodlužuje",
+    "Světla",
+    "Denního světla",
+    "Délky dne",
+    "Dny se prodlužují"
+   ],
+   "why": "Spoken answer will often be the nominative 'den'"
+  },
+  {
+   "id": "588d9d10-4f07-4baf-b5b4-5fb1b8358b89",
+   "field": "question",
+   "new": "Koledníci píšou křídou na dveře K+M+B a k tomu letopočet. Většina lidí v tom vidí jména Kašpar, Melichar a Baltazar. Písmena jsou ale zároveň zkratkou latinské věty. Co ta věta přeje?",
+   "why": "Which meaning came first is disputed; sources give both readings, not 'původně'"
+  },
+  {
+   "id": "588d9d10-4f07-4baf-b5b4-5fb1b8358b89",
+   "field": "explanation",
+   "new": "Latinsky „Christus mansionem benedicat“, tedy Kristus ať žehná tomuto domu. Nápis je požehnání na celý rok.",
+   "why": "Removed the unsupported claim that the match with the kings' initials is a coincidence"
+  },
+  {
+   "id": "a4caf45c-dcb9-4335-8d2c-34d363073fab",
+   "field": "question",
+   "new": "Čínský zvěrokruh má dvanáct zvířat, ale jedno, které chová doma spousta Čechů, v něm chybí. Podle legendy ho krysa nevzbudila na závod, ve kterém se o místa soupeřilo. Které zvíře to je?",
+   "why": "Versions differ (rat forgot vs. did it on purpose); 'schválně' dropped so it holds for both"
+  },
+  {
+   "id": "a4caf45c-dcb9-4335-8d2c-34d363073fab",
+   "field": "source_url",
+   "new": "https://www.royalmint.com/stories/commemorate/the-story-of-the-animals-behind-the-chinese-zodiac-the-rat-and-the-cat/",
+   "why": "Wikipedia tells the push-into-the-river version; old excerpt was not on it"
+  },
+  {
+   "id": "a4caf45c-dcb9-4335-8d2c-34d363073fab",
+   "field": "source_excerpt",
+   "new": "But, when the day came, Rat forgot all about his promise.",
+   "why": "Verbatim from the new source"
+  }
+ ],
+ "drop": [
+  {
+   "id": "e6215751-a42b-4b28-b9b7-3d67d198bb39",
+   "why": "Duplicate of live cs question on Silvestr (pope who died 31 Dec 335)"
+  },
+  {
+   "id": "f2a6d710-5236-4988-831b-2758a1c1953e",
+   "why": "Danish plate custom and its 'many friends' meaning found only in listicles; Danish Wikipedia describes throwing pottery at doors as a former custom to make noise"
+  }
+ ]
+}

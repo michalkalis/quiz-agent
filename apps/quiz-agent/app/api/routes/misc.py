@@ -24,6 +24,7 @@ from ...retrieval.question_retriever import QuestionRetriever
 from ...usage.tracker import UsageTracker
 from ...usage.caps import STT_TOKENS, DailyCapExceeded, UsageCaps
 from ...config import get_settings
+from ...extra_categories import check_extra_request, exhausted_error, only_extra
 from ...rate_limit import limiter
 from quiz_shared.models.session import QuizSession
 
@@ -173,6 +174,7 @@ async def get_question_availability(
     question_retriever: QuestionRetriever = Depends(get_question_retriever),
     usage_tracker: Optional[UsageTracker] = Depends(get_usage_tracker),
     subject: AuthSubject = Depends(require_auth_or_grace),
+    auth_sessionmaker=Depends(get_auth_sessionmaker),
 ):
     """How many unseen questions this configuration still has (#174 finding 1).
 
@@ -187,6 +189,12 @@ async def get_question_availability(
     # A throwaway session is the input `_build_metadata_filters` takes, and
     # routing through it is what keeps this count honest: the eligibility can
     # never drift from what the retriever actually serves with. Not persisted.
+    await check_extra_request(
+        body.categories or ([body.category] if body.category else []),
+        body.language,
+        get_settings(),
+        auth_sessionmaker,
+    )
     probe = QuizSession(
         session_id="availability-probe",
         max_questions=body.requested_count,
@@ -207,6 +215,11 @@ async def get_question_availability(
     available = await question_retriever.count_available(
         probe, client_excluded_ids=body.excluded_question_ids
     )
+    # #242: an extra-only request that has nothing unplayed left gets the
+    # coded end instead of the shorter-set / history-reset offer (the player
+    # ran out of one category, not of the library).
+    if only_extra(probe.preferred_categories) and available == 0:
+        raise exhausted_error()
     limited_by = None
     if available < body.requested_count:
         limited_by = "corpus"

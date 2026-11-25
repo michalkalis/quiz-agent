@@ -8,7 +8,8 @@
 //  revealed answer + explanation, chunked per question and played
 //  sequentially. Auto-starts on recap appear — auto-record, the app's
 //  hands-free signal, is always on since #200 — and never while muted (mute
-//  wins everywhere TTS starts, #85).
+//  wins everywhere TTS starts, #85). #243 decision 5: the round-end line
+//  ("Hotovo, 7 z 10. Znova, alebo domov?") follows the read.
 //
 
 import Foundation
@@ -33,8 +34,13 @@ extension QuizViewModel {
     /// číta nahlas". Its hands-free proxy, auto-record, is always on (#200);
     /// muted drivers read the list instead.
     func autoPlayRecapIfHandsFree() {
-        guard autoReadsRecap, !isAudioMuted else { return }
+        guard recapReadsItself else { return }
         playRecapSummary()
+    }
+
+    /// Whether the recap will read its summary by itself when it opens.
+    var recapReadsItself: Bool {
+        autoReadsRecap && !isAudioMuted
     }
 
     func playRecapSummary() {
@@ -46,13 +52,18 @@ extension QuizViewModel {
             let outcome = await narrate(chunks: chunks)
             isNarratingRecap = false
             noteRecapRead(.recapSummary, outcome)
+            guard !Task.isCancelled else { return }
+            await resumeRoundEndAfterRecapRead()
         }, key: .recapNarration)
     }
 
     func stopRecapNarration() {
         taskBag.cancel(.recapNarration)
         isNarratingRecap = false
-        Task { await audioDeviceState.stopAnyPlayingAudio() }
+        Task {
+            await audioDeviceState.stopAnyPlayingAudio()
+            await resumeRoundEndAfterRecapRead()
+        }
     }
 
     /// Row-level "hear it": speak one entry's explanation. Replaces any
@@ -64,6 +75,8 @@ extension QuizViewModel {
             guard let self else { return }
             let outcome = await narrate(chunks: Self.splitForTTS(explanation))
             noteRecapRead(.recapEntry(entry.id), outcome)
+            guard !Task.isCancelled else { return }
+            await resumeRoundEndAfterRecapRead()
         }, key: .recapNarration)
     }
 
@@ -75,7 +88,9 @@ extension QuizViewModel {
     }
 
     /// Sequential fetch-and-play. A failed chunk is logged and skipped — one
-    /// transient TTS failure must not silence the rest of the summary.
+    /// transient TTS failure must not silence the rest of the summary. Played
+    /// as app speech (#243 decision 5): the round end listens for commands,
+    /// and the read must never reach a live mic.
     private func narrate(chunks: [String]) async -> ReadAloudOutcome {
         var outcome = ReadAloudOutcome()
         for chunk in chunks {
@@ -85,7 +100,7 @@ extension QuizViewModel {
                     text: chunk, language: currentSession?.language ?? settings.language
                 )
                 guard !Task.isCancelled else { return outcome }
-                _ = try await audioService.playOpusAudio(audio)
+                await audioDeviceState.playAppSpeech(audio)
                 outcome.played = true
             } catch is CancellationError {
                 return outcome

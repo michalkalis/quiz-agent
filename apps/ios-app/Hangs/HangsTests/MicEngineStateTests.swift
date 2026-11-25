@@ -185,7 +185,10 @@ struct MicEngineStateTests {
         await vm.recordingCoordinator.startRecording()
         audio.onPlaybackStarted = { [weak vm] in vm?.enterPause() } // pressed while the prompt plays
 
-        await vm.recordingCoordinator.stopRecordingAndSubmit() // nothing was said
+        // #243.4: heard but not understood — only that miss speaks the retry
+        // line (a silent window goes back to thinking instead).
+        vm.recordingCoordinator.noteSpeechStarted()
+        await vm.recordingCoordinator.stopRecordingAndSubmit()
 
         await pumpUntil({ vm.isPaused && !vm.recordingCoordinator.isSpeakingRetryPrompt }, "the retry prompt never played")
         await drain()

@@ -18,7 +18,8 @@ enum AnalyticsEvent: Equatable {
     case onboardingFinished(outcome: OnboardingOutcome, step: String)
     /// `timezone` is the IANA identifier: `occurred_at` is UTC, so the local
     /// time of day a player plays at needs it (#213.1).
-    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false)
+    /// `silentMode` (founder 2026-11-22): the quiz ran without any sound.
+    case quizContext(audioRoute: AudioRouteKind, voiceCommandsEnabled: Bool, entryPoint: QuizEntryPoint, timezone: String, quickGame: Bool = false, silentMode: Bool = false)
     /// #240.9: `reason` = how the round was left, `question` = the 1-based
     /// question on screen.
     case quizAbandoned(questionsAnswered: Int, phase: String, reason: QuizLeaveReason, question: Int)
@@ -29,7 +30,14 @@ enum AnalyticsEvent: Equatable {
     case answerCaptured(AnswerCapturedReport)
     /// #204.9: the app turned an experiment arm off on this device.
     case voiceExperimentGuard(flag: VoiceExperimentFlag, fromRoute: String, toRoute: String, expGen: Int)
-    case voiceCommand(command: VoiceCommand, phase: String)
+    /// A command fired. `language` = the command language (sk / cs / en / uk);
+    /// `path` = which result fired it (final, volatile-repeat, volatile-settle,
+    /// alternative); `speechEndMs` = end of speech → fire, nil when no end of
+    /// speech was seen. Founder 2026-11-22: with `voice_command_window`, this
+    /// answers whether sk and cs are recognised worse than en, per command.
+    case voiceCommand(command: VoiceCommand, phase: String, language: String? = nil, path: String? = nil, speechEndMs: Int? = nil)
+    /// One closed listening window of the command recognizer.
+    case voiceCommandWindow(CommandWindowReport)
     /// #237: the player turned voice commands on — where, and what iOS
     /// answered the speech-recognition request.
     case voiceCommandsTurnedOn(source: VoiceCommandsSource, result: VoiceCommandsPermissionResult)
@@ -63,8 +71,20 @@ enum AnalyticsEvent: Equatable {
     case homeCategoryStepped(direction: CategoryCycle.Direction, input: CategoryStepInput, to: String)
     /// #224.6: the multi-category picker opened, from the deck's button or the pill.
     case homeCategoryPickerOpened(source: CategoryPickerSource)
+    /// TF build 90 (C1): the result's "Show question" sheet opened.
+    case resultQuestionOpened(kind: ResultQuestionKind, verdict: ResultQuestionVerdict)
     /// #224.8: the Home "Quick quiz" switch was flipped.
     case quickGameChanged(enabled: Bool)
+    /// The Home "No sound" switch was flipped (founder 2026-11-22).
+    case silentModeChanged(enabled: Bool)
+    /// TestFlight build 90 feedback: Settings opened from the gear on Home.
+    case homeSettingsOpened
+    /// Free tier split (2026-11-21): the once-a-month "voice answers used up"
+    /// notice came on the question screen. Its Plus link is `paywallViewed`
+    /// with source `voice_limit`.
+    case voiceLimitNoticeShown
+    /// TestFlight build 90 feedback: the round length was changed on Home.
+    case homeRoundLengthChanged(questions: Int)
     /// #224.8: a question was skipped (button or voice); `quick` = the quick quiz was on.
     case questionSkipped(quick: Bool)
     /// #233: the custom pack topic check before payment; `verdict` is
@@ -81,6 +101,8 @@ enum AnalyticsEvent: Equatable {
     case familyTopicSelected(band: FamilyBand, topic: String)
     /// #236: `/start` answered `family_topic_empty`; Home hid the topic.
     case familyTopicEmpty(band: FamilyBand, topic: String)
+    /// #242: a quiz started with a free rotating extra category selected.
+    case extraCategoryQuizStarted(category: String)
     case roomSettingsChanged(setting: RoomSettingKind, value: String, surface: RoomSettingsSurface)
 
     var name: String {
@@ -94,6 +116,7 @@ enum AnalyticsEvent: Equatable {
         case .answerCaptured: "answer_captured"
         case .voiceExperimentGuard: "voice_experiment_guard"
         case .voiceCommand: "voice_command"
+        case .voiceCommandWindow: "voice_command_window"
         case .voiceCommandsTurnedOn: "voice_commands_turned_on"
         case .paywallViewed: "paywall_viewed"
         case .purchaseResult: "purchase_result"
@@ -111,7 +134,12 @@ enum AnalyticsEvent: Equatable {
         case .roomRankingShared: "room_ranking_shared"
         case .homeCategoryStepped: "home_category_stepped"
         case .homeCategoryPickerOpened: "home_category_picker_opened"
+        case .resultQuestionOpened: "result_question_opened"
         case .quickGameChanged: "quick_game_changed"
+        case .silentModeChanged: "silent_mode_changed"
+        case .homeSettingsOpened: "home_settings_opened"
+        case .voiceLimitNoticeShown: "voice_limit_notice_shown"
+        case .homeRoundLengthChanged: "home_round_length_changed"
         case .questionSkipped: "question_skipped"
         case .packTopicChecked: "pack_topic_checked"
         case .sharedQuizPasted: "shared_quiz_pasted"
@@ -119,6 +147,7 @@ enum AnalyticsEvent: Equatable {
         case .familyBandSelected: "family_band_selected"
         case .familyTopicSelected: "family_topic_selected"
         case .familyTopicEmpty: "family_topic_empty"
+        case .extraCategoryQuizStarted: "extra_category_quiz_started"
         }
     }
 
@@ -129,13 +158,14 @@ enum AnalyticsEvent: Equatable {
             [("launch", .string(launch.rawValue))]
         case let .onboardingFinished(outcome, step):
             [("outcome", .string(outcome.rawValue)), ("step", .string(step))]
-        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame):
+        case let .quizContext(audioRoute, voiceCommandsEnabled, entryPoint, timezone, quickGame, silentMode):
             [
                 ("audio_route", .string(audioRoute.rawValue)),
                 ("voice_commands_enabled", .bool(voiceCommandsEnabled)),
                 ("entry_point", .string(entryPoint.rawValue)),
                 ("timezone", .string(timezone)),
                 ("quick_game", .bool(quickGame)),
+                ("silent_mode", .bool(silentMode)),
             ]
         case let .quizAbandoned(questionsAnswered, phase, reason, question):
             [
@@ -163,8 +193,16 @@ enum AnalyticsEvent: Equatable {
                 ("to_route", .string(toRoute)),
                 ("exp_gen", .int(expGen)),
             ]
-        case let .voiceCommand(command, phase):
-            [("command", .string(command.rawValue)), ("phase", .string(phase))]
+        case let .voiceCommand(command, phase, language, path, speechEndMs):
+            [
+                ("command", .string(command.rawValue)),
+                ("phase", .string(phase)),
+                ("language", language.map { .string($0) }),
+                ("path", path.map { .string($0) }),
+                ("speech_end_ms", speechEndMs.map { .int($0) }),
+            ]
+        case let .voiceCommandWindow(report):
+            report.propertyPairs
         case let .voiceCommandsTurnedOn(source, result):
             [("source", .string(source.rawValue)), ("result", .string(result.rawValue))]
         case let .paywallViewed(source):
@@ -186,8 +224,10 @@ enum AnalyticsEvent: Equatable {
             [("has_account", .bool(hasAccount))]
         case let .recapShared(kind):
             [("kind", .string(kind))]
-        case .togetherOpened, .playerNameChanged:
+        case .togetherOpened, .playerNameChanged, .homeSettingsOpened, .voiceLimitNoticeShown:
             []
+        case let .homeRoundLengthChanged(questions):
+            [("questions", .int(questions))]
         case let .roomPauseChanged(paused, question):
             [("paused", .bool(paused)), ("question", .int(question))]
         case let .roomGuestReadAloud(on, via):
@@ -200,7 +240,11 @@ enum AnalyticsEvent: Equatable {
             [("direction", .string(direction.rawValue)), ("input", .string(input.rawValue)), ("to", .string(to))]
         case let .homeCategoryPickerOpened(source):
             [("source", .string(source.rawValue))]
+        case let .resultQuestionOpened(kind, verdict):
+            [("kind", .string(kind.rawValue)), ("verdict", .string(verdict.rawValue))]
         case let .quickGameChanged(enabled):
+            [("enabled", .bool(enabled))]
+        case let .silentModeChanged(enabled):
             [("enabled", .bool(enabled))]
         case let .questionSkipped(quick):
             [("quick", .bool(quick))]
@@ -214,6 +258,8 @@ enum AnalyticsEvent: Equatable {
             [("band", .string(band.rawValue)), ("first_time", .bool(firstTime))]
         case let .familyTopicSelected(band, topic), let .familyTopicEmpty(band, topic):
             [("band", .string(band.rawValue)), ("topic", .string(topic))]
+        case let .extraCategoryQuizStarted(category):
+            [("category", .string(category))]
         case let .roomSettingsChanged(setting, value, surface):
             [("setting", .string(setting.rawValue)), ("value", .string(value)), ("surface", .string(surface.rawValue))]
         }
@@ -257,6 +303,17 @@ enum CategoryStepInput: String {
 enum CategoryPickerSource: String {
     case deckButton = "deck_button"
     case pill
+}
+
+enum ResultQuestionKind: String {
+    case open
+    case mcq
+}
+
+enum ResultQuestionVerdict: String {
+    case correct
+    case incorrect
+    case skipped
 }
 
 enum AppLaunchKind: String {
@@ -352,10 +409,6 @@ enum VoiceCaptureFailure: String {
     case recorderFailed = "recorder_failed"
     /// #240: the microphone is refused in iOS Settings, so no recording was started.
     case micDenied = "mic_denied"
-    /// #240.9: the phone measured silence for the whole window to start
-    /// speaking; nothing was uploaded and the player was offered speak, type
-    /// or skip. Not counted as an answer attempt.
-    case silent
 }
 
 /// #240.9: how the player left a round before its end.
@@ -375,6 +428,8 @@ enum PaywallSource: String {
     case profile
     case settings
     case completion
+    /// 2026-11-21: the Plus link in the "voice answers used up" notice.
+    case voiceLimit = "voice_limit"
 }
 
 enum PurchaseKind: String {

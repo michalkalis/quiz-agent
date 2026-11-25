@@ -97,14 +97,14 @@ struct VoiceHearingFeedbackTests {
 
     // MARK: - Recognizing
 
-    @Test("A destructive command on a volatile shows recognizing with the command, then the final fires matched")
+    @Test("A final-only command ('next') on a volatile shows recognizing with the command, then the final fires matched")
     func awaitingFinalThenMatched() async {
         let (_, coordinator, _, _) = make()
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: false))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
         #expect(coordinator.voiceFeedbackPhase == .recognizing)
-        #expect(coordinator.recognizingCommand == .skip)
+        #expect(coordinator.recognizingCommand == .next)
 
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: true))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: true))
         #expect(coordinator.voiceFeedbackPhase == .matched)
         #expect(coordinator.recognizingCommand == nil, "recognizingCommand is non-nil only while recognizing")
     }
@@ -112,7 +112,7 @@ struct VoiceHearingFeedbackTests {
     @Test("A final that matches nothing does not leave recognizing stuck")
     func finalUnmatchedNotStuck() async {
         let (_, coordinator, _, _) = make()
-        await coordinator.handleCommandTranscript(CommandTranscript(text: "skip", isFinal: false))
+        await coordinator.handleCommandTranscript(CommandTranscript(text: "next", isFinal: false))
         await coordinator.handleCommandTranscript(CommandTranscript(text: "completely unrelated words", isFinal: true))
         #expect(coordinator.voiceFeedbackPhase != .recognizing)
         #expect(coordinator.recognizingCommand == nil)
@@ -121,7 +121,7 @@ struct VoiceHearingFeedbackTests {
     @Test("Recognizing self-clears at 3.0 s")
     func recognizingAutoClears() async {
         let (_, coordinator, _, clock) = make()
-        coordinator.noteRecognizingForFeedback(.skip)
+        coordinator.noteRecognizingForFeedback(.next)
         await Task.yield()
         await clock.advance(by: .milliseconds(2990))
         #expect(coordinator.voiceFeedbackPhase == .recognizing)
@@ -134,7 +134,7 @@ struct VoiceHearingFeedbackTests {
     func precedenceAndReset() {
         let (_, coordinator, _, _) = make()
         coordinator.noteSpeechStartedForFeedback()
-        coordinator.noteRecognizingForFeedback(.skip)
+        coordinator.noteRecognizingForFeedback(.next)
         #expect(coordinator.voiceFeedbackPhase == .recognizing)
         coordinator.noteSpeechStartedForFeedback()
         #expect(coordinator.voiceFeedbackPhase == .recognizing, "hearing lights only from idle")
@@ -143,7 +143,7 @@ struct VoiceHearingFeedbackTests {
         #expect(coordinator.voiceFeedbackPhase == .unmatched)
         #expect(coordinator.recognizingCommand == nil)
 
-        coordinator.noteRecognizingForFeedback(.skip)
+        coordinator.noteRecognizingForFeedback(.next)
         coordinator.resetFeedbackGlow()
         #expect(coordinator.voiceFeedbackPhase == .idle)
         #expect(coordinator.recognizingCommand == nil)
@@ -151,7 +151,7 @@ struct VoiceHearingFeedbackTests {
 
     @Test("The caption quotes the command word in the command language")
     func captionLanguage() {
-        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .english) == "\"next\"…")
-        #expect(VoiceCommandLexicon.recognizingCaption(.skip, language: .slovak) == "„ďalšia“…")
+        #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .english) == "\"next\"…")
+        #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .slovak) == "„ďalšia“…")
     }
 }

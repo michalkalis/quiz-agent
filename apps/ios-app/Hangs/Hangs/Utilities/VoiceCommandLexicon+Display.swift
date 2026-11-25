@@ -20,83 +20,69 @@ extension VoiceCommandLexicon {
         language: CommandLanguage = .english
     ) -> String {
         switch (language, command) {
-        case (.english, .start): return "start"
-        case (.english, .ok): return "ok"
+        case (.english, .answer): return "answer"
         case (.english, .next): return "next"
-        case (.english, .again): return "again"
         case (.english, .repeatQuestion): return "repeat"
-        case (.english, .skip): return "next"
-        case (.english, .stop): return "stop"
-        case (.english, .pause): return "pause"
+        case (.english, .again): return "again"
         case (.english, .home): return "home"
-        case (.slovak, .start): return "štart"
-        case (.slovak, .ok): return "potvrď"
-        case (.slovak, .next): return "ďalej"
-        case (.slovak, .again): return "znova"
+        case (.slovak, .answer): return "odpovedz"
+        case (.slovak, .next): return "ďalšia"
         case (.slovak, .repeatQuestion): return "zopakuj"
-        case (.slovak, .skip): return "ďalšia"
-        // #185 5.3: "stop" only holds the countdown now; "zruš" is no longer
-        // a voice command (the Cancel button stays a button).
-        case (.slovak, .stop): return "stop"
-        case (.slovak, .pause): return "pauza"
+        case (.slovak, .again): return "znova"
         case (.slovak, .home): return "domov"
-        case (.czech, .start): return "start"
-        case (.czech, .ok): return "potvrď"
-        case (.czech, .next): return "dál"
-        case (.czech, .again): return "znovu"
+        case (.czech, .answer): return "odpověz"
+        case (.czech, .next): return "další"
         case (.czech, .repeatQuestion): return "zopakuj"
-        case (.czech, .skip): return "další"
-        case (.czech, .stop): return "stop"
-        case (.czech, .pause): return "pauza"
+        case (.czech, .again): return "znovu"
         case (.czech, .home): return "domů"
-        case (.ukrainian, .start): return "старт"
-        case (.ukrainian, .ok): return "підтверди"
-        case (.ukrainian, .next): return "далі"
-        case (.ukrainian, .again): return "ще раз"
+        case (.ukrainian, .answer): return "відповідай"
+        case (.ukrainian, .next): return "пропусти"
         case (.ukrainian, .repeatQuestion): return "повтори"
-        case (.ukrainian, .skip): return "пропусти"
-        case (.ukrainian, .stop): return "стоп"
-        case (.ukrainian, .pause): return "пауза"
+        case (.ukrainian, .again): return "ще раз"
         case (.ukrainian, .home): return "додому"
         }
     }
 
     /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
     /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
-    /// commands. #105: the question screen must advertise "start" — it is what
-    /// begins answer recording. Rendered in the COMMAND language (#120), which
+    /// commands. #105: the question screen must advertise the answer word — it
+    /// is what begins answer recording. Rendered in the COMMAND language (#120), which
     /// is independent of the app/quiz language.
     static func hint(
         on screen: VoiceCommandScreen,
         language: CommandLanguage = .english
     ) -> String {
         switch (language, screen) {
-        case (.english, .question): return #"Say "start" or "next""#
-        // #174: names the words printed on the sheet's buttons (Confirm / Again).
-        // #189 founder feedback (2026-09-29): the previous wording ("say the
-        // answer again") never actually said the word "again" — quote both
-        // button words, then name the fallback (a new answer covers anything
-        // else spoken on the sheet, per #185 5.1 D1 2026-09-25).
-        case (.english, .confirmation): return #"Say "confirm", "again" or a new answer"#
-        // #185: the no-answer sheet's buttons are Again / Next.
-        case (.english, .noAnswer): return #"Say "again" or "next""#
-        case (.english, .error): return #"Say "again" or "stop""#
+        // Founder 2026-11-22: the Answer button's word, not "start".
+        case (.english, .question): return #"Say "answer" or "next""#
+        // #189 founder feedback (2026-09-29): quote the word. Silence confirms
+        // (founder 2026-11-22); #243.5: "again" is all the sheet listens for.
+        case (.english, .confirmation): return #"Say "again""#
+        // #185: the no-answer sheet's buttons are Again / Next; #243.4 adds
+        // the way back to the question, in the offer line's order.
+        case (.english, .noAnswer): return #"Say "repeat", "again" or "next""#
+        case (.english, .error): return #"Say "again""#
+        // #243 decision 5: the round end's two words.
         case (.english, .setEnd): return #"Say "again" or "home""#
-        case (.slovak, .question): return "Povedz „štart“ alebo „ďalšia“"
-        case (.slovak, .confirmation): return "Povedz „potvrď“, „znova“ alebo novú odpoveď"
-        case (.slovak, .noAnswer): return "Povedz „znova“ alebo „ďalšia“"
-        case (.slovak, .error): return "Povedz „znova“ alebo „stop“"
+        case (.english, .result): return #"Say "next""#
+        case (.slovak, .question): return "Povedz „odpovedz“ alebo „ďalšia“"
+        case (.slovak, .confirmation): return "Povedz „znova“"
+        case (.slovak, .noAnswer): return "Povedz „zopakuj“, „znova“ alebo „ďalšia“"
+        case (.slovak, .error): return "Povedz „znova“"
         case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
-        case (.czech, .question): return "Řekni „start“ nebo „další“"
-        case (.czech, .confirmation): return "Řekni „potvrď“, „znovu“ nebo novou odpověď"
-        case (.czech, .noAnswer): return "Řekni „znovu“ nebo „další“"
-        case (.czech, .error): return "Řekni „znovu“ nebo „stop“"
+        case (.slovak, .result): return "Povedz „ďalšia“"
+        case (.czech, .question): return "Řekni „odpověz“ nebo „další“"
+        case (.czech, .confirmation): return "Řekni „znovu“"
+        case (.czech, .noAnswer): return "Řekni „zopakuj“, „znovu“ nebo „další“"
+        case (.czech, .error): return "Řekni „znovu“"
         case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
-        case (.ukrainian, .question): return "Скажи «старт» або «пропусти»"
-        case (.ukrainian, .confirmation): return "Скажи «підтверди», «ще раз» або нову відповідь"
-        case (.ukrainian, .noAnswer): return "Скажи «ще раз» або «пропусти»"
-        case (.ukrainian, .error): return "Скажи «ще раз» або «стоп»"
+        case (.czech, .result): return "Řekni „další“"
+        case (.ukrainian, .question): return "Скажи «відповідай» або «пропусти»"
+        case (.ukrainian, .confirmation): return "Скажи «ще раз»"
+        case (.ukrainian, .noAnswer): return "Скажи «повтори», «ще раз» або «пропусти»"
+        case (.ukrainian, .error): return "Скажи «ще раз»"
         case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
+        case (.ukrainian, .result): return "Скажи «пропусти»"
         }
     }
 
@@ -104,8 +90,8 @@ extension VoiceCommandLexicon {
     /// quoted chips — the question screen renders them in a row under the bar's
     /// caption instead of in one sentence. Takes the commands explicitly rather
     /// than a screen, because the question screen shows a DIFFERENT subset per
-    /// bar state (no "start" while the question is still being read — saying it
-    /// there would cut the read off mid-sentence).
+    /// bar state (no "answer" while the question is still being read — saying
+    /// it there would cut the read off mid-sentence).
     ///
     /// Quoting follows the language's own convention, exactly as the sentence
     /// form does, so the two never look like two different features.
@@ -196,6 +182,20 @@ extension VoiceCommandLexicon {
         case .english: return "\"\(word)\"…"
         case .slovak, .czech: return "„\(word)“…"
         case .ukrainian: return "«\(word)»…"
+        }
+    }
+
+    /// "What the app hears" (founder 2026-11-22): the quiet label naming the
+    /// command the words in progress resemble — always the screen language's
+    /// own word, never what the recognizer wrote. Lowercase where the language
+    /// allows, and the same for every player. Verbatim, never localized.
+    static func heardCaption(_ command: VoiceCommand, language: CommandLanguage = .english) -> String {
+        let word = spokenWord(command, language: language)
+        switch language {
+        case .english: return "I hear: “\(word)”"
+        case .slovak: return "počujem: „\(word)“"
+        case .czech: return "slyším: „\(word)“"
+        case .ukrainian: return "чую: «\(word)»"
         }
     }
 }

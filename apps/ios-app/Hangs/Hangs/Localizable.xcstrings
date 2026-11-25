@@ -2600,29 +2600,6 @@
         }
       }
     },
-    "Answer by voice" : {
-      "comment" : "Button on a multiple-choice question after silence: opens the mic again (#240.9)",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odpověz hlasem"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odpovedz hlasom"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відповідай голосом"
-          }
-        }
-      }
-    },
     "Answer locked" : {
       "comment" : "Hra spolu (#212)",
       "localizations" : {
@@ -3546,6 +3523,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Купи набір зі 100 питань за %@"
+          }
+        }
+      }
+    },
+    "By voice: %lld of %lld left" : {
+      "comment" : "Profile plan card: voice answers left this month out of the monthly voice limit (free plan)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasem: ještě %1$lld z %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By voice: %1$lld of %2$lld left"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasom: ešte %1$lld z %2$lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Голосом: ще %1$lld з %2$lld"
           }
         }
       }
@@ -5305,19 +5311,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozuměl jsem"
+            "value" : "Nebylo ti rozumět"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozumel som"
+            "value" : "Nebolo ti rozumieť"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не розчув"
+            "value" : "Не вдалося розчути"
           }
         }
       }
@@ -5328,19 +5334,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozuměl jsem. %@"
+            "value" : "Nebylo ti rozumět. %@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nerozumel som. %@"
+            "value" : "Nebolo ti rozumieť. %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не розчув. %@"
+            "value" : "Не вдалося розчути. %@"
           }
         }
       }
@@ -5739,25 +5745,48 @@
         }
       }
     },
-    "Entertainment" : {
-      "comment" : "Quiz category option",
+    "No limit" : {
+      "comment" : "Thinking time setting: no countdown, the question waits for the spoken answer command or a tap",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zábava"
+            "value" : "Bez limitu"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zábava"
+            "value" : "Bez limitu"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Розваги"
+            "value" : "Без обмеження"
+          }
+        }
+      }
+    },
+    "Pop Culture" : {
+      "comment" : "Quiz category option",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popkultura"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popkultúra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попкультура"
           }
         }
       }
@@ -6437,6 +6466,304 @@
         }
       }
     },
+    "Days played: %lld" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odehrané dny: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days played: %lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odohrané dni: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зіграно днів: %lld"
+          }
+        }
+      }
+    },
+    "Finish it and play %lld extra questions today." : {
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hraješ %lld otázky navíc."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hraješ %lld otázky navíc."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hraješ %lld otázku navíc."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hraješ %lld otázek navíc."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Finish it and play %lld extra question today."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Finish it and play %lld extra questions today."
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hráš %lld otázky navyše."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hráš %lld otázky navyše."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hráš %lld otázku navyše."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dohraj a dnes hráš %lld otázok navyše."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Заверши й сьогодні грай ще %lld питання."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Заверши й сьогодні грай ще %lld питань."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Заверши й сьогодні грай ще %lld питання."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Заверши й сьогодні грай ще %lld питання."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Right after the verdict" : {
+      "comment" : "Auto-advance setting: the next question follows a short moment after the spoken verdict",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hned po verdiktu"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hneď po verdikte"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одразу після вердикту"
+          }
+        }
+      }
+    },
+    "Wait for \"next\"" : {
+      "comment" : "Auto-advance setting: the result stays until the player taps Next or says the next command",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čekej na „další“"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čakaj na „ďalšia“"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чекай на «пропусти»"
+          }
+        }
+      }
+    },
+    "You have %lld extra questions today." : {
+      "localizations" : {
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázky navíc."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázky navíc."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázku navíc."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázek navíc."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You have %lld extra question today."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You have %lld extra questions today."
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázky navyše."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázky navyše."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázku navyše."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dnes máš %lld otázok navyše."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сьогодні в тебе ще %lld питання."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сьогодні в тебе ще %lld питань."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сьогодні в тебе ще %lld питання."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сьогодні в тебе ще %lld питання."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Five questions. The same for everyone." : {
       "localizations" : {
         "cs" : {
@@ -6509,47 +6836,25 @@
         }
       }
     },
-    "Food & Everyday Life" : {
+    "Food & Drink" : {
       "comment" : "Quiz category option",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jídlo a běžný život"
+            "value" : "Jídlo a pití"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jedlo a bežný život"
+            "value" : "Jedlo a pitie"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Їжа й побут"
-          }
-        }
-      }
-    },
-    "For example, a city's bus routes or a local card game" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Třeba linky MHD ve tvém městě nebo místní karetní hra"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napríklad linky MHD v tvojom meste alebo miestna kartová hra"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Наприклад, автобусні маршрути твого міста чи місцева карткова гра"
+            "value" : "Їжа й напої"
           }
         }
       }
@@ -6878,25 +7183,25 @@
         }
       }
     },
-    "Geography & World" : {
+    "Geography" : {
       "comment" : "Quiz category option",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zeměpis a svět"
+            "value" : "Zeměpis"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geografia a svet"
+            "value" : "Zemepis"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Географія і світ"
+            "value" : "Географія"
           }
         }
       }
@@ -7390,19 +7695,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její písmeno."
+            "value" : "Nebylo jasné, kterou možnost myslíš. Řekni její písmeno."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej písmeno."
+            "value" : "Nebolo jasné, ktorú možnosť myslíš. Povedz jej písmeno."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув, який варіант ти маєш на увазі. Назви його літеру."
+            "value" : "Незрозуміло, який варіант ти маєш на увазі. Назви його літеру."
           }
         }
       }
@@ -7413,19 +7718,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem, kterou možnost myslíš. Řekni její číslo."
+            "value" : "Nebylo jasné, kterou možnost myslíš. Řekni její číslo."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som, ktorú možnosť myslíš. Povedz jej číslo."
+            "value" : "Nebolo jasné, ktorú možnosť myslíš. Povedz jej číslo."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув, який варіант ти маєш на увазі. Назви його номер."
+            "value" : "Незрозуміло, який варіант ти маєш на увазі. Назви його номер."
           }
         }
       }
@@ -7436,19 +7741,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil jsem odpověď, zkus to znovu."
+            "value" : "Odpověď se nepodařilo zachytit, zkus to znovu."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nezachytil som odpoveď, skús to znova."
+            "value" : "Odpoveď sa nepodarilo zachytiť, skús to znova."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Я не розчув відповіді, спробуй ще раз."
+            "value" : "Не вдалося розчути відповідь, спробуй ще раз."
           }
         }
       }
@@ -8379,28 +8684,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажую…"
-          }
-        }
-      }
-    },
-    "Local questions" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Místní otázky"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokálne otázky"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Локальні питання"
           }
         }
       }
@@ -9601,6 +9884,29 @@
         }
       }
     },
+    "No sound" : {
+      "comment" : "Home: toggle row under Quick quiz; silent mode, no read aloud, no microphone",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без звуку"
+          }
+        }
+      }
+    },
     "Nobody else knew" : {
       "comment" : "Hra spolu (#240.9): award, the only player with the right answer",
       "localizations" : {
@@ -9774,19 +10080,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nic jsem nezachytil"
+            "value" : "Nic nebylo slyšet"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nič som nezachytil"
+            "value" : "Nič nebolo počuť"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нічого не почув"
+            "value" : "Нічого не було чути"
           }
         }
       }
@@ -10621,6 +10927,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Варіанти чи свої слова"
+          }
+        }
+      }
+    },
+    "Or spell it: P, A, R, I, S" : {
+      "comment" : "Under 'Listening…' after the player rejected a transcript: the answer can be spoken letter by letter. Short, it shares one line with the countdown. The example spells Paris as it is written in this language.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nebo ji hláskuj: P, A, Ř, Í, Ž"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alebo ju vyhláskuj: P, A, R, Í, Ž"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Або скажи по літерах: П, А, Р, И, Ж"
           }
         }
       }
@@ -11970,6 +12299,29 @@
         }
       }
     },
+    "Question" : {
+      "comment" : "Title of the sheet that shows the full question from the result screen",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázka"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання"
+          }
+        }
+      }
+    },
     "Question %lld" : {
       "comment" : "Hra spolu (#240.9): award, the question it was on",
       "localizations" : {
@@ -12190,6 +12542,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Питання й оцінку відповідей створює штучний інтелект, тож можливі неточності."
+          }
+        }
+      }
+    },
+    "Questions for locals" : {
+      "comment" : "Categories sheet: title of the switch that includes questions only people from one country or city know (#206)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky pro místní"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky pre miestnych"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання для місцевих"
           }
         }
       }
@@ -12563,6 +12938,29 @@
         }
       }
     },
+    "Read the questions, type the answers" : {
+      "comment" : "Home: subtitle of the No sound row",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky čítaš, odpovede píšeš"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky čteš, odpovědi píšeš"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання читаєш, відповіді пишеш"
+          }
+        }
+      }
+    },
     "Remove from crew" : {
       "comment" : "Denná výzva: partia (#239)",
       "localizations" : {
@@ -12752,19 +13150,19 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Řekneš „dál“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce."
+            "value" : "Řekneš „další“ a nemusíš se dotknout telefonu. Hodí se, když máš plné ruce."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Povieš „ďalej“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky."
+            "value" : "Povieš „ďalšia“ a nemusíš sa dotknúť telefónu. Hodí sa, keď máš plné ruky."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скажи «далі», і не треба торкатися телефона. Зручно, коли руки зайняті."
+            "value" : "Скажи «пропусти», і не треба торкатися телефона. Зручно, коли руки зайняті."
           }
         }
       }
@@ -12862,29 +13260,6 @@
         }
       }
     },
-    "Speak now" : {
-      "comment" : "Listen bar caption while the mic is open for the answer and nothing has been heard yet (#240.9)",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teď mluv"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teraz hovor"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Говори"
-          }
-        }
-      }
-    },
     "Speech recognition is off" : {
       "comment" : "Listen bar note: speech recognition was refused; a Settings button sits beside it",
       "localizations" : {
@@ -12927,52 +13302,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Старт із дітьми"
-          }
-        }
-      }
-    },
-    "Take your time. Speak, tap an option or move on." : {
-      "comment" : "Calm line on a multiple-choice question after the mic heard nothing for the whole answer window; nothing was sent",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nikam nespěchej. Mluv, klepni na možnost nebo přejdi na další."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nikam sa neponáhľaj. Hovor, klepni na možnosť alebo prejdi na ďalšiu."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не поспішай. Говори, торкнися варіанта або переходь до наступного."
-          }
-        }
-      }
-    },
-    "Take your time. Speak, type or move on." : {
-      "comment" : "Calm line on an open question after the mic heard nothing for the whole answer window; nothing was sent",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nikam nespěchej. Mluv, napiš nebo přejdi na další."
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nikam sa neponáhľaj. Hovor, napíš alebo prejdi na ďalšiu."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не поспішай. Говори, напиши або переходь до наступного."
           }
         }
       }
@@ -13521,6 +13850,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Повторно відтворює питання"
+          }
+        }
+      }
+    },
+    "Repeat question" : {
+      "comment" : "No-answer sheet button (#243.4): closes the sheet and reads the question again, then a fresh think window",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zopakuj otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zopakuj otázku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повтори питання"
           }
         }
       }
@@ -14801,6 +15153,29 @@
         }
       }
     },
+    "Show question" : {
+      "comment" : "Result card: opens a sheet with the full question that was just answered",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobraz otázku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobraz otázku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажи питання"
+          }
+        }
+      }
+    },
     "Show the voice commands you can say" : {
       "comment" : "Subtitle of the Voice hints settings toggle: the hints list the voice commands that work on the screen.",
       "localizations" : {
@@ -15848,6 +16223,75 @@
         }
       }
     },
+    "Things only people who live in that country or city know. For example, bus and tram routes." : {
+      "comment" : "Categories sheet: subtitle of the local questions switch (#206)",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To, co ví jen ten, kdo v dané zemi nebo městě žije. Třeba linky MHD."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To, čo vie len ten, kto v danej krajine alebo meste žije. Napríklad linky MHD."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, що знає лише той, хто живе в певній країні чи місті. Наприклад, маршрути міського транспорту."
+          }
+        }
+      }
+    },
+    "This category is no longer on offer. Back to all categories." : {
+      "comment" : "#242: Home alert, the free extra category rotated out; the selection went back to all categories",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahle kategorie už není v nabídce. Vracíme se ke všem kategoriím."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Táto kategória už nie je v ponuke. Vraciame sa na všetky kategórie."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця категорія більше не доступна. Повертаємось до всіх категорій."
+          }
+        }
+      }
+    },
+    "This month's free voice answers are used up. Keep playing by typing or tapping." : {
+      "comment" : "Question screen notice, shown once a month: the free voice answers are used up and the quiz goes on with typed and tapped answers",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovědi zdarma na tento měsíc došly. Hraj dál psaním nebo klepnutím."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovede zadarmo na tento mesiac sa minuli. Hraj ďalej písaním alebo klepnutím."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Безплатні голосові відповіді на цей місяць закінчилися. Грай далі й відповідай текстом або дотиком."
+          }
+        }
+      }
+    },
     "This quiz can't be played any more." : {
       "localizations" : {
         "sk" : {
@@ -16098,6 +16542,29 @@
         }
       }
     },
+    "Voice answers used up this month" : {
+      "comment" : "Profile plan card: the free voice answers of this month are used up",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovědi na tento měsíc došly"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovede na tento mesiac sa minuli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Голосові відповіді на цей місяць закінчилися"
+          }
+        }
+      }
+    },
     "We can't make a quiz on this topic. Please try a different one." : {
       "comment" : "Order form (#233): the topic check refused the topic before payment; the player edits it",
       "extractionState" : "manual",
@@ -16329,6 +16796,29 @@
         }
       }
     },
+    "You have played through this category. Try another." : {
+      "comment" : "#242: Home alert, the free extra category has no question left this phone has not played",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuhle kategorii máš prošlou. Zkus jinou."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Túto kategóriu máš prejdenú. Skús inú."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі питання цієї категорії вже пройдено. Спробуй іншу."
+          }
+        }
+      }
+    },
     "You will no longer see each other in the table." : {
       "comment" : "Denná výzva: partia (#239)",
       "localizations" : {
@@ -16392,6 +16882,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Твої відповіді й теми наборів обробляють сторонні сервіси ШІ. Продовжуючи, ти з цим погоджуєшся."
+          }
+        }
+      }
+    },
+    "new" : {
+      "comment" : "#242: small label on a free rotating extra category",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nové"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nové"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "нове"
           }
         }
       }
@@ -19121,6 +19634,29 @@
         }
       }
     },
+    "until %@" : {
+      "comment" : "#242: the last day a free extra category is on offer; placeholder is a short date",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "do %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "do %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "до %@"
+          }
+        }
+      }
+    },
     "your crew this week" : {
       "comment" : "Denná výzva: partia (#239)",
       "localizations" : {
@@ -20200,6 +20736,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "послухай"
+          }
+        }
+      }
+    },
+    "heard" : {
+      "comment" : "Result card: label before the transcript of an accepted answer that differs from the correct answer, e.g. 'heard: solo'",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozpoznáno"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rozpoznané"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "розпізнано"
           }
         }
       }

@@ -17,7 +17,7 @@ Peťo
 Z
 Zuzka
 Pravidlá hry
-10 otázok · Random · After each question · 15 s
+8 otázok · Random · After each question · 15 s
 Začni hru
 # identifiers
 room.close

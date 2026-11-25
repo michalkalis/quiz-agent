@@ -41,6 +41,11 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Number of questions per quiz session
     var numberOfQuestions: Int
 
+    /// Which round-length default the saved value was made under: none = 10
+    /// (every build up to 90), 2 = 8 (founder, TestFlight build 90 feedback).
+    /// See `init(from:)`.
+    private var numberOfQuestionsDefaultVersion = Self.currentQuestionCountDefaultVersion
+
     /// Category filter — multi-select (#82 item 4, founder decision 7).
     /// Empty = all categories. See `Config.categoryOptions` for valid ids.
     var categories: [String]
@@ -52,8 +57,18 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// Difficulty level ("easy", "medium", "hard", "random")
     var difficulty: String
 
-    /// Auto-advance delay in seconds for result screen
-    var autoAdvanceDelay: Int
+    /// How the result screen moves on (#243.8): seconds after the verdict,
+    /// or a sentinel — `rightAfterVerdictAutoAdvance` (0) and
+    /// `waitForNextAutoAdvance` (-1). Saved under its own key
+    /// (`autoAdvancePreset`) that older builds ignore.
+    var autoAdvanceDelay: Int {
+        didSet { legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay) }
+    }
+
+    /// #243.8: what older builds read under the old `autoAdvanceDelay` key —
+    /// always a positive number of seconds, never a sentinel. They count
+    /// `0 ... delay`, which traps below 0, and a 1.0 decoder requires the key.
+    private var legacyAutoAdvanceDelay: Int
 
     /// Retired with the "Answer time limit" setting (#200 — auto-record is
     /// always on, so the think window is the only answer window). Nothing
@@ -62,11 +77,21 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// otherwise lose every setting.
     private var answerTimeLimit = 30
 
-    /// Thinking time in seconds before auto-recording starts (0 = immediate 500ms delay)
-    var thinkingTime: Int
+    /// Thinking time in seconds before auto-recording starts;
+    /// `unlimitedThinkingTime` (-1) = no countdown, the mic never opens on
+    /// its own (#243.8). Saved under its own key (`thinkingTimePreset`)
+    /// that older builds ignore.
+    var thinkingTime: Int {
+        didSet { legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime) }
+    }
 
-    /// #240.9: which think-time default the saved value was made under. Blobs
-    /// without it come from builds whose default was 10 s; see `init(from:)`.
+    /// #243.8: what older builds read under the old `thinkingTime` key —
+    /// seconds they can run, never the no-limit sentinel.
+    private var legacyThinkingTime: Int
+
+    /// Which think-time default the saved value was made under: none = 10 s
+    /// (every build up to 89), 2 = 0 s (build 90, #240.9), 3 = 10 s again.
+    /// See `init(from:)`.
     private var thinkingTimeDefaultVersion = Self.currentThinkingTimeDefaultVersion
 
     /// Preferred input device UID (nil = automatic selection)
@@ -122,6 +147,13 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// note of the right answer instead of a result screen.
     var quickGame: Bool
 
+    /// The Home "No sound" switch (founder 2026-11-22). ON: nothing in the
+    /// quiz makes a sound or listens. No read aloud, no microphone, no voice
+    /// commands, no tones; a question has no time limit and is answered by
+    /// typing or tapping. The quiz applies it through
+    /// `QuizViewModel.isSilentMode`, which also leaves CarPlay out.
+    var silentMode: Bool
+
     /// The one rule for whether the command words are shown: an explicit Settings
     /// choice wins, otherwise they are shown.
     static func voiceHintsVisible(override: Bool?) -> Bool {
@@ -149,7 +181,8 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceCommandsEnabled: Bool = true,
         answerRevealMode reveal: AnswerRevealMode = .perQuestion,
         voiceHintsEnabled: Bool? = nil,
-        quickGame: Bool = false
+        quickGame: Bool = false,
+        silentMode: Bool = false
     ) {
         self.language = language
         self.audioMode = audioMode
@@ -157,7 +190,9 @@ struct QuizSettings: Codable, Equatable, Sendable {
         self.categories = categories
         self.difficulty = difficulty
         self.autoAdvanceDelay = autoAdvanceDelay
+        legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay)
         self.thinkingTime = thinkingTime
+        legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime)
         self.preferredInputDeviceId = preferredInputDeviceId
         self.autoConfirmEnabled = autoConfirmEnabled
         self.showConfirmSheet = showConfirmSheet
@@ -170,6 +205,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
         answerRevealMode = reveal
         self.voiceHintsEnabled = voiceHintsEnabled
         self.quickGame = quickGame
+        self.silentMode = silentMode
     }
 
     // MARK: - Default Configuration
@@ -189,10 +225,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
     static let `default` = QuizSettings(
         language: "en",
         audioMode: "media",
-        numberOfQuestions: 10,
+        numberOfQuestions: Self.defaultNumberOfQuestions,
         categories: [],
         difficulty: Config.defaultDifficulty,
-        autoAdvanceDelay: 8,
+        autoAdvanceDelay: Self.rightAfterVerdictAutoAdvance,
         thinkingTime: Self.defaultThinkingTime,
         preferredInputDeviceId: nil,
         autoConfirmEnabled: true,
@@ -215,6 +251,21 @@ struct QuizSettings: Codable, Equatable, Sendable {
         case category
     }
 
+    /// Spelled out for #243.8 only: the two preset choices take new keys and
+    /// their old keys carry the legacy-safe values. Every other key is the
+    /// property's own name.
+    private enum CodingKeys: String, CodingKey {
+        case language, audioMode, numberOfQuestions, numberOfQuestionsDefaultVersion, categories
+        case ageAppropriate, difficulty, answerTimeLimit, thinkingTimeDefaultVersion
+        case autoAdvanceDelay = "autoAdvancePreset"
+        case legacyAutoAdvanceDelay = "autoAdvanceDelay"
+        case thinkingTime = "thinkingTimePreset"
+        case legacyThinkingTime = "thinkingTime"
+        case preferredInputDeviceId, autoConfirmEnabled, showConfirmSheet, isMuted
+        case recordingSoundsEnabled, includeImageQuestions, includeLocalQuestions
+        case voiceCommandsEnabled, answerRevealMode, voiceHintsEnabled, quickGame, silentMode
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         // A persisted language that is no longer offered (#168 DD14 hid it, or
@@ -222,7 +273,10 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // filter below: a stale value would otherwise be sent to the backend.
         language = Language.selectable(try container.decode(String.self, forKey: .language)).id
         audioMode = try container.decode(String.self, forKey: .audioMode)
-        numberOfQuestions = try container.decode(Int.self, forKey: .numberOfQuestions)
+        numberOfQuestions = Self.migratedQuestionCount(
+            try container.decode(Int.self, forKey: .numberOfQuestions),
+            defaultVersion: try container.decodeIfPresent(Int.self, forKey: .numberOfQuestionsDefaultVersion) ?? 1
+        )
         if let list = try container.decodeIfPresent([String].self, forKey: .categories) {
             categories = list
         } else {
@@ -233,19 +287,35 @@ struct QuizSettings: Codable, Equatable, Sendable {
         // Drop ids retired by taxonomy changes (2026-08 revamp): a stale
         // selection like "disney" would silently filter every quiz to empty.
         // Dropping degrades to "All Categories", which always has content.
-        categories = categories.filter { Self.categoryOptions.contains($0) }
+        // #242: a served extra (`extra-*`) survives a launch; only a fetch that
+        // no longer lists it, or the server's refusal, drops it.
+        categories = categories.filter { Self.categoryOptions.contains($0) || ExtraCategory.isExtra($0) }
         difficulty = try container.decode(String.self, forKey: .difficulty)
-        autoAdvanceDelay = try container.decode(Int.self, forKey: .autoAdvanceDelay)
-        thinkingTime = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) ?? Self.defaultThinkingTime
-        // #240.9 (founder 2026-11-18): the mic now opens right after the
-        // question. A saved 10 s from an older build is that build's default,
-        // so it moves to the new one; any other saved value was the player's
-        // choice and stays. (A player who picked exactly 10 cannot be told
-        // apart from the old default.)
-        let defaultVersion = try container.decodeIfPresent(Int.self, forKey: .thinkingTimeDefaultVersion) ?? 1
-        if defaultVersion < Self.currentThinkingTimeDefaultVersion, thinkingTime == Self.legacyDefaultThinkingTime {
-            thinkingTime = Self.defaultThinkingTime
+        // #243.8: the preset keys are this build's choice. Without them (a
+        // blob from an older build, or one an older build re-saved) the old
+        // keys move to the presets.
+        if let preset = try container.decodeIfPresent(Int.self, forKey: .autoAdvanceDelay) {
+            autoAdvanceDelay = preset
+        } else {
+            autoAdvanceDelay = Self.migratedAutoAdvanceDelay(try container.decode(Int.self, forKey: .legacyAutoAdvanceDelay))
         }
+        legacyAutoAdvanceDelay = Self.legacyAutoAdvanceDelay(for: autoAdvanceDelay)
+        if let preset = try container.decodeIfPresent(Int.self, forKey: .thinkingTime) {
+            thinkingTime = preset
+        } else {
+            var saved = try container.decodeIfPresent(Int.self, forKey: .legacyThinkingTime) ?? Self.defaultThinkingTime
+            // Build 90 (#240.9) made 0 s the default and rewrote every saved 10 s
+            // to 0. The founder rejected that flow after testing it (2026-11-21),
+            // so a 0 saved under build 90's default goes back to 10 s. A 0 the
+            // player picked on purpose cannot be told apart from build 90's
+            // default; build 90 was TestFlight only.
+            let defaultVersion = try container.decodeIfPresent(Int.self, forKey: .thinkingTimeDefaultVersion) ?? 1
+            if defaultVersion == Self.immediateMicDefaultVersion, saved == Self.immediateMicDefaultThinkingTime {
+                saved = Self.defaultThinkingTime
+            }
+            thinkingTime = Self.migratedThinkingTime(saved)
+        }
+        legacyThinkingTime = Self.legacyThinkingTime(for: thinkingTime)
         preferredInputDeviceId = try container.decodeIfPresent(String.self, forKey: .preferredInputDeviceId)
         autoConfirmEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoConfirmEnabled) ?? true
         showConfirmSheet = try container.decodeIfPresent(Bool.self, forKey: .showConfirmSheet) ?? true
@@ -262,28 +332,90 @@ struct QuizSettings: Codable, Equatable, Sendable {
         voiceHintsEnabled = try container.decodeIfPresent(Bool.self, forKey: .voiceHintsEnabled)
         // #224.8: absent = off, today's flow.
         quickGame = try container.decodeIfPresent(Bool.self, forKey: .quickGame) ?? false
+        // Absent = off: every quiz before this build had sound.
+        silentMode = try container.decodeIfPresent(Bool.self, forKey: .silentMode) ?? false
     }
 
     // MARK: - Validation Helpers
 
-    /// Valid question count options
-    static let questionCountOptions = [5, 10, 15, 20]
+    /// Valid question count options (founder, TestFlight build 90: 10 was
+    /// too many, so 8 is the default and 20 left the list).
+    static let questionCountOptions = [5, 8, 10, 15]
+    static let defaultNumberOfQuestions = 8
+    /// Every build up to 90 saved 10 as its default, with no version.
+    static let legacyDefaultNumberOfQuestions = 10
+    static let currentQuestionCountDefaultVersion = 2
+
+    /// Runs once, on a blob saved before this version. A 10 there is the old
+    /// default, not a choice: the saved data cannot tell a player who picked
+    /// 10 from one who never touched it, and most never did, so it becomes the
+    /// new default (10 stays one tap away). Any other saved value is the
+    /// player's choice and stays; one the list no longer offers (20) becomes
+    /// the nearest that it does.
+    static func migratedQuestionCount(_ saved: Int, defaultVersion: Int) -> Int {
+        guard defaultVersion < currentQuestionCountDefaultVersion else { return saved }
+        if saved == legacyDefaultNumberOfQuestions { return defaultNumberOfQuestions }
+        if questionCountOptions.contains(saved) { return saved }
+        return questionCountOptions.min { abs($0 - saved) < abs($1 - saved) } ?? defaultNumberOfQuestions
+    }
 
     /// Valid difficulty options
     static let difficultyOptions = ["easy", "medium", "hard", "random"]
 
-    /// Valid auto-advance delay options (seconds)
-    static let autoAdvanceDelayOptions = [5, 8, 10, 15]
+    /// #243.8 (founder 2026-11-24): the result moves on right after the
+    /// verdict (the default), 8 s or 15 s after it, or waits for "next".
+    static let autoAdvanceDelayOptions = [rightAfterVerdictAutoAdvance, 8, 15, waitForNextAutoAdvance]
+    static let rightAfterVerdictAutoAdvance = 0
+    static let waitForNextAutoAdvance = -1
 
-    /// #240.9: no think time; the window to start speaking covers it instead
-    /// (`Config.immediateMicExtraWindow`).
-    static let defaultThinkingTime = 0
-    /// The default every build before #240.9 saved.
-    static let legacyDefaultThinkingTime = 10
-    static let currentThinkingTimeDefaultVersion = 2
+    /// A blob without the preset key (saved by an older build): 5 s and the
+    /// old untouched default 8 s become "right after the verdict", 10 s the
+    /// nearest longer pause (8 s), 15 s stays; anything else the default.
+    static func migratedAutoAdvanceDelay(_ saved: Int) -> Int {
+        switch saved {
+        case 10: return 8
+        case 15: return 15
+        default: return rightAfterVerdictAutoAdvance
+        }
+    }
 
-    /// Valid thinking time options (seconds, 0 = immediate recording)
-    static let thinkingTimeOptions = [0, 10, 15, 30, 45, 60, 90, 120]
+    /// Think time before the mic opens on its own (#68, driving-critical).
+    static let defaultThinkingTime = 10
+    /// Build 90's default (#240.9, rejected) and the version it saved with.
+    static let immediateMicDefaultThinkingTime = 0
+    static let immediateMicDefaultVersion = 2
+    static let currentThinkingTimeDefaultVersion = 3
+
+    /// #243.8 (founder 2026-11-24): 5 · 10 (default) · 20 · 30 s or no limit.
+    static let thinkingTimeOptions = [5, 10, 20, 30, unlimitedThinkingTime]
+    /// No countdown: the question waits for "answer" or a tap.
+    static let unlimitedThinkingTime = -1
+
+    /// A blob without the preset key (saved by an older build; after build
+    /// 90's fix-up): 0 s → 5 s, 15 s → 20 s, anything above 30 s → no limit,
+    /// any other value the nearest preset.
+    static func migratedThinkingTime(_ saved: Int) -> Int {
+        if saved > 30 { return unlimitedThinkingTime }
+        if saved == 15 { return 20 }
+        let timed = thinkingTimeOptions.filter { $0 > 0 }
+        return timed.min { abs($0 - saved) < abs($1 - saved) } ?? defaultThinkingTime
+    }
+
+    /// #243.8: the old-key values older builds read. No limit is their
+    /// longest window, "right after the verdict" their shortest pause and
+    /// "wait for next" their longest; seconds pass through.
+    static let legacyUnlimitedThinkingTime = 120
+    static let legacyRightAfterVerdictDelay = 5
+    static let legacyWaitForNextDelay = 15
+
+    static func legacyThinkingTime(for time: Int) -> Int {
+        time < 0 ? legacyUnlimitedThinkingTime : time
+    }
+
+    static func legacyAutoAdvanceDelay(for delay: Int) -> Int {
+        if delay > 0 { return delay }
+        return delay == rightAfterVerdictAutoAdvance ? legacyRightAfterVerdictDelay : legacyWaitForNextDelay
+    }
 
     /// Valid category options (nil means "All Categories"). Mirrors `Config.categoryOptions`.
     static let categoryOptions: [String?] = [
@@ -298,15 +430,23 @@ struct QuizSettings: Codable, Equatable, Sendable {
     /// one = its name, several = a count). Derives from `Config.categoryOptions`,
     /// the single source of id→display pairs, so each label lives in exactly one
     /// place for localization (#56).
-    func categoryDisplayName() -> String {
+    func categoryDisplayName(extras: [ExtraCategory] = []) -> String {
         switch categories.count {
         case 0:
-            return Config.categoryOptions.first { $0.id == nil }?.display ?? ""
+            return allCategoriesDisplayName
         case 1:
-            return Config.categoryOptions.first { $0.id == categories[0] }?.display ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
+            return Config.categoryOptions.first { $0.id == categories[0] }?.display
+                ?? extras.first { $0.key == categories[0] }?.name
+                ?? (ExtraCategory.isExtra(categories[0]) ? allCategoriesDisplayName : nil)
+                ?? String(localized: "Unknown", bundle: .interface, locale: .interface, comment: "Fallback category display name when the category id is unrecognized")
         default:
             return String(localized: "\(categories.count) selected", bundle: .interface, locale: .interface, comment: "Home category picker value when several categories are selected; placeholder is the count")
         }
+    }
+
+    /// A saved extra with no remembered name reads as "All categories", never "Unknown" (#242).
+    private var allCategoriesDisplayName: String {
+        Config.categoryOptions.first { $0.id == nil }?.display ?? ""
     }
 
     /// Display name for the active age-appropriate filter.
@@ -341,7 +481,7 @@ struct QuizSettings: Codable, Equatable, Sendable {
             numberOfQuestions: 20,
             categories: ["science-nature"],
             difficulty: "hard",
-            autoAdvanceDelay: 5,
+            autoAdvanceDelay: 8,
             preferredInputDeviceId: nil
         )
     }

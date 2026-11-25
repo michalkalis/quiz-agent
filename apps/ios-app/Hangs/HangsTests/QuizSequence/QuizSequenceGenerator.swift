@@ -196,9 +196,9 @@ struct QuizSequenceGenerator {
         if run.isCommandWindowOpen {
             let screen = vm.voiceCommandCoordinator.currentCommandScreen
             let onScreen: [VoiceCommand] = switch screen {
-            case .question: [.start, .repeatQuestion, .skip, .pause]
-            case .confirmation: [.ok, .again, .stop, .pause]
-            case .noAnswer: [.again, .skip, .next] // #185: the Again/Skip sheet's own screen
+            case .question: [.answer, .repeatQuestion, .next]
+            case .confirmation: [.again] // 2026-11-22: the sheet's only command
+            case .noAnswer: [.repeatQuestion, .again, .next] // #185 + #243.4: the no-answer sheet's own screen
             default: []
             }
             for command in onScreen {

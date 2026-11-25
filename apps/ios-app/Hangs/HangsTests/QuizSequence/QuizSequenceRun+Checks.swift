@@ -146,9 +146,7 @@ extension QuizSequenceRun {
         let attempt = vm.currentAttempt.description
         switch vm.quizState {
         case .recording:
-            // #240.9: a hands-free opening with no think time keeps the mic
-            // open 10 s longer (the think time it replaces), so its cap is too.
-            active["recording \(attempt)"] = ("stuck recording", 16000 + Int(Config.immediateMicExtraWindow * 1000))
+            active["recording \(attempt)"] = ("stuck recording", 16000)
         case .skipping:
             active["skipping \(attempt)"] = ("stuck skipping", 40000)
         case .startingQuiz:
@@ -156,9 +154,7 @@ extension QuizSequenceRun {
         case .processing where !isSheetUp:
             active["processing \(attempt)"] = ("stuck processing with no sheet", 40000)
         case .processing where vm.showAnswerConfirmation && !vm.noAnswerCaptured && !isSheetEmpty
-            && vm.settings.autoConfirmEnabled && !vm.isPaused && !vm.isEditingTranscript
-            // #185 5.3 (founder): after a spoken "stop" the sheet waits for the driver.
-            && vm.recordingCoordinator.countdownHold != .driverStop:
+            && vm.settings.autoConfirmEnabled && !vm.isPaused && !vm.isEditingTranscript:
             active["sheet \(attempt) \(vm.transcribedAnswer)"] = ("confirmation sheet never auto-confirmed", 12000)
         case .showingResult where !vm.isPaused:
             active["result \(vm.resultQuestion?.id ?? "-")"] = ("result never auto-advanced", 15000)

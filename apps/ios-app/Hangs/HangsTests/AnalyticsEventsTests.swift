@@ -24,7 +24,7 @@ import Testing
 private let backendClientEvents: [String: Set<String>] = [
     "app_opened": ["launch"],
     "onboarding_finished": ["outcome", "step"],
-    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game"],
+    "quiz_context": ["audio_route", "voice_commands_enabled", "entry_point", "timezone", "quick_game", "silent_mode"],
     // #240.9: reason + question, and `build_channel` on every event below.
     // Added to the server allowlist in its own backend PR.
     "quiz_abandoned": ["questions_answered", "phase", "reason", "question"],
@@ -39,7 +39,8 @@ private let backendClientEvents: [String: Set<String>] = [
         "trigger", "mic_open_delay_ms", "peak_db", "mic_permission",
     ],
     "voice_experiment_guard": ["flag", "reason", "from_route", "to_route", "exp_gen"],
-    "voice_command": ["command", "phase"],
+    "voice_command": ["command", "phase", "language", "path", "speech_end_ms"],
+    "voice_command_window": ["engine", "language", "screen", "transcripts", "matched", "unmatched", "late", "cut_off", "first_transcript_ms"],
     "voice_commands_turned_on": ["source", "result"],
     "paywall_viewed": ["source"],
     "purchase_result": ["product_id", "kind", "outcome", "question_count"],
@@ -58,7 +59,12 @@ private let backendClientEvents: [String: Set<String>] = [
     "room_ranking_shared": ["role", "players"],
     "home_category_stepped": ["direction", "input", "to"],
     "home_category_picker_opened": ["source"],
+    "result_question_opened": ["kind", "verdict"],
     "quick_game_changed": ["enabled"],
+    "silent_mode_changed": ["enabled"],
+    "home_settings_opened": [],
+    "voice_limit_notice_shown": [],
+    "home_round_length_changed": ["questions"],
     "question_skipped": ["quick"],
     "pack_topic_checked": ["verdict"],
     "shared_quiz_pasted": ["outcome"],
@@ -67,13 +73,14 @@ private let backendClientEvents: [String: Set<String>] = [
     "family_band_selected": ["band", "first_time"],
     "family_topic_selected": ["band", "topic"],
     "family_topic_empty": ["band", "topic"],
+    "extra_category_quiz_started": ["category"],
 ]
 
 /// One instance of every case, with every optional property present.
 private let everyEvent: [AnalyticsEvent] = [
     .appOpened(launch: .cold),
     .onboardingFinished(outcome: .commandsOn, step: "commands"),
-    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true),
+    .quizContext(audioRoute: .carplay, voiceCommandsEnabled: true, entryPoint: .home, timezone: "Europe/Bratislava", quickGame: true, silentMode: true),
     .quizAbandoned(questionsAnswered: 3, phase: "askingQuestion", reason: .endQuiz, question: 4),
     .answerSubmitted(inputMode: .voice, questionId: "q_001", isRetry: false, latencyMs: 1500),
     .voiceCaptureFailed(reason: .tooShort, questionId: "q_001"),
@@ -89,7 +96,11 @@ private let everyEvent: [AnalyticsEvent] = [
         trigger: "auto", micOpenDelayMs: 600, peakDb: -24, micPermission: "granted"
     )),
     .voiceExperimentGuard(flag: .aec, fromRoute: "CarAudio", toRoute: "Speaker", expGen: 1),
-    .voiceCommand(command: .next, phase: "result"),
+    .voiceCommand(command: .next, phase: "question", language: "sk", path: "final", speechEndMs: 420),
+    .voiceCommandWindow(CommandWindowReport(
+        engine: "dictation", language: "sk", screen: "question",
+        transcripts: 3, matched: 1, unmatched: 1, late: 1, cutOff: 1, firstTranscriptMs: 900
+    )),
     .voiceCommandsTurnedOn(source: .listenBar, result: .granted),
     .paywallViewed(source: .quota),
     .purchaseResult(productId: "pack_30", kind: .customPack, outcome: .success, questionCount: 30),
@@ -106,7 +117,12 @@ private let everyEvent: [AnalyticsEvent] = [
     .roomRankingShared(role: "host", players: 3),
     .homeCategoryStepped(direction: .next, input: .tap, to: "history"),
     .homeCategoryPickerOpened(source: .deckButton),
+    .resultQuestionOpened(kind: .mcq, verdict: .correct),
     .quickGameChanged(enabled: true),
+    .silentModeChanged(enabled: true),
+    .homeSettingsOpened,
+    .voiceLimitNoticeShown,
+    .homeRoundLengthChanged(questions: 8),
     .questionSkipped(quick: true),
     .packTopicChecked(verdict: "blocked"),
     .sharedQuizPasted(outcome: .notALink),
@@ -114,6 +130,7 @@ private let everyEvent: [AnalyticsEvent] = [
     .familyBandSelected(band: .kids7to9, firstTime: true),
     .familyTopicSelected(band: .kids4to6, topic: "family-dinosaurs"),
     .familyTopicEmpty(band: .kids10to12, topic: "family-harry-potter"),
+    .extraCategoryQuizStarted(category: "extra-techno"),
 ]
 
 @MainActor
@@ -212,7 +229,7 @@ struct QuizAnalyticsTests {
         #expect(vm.quizState == .askingQuestion)
         let context = analytics.tracked.filter { $0.event.name == "quiz_context" }
         #expect(context.count == 1)
-        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _) = context.first?.event else {
+        guard case let .quizContext(_, voiceCommandsEnabled, entryPoint, timezone, _, _) = context.first?.event else {
             Issue.record("no quiz_context")
             return
         }
@@ -367,7 +384,7 @@ struct QuizAnalyticsTests {
 
         vm.voiceCommandCoordinator.handleRecognizedCommand(.repeatQuestion)
 
-        #expect(analytics.events(named: "voice_command") == [.voiceCommand(command: .repeatQuestion, phase: "question")])
+        #expect(analytics.events(named: "voice_command") == [.voiceCommand(command: .repeatQuestion, phase: "question", language: "en")])
         #expect(analytics.events(named: "voice_command").first?.properties["command"] == .string("repeatQuestion"))
     }
 }

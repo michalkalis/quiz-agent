@@ -204,6 +204,16 @@ def _build_where(filters: Dict[str, Any]) -> List[Any]:
             # language NULL and are English, so a plain IN would drop them
             # (SQL: NULL IN (...) is never true).
             clauses.append(or_(col.in_(value["$in_or_null"]), col.is_(None)))
+        elif isinstance(value, dict) and "$not_prefix_or_null" in value:
+            # #242: "does not start with <prefix>, or is NULL". A plain `$ne`
+            # (or NOT LIKE) would drop NULL categories (NULL <> x is never
+            # true), hiding every unlabelled question from the mixed quiz.
+            clauses.append(
+                or_(
+                    col.is_(None),
+                    ~col.startswith(value["$not_prefix_or_null"], autoescape=True),
+                )
+            )
         elif isinstance(value, dict) and "$ne" in value:
             clauses.append(col != value["$ne"])
         elif isinstance(value, dict) and ("$gt" in value or "$lt" in value):

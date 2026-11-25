@@ -49,13 +49,14 @@ struct QuestionViewMCQInspectorTests {
     @Test("MCQ renders the shared category + counter, not the old merged Qn label")
     func mcqHeaderRendersSharedMetaRow() async throws {
         let vm = makeMCQViewModel()
-        // questionsAnswered = 0 → question 1
+        // questionsAnswered = 0 → question 1; no session yet, so the total is
+        // the round length from the settings (Home A1: 8 by default).
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let category = try tree.find(viewWithAccessibilityIdentifier: "question.category")
             #expect(try category.text().string() == Config.categoryDisplayName(for: "science-nature")?.uppercased())
-            #expect(throws: Never.self) { try tree.find(text: "1/10") }
+            #expect(throws: Never.self) { try tree.find(text: "1/\(Config.defaultQuestions)") }
             #expect(throws: (any Error).self, "the merged #125 row is gone") {
                 try tree.find(text: "adults · Q1")
             }
@@ -176,7 +177,7 @@ struct QuestionViewMCQOptionVisibilityTests {
             #expect(bar.findAll(ViewType.Text.self).contains { ((try? $0.string()) ?? "").contains("12") })
             // …and never claims a live mic during the think phase.
             #expect(throws: (any Error).self) {
-                _ = try tree.find(text: "Speak now")
+                _ = try tree.find(text: "Listening…")
             }
         }
 
@@ -186,7 +187,7 @@ struct QuestionViewMCQOptionVisibilityTests {
         try await ViewHosting.host(recording) {
             let tree = try recording.inspect()
             #expect(throws: Never.self) {
-                try tree.find(text: "Speak now")
+                try tree.find(text: "Listening…")
             }
             #expect(throws: (any Error).self) { _ = try tree.find(text: "Think") }
             #expect(throws: (any Error).self) { _ = try tree.find(text: "THINK. LISTENING IN 0 S") }
@@ -342,7 +343,9 @@ struct QuestionViewVoiceInspectorTests {
     /// docked bar (id "listen-bar") appears. This is the unit-level cover for the
     /// sim state the UI-test harness cannot produce (its mock forces
     /// `commandAvailability = .unavailable`).
-    @Test("Voice body shows the docked command ListenBar while a command window is armed (#125)")
+    /// #243.6 (founder 2026-11-24) reverses TF build 90: an armed command
+    /// window shows the bar with the words the app listens for.
+    @Test("Voice body shows the command ListenBar for an armed command window")
     func voiceShowsCommandListenBarWhenArmed() async throws {
         let vm = QuizViewModel(
             networkService: MockNetworkService(),

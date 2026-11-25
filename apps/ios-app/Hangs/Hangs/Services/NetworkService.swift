@@ -18,6 +18,9 @@ protocol NetworkServiceProtocol: Sendable {
     /// #236: `GET /family/topics?language=` — per band the topics with a whole
     /// round in that language for this build's channel; empty with the switch off.
     func familyTopics(language: String) async throws -> FamilyTopicsResponse
+    /// #242: `GET /categories/extra?language=` — the free rotating categories
+    /// on offer now (empty while the server switch is off).
+    func extraCategories(language: String) async throws -> ExtraCategoriesResponse
     /// #174: how many unseen questions this configuration still has, asked
     /// BEFORE the session is created. Read-only and cheap (one COUNT server
     /// side) so it can sit on the tap-to-start path.
@@ -111,6 +114,11 @@ extension NetworkServiceProtocol {
         FamilyTopicsResponse(bands: [])
     }
 
+    /// #242: like the server with the switch off.
+    func extraCategories(language _: String) async throws -> ExtraCategoriesResponse {
+        ExtraCategoriesResponse(categories: [])
+    }
+
     func createSharedQuiz(sessionId _: String?, packId _: String?, displayName _: String?) async throws -> SharedQuizCreated {
         throw NetworkError.sharedQuizUnavailable(.notFound)
     }
@@ -137,7 +145,10 @@ extension NetworkServiceProtocol {
 actor NetworkService: NetworkServiceProtocol {
     /// `X-Client-Capabilities` sent on session create (#185 track G): coded
     /// "say it again" 400s, and question audio that reads the option labels.
-    nonisolated static let clientCapabilities = "answer-codes, option-labels"
+    /// `voice-allowance` (2026-11-21): this build handles the 429
+    /// `voice_limit_reached`, so the server may refuse a voice answer once the
+    /// free voice answers are used up.
+    nonisolated static let clientCapabilities = "answer-codes, option-labels, voice-allowance"
 
     /// `X-App-Version` on every request (#51), "<short version> (<build>)", so
     /// the server's analytics events carry the build that caused them.
@@ -262,6 +273,13 @@ actor NetworkService: NetworkServiceProtocol {
         // Handle 429 daily limit reached
         if httpResponse.statusCode == 429 {
             logHTTPError(endpoint: endpointPath, status: 429)
+            // 2026-11-21: the free voice answers are used up. Not the quota:
+            // the question stays open for a typed or tapped answer.
+            if let voiceLimit = try? JSONDecoder().decode(VoiceLimitErrorWrapper.self, from: data),
+               voiceLimit.detail.code == VoiceLimitError.reachedCode
+            {
+                throw NetworkError.voiceLimitReached(voiceLimit.detail)
+            }
             if let limitError = try? JSONDecoder().decode(QuotaLimitErrorWrapper.self, from: data) {
                 throw NetworkError.quotaLimitReached(limitError.detail)
             }
@@ -318,6 +336,21 @@ actor NetworkService: NetworkServiceProtocol {
         {
             logHTTPError(endpoint: endpointPath, status: 409, code: coded.detail.code)
             throw NetworkError.familyTopicEmpty
+        }
+
+        // #242: a rotating extra category that is gone (400) or has nothing
+        // left this phone has not played (409). Neither is a failure.
+        if [400, 409].contains(httpResponse.statusCode),
+           let coded = try? JSONDecoder().decode(AnswerRetryWrapper.self, from: data)
+        {
+            if coded.detail.code == "extra_category_invalid" {
+                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: coded.detail.code)
+                throw NetworkError.extraCategoryInvalid
+            }
+            if coded.detail.code == "extra_category_exhausted" {
+                logHTTPError(endpoint: endpointPath, status: httpResponse.statusCode, code: coded.detail.code)
+                throw NetworkError.extraCategoryExhausted
+            }
         }
 
         // #232: a shared quiz that cannot be created or started; the code
@@ -448,6 +481,25 @@ actor NetworkService: NetworkServiceProtocol {
 
         let data = try await performRequestData(request, endpointPath: "/api/v1/family/topics")
         return try JSONDecoder().decode(FamilyTopicsResponse.self, from: data)
+    }
+
+    func extraCategories(language: String) async throws -> ExtraCategoriesResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("/api/v1/categories/extra"), resolvingAgainstBaseURL: false) else {
+            throw NetworkError.invalidURL
+        }
+        components.queryItems = [URLQueryItem(name: "language", value: language)]
+        guard let url = components.url else { throw NetworkError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        // Same header contract as createSession: a category is offered only
+        // when this build's channel has its questions.
+        if BuildChannel.debugSurfacesEnabled() {
+            request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
+        }
+
+        let data = try await performRequestData(request, endpointPath: "/api/v1/categories/extra")
+        return try JSONDecoder().decode(ExtraCategoriesResponse.self, from: data)
     }
 
     func questionAvailability(requestedCount: Int, difficulty: String, language: String, categories: [String], includeImages: Bool, skipLocalQuestions: Bool, excludedQuestionIds: [String]) async throws -> QuestionAvailability {
@@ -977,7 +1029,7 @@ actor NetworkService: NetworkServiceProtocol {
             request.setValue("testflight", forHTTPHeaderField: "X-Build-Channel")
         }
         request.setValue(Self.clientCapabilities, forHTTPHeaderField: "X-Client-Capabilities")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["date": date, "language": language])
+        request.httpBody = try Self.dailyStartBody(date: date, language: language)
 
         let data = try await performRequestData(request, endpointPath: "/api/v1/daily-challenge/start")
         return try await MainActor.run {
@@ -985,6 +1037,16 @@ actor NetworkService: NetworkServiceProtocol {
             decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(DailyStartResult.self, from: data)
         }
+    }
+
+    /// #205.8: the device's offset from UTC rides along, so the server knows
+    /// where the player's day ends (the extra questions expire then).
+    nonisolated static func dailyStartBody(date: String, language: String, timeZone: TimeZone = .current) throws -> Data {
+        try JSONSerialization.data(withJSONObject: [
+            "date": date,
+            "language": language,
+            "utc_offset_minutes": timeZone.secondsFromGMT() / 60,
+        ] as [String: Any])
     }
 
     // MARK: - Helper Methods
@@ -1058,6 +1120,11 @@ private nonisolated struct QuotaLimitErrorWrapper: Decodable, Sendable {
     let detail: QuotaLimitError
 }
 
+/// The voice-allowance 429 (`VoiceLimitError`), wrapped the same way.
+private nonisolated struct VoiceLimitErrorWrapper: Decodable, Sendable {
+    let detail: VoiceLimitError
+}
+
 /// Backend 409 for a submit whose `question_id` the session cannot grade (#133 1a):
 /// `{"detail": {"code": "question_mismatch", "current_question_id": "…"}}`.
 /// `current_question_id` is nullable server-side (a session with no open question).
@@ -1081,6 +1148,10 @@ enum NetworkError: LocalizedError {
     case decodingError(Error)
     case serverError(statusCode: Int, message: String)
     case quotaLimitReached(QuotaLimitError)
+    /// HTTP 429 `voice_limit_reached` (2026-11-21): this month's free voice
+    /// answers are used up. Nothing was transcribed or charged; the question
+    /// is still open for a typed or tapped answer.
+    case voiceLimitReached(VoiceLimitError)
     case sessionNotFound
     /// HTTP 409 `question_mismatch` (#133 1a): the submitted `question_id` is
     /// neither the session's current question nor the last one it graded, so the
@@ -1103,6 +1174,20 @@ enum NetworkError: LocalizedError {
     /// HTTP 409 `family_topic_empty` (#236): the family topic has no question
     /// in this language. Not a failure — Home hides the topic.
     case familyTopicEmpty
+    /// HTTP 400 `extra_category_invalid` (#242): the extra category is no
+    /// longer on offer. Not a failure — Home falls back to all categories.
+    case extraCategoryInvalid
+    /// HTTP 409 `extra_category_exhausted` (#242): this phone has played every
+    /// question of the extra category. Not a failure — a calm message, never
+    /// the reset-history offer.
+    case extraCategoryExhausted
+
+    var isExtraCategoryAnswer: Bool {
+        switch self {
+        case .extraCategoryInvalid, .extraCategoryExhausted: true
+        default: false
+        }
+    }
 
     var errorDescription: String? {
         switch self {
@@ -1117,6 +1202,8 @@ enum NetworkError: LocalizedError {
             return message
         case .quotaLimitReached:
             return String(localized: "Free question limit reached", bundle: .interface, locale: .interface, comment: "Network error: user hit the free monthly question quota")
+        case .voiceLimitReached:
+            return String(localized: "This month's free voice answers are used up. Keep playing by typing or tapping.", bundle: .interface, locale: .interface, comment: "Question screen notice, shown once a month: the free voice answers are used up and the quiz goes on with typed and tapped answers")
         case .sessionNotFound:
             return String(localized: "Session not found or already ended", bundle: .interface, locale: .interface, comment: "Network error: the quiz session is no longer active")
         case .questionMismatch:
@@ -1131,6 +1218,10 @@ enum NetworkError: LocalizedError {
             return reason.message
         case .familyTopicEmpty:
             return String(localized: "This topic has no questions in your quiz language yet.", bundle: .interface, locale: .interface, comment: "#236 family mode: the chosen topic has no question in the quiz language")
+        case .extraCategoryInvalid:
+            return ExtraCategoryNotice.invalid
+        case .extraCategoryExhausted:
+            return ExtraCategoryNotice.exhausted
         }
     }
 }

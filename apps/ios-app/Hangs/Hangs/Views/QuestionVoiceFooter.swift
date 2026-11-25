@@ -71,61 +71,77 @@ struct QuestionVoiceFooter: View {
 
     var body: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
-            if showTextInput {
+            // 2026-11-21: once a month, the voice answers are used up. Shown in
+            // both states, because Answer now opens the typed field.
+            if viewModel.showsVoiceLimitNotice {
+                VoiceLimitNotice(onPlus: viewModel.openPaywallFromVoiceLimitNotice)
+                    .padding(.horizontal, Self.gutter)
+                    .transition(.opacity)
+            }
+
+            // Silent mode (founder 2026-11-22): the typed field is the only way
+            // to answer, so it is open from the start and there is no Answer.
+            if showTextInput || viewModel.isSilentMode {
+                // TF build 90 (founder): typing is its own calm state. The field,
+                // send and Skip (F2) sit directly on the keyboard; only the
+                // countdown stays above them, standing still while typing (F3).
+                if let stripPhase {
+                    listenBar(stripPhase)
+                }
                 textInputRow
-            }
-
-            // #122: light sweep strip — reserved in every phase so the stack
-            // below never shifts; glows only during feedback.
-            GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
-                .padding(.horizontal, Self.gutter)
-
-            // #185 track B: the retry line, next to the mic it explains.
-            if viewModel.showsEmptyAnswerRetryHint {
-                EmptyAnswerRetryHint()
+            } else {
+                // #122: light sweep strip, glows only during feedback.
+                GlowSweepLine(phase: viewModel.voiceFeedbackPhase)
                     .padding(.horizontal, Self.gutter)
-                    .transition(.opacity)
-            } else if viewModel.showsSilencePrompt {
-                // #240.9: the Answer / Type / Skip row below is the way on.
-                SilentAnswerPrompt(isMultipleChoice: false)
-                    .padding(.horizontal, Self.gutter)
-                    .transition(.opacity)
-            } else if viewModel.showsSpellingHint {
-                // #208.6: after a rejected transcript, before the next try.
-                AnswerSpellingHint()
-                    .padding(.horizontal, Self.gutter)
-                    .transition(.opacity)
-            }
 
-            // #179 D1: the docked bar, in whichever of the four states the quiz
-            // is in — never gated on the command window any more, because two of
-            // those states listen for no command at all and the bar still has to
-            // be there. The words inside it are what the arming gates.
-            if let phase = listenPhase {
-                QuestionListenBar(
-                    phase: phase,
-                    feedback: viewModel.voiceFeedbackPhase,
-                    recognizingWord: viewModel.recognizingWord,
-                    showsWords: showsCommandWords,
-                    // #131 Track F: the SE-class `compact` flag is now the slim size.
-                    size: compact ? .slim : .full,
-                    language: viewModel.commandLanguage,
-                    speechHeard: viewModel.isHearingAnswer,
-                    inputLevel: viewModel.recordingInputLevel,
-                    // #188 G11: the recording window, moved out of the Stop button.
-                    answerRemaining: viewModel.answerWindowRemaining,
-                    commandsAccessory: viewModel.commandsAccessory(for: phase),
-                    onTurnOnCommands: turnOnCommands,
-                    onOpenSettings: openSystemSettings
-                )
-                .padding(.horizontal, Self.gutter)
-                .transition(.opacity)
-            }
+                // TF build 90: the strip shows only what the player needs
+                // (`QuestionListenPhase.strip`). Its slot is reserved, so the
+                // question never moves when it comes and goes.
+                ZStack {
+                    if let stripPhase {
+                        listenBar(stripPhase)
+                            .transition(.opacity)
+                    } else if let heard = viewModel.commandHeard {
+                        // "What the app hears" where the strip is hidden.
+                        CommandHeardLine(heard: heard, language: viewModel.commandLanguage)
+                            .transition(.opacity)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: QuestionListenBar.slotHeight(size: barSize))
+                .animation(.easeInOut(duration: 0.25), value: stripPhase == nil)
+                .animation(.easeInOut(duration: 0.25), value: viewModel.commandHeard == nil)
 
-            actionRow
-                .padding(.horizontal, Self.gutter)
+                actionRow
+                    .padding(.horizontal, Self.gutter)
+            }
         }
     }
+
+    /// #179 D1: the docked bar in whichever state the strip shows, with the
+    /// command words while a command window is live (#243.6).
+    private func listenBar(_ phase: QuestionListenPhase) -> some View {
+        QuestionListenBar(
+            phase: phase,
+            feedback: viewModel.voiceFeedbackPhase,
+            recognizingWord: viewModel.recognizingWord,
+            heard: viewModel.commandHeard,
+            showsWords: viewModel.questionStripShowsWords,
+            size: barSize,
+            language: viewModel.commandLanguage,
+            speechHeard: viewModel.isHearingAnswer,
+            inputLevel: viewModel.recordingInputLevel,
+            // #188 G11: the recording window, moved out of the Stop button.
+            answerRemaining: viewModel.answerWindowRemaining,
+            answerNote: viewModel.answerBarNote,
+            commandsAccessory: viewModel.commandsAccessory(for: phase),
+            onTurnOnCommands: turnOnCommands,
+            onOpenSettings: openSystemSettings
+        )
+        .padding(.horizontal, Self.gutter)
+    }
+
+    /// #131 Track F: the SE-class `compact` flag is the slim size.
+    private var barSize: ListenBar.Size { compact ? .slim : .full }
 
     // MARK: - Action row (Record · Type · Skip)
 
@@ -167,7 +183,13 @@ struct QuestionVoiceFooter: View {
             tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil,
             singleLineTitle: true
         ) {
-            Task { await viewModel.toggleRecording() }
+            // 2026-11-21: with the voice answers used up, Answer opens the
+            // typed field instead of a mic the server would refuse.
+            if viewModel.isVoiceAllowanceSpent {
+                openTypedAnswer()
+            } else {
+                Task { await viewModel.toggleRecording() }
+            }
         }
         // #174 review: during an in-flight skip the footer stays mounted, so
         // gate the CTA on `.skipping` too — a tap there is a silent no-op.
@@ -189,10 +211,7 @@ struct QuestionVoiceFooter: View {
     /// the Answer button beside it, a labelled glass button, so typing is a
     /// first-class way to answer and not a hidden icon.
     private var typeButton: some View {
-        Button {
-            showTextInput = true
-            isTextFieldFocused.wrappedValue = true
-        } label: {
+        Button(action: openTypedAnswer) {
             Label("Type", systemImage: "keyboard")
                 .font(.hangsButton)
                 .lineLimit(1)
@@ -226,7 +245,8 @@ struct QuestionVoiceFooter: View {
     // MARK: - Typed answer
 
     /// #194 Bg-Typed: a white capsule field with the ink send button beside it,
-    /// above the listen bar (the countdown keeps running while typing, 2a).
+    /// under the listen bar. Founder F2 (TF build 90): Skip stays beside them,
+    /// players used it while typing.
     private var textInputRow: some View {
         HStack(spacing: Theme.Hangs.Spacing.xs) {
             TextField("Type your answer…", text: $textAnswer)
@@ -252,14 +272,23 @@ struct QuestionVoiceFooter: View {
                             .fill(textAnswer.isEmpty ? Theme.Hangs.Colors.mutedBorder : Theme.Hangs.Colors.action)
                     )
             }
-            .disabled(textAnswer.isEmpty)
+            // The field stays up while a silent answer is graded; one send.
+            .disabled(textAnswer.isEmpty || !canInteract)
             .accessibilityIdentifier("question.textSubmit")
+
+            skipButton
         }
         .padding(.horizontal, Self.gutter)
     }
 
+    private func openTypedAnswer() {
+        viewModel.beginTypingAnswer()
+        showTextInput = true
+        isTextFieldFocused.wrappedValue = true
+    }
+
     private func submitTypedAnswer() {
-        guard !textAnswer.isEmpty else { return }
+        guard !textAnswer.isEmpty, canInteract else { return }
         let answer = textAnswer
         submittedAnswer = answer
         textAnswer = ""
@@ -282,20 +311,14 @@ struct QuestionVoiceFooter: View {
     private var isRecording: Bool { viewModel.quizState == .recording }
 
     /// #179 D1: the one state model — the same call the MCQ body makes.
-    private var listenPhase: QuestionListenPhase? {
-        QuestionListenPhase.current(
+    private var stripPhase: QuestionListenPhase? {
+        viewModel.questionStripPhase(QuestionListenPhase.current(
             quizState: viewModel.quizState,
             answerWindowRemaining: viewModel.answerWindowRemaining,
             answerWindowTotal: viewModel.answerWindowTotal,
             answerKind: .open,
             isReadingQuestion: viewModel.isReadingQuestion
-        )
-    }
-
-    /// A chip is a promise the word will be heard: Settings toggle AND an armed
-    /// listener. The bar itself no longer depends on either.
-    private var showsCommandWords: Bool {
-        viewModel.showsVoiceHints && viewModel.commandListenerHint != nil
+        ))
     }
 
     private var canInteract: Bool { viewModel.quizState == .askingQuestion }

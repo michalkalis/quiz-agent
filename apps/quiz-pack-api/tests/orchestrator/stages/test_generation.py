@@ -1030,24 +1030,47 @@ async def test_normalizes_per_question_difficulty_and_category() -> None:
     off-vocabulary value would make the question invisible to players.
     """
     questions = [
-        _stub_question(0, difficulty="Hard "),           # normalizes to hard
-        _stub_question(1, difficulty="expert"),          # junk -> default
-        _stub_question(2, category="children"),          # age axis, not a category -> fallback
+        _stub_question(0, difficulty="Hard ", category="sports"),  # normalizes to hard
+        _stub_question(1, difficulty="expert", category="Food"),   # junk -> default; alias
         _stub_question(3, category="History"),           # #170 R1: history IS a taxonomy id
+    ]
+    gen = _FakeGenerator(questions)
+    stage = GenerationStage(gen)  # type: ignore[arg-type]
+    facts = [Fact(text="t", source_url="https://ex/1")]
+    ctx = _make_ctx(target_count=3, facts=facts, category=None)
+
+    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+
+    assert [q.difficulty for q in ctx.questions] == ["hard", "medium", "medium"]
+    assert [q.category for q in ctx.questions] == [
+        "sports", "food-everyday", "history",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_unclassifiable_question_is_dropped_never_stored_as_general() -> None:
+    """2026-11-21 category review: 791 approved questions sat under `general`,
+    which no picker offers, so a player choosing any category never met them.
+    The cause was this gate quietly storing `general` for anything off the
+    taxonomy. Without an order category, a question the model filed under
+    `general`, an age label or nothing at all must be dropped (counted, so a
+    run that loses many is visible), never persisted under an id no player
+    filter reaches."""
+    questions = [
+        _stub_question(0, category="general"),
+        _stub_question(1, category="children"),   # age axis, not a category
+        _stub_question(2, category=""),           # the model emitted none
+        _stub_question(3, category="geography-world"),
     ]
     gen = _FakeGenerator(questions)
     stage = GenerationStage(gen)  # type: ignore[arg-type]
     facts = [Fact(text="t", source_url="https://ex/1")]
     ctx = _make_ctx(target_count=4, facts=facts, category=None)
 
-    await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
+    result = await stage.run(ctx, sink=_RecordingSink())  # type: ignore[arg-type]
 
-    assert [q.difficulty for q in ctx.questions] == [
-        "hard", "medium", "medium", "medium",
-    ]
-    assert [q.category for q in ctx.questions] == [
-        "general", "general", "general", "history",
-    ]
+    assert [q.category for q in ctx.questions] == ["geography-world"]
+    assert result.info["dropped_uncategorized"] == 3
 
 
 @pytest.mark.asyncio

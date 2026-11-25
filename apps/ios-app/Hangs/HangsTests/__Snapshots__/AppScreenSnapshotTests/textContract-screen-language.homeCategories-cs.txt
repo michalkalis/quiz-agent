@@ -3,13 +3,13 @@ Kategorie
 All Categories
 Science & Nature
 History
-Geography & World
+Geography
 Movies & Music
 Sports
-Food & Everyday Life
-Entertainment
-Místní otázky
-Třeba linky MHD ve tvém městě nebo místní karetní hra
+Food & Drink
+Pop Culture
+Otázky pro místní
+To, co ví jen ten, kdo v dané zemi nebo městě žije. Třeba linky MHD.
 
 Hotovo
 # identifiers

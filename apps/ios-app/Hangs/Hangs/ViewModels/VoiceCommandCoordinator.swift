@@ -2,8 +2,8 @@
 //  VoiceCommandCoordinator.swift
 //  Hangs
 //
-//  The voice-command slice: capture phase, recognizer availability, the
-//  voice-start flags, and the skip undo-window state. The listening window +
+//  The voice-command slice: capture phase, recognizer availability and the
+//  voice-answer flag. The listening window +
 //  consumer loop + command routing live in VoiceCommandCoordinator+Listening.swift;
 //  the volatile-result policy (one command per utterance, final-only for
 //  destructive commands, cooldown) lives in VoiceCommandCoordinator+Utterance.swift.
@@ -14,22 +14,21 @@ import Clocks
 import Foundation
 import os
 
-/// #185 5.1: what one finished utterance on the answer confirmation sheet
-/// turned out to be.
+/// #185: what one finished utterance on the answer confirmation sheet turned
+/// out to be. (#243.5: the sheet listens for "again" only — anything else,
+/// words included, is nothing to act on.)
 enum ConfirmationUtterance: Equatable, Sendable {
     /// A command fired for it — its action already ran.
     case command
-    /// Not a command, with words in it: the driver's new answer (the local
-    /// recognizer's text — the answer itself is transcribed from the audio).
-    case newAnswer(String)
-    /// Filler, silence, a blip — nothing to act on.
+    /// Anything else — the countdown resumes.
     case noise
 }
 
 /// The windowed voice-command slice as its own child object (#113 T3).
 /// Owns the capture-phase observable (77.4), the recognizer-availability
-/// mirror (#96 S2), the recognized-command diagnostics (#96 P2), the
-/// voice-start flags (P4a), and the skip undo-window (77.9).
+/// mirror (#96 S2), the recognized-command diagnostics (#96 P2) and the
+/// voice-answer flag (P4a). (The skip undo window of 77.9 is gone: "next"
+/// skips at once, founder 2026-11-22.)
 ///
 /// The façade (QuizViewModel) owns this child, re-publishes its
 /// `objectWillChange`, and re-exposes the view-facing slice via permanent
@@ -58,11 +57,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// finishes installing after launch.
     @Published private(set) var commandAvailability: VoiceCommandAvailability = .unknown
 
-    /// Skip undo-window (77.9 / E-match): a recognized "skip" on the question
-    /// screen opens a ~2.5 s window before the skip commits, so a tap or a
-    /// spoken cancel word can abort it. `nil` = no pending skip.
-    @Published private(set) var pendingSkipWindow: UndoWindow?
-
     /// #122 Track A — the ambient-glow feedback phase (Variant C). Written only
     /// through the helpers in VoiceCommandCoordinator+Feedback.swift; internal
     /// (not `private(set)`) because those helpers are a sibling-file extension.
@@ -70,6 +64,10 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// The command a transcript matched but that has not fired yet; non-nil only
     /// while `voiceFeedbackPhase == .recognizing` (#122 follow-up).
     @Published var recognizingCommand: VoiceCommand?
+    /// "What the app hears" (founder 2026-11-22): the command the words in
+    /// progress resemble, until it fires or the utterance ends. Written only
+    /// through VoiceCommandCoordinator+Heard.swift.
+    @Published var commandHeard: CommandHeard?
 
     // MARK: - Glow Feedback State (#122 — policy lives in +Feedback)
 
@@ -100,6 +98,11 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// How long the speech before the pause lasted, from the last
     /// `SpeechActivityEvent.paused` — a blip never shows "processing".
     var lastPausedSpeechSecs: TimeInterval = 0
+    /// When the driver last stopped speaking (`SpeechActivityEvent.paused`),
+    /// or `nil` while speaking — the anchor of `voice_command`'s
+    /// `speech_end_ms` (founder 2026-11-22: how long a command takes to fire
+    /// after the word, per language).
+    var lastSpeechEndAt: AnyClock<Duration>.Instant?
 
     // MARK: - #208.7 Read + Utterance Log State (policy in +Reading)
 
@@ -116,18 +119,22 @@ final class VoiceCommandCoordinator: ObservableObject {
     var utteranceBeganDuringRead = false
     /// The per-utterance numbers for the "voice cmd utterance" log.
     var utteranceLog = CommandUtteranceLog()
+    /// The listening window in progress, for `voice_command_window`
+    /// (+WindowReport); `nil` while no listener is live.
+    var commandWindowStats: CommandWindowStats?
+    /// Recognizer results heard in any open window since launch. Only ever
+    /// grows, so a caller can tell "nothing heard since then" across window
+    /// re-arms (#243 decision 5: the round end asks once more on silence).
+    var transcriptsHeard = 0
 
-    /// P4a founder-overridable flag: spoken "start" on QuestionView opens the
+    /// P4a founder-overridable flag: spoken "answer" on QuestionView opens the
     /// mic. `false` disables ONLY that wiring — the rest of the command layer
-    /// (and Home "start") stays intact.
+    /// stays intact.
     var voiceStartOnQuestionEnabled: Bool = Config.voiceStartCommandEnabled
 
     /// Observation hook / test seam (77.5): fired when a screen-scoped command
     /// is recognized, BEFORE it is routed to an action.
     var onCommandRecognized: (@MainActor (VoiceCommand) -> Void)?
-
-    /// Earcon seam (77.10): fired when the skip undo-window OPENS.
-    var onSkipUndoWindowOpened: (@MainActor () -> Void)?
 
     // MARK: - Volatile-result Guards (#119 — state; policy lives in +Utterance)
 
@@ -137,8 +144,8 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// seems to happen, build-33: "start start start start start").
     static let commandCooldown: TimeInterval = 1.5
 
-    /// The façade's clock (#180 track A): the cooldown, the glow windows, the
-    /// settle fallback and the skip-undo window all run on it, so a test drives
+    /// The façade's clock (#180 track A): the cooldown, the glow windows and
+    /// the settle fallback all run on it, so a test drives
     /// them with a `TestClock` instead of real sleeps — the repo's three flaky
     /// async voice tests all came from `Task.sleep`.
     let clock: AnyClock<Duration>
@@ -223,11 +230,10 @@ final class VoiceCommandCoordinator: ObservableObject {
     let silenceDetectionService: SilenceDetectionServiceProtocol
     /// Façade-owned task registry (decision 4 — a register/cancel handle), so
     /// `resetState()`'s blanket `cancelAll()` still covers the consumer loop
-    /// and a pending skip exactly as before the extraction.
+    /// exactly as before the extraction.
     let taskBag: TaskBag
-    /// #186 step 1: attempt owner (shared like `taskBag`) — the skip undo
-    /// window proves its question is still on screen; commands go to the
-    /// flight recorder.
+    /// #186 step 1: attempt owner (shared like `taskBag`) — commands go to
+    /// the flight recorder.
     let attemptLedger: AttemptLedger
 
     // MARK: - Injected façade closures (decision 4 — scoped reads/writes, never a vm ref)
@@ -276,11 +282,8 @@ final class VoiceCommandCoordinator: ObservableObject {
     let skipQuestion: @MainActor () async -> Void
     let confirmAnswer: @MainActor () async -> Void
     let rerecordAnswer: @MainActor () -> Void
-    /// #185 5.3: spoken "stop" on the confirmation sheet holds the auto-confirm
-    /// countdown — it used to CANCEL the answer, which the founder does not want.
-    let holdAutoConfirm: @MainActor () -> Void
-    /// #185: the sheet is the no-answer choice (Again / Skip, no countdown) —
-    /// its own command screen, so "potvrď" can no longer skip there.
+    /// #185: the sheet is the no-answer choice (Again / Next, no countdown) —
+    /// its own command screen.
     let isNoAnswerSheet: @MainActor () -> Bool
     /// #185 5.1: someone is speaking on the confirmation sheet — the countdown
     /// must not confirm the old answer under a new one.
@@ -289,18 +292,17 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// `ConfirmationUtterance`.
     let noteConfirmationUtteranceEnded: @MainActor (ConfirmationUtterance) -> Void
     let continueToNext: @MainActor () -> Void
-    /// #171 Track D / #173: spoken "pause"/"pauza" — on the question screen and
-    /// on the confirmation sheet alike.
-    let pauseQuiz: @MainActor () -> Void
     let cancelThinkingTime: @MainActor () -> Void
     /// #188 G1/G3: the error / set-end screen has spoken its line and may listen.
     let quizEndCommandsArmed: @MainActor () -> Bool
+    /// #243.8: the result waits for "next" and has spoken its verdict.
+    let resultNextCommandArmed: @MainActor () -> Bool
     /// #188 G1: spoken "znova" on the error screen — what its primary button does.
     let retryFromError: @MainActor () async -> Void
-    /// #188 G3 / #200: spoken "znova" at the set end — the Play Again button's
-    /// path, which replays the same pack.
+    /// #188 G3 / #200: spoken "znova" at the round end — the Play Again
+    /// button's path, which replays the same pack.
     let playAgain: @MainActor () -> Void
-    /// #188 G1/G3: spoken "stop" on the error screen, "domov" at the set end.
+    /// #243 decision 5: spoken "domov" at the round end — its Home button.
     let goHome: @MainActor () -> Void
     /// #51 product analytics — the façade attaches the session id.
     let trackAnalytics: @MainActor (AnalyticsEvent) -> Void
@@ -312,9 +314,6 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// Car test 2026-10-30: the answer the open sheet read back aloud, for the
     /// sheet's echo guard (`echoGuardText`).
     let answerReadBack: @MainActor () -> String?
-    /// #208.7: a skip said during the read stops the read — the driver hears
-    /// that it worked, and the undo window is not spent under the question.
-    let stopQuestionRead: @MainActor () async -> Void
 
     /// #237: the player turned commands on and the live listener (started
     /// without a transcriber) must be rebuilt once they are ready. Written
@@ -349,22 +348,20 @@ final class VoiceCommandCoordinator: ObservableObject {
         skipQuestion: @escaping @MainActor () async -> Void,
         confirmAnswer: @escaping @MainActor () async -> Void,
         rerecordAnswer: @escaping @MainActor () -> Void,
-        holdAutoConfirm: @escaping @MainActor () -> Void,
         isNoAnswerSheet: @escaping @MainActor () -> Bool,
         noteConfirmationSpeech: @escaping @MainActor () -> Void,
         noteConfirmationUtteranceEnded: @escaping @MainActor (ConfirmationUtterance) -> Void,
         continueToNext: @escaping @MainActor () -> Void,
-        pauseQuiz: @escaping @MainActor () -> Void,
         cancelThinkingTime: @escaping @MainActor () -> Void,
         quizEndCommandsArmed: @escaping @MainActor () -> Bool,
+        resultNextCommandArmed: @escaping @MainActor () -> Bool,
         retryFromError: @escaping @MainActor () async -> Void,
         playAgain: @escaping @MainActor () -> Void,
         goHome: @escaping @MainActor () -> Void,
         trackAnalytics: @escaping @MainActor (AnalyticsEvent) -> Void = { _ in },
         isReadingQuestionAloud: @escaping @MainActor () -> Bool = { false },
         textBeingRead: @escaping @MainActor () -> String? = { nil },
-        answerReadBack: @escaping @MainActor () -> String? = { nil },
-        stopQuestionRead: @escaping @MainActor () async -> Void = {}
+        answerReadBack: @escaping @MainActor () -> String? = { nil }
     ) {
         self.silenceDetectionService = silenceDetectionService
         self.taskBag = taskBag
@@ -386,14 +383,13 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.skipQuestion = skipQuestion
         self.confirmAnswer = confirmAnswer
         self.rerecordAnswer = rerecordAnswer
-        self.holdAutoConfirm = holdAutoConfirm
         self.isNoAnswerSheet = isNoAnswerSheet
         self.noteConfirmationSpeech = noteConfirmationSpeech
         self.noteConfirmationUtteranceEnded = noteConfirmationUtteranceEnded
         self.continueToNext = continueToNext
-        self.pauseQuiz = pauseQuiz
         self.cancelThinkingTime = cancelThinkingTime
         self.quizEndCommandsArmed = quizEndCommandsArmed
+        self.resultNextCommandArmed = resultNextCommandArmed
         self.retryFromError = retryFromError
         self.playAgain = playAgain
         self.goHome = goHome
@@ -401,7 +397,6 @@ final class VoiceCommandCoordinator: ObservableObject {
         self.isReadingQuestionAloud = isReadingQuestionAloud
         self.textBeingRead = textBeingRead
         self.answerReadBack = answerReadBack
-        self.stopQuestionRead = stopQuestionRead
 
         // Seed + observe recognizer availability (see `commandAvailability`).
         // Seeding catches whatever the service resolved before this object
@@ -424,16 +419,15 @@ final class VoiceCommandCoordinator: ObservableObject {
         commandAvailabilityTask?.cancel()
     }
 
-    /// T7 unified reset model: clears this child's own scoped state
-    /// (capture phase + pending skip). Not yet wired — the façade's
+    /// T7 unified reset model: clears this child's own scoped state. Not yet wired — the façade's
     /// `resetState`/`transition` invokes this once T7 (S6b) wires the
     /// per-child `reset()` calls.
     func reset() {
         applyCaptureEvent(.reset)
-        abortSkipUndoWindow()
         endUtterance() // no utterance survives a reset (#119)
         resetFeedbackGlow() // #122: no glow survives a reset either
         endQuestionRead() // #208.7: nor a kept-up read listener
+        clearCommandHeard() // nor a "what the app hears" preview
     }
 
     // MARK: - Capture Phase
@@ -453,52 +447,5 @@ final class VoiceCommandCoordinator: ObservableObject {
     /// setter is honored (+Listening is a separate file).
     func noteRecognizedCommand(_ command: VoiceCommand) {
         lastRecognizedCommand = command
-    }
-
-    // MARK: - Skip Undo-Window
-
-    /// Open the skip undo-window (77.9). A recognized "skip" on the question
-    /// screen does NOT commit immediately: it opens a ~2.5 s window that a tap
-    /// (or a spoken cancel word) can abort. On expiry the skip commits via the
-    /// injected `skipQuestion`. Idempotent while a window is already open.
-    /// `duration` is injectable so tests don't wait the full 2.5 s.
-    func beginSkipUndoWindow(duration: TimeInterval = UndoWindow.defaultDuration) {
-        guard quizState() == .askingQuestion, pendingSkipWindow == nil else { return }
-        cancelThinkingTime()
-        pendingSkipWindow = UndoWindow(duration: duration)
-        emitEarcon(.skipConfirm) // 77.10 skip-confirm tone — undo-window opened
-        onSkipUndoWindowOpened?() // observation seam (deferred UI / tests)
-
-        let clock = clock
-        let owner = attemptLedger.current
-        let task = Task { [weak self] in
-            try? await clock.sleep(for: .seconds(duration))
-            guard let self, !Task.isCancelled else { return }
-            guard self.pendingSkipWindow != nil else { return } // aborted
-            // #110 Bug 2: a pending skip is only ever committed while the quiz
-            // is still asking the question — starting an answer (voice or tap)
-            // supersedes it. Without this recheck, expiry could commit
-            // skipQuestion() mid-recording, leaving the streaming mic live.
-            guard self.quizState() == .askingQuestion,
-                  self.attemptLedger.ownsQuestion(owner, "skipUndo.commit")
-            else {
-                self.pendingSkipWindow = nil
-                return
-            }
-            self.pendingSkipWindow = nil
-            self.attemptLedger.record(.timer, "skipUndo.commit")
-            await self.skipQuestion()
-        }
-        taskBag.add(task, key: .skipUndo)
-        Logger.voice.info("⏭️ Skip undo-window opened (\(duration, privacy: .public)s)")
-    }
-
-    /// Abort a pending skip (tap on the undo affordance, a spoken cancel word,
-    /// or starting an answer). No-op if none is open.
-    func abortSkipUndoWindow() {
-        guard pendingSkipWindow != nil else { return }
-        pendingSkipWindow = nil
-        taskBag.cancel(.skipUndo)
-        Logger.voice.info("↩️ Skip undo-window aborted")
     }
 }

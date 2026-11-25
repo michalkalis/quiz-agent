@@ -18,7 +18,7 @@ import Testing
 @Suite("Unified reset model (#113 T7)")
 struct ResetModelTests {
     /// WHY: before T7, resetState missed ≥9 fields (paywall, mic-picker,
-    /// command capture, skip window, no-answer flag, auto-confirm, edit
+    /// command capture, no-answer flag, auto-confirm, edit
     /// flags, error model, MCQ match) — each a sticky-state bug across quiz
     /// teardown. The per-child reset() mechanism must clear every one of them.
     @Test("full teardown leaves zero residual across all previously-missed fields")
@@ -37,9 +37,6 @@ struct ResetModelTests {
         )
         viewModel.showingMicrophonePicker = true
         _ = viewModel.voiceCommandCoordinator.applyCaptureEvent(.arm)
-        // The skip undo-window only opens while the question is being asked.
-        viewModel.quizState = .askingQuestion
-        viewModel.voiceCommandCoordinator.beginSkipUndoWindow()
         viewModel.recordingCoordinator.noAnswerCaptured = true
         viewModel.recordingCoordinator.currentQuestionAudioUrl = "https://example.com/q.mp3"
         viewModel.autoConfirmCountdown = 5
@@ -51,7 +48,6 @@ struct ResetModelTests {
         viewModel.setError(message: "boom", context: .general)
 
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .armed)
-        #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow != nil)
         #expect(viewModel.activeErrorModel != nil)
         #expect(viewModel.score == 5.0)
 
@@ -62,7 +58,6 @@ struct ResetModelTests {
         #expect(viewModel.quotaLimitError == nil)
         #expect(viewModel.showingMicrophonePicker == false)
         #expect(viewModel.voiceCommandCoordinator.commandCapturePhase == .idle)
-        #expect(viewModel.voiceCommandCoordinator.pendingSkipWindow == nil)
         #expect(viewModel.recordingCoordinator.noAnswerCaptured == false)
         #expect(viewModel.recordingCoordinator.currentQuestionAudioUrl == nil)
         #expect(viewModel.autoConfirmCountdown == 0)
@@ -112,6 +107,8 @@ struct ResetModelTests {
     /// didn't catch that, say it again" — and the mic opens again at once. No
     /// sheet, no banner, no fresh think+answer countdown (#171 Track B's reason
     /// for deleting the old escalation still holds: that read as a broken timer).
+    /// #243.4 (founder 2026-11-24): only when the player was heard; a window
+    /// that heard nothing goes back to thinking (`SilenceBackToThinkingTests`).
     @Test("the first failed capture says it heard nothing and re-records — no sheet, no banner")
     func firstFailedCaptureRetries() async throws {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
@@ -120,7 +117,7 @@ struct ResetModelTests {
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .recording
 
-        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        viewModel.recordingCoordinator.handleTranscriptionFailure(heardSpeech: true)
 
         #expect(viewModel.showAnswerConfirmation == false, "the first miss is not a sheet")
         #expect(viewModel.errorMessage == nil, "a banner re-reads as 'something broke, try again'")
@@ -141,10 +138,10 @@ struct ResetModelTests {
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
         viewModel.quizState = .recording
-        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        viewModel.recordingCoordinator.handleTranscriptionFailure(heardSpeech: true)
         await pumpUntil({ viewModel.quizState == .recording }, "the retry never re-opened the mic")
 
-        viewModel.recordingCoordinator.handleTranscriptionFailure()
+        viewModel.recordingCoordinator.handleTranscriptionFailure(heardSpeech: true)
 
         #expect(viewModel.showAnswerConfirmation == true)
         #expect(viewModel.noAnswerCaptured == true, "the sheet renders the no-answer body, not the Transcribing spinner")
@@ -153,16 +150,17 @@ struct ResetModelTests {
         #expect(viewModel.taskBag.contains(.autoConfirm) == false, "no countdown may resolve this sheet")
         #expect(viewModel.autoConfirmCountdown == 0)
         #expect(viewModel.errorMessage == nil)
-        #expect(mockNetwork.synthesizedTexts.count == 1, "the sheet is not announced")
+        // #243.4: the sheet's offer line is a bundled clip, never a synthesized one.
+        #expect(mockNetwork.synthesizedTexts.count == 1, "nothing more is synthesized for the sheet")
     }
 
     /// WHY: the founder's exact TF trace — the answer window expires,
-    /// auto-record opens and captures dead air. Dead air is never an upload.
-    /// #240.9 (founder 2026-11-18): nor a failed attempt: no "didn't catch
-    /// that", no re-record on its own, but the calm way on (speak, type or
-    /// move on) on the question.
-    @Test("dead air during auto-record is not a failed attempt")
-    func deadAirDuringAutoRecordIsNotAFailedAttempt() async throws {
+    /// auto-record opens and captures dead air. Never an upload. #243.4
+    /// (founder 2026-11-24, decision 2): dead air is a player still thinking,
+    /// so it no longer takes the spoken retry — the quiz goes back to
+    /// thinking with a fresh window and the mic shut.
+    @Test("dead air during auto-record goes back to thinking, never an upload")
+    func deadAirDuringAutoRecordRetries() async throws {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
         viewModel.currentSession = Fixtures.makeActiveSession()
         viewModel.currentQuestion = Fixtures.makeQuestion()
@@ -177,15 +175,16 @@ struct ResetModelTests {
         #expect(viewModel.showAnswerConfirmation == false)
         #expect(viewModel.isAutoRecording == false)
         #expect(viewModel.errorMessage == nil)
-        #expect(!viewModel.taskBag.contains(.emptyAnswerRetry), "silence arms no re-record")
-        #expect(viewModel.quizState == .askingQuestion)
-        #expect(viewModel.showsSilencePrompt, "the question offers the calm way on")
+        #expect(viewModel.taskBag.contains(.emptyAnswerRetry) == false, "no spoken retry for silence")
+        #expect(viewModel.quizState == .askingQuestion, "back to thinking, the mic shut")
+        #expect(viewModel.taskBag.contains(.thinkingTime), "a fresh think window")
     }
 
     /// WHY: a spoken-but-lost answer (speech was heard, the server's transcript
-    /// came back empty) does not fork from dead air — one predictable path
-    /// after every miss.
-    @Test("an empty transcript after detected speech takes the same path")
+    /// came back empty) keeps the spoken retry. #243.4 (founder 2026-11-24):
+    /// it now forks from dead air on purpose — the hint is for a player the app
+    /// heard but did not understand.
+    @Test("an empty transcript after detected speech takes the retry path")
     func emptyTranscriptAfterSpeechTakesSamePath() async throws {
         let (viewModel, mockNetwork) = Fixtures.makeViewModelWithNetwork()
         let base = try #require(mockNetwork.mockResponse)

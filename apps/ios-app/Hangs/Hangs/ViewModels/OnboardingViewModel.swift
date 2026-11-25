@@ -73,7 +73,7 @@ final class OnboardingViewModel: ObservableObject {
     /// The three command words on the commands page's card, in the command
     /// language — real words from the lexicon, never a made-up example.
     static func commandWords(language: CommandLanguage) -> [String] {
-        VoiceCommandLexicon.spokenChips([.next, .repeatQuestion, .start], language: language)
+        VoiceCommandLexicon.spokenChips([.next, .repeatQuestion, .answer], language: language)
     }
 
     /// "Allow" on the microphone page: granted → the commands page; refused →

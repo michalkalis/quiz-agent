@@ -101,11 +101,15 @@ struct ListenBarDismissal: Equatable {
 
 struct ListenBar: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Metrics {
         /// #188 G11: the countdown beside the 17pt status line — one step
         /// larger, so the number is what the eye lands on.
         static let statusSeconds: CGFloat = 20
+        /// "What the app hears" under a think countdown: a band thin enough
+        /// to read as an edge, not as a second fill.
+        static let heardBand: CGFloat = 3
     }
 
     /// The answer form the driver should speak — drives the answer-mode caption.
@@ -163,6 +167,18 @@ struct ListenBar: View {
         case micOff
     }
 
+    /// TF build 90 (founder): the question screen's hints live in the open
+    /// mic's bar, not as free lines under the question. Answer mode only, and
+    /// only until speech is heard.
+    enum AnswerNote: Equatable {
+        /// #185 track B: the mic opened again after an empty answer; the state
+        /// line says why.
+        case didNotCatch
+        /// #208.6: a transcript of this question was thrown away; the
+        /// instruction offers spelling.
+        case spelling
+    }
+
     /// #132 Track B — the think-phase window this bar is counting down. The fill
     /// fraction is `remaining/total`; a zero total hides the fill (no window is
     /// draining, e.g. while the question is still being read).
@@ -180,6 +196,11 @@ struct ListenBar: View {
     /// as a ready caption (`VoiceCommandLexicon.recognizingCaption`, command
     /// language, verbatim). Shown with a spinner while `feedback == .recognizing`.
     var recognizingWord: String? = nil
+
+    /// "What the app hears" (founder 2026-11-22): the command the words in
+    /// progress resemble. Its label takes the caption, its certainty a soft
+    /// fill; VoiceOver keeps the state caption (a guess is not announced).
+    var heard: CommandHeard? = nil
 
     /// The screen's concrete command words, already rendered by
     /// `VoiceCommandLexicon.hint(on:language:)` (the same string the caller gates
@@ -219,6 +240,9 @@ struct ListenBar: View {
     /// nil or 0 = no window running, nothing shown. It moved here from the
     /// Stop button so the quiz counts down in one place.
     var answerRemaining: Int? = nil
+
+    /// TF build 90: the retry or spelling hint (answer mode only).
+    var answerNote: AnswerNote? = nil
 
     /// #173 B1 (founder locked 2026-09-07): a trailing ✕ that hides the bar for
     /// the CURRENT question only. Nil = no dismiss affordance (Home, result,
@@ -461,12 +485,28 @@ struct ListenBar: View {
     /// catalog-localized like the answer captions, since it narrates the answer
     /// flow ("listening in N s"), not the command engine.
     private var captionText: Text {
+        // The status layout keeps its large state and shows the label on the
+        // small line under it (`statusContent`); the "hearing" / recognizing
+        // caption would only say the label twice.
+        guard let heardCaption else { return stateCaption() }
+        return usesStatusLayout ? stateCaption(showsMicState: false) : heardCaption
+    }
+
+    /// The heard label, while there is one and the bar is listening.
+    private var heardCaption: Text? {
+        guard let heard, !isBusy else { return nil }
+        return Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language))
+    }
+
+    /// The caption for the bar's state, without the live preview — also what
+    /// VoiceOver reads.
+    private func stateCaption(showsMicState: Bool = true) -> Text {
         // #208.7: what the mic is doing right now outranks the countdown — on
         // the question screen the think caption used to hide both cues.
-        if isRecognizing {
+        if showsMicState, isRecognizing {
             return Text(verbatim: recognizingWord ?? VoiceCommandLexicon.processingCaption(language: language))
         }
-        if isHearing { return Text(verbatim: VoiceCommandLexicon.hearingCaption(language: language)) }
+        if showsMicState, isHearing { return Text(verbatim: VoiceCommandLexicon.hearingCaption(language: language)) }
         if let countdown = activeThinkCountdown {
             // #188 G11: in the status layout the seconds are their own large
             // number, so the state line is the one word.
@@ -499,11 +539,9 @@ struct ListenBar: View {
             ))
         // #185 track F: the state, not the instruction — the instruction
         // moved to `answerInstruction` (the sub-line).
-        // #240.9 (founder 2026-11-18): the open mic says in words that it is
-        // the player's turn. "Listening…" read as the app being busy, and most
-        // store answers were silence.
         case .answer:
-            return speechHeard ? Text("Hearing you…") : Text("Speak now")
+            if speechHeard { return Text("Hearing you…") }
+            return answerNote == .didNotCatch ? Text("Didn't catch that") : Text("Listening…")
         }
     }
 
@@ -513,6 +551,12 @@ struct ListenBar: View {
     private var answerInstruction: Text? {
         guard case let .answer(kind) = mode else { return nil }
         if speechHeard { return Text("I'll stop when you go quiet") }
+        if answerNote == .spelling, kind == .open {
+            return Text(
+                "Or spell it: P, A, R, I, S",
+                comment: "Under 'Listening…' after the player rejected a transcript: the answer can be spoken letter by letter. Short, it shares one line with the countdown. The example spells Paris as it is written in this language."
+            )
+        }
         switch kind {
         // #171 Track I: answering with the option TEXT works (and goes through
         // the confirmation sheet like every other answer), so the caption must
@@ -553,6 +597,19 @@ struct ListenBar: View {
                         }
                         .clipShape(Capsule())
                     }
+                    // "What the app hears": grows with the certainty, full on a
+                    // fire. Under a draining think window it is a thin band on
+                    // the bottom edge, so the two fills never read as one.
+                    // Under Reduce Motion only the label shows.
+                    if let heard, heardCaption != nil, !reduceMotion {
+                        Rectangle()
+                            .fill(live.opacity(thinkFillFraction == nil ? 0.16 : 0.5))
+                            .frame(height: thinkFillFraction == nil ? nil : Metrics.heardBand)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
+                            .scaleEffect(x: heard.certainty, anchor: .leading)
+                            .clipShape(Capsule())
+                            .animation(.easeOut(duration: 0.2), value: heard.certainty)
+                    }
                 }
             )
             .overlay(Capsule().strokeBorder(border, lineWidth: 1))
@@ -568,6 +625,7 @@ struct ListenBar: View {
             }
             .animation(.easeInOut(duration: 0.25), value: feedback)
             .animation(.easeInOut(duration: 0.25), value: speechHeard)
+            .animation(.easeInOut(duration: 0.25), value: heard == nil)
     }
 
     /// Room for the ✕ when there is one (F2 widens it with the larger bar).
@@ -597,7 +655,13 @@ struct ListenBar: View {
                     .foregroundColor(statusTextColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if !chipWords.isEmpty {
+                if let heardCaption {
+                    heardCaption
+                        .font(.hangsMonoMini)
+                        .foregroundColor(accent)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                } else if !chipWords.isEmpty {
                     words
                 } else if let subLine {
                     subLine
@@ -706,7 +770,7 @@ struct ListenBar: View {
 
     /// The bar as one VoiceOver element: state, seconds left, then what to say.
     private var accessibilityText: Text {
-        var text = captionText
+        var text = stateCaption()
         if let trailingSeconds {
             text = text + Text(verbatim: ", ") + Text("\(trailingSeconds) seconds left")
         }
@@ -834,7 +898,8 @@ struct ListenBar: View {
         captionText
             .font(.hangsMono(11, weight: .medium))
             .tracking(0.6)
-            .textCase(.uppercase)
+            // The heard label stays lowercase: it is a quiet aside, not a state.
+            .textCase(heardCaption == nil || usesStatusLayout ? .uppercase : nil)
             .foregroundColor(accent)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
@@ -986,15 +1051,15 @@ struct ListenBarLevelGlow: View {
 #if DEBUG
     #Preview {
         VStack(spacing: 16) {
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#,
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#,
                       thinkCountdown: .init(remaining: 32, total: 45))
-            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "start" or "next""#)
-            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "start" or "next""#)
+            ListenBar(mode: .command, feedback: .matched, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Say "answer" or "next""#)
+            ListenBar(mode: .command, feedback: .hearing, commandHint: #"Say "answer" or "next""#)
             ListenBar(mode: .command, feedback: .recognizing,
-                      recognizingWord: VoiceCommandLexicon.recognizingCaption(.skip),
-                      commandHint: #"Say "start" or "next""#)
+                      recognizingWord: VoiceCommandLexicon.recognizingCaption(.next),
+                      commandHint: #"Say "answer" or "next""#)
             ListenBar(mode: .answer(.mcq))
             ListenBar(mode: .answer(.trueFalse), feedback: .unmatched)
             ListenBar(mode: .answer(.open))
@@ -1004,18 +1069,18 @@ struct ListenBarLevelGlow: View {
                       commandWords: ["„zopakuj“", "„ďalšia“"], language: .slovak)
             // #189 — the confirmation sheet right after it opens.
             ListenBar(mode: .readingAnswerBack,
-                      commandHint: "Povedz „potvrď“, „znova“ alebo novú odpoveď",
+                      commandHint: "Povedz „znova“",
                       shortCaption: true, language: .slovak)
             ListenBar(mode: .command,
-                      commandWords: ["„štart“", "„zopakuj“", "„ďalšia“"],
+                      commandWords: ["„odpovedz“", "„zopakuj“", "„ďalšia“"],
                       language: .slovak,
                       thinkCountdown: .init(remaining: 32, total: 45))
             ListenBar(mode: .evaluating)
             ListenBar(mode: .skipping)
-            ListenBar(mode: .command, commandHint: #"Say "start" or "next""#, onDismiss: {})
-            ListenBar(mode: .command, commandHint: #"Povedz „štart" alebo „ďalšia""#, language: .slovak)
-            ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim)
-            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „štart""#,
+            ListenBar(mode: .command, commandHint: #"Say "answer" or "next""#, onDismiss: {})
+            ListenBar(mode: .command, commandHint: #"Povedz „odpovedz" alebo „ďalšia""#, language: .slovak)
+            ListenBar(mode: .command, commandHint: #"Say "again""#, size: .slim)
+            ListenBar(mode: .command, feedback: .unmatched, commandHint: #"Povedz „znova""#,
                       size: .slim, language: .slovak)
         }
         .padding(20)

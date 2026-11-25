@@ -1,0 +1,161 @@
+{
+  "slug": "daily-return-rewards",
+  "question": "What makes players come back every day (streaks, daily challenge, rewards, reminders), what do they resent about those mechanics, and what should Trubbo (voice quiz) adopt? Plus: what do the 'Road Trip Trivia' style car apps do and what do their users say?",
+  "appstore": {
+    "search_terms": [
+      "road trip trivia",
+      "car trivia",
+      "road trip games",
+      "autio",
+      "highway trivia",
+      "milesmile",
+      "daily trivia",
+      "trivia quiz game",
+      "jeopardy",
+      "sporcle",
+      "quizduel",
+      "wordle daily word game",
+      "daily puzzle",
+      "question of the day trivia",
+      "habit tracker streak",
+      "finch self care",
+      "language learning"
+    ],
+    "app_ids": [
+      "6756504437",
+      "6446503414",
+      "6760123610",
+      "570060128",
+      "307569751",
+      "651510680",
+      "493145008",
+      "426826309",
+      "447188370"
+    ],
+    "per_term": 12,
+    "max_apps": 48,
+    "countries": [
+      "us",
+      "gb",
+      "ca",
+      "au",
+      "de",
+      "sk",
+      "cz",
+      "pl"
+    ],
+    "pages": 10,
+    "iap_country": "us"
+  },
+  "play": {
+    "search_terms": [
+      "duolingo",
+      "trivia quiz",
+      "daily word puzzle",
+      "road trip trivia",
+      "habit tracker streak"
+    ],
+    "per_term": 6,
+    "max_apps": 18,
+    "count": 600,
+    "locales": [
+      [
+        "en",
+        "us"
+      ]
+    ]
+  },
+  "reddit": {
+    "subreddits": [
+      "duolingo",
+      "languagelearning",
+      "wordle",
+      "NYTConnections",
+      "trivia",
+      "iosgaming",
+      "gamedev",
+      "getdisciplined",
+      "roadtrip",
+      "ProductManagement"
+    ],
+    "title_terms": [
+      "streak",
+      "streak freeze",
+      "lost my streak",
+      "daily reward",
+      "daily challenge",
+      "login bonus",
+      "leaderboard",
+      "notifications",
+      "road trip games",
+      "car games"
+    ],
+    "posts_per_term": 30,
+    "comments_per_post": 80
+  },
+  "hn": {
+    "queries": [
+      "duolingo streak",
+      "streaks habit",
+      "wordle streak",
+      "daily login rewards",
+      "gamification retention streak"
+    ],
+    "pages": 2
+  },
+  "keywords": [
+    "streak",
+    "every ?day|each day|daily (challenge|quiz|puzzle|game|goal|quest|reward|bonus|question|drive|trivia|play|habit|routine|reminder|spin|login)",
+    "come back|coming back|keeps? me (coming|going|motivated|engaged)|look forward|part of my (day|morning|routine)|my (morning|daily|nightly) routine|\\bhabit",
+    "reward|bonus|\\bbadges?\\b|achievement|troph|\\bxp\\b",
+    "leaderboard|\\bleagues?\\b",
+    "notif|remind",
+    "freeze|lost my|broke(n)? my",
+    "addict|hooked|obsess|motivat",
+    "widget",
+    "\\bhearts\\b|\\benergy\\b|\\blives\\b|\\bcoins\\b|\\bgems\\b",
+    "commute|road ?trip|while driving|carplay|in the car|car ride",
+    "séri|denn[áíéýú]|odmen|každý de|täglich|belohn|codzien|nagrod"
+  ],
+  "min_chars": 40,
+  "exclude_apps": [
+    "trivago: Compare hotel prices",
+    "Turkish Airlines: Book Flights",
+    "TripIt: Travel Planner",
+    "MileIQ: Mileage Tracker & Log",
+    "Audible: Audiobooks & Podcasts",
+    "Audiomack - Play Music Offline",
+    "National Park Service",
+    "Charity Miles",
+    "Duolingo English Test (DET)",
+    "Dinolingo Kids Learn Languages",
+    "Learn to Read - Duolingo ABC",
+    "Offline Games - No Wifi Games"
+  ],
+  "codebook": {
+    "streak_motivates": "says a streak / day counter keeps them coming back, or is proud of it",
+    "streak_lost_upset": "lost a streak through their own miss (illness, travel, forgot) and is upset, demotivated or quit",
+    "streak_bug_lost": "streak lost or reset because of a bug, sync, timezone or update",
+    "streak_pressure": "streak causes anxiety, guilt or obligation; does the bare minimum only to keep it",
+    "streak_meaningless": "says the streak is fake or pointless (freezes inflate it, streak is not real progress)",
+    "forgiveness_wanted": "asks for or praises a streak freeze, repair, vacation mode, rest days or weekly goal",
+    "pay_to_keep": "resents paying (money or premium currency) to repair/keep a streak or progress",
+    "daily_content_loved": "returns for fresh daily content (daily puzzle, quiz, challenge, question); part of a routine",
+    "daily_limit_liked": "likes that it is short or limited to once a day",
+    "daily_limit_resented": "resents once-a-day limit or wait timers; wants more plays or an archive",
+    "reward_liked": "enjoys rewards, badges, achievements, collectibles, XP, levels, unlocks",
+    "reward_empty_or_rigged": "rewards are useless, nothing to spend coins on, rigged spins, or rewards were cut",
+    "energy_lives_resented": "hearts / energy / lives limit how much they can play",
+    "ads_for_rewards": "too many or forced ads, including watch-an-ad-for-reward",
+    "leaderboard_liked": "leaderboard / league / competing motivates them",
+    "leaderboard_pressure": "leagues or leaderboards stress them, cheaters, wants to opt out",
+    "social_motivates": "playing or comparing with friends/family, shared streaks, sharing results motivates",
+    "notif_helpful": "wants or praises reminders/notifications",
+    "notif_annoying": "too many, guilt-tripping or unstoppable notifications",
+    "widget": "mentions a home-screen or lock-screen widget (praise or request or bug)",
+    "progress_real": "motivated by real progress, learning or good content rather than game mechanics; or says gamification got in the way of it",
+    "car_context": "plays or wants to play in the car / commute / road trip, or describes road-trip games (put what they play or want in `theme`)",
+    "voice_audio": "comments on voice, audio, read-aloud or hands-free use (quality, wish, bug)",
+    "other": "about daily return, rewards or car play but none of the above (describe in `quote`)"
+  }
+}

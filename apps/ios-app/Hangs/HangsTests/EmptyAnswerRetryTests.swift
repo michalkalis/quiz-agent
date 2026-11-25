@@ -43,8 +43,11 @@ struct EmptyAnswerRetryTests {
         return (vm, silence, network, audio)
     }
 
-    /// Record something the backend cannot understand (the car-test 400).
+    /// Record speech the backend cannot understand (the car-test 400). #243.4:
+    /// the voice detector heard the player — a window that heard nothing goes
+    /// back to thinking instead (`SilenceBackToThinkingTests`).
     private func recordUnderstoodAsNothing(_ vm: QuizViewModel, _ silence: MockSilenceDetectionService) async {
+        vm.recordingCoordinator.noteSpeechStarted()
         silence.simulateAnswerAudio(Data(count: 16000))
         await vm.recordingCoordinator.stopRecordingAndSubmit()
     }
@@ -132,10 +135,10 @@ struct EmptyAnswerRetryTests {
     /// in the founder's wording (2026-09-24).
     @Test("the prompt exists in every quiz language")
     func promptInEveryQuizLanguage() {
-        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Nezachytil som odpoveď, skús to znova.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Nezachytil jsem odpověď, zkus to znovu.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .slovak) == "Odpoveď sa nepodarilo zachytiť, skús to znova.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .czech) == "Odpověď se nepodařilo zachytit, zkus to znovu.")
         #expect(SpokenPrompt.didNotCatch.text(language: .english) == "I didn't catch your answer, please try again.")
-        #expect(SpokenPrompt.didNotCatch.text(language: .ukrainian) == "Я не розчув відповіді, спробуй ще раз.")
+        #expect(SpokenPrompt.didNotCatch.text(language: .ukrainian) == "Не вдалося розчути відповідь, спробуй ще раз.")
     }
 
     /// WHY (founder 2026-09-24): the retry line is ALSO on screen, for the whole
@@ -165,9 +168,9 @@ struct EmptyAnswerRetryTests {
     }
 
     /// WHY: muted means no spoken line — which is exactly when the driver needs
-    /// the written one to know why the mic opened again. It is on the question
-    /// screen itself, next to the mic.
-    @Test("muted: the retry line is on the question screen while the mic is open again")
+    /// the written one to know why the mic opened again. TF build 90: it is
+    /// the open mic's own state line, not a free line under the question.
+    @Test("muted: the open mic's bar says why it opened again")
     func mutedRetryLineOnQuestionScreen() async throws {
         let (vm, silence, network, _) = makeVM(clock: TestClock())
         vm.settings.isMuted = true
@@ -180,8 +183,12 @@ struct EmptyAnswerRetryTests {
         let view = QuestionView(viewModel: vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "question.retryHint") }
-            #expect(throws: Never.self) { try tree.find(text: "I didn't catch your answer, please try again.") }
+            let bar = try tree.find(viewWithAccessibilityIdentifier: "listen-bar")
+            #expect(throws: Never.self) { try bar.find(text: "Didn't catch that") }
+            #expect(throws: Never.self) { try bar.find(text: "Say your answer") }
+            #expect(throws: (any Error).self, "no free hint line under the question") {
+                try tree.find(viewWithAccessibilityIdentifier: "question.retryHint")
+            }
         }
     }
 }
@@ -282,7 +289,8 @@ struct NoAnswerSheetViewTests {
             autoConfirmTotal: Config.autoConfirmDelaySecs,
             onConfirm: {},
             onReRecord: {},
-            noAnswerCaptured: noAnswer
+            noAnswerCaptured: noAnswer,
+            onRepeatQuestion: {}
         )
     }
 
@@ -305,6 +313,37 @@ struct NoAnswerSheetViewTests {
             return ids.contains(id)
         }).compactMap { try? $0.accessibilityIdentifier() }
         #expect(order == ids, "Again must keep its place on the left")
+    }
+
+    /// WHY (#243.4, B2): the sheet had no way back to the question. "Repeat
+    /// question" sits above the Again / Next row, first as in the spoken offer,
+    /// and calls back so the question is read again.
+    @Test("the second-miss sheet also offers Repeat question, above Again / Next")
+    func offersRepeatQuestion() throws {
+        var repeated = false
+        let view = AnswerConfirmationView(
+            isProcessing: false,
+            transcribedAnswer: .constant(""),
+            autoConfirmCountdown: 0,
+            autoConfirmEnabled: true,
+            autoConfirmTotal: Config.autoConfirmDelaySecs,
+            onConfirm: {},
+            onReRecord: {},
+            noAnswerCaptured: true,
+            onRepeatQuestion: { repeated = true }
+        )
+        let tree = try view.inspect()
+        try tree.find(viewWithAccessibilityIdentifier: "confirmation.repeatQuestion").find(ViewType.Button.self).tap()
+        #expect(repeated)
+        let ids = ["confirmation.repeatQuestion", "confirmation.reRecord", "confirmation.skip"]
+        let order = tree.findAll(where: { view in
+            guard let id = try? view.accessibilityIdentifier() else { return false }
+            return ids.contains(id)
+        }).compactMap { try? $0.accessibilityIdentifier() }
+        #expect(order == ids)
+        #expect(throws: (any Error).self, "only the no-answer sheet offers it") {
+            try makeView(noAnswer: false).inspect().find(viewWithAccessibilityIdentifier: "confirmation.repeatQuestion")
+        }
     }
 
     /// WHY: an empty field the driver cleared while editing is not a miss —

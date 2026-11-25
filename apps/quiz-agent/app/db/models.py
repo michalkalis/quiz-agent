@@ -159,6 +159,11 @@ class DailyUsage(Base):
     tts_chars: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    # 2026-11-21: answers given by voice today, against the free voice allowance
+    # (``usage.voice_allowance``); summed over the month like questions_count.
+    voice_answers: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
     # Dead column post-#93: check_limit no longer reads it; kept pending a cleanup migration.
     is_premium: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default="false"
@@ -496,6 +501,14 @@ class DailyChallengePlay(Base):
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Crowd lines the host has spoken in this play (max 3, across resumes).
     spoken_lines: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
+    # 205.8: the extra questions earned by finishing run until the player's
+    # local midnight (set at creation); ``bonus_used`` of them are spent.
+    bonus_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    bonus_used: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
 

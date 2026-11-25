@@ -1,0 +1,426 @@
+{
+ "keep": [
+  "70fd5adb-b822-4b35-a744-bde399309305",
+  "9a281778-eb34-435e-ba3f-9091da144317",
+  "c4cf1bcf-0c34-4cc6-bc39-a3944b0914af",
+  "ca82be5f-b85e-45e5-ac46-ab65329e00b6",
+  "62619e6b-700f-4269-876c-5f649c0a8128",
+  "3468fc69-04f3-4a3f-91b6-f2ac879907dc",
+  "1eb8c0ea-15f6-49b0-9c45-6b5c0afa2e02",
+  "c32e2c0c-3b64-4e99-bc32-9210e5b6c563",
+  "85f4e982-823c-4121-a9a8-472566572392",
+  "f061f21e-47e8-47e4-bbf1-b6e6593632e0",
+  "314a018c-952c-4f98-b068-98e629b26f7e",
+  "603dd198-2caa-4893-b6c4-ff783178a0ac",
+  "26817199-665d-4ea0-bf9a-a5bd5373ed34",
+  "984d5f54-7981-48eb-bbf3-76474762fc38",
+  "9cfcd5d0-e9d9-4cc5-b0c2-06f4a06849a5",
+  "d9b015ab-c685-4fdf-9d44-7db34824ff27",
+  "6714ad0f-26f6-4aba-bfdf-99158e27317e",
+  "f2e45e1d-7335-42bd-b45b-ce7934bc03e0",
+  "3653c0b6-c1ba-4773-847b-5e0ae48a59d8",
+  "58af0d96-564c-457d-9783-aab2403dc6da",
+  "ddc2b164-2f52-463d-a7d5-3e37f37be73a",
+  "fa5b83eb-a08f-4580-ba93-78ad32676ee9",
+  "9feed7ae-12bf-421b-a97d-aeb7a211cd46",
+  "a9326b85-5f75-4693-afcd-e769a1af323e",
+  "3c53c007-1e58-4f38-8e51-ad21ec9519e1",
+  "179cf1b7-5bdb-43c9-b94e-860571dcf97e",
+  "18ab7db1-b35c-4d6f-8d52-614fbd463436",
+  "ca950535-88d8-425d-8576-c3d4c1ef820a",
+  "d4a8779a-b3b3-43b7-b130-706b2bc31486",
+  "583e122b-3a6e-4923-ad3a-f27a14ec72c0",
+  "149f50ef-fdd7-443b-b3f0-9855c2b6f2d6",
+  "0c33ff06-9199-4777-ba63-7f1ca7e57c99",
+  "72267d21-4f1b-4e1e-9a80-d2133b47e415",
+  "7edadc7b-d512-4625-adb2-6221c43a0545",
+  "4e7be02a-f8ac-451f-86b5-c468a8befcd3",
+  "f2d4f8cf-7f24-4f8a-b9c3-1168f9e7ca5b",
+  "65d4aec6-6ad1-419d-bd33-f873f6166200",
+  "76f81d9c-daca-458c-9744-4bb660c54c09",
+  "eb3a96a7-e393-4814-b909-a01c5497cffb",
+  "9c8e3319-4e2c-444f-92d2-be7c4692a506",
+  "43b1fd08-b4fb-47f3-ae93-69366690b20e",
+  "57e51672-bff8-4987-be33-721786e34e05",
+  "2839a87a-75bb-4a84-ad0e-10a06163f800",
+  "96c9851b-09e5-41d3-b103-3749dec9bb21",
+  "0ab5563e-0358-401f-8da7-24194ca065cd",
+  "4b72c099-4cf2-47f2-8600-1b97d8376803",
+  "ad0ef599-6a64-46f7-8541-cceb3f66c938",
+  "f959c858-0be2-465c-bb70-c7893a962e91",
+  "b9e18a61-9224-4aba-a19d-8a0f3a0f7978",
+  "fbcdcfcd-e086-4ba3-aef3-2cb212af7ae6",
+  "d17756a9-bf91-477a-9120-bbc58af347e3",
+  "72c498e3-7ab2-48f8-bdeb-07586469a1bb",
+  "4eb014d4-47f4-41af-b04b-7c2621b15436",
+  "bba6e9e4-4063-498f-a648-0df722cc8438",
+  "091f7d25-3028-45bc-910b-d689e78a2558",
+  "d7912572-35f8-4f26-ae35-1e8008e57ede",
+  "d45e7f38-cd48-4f0d-a6c1-23db7044ccd7",
+  "fe53ed67-1e5c-42a1-b164-fca78928d342",
+  "f580a442-4e06-4f23-b81c-54178c8f2e60",
+  "20a77da2-ed18-46f1-aca8-ac04050d6255",
+  "edde9544-ec9e-4b2a-b93a-ef3b8712005d",
+  "47fac78c-3f84-4f74-a2fc-3ea271256c54",
+  "0e9eb2ec-f255-423e-8dcc-9ba3ce6b9928",
+  "e9659d75-b7cf-4f6f-8343-efa8c931bd29",
+  "7cf59f6f-1e62-42b2-b545-1873afe07f0f",
+  "fd6098df-3096-4488-8dcc-25475f0fc9eb",
+  "a9f74162-088d-4b30-b08d-d7a19adfa47c",
+  "f47108b6-7da8-46b6-a589-2b18ac740b74",
+  "e7a3a10e-3171-4164-b5e6-60e66d79d75c",
+  "f77b5cbb-90ba-408d-b9d2-37cd6a4041cf",
+  "7694b8db-cf40-4d77-b258-74784cd63e95",
+  "d66273ae-c045-4034-ba75-205f497d301d",
+  "92e20ba3-34b8-470b-a2b3-04255730ea2e"
+ ],
+ "fix": [
+  {
+   "id": "70fd5adb-b822-4b35-a744-bde399309305",
+   "field": "source_excerpt",
+   "new": "is a Ukrainian headwear and accessory designer and founder of the eponymous Ruslan Baginskiy brand.",
+   "why": "Старий уривок на сторінці не дослівний; замінено дослівною цитатою."
+  },
+  {
+   "id": "c4cf1bcf-0c34-4cc6-bc39-a3944b0914af",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Virsky_Company",
+   "why": "Домен wikipedia.com нестандартний; замінено на сторінку en.wikipedia."
+  },
+  {
+   "id": "c4cf1bcf-0c34-4cc6-bc39-a3944b0914af",
+   "field": "source_excerpt",
+   "new": "The ensemble was founded in 1937 by Pavlo Virsky and Mykola Bolotov, and guided by Virsky until his death in 1975.",
+   "why": "Дослівна цитата, що підтверджує, від кого походить назва."
+  },
+  {
+   "id": "c4cf1bcf-0c34-4cc6-bc39-a3944b0914af",
+   "field": "explanation",
+   "new": "Ансамбль носить ім'я Павла Вірського: він керував ним від заснування 1937 року до своєї смерті 1975-го і сам поставив знаменитий гопак ансамблю.",
+   "why": "Твердження, що гопак «досі завершує концерти», не підтверджене і може застаріти."
+  },
+  {
+   "id": "3468fc69-04f3-4a3f-91b6-f2ac879907dc",
+   "field": "source_excerpt",
+   "new": "Finnish had been a major source of inspiration.",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "314a018c-952c-4f98-b068-98e629b26f7e",
+   "field": "explanation",
+   "new": "У 1985 році пісня дійшла лише до третього місця, а першою стала аж у 2022-му завдяки Netflix. Сама Кейт Буш назвала таке повернення пісні неймовірним і зворушливим.",
+   "why": "Жарт Кейт Буш про «нове покоління» не підтверджується; замінено реакцією, яку наводить Wikipedia."
+  },
+  {
+   "id": "26817199-665d-4ea0-bf9a-a5bd5373ed34",
+   "field": "alternative_answers",
+   "new": [
+    "столяр",
+    "тесляр"
+   ],
+   "why": "Відповідь «будівельник» прийняти не можна: питання само згадує «будівельні риштування», тож вона видає себе."
+  },
+  {
+   "id": "26817199-665d-4ea0-bf9a-a5bd5373ed34",
+   "field": "source_excerpt",
+   "new": "Mario was made into a carpenter; and when he appeared again in Mario Bros., it was decided that he should be a plumber.",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "9cfcd5d0-e9d9-4cc5-b0c2-06f4a06849a5",
+   "field": "question",
+   "new": "Назва BTS походить від корейського «Бантхан Сонйондан». Дослівно це «бойскаути», але з дуже незвичним означенням. Яким?",
+   "why": "Прибрано тире як розділовий знак."
+  },
+  {
+   "id": "d9b015ab-c685-4fdf-9d44-7db34824ff27",
+   "field": "question",
+   "new": "Найбільший у світі виробник шин за кількістю штук не Michelin і не Bridgestone, а іграшкова компанія. Яка?",
+   "why": "Перед присудком із «не» тире не ставлять; прибрано тире."
+  },
+  {
+   "id": "f2e45e1d-7335-42bd-b45b-ce7934bc03e0",
+   "field": "question",
+   "new": "Яку науку викладав творець «Губки Боба» Стівен Гілленберґ, перш ніж оселити своїх героїв на дні океану?",
+   "why": "Хибна передумова: Гілленберґ закінчив магістратуру з експериментальної анімації в CalArts, тобто прийшов в анімацію саме з художньої школи."
+  },
+  {
+   "id": "f2e45e1d-7335-42bd-b45b-ce7934bc03e0",
+   "field": "alternative_answers",
+   "new": [
+    "морська біологія",
+    "біологію",
+    "біологія"
+   ],
+   "why": "Океанологія не те саме, що морська біологія, а «морознавство» не вживається; ці варіанти були б хибними зарахуваннями."
+  },
+  {
+   "id": "3653c0b6-c1ba-4773-847b-5e0ae48a59d8",
+   "field": "question",
+   "new": "Канадка Селін Діон 1988 року виграла Євробачення. За яку країну вона виступала?",
+   "why": "Згадка про «Титанік» видавала відповідь на питання fd6098df у цьому ж чанку."
+  },
+  {
+   "id": "9feed7ae-12bf-421b-a97d-aeb7a211cd46",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Goal-line_technology",
+   "why": "Ця сторінка пов'язує епізод із Девичем саме з дискусією про технологію лінії воріт."
+  },
+  {
+   "id": "9feed7ae-12bf-421b-a97d-aeb7a211cd46",
+   "field": "source_excerpt",
+   "new": "a shot by Ukraine's Marko Dević briefly crossed the line within clear view of the goal-line official",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "fa5b83eb-a08f-4580-ba93-78ad32676ee9",
+   "field": "source_excerpt",
+   "new": "Blokhin 40', 53'",
+   "why": "Старий уривок вигаданий (на сторінці такого речення нема); підставлено дослівний рядок таблиці бомбардирів."
+  },
+  {
+   "id": "a9326b85-5f75-4693-afcd-e769a1af323e",
+   "field": "source_excerpt",
+   "new": "first team in the history of the FIFA World Cup to leave an edition of the tournament without conceding a single goal",
+   "why": "Старий уривок вигаданий; на сторінці є таблиця серії пенальті і це речення."
+  },
+  {
+   "id": "179cf1b7-5bdb-43c9-b94e-860571dcf97e",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Oleg_Blokhin",
+   "why": "Старе джерело повертає 404."
+  },
+  {
+   "id": "179cf1b7-5bdb-43c9-b94e-860571dcf97e",
+   "field": "source_excerpt",
+   "new": "Ukraine reached the quarter-finals of the tournament, losing to eventual champions Italy.",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "18ab7db1-b35c-4d6f-8d52-614fbd463436",
+   "field": "source_excerpt",
+   "new": "His margin of victory was only 0.099, which was less than one small step on landing in terms of gymnastic scoring.",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "149f50ef-fdd7-443b-b3f0-9855c2b6f2d6",
+   "field": "question",
+   "new": "У сімдесятих і вісімдесятих роках київський «Спартак» тринадцять разів вигравав жіночий Кубок європейських чемпіонів. У якому виді спорту?",
+   "why": "Твердження «рекорд досі ніхто не побив» може застаріти."
+  },
+  {
+   "id": "72267d21-4f1b-4e1e-9a80-d2133b47e415",
+   "field": "explanation",
+   "new": "Римляни й греки тут ні до чого: стиль склався у Франції в XIX столітті, а «античну» назву дали пізніше.",
+   "why": "Прибрано згадку про Жана Беленюка, чинного політика."
+  },
+  {
+   "id": "72267d21-4f1b-4e1e-9a80-d2133b47e415",
+   "field": "source_excerpt",
+   "new": "'Flat hand wrestling' or 'French wrestling' (as the style became known) developed all throughout Europe",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "f2d4f8cf-7f24-4f8a-b9c3-1168f9e7ca5b",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Klasychne_derby",
+   "why": "cavac.at це сміттєве дзеркало; замінено на en.wikipedia."
+  },
+  {
+   "id": "f2d4f8cf-7f24-4f8a-b9c3-1168f9e7ca5b",
+   "field": "source_excerpt",
+   "new": "Klasychne derby (Ukrainian: Класичне, as Classico), or the Ukrainian football rivalry is the football match between the two",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "65d4aec6-6ad1-419d-bd33-f873f6166200",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Artem_Dovbyk",
+   "why": "На старій сторінці немає наведеного речення (там лише протокол матчу)."
+  },
+  {
+   "id": "65d4aec6-6ad1-419d-bd33-f873f6166200",
+   "field": "source_excerpt",
+   "new": "He scored the winning goal in the stoppage time to secure a 2–1 victory for the Ukraine National Team",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "76f81d9c-daca-458c-9744-4bb660c54c09",
+   "field": "source_excerpt",
+   "new": "4–4 on aggregate; Real Madrid won 4–3 on penalties.",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "eb3a96a7-e393-4814-b909-a01c5497cffb",
+   "field": "source_excerpt",
+   "new": "Ukraine finished in third place, with 41 gold and 117 total medals, its most medals and highest finish to date.",
+   "why": "Старий уривок не дослівний."
+  },
+  {
+   "id": "9c8e3319-4e2c-444f-92d2-be7c4692a506",
+   "field": "question",
+   "new": "Майже всі зимові паралімпійські медалі України здобуто лише у двох видах спорту, і в обох спортсмени біжать на лижах. Назви ці два види.",
+   "why": "До гравця звертаємося на «ти»."
+  },
+  {
+   "id": "9c8e3319-4e2c-444f-92d2-be7c4692a506",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Ukraine_at_the_Paralympics",
+   "why": "Стара сторінка охоплює лише Ігри 2026 і не підтверджує «майже всі медалі»; нова дає загальний підсумок за видами спорту."
+  },
+  {
+   "id": "9c8e3319-4e2c-444f-92d2-be7c4692a506",
+   "field": "source_excerpt",
+   "new": "Biathlon | 25 | 34 | 34 | 93; Cross-country skiing | 16 | 25 | 26 | 67",
+   "why": "Рядки таблиці медалей за видами спорту з нового джерела."
+  },
+  {
+   "id": "57e51672-bff8-4987-be33-721786e34e05",
+   "field": "source_url",
+   "new": "https://en.wikipedia.org/wiki/Oksana_Baiul",
+   "why": "На старій сторінці немає наведеного речення."
+  },
+  {
+   "id": "57e51672-bff8-4987-be33-721786e34e05",
+   "field": "source_excerpt",
+   "new": "Baiul is the first Olympic Champion from Ukraine to compete under the Ukrainian flag.",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "0ab5563e-0358-401f-8da7-24194ca065cd",
+   "field": "alternative_answers",
+   "new": [
+    "Дудек",
+    "Єжи Дудек",
+    "Юрек Дудек"
+   ],
+   "why": "«Ежи» це російська форма імені; таку не зараховуємо."
+  },
+  {
+   "id": "4b72c099-4cf2-47f2-8600-1b97d8376803",
+   "field": "question",
+   "new": "Кларенс Зеєдорф став першим футболістом, який вигравав Лігу чемпіонів із трьома різними клубами: «Реалом», «Міланом» і нідерландським клубом, з якого він почав. Яким?",
+   "why": "«Єдиний» може застаріти, тому «першим»; прибрано тире."
+  },
+  {
+   "id": "ad0ef599-6a64-46f7-8541-cceb3f66c938",
+   "field": "source_url",
+   "new": "https://www.autosport.com/f1/news/how-spraying-champagne-became-a-tradition-on-the-f1-podium/10646556/",
+   "why": "На сторінці Jalopnik наведеного уривка немає (стаття 2012 року не могла згадувати Саудівську Аравію)."
+  },
+  {
+   "id": "ad0ef599-6a64-46f7-8541-cceb3f66c938",
+   "field": "source_excerpt",
+   "new": "So for grands prix in Saudi Arabia, Bahrain, Qatar and the United Arab Emirates, a sparkling fruit juice called rose water",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "fbcdcfcd-e086-4ba3-aef3-2cb212af7ae6",
+   "field": "explanation",
+   "new": "Статую Надаля встановили у 2021 році, ще до його чотирнадцятого титулу на Ролан Гаррос і задовго до завершення кар'єри.",
+   "why": "Твердження «досі не має ніхто інший» може застаріти; уточнено, що 2022 року він виграв лише один титул."
+  },
+  {
+   "id": "72c498e3-7ab2-48f8-bdeb-07586469a1bb",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Бубка_Сергій_Назарович",
+   "why": "en-сторінка підтверджує лише премії; uk.wikipedia в одному абзаці пише і про премії, і про сантиметрові прирости."
+  },
+  {
+   "id": "72c498e3-7ab2-48f8-bdeb-07586469a1bb",
+   "field": "source_excerpt",
+   "new": "Він намагався за кожної можливості покращувати свій попередній рекорд на 1 см",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "fe53ed67-1e5c-42a1-b164-fca78928d342",
+   "field": "explanation",
+   "new": "Лисенко працював над оперою десять років, але відмовився ставити її інакше, ніж українською. Прем'єра відбулася лише 1924 року в Харкові, через дванадцять років після смерті композитора.",
+   "why": "Помилка: Лисенко помер 1912 року, тож до прем'єри минуло 12 років, а не 16; пропозиція перекласти оперу йшла з Петербурга, а не з Москви; прибрано згадку про Москву."
+  },
+  {
+   "id": "fe53ed67-1e5c-42a1-b164-fca78928d342",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Тарас_Бульба_(опера)",
+   "why": "Підставлено uk.wikipedia з датою прем'єри."
+  },
+  {
+   "id": "fe53ed67-1e5c-42a1-b164-fca78928d342",
+   "field": "source_excerpt",
+   "new": "Прем'єра опери відбулася 4 жовтня 1924 року у Харкові",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "e9659d75-b7cf-4f6f-8343-efa8c931bd29",
+   "field": "question",
+   "new": "Пісню «Рідна мати моя» всі знають за першим рядком. Але насправді вона називається «Пісня про…» що саме?",
+   "why": "Прибрано тире."
+  },
+  {
+   "id": "e9659d75-b7cf-4f6f-8343-efa8c931bd29",
+   "field": "source_url",
+   "new": "https://uk.wikipedia.org/wiki/Пісня_про_рушник",
+   "why": "wiki.riteme.site це сміттєве дзеркало; замінено на uk.wikipedia."
+  },
+  {
+   "id": "e9659d75-b7cf-4f6f-8343-efa8c931bd29",
+   "field": "source_excerpt",
+   "new": "Пісня про рушник — твір Андрія Малишка, сповідь-спогад ліричного героя, у якій мати дарує синові рушник",
+   "why": "Дослівна цитата з нового джерела."
+  },
+  {
+   "id": "7cf59f6f-1e62-42b2-b545-1873afe07f0f",
+   "field": "question",
+   "new": "У фільмі «Початок» героїв будить зі сну стара французька пісня. Гучні низькі гудіння в музиці Ганса Ціммера до цього фільму зроблені з тієї самої пісні, тільки дуже сповільненої. Хто її співає?",
+   "why": "Прибрано тире."
+  },
+  {
+   "id": "fd6098df-3096-4488-8dcc-25475f0fc9eb",
+   "field": "source_excerpt",
+   "new": "Dion recorded her vocal in one take, and this version was used in the film.",
+   "why": "Старий уривок склеєний із трикрапок, це не цитата."
+  },
+  {
+   "id": "f77b5cbb-90ba-408d-b9d2-37cd6a4041cf",
+   "field": "alternative_answers",
+   "new": [
+    "священник",
+    "католицький священник",
+    "панотець",
+    "ксьондз",
+    "духовна особа"
+   ],
+   "why": "«Пастор» це протестантський священнослужитель, а Вівальді був католицьким священником."
+  }
+ ],
+ "drop": [
+  {
+   "id": "123e2bca-f742-43c5-9504-f5a9e4fe94ea",
+   "why": "Факт спірний: en.wikipedia прямо пише, що версія «кубик як навчальний посібник для студентів» лише широко поширена, а справжньою метою Рубіка була конструкторська задача."
+  },
+  {
+   "id": "09ebe8a8-4aec-4f8a-a9b5-c1ed0ad80182",
+   "why": "Віталій Кличко чинний мер Києва, тобто чинний політик (жорстке правило теми)."
+  },
+  {
+   "id": "0f73f575-9a3a-4e5d-9d21-5d64bc7697c8",
+   "why": "Віталій Кличко чинний мер Києва, тобто чинний політик (жорстке правило теми)."
+  },
+  {
+   "id": "13a40d68-a0c7-49c2-955e-6571e1d37d29",
+   "why": "Жан Беленюк чинний народний депутат, тобто чинний політик (жорстке правило теми)."
+  },
+  {
+   "id": "f1f2f44e-0975-40a0-a9a6-5837e0624685",
+   "why": "Відповідь видає питання 3c53c007 у цьому ж чанку (там сказано, що «Динамо» виграло Кубок кубків 1986 року); до того ж це шкільна дрібничка."
+  },
+  {
+   "id": "2a492652-7df4-4e90-9e44-6079c08b66fa",
+   "why": "Відкрита числова відповідь крихка (за логікою «наполовину» гравець цілком скаже 46); формулювання «хотів бути наполовину таким добрим» слабко підтверджене, а джерело слабке."
+  },
+  {
+   "id": "62dba717-bae6-4f6a-892b-5134cbe0991c",
+   "why": "Питання саме видає відповідь: «найславетніша оперна сцена Франції» означає Париж, тож тут нема чого вгадувати."
+  }
+ ]
+}

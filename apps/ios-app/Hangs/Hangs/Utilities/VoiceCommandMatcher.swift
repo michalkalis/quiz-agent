@@ -13,9 +13,9 @@
 //  language model snaps its output to dictionary words rather than phonetic
 //  spellings — the tolerance is what covers the accent, not a variant list.
 //
-//  `skip` is deliberately STRICT (whole-utterance, modulo filler): skipping
-//  burns a freemium question, so "let's skip this one" must NOT be read as a
-//  skip — the utterance must BE the skip word, not merely contain it.
+//  `next` (the skip) is deliberately STRICT (whole-utterance, modulo filler):
+//  skipping burns a freemium question, so "let's skip this one" must NOT be
+//  read as a skip — the utterance must BE the word, not merely contain it.
 //
 //  #119 (build-33 field data): ALL commands are additionally capped at
 //  `maxContentTokens` content tokens — see the gate in `match` — and a VOLATILE
@@ -48,21 +48,13 @@ import Foundation
 /// Maps an English transcript — volatile hypothesis or final — to a
 /// screen-scoped hands-free command.
 enum VoiceCommandMatcher {
-    /// Confidence floor for a fuzzy token→command match (1 = exact). A single
-    /// edit on a 5-letter word ("stat"→"start" = 0.8) clears it; noise doesn't.
-    static let confidenceFloor: Double = 0.72
-    /// A stricter floor for a VOLATILE hypothesis (#119). A volatile is revisable
-    /// by design and arrives while the mic is still open to the road, the radio
-    /// and the passenger, so only a near-exact word may act on one. There is no
-    /// recall cost: the build-33 unmatched field transcripts sit at ~0.50, far
-    /// below either floor, while a real command word transcribes perfectly (1.0).
-    /// What this drops is one-edit noise on a short word ("star"/"gain" → 0.80).
-    static let volatileConfidenceFloor: Double = 0.85
-    /// The winning command must beat the runner-up by this margin, else the
-    /// utterance is ambiguous and resolves to `nil` (never guess a wrong action).
+    // Each command's floors live in its `CommandSensitivity`
+    // (VoiceCommandSensitivity.swift, founder 2026-11-22). The build-33
+    // unmatched field transcripts sit at ~0.50, well below every floor.
+
+    /// Two commands that both clear their floors closer than this are a near
+    /// tie, which goes to the cheaper false fire (`resolve`).
     static let ambiguityMargin: Double = 0.15
-    /// A stricter floor for the destructive `skip` word.
-    static let skipFloor: Double = 0.8
     /// Upper bound on DISTINCT content tokens (filler stripped, duplicates
     /// collapsed) for an utterance to be read as ONE command word. ONE,
     /// because every word in this grammar is one word — see the gate in `match`.
@@ -79,7 +71,7 @@ enum VoiceCommandMatcher {
     ///     volatile hypothesis as well as a final (see `isFinal`).
     ///   - screen: the current screen — bounds which commands are considered.
     ///   - isFinal: whether this is a finalized transcript. A volatile hypothesis
-    ///     is scored against the stricter `volatileConfidenceFloor`.
+    ///     is held to each command's stricter `volatileFloor`.
     ///   - language: the command grammar language (#120). The app passes the
     ///     quiz language (#175); the `.english` default is the tests' pin.
     static func match(
@@ -112,18 +104,26 @@ enum VoiceCommandMatcher {
         // volatile when the hypothesis CHANGES, never on a timer — so the settle
         // is the real gate and the re-delivery is an accelerator.
         let content = contentTokens(tokens, language: language, on: screen)
+        // The word for "question" may ride along with a command about the
+        // question ("zopakuj otázku", "ďalšia otázka", "next question"): it is
+        // set aside before the cap, and the utterance still needs a command
+        // word that takes it. Alone, beside another content word, or beside
+        // "odpovedz" / a sheet word it changes nothing — those stay inert.
+        let questionWords = content.intersection(VoiceCommandLexicon.questionWords(for: language))
+        let commandWords = content.subtracting(questionWords)
         // Filler only is never a command (#185: a lone "ešte" must not score as
         // a cut-off "ešte raz"), and only content words are scored.
-        guard !content.isEmpty else { return nil }
-        if content.count > maxContentTokens {
-            return agreeingCommand(content, on: screen, isFinal: isFinal, language: language)
-        }
-        return matchOneWord(Array(content), on: screen, isFinal: isFinal, language: language)
+        guard !commandWords.isEmpty else { return nil }
+        let command = commandWords.count > maxContentTokens
+            ? agreeingCommand(commandWords, on: screen, isFinal: isFinal, language: language)
+            : matchOneWord(Array(commandWords), on: screen, isFinal: isFinal, language: language)
+        guard questionWords.isEmpty || command.map(VoiceCommandLexicon.takesQuestionWord) == true else { return nil }
+        return command
     }
 
     /// #185: several content words, each of which is on its own a confident
-    /// match for the SAME command — "nie, znova", "áno, potvrď". Any word that
-    /// is not a command, or two words that disagree ("áno, znova"), and the
+    /// match for the SAME command — "nie, znova". Any word that is not a
+    /// command, or two words that disagree ("znova, ďalšia"), and the
     /// utterance is not a command.
     private static func agreeingCommand(
         _ content: Set<String>, on screen: VoiceCommandScreen, isFinal: Bool, language: CommandLanguage
@@ -142,39 +142,39 @@ enum VoiceCommandMatcher {
     private static func matchOneWord(
         _ tokens: [String], on screen: VoiceCommandScreen, isFinal: Bool, language: CommandLanguage
     ) -> VoiceCommand? {
-        let candidates = VoiceCommandLexicon.commands(on: screen)
-
-        // Skip is strict whole-utterance — handled before (and excluded from) the
-        // fuzzy token scan so it can never be triggered by a token buried in a
-        // longer sentence.
-        if candidates.contains(.skip),
-           matchesStrictSkip(tokens: tokens, on: screen, language: language, isFinal: isFinal)
-        {
-            return .skip
+        let scores = VoiceCommandLexicon.commands(on: screen).map { command in
+            (command, command == .next
+                ? strictNextScore(tokens: tokens, on: screen, language: language, isFinal: isFinal)
+                : bestScore(tokens, command: command, on: screen, isFinal: isFinal, language: language))
         }
+        return resolve(scores, isFinal: isFinal)
+    }
 
-        // Fuzzy token scan over the remaining screen commands.
-        var scores: [(command: VoiceCommand, score: Double)] = []
-        for command in candidates where command != .skip {
-            let variants = comparableVariants(for: command, on: screen, language: language, isFinal: isFinal)
-            var best = 0.0
-            for token in tokens {
-                for variant in variants {
-                    best = max(best, score(token, variant, isFinal: isFinal, language: language))
-                }
-            }
-            scores.append((command, best))
-        }
+    /// The best score any token earns against any of `command`'s variants.
+    static func bestScore(
+        _ tokens: [String], command: VoiceCommand, on screen: VoiceCommandScreen, isFinal: Bool,
+        language: CommandLanguage
+    ) -> Double {
+        let variants = comparableVariants(for: command, on: screen, language: language, isFinal: isFinal)
+        return tokens.flatMap { token in variants.map { score(token, $0, isFinal: isFinal, language: language) } }
+            .max() ?? 0
+    }
 
-        let floor = isFinal ? confidenceFloor : volatileConfidenceFloor
-        scores.sort { $0.score > $1.score }
-        guard let top = scores.first, top.score >= floor else { return nil }
-        if scores.count > 1, scores[1].score >= floor,
-           top.score - scores[1].score < ambiguityMargin
-        {
-            return nil // two commands too close — ambiguous
+    /// Which command, if any, the scores name. A command must clear its own
+    /// floor (`CommandSensitivity`). When two clear theirs within
+    /// `ambiguityMargin` of each other, the one whose false fire costs less
+    /// wins (founder 2026-11-22): a word half-way between "answer" and "next"
+    /// opens the mic, it never skips the question.
+    static func resolve(_ scores: [(command: VoiceCommand, score: Double)], isFinal: Bool) -> VoiceCommand? {
+        let passing = scores.filter { entry in
+            let sensitivity = entry.command.sensitivity
+            return entry.score >= (isFinal ? sensitivity.finalFloor : sensitivity.volatileFloor)
         }
-        return top.command
+        guard let top = passing.map(\.score).max() else { return nil }
+        return passing
+            .filter { top - $0.score < ambiguityMargin }
+            .min { $0.command.sensitivity.falseFireCost < $1.command.sensitivity.falseFireCost }?
+            .command
     }
 
     /// #122 Track A: whether a normalized utterance still carries at least one
@@ -199,7 +199,7 @@ enum VoiceCommandMatcher {
     /// start"); DISTINCT rather than consecutive-only so filler between the
     /// repeats ("start um start") doesn't inflate the count either. With a
     /// `screen`, that screen's command words are never filler (#185).
-    private static func contentTokens(
+    static func contentTokens(
         _ tokens: [String], language: CommandLanguage, on screen: VoiceCommandScreen? = nil
     ) -> Set<String> {
         // #184: the filler set is stored pre-folded but NOT phonetically folded,
@@ -226,22 +226,22 @@ enum VoiceCommandMatcher {
             .map { phoneticFold($0, language: language) }
     }
 
-    /// STRICT skip: after stripping filler and collapsing duplicates, EXACTLY one
-    /// distinct token remains and it is a confident skip variant. "skip" / "um
-    /// skip please" / "skip skip" pass; "let's skip this one" (other content
-    /// words remain) does not. The duplicate collapse matters MORE here than
-    /// anywhere else: skip is the one command that may only fire from a final,
-    /// and the final is precisely the transcript where repetitions merge.
-    private static func matchesStrictSkip(
+    /// STRICT next: after stripping filler and collapsing duplicates, EXACTLY
+    /// one distinct token remains, scored against the next words. "next" / "um
+    /// next please" / "next next" score; "let's skip this one" (other content
+    /// words remain) scores 0. The duplicate collapse matters MORE here than
+    /// anywhere else: next may only fire from a final, and the final is
+    /// precisely the transcript where repetitions merge.
+    private static func strictNextScore(
         tokens: [String], on screen: VoiceCommandScreen, language: CommandLanguage, isFinal: Bool
-    ) -> Bool {
+    ) -> Double {
         let content = contentTokens(tokens, language: language, on: screen)
-        guard content.count == 1, let token = content.first else { return false }
-        let best = comparableVariants(for: .skip, on: screen, language: language, isFinal: isFinal)
+        guard content.count == 1, let token = content.first else { return 0 }
+        return comparableVariants(for: .next, on: screen, language: language, isFinal: isFinal)
             .map { variant in
                 // #224: "další" / "ďalšia" begin like the everyday "dál", "dále",
                 // "dal" ("further", "he gave"). A shorter token earns the
-                // truncation credit only when it is the skip word missing its
+                // truncation credit only when it is the next word missing its
                 // last letter; anything else is judged on edit distance alone.
                 let isCutOff = variant.hasPrefix(token) && variant.count - token.count <= Self.maxSkipTruncation
                 return token.count < variant.count && !isCutOff
@@ -249,7 +249,6 @@ enum VoiceCommandMatcher {
                     : score(token, variant, isFinal: isFinal, language: language)
             }
             .max() ?? 0
-        return best >= skipFloor
     }
 
     /// Letters a heard skip token may lack and still count as a cut-off skip word.
@@ -282,7 +281,13 @@ enum VoiceCommandMatcher {
     /// `ukrainianShortWord` letters or fewer, and every `exactOnlyVariants`
     /// word, scores only on an exact match, and a token shorter than that
     /// earns no truncation credit.
+    ///
+    /// In every language a variant of `shortWord` letters or fewer also scores
+    /// only on an exact match: one letter off, it is another word ("Níl" /
+    /// "ale" vs "nie" / "zle", "now" vs "no"), and "again"'s lenient floor
+    /// (0.65) sits under a one-letter miss on three letters (0.67).
     static func score(_ token: String, _ variant: String, isFinal: Bool, language: CommandLanguage = .english) -> Double {
+        if token != variant, variant.count <= shortWord { return 0 }
         if language == .ukrainian, token != variant,
            variant.count <= ukrainianShortWord || VoiceCommandLexicon.exactOnlyVariants(for: language).contains(variant)
         {
@@ -292,6 +297,9 @@ enum VoiceCommandMatcher {
         guard isFinal, isTruncation(token, of: variant, language: language) else { return levenshtein }
         return max(levenshtein, jaroWinkler(token, variant))
     }
+
+    /// A command word this short must be heard exactly (see `score`).
+    static let shortWord = 3
 
     /// Leading characters a shortened token must share with a variant before it
     /// is treated as a truncation rather than a different word.
@@ -409,6 +417,7 @@ enum VoiceCommandMatcher {
     /// Replace every run of a lexicon phrase's words with its single token.
     private static func joinPhrases(_ tokens: [String], language: CommandLanguage) -> [String] {
         let all = VoiceCommandLexicon.phrases(for: language) + VoiceCommandLexicon.buttonPhrases(for: language)
+            + VoiceCommandLexicon.questionPhrases(for: language)
         let phrases = all.map { phrase in
             (words: phrase.words.map { phoneticFold($0, language: language) }, token: phrase.token)
         }
@@ -457,37 +466,5 @@ enum VoiceCommandMatcher {
             }
         }
         return result
-    }
-}
-
-/// A pure ~2.5 s undo window opened after a destructive command (a `skip`
-/// commit): a spoken cancel word ("stop"/"no"/"cancel") OR a tap that lands
-/// within the window ABORTS; otherwise, once the deadline passes, the action
-/// COMMITS. Pure value type — no timers, no clock ownership; the caller supplies
-/// timestamps so the resolution is deterministic and testable.
-struct UndoWindow: Sendable, Equatable {
-    /// Default undo grace period (E-match: ~2.5 s skip-confirm undo window).
-    static let defaultDuration: TimeInterval = 2.5
-
-    /// The instant after which a cancel no longer aborts (the action commits).
-    let deadline: Date
-
-    init(startedAt: Date = Date(), duration: TimeInterval = UndoWindow.defaultDuration) {
-        deadline = startedAt.addingTimeInterval(duration)
-    }
-
-    enum Resolution: Sendable, Equatable {
-        case abort // cancelled in time — do NOT perform the action
-        case commit // window elapsed (or cancel too late) — perform the action
-    }
-
-    /// Whether the window is still accepting a cancel at `now`.
-    func isOpen(at now: Date) -> Bool { now < deadline }
-
-    /// Resolve the window. A `cancelledAt` timestamp aborts iff it lands within
-    /// the window (`<= deadline`); `nil` (no cancel) or a late cancel commits.
-    func resolve(cancelledAt: Date?) -> Resolution {
-        guard let cancelledAt, cancelledAt <= deadline else { return .commit }
-        return .abort
     }
 }

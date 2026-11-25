@@ -120,15 +120,15 @@ struct QuizSettingsBackwardCompatTests {
     /// Regression: adding `thinkingTime` as a required `decode` call (instead of
     /// `decodeIfPresent ?? 10`) would throw a `DecodingError` for every v1-era
     /// blob and wipe the user's other settings on upgrade. The fallback tracks
-    /// the product default (0 since #240.9: the mic opens after the question).
-    @Test("missing thinkingTime decodes with the default value 0")
-    func missingThinkingTimeDefaultsToDefault() throws {
+    /// the product default (10 since #68 — driving-critical defaults).
+    @Test("missing thinkingTime decodes with default value 10")
+    func missingThinkingTimeDefaultsTen() throws {
         var json = legacyMinimalJSON
         json.removeValue(forKey: "thinkingTime")
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == QuizSettings.defaultThinkingTime)
+        #expect(settings.thinkingTime == 10)
     }
 
     // MARK: - Missing autoConfirmEnabled
@@ -256,7 +256,7 @@ struct QuizSettingsBackwardCompatTests {
 
         let settings = try decodeSettings(json)
 
-        #expect(settings.thinkingTime == QuizSettings.defaultThinkingTime)
+        #expect(settings.thinkingTime == 10)
         #expect(settings.autoConfirmEnabled == true)
         #expect(settings.showConfirmSheet == true)
         #expect(settings.isMuted == false)
@@ -313,14 +313,85 @@ struct QuizSettingsBackwardCompatTests {
     // MARK: - Driving-critical default (#68)
 
     /// #68 acceptance: the default thinking time must stay short — a driver
-    /// can't wait a minute for auto-record to arm. #240.9 (founder 2026-11-18):
-    /// the default is 0, the mic opens as soon as the question was read (the
-    /// window to start speaking grows instead). Guards against the default
+    /// can't wait a minute for auto-record to arm. Guards against the default
     /// creeping back up without a founder decision.
-    @Test("default thinkingTime is 0 and stays a picker option")
+    @Test("default thinkingTime is 10 and stays under 30")
     func defaultThinkingTimeIsDrivingShort() {
-        #expect(QuizSettings.default.thinkingTime == 0)
-        #expect(QuizSettings.thinkingTimeOptions.contains(QuizSettings.default.thinkingTime))
+        #expect(QuizSettings.default.thinkingTime == 10)
+        #expect(QuizSettings.default.thinkingTime < 30)
+        #expect(QuizSettings.thinkingTimeOptions.contains(10))
+    }
+
+    // MARK: - Build 90's 0 s default rolled back (#240.9)
+
+    /// WHY: build 90 (#240 — app quality from the subscription's spare
+    /// capacity, task 240.9) made 0 s the default and rewrote every saved 10 s
+    /// to 0. The founder rejected that flow after testing it (2026-11-21). A
+    /// tester on build 90 must get the 10 s think time back, not stay on 0
+    /// with the mic opening the moment the question ends.
+    @Test("build 90's saved 0 s goes back to 10; every other saved value stays")
+    func immediateMicDefaultRolledBack() throws {
+        func decoded(thinkingTime: Int, version: Int?) throws -> Int {
+            var json = legacyMinimalJSON
+            json["thinkingTime"] = thinkingTime
+            json["thinkingTimeDefaultVersion"] = version
+            return try decodeSettings(json).thinkingTime
+        }
+        #expect(try decoded(thinkingTime: 0, version: 2) == 10, "build 90's default (or its rewrite of 10)")
+        #expect(try decoded(thinkingTime: 30, version: 2) == 30, "a choice made on build 90")
+        #expect(try decoded(thinkingTime: 10, version: nil) == 10, "builds up to 89 keep their value")
+        #expect(try decoded(thinkingTime: 0, version: nil) == 5, "a 0 picked on a build up to 89: the shortest #243.8 preset")
+        #expect(try decoded(thinkingTime: 0, version: QuizSettings.currentThinkingTimeDefaultVersion) == 5, "a 0 picked on build 91+: the shortest #243.8 preset")
+    }
+
+    /// WHY: the rollback must run once. A blob this build saves carries the
+    /// current version, so a 5 s the player picks after it is never undone.
+    @Test("a saved blob carries the current think-time version")
+    func savedBlobCarriesCurrentVersion() throws {
+        var settings = QuizSettings.default
+        settings.thinkingTime = 5
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        #expect(json["thinkingTimeDefaultVersion"] as? Int == QuizSettings.currentThinkingTimeDefaultVersion)
+        #expect(try decodeSettings(json).thinkingTime == 5)
+    }
+
+    // MARK: - Round length: 8 by default (TestFlight build 90 feedback)
+
+    /// WHY: the founder found 10 questions a round too many, so 8 is the
+    /// default. Every build up to 90 saved 10 without a version, so a saved
+    /// 10 is read as "never changed" and becomes 8; a player who chose 5 or 15
+    /// keeps it, and a 20 the list no longer offers lands on the nearest, 15.
+    @Test("a player who never chose a round length gets 8; one who chose keeps it")
+    func roundLengthDefaultMovesToEight() throws {
+        func decoded(_ count: Int, version: Int?) throws -> Int {
+            var json = legacyMinimalJSON
+            json["numberOfQuestions"] = count
+            json["numberOfQuestionsDefaultVersion"] = version
+            return try decodeSettings(json).numberOfQuestions
+        }
+        #expect(QuizSettings.default.numberOfQuestions == 8, "a first launch plays 8")
+        #expect(try decoded(10, version: nil) == 8, "the old default, never changed")
+        #expect(try decoded(5, version: nil) == 5, "a short round picked on an older build")
+        #expect(try decoded(15, version: nil) == 15, "a long round picked on an older build")
+        #expect(try decoded(20, version: nil) == 15, "20 is no longer offered: the nearest choice")
+        #expect(try decoded(10, version: QuizSettings.currentQuestionCountDefaultVersion) == 10, "10 chosen from now on stays")
+    }
+
+    /// WHY: the move to 8 must run once. A blob this build saves carries the
+    /// current version, so a 10 the player picks afterwards is never undone.
+    @Test("a saved blob carries the current round-length version")
+    func savedBlobCarriesRoundLengthVersion() throws {
+        var settings = QuizSettings.default
+        settings.numberOfQuestions = 10
+        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(settings)) as? [String: Any])
+        #expect(json["numberOfQuestionsDefaultVersion"] as? Int == QuizSettings.currentQuestionCountDefaultVersion)
+        #expect(try decodeSettings(json).numberOfQuestions == 10)
+    }
+
+    @Test("the round-length choices include the default")
+    func roundLengthChoicesIncludeDefault() {
+        #expect(QuizSettings.questionCountOptions == [5, 8, 10, 15])
+        #expect(QuizSettings.questionCountOptions.contains(QuizSettings.defaultNumberOfQuestions))
     }
 
     // MARK: - Unknown legacy keys are silently ignored

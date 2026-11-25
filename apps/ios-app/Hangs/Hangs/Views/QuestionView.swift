@@ -154,9 +154,21 @@ struct QuestionView: View {
         // so the options and the controls keep a screen to live on. Applied to
         // the screen only — the Settings sheet below is not a quiz screen.
         .dynamicTypeSize(...QuizTypeSize.screenCap)
-        // The echo belongs to one question only.
+        // The echo belongs to one question only, and so does an open answer
+        // field: a quick-game skip or the end-of-set reveal goes to the next
+        // question without leaving this screen (TestFlight build 90).
         .onChange(of: viewModel.currentQuestion?.id) { _, _ in
             submittedAnswer = ""
+            showTextInput = false
+            textAnswer = ""
+            isTextFieldFocused = false
+        }
+        // Silent mode (founder 2026-11-22): the open question's typed field
+        // takes the keyboard at once, first question included.
+        .task(id: viewModel.currentQuestion?.id) {
+            if viewModel.isSilentMode, viewModel.currentQuestion?.isMultipleChoice == false {
+                isTextFieldFocused = true
+            }
         }
         // The voice paths (confirm sheet, auto-confirm, an edited transcript) all
         // land the final text in `transcribedAnswer` before submitting, and it is
@@ -180,8 +192,8 @@ struct QuestionView: View {
             isMuted: viewModel.isAudioMuted,
             isPaused: viewModel.isPaused,
             isPauseEnabled: viewModel.canPauseQuiz || viewModel.isPaused,
-            onClose: { showEndQuizConfirmation = true },
-            onMute: { Task { await viewModel.toggleMute() } },
+            onClose: openEndQuizConfirmation,
+            onMute: viewModel.isSilentMode ? nil : { Task { await viewModel.toggleMute() } },
             onPause: { viewModel.togglePause() },
             onSettings: openQuizSettings,
             onFeedback: ratingEntry?.isEnabled == true ? ratingEntry?.openFeedback : nil,
@@ -213,10 +225,12 @@ struct QuestionView: View {
                 commandLanguage: viewModel.commandLanguage,
                 commandFeedback: viewModel.voiceFeedbackPhase,
                 recognizingWord: viewModel.recognizingWord,
+                commandHeard: viewModel.commandHeard,
                 matchedOption: viewModel.matchedVoiceOptionLabel,
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
                 noAnswerCaptured: viewModel.noAnswerCaptured,
+                onRepeatQuestion: { Task { await viewModel.repeatQuestion() } },
                 autoConfirmHeld: viewModel.isAutoConfirmHeld,
                 showsSpellingHint: viewModel.showsSpellingHint
             )
@@ -224,7 +238,7 @@ struct QuestionView: View {
             .dynamicTypeSize(...QuizTypeSize.screenCap)
         }
         // #240: Settings holds the question while it is open.
-        .sheet(isPresented: $showQuizSettings, onDismiss: viewModel.releaseQuestionAfterSettings) {
+        .sheet(isPresented: $showQuizSettings, onDismiss: viewModel.releaseQuestionAfterModal) {
             // #68 resolution: the chip opens the full settings screen, which now
             // contains the Session group (decision 6 Variant A rows). The #86
             // Pencil pass approved the session card on the Settings screen only —
@@ -234,7 +248,7 @@ struct QuestionView: View {
         // #81 / frame w9tOoU: native alert, Continue (cancel) + destructive End Quiz,
         // title only — replaces the bottom confirmationDialog.
         .alert("End Quiz?", isPresented: $showEndQuizConfirmation) {
-            Button("Continue", role: .cancel) {}
+            Button("Continue", role: .cancel, action: viewModel.releaseQuestionAfterModal)
             // #125: the MCQ screen drops its settings gear, so settings stay
             // reachable through this sheet (both modes share the alert).
             Button("Settings", action: openQuizSettings)
@@ -248,20 +262,27 @@ struct QuestionView: View {
                 Task { await viewModel.endQuiz() }
             }
         }
-        // #81 follow-up (founder 2026-07-06): the think/answer countdowns keep
-        // running behind the dialog — a pause here would let the user buy
-        // thinking time by opening a modal (same rationale as the
-        // no-pause-while-typing decision 2a). #240: the settings sheet holds
-        // the question since the toolbar pause (#173) gives that time anyway,
-        // and a countdown running out there replaced Settings mid-edit.
+        // TF build 90 (founder): the alert holds the question like Settings
+        // (#240). The #81 follow-up (2026-07-06) let the countdown run behind
+        // it so a modal could not buy thinking time, but the toolbar pause
+        // (#173) gives that time anyway, and a countdown running out under
+        // "End Quiz?" opened the mic behind the dialog. "Continue" goes on
+        // where it stopped; "Settings" hands the hold to the sheet; ending
+        // the quiz needs no release.
     }
 
     // MARK: - Toolbar actions
 
+    /// The ✕: ask before quitting, with the question held meanwhile.
+    private func openEndQuizConfirmation() {
+        viewModel.holdQuestionForModal()
+        showEndQuizConfirmation = true
+    }
+
     /// #240: from the ⋯ menu or the End Quiz alert. The sheet's dismissal
     /// lets the question go on.
     private func openQuizSettings() {
-        viewModel.holdQuestionForSettings()
+        viewModel.holdQuestionForModal()
         showQuizSettings = true
     }
 
@@ -440,15 +461,18 @@ struct QuestionView: View {
             categoryName: identity.chipName,
             categoryIdentifier: "question.category"
         ) {
-            // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
-            Button {
-                Task { await viewModel.replayQuestionAudio() }
-            } label: {
-                replayGlyph
+            // Silent mode (founder 2026-11-22): nothing is read, so no replay.
+            if !viewModel.isSilentMode {
+                // a11y-id: twin of `question.replay` for the corner glyph; hidden from VoiceOver, which uses the question itself
+                Button {
+                    Task { await viewModel.replayQuestionAudio() }
+                } label: {
+                    replayGlyph
+                }
+                .buttonStyle(QuestionReplayButtonStyle())
+                .disabled(!viewModel.canReplayAudio)
+                .accessibilityHidden(true)
             }
-            .buttonStyle(QuestionReplayButtonStyle())
-            .disabled(!viewModel.canReplayAudio)
-            .accessibilityHidden(true)
         } content: {
             content()
         }
@@ -521,6 +545,14 @@ struct QuestionView: View {
             // countdown starts. Below the grid it was reliably missed (the
             // 2026-09-07 report), and it is the one element that tells the driver
             // the mic is about to open.
+            // 2026-11-21: once a month, the voice answers are used up; the
+            // options below stay tappable.
+            if viewModel.showsVoiceLimitNotice {
+                VoiceLimitNotice(onPlus: viewModel.openPaywallFromVoiceLimitNotice)
+                    .padding(.horizontal, Metrics.gutter)
+                    .padding(.top, Metrics.blockGap)
+                    .transition(.opacity)
+            }
             mcqListenBar(question: question, compact: compact)
 
             mcqOptions(question: question, compact: compact)
@@ -639,56 +671,48 @@ struct QuestionView: View {
     /// (`ListenBarDismissal`) — nothing is persisted, so the next question arms
     /// its own bar and a driver cannot permanently lose the only surface that
     /// names the voice commands.
-    @ViewBuilder
+    ///
+    /// TF build 90 (founder): it shows only what the player needs
+    /// (`QuestionListenPhase.strip`), the command words while commands are heard
+    /// (#243.6), and carries the
+    /// retry line itself. Its slot is reserved, so the options never move when
+    /// it comes and goes.
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
-        // #185 track B: the retry line sits with the bar (not behind its ✕ —
-        // a dismissed bar must not hide why the mic opened again).
-        if let prompt = viewModel.emptyAnswerRetryHintPrompt {
-            EmptyAnswerRetryHint(prompt: prompt)
-                .padding(.horizontal, Metrics.gutter)
-                .padding(.top, Metrics.blockGap)
+        // #131 Track F folded the old SE-class `compact` flag into the one
+        // size axis: a short container gets the slim bar.
+        let size: ListenBar.Size = compact ? .slim : .full
+        let phase = listenBarDismissal.isHidden(questionId: question.id)
+            ? nil : viewModel.questionStripPhase(viewModel.listenPhase(for: question))
+        return ZStack {
+            if let phase {
+                QuestionListenBar(
+                    phase: phase,
+                    feedback: viewModel.voiceFeedbackPhase,
+                    recognizingWord: viewModel.recognizingWord,
+                    heard: viewModel.commandHeard,
+                    showsWords: viewModel.questionStripShowsWords,
+                    size: size,
+                    language: viewModel.commandLanguage,
+                    speechHeard: viewModel.isHearingAnswer,
+                    inputLevel: viewModel.recordingInputLevel,
+                    answerRemaining: viewModel.answerWindowRemaining,
+                    answerNote: viewModel.answerBarNote,
+                    onDismiss: { listenBarDismissal.dismiss(questionId: question.id) },
+                    commandsAccessory: viewModel.commandsAccessory(for: phase),
+                    onTurnOnCommands: turnOnCommands,
+                    onOpenSettings: openSystemSettings
+                )
                 .transition(.opacity)
-        } else if viewModel.showsSilencePrompt {
-            // #240.9: with the bar, never behind its ✕ — it is how the player
-            // learns the mic is closed and how to open it again.
-            SilentAnswerPrompt(
-                isMultipleChoice: true,
-                buttonHeight: compact ? QuestionSkipButton.chipHeight : QuestionSkipButton.compactRowHeight,
-                onSpeak: speakAfterSilence
-            )
-            .padding(.horizontal, Metrics.gutter)
-            .padding(.top, Metrics.blockGap)
-            .transition(.opacity)
+            } else if let heard = viewModel.commandHeard {
+                CommandHeardLine(heard: heard, language: viewModel.commandLanguage)
+                    .transition(.opacity)
+            }
         }
-        if !listenBarDismissal.isHidden(questionId: question.id),
-           let phase = viewModel.listenPhase(for: question)
-        {
-            QuestionListenBar(
-                phase: phase,
-                feedback: viewModel.voiceFeedbackPhase,
-                recognizingWord: viewModel.recognizingWord,
-                showsWords: viewModel.showsCommandWords,
-                // #131 Track F folded the old SE-class `compact` flag into the
-                // one size axis: a short container gets the slim bar.
-                size: compact ? .slim : .full,
-                language: viewModel.commandLanguage,
-                speechHeard: viewModel.isHearingAnswer,
-                inputLevel: viewModel.recordingInputLevel,
-                answerRemaining: viewModel.answerWindowRemaining,
-                onDismiss: { listenBarDismissal.dismiss(questionId: question.id) },
-                commandsAccessory: viewModel.commandsAccessory(for: phase),
-                onTurnOnCommands: turnOnCommands,
-                onOpenSettings: openSystemSettings
-            )
-            .padding(.horizontal, Metrics.gutter)
-            .padding(.top, Metrics.blockGap)
-            .transition(.opacity)
-        }
-    }
-
-    /// #240.9: the MCQ screen's one-tap way to answer by voice after silence.
-    private func speakAfterSilence() {
-        Task { await viewModel.toggleRecording() }
+        .frame(maxWidth: .infinity, minHeight: QuestionListenBar.slotHeight(size: size))
+        .animation(.easeInOut(duration: 0.25), value: phase == nil)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.commandHeard == nil)
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.top, Metrics.blockGap)
     }
 
     /// #237: the listen bar's "Turn on" / "Settings".

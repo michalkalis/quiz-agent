@@ -69,9 +69,10 @@ struct HomeViewStateContractTests {
             // Brand wordmark: the driver must land on a recognisable app.
             #expect(throws: Never.self) { try tree.find(text: "trubbo") }
 
-            // Session settings — where difficulty / language / categories are
-            // chosen before starting (#194 C1: three pills, was a config card).
-            for id in ["home-language-menu", "home-difficulty-menu", "home-categories-menu"] {
+            // Session settings — where difficulty / language / round length /
+            // categories are chosen before starting (TestFlight build 90: one
+            // settings list under the deck, was three pills).
+            for id in ["home-language-menu", "home-difficulty-menu", "home.questionCount", "home.categories.chooseSeveral"] {
                 #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: id) }
             }
 
@@ -156,7 +157,7 @@ struct QuestionViewStateContractTests {
                 try tree.find(viewWithAccessibilityIdentifier: "question.liveTranscript")
             }
             #expect(throws: Never.self, "the bar must say we are listening") {
-                try tree.find(text: "Speak now")
+                try tree.find(text: "Listening…")
             }
             // Question + countdown stay on screen while answering.
             #expect(throws: Never.self) {

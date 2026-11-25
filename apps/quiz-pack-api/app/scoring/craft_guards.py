@@ -272,6 +272,44 @@ def stem_leak_reason(
     return None
 
 
+#: #243.10 (founder 2026-11-24): the explanation is read aloud right after the
+#: answer; more than two sentences overwhelmed the player in the car.
+EXPLANATION_MAX_SENTENCES = 2
+
+# A sentence ends at . ! ? (or …) before a space or the end, unless the word
+# before it is an initial ("J. R. R.") or a short abbreviation ("St.", "napr."),
+# or the text goes on in lower case.
+_SENTENCE_END = re.compile(r"(\S*?)[.!?…]+[\"'“”»)]*(?=\s|$)")
+_ABBREVIATIONS = frozenset(
+    "st mr mrs dr jr sr vs etc approx cca napr tzv atď resp tj sv mil mld min max "
+    "č kap str roč stol pr n l r".split()
+)
+
+
+def explanation_sentence_count(explanation: str | None) -> int:
+    """Spoken sentences in an explanation (0 when empty)."""
+    text = (explanation or "").strip()
+    count = 0
+    for match in _SENTENCE_END.finditer(text):
+        word = match.group(1).strip("\"'“„(«").lower()
+        if len(word) == 1 and word.isalpha() or word in _ABBREVIATIONS:
+            continue
+        # A quoted "spark joy?" inside a running sentence goes on in lower case.
+        rest = text[match.end() :].lstrip()
+        if rest[:1].islower():
+            continue
+        count += 1
+    return count
+
+
+def long_explanation_reason(explanation: str | None) -> str | None:
+    """Reason string when the explanation runs past two spoken sentences."""
+    count = explanation_sentence_count(explanation)
+    if count > EXPLANATION_MAX_SENTENCES:
+        return f"long_explanation({count}s)"
+    return None
+
+
 def long_answer_reason(
     correct_answer: object, possible_answers: dict | None = None
 ) -> str | None:
@@ -357,8 +395,16 @@ def undated_record_reason(
     return f"undated_record({m.group(0).lower()})"
 
 
-# #192: Slovak/Czech packs write the T/F options as "Pravda" / "Nepravda".
-_TF_WORDS = {"true": "true", "false": "false", "pravda": "true", "nepravda": "false"}
+# #192: Slovak/Czech packs write the T/F options as "Pravda" / "Nepravda";
+# #231: Ukrainian packs as "Правда" / "Неправда" (Cyrillic).
+_TF_WORDS = {
+    "true": "true",
+    "false": "false",
+    "pravda": "true",
+    "nepravda": "false",
+    "правда": "true",
+    "неправда": "false",
+}
 
 
 def true_false_key(
@@ -388,7 +434,7 @@ def true_false_key(
 
     if ans in _TF_WORDS:
         return _TF_WORDS[ans]
-    m = re.match(r"^(true|false|pravda|nepravda)\s*[—–:,.;-]", ans)
+    m = re.match(r"^(true|false|pravda|nepravda|правда|неправда)\s*[—–:,.;-]", ans)
     return _TF_WORDS[m.group(1)] if m else None
 
 

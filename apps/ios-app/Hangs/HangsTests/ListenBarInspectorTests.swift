@@ -55,7 +55,7 @@ struct ListenBarInspectorTests {
     func thinkCountdownCaptionAndWords() async throws {
         let view = ListenBar(
             mode: .command,
-            commandHint: #"Say "start" or "skip""#,
+            commandHint: #"Say "answer" or "next""#,
             thinkCountdown: .init(remaining: 32, total: 45)
         )
         try await ViewHosting.host(view) {
@@ -64,7 +64,7 @@ struct ListenBarInspectorTests {
             let seconds = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.seconds")
             #expect(try seconds.text().string() == "32 s")
             let words = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
-            #expect(try words.text().string() == #"Say "start" or "skip""#)
+            #expect(try words.text().string() == #"Say "answer" or "next""#)
         }
     }
 
@@ -89,7 +89,7 @@ struct ListenBarInspectorTests {
     func thinkStateKeepsIdentityAndHeight() async throws {
         let view = ListenBar(
             mode: .command,
-            commandHint: #"Say "start" or "skip""#,
+            commandHint: #"Say "answer" or "next""#,
             thinkCountdown: .init(remaining: 5, total: 45)
         )
         try await ViewHosting.host(view) {
@@ -173,7 +173,7 @@ struct ListenBarInspectorTests {
             let tree = try view.inspect()
             let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try sub.text().string() == hint)
-            #expect(hint.contains("start") && hint.contains("next"), "the question screen's words")
+            #expect(hint.contains("answer") && hint.contains("next"), "the question screen's words")
         }
     }
 
@@ -187,7 +187,7 @@ struct ListenBarInspectorTests {
             let tree = try view.inspect()
             let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try sub.text().string() == hint)
-            #expect(hint.contains("štart"), "Slovak spoken form, not the English one")
+            #expect(hint.contains("odpovedz"), "Slovak spoken form, not the English one")
         }
     }
 
@@ -224,7 +224,7 @@ struct ListenBarInspectorTests {
     /// be noise on the one screen where the driver is mid-answer.
     @Test("Answer mode renders no sub-line")
     func answerModeHasNoSubLine() async throws {
-        let view = ListenBar(mode: .answer(.mcq), commandHint: "Say \"start\"")
+        let view = ListenBar(mode: .answer(.mcq), commandHint: "Say \"answer\"")
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: (any Error).self) {
@@ -280,14 +280,14 @@ struct ListenBarInspectorTests {
     /// shortens. Full keeps the whole sentence.
     @Test("Slim shortens the caption; full keeps the full sentence")
     func slimUsesShortCaption() async throws {
-        let slim = ListenBar(mode: .command, commandHint: #"Say "start""#, size: .slim, language: .english)
+        let slim = ListenBar(mode: .command, commandHint: #"Say "answer""#, size: .slim, language: .english)
         try await ViewHosting.host(slim) {
             let tree = try slim.inspect()
             #expect(throws: Never.self) { try tree.find(text: "LISTENING") }
             #expect(throws: (any Error).self) { try tree.find(text: "LISTENING FOR COMMANDS") }
         }
 
-        let full = ListenBar(mode: .command, commandHint: #"Say "start""#, language: .english)
+        let full = ListenBar(mode: .command, commandHint: #"Say "answer""#, language: .english)
         try await ViewHosting.host(full) {
             let tree = try full.inspect()
             #expect(throws: Never.self) { try tree.find(text: "LISTENING FOR COMMANDS") }
@@ -305,7 +305,7 @@ struct ListenBarInspectorTests {
             #expect(throws: Never.self) { try tree.find(text: "POČÚVAM") }
             let sub = try tree.find(viewWithAccessibilityIdentifier: "listen-bar.commands")
             #expect(try sub.text().string() == hint)
-            #expect(hint.contains("štart"), "Slovak spoken form, not the English one")
+            #expect(hint.contains("odpovedz"), "Slovak spoken form, not the English one")
         }
     }
 

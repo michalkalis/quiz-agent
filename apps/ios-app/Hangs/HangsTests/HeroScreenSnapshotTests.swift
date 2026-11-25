@@ -48,7 +48,7 @@ nonisolated enum SnapshotBaseline {
 
     static var runtimeMatches: Bool {
         let v = ProcessInfo.processInfo.operatingSystemVersion
-        return "\(v.majorVersion).\(v.minorVersion)" == iosVersion
+        return iosVersion == "\(v.majorVersion).\(v.minorVersion)"
     }
 }
 
@@ -214,13 +214,19 @@ enum HeroScreen: String, CaseIterable {
 @MainActor
 private func buildTextContract(of screen: HeroScreen, in language: HeroLanguage) async throws -> String {
     let view = await screen.make()
-    var lines: [String] = ["# texts"]
+    var lines = ["# texts"]
     try await ViewHosting.host(view, function: "\(screen.rawValue)-\(language.rawValue)") {
         let tree = try view.inspect()
         for text in tree.findAll(ViewType.Text.self) {
             if let value = try? text.string(locale: language.locale) {
                 lines.append(value)
             }
+        }
+        // The bar title is a modifier, not a Text in the tree (TestFlight
+        // build 90: Home's showed "Play" in a Slovak app).
+        if screen == .home {
+            lines.append("# navigation title")
+            lines.append(HomeView.navigationTitle(in: language.locale))
         }
         lines.append("# identifiers")
         for node in tree.findAll(where: { (try? $0.accessibilityIdentifier()) != nil }) {

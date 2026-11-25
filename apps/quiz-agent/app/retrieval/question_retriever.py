@@ -17,7 +17,7 @@ import random
 logger = logging.getLogger(__name__)
 
 from quiz_shared.languages import NATIVE_ONLY_LANGUAGES
-from quiz_shared.models.question import Question
+from quiz_shared.models.question import EXTRA_CATEGORY_PREFIX, Question
 from quiz_shared.models.session import QuizSession
 from quiz_shared.database.pgvector_client import PgvectorQuestionStore
 from quiz_shared.utils.embeddings import generate_embedding_async, calculate_similarity
@@ -571,6 +571,22 @@ class QuestionRetriever:
         filters["age_band"] = {"$ne": None}
         return await self._store.grouped_counts(("age_band", "category"), filters)
 
+    async def extra_category_counts(
+        self, language: str, build_channel: Optional[str], keys: Sequence[str]
+    ) -> dict:
+        """Playable questions per ``(category,)`` for the #242 extra keys, under
+        the filters a session asking for them plays from (language only, as
+        ``band_topic_counts``)."""
+        template = QuizSession(
+            session_id="extra-categories",
+            language=language,
+            build_channel=build_channel,
+            preferred_categories=list(keys),
+        )
+        return await self._store.grouped_counts(
+            ("category",), self._band_filters(template)
+        )
+
     @staticmethod
     def _image_types(session: QuizSession) -> list[str]:
         """Image type is served only when the session opted in (#68, default off)."""
@@ -656,6 +672,12 @@ class QuestionRetriever:
         # Add category filter if specified
         if session.preferred_categories:
             filters["category"] = {"$in": session.preferred_categories}
+        else:
+            # #242: "all categories" never includes an extra (rotating)
+            # category, so old builds, the daily challenge, shared quizzes and
+            # the availability count stay on the permanent corpus. NULL
+            # categories still pass.
+            filters["category"] = {"$not_prefix_or_null": EXTRA_CATEGORY_PREFIX}
 
         return filters
 

@@ -32,13 +32,24 @@ struct MCQOptionPicker: View {
     /// full-screen evaluating overlay that used to do both is gone.
     var isSubmitting: Bool = false
 
+    /// TF build 90 (C1): the options after the answer, read-only — the correct
+    /// one marked, and the player's pick when it was another one.
+    struct Reveal: Equatable {
+        let correctKey: String?
+        let chosenKey: String?
+    }
+
+    /// Set = read-only reveal (the result's question sheet); nothing is tappable.
+    var reveal: Reveal?
+
     init(
         options: [(key: String, value: String)],
         labels: [String: String]? = nil,
         onSelect: @escaping (String, String) -> Void,
         externalSelectedKey: Binding<String?> = .constant(nil),
         compact: Bool = false,
-        isSubmitting: Bool = false
+        isSubmitting: Bool = false,
+        reveal: Reveal? = nil
     ) {
         self.options = options
         self.labels = labels ?? [:]
@@ -46,6 +57,7 @@ struct MCQOptionPicker: View {
         _externalSelectedKey = externalSelectedKey
         self.compact = compact
         self.isSubmitting = isSubmitting
+        self.reveal = reveal
     }
 
     /// 80pt for the 2-option T/F variant; 64pt for all other MCQ rows. (The 4-up
@@ -97,10 +109,10 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     label: labels[option.key],
-                    state: externalSelectedKey == option.key ? .selected : .default,
+                    state: state(for: option.key),
                     isLoading: isLoading(option.key),
                     minHeight: optionMinHeight,
-                    action: { tapOption(option) }
+                    action: tapAction(option)
                 )
                 .disabled(externalSelectedKey != nil || isSubmitting)
                 .opacity(isDimmed(option.key) ? 0.45 : 1)
@@ -128,10 +140,10 @@ struct MCQOptionPicker: View {
                     key: option.key,
                     value: option.value,
                     label: labels[option.key],
-                    state: externalSelectedKey == option.key ? .selected : .default,
+                    state: state(for: option.key),
                     isLoading: isLoading(option.key),
                     compact: compact,
-                    action: { tapOption(option) }
+                    action: tapAction(option)
                 )
                 .disabled(externalSelectedKey != nil || isSubmitting)
                 .opacity(isDimmed(option.key) ? 0.45 : 1)
@@ -142,6 +154,17 @@ struct MCQOptionPicker: View {
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
+    }
+
+    private func state(for key: String) -> AnswerOption.State {
+        guard let reveal else { return externalSelectedKey == key ? .selected : .default }
+        if key == reveal.correctKey { return .correct }
+        return key == reveal.chosenKey ? .incorrect : .default
+    }
+
+    /// No action in a reveal: the rows render as plain rows, not buttons.
+    private func tapAction(_ option: (key: String, value: String)) -> (() -> Void)? {
+        reveal == nil ? { tapOption(option) } : nil
     }
 
     /// The chosen option is the only one that spins; a skip has no chosen option

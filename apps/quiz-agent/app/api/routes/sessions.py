@@ -22,6 +22,7 @@ from ...auth.identity import AuthSubject, resolve_session_subject
 from ...auth.tokens import TokenService
 from ...client_capabilities import CAPABILITIES_HEADER, parse_capabilities
 from ...config import get_settings
+from ...extra_categories import check_extra_request
 from ...family.rounds import build_channel, check_family_request
 from ...family.topics import ROUND_SIZE
 from ...session.manager import SessionManager
@@ -133,6 +134,14 @@ async def create_session(
         max_questions = ROUND_SIZE[body.age_band]
         difficulty = "random"
         include_images = False
+    # #242: an extra key that is not on offer now (rotated out, switch off) is
+    # refused up front, outside the try below (it would turn the 4xx into 500).
+    await check_extra_request(
+        body.categories or ([body.category] if body.category else []),
+        language,
+        get_settings(),
+        auth_sessionmaker,
+    )
     if body.pack_id:
         # #200 (founder, 2026-10-12): a pack plays as many questions as the
         # client's "questions per quiz" setting asks for — never more than the

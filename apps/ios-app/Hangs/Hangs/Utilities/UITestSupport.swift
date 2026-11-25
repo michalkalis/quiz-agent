@@ -27,7 +27,8 @@
         /// the end of speech, and the "server" hears the injected transcript.
         private static var mockNetwork: MockNetworkService?
         private static var mockRooms: MockRoomService?
-        /// #235.5: calls held since launch (`--ui-test-network-hold`).
+        /// #235.5: calls held since launch (`--ui-test-network-hold`) or
+        /// since `network/hold`.
         private static var launchHolds: [NetworkHold] = []
         /// #212: where a test's join link lands, as if the player opened it.
         weak static var roomInvites: RoomInviteInbox?
@@ -80,6 +81,7 @@
 
             SharedQuizFixtures.configure(network)
             FamilyModeFixtures.configure(network)
+            FamilyModeFixtures.configureExtraCategories(network)
 
             if CommandLine.arguments.contains("--ui-test-paywall") {
                 network.createSessionError = NetworkError.quotaLimitReached(QuotaLimitError(
@@ -106,6 +108,15 @@
                     )
                 ))
                 network.submitTextInputError = limit
+            }
+
+            // 2026-11-21 RS-47: the free voice answers are used up; every voice
+            // upload meets the server's 429 `voice_limit_reached`.
+            if CommandLine.arguments.contains("--ui-test-voice-limit") {
+                network.submitVoiceAnswerError = NetworkError.voiceLimitReached(VoiceLimitError(
+                    code: VoiceLimitError.reachedCode, voiceAnswersUsed: 30, voiceAnswersLimit: 30,
+                    resetsAt: "2099-01-01T00:00:00+00:00"
+                ))
             }
 
             // #123 Track B: seed the Home entitlement card's key visuals for the
@@ -200,6 +211,9 @@
             // observable PRE-reveal window (options + listening pill still hidden
             // while the countdown runs), so that combination gets a few seconds.
             seededSettings.thinkingTime = wantsMCQ ? (wantsLong ? 5 : 1) : 30
+            // #243.8 made "right after the verdict" the default; the result
+            // scenarios keep the 8 s pause they were written against.
+            seededSettings.autoAdvanceDelay = 8
             // #190: store-screenshot mode — listing-quality content in the quiz
             // language, calm frames (no ticking pills), populated Home.
             if StoreScreenshotFixtures.isActive {
@@ -372,9 +386,11 @@
         /// - `hangs-test://network/condition?text=<profile>&calls=<name,name>` →
         ///   the network changes while the app runs (#235.5); `text=clear`
         ///   brings it back (`changeNetworkCondition`)
+        /// - `hangs-test://network/hold?text=<name,name>` → those calls stay in
+        ///   flight from now on, as with `--ui-test-network-hold` (RS-16)
         /// - `hangs-test://network/release` → the calls held since launch
         ///   (`--ui-test-network-hold`) answer (#235.5)
-        /// - `hangs-test://command/send?text=start` → registered command sink("start"),
+        /// - `hangs-test://command/send?text=next` → registered command sink("next"),
         ///   driving the real `handleCommandTranscript` → `routeCommand` pipeline
         ///   (issue #111 T3 — voice-command test seam).
         /// Returns `false` when the request was NOT actually handled (unknown
@@ -420,6 +436,12 @@
             case ("network", "/condition"):
                 let calls = queryItems.first(where: { $0.name == "calls" })?.value
                 return await changeNetworkCondition(profile: text, calls: calls)
+            case ("network", "/hold"):
+                let names = text.split(separator: ",")
+                let calls = names.compactMap { MockNetworkCall(rawValue: String($0)) }
+                guard let mockNetwork, !calls.isEmpty, calls.count == names.count else { return false }
+                launchHolds += calls.map { mockNetwork.hold($0) }
+                return true
             case ("network", "/release"):
                 guard !launchHolds.isEmpty else { return false }
                 launchHolds.forEach { $0.release() }

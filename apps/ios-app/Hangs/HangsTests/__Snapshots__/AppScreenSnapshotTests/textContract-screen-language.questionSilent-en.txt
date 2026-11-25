@@ -1,0 +1,21 @@
+# texts
+1/10
+GEOGRAPHY
+What is the capital of France?
+Type your answer…
+askingQuestion
+Settings
+# identifiers
+question.progress
+question.counter
+question.category
+question.replay
+question.text
+question.textField
+question.textSubmit
+question.skip
+question.state
+question.closeButton
+question.pause
+question.moreMenu
+question.settingsButton

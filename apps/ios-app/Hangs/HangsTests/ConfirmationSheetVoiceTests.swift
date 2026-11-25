@@ -3,10 +3,12 @@
 //  HangsTests
 //
 //  #185 track D — the answer confirmation sheet listens (car test 2026-09-23,
-//  founder decisions 5.1–5.3 of 2026-09-24):
-//   5.1 anything said on the sheet that is not a command is a new answer;
+//  founder decisions of 2026-09-24):
+//   5.1 (reversed by #243.5, founder 2026-11-24) anything said on the sheet
+//       was a new answer; now the sheet listens for "again" only and any
+//       other speech changes nothing;
 //   5.2 the countdown starts only once the command listener is live;
-//   5.3 "stop" only holds the countdown — the sheet then waits;
+//   5.3 (retired 2026-11-22) the "stop" hold and the spoken confirm are gone;
 //   plus the no-answer sheet (track B), where "potvrď" used to skip.
 //  Time is a `TestClock`; the recognizer and the upload are mocks.
 //
@@ -56,7 +58,7 @@ private func response(answer: String) -> QuizResponse {
     )
 }
 
-@Suite("#185 the confirmation sheet listens (5.1–5.3)")
+@Suite("#185 the confirmation sheet listens (5.2; #243.5 only \"again\")")
 @MainActor
 struct ConfirmationSheetVoiceTests {
     private func makeVM(clock: TestClock<Duration>) -> (QuizViewModel, MockSilenceDetectionService, MockNetworkService) {
@@ -84,7 +86,7 @@ struct ConfirmationSheetVoiceTests {
         vm.recordingCoordinator.pendingResponse = response(answer: answer)
         vm.recordingCoordinator.presentVoiceTranscript(answer)
         await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "the countdown never started")
-        #expect(silence.isAnswerCaptureActive, "the live sheet keeps the listener's audio")
+        #expect(silence.isListening, "the sheet listens for \"again\"")
     }
 
     // MARK: - 5.2
@@ -124,68 +126,71 @@ struct ConfirmationSheetVoiceTests {
         #expect(silence.isAnswerCaptureActive == false, "no mic, nothing to keep")
     }
 
-    // MARK: - 5.3
+    // MARK: - #243.5: only "again"
 
-    /// WHY (founder): "stop" only stops the automatic advance; the sheet waits,
-    /// still listening, for a command or a tap. It used to CANCEL the answer.
-    @Test("5.3: 'stop' holds the countdown, keeps listening, and 'confirm' still works")
-    func stopHoldsAndWaits() async {
+    /// WHY (#243.5, founder 2026-11-24, reverses #185 5.1): the sheet listens
+    /// for "again" only. Anything else said over it — a correction, a passenger,
+    /// the radio — changes nothing: no upload, the answer stands, and the
+    /// countdown that speech held resumes with a full window.
+    @Test("#243.5: a spoken non-command changes nothing on the sheet")
+    func nonCommandChangesNothing() async {
         let clock = TestClock()
         let (vm, silence, network) = makeVM(clock: clock)
         await openSheet(vm, silence)
-
-        silence.simulateCommandTranscript("stop")
-        await pumpUntil({ vm.recordingCoordinator.countdownHold == .driverStop }, "'stop' did not hold")
-        await clock.advance(by: .seconds(Config.autoConfirmDelaySecs * 3))
-        await drain()
-        #expect(vm.showAnswerConfirmation, "the sheet waited")
-        #expect(vm.quizState == .processing, "'stop' no longer cancels the answer")
-        #expect(vm.transcribedAnswer == "Paris")
-        #expect(vm.autoConfirmCountdown == 0)
-        #expect(vm.voiceCommandCoordinator.commandCapturePhase == .listening, "the sheet still listens")
-
-        silence.simulateCommandTranscript("confirm")
-        await pumpUntil({ vm.quizState.isShowingResult }, "'confirm' after 'stop' did nothing")
-        #expect(network.submitVoiceAnswerCallCount == 0, "the recorded grade was used")
-    }
-
-    // MARK: - 5.1
-
-    /// WHY (founder 5.1): the driver simply says the answer again. Speech holds
-    /// the countdown (it must not confirm "Paris" under "Curling"), the words
-    /// are transcribed from the audio like any answer, and the new answer
-    /// replaces the old one on the sheet — read back, countdown re-armed.
-    @Test("5.1: a spoken non-command on the sheet becomes the new answer")
-    func spokenAnswerReplaces() async {
-        let clock = TestClock()
-        let (vm, silence, network) = makeVM(clock: clock)
-        await openSheet(vm, silence)
-        let oldAttempt = vm.currentAttempt
-        network.mockResponse = response(answer: "Curling")
+        let attempt = vm.currentAttempt
 
         silence.simulateAnswerAudio(Data(count: 16000))
         silence.simulateCommandTranscript("carling", isFinal: false)
         await pumpUntil({ vm.recordingCoordinator.countdownHold == .speech }, "speech did not hold the countdown")
-        #expect(vm.autoConfirmCountdown == 0)
-        await clock.advance(by: .seconds(Config.autoConfirmDelaySecs + 1))
-        await drain()
-        #expect(vm.showAnswerConfirmation, "the old answer was confirmed under the new one")
-
         silence.simulateCommandTranscript("carling")
-        await pumpUntil({ vm.transcribedAnswer == "Curling" }, "the new answer never replaced the old one")
-        #expect(network.submitVoiceAnswerCallCount == 1)
-        #expect(network.capturedVoiceAnswerFileName == "answer.wav")
-        #expect((network.capturedVoiceAnswerBytes ?? 0) > 16000, "the sheet's audio was uploaded, not the recognizer's text")
-        #expect(vm.currentAttempt != oldAttempt, "a new answer is a new attempt")
-        // The read-back is its own task: wait for it rather than assume it ran.
-        await pumpUntil({ network.synthesizedTexts.last == "Curling" }, "the new answer is not read back")
-        await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "no countdown for the new answer")
-        #expect(vm.attemptLedger.invariantViolations.isEmpty)
+        await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "the countdown stayed held")
+
+        #expect(network.submitVoiceAnswerCallCount == 0, "the speech was uploaded as a new answer")
+        #expect(vm.transcribedAnswer == "Paris")
+        #expect(vm.currentAttempt == attempt, "a new answer attempt was opened")
+        #expect(vm.quizState == .processing && vm.showAnswerConfirmation)
     }
 
-    /// WHY: filler or a blip is not an answer — a held countdown resumes with a
-    /// full window, and nothing is uploaded.
-    @Test("5.1: speech that ends in nothing resumes the countdown")
+    /// WHY (founder 2026-11-22): "stop" and "confirm" are no commands any
+    /// more; with #243.5 they are not an answer either — just ignored.
+    @Test("'stop' and 'confirm' on the sheet change nothing", arguments: ["stop", "confirm"])
+    func removedWordsChangeNothing(_ spoken: String) async {
+        let (vm, silence, network) = makeVM(clock: TestClock())
+        await openSheet(vm, silence)
+
+        silence.simulateAnswerAudio(Data(count: 16000))
+        silence.simulateCommandTranscript(spoken)
+        await drain()
+        #expect(network.submitVoiceAnswerCallCount == 0)
+        #expect(network.submitTextInputCallCount == 0, "'\(spoken)' confirmed the answer")
+        #expect(vm.transcribedAnswer == "Paris")
+        #expect(vm.quizState == .processing)
+    }
+
+    /// WHY: "again" is the sheet's one word — it records the answer again.
+    @Test("#243.5: 'again' on the sheet records again")
+    func againReRecords() async {
+        let (vm, silence, _) = makeVM(clock: TestClock())
+        await openSheet(vm, silence)
+        silence.simulateCommandTranscript("again")
+        await pumpUntil({ vm.quizState == .recording }, "'again' did not re-record")
+        #expect(vm.showAnswerConfirmation == false)
+    }
+
+    /// WHY: silence still confirms — the countdown runs out and the answer is
+    /// graded with no word from the player.
+    @Test("#243.5: silence on the sheet auto-confirms")
+    func silenceAutoConfirms() async {
+        let clock = TestClock()
+        let (vm, silence, _) = makeVM(clock: clock)
+        await openSheet(vm, silence)
+        await clock.advance(by: .seconds(Config.autoConfirmDelaySecs + 1))
+        await pumpUntil({ vm.quizState.isShowingResult }, "the countdown never confirmed")
+        #expect(vm.resultEvaluation?.userAnswer == "Paris")
+    }
+
+    /// WHY: filler or a blip — a held countdown resumes with a full window.
+    @Test("speech that ends in nothing resumes the countdown")
     func noiseResumes() async {
         let (vm, silence, network) = makeVM(clock: TestClock())
         await openSheet(vm, silence)
@@ -198,8 +203,23 @@ struct ConfirmationSheetVoiceTests {
         #expect(vm.transcribedAnswer == "Paris")
     }
 
+    /// WHY (founder 2026-11-22): with the confirm command gone, "ok" / "yeah"
+    /// said over the sheet are the driver's filler — the old answer stays.
+    @Test("'ok' / 'yeah' on the sheet are noise, the old answer stays", arguments: ["ok", "yeah"])
+    func fillerIsNoise(_ spoken: String) async {
+        let (vm, silence, network) = makeVM(clock: TestClock())
+        await openSheet(vm, silence)
+
+        silence.simulateCommandTranscript("carling", isFinal: false)
+        await pumpUntil({ vm.recordingCoordinator.countdownHold == .speech })
+        silence.simulateCommandTranscript(spoken)
+        await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "the countdown stayed held")
+        #expect(network.submitVoiceAnswerCallCount == 0)
+        #expect(vm.transcribedAnswer == "Paris")
+    }
+
     /// WHY: a recognizer that never finalizes must not freeze the sheet.
-    @Test("5.1: speech holds the countdown for a bounded time only")
+    @Test("speech holds the countdown for a bounded time only")
     func speechHoldIsBounded() async {
         let clock = TestClock()
         let (vm, silence, _) = makeVM(clock: clock)
@@ -214,97 +234,38 @@ struct ConfirmationSheetVoiceTests {
         await pumpUntil({ vm.autoConfirmCountdown == Config.autoConfirmDelaySecs }, "the hold never ran out")
     }
 
-    /// WHY: the on-device recognizer misses commands in the cabin — that is the
-    /// whole car-test problem. If the upload turns out to be "Confirm.", it was
-    /// a confirm of the OLD answer, never the answer "Confirm". The old grade is
-    /// stale (the backend graded the newer audio last), so the text is re-graded.
-    @Test("5.1: a command word heard only by the answer transcription confirms the old answer")
-    func transcribedCommandConfirmsOldAnswer() async {
-        let (vm, silence, network) = makeVM(clock: TestClock())
-        await openSheet(vm, silence)
-        network.mockResponse = response(answer: "Confirm.")
-
-        silence.simulateAnswerAudio(Data(count: 16000))
-        silence.simulateCommandTranscript("the firm")
-        await pumpUntil({ network.submitTextInputCallCount == 1 }, "the old answer was not confirmed")
-        #expect(network.capturedTextInputInput == "Paris")
-        #expect(vm.transcribedAnswer != "Confirm.")
-    }
-
     /// WHY (#231 — Ukrainian as a fourth language, PR #862 review): «Правильно»
     /// is how a Ukrainian says "right", «Неправда» how the app asks a false
     /// statement to be answered. Both sit one letter from «неправильно»
-    /// ("wrong" = record again) and re-recorded the answer — on the listener
-    /// and again on the upload's transcript. They are a new answer.
-    @Test("5.1 uk: «Правильно» / «Неправда» on the sheet are a new answer, not 'again'",
-          arguments: ["Правильно.", "Неправда."])
-    func ukrainianNearWrongIsAnAnswer(_ spoken: String) async {
+    /// ("wrong" = record again) and re-recorded the answer. They must not
+    /// count as "again" — and (#243.5) they change nothing.
+    @Test("uk: «Правильно» / «Неправда» on the sheet are not 'again'", arguments: ["Правильно.", "Неправда."])
+    func ukrainianNearWrongIsNotAgain(_ spoken: String) async {
         let (vm, silence, network) = makeVM(clock: TestClock())
         vm.settings.language = "uk"
         vm.currentSession = Fixtures.makeActiveSession(language: "uk")
         await openSheet(vm, silence, answer: "Київ")
-        network.mockResponse = response(answer: spoken)
 
         silence.simulateAnswerAudio(Data(count: 16000))
         silence.simulateCommandTranscript(spoken)
-        await pumpUntil({ vm.transcribedAnswer == spoken }, "'\(spoken)' did not become the new answer")
-        #expect(vm.quizState == .processing, "'\(spoken)' re-recorded the answer")
-        #expect(network.submitVoiceAnswerCallCount == 1)
-    }
-
-    /// WHY: cabin noise the recognizer took for words must not destroy a good
-    /// answer — an empty transcription keeps the old one, with no retry prompt.
-    @Test("5.1: an unheard new answer keeps the old one")
-    func unheardKeepsOld() async {
-        let (vm, silence, network) = makeVM(clock: TestClock())
-        await openSheet(vm, silence)
-        network.submitVoiceAnswerError = NetworkError.serverError(statusCode: 400, message: "speech not understood")
-        let promptsBefore = network.synthesizedTexts.count
-
-        silence.simulateAnswerAudio(Data(count: 16000))
-        silence.simulateCommandTranscript("carling")
-        await pumpUntil({ network.submitVoiceAnswerCallCount == 1 })
-        await pumpUntil({ vm.transcribedAnswer == "Paris" && vm.recordingCoordinator.spokenReplacement == nil },
-                        "the old answer did not come back")
-        #expect(vm.showAnswerConfirmation)
-        #expect(vm.quizState == .processing, "no retry recording")
-        #expect(!network.synthesizedTexts.dropFirst(promptsBefore).contains(SpokenPrompt.didNotCatch.text(language: .english)))
-    }
-
-    /// WHY (#186 ticket): a re-record while the new answer uploads owns the
-    /// question — the late transcript must not reopen the sheet over it.
-    @Test("5.1: 'again' during the upload wins; the late transcript is dropped")
-    func againDuringUploadWins() async {
-        let (vm, silence, network) = makeVM(clock: TestClock())
-        await openSheet(vm, silence)
-        let gate = Gate()
-        network.gates[.submitVoiceAnswer] = { await gate.wait() }
-        network.mockResponse = response(answer: "Curling")
-
-        silence.simulateAnswerAudio(Data(count: 16000))
-        silence.simulateCommandTranscript("carling")
-        await pumpUntil({ network.submitVoiceAnswerCallCount == 1 })
-        silence.simulateCommandTranscript("again")
-        await pumpUntil({ vm.quizState == .recording }, "'again' did not re-record")
-
-        await gate.open()
         await drain()
-        #expect(vm.showAnswerConfirmation == false)
-        #expect(vm.transcribedAnswer != "Curling")
-        #expect(vm.quizState == .recording)
+        #expect(vm.quizState == .processing, "'\(spoken)' re-recorded the answer")
+        #expect(vm.transcribedAnswer == "Київ")
+        #expect(network.submitVoiceAnswerCallCount == 0)
     }
 
     // MARK: - The no-answer sheet
 
     /// WHY (car test): "potvrď" on the Again/Skip sheet SKIPPED the question.
-    /// Skipping must be asked for ("preskoč"), and the hint names that sheet's
-    /// own words.
-    @Test("no-answer sheet: 'confirm' does nothing, 'skip' skips, the hint names again/skip")
+    /// Skipping must be asked for ("next"), and the hint names that sheet's
+    /// own words (#243.4: repeat, again, next — after the spoken offer).
+    @Test("no-answer sheet: 'confirm' does nothing, 'next' skips, the hint names repeat/again/next")
     func noAnswerSheet() async {
         let clock = TestClock()
         let (vm, silence, network) = makeVM(clock: clock)
         vm.quizState = .processing
         vm.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        await pumpUntil({ !vm.recordingCoordinator.isSpeakingRetryPrompt }, "the offer line never ended")
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .noAnswer)
         #expect(vm.commandListenerHint == VoiceCommandLexicon.hint(on: .noAnswer, language: .english))
@@ -314,12 +275,12 @@ struct ConfirmationSheetVoiceTests {
         #expect(network.submitTextInputCallCount == 0, "a confirm skipped the question")
         #expect(vm.showAnswerConfirmation)
 
-        silence.simulateCommandTranscript("skip")
-        await pumpUntil({ network.submitTextInputCallCount == 1 }, "'skip' did not skip")
+        silence.simulateCommandTranscript("next")
+        await pumpUntil({ network.submitTextInputCallCount == 1 }, "'next' did not skip")
     }
 
     /// WHY (PR #199 review): pausing takes the mic down; resuming on the
-    /// Again/Skip sheet must bring its "znova" / "preskoč" listener back even
+    /// Again/Skip sheet must bring its "znova" / "ďalšia" listener back even
     /// though that sheet has no countdown to re-arm — otherwise the driver is
     /// left with a tap as the only way off it.
     @Test("resuming a paused no-answer sheet re-arms its command listener")
@@ -327,6 +288,7 @@ struct ConfirmationSheetVoiceTests {
         let (vm, silence, network) = makeVM(clock: TestClock())
         vm.quizState = .processing
         vm.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        await pumpUntil({ !vm.recordingCoordinator.isSpeakingRetryPrompt }, "the offer line never ended")
         await vm.audioDeviceState.startSilenceDetectionListening()
         vm.enterPause()
         await pumpUntil({ vm.voiceCommandCoordinator.commandCapturePhase == .idle }, "pause kept the mic up")
@@ -336,7 +298,7 @@ struct ConfirmationSheetVoiceTests {
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .noAnswer)
         #expect(vm.autoConfirmCountdown == 0, "the no-answer sheet still never counts down")
 
-        silence.simulateCommandTranscript("skip")
-        await pumpUntil({ network.submitTextInputCallCount == 1 }, "'skip' after resume did nothing")
+        silence.simulateCommandTranscript("next")
+        await pumpUntil({ network.submitTextInputCallCount == 1 }, "'next' after resume did nothing")
     }
 }

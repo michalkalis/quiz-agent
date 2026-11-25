@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any, List, Optional
 from unittest.mock import AsyncMock, MagicMock
 
@@ -38,6 +39,7 @@ from slowapi.errors import RateLimitExceeded  # noqa: E402
 from app.api import deps  # noqa: E402
 from app.api.routes import quiz as quiz_routes  # noqa: E402
 from app.api.routes import voice as voice_routes  # noqa: E402
+from app.usage.tracker import VoiceCheck  # noqa: E402
 from app.auth.identity import AuthSubject  # noqa: E402
 from app.evaluation.evaluator import AnswerEvaluator  # noqa: E402
 from app.quiz.flow import QuizFlowService  # noqa: E402
@@ -142,6 +144,10 @@ class _Harness:
         retriever.pack_is_generating = AsyncMock(return_value=False)
         self.usage = MagicMock()
         self.usage.check_limit = AsyncMock(return_value=(True, 5, None))
+        self.usage.check_voice_answer = AsyncMock(
+            return_value=VoiceCheck(True, 0, None, datetime.now(timezone.utc))
+        )
+        self.usage.record_voice_answer = AsyncMock(return_value=True)
         self.usage.record_question = AsyncMock()
         self.flow = QuizFlowService(
             session_manager=self.manager,

@@ -186,6 +186,35 @@ struct PlaybackStallVerdictTests {
     }
 }
 
+// MARK: - Recording settle after a spoken line (#243.4)
+
+/// TF drive 2026-11-23: the phone mic recorded the tail of the app's own
+/// retry hint as the answer ("…skús to znova. Parmezán."). The app already
+/// waits for the clip's end, but AVPlayer reports the end when its last
+/// sample left the app; a Bluetooth car keeps sounding the route's output
+/// latency after that. The recording settle must cover that tail.
+@Suite("Recording settle after playback")
+struct RecordingSettleTests {
+    @Test("no clip just played → the plain hardware settle")
+    func noRecentClip() {
+        #expect(AudioService.recordingSettle(sincePlaybackEnded: nil, outputLatency: 0.4) == .milliseconds(200))
+    }
+
+    @Test("a clip just ended on a slow route → wait out the route's tail")
+    func slowRouteTail() {
+        // 400 ms of output latency, the clip ended 50 ms ago: the speakers still
+        // play its last ~350 ms, plus the margin.
+        let settle = AudioService.recordingSettle(sincePlaybackEnded: .milliseconds(50), outputLatency: 0.4)
+        #expect(settle == .milliseconds(400) + AudioService.playbackDrainMargin - .milliseconds(50))
+        #expect(settle > .milliseconds(200), "the mic would open under the hint's tail")
+    }
+
+    @Test("the tail already played out → no extra wait beyond the hardware settle")
+    func tailAlreadyOver() {
+        #expect(AudioService.recordingSettle(sincePlaybackEnded: .seconds(2), outputLatency: 0.4) == .milliseconds(200))
+    }
+}
+
 // MARK: - Audio Session Category Options (#104 founder decision)
 
 //
@@ -238,11 +267,17 @@ struct AudioSessionCategoryOptionsTests {
         #expect(AudioService.categoryOptions(for: media) != AudioService.categoryOptions(for: call))
     }
 
-    @Test("every mode ducks background audio")
-    func everyModeDucksBackgroundAudio() {
+    // #243.1 (founder, TF 2026-11-22): ducked music under the questions was
+    // still too much, the quiz must stop it. Only a session with no mixing
+    // option interrupts other apps' audio; any of the three would keep the
+    // music playing (ducked or not) and bring the TF bug back.
+    @Test("every mode stops background audio instead of ducking it")
+    func everyModeStopsBackgroundAudio() {
         for mode in AudioMode.supportedModes {
             let options = AudioService.categoryOptions(for: mode)
-            #expect(options.contains(.duckOthers), "\(mode.id) should duck others")
+            #expect(!options.contains(.mixWithOthers), "\(mode.id): mixing keeps the music playing")
+            #expect(!options.contains(.duckOthers), "\(mode.id): ducking keeps the music playing")
+            #expect(!options.contains(.interruptSpokenAudioAndMixWithOthers), "\(mode.id): mixes with music")
             #expect(options.contains(.defaultToSpeaker), "\(mode.id) should default to speaker")
         }
     }
@@ -317,15 +352,12 @@ struct QuietListeningSessionOptionsTests {
         #expect(!options.contains(.allowBluetoothHFP))
     }
 
-    @Test("in-quiz options duck — the Home vs. in-quiz contrast")
-    func quizOptionsDuckWhereHomeDoesNot() {
+    @Test("Home mixes, the quiz stops other audio — the Home vs. in-quiz contrast")
+    func quizStopsAudioWhereHomeMixes() {
         for mode in AudioMode.supportedModes {
-            let options = AudioService.categoryOptions(for: mode)
-            // Note: .interruptSpokenAudioAndMixWithOthers bit-includes
-            // .mixWithOthers, so the contrast is pinned on the ducking options —
-            // present in-quiz, absent in the quiet Home set above.
-            #expect(options.contains(.duckOthers), "\(mode.id): the quiz session keeps ducking (startNewQuiz path unchanged)")
-            #expect(options.contains(.interruptSpokenAudioAndMixWithOthers), "\(mode.id): podcasts must pause during the quiz (two voices = unintelligible)")
+            // Home leaves Spotify playing (#136); the quiz stops it (#243.1).
+            #expect(!AudioService.categoryOptions(for: mode).contains(.mixWithOthers), "\(mode.id)")
+            #expect(AudioService.quietListeningCategoryOptions.contains(.mixWithOthers))
         }
     }
 }

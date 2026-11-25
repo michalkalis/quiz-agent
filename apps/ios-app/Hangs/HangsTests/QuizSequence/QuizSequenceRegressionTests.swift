@@ -36,7 +36,7 @@ struct QuizSequenceRegressionTests {
         let outcome = await QuizSequenceHarness.replay(config: parsed.config, inputs: parsed.inputs)
 
         #expect(outcome.violation == nil, "\(outcome.violation.map { "\($0.invariant): \($0.detail)" } ?? "")")
-        #expect(outcome.run.vm.recapEntries.first?.userAnswerDisplay == "answer 1",
+        #expect(outcome.run.vm.recapEntries.first?.userAnswerDisplay == "reply 1",
                 "the countdown must still confirm the heard answer")
         #expect(outcome.run.vm.isPlayingAnswerReadBack == false, "a latched read-back keeps voice commands off")
     }
@@ -121,27 +121,28 @@ struct QuizSequenceRegressionTests {
 
     /// WHY (harness seed 186115, founder decision 2026-09-25): with reveal at
     /// the end, the auto-confirm sent question 2's answer and the advance to
-    /// question 3 was already on its way when the driver said "stop" (or
-    /// "again"). That reopened question 2 for a moment — a new attempt, the
+    /// question 3 was already on its way when the driver said "again" (the
+    /// spoken "stop" that also hit this was retired 2026-11-22). That
+    /// reopened question 2 for a moment — a new attempt, the
     /// advance then landing on top of it (rejected transition), and "again"
     /// even starting a recording the advance cut off. A sent answer is final:
     /// the late command is dropped and reported, the quiz moves on.
-    @Test("stop / again after the answer is sent are dropped, never reopen the question", arguments: ["stop", "again"])
+    @Test("'again' after the answer is sent is dropped, never reopens the question", arguments: ["again"])
     func commandAfterAnswerSentIsDropped(command: String) async {
         // #200: recorded with auto-record off, whose 30 s answer timer opened the
         // mic; auto-record is always on now, so a 30 s think window replays it.
-        // #240.9: question 1's silent recording now offers the calm prompt
-        // instead of the empty sheet the original run confirmed, so a Skip
-        // tap moves it on; question 2 is the scenario under test. Its mic tap
-        // moved 2.5 s later: the speech reached the old automatic retry's
-        // recording, which silence no longer opens.
+        // #243.4: question 1 was skipped from the second-miss sheet; a silent
+        // window now goes back to thinking, so it is skipped by the Skip tap —
+        // the prelude only has to get question 2 on screen. The mic tap moved
+        // 3 s later: the speech at 01:12.9 used to land in the spoken retry's
+        // recording, which a silent window no longer opens.
         let dump = """
         # quiz-sequence seed=186115 questions=4 mcq=4 thinking=30 autoConfirm=1 muted=0 commands=1 endOfSet=1 feedbackAudio=0 deafDetector=0
         00:00:00.000 state quizStart attempt=- state=idle
         00:00:32.242 tap mute attempt=q_001#1 state=askingQuestion
         00:00:52.891 tap skip attempt=q_001#3 state=askingQuestion
         00:01:00.605 network quizResponse attempt=q_001#4 state=skipping correct
-        00:01:09.033 tap mic attempt=q_002#5 state=askingQuestion
+        00:01:09.533 tap mic attempt=q_002#5 state=askingQuestion
         00:01:12.919 speech vad.speechStarted attempt=q_002#7 state=recording
         00:01:14.234 speech vad.silenceAfterSpeech attempt=q_002#7 state=recording
         00:01:18.489 network voiceSubmit.transcript attempt=q_002#7 state=processing

@@ -27,7 +27,8 @@ by construction — which is exactly why the marker below is *versioned*:
 new version rather than a silently different meaning for the same string.
 
 ``machine:gates-v2`` (#231 — Ukrainian as a fourth language): Ukrainian rows
-also need a passing naturalness verdict, a source that is not Russian, and the
+also need a passing naturalness verdict (whose uk flags ``off_policy`` and
+``gives_away`` must both be ``False``), a source that is not Russian, and the
 tiered topic policy and wider Russian check of ``app.uk_policy`` over every
 text field. The en/sk/cs gates are the same as in v1.
 """
@@ -168,6 +169,8 @@ def _recomputed_guard_reason(q: Question, tf_excess: Collection[str]) -> str | N
         craft_reason = craft_guards.units_reason(
             q.question, q.correct_answer, q.possible_answers, language=q.language
         )
+    if craft_reason is None:
+        craft_reason = craft_guards.long_explanation_reason(q.explanation)
     if craft_reason is not None:
         return f"{CRAFT_FLAG_KEY}={craft_reason}"
     if q.id in tf_excess:
@@ -210,6 +213,12 @@ def _uk_reason(q: Question) -> str | None:
     verdict = extra.get("naturalness")
     if not isinstance(verdict, dict):
         return "naturalness=missing"
+    # The model's second opinion beside the keyword lists, which leaked twice:
+    # war/politics/Russia in other words, an answer given away in another
+    # case. Only an explicit False clears it (a verdict without flags holds).
+    for flag in ("off_policy", "gives_away"):
+        if verdict.get(flag) is not False:
+            return f"naturalness={flag}"
     if verdict.get("ok") is not True:
         return "naturalness=not_ok"
     return None

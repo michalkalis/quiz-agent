@@ -214,8 +214,10 @@ async def test_thin_crowd_has_no_strip_and_says_nothing(db_sessionmaker):
 
 async def test_wrong_easy_has_no_strip(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    ids = await _play_all(svc, "p1", ["correct"] * 5)
-    session, _ = await _start(svc, "p2")
+    # A crowd big enough (#248) that only the wrong-but-easy rule hides it.
+    for n in range(20):
+        ids = await _play_all(svc, f"p{n}", ["correct"] * 5)
+    session, _ = await _start(svc, "me")
     strip, line = await svc.answer_strip(session, ids[0], "incorrect")
     assert strip is None and line is None
 

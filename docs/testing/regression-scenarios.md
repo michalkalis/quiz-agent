@@ -279,14 +279,19 @@ on edit-tap and must not restart).
 4. Wait for `confirmation.state.transcript`
 5. Tap `confirmation.edit`
 6. Type `Berlin` into `confirmation.answerField`
-7. Tap `confirmation.reRecord`
-8. Wait up to 3s
+7. `curl -s "http://127.0.0.1:9999/stt/committed?text=Rome&wait=180" >/dev/null &`
+   (answers "Rome" the moment the new recording opens)
+8. Tap `confirmation.reRecord`; wait for the curl to return
 
 **Asserts**
-- `question.state` label is `askingQuestion`
-- No confirmation sheet visible (`confirmation.state.transcript` and
-  `confirmation.state.processing` both absent)
+- The sheet shows the new recording: `confirmation.answer` reads `Rome`, not `Berlin`
+- `question.counter` still reads `1/10` and no result screen appeared
 - `question.errorBanner` is **not** present
+
+Why not assert `askingQuestion`/`recording` right after the tap: those
+states last ~10 s (the re-recording ends without speech), while XCUITest
+on CI sometimes waits a minute per step for the app to go idle once the
+keyboard is up. The new answer's sheet stays until the player acts.
 - Log does **not** contain `✏️ Resubmitting edited answer`
 - App process is alive; no `EXC_*` in log
 

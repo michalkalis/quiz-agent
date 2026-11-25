@@ -24,6 +24,13 @@ struct UITestClient {
         try await post(path: "/stt/committed", text: text)
     }
 
+    /// The player says `text` as soon as the next answer recording opens, at
+    /// most `seconds` from now — for a recording a tap is about to open, when
+    /// the tap itself may outlast that recording's wait for speech (RS-07).
+    func sendSpokenAnswer(_ text: String, whenMicOpensWithin seconds: Int) async throws {
+        try await post(path: "/stt/committed", text: text, wait: seconds)
+    }
+
     /// An audio interruption (phone call) hits the recording.
     func interruptRecording() async throws {
         try await post(path: "/recording/interrupt", text: nil)
@@ -67,7 +74,7 @@ struct UITestClient {
         try await post(path: "/network/release", text: nil)
     }
 
-    private func post(path: String, text: String?, calls: [String]? = nil) async throws {
+    private func post(path: String, text: String?, calls: [String]? = nil, wait: Int? = nil) async throws {
         var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if let text {
             components.queryItems = [URLQueryItem(name: "text", value: text)]
@@ -75,13 +82,16 @@ struct UITestClient {
         if let calls {
             components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "calls", value: calls.joined(separator: ","))]
         }
+        if let wait {
+            components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "wait", value: String(wait))]
+        }
         guard let url = components.url else {
             XCTFail("UITestClient: could not build URL for path \(path)")
             return
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = 5
+        request.timeoutInterval = TimeInterval((wait ?? 0) + 5)
         let (_, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         XCTAssertEqual(status, 200, "UITestClient: unexpected HTTP status \(status) for \(path)")

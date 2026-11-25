@@ -198,10 +198,21 @@ final nonisolated class RSResultTests: XCTestCase {
     // build 90 both are the toolbar's pause button (the STAY pill is gone). Proof of a
     // real resume: the result screen then leaves on its own within the 8 s
     // auto-advance window, which a stuck pause would never do.
+    //
+    // The pause tap races that real countdown, so the 8 s UITestSupport seeds
+    // is a precondition, checked first. Before #243.8 (result pace presets) a
+    // spoken verdict cut it to 3 s, and on a slow CI runner the result was
+    // gone before the tap landed ("pause left the result screen").
     @MainActor
     func testRS17ResumeAutoAdvanceResumesCountdown() async throws {
         let app = RSFlow.launch()
         let result = try await RSFlow.reachResult(app, client: client, scenario: "RS-17")
+
+        let secondsLeft = result.waitForAutoAdvanceSeconds()
+        XCTAssertGreaterThanOrEqual(
+            secondsLeft ?? 0, 5,
+            "RS-17: the result counts down \(secondsLeft.map { "only \($0) s" } ?? "nothing"), the scenario needs the seeded 8 s"
+        )
 
         XCTAssertTrue(result.pauseButton.waitForExistence(timeout: 3), "RS-17: question.pause missing")
         result.pauseButton.tap() // pause

@@ -47,9 +47,14 @@ final nonisolated class RSEditTests: XCTestCase {
     // MARK: RS-07 — Edit then re-record dismisses without submitting
 
     // Regression guarded: entering edit mode and tapping Re-record must discard
-    // the edit and never submit — no evaluation, no result screen, no error.
-    // "Again" bridges through askingQuestion and starts the next recording
-    // itself (see RS-05), so either state is the legal landing.
+    // the edit and never submit — no evaluation, no result screen, no error —
+    // and record a fresh answer for the same question.
+    //
+    // The proof is the sheet the NEW recording leaves, not the states on the
+    // way there: with the keyboard up, XCUITest on CI sometimes waits a minute
+    // per step for the app to go idle, and by then the re-recording (10 s
+    // without speech) has long ended. So the new answer is spoken the moment
+    // the mic opens, whenever the tap lands, and the test reads what lasts.
     @MainActor
     func testRS07EditThenReRecordDiscardsWithoutSubmitting() async throws {
         let app = RSFlow.launch()
@@ -59,10 +64,21 @@ final nonisolated class RSEditTests: XCTestCase {
         )
 
         confirmation.replaceAnswer(with: "Berlin", scenario: "RS-07")
+        let client = client
+        let rerecording = Task.detached {
+            try await client.sendSpokenAnswer("Rome", whenMicOpensWithin: 180)
+        }
         confirmation.reRecordButton.tap()
+        try await rerecording.value
 
-        question.waitForState(in: ["askingQuestion", "recording"], timeout: 5)
-        confirmation.waitForDismissal(timeout: 3, scenario: "RS-07")
+        confirmation.waitForTranscript(timeout: 10, scenario: "RS-07")
+        let shown = confirmation.answer.label
+        XCTAssertTrue(shown.contains("Rome"), "RS-07: the sheet does not show the new recording, it reads '\(shown)'")
+        XCTAssertFalse(shown.contains("Berlin"), "RS-07: the discarded edit survived Re-record, sheet reads '\(shown)'")
+        XCTAssertEqual(
+            question.counter.label, "1/10",
+            "RS-07: the quiz moved past the first question — Re-record submitted the edited answer"
+        )
         XCTAssertFalse(
             ResultPage(app: app).continueButton.exists,
             "RS-07: a result screen appeared — Re-record submitted the edited answer"

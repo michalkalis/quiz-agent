@@ -1933,25 +1933,25 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "+%lld пункт"
+                  "value" : "+%lld бал"
                 }
               },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "+%lld пункти"
+                  "value" : "+%lld бали"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "+%lld пунктів"
+                  "value" : "+%lld балів"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "+%lld пункту"
+                  "value" : "+%lld бала"
                 }
               }
             }
@@ -2000,7 +2000,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 питань на місяць"
+            "value" : "1 000 питань на місяць"
           }
         }
       }
@@ -2023,7 +2023,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 питань на місяць за %@"
+            "value" : "1 000 питань на місяць за %@"
           }
         }
       }
@@ -16859,7 +16859,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ця вікторина в тебе вже зіграна."
+            "value" : "Цю вікторину вже зіграно."
           }
         }
       }
@@ -19265,7 +19265,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Усі питання цього набору в тебе вже позаду."
+            "value" : "Усі питання цього набору вже зіграно."
           }
         }
       }
@@ -19357,25 +19357,25 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Цього місяця в тебе вже позаду %lld безплатне питання."
+                  "value" : "Цього місяця %lld безплатне питання вже використано."
                 }
               },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Цього місяця в тебе вже позаду всі %lld безплатні питання."
+                  "value" : "Цього місяця всі %lld безплатні питання вже використано."
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Цього місяця в тебе вже позаду всі %lld безплатних питань."
+                  "value" : "Цього місяця всі %lld безплатних питань уже використано."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Цього місяця в тебе вже позаду всі %lld безплатного питання."
+                  "value" : "Цього місяця всі %lld безплатного питання вже використано."
                 }
               }
             }
@@ -19401,7 +19401,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Цього місяця в тебе вже позаду всі 1 000 питань Trubbo Plus."
+            "value" : "Цього місяця всі 1 000 питань Trubbo Plus уже використано."
           }
         }
       }
@@ -19424,7 +19424,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Цього місяця в тебе вже позаду всі безплатні питання."
+            "value" : "Цього місяця всі безплатні питання вже використано."
           }
         }
       }
@@ -22212,25 +22212,25 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "−%lld пункт"
+                  "value" : "−%lld бал"
                 }
               },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "−%lld пункти"
+                  "value" : "−%lld бали"
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "−%lld пунктів"
+                  "value" : "−%lld балів"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "−%lld пункту"
+                  "value" : "−%lld бала"
                 }
               }
             }

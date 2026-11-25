@@ -467,7 +467,7 @@ struct HomeView: View {
         Menu {
             ForEach(Language.selectableLanguages) { language in
                 Button {
-                    viewModel.settings.language = language.id
+                    viewModel.chooseLanguage(language.id)
                 } label: {
                     if viewModel.settings.language == language.id {
                         Label(language.nativeName, systemImage: "checkmark")

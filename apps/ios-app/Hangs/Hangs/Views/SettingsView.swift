@@ -250,7 +250,7 @@ struct SettingsView: View {
         groupSection(label: "language") {
             Menu {
                 ForEach(Language.selectableLanguages) { language in
-                    Button(language.nativeName) { viewModel.settings.language = language.id }
+                    Button(language.nativeName) { viewModel.chooseLanguage(language.id) }
                         .accessibilityIdentifier("settings.language.\(language.id)")
                 }
             } label: {

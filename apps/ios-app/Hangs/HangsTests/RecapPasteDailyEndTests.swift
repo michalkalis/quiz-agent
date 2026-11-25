@@ -34,7 +34,7 @@ struct RecapPasteDailyEndTests {
         #expect(message.split(separator: "\n").count == 2, "a line, then the address: \(message)")
     }
 
-    @Test("the site address follows the language", arguments: [("sk", "https://trubbo.app/sk/"), ("cs", "https://trubbo.app/cs/"), ("en", "https://trubbo.app")])
+    @Test("the site address follows the language", arguments: [("sk", "https://trubbo.app/sk/"), ("cs", "https://trubbo.app/cs/"), ("uk", "https://trubbo.app/uk/"), ("en", "https://trubbo.app")])
     func homePagePerLanguage(language: String, url: String) {
         #expect(Config.homePageURL(languageCode: language).absoluteString == url)
     }

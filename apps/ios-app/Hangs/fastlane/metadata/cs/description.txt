@@ -1,30 +1,15 @@
-Trubbo je zábavný kvíz, který hraješ hlasem. Otázku ti přečte, odpovíš nahlas vlastními slovy a hned víš, jestli máš pravdu. Otázky slyší všichni kolem, takže odpovědět může kdokoli, třeba doma s partou, s dětmi nebo cestou autem.
+Trubbo ti přečte otázku nahlas, odpovíš vlastními slovy a hned víš, jestli máš pravdu. Nemusíš ťukat ani číst, takže hrát může kdokoli kolem, třeba parta doma, děti nebo celé auto.
 
-JAK TO FUNGUJE
-• Každou otázku čte přirozený hlas
-• Odpovídáš vlastními slovy. Trubbo pochopí, co myslíš, nejen přesné znění
-• U otázek s možnostmi řekni odpověď nebo její číslo
-• Kvíz ovládáš hlasem: start, potvrď, dál, znovu, další
-• Po každé odpovědi dostaneš krátké vysvětlení a odkaz na zdroj
+• Otázky z běžného života, vědy, historie, sportu, filmu, jídla a dalších témat
+• Odpovídáš po svém, Trubbo pochopí, co myslíš
+• Ke každé odpovědi krátké vysvětlení a odkaz na zdroj
+• Každou otázku před hrou ověříme podle zdrojů
+• Vlastní balíček na jakékoli téma, třeba vesmír pro děti nebo hudba 90. let. Hrát můžeš skoro hned
+• Česky, slovensky i anglicky. Odpovídat můžeš i psaním
 
-VYBER SI KVÍZ
-• Kategorie od vědy a historie po sport, filmy a jídlo
-• Lehké, střední i těžké otázky
-• Hraj česky, slovensky nebo anglicky
-• Raději píšeš? Každou odpověď můžeš zadat i na obrazovce
+Každý měsíc 30 otázek zdarma. Trubbo Plus ti dá 1 000 otázek měsíčně a jednorázový balíček 100 otázek nikdy nevyprší. Předplatné se obnovuje automaticky, dokud ho nezrušíš v nastavení Apple účtu.
 
-OVĚŘENÉ OTÁZKY
-AI chat si v kvízu umí vymýšlet a zní přitom jistě. Trubbo každou otázku před hrou ověří podle zdrojů na webu a co neobstojí, vyřadí. U každé odpovědi vidíš, odkud fakt pochází.
-
-VLASTNÍ BALÍČEK
-Napiš jakékoli téma, třeba vesmír pro děti nebo hudbu 90. let, a Trubbo ti připraví balíček 30 otázek. I ty ověří podle zdrojů. První otázky můžeš hrát už za pár minut.
-
-ZDARMA NEBO TRUBBO PLUS
-Každý měsíc 30 otázek zdarma. Předplatné Trubbo Plus ti dá 1 000 otázek měsíčně. Jednorázový balíček 100 otázek nikdy nevyprší. Ceny uvidíš v aplikaci ještě před nákupem. Předplatné se obnovuje automaticky, dokud ho nezrušíš v nastavení Apple účtu.
-
-DOBRÉ VĚDĚT
-Hraješ v autě? Jeď opatrně.
-Otázky a vyhodnocení odpovědí vznikají s pomocí umělé inteligence. Otázky ověřujeme podle zdrojů, přesto se výjimečně může objevit chyba. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
+Hraješ v autě? Jeď opatrně. Otázky vznikají s pomocí umělé inteligence a ověřujeme je podle zdrojů, přesto se výjimečně může objevit chyba. Své údaje můžeš kdykoli exportovat nebo smazat v Nastavení.
 
 Zásady ochrany soukromí: https://trubbo.app/cs/privacy
 Podmínky použití: https://trubbo.app/cs/terms

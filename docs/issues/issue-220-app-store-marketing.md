@@ -117,6 +117,23 @@ Kandidáti na štart (nie finál, doplní 220.2):
   Čo: mesačne App Analytics (search vs browse, konverzia per CPP, eventy), poradie top slov; slová, ktoré po 2 verziách neprinesú nič, vymeniť.
   Hotové: krátky záznam v research súbore po každom mesiaci, zmeny cez 220.3 až 220.5.
 
+## Stav 2026-11-25 (review živého obchodu)
+
+[Review](../research/asc-listing-review-2026-11-25.md) · [rešerš](../research/aso-app-store-copy-2026-11-25.md). Rozhodnutia foundera 11-25:
+- Kratší popis (~1 100 znakov, háčik v prvej vete, bez zoznamu povelov) vo všetkých 4 jazykoch, v repo. Nahrať s najbližšou verziou (220.5).
+- Názov sk „Trubbo: Vedomostný kvíz hlasom“, cs „Trubbo: Vědomostní kvíz hlasem“, v repo.
+- en-GB kľúčové slová = anglické slová pre SK/CZ obchod (en-GB sa tam podľa testu z 2023 prehľadáva); `qzvox` je testovacie slovo: po vydaní ho vyhľadať v SK obchode, potom vyhodiť.
+- Čína stiahnutá z predaja 11-25 (AIGC povolenie do 2027-01-31 nereálne).
+- Žiadosť o hodnotenie v appke ZATIAĽ NIE: až keď je founder s appkou sám spokojný.
+- Doplniť: udalosti v obchode (220.9), video ukážka (220.13), druhá kategória Hry › Kvízy (220.14). Propagovaný nákup zatiaľ nie.
+- Kľúčové slová držané ≤ 100 bajtov (bezpečné; Apple pravdepodobne počíta znaky, neoverené).
+- Otvorené: dve nové otázky Apple k vekovému hodnoteniu (randenie, zdieľanie polohy) zodpovedať „nie“ do 2027-01-12.
+
+- [ ] **220.13 Video ukážka** · agent, founder schváli
+  Čo: 15 až 30 s záznam appky (sk, cs, en), prvé sekundy musia fungovať bez zvuku; podklad z promo videí #210, ale Apple chce zábery z appky.
+- [ ] **220.14 Druhá kategória Hry › Kvízy** · agent
+  Čo: nastaviť s najbližšou verziou; pred tým overiť, že druhá kategória nemení nárok na CarPlay (#97).
+
 ## Otázky pre foundera
 
 1. **Názov v obchode:** pridať k „Trubbo“ popis, napr. „Trubbo: Hlasový kvíz“ (sk/cs) a „Trubbo: Voice Trivia Quiz“ (en)? Na ploche iPhonu ostane „Trubbo“. *Odporúčam áno, názov je najsilnejšie pole a dnes je takmer prázdny.*

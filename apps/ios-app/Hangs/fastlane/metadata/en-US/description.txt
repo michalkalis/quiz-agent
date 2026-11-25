@@ -1,30 +1,15 @@
-Trubbo is a fun trivia quiz you play with your voice. It reads each question aloud, you answer out loud in your own words, and you hear right away whether you got it. Everyone around hears the questions, so anyone can answer, for example at home with friends, with the kids or on a road trip.
+Trubbo reads each question aloud, you answer in your own words and hear right away whether you got it. No tapping or reading, so anyone nearby can play, for example friends at home, the kids or everyone in the car.
 
-HOW IT WORKS
-• A natural voice reads every question
-• Answer in your own words. Trubbo understands what you mean, not only the exact wording
-• Multiple choice questions: say the answer or its number
-• Control the quiz by voice: start, confirm, next, again, repeat
-• After every answer you get a short explanation and a link to the source
+• Questions from everyday life, science, history, sports, film, food and more
+• Answer your own way, Trubbo understands what you mean
+• A short explanation and a source link after every answer
+• Every question is checked against sources before you play it
+• Your own pack on any topic, for example space for kids or 90s music. You can start playing almost right away
+• Play in English, Slovak or Czech. You can also type your answers
 
-PICK YOUR QUIZ
-• Categories from science and history to sports, film and food
-• Easy, medium or hard questions
-• Play in English, Slovak or Czech
-• Prefer typing? Every answer can be entered on screen too
+30 free questions every month. Trubbo Plus gives you 1,000 questions a month, and a one-time pack of 100 questions never expires. The subscription renews automatically until you cancel it in your Apple Account settings.
 
-CHECKED QUESTIONS
-An AI chat can make things up in a quiz and still sound sure. Trubbo checks every question against sources on the web before you play it and drops anything that doesn't hold up. Every answer shows where the fact comes from.
-
-YOUR OWN PACK
-Describe any topic, for example space for kids or 90s music, and Trubbo writes a pack of 30 questions for you, checked against sources too. The first questions are ready to play within minutes.
-
-FREE OR TRUBBO PLUS
-30 questions free every month. The Trubbo Plus subscription gives you 1,000 questions a month. A one-time pack of 100 questions never expires. Prices are shown in the app before you buy. The subscription renews automatically until you cancel it in your Apple Account settings.
-
-GOOD TO KNOW
-Playing in the car? Drive safe.
-Questions and answer evaluation are created with the help of AI. We check the questions against sources, but a mistake can still slip through now and then. You can export or delete your data anytime in Settings.
+Playing in the car? Drive safe. Questions are created with the help of AI and checked against sources, but a mistake can still slip through now and then. You can export or delete your data anytime in Settings.
 
 Privacy Policy: https://trubbo.app/privacy
 Terms of Use: https://trubbo.app/terms

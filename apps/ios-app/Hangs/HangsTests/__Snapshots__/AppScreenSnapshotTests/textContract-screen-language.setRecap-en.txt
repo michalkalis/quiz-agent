@@ -2,7 +2,7 @@
 Geography
 0
 out of 10
-Correct 1 · Missed 1 · Skipped 1
+Correct 1 · Wrong 1 · Skipped 1
 Hardest one you got: Paris
 Questions
 Play summary

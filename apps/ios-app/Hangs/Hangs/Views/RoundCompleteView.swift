@@ -239,7 +239,7 @@ struct RoundCompleteView: View {
             .accessibilityLabel(String(localized: "Final score: \(summary.displayScore) out of \(summary.totalQuestions)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
             .accessibilityIdentifier(route == .score ? "completion.score" : "recap.hero")
 
-            Text("Correct \(correctCount) · Missed \(incorrectCount) · Skipped \(skippedCount)")
+            Text("Correct \(correctCount) · Wrong \(incorrectCount) · Skipped \(skippedCount)")
                 .font(.hangsBody)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .fixedSize(horizontal: false, vertical: true)

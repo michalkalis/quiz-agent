@@ -11,7 +11,8 @@
 //  Bottom: the listen bar, "Next quiz" (what spoken "again" does here: an
 //  ordinary round, `playAgainFromRoundEnd`) and Home. The numbers stay as they
 //  were when the screen opened (#240, 240.9); only what is still missing is
-//  fetched. Share sends the tiles and the score without the answers (#205.6).
+//  fetched. The week's crew table (#239) shows when the player has a crew.
+//  Share sends the tiles and the score without the answers (#205.6).
 //
 
 import SwiftUI
@@ -23,7 +24,10 @@ struct DailyRoundEndView: View {
     @StateObject private var daily: DailyChallengeViewModel
     /// #232 (daily text B): the same five questions as a link.
     @StateObject private var share: SharedQuizShareModel
+    /// #239: the week's crew table under the result (nothing without a crew).
+    @StateObject private var crew: DailyCrewViewModel
     private let round: DailyRound
+    private let playerName: String
 
     private enum Metrics {
         /// The score figure, as on the regular round end.
@@ -41,19 +45,25 @@ struct DailyRoundEndView: View {
             state: round.state
         ))
         _share = StateObject(wrappedValue: Self.shareModel(viewModel))
+        _crew = StateObject(wrappedValue: DailyCrewViewModel(network: viewModel.networkService))
+        playerName = Self.playerName()
     }
 
     #if DEBUG
         /// Test seam: a pre-loaded state, so snapshots need not wait on a fetch.
         init(
             viewModel: QuizViewModel,
-            daily: DailyChallengeViewModel
+            daily: DailyChallengeViewModel,
+            crew: DailyCrewViewModel? = nil,
+            playerName: String = "Jana"
         ) {
             self.viewModel = viewModel
             round = viewModel.activeDaily
                 ?? DailyRound(day: daily.day, language: viewModel.settings.language)
             _daily = StateObject(wrappedValue: daily)
             _share = StateObject(wrappedValue: Self.shareModel(viewModel))
+            _crew = StateObject(wrappedValue: crew ?? DailyCrewViewModel(network: viewModel.networkService))
+            self.playerName = playerName
         }
     #endif
 
@@ -88,6 +98,9 @@ struct DailyRoundEndView: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("daily.comparison")
                     }
+                    // The invite card is gone (#248.3): the top-bar Share icon
+                    // invites; the card draws only a crew that exists.
+                    DailyCrewCard(model: crew, playerName: playerName, canInvite: false)
                     if let failure = share.failureMessage {
                         Text(verbatim: failure)
                             .font(.hangsBody)
@@ -198,7 +211,14 @@ struct DailyRoundEndView: View {
     /// What the screen could not show yet (opened before the server's summary,
     /// a failed fetch); what it shows already stays.
     private func loadMissing() async {
-        await daily.loadIfMissing(day: round.day, language: round.language)
+        async let state: Void = daily.loadIfMissing(day: round.day, language: round.language)
+        async let table: Void = crew.loadIfMissing(day: round.day, language: round.language)
+        _ = await (state, table)
+    }
+
+    /// The name the crew sees for this player (the one a shared link carries).
+    private static func playerName() -> String {
+        PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName)
     }
 
     private func shareWithLink() {

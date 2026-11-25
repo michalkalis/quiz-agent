@@ -4,6 +4,17 @@ Denná výzva · hotovo
 z 5
 Za odmenu máš dnes 10 otázok navyše.
 Lepšie skóre ako 2 z 3 hráčov.
+tvoja partia tento týždeň
+1.
+Peter
+240
+2.
+Jana (ty)
+185
+3.
+Mama
+90
+Správna odpoveď, ktorú vedelo málo ľudí, má viac bodov, až 100.
 Ďalší kvíz
 Úvod
 # identifiers
@@ -14,5 +25,9 @@ daily.score
 daily.tiles
 daily.bonusLeft
 daily.comparison
+daily.crew
+daily.crew.member
+daily.crew.you
+daily.crew.member
 daily.nextQuiz
 daily.home

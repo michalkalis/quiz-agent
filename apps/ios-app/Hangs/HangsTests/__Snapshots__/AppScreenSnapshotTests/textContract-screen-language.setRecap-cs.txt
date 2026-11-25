@@ -2,7 +2,7 @@
 Geography
 0
 z 10
-Správně 1 · Vedle 1 · Přeskočeno 1
+Správně 1 · Špatně 1 · Přeskočeno 1
 Nejtěžší uhodnutá: Paris
 Otázky
 Přehraj souhrn

@@ -64,13 +64,18 @@ struct HangsNavChipLabel: View {
     var isLoading = false
     var cornerRadius: CGFloat = Theme.Hangs.Radius.navRound
 
+    enum Metrics {
+        /// The glyph size of a 44pt nav chip (same as `HangsNavChip`).
+        static let iconSize: CGFloat = 16
+    }
+
     var body: some View {
         Group {
             if isLoading {
                 ProgressView()
             } else {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: HangsNavChipLabel.Metrics.iconSize, weight: .semibold))
             }
         }
         .foregroundColor(Theme.Hangs.Colors.ink)

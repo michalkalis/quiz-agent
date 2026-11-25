@@ -186,6 +186,34 @@ struct DailyRoundEndInspectorTests {
         }
     }
 
+    // WHY (#239, founder 2026-11-18): the crew table lives only here; the
+    // founder dropped just the invite text. A crew shows; none shows nothing.
+    @Test("crew with members: the table; no crew: no invite and no table")
+    func crewTableOrNothing() async throws {
+        func view(_ crew: DailyCrew) -> DailyRoundEndView {
+            let day = DailyChallengeDay(year: 2026, month: 10, day: 15)
+            let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
+            vm.activeDaily = DailyRound(day: day, language: "sk")
+            vm.quizState = .finished
+            let network = MockNetworkService()
+            return DailyRoundEndView(
+                viewModel: vm,
+                daily: DailyChallengeViewModel(network: network, day: day),
+                crew: DailyCrewViewModel(network: network, crew: crew)
+            )
+        }
+        let withCrew = view(CrewFixtures.crew)
+        try await ViewHosting.host(withCrew) {
+            #expect(throws: Never.self) { try withCrew.inspect().find(viewWithAccessibilityIdentifier: "daily.crew") }
+        }
+        let empty = view(DailyCrew(weekStart: "2026-10-12", members: []))
+        try await ViewHosting.host(empty) {
+            let tree = try empty.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "daily.crew") }
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "daily.crew.invite") }
+        }
+    }
+
     @Test("no comparison yet: no crowd line, the round's own score stands in")
     func comparisonHiddenWhenNil() async throws {
         let day = DailyChallengeDay(year: 2026, month: 10, day: 15)

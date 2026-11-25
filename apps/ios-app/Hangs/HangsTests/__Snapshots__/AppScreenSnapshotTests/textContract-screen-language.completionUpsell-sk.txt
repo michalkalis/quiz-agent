@@ -2,7 +2,7 @@
 Geography
 7.5
 z 10
-Správne 7 · Vedľa 3 · Preskočené 0
+Správne 7 · Nesprávne 3 · Preskočené 0
 Najťažšia uhádnutá: Answer 10
 Míňajú sa ti otázky zadarmo
 Tento mesiac ti zostáva 4 otázok zadarmo.

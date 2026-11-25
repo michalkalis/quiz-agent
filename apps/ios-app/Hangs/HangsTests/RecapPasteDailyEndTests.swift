@@ -64,13 +64,21 @@ struct RecapPasteDailyEndTests {
 
     private static let day = DailyChallengeDay(year: 2026, month: 10, day: 15)
 
-    private static func roundEnd(state: DailyChallengeState?, network: MockNetworkService) -> DailyRoundEndView {
+    private static func crew(points: Int) -> DailyCrew {
+        DailyCrew(weekStart: "2026-10-12", members: [
+            DailyCrewMember(memberId: "m-1", name: "Peter", points: points, today: 65, days: 3, place: 1, isYou: false),
+            DailyCrewMember(memberId: nil, name: nil, points: 100, today: 50, days: 2, place: 2, isYou: true),
+        ])
+    }
+
+    private static func roundEnd(state: DailyChallengeState?, crew: DailyCrew? = nil, network: MockNetworkService) -> DailyRoundEndView {
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
         return DailyRoundEndView(
             viewModel: vm,
-            daily: DailyChallengeViewModel(network: network, day: day, state: state)
+            daily: DailyChallengeViewModel(network: network, day: day, state: state),
+            crew: DailyCrewViewModel(network: network, crew: crew)
         )
     }
 
@@ -86,16 +94,18 @@ struct RecapPasteDailyEndTests {
             summary: DailySummary(score: 4, total: 5, marks: DailyChallengeFixtures.goodMarks, players: 9,
                                   comparison: "Lepšie skóre ako 7 z 8 hráčov.", rank: nil, bestHit: nil)
         )
-        let view = Self.roundEnd(state: shown, network: network)
+        network.stubbedDailyCrew = Self.crew(points: 999)
+        let view = Self.roundEnd(state: shown, crew: Self.crew(points: 240), network: network)
 
         try await ViewHosting.host(view) {
             for _ in 0 ..< 50 {
                 await Task.yield()
             }
             #expect(network.fetchDailyChallengeCallCount == 0, "the crowd numbers were fetched again while open")
-            #expect(network.fetchDailyCrewCallCount == 0, "the invite card is gone: nothing asks for the crew table")
+            #expect(network.fetchDailyCrewCallCount == 0, "the crew table was fetched again while open")
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "Lepšie skóre ako 2 z 3 hráčov.") }
+            #expect(throws: Never.self) { try tree.find(text: "240") }
         }
     }
 
@@ -105,16 +115,17 @@ struct RecapPasteDailyEndTests {
     func missingNumbersFetchedOnce() async throws {
         let network = MockNetworkService()
         network.stubbedDailyState = DailyChallengeFixtures.playedState(date: Self.day.isoDate, language: "sk", marks: DailyChallengeFixtures.goodMarks)
+        network.stubbedDailyCrew = Self.crew(points: 240)
         let view = Self.roundEnd(state: nil, network: network)
 
         try await ViewHosting.host(view) {
-            await pumpUntil({ network.fetchDailyChallengeCallCount == 1 },
+            await pumpUntil({ network.fetchDailyChallengeCallCount == 1 && network.fetchDailyCrewCallCount == 1 },
                             "the round end never asked for its numbers")
             for _ in 0 ..< 20 {
                 await Task.yield()
             }
             #expect(network.fetchDailyChallengeCallCount == 1)
-            #expect(network.fetchDailyCrewCallCount == 0)
+            #expect(network.fetchDailyCrewCallCount == 1)
         }
     }
 

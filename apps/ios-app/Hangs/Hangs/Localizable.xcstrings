@@ -22397,30 +22397,6 @@
         }
       }
     },
-    "Correct %lld · Missed %lld · Skipped %lld" : {
-      "comment" : "One-line breakdown under the final score: right, missed and skipped counts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Správně %lld · Vedle %lld · Přeskočeno %lld"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Správne %lld · Vedľa %lld · Preskočené %lld"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Правильно %lld · Мимо %lld · Пропущено %lld"
-          }
-        }
-      }
-    },
     "to answer" : {
       "comment" : "Hra spolu (#224.4): under the seconds left on the question screen",
       "localizations" : {
@@ -22829,6 +22805,30 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Correct %lld · Wrong %lld · Skipped %lld" : {
+      "comment" : "One-line breakdown under the final score: right, wrong and skipped counts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správně %lld · Špatně %lld · Přeskočeno %lld"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Správne %lld · Nesprávne %lld · Preskočené %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правильно %lld · Неправильно %lld · Пропущено %lld"
           }
         }
       }

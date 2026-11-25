@@ -2,7 +2,7 @@
 Geography
 7.5
 z 10
-Správně 7 · Vedle 3 · Přeskočeno 0
+Správně 7 · Špatně 3 · Přeskočeno 0
 Nejtěžší uhodnutá: Answer 10
 Otázky
 Question 1 of the round?

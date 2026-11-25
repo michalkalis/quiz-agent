@@ -328,6 +328,68 @@ struct RoundEndVoiceTests {
         #expect(rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3, bonus: 10)])
     }
 
+    /// WHY (#235 beyond the happy path): the daily state is fetched before
+    /// the line. A slow server must not hold the round end silent and deaf:
+    /// at the prompt bound the line plays without the reward, the words work
+    /// while the fetch is still in flight, and its late answer says nothing.
+    @Test("a slow daily state: at the bound the line plays without the reward; the words work; the late answer stays silent",
+          arguments: [VoiceCommand.next, .home])
+    func slowDailyStateIsSkipped(command: VoiceCommand) async {
+        let rig = makeRig()
+        rig.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        let hold = rig.network.hold(.fetchDailyChallenge)
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        rig.vm.sessionCorrectCount = 3
+        await rig.vm.handleError(NetworkError.sessionFinished, context: .submission, fallbackMessage: "x")
+        await pumpUntil({ hold.heldCount == 1 }, "the daily state was never asked for")
+        await rig.clock.advance(by: .seconds(QuizViewModel.promptFetchTimeoutSeconds) - .milliseconds(1))
+        await drain()
+        #expect(rig.network.synthesizedTexts.isEmpty, "the line did not wait for the daily state")
+
+        await rig.clock.advance(by: .milliseconds(1))
+        await pumpUntil({ rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3)] }, "no line at the bound")
+        await listensAtRoundEnd(rig, "the slow daily state held the round end deaf")
+        #expect(rig.audio.playOpusCallCount == 1)
+
+        let word = VoiceCommandLexicon.spokenWord(command, language: rig.language, on: .setEnd)
+        rig.silence.simulateCommandTranscript(word)
+        await pumpUntil({ rig.vm.quizState != .finished }, "'\(word)' did not act while the fetch was held")
+
+        hold.release()
+        await drain()
+        // A started quiz may fetch its own lines; none of them is the round end's.
+        let offer = roundEndQuestion(rig) ?? "-"
+        #expect(rig.network.synthesizedTexts.count { $0.contains(offer) } == 1, "the late answer said a second line")
+        #expect(!rig.network.synthesizedTexts.contains(roundEndLine(rig, correct: 3, bonus: 10)))
+    }
+
+    /// WHY: the buttons never wait for the line. Tapped while the daily state
+    /// is still in flight, they act at once, and the answer that lands later
+    /// says nothing over the next screen.
+    @Test("the buttons act while the daily state is held, and its late answer stays silent", arguments: [false, true])
+    func buttonsWhileDailyStateHeld(nextQuiz: Bool) async {
+        let rig = makeRig()
+        rig.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        let hold = rig.network.hold(.fetchDailyChallenge)
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        await rig.vm.handleError(NetworkError.sessionFinished, context: .submission, fallbackMessage: "x")
+        await pumpUntil({ hold.heldCount == 1 }, "the daily state was never asked for")
+        let offer = roundEndQuestion(rig) ?? "-"
+
+        if nextQuiz {
+            rig.vm.playAgainFromRoundEnd() // the Next quiz button
+            await pumpUntil({ rig.network.createSessionCallCount == 1 }, "Next quiz did not start a quiz")
+        } else {
+            rig.vm.resetToHome() // the Home button
+            #expect(rig.vm.quizState == .idle)
+        }
+        hold.release()
+        await rig.clock.advance(by: .seconds(QuizViewModel.promptFetchTimeoutSeconds))
+        await drain()
+        #expect(!rig.network.synthesizedTexts.contains { $0.contains(offer) }, "a round-end line followed the button")
+        #expect(rig.network.fetchDailyChallengeCallCount == 1)
+    }
+
     /// WHY: nothing earned (used up, a subscriber) or nothing known (the
     /// fetch failed, #235) means no reward sentence; the score and the offer
     /// still come, and an ordinary round never asks for the daily state.

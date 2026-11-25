@@ -99,20 +99,10 @@ def _of(language: str, n: int) -> str:
     return cs_from(n) if language == "cs" else sk_from(n)
 
 
-FIRST = {
-    "sk": "Prvý výsledok dňa.",
-    "cs": "První výsledek dne.",
-    "uk": "Перший результат дня.",
-    "en": "First result today.",
-}
-
-
 def strip_text(crowd: Crowd, language: str) -> str:
-    """The result-screen strip: counts below 20 others, a percentage from 20,
-    "first today" with nobody else yet."""
+    """The result-screen strip: counts below 20 others, a percentage from 20.
+    Shown only from `rules.MIN_CROWD` others (`classify` hides it below)."""
     lang = _lang(language)
-    if crowd.others == 0:
-        return FIRST[lang]
     if crowd.knew == 0:
         return rare_text(crowd, language)
     k, n, p = crowd.knew, crowd.others, crowd.percent
@@ -237,11 +227,12 @@ def rank_text(standing: Standing, language: str) -> Optional[str]:
 
 
 def comparison_text(standing: Standing, language: str) -> Optional[str]:
-    """Round end and Home card: first today, rank in the top half, otherwise
-    "tough challenge" (nothing for a perfect score that did not out-rank)."""
+    """Round end and Home card: rank in the top half, otherwise "tough
+    challenge" (nothing for a perfect score that did not out-rank). The
+    service shows none of it below `rules.MIN_CROWD` other players (#248)."""
     lang = _lang(language)
     if standing.others == 0:
-        return FIRST[lang]
+        return None
     rank = rank_text(standing, language)
     if rank:
         return rank

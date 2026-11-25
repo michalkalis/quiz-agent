@@ -31,6 +31,7 @@ from ..usage.entitlement import account_is_entitled
 from ..shared_quiz.store import person_ids
 from . import copy
 from .rules import (
+    MIN_CROWD,
     MAX_SPOKEN_LINES,
     RARE_SHARE,
     Crowd,
@@ -343,16 +344,23 @@ class DailyChallengeService:
         standing = Standing(
             others=others, beaten=beaten, score=score, total=len(set_ids)
         )
+        # #248 (founder 2026-11-25): no comparison with a thin crowd; "first
+        # result today" or "best of 2" read as an empty app.
+        crowded = others >= MIN_CROWD
         return DailySummary(
             score=score,
             total=len(set_ids),
             marks=[answers.get(q) for q in set_ids],
             players=others + 1,
-            comparison=copy.comparison_text(standing, play.language),
-            rank=copy.rank_text(standing, play.language),
+            comparison=copy.comparison_text(standing, play.language)
+            if crowded
+            else None,
+            rank=copy.rank_text(standing, play.language) if crowded else None,
             best_hit=await self._best_hit(
                 play, [q for q in set_ids if answers.get(q)], exclude
-            ),
+            )
+            if crowded
+            else None,
         )
 
     async def _best_hit(
@@ -362,7 +370,7 @@ class DailyChallengeService:
         best: Optional[Tuple[float, str, Crowd]] = None
         for qid in known_ids:
             crowd = await self.crowd(play.language, play.challenge_date, qid, exclude)
-            if crowd.others and (best is None or crowd.share < best[0]):
+            if crowd.others >= MIN_CROWD and (best is None or crowd.share < best[0]):
                 best = (crowd.share, qid, crowd)
         if best is None:
             return None

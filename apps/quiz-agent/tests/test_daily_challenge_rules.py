@@ -22,12 +22,15 @@ from app.daily_challenge.rules import (
 @pytest.mark.parametrize(
     "crowd,player_knew,kind",
     [
-        (Crowd(others=0, knew=0), True, "first"),
-        (Crowd(others=0, knew=0), False, "first"),
-        (Crowd(others=10, knew=3), True, "rare"),  # 30 % is still rare
-        (Crowd(others=10, knew=4), True, "plain"),
-        (Crowd(others=10, knew=3), False, "hard"),
-        (Crowd(others=10, knew=4), False, "hidden"),  # wrong + easy: no strip
+        # #248 (founder 2026-11-25): a thin crowd says nothing, never
+        # "first result today" (it read as an app nobody uses).
+        (Crowd(others=0, knew=0), True, "hidden"),
+        (Crowd(others=0, knew=0), False, "hidden"),
+        (Crowd(others=19, knew=1), True, "hidden"),
+        (Crowd(others=20, knew=6), True, "rare"),  # 30 % is still rare
+        (Crowd(others=20, knew=7), True, "plain"),
+        (Crowd(others=20, knew=6), False, "hard"),
+        (Crowd(others=20, knew=7), False, "hidden"),  # wrong + easy: no strip
         (Crowd(others=1, knew=1), False, "hidden"),
     ],
 )
@@ -61,9 +64,6 @@ def test_partially_correct_counts_as_knowing():
         ("cs", Crowd(50, 7), "Vědělo 14 %."),
         ("en", Crowd(3, 2), "2 of 3 knew."),
         ("en", Crowd(100, 14), "14% knew."),
-        ("sk", Crowd(0, 0), "Prvý výsledok dňa."),
-        ("cs", Crowd(0, 0), "První výsledek dne."),
-        ("en", Crowd(0, 0), "First result today."),
     ],
 )
 def test_strip_counts_below_twenty_percent_from_twenty(language, crowd, text):
@@ -154,6 +154,7 @@ def test_rank_uses_percent_from_twenty_players_and_best_of_when_beating_all():
 
 
 def test_first_player_and_perfect_tie():
-    assert copy.comparison_text(Standing(0, 0, 3, 5), "sk") == "Prvý výsledok dňa."
+    # #248: nobody else yet → nothing ("first result today" read as an empty app).
+    assert copy.comparison_text(Standing(0, 0, 3, 5), "sk") is None
     # A perfect score tied with everyone is not a "tough challenge".
     assert copy.comparison_text(Standing(4, 0, 5, 5), "sk") is None

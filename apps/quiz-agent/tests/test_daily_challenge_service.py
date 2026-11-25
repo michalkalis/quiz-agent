@@ -141,7 +141,9 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     )
 
     alone = await svc.state("p1", "en", DAY)
-    assert alone.summary.comparison == "First result today."
+    # #248 (founder 2026-11-25): no "first result today", it read as an
+    # app nobody uses.
+    assert alone.summary.comparison is None
     assert alone.summary.best_hit is None  # no crowd yet, nothing to compare
     assert alone.summary.marks == [True, True, False, True, True]
 
@@ -152,10 +154,22 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     crowd = await svc.crowd("en", DAY, ids[0], exclude=["p1"])
     assert (crowd.others, crowd.knew) == (1, 0)
 
+    # #248: two players are not a crowd; still nothing to compare.
+    thin = await svc.state("p1", "en", DAY)
+    assert thin.summary.players == 2
+    assert thin.summary.comparison is None
+    assert thin.summary.rank is None
+    assert thin.summary.best_hit is None
+
+    # From 20 others the numbers are real: 19 more weak players.
+    for n in range(19):
+        await _play_all(
+            svc, f"w{n}", ["incorrect", "correct", "correct", "incorrect", "incorrect"]
+        )
     live = await svc.state("p1", "en", DAY)
-    assert live.summary.players == 2
-    assert live.summary.comparison == "Best score of 2 players."
-    assert live.summary.rank == "Best score of 2 players."
+    assert live.summary.players == 21
+    assert live.summary.comparison == "Best score of 21 players."
+    assert live.summary.rank == "Best score of 21 players."
     best = live.summary.best_hit
     assert best.question_id in (ids[0], ids[3], ids[4]) and best.rare
     assert best.text == "Nobody else knew that."

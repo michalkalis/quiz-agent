@@ -138,7 +138,8 @@ async def test_a_finished_challenge_comes_back_as_its_result(client, app):
     assert body["session"] is None
     assert body["state"]["status"] == "played"
     assert body["state"]["summary"]["score"] == 5
-    assert body["state"]["summary"]["comparison"] == "First result today."
+    # #248: alone today → no comparison at all.
+    assert body["state"]["summary"]["comparison"] is None
 
 
 async def test_beta_builds_reach_the_endpoints_before_launch(client, monkeypatch):

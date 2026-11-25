@@ -56,7 +56,10 @@ extension AudioDeviceState {
         // sequence harness): clearing the flag under it let the hands-free
         // start open the mic over the replay. The replay's own tail does both.
         if generation == questionReadOutGeneration {
-            await endQuestionReadOut()
+            // The think line comes next and arms the listener after itself:
+            // arming it here only to tear it down for the line was the pause
+            // the founder heard between the question and "Think." (TF b92).
+            await endQuestionReadOut(rearm: isRerecording() || !thinkLineFollowsRead())
         }
 
         // After TTS finishes (or was interrupted by barge-in): the think
@@ -73,11 +76,11 @@ extension AudioDeviceState {
     /// flag and bring the listener back — unless it stayed up through the read
     /// (#208.7), where re-arming would only re-mint its streams and drop a
     /// command said as the read ended.
-    private func endQuestionReadOut() async {
+    private func endQuestionReadOut(rearm: Bool = true) async {
         let stillLive = isListenerKeptThroughRead() && silenceDetectionService.isListening
         endQuestionRead()
         setPlayingQuestionTTS(false)
-        if !stillLive { await startSilenceDetectionListening() }
+        if rearm, !stillLive { await startSilenceDetectionListening() }
     }
 
     /// What became of the question read a pause held (#200).

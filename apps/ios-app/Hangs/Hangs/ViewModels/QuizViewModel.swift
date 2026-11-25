@@ -5,8 +5,8 @@
 //  Core quiz flow and state management
 //
 
-import Combine
 import Clocks
+import Combine
 import Foundation
 import os
 import Sentry
@@ -1092,7 +1092,8 @@ final class QuizViewModel: ObservableObject {
             },
             beginQuestionRead: { [weak self] in self?.voiceCommandCoordinator.beginQuestionRead() ?? false },
             endQuestionRead: { [weak self] in self?.voiceCommandCoordinator.endQuestionRead() },
-            isListenerKeptThroughRead: { [weak self] in self?.voiceCommandCoordinator.listenerKeptThroughRead ?? false }
+            isListenerKeptThroughRead: { [weak self] in self?.voiceCommandCoordinator.listenerKeptThroughRead ?? false },
+            thinkLineFollowsRead: { [weak self] in self?.thinkLineFollowsRead ?? false }
         )
     }
 
@@ -2401,7 +2402,7 @@ final class QuizViewModel: ObservableObject {
             Logger.quiz.warning("⚠️ Backend end-session failed after early exit (session will TTL out): \(error, privacy: .public)")
         }
 
-        Logger.quiz.info("🎮 Quiz ended early with results — score: \(self.score, privacy: .public)")
+        Logger.quiz.info("🎮 Quiz ended early with results — score: \(score, privacy: .public)")
     }
 
     /// Resume a saved session

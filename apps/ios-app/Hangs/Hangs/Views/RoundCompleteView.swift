@@ -14,7 +14,7 @@
 //  Critical spots kept: the hero is one line with no sentence under it, the
 //  breakdown counts the whole round, the list groups each answer under its
 //  question and a row expands to the full question + source. The voice
-//  commands that work here ("znova", "domov") are named in the listen bar.
+//  commands that work here ("ďalší", "domov") are named in the listen bar.
 //
 
 import SwiftUI
@@ -33,7 +33,6 @@ struct RoundCompleteView: View {
     }
 
     @Environment(\.locale) private var locale
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var viewModel: QuizViewModel
     /// #232: this round's link and comparison (sender or friend).
@@ -61,16 +60,20 @@ struct RoundCompleteView: View {
     private enum Metrics {
         /// Canvas B4a: the score figure (64 display).
         static let figure: CGFloat = 64
-        /// R-Complete: Home beside the main action.
-        static let homeWidth: CGFloat = 124
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // #198: the logo stays on Home and Onboarding only.
             HangsTopBar {
-                HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
-                    .accessibilityIdentifier("\(route.idPrefix).close")
+                HStack {
+                    HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
+                        .accessibilityIdentifier("\(route.idPrefix).close")
+                    Spacer()
+                    if offersShareIcon {
+                        shareIcon
+                    }
+                }
             }
 
             ScrollView {
@@ -88,12 +91,14 @@ struct RoundCompleteView: View {
                             .accessibilityIdentifier("\(route.idPrefix).cards")
                     }
 
-                    // #232 (1A): send the round to a friend; then (4A) how
-                    // everyone who played it did.
-                    if viewModel.shareableRoundSessionId != nil {
-                        SharedQuizSendCard(isCreating: share.isCreating, failureMessage: share.failureMessage, action: sendToFriend)
-                            .padding(.top, Theme.Hangs.Spacing.xxs)
-                            .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
+                    // #232 (1A): sending the round on is the trailing top-bar
+                    // icon (#248.3); then (4A) how everyone who played it did.
+                    if let failure = share.failureMessage {
+                        Text(verbatim: failure)
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("\(route.idPrefix).shareFailed")
                     }
                     if showsSharing, !share.rows.isEmpty {
                         SharedQuizRankingCard(rows: share.rows)
@@ -144,6 +149,22 @@ struct RoundCompleteView: View {
     /// The comparison has a link to read: the friend's, or the sender's once sent.
     private var showsSharing: Bool {
         viewModel.sharedQuizEnabled() && (isFriendsRound || viewModel.shareableRoundSessionId != nil)
+    }
+
+    /// #248.3: Share lives in the top bar, where Apple puts it. A friend's
+    /// round has "Send to a friend" as its main button instead.
+    private var offersShareIcon: Bool {
+        viewModel.shareableRoundSessionId != nil && !isFriendsRound
+    }
+
+    private var shareIcon: some View {
+        Button(action: sendToFriend) {
+            HangsNavChipLabel(icon: "square.and.arrow.up", isLoading: share.isCreating)
+        }
+        .buttonStyle(.plain)
+        .disabled(share.isCreating)
+        .accessibilityLabel(Text("Send to a friend"))
+        .accessibilityIdentifier("\(route.idPrefix).sendToFriend")
     }
 
     private func sendToFriend() {
@@ -364,7 +385,7 @@ struct RoundCompleteView: View {
     private var footer: some View {
         VStack(spacing: Theme.Hangs.Spacing.sm) {
             // Founder round 4: the commands are shown wherever they work —
-            // here "znova" plays again and "domov" goes Home.
+            // here "ďalší" starts the next quiz and "domov" goes Home.
             if viewModel.commandListenerHint != nil {
                 ListenBar(
                     mode: .command,
@@ -377,22 +398,9 @@ struct RoundCompleteView: View {
                 .transition(.opacity)
             }
 
-            // From the size where button titles wrap, the two stack: a 124pt Home
-            // beside Play Again would break "Home" mid-word.
-            let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
                 mainButton
                 homeButton
-            }
-            if HangsButtonTitle.wraps(at: dynamicTypeSize) {
-                stacked
-            } else {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: Theme.Hangs.Spacing.sm) {
-                        mainButton
-                        homeButton.frame(width: Metrics.homeWidth)
-                    }
-                    stacked
-                }
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -410,7 +418,7 @@ struct RoundCompleteView: View {
     }
 
     private var playAgainButton: some View {
-        HangsPrimaryButton(title: "Play Again", icon: "arrow.counterclockwise") {
+        HangsPrimaryButton(title: "Next quiz", trailingIcon: "arrow.right") {
             viewModel.playAgain()
         }
         .accessibilityIdentifier("\(route.idPrefix).playAgain")

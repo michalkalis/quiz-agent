@@ -19,7 +19,7 @@ extension AppScreen {
 
     func makeDaily() async -> AnyView {
         switch self {
-        case .dailyEndGood: Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, crew: Self.crew)
+        case .dailyEndGood: Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, bonusLeft: 10)
         case .dailyEndWeak: Self.roundEnd(marks: DailyChallengeFixtures.weakMarks)
         case .homeDaily: await Self.home(state: nil)
         case .homeDailyPlayed: await Self.home(state: Self.played(DailyChallengeFixtures.goodMarks))
@@ -51,23 +51,19 @@ extension AppScreen {
         return network
     }
 
-    /// #239: a good day with a crew of two friends (the weak day has none).
-    private static let crew = DailyCrew(weekStart: "2026-10-12", members: [
-        DailyCrewMember(memberId: "m-1", name: "Peter", points: 240, today: 65, days: 3, place: 1, isYou: false),
-        DailyCrewMember(memberId: nil, name: nil, points: 185, today: 120, days: 2, place: 2, isYou: true),
-        DailyCrewMember(memberId: "m-2", name: "Mama", points: 90, today: 0, days: 2, place: 3, isYou: false),
-    ])
-
-    private static func roundEnd(marks: [Bool?], crew: DailyCrew? = nil) -> AnyView {
-        let state = played(marks)
+    private static func roundEnd(marks: [Bool?], bonusLeft: Int? = nil) -> AnyView {
+        // #248.3: the good day earned the reward line; the weak one did not.
+        let base = played(marks)
+        let state = bonusLeft == nil ? base : DailyChallengeState(
+            date: base.date, language: base.language, status: base.status, total: base.total, summary: base.summary,
+            bonusOffer: 10, bonusLeft: bonusLeft, daysPlayed: 1
+        )
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
         let network = network(state)
-        network.stubbedDailyCrew = crew
         let daily = DailyChallengeViewModel(network: network, now: { fixedNow }, day: day, state: state)
-        let crewModel = DailyCrewViewModel(network: network, crew: crew)
-        return AnyView(DailyRoundEndView(viewModel: vm, daily: daily, crew: crewModel))
+        return AnyView(DailyRoundEndView(viewModel: vm, daily: daily))
     }
 
     private static func home(state: DailyChallengeState?) async -> AnyView {

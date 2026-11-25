@@ -1,25 +1,16 @@
 # texts
-ГОТОВО
-фінальний рахунок
+Щоденний виклик · готово
 1
 з 5
 Ťažká výzva.
-твоя найкраща відповідь
-Gerlachovský štít
-Ako sa volá najvyšší vrch Slovenska?
-Vedeli 2 z 3.
-Поділись
-Додому
-Поділись
+Наступна вікторина
 Додому
 # identifiers
 daily.end
 daily.close
-daily.tiles
+daily.share
 daily.score
+daily.tiles
 daily.comparison
-daily.bestHit
-daily.share
-daily.home
-daily.share
+daily.nextQuiz
 daily.home

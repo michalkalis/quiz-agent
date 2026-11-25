@@ -98,9 +98,15 @@ struct DailyCrowdStripInspectorTests {
 @Suite("Daily round end (#205.5)")
 @MainActor
 struct DailyRoundEndInspectorTests {
-    private func makeView(marks: [Bool?]) -> DailyRoundEndView {
+    private func makeView(marks: [Bool?], bonusLeft: Int? = nil) -> DailyRoundEndView {
         let day = DailyChallengeDay(year: 2026, month: 10, day: 15)
-        let state = DailyChallengeFixtures.playedState(date: day.isoDate, language: "sk", marks: marks)
+        var state = DailyChallengeFixtures.playedState(date: day.isoDate, language: "sk", marks: marks)
+        if let bonusLeft {
+            state = DailyChallengeState(
+                date: state.date, language: state.language, status: state.status, total: state.total, summary: state.summary,
+                bonusOffer: 10, bonusLeft: bonusLeft, daysPlayed: 1
+            )
+        }
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
@@ -109,48 +115,78 @@ struct DailyRoundEndInspectorTests {
         return DailyRoundEndView(viewModel: vm, daily: DailyChallengeViewModel(network: network, day: day, state: state))
     }
 
-    @Test("peak-end order: score, comparison, then the rarest hit last")
+    // WHY (#248.3, founder variant B "Minimum"): the end is quiet. The score
+    // is the headline, then the tiles, then one reward line and the server's
+    // crowd sentence as one quiet line; the cards that crowded it are gone.
+    @Test("score headline, tiles, reward line, then the quiet crowd line; no cards")
     func goodRoundOrder() async throws {
-        let view = makeView(marks: DailyChallengeFixtures.goodMarks)
+        let view = makeView(marks: DailyChallengeFixtures.goodMarks, bonusLeft: 10)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             let order = texts(tree)
-            let hero = try #require(order.firstIndex(of: "COMPLETE"))
-            let score = try #require(order.firstIndex(of: "final score"))
+            let label = try #require(order.firstIndex(of: "Daily challenge · done"))
+            let score = try #require(order.firstIndex(of: "4"))
+            let reward = try #require(order.firstIndex(of: "As a reward you get 10 extra questions today."))
             let comparison = try #require(order.firstIndex(of: "Lepšie skóre ako 2 z 3 hráčov."))
-            let hitLabel = try #require(order.firstIndex(of: "few knew this one"))
-            let hitText = try #require(order.firstIndex(of: "Vedel to len 1 z 3."))
-            #expect(hero < score && score < comparison && comparison < hitLabel && hitLabel < hitText, "\(order)")
-            #expect(order.contains("4"))
+            #expect(label < score && score < reward && reward < comparison, "\(order)")
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "daily.tiles") }
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "daily.comparison") }
+            for gone in ["COMPLETE", "final score", "few knew this one", "your best answer"] {
+                #expect(!order.contains(gone), "\(gone) crowded the screen the founder wanted calm")
+            }
+            #expect(throws: (any Error).self, "the best-hit card is gone") { try tree.find(viewWithAccessibilityIdentifier: "daily.bestHit") }
         }
     }
 
-    @Test("a weak round: 'Ťažká výzva.' and 'your best answer', never 'worse than'")
-    func weakRound() async throws {
+    @Test("no reward line when no bonus is left")
+    func noRewardWithoutBonus() async throws {
         let view = makeView(marks: DailyChallengeFixtures.weakMarks)
         try await ViewHosting.host(view) {
-            let order = try texts(view.inspect())
+            let tree = try view.inspect()
+            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "daily.bonusLeft") }
+            let order = texts(tree)
             #expect(order.contains("Ťažká výzva."))
-            #expect(order.contains("your best answer"))
-            #expect(!order.contains("few knew this one"))
             #expect(!order.contains { $0.localizedStandardContains("horší") || $0.localizedStandardContains("worse") })
         }
     }
 
-    @Test("one challenge a day: Share and Home, no Play Again, no upsell")
+    // WHY: sharing is the icon in the top bar (Apple's place for it) and the
+    // invite card is gone; "Next quiz" is the one filled action, Home sits
+    // under it. One challenge a day, so still no Play Again and no upsell.
+    @Test("Share is a top-bar icon, Next quiz and Home are the footer, no invite card")
     func footer() async throws {
         let view = makeView(marks: DailyChallengeFixtures.goodMarks)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "daily.share") }
-            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "daily.home") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Play Again") }
+            for id in ["daily.close", "daily.share", "daily.nextQuiz", "daily.home"] {
+                #expect(throws: Never.self, "\(id) missing") { try tree.find(viewWithAccessibilityIdentifier: id) }
+            }
+            let order = texts(tree)
+            #expect(order.contains("Next quiz"))
+            #expect(!order.contains("Share"), "Share is an icon now, not a footer button")
+            #expect(!order.contains("Play Again"))
+            #expect(!order.contains { $0.contains("friend") || $0.contains("kamarát") }, "the invite card is gone: \(order)")
             #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "completion.upsell") }
         }
     }
 
-    @Test("no comparison yet: the card is hidden, the round's own score stands in")
+    // WHY (founder 2026-11-25): after the daily challenge "again" makes no
+    // sense; Next quiz starts an ordinary quiz, the same as spoken "again".
+    @Test("Next quiz starts an ordinary quiz through a tracked start")
+    func nextQuizStartsOrdinaryQuiz() async throws {
+        let view = makeView(marks: DailyChallengeFixtures.goodMarks)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let vm = view.viewModel
+            #expect(vm.activeDaily != nil)
+            #expect(!vm.taskBag.contains(.quizStart))
+            try tree.find(viewWithAccessibilityIdentifier: "daily.nextQuiz").button().tap()
+            #expect(vm.taskBag.contains(.quizStart), "Home must be able to cancel the start Next quiz spawned")
+            vm.taskBag.cancelAll()
+        }
+    }
+
+    @Test("no comparison yet: no crowd line, the round's own score stands in")
     func comparisonHiddenWhenNil() async throws {
         let day = DailyChallengeDay(year: 2026, month: 10, day: 15)
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
@@ -160,7 +196,6 @@ struct DailyRoundEndInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "daily.comparison") }
-            #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "daily.bestHit") }
         }
     }
 }

@@ -19,7 +19,7 @@ final nonisolated class RSDailyChallengeTests: XCTestCase {
 
     // Regression guarded: the daily challenge must play through the ordinary
     // quiz screens, show the crowd strip on the result card, end on its own
-    // round end (Share + Home, never Play Again) and, back Home, the card
+    // round end (Share icon, Next quiz + Home, never Play Again) and, back Home, the card
     // must show the day as played instead of offering it again.
     @MainActor
     func testRS25DailyChallengePlaysThroughToItsRoundEnd() {
@@ -51,6 +51,7 @@ final nonisolated class RSDailyChallengeTests: XCTestCase {
         end.waitForScreen(scenario: "RS-25")
         XCTAssertTrue(end.tiles.exists, "RS-25: the round end has no tiles")
         XCTAssertTrue(end.shareButton.exists, "RS-25: the round end has no Share")
+        XCTAssertTrue(end.nextQuizButton.exists, "RS-25: the round end offers no next quiz")
         XCTAssertFalse(app.buttons["completion.playAgain"].exists, "RS-25: a second attempt is offered")
 
         end.homeButton.tap()

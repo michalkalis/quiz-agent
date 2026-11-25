@@ -12,9 +12,7 @@ Which river flows through Budapest?
 Danube
 How many strings does a standard violin have?
 Four
-Play Again
-Home
-Play Again
+Next quiz
 Home
 # identifiers
 recap.close
@@ -26,7 +24,5 @@ recap.playSummary
 recap.row.1
 recap.row.2
 recap.row.3
-recap.playAgain
-recap.home
 recap.playAgain
 recap.home

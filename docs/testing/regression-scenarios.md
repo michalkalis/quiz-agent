@@ -704,7 +704,7 @@ App alive.
 
 **Hypothesis:** The daily challenge plays through the ordinary quiz screens,
 shows the crowd strip only on the answers the server sent one for, ends on
-its own round end (Share + Home, never Play Again), and back on Home the day
+its own round end (Share icon, Next quiz + Home, never Play Again), and back on Home the day
 shows as played instead of being offered again.
 
 **Steps:** launch with `--ui-test-daily-home` (server switch on, a scripted
@@ -712,7 +712,7 @@ five-question challenge on the mocks); tap `home.daily.play`; skip each of
 the five questions and continue from each result; tap `daily.home`.
 
 **Asserts:** `result.crowd` present on results 3 and 4, absent on 1, 2 and 5;
-`daily.end`, `daily.tiles` and `daily.share` present, `completion.playAgain`
+`daily.end`, `daily.tiles`, `daily.share` and `daily.nextQuiz` present, `completion.playAgain`
 absent; back Home `home.daily.open` present and `home.daily.play` gone. App
 alive.
 

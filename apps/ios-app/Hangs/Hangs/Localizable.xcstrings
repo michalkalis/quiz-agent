@@ -22673,6 +22673,165 @@
           }
         }
       }
+    },
+    "Next quiz" : {
+      "comment" : "#248.3: primary button at the end of a round: start the next quiz with the same settings.",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ďalší kvíz"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Další kvíz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна вікторина"
+          }
+        }
+      }
+    },
+    "Daily challenge · done" : {
+      "comment" : "#248.3: small label above the score on the daily challenge's end screen.",
+      "localizations" : {
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denná výzva · hotovo"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denní výzva · hotovo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоденний виклик · готово"
+          }
+        }
+      }
+    },
+    "As a reward you get %lld extra questions today." : {
+      "comment" : "#248.3: daily challenge end screen, the one reward line.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "As a reward you get %lld extra question today."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "As a reward you get %lld extra questions today."
+                }
+              }
+            }
+          }
+        },
+        "sk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odmenu máš dnes %lld otázky navyše."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odmenu máš dnes %lld otázky navyše."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odmenu máš dnes %lld otázku navyše."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odmenu máš dnes %lld otázok navyše."
+                }
+              }
+            }
+          }
+        },
+        "cs" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odměnu máš dnes %lld otázky navíc."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odměnu máš dnes %lld otázky navíc."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odměnu máš dnes %lld otázku navíc."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Za odměnu máš dnes %lld otázek navíc."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Як винагороду маєш сьогодні %lld додаткові питання."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Як винагороду маєш сьогодні %lld додаткових питань."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Як винагороду маєш сьогодні %lld додаткове питання."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Як винагороду маєш сьогодні %lld додаткових питань."
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

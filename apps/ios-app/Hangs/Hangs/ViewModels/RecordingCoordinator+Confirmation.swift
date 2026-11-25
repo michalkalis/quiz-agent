@@ -49,6 +49,7 @@ extension RecordingCoordinator {
         }
         let owner = confirmationOwner ?? attemptLedger.current
         cancelAnswerReadBack()
+        cancelRetryPrompt() // #243.4: Next tapped over the no-answer sheet's offer
         cancelAutoConfirm()
         stopSheetCapture() // #185 5.1: the sheet stops listening for a new answer
         clearPause()

@@ -36,7 +36,8 @@ struct VoiceCommandFourCommandsTests {
     func commandsPerScreen() {
         #expect(Set(VoiceCommandLexicon.commands(on: .question)) == [.answer, .repeatQuestion, .next])
         #expect(VoiceCommandLexicon.commands(on: .confirmation) == [.again])
-        #expect(Set(VoiceCommandLexicon.commands(on: .noAnswer)) == [.again, .next])
+        // #243.4 (founder 2026-11-24, B2): the no-answer sheet leads back to the question too.
+        #expect(Set(VoiceCommandLexicon.commands(on: .noAnswer)) == [.repeatQuestion, .again, .next])
         #expect(VoiceCommandLexicon.commands(on: .error) == [.again])
         // #243 decision 5: the round end asks "Znova, alebo domov?".
         #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.again, .home])

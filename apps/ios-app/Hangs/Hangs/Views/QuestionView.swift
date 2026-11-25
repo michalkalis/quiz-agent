@@ -230,6 +230,7 @@ struct QuestionView: View {
                 isPaused: viewModel.isPaused,
                 evaluatingAnswer: viewModel.isEvaluatingAnswer ? submittedAnswer : nil,
                 noAnswerCaptured: viewModel.noAnswerCaptured,
+                onRepeatQuestion: { Task { await viewModel.repeatQuestion() } },
                 autoConfirmHeld: viewModel.isAutoConfirmHeld,
                 showsSpellingHint: viewModel.showsSpellingHint
             )

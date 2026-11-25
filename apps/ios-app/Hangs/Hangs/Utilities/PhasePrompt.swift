@@ -24,8 +24,21 @@ enum PhasePrompt: Equatable, Sendable {
     case thinkMore
     /// The mic opens on its own for the answer.
     case answer
-    /// The second silence: "Repeat the question, again, or next?" (#243.4).
+    /// The second silence (#243.4): "I can't hear an answer. Say: repeat, and
+    /// I'll read the question. Say: again, …" — the long line the first
+    /// `longNoAnswerOfferPlays` times a player hears it, then `noAnswerOfferShort`.
     case noAnswerOffer
+    /// "I can't hear an answer. Say: repeat. Again. Or next." (#243.4).
+    case noAnswerOfferShort
+
+    /// How many times the long offer plays before the short one (founder
+    /// 2026-11-24), counted across quizzes.
+    static let longNoAnswerOfferPlays = 2
+
+    /// The offer for a player who has heard it `heardCount` times before.
+    static func noAnswerOffer(heardCount: Int) -> PhasePrompt {
+        heardCount < longNoAnswerOfferPlays ? .noAnswerOffer : .noAnswerOfferShort
+    }
 
     /// Think windows with a longer clip, the think-time presets (#243.8).
     static let spokenThinkSeconds: Set<Int> = [5, 10, 20, 30]
@@ -38,6 +51,32 @@ enum PhasePrompt: Equatable, Sendable {
         case .thinkMore: "think-more"
         case .answer: "answer"
         case .noAnswerOffer: "no-answer-offer"
+        case .noAnswerOfferShort: "no-answer-offer-short"
+        }
+    }
+
+    /// What the clip says — the lines the echo guard looks for in front of an
+    /// answer (#243.4). Same texts as `scripts/generate_phase_prompts.py`
+    /// (`SpokenLineEchoTests` compares them); the think lines are not needed.
+    func text(language: CommandLanguage) -> String {
+        switch (self, language) {
+        case (.answer, .slovak): "Odpovedaj."
+        case (.answer, .czech): "Odpovídej."
+        case (.answer, .english): "Answer."
+        case (.answer, .ukrainian): "Відповідай."
+        case (.noAnswerOffer, .slovak):
+            "Nepočujem odpoveď. Povedz: zopakuj, a prečítam otázku. Povedz: znova, a môžeš odpovedať. Alebo povedz: ďalšia."
+        case (.noAnswerOffer, .czech):
+            "Neslyším odpověď. Řekni: zopakuj, a přečtu otázku. Řekni: znovu, a můžeš odpovědět. Nebo řekni: další."
+        case (.noAnswerOffer, .english):
+            "I can't hear an answer. Say: repeat, and I'll read the question. Say: again, and you can answer. Or say: next."
+        case (.noAnswerOffer, .ukrainian):
+            "Не чую відповіді. Скажи: повтори, і я прочитаю питання. Скажи: ще раз, і зможеш відповісти. Або скажи: пропусти."
+        case (.noAnswerOfferShort, .slovak): "Nepočujem odpoveď. Povedz: zopakuj. Znova. Alebo ďalšia."
+        case (.noAnswerOfferShort, .czech): "Neslyším odpověď. Řekni: zopakuj. Znovu. Nebo další."
+        case (.noAnswerOfferShort, .english): "I can't hear an answer. Say: repeat. Again. Or next."
+        case (.noAnswerOfferShort, .ukrainian): "Не чую відповіді. Скажи: повтори. Ще раз. Або пропусти."
+        case (.think, _), (.thinkMore, _): ""
         }
     }
 

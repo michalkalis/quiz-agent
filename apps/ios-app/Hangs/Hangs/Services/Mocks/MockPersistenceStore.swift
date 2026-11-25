@@ -139,5 +139,13 @@ final class MockPersistenceStore: PersistenceStoreProtocol {
     func setVoiceLimitNoticeMonth(_ resetsAt: String) {
         voiceLimitNoticeMonth = resetsAt
     }
+
+    // MARK: - No-answer offer (#243.4)
+
+    var noAnswerOfferHeardCount: Int = 0
+
+    func incrementNoAnswerOfferHeardCount() {
+        noAnswerOfferHeardCount += 1
+    }
 }
 #endif

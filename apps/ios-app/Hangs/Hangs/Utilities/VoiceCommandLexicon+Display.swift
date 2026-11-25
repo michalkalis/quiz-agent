@@ -59,24 +59,25 @@ extension VoiceCommandLexicon {
         // fallback (a new answer covers anything else spoken on the sheet,
         // per #185 5.1 D1 2026-09-25). Silence confirms (founder 2026-11-22).
         case (.english, .confirmation): return #"Say "again" or a new answer"#
-        // #185: the no-answer sheet's buttons are Again / Next.
-        case (.english, .noAnswer): return #"Say "again" or "next""#
+        // #185: the no-answer sheet's buttons are Again / Next; #243.4 adds
+        // the way back to the question, in the offer line's order.
+        case (.english, .noAnswer): return #"Say "repeat", "again" or "next""#
         case (.english, .error): return #"Say "again""#
         // #243 decision 5: the round end's two words.
         case (.english, .setEnd): return #"Say "again" or "home""#
         case (.slovak, .question): return "Povedz „odpovedz“ alebo „ďalšia“"
         case (.slovak, .confirmation): return "Povedz „znova“ alebo novú odpoveď"
-        case (.slovak, .noAnswer): return "Povedz „znova“ alebo „ďalšia“"
+        case (.slovak, .noAnswer): return "Povedz „zopakuj“, „znova“ alebo „ďalšia“"
         case (.slovak, .error): return "Povedz „znova“"
         case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
         case (.czech, .question): return "Řekni „odpověz“ nebo „další“"
         case (.czech, .confirmation): return "Řekni „znovu“ nebo novou odpověď"
-        case (.czech, .noAnswer): return "Řekni „znovu“ nebo „další“"
+        case (.czech, .noAnswer): return "Řekni „zopakuj“, „znovu“ nebo „další“"
         case (.czech, .error): return "Řekni „znovu“"
         case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
         case (.ukrainian, .question): return "Скажи «відповідай» або «пропусти»"
         case (.ukrainian, .confirmation): return "Скажи «ще раз» або нову відповідь"
-        case (.ukrainian, .noAnswer): return "Скажи «ще раз» або «пропусти»"
+        case (.ukrainian, .noAnswer): return "Скажи «повтори», «ще раз» або «пропусти»"
         case (.ukrainian, .error): return "Скажи «ще раз»"
         case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
         }

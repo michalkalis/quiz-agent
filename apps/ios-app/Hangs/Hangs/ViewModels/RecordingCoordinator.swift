@@ -43,6 +43,12 @@ final class RecordingCoordinator: ObservableObject {
         set { recordingState.speechDetectedDuringAutoRecord = newValue }
     }
 
+    /// See `RecordingState.stoppedRecordingHeardSpeech` (#243.4).
+    var stoppedRecordingHeardSpeech: Bool {
+        get { recordingState.stoppedRecordingHeardSpeech }
+        set { recordingState.stoppedRecordingHeardSpeech = newValue }
+    }
+
     /// Prevents concurrent stopRecordingAndSubmit calls (silence detection + user tap can race)
     var isStoppingRecording: Bool {
         get { recordingState.isStoppingRecording }
@@ -79,6 +85,32 @@ final class RecordingCoordinator: ObservableObject {
     var emptyAnswerRetryQuestionKey: String? {
         get { recordingState.emptyAnswerRetryQuestionKey }
         set { recordingState.emptyAnswerRetryQuestionKey = newValue }
+    }
+
+    /// See `RecordingState.recordingEchoLine` (#243.4).
+    var recordingEchoLine: String? {
+        get { recordingState.recordingEchoLine }
+        set { recordingState.recordingEchoLine = newValue }
+    }
+
+    /// #243.4: the app just said `text` on the open question — the next
+    /// recording strips it from the front of its transcript.
+    func noteSpokenLine(_ text: String) {
+        guard !text.isEmpty else { return }
+        recordingState.lastSpokenLine = (currentQuestion()?.id ?? "", text)
+    }
+
+    /// The line said right before this recording on this question, once.
+    func takeLastSpokenLine() -> String? {
+        defer { recordingState.lastSpokenLine = nil }
+        guard let line = recordingState.lastSpokenLine, line.questionKey == (currentQuestion()?.id ?? "") else { return nil }
+        return line.text
+    }
+
+    /// See `RecordingState.thinkMoreQuestionKey` (#243.4).
+    var thinkMoreQuestionKey: String? {
+        get { recordingState.thinkMoreQuestionKey }
+        set { recordingState.thinkMoreQuestionKey = newValue }
     }
 
     /// See `RecordingState.recordingTrigger` (#240.9).
@@ -270,6 +302,9 @@ final class RecordingCoordinator: ObservableObject {
     /// mic under a pause (see RecordingCoordinator+EmptyAnswer).
     let isPaused: @MainActor () -> Bool
     let cancelThinkingTime: @MainActor () -> Void
+    /// #243.4: arm a fresh think window on the open question (the façade's
+    /// `startRecordingOrTimer`), after an answer window heard nothing.
+    let startThinkingTime: @MainActor () -> Void
     /// Test seam (#173): the two window lengths this coordinator arms —
     /// `speechStartWindow` is the visible "time to start speaking",
     /// `deadAirCap` is the hidden cap under it. Production never assigns them;
@@ -314,6 +349,9 @@ final class RecordingCoordinator: ObservableObject {
     let voiceAllowanceSpent: @MainActor (VoiceLimitError?) -> Void
     /// Silent mode (founder 2026-11-22): the mic never opens.
     let isSilentMode: @MainActor () -> Bool
+    /// #243.4: the no-answer offer to play now — long the first times a player
+    /// hears it, short after — counted as heard by this call.
+    let takeNoAnswerOffer: @MainActor () -> PhasePrompt
 
     init(
         audioService: AudioServiceProtocol,
@@ -346,6 +384,7 @@ final class RecordingCoordinator: ObservableObject {
         clearPause: @escaping @MainActor () -> Void,
         isPaused: @escaping @MainActor () -> Bool,
         cancelThinkingTime: @escaping @MainActor () -> Void,
+        startThinkingTime: @escaping @MainActor () -> Void,
         startAutoStopRecordingTimer: @escaping @MainActor (TimeInterval, TimeInterval) -> Void,
         armRecordingDeadAirCap: @escaping @MainActor (TimeInterval) -> Void,
         cancelAutoStopRecordingTimer: @escaping @MainActor () -> Void,
@@ -359,7 +398,8 @@ final class RecordingCoordinator: ObservableObject {
         answerRecordingDecided: @escaping @MainActor () -> Void = {},
         isVoiceAllowanceSpent: @escaping @MainActor () -> Bool = { false },
         voiceAllowanceSpent: @escaping @MainActor (VoiceLimitError?) -> Void = { _ in },
-        isSilentMode: @escaping @MainActor () -> Bool = { false }
+        isSilentMode: @escaping @MainActor () -> Bool = { false },
+        takeNoAnswerOffer: @escaping @MainActor () -> PhasePrompt = { .noAnswerOffer }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -391,6 +431,7 @@ final class RecordingCoordinator: ObservableObject {
         self.clearPause = clearPause
         self.isPaused = isPaused
         self.cancelThinkingTime = cancelThinkingTime
+        self.startThinkingTime = startThinkingTime
         self.startAutoStopRecordingTimer = startAutoStopRecordingTimer
         self.armRecordingDeadAirCap = armRecordingDeadAirCap
         self.cancelAutoStopRecordingTimer = cancelAutoStopRecordingTimer
@@ -405,6 +446,7 @@ final class RecordingCoordinator: ObservableObject {
         self.isVoiceAllowanceSpent = isVoiceAllowanceSpent
         self.voiceAllowanceSpent = voiceAllowanceSpent
         self.isSilentMode = isSilentMode
+        self.takeNoAnswerOffer = takeNoAnswerOffer
     }
 
     // MARK: - Façade fan-out wrappers (keep the moved call sites byte-identical)

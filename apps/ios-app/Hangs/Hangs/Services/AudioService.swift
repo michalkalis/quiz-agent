@@ -205,6 +205,9 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     // Timestamps for Sentry breadcrumb durations (metadata only — no audio bytes).
     private var recordingStartedAt: Date?
     private var playbackStartedAt: Date?
+    /// When the last clip played to its end — `prepareForRecording` waits out
+    /// the route's tail after it (#243.4).
+    private var playbackEndedAt: ContinuousClock.Instant?
 
     // Session-level NotificationCenter observer tokens.
     // NSObjectProtocol is not Sendable in Swift 6, and `deinit` runs nonisolated even
@@ -771,8 +774,13 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
 
         // Hardware settle time - AVAudioSession needs time to release playback resources
         // and transition to recording mode. Without this delay, recording may start
-        // before hardware is ready, resulting in empty/corrupt recordings (28 bytes)
-        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+        // before hardware is ready, resulting in empty/corrupt recordings (28 bytes).
+        // #243.4: after a clip, also until the route has finished sounding it.
+        let settle = Self.recordingSettle(
+            sincePlaybackEnded: playbackEndedAt.map { ContinuousClock.now - $0 },
+            outputLatency: AVAudioSession.sharedInstance().outputLatency
+        )
+        try? await Task.sleep(for: settle)
 
         Logger.audio.debug("🎤 Audio system ready for recording")
     }
@@ -1215,6 +1223,21 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
     /// - `playerIsPlaying` — within its own operation, only a player that never
     ///   reached `.playing` is a stall. Failing unconditionally aborted every TTS
     ///   longer than 5 s and started the thinking-timer mid-read.
+    /// Headroom on top of the route's reported output latency (#243.4).
+    nonisolated static let playbackDrainMargin: Duration = .milliseconds(150)
+
+    /// The wait before a recording opens the mic: the 200 ms hardware settle,
+    /// and after a clip that just ended, long enough for the route to finish
+    /// sounding it. AVPlayer reports the end when its last sample left the app;
+    /// a Bluetooth car plays the route's output latency after that (TF drive
+    /// 2026-11-23: the mic recorded "…skús to znova." under the answer).
+    nonisolated static func recordingSettle(sincePlaybackEnded: Duration?, outputLatency: TimeInterval) -> Duration {
+        let hardware = Duration.milliseconds(200)
+        guard let sincePlaybackEnded else { return hardware }
+        let tail = Duration.milliseconds(Int((outputLatency * 1000).rounded())) + playbackDrainMargin - sincePlaybackEnded
+        return max(hardware, tail)
+    }
+
     nonisolated static func shouldFailStalledPlayback(isCurrentOperation: Bool, playerIsPlaying: Bool) -> Bool {
         isCurrentOperation && !playerIsPlaying
     }
@@ -1342,6 +1365,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
             Task { @MainActor [weak self] in
                 self?.isPlaying = false
                 self?.playbackState = .idle
+                self?.playbackEndedAt = .now
                 Logger.audio.info("🔊 Playback completed")
                 self?.emitPlaybackEndBreadcrumb(reason: "completed")
                 continuation.yield(durationSeconds)
@@ -1453,6 +1477,7 @@ final class AudioService: NSObject, ObservableObject, AudioServiceProtocol {
         isPlaying = false
         isPlaybackPaused = false
         playbackState = .idle
+        playbackEndedAt = .now // a cut clip's last samples are still in the route
 
         Logger.audio.info("🔊 Stopped playback")
         emitPlaybackEndBreadcrumb(reason: "stopped")

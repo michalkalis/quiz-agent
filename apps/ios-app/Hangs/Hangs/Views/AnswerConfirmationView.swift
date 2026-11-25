@@ -57,6 +57,9 @@ struct AnswerConfirmationView: View {
     /// skipped only when the driver says so. Skip reuses `onConfirm`: confirming
     /// an empty answer is the backend's skip.
     var noAnswerCaptured: Bool = false
+    /// #243.4 (B2): "Repeat question" on that sheet — back to the question,
+    /// read again. No button when nil.
+    var onRepeatQuestion: (() -> Void)? = nil
     /// #185: the countdown is not running ON PURPOSE (read-back, the mic
     /// coming up, the driver speaking, a spoken "stop") — a countdown of 0
     /// then means "waiting", not "ran out".
@@ -343,20 +346,32 @@ struct AnswerConfirmationView: View {
     /// Again is the primary here — it is the likelier wish after "I didn't
     /// catch that" — and no countdown on either: this sheet never resolves
     /// itself. #208.6: the same row as the transcript's, Again on the left,
-    /// Skip in Confirm's place (an empty confirm IS the skip).
+    /// Skip in Confirm's place (an empty confirm IS the skip). #243.4: the
+    /// way back to the question is a quiet text action above that row, first
+    /// as in the spoken offer.
     private var noAnswerChoice: some View {
-        HStack(spacing: Theme.Hangs.Spacing.xs) {
-            HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", singleLineTitle: true) {
-                editFocused = false
-                onReRecord()
+        VStack(spacing: Theme.Hangs.Spacing.xs) {
+            if let onRepeatQuestion {
+                HangsGhostButton(title: "Repeat question", icon: "arrow.uturn.backward") {
+                    editFocused = false
+                    onRepeatQuestion()
+                }
+                .accessibilityIdentifier("confirmation.repeatQuestion")
             }
-            .accessibilityIdentifier("confirmation.reRecord")
 
-            HangsSecondaryButton(title: "Next (skip question)", icon: "chevron.right.2", singleLineTitle: true) {
-                editFocused = false
-                onConfirm()
+            HStack(spacing: Theme.Hangs.Spacing.xs) {
+                HangsPrimaryButton(title: "Again", icon: "arrow.counterclockwise", singleLineTitle: true) {
+                    editFocused = false
+                    onReRecord()
+                }
+                .accessibilityIdentifier("confirmation.reRecord")
+
+                HangsSecondaryButton(title: "Next (skip question)", icon: "chevron.right.2", singleLineTitle: true) {
+                    editFocused = false
+                    onConfirm()
+                }
+                .accessibilityIdentifier("confirmation.skip")
             }
-            .accessibilityIdentifier("confirmation.skip")
         }
     }
 
@@ -492,7 +507,8 @@ struct AnswerConfirmationView: View {
             autoConfirmTotal: 5,
             onConfirm: {},
             onReRecord: {},
-            noAnswerCaptured: true
+            noAnswerCaptured: true,
+            onRepeatQuestion: {}
         )
     }
 

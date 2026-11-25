@@ -308,13 +308,14 @@ struct ConfirmationSheetVoiceTests {
 
     /// WHY (car test): "potvrď" on the Again/Skip sheet SKIPPED the question.
     /// Skipping must be asked for ("next"), and the hint names that sheet's
-    /// own words.
-    @Test("no-answer sheet: 'confirm' does nothing, 'next' skips, the hint names again/next")
+    /// own words (#243.4: repeat, again, next — after the spoken offer).
+    @Test("no-answer sheet: 'confirm' does nothing, 'next' skips, the hint names repeat/again/next")
     func noAnswerSheet() async {
         let clock = TestClock()
         let (vm, silence, network) = makeVM(clock: clock)
         vm.quizState = .processing
         vm.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        await pumpUntil({ !vm.recordingCoordinator.isSpeakingRetryPrompt }, "the offer line never ended")
         await vm.audioDeviceState.startSilenceDetectionListening()
         #expect(vm.voiceCommandCoordinator.currentCommandScreen == .noAnswer)
         #expect(vm.commandListenerHint == VoiceCommandLexicon.hint(on: .noAnswer, language: .english))
@@ -337,6 +338,7 @@ struct ConfirmationSheetVoiceTests {
         let (vm, silence, network) = makeVM(clock: TestClock())
         vm.quizState = .processing
         vm.recordingCoordinator.handleTranscriptionFailure(allowAutoRetry: false)
+        await pumpUntil({ !vm.recordingCoordinator.isSpeakingRetryPrompt }, "the offer line never ended")
         await vm.audioDeviceState.startSilenceDetectionListening()
         vm.enterPause()
         await pumpUntil({ vm.voiceCommandCoordinator.commandCapturePhase == .idle }, "pause kept the mic up")

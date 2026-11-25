@@ -173,7 +173,9 @@ final class SequenceNetwork: NetworkServiceProtocol {
         self.config = config
     }
 
-    static func transcript(of request: Request) -> String { "answer \(request.id)" }
+    /// Not "answer …": after the app said "Answer." a leading "answer" is the
+    /// app's own echo and is stripped (#243.4).
+    static func transcript(of request: Request) -> String { "reply \(request.id)" }
 
     func hasPending(voice: Bool) -> Bool {
         requests.contains { $0.isVoice == voice && parked.isOpen($0.id) }

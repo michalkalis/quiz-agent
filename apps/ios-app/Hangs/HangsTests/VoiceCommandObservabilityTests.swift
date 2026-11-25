@@ -57,7 +57,8 @@ struct VoiceCommandObservabilityTests {
     func lexiconHints() {
         #expect(VoiceCommandLexicon.hint(on: .question) == #"Say "answer" or "next""#)
         #expect(VoiceCommandLexicon.hint(on: .confirmation) == #"Say "again" or a new answer"#)
-        #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "again" or "next""#)
+        // #243.4: the no-answer sheet also leads back to the question.
+        #expect(VoiceCommandLexicon.hint(on: .noAnswer) == #"Say "repeat", "again" or "next""#)
     }
 
     @Test("commandListenerHint is nil until listening, then names the screen's words")

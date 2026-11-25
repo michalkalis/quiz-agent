@@ -104,6 +104,7 @@ extension RecordingCoordinator {
         let attempt = attemptLedger.begin("recording.\(trigger.rawValue)")
         recordingTrigger = trigger
         micOpenDelayMs = nil
+        recordingEchoLine = takeLastSpokenLine() // #243.4
         // After the transition, as #178 orders the MCQ tap: the interrupted
         // read's tail then sees `.recording` and arms no countdown.
         if readOut == .interrupt {

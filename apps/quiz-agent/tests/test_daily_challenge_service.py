@@ -182,8 +182,10 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
 
 async def test_answer_strip_and_spoken_cap(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    ids = await _play_all(svc, "p1", ["incorrect"] * 5)
-    session, _ = await _start(svc, "p2")
+    # #248: the crowd speaks only from 20 other players.
+    for n in range(20):
+        ids = await _play_all(svc, f"p{n}", ["incorrect"] * 5)
+    session, _ = await _start(svc, "me")
     spoken = []
     for qid in ids[:2]:
         strip, line = await svc.answer_strip(session, qid, "correct")
@@ -193,11 +195,21 @@ async def test_answer_strip_and_spoken_cap(db_sessionmaker):
     strip, line = await svc.answer_strip(session, ids[1], "correct", regrade=True)
     assert strip is not None and line is None
     # Resumed in a new session: the count of spoken lines carries over.
-    resumed, _ = await _start(svc, "p2")
+    resumed, _ = await _start(svc, "me")
     for qid in ids[2:]:
         _, line = await svc.answer_strip(resumed, qid, "correct")
         spoken.append(line)
     assert [s is not None for s in spoken] == [True, True, True, False, False]
+
+
+async def test_thin_crowd_has_no_strip_and_says_nothing(db_sessionmaker):
+    """#248 (founder 2026-11-25): with one other player a rare hit ("Nobody
+    else knew that.") or "first result today" reads as an empty app."""
+    svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
+    ids = await _play_all(svc, "p1", ["incorrect"] * 5)
+    session, _ = await _start(svc, "p2")
+    strip, line = await svc.answer_strip(session, ids[0], "correct")
+    assert strip is None and line is None
 
 
 async def test_wrong_easy_has_no_strip(db_sessionmaker):

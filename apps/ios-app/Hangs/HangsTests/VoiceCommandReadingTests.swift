@@ -108,7 +108,9 @@ struct VoiceCommandReadingTests {
         audio.onPlaybackStarted = { listeningWhilePlaying = silence.isListening }
         await vm.audioDeviceState.playQuestionAudio(from: "https://example.com/q.mp3")
         #expect(!listeningWhilePlaying)
-        #expect(silence.isListening, "the tail brings it back")
+        // The think line follows the read and brings the listener back after
+        // itself (founder TF b92: arming it in between was an audible pause).
+        await pumpUntil({ silence.isListening }, turns: 2000, "the listener never came back after the read")
         #expect(silence.speechEdgeSuspensions.isEmpty)
     }
 

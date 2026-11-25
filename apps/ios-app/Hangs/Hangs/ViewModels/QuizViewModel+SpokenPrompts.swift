@@ -246,7 +246,12 @@ extension QuizViewModel {
     func announcePhase(_ cue: QuizTimersController.PhaseCue) async {
         // #243.4: taken before the mute guard, so it never reaches a later window.
         let thinksMore = recordingCoordinator.takeThinkMore(questionId: currentQuestion?.id)
-        guard !isSilentMode, !isAudioMuted else { return }
+        guard !isSilentMode, !isAudioMuted else {
+            // The read's tail left the listener to this line; no line, so
+            // bring it up here (read-aloud switched off as the read ended).
+            if case .thinkStart = cue { await armListenerLeftToThinkLine() }
+            return
+        }
         // A line is a new clip, and a new clip stops the one playing: said
         // over a replay the player tapped, it would cut the question off.
         switch cue {
@@ -267,6 +272,30 @@ extension QuizViewModel {
             else { return }
             await playPhasePrompt(.answer)
         }
+    }
+
+    /// The question read hands the listener to the think line when that line
+    /// plays right after it (`AudioDeviceState.playQuestionAudio`): arming it
+    /// between the two only to tear it down for the line was a long, audible
+    /// pause (founder, TF b92). Same conditions the think window and
+    /// `announcePhase` speak under.
+    var thinkLineFollowsRead: Bool {
+        quizState == .askingQuestion
+            && !isSilentMode
+            && !isAudioMuted
+            && !quizTimersController.isPaused
+            && !quizTimersController.isHeldForTyping
+            && settings.thinkingTime != 0
+    }
+
+    /// The think window opened without its line although the read left the
+    /// listener to it: commands still work while the player thinks.
+    private func armListenerLeftToThinkLine() async {
+        guard quizState == .askingQuestion,
+              !silenceDetectionService.isListening,
+              !silenceDetectionService.isStartingListening
+        else { return }
+        await voiceCommandCoordinator.syncCommandListenerWindow()
     }
 
     func playPhasePrompt(_ prompt: PhasePrompt) async {

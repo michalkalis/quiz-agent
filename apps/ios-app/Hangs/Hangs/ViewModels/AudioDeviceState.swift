@@ -139,6 +139,11 @@ final class AudioDeviceState: ObservableObject {
     let endQuestionRead: @MainActor () -> Void
     /// #208.7: the listener was kept up for the read in progress.
     let isListenerKeptThroughRead: @MainActor () -> Bool
+    /// The think line plays right after this read and brings the listener up
+    /// after itself, so the read's tail leaves the mic down (founder, TF b92:
+    /// a long pause before "Think." came from arming the listener only to
+    /// tear it down again for the line).
+    let thinkLineFollowsRead: @MainActor () -> Bool
 
     // MARK: - Initialization
 
@@ -172,7 +177,8 @@ final class AudioDeviceState: ObservableObject {
         startThinkingTimeCountdown: @escaping @MainActor (_ afterSilentRead: Bool) -> Void,
         beginQuestionRead: @escaping @MainActor () -> Bool = { false },
         endQuestionRead: @escaping @MainActor () -> Void = {},
-        isListenerKeptThroughRead: @escaping @MainActor () -> Bool = { false }
+        isListenerKeptThroughRead: @escaping @MainActor () -> Bool = { false },
+        thinkLineFollowsRead: @escaping @MainActor () -> Bool = { false }
     ) {
         self.audioService = audioService
         self.networkService = networkService
@@ -204,6 +210,7 @@ final class AudioDeviceState: ObservableObject {
         self.beginQuestionRead = beginQuestionRead
         self.endQuestionRead = endQuestionRead
         self.isListenerKeptThroughRead = isListenerKeptThroughRead
+        self.thinkLineFollowsRead = thinkLineFollowsRead
     }
 
     /// T7 unified reset model: clears this child's own scoped device-UI state.

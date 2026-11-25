@@ -98,11 +98,12 @@ struct MicArmingPredicateTests {
         audio.playbackDurationNs = 0
 
         await vm.audioDeviceState.playQuestionAudio(from: "https://example.invalid/q.opus")
-        #expect(silence.isListening, "the question tail must still arm capture when commands are on")
 
         // #243.3 (founder 2026-11-24): the think window now opens with a spoken
-        // "Think.", and app speech takes the mic down while it plays so the app
-        // never hears itself. Barge-in must be armed again once the line ends.
+        // "Think.", and app speech keeps the mic down while it plays so the app
+        // never hears itself. The read hands capture straight to that line
+        // (no arming in between, founder TF b92: it was an audible pause), so
+        // barge-in must be armed once the line ends.
         await pumpUntil({ audio.playOpusCallCount == 2 && !vm.isPlayingFeedbackTTS && silence.isListening },
                         turns: 2000, "the think line never ended with capture armed again")
 

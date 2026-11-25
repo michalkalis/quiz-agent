@@ -77,6 +77,62 @@ struct PhasePromptTests {
         await pumpUntil({ vm.quizState == .recording }, "the mic never opened after the answer line")
     }
 
+    /// WHY (founder, TF b92): a long pause sat between the end of the question
+    /// and "Think.". The read's tail armed the command listener and the line
+    /// tore it straight down again; on a phone that is an audio engine start
+    /// and stop (and on Bluetooth a route switch) the player hears as silence.
+    /// The line now follows the read directly and the listener comes up after it.
+    @Test("the think line follows the read at once, the listener comes up after it")
+    func thinkLineFollowsReadWithoutListenerChurn() async throws {
+        let audio = MockAudioService()
+        audio.playbackDurationNs = 0
+        let silence = MockSilenceDetectionService()
+        let vm = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: audio,
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence,
+            clock: AnyClock(TestClock())
+        )
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentSession?.askedCount = 1
+        vm.currentQuestion = Question.preview
+        vm.quizState = .askingQuestion
+        vm.settings.thinkingTime = 10
+        let think = try #require(PhasePrompt.think(seconds: 10).audio(language: .english))
+        var listenerStartsBeforeLine: Int?
+        audio.onPlaybackStarted = {
+            if audio.lastPlayedData == think { listenerStartsBeforeLine = silence.startListeningCallCount }
+        }
+
+        await vm.audioDeviceState.playQuestionAudio(from: "https://example.invalid/q.opus")
+        await pumpUntil({ listenerStartsBeforeLine != nil }, "the think line never played")
+        #expect(listenerStartsBeforeLine == 0, "nothing may arm the listener between the read and the line")
+        await pumpUntil({ silence.isListening }, "commands must work while the player thinks")
+    }
+
+    /// WHY: the read leaves the listener to the think line. When read-aloud
+    /// goes off just as the read ends there is no line, and the player would
+    /// think with voice commands dead.
+    @Test("no think line after all: the listener still comes up")
+    func noLineStillArmsListener() async {
+        let silence = MockSilenceDetectionService()
+        let vm = QuizViewModel(
+            networkService: Fixtures.makeFullMockNetwork(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: silence
+        )
+        vm.currentSession = Fixtures.makeActiveSession()
+        vm.currentQuestion = Question.preview
+        vm.quizState = .askingQuestion
+        vm.settings.isMuted = true
+        #expect(!silence.isListening, "precondition")
+
+        await vm.announcePhase(.thinkStart(seconds: 10))
+        #expect(silence.isListening)
+    }
+
     /// WHY: the founder wants the longer line only while the player learns
     /// the flow; from the third question it is just "Think.".
     @Test("from the third question the think line is short")

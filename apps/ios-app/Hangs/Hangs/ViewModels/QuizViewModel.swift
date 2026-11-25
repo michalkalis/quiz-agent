@@ -1092,7 +1092,8 @@ final class QuizViewModel: ObservableObject {
             },
             beginQuestionRead: { [weak self] in self?.voiceCommandCoordinator.beginQuestionRead() ?? false },
             endQuestionRead: { [weak self] in self?.voiceCommandCoordinator.endQuestionRead() },
-            isListenerKeptThroughRead: { [weak self] in self?.voiceCommandCoordinator.listenerKeptThroughRead ?? false }
+            isListenerKeptThroughRead: { [weak self] in self?.voiceCommandCoordinator.listenerKeptThroughRead ?? false },
+            thinkLineFollowsRead: { [weak self] in self?.thinkLineFollowsRead ?? false }
         )
     }
 

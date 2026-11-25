@@ -141,7 +141,9 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     )
 
     alone = await svc.state("p1", "en", DAY)
-    assert alone.summary.comparison == "First result today."
+    # #248 (founder 2026-11-25): no "first result today", it read as an
+    # app nobody uses.
+    assert alone.summary.comparison is None
     assert alone.summary.best_hit is None  # no crowd yet, nothing to compare
     assert alone.summary.marks == [True, True, False, True, True]
 
@@ -152,10 +154,22 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
     crowd = await svc.crowd("en", DAY, ids[0], exclude=["p1"])
     assert (crowd.others, crowd.knew) == (1, 0)
 
+    # #248: two players are not a crowd; still nothing to compare.
+    thin = await svc.state("p1", "en", DAY)
+    assert thin.summary.players == 2
+    assert thin.summary.comparison is None
+    assert thin.summary.rank is None
+    assert thin.summary.best_hit is None
+
+    # From 20 others the numbers are real: 19 more weak players.
+    for n in range(19):
+        await _play_all(
+            svc, f"w{n}", ["incorrect", "correct", "correct", "incorrect", "incorrect"]
+        )
     live = await svc.state("p1", "en", DAY)
-    assert live.summary.players == 2
-    assert live.summary.comparison == "Best score of 2 players."
-    assert live.summary.rank == "Best score of 2 players."
+    assert live.summary.players == 21
+    assert live.summary.comparison == "Best score of 21 players."
+    assert live.summary.rank == "Best score of 21 players."
     best = live.summary.best_hit
     assert best.question_id in (ids[0], ids[3], ids[4]) and best.rare
     assert best.text == "Nobody else knew that."
@@ -168,8 +182,10 @@ async def test_first_player_then_live_numbers_exclude_self(db_sessionmaker):
 
 async def test_answer_strip_and_spoken_cap(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    ids = await _play_all(svc, "p1", ["incorrect"] * 5)
-    session, _ = await _start(svc, "p2")
+    # #248: the crowd speaks only from 20 other players.
+    for n in range(20):
+        ids = await _play_all(svc, f"p{n}", ["incorrect"] * 5)
+    session, _ = await _start(svc, "me")
     spoken = []
     for qid in ids[:2]:
         strip, line = await svc.answer_strip(session, qid, "correct")
@@ -179,17 +195,29 @@ async def test_answer_strip_and_spoken_cap(db_sessionmaker):
     strip, line = await svc.answer_strip(session, ids[1], "correct", regrade=True)
     assert strip is not None and line is None
     # Resumed in a new session: the count of spoken lines carries over.
-    resumed, _ = await _start(svc, "p2")
+    resumed, _ = await _start(svc, "me")
     for qid in ids[2:]:
         _, line = await svc.answer_strip(resumed, qid, "correct")
         spoken.append(line)
     assert [s is not None for s in spoken] == [True, True, True, False, False]
 
 
+async def test_thin_crowd_has_no_strip_and_says_nothing(db_sessionmaker):
+    """#248 (founder 2026-11-25): with one other player a rare hit ("Nobody
+    else knew that.") or "first result today" reads as an empty app."""
+    svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
+    ids = await _play_all(svc, "p1", ["incorrect"] * 5)
+    session, _ = await _start(svc, "p2")
+    strip, line = await svc.answer_strip(session, ids[0], "correct")
+    assert strip is None and line is None
+
+
 async def test_wrong_easy_has_no_strip(db_sessionmaker):
     svc = DailyChallengeService(db_sessionmaker, FakeRetriever())
-    ids = await _play_all(svc, "p1", ["correct"] * 5)
-    session, _ = await _start(svc, "p2")
+    # A crowd big enough (#248) that only the wrong-but-easy rule hides it.
+    for n in range(20):
+        ids = await _play_all(svc, f"p{n}", ["correct"] * 5)
+    session, _ = await _start(svc, "me")
     strip, line = await svc.answer_strip(session, ids[0], "incorrect")
     assert strip is None and line is None
 

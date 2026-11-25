@@ -17,6 +17,10 @@ RARE_SHARE = 0.30
 PERCENT_FROM = 20
 # Crowd lines the host may speak in one challenge.
 MAX_SPOKEN_LINES = 3
+# No comparison with the crowd below this many other players (#248, founder
+# 2026-11-25): "first result today" or "1 of 2" told the player the app is
+# empty, not how they did.
+MIN_CROWD = 20
 
 CrowdKind = Literal["first", "rare", "plain", "hard", "hidden"]
 
@@ -45,8 +49,8 @@ def classify(crowd: Crowd, player_knew: bool) -> CrowdKind:
     """The rules table: rare and hard are worth saying; a common correct answer
     gets a plain strip; a wrong answer most others knew gets nothing at all
     (negative comparison is the one line with measured harm)."""
-    if crowd.others == 0:
-        return "first"
+    if crowd.others < MIN_CROWD:
+        return "hidden"
     rare = crowd.knew / crowd.others <= RARE_SHARE
     if player_knew:
         return "rare" if rare else "plain"

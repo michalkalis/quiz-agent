@@ -364,7 +364,6 @@ def test_uk_plural_one_few_many(n, form):
 def test_uk_count_strip_and_rank_lines():
     assert copy.strip_text(Crowd(others=9, knew=5), "uk") == "Знали 5 із 9."
     assert copy.strip_text(Crowd(others=9, knew=1), "uk") == "Знав 1 із 9."
-    assert copy.strip_text(Crowd(others=0, knew=0), "uk") == "Перший результат дня."
     assert copy.strip_text(Crowd(others=100, knew=70), "uk") == f"Знали 70{NBSP}%."
 
 

@@ -108,8 +108,7 @@ extension VoiceCommandCoordinator {
             guard VoiceCommandMatcher.hasContentTokens(stripped, language: commandLanguage) else {
                 utteranceLog.echoDrops += 1
                 utteranceOutcome = "echo"
-                // The sheet keeps the listener's audio per utterance: the
-                // echo's audio must not open the driver's next answer.
+                // The echo held nothing: the sheet's countdown resumes.
                 if screen == .confirmation, transcript.isFinal { noteConfirmationUtteranceEnded(.noise) }
                 return
             }
@@ -123,21 +122,17 @@ extension VoiceCommandCoordinator {
         // "What the app hears": partials only; a final fires or clears it.
         if !transcript.isFinal { noteCommandHeard(matchText, on: screen) }
 
-        // #185 5.1 (founder 2026-09-24): on the answer sheet anything that is
-        // not a command is a NEW answer. Two duties here, the rest is the
-        // recording side's: (1) any content-bearing speech holds the countdown,
-        // so it never confirms the old answer under a new one; (2) every final
-        // ends an utterance the sheet cares about, reported as what it turned
-        // out to be. Declared after the `endUtterance` defer, so it runs BEFORE
-        // the latch is cleared.
+        // #185 on the answer sheet: (1) any content-bearing speech holds the
+        // countdown, so a slow "again" is never beaten by the auto-confirm;
+        // (2) every final ends the utterance — "again" or nothing (#243.5,
+        // founder 2026-11-24: other speech is no longer a new answer).
+        // Declared after the `endUtterance` defer, so it runs BEFORE the latch
+        // is cleared.
         let onAnswerSheet = screen == .confirmation
         let hasContent = VoiceCommandMatcher.hasContentTokens(guardedNormalized, language: commandLanguage)
-        var spokenAnswer: String?
         defer {
             if onAnswerSheet, transcript.isFinal {
-                noteConfirmationUtteranceEnded(
-                    commandFiredThisUtterance ? .command : spokenAnswer.map { .newAnswer($0) } ?? .noise
-                )
+                noteConfirmationUtteranceEnded(commandFiredThisUtterance ? .command : .noise)
             }
         }
         if onAnswerSheet, hasContent, !commandFiredThisUtterance {
@@ -178,15 +173,10 @@ extension VoiceCommandCoordinator {
         }
 
         guard let command = matched else {
-            // #185 5.1: a finished non-command utterance on the answer sheet is
-            // the driver's new answer — understood, so no "didn't get that" glow.
-            let isNewAnswer = onAnswerSheet && transcript.isFinal && hasContent && !commandFiredThisUtterance
-            if transcript.isFinal, !isNewAnswer, !commandFiredThisUtterance {
+            if transcript.isFinal, !commandFiredThisUtterance {
                 noteWindowUtteranceUnmatched()
             }
-            if isNewAnswer {
-                spokenAnswer = transcript.text
-            } else if !underEchoGuard { // over the read, a miss is most likely the app's own voice
+            if !underEchoGuard { // over the read, a miss is most likely the app's own voice
                 // #122: the "heard you, didn't understand" glow — throttled inside.
                 noteUnmatchedForFeedback(normalized, isFinal: transcript.isFinal)
             }
@@ -195,7 +185,6 @@ extension VoiceCommandCoordinator {
                     transcript, normalized: normalized, tokens: tokens, sincePrevMs: sincePrevMs
                 )
                 attributes["screen"] = String(describing: screen)
-                if isNewAnswer { attributes["outcome"] = "newAnswer" }
                 SentryLog.info("voice cmd transcript unmatched", category: .voice, attributes: attributes)
             }
             return

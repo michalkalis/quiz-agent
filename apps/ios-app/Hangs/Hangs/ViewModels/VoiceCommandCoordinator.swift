@@ -14,15 +14,13 @@ import Clocks
 import Foundation
 import os
 
-/// #185 5.1: what one finished utterance on the answer confirmation sheet
-/// turned out to be.
+/// #185: what one finished utterance on the answer confirmation sheet turned
+/// out to be. (#243.5: the sheet listens for "again" only — anything else,
+/// words included, is nothing to act on.)
 enum ConfirmationUtterance: Equatable, Sendable {
     /// A command fired for it — its action already ran.
     case command
-    /// Not a command, with words in it: the driver's new answer (the local
-    /// recognizer's text — the answer itself is transcribed from the audio).
-    case newAnswer(String)
-    /// Filler, silence, a blip — nothing to act on.
+    /// Anything else — the countdown resumes.
     case noise
 }
 

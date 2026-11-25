@@ -153,7 +153,7 @@ struct CzechCommandGrammarTests {
     @Test("driver-facing strings are Czech and quote the button words (#174)")
     func czechDisplayStrings() {
         #expect(VoiceCommandLexicon.hint(on: .question, language: .czech) == "Řekni „odpověz“ nebo „další“")
-        #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .czech) == "Řekni „znovu“ nebo novou odpověď")
+        #expect(VoiceCommandLexicon.hint(on: .confirmation, language: .czech) == "Řekni „znovu“")
         #expect(VoiceCommandLexicon.spokenWord(.answer, language: .czech) == "odpověz")
         #expect(VoiceCommandLexicon.spokenWord(.next, language: .czech) == "další")
         #expect(VoiceCommandLexicon.listeningCaption(language: .czech) == "POSLOUCHÁM PŘÍKAZY")

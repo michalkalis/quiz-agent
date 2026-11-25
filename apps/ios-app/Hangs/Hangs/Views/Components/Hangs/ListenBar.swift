@@ -1069,7 +1069,7 @@ struct ListenBarLevelGlow: View {
                       commandWords: ["„zopakuj“", "„ďalšia“"], language: .slovak)
             // #189 — the confirmation sheet right after it opens.
             ListenBar(mode: .readingAnswerBack,
-                      commandHint: "Povedz „znova“ alebo novú odpoveď",
+                      commandHint: "Povedz „znova“",
                       shortCaption: true, language: .slovak)
             ListenBar(mode: .command,
                       commandWords: ["„odpovedz“", "„zopakuj“", "„ďalšia“"],

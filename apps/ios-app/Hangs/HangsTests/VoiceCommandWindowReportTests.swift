@@ -157,22 +157,21 @@ struct VoiceCommandWindowReportTests {
         }
     }
 
-    /// WHY: on the answer sheet anything that is not a command is a new
-    /// answer — understood, not missed. Counting it as unmatched would make
-    /// the sheet look broken exactly when it works.
-    @Test("a new answer on the sheet is not an unmatched utterance")
-    func newAnswerIsNotAMiss() async {
+    /// WHY (#243.5): the answer sheet listens for "again" only, so anything
+    /// else said there is an unmatched utterance like on any other screen —
+    /// it used to be counted as a new answer, understood.
+    @Test("a non-command on the answer sheet is an unmatched utterance")
+    func nonCommandOnSheetIsAMiss() async {
         await withMainSerialExecutor {
             let (vm, silence, analytics, _) = makeVM()
             vm.quizState = .processing
             await vm.audioDeviceState.startSilenceDetectionListening()
             silence.simulateCommandTranscript("Bratislava")
-            // The new answer may close the sheet (and the window) by itself.
-            await pumpUntil { vm.voiceCommandCoordinator.commandWindowStats?.transcripts == 1 || !reports(analytics).isEmpty }
+            await pumpUntil { vm.voiceCommandCoordinator.commandWindowStats?.transcripts == 1 }
             vm.audioDeviceState.stopSilenceDetectionListening()
 
             #expect(reports(analytics).first?.screen == "confirmation")
-            #expect(reports(analytics).first?.unmatched == 0)
+            #expect(reports(analytics).first?.unmatched == 1)
         }
     }
 

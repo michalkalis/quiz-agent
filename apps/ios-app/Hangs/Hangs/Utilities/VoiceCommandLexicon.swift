@@ -91,8 +91,8 @@ enum VoiceCommandLexicon {
     static func commands(on screen: VoiceCommandScreen) -> [VoiceCommand] {
         switch screen {
         case .question: [.answer, .repeatQuestion, .next]
-        // Founder 2026-11-22: silence confirms, anything else said is a new
-        // answer; "again" is the one word the sheet acts on.
+        // Founder 2026-11-22: silence confirms; "again" is the one word the
+        // sheet acts on (#243.5: anything else said is ignored).
         case .confirmation: [.again]
         // The sheet's buttons, Repeat question / Again / Next (#243.4). No
         // confirm: confirming an empty field IS a skip.

@@ -59,9 +59,6 @@ extension RecordingCoordinator {
     ) {
         let attempt = owner ?? attemptLedger.current
         guard attemptLedger.owns(attempt, "transcriptionFailure") else { return }
-        // #185 5.1: a new answer spoken ON the sheet that came back empty keeps
-        // the answer it was meant to replace — no retry prompt, no second miss.
-        if restoreAfterUnheardReplacement() { return }
 
         // #243.4: dead air and a spoken-but-lost answer now end differently.
         let heardSpeech = heardSpeech ?? stoppedRecordingHeardSpeech

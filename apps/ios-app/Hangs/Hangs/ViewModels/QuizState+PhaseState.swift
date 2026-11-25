@@ -143,11 +143,6 @@ struct ConfirmationState {
     /// sheet, or `nil` when it runs (or is off in Settings).
     var countdownHold: ConfirmationCountdownHold?
 
-    /// #185 5.1: the driver said a new answer on the sheet and it is being
-    /// transcribed — carries the answer it replaces, which comes back if the
-    /// new one turns out to be nothing (or a command word).
-    var spokenReplacement: SpokenReplacement?
-
     /// Car test 2026-10-30: the answer this sheet last read back aloud, `nil`
     /// when nothing was read (muted, empty). Its words are the app's own voice
     /// to the sheet's listener — see RecordingCoordinator+ReadBackEcho.
@@ -162,12 +157,7 @@ enum ConfirmationCountdownHold: String, Sendable, Equatable {
     /// 5.2: the answer is being read back or the mic is still coming up — the
     /// countdown starts once the command listener is live.
     case awaitingListener
-    /// 5.1: someone is speaking; resumes when the utterance ends in nothing.
+    /// Someone is speaking (it may be "again"); resumes when the utterance
+    /// ends in anything else.
     case speech
-}
-
-/// #185 5.1: a spoken new answer in flight on the sheet.
-struct SpokenReplacement: Sendable, Equatable {
-    /// The answer on the sheet when the driver spoke.
-    let previousAnswer: String
 }

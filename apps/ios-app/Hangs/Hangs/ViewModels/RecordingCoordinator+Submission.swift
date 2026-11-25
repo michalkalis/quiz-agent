@@ -174,9 +174,8 @@ extension RecordingCoordinator {
         let recordingStamp = savedRecordingStamp
         savedRecordingStamp = nil
 
-        // #185 5.1: a new answer spoken on the confirmation sheet is uploaded
-        // from `.processing` already, and `.processing → .processing` is not a
-        // legal edge.
+        // An upload may start from `.processing` already (#185), and
+        // `.processing → .processing` is not a legal edge.
         if quizState() != .processing {
             transition(to: .processing)
         }
@@ -253,9 +252,6 @@ extension RecordingCoordinator {
                         return
                     }
                     self.attemptLedger.record(.network, "voiceSubmit.transcript", "len=\(evaluation.userAnswer.count)")
-                    // #185 5.1: a new answer spoken on the sheet may turn out
-                    // to be a command word the on-device recognizer missed.
-                    if self.resolveSpokenReplacement(evaluation.userAnswer) { return }
                     if self.handleSpokenLineEcho(in: evaluation.userAnswer, owner: owner) { return }
                     self.pendingResponse = response
                     // #184 track D: the sheet opens AND the recognised answer is

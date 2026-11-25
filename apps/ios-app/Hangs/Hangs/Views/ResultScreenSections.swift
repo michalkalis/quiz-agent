@@ -184,3 +184,25 @@ struct ResultCardChip: View {
         .buttonStyle(.plain)
     }
 }
+
+// MARK: - Card surface
+
+/// The calm result card's plate (#224) without the category header row the
+/// question's `HangsDeckCard` carries: #248.2 opens the result with the verdict
+/// as its headline and prints no category. Same plate, corner and padding as the
+/// calm deck card.
+struct ResultCardSurface<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.Hangs.Radius.deck, style: .continuous)
+        content()
+            .foregroundStyle(Theme.Hangs.Colors.ink)
+            .padding(EdgeInsets(top: 16, leading: 20, bottom: 18, trailing: 20))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                shape.fill(Theme.Hangs.Colors.bgCard)
+                    .overlay(shape.strokeBorder(Theme.Hangs.Colors.hairline, lineWidth: 1))
+            )
+    }
+}

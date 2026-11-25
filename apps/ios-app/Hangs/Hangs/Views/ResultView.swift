@@ -167,18 +167,12 @@ struct ResultView: View {
         )
     }
 
-    /// #224 (canvas B1b): a neutral card for every verdict. The category is a
-    /// dot and a name; the verdict is a quiet label in the header and the only
-    /// green is a right answer.
+    /// #224 (canvas B1b): a neutral card for every verdict; the only green is a
+    /// right answer.
     private var resultCard: some View {
         // #248.2 (founder 2026-11-25, variant A): no category on the card; the
         // verdict is its headline, then the answer, what the player said, why.
-        HangsDeckCard(
-            style: deckIdentity.notCorrectStyle,
-            categoryName: nil,
-            isCalm: true,
-            showsHeader: false
-        ) {
+        ResultCardSurface {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 ResultVerdictLabel(verdict: verdict, streak: viewModel.resultStreak)
                 ResultAnswerPanel(

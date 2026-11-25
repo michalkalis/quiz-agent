@@ -102,35 +102,86 @@ enum SpokenPrompt: String, Sendable {
         return [opening, saySentence(commands, language: language)].compactMap { $0 }.joined(separator: " ")
     }
 
-    /// The round-end line (#243 decision 5, founder 2026-11-24): "Hotovo, 7 z
-    /// 10. Znova, alebo domov?" — the score, then the question naming the
-    /// words the screen acts on. Every round end says it (score, recap, daily
-    /// challenge).
+    /// The round-end line (#248 — result screen and round-end cleanup,
+    /// founder 2026-11-25): the score as a sentence, on a finished daily
+    /// challenge the extra questions it earned today, then the offer naming
+    /// the words the screen acts on. Every round end says it (score, recap,
+    /// daily challenge). `bonusQuestions` is nil or 0 when nothing was earned.
     static func setFinishedLine(
-        correct: Int, total: Int, commands: [VoiceCommand], language: CommandLanguage
+        correct: Int, total: Int, bonusQuestions: Int? = nil, commands: [VoiceCommand], language: CommandLanguage
     ) -> String {
         let score = switch language {
-        case .slovak, .czech: "Hotovo, \(correct) z \(total)."
-        case .ukrainian: "Готово, \(correct) з \(total)."
-        case .english: "Done, \(correct) out of \(total)."
+        case .slovak: "Hotovo. Máš správne \(correct) z \(total) \(total == 1 ? "odpovede" : "odpovedí")."
+        case .czech: "Hotovo. Máš správně \(correct) z \(total) \(total == 1 ? "odpovědi" : "odpovědí")."
+        case .ukrainian: "Готово. У тебе правильно \(correct) з \(total) \(total == 1 ? "відповіді" : "відповідей")."
+        case .english: "Done. You got \(correct) out of \(total) right."
         }
-        return [score, setEndQuestion(commands: commands, language: language)].compactMap { $0 }.joined(separator: " ")
+        let bonus = bonusQuestions.flatMap { $0 > 0 ? bonusSentence($0, language: language) : nil }
+        return [score, bonus, setEndQuestion(commands: commands, language: language)]
+            .compactMap { $0 }.joined(separator: " ")
     }
 
-    /// "Znova, alebo domov?" — the question alone, also said once more when
-    /// the round end hears nothing. Nil when nothing listens. The words come
-    /// from the lexicon, so the line and the matcher cannot drift.
-    static func setEndQuestion(commands: [VoiceCommand], language: CommandLanguage) -> String? {
-        let words = commands.map { VoiceCommandLexicon.spokenWord($0, language: language) }
-        guard let last = words.last else { return nil }
-        let or = switch language {
-        case .slovak: ", alebo "
-        case .czech: ", nebo "
-        case .ukrainian: " чи "
-        case .english: ", or "
+    /// "Za odmenu máš dnes 10 otázok navyše." The noun follows the number
+    /// (sk / cs: 1, 2–4, 5+; uk also by the last digits).
+    private static func bonusSentence(_ count: Int, language: CommandLanguage) -> String {
+        switch language {
+        case .slovak:
+            let noun = switch count {
+            case 1: "otázku"
+            case 2 ... 4: "otázky"
+            default: "otázok"
+            }
+            return "Za odmenu máš dnes \(count) \(noun) navyše."
+        case .czech:
+            let noun = switch count {
+            case 1: "otázku"
+            case 2 ... 4: "otázky"
+            default: "otázek"
+            }
+            return "Za odměnu máš dnes \(count) \(noun) navíc."
+        case .ukrainian:
+            let lastTwo = count % 100
+            let last = count % 10
+            let noun = if (11 ... 14).contains(lastTwo) {
+                "додаткових питань"
+            } else if last == 1 {
+                "додаткове питання"
+            } else if (2 ... 4).contains(last) {
+                "додаткові питання"
+            } else {
+                "додаткових питань"
+            }
+            return "У нагороду маєш сьогодні \(count) \(noun)."
+        case .english:
+            return "As a reward you get \(count) extra \(count == 1 ? "question" : "questions") today."
         }
-        let list = words.count > 1 ? words.dropLast().joined(separator: ", ") + or + last : last
-        return list.prefix(1).uppercased() + list.dropFirst() + "?"
+    }
+
+    /// The offer alone: "Chceš hrať ďalší kvíz? Povedz: ďalší. Alebo otvoriť
+    /// úvodnú obrazovku? Povedz: domov." Also said once more when the round
+    /// end hears nothing. Nil when nothing listens. The words come from the
+    /// lexicon, so the line and the matcher cannot drift; no quote marks, the
+    /// voice would read them (copy rule 10).
+    static func setEndQuestion(commands: [VoiceCommand], language: CommandLanguage) -> String? {
+        let sentences = commands.enumerated().compactMap { index, command in
+            offerSentence(command, first: index == 0, language: language)
+        }
+        return sentences.isEmpty ? nil : sentences.joined(separator: " ")
+    }
+
+    private static func offerSentence(_ command: VoiceCommand, first: Bool, language: CommandLanguage) -> String? {
+        let word = VoiceCommandLexicon.spokenWord(command, language: language, on: .setEnd)
+        switch (command, language) {
+        case (.next, .slovak): return "Chceš hrať ďalší kvíz? Povedz: \(word)."
+        case (.next, .czech): return "Chceš hrát další kvíz? Řekni: \(word)."
+        case (.next, .ukrainian): return "Хочеш зіграти ще одну вікторину? Скажи: \(word)."
+        case (.next, .english): return "Want to play another quiz? Say: \(word)."
+        case (.home, .slovak): return "\(first ? "Chceš" : "Alebo") otvoriť úvodnú obrazovku? Povedz: \(word)."
+        case (.home, .czech): return "\(first ? "Chceš" : "Nebo") otevřít úvodní obrazovku? Řekni: \(word)."
+        case (.home, .ukrainian): return "\(first ? "Хочеш" : "Або") відкрити головний екран? Скажи: \(word)."
+        case (.home, .english): return "\(first ? "Want to" : "Or") go to the home screen? Say: \(word)."
+        default: return nil
+        }
     }
 
     /// "Povedz znova alebo stop." — no quote marks, the voice would read them

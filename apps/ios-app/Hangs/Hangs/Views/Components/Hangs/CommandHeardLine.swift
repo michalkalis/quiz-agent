@@ -20,7 +20,7 @@ struct CommandHeardLine: View {
     var language: CommandLanguage = .english
 
     var body: some View {
-        Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language))
+        Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language, on: heard.screen))
             .font(.hangsMonoMini)
             .tracking(0.6)
             .foregroundStyle(Theme.Hangs.Colors.live)

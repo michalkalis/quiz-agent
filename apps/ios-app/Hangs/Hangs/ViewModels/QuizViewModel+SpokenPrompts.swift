@@ -8,10 +8,10 @@
 //
 //  - G1: the error screen says what happened and listens for "znova".
 //  - G2: the free questions ran out: one line, then the paywall.
-//  - G3: every round end says "Hotovo, 7 z 10. Znova, alebo domov?" and
-//    listens for those two words (#243 decision 5, founder 2026-11-24); on
-//    silence it asks once more, then waits. The recap says it after its
-//    summary read.
+//  - G3: every round end says the score, then offers the next quiz or Home
+//    and listens for "ďalší" / "domov" (#243 decision 5; wording #248,
+//    founder 2026-11-25); on silence it offers once more, then waits. The
+//    recap says it after its summary read.
 //  - G4: "hear it" on the result reads the explanation, not the verdict again.
 //
 //  Lines are synthesized by the backend's generic TTS, like the retry prompt.
@@ -119,27 +119,31 @@ extension QuizViewModel {
         }, key: .voiceLimitPrompt)
     }
 
-    // MARK: - G3: round end (#243 decision 5)
+    // MARK: - G3: round end (#243 decision 5, #248)
 
-    /// Say "Hotovo, 7 z 10. Znova, alebo domov?", release the quiz session
+    /// Say "Hotovo. Máš správne 7 z 10 odpovedí." (after a daily challenge
+    /// also the extra questions it earned), then "Chceš hrať ďalší kvíz?
+    /// Povedz: ďalší. Alebo …? Povedz: domov.", release the quiz session
     /// (music back to full volume), then listen on the quiet session like
     /// Home does. A line that cannot be fetched is skipped; the screen listens
-    /// all the same. Heard nothing: the question once more, then silence.
+    /// all the same. Heard nothing: the offer once more, then silence.
     /// #240.9: `thenPaywall` = the round ended at the monthly limit; after
     /// the score the paywall follows (`showRoundEndPaywall`).
     func announceSetFinished(thenPaywall quotaLimit: QuotaLimitError? = nil) {
         roundEndLineStarted = true
         let commands = spokenCommands(VoiceCommandLexicon.commands(on: .setEnd))
-        let text = SpokenPrompt.setFinishedLine(
-            correct: sessionCorrectCount,
-            total: currentSession?.maxQuestions ?? settings.numberOfQuestions,
-            commands: commands,
-            language: promptLanguage
-        )
-        let question = SpokenPrompt.setEndQuestion(commands: commands, language: promptLanguage)
+        let correct = sessionCorrectCount
+        let total = currentSession?.maxQuestions ?? settings.numberOfQuestions
+        let language = promptLanguage
+        let daily = activeDaily
+        let question = SpokenPrompt.setEndQuestion(commands: commands, language: language)
         taskBag.add(Task { [weak self] in
             guard let self else { return }
-            await sayAtRoundEnd(text)
+            let bonus = isAudioMuted ? nil : await roundEndDailyBonus(daily)
+            guard !Task.isCancelled, quizState == .finished else { return }
+            await sayAtRoundEnd(SpokenPrompt.setFinishedLine(
+                correct: correct, total: total, bonusQuestions: bonus, commands: commands, language: language
+            ))
             guard !Task.isCancelled, quizState == .finished else { return }
             if let quotaLimit { await showRoundEndPaywall(quotaLimit) }
             guard !Task.isCancelled, quizState == .finished else { return }
@@ -148,6 +152,20 @@ extension QuizViewModel {
             await voiceCommandCoordinator.syncCommandListenerWindow()
             if let question { await reaskRoundEndOnSilence(question) }
         }, key: .quizEndPrompt)
+    }
+
+    /// #248 (founder 2026-11-25): the extra questions a finished daily
+    /// challenge earned today, the number its round end shows
+    /// (`DailyChallengeState.earnedBonusLeft`); nil on any other round.
+    /// Bounded like the line itself. A failed or slow fetch is deliberately
+    /// silent: the line then just leaves the reward out, and the screen still
+    /// shows it once its own fetch lands.
+    private func roundEndDailyBonus(_ daily: DailyRound?) async -> Int? {
+        guard let daily else { return nil }
+        let state = try? await withUserFacingTimeout(seconds: Self.promptFetchTimeoutSeconds, clock: clock) {
+            try await self.networkService.fetchDailyChallenge(date: daily.day.isoDate, language: daily.language)
+        }
+        return state?.earnedBonusLeft
     }
 
     /// The recap's summary read (or the row read that replaced it) ended or
@@ -162,9 +180,9 @@ extension QuizViewModel {
         }
     }
 
-    /// Spoken "znova" at a round end does what Play Again does. The daily
-    /// challenge end has no Play Again (one challenge a day), so there it
-    /// starts an ordinary round, as Home's Start does.
+    /// Spoken "ďalší" at a round end (#248; was "znova") starts the next quiz
+    /// with the same settings. After a daily challenge (one a day) it starts
+    /// an ordinary round, as Home's Start does.
     func playAgainFromRoundEnd() {
         if activeDaily != nil {
             beginQuizStart()
@@ -179,7 +197,8 @@ extension QuizViewModel {
         await audioDeviceState.playAppSpeech(audio)
     }
 
-    /// Founder decision 5: "pri tichu sa raz spýta, potom čaká". Only while
+    /// Founder decision 5: "pri tichu sa raz spýta, potom čaká" (#248: the
+    /// offer alone, without the score). Only while
     /// the screen still listens, nothing was heard, and nothing else talks
     /// or covers it (a recap read, the paywall).
     private func reaskRoundEndOnSilence(_ question: String) async {
@@ -237,8 +256,9 @@ extension QuizViewModel {
     // MARK: - #243.3: phase prompts
 
     /// Questions at the start of a quiz that hear the longer think line with
-    /// the seconds (founder 2026-11-24: the first two).
-    static let longThinkPromptQuestions = 2
+    /// the seconds (#248, founder 2026-11-25: only the first; the second
+    /// already knows the window).
+    static let longThinkPromptQuestions = 1
 
     /// "Think." / "Answer." in the app voice, from the bundle. Nothing in a
     /// silent quiz or with read-aloud off: the screen says the phase there.

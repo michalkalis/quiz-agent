@@ -500,7 +500,9 @@ final class QuizViewModel: ObservableObject {
 
     var recognizingWord: String? {
         voiceCommandCoordinator.recognizingCommand.map {
-            VoiceCommandLexicon.recognizingCaption($0, language: commandLanguage)
+            VoiceCommandLexicon.recognizingCaption(
+                $0, language: commandLanguage, on: voiceCommandCoordinator.currentCommandScreen
+            )
         }
     }
 
@@ -2816,7 +2818,7 @@ final class QuizViewModel: ObservableObject {
         // engine. Down before the session goes, like `endQuizWithResults`.
         audioDeviceState.stopSilenceDetectionListening()
         // #243 decision 5 (founder 2026-11-24): every round end (score, recap,
-        // daily challenge) says "Hotovo, 7 z 10. Znova, alebo domov?" and
+        // daily challenge) says the score and offers "ďalší" / "domov" (#248) and
         // listens for those words. It releases the session once it has spoken.
         let quotaLimit = roundEndQuotaLimit
         roundEndQuotaLimit = nil

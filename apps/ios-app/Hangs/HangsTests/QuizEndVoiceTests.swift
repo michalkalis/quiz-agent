@@ -186,16 +186,19 @@ struct QuizEndCommandWordTests {
     /// WHY: the founder's words for the two screens, in every quiz language at
     /// once (the lexicon parity rule). #243 decision 5: the round end also
     /// takes "domov"; the error screen still does not (retired 2026-11-22).
-    @Test("again routes on both quiz-end screens, home at the round end only", arguments: CommandLanguage.allCases)
+    /// #248 (founder 2026-11-25): the round end takes "ďalší", not "znova".
+    @Test("again retries on the error screen, next and home act at the round end", arguments: CommandLanguage.allCases)
     func founderWords(_ language: CommandLanguage) {
         let again = VoiceCommandLexicon.spokenWord(.again, language: language)
+        let next = VoiceCommandLexicon.spokenWord(.next, language: language, on: .setEnd)
         let home = VoiceCommandLexicon.spokenWord(.home, language: language)
         #expect(match(again, .error, language) == .again)
-        #expect(match(again, .setEnd, language) == .again)
+        #expect(match(again, .setEnd, language) == nil)
+        #expect(match(next, .setEnd, language) == .next)
         #expect(match(home, .setEnd, language) == .home)
         #expect(match(home, .error, language) == nil)
         #expect(VoiceCommandLexicon.commands(on: .error) == [.again])
-        #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.again, .home])
+        #expect(VoiceCommandLexicon.commands(on: .setEnd) == [.next, .home])
     }
 
     /// WHY: on the sheet "nie" re-records an answer; at the set end it would
@@ -214,12 +217,12 @@ struct QuizEndCommandWordTests {
     func spokenLinesAreHonest(_ language: CommandLanguage) {
         let lines = [
             (SpokenPrompt.errorLine(commands: [.again], language: language), VoiceCommandScreen.error),
-            (SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: language), .setEnd),
+            (SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.next, .home], language: language), .setEnd),
         ]
         for (line, screen) in lines {
             #expect(!line.contains("\"") && !line.contains("„") && !line.contains("“") && !line.contains("«"))
             for command in VoiceCommandLexicon.commands(on: screen) {
-                let word = VoiceCommandLexicon.spokenWord(command, language: language)
+                let word = VoiceCommandLexicon.spokenWord(command, language: language, on: screen)
                 #expect(line.localizedCaseInsensitiveContains(word), "\(line) must name \(word)")
                 #expect(match(word, screen, language) == command)
             }

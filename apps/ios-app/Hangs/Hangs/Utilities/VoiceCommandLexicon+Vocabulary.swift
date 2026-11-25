@@ -83,7 +83,7 @@ extension VoiceCommandLexicon {
         case .slovak:
             [
                 "odpovedz", "odpovedaj", "odpoveď", "ďalšia", "preskoč", "vynechaj", "zopakuj", "opakuj",
-                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj otázku", "ďalšia otázka", "domov",
+                "znova", "znovu", "nie", "zle", "ešte raz", "zopakuj otázku", "ďalšia otázka", "domov", "ďalší",
             ]
         case .czech:
             [
@@ -93,7 +93,7 @@ extension VoiceCommandLexicon {
         case .ukrainian:
             [
                 "відповідай", "відповідь", "пропусти", "наступне", "повтори",
-                "ще раз", "знову", "ні", "неправильно", "повтори питання", "наступне питання", "додому",
+                "ще раз", "знову", "ні", "неправильно", "повтори питання", "наступне питання", "додому", "наступна",
             ]
         }
     }

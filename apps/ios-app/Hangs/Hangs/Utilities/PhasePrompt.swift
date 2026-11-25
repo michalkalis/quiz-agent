@@ -4,7 +4,7 @@
 //
 //  #243.3 (founder 2026-11-24, decision 1): the quiz says which phase starts,
 //  in one short line in the app voice, plus the quiet mic tone it already had.
-//  The first two questions of a quiz get the longer think line with the
+//  The first question of a quiz (#248: was the first two) gets the longer think line with the
 //  seconds ("Premýšľaj, máš desať sekúnd."), the rest only "Premýšľaj." and
 //  "Odpovedaj.".
 //

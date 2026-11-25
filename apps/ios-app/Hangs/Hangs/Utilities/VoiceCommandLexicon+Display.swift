@@ -15,10 +15,14 @@ extension VoiceCommandLexicon {
     /// Canonical spoken spelling of a command, for display (diagnostics + the
     /// listening indicator). NOT the matcher input — matching uses `variants`.
     /// Slovak forms carry their real diacritics (display, not matching).
+    /// `screen`: the round end says "next" as „ďalší“ (kvíz), not the
+    /// question's „ďalšia“ (otázka) (#248, founder 2026-11-25).
     static func spokenWord(
         _ command: VoiceCommand,
-        language: CommandLanguage = .english
+        language: CommandLanguage = .english,
+        on screen: VoiceCommandScreen? = nil
     ) -> String {
+        if screen == .setEnd, command == .next { return roundEndNextWord(language) }
         switch (language, command) {
         case (.english, .answer): return "answer"
         case (.english, .next): return "next"
@@ -43,6 +47,16 @@ extension VoiceCommandLexicon {
         }
     }
 
+    /// #248: the round end's "next" — the next quiz.
+    private static func roundEndNextWord(_ language: CommandLanguage) -> String {
+        switch language {
+        case .english: "next"
+        case .slovak: "ďalší"
+        case .czech: "další"
+        case .ukrainian: "далі"
+        }
+    }
+
     /// Curated hint for the on-screen "LISTENING FOR COMMANDS" indicator (77.12,
     /// pen `s49sd`). A concise, driver-facing subset of each screen's routable
     /// commands. #105: the question screen must advertise the answer word — it
@@ -62,26 +76,26 @@ extension VoiceCommandLexicon {
         // the way back to the question, in the offer line's order.
         case (.english, .noAnswer): return #"Say "repeat", "again" or "next""#
         case (.english, .error): return #"Say "again""#
-        // #243 decision 5: the round end's two words.
-        case (.english, .setEnd): return #"Say "again" or "home""#
+        // #248 (founder 2026-11-25): the round end's two words.
+        case (.english, .setEnd): return #"Say "next" or "home""#
         case (.english, .result): return #"Say "next""#
         case (.slovak, .question): return "Povedz „odpovedz“ alebo „ďalšia“"
         case (.slovak, .confirmation): return "Povedz „znova“"
         case (.slovak, .noAnswer): return "Povedz „zopakuj“, „znova“ alebo „ďalšia“"
         case (.slovak, .error): return "Povedz „znova“"
-        case (.slovak, .setEnd): return "Povedz „znova“ alebo „domov“"
+        case (.slovak, .setEnd): return "Povedz „ďalší“ alebo „domov“"
         case (.slovak, .result): return "Povedz „ďalšia“"
         case (.czech, .question): return "Řekni „odpověz“ nebo „další“"
         case (.czech, .confirmation): return "Řekni „znovu“"
         case (.czech, .noAnswer): return "Řekni „zopakuj“, „znovu“ nebo „další“"
         case (.czech, .error): return "Řekni „znovu“"
-        case (.czech, .setEnd): return "Řekni „znovu“ nebo „domů“"
+        case (.czech, .setEnd): return "Řekni „další“ nebo „domů“"
         case (.czech, .result): return "Řekni „další“"
         case (.ukrainian, .question): return "Скажи «відповідай» або «пропусти»"
         case (.ukrainian, .confirmation): return "Скажи «ще раз»"
         case (.ukrainian, .noAnswer): return "Скажи «повтори», «ще раз» або «пропусти»"
         case (.ukrainian, .error): return "Скажи «ще раз»"
-        case (.ukrainian, .setEnd): return "Скажи «ще раз» або «додому»"
+        case (.ukrainian, .setEnd): return "Скажи «далі» або «додому»"
         case (.ukrainian, .result): return "Скажи «пропусти»"
         }
     }
@@ -175,9 +189,10 @@ extension VoiceCommandLexicon {
     /// language (same quote style as `hint`). Verbatim, never localized.
     static func recognizingCaption(
         _ command: VoiceCommand,
-        language: CommandLanguage = .english
+        language: CommandLanguage = .english,
+        on screen: VoiceCommandScreen? = nil
     ) -> String {
-        let word = spokenWord(command, language: language)
+        let word = spokenWord(command, language: language, on: screen)
         switch language {
         case .english: return "\"\(word)\"…"
         case .slovak, .czech: return "„\(word)“…"
@@ -189,8 +204,10 @@ extension VoiceCommandLexicon {
     /// command the words in progress resemble — always the screen language's
     /// own word, never what the recognizer wrote. Lowercase where the language
     /// allows, and the same for every player. Verbatim, never localized.
-    static func heardCaption(_ command: VoiceCommand, language: CommandLanguage = .english) -> String {
-        let word = spokenWord(command, language: language)
+    static func heardCaption(
+        _ command: VoiceCommand, language: CommandLanguage = .english, on screen: VoiceCommandScreen? = nil
+    ) -> String {
+        let word = spokenWord(command, language: language, on: screen)
         switch language {
         case .english: return "I hear: “\(word)”"
         case .slovak: return "počujem: „\(word)“"

@@ -9,7 +9,7 @@
 //  sequentially. Auto-starts on recap appear — auto-record, the app's
 //  hands-free signal, is always on since #200 — and never while muted (mute
 //  wins everywhere TTS starts, #85). #243 decision 5: the round-end line
-//  ("Hotovo, 7 z 10. Znova, alebo domov?") follows the read.
+//  (the score and the offer of the next quiz, #248) follows the read.
 //
 
 import Foundation

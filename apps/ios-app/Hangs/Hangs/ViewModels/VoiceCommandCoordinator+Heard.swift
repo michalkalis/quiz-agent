@@ -26,7 +26,7 @@ extension VoiceCommandCoordinator {
         }
         let heard = VoiceCommandMatcher.resemblance(
             transcript: text, on: screen, among: commands, language: commandLanguage
-        ).flatMap { CommandHeard.inProgress($0.command, score: $0.score) }
+        ).flatMap { CommandHeard.inProgress($0.command, score: $0.score, on: screen) }
         guard let heard else { return clearUnfiredCommandHeard() }
         if commandHeard != heard { commandHeard = heard }
     }
@@ -34,7 +34,7 @@ extension VoiceCommandCoordinator {
     /// A command fired on `screen`: full, then cleared after a short hold.
     func showCommandFired(_ command: VoiceCommand, on screen: VoiceCommandScreen) {
         guard CommandHeard.screens.contains(screen) else { return }
-        commandHeard = .fired(command)
+        commandHeard = .fired(command, on: screen)
         let clock = clock
         let task = Task { [weak self] in
             try? await clock.sleep(for: CommandHeard.firedHold)

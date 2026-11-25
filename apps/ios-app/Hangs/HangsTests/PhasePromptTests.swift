@@ -5,7 +5,9 @@
 //  #243.3 (founder 2026-11-24, decision 1): in the car, tones alone did not
 //  say what was happening. The quiz now says "Think." when the think window
 //  starts and "Answer." right before the mic opens on its own, in the app
-//  voice from the bundle; the first two questions name the seconds.
+//  voice from the bundle. #248 (founder 2026-11-25): only the first
+//  question names the seconds, and "Answer." comes only before the mic opens
+//  on its own, never when the player opens it.
 //
 
 import Clocks
@@ -133,18 +135,61 @@ struct PhasePromptTests {
         #expect(silence.isListening)
     }
 
-    /// WHY: the founder wants the longer line only while the player learns
-    /// the flow; from the third question it is just "Think.".
-    @Test("from the third question the think line is short")
-    func shortAfterTwoQuestions() async throws {
+    /// WHY (#248, founder 2026-11-25): the seconds are news once; hearing
+    /// them again on every early question annoyed. Only the first question of
+    /// a quiz says "Think, you have ten seconds."; from the second it is "Think.".
+    @Test("only the first question says the long think line")
+    func longOnlyOnFirstQuestion() async throws {
         let (vm, audio) = makeVM()
-        vm.currentSession?.askedCount = 2
+        vm.currentSession?.askedCount = 1
         await vm.announcePhase(.thinkStart(seconds: 10))
         #expect(audio.lastPlayedData == PhasePrompt.think(seconds: 10).audio(language: .english))
 
-        vm.currentSession?.askedCount = 3
-        await vm.announcePhase(.thinkStart(seconds: 10))
-        #expect(audio.lastPlayedData == PhasePrompt.think(seconds: nil).audio(language: .english))
+        for asked in [2, 3] {
+            vm.currentSession?.askedCount = asked
+            await vm.announcePhase(.thinkStart(seconds: 10))
+            #expect(
+                audio.lastPlayedData == PhasePrompt.think(seconds: nil).audio(language: .english),
+                "question \(asked) must say the short line"
+            )
+        }
+    }
+
+    /// WHY (#248, founder 2026-11-25): "Answer." warns that the mic is about
+    /// to open on its own. A player who opens it themselves knows already;
+    /// the line would only talk into their answer.
+    @Test("a tap on Answer opens the mic without the answer line")
+    func tapSaysNoAnswerLine() async throws {
+        let clock = TestClock()
+        let (vm, audio) = makeVM(clock: clock)
+        let answer = try #require(PhasePrompt.answer.audio(language: .english))
+        vm.startRecordingOrTimer()
+        await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the window never started")
+        await clock.advance(by: .seconds(3))
+
+        await vm.toggleRecording()
+        await pumpUntil({ vm.quizState == .recording }, "the tap did not open the mic")
+        await clock.advance(by: .seconds(8)) // past where the window would have ended
+        #expect(!audio.playedData.contains(answer), "the answer line played on a tap")
+        vm.taskBag.cancelAll()
+    }
+
+    /// WHY: same as the tap: the spoken "answer" is the player's own start.
+    @Test("the spoken 'answer' opens the mic without the answer line")
+    func voiceCommandSaysNoAnswerLine() async throws {
+        let clock = TestClock()
+        let (vm, audio) = makeVM(clock: clock)
+        let answer = try #require(PhasePrompt.answer.audio(language: .english))
+        vm.voiceCommandCoordinator.voiceStartOnQuestionEnabled = true
+        vm.startRecordingOrTimer()
+        await pumpUntil({ vm.thinkingTimeCountdown == 10 }, "the window never started")
+        await clock.advance(by: .seconds(3))
+
+        vm.voiceCommandCoordinator.handleRecognizedCommand(.answer)
+        await pumpUntil({ vm.quizState == .recording }, "'answer' did not open the mic")
+        await clock.advance(by: .seconds(8))
+        #expect(!audio.playedData.contains(answer), "the answer line played on the spoken command")
+        vm.taskBag.cancelAll()
     }
 
     /// WHY: with read-aloud off nothing may speak; the screen carries the

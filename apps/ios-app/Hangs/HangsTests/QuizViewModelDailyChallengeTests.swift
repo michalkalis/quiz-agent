@@ -147,7 +147,7 @@ struct QuizViewModelDailyChallengeTests {
     /// with Play Again and the upsell (one challenge a day). #243 decision 5
     /// (founder 2026-11-24) changed what it says: it used to stay silent with
     /// nothing armed; now, like every round end, it says "Hotovo, X z 5.
-    /// Znova, alebo domov?" and listens ("znova" starts an ordinary round,
+    /// …" and listens (#248: "ďalší" starts an ordinary round,
     /// `QuizEndVoiceTests`).
     @Test("the last answer ends on the daily round end, which says the round-end line and listens")
     func lastAnswerEndsOnDailyRoundEnd() async {

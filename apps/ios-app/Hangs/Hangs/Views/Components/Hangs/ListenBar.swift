@@ -495,7 +495,7 @@ struct ListenBar: View {
     /// The heard label, while there is one and the bar is listening.
     private var heardCaption: Text? {
         guard let heard, !isBusy else { return nil }
-        return Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language))
+        return Text(verbatim: VoiceCommandLexicon.heardCaption(heard.command, language: language, on: heard.screen))
     }
 
     /// The caption for the bar's state, without the live preview — also what

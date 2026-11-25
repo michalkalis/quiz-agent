@@ -19,12 +19,12 @@ struct ResultAnswerPanel: View {
     enum SaidLine: Equatable {
         /// A miss: struck through.
         case missed(String)
-        /// TF build 90: accepted, but heard as something else ("solo" for
-        /// "soľ"). Quiet and unstruck: the answer counted.
+        /// Accepted, but worded differently ("solo" for "soľ"). Unstruck: the
+        /// answer counted.
         case heard(String)
     }
 
-    /// "the answer", or "the question" (recap).
+    /// "Correct answer", or "the question" (recap).
     let answerLabel: LocalizedStringKey
     /// The answer, or in recap mode the question stem.
     let answerText: String
@@ -60,7 +60,7 @@ struct ResultAnswerPanel: View {
 
             if let saidLine {
                 said(saidLine)
-                    .padding(.top, Metrics.labelGap)
+                    .padding(.top, Metrics.blockGap)
             }
 
             if let explanation {
@@ -87,23 +87,25 @@ struct ResultAnswerPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// One quiet line: "you said: ~~X~~" on a miss, "heard: X" on an accepted
-    /// answer that was transcribed differently.
+    /// "Your answer" and what the player said below it, smaller and muted:
+    /// struck through on a miss, plain when it was accepted worded differently.
     private func said(_ line: SaidLine) -> some View {
-        Group {
-            switch line {
-            case let .missed(answer):
-                Text("you said") + Text(verbatim: ": ") + Text(verbatim: answer).strikethrough(pattern: .solid)
-            case let .heard(answer):
-                Text("heard", comment: "Result card: label before the transcript of an accepted answer that differs from the correct answer, e.g. 'heard: solo'")
-                    + Text(verbatim: ": ") + Text(verbatim: answer)
+        VStack(alignment: .leading, spacing: Metrics.labelGap) {
+            HangsSectionLabel(text: "Your answer")
+            Group {
+                switch line {
+                case let .missed(answer):
+                    Text(verbatim: answer).strikethrough(pattern: .solid)
+                case let .heard(answer):
+                    Text(verbatim: answer)
+                }
             }
+            .font(.hangsBody)
+            .foregroundStyle(Theme.Hangs.Colors.muted)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier(line.identifier)
         }
-        .font(.hangsBody)
-        .foregroundStyle(Theme.Hangs.Colors.muted)
-        .lineLimit(2)
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityIdentifier(line.identifier)
     }
 
     // MARK: Explanation (internal scroll, never clips the screen)

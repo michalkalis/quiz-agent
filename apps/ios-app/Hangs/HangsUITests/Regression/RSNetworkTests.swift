@@ -113,7 +113,7 @@ final nonisolated class RSNetworkTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 10)
-        result.assertVerdictContains("Nailed it")
+        result.assertVerdictContains("Correct")
         XCTAssertFalse(error.title.exists, "RS-36: the error screen stayed up after a successful retry")
         RSFlow.assertAlive(app, "RS-36")
     }

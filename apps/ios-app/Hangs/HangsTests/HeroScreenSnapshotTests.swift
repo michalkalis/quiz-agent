@@ -103,6 +103,8 @@ enum HeroScreen: String, CaseIterable {
     /// #188 G9: a wrong answer long enough that the meta row must wrap rather
     /// than cut the driver's answer to "…" at large text.
     case resultMissed
+    /// #248.2: a skip, a muted headline over the revealed answer, no "Your answer".
+    case resultSkipped
 
     func make() async -> AnyView {
         switch self {
@@ -140,6 +142,16 @@ enum HeroScreen: String, CaseIterable {
             let evaluation = Evaluation(
                 userAnswer: "Somewhere on the Rhône, I think Lyon or maybe Marseille",
                 result: .incorrect, points: 0.0,
+                correctAnswer: "Paris", questionId: Question.preview.id,
+                explanation: Question.preview.explanation
+            )
+            vm.quizState = .showingResult(question: Question.preview, evaluation: evaluation)
+            return AnyView(ResultView(viewModel: vm, debugSurfaces: false))
+
+        case .resultSkipped:
+            let vm = Self.quizViewModel()
+            let evaluation = Evaluation(
+                userAnswer: "", result: .skipped, points: 0.0,
                 correctAnswer: "Paris", questionId: Question.preview.id,
                 explanation: Question.preview.explanation
             )

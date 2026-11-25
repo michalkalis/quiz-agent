@@ -1,8 +1,7 @@
 # texts
 0/10
-Geography
-Nailed it
-the answer
+Correct
+Correct answer
 Paris
 why
 hear it
@@ -14,7 +13,6 @@ Settings
 # identifiers
 question.progress
 question.counter
-question.category
 result.verdict
 result.answer
 result.hearIt

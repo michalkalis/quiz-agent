@@ -22,24 +22,29 @@ struct HangsDeckCard<Accessory: View, Content: View>: View {
     /// category shrinks to a dot in its colour plus its name, so a screen that is
     /// read (a result) is not also a colour field.
     var isCalm = false
+    /// #248.2: false drops the chip/accessory row altogether (the result card
+    /// opens with the verdict as its headline and carries no category).
+    var showsHeader = true
     @ViewBuilder var accessory: () -> Accessory
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: DeckCardMetrics.headerGap) {
-            HStack(alignment: .center) {
-                if let categoryName {
-                    if isCalm {
-                        HangsCategoryDotLabel(name: categoryName, dot: style.fill, identifier: categoryIdentifier)
-                    } else {
-                        HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+            if showsHeader {
+                HStack(alignment: .center) {
+                    if let categoryName {
+                        if isCalm {
+                            HangsCategoryDotLabel(name: categoryName, dot: style.fill, identifier: categoryIdentifier)
+                        } else {
+                            HangsCategoryChip(name: categoryName, identifier: categoryIdentifier)
+                        }
                     }
+                    Spacer(minLength: Theme.Hangs.Spacing.xs)
+                    accessory()
                 }
-                Spacer(minLength: Theme.Hangs.Spacing.xs)
-                accessory()
+                // Keeps the header row's height when there is neither chip nor accessory.
+                .frame(minHeight: DeckCardMetrics.chipHeight)
             }
-            // Keeps the header row's height when there is neither chip nor accessory.
-            .frame(minHeight: DeckCardMetrics.chipHeight)
             content()
         }
         .foregroundStyle(isCalm ? Theme.Hangs.Colors.ink : style.text)
@@ -76,6 +81,7 @@ extension HangsDeckCard where Accessory == EmptyView {
         categoryName: String?,
         categoryIdentifier: String? = nil,
         isCalm: Bool = false,
+        showsHeader: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.init(
@@ -83,6 +89,7 @@ extension HangsDeckCard where Accessory == EmptyView {
             categoryName: categoryName,
             categoryIdentifier: categoryIdentifier,
             isCalm: isCalm,
+            showsHeader: showsHeader,
             accessory: { EmptyView() },
             content: content
         )

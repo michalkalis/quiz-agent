@@ -208,10 +208,10 @@ struct ResultViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.verdict") }
-            #expect(throws: Never.self) { try tree.find(text: "Nailed it") }
+            #expect(throws: Never.self) { try tree.find(text: "Correct") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
             // No competing verdict may appear on the same screen.
-            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Wrong") }
             #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
     }
@@ -227,11 +227,11 @@ struct ResultViewStateContractTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.verdict") }
-            #expect(throws: Never.self) { try tree.find(text: "Missed") }
-            #expect(throws: Never.self) { try tree.find(text: "the answer") }
+            #expect(throws: Never.self) { try tree.find(text: "Wrong") }
+            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct") }
             #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
     }
@@ -254,8 +254,8 @@ struct ResultViewStateContractTests {
             #expect(throws: Never.self) { try tree.find(text: "Skipped") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.continue") }
             #expect(throws: (any Error).self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Wrong") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct") }
         }
     }
 }

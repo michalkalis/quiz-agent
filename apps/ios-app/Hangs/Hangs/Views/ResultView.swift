@@ -7,8 +7,8 @@
 //  never clip — only the explanation scrolls, inside the answer card.
 //
 //  #224 (founder, TF 2026-11-02, canvas B1b) makes it calm: one neutral card,
-//  the verdict a quiet label in its header (green only when right), the answer
-//  big, the rest demoted. Zone views live in ResultScreenSections /
+//  the answer big, the rest demoted. #248.2 (variant A): the verdict is the
+//  card's headline, no category chip. Zone views live in ResultScreenSections /
 //  ResultAnswerPanel / ResultFooter. SourceWebView sheet preserved.
 //
 //  #132 (founder, 2026-07-29): the band's replay-question speaker and the meta
@@ -171,16 +171,16 @@ struct ResultView: View {
     /// dot and a name; the verdict is a quiet label in the header and the only
     /// green is a right answer.
     private var resultCard: some View {
+        // #248.2 (founder 2026-11-25, variant A): no category on the card; the
+        // verdict is its headline, then the answer, what the player said, why.
         HangsDeckCard(
-            // The dot never takes the correct-answer mint: green means "right" here.
             style: deckIdentity.notCorrectStyle,
-            categoryName: deckIdentity.chipName,
-            categoryIdentifier: "question.category",
-            isCalm: true
+            categoryName: nil,
+            isCalm: true,
+            showsHeader: false
         ) {
-            ResultVerdictLabel(verdict: verdict, streak: viewModel.resultStreak)
-        } content: {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
+                ResultVerdictLabel(verdict: verdict, streak: viewModel.resultStreak)
                 ResultAnswerPanel(
                     answerLabel: answerLabel,
                     answerText: answerText,
@@ -267,7 +267,7 @@ struct ResultView: View {
     }
 
     private var answerLabel: LocalizedStringKey {
-        isRecap ? "the question" : "the answer"
+        isRecap ? "the question" : "Correct answer"
     }
 
     private var answerText: String {
@@ -282,9 +282,9 @@ struct ResultView: View {
         return question.labelledAnswer(raw)
     }
 
-    /// What the driver said, under the answer: struck through on a miss; on an
-    /// accepted answer only when it was heard as something else (TF build 90);
-    /// never on a skip (#131 Track D: nothing was said).
+    /// "Your answer", under the right one: struck through on a miss; on an
+    /// accepted answer only when it is worded differently (#248.2); never on a
+    /// skip (#131 Track D: nothing was said).
     private var saidLine: ResultAnswerPanel.SaidLine? {
         guard let said = viewModel.resultEvaluation?.userAnswer,
               !said.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
@@ -295,7 +295,7 @@ struct ResultView: View {
         }
     }
 
-    /// Whether the transcript reads differently from the answer on the card:
+    /// Whether the player's answer reads differently from the answer on the card:
     /// case, accents and surrounding spaces don't count, and on MCQ a key and
     /// its option text are the same answer.
     private func heardDiffers(_ said: String) -> Bool {

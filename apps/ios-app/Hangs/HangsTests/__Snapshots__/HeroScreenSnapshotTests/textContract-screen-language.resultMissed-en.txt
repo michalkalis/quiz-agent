@@ -1,10 +1,10 @@
 # texts
 0/10
-Geography
-Missed
-the answer
+Wrong
+Correct answer
 Paris
-you said: Somewhere on the Rhône, I think Lyon or maybe Marseille
+Your answer
+Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
 hear it
 Paris has been the capital of France since the 10th century.
@@ -15,7 +15,6 @@ Settings
 # identifiers
 question.progress
 question.counter
-question.category
 result.verdict
 result.answer
 result.said

@@ -1,8 +1,7 @@
 # texts
 0/10
-Geography
-Máš to
-správna odpoveď
+Správne
+Správna odpoveď
 Paris
 prečo
 vypočuj si
@@ -14,7 +13,6 @@ Nastavenia
 # identifiers
 question.progress
 question.counter
-question.category
 result.verdict
 result.answer
 result.hearIt

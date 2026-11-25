@@ -1,10 +1,10 @@
 # texts
 0/10
-Geography
-Vedle
-správná odpověď
+Špatně
+Správná odpověď
 Paris
-tvoje odpověď: Somewhere on the Rhône, I think Lyon or maybe Marseille
+Tvoje odpověď
+Somewhere on the Rhône, I think Lyon or maybe Marseille
 proč
 poslechni si
 Paris has been the capital of France since the 10th century.
@@ -15,7 +15,6 @@ Nastavení
 # identifiers
 question.progress
 question.counter
-question.category
 result.verdict
 result.answer
 result.said

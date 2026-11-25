@@ -7,8 +7,8 @@
 //  ResultFooter.swift.
 //
 //  #224 (founder, TF 2026-11-02, canvas B1b): the result is calm. One neutral
-//  card, the verdict said once in its header (green only when right), the
-//  answer big, the rest quiet.
+//  card, the answer big, the rest quiet. #248.2 (founder 2026-11-25, variant A):
+//  the verdict is the card's headline, no category on the card.
 //
 //  The #127 zero-scroll rule still holds: card and footer are fixed zones;
 //  only the explanation scrolls, inside the card.
@@ -24,14 +24,14 @@ enum ResultVerdict {
     case incorrect
     case neutral
     /// #131 Track D: a skip is not a failure, distinct from `.incorrect` so it
-    /// never reads "Missed" over an answer the driver never gave.
+    /// never reads "Wrong" over an answer the driver never gave.
     case skipped
 
     /// The verdict word (nil = neutral, no word).
     var word: LocalizedStringKey? {
         switch self {
-        case .correct: return "Nailed it"
-        case .incorrect: return "Missed"
+        case .correct: return "Correct"
+        case .incorrect: return "Wrong"
         case .skipped: return "Skipped"
         case .neutral: return nil
         }
@@ -48,34 +48,48 @@ enum ResultVerdict {
     }
 }
 
-// MARK: - Verdict label (#224, B1b)
+// MARK: - Verdict label (#248.2, variant A "verdict as the headline")
 
-/// The verdict, said once and quietly in the card's header: a glyph and a word.
-/// Green only for a right answer; a miss and a skip stay in the muted text
-/// colour (a wrong answer reads neutral, never red).
+/// The verdict, the headline of the result card: a large bold word with a small
+/// glyph. Green for right, the miss pink for wrong, muted for a skip.
 struct ResultVerdictLabel: View {
     let verdict: ResultVerdict
     /// #240.9: right answers in a row this round, said beside "Correct" from 3.
     var streak: Int? = nil
 
+    private enum Metrics {
+        static let wordSize: CGFloat = 30
+    }
+
     var body: some View {
         if let word = verdict.word, let symbol = verdict.symbol {
-            HStack(spacing: Theme.Hangs.Spacing.xxs) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                 Image(systemName: symbol)
+                    .font(.hangsBody.weight(.bold))
                     .accessibilityHidden(true)
                 Text(word)
+                    .font(.hangsDisplay(Metrics.wordSize))
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("result.verdict")
                 if let streak {
                     Text(verbatim: "·")
                         .accessibilityHidden(true)
                     Text("\(streak) in a row")
+                        .font(.hangsBody.weight(.semibold))
                         .accessibilityIdentifier("result.streak")
                 }
             }
-            .font(.hangsBody.weight(.semibold))
-            .foregroundStyle(verdict == .correct ? Theme.Hangs.Colors.successText : Theme.Hangs.Colors.muted)
+            .foregroundStyle(color)
             .lineLimit(1)
+            .minimumScaleFactor(0.6)
+        }
+    }
+
+    private var color: Color {
+        switch verdict {
+        case .correct: Theme.Hangs.Colors.successText
+        case .incorrect: Theme.Hangs.Colors.missText
+        case .skipped, .neutral: Theme.Hangs.Colors.muted
         }
     }
 }

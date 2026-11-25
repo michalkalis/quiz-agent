@@ -23,13 +23,13 @@
 5. **Hlas na konci:** „Máš správne 1 z 5 odpovedí.“ (nie len „1 z 5“; rodovo neutrálne), odmena „Za odmenu máš dnes 10 otázok navyše.“, ponuka „Chceš hrať ďalší kvíz? Povedz: ďalší. Alebo otvoriť úvodnú obrazovku? Povedz: domov.“ Povel **„ďalší“** (nie „ďalší kvíz“, nie „znova“).
 6. **„Ďalší kvíz“** = hneď ďalší kvíz s rovnakým nastavením (po dennej výzve posledný bežný kvíz).
 
-Otvorené (founder): kedy a koľko odmeny za dennú výzvu (aj pri zlom skóre? 4–5 správnych → 5 / 10 otázok?), „zistiť, ako to robia iné appky“ → 248.5.
+Otvorené (founder): kedy a koľko odmeny za dennú výzvu (aj pri zlom skóre? 4–5 správnych → 5 / 10 otázok?), „zistiť, ako to robia iné appky“ → 248.5 (rešerš odmien).
 
 ## Kroky
 
 | # | Čo | Kde | Stav |
 |---|----|-----|------|
-| 248.0 | Pauza pred „Premýšľaj“: výzva hneď po otázke, mikrofón na povely až po nej | appka | PR #985 |
+| 248.0 | Pauza pred „Premýšľaj“: výzva hneď po otázke, mikrofón na povely až po nej | appka | PR #985 (pauza pred „Premýšľaj“) |
 | 248.1 | Hlas: dlhá výzva len pri 1. otázke; „Odpovedaj.“ len pred automatickým mikrofónom; veta na konci + povel „ďalší“ (sk/cs/en/uk) | appka | [ ] |
 | 248.2 | Výsledok otázky podľa A (texty vyššie, bez kategórie, bez štatistík) + hlasová veta „Nesprávne. Správna odpoveď: …“ | appka | [ ] |
 | 248.3 | Koniec kvízu podľa B: denná výzva aj bežný kvíz; „Ďalší kvíz“, zdieľanie v hornej lište | appka | [ ] |

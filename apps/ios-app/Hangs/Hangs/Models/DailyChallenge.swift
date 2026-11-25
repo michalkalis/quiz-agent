@@ -69,6 +69,16 @@ nonisolated struct DailyChallengeState: Codable, Sendable, Equatable {
     }
 }
 
+extension DailyChallengeState {
+    /// Extra questions the finished challenge left for today; nil when none
+    /// (not finished, used up, a subscriber, an older server). What the
+    /// daily round end shows and its spoken line says (#248).
+    var earnedBonusLeft: Int? {
+        guard status == .played, summary != nil, let left = bonusLeft, left > 0 else { return nil }
+        return left
+    }
+}
+
 /// A finished challenge, computed live by the server on every request.
 nonisolated struct DailySummary: Codable, Sendable, Equatable {
     let score: Int

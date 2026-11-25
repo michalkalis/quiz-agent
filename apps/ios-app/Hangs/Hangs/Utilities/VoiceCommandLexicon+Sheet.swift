@@ -23,6 +23,8 @@ extension VoiceCommandLexicon {
         language: CommandLanguage,
         on screen: VoiceCommandScreen
     ) -> [String] {
+        // #248: at the round end "next" means the next quiz, with words of its own.
+        if screen == .setEnd, command == .next { return roundEndNextVariants(for: language) }
         let base = variants(for: command, language: language)
         let buttons = buttonVariants(for: command, language: language, on: screen)
         switch screen {

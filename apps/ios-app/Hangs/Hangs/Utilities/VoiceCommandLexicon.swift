@@ -44,6 +44,8 @@
 //
 //  #243 decision 5 (founder 2026-11-24): the round end asks "Znova, alebo
 //  domov?", so "home" is back as a fifth command, on that screen only.
+//  #248 (founder 2026-11-25): the round end offers the next quiz instead,
+//  so there "next" („ďalší“) replaces "again" (`variants(for:language:on:)`).
 //
 
 import Foundation
@@ -79,7 +81,7 @@ enum VoiceCommandScreen: Sendable, Equatable {
     /// failure does not need a tap.
     case error
     /// #188 G3, #243 decision 5: every round end (score, recap, daily
-    /// challenge) — "znova" plays again, "domov" goes Home.
+    /// challenge). #248: "ďalší" starts the next quiz, "domov" goes Home.
     case setEnd
     /// #243.8: a result set to wait for "next", once its verdict has ended.
     case result
@@ -101,8 +103,9 @@ enum VoiceCommandLexicon {
         // confirm: confirming an empty field IS a skip.
         case .noAnswer: [.repeatQuestion, .again, .next]
         case .error: [.again]
-        // #243 decision 5: the line asks "Znova, alebo domov?" in this order.
-        case .setEnd: [.again, .home]
+        // #248 (founder 2026-11-25): the line offers "ďalší", then "domov",
+        // in this order.
+        case .setEnd: [.next, .home]
         case .result: [.next]
         }
     }

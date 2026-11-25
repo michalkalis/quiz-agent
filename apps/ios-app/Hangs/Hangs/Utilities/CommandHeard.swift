@@ -17,6 +17,8 @@ struct CommandHeard: Equatable, Sendable {
     /// 0 at the first resemblance, rising to just under 1 at the command's
     /// fire threshold. Exactly 1 only once the command fired.
     let certainty: Double
+    /// Where it was heard: the round end names "next" its own way (#248).
+    var screen: VoiceCommandScreen? = nil
 
     var hasFired: Bool { certainty >= 1 }
 
@@ -34,21 +36,21 @@ struct CommandHeard: Equatable, Sendable {
     /// How long the full fill stays after a fire before it clears.
     static let firedHold: Duration = .milliseconds(600)
 
-    static func fired(_ command: VoiceCommand) -> CommandHeard {
-        CommandHeard(command: command, certainty: 1)
+    static func fired(_ command: VoiceCommand, on screen: VoiceCommandScreen? = nil) -> CommandHeard {
+        CommandHeard(command: command, certainty: 1, screen: screen)
     }
 
     /// The preview for words in progress that score `score` against
     /// `command`, or `nil` below the first resemblance. The fill is mapped
     /// onto the command's own threshold, so the same similarity fills a
     /// strict command ("next") less than a lenient one ("again").
-    static func inProgress(_ command: VoiceCommand, score: Double) -> CommandHeard? {
+    static func inProgress(_ command: VoiceCommand, score: Double, on screen: VoiceCommandScreen? = nil) -> CommandHeard? {
         guard score >= resemblanceFloor else { return nil }
         let sensitivity = command.sensitivity
         // "next" fires only from a final, so its final floor is its threshold.
         let threshold = sensitivity.waitsForFinal ? sensitivity.finalFloor : sensitivity.volatileFloor
         let progress = (score - resemblanceFloor) / (threshold - resemblanceFloor)
-        return CommandHeard(command: command, certainty: min(max(progress, 0), unfiredCeiling))
+        return CommandHeard(command: command, certainty: min(max(progress, 0), unfiredCeiling), screen: screen)
     }
 }
 

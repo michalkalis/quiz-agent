@@ -3,9 +3,12 @@
 //  HangsTests
 //
 //  #243 decision 5 (founder 2026-11-24): every round end (score, recap,
-//  daily challenge) says "Hotovo, 7 z 10. Znova, alebo domov?", listens for
-//  "znova" and "domov", and on silence asks once more, then waits. Was #188
-//  G3 (score screen only, "znova" only) in QuizEndVoiceTests.
+//  daily challenge) says its line, listens, and on silence asks once more,
+//  then waits. Was #188 G3 (score screen only, "znova" only) in
+//  QuizEndVoiceTests. #248 (founder 2026-11-25): the line is "Hotovo. Máš
+//  správne 7 z 10 odpovedí. [Za odmenu …] Chceš hrať ďalší kvíz? Povedz:
+//  ďalší. Alebo otvoriť úvodnú obrazovku? Povedz: domov." and "ďalší"
+//  replaces "znova".
 //
 
 import Clocks
@@ -20,7 +23,7 @@ private func drain() async {
     }
 }
 
-@Suite("#243 decision 5 — the round end asks 'Znova, alebo domov?'")
+@Suite("#243 decision 5, #248 — the round end offers 'ďalší' or 'domov'")
 @MainActor
 struct RoundEndVoiceTests {
     private struct Rig {
@@ -59,10 +62,16 @@ struct RoundEndVoiceTests {
     }
 
     /// The round end's line with the words it really listens for.
-    private func roundEndLine(_ rig: Rig, correct: Int = 7) -> String {
+    private func roundEndLine(_ rig: Rig, correct: Int = 7, bonus: Int? = nil) -> String {
         SpokenPrompt.setFinishedLine(
-            correct: correct, total: 10, commands: VoiceCommandLexicon.commands(on: .setEnd), language: rig.language
+            correct: correct, total: 10, bonusQuestions: bonus,
+            commands: VoiceCommandLexicon.commands(on: .setEnd), language: rig.language
         )
+    }
+
+    /// The word the round end offers for the next quiz („ďalší“).
+    private func nextWord(_ rig: Rig) -> String {
+        VoiceCommandLexicon.spokenWord(.next, language: rig.language, on: .setEnd)
     }
 
     private func roundEndQuestion(_ rig: Rig) -> String? {
@@ -83,11 +92,12 @@ struct RoundEndVoiceTests {
         await drain()
     }
 
-    /// WHY (D3, #243 decision 5): the round ended in silence and the driver
-    /// never learned the score, nor what they could say next. The line says
-    /// both ("Hotovo, 7 z 10. Znova, alebo domov?"), the music gets its
-    /// volume back, and the screen listens on the quiet session like Home.
-    @Test("the round end says the score and its question, then a stable 'again' fires without waiting for a final")
+    /// WHY (D3, #243 decision 5; #248): the round ended in silence and the
+    /// driver never learned the score, nor what they could say next. The line
+    /// says both, the music gets its volume back, and the screen listens on
+    /// the quiet session like Home. "Ďalší" starts the next quiz, as the
+    /// founder asked (2026-11-25), not "znova".
+    @Test("the round end says the score and its offer, then 'next' starts the next quiz")
     func setEndSpeaksScoreAndListens() async {
         let rig = makeRig()
         await finishRound(rig)
@@ -96,15 +106,24 @@ struct RoundEndVoiceTests {
         #expect(rig.audio.deactivateSessionCallCount >= 1, "the quiz session was released")
         #expect(rig.audio.setupQuietListeningSessionCallCount >= 1, "listening must not duck the music")
 
-        // WHY (founder 2026-11-22): "again" is the most lenient command and no
-        // longer waits for a final anywhere — a driver whose recognizer never
-        // finalizes at the quiet score screen must still be able to replay.
         var recognized: [VoiceCommand] = []
         rig.vm.voiceCommandCoordinator.onCommandRecognized = { recognized.append($0) }
-        let again = VoiceCommandLexicon.spokenWord(.again, language: rig.language)
-        rig.silence.simulateCommandTranscript(again, isFinal: false)
-        rig.silence.simulateCommandTranscript(again, isFinal: false)
-        await pumpUntil({ recognized == [.again] }, "a stable volatile 'again' still waited for a final")
+        rig.silence.simulateCommandTranscript(nextWord(rig))
+        await pumpUntil({ recognized == [.next] }, "'next' did not act at the round end")
+        await pumpUntil({ rig.network.createSessionCallCount == 1 }, "'next' did not start a quiz")
+    }
+
+    /// WHY (#248, founder 2026-11-25): "znova" after a daily challenge made
+    /// no sense, so the round end no longer takes it; a passenger's "again"
+    /// must not start a quiz.
+    @Test("'again' no longer acts at the round end")
+    func againIsInert() async {
+        let rig = makeRig()
+        await finishRound(rig)
+        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.again, language: rig.language))
+        await drain()
+        #expect(rig.vm.quizState == .finished)
+        #expect(rig.network.createSessionCallCount == 0)
     }
 
     /// WHY (#243 decision 5): "domov" is the second word the line names; it
@@ -180,8 +199,8 @@ struct RoundEndVoiceTests {
         await listensAtRoundEnd(rig, "the failed re-ask left the round end deaf")
         #expect(rig.audio.playOpusCallCount == 0)
 
-        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.again, language: rig.language))
-        await pumpUntil({ rig.vm.quizState != .finished }, "'again' did not work without the line")
+        rig.silence.simulateCommandTranscript(nextWord(rig))
+        await pumpUntil({ rig.vm.quizState != .finished }, "'next' did not work without the line")
     }
 
     /// WHY (#235): a slow server must not hold the round end silent and deaf.
@@ -270,18 +289,127 @@ struct RoundEndVoiceTests {
     }
 
     /// WHY (#243 decision 5): the daily challenge end used to say nothing.
-    /// It says the line too; with no Play Again there (one challenge a day),
-    /// "znova" starts an ordinary round rather than the played day again.
-    @Test("the daily challenge end says the line; 'again' starts an ordinary round")
-    func dailyEndSpeaksAndAgainStartsARound() async {
+    /// It says the line too; with no replay there (one challenge a day),
+    /// "ďalší" starts an ordinary round rather than the played day again.
+    @Test("the daily challenge end says the line; 'next' starts an ordinary round")
+    func dailyEndSpeaksAndNextStartsARound() async {
         let rig = makeRig()
         rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
         await finishRound(rig, correct: 3)
         #expect(rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3)])
 
-        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.again, language: rig.language))
-        await pumpUntil({ rig.network.createSessionCallCount == 1 }, "'again' did not start a round")
-        #expect(rig.network.startDailyChallengeCallCount == 0, "'again' replayed the daily challenge")
+        rig.silence.simulateCommandTranscript(nextWord(rig))
+        await pumpUntil({ rig.network.createSessionCallCount == 1 }, "'next' did not start a round")
+        #expect(rig.network.startDailyChallengeCallCount == 0, "'next' replayed the daily challenge")
+    }
+
+    /// A finished daily challenge as the server reports it, with `left` extra
+    /// questions for today.
+    private static func finishedDaily(left: Int?) -> DailyChallengeState {
+        DailyChallengeState(
+            date: DailyChallengeDay(.now).isoDate, language: "en", status: .played, total: 5,
+            summary: DailySummary(
+                score: 3, total: 5, marks: [true, true, false, true, false], players: 2,
+                comparison: nil, rank: nil, bestHit: nil
+            ),
+            bonusOffer: 10, bonusLeft: left
+        )
+    }
+
+    /// WHY (#248, founder 2026-11-25): the reward is the reason to play the
+    /// daily challenge, so its end says it: "Za odmenu máš dnes 10 otázok
+    /// navyše." The number is the one the screen shows (the finished state).
+    @Test("a daily challenge that earned extra questions says how many")
+    func dailyEndSaysTheReward() async {
+        let rig = makeRig()
+        rig.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        await finishRound(rig, correct: 3)
+        #expect(rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3, bonus: 10)])
+    }
+
+    /// WHY (#235 beyond the happy path): the daily state is fetched before
+    /// the line. A slow server must not hold the round end silent and deaf:
+    /// at the prompt bound the line plays without the reward, the words work
+    /// while the fetch is still in flight, and its late answer says nothing.
+    @Test("a slow daily state: at the bound the line plays without the reward; the words work; the late answer stays silent",
+          arguments: [VoiceCommand.next, .home])
+    func slowDailyStateIsSkipped(command: VoiceCommand) async {
+        let rig = makeRig()
+        rig.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        let hold = rig.network.hold(.fetchDailyChallenge)
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        rig.vm.sessionCorrectCount = 3
+        await rig.vm.handleError(NetworkError.sessionFinished, context: .submission, fallbackMessage: "x")
+        await pumpUntil({ hold.heldCount == 1 }, "the daily state was never asked for")
+        await rig.clock.advance(by: .seconds(QuizViewModel.promptFetchTimeoutSeconds) - .milliseconds(1))
+        await drain()
+        #expect(rig.network.synthesizedTexts.isEmpty, "the line did not wait for the daily state")
+
+        await rig.clock.advance(by: .milliseconds(1))
+        await pumpUntil({ rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3)] }, "no line at the bound")
+        await listensAtRoundEnd(rig, "the slow daily state held the round end deaf")
+        #expect(rig.audio.playOpusCallCount == 1)
+
+        let word = VoiceCommandLexicon.spokenWord(command, language: rig.language, on: .setEnd)
+        rig.silence.simulateCommandTranscript(word)
+        await pumpUntil({ rig.vm.quizState != .finished }, "'\(word)' did not act while the fetch was held")
+
+        hold.release()
+        await drain()
+        // A started quiz may fetch its own lines; none of them is the round end's.
+        let offer = roundEndQuestion(rig) ?? "-"
+        #expect(rig.network.synthesizedTexts.count { $0.contains(offer) } == 1, "the late answer said a second line")
+        #expect(!rig.network.synthesizedTexts.contains(roundEndLine(rig, correct: 3, bonus: 10)))
+    }
+
+    /// WHY: the buttons never wait for the line. Tapped while the daily state
+    /// is still in flight, they act at once, and the answer that lands later
+    /// says nothing over the next screen.
+    @Test("the buttons act while the daily state is held, and its late answer stays silent", arguments: [false, true])
+    func buttonsWhileDailyStateHeld(nextQuiz: Bool) async {
+        let rig = makeRig()
+        rig.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        let hold = rig.network.hold(.fetchDailyChallenge)
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        await rig.vm.handleError(NetworkError.sessionFinished, context: .submission, fallbackMessage: "x")
+        await pumpUntil({ hold.heldCount == 1 }, "the daily state was never asked for")
+        let offer = roundEndQuestion(rig) ?? "-"
+
+        if nextQuiz {
+            rig.vm.playAgainFromRoundEnd() // the Next quiz button
+            await pumpUntil({ rig.network.createSessionCallCount == 1 }, "Next quiz did not start a quiz")
+        } else {
+            rig.vm.resetToHome() // the Home button
+            #expect(rig.vm.quizState == .idle)
+        }
+        hold.release()
+        await rig.clock.advance(by: .seconds(QuizViewModel.promptFetchTimeoutSeconds))
+        await drain()
+        #expect(!rig.network.synthesizedTexts.contains { $0.contains(offer) }, "a round-end line followed the button")
+        #expect(rig.network.fetchDailyChallengeCallCount == 1)
+    }
+
+    /// WHY: nothing earned (used up, a subscriber) or nothing known (the
+    /// fetch failed, #235) means no reward sentence; the score and the offer
+    /// still come, and an ordinary round never asks for the daily state.
+    @Test("no reward, or no daily state, says the line without it", arguments: [true, false])
+    func dailyEndWithoutReward(fetchFails: Bool) async {
+        let rig = makeRig()
+        if fetchFails {
+            rig.network.setNetworkCondition(.offline, for: [.fetchDailyChallenge])
+        } else {
+            rig.network.stubbedDailyState = Self.finishedDaily(left: 0)
+        }
+        rig.vm.activeDaily = DailyRound(day: DailyChallengeDay(.now), language: rig.vm.settings.language)
+        await finishRound(rig, correct: 3)
+        #expect(rig.network.synthesizedTexts == [roundEndLine(rig, correct: 3)])
+
+        let ordinary = makeRig()
+        ordinary.network.stubbedDailyState = Self.finishedDaily(left: 10)
+        await finishRound(ordinary)
+        #expect(ordinary.network.fetchDailyChallengeCallCount == 0)
+        #expect(ordinary.network.synthesizedTexts == [roundEndLine(ordinary)])
     }
 }
 
@@ -310,18 +438,98 @@ struct RoundEndWordTests {
         #expect(match(word, .setEnd, language) == nil)
     }
 
-    /// WHY (#243 decision 5): the founder's exact round-end lines.
-    @Test("the round-end line in every language", arguments: [
-        (CommandLanguage.slovak, "Hotovo, 7 z 10. Znova, alebo domov?", "Znova, alebo domov?"),
-        (.czech, "Hotovo, 7 z 10. Znovu, nebo domů?", "Znovu, nebo domů?"),
-        (.english, "Done, 7 out of 10. Again, or home?", "Again, or home?"),
-        (.ukrainian, "Готово, 7 з 10. Ще раз чи додому?", "Ще раз чи додому?"),
+    /// WHY (#248, founder 2026-11-25): „ďalší“ for the next quiz, plus the
+    /// forms people say („ďalšia“, „ďalej“ / „dál“, the button's "ďalší
+    /// kvíz"); never only the two words.
+    @Test("the next-quiz words act at the round end", arguments: [
+        (CommandLanguage.slovak, "ďalší"), (.slovak, "ďalšia"), (.slovak, "ďalej"), (.slovak, "ďalší kvíz"),
+        (.czech, "další"), (.czech, "dál"), (.czech, "další kvíz"),
+        (.english, "next"), (.english, "next quiz"),
+        (.ukrainian, "далі"), (.ukrainian, "наступна"), (.ukrainian, "наступна вікторина"),
     ])
-    func roundEndLines(_ language: CommandLanguage, _ line: String, _ question: String) {
+    func nextWords(_ language: CommandLanguage, _ word: String) {
+        #expect(match(word, .setEnd, language) == .next)
+    }
+
+    /// WHY (#248): the hint and the "I hear" label name the round end's own
+    /// word („ďalší“), not the question's „ďalšia“ the player did not say.
+    @Test("the round end's hint and captions name its words")
+    func displayWords() {
+        #expect(VoiceCommandLexicon.hint(on: .setEnd, language: .slovak) == "Povedz „ďalší“ alebo „domov“")
+        #expect(VoiceCommandLexicon.hint(on: .setEnd, language: .czech) == "Řekni „další“ nebo „domů“")
+        #expect(VoiceCommandLexicon.hint(on: .setEnd, language: .english) == #"Say "next" or "home""#)
+        #expect(VoiceCommandLexicon.heardCaption(.next, language: .slovak, on: .setEnd) == "počujem: „ďalší“")
+        #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .slovak, on: .setEnd) == "„ďalší“…")
+        #expect(VoiceCommandLexicon.heardCaption(.next, language: .slovak, on: .question) == "počujem: „ďalšia“")
+    }
+
+    /// WHY: "znova" is retired here, and the question's skip words would
+    /// start a whole quiz by surprise.
+    @Test("again and skip words do nothing at the round end", arguments: [
+        (CommandLanguage.slovak, "znova"), (.slovak, "preskoč"), (.czech, "znovu"), (.czech, "přeskoč"),
+        (.english, "again"), (.english, "skip"), (.ukrainian, "ще раз"), (.ukrainian, "пропусти"),
+    ])
+    func retiredWords(_ language: CommandLanguage, _ word: String) {
+        #expect(match(word, .setEnd, language) == nil)
+    }
+
+    /// WHY (#248, founder 2026-11-25): the founder's exact round-end lines.
+    /// The re-ask on silence is the offer alone.
+    @Test("the round-end line in every language", arguments: [
+        (
+            CommandLanguage.slovak,
+            "Hotovo. Máš správne 7 z 10 odpovedí.",
+            "Chceš hrať ďalší kvíz? Povedz: ďalší. Alebo otvoriť úvodnú obrazovku? Povedz: domov."
+        ),
+        (
+            .czech,
+            "Hotovo. Máš správně 7 z 10 odpovědí.",
+            "Chceš hrát další kvíz? Řekni: další. Nebo otevřít úvodní obrazovku? Řekni: domů."
+        ),
+        (
+            .english,
+            "Done. You got 7 out of 10 right.",
+            "Want to play another quiz? Say: next. Or go to the home screen? Say: home."
+        ),
+        (
+            .ukrainian,
+            "Готово. У тебе правильно 7 з 10 відповідей.",
+            "Хочеш зіграти ще одну вікторину? Скажи: далі. Або відкрити головний екран? Скажи: додому."
+        ),
+    ])
+    func roundEndLines(_ language: CommandLanguage, _ score: String, _ offer: String) {
         let commands = VoiceCommandLexicon.commands(on: .setEnd)
-        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: commands, language: language) == line)
-        #expect(SpokenPrompt.setEndQuestion(commands: commands, language: language) == question)
+        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: commands, language: language)
+            == score + " " + offer)
+        #expect(SpokenPrompt.setEndQuestion(commands: commands, language: language) == offer)
         // Nothing listens (commands off): the score alone, and no re-ask.
+        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [], language: language) == score)
         #expect(SpokenPrompt.setEndQuestion(commands: [], language: language) == nil)
+    }
+
+    /// WHY (#248): the reward sentence sits between the score and the offer,
+    /// and its noun agrees with the number (1 / 2–4 / 5+).
+    @Test("the reward sentence, with the right plural", arguments: [
+        (CommandLanguage.slovak, 10, "Za odmenu máš dnes 10 otázok navyše."),
+        (.slovak, 3, "Za odmenu máš dnes 3 otázky navyše."),
+        (.slovak, 1, "Za odmenu máš dnes 1 otázku navyše."),
+        (.czech, 10, "Za odměnu máš dnes 10 otázek navíc."),
+        (.czech, 2, "Za odměnu máš dnes 2 otázky navíc."),
+        (.english, 10, "As a reward you get 10 extra questions today."),
+        (.english, 1, "As a reward you get 1 extra question today."),
+        (.ukrainian, 10, "У нагороду маєш сьогодні 10 додаткових питань."),
+        (.ukrainian, 3, "У нагороду маєш сьогодні 3 додаткові питання."),
+        (.ukrainian, 21, "У нагороду маєш сьогодні 21 додаткове питання."),
+    ])
+    func rewardSentence(_ language: CommandLanguage, _ count: Int, _ sentence: String) {
+        let commands = VoiceCommandLexicon.commands(on: .setEnd)
+        let line = SpokenPrompt.setFinishedLine(
+            correct: 1, total: 5, bonusQuestions: count, commands: commands, language: language
+        )
+        let score = SpokenPrompt.setFinishedLine(correct: 1, total: 5, commands: [], language: language)
+        let offer = SpokenPrompt.setEndQuestion(commands: commands, language: language) ?? ""
+        #expect(line == [score, sentence, offer].joined(separator: " "))
+        #expect(SpokenPrompt.setFinishedLine(correct: 1, total: 5, bonusQuestions: 0, commands: commands, language: language)
+            == score + " " + offer)
     }
 }

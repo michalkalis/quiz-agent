@@ -196,9 +196,11 @@ struct UkrainianCommandGrammarTests {
         #expect(VoiceCommandLexicon.spokenChips([.again], language: .ukrainian) == ["«ще раз»"])
         #expect(VoiceCommandLexicon.recognizingCaption(.next, language: .ukrainian) == "«пропусти»…")
         #expect(VoiceCommandLexicon.listeningCaption(language: .ukrainian) == "СЛУХАЮ КОМАНДИ")
-        // #243 decision 5: the founder's Ukrainian round-end line.
-        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.again, .home], language: .ukrainian)
-            == "Готово, 7 з 10. Ще раз чи додому?")
+        // #248: the Ukrainian round-end line and hint (uk needs a native check).
+        #expect(SpokenPrompt.setFinishedLine(correct: 7, total: 10, commands: [.next, .home], language: .ukrainian)
+            == "Готово. У тебе правильно 7 з 10 відповідей. Хочеш зіграти ще одну вікторину? Скажи: далі. "
+            + "Або відкрити головний екран? Скажи: додому.")
+        #expect(VoiceCommandLexicon.hint(on: .setEnd, language: .ukrainian) == "Скажи «далі» або «додому»")
     }
 
     /// WHY: the app runs from iOS 26, and a device whose dictation lacks

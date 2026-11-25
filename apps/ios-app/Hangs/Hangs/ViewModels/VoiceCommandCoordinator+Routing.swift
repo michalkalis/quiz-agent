@@ -350,9 +350,10 @@ extension VoiceCommandCoordinator {
         case (.result, .next):
             continueToNext()
 
-        // #188 G3: the round end — play again (the Play Again button's path,
-        // the same pack since #200).
-        case (.setEnd, .again):
+        // #248 (founder 2026-11-25): the round end — "ďalší" starts the next
+        // quiz, what its Next quiz button does (`playAgainFromRoundEnd`: the
+        // same settings, after a daily challenge an ordinary quiz).
+        case (.setEnd, .next):
             playAgain()
 
         // #243 decision 5: the round end — Home, like its Home button.

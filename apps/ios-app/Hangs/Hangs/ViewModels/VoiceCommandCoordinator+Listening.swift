@@ -153,7 +153,7 @@ extension VoiceCommandCoordinator {
         if let screen = currentCommandScreen {
             // #136 (founder decision B): set-end listening runs under the QUIET
             // mixable session — external audio keeps playing while the app
-            // waits for "again". In-quiz windows keep whatever session
+            // waits for "next". In-quiz windows keep whatever session
             // startNewQuiz configured (ducking included).
             if screen == .setEnd {
                 configureQuietListeningSession()

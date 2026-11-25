@@ -82,7 +82,7 @@ struct CommandHeardPreviewTests {
             await coordinator.handleCommandTranscript(CommandTranscript(text: "repea", isFinal: false))
             await coordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
 
-            #expect(vm.commandHeard == .fired(.repeatQuestion))
+            #expect(vm.commandHeard == .fired(.repeatQuestion, on: .question))
 
             await clock.advance(by: CommandHeard.firedHold - .milliseconds(1))
             #expect(vm.commandHeard != nil, "the full fill is seen before it clears")
@@ -110,7 +110,7 @@ struct CommandHeardPreviewTests {
     func teardownClearsFiredPreview() async {
         let vm = makeVM()
         await vm.voiceCommandCoordinator.handleCommandTranscript(CommandTranscript(text: "repeat", isFinal: true))
-        #expect(vm.commandHeard == .fired(.repeatQuestion))
+        #expect(vm.commandHeard == .fired(.repeatQuestion, on: .question))
         vm.voiceCommandCoordinator.reset()
         #expect(vm.commandHeard == nil, "reset")
 

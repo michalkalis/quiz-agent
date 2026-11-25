@@ -147,7 +147,8 @@ struct PackProgressTests {
         #expect(rig.network.capturedPackId == "pack-1")
     }
 
-    @Test("spoken 'znova' at the end of a pack replays the pack")
+    // #248: the round end's word is "ďalší" (next) now, not "znova".
+    @Test("spoken 'next' at the end of a pack replays the pack")
     func spokenAgainAtSetEndReplaysPack() async {
         let rig = makeRig()
         await rig.vm.startNewQuiz(pack: pack)
@@ -158,9 +159,9 @@ struct PackProgressTests {
                         "the score screen never listened")
 
         let language = CommandLanguage.forQuizLanguage(rig.vm.currentSession?.language ?? rig.vm.settings.language)
-        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.again, language: language))
+        rig.silence.simulateCommandTranscript(VoiceCommandLexicon.spokenWord(.next, language: language, on: .setEnd))
 
-        await pumpUntil({ rig.network.createSessionCallCount == 2 }, "'znova' did not start again")
+        await pumpUntil({ rig.network.createSessionCallCount == 2 }, "'next' did not start again")
         #expect(rig.network.capturedPackId == "pack-1")
     }
 

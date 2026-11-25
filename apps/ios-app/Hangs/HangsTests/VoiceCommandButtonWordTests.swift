@@ -40,7 +40,8 @@ private let buttonTitles: [ButtonTitle] = [
     // The empty-answer sheet's own Next button reads "Ďalej" / "Dál" / "Далі".
     ButtonTitle(button: "Next (sheet)", screen: .noAnswer, expected: .next, sk: "Ďalej", cs: "Dál", en: "Next", uk: "Далі"),
     ButtonTitle(button: "Try Again", screen: .error, expected: .again, sk: "Skús znova", cs: "Zkus znovu", en: "Try Again", uk: "Спробуй ще раз"),
-    ButtonTitle(button: "Play Again", screen: .setEnd, expected: .again, sk: "Hraj znova", cs: "Hraj znovu", en: "Play Again", uk: "Зіграй ще раз"),
+    // #248 (founder 2026-11-25): the round end's main button is "Next quiz".
+    ButtonTitle(button: "Next quiz", screen: .setEnd, expected: .next, sk: "Ďalší kvíz", cs: "Další kvíz", en: "Next quiz", uk: "Наступна вікторина"),
     // #243 decision 5: "home" is a command at the round end again, so its Home button's title is too.
     ButtonTitle(button: "Home", screen: .setEnd, expected: .home, sk: "Úvod", cs: "Úvod", en: "Home", uk: "Додому"),
 ]

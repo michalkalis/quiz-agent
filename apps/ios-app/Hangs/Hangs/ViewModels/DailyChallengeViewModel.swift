@@ -83,8 +83,7 @@ final class DailyChallengeViewModel: ObservableObject {
 
     /// Extra questions still left after finishing; nil when none (0 = used up).
     var bonusLeft: Int? {
-        guard case .played = card, let left = state?.bonusLeft, left > 0 else { return nil }
-        return left
+        state?.earnedBonusLeft
     }
 
     /// Finished challenges, shown quietly once there is one.

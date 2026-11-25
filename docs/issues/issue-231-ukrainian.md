@@ -1,7 +1,7 @@
 # #231 — Ukrajinčina ako štvrtý jazyk
 
 **Triage:** enhancement · ready-for-agent
-**Status:** 2026-11-19 postavené a dvakrát nezávisle skontrolované (server, otázky, appka, texty); nálezy druhej kontroly opravené a nasadené, oprava appky v PR #919; zásoba **300 schválených otázok** (dávka 2, zimné sviatky, čerstvá zábava, všetko na predplatnom); uk je na serveri vypnutá; ďalší krok = TestFlight build na požiadanie foundera a kontrola rodeným hovorcom v appke (231.10, 231.11) — [stránka overenia](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
+**Status:** 2026-11-25 founder: „ukrajinstina uz moze ist do bety“ → uk je na serveri zapnutá pre kvíz (`SERVABLE_QUIZ_LANGUAGES=en,sk,cs,uk` v oboch env súboroch na serveri, záloha `.bak-2026-11-25-uk`); vidia ju TestFlight buildy 1.3 (od b90), App Store 1.2 ju v zozname jazykov neukáže; objednávky balíkov po ukrajinsky ostávajú vypnuté. Zásoba 300 schválených otázok (+77 čakajúcich, len v bete). Ďalší krok = kontrola rodeným hovorcom v appke (231.10, 231.11); oprava appky v PR #919 sa dostane do bety s najbližším buildom — [stránka overenia](https://claude.ai/artifact/E9tRubgL2ZeVmhh9Z7hXyZ)
 **Founder:** 2026-11-08 „pridaj ukrajinčinu do appky, na všetko, tak ako cz, sk a en“
 
 ## Cieľ

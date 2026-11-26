@@ -17,21 +17,24 @@ struct MultiplayerSettingsStore {
         var revealMode: RoomState.RevealMode?
         var thinkingSeconds: Int?
         var readsAloud: Bool?
+        /// #249.1: nil = all categories.
+        var categories: [String]?
         /// 2 = only picked rules are stored. Builds before #240.9 stored every
         /// rule without it (see `fromBefore240`).
         var format: Int?
 
         static let currentFormat = 2
 
-        init(revealMode: RoomState.RevealMode? = nil, thinkingSeconds: Int? = nil, readsAloud: Bool? = nil) {
+        init(revealMode: RoomState.RevealMode? = nil, thinkingSeconds: Int? = nil, readsAloud: Bool? = nil, categories: [String]? = nil) {
             self.revealMode = revealMode
             self.thinkingSeconds = thinkingSeconds
             self.readsAloud = readsAloud
+            self.categories = categories
             format = Self.currentFormat
         }
 
         init(_ settings: MultiplayerSettings) {
-            self.init(revealMode: settings.revealMode, thinkingSeconds: settings.thinkingSeconds, readsAloud: settings.readsAloud)
+            self.init(revealMode: settings.revealMode, thinkingSeconds: settings.thinkingSeconds, readsAloud: settings.readsAloud, categories: settings.categories)
         }
 
         var settings: MultiplayerSettings {
@@ -42,6 +45,7 @@ struct MultiplayerSettingsStore {
                 settings.thinkingSeconds = min(max(thinkingSeconds, range.lowerBound), range.upperBound)
             }
             if let readsAloud { settings.readsAloud = readsAloud }
+            if let categories { settings.categories = categories }
             return settings
         }
 
@@ -51,6 +55,7 @@ struct MultiplayerSettingsStore {
             case .revealMode: revealMode = settings.revealMode
             case .thinkingSeconds: thinkingSeconds = settings.thinkingSeconds
             case .readsAloud: readsAloud = settings.readsAloud
+            case .categories: categories = settings.categories
             }
         }
 
@@ -62,7 +67,8 @@ struct MultiplayerSettingsStore {
             Choices(
                 revealMode: revealMode == .round ? nil : revealMode,
                 thinkingSeconds: thinkingSeconds == 30 ? nil : thinkingSeconds,
-                readsAloud: readsAloud == true ? nil : readsAloud
+                readsAloud: readsAloud == true ? nil : readsAloud,
+                categories: categories
             )
         }
 
@@ -70,6 +76,7 @@ struct MultiplayerSettingsStore {
             case revealMode = "reveal_mode"
             case thinkingSeconds = "thinking_seconds"
             case readsAloud = "reads_aloud"
+            case categories
             case format
         }
     }

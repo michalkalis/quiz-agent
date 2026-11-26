@@ -30,7 +30,7 @@ struct RoomLobbyHostView: View {
                             .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
                     }
                     playerList
-                    if let packs, viewModel.packsEnabled() {
+                    if let packs {
                         contentRow(packs)
                     }
                     rulesRow
@@ -191,7 +191,7 @@ struct RoomLobbyHostView: View {
 
     @ViewBuilder private var contentSummary: some View {
         switch viewModel.content {
-        case .home: Text("Categories from Home")
+        case .categories: Text(verbatim: viewModel.categorySummary)
         case let .pack(_, title): Text(verbatim: title)
         }
     }

@@ -75,7 +75,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// Host: a rules change is on its way to the server.
     @Published var isSavingSettings = false
     /// #232 (5A): what the room plays; the host changes it in the lobby.
-    @Published var content: RoomContent = .home
+    @Published var content: RoomContent = .categories
 
     let settingsStore: MultiplayerSettingsStore
     let analytics: AnalyticsClient
@@ -91,6 +91,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     let names: PlayerNameStore
     /// #232 (5A): the host may pick a finished custom pack (server switch).
     let packsEnabled: () -> Bool
+    /// #249.1: the served extra categories (the solo list), offered when their switch is on.
+    let extraCategories: @MainActor () -> [ExtraCategory]
     private let calls: CallStatusProviding
     private let isOffCellular: () async -> Bool
     /// #235 F5: a leave the server did not get is kept and sent again later.
@@ -143,6 +145,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         languageCode: String? = Locale.current.language.languageCode?.identifier,
         isOffCellular: @escaping () async -> Bool = LocalNetworkCheck.isOffCellular,
         packsEnabled: @escaping () -> Bool = { false },
+        extraCategories: @escaping @MainActor () -> [ExtraCategory] = { [] },
         pendingLeaves: PendingRoomLeaveStore = PendingRoomLeaveStore()
     ) {
         self.rooms = rooms
@@ -161,6 +164,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         self.clock = clock
         self.isOffCellular = isOffCellular
         self.packsEnabled = packsEnabled
+        self.extraCategories = extraCategories
         self.pendingLeaves = pendingLeaves
         playerName = names.playerName(accountName: accountName, languageCode: languageCode)
     }

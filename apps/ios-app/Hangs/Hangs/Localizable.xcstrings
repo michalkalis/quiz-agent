@@ -3578,29 +3578,6 @@
         }
       }
     },
-    "Categories from Home" : {
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kategórie z Úvodu"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kategorie z Úvodu"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Категорії з головної"
-          }
-        }
-      },
-      "comment" : "#232: game together plays the categories set on the Home tab"
-    },
     "Changes apply from the next question. When to show answers can only be changed before the game." : {
       "localizations" : {
         "cs" : {
@@ -22783,6 +22760,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Правильно %lld · Неправильно %lld · Пропущено %lld"
+          }
+        }
+      }
+    },
+    "New" : {
+      "comment" : "#249.1: small gray line under a free rotating extra category in the category list, no end date announced",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nová"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nová"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова"
+          }
+        }
+      }
+    },
+    "New · until %@" : {
+      "comment" : "#249.1: small gray line under a free rotating extra category in the category list; placeholder is a short date",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nová · do %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nová · do %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова · до %@"
           }
         }
       }

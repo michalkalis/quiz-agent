@@ -196,7 +196,7 @@ struct RoomEndgameTests {
         await advanceUntil(clock, limit: .seconds(60)) { model.errorMessage != nil }
         await change.value
 
-        #expect(model.content == .home, "the host must see what the room still plays")
+        #expect(model.content == .categories, "the host must see what the room still plays")
         #expect(model.screen == .lobby)
         #expect(!model.isWorking)
     }

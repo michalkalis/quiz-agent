@@ -2,11 +2,11 @@
 //  HomeCategoryPicker.swift
 //  Hangs
 //
-//  #194 C1 — category picker (canvas Bg-Topics, Zábava decided in
-//  Dec-Zabava-Topics). Multi-select stays (#82 decision 7): each tile toggles
-//  its category, "All Categories" clears the selection. Changes apply at once
+//  #194 C1 — category picker. Multi-select stays (#82 decision 7): each row
+//  toggles its category, "All Categories" clears the selection. #249.1: the
+//  tiles became the shared vertical list (CategoryListView). Changes apply at once
 //  (as in the beta menu); Done and the swipe only close the sheet.
-//  #206: the "local questions" switch sits under the tiles (founder picked
+//  #206: the "local questions" switch sits under the list (founder picked
 //  variant B, 2026-10-22) — it shapes which questions come, like categories.
 //
 
@@ -14,10 +14,9 @@ import SwiftUI
 
 struct HomeCategoryPicker: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var categories: [String]
     @Binding var includeLocalQuestions: Bool
-    /// #242: the served extra categories, after the permanent tiles.
+    /// #242: the served extra categories, after the permanent ones.
     var extras: [ExtraCategory] = []
 
     var body: some View {
@@ -30,15 +29,7 @@ struct HomeCategoryPicker: View {
                     .minimumScaleFactor(0.7)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.horizontal, Theme.Hangs.Spacing.xxs)
-                allCategoriesRow
-                LazyVGrid(columns: columns, spacing: Theme.Hangs.Spacing.sm) {
-                    ForEach(Config.categoryOptions.compactMap(\.id), id: \.self) { id in
-                        tile(id, name: Config.categoryDisplayName(for: id) ?? "", style: Theme.Hangs.Category.style(for: id))
-                    }
-                    ForEach(Array(extras.enumerated()), id: \.element.key) { index, extra in
-                        tile(extra.key, name: extra.name, style: Theme.Hangs.Category.extraStyle(position: index), extra: extra)
-                    }
-                }
+                CategoryListView(categories: $categories, extras: extras)
                 localQuestionsRow
             }
             .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -51,75 +42,6 @@ struct HomeCategoryPicker: View {
         .presentationDragIndicator(.hidden)
     }
 
-    private var columns: [GridItem] {
-        let count = dynamicTypeSize.isAccessibilitySize ? 1 : 2
-        return Array(repeating: GridItem(.flexible(), spacing: Theme.Hangs.Spacing.sm), count: count)
-    }
-
-    // MARK: - Rows
-
-    private var allCategoriesRow: some View {
-        Button(action: selectAll) {
-            HStack(spacing: Theme.Hangs.Spacing.md) {
-                HStack(spacing: 0) {
-                    ForEach(Theme.Hangs.Category.taxonomy, id: \.self) { id in
-                        Theme.Hangs.Category.style(for: id).fill
-                    }
-                }
-                .frame(width: Metrics.stripWidth, height: Metrics.stripHeight)
-                .clipShape(Capsule())
-                .accessibilityHidden(true)
-                Text(verbatim: Config.categoryOptions.first { $0.id == nil }?.display ?? "")
-                    .font(.hangsLabel)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                checkMark(isOn: categories.isEmpty, style: nil)
-            }
-            .foregroundStyle(Theme.Hangs.Colors.ink)
-            .padding(.horizontal, Theme.Hangs.Spacing.md)
-            .frame(maxWidth: .infinity, minHeight: Metrics.rowHeight)
-            .background(surface(cornerRadius: Theme.Hangs.Radius.card))
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(categories.isEmpty ? .isSelected : [])
-        .accessibilityIdentifier("home.category.all")
-    }
-
-    private func tile(_ id: String, name: String, style: Theme.Hangs.Category.Style, extra: ExtraCategory? = nil) -> some View {
-        let isOn = categories.contains(id)
-        return Button {
-            toggle(id)
-        } label: {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xs) {
-                checkMark(isOn: isOn, style: style)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                Spacer(minLength: 0)
-                Text(verbatim: name)
-                    .font(.hangsLabel)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let extra {
-                    ExtraCategoryBadge(category: extra)
-                }
-            }
-            .foregroundStyle(isOn ? style.text : Theme.Hangs.Colors.ink)
-            .padding(EdgeInsets(top: Theme.Hangs.Spacing.sm, leading: Theme.Hangs.Spacing.md, bottom: Theme.Hangs.Spacing.md, trailing: Theme.Hangs.Spacing.sm))
-            .frame(maxWidth: .infinity, minHeight: Metrics.tileHeight, alignment: .topLeading)
-            .background {
-                if isOn {
-                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                        .fill(style.fill)
-                } else {
-                    surface(cornerRadius: Theme.Hangs.Radius.card)
-                }
-            }
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-        .accessibilityIdentifier("home.category.\(id)")
-    }
-
     private var localQuestionsRow: some View {
         HangsToggleRow(
             label: "Questions for locals",
@@ -128,24 +50,6 @@ struct HomeCategoryPicker: View {
         )
         .background(surface(cornerRadius: Theme.Hangs.Radius.card))
         .accessibilityIdentifier("home.categories.localQuestions")
-    }
-
-    /// Filled check in the tile's text colour when on, an empty ring when off.
-    private func checkMark(isOn: Bool, style: Theme.Hangs.Category.Style?) -> some View {
-        let ink = style?.text ?? Theme.Hangs.Colors.ink
-        let glyph = style?.fill ?? Theme.Hangs.Colors.bgCard
-        return ZStack {
-            if isOn {
-                Circle().fill(ink)
-                Image(systemName: "checkmark")
-                    .font(.hangsCaption.weight(.bold))
-                    .foregroundStyle(glyph)
-            } else {
-                Circle().strokeBorder(Theme.Hangs.Colors.track, lineWidth: Metrics.ringWidth)
-            }
-        }
-        .frame(width: Metrics.check, height: Metrics.check)
-        .accessibilityHidden(true)
     }
 
     private func surface(cornerRadius: CGFloat) -> some View {
@@ -161,29 +65,6 @@ struct HomeCategoryPicker: View {
             .accessibilityIdentifier("home.categories.done")
             .padding(.horizontal, Theme.Hangs.Spacing.md)
             .padding(.bottom, Theme.Hangs.Spacing.xs)
-    }
-
-    // MARK: - Actions
-
-    private func selectAll() {
-        categories = []
-    }
-
-    private func toggle(_ id: String) {
-        if let index = categories.firstIndex(of: id) {
-            categories.remove(at: index)
-        } else {
-            categories.append(id)
-        }
-    }
-
-    private enum Metrics {
-        static let rowHeight: CGFloat = 60
-        static let tileHeight: CGFloat = 100
-        static let check: CGFloat = 24
-        static let ringWidth: CGFloat = 2
-        static let stripWidth: CGFloat = 42
-        static let stripHeight: CGFloat = 12
     }
 }
 

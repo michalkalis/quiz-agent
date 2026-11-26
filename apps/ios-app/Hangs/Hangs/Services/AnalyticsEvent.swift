@@ -471,6 +471,7 @@ enum RoomSettingKind: String {
     case revealMode = "reveal_mode"
     case thinkingSeconds = "thinking_seconds"
     case readsAloud = "reads_aloud"
+    case categories
 }
 
 /// #240.9: how a game together closed on the host's phone.

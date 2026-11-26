@@ -10,7 +10,7 @@ import Foundation
 
 /// The host's rules for a game together, the same for every player. They are
 /// their own set, kept on the device (`MultiplayerSettingsStore`), and never
-/// written to the solo settings. Language, categories, difficulty, local
+/// written to the solo settings (the categories included, #249.1). Language, difficulty, local
 /// questions, the number of questions and the auto-advance pause still come
 /// from the host's solo choices. The reveal is fixed once the game starts;
 /// the answer time and reading aloud can change mid-game (the server applies
@@ -23,6 +23,9 @@ nonisolated struct MultiplayerSettings: Codable, Equatable, Sendable {
     var thinkingSeconds = 15
     /// The host's phone reads every question aloud.
     var readsAloud = true
+    /// #249.1: the categories the room plays, empty = all. Their own choice,
+    /// never the solo categories (#212: solo settings do not change through a game together).
+    var categories: [String] = []
 
     /// What the host picks from; the server accepts 3–60 s.
     static let thinkingChoices = [15, 30, 45, 60]
@@ -39,6 +42,14 @@ nonisolated struct MultiplayerSettings: Codable, Equatable, Sendable {
         case revealMode = "reveal_mode"
         case thinkingSeconds = "thinking_seconds"
         case readsAloud = "reads_aloud"
+        case categories
+    }
+
+    init(revealMode: RoomState.RevealMode = .question, thinkingSeconds: Int = 15, readsAloud: Bool = true, categories: [String] = []) {
+        self.revealMode = revealMode
+        self.thinkingSeconds = thinkingSeconds
+        self.readsAloud = readsAloud
+        self.categories = categories
     }
 }
 

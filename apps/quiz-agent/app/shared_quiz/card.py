@@ -206,10 +206,10 @@ def render(data: CardData) -> bytes:
     else:
         _text(
             draw,
-            (80, 140),
+            (80, 148),
             f"{score_text(data.score)}/{data.total}",
             "ExtraBold",
-            250,
+            200,
             WHITE,
             0,
             lang,

@@ -51,9 +51,9 @@ struct DailyShareCardView: View {
                     .tracking(2)
                     .padding(.top, Metrics.labelGap)
                 Text(verbatim: "\(score)/\(total)")
-                    .font(face(220, .heavy))
-                    .minimumScaleFactor(0.5)
+                    .font(face(200, .heavy))
                     .lineLimit(1)
+                    .fixedSize()
                     .frame(height: 200, alignment: .top)
                     .padding(.top, Metrics.scoreGap)
                 tiles

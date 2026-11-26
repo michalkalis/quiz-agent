@@ -22,8 +22,8 @@ struct DailyShareCardView: View {
         static let top: CGFloat = 52
         static let labelGap: CGFloat = 8
         static let scoreGap: CGFloat = 4
-        static let tilesGap: CGFloat = 14
-        static let hookGap: CGFloat = 28
+        static let tilesGap: CGFloat = 26
+        static let hookGap: CGFloat = 22
         static let tileSpacing: CGFloat = 16
         static let cardRadius: CGFloat = 30
     }

@@ -55,7 +55,7 @@ Zavrhnuté: zoznam v prepínačoch v databáze (názvy by obišli kontrolu texto
   - **Rozprávky a animáky** (konkrétne mená a názvy): veľké animované filmy, japonská animácia, večerníčky a československé rozprávky, klasické rozprávky a ich pôvod, pesničky, hlasy a dabing, ako sa robí animácia, vianočné rozprávky.
   - Extra otázky sa smú používať aj v príspevkoch na sociálne siete (founder 2026-11-22).
 - [x] 242.5 Appka (PR feat/242-ios-extra-categories): vejár a výber čítajú katalóg za stálymi kategóriami so značkou „nové“ a „do dátumu“; pomalá a zlyhaná odpoveď servera = len stále kategórie (testy); uložený `extra-*` výber prežije spustenie, zahodí sa len po úspešnom načítaní bez neho alebo po `extra_category_invalid`; `extra_category_exhausted` = pokojná správa bez ponuky na reset; udalosť `extra_category_quiz_started` (aj v zozname udalostí servera).
-- [ ] 242.6 Zapnúť vypínač po teste foundera v bete (TestFlight build na požiadanie). Prvé okno: Harry Potter, Superhrdinovia, Rozprávky a animáky do 22. 12. 2026; Techno a klubová scéna od 23. 12. Pred 23. 12. rozhodnúť, ktoré dve z prvých troch pokračujú, a pripraviť ďalšiu kategóriu.
+- [x] 242.6 Vypínač zapnutý 2026-11-26 na pokyn foundera („zapni extra kategorie“); appka dostáva tri kategórie v sk, cs a en, v uk žiadnu (extra otázky v ukrajinčine nie sú). Vidia ich TestFlight buildy 1.3 od b92 (spoločný build b93), App Store 1.2 zoznam nečíta. Otvorené ostáva: Prvé okno: Harry Potter, Superhrdinovia, Rozprávky a animáky do 22. 12. 2026; Techno a klubová scéna od 23. 12. Pred 23. 12. rozhodnúť, ktoré dve z prvých troch pokračujú, a pripraviť ďalšiu kategóriu.
 - [ ] 242.7 Vyhodnotenie po dvoch výmenách: podiel kôl v extra kategóriách, návraty.
 
 ## Ako vymeniť kategórie

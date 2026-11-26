@@ -72,6 +72,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var voiceNote: VoiceNote?
     /// #249.5: the player refused the microphone this game (typing still works).
     @Published var micRefused = false
+    /// #249.5: the server refused voice (a 429 limit); Answer opens typing until the next question.
+    @Published var voiceUnavailable = false
     /// #249.5: the PCM of the recording in progress; the tap appends on an audio thread.
     let voicePCM = OSAllocatedUnfairLock<Data>(initialState: Data())
     var voiceQuestionId: String?
@@ -350,7 +352,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
             await stopRecordingAndSend()
             return
         }
-        guard voicePhase == .idle else { return }
+        // Idle, or a mic still starting (that start then finds the answer in).
+        guard voicePhase != .sending else { return }
         let text = typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, let roomId = state?.roomId, let round,
               round.questionId == questionId, round.phase == .answering,
@@ -506,6 +509,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
             if round.questionId != previousQuestionId {
                 typedAnswer = ""
                 voiceNote = nil
+                voiceUnavailable = false
                 draftWatcherQuestionId = nil
                 answerWindowSeconds = nil
             }

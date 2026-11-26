@@ -85,14 +85,15 @@ struct RoomOpenAnswerControls: View {
             tint: isRecording ? Theme.Hangs.Colors.listenStrong : nil,
             singleLineTitle: true
         ) {
-            // A refused mic never leaves a dead button: Answer opens typing.
-            if viewModel.micDenied, !isRecording {
+            // A refused mic (or voice refused by the server) never leaves a
+            // dead button: Answer opens typing.
+            if viewModel.answersByTyping, !isRecording {
                 openTyping()
             } else {
                 Task { await viewModel.toggleRecording() }
             }
         }
-        .disabled(!isRecording && !canSpeak && !(viewModel.micDenied && canAnswer))
+        .disabled(!isRecording && !canSpeak && !(viewModel.answersByTyping && canAnswer))
         .accessibilityIdentifier(isRecording ? "room.answer.stop" : "room.answer.record")
     }
 

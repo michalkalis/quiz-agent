@@ -273,6 +273,30 @@ struct RoomVoiceAnswerTests {
         #expect(model.voiceNote == .didNotCatch && model.canSpeak)
     }
 
+    // WHY: the mic prompt and the engine start take a moment; a second tap on
+    // Answer in that gap must not open a second recording (two uploads, two
+    // answers for one question).
+    @Test("a second tap while the mic is starting starts nothing")
+    func doubleTapWhileStarting() async {
+        let model = await guestAtTypedQuestion()
+        defer { model.stopAll() }
+        let gate = Gate()
+        audio.prepareForRecordingGate = { await gate.wait() }
+        let first = Task { await model.toggleRecording() }
+        await pumpUntil { audio.prepareForRecordingCallCount == 1 }
+        #expect(model.voicePhase == .starting)
+        #expect(!model.canSpeak, "Answer still looks tappable while the mic starts")
+
+        let second = Task { await model.toggleRecording() }
+        await settle()
+        gate.open()
+        await first.value
+        await second.value
+        #expect(audio.micPermissionRequestCount == 1)
+        #expect(audio.prepareForRecordingCallCount == 1)
+        #expect(model.voicePhase == .recording)
+    }
+
     // MARK: - Bad network
 
     @Test("a failed upload leaves a clear note, typing works and the game goes on", arguments: [
@@ -296,6 +320,27 @@ struct RoomVoiceAnswerTests {
         rooms.othersAnswer()
         await model.refresh()
         #expect(model.screen == .reveal, "the player cannot continue after a failed upload")
+    }
+
+    // WHY: a 429 is a limit (the daily voice cap, too many tries), not a
+    // hiccup: "try again" would fail again. The note says to type, and
+    // Answer opens typing for the rest of the question.
+    @Test("a voice limit steers the player to typing")
+    func voiceLimitSteersToTyping() async throws {
+        let model = await guestAtTypedQuestion()
+        defer { model.stopAll() }
+        rooms.conditions.setNetworkCondition(.serverError(statusCode: 429), for: [.answerByVoice])
+        await speak(model)
+        await model.toggleRecording()
+        #expect(model.voiceNote == .typeInstead)
+        #expect(model.answersByTyping)
+        let view = try RoomQuestionView(viewModel: model).inspect()
+        let answer = try view.find(viewWithAccessibilityIdentifier: "room.answer.record").button()
+        #expect(!answer.isDisabled())
+
+        model.typedAnswer = "Canberra"
+        await model.submitTypedAnswer()
+        #expect(typedQuestionAnswers == ["Canberra"])
     }
 
     @Test("after a failed upload the player can still type the answer")
@@ -342,5 +387,23 @@ struct RoomVoiceAnswerTests {
         await model.leave()
         #expect(!audio.isRecording)
         #expect(rooms.voiceUploads.isEmpty)
+    }
+}
+
+/// Holds every waiter until `open()`: the mic handshake parked in its gap.
+@MainActor
+private final class Gate {
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var isOpen = false
+
+    func wait() async {
+        guard !isOpen else { return }
+        await withCheckedContinuation { waiters.append($0) }
+    }
+
+    func open() {
+        isOpen = true
+        waiters.forEach { $0.resume() }
+        waiters = []
     }
 }

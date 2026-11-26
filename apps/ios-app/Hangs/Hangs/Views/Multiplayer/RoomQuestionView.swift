@@ -154,6 +154,7 @@ struct RoomQuestionView: View {
             switch note {
             case .didNotCatch: Text("Didn't catch that")
             case .notSent: Text("Your answer didn't go through. Try again or type it.")
+            case .typeInstead: Text("Voice answers aren't available right now. Type your answer.")
             }
         }
         .font(.hangsLabel)

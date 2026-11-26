@@ -18,6 +18,9 @@ import os
 extension RoomViewModel {
     enum VoicePhase: Equatable {
         case idle
+        /// Answer was tapped: the mic prompt, the session and the engine are
+        /// coming up. A second tap must not start a second recording.
+        case starting
         case recording
         /// The clip is with the server, being transcribed.
         case sending
@@ -28,6 +31,8 @@ extension RoomViewModel {
         case didNotCatch
         /// The upload failed (offline, server error); the player may try again or type.
         case notSent
+        /// The server refused voice for now (a limit, 429): a retry cannot work, so type.
+        case typeInstead
     }
 
     /// Less audio than this is a tap on Stop, not an answer.
@@ -35,9 +40,15 @@ extension RoomViewModel {
 
     /// The open question takes a spoken answer now. Options are tapped, and
     /// the host's phone does not cut its own read for the room.
-    var canSpeak: Bool {
+    var canSpeak: Bool { voicePhase != .starting && voiceAnswerOpen }
+
+    private var voiceAnswerOpen: Bool {
         canAnswer && question?.isMultipleChoice == false && !(isHost && isReadingAloud)
     }
+
+    /// Answer opens typing instead of the mic: the mic is refused, or the
+    /// server refused voice for this question (`VoiceNote.typeInstead`).
+    var answersByTyping: Bool { micDenied || voiceUnavailable }
 
     /// The mic is refused (this game or in iOS Settings): Answer opens typing.
     var micDenied: Bool { micRefused || audio.microphonePermissionStatus == .denied }
@@ -50,7 +61,7 @@ extension RoomViewModel {
         switch voicePhase {
         case .recording: return .listening(.open)
         case .sending: return .evaluating
-        case .idle: break
+        case .idle, .starting: break
         }
         if submittingAnswer != nil { return .evaluating }
         if round.phase == .reading { return .readingQuestion }
@@ -63,13 +74,17 @@ extension RoomViewModel {
         switch voicePhase {
         case .idle: await startRecording()
         case .recording: await stopRecordingAndSend()
-        case .sending: break
+        case .starting, .sending: break
         }
     }
 
     func startRecording() async {
         guard voicePhase == .idle, canSpeak, let questionId = round?.questionId else { return }
+        // Set before the first await: a second tap during the prompt or the
+        // engine start is ignored (`toggleRecording`, `canSpeak`).
+        voicePhase = .starting
         guard await audio.requestMicrophonePermission() else {
+            voicePhase = .idle
             micRefused = true
             return
         }
@@ -83,7 +98,8 @@ extension RoomViewModel {
             await audio.prepareForRecording()
             let engine = await startEngine()
             // The time may have run out or the answer locked during the prompt and the settle.
-            guard canSpeak, round?.questionId == questionId else {
+            guard voiceAnswerOpen, round?.questionId == questionId, voicePhase == .starting else {
+                if voicePhase == .starting { voicePhase = .idle }
                 releaseEngine()
                 return
             }
@@ -104,6 +120,7 @@ extension RoomViewModel {
         } catch {
             audio.stopStreamingRecording()
             releaseEngine()
+            voicePhase = .idle
             voiceNote = .notSent
             Logger.audio.warning("Room recording failed to start: \(error, privacy: .public)")
         }
@@ -188,6 +205,12 @@ extension RoomViewModel {
             ))
         } catch NetworkError.answerNotCaptured {
             voiceNote = .didNotCatch
+        } catch NetworkError.quotaLimitReached, NetworkError.voiceLimitReached,
+            NetworkError.serverError(statusCode: 429, _)
+        {
+            // A limit, not a hiccup: "try again" cannot work, typing still does.
+            voiceUnavailable = true
+            voiceNote = .typeInstead
         } catch NetworkError.serverError(statusCode: 409, _) {
             // Answered on another try, or the time ran out: the room knows.
             await refresh()

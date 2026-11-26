@@ -16519,6 +16519,29 @@
         }
       }
     },
+    "Voice answers aren't available right now. Type your answer." : {
+      "comment" : "Hra spolu (#249.5): the server refused the spoken answer for now (a limit); the player can still type it",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovědi teď nejdou. Napiš odpověď."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hlasové odpovede teraz nejdú. Napíš odpoveď."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Голосові відповіді зараз недоступні. Напиши відповідь."
+          }
+        }
+      }
+    },
     "Voice answers used up this month" : {
       "comment" : "Profile plan card: the free voice answers of this month are used up",
       "localizations" : {

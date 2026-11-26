@@ -41,9 +41,9 @@
 
 | # | Čo | Stav |
 |---|---|---|
-| 249.1 | Výber kategórií: zvislý zoznam (solo) + priamo v okne „Čo hráme“ | [ ] |
-| 249.2 | A až D: menšia medzera otázka ↔ možnosti | [ ] |
-| 249.3 | Hra spolu: rozpísaná odpoveď sa pošle pri konci času | [ ] |
-| 249.4 | Hra spolu, horná lišta ako v hre sám: reproduktor u každého, pauza hostiteľa aj počas otázky (server zastaví spoločný čas), čítanie u hosťa predvolene podľa siete | [ ] |
-| 249.5 | Hra spolu, spodok ako v hre sám: tlačidlá odpovede (hlas + písanie), čas ako pásik pod otázkou; prepis hlasu na serveri | [ ] |
-| 249.6 | Denná výzva: text + samostatný odkaz, náhľad odkazu = karta so skóre | [ ] |
+| 249.1 | Výber kategórií: zvislý zoznam (solo) + priamo v okne „Čo hráme“ | [x] PR #1000 |
+| 249.2 | A až D: menšia medzera otázka ↔ možnosti | [x] PR #1006 |
+| 249.3 | Hra spolu: rozpísaná odpoveď sa pošle pri konci času | [x] PR #998 |
+| 249.4 | Hra spolu, horná lišta ako v hre sám: reproduktor u každého, pauza hostiteľa aj počas otázky (server zastaví spoločný čas), čítanie u hosťa predvolene podľa siete | [x] PR #1005, server nasadený 2026-11-26 |
+| 249.5 | Hra spolu, spodok ako v hre sám: tlačidlá odpovede (hlas + písanie), čas ako pásik pod otázkou; prepis hlasu na serveri | [~] PR #1007 (stavaný na #1005, treba rebase na main; doplniť koniec nahrávania pri tichu ako v hre sám; CI + review) |
+| 249.6 | Denná výzva: text + samostatný odkaz, náhľad odkazu = karta so skóre | [~] PR #1004 (odkaz api.trubbo.app/play s kartou; snímky aj okraje karty hotové, čakalo sa na iOS CI; po zlúčení nasadiť backend PRED buildom appky; na telefóne overiť otvorenie odkazu a náhľady v iMessage/WhatsApp) |

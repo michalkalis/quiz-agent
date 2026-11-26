@@ -1,6 +1,6 @@
 # #248 — Výsledok otázky a koniec kvízu: upratať (TF 1.3 b92)
 
-**Triage:** enhancement · in-progress
+**Triage:** enhancement · in-progress (kód hotový 2026-11-26, čaká TF build a rozhodnutie o odmene)
 **Founder:** 2026-11-25, test TF 1.3 (92) + rozhodnutia na stránke /decide (session quiz-agent-85)
 **Nadväzuje:** #243 — hlasová navigácia (decisions 2026-11-24), #205 — denná výzva
 
@@ -29,12 +29,12 @@ Otvorené (founder): kedy a koľko odmeny za dennú výzvu (aj pri zlom skóre? 
 
 | # | Čo | Kde | Stav |
 |---|----|-----|------|
-| 248.0 | Pauza pred „Premýšľaj“: výzva hneď po otázke, mikrofón na povely až po nej | appka | PR #985 (pauza pred „Premýšľaj“) |
-| 248.1 | Hlas: dlhá výzva len pri 1. otázke; „Odpovedaj.“ len pred automatickým mikrofónom; veta na konci + povel „ďalší“ (sk/cs/en/uk) | appka | [ ] |
-| 248.2 | Výsledok otázky podľa A (texty vyššie, bez kategórie, bez štatistík) + hlasová veta „Nesprávne. Správna odpoveď: …“ | appka | [ ] |
-| 248.3 | Koniec kvízu podľa B: denná výzva aj bežný kvíz; „Ďalší kvíz“, zdieľanie v hornej lište | appka | [ ] |
-| 248.4 | Server: porovnanie s ostatnými len pri dostatku hráčov, nikdy „Prvý výsledok dňa.“ | server | [ ] |
-| 248.5 | Rešerš: odmeny za dennú výzvu podľa skóre v iných appkách → návrh foundrovi | rešerš | [ ] |
+| 248.0 | Pauza pred „Premýšľaj“: výzva hneď po otázke, mikrofón na povely až po nej | appka | hotové, PR #985 (pauza pred „Premýšľaj“) |
+| 248.1 | Hlas: dlhá výzva len pri 1. otázke; „Odpovedaj.“ len pred automatickým mikrofónom; veta na konci + povel „ďalší“ (sk/cs/en/uk) | appka | hotové, PR #990 (hlasové vety a povel „ďalší“) |
+| 248.2 | Výsledok otázky podľa A (texty vyššie, bez kategórie, bez štatistík) + hlasová veta „Nesprávne. Správna odpoveď: …“ | appka | hotové, PR #989 (výsledok otázky) |
+| 248.3 | Koniec kvízu podľa B: denná výzva aj bežný kvíz; „Ďalší kvíz“, zdieľanie v hornej lište | appka | hotové, PR #991 (koniec kvízu; týždenná tabuľka kamarátov ostáva, len pozvánka preč) |
+| 248.4 | Server: porovnanie s ostatnými len pri dostatku hráčov, nikdy „Prvý výsledok dňa.“ | server | hotové, PR #987 (prah 20 hráčov), v produkcii 2026-11-25 |
+| 248.5 | Rešerš: odmeny za dennú výzvu podľa skóre v iných appkách → návrh foundrovi | rešerš | rešerš hotová (odporúčanie: základ 10 + bonus 5 za 4–5 správnych), čaká rozhodnutie foundera |
 | 248.6 | Gamifikácia ako celok premyslieť (štatistiky, porovnania, kedy ich ukázať) | neskôr | [ ] |
 
 ## Technický smer (stručne)
@@ -43,6 +43,8 @@ Otvorené (founder): kedy a koľko odmeny za dennú výzvu (aj pri zlom skóre? 
 - **248.1:** vety konca kvízu skladá appka (hlas cez server TTS ako doteraz); povel na konci = existujúci povel „next“ s tvarom „ďalší“ / „další“ / „next“ / uk; návrh „Ďalší kvíz“ spúšťa to isté ako dnes „znova“ (denná výzva → bežný kvíz, inak nové kolo s rovnakým nastavením).
 - **248.4:** prah na serveri (agent: aspoň 20 iných hráčov danej otázky / dňa), pod ním server porovnanie nepošle; staré buildy pole už dnes berú ako voliteľné → bez zmeny API tvaru.
 - Starý build (TF b92, App Store 1.2) ostáva funkčný: mení sa len text a to, kedy server pošle voliteľné pole.
+
+**Rešerš 248.5:** [daily-reward-by-score-2026-11-25.md](../research/daily-reward-by-score-2026-11-25.md)
 
 ## Overenie
 

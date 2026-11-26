@@ -39,6 +39,28 @@ def open_round(session: QuizSession, payload: Dict[str, Any]) -> None:
     )
 
 
+def game_time(rnd: RoomRound, at: datetime) -> datetime:
+    """The round's own clock (#249.4): it stands still while the host pauses
+    the open question, so every check made during a pause sees its start."""
+    return min(at, rnd.paused_at) if rnd.paused_at else at
+
+
+def resume(rnd: RoomRound, at: datetime) -> None:
+    """End the host's pause: every time of the round moves on by the pause,
+    so the time left, the reading fallback and every answer's speed are as
+    if the pause never happened. Answers sent during it were stored at its
+    start and land on the resume instant."""
+    if rnd.paused_at is None:
+        return
+    gap = max(timedelta(0), at - rnd.paused_at)
+    rnd.served_at += gap
+    if rnd.opened_at is not None:
+        rnd.opened_at += gap
+    for a in rnd.answers.values():
+        a.at += gap
+    rnd.paused_at = None
+
+
 def clock_start(rnd: RoomRound) -> datetime:
     """When the answer time starts: the host's "read aloud done", or a fallback
     so a host phone that died mid-read cannot stall the room."""
@@ -66,13 +88,14 @@ def all_answered(session: QuizSession, rnd: RoomRound) -> bool:
 
 
 def accepts_answers(game: RoomGame, rnd: RoomRound, at: datetime) -> bool:
-    return not rnd.closed and at < deadline(game, rnd) + ANSWER_GRACE
+    return not rnd.closed and game_time(rnd, at) < deadline(game, rnd) + ANSWER_GRACE
 
 
 def close_due(session: QuizSession, at: datetime) -> bool:
     game = session.room_game
     rnd = game.current if game else None
-    if rnd is None or rnd.closed:
+    # #249.4: a paused question never closes, not even with every answer in.
+    if rnd is None or rnd.closed or rnd.paused_at is not None:
         return False
     return all_answered(session, rnd) or not accepts_answers(game, rnd, at)
 
@@ -83,14 +106,16 @@ def phase(session: QuizSession, rnd: RoomRound, at: datetime) -> str:
         return "revealed"
     if close_due(session, at):
         return "grading"
-    if rnd.opened_at is None and at < clock_start(rnd):
+    if rnd.opened_at is None and game_time(rnd, at) < clock_start(rnd):
         return "reading"
     return "answering"
 
 
 def remaining_ms(game: RoomGame, rnd: RoomRound, at: datetime) -> Optional[int]:
     """Milliseconds left to answer (phones count down from this, never from
-    their own clock). None while the host is still reading."""
+    their own clock). None while the host is still reading; it stands still
+    while the host pauses."""
+    at = game_time(rnd, at)
     if rnd.opened_at is None and at < clock_start(rnd):
         return None
     return max(0, int((deadline(game, rnd) - at).total_seconds() * 1000))

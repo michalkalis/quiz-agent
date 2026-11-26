@@ -242,6 +242,57 @@ async def test_join_by_id_needs_the_network_join_by_token_works_anywhere(ctx):
 
 
 @pytest.mark.asyncio
+async def test_join_says_whether_the_guest_is_on_the_hosts_network(ctx):
+    # #249.4: a guest next to the host hears the host's phone, so their own
+    # phone stays quiet by default; a guest elsewhere gets the questions read
+    # aloud. How they joined (link, QR, nearby list) must not decide it.
+    client, sessions, _ = ctx
+    room = await _host_room(client, sessions)
+
+    async def join(subject, ip, **how):
+        r = await client.post(
+            "/api/v1/rooms/join",
+            json={"display_name": subject.title(), **how},
+            headers=_h(subject, ip),
+        )
+        assert r.status_code == 200, r.text
+        return r.json().get("same_network")
+
+    token = room["join_token"]
+    assert await join("near", HOME_V4, join_token=token, via="link") is True
+    assert await join("scan", OTHER_V4, join_token=token, via="qr") is False
+    assert await join("list", HOME_V4, room_id=room["room_id"]) is True
+    # Dual stack: the host was seen on IPv4, this guest on IPv6 with a ticket.
+    ticket = await _probe(client, "dual", HOME_V4)
+    r = await client.post(
+        "/api/v1/rooms/join",
+        json={"display_name": "Dual", "join_token": token, "net_tickets": [ticket]},
+        headers=_h("dual", HOME_V6_GUEST),
+    )
+    assert r.json()["same_network"] is True
+    # Polls never carry it: only the join reply decides the default.
+    state = await client.get(
+        f"/api/v1/rooms/{room['room_id']}/state", headers=_h("near", HOME_V4)
+    )
+    assert "same_network" not in state.json()
+
+
+@pytest.mark.asyncio
+async def test_same_network_is_left_out_when_the_server_cannot_tell(ctx):
+    # A host off the public internet (local dev, a proxy that hid the
+    # client) has no network key: "unknown" must read as away (sound on),
+    # never as a false "same Wi-Fi".
+    client, sessions, _ = ctx
+    room = await _host_room(client, sessions, ip="10.0.0.5")
+    r = await client.post(
+        "/api/v1/rooms/join",
+        json={"display_name": "Jana", "join_token": room["join_token"]},
+        headers=_h("jana", HOME_V4),
+    )
+    assert r.status_code == 200 and "same_network" not in r.json()
+
+
+@pytest.mark.asyncio
 async def test_joining_again_does_not_add_a_second_player(ctx):
     client, sessions, _ = ctx
     room = await _host_room(client, sessions)

@@ -71,7 +71,8 @@ class RoomPlay:
                 raise RoomError(403, "Only the host can start the answer time")
             rnd = self._round(session, question_id)
             if rnd.opened_at is None and not rnd.closed:
-                rnd.opened_at = rounds.now()
+                # #249.4: a read that ends during a pause ended at its start.
+                rnd.opened_at = rounds.game_time(rnd, rounds.now())
                 await self.sessions.update_session(session)
 
     async def settings(
@@ -115,8 +116,11 @@ class RoomPlay:
                 raise RoomError(409, "Already answered")
             if not rounds.accepts_answers(session.room_game, rnd, at):
                 raise RoomError(409, "Time is up")
-            rnd.answers[you.participant_id] = RoomAnswer(answer=text.strip(), at=at)
-            if rounds.all_answered(session, rnd):
+            rnd.answers[you.participant_id] = RoomAnswer(
+                answer=text.strip(), at=rounds.game_time(rnd, at)
+            )
+            # #249.4: while the host pauses, the question waits for the resume.
+            if rounds.all_answered(session, rnd) and rnd.paused_at is None:
                 # #240.9: stored first, so while the judge works every other
                 # phone sees "grading" instead of a question that looks open.
                 await self.sessions.update_session(session)
@@ -141,17 +145,33 @@ class RoomPlay:
 
     async def pause(self, room_id: str, subject_id: str, paused: bool) -> None:
         """#224.4: the host stays on the revealed question (guests see it) or
-        resumes. Only a closed question can be held; moving on clears it."""
+        resumes; moving on clears it. #249.4: an open question (reading or
+        answering) pauses too: its clock stands still for everyone until the
+        resume. A question whose time is up (grading) cannot be paused."""
         session_id = await self._session_id(room_id)
         async with self.sessions.session_lock(session_id):
             session, you = await self._load(session_id, subject_id)
             if not you.is_host:
                 raise RoomError(403, "Only the host can pause")
             rnd = session.room_game.current
-            if session.phase != SessionPhase.ASKING or rnd is None or not rnd.closed:
+            if session.phase != SessionPhase.ASKING or rnd is None:
                 raise RoomError(409, "Nothing to pause")
-            if rnd.paused != paused:
+            at = rounds.now()
+            if rnd.closed:
+                changed = rnd.paused != paused
                 rnd.paused = paused
+            elif rnd.paused_at is not None:
+                changed = not paused
+                if changed:
+                    rounds.resume(rnd, at)
+            elif not paused:
+                changed = False
+            elif rounds.close_due(session, at):
+                raise RoomError(409, "Nothing to pause")
+            else:
+                changed = True
+                rnd.paused_at = at
+            if changed:
                 await self.sessions.update_session(session)
 
     async def next(self, room_id: str, subject_id: str) -> None:

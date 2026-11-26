@@ -577,10 +577,10 @@ async def test_a_guest_from_the_nearby_list_or_a_scanned_qr_is_told_apart(game):
 async def test_host_pause_is_seen_by_guests_and_clears_with_the_next_question(game):
     # #224.4: the host phone owns auto-advance, so guests can only learn that
     # the host stayed on the reveal from the server; a pause must never leak
-    # into the next question or be settable by a guest.
+    # into the next question or be settable by a guest. (#249.4: an open
+    # question pauses too, see test_room_pause.py.)
     await game.setup()
     await game.post("open", question_id="q_mcq")
-    assert (await game.post("pause", paused=True)).status_code == 409  # still open
     for who in ("host", "jana", "peto"):
         await game.answer(who, "q_mcq", "b")
     assert "paused" not in (await game.state("jana"))["round"]
@@ -592,7 +592,6 @@ async def test_host_pause_is_seen_by_guests_and_clears_with_the_next_question(ga
     await game.post("pause", paused=True)
     await game.post("next")
     assert "paused" not in (await game.state("jana"))["round"]
-    assert (await game.post("pause", paused=True)).status_code == 409  # new, open
 
 
 async def test_a_long_game_outlives_the_30_minutes_a_fresh_session_gets(

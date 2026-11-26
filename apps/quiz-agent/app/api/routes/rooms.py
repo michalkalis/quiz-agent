@@ -104,6 +104,11 @@ class RoomStateResponse(GameView):
     question_number: Optional[int] = None
     max_questions: Optional[int] = None
     players: Optional[List[RoomPlayer]] = None
+    same_network: Optional[bool] = Field(
+        None,
+        description="Join reply only (#249.4): the guest is on the host's "
+        "network (true) or elsewhere (false); absent when either is unknown",
+    )
 
 
 def subject_or_401(subject: AuthSubject) -> str:
@@ -210,18 +215,27 @@ async def join_room(
 ):
     subject_id = subject_or_401(subject)
     service = service_or_404(rooms)
+    keys = _keys(request, body.net_tickets, subject_id, service)
     try:
         room = await service.resolve(
-            subject_id,
-            _keys(request, body.net_tickets, subject_id, service),
-            join_token=body.join_token,
-            room_id=body.room_id,
+            subject_id, keys, join_token=body.join_token, room_id=body.room_id
         )
         via = body.via if body.join_token else "nearby"
         await service.join(room, subject_id, body.display_name, via)
     except RoomError as e:
         raise_http(e)
-    return await state_reply(service, room.room_id, subject_id, since=None)
+    reply = await state_reply(service, room.room_id, subject_id, since=None)
+    reply.same_network = same_network(room, keys)
+    return reply
+
+
+def same_network(room, keys: dict[str, str]) -> Optional[bool]:
+    """#249.4: the guest's phone reads the questions aloud by default only
+    away from the host (same address check as the nearby list, rooms.network)."""
+    host = {room.net_v4, room.net_v6} - {None}
+    if not host or not keys:
+        return None
+    return bool(host & set(keys.values()))
 
 
 @router.delete("/rooms/{room_id}/players/{participant_id}", status_code=204)

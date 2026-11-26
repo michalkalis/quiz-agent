@@ -2,7 +2,7 @@
 Geography
 0
 z 10
-Správně 1 · Vedle 1 · Přeskočeno 1
+Správně 1 · Špatně 1 · Přeskočeno 1
 Nejtěžší uhodnutá: Paris
 Otázky
 Přehraj souhrn
@@ -12,9 +12,7 @@ Which river flows through Budapest?
 Danube
 How many strings does a standard violin have?
 Four
-Hraj znovu
-Úvod
-Hraj znovu
+Další kvíz
 Úvod
 # identifiers
 recap.close
@@ -26,7 +24,5 @@ recap.playSummary
 recap.row.1
 recap.row.2
 recap.row.3
-recap.playAgain
-recap.home
 recap.playAgain
 recap.home

@@ -2,17 +2,17 @@
 //  DailyRoundEndView.swift
 //  Hangs
 //
-//  #205.5: the end of a daily challenge, in peak-end order: the round's
-//  tiles, the score, how the player compares with today's crowd, and LAST
-//  of the round the best hit (the rarest question they knew); the week's
-//  crew table (#239) follows it. Every crowd sentence is the server's, shown
-//  as sent; the screen never says "worse than". The numbers stay as they were
-//  when the screen opened, since numbers changing under the player's eyes
-//  confused (#240, 240.9); only what is still missing is fetched, and the next
-//  opening shows the new numbers. No Play Again (one challenge a day) and no
-//  upsell; Share sends the tiles and the score without the answers (#205.6).
-//  #243 decision 5: it still says "Hotovo, 3 z 5. Znova, alebo domov?";
-//  spoken "znova" starts an ordinary round (`playAgainFromRoundEnd`).
+//  #205.5 / #248.3 (founder 2026-11-25, variant B "Minimum"): the end of a
+//  daily challenge is quiet. Close on the leading side and Share (an icon, as
+//  Apple places it) on the trailing side; a small "Daily challenge · done"
+//  label; the score as the headline; the round's tiles; one muted reward line;
+//  the server's crowd sentence as one quiet line when it sends one (the server
+//  decides when there are enough players, the client has no threshold).
+//  Bottom: the listen bar, "Next quiz" (what spoken "again" does here: an
+//  ordinary round, `playAgainFromRoundEnd`) and Home. The numbers stay as they
+//  were when the screen opened (#240, 240.9); only what is still missing is
+//  fetched. The week's crew table (#239) shows when the player has a crew.
+//  Share sends the tiles and the score without the answers (#205.6).
 //
 
 import SwiftUI
@@ -24,18 +24,14 @@ struct DailyRoundEndView: View {
     @StateObject private var daily: DailyChallengeViewModel
     /// #232 (daily text B): the same five questions as a link.
     @StateObject private var share: SharedQuizShareModel
-    /// #239: the week's crew table under the result.
+    /// #239: the week's crew table under the result (nothing without a crew).
     @StateObject private var crew: DailyCrewViewModel
     private let round: DailyRound
     private let playerName: String
 
     private enum Metrics {
-        /// R-Complete: the score figure, as on the regular round end.
-        static let figure: CGFloat = 52
-        /// R-Complete: Home beside the main action.
-        static let homeWidth: CGFloat = 124
-        static let buttonHeight: CGFloat = 56
-        static let shareIcon: CGFloat = 17
+        /// The score figure, as on the regular round end.
+        static let figure: CGFloat = 64
     }
 
     init(viewModel: QuizViewModel) {
@@ -78,31 +74,33 @@ struct DailyRoundEndView: View {
     var body: some View {
         VStack(spacing: 0) {
             HangsTopBar {
-                HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
-                    .accessibilityIdentifier("daily.close")
+                HStack {
+                    HangsNavChip(icon: "xmark", label: "Close") { viewModel.resetToHome() }
+                        .accessibilityIdentifier("daily.close")
+                    Spacer()
+                    shareButton
+                }
             }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
-                    HangsHeroBlock(title: "COMPLETE", titleFont: .hangsDisplaySM)
+                    scoreBlock
                     DailyMarkTiles(marks: content.marks, tileHeight: DailyMarkTiles.Metrics.roundEndTileHeight)
                         .accessibilityIdentifier("daily.tiles")
-                    scoreCard
-                    if let comparison = content.comparison {
-                        comparisonCard(comparison)
-                    }
-                    if let bestHit = content.bestHit {
-                        bestHitCard(bestHit)
-                    }
                     if let left = daily.bonusLeft {
-                        DailyBonusLeftLine(left: left)
+                        DailyRewardLine(left: left)
                             .accessibilityIdentifier("daily.bonusLeft")
                     }
-                    DailyCrewCard(
-                        model: crew,
-                        playerName: playerName,
-                        canInvite: viewModel.shareableRoundSessionId != nil
-                    )
+                    if let comparison = content.comparison {
+                        Text(verbatim: comparison)
+                            .font(.hangsBody)
+                            .foregroundStyle(Theme.Hangs.Colors.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("daily.comparison")
+                    }
+                    // The invite card is gone (#248.3): the top-bar Share icon
+                    // invites; the card draws only a crew that exists.
+                    DailyCrewCard(model: crew, playerName: playerName, canInvite: false)
                     if let failure = share.failureMessage {
                         Text(verbatim: failure)
                             .font(.hangsBody)
@@ -127,28 +125,28 @@ struct DailyRoundEndView: View {
         }
     }
 
-    // MARK: - Cards
+    // MARK: - Score
 
-    private static let cardPadding = EdgeInsets(
-        top: Theme.Hangs.Spacing.sm, leading: Theme.Hangs.Spacing.md,
-        bottom: Theme.Hangs.Spacing.sm, trailing: Theme.Hangs.Spacing.md
-    )
-
-    private var scoreCard: some View {
-        HangsCard(padding: Self.cardPadding) {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                HangsSectionLabel(text: "final score")
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xxs) {
-                    Text(verbatim: "\(content.score)")
-                        .font(.hangsDisplay(Metrics.figure))
-                        .foregroundStyle(Theme.Hangs.Colors.blue)
-                        .lineLimit(1)
-                    Text("out of \(content.total)")
-                        .font(.hangsLabel)
-                        .foregroundStyle(Theme.Hangs.Colors.muted)
-                        .lineLimit(1)
-                        .fixedSize()
-                }
+    /// The label, then the score as the headline: the figure and "out of N".
+    private var scoreBlock: some View {
+        VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
+            Text("Daily challenge · done")
+                .textCase(.uppercase)
+                .font(.hangsOverline)
+                .tracking(0.6)
+                .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
+                .lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
+                Text(verbatim: "\(content.score)")
+                    .font(.hangsDisplay(Metrics.figure))
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("out of \(content.total)")
+                    .font(.hangsSubHero)
+                    .foregroundStyle(Theme.Hangs.Colors.muted)
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(localized: "Final score: \(String(content.score)) out of \(content.total)", bundle: .interface, locale: .interface, comment: "Accessibility label for the final-score card"))
@@ -156,59 +154,12 @@ struct DailyRoundEndView: View {
         }
     }
 
-    private func comparisonCard(_ comparison: String) -> some View {
-        HangsCard(padding: Self.cardPadding) {
-            Label {
-                Text(verbatim: comparison)
-                    .font(.hangsLabel)
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-            } icon: {
-                Image(systemName: "person.3.fill")
-                    .foregroundStyle(Theme.Hangs.Colors.blue)
-                    .accessibilityHidden(true)
-            }
-        }
-        .accessibilityIdentifier("daily.comparison")
-    }
-
-    private func bestHitCard(_ hit: DailyBestHit) -> some View {
-        HangsCard(padding: Self.cardPadding) {
-            VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.xxs) {
-                HangsSectionLabel(text: hit.rare ? "few knew this one" : "your best answer")
-                Text(verbatim: hit.answer)
-                    .font(.hangsTitle)
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.6)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: hit.question)
-                    .font(.hangsCaption)
-                    .foregroundStyle(Theme.Hangs.Colors.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: hit.text)
-                    .font(.hangsBody)
-                    .foregroundStyle(Theme.Hangs.Colors.ink)
-                    .padding(.top, Theme.Hangs.Spacing.xxs)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("daily.bestHit")
-    }
-
     // MARK: - Footer
 
     private var footer: some View {
-        // From the size where button titles wrap, the two stack: a 124pt Home
-        // beside Share would break "Home" mid-word (same rule as RoundCompleteView).
-        let stacked = VStack(spacing: Theme.Hangs.Spacing.xs) {
-            shareButton
-            homeButton
-        }
-        return VStack(spacing: Theme.Hangs.Spacing.sm) {
-            // #243 decision 5: the round end listens for "znova" / "domov",
-            // named here as on the regular round end.
+        VStack(spacing: Theme.Hangs.Spacing.sm) {
+            // The round end listens for "ďalší" / "domov", named here as on
+            // the regular round end.
             if viewModel.commandListenerHint != nil {
                 ListenBar(
                     mode: .command,
@@ -220,16 +171,15 @@ struct DailyRoundEndView: View {
                 )
                 .transition(.opacity)
             }
-            if HangsButtonTitle.wraps(at: dynamicTypeSize) {
-                stacked
-            } else {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: Theme.Hangs.Spacing.sm) {
-                        shareButton
-                        homeButton.frame(width: Metrics.homeWidth)
-                    }
-                    stacked
+            VStack(spacing: Theme.Hangs.Spacing.xs) {
+                HangsPrimaryButton(title: "Next quiz", trailingIcon: "arrow.right") {
+                    viewModel.playAgainFromRoundEnd()
                 }
+                .accessibilityIdentifier("daily.nextQuiz")
+                HangsSecondaryButton(title: "Home", icon: "house.fill") {
+                    viewModel.resetToHome()
+                }
+                .accessibilityIdentifier("daily.home")
             }
         }
         .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -238,54 +188,24 @@ struct DailyRoundEndView: View {
 
     /// #232: with the switch on and this phone's daily session at hand, the
     /// text carries a link to the same questions (made on the tap); else the
-    /// text alone, as before.
+    /// text alone, as before. A top-bar icon, the place Apple gives Share.
     @ViewBuilder private var shareButton: some View {
         if viewModel.shareableRoundSessionId != nil {
             Button(action: shareWithLink) {
-                shareLabel(isCreating: share.isCreating)
+                HangsNavChipLabel(icon: "square.and.arrow.up", isLoading: share.isCreating)
             }
             .buttonStyle(.plain)
             .disabled(share.isCreating)
+            .accessibilityLabel(Text("Share"))
             .accessibilityIdentifier("daily.share")
         } else {
             ShareLink(item: content.shareText) {
-                shareLabel(isCreating: false)
+                HangsNavChipLabel(icon: "square.and.arrow.up", isLoading: false)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("Share"))
             .accessibilityIdentifier("daily.share")
         }
-    }
-
-    /// The primary capsule's look on a `ShareLink` (a button cannot hold one).
-    private func shareLabel(isCreating: Bool) -> some View {
-        Label {
-            Text("Share")
-                .font(.hangsButton)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        } icon: {
-            if isCreating {
-                ProgressView()
-                    .tint(Theme.Hangs.Colors.textOnAction)
-            } else {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: Metrics.shareIcon, weight: .semibold))
-            }
-        }
-        .foregroundStyle(Theme.Hangs.Colors.textOnAction)
-        .padding(.horizontal, Theme.Hangs.Spacing.md)
-        .frame(maxWidth: .infinity, minHeight: Metrics.buttonHeight)
-        .background(
-            Capsule().fill(Theme.Hangs.Colors.action)
-                .hangsShadow(Theme.Hangs.Shadow.cta)
-        )
-    }
-
-    private var homeButton: some View {
-        HangsSecondaryButton(title: "Home", icon: "house.fill") {
-            viewModel.resetToHome()
-        }
-        .accessibilityIdentifier("daily.home")
     }
 
     /// What the screen could not show yet (opened before the server's summary,

@@ -1,13 +1,9 @@
 # texts
-ГОТОВО
-фінальний рахунок
+Щоденний виклик · готово
 4
 з 5
+Як винагороду маєш сьогодні 10 додаткових питань.
 Lepšie skóre ako 2 z 3 hráčov.
-це мало хто знав
-Libanon
-Ktorá krajina má na vlajke cédrový strom?
-Vedel to len 1 z 3.
 твоя компанія цього тижня
 1.
 Peter
@@ -19,22 +15,19 @@ Jana (ти)
 Mama
 90
 Правильна відповідь, яку знали небагато людей, дає більше балів, до 100.
-Поділись
-Додому
-Поділись
+Наступна вікторина
 Додому
 # identifiers
 daily.end
 daily.close
-daily.tiles
+daily.share
 daily.score
+daily.tiles
+daily.bonusLeft
 daily.comparison
-daily.bestHit
 daily.crew
 daily.crew.member
 daily.crew.you
 daily.crew.member
-daily.share
-daily.home
-daily.share
+daily.nextQuiz
 daily.home

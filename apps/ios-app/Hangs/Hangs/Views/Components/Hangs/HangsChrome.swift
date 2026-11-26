@@ -57,6 +57,33 @@ struct HangsNavChip: View {
     }
 }
 
+/// The look of a `HangsNavChip` for a control that is not a plain Button
+/// (a `ShareLink`, or a Button that shows a spinner while it works).
+struct HangsNavChipLabel: View {
+    let icon: String
+    var isLoading = false
+    var cornerRadius: CGFloat = Theme.Hangs.Radius.navRound
+
+    enum Metrics {
+        /// The glyph size of a 44pt nav chip (same as `HangsNavChip`).
+        static let iconSize: CGFloat = 16
+    }
+
+    var body: some View {
+        Group {
+            if isLoading {
+                ProgressView()
+            } else {
+                Image(systemName: icon)
+                    .font(.system(size: HangsNavChipLabel.Metrics.iconSize, weight: .semibold))
+            }
+        }
+        .foregroundColor(Theme.Hangs.Colors.ink)
+        .frame(width: 44, height: 44)
+        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+}
+
 // MARK: - Top brand row (home / settings / complete)
 
 /// Top row with `hangs.` brand on the left and an optional right accessory.

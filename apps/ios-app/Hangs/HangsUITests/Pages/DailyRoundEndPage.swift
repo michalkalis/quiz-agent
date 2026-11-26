@@ -22,6 +22,11 @@ struct DailyRoundEndPage {
         app.descendants(matching: .any)["daily.share"]
     }
 
+    /// #248.3: the one filled action: the next ordinary quiz.
+    var nextQuizButton: XCUIElement {
+        app.buttons["daily.nextQuiz"]
+    }
+
     var homeButton: XCUIElement {
         app.buttons["daily.home"]
     }

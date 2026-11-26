@@ -1,25 +1,16 @@
 # texts
-COMPLETE
-final score
+Daily challenge · done
 1
 out of 5
 Ťažká výzva.
-your best answer
-Gerlachovský štít
-Ako sa volá najvyšší vrch Slovenska?
-Vedeli 2 z 3.
-Share
-Home
-Share
+Next quiz
 Home
 # identifiers
 daily.end
 daily.close
-daily.tiles
+daily.share
 daily.score
+daily.tiles
 daily.comparison
-daily.bestHit
-daily.share
-daily.home
-daily.share
+daily.nextQuiz
 daily.home

@@ -71,7 +71,7 @@ struct RecapPasteDailyEndTests {
         ])
     }
 
-    private static func roundEnd(state: DailyChallengeState?, crew: DailyCrew?, network: MockNetworkService) -> DailyRoundEndView {
+    private static func roundEnd(state: DailyChallengeState?, crew: DailyCrew? = nil, network: MockNetworkService) -> DailyRoundEndView {
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
@@ -116,7 +116,7 @@ struct RecapPasteDailyEndTests {
         let network = MockNetworkService()
         network.stubbedDailyState = DailyChallengeFixtures.playedState(date: Self.day.isoDate, language: "sk", marks: DailyChallengeFixtures.goodMarks)
         network.stubbedDailyCrew = Self.crew(points: 240)
-        let view = Self.roundEnd(state: nil, crew: nil, network: network)
+        let view = Self.roundEnd(state: nil, network: network)
 
         try await ViewHosting.host(view) {
             await pumpUntil({ network.fetchDailyChallengeCallCount == 1 && network.fetchDailyCrewCallCount == 1 },

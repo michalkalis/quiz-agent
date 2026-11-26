@@ -2,7 +2,7 @@
 Geography
 7.5
 з 10
-Правильно 7 · Мимо 3 · Пропущено 0
+Правильно 7 · Неправильно 3 · Пропущено 0
 Найважче вгадане: Answer 10
 Безплатні питання закінчуються
 Цього місяця в тебе залишається 4 безплатного питання.
@@ -28,9 +28,7 @@ Question 9 of the round?
 Answer 9
 Question 10 of the round?
 Answer 10
-Зіграй ще раз
-Додому
-Зіграй ще раз
+Наступна вікторина
 Додому
 # identifiers
 completion.close
@@ -49,7 +47,5 @@ recap.row.7
 recap.row.8
 recap.row.9
 recap.row.10
-completion.playAgain
-completion.home
 completion.playAgain
 completion.home

@@ -268,3 +268,81 @@ struct CompletionViewPlayAgainTests {
         }
     }
 }
+
+// MARK: - #248.3 — the round end plays on and shares from the top bar
+
+// Why: the founder (TF 1.3 b92) wanted the next quiz, not "play again", at the
+// end of a round, and a quiet screen: Share as an icon where Apple puts it,
+// one filled action, Home under it. A friend's round keeps "Send to a friend"
+// as its main action (#232).
+@MainActor
+@Suite("CompletionView — Next quiz and top-bar share (#248.3)")
+struct CompletionViewRoundEndLayoutTests {
+    private func makeView(sharedQuiz: Bool, friendsRound: Bool = false) -> (CompletionView, QuizViewModel) {
+        let vm = QuizViewModel(
+            networkService: MockNetworkService(),
+            audioService: MockAudioService(),
+            persistenceStore: MockPersistenceStore(),
+            silenceDetectionService: MockSilenceDetectionService(),
+            sharedQuizEnabled: { sharedQuiz }
+        )
+        vm.currentSession = Fixtures.session(score: 7, answered: 10)
+        if friendsRound { vm.activeShare = SharedQuizPlay(token: "tok") }
+        vm.quizState = .finished
+        return (CompletionView(viewModel: vm), vm)
+    }
+
+    private func allTexts<V>(_ tree: InspectableView<V>) -> [String] {
+        tree.findAll(ViewType.Text.self).compactMap { try? $0.string() }
+    }
+
+    @Test("the primary action is Next quiz, not Play Again, and Home stays under it")
+    func nextQuizIsPrimary() async throws {
+        let (view, vm) = makeView(sharedQuiz: false)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let texts = allTexts(tree)
+            #expect(texts.contains("Next quiz"))
+            #expect(!texts.contains("Play Again"))
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "completion.home") }
+            // Same action as before: a tracked new round (see the V15 suite).
+            try tree.find(viewWithAccessibilityIdentifier: "completion.playAgain").button().tap()
+            #expect(vm.taskBag.contains(.quizStart))
+            vm.taskBag.cancelAll()
+        }
+    }
+
+    @Test("share is a top-bar icon with a name, and the old send card is gone")
+    func shareIsTopBarIcon() async throws {
+        let (view, vm) = makeView(sharedQuiz: true)
+        vm.currentSession = Fixtures.makeQuizSession(id: "s_mine")
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let share = try tree.find(viewWithAccessibilityIdentifier: "completion.sendToFriend")
+            let label = try share.find(ViewType.Button.self).accessibilityLabel().string()
+            #expect(label == "Send to a friend", "an icon-only control must be named")
+            #expect(!allTexts(tree).contains("Send to a friend"), "no card or button with the words, only the icon")
+        }
+    }
+
+    @Test("switch off: no share icon at all")
+    func noShareWhenSwitchOff() async throws {
+        let (view, _) = makeView(sharedQuiz: false)
+        try await ViewHosting.host(view) {
+            #expect(throws: (any Error).self) {
+                try view.inspect().find(viewWithAccessibilityIdentifier: "completion.sendToFriend")
+            }
+        }
+    }
+
+    @Test("a friend's round keeps Send to a friend as its main button, no Next quiz")
+    func friendsRoundKeepsSend() async throws {
+        let (view, _) = makeView(sharedQuiz: true, friendsRound: true)
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let texts = allTexts(tree)
+            #expect(texts.contains("Send to a friend"))
+            #expect(!texts.contains("Next quiz"))
+        }
+    }
+}

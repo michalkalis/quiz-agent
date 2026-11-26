@@ -1,13 +1,9 @@
 # texts
-HOTOVO
-konečné skóre
+Denní výzva · hotovo
 4
 z 5
+Za odměnu máš dnes 10 otázek navíc.
 Lepšie skóre ako 2 z 3 hráčov.
-tohle věděl málokdo
-Libanon
-Ktorá krajina má na vlajke cédrový strom?
-Vedel to len 1 z 3.
 tvoje parta tento týden
 1.
 Peter
@@ -19,22 +15,19 @@ Jana (ty)
 Mama
 90
 Správná odpověď, kterou vědělo málo lidí, má víc bodů, až 100.
-Sdílej
-Úvod
-Sdílej
+Další kvíz
 Úvod
 # identifiers
 daily.end
 daily.close
-daily.tiles
+daily.share
 daily.score
+daily.tiles
+daily.bonusLeft
 daily.comparison
-daily.bestHit
 daily.crew
 daily.crew.member
 daily.crew.you
 daily.crew.member
-daily.share
-daily.home
-daily.share
+daily.nextQuiz
 daily.home

@@ -130,7 +130,7 @@ struct SetRecapViewInspectorTests {
         try await ViewHosting.host(view) {
             let breakdown = try view.inspect().find(viewWithAccessibilityIdentifier: "completion.breakdown")
             let line = try breakdown.text().string()
-            #expect(line == "Correct 1 · Missed 3 · Skipped 2")
+            #expect(line == "Correct 1 · Wrong 3 · Skipped 2")
         }
     }
 

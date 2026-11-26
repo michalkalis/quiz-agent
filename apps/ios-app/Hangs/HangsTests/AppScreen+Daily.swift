@@ -19,7 +19,7 @@ extension AppScreen {
 
     func makeDaily() async -> AnyView {
         switch self {
-        case .dailyEndGood: Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, crew: Self.crew)
+        case .dailyEndGood: Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, bonusLeft: 10, crew: Self.crew)
         case .dailyEndWeak: Self.roundEnd(marks: DailyChallengeFixtures.weakMarks)
         case .homeDaily: await Self.home(state: nil)
         case .homeDailyPlayed: await Self.home(state: Self.played(DailyChallengeFixtures.goodMarks))
@@ -58,16 +58,20 @@ extension AppScreen {
         DailyCrewMember(memberId: "m-2", name: "Mama", points: 90, today: 0, days: 2, place: 3, isYou: false),
     ])
 
-    private static func roundEnd(marks: [Bool?], crew: DailyCrew? = nil) -> AnyView {
-        let state = played(marks)
+    private static func roundEnd(marks: [Bool?], bonusLeft: Int? = nil, crew: DailyCrew? = nil) -> AnyView {
+        // #248.3: the good day earned the reward line; the weak one did not.
+        let base = played(marks)
+        let state = bonusLeft == nil ? base : DailyChallengeState(
+            date: base.date, language: base.language, status: base.status, total: base.total, summary: base.summary,
+            bonusOffer: 10, bonusLeft: bonusLeft, daysPlayed: 1
+        )
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
         let network = network(state)
         network.stubbedDailyCrew = crew
         let daily = DailyChallengeViewModel(network: network, now: { fixedNow }, day: day, state: state)
-        let crewModel = DailyCrewViewModel(network: network, crew: crew)
-        return AnyView(DailyRoundEndView(viewModel: vm, daily: daily, crew: crewModel))
+        return AnyView(DailyRoundEndView(viewModel: vm, daily: daily, crew: DailyCrewViewModel(network: network, crew: crew)))
     }
 
     private static func home(state: DailyChallengeState?) async -> AnyView {

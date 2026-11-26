@@ -4,11 +4,11 @@ M
 Michal
 P
 Peťo
-20 s
-na odpověď
 Pauzu dal hostitel Michal
 SCIENCE & NATURE
 Which planet has the most known moons?
+Přemýšlej
+20 s
 A
 Jupiter
 B
@@ -24,10 +24,12 @@ question.mute
 question.progress
 question.counter
 room.question.players
-room.question.timer
 room.question.paused
 question.category
 question.text
+room.question.bar
+listen-bar
+listen-bar.seconds
 mcq.option.a
 mcq.option.b
 mcq.option.c

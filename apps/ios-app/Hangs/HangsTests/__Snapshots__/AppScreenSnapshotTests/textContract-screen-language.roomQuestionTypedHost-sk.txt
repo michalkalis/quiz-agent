@@ -1,0 +1,31 @@
+# texts
+Pravidlá hry
+2/2
+M
+Michal
+J
+Jana
+SCIENCE & NATURE
+What is the capital of Australia?
+Premýšľaj
+20 s
+Odpovedz
+Napíš
+Ostatní uvidia tvoju odpoveď až po otázke.
+# identifiers
+room.close
+question.mute
+question.pause
+room.moreMenu
+room.rules.open
+question.progress
+question.counter
+room.question.players
+question.category
+room.readAgain
+question.text
+room.question.bar
+listen-bar
+listen-bar.seconds
+room.answer.record
+room.answer.type

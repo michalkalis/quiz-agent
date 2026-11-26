@@ -1,0 +1,26 @@
+# texts
+2/2
+M
+Michal
+P
+Peťo
+SCIENCE & NATURE
+What is the capital of Australia?
+Přemýšlej
+20 s
+Odpověz
+Napiš
+Ostatní uvidí tvou odpověď až po otázce.
+# identifiers
+room.close
+question.mute
+question.progress
+question.counter
+room.question.players
+question.category
+question.text
+room.question.bar
+listen-bar
+listen-bar.seconds
+room.answer.record
+room.answer.type

@@ -38,7 +38,7 @@ extension AppScreen {
             await makeDaily()
         case .roomLobbyHost, .roomLobbyGuest, .roomQuestion, .roomQuestionHost, .roomReveal, .roomRevealTyped, .roomRevealPaused, .roomFinal, .roomFinalExpanded, .roomRules, .roomRulesLobby, .roomLobbyHostFull,
              .roomQuestionReading, .roomQuestionGrading, .roomRevealCancelled, .roomFinalGuest, .roomRankingShareImage,
-             .roomQuestionPaused, .roomQuestionPausedHost:
+             .roomQuestionPaused, .roomQuestionPausedHost, .roomQuestionTyped, .roomQuestionTypedHost, .roomQuestionRecording:
             await makeRoom()
         case .recapShareImage:
             makeRecapShareImage()

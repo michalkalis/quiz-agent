@@ -103,7 +103,7 @@ struct RoomQuestionView: View {
     }
 
     /// #249.4: the host paused the question; its time stands still for
-    /// everyone (the seconds in the strip above stop), answers still count.
+    /// everyone (the seconds in the bar under the question stop), answers still count.
     private var pausedLine: some View {
         Group {
             if viewModel.isHost {

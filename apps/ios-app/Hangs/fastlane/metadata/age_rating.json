@@ -1,5 +1,5 @@
 {
-  "_comment": "Founder 2026-10-12: trivia questions occasionally mention historical wars and alcohol, nothing else applies (no chat, no shared user content, no gambling, no ads, no web browser).",
+  "_comment": "Founder 2026-10-12: trivia questions occasionally mention historical wars and alcohol, nothing else applies (no chat, no shared user content, no gambling, no ads, no web browser). Founder 2026-11-25: no dating features, no location sharing (Apple questions added 2026-11, due 2027-01-12; editable only with a new version).",
   "alcoholTobaccoOrDrugUseOrReferences": "INFREQUENT",
   "violenceRealistic": "INFREQUENT",
   "contests": "NONE",
@@ -23,5 +23,7 @@
   "socialMedia": false,
   "socialMediaAgeRestricted": false,
   "unrestrictedWebAccess": false,
-  "userGeneratedContent": false
+  "userGeneratedContent": false,
+  "datingAndRelationships": false,
+  "sharedLocation": false
 }

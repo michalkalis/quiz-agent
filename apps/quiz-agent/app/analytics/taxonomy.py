@@ -177,8 +177,11 @@ _CLIENT_EVENT_KEYS: dict[str, frozenset[str]] = {
     # #213.8: the host changed a rule of a game together (lobby or in game).
     "room_settings_changed": frozenset({"setting", "value", "surface"}),
     # #224.4: the host stayed on a reveal (paused) or let the game go on.
-    "room_pause_changed": frozenset({"paused", "question"}),
-    "room_guest_read_aloud": frozenset({"on", "via"}),
+    # #249.4: phase = reading | answering | revealed (an open question pauses
+    # too); same_network = the join found the guest on the host's network
+    # (true | false | unknown), which set the read-aloud default.
+    "room_pause_changed": frozenset({"paused", "question", "phase"}),
+    "room_guest_read_aloud": frozenset({"on", "via", "same_network"}),
     # #240.9: the host's phone closed a game together (reason = finished |
     # host_left | never_started | expired), and the share sheet opened on the
     # final ranking (role = host | guest).

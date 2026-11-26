@@ -5,7 +5,8 @@
 //  #224.4: the question card of a game together. It takes the room the
 //  options leave free, shows no scroll bar and, like the solo screen, lets a
 //  long question drift to its end at reading pace. The host's card replays the
-//  question on a tap; a guest has no audio controls.
+//  question on a tap (solo's ↻); the speaker for every player is in the top
+//  bar since #249.4.
 //
 
 import SwiftUI
@@ -18,9 +19,6 @@ struct RoomQuestionCard: View {
     let canReplay: Bool
     /// Guest: the host's phone is reading the question aloud right now.
     let hostIsReading: Bool
-    /// Guest: this phone reads the question aloud (#230.2); the button switches it.
-    var guestReadsAloud = false
-    var toggleGuestReadAloud: () -> Void = {}
     let replay: () -> Void
 
     @State private var scroll = ScrollPosition()
@@ -51,7 +49,7 @@ struct RoomQuestionCard: View {
                 overflow = new
             }
             .task(id: question.id) { await drift() }
-            // a11y-id: the speaker button in the card header is the accessible "read again"
+            // a11y-id: the replay button in the card header is the accessible "read again"
             .onTapGesture { if isHost, canReplay { replay() } }
         }
         .frame(minHeight: Metrics.minHeight)
@@ -60,8 +58,9 @@ struct RoomQuestionCard: View {
     @ViewBuilder
     private var accessory: some View {
         if isHost {
+            // #249.4: solo's replay glyph; a speaker here read as a second mute.
             Button(action: replay) {
-                Image(systemName: "speaker.wave.2.fill")
+                Image(systemName: "arrow.counterclockwise")
                     .font(.hangsBody(Metrics.iconSize, weight: .semibold))
                     .frame(width: Metrics.buttonSide, height: Metrics.buttonSide)
             }
@@ -70,19 +69,8 @@ struct RoomQuestionCard: View {
             .opacity(canReplay ? 1 : Metrics.dimmed)
             .accessibilityLabel(Text("Read again"))
             .accessibilityIdentifier("room.readAgain")
-        } else {
-            HStack(spacing: Metrics.gap) {
-                if hostIsReading { hostReadingLabel }
-                Button(action: toggleGuestReadAloud) {
-                    Image(systemName: guestReadsAloud ? "speaker.wave.2" : "speaker.slash")
-                        .font(.hangsBody(Metrics.iconSize, weight: .semibold))
-                        .frame(width: Metrics.buttonSide, height: Metrics.buttonSide)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Read aloud on this phone"))
-                .accessibilityValue(Text(guestReadsAloud ? "On" : "Off"))
-                .accessibilityIdentifier("room.guestReadAloud")
-            }
+        } else if hostIsReading {
+            hostReadingLabel
         }
     }
 
@@ -112,6 +100,5 @@ struct RoomQuestionCard: View {
         static let iconSize: CGFloat = 16
         static let buttonSide: CGFloat = 44
         static let dimmed = 0.4
-        static let gap: CGFloat = 4
     }
 }

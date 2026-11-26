@@ -35,7 +35,13 @@ class RoundOut(BaseModel):
     explanation: Optional[str] = None
     results: Optional[List[RoundResult]] = None
     # #224.4: set (true) only while the host holds the reveal; absent otherwise.
-    paused: Optional[bool] = None
+    # #249.4: also while the host pauses the open question (reading or
+    # answering): remaining_ms then stands still and answers still count.
+    paused: Optional[bool] = Field(
+        None,
+        description="True while the host pauses (the reveal, or the open "
+        "question with its clock stopped); absent otherwise",
+    )
     # #239: set (true) only when the judge could not grade the question and the
     # host moved on; every result is then "skipped" with 0 points. Absent otherwise.
     cancelled: Optional[bool] = None
@@ -114,6 +120,7 @@ def round_out(session: QuizSession, rnd, you, at: datetime) -> RoundOut:
         remaining_ms=rounds.remaining_ms(game, rnd, at) if not rnd.closed else 0,
         answered=list(rnd.answers),
         your_answer=mine.answer if mine else None,
+        paused=True if rnd.paused_at is not None else None,
     )
     if rnd.closed:
         out.correct_answer = rnd.correct_answer
@@ -169,9 +176,12 @@ def game_view(session: QuizSession, you) -> GameView:
 def stable(session: QuizSession) -> bool:
     """True when an unchanged version means an unchanged screen. While the host
     reads or a close is pending, the phase moves with time alone, so the poll
-    answers in full."""
+    answers in full. #249.4: also during a pause of the open question, so a
+    build that does not know it keeps re-reading the stopped time left."""
     game = session.room_game
     rnd = game.current if game else None
+    if rnd is not None and rnd.paused_at is not None:
+        return False
     return rnd is None or rounds.phase(session, rnd, rounds.now()) in (
         "answering",
         "revealed",

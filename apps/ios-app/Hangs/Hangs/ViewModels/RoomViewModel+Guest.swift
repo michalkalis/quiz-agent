@@ -4,7 +4,7 @@
 //
 //  #230.2: a guest who joined from another city has no host in the room to
 //  listen to, so their own phone reads each question aloud (from the room's
-//  audio). It is switched on by default after a link join, and for this game only.
+//  audio). #249.4: on by default away from the host's network, for this game only.
 //
 
 import Foundation
@@ -16,7 +16,10 @@ extension RoomViewModel {
     func setGuestReadsAloud(_ on: Bool) async {
         guard role == .guest, on != guestReadsAloud else { return }
         guestReadsAloud = on
-        if let invite { analytics.track(.roomGuestReadAloud(on: on, via: invite.via)) }
+        if let invite {
+            let network = joinedOnHostNetwork.map { $0 ? "true" : "false" } ?? "unknown"
+            analytics.track(.roomGuestReadAloud(on: on, via: invite.via, sameNetwork: network))
+        }
         if on, let state { guestReact(to: state) }
         if !on {
             guestReadTask?.cancel()
@@ -25,6 +28,16 @@ extension RoomViewModel {
     }
 
     func guestReact(to state: RoomState) {
+        // #249.4: the host paused the open question: the clip stops too; one
+        // stopped while the question was still being read plays again after.
+        if let round = state.round, round.isPaused, round.phase != .revealed {
+            guard let task = guestReadTask else { return }
+            task.cancel()
+            guestReadTask = nil
+            if round.phase == .reading { guestReadQuestionId = nil }
+            Task { await audio.stopPlayback() }
+            return
+        }
         guard guestReadsAloud, state.status == .playing, let round = state.round,
               round.phase == .reading || round.phase == .answering,
               guestReadQuestionId != round.questionId

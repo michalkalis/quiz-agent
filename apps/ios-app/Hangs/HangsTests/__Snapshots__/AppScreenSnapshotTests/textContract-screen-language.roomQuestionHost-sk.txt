@@ -1,5 +1,5 @@
 # texts
-Hra spolu
+Pravidlá hry
 1/2
 M
 Michal
@@ -20,6 +20,9 @@ Neptune
 Ostatní uvidia tvoju odpoveď až po otázke.
 # identifiers
 room.close
+question.mute
+question.pause
+room.moreMenu
 room.rules.open
 question.progress
 question.counter

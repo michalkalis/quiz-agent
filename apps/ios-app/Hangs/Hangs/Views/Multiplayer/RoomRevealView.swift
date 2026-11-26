@@ -149,39 +149,24 @@ struct RoomRevealView: View {
 }
 
 /// The host moves on (by itself after a countdown, unless it stays); a guest
-/// waits for it and sees when the host paused (#224.4).
+/// waits for it and sees when the host paused (#224.4). #249.4: the host
+/// stays with the top bar's pause, as on the solo result screen.
 struct RoomNextFooter: View {
     @ObservedObject var viewModel: RoomViewModel
 
     var body: some View {
         if viewModel.isHost {
-            HStack(spacing: Theme.Hangs.Spacing.xs) {
-                HangsPrimaryButton(
-                    title: "Next",
-                    trailingIcon: "arrow.right",
-                    isLoading: viewModel.isWorking,
-                    countdownSecondsRemaining: viewModel.autoAdvanceLeft,
-                    countdownTotal: viewModel.autoAdvanceSeconds
-                ) {
-                    Task { await viewModel.next() }
-                }
-                .disabled(viewModel.isWorking)
-                .accessibilityIdentifier("room.next")
-                .layoutPriority(1)
-                if viewModel.isPaused {
-                    HangsSecondaryButton(title: "Resume", icon: "play.fill", singleLineTitle: true) {
-                        Task { await viewModel.togglePause() }
-                    }
-                    .fixedSize(horizontal: true, vertical: false)
-                    .accessibilityIdentifier("room.resume")
-                } else {
-                    HangsSecondaryButton(title: "Stay", icon: "pause.fill", singleLineTitle: true) {
-                        Task { await viewModel.togglePause() }
-                    }
-                    .fixedSize(horizontal: true, vertical: false)
-                    .accessibilityIdentifier("room.pause")
-                }
+            HangsPrimaryButton(
+                title: "Next",
+                trailingIcon: "arrow.right",
+                isLoading: viewModel.isWorking,
+                countdownSecondsRemaining: viewModel.autoAdvanceLeft,
+                countdownTotal: viewModel.autoAdvanceSeconds
+            ) {
+                Task { await viewModel.next() }
             }
+            .disabled(viewModel.isWorking)
+            .accessibilityIdentifier("room.next")
         } else if viewModel.isPaused {
             Label("The host paused", systemImage: "pause.circle.fill")
                 .font(.hangsLabel)

@@ -13,7 +13,11 @@ from pydantic import BaseModel, Field
 
 class RoomAnswer(BaseModel):
     answer: str = Field(..., description="Option key or the typed text")
-    at: datetime = Field(..., description="When the server received it")
+    at: datetime = Field(
+        ...,
+        description="When the server received it, on the round's clock: a host "
+        "pause (#249.4) moves it on by the pause, so no speed counts a pause",
+    )
     result: Optional[str] = Field(None, description="Set when the question closes")
     points: float = 0.0
 
@@ -45,6 +49,11 @@ class RoomRound(BaseModel):
     # #224.4: the host stays on this reveal; guests are told. Lives on the
     # round, so the next question starts unpaused without any reset code.
     paused: bool = False
+    # #249.4: the host paused the open question (reading or answering). The
+    # round's clock stands still at this instant: answers still come in, the
+    # question never closes, and the resume moves the round's times on by
+    # the pause (rounds.resume), so the time left is the same as before.
+    paused_at: Optional[datetime] = None
     # The judge stayed down until the host moved on: the question counts for
     # nobody (founder 2026-11-18, #239).
     cancelled: bool = False

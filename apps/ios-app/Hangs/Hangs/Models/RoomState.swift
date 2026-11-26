@@ -31,6 +31,9 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
     let away: [Away]?
     /// #240.9: small awards on the final screen; nil from an older server.
     var awards: [Award]? = nil
+    /// #249.4: join reply only: the guest is on the host's network; nil when
+    /// the server cannot tell (or an older server).
+    var sameNetwork: Bool? = nil
 
     enum Status: String, Decodable, Sendable {
         case lobby, playing, finished
@@ -74,6 +77,7 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         let explanation: String?
         let results: [Result]?
         /// #224.4: the host stays on this reveal; the server leaves it out otherwise.
+        /// #249.4: also while the host pauses the open question (its time stands still).
         let paused: Bool?
         /// #240.9: the judge could not grade this question, so it counts for nobody.
         var cancelled: Bool? = nil
@@ -163,5 +167,6 @@ nonisolated struct RoomState: Decodable, Sendable, Equatable {
         case question, round
         case finishedReason = "finished_reason"
         case ranking, rounds, away, awards
+        case sameNetwork = "same_network"
     }
 }

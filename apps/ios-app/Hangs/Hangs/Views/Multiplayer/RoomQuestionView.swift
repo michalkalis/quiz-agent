@@ -3,8 +3,8 @@
 //  Hangs
 //
 //  #212: everyone's question screen: tap A–D or type, then the answer locks.
-//  #224.4: faces and time on top, a calm drifting question card, no audio
-//  controls for guests.
+//  #224.4: faces and time on top, a calm drifting question card.
+//  #249.4: the speaker and the host's pause are in the top bar, as in solo.
 //
 
 import SwiftUI
@@ -25,17 +25,17 @@ struct RoomQuestionView: View {
                         secondsLeft: viewModel.secondsLeft(),
                         fullSeconds: viewModel.state?.thinkingSeconds
                     )
-                    if let progress = viewModel.readingProgress() {
+                    if viewModel.isPaused {
+                        pausedLine
+                    } else if let progress = viewModel.readingProgress() {
                         readingBar(progress)
                     }
                     if let question = viewModel.question {
                         RoomQuestionCard(
                             question: question,
                             isHost: viewModel.isHost,
-                            canReplay: viewModel.settings.readsAloud && !viewModel.isReadingAloud,
-                            hostIsReading: round.phase == .reading && !viewModel.guestReadsAloud,
-                            guestReadsAloud: viewModel.guestReadsAloud,
-                            toggleGuestReadAloud: { Task { await viewModel.setGuestReadsAloud(!viewModel.guestReadsAloud) } },
+                            canReplay: viewModel.settings.readsAloud && !viewModel.isReadingAloud && !viewModel.isPaused,
+                            hostIsReading: round.phase == .reading && !round.isPaused && !viewModel.guestReadsAloud,
                             replay: viewModel.readAgain
                         )
                         answerArea(question, round: round)
@@ -137,6 +137,25 @@ struct RoomQuestionView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Answer time starts after reading"))
             .accessibilityIdentifier("room.question.readingProgress")
+    }
+
+    /// #249.4: the host paused the question; its time stands still for
+    /// everyone (the seconds in the strip above stop), answers still count.
+    private var pausedLine: some View {
+        Group {
+            if viewModel.isHost {
+                Label("Paused for everyone", systemImage: "pause.circle.fill")
+            } else {
+                Label("Paused by the host \(viewModel.host?.displayName ?? "")", systemImage: "pause.circle.fill")
+            }
+        }
+        .font(.hangsLabel)
+        .foregroundStyle(Theme.Hangs.Colors.ink)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("room.question.paused")
     }
 
     @ViewBuilder

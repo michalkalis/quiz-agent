@@ -72,20 +72,22 @@ struct RoomFlowView: View {
         }
     }
 
+    /// #249.4: while the game is played the bar is the solo quiz bar: ✕,
+    /// then the speaker + pause pill and ⋯ (`RoomGameControls`); before and
+    /// after it, ✕ and the title.
     private var topBar: some View {
         HStack {
             HangsNavChip(icon: "xmark", label: "Close", action: closeTapped)
                 .accessibilityIdentifier("room.close")
             Spacer()
-            Text("Play together")
-                .font(.hangsOverline)
-                .textCase(.uppercase)
-                .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
-            Spacer()
-            if showsRulesButton {
-                HangsNavChip(icon: "gearshape", label: "Game rules", action: openRules)
-                    .accessibilityIdentifier("room.rules.open")
+            if isPlaying {
+                RoomGameControls(viewModel: viewModel, openRules: openRules)
             } else {
+                Text("Play together")
+                    .font(.hangsOverline)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
+                Spacer()
                 Color.clear.frame(width: Metrics.chipSide, height: Metrics.chipSide)
             }
         }
@@ -139,10 +141,9 @@ struct RoomFlowView: View {
         .accessibilityIdentifier("room.ended")
     }
 
-    /// #213.8: the host changes the rules mid-game; guests have no gear.
-    private var showsRulesButton: Bool {
-        guard viewModel.isHost else { return false }
-        return switch viewModel.screen {
+    /// #213.8: the host changes the rules mid-game (under ⋯ since #249.4).
+    private var isPlaying: Bool {
+        switch viewModel.screen {
         case .question, .reveal, .roundWait: true
         default: false
         }

@@ -116,23 +116,31 @@ struct QuizControlPill: View {
     let isPauseEnabled: Bool
     /// nil = no mute: a silent quiz (founder 2026-11-22) has no sound to mute.
     let onMute: (() -> Void)?
-    let onPause: () -> Void
+    /// nil = no pause: a guest of a game together (#249.4), whose game the host pauses.
+    let onPause: (() -> Void)?
+    /// #249.4: a game together draws the pill in its own bar, not the native
+    /// toolbar, so it gives the buttons the bar's full height to hit.
+    var buttonHeight: CGFloat = 30
 
     var body: some View {
         HStack(spacing: 0) {
             if let onMute {
                 QuizMuteToolbarButton(isMuted: isMuted, action: onMute)
-                    .frame(width: 42, height: 30)
+                    .frame(width: 42, height: buttonHeight)
 
-                Rectangle()
-                    .fill(Theme.Hangs.Colors.hairline)
-                    .frame(width: 1, height: 18)
-                    .accessibilityHidden(true)
+                if onPause != nil {
+                    Rectangle()
+                        .fill(Theme.Hangs.Colors.hairline)
+                        .frame(width: 1, height: 18)
+                        .accessibilityHidden(true)
+                }
             }
 
-            QuizPauseToolbarButton(isPaused: isPaused, action: onPause)
-                .frame(width: 42, height: 30)
-                .disabled(!isPauseEnabled)
+            if let onPause {
+                QuizPauseToolbarButton(isPaused: isPaused, action: onPause)
+                    .frame(width: 42, height: buttonHeight)
+                    .disabled(!isPauseEnabled)
+            }
         }
         // Deliberately NO identifier on the pill: `accessibilityIdentifier` is
         // inherited, so one here overwrites `question.mute` / `question.pause`

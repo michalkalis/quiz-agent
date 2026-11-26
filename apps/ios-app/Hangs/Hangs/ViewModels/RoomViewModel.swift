@@ -59,9 +59,13 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var autoAdvanceLeft: Int?
     /// Host: a pause or resume is on its way to the server (#224.4).
     @Published var isChangingPause = false
-    /// Guest: this phone reads each question aloud itself (#230.2). On by
-    /// default after a link join (a friend in another city), off next to the host.
+    /// Guest: this phone reads each question aloud itself (#230.2). #249.4:
+    /// off by default on the host's network (the host's phone reads), on
+    /// anywhere else or when the server cannot tell; the guest's own choice
+    /// in the top bar then holds for the rest of the game.
     @Published var guestReadsAloud = false
+    /// Guest: what the join said about the host's network (#249.4), for analytics.
+    private(set) var joinedOnHostNetwork: Bool?
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
@@ -178,6 +182,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     var isHost: Bool { role == .host }
     /// #224.4: the host stays on this reveal; every phone says so.
+    /// #249.4: also an open question the host paused (its time stands still).
     var isPaused: Bool { round?.isPaused == true }
     /// After a reveal the host's phone moves on by itself after this long
     /// (solo's pause). #243.8: solo's "right after the verdict" (0) and "wait
@@ -207,6 +212,10 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     /// Whole seconds of answer time left; nil while the host reads aloud.
     func secondsLeft() -> Int? {
+        // #249.4: paused, the server's time left stands still; never count it down here.
+        if let round, round.isPaused, round.phase == .answering, let ms = round.remainingMs {
+            return max(0, (ms + 999) / 1000)
+        }
         guard let answerDeadline, round?.phase == .answering else { return nil }
         let left = clock.now.duration(to: answerDeadline)
         return max(0, Int((left.timeInterval).rounded(.up)))
@@ -255,7 +264,6 @@ final class RoomViewModel: ObservableObject, Identifiable {
         stopNearbySearch()
         self.invite = invite
         role = .guest
-        if case .token = invite { guestReadsAloud = true } else { guestReadsAloud = false }
         isWorking = true
         defer { isWorking = false }
         do {
@@ -265,6 +273,9 @@ final class RoomViewModel: ObservableObject, Identifiable {
                 if let you = joined.you { try? await rooms.removePlayer(roomId: joined.roomId, participantId: you) }
                 return
             }
+            // #249.4: next to the host the host's phone reads; anywhere else (or unknown) this one does.
+            joinedOnHostNetwork = joined.sameNetwork
+            guestReadsAloud = joined.sameNetwork != true
             apply(joined)
             startPolling()
         } catch {

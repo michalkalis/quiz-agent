@@ -94,15 +94,18 @@ struct RoomPauseTests {
         defer { model.stopAll() }
         await model.togglePause()
         await model.togglePause()
-        #expect(analytics.events == [.roomPauseChanged(paused: true, question: 1), .roomPauseChanged(paused: false, question: 1)])
+        #expect(analytics.events == [
+            .roomPauseChanged(paused: true, question: 1, phase: "revealed"),
+            .roomPauseChanged(paused: false, question: 1, phase: "revealed"),
+        ])
     }
 
     @Test("A refused pause keeps the countdown running and counts nothing")
     func refusedPauseKeepsCountdown() async {
         let model = await hostAtReveal()
         defer { model.stopAll() }
-        // The room refuses a pause on a question that is not revealed any more.
-        rooms.hostMovesOn()
+        // The room refuses the pause (e.g. the game moved on meanwhile).
+        rooms.conditions.setNetworkCondition(.serverError(statusCode: 409), for: [.setPaused])
         await model.togglePause()
         for _ in 0 ..< 5 {
             await Task.yield()

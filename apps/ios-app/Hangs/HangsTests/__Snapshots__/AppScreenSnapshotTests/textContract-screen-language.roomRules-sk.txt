@@ -8,8 +8,6 @@ Hotovo
 60 s
 Vlastný
 Čas na odpoveď
-Čítať otázky nahlas
-
 Kedy ukázať odpovede
 After each question
 Kedy ukázať odpovede
@@ -18,5 +16,4 @@ Zmeny platia od ďalšej otázky. Kedy ukázať odpovede sa dá zmeniť len pred
 # identifiers
 room.rules.done
 room.rules.sheet.time
-room.rules.sheet.readsAloud
 room.rules.sheet.reveal

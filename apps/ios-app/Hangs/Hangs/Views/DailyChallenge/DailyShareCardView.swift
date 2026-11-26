@@ -39,16 +39,17 @@ struct DailyShareCardView: View {
                     .tracking(2)
                     .padding(.top, 8)
                 Text(verbatim: "\(score)/\(total)")
-                    .font(face(250, .heavy))
+                    .font(face(220, .heavy))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                    .padding(.top, 20)
+                    .frame(height: 200, alignment: .top)
+                    .padding(.top, 4)
                 tiles
-                    .padding(.top, 8)
+                    .padding(.top, 14)
                 Text(verbatim: Self.hook(language: language))
                     .font(face(56, .heavy))
                     .foregroundStyle(Theme.Hangs.ShareCard.hook)
-                    .padding(.top, 20)
+                    .padding(.top, 28)
             }
             .foregroundStyle(Theme.Hangs.ShareCard.text)
             .padding(.leading, 80)
@@ -60,7 +61,7 @@ struct DailyShareCardView: View {
 
     private var tiles: some View {
         let shown = Array(marks.prefix(10))
-        let side = min(96, (700 - 16 * CGFloat(max(shown.count - 1, 0))) / CGFloat(max(shown.count, 1)))
+        let side = min(92, (700 - 16 * CGFloat(max(shown.count - 1, 0))) / CGFloat(max(shown.count, 1)))
         return HStack(spacing: 16) {
             ForEach(Array(shown.enumerated()), id: \.offset) { _, mark in
                 tile(mark, side: side)

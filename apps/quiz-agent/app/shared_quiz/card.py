@@ -216,10 +216,10 @@ def render(data: CardData) -> bytes:
         )
         marks = list(data.marks[:MAX_TILES])
         if marks:
-            size = min(96, (700 - 16 * (len(marks) - 1)) // len(marks))
+            size = min(92, (700 - 16 * (len(marks) - 1)) // len(marks))
             for i, mark in enumerate(marks):
-                _tile(draw, 80 + i * (size + 16), 456, size, mark)
-        _text(draw, (80, 550), w["hook"], "ExtraBold", 56, YELLOW, 0, lang)
+                _tile(draw, 80 + i * (size + 16), 398, size, mark)
+        _text(draw, (80, 508), w["hook"], "ExtraBold", 56, YELLOW, 0, lang)
     out = io.BytesIO()
     img.save(out, "PNG", optimize=True)
     return out.getvalue()

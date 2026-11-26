@@ -37,7 +37,9 @@ def _tracker(sm, limit=3, now=NOON) -> UsageTracker:
     return UsageTracker(sm, monthly_limit=limit, now=lambda: now)
 
 
-async def _play(sm, *, finished=True, expires=None, used=0, subject=SUBJECT, day=DAY):
+async def _play(
+    sm, *, finished=True, expires=None, used=0, subject=SUBJECT, day=DAY, score=None
+):
     async with sm() as db:
         db.add(
             DailyChallengePlay(
@@ -47,6 +49,7 @@ async def _play(sm, *, finished=True, expires=None, used=0, subject=SUBJECT, day
                 finished_at=NOON if finished else None,
                 bonus_expires_at=expires or NOON + timedelta(hours=12),
                 bonus_used=used,
+                score=score,
             )
         )
         await db.commit()
@@ -145,6 +148,37 @@ async def test_concurrent_records_cannot_overspend(db_sessionmaker):
     assert await _month_count(t) == 5
 
 
+async def test_strong_score_earns_the_bonus_on_top(db_sessionmaker):
+    """#248.5 option B (founder 2026-11-26): 4 or 5 right earns 10 + 5. The
+    extra five must really be playable, not just shown, so the sixteenth
+    question is the first one on the monthly count."""
+    await _play(db_sessionmaker, score=4)
+    t = _tracker(db_sessionmaker, limit=50)
+    for _ in range(16):
+        await t.record_question(SUBJECT)
+    assert (await _plays(db_sessionmaker))[0].bonus_used == 15
+    assert await _month_count(t) == 1
+
+
+async def test_weak_score_keeps_the_full_base(db_sessionmaker):
+    """A bonus, never a cut: 3 right or fewer still gets the whole base 10."""
+    await _play(db_sessionmaker, score=3)
+    t = _tracker(db_sessionmaker, limit=50)
+    allowed, remaining, _ = await t.check_limit(SUBJECT)
+    assert allowed and remaining == 10 + 50
+
+
+async def test_concurrent_records_cannot_overspend_the_top_score_bonus(
+    db_sessionmaker,
+):
+    """The per-play allowance is re-checked under the row lock too."""
+    await _play(db_sessionmaker, score=5)
+    t = _tracker(db_sessionmaker, limit=50)
+    await asyncio.gather(*(t.record_question(SUBJECT) for _ in range(20)))
+    assert (await _plays(db_sessionmaker))[0].bonus_used == 15
+    assert await _month_count(t) == 5
+
+
 async def test_reward_off_with_zero(db_sessionmaker, monkeypatch):
     monkeypatch.setenv("DAILY_BONUS_QUESTIONS", "0")
     await _play(db_sessionmaker)
@@ -222,6 +256,22 @@ async def test_state_fields_before_after_finish_and_after_use(
 
     monkeypatch.setattr(daily_service, "utcnow", lambda: NOON + timedelta(hours=6))
     assert (await svc.state(SUBJECT, "en", DAY)).bonus_left == 0
+
+
+async def test_state_reports_the_top_score_bonus(db_sessionmaker, monkeypatch):
+    """The round end and its voice line read bonus_left; after 5 right it must
+    say 15, the number the player can actually play (#248.5)."""
+    svc = DailyChallengeService(db_sessionmaker, _Retriever())
+    monkeypatch.setattr(daily_service, "utcnow", lambda: NOON)
+    await svc.begin(SUBJECT, "en", DAY)
+    async with db_sessionmaker() as db:
+        row = (await db.execute(select(DailyChallengePlay))).scalar_one()
+        row.finished_at = NOON
+        row.score = 5
+        row.bonus_expires_at = NOON + timedelta(hours=5)
+        await db.commit()
+    state = await svc.state(SUBJECT, "en", DAY)
+    assert (state.bonus_offer, state.bonus_left) == (10, 15)
 
 
 async def test_state_hides_bonus_from_subscribers_and_when_off(

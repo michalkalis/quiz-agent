@@ -34,7 +34,7 @@ Otvorené (founder): kedy a koľko odmeny za dennú výzvu (aj pri zlom skóre? 
 | 248.2 | Výsledok otázky podľa A (texty vyššie, bez kategórie, bez štatistík) + hlasová veta „Nesprávne. Správna odpoveď: …“ | appka | hotové, PR #989 (výsledok otázky) |
 | 248.3 | Koniec kvízu podľa B: denná výzva aj bežný kvíz; „Ďalší kvíz“, zdieľanie v hornej lište | appka | hotové, PR #991 (koniec kvízu; týždenná tabuľka kamarátov ostáva, len pozvánka preč) |
 | 248.4 | Server: porovnanie s ostatnými len pri dostatku hráčov, nikdy „Prvý výsledok dňa.“ | server | hotové, PR #987 (prah 20 hráčov), v produkcii 2026-11-25 |
-| 248.5 | Rešerš: odmeny za dennú výzvu podľa skóre v iných appkách → návrh foundrovi | rešerš | rešerš hotová (odporúčanie: základ 10 + bonus 5 za 4–5 správnych), čaká rozhodnutie foundera |
+| 248.5 | Rešerš: odmeny za dennú výzvu podľa skóre v iných appkách → návrh foundrovi | rešerš | hotové: founder 2026-11-26 vybral B (každý 10, pri 4–5 správnych +5); na serveri, bez novej verzie appky |
 | 248.6 | Gamifikácia ako celok premyslieť (štatistiky, porovnania, kedy ich ukázať) | neskôr | [ ] |
 
 ## Technický smer (stručne)

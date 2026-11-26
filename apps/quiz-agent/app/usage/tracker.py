@@ -32,6 +32,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..config import get_settings
+from ..daily_challenge.reward import bonus_allowance_sql
 from ..db.models import CreditLedger, DailyChallengePlay, DailyUsage
 from ..shared_quiz.store import person_ids
 from .entitlement import (
@@ -141,42 +142,41 @@ class UsageTracker:
         return int(count), bool(premium)
 
     @staticmethod
-    def _active_bonus(ids: list[str], now: datetime, offer: int) -> list:
+    def _active_bonus(ids: list[str], now: datetime) -> list:
         """WHERE clauses of a usable daily-challenge bonus (205.8): a FINISHED
-        play of this person, not yet past their local midnight, not spent."""
+        play of this person, not yet past their local midnight, not spent.
+        The allowance depends on that play's score (#248.5)."""
         return [
             DailyChallengePlay.subject_id.in_(ids),
             DailyChallengePlay.finished_at.is_not(None),
             DailyChallengePlay.bonus_expires_at > now,
-            DailyChallengePlay.bonus_used < offer,
+            DailyChallengePlay.bonus_used < bonus_allowance_sql(),
         ]
 
     async def _bonus_left(
         self, session: AsyncSession, subject_id: str, now: datetime
     ) -> int:
-        offer = get_settings().daily_bonus_questions
-        if offer <= 0:
+        if get_settings().daily_bonus_questions <= 0:
             return 0
         ids = await person_ids(session, subject_id)
-        used = (
+        left = (
             await session.execute(
-                select(func.max(DailyChallengePlay.bonus_used)).where(
-                    *self._active_bonus(ids, now, offer)
-                )
+                select(
+                    func.max(bonus_allowance_sql() - DailyChallengePlay.bonus_used)
+                ).where(*self._active_bonus(ids, now))
             )
         ).scalar_one_or_none()
-        return 0 if used is None else offer - int(used)
+        return 0 if left is None else int(left)
 
     async def _spend_bonus(
         self, session: AsyncSession, subject_id: str, now: datetime
     ) -> bool:
         """One guarded UPDATE: the bonus condition is re-checked on the row
         under its lock, so two concurrent records cannot overspend it."""
-        offer = get_settings().daily_bonus_questions
-        if offer <= 0:
+        if get_settings().daily_bonus_questions <= 0:
             return False
         ids = await person_ids(session, subject_id)
-        active = self._active_bonus(ids, now, offer)
+        active = self._active_bonus(ids, now)
         pick = (
             select(DailyChallengePlay.id)
             .where(*active)

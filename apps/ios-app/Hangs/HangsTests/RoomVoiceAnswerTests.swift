@@ -37,7 +37,7 @@ struct RoomVoiceAnswerTests {
     }
 
     /// A guest at the typed second question, 20 s of answer time from now.
-    private func guestAtTypedQuestion() async -> RoomViewModel {
+    private func guestAtTypedQuestion(silence: MockSilenceDetectionService? = nil) async -> RoomViewModel {
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = .previewStartQuiz
         rooms.conditions.networkClock = AnyClock(clock)
@@ -47,7 +47,8 @@ struct RoomVoiceAnswerTests {
             names: PlayerNameStore(defaults: UserDefaults(suiteName: "room-voice-\(UUID().uuidString)")!),
             settingsStore: MultiplayerSettingsStore(defaults: UserDefaults(suiteName: "room-voice-rules-\(UUID().uuidString)")!),
             clock: AnyClock(clock), languageCode: "sk", isOffCellular: { true },
-            pendingLeaves: PendingRoomLeaveStore(defaults: UserDefaults(suiteName: "room-voice-leave-\(UUID().uuidString)")!)
+            pendingLeaves: PendingRoomLeaveStore(defaults: UserDefaults(suiteName: "room-voice-leave-\(UUID().uuidString)")!),
+            silence: silence
         )
         await model.join(.token(MockRoomService.token))
         rooms.hostStarts()
@@ -105,6 +106,82 @@ struct RoomVoiceAnswerTests {
         #expect(!model.canSpeak)
         await model.toggleRecording()
         #expect(model.voicePhase == .idle && audio.micPermissionRequestCount == 0)
+    }
+
+    // MARK: - Ends on silence, like solo
+
+    // WHY: the founder wants the room's mic to behave like solo's: the player
+    // just speaks and stops, and the VAD's silence after speech sends the
+    // answer with no tap on Stop. It is solo's engine and solo's blip bar, so
+    // a threshold change in solo changes the room too.
+    @Test("silence after speech sends the answer once, on solo's engine and blip bar")
+    func silenceAfterSpeechSends() async {
+        let silence = MockSilenceDetectionService()
+        let model = await guestAtTypedQuestion(silence: silence)
+        defer { model.stopAll() }
+        await model.toggleRecording()
+        #expect(model.voicePhase == .recording)
+        #expect(silence.isAnswerCaptureActive)
+        #expect(silence.answerDetectionMinSpeechDurations == [VADTuning.minSpeechDurationSecs])
+        silence.simulateSilenceEvent(.speechStarted)
+        silence.simulateAnswerAudio(Data(count: 32000))
+        silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.2))
+        await settle()
+
+        #expect(rooms.voiceUploads.count == 1)
+        #expect(model.round?.yourAnswer == "Canberra")
+        #expect(model.voicePhase == .idle && !silence.isAnswerCaptureActive)
+        // The recording started the engine, so it stops it again (solo's rule).
+        #expect(!silence.isListening)
+        // A late event of the finished recording sends nothing more.
+        silence.simulateSilenceEvent(.silenceAfterSpeech(duration: 1.2))
+        await settle()
+        #expect(rooms.voiceUploads.count == 1)
+    }
+
+    // WHY: solo's 5 s "time to start speaking": a mic nobody speaks into ends
+    // with solo's "Didn't catch that", sends nothing, and the player can try
+    // again or type before the time is up.
+    @Test("no speech within solo's start window ends the recording unsent")
+    func noSpeechEndsUnsent() async {
+        let silence = MockSilenceDetectionService()
+        let model = await guestAtTypedQuestion(silence: silence)
+        defer { model.stopAll() }
+        await model.toggleRecording()
+        await clock.advance(by: .seconds(Config.speechStartWindow) - .milliseconds(100))
+        await settle()
+        #expect(model.voicePhase == .recording, "ended before solo's window")
+
+        await clock.advance(by: .milliseconds(100))
+        await settle()
+        #expect(model.voicePhase == .idle && model.voiceNote == .didNotCatch)
+        #expect(rooms.voiceUploads.isEmpty && !silence.isListening)
+        #expect(model.canSpeak, "the question stays open for another try")
+    }
+
+    // WHY: solo never cuts a late or quiet answer on a detector that cannot
+    // vouch for the silence (#185), and a player already speaking is never
+    // cut by the start window; the shared time then decides, and sends.
+    @Test(
+        "the start window does not end a recording the detector heard or cannot vouch for",
+        arguments: [true, false]
+    )
+    func startWindowKeepsSpeaker(heardSpeech: Bool) async {
+        let silence = MockSilenceDetectionService()
+        if !heardSpeech { silence.noSpeechWindowVerdict = .possibleSpeech }
+        let model = await guestAtTypedQuestion(silence: silence)
+        defer { model.stopAll() }
+        await model.toggleRecording()
+        if heardSpeech { silence.simulateSilenceEvent(.speechStarted) }
+        silence.simulateAnswerAudio(Data(count: 32000))
+        await settle()
+        await clock.advance(by: .seconds(Config.speechStartWindow + 1))
+        await settle()
+        #expect(model.voicePhase == .recording)
+
+        await clock.advance(by: .seconds(15))
+        await settle()
+        #expect(rooms.voiceUploads.count == 1, "the time running out sends the recording")
     }
 
     // MARK: - One recording, one answer

@@ -75,6 +75,17 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// #249.5: the PCM of the recording in progress; the tap appends on an audio thread.
     let voicePCM = OSAllocatedUnfairLock<Data>(initialState: Data())
     var voiceQuestionId: String?
+    /// #249.5: the VAD heard speech in this recording, so solo's 5 s start window no longer ends it.
+    var voiceHeardSpeech = false
+    /// #249.5: solo's shared mic engine and its VAD: it records the answer and
+    /// ends it on silence. nil (previews, tests) records on `audio` without auto-stop.
+    let silence: SilenceDetectionServiceProtocol?
+    var voiceUsesEngine = false
+    /// This recording started the engine, so it stops it again (solo's rule).
+    var startedVoiceListener = false
+    var voiceSampleRate = 16000
+    /// The silence consumer and the no-speech window of the recording in progress.
+    var voiceTasks: [Task<Void, Never>] = []
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
@@ -153,8 +164,10 @@ final class RoomViewModel: ObservableObject, Identifiable {
         isOffCellular: @escaping () async -> Bool = LocalNetworkCheck.isOffCellular,
         packsEnabled: @escaping () -> Bool = { false },
         extraCategories: @escaping @MainActor () -> [ExtraCategory] = { [] },
-        pendingLeaves: PendingRoomLeaveStore = PendingRoomLeaveStore()
+        pendingLeaves: PendingRoomLeaveStore = PendingRoomLeaveStore(),
+        silence: SilenceDetectionServiceProtocol? = nil
     ) {
+        self.silence = silence
         self.rooms = rooms
         self.network = network
         self.audio = audio

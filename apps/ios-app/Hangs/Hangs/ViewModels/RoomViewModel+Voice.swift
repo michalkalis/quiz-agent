@@ -3,10 +3,12 @@
 //  Hangs
 //
 //  #249.5 (founder 2026-11-26): every player answers a typed-answer question
-//  by voice, with solo's controls and solo's server transcription. The mic
-//  records 16 kHz PCM on the shared `AudioService` (as `TextDictation` does);
-//  Stop, or the end of the answer time, sends the clip once to the room's
-//  voice endpoint, which transcribes it and stores it like a typed answer.
+//  by voice, with solo's controls and solo's server transcription. Like solo
+//  (`RecordingCoordinator+Capture`), the shared mic engine records and its VAD
+//  ends the recording: silence after speech sends it, and nothing said within
+//  solo's 5 s start window (when the detector can vouch) ends it unsent. Stop,
+//  or the end of the answer time, sends it too. One clip, one upload to the
+//  room's voice endpoint, which transcribes it and stores it like a typed answer.
 //  Typing stays one tap away, and is the way to answer when the mic is refused.
 //
 
@@ -28,8 +30,8 @@ extension RoomViewModel {
         case notSent
     }
 
-    /// Less than this much audio is a tap on Stop, not an answer (0.3 s of 16 kHz PCM16).
-    static let minVoiceBytes = 9600
+    /// Less audio than this is a tap on Stop, not an answer.
+    static let minVoiceSeconds = 0.3
 
     /// The open question takes a spoken answer now. Options are tapped, and
     /// the host's phone does not cut its own read for the room.
@@ -72,25 +74,100 @@ extension RoomViewModel {
             return
         }
         voiceNote = nil
+        voiceHeardSpeech = false
         voicePCM.withLock { $0 = Data() }
         // A guest's own read of the question stops, as a solo tap on Answer does.
         if role == .guest { guestReadTask?.cancel() }
         do {
             try audio.ensureRecordingSession()
             await audio.prepareForRecording()
+            let engine = await startEngine()
             // The time may have run out or the answer locked during the prompt and the settle.
-            guard canSpeak, round?.questionId == questionId else { return }
+            guard canSpeak, round?.questionId == questionId else {
+                releaseEngine()
+                return
+            }
             let pcm = voicePCM
-            try await audio.startStreamingRecording { chunk in
-                pcm.withLock { $0.append(chunk) }
+            if let engine {
+                voiceUsesEngine = true
+                voiceSampleRate = Int(engine.answerAudioSampleRate)
+                engine.setAnswerAudioSink { chunk in pcm.withLock { $0.append(chunk) } }
+            } else {
+                // No engine (previews, a failed recognizer setup): the plain stream, no auto-stop.
+                voiceUsesEngine = false
+                voiceSampleRate = 16000
+                try await audio.startStreamingRecording { chunk in pcm.withLock { $0.append(chunk) } }
             }
             voiceQuestionId = questionId
             voicePhase = .recording
+            if let engine { armSilenceDetection(engine, questionId: questionId) }
         } catch {
             audio.stopStreamingRecording()
+            releaseEngine()
             voiceNote = .notSent
             Logger.audio.warning("Room recording failed to start: \(error, privacy: .public)")
         }
+    }
+
+    /// Solo's engine handshake: adopt a running engine (or one starting, for a
+    /// bounded wait), else start it and remember to stop it afterwards.
+    private func startEngine() async -> SilenceDetectionServiceProtocol? {
+        guard let silence else { return nil }
+        if !silence.isListening, !silence.isStartingListening {
+            startedVoiceListener = true
+            await silence.startListening()
+        } else if silence.isStartingListening {
+            var waitedMs = 0
+            while silence.isStartingListening, waitedMs < VoiceCommandCoordinator.listenerSettleBudgetMs {
+                do { try await clock.sleep(for: .milliseconds(100)) } catch { break }
+                waitedMs += 100
+            }
+        }
+        guard silence.isListening else {
+            releaseEngine()
+            return nil
+        }
+        return silence
+    }
+
+    private func releaseEngine() {
+        guard startedVoiceListener else { return }
+        startedVoiceListener = false
+        silence?.stopListening()
+    }
+
+    /// Solo's two silence rules, with solo's thresholds: the VAD's silence after
+    /// speech sends the answer; no speech within `Config.speechStartWindow` ends
+    /// the recording unsent, but only when the detector can vouch for the silence.
+    private func armSilenceDetection(_ engine: SilenceDetectionServiceProtocol, questionId: String) {
+        engine.beginAnswerDetection(minSpeechDuration: VADTuning.minSpeechDurationSecs)
+        let events = engine.makeSilenceEventStream()
+        voiceTasks.append(Task { [weak self] in
+            for await event in events {
+                guard let self, !Task.isCancelled, self.isRecording(questionId) else { return }
+                switch event {
+                case .speechStarted:
+                    self.voiceHeardSpeech = true
+                case .silenceAfterSpeech:
+                    // Its own task: sending tears this consumer down.
+                    Task { await self.stopRecordingAndSend() }
+                    return
+                }
+            }
+        })
+        voiceTasks.append(Task { [weak self] in
+            guard let clock = self?.clock else { return }
+            do { try await clock.sleep(for: .seconds(Config.speechStartWindow)) } catch { return }
+            guard let self, self.isRecording(questionId), !self.voiceHeardSpeech,
+                  engine.noSpeechWindowVerdict.mayEndRecording
+            else { return }
+            _ = self.takeRecording()
+            self.voiceNote = .didNotCatch
+        })
+    }
+
+    private func isRecording(_ questionId: String) -> Bool {
+        voicePhase == .recording && voiceQuestionId == questionId
     }
 
     /// Stop the mic and send what was recorded, once. Silence never reaches
@@ -98,7 +175,7 @@ extension RoomViewModel {
     func stopRecordingAndSend() async {
         guard voicePhase == .recording, let questionId = voiceQuestionId else { return }
         let pcm = takeRecording()
-        guard pcm.count >= Self.minVoiceBytes else {
+        guard Double(pcm.count) >= Self.minVoiceSeconds * Double(voiceSampleRate * 2) else {
             voiceNote = .didNotCatch
             return
         }
@@ -107,7 +184,7 @@ extension RoomViewModel {
         defer { voicePhase = .idle }
         do {
             try apply(await rooms.answerByVoice(
-                roomId: roomId, questionId: questionId, audioWAV: WavEncoder.wrapPCM16(pcm)
+                roomId: roomId, questionId: questionId, audioWAV: WavEncoder.wrapPCM16(pcm, sampleRate: voiceSampleRate)
             ))
         } catch NetworkError.answerNotCaptured {
             voiceNote = .didNotCatch
@@ -128,7 +205,15 @@ extension RoomViewModel {
     }
 
     private func takeRecording() -> Data {
-        audio.stopStreamingRecording()
+        voiceTasks.forEach { $0.cancel() }
+        voiceTasks = []
+        if voiceUsesEngine, let silence {
+            silence.setAnswerAudioSink(nil)
+            _ = silence.endAnswerDetection()
+            releaseEngine()
+        } else {
+            audio.stopStreamingRecording()
+        }
         voicePhase = .idle
         voiceQuestionId = nil
         return voicePCM.withLock { data in

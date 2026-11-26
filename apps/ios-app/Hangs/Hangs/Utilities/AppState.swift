@@ -424,7 +424,8 @@ final class AppState: ObservableObject {
             analytics: analytics,
             packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled },
             extraCategories: { [quiz] in quiz.extraCatalog },
-            pendingLeaves: pendingRoomLeaves
+            pendingLeaves: pendingRoomLeaves,
+            silence: silenceDetectionService
         )
     }
 

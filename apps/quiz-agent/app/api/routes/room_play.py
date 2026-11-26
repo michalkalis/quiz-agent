@@ -10,19 +10,45 @@ from __future__ import annotations
 
 from typing import Annotated, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+import logging
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from pydantic import BaseModel, BeforeValidator, Field
+from quiz_shared.sentry_privacy import user_text_log
 from quiz_shared.utils.user_text import clean_user_text
 
 from ...auth.identity import AuthSubject
+from ...config import get_settings
+from ...quiz.errors import InvalidSubmission
 from ...rate_limit import limiter
+from ...rooms import rounds
 from ...rooms.service import RoomError, RoomService
+from ...usage.caps import (
+    STT_SECONDS,
+    DailyCapExceeded,
+    UsageCaps,
+    answer_attempts,
+    recording_seconds,
+)
+from ...voice.transcriber import VoiceTranscriber
 from ..deps import (
+    get_analytics,
     get_question_retriever,
     get_rooms,
     get_session_manager,
     get_translation_service,
     get_tts_service,
+    get_usage_caps,
+    get_voice_transcriber,
     require_auth_or_grace,
 )
 from .rooms import (
@@ -34,6 +60,7 @@ from .rooms import (
 )
 from .tts import question_audio_response
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -139,6 +166,132 @@ async def answer_question(
     """Any player: the answer to the current question (final once sent)."""
     subject_id, service = subject_or_401(subject), service_or_404(rooms)
     await _run(service.play.answer(room_id, subject_id, body.question_id, body.answer))
+    return await state_reply(service, room_id, subject_id, since=None)
+
+
+@router.post(
+    "/rooms/{room_id}/answer/voice",
+    response_model=RoomStateResponse,
+    response_model_exclude_none=True,
+)
+@limiter.limit("30/minute")
+async def answer_by_voice(
+    request: Request,
+    room_id: str,
+    question_id: str = Form(max_length=128),
+    audio: UploadFile = File(..., description="The spoken answer (16-bit WAV)"),
+    rooms: Optional[RoomService] = Depends(get_rooms),
+    question_retriever=Depends(get_question_retriever),
+    voice_transcriber: VoiceTranscriber = Depends(get_voice_transcriber),
+    usage_caps: UsageCaps = Depends(get_usage_caps),
+    subject: AuthSubject = Depends(require_auth_or_grace),
+):
+    """Any player, typed-answer questions only (#249.5): the answer spoken,
+    transcribed on the server exactly like a solo voice answer, then stored
+    as if typed. It counts from when the recording ARRIVED: one that ends at
+    the buzzer and lands within the grace is in time, however long the
+    transcription takes. 409 = already answered / time up (checked before
+    anything is paid for); 400 ``no_speech`` = nothing usable heard, nothing
+    stored (the player may try again while time is left); 502 ``stt_error``
+    = the recogniser failed, nothing stored."""
+    received = rounds.now()
+    subject_id, service = subject_or_401(subject), service_or_404(rooms)
+    if not voice_transcriber.is_supported_format(audio.filename or ""):
+        raise HTTPException(status_code=400, detail="Unsupported audio format")
+    try:
+        language = await service.play.hold_voice(
+            room_id, subject_id, question_id, received
+        )
+    except RoomError as e:
+        raise_http(e)
+    analytics = get_analytics(request)
+
+    def rejected(reason: str, chars: Optional[int] = None) -> None:
+        # #240: why a voice answer was turned away, a count, never the words.
+        analytics.emit(
+            "transcription_failed",
+            subject_id=subject_id,
+            properties={
+                "reason": reason,
+                "question_id": question_id,
+                "transcript_chars": chars,
+                "multiplayer": True,
+                "room_id": room_id,
+            },
+        )
+
+    try:
+        settings = get_settings()
+        # No gate_voice_answer here, on purpose: in a game together only the
+        # host pays per question (founder rule), so a player's spoken answer
+        # never counts against their free monthly voice allowance. The solo
+        # daily abuse caps below still apply per account.
+        try:
+            # #207.13: the solo daily caps, before transcription is paid for.
+            await usage_caps.consume(
+                subject_id,
+                answer_attempts(question_id),
+                1,
+                settings.daily_cap_answer_attempts,
+            )
+            await usage_caps.consume(
+                subject_id,
+                STT_SECONDS,
+                recording_seconds(audio.file),
+                settings.daily_cap_stt_seconds,
+            )
+        except DailyCapExceeded as exc:
+            rejected("daily_cap")
+            raise exc.http_error() from exc
+        question = await question_retriever.get(question_id)
+        try:
+            # The solo recogniser call: same model, size cap and language hint,
+            # the question as context and no keyterms (an open question).
+            result = await voice_transcriber.transcribe_with_quiz_context(
+                audio_file=audio.file,
+                filename=audio.filename,
+                current_question=question.question if question else None,
+                language=language,
+            )
+        except InvalidSubmission as exc:  # size/format: built from facts, safe
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            rejected("stt_error")
+            logger.warning("Room voice transcription failed: %s", type(exc).__name__)
+            raise HTTPException(
+                status_code=502,
+                detail={"code": "stt_error", "message": "Transcription failed"},
+            ) from exc
+        text = clean_user_text(result.text).strip()[:200]
+        if not result.is_valid(min_chars=2) or not text:
+            user_text_log.info("Rejected room transcript: %r", result.text)
+            rejected(result.rejection_code(2), len(result.text.strip()))
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "no_speech",
+                    "message": "No clear speech detected. Please try again.",
+                },
+            )
+    except BaseException:
+        await service.play.release_voice(room_id, subject_id, question_id)
+        raise
+    try:
+        await service.play.answer(
+            room_id,
+            subject_id,
+            question_id,
+            text,
+            received_at=received,
+            route="voice",
+        )
+    except BaseException as e:
+        # Any failure (a DB or grading error too) frees the hold, or every
+        # player would wait out VOICE_PENDING_MAX for a transcript never stored.
+        await service.play.release_voice(room_id, subject_id, question_id)
+        if isinstance(e, RoomError):
+            raise_http(e)
+        raise
     return await state_reply(service, room_id, subject_id, since=None)
 
 

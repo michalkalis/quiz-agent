@@ -5,6 +5,8 @@
 //  #212: everyone's question screen: tap A–D or type, then the answer locks.
 //  #224.4: faces and time on top, a calm drifting question card.
 //  #249.4: the speaker and the host's pause are in the top bar, as in solo.
+//  #249.5: solo's bar under the question carries the answer time, and a
+//  typed-answer question gets solo's Answer (voice) and Type.
 //
 
 import SwiftUI
@@ -19,16 +21,9 @@ struct RoomQuestionView: View {
             VStack(spacing: Theme.Hangs.Spacing.sm) {
                 if let round = viewModel.round {
                     HangsQuizProgressHeader(current: round.number, total: viewModel.state?.maxQuestions ?? round.number)
-                    RoomPlayersStrip(
-                        players: viewModel.players,
-                        answered: Set(round.answered),
-                        secondsLeft: viewModel.secondsLeft(),
-                        fullSeconds: viewModel.state?.thinkingSeconds
-                    )
+                    RoomPlayersStrip(players: viewModel.players, answered: Set(round.answered))
                     if viewModel.isPaused {
                         pausedLine
-                    } else if let progress = viewModel.readingProgress() {
-                        readingBar(progress)
                     }
                     if let question = viewModel.question {
                         RoomQuestionCard(
@@ -37,6 +32,11 @@ struct RoomQuestionView: View {
                             canReplay: viewModel.settings.readsAloud && !viewModel.isReadingAloud && !viewModel.isPaused,
                             hostIsReading: round.phase == .reading && !round.isPaused && !viewModel.guestReadsAloud,
                             replay: viewModel.readAgain
+                        )
+                        RoomListenBar(
+                            phase: viewModel.listenPhase,
+                            secondsLeft: viewModel.secondsLeft(),
+                            showsMicOff: viewModel.micDenied && !question.isMultipleChoice
                         )
                         answerArea(question, round: round)
                     }
@@ -67,39 +67,13 @@ struct RoomQuestionView: View {
             )
             .disabled(!viewModel.canAnswer)
         } else {
-            typedAnswerField
+            RoomOpenAnswerControls(
+                viewModel: viewModel,
+                canAnswer: viewModel.canAnswer,
+                canSpeak: viewModel.canSpeak,
+                typing: $typing
+            )
         }
-    }
-
-    private var typedAnswerField: some View {
-        HStack(spacing: Theme.Hangs.Spacing.xs) {
-            TextField("Type your answer", text: $viewModel.typedAnswer)
-                .font(.hangsBodyLG)
-                .submitLabel(.send)
-                .focused($typing)
-                .onSubmit { Task { await viewModel.submitTypedAnswer() } }
-                .limitLength($viewModel.typedAnswer, to: RoomViewModel.maxAnswerLength)
-                .padding(Theme.Hangs.Spacing.md)
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.Hangs.Radius.cardInner, style: .continuous)
-                        .fill(Theme.Hangs.Colors.bgCard)
-                )
-                .accessibilityIdentifier("room.answer.field")
-            Button {
-                Task { await viewModel.submitTypedAnswer() }
-            } label: {
-                Image(systemName: "arrow.up")
-                    .font(.hangsBody(Metrics.sendIcon, weight: .bold))
-                    .foregroundStyle(Theme.Hangs.Colors.textOnAction)
-                    .frame(width: Metrics.sendSide, height: Metrics.sendSide)
-                    .background(Circle().fill(Theme.Hangs.Colors.action))
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel.typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .accessibilityLabel(Text("Send answer"))
-            .accessibilityIdentifier("room.answer.send")
-        }
-        .disabled(!viewModel.canAnswer)
     }
 
     private func lockedCard(_ answer: String) -> some View {
@@ -128,19 +102,8 @@ struct RoomQuestionView: View {
         .accessibilityIdentifier("room.answer.locked")
     }
 
-    /// #240.9: the answer time starts after reading; the bar shows it moving.
-    /// The header already says "after reading" next to the seconds, so the bar
-    /// carries no caption of its own (one more line clipped the question at
-    /// large text).
-    private func readingBar(_ progress: Double) -> some View {
-        HangsProgressBar(progress: progress)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Answer time starts after reading"))
-            .accessibilityIdentifier("room.question.readingProgress")
-    }
-
     /// #249.4: the host paused the question; its time stands still for
-    /// everyone (the seconds in the strip above stop), answers still count.
+    /// everyone (the seconds in the bar under the question stop), answers still count.
     private var pausedLine: some View {
         Group {
             if viewModel.isHost {
@@ -176,6 +139,8 @@ struct RoomQuestionView: View {
                 .font(.hangsLabel)
                 .foregroundStyle(Theme.Hangs.Colors.muted)
                 .accessibilityIdentifier("room.question.timeUp")
+        } else if round.yourAnswer == nil, let note = viewModel.voiceNote {
+            voiceNoteLine(note)
         } else if round.yourAnswer == nil {
             Text("The others see your answer after the question.")
                 .font(.hangsCaption)
@@ -183,8 +148,17 @@ struct RoomQuestionView: View {
         }
     }
 
-    private enum Metrics {
-        static let sendSide: CGFloat = 52
-        static let sendIcon: CGFloat = 18
+    /// #249.5: why the last spoken answer did not count; the question is still open.
+    private func voiceNoteLine(_ note: RoomViewModel.VoiceNote) -> some View {
+        Group {
+            switch note {
+            case .didNotCatch: Text("Didn't catch that")
+            case .notSent: Text("Your answer didn't go through. Try again or type it.")
+            case .typeInstead: Text("Voice answers aren't available right now. Type your answer.")
+            }
+        }
+        .font(.hangsLabel)
+        .foregroundStyle(Theme.Hangs.Colors.warning)
+        .accessibilityIdentifier("room.answer.voiceNote")
     }
 }

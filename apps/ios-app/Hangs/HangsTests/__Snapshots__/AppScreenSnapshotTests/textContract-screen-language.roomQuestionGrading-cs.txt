@@ -4,8 +4,6 @@ M
 Michal
 P
 Peťo
-30 s
-po přečtení
 SCIENCE & NATURE
 Which planet has the most known moons?
 Odpověď je zamčená
@@ -19,9 +17,9 @@ question.mute
 question.progress
 question.counter
 room.question.players
-room.question.timer
 question.category
 question.text
+room.question.bar
 room.answer.locked
 room.answer.answeredBy
 room.question.grading

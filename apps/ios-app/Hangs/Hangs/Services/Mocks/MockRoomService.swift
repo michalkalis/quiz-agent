@@ -47,6 +47,10 @@
         private(set) var settingsCalls: [SettingsCall] = []
         private(set) var awayReports: [String] = []
         private(set) var answers: [String] = []
+        /// #249.5: every recording uploaded, in order (its byte count).
+        private(set) var voiceUploads: [Int] = []
+        /// #249.5: what the server hears in a recording; nil = nothing (no_speech).
+        var voiceTranscript: String? = "Canberra"
         private(set) var removed: [String] = []
         private(set) var openCalls = 0
         private(set) var pauseCalls: [Bool] = []
@@ -221,6 +225,13 @@
             // The other player always has answered by then: the question closes.
             othersAnswer()
             return state(full: true)
+        }
+
+        func answerByVoice(roomId: String, questionId: String, audioWAV: Data) async throws -> RoomState {
+            try await conditions.simulateNetwork(.answerByVoice)
+            voiceUploads.append(audioWAV.count)
+            guard let voiceTranscript else { throw NetworkError.answerNotCaptured(code: .noSpeech, heard: nil) }
+            return try await answer(roomId: roomId, questionId: questionId, answer: voiceTranscript)
         }
 
         /// The other players' answers arrive: the question closes (or is graded first).

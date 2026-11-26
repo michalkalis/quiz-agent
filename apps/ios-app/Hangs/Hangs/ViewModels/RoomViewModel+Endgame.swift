@@ -17,29 +17,6 @@ extension RoomViewModel {
     /// What the player's own answer to the revealed question came to.
     enum RevealOutcome: Equatable { case correct, miss, cancelled }
 
-    /// How long a question takes to read aloud, estimated from its text: the
-    /// host's phone does not tell the room how long its clip is. Kept short
-    /// of the end, so the bar never claims the answer time already started.
-    static let readCharactersPerSecond = 14.0
-    static let readLeadInSeconds = 1.5
-    static let readEstimateRange = 3.0 ... 30.0
-    static let readingCap = 0.95
-
-    static func readingEstimate(for question: Question?) -> Duration {
-        let options = question?.possibleAnswers?.values.joined(separator: " ") ?? ""
-        let characters = Double((question?.question.count ?? 0) + options.count)
-        let seconds = characters / readCharactersPerSecond + readLeadInSeconds
-        let bounded = min(max(seconds, readEstimateRange.lowerBound), readEstimateRange.upperBound)
-        return .milliseconds(Int(bounded * 1000))
-    }
-
-    /// 0…1 while the question is read aloud; nil otherwise.
-    func readingProgress() -> Double? {
-        guard round?.phase == .reading, let readingSince else { return nil }
-        let elapsed = readingSince.duration(to: clock.now)
-        return min(Self.readingCap, max(0, elapsed / Self.readingEstimate(for: question)))
-    }
-
     /// Everyone answered and the answers are being checked.
     var isGrading: Bool { round?.phase == .grading }
 

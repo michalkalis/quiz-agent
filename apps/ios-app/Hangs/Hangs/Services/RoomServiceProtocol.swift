@@ -32,6 +32,11 @@ protocol RoomServiceProtocol: Sendable {
     func openQuestion(roomId: String, questionId: String) async throws -> RoomState
     /// An option key (a–d) or typed text; final once sent.
     func answer(roomId: String, questionId: String, answer: String) async throws -> RoomState
+    /// #249.5: the spoken answer to a typed-answer question (16 kHz WAV); the
+    /// server transcribes it like a solo voice answer and stores it as typed.
+    /// `answerNotCaptured` = nothing heard (nothing stored), 409 = answered or
+    /// time up.
+    func answerByVoice(roomId: String, questionId: String, audioWAV: Data) async throws -> RoomState
     /// The app went to the background during the question (never during a call).
     func reportAway(roomId: String, questionId: String) async throws
     /// Host (#213.8): changes the given rules (nil = unchanged) and returns

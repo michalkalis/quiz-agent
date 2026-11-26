@@ -141,7 +141,7 @@ import Foundation
     /// #235.2: the game-together service's calls (`MockRoomService.conditions`).
     enum MockRoomCall: String, CaseIterable, Sendable {
         case createRoom, nearbyRooms, joinRoom, removePlayer, roomState, openQuestion
-        case updateSettings, answer, reportAway, setPaused, nextQuestion
+        case updateSettings, answer, answerByVoice, reportAway, setPaused, nextQuestion
     }
 
     /// #235.2: the same gates and conditions for the other mock services, so

@@ -103,21 +103,38 @@ class RoomPlay:
             await self.sessions.update_session(session)
 
     async def answer(
-        self, room_id: str, subject_id: str, question_id: str, text: str
+        self,
+        room_id: str,
+        subject_id: str,
+        question_id: str,
+        text: str,
+        *,
+        received_at=None,
+        route: str = "text",
     ) -> None:
         """One answer per player and question, final once sent. The last
-        missing answer closes the question right away."""
+        missing answer closes the question right away. ``received_at``
+        (#249.5): a transcribed recording counts from when it arrived, held
+        by ``hold_voice``, so the transcription time cannot make it late."""
         session_id = await self._session_id(room_id)
         async with self.sessions.session_lock(session_id):
             session, you = await self._load(session_id, subject_id)
             rnd = self._round(session, question_id)
             at = rounds.now()
-            if you.participant_id in rnd.answers:
+            pid = you.participant_id
+            held = rnd.voice_pending.pop(pid, None) if received_at else None
+            if pid in rnd.answers or (
+                held is None and rounds.voice_pending_for(rnd, pid, at)
+            ):
                 raise RoomError(409, "Already answered")
-            if not rounds.accepts_answers(session.room_game, rnd, at):
+            # The held instant, not ``received_at``: a resume moves it on by the pause.
+            counted_at = held if held is not None else at
+            if not rounds.accepts_answers(session.room_game, rnd, counted_at):
                 raise RoomError(409, "Time is up")
-            rnd.answers[you.participant_id] = RoomAnswer(
-                answer=text.strip(), at=rounds.game_time(rnd, at)
+            rnd.answers[pid] = RoomAnswer(
+                answer=text.strip(),
+                at=rounds.game_time(rnd, min(counted_at, at)),
+                route=route,
             )
             # #249.4: while the host pauses, the question waits for the resume.
             if rounds.all_answered(session, rnd) and rnd.paused_at is None:
@@ -131,6 +148,44 @@ class RoomPlay:
                     # the next poll closes the question once the judge answers.
                     logger.warning("Room grading deferred for session %s", session_id)
             await self.sessions.update_session(session)
+
+    async def hold_voice(
+        self, room_id: str, subject_id: str, question_id: str, received_at
+    ) -> str:
+        """#249.5: a recording arrived. Checked like a typed answer at the
+        instant it was received (in time, not answered yet, an open
+        question), then held so the question waits for its transcript.
+        Returns the session language for the recogniser."""
+        session_id = await self._session_id(room_id)
+        async with self.sessions.session_lock(session_id):
+            session, you = await self._load(session_id, subject_id)
+            rnd = self._round(session, question_id)
+            pid = you.participant_id
+            if pid in rnd.answers or rounds.voice_pending_for(rnd, pid, received_at):
+                raise RoomError(409, "Already answered")
+            if not rnd.is_open:
+                raise RoomError(422, "Tap an option")
+            if not rounds.accepts_answers(session.room_game, rnd, received_at):
+                raise RoomError(409, "Time is up")
+            rnd.voice_pending[pid] = received_at
+            await self.sessions.update_session(session)
+            return session.language
+
+    async def release_voice(
+        self, room_id: str, subject_id: str, question_id: str
+    ) -> None:
+        """#249.5: the held recording gave no answer (nothing heard, the
+        recogniser failed): the question no longer waits for it."""
+        try:
+            session_id = await self._session_id(room_id)
+            async with self.sessions.session_lock(session_id):
+                session, you = await self._load(session_id, subject_id)
+                rnd = session.room_game.current
+                if rnd and rnd.question_id == question_id:
+                    if rnd.voice_pending.pop(you.participant_id, None):
+                        await self.sessions.update_session(session)
+        except RoomError:
+            pass  # the game or the player is gone: nothing waits any more
 
     async def away(self, room_id: str, subject_id: str, question_id: str) -> None:
         """#212.4: the player's app went to the background during the question
@@ -166,7 +221,9 @@ class RoomPlay:
                     rounds.resume(rnd, at)
             elif not paused:
                 changed = False
-            elif rounds.close_due(session, at):
+            elif rounds.close_due(session, at) or not rounds.accepts_answers(
+                session.room_game, rnd, at
+            ):
                 raise RoomError(409, "Nothing to pause")
             else:
                 changed = True
@@ -327,7 +384,7 @@ class RoomPlay:
                     "category": question.category,
                     "question_type": question.type,
                     "difficulty": question.difficulty,
-                    "route": "text",
+                    "route": a.route,
                     "is_regrade": False,
                     "question_index": rnd.number,
                     "multiplayer": True,

@@ -53,6 +53,8 @@ enum AppScreen: String, CaseIterable {
     case roomQuestionReading, roomQuestionGrading, roomRevealCancelled, roomFinalGuest, roomRankingShareImage
     /// #249.4: a question the host paused, on a guest's and on the host's phone.
     case roomQuestionPaused, roomQuestionPausedHost
+    /// #249.5: a typed-answer question with solo's Answer and Type (guest, host) and the open mic.
+    case roomQuestionTyped, roomQuestionTypedHost, roomQuestionRecording
     case profile, profileNewPlayer, profileLoadFailed, allStats
     case recapShareImage
     /// #232: share a quiz by link (1A send card, 4A ranking, 3 paste row, 5A picker).

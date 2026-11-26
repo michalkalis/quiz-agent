@@ -20,6 +20,9 @@ class RoomAnswer(BaseModel):
     )
     result: Optional[str] = Field(None, description="Set when the question closes")
     points: float = 0.0
+    # #249.5: how the answer came in (analytics `route`): typed/tapped or a
+    # recording the server transcribed.
+    route: Literal["text", "voice"] = "text"
 
 
 class RoomRound(BaseModel):
@@ -57,6 +60,10 @@ class RoomRound(BaseModel):
     # The judge stayed down until the host moved on: the question counts for
     # nobody (founder 2026-11-18, #239).
     cancelled: bool = False
+    # #249.5: recordings received in time and still being transcribed
+    # (participant_id → when received, wall clock). The question does not
+    # close on time while one is in, so transcription never makes it late.
+    voice_pending: Dict[str, datetime] = Field(default_factory=dict)
 
 
 class RoomGame(BaseModel):

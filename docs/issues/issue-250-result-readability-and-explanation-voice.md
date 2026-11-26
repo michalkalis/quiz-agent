@@ -1,4 +1,4 @@
-# #249 — Výsledok otázky: prehľadnosť a vysvetlenie nahlas (TF 1.3 b93)
+# #250 — Výsledok otázky: prehľadnosť a vysvetlenie nahlas (TF 1.3 b93)
 
 **Triage:** enhancement · in-progress
 **Founder:** 2026-11-26, test TF 1.3 (93)
@@ -14,9 +14,9 @@
 
 | # | Čo | Stav |
 |---|----|------|
-| 249.1 | Vysvetlenie nahlas po verdikte (nie v rýchlom kvíze, nie s vypnutým čítaním / bez zvuku); „vypočuj si“ len bez automatického čítania alebo po chybe | appka, PR (tento) |
-| 249.2 | Rešerš + návrhy vzhľadu (A nadpis / B štítky / C otázka na karte) a otázka o bodke → stránka /decide | čaká founder |
-| 249.3 | Vzhľad podľa rozhodnutia + bodka | [ ] |
+| 250.1 | Vysvetlenie nahlas po verdikte (nie v rýchlom kvíze, nie s vypnutým čítaním / bez zvuku); „vypočuj si“ len bez automatického čítania alebo po chybe | appka, PR (tento) |
+| 250.2 | Rešerš + návrhy vzhľadu (A nadpis / B štítky / C otázka na karte) a otázka o bodke → stránka /decide | čaká founder |
+| 250.3 | Vzhľad podľa rozhodnutia + bodka | [ ] |
 
 ## Rešerš (stručne)
 

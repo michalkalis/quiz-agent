@@ -2,7 +2,7 @@
 //  ResultExplanationAutoReadTests.swift
 //  HangsTests
 //
-//  #249 (founder, TF 1.3 b93, 2026-11-26): "chcel by som počuť vysvetlenia
+//  #250 (founder, TF 1.3 b93, 2026-11-26): "chcel by som počuť vysvetlenia
 //  na výsledku". The result reads its explanation after the verdict by
 //  default; Quick quiz and read-aloud off skip it. Under a slow or failing
 //  server the result still moves on: never an endless wait.
@@ -13,7 +13,7 @@ import Foundation
 @testable import Hangs
 import Testing
 
-@Suite("#249 the result reads its explanation")
+@Suite("#250 the result reads its explanation")
 @MainActor
 struct ResultExplanationAutoReadTests {
     private struct Rig {

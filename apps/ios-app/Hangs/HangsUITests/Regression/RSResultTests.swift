@@ -180,7 +180,7 @@ final nonisolated class RSResultTests: XCTestCase {
         result.waitForResult(timeout: 15)
         let verdictBefore = result.verdict.label
 
-        // #249: the explanation reads itself by default, so "hear it" is gone;
+        // #250: the explanation reads itself by default, so "hear it" is gone;
         // a tap on the explanation text is the replay.
         XCTAssertFalse(result.hearItButton.exists, "RS-16: 'hear it' beside an explanation that reads itself")
         XCTAssertTrue(result.explanationReadButton.waitForExistence(timeout: 3), "RS-16: result.explanationRead missing")

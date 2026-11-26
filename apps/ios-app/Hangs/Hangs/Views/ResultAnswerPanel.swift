@@ -41,7 +41,7 @@ struct ResultAnswerPanel: View {
 
     /// nil = no "hear it": a silent quiz (founder 2026-11-22) reads nothing.
     let onHearIt: (() -> Void)?
-    /// #249: false while the result reads the explanation by itself; the
+    /// #250: false while the result reads the explanation by itself; the
     /// text stays tappable to hear it again.
     var showsHearItChip = true
 

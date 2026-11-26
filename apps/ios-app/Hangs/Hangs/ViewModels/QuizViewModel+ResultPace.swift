@@ -50,7 +50,7 @@ extension QuizViewModel {
         return pace
     }
 
-    /// #249 (founder 2026-11-26): the result reads its explanation after the
+    /// #250 (founder 2026-11-26): the result reads its explanation after the
     /// verdict by default. Quick quiz, read-aloud off and silent mode skip it;
     /// the result then offers "hear it" instead.
     var readsExplanationOnResult: Bool {

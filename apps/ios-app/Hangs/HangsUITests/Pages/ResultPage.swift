@@ -17,7 +17,7 @@ struct ResultPage {
     }
 
     /// "hear it" — reads the explanation; only shown when the result does not
-    /// read it by itself (#249: Quick quiz, read-aloud off).
+    /// read it by itself (#250: Quick quiz, read-aloud off).
     var hearItButton: XCUIElement {
         app.buttons["result.hearIt"]
     }

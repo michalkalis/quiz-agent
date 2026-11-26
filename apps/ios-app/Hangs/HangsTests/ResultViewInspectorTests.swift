@@ -243,7 +243,7 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "why") }
-            // #249: read aloud by itself; the text is the tap to hear it again.
+            // #250: read aloud by itself; the text is the tap to hear it again.
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus is tipped about 98 degrees.") }
         }
@@ -263,7 +263,7 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "why") }
-            // #249: read aloud by itself; the text is the tap to hear it again.
+            // #250: read aloud by itself; the text is the tap to hear it again.
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead") }
         }
     }
@@ -502,7 +502,7 @@ struct ResultViewInspectorTests {
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "result.readAloud")
             }
-            // #249: the explanation reads itself by default; tapping its text
+            // #250: the explanation reads itself by default; tapping its text
             // is the one replay left.
             #expect(throws: Never.self) {
                 try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead")
@@ -510,7 +510,7 @@ struct ResultViewInspectorTests {
         }
     }
 
-    // MARK: - #249: "hear it" only when the result does not read by itself
+    // MARK: - #250: "hear it" only when the result does not read by itself
 
     /// WHY (founder 2026-11-26): the explanation is read aloud after the verdict
     /// by default, so a "hear it" button beside it only repeats what is already

@@ -9075,7 +9075,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Špatně. Správná odpověď: %@."
+            "value" : "Nesprávně. Správná odpověď: %@."
           }
         },
         "en" : {
@@ -22339,7 +22339,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Špatně"
+            "value" : "Nesprávně"
           }
         },
         "uk" : {
@@ -22793,7 +22793,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Správně %lld · Špatně %lld · Přeskočeno %lld"
+            "value" : "Správně %lld · Nesprávně %lld · Přeskočeno %lld"
           }
         },
         "sk" : {

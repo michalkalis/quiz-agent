@@ -1,6 +1,6 @@
 # texts
 0/10
-Špatně
+Nesprávně
 Správná odpověď
 Paris
 Tvoje odpověď

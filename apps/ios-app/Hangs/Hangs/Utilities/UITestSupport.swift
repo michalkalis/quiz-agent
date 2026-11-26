@@ -297,9 +297,13 @@
         /// real batch path runs: the capture receives half a second of audio,
         /// the VAD reports the end of speech, the coordinator uploads the WAV,
         /// and the mock server hears `text` and grades it. Returns false —
-        /// the seam fails loudly — when no answer recording is armed.
+        /// the seam fails loudly — when no answer recording is armed within
+        /// `armWaitMs`. The default covers the few hops after the probe reads
+        /// `recording`. A longer wait lets a test speak into a recording that a
+        /// tap is about to open (RS-07): XCUITest can stall a minute per step,
+        /// far longer than that recording waits for speech.
         @discardableResult
-        static func injectSpokenAnswer(_ text: String) async -> Bool {
+        static func injectSpokenAnswer(_ text: String, armWaitMs: Int = 3000) async -> Bool {
             guard let network = mockNetwork, let silence = mockSilence else {
                 Logger.quiz.error("🧪 UITestSupport: injectSpokenAnswer called but no mocks are registered")
                 return false
@@ -307,7 +311,7 @@
             // The capture arms a few hops after the probe reads `recording`
             // (engine start, detector session): wait for it, bounded.
             var waitedMs = 0
-            while !(silence.isAnswerCaptureActive && silence.isAnswerDetectionActive), waitedMs < 3000 {
+            while !(silence.isAnswerCaptureActive && silence.isAnswerDetectionActive), waitedMs < armWaitMs {
                 try? await Task.sleep(for: .milliseconds(50))
                 waitedMs += 50
             }
@@ -375,7 +379,8 @@
         ///
         /// Supported URLs:
         /// - `hangs-test://stt/committed?text=foo` → the player answers "foo" into
-        ///   the open recording (`injectSpokenAnswer`; the path name predates #208.8)
+        ///   the open recording (`injectSpokenAnswer`; the path name predates #208.8);
+        ///   `&wait=<seconds>` waits that long for the recording to open (default 3)
         /// - `hangs-test://stt/connected`          → readiness ping, no effect
         /// - `hangs-test://recording/interrupt`    → an audio interruption (phone
         ///   call) hits the recording
@@ -410,7 +415,8 @@
 
             switch (host, path) {
             case ("stt", "/committed"):
-                return await injectSpokenAnswer(text)
+                let waitSeconds = queryItems.first(where: { $0.name == "wait" })?.value.flatMap { Int($0) } ?? 3
+                return await injectSpokenAnswer(text, armWaitMs: waitSeconds * 1000)
             case ("stt", "/connected"):
                 return true
             case ("recording", "/interrupt"):

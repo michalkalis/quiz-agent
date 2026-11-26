@@ -46,6 +46,18 @@ struct ResultPage {
         )
     }
 
+    /// Seconds left on the auto-advance countdown, read from the Next
+    /// button's label ("…auto-advancing in 7 seconds") once the countdown
+    /// runs; nil if it does not start within `timeout`.
+    func waitForAutoAdvanceSeconds(timeout: TimeInterval = 3) -> Int? {
+        let counting = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS %@", "auto-advancing in"), object: continueButton
+        )
+        guard XCTWaiter.wait(for: [counting], timeout: timeout) == .completed,
+              let match = continueButton.label.firstMatch(of: /in (\d+) second/) else { return nil }
+        return Int(match.1)
+    }
+
     /// Wait for the result screen to go away (auto-advance or continue fired).
     func waitForDismissal(timeout: TimeInterval = 15, scenario: String) {
         let gone = XCTNSPredicateExpectation(

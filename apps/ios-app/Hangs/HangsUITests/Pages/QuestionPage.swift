@@ -34,6 +34,11 @@ struct QuestionPage {
         app.staticTexts["question.state"]
     }
 
+    /// "1/10" — which question of the round is up.
+    var counter: XCUIElement {
+        app.staticTexts["question.counter"]
+    }
+
     var closeButton: XCUIElement {
         app.buttons["question.closeButton"]
     }

@@ -53,7 +53,8 @@ def resume(rnd: RoomRound, at: datetime) -> None:
     """End the host's pause: every time of the round moves on by the pause,
     so the time left, the reading fallback and every answer's speed are as
     if the pause never happened. Answers sent during it were stored at its
-    start and land on the resume instant."""
+    start and land on the resume instant; so do recordings held for their
+    transcript."""
     if rnd.paused_at is None:
         return
     gap = max(timedelta(0), at - rnd.paused_at)
@@ -62,6 +63,11 @@ def resume(rnd: RoomRound, at: datetime) -> None:
         rnd.opened_at += gap
     for a in rnd.answers.values():
         a.at += gap
+    # #249.5: a recording still being transcribed counts from when it arrived;
+    # that instant moves on too (one that arrived during the pause lands on
+    # the resume), or the pause would make it look faster than everyone else.
+    for pid, held in rnd.voice_pending.items():
+        rnd.voice_pending[pid] = min(held, rnd.paused_at) + gap
     rnd.paused_at = None
 
 

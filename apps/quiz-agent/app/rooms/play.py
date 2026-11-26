@@ -127,7 +127,8 @@ class RoomPlay:
                 held is None and rounds.voice_pending_for(rnd, pid, at)
             ):
                 raise RoomError(409, "Already answered")
-            counted_at = received_at if held is not None else at
+            # The held instant, not ``received_at``: a resume moves it on by the pause.
+            counted_at = held if held is not None else at
             if not rounds.accepts_answers(session.room_game, rnd, counted_at):
                 raise RoomError(409, "Time is up")
             rnd.answers[pid] = RoomAnswer(

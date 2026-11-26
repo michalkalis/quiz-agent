@@ -222,6 +222,10 @@ async def answer_by_voice(
 
     try:
         settings = get_settings()
+        # No gate_voice_answer here, on purpose: in a game together only the
+        # host pays per question (founder rule), so a player's spoken answer
+        # never counts against their free monthly voice allowance. The solo
+        # daily abuse caps below still apply per account.
         try:
             # #207.13: the solo daily caps, before transcription is paid for.
             await usage_caps.consume(
@@ -281,9 +285,13 @@ async def answer_by_voice(
             received_at=received,
             route="voice",
         )
-    except RoomError as e:
+    except BaseException as e:
+        # Any failure (a DB or grading error too) frees the hold, or every
+        # player would wait out VOICE_PENDING_MAX for a transcript never stored.
         await service.play.release_voice(room_id, subject_id, question_id)
-        raise_http(e)
+        if isinstance(e, RoomError):
+            raise_http(e)
+        raise
     return await state_reply(service, room_id, subject_id, since=None)
 
 

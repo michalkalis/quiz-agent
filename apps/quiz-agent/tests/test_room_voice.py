@@ -220,6 +220,41 @@ async def test_a_paused_question_still_takes_a_spoken_answer(game, voice):  # no
     assert (await _speak(game)).status_code == 200
 
 
+async def test_a_pause_while_transcribing_keeps_the_speed(game, voice):  # noqa: F811
+    # The speed tie-break: a recording held across the host's pause must move
+    # on with every other time of the round, or it would look up to a whole
+    # pause faster than an answer typed at the same moment.
+    await _to_open_question(game)
+    game.clock.tick(2)
+    voice.hold = asyncio.Event()
+    upload = asyncio.create_task(_speak(game))
+    await voice.started.wait()
+    game.clock.tick(1)
+    await game.post("pause", paused=True)
+    game.clock.tick(60)
+    await game.post("pause", paused=False)
+    voice.hold.set()
+    assert (await upload).status_code == 200
+    rnd = await _current(game)
+    took = rnd.answers[await game.pid("jana")].at - rounds.clock_start(rnd)
+    assert took.total_seconds() == pytest.approx(2)
+
+
+async def test_a_store_failure_frees_the_hold(game, voice, monkeypatch):  # noqa: F811
+    # A DB or grading error after transcription must not leave the hold
+    # behind: the whole room would wait VOICE_PENDING_MAX for nothing.
+    await _to_open_question(game)
+    play = game.c._transport.app.state.rooms.play
+
+    async def broken(*args, **kwargs):
+        raise RuntimeError("database gone")
+
+    monkeypatch.setattr(play, "answer", broken)
+    with pytest.raises(RuntimeError):
+        await _speak(game)
+    assert (await _current(game)).voice_pending == {}
+
+
 async def test_a_stale_hold_from_a_crashed_request_does_not_stall_the_room(game, voice):  # noqa: F811
     left = await _to_open_question(game)
     session = await game.sessions.get_session(game.session_id)

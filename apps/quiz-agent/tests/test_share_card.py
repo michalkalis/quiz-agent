@@ -175,3 +175,33 @@ async def test_aasa_serves_play_for_both_apps_like_the_website():
     assert [d["appIDs"] for d in served] == [d["appIDs"] for d in on_site]
     for d in served:
         assert d["components"] == [{"/": "/play", "?": {"s": "?*"}}]
+
+
+async def test_page_has_a_tap_into_the_app_and_no_blind_redirect_on_ios():
+    resp = await _get(f"/play?s={TOKEN}", _share())
+    # Old App Store builds lack the api.trubbo.app universal link, and iOS
+    # ignores script redirects: the tap to trubbo.app/play is their way in.
+    assert f'class="open" href="https://trubbo.app/play?s={TOKEN}"' in resp.text
+    assert "Otvoriť v Trubbe" in resp.text
+    assert "if(!ios)location.replace" in resp.text
+    assert not re.search(r"^location\.replace", resp.text, re.M)
+
+
+async def test_a_failed_lookup_is_never_cached_under_the_permanent_url(caplog):
+    page = await _get(f"/play?s={TOKEN}", error=RuntimeError("db down"))
+    image = await _get(f"/og/play/{TOKEN}.png", error=RuntimeError("db down"))
+    # A generic card cached for a day under the share's own URL would outlive
+    # the outage in every chat app.
+    assert page.headers["cache-control"] == image.headers["cache-control"] == "no-store"
+    assert "share card lookup failed" in caplog.text
+
+
+async def test_an_unknown_share_stays_cacheable():
+    resp = await _get(f"/og/play/{TOKEN}.png", share=None)
+    assert "max-age" in resp.headers["cache-control"]
+
+
+async def test_a_long_or_odd_token_gets_a_generic_page_not_a_422():
+    resp = await _get("/play?s=" + "a" * 200)
+    assert resp.status_code == 200
+    assert "Daily challenge in Trubbo" == _tags(resp.text)["og:title"]

@@ -17,13 +17,15 @@ from __future__ import annotations
 
 import re
 from html import escape
-from typing import Optional
+import logging
+from typing import Optional, Tuple
 
 from fastapi import APIRouter, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
 
 from ...db.models import SharedQuiz
 from ...rate_limit import limiter
+from ...shared_quiz.service import ShareError
 from ...shared_quiz.card import (
     CardData,
     HEIGHT,
@@ -34,12 +36,18 @@ from ...shared_quiz.card import (
 )
 from ..deps import get_shared_quiz
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 SITE = "https://api.trubbo.app"
 STATIC_PLAY = "https://trubbo.app/play"
 _TOKEN = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 _LOCALE = {"sk": "sk_SK", "cs": "cs_CZ", "uk": "uk_UA"}
+_OPEN = {
+    "sk": "Otvoriť v Trubbe",
+    "cs": "Otevřít v Trubbu",
+    "uk": "Відкрити в Trubbo",
+}
 _ALT = {
     "sk": "Skóre dennej výzvy v Trubbe",
     "cs": "Skóre denní výzvy v Trubbu",
@@ -83,14 +91,26 @@ def card_data(share: Optional[SharedQuiz]) -> CardData:
     )
 
 
-async def _lookup(request: Request, token: str) -> Optional[SharedQuiz]:
+async def _lookup(request: Request, token: str) -> Tuple[Optional[SharedQuiz], bool]:
+    """(share, failed). Unknown token: (None, False), a stable answer. A failing
+    lookup (database down, no service): (None, True), which callers must not
+    let a cache keep under the share's permanent URL."""
     service = get_shared_quiz(request)
-    if service is None or not _TOKEN.match(token):
-        return None
+    if not _TOKEN.match(token):
+        return None, False
+    if service is None:
+        return None, True
     try:
-        return await service.by_token(token)
-    except Exception:  # unknown token (ShareError) or a failing lookup
-        return None
+        return await service.by_token(token), False
+    except ShareError:
+        return None, False
+    except Exception:
+        logger.warning("share card lookup failed", exc_info=True)
+        return None, True
+
+
+def _cache(failed: bool, stable: str) -> str:
+    return "no-store" if failed else stable
 
 
 def page(data: CardData, token: str) -> str:
@@ -101,6 +121,7 @@ def page(data: CardData, token: str) -> str:
     image = f"{SITE}/og/play/{q}.png" if q else f"{SITE}/og/play/generic.png"
     lang = escape(data.language, quote=True)
     target = f"{STATIC_PLAY}?s={q}" if q else STATIC_PLAY
+    open_label = escape(_OPEN.get(data.language, "Open in Trubbo"))
     alt = escape(_ALT.get(data.language, "Daily challenge score in Trubbo"))
     locale = _LOCALE.get(data.language, "en_US")
     return f"""<!doctype html>
@@ -124,10 +145,23 @@ def page(data: CardData, token: str) -> str:
 <meta property="og:image:alt" content="{alt}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="apple-itunes-app" content="app-id=6762482437">
+<style>
+body{{margin:0;padding:16px;font-family:-apple-system,system-ui,sans-serif;background:#E8EAEE;color:#111216;text-align:center}}
+img{{max-width:100%;height:auto;border-radius:16px}}
+a.open{{display:block;max-width:420px;margin:20px auto;padding:16px 28px;border-radius:28px;background:#111216;color:#fff;font-size:18px;font-weight:700;text-decoration:none}}
+</style>
 </head>
 <body>
-<p><a href="{target}">trubbo.app</a></p>
-<script>location.replace({target!r});</script>
+<h1>{title}</h1>
+<img src="{image}" alt="{alt}" width="{WIDTH}" height="{HEIGHT}">
+<a class="open" href="{target}">{open_label}</a>
+<script>
+// iOS ignores a script redirect for universal links, so on iPhone and iPad the
+// tap above is the way into the app (an older build opens it from a tap on
+// another domain). Elsewhere the static page is the next step.
+var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(!ios)location.replace({target!r});
+</script>
 </body>
 </html>
 """
@@ -137,13 +171,13 @@ def page(data: CardData, token: str) -> str:
 @limiter.limit("120/minute")
 async def play_page(
     request: Request,
-    s: str = Query(default="", max_length=64),
+    s: str = Query(default=""),
 ) -> Response:
-    data = card_data(await _lookup(request, s))
+    share, failed = await _lookup(request, s)
     return Response(
-        page(data, s),
+        page(card_data(share), s),
         media_type="text/html",
-        headers={"Cache-Control": "public, max-age=300"},
+        headers={"Cache-Control": _cache(failed, "public, max-age=300")},
     )
 
 
@@ -152,10 +186,12 @@ async def play_page(
 async def play_card(request: Request, token: str) -> Response:
     """Stable per share (chat apps cache a preview image hard); a share never
     changes, so neither does its image."""
-    data = card_data(await _lookup(request, token))
-    png = await run_in_threadpool(render_cached, data)
+    share, failed = await _lookup(request, token)
+    png = await run_in_threadpool(render_cached, card_data(share))
     return Response(
-        png, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
+        png,
+        media_type="image/png",
+        headers={"Cache-Control": _cache(failed, "public, max-age=86400")},
     )
 
 

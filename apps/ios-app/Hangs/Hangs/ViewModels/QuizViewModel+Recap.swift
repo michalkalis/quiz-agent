@@ -153,7 +153,7 @@ extension QuizViewModel {
                 ))
             default:
                 pieces.append(String(
-                    localized: "Missed. The answer: \(entry.correctAnswerDisplay).",
+                    localized: "Wrong. Correct answer: \(entry.correctAnswerDisplay).",
                     bundle: .interface, locale: .interface,
                     comment: "Recap narration verdict for a wrong answer, then the revealed answer"
                 ))

@@ -17,7 +17,7 @@ import ViewInspector
 struct ExplanationTapTests {
     private func panel(onHearIt: (() -> Void)?) -> ResultAnswerPanel {
         ResultAnswerPanel(
-            answerLabel: "the answer",
+            answerLabel: "Correct answer",
             answerText: "Liechtenstein",
             isRecap: false,
             isCorrect: false,

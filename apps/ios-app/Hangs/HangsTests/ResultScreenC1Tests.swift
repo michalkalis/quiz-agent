@@ -65,9 +65,11 @@ struct ResultScreenC1Tests {
             let tree = try view.inspect()
             let answer = try tree.find(viewWithAccessibilityIdentifier: "result.answer")
             #expect(try answer.text().string() == "Soľ")
-            #expect(throws: Never.self) { try tree.find(text: "the answer") }
-            #expect(throws: (any Error).self, "\"your answer\" labelled the transcript") { try tree.find(text: "your answer") }
-            #expect(throws: Never.self, "what was heard stays visible, quietly") {
+            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
+            #expect(throws: Never.self, "#248.2: \"Your answer\" labels the differently worded answer") {
+                try tree.find(text: "Your answer")
+            }
+            #expect(throws: Never.self, "what the player said stays visible, quietly") {
                 try tree.find(viewWithAccessibilityIdentifier: "result.heard")
             }
             #expect(throws: (any Error).self, "an accepted answer is never struck through") {

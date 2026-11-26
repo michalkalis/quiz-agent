@@ -79,7 +79,7 @@ struct IconVocabularyTests {
     @Test("the result screen's hear-it glyph is the outline speaker")
     func resultHearItIsOutlineSpeaker() async throws {
         let panel = ResultAnswerPanel(
-            answerLabel: "the answer",
+            answerLabel: "Correct answer",
             answerText: "Liechtenstein",
             isRecap: false,
             isCorrect: false,

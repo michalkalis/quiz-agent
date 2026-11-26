@@ -85,7 +85,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
     //
     // Scenario: from askingQuestion state, record and say the correct answer, confirm via the confirmation sheet, and assert the result
-    // screen shows the CORRECT verdict ("Nailed it") plus the continue button.
+    // screen shows the CORRECT verdict ("Correct") plus the continue button.
     //
     // Regression guarded: STT→processAnswer→showingResult pipeline for correct
     // answers, verdict included. Asserting only `result.continue` (as this
@@ -129,7 +129,7 @@ final nonisolated class RegressionTests: XCTestCase {
         // verdict band says the answer was right.
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertVerdictContains("Nailed it")
+        result.assertVerdictContains("Correct")
     }
 
     // MARK: - RS-incorrect
@@ -137,10 +137,10 @@ final nonisolated class RegressionTests: XCTestCase {
     //
     // Scenario: same flow as RS-correct but launched with "--ui-test-incorrect"
     // so the mock returns an incorrect evaluation. Assert the verdict label says
-    // "Missed" (the incorrect-branch verdict).
+    // "Wrong" (the incorrect-branch verdict).
     //
     // Regression guarded: incorrect-answer branch of showingResult renders the
-    // "Missed" verdict label.
+    // "Wrong" verdict label.
 
     @MainActor
     func testRSIncorrect() async throws {
@@ -171,7 +171,7 @@ final nonisolated class RegressionTests: XCTestCase {
 
         let result = ResultPage(app: app)
         result.waitForResult(timeout: 15)
-        result.assertVerdictContains("Missed")
+        result.assertVerdictContains("Wrong")
     }
 
     // MARK: - RS-long

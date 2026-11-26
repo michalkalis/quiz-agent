@@ -72,7 +72,7 @@ struct ResultViewInspectorTests {
     // MARK: - Correct variant
 
     /// #131 Track D Variant A: the band states the outcome ONCE — the big
-    /// "Nailed it" word plus the check badge. The old "correct" status chip is
+    /// "Correct" word plus the check badge. The old "correct" status chip is
     /// gone; the screen must never say the same state twice.
     @Test("Correct evaluation renders the verdict label, Nailed it word and 'the answer' panel")
     func correctVariantRendersVerdictAndAnswerPanel() async throws {
@@ -84,7 +84,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Nailed it") }
+            #expect(throws: Never.self) { try tree.find(text: "Correct") }
             #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
                 try tree.find(text: "correct")
             }
@@ -92,14 +92,14 @@ struct ResultViewInspectorTests {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "checkmark" })
             }
             // TF build 90 (C1): the question's answer, under the same label on every verdict.
-            #expect(throws: Never.self) { try tree.find(text: "the answer") }
+            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
         }
     }
 
     // MARK: - Incorrect variant
 
-    /// Incorrect: the band says "Missed" once (xmark badge, no "incorrect"
+    /// Incorrect: the band says "Wrong" once (xmark badge, no "incorrect"
     /// chip), the card labels the revealed answer "the answer", and what the
     /// driver said drops to the muted meta row under the card.
     @Test("Incorrect evaluation renders Missed word, 'the answer' panel and 'you said' line")
@@ -112,7 +112,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Missed") }
+            #expect(throws: Never.self) { try tree.find(text: "Wrong") }
             #expect(throws: (any Error).self, "the status chip must not repeat the verdict") {
                 try tree.find(text: "incorrect")
             }
@@ -120,13 +120,13 @@ struct ResultViewInspectorTests {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "xmark" })
             }
             // The revealed correct answer is the dominant text under "the answer".
-            #expect(throws: Never.self) { try tree.find(text: "the answer") }
+            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
             // The wrong answer is the quiet struck-through "you said" line.
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.metaRow") }
             // NAILED must NOT appear.
-            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct") }
         }
     }
 
@@ -150,9 +150,9 @@ struct ResultViewInspectorTests {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "minus" })
             }
             // The wrong verdicts must NOT appear.
-            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Wrong") }
             #expect(throws: (any Error).self) { try tree.find(text: "incorrect") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct") }
         }
     }
 
@@ -188,7 +188,7 @@ struct ResultViewInspectorTests {
         }
     }
 
-    /// A genuine wrong answer must still show "Missed" — the new `.skipped`
+    /// A genuine wrong answer must still show "Wrong" — the new `.skipped`
     /// branch must not swallow the existing incorrect path.
     @Test("Wrong answer still renders MISSED IT after the skipped verdict was added")
     func incorrectVariantStillRendersMissedIt() async throws {
@@ -200,7 +200,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Missed") }
+            #expect(throws: Never.self) { try tree.find(text: "Wrong") }
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.said") }
             #expect(throws: (any Error).self) { try tree.find(text: "Skipped") }
         }
@@ -221,7 +221,7 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Missed") }
+            #expect(throws: Never.self) { try tree.find(text: "Wrong") }
             #expect(vm.resultEvaluation?.result == .partiallyCorrect)
             #expect(vm.resultEvaluation?.points == 0.5)
         }
@@ -382,8 +382,8 @@ struct ResultViewInspectorTests {
             // Footer still works.
             #expect(throws: Never.self) { try tree.find(button: "Next") }
             // Neutral: neither verdict word appears.
-            #expect(throws: (any Error).self) { try tree.find(text: "Nailed it") }
-            #expect(throws: (any Error).self) { try tree.find(text: "Missed") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Wrong") }
             #expect(vm.resultEvaluation == nil)
         }
     }
@@ -403,7 +403,7 @@ struct ResultViewInspectorTests {
             // Recap label + stem (from the seeded question), not the answer branch.
             #expect(throws: Never.self) { try tree.find(text: "the question") }
             #expect(throws: Never.self) { try tree.find(text: "Which planet rotates on its side?") }
-            #expect(throws: (any Error).self) { try tree.find(text: "the answer") }
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct answer") }
         }
     }
 

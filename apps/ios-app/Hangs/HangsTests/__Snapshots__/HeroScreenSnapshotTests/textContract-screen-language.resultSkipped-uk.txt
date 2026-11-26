@@ -1,0 +1,29 @@
+# texts
+0/10
+Пропущено
+Правильна відповідь
+Paris
+чому
+послухай
+Paris has been the capital of France since the 10th century.
+Покажи питання
+джерело
+Далі
+Налаштування
+# identifiers
+question.progress
+question.counter
+result.verdict
+result.answer
+result.hearIt
+result.explanation
+result.explanationRead
+result.metaRow
+result.showQuestion
+result.source
+result.continue
+question.closeButton
+question.mute
+question.pause
+question.moreMenu
+question.settingsButton

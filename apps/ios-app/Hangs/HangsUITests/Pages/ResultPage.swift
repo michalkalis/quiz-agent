@@ -32,7 +32,7 @@ struct ResultPage {
         app.buttons["result.showQuestion"]
     }
 
-    /// The verdict label in the result card header ("Nailed it" / "Missed" /
+    /// The verdict label in the result card header ("Correct" / "Wrong" /
     /// "Skipped") — the one surface that tells the driver what happened.
     var verdict: XCUIElement {
         app.staticTexts["result.verdict"]

@@ -1,8 +1,7 @@
 # texts
 0/10
-Geography
-Влучно
-правильна відповідь
+Правильно
+Правильна відповідь
 Paris
 чому
 послухай
@@ -14,7 +13,6 @@ Paris has been the capital of France since the 10th century.
 # identifiers
 question.progress
 question.counter
-question.category
 result.verdict
 result.answer
 result.hearIt

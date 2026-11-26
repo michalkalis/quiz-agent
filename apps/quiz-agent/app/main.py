@@ -81,7 +81,11 @@ from .tts.service import TTSService
 from .translation import TranslationService
 from .usage.caps import UsageCaps
 from .usage.elevenlabs_budget import ElevenLabsBudget
-from .usage.tracker import UsageTracker
+from .usage.tracker import (
+    FREE_MONTHLY_LIMIT,
+    SUBSCRIBER_MONTHLY_LIMIT,
+    UsageTracker,
+)
 from .api import rest, admin
 from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
@@ -259,9 +263,10 @@ async def lifespan(app: FastAPI):
                     "anon-bootstrap will fail safe (503) until the app id is set."
                 )
             logger.info(
-                "Services initialized (limits: free %d, Plus %d questions/month, persistent)",
-                usage_tracker.monthly_limit,
-                usage_tracker.subscriber_monthly_limit,
+                "Services initialized (limits: free %d, Plus %d questions/month "
+                "unless an app switch overrides them, persistent)",
+                FREE_MONTHLY_LIMIT,
+                SUBSCRIBER_MONTHLY_LIMIT,
             )
             # Auth token services (#60.4). Need the JWT secret too; without it the
             # /auth/* endpoints stay disabled (503) rather than minting tokens an

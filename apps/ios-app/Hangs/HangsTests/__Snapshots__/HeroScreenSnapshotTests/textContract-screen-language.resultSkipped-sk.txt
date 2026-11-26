@@ -4,7 +4,6 @@ Preskočené
 Správna odpoveď
 Paris
 prečo
-vypočuj si
 Paris has been the capital of France since the 10th century.
 Zobraz otázku
 zdroj
@@ -15,7 +14,6 @@ question.progress
 question.counter
 result.verdict
 result.answer
-result.hearIt
 result.explanation
 result.explanationRead
 result.metaRow

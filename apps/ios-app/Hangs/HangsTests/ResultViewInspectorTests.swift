@@ -229,9 +229,9 @@ struct ResultViewInspectorTests {
 
     // MARK: - Explanation "why" block on BOTH outcomes (gated on text, not correctness)
 
-    /// When explanation text exists, the "why" label + "hear it" control render on
-    /// a CORRECT answer.
-    @Test("Explanation present: 'why' + 'hear it' render on a correct answer")
+    /// When explanation text exists, the "why" label and the tappable text render
+    /// on a CORRECT answer.
+    @Test("Explanation present: 'why' + tappable text render on a correct answer")
     func explanationRendersOnCorrect() async throws {
         let evaluation = Evaluation(
             userAnswer: "Uranus", result: .correct, points: 1.0,
@@ -243,14 +243,15 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "why") }
-            #expect(throws: Never.self) { try tree.find(text: "hear it") }
+            // #250: read aloud by itself; the text is the tap to hear it again.
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus is tipped about 98 degrees.") }
         }
     }
 
     /// The SAME "why" block renders on an INCORRECT answer — the explanation is
     /// gated on the text existing, never on correctness (issue #127 fix).
-    @Test("Explanation present: 'why' + 'hear it' render on an incorrect answer too")
+    @Test("Explanation present: 'why' + tappable text render on an incorrect answer too")
     func explanationRendersOnIncorrect() async throws {
         let evaluation = Evaluation(
             userAnswer: "Saturn", result: .incorrect, points: 0.0,
@@ -262,7 +263,8 @@ struct ResultViewInspectorTests {
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(text: "why") }
-            #expect(throws: Never.self) { try tree.find(text: "hear it") }
+            // #250: read aloud by itself; the text is the tap to hear it again.
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead") }
         }
     }
 
@@ -500,8 +502,36 @@ struct ResultViewInspectorTests {
             #expect(throws: (any Error).self) {
                 _ = try tree.find(viewWithAccessibilityIdentifier: "result.readAloud")
             }
+            // #250: the explanation reads itself by default; tapping its text
+            // is the one replay left.
             #expect(throws: Never.self) {
-                try tree.find(viewWithAccessibilityIdentifier: "result.hearIt")
+                try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead")
+            }
+        }
+    }
+
+    // MARK: - #250: "hear it" only when the result does not read by itself
+
+    /// WHY (founder 2026-11-26): the explanation is read aloud after the verdict
+    /// by default, so a "hear it" button beside it only repeats what is already
+    /// playing. Quick quiz skips the read; there the button is the way to hear it.
+    @Test("'hear it' is hidden while the result reads its explanation, shown in Quick quiz", arguments: [false, true])
+    func hearItOnlyWithoutAutoRead(quickGame: Bool) async throws {
+        let why = "Paris has been the capital since the 10th century."
+        let evaluation = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: why
+        )
+        let vm = makeViewModel(evaluation: evaluation, question: makeQuestion(explanation: why))
+        vm.settings.quickGame = quickGame
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let chip = try? tree.find(viewWithAccessibilityIdentifier: "result.hearIt")
+            #expect((chip != nil) == quickGame)
+            #expect(throws: Never.self, "a tap on the text still reads it") {
+                try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead")
             }
         }
     }

@@ -2722,7 +2722,11 @@ final class QuizViewModel: ObservableObject {
             // #186: a result already left behind (Next tapped before this ran)
             // must not start talking or counting over the next question.
             guard attemptLedger.ownsQuestion(resultOwner, "resultFeedback.start") else { return }
-            let countdown = await playVerdictThenPace(response.audio)
+            // #250: and the explanation after it, unless Quick quiz or read-aloud off.
+            let countdown = await speakResultThenPace(
+                response.audio,
+                explanation: question.explanation ?? evaluation.explanation
+            )
             guard !Task.isCancelled,
                   attemptLedger.ownsQuestion(resultOwner, "resultFeedback.countdown") else { return }
             guard let countdown else {

@@ -6,7 +6,6 @@ Paris
 Your answer
 Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
-hear it
 Paris has been the capital of France since the 10th century.
 Show question
 source
@@ -18,7 +17,6 @@ question.counter
 result.verdict
 result.answer
 result.said
-result.hearIt
 result.explanation
 result.explanationRead
 result.metaRow

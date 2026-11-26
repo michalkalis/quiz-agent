@@ -16,9 +16,15 @@ struct ResultPage {
         app.otherElements["result.heroBanner"]
     }
 
-    /// "hear it" — replays the question audio from the answer panel.
+    /// "hear it" — reads the explanation; only shown when the result does not
+    /// read it by itself (#250: Quick quiz, read-aloud off).
     var hearItButton: XCUIElement {
         app.buttons["result.hearIt"]
+    }
+
+    /// The explanation text; a tap reads it (#243.9), always available.
+    var explanationReadButton: XCUIElement {
+        app.buttons["result.explanationRead"]
     }
 
     /// The quiz toolbar's pause: holds the auto-advance ⇄ resumes it (TF

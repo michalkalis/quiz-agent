@@ -1982,48 +1982,48 @@
         }
       }
     },
-    "1,000 questions a month" : {
+    "%@ questions a month" : {
       "comment" : "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázek měsíčně"
+            "value" : "%@ otázek měsíčně"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázok mesačne"
+            "value" : "%@ otázok mesačne"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 питань на місяць"
+            "value" : "%@ питань на місяць"
           }
         }
       }
     },
-    "1,000 questions a month for %@" : {
+    "%@ questions a month for %@" : {
       "comment" : "Paywall plan card line: the Trubbo Plus allowance and its monthly price",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázek měsíčně za %@"
+            "value" : "%1$@ otázek měsíčně za %2$@"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázok mesačne za %@"
+            "value" : "%1$@ otázok mesačne za %2$@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 питань на місяць за %@"
+            "value" : "%1$@ питань на місяць за %2$@"
           }
         }
       }
@@ -19383,25 +19383,25 @@
         }
       }
     },
-    "You've used all 1,000 Trubbo Plus questions this month." : {
+    "You've used all %@ Trubbo Plus questions this month." : {
       "comment" : "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento měsíc už máš za sebou všech 1 000 otázek Trubbo Plus."
+            "value" : "Tento měsíc už máš za sebou všech %@ otázek Trubbo Plus."
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tento mesiac už máš za sebou všetkých 1 000 otázok Trubbo Plus."
+            "value" : "Tento mesiac už máš za sebou všetkých %@ otázok Trubbo Plus."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Цього місяця всі 1 000 питань Trubbo Plus уже використано."
+            "value" : "Цього місяця всі %@ питань Trubbo Plus уже використано."
           }
         }
       }

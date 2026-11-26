@@ -158,6 +158,33 @@ struct PaywallViewNormalStructureTests {
         }
     }
 
+    // Remote config 2026-11-26: the Plus allowance is a server switch. The
+    // paywall must name the number the server enforces, or a changed
+    // allowance turns the subscription pitch into a false promise (App
+    // Review 3.1.2), in every place the number appears.
+    @Test("Every Plus allowance on the paywall is the server's number")
+    func plusAllowanceComesFromTheServer() async throws {
+        let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)
+        let proactive = PaywallView(storeManager: manager, limitError: nil, plusMonthlyQuestions: 1200, onDismiss: {})
+        try await ViewHosting.host(proactive) {
+            let tree = try proactive.inspect()
+            #expect(throws: Never.self) { try tree.find(text: "1,200 questions a month") }
+            #expect(treeHasText(tree, containing: ["1,200 questions a month for", "4.99"]))
+            #expect(!treeHasText(tree, containing: ["1,000"]))
+        }
+        let spent = QuotaLimitError(
+            error: "Monthly limit reached", questionsUsed: 1200, questionsLimit: 1200,
+            resetsAt: "2099-01-01T08:00:00.000Z", upgradeAvailable: false
+        )
+        let subscriber = PaywallView(storeManager: manager, limitError: spent, plusMonthlyQuestions: 1200, onDismiss: {})
+        try await ViewHosting.host(subscriber) {
+            let tree = try subscriber.inspect()
+            #expect(throws: Never.self) {
+                try tree.find(text: "You've used all 1,200 Trubbo Plus questions this month.")
+            }
+        }
+    }
+
     @Test("Countdown pill renders when limitError has a resetDate")
     func countdownPillRenders() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)

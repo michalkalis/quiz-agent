@@ -32,6 +32,9 @@ enum PaywallPlan {
 struct PaywallView: View {
     @ObservedObject var storeManager: StoreManager
     let limitError: QuotaLimitError?
+    /// The Trubbo Plus allowance the server enforces (`/app-config`), so the
+    /// copy never promises a different number than the player gets.
+    let plusMonthlyQuestions: Int
     let onDismiss: () -> Void
 
     @State private var selectedPlan: PaywallPlan
@@ -39,11 +42,13 @@ struct PaywallView: View {
     init(
         storeManager: StoreManager,
         limitError: QuotaLimitError?,
+        plusMonthlyQuestions: Int = AppConfigStore.defaultPlusMonthlyQuestions,
         onDismiss: @escaping () -> Void,
         initialPlan: PaywallPlan = .monthly
     ) {
         self.storeManager = storeManager
         self.limitError = limitError
+        self.plusMonthlyQuestions = plusMonthlyQuestions
         self.onDismiss = onDismiss
         _selectedPlan = State(initialValue: initialPlan)
     }
@@ -251,11 +256,18 @@ struct PaywallView: View {
     private var limitMessage: String {
         if let limit = limitError {
             if !limit.upgradeAvailable {
-                return String(localized: "You've used all 1,000 Trubbo Plus questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+                return String(localized: "You've used all \(plusAllowance) Trubbo Plus questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
             }
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "1,000 questions a month", bundle: .interface, locale: .interface, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
+        return String(localized: "\(plusAllowance) questions a month", bundle: .interface, locale: .interface, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
+    }
+
+    /// The allowance grouped the way the interface language writes it
+    /// ("1 000", "1,000"). The language alone decides, not the phone's region,
+    /// so the text matches its translation on every phone.
+    private var plusAllowance: String {
+        plusMonthlyQuestions.formatted(.number.locale(Locale(identifier: InterfaceLanguage.code)))
     }
 
     // MARK: - Plan picker
@@ -281,7 +293,7 @@ struct PaywallView: View {
             if subscriptionOffered, let monthly = storeManager.offerings?.monthly {
                 planCard(
                     title: "Trubbo Plus",
-                    price: "1,000 questions a month for \(monthly.displayPrice)",
+                    price: "\(plusMonthlyQuestions, format: .number) questions a month for \(monthly.displayPrice)",
                     plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {

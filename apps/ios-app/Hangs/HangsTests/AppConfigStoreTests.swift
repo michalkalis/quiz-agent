@@ -293,12 +293,100 @@ struct AppConfigStoreTests {
         #expect(!config.multiplayerEnabledAppStore)
     }
 
+    // MARK: Remembered between launches (remote config 2026-11-26)
+
+    // Why: the app is often opened without signal (tunnel, underground garage,
+    // flight). Before, every launch started from `permissive`, so the daily
+    // challenge, Together and the other switched-on features vanished until a
+    // fetch landed, then popped in. The last config the server sent applies
+    // from the first frame instead, and never one that could lock a player out.
+
+    @Test("A launch without signal shows what the server switched on last time")
+    func lastConfigSurvivesAnOfflineRelaunch() async throws {
+        let defaults = try #require(UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)"))
+        let online = RemoteAppConfig(
+            minVersionAppStore: nil, minVersionTestflight: nil, ordersEnabled: false,
+            notice: RemoteAppConfig.Notice(sk: nil, cs: nil, en: "Hello", uk: nil),
+            voiceExperiment: VoiceExperimentConfig(arms: [:]),
+            dailyChallengeEnabled: true, multiplayerEnabled: true,
+            sharedQuizEnabled: true, extraCategoriesEnabled: true, plusMonthlyQuestions: 1200
+        )
+        let first = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { online }
+        await first.refresh()
+
+        let relaunch = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { throw Offline() }
+        #expect(relaunch.config == online)
+        await relaunch.refresh()
+        #expect(relaunch.config == online)
+        #expect(relaunch.multiplayerEnabled && relaunch.sharedQuizEnabled && !relaunch.ordersEnabled)
+        #expect(relaunch.plusMonthlyQuestions == 1200)
+    }
+
+    @Test("A remembered maintenance flag never blocks the next launch")
+    func rememberedMaintenanceIsDropped() async throws {
+        let defaults = try #require(UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)"))
+        let duringMaintenance = RemoteAppConfig(
+            minVersionAppStore: nil, minVersionTestflight: nil, ordersEnabled: true, notice: nil,
+            dailyChallengeEnabled: true, maintenanceEnabled: true,
+            maintenanceMessage: RemoteAppConfig.Notice(sk: nil, cs: nil, en: "Back at 10", uk: nil)
+        )
+        let first = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { duringMaintenance }
+        await first.refresh()
+        #expect(first.maintenance)
+
+        let relaunch = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { throw Offline() }
+        #expect(!relaunch.maintenance)
+        #expect(relaunch.config.dailyChallengeEnabled)
+    }
+
+    @Test("A newer answer from the server replaces the remembered one")
+    func freshFetchWinsOverTheRememberedConfig() async throws {
+        let defaults = try #require(UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)"))
+        let on = RemoteAppConfig(minVersionAppStore: nil, minVersionTestflight: nil, ordersEnabled: true,
+                                 notice: nil, multiplayerEnabled: true)
+        await makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { on }.refresh()
+
+        let relaunch = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { .permissive }
+        #expect(relaunch.multiplayerEnabled)
+        await relaunch.refresh()
+        #expect(!relaunch.multiplayerEnabled)
+        let third = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { throw Offline() }
+        #expect(third.config == .permissive)
+    }
+
+    @Test("A store that does not remember leaves nothing behind (UI tests, seeded launches)")
+    func notRememberingWritesNothing() async throws {
+        let defaults = try #require(UserDefaults(suiteName: "AppConfigStoreTests.\(UUID().uuidString)"))
+        let on = RemoteAppConfig(minVersionAppStore: "999", minVersionTestflight: "999",
+                                 ordersEnabled: true, notice: nil)
+        await makeStore(version: "1.3", defaults: defaults) { on }.refresh()
+
+        let relaunch = makeStore(version: "1.3", defaults: defaults, remembersConfig: true) { throw Offline() }
+        #expect(!relaunch.updateRequired)
+    }
+
+    // MARK: Plus allowance on the paywall
+
+    @Test("The paywall names the server's Plus allowance, 1,000 when none is sent", arguments: [
+        (#"{"plus_monthly_questions": 1200}"#, 1200),
+        ("{}", 1000),
+        (#"{"plus_monthly_questions": 0}"#, 1000),
+        (#"{"plus_monthly_questions": "lots"}"#, 1000),
+    ])
+    func plusAllowanceFromServer(body: String, expected: Int) async throws {
+        let config = try JSONDecoder().decode(RemoteAppConfig.self, from: Data(body.utf8))
+        let store = makeStore(version: "1.3") { config }
+        await store.refresh()
+        #expect(store.plusMonthlyQuestions == expected)
+    }
+
     private func makeStore(
         version: String,
         isTestFlight: Bool = false,
         isAppStoreBuild: Bool = false,
         language: String = "en",
         defaults: UserDefaults? = nil,
+        remembersConfig: Bool = false,
         fetch: @escaping AppConfigStore.Fetch
     ) -> AppConfigStore {
         AppConfigStore(
@@ -307,6 +395,7 @@ struct AppConfigStoreTests {
             appVersion: version,
             isTestFlight: isTestFlight,
             isAppStoreBuild: isAppStoreBuild,
+            remembersConfig: remembersConfig,
             languageCode: language
         )
     }

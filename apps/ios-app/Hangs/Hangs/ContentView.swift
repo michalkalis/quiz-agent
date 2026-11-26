@@ -366,6 +366,7 @@ struct ContentView: View {
             PaywallView(
                 storeManager: appState.storeManager,
                 limitError: viewModel.quotaLimitError,
+                plusMonthlyQuestions: appState.appConfig.plusMonthlyQuestions,
                 onDismiss: { viewModel.showPaywall = false }
             )
         }

@@ -21,12 +21,12 @@ pytestmark = pytest.mark.asyncio
 GRACE = rounds.ANSWER_GRACE.total_seconds()
 
 
-async def _current(game):
+async def _current(game):  # noqa: F811
     session = await game.sessions.get_session(game.session_id)
     return session.room_game.current
 
 
-async def test_a_pause_while_answering_stops_the_clock_for_everyone(game):
+async def test_a_pause_while_answering_stops_the_clock_for_everyone(game):  # noqa: F811
     # 10 s thinking + 5 s for A–D = 15 s; 4 s gone when the host pauses.
     await game.setup(thinking_seconds=10)
     await game.post("open", question_id="q_mcq")
@@ -50,7 +50,7 @@ async def test_a_pause_while_answering_stops_the_clock_for_everyone(game):
     assert (await game.answer("jana", "q_mcq", "b")).status_code == 409
 
 
-async def test_the_lazy_close_never_closes_a_paused_question(game):
+async def test_the_lazy_close_never_closes_a_paused_question(game):  # noqa: F811
     # Polls close a question past its time in the background; during a pause
     # that would end the question under the players' hands.
     await game.setup(thinking_seconds=10)
@@ -66,7 +66,7 @@ async def test_the_lazy_close_never_closes_a_paused_question(game):
     assert (await game.post("next")).status_code == 409
 
 
-async def test_answers_count_while_paused_and_the_pause_is_not_their_speed(game):
+async def test_answers_count_while_paused_and_the_pause_is_not_their_speed(game):  # noqa: F811
     await game.setup(thinking_seconds=10)
     await game.post("open", question_id="q_mcq")
     game.clock.tick(4)
@@ -91,7 +91,7 @@ async def test_answers_count_while_paused_and_the_pause_is_not_their_speed(game)
     assert rounds.answer_ms(current, current.answers[jana]) == 4_000
 
 
-async def test_a_pause_while_the_host_reads_holds_the_reading_fallback(game):
+async def test_a_pause_while_the_host_reads_holds_the_reading_fallback(game):  # noqa: F811
     # The server starts the time by itself 45 s after serving (a host phone
     # that died mid-read); a pause during reading must push that too.
     await game.setup(thinking_seconds=10)
@@ -110,7 +110,7 @@ async def test_a_pause_while_the_host_reads_holds_the_reading_fallback(game):
 
 
 async def test_a_read_that_ends_during_the_pause_starts_the_clock_at_the_resume(
-    game,
+    game,  # noqa: F811
 ):
     await game.setup(thinking_seconds=10)
     await game.post("pause", paused=True)
@@ -124,7 +124,7 @@ async def test_a_read_that_ends_during_the_pause_starts_the_clock_at_the_resume(
     assert (await game.state("jana"))["round"]["remaining_ms"] == 10_000
 
 
-async def test_only_the_host_pauses_and_a_question_out_of_time_cannot(game):
+async def test_only_the_host_pauses_and_a_question_out_of_time_cannot(game):  # noqa: F811
     await game.setup(thinking_seconds=10)
     await game.post("open", question_id="q_mcq")
     assert (await game.post("pause", "jana", paused=True)).status_code == 403
@@ -142,7 +142,7 @@ async def test_only_the_host_pauses_and_a_question_out_of_time_cannot(game):
 
 
 async def test_a_paused_poll_is_answered_in_full_for_builds_without_the_pause(
-    game,
+    game,  # noqa: F811
 ):
     # Builds before #249.4 count down locally between full replies; a tiny
     # "unchanged" reply during a pause would let their timer run to zero.

@@ -2,11 +2,13 @@
 //  ResultCardVerdictLayoutTests.swift
 //  HangsTests
 //
-//  #248.2 (founder 2026-11-25, variant A "verdict as the headline"): the
-//  result card reads top to bottom as verdict, correct answer, "Your answer",
-//  why, quiet row. These contracts guard WHAT the player is told: the verdict
-//  word per outcome, and whether their own answer is shown struck through,
-//  shown plain, or not at all (it was crowded and the parts did not relate).
+//  #248.2 (founder 2026-11-25) set the verdict words; #250 (founder
+//  2026-11-26, variant A "your answer as the headline") made the player's own
+//  answer the headline under a small verdict, the correct answer below it.
+//  These contracts guard WHAT the player is told: the verdict word per
+//  outcome, and whether their own answer is shown struck through, shown
+//  plain, or not at all. The visible "Your answer" label is gone (#250): the
+//  headline carries it as its accessibility label for VoiceOver.
 //
 
 @testable import Hangs
@@ -52,13 +54,14 @@ struct ResultCardVerdictLayoutTests {
         }
     }
 
-    @Test("a wrong answer is shown under \"Your answer\", struck through")
+    @Test("a wrong answer is the headline, struck through, and VoiceOver calls it \"Your answer\"")
     func wrongAnswerIsStruck() async throws {
         let view = ResultView(viewModel: viewModel(said: "Pepper", result: .incorrect))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Your answer") }
-            let said = try tree.find(viewWithAccessibilityIdentifier: "result.said").find(text: "Pepper")
+            let line = try tree.find(viewWithAccessibilityIdentifier: "result.said")
+            #expect(try line.accessibilityLabel().string() == "Your answer")
+            let said = try line.find(text: "Pepper")
             #expect(try said.attributes().isStrikethrough(), "a wrong answer is crossed out")
         }
     }
@@ -68,8 +71,9 @@ struct ResultCardVerdictLayoutTests {
         let view = ResultView(viewModel: viewModel(said: "solo", result: .correct))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            #expect(throws: Never.self) { try tree.find(text: "Your answer") }
-            let said = try tree.find(viewWithAccessibilityIdentifier: "result.heard").find(text: "solo")
+            let line = try tree.find(viewWithAccessibilityIdentifier: "result.heard")
+            #expect(try line.accessibilityLabel().string() == "Your answer")
+            let said = try line.find(text: "solo")
             // isStrikethrough() throws when the text has no strikethrough modifier at all.
             #expect(((try? said.attributes().isStrikethrough()) ?? false) == false, "it counted, so nothing is crossed out")
         }

@@ -58,6 +58,12 @@ struct QuestionView: View {
     /// measured — it grows with the text size, so it cannot be a constant.
     @State private var stemCardHeight: CGFloat = 0
     @State private var stemRegionHeight: CGFloat = 0
+    /// #249.2: the heights of everything on the MCQ screen that is not the stem
+    /// card, so the card's floor can leave the options the room they need.
+    @State private var mcqBodyHeight: CGFloat = 0
+    @State private var provenanceHeight: CGFloat = 0
+    @State private var listenRowHeight: CGFloat = 0
+    @State private var mcqFooterHeight: CGFloat = 0
     /// #194 B3: bumped once per question to play the card arrival. Starts at
     /// rest, so a first render (and every snapshot) shows the card in place.
     @State private var cardArrival = 0
@@ -539,6 +545,7 @@ struct QuestionView: View {
                 isEnabled: debugSurfaces,
                 horizontalPadding: Metrics.gutter
             )
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { provenanceHeight = $0 }
 
             // #173 B1 (founder pick): the listening banner sits ABOVE the option
             // grid, directly under the stem — where the eye already is when the
@@ -585,8 +592,10 @@ struct QuestionView: View {
             // last option (founder screenshot, large text). A row never overlaps.
             mcqFooter(compact: compact)
                 .fixedSize(horizontal: false, vertical: true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { mcqFooterHeight = $0 }
         }
         .frame(maxHeight: .infinity)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { mcqBodyHeight = $0 }
     }
 
     /// #188 G9 (founder screenshot, xxxLarge): the options are sized to their
@@ -675,8 +684,14 @@ struct QuestionView: View {
     /// TF build 90 (founder): it shows only what the player needs
     /// (`QuestionListenPhase.strip`), the command words while commands are heard
     /// (#243.6), and carries the
-    /// retry line itself. Its slot is reserved, so the options never move when
-    /// it comes and goes.
+    /// retry line itself.
+    ///
+    /// #249.2 (founder, 2026-11-26): it no longer reserves an empty slot while
+    /// hidden. The strip is off for most of a question, and the reserved 58 pt
+    /// sat as a gap between the card and the options, pushing the options into
+    /// a scroll. The options still never move when it comes and goes: the stem
+    /// card above them is the flexible part, so it gives the strip's height
+    /// (the question just sits a little higher in the card for that moment).
     private func mcqListenBar(question: Question, compact: Bool) -> some View {
         // #131 Track F folded the old SE-class `compact` flag into the one
         // size axis: a short container gets the slim bar.
@@ -708,11 +723,12 @@ struct QuestionView: View {
                     .transition(.opacity)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: QuestionListenBar.slotHeight(size: size))
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.top, phase == nil && viewModel.commandHeard == nil ? 0 : Metrics.blockGap)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { listenRowHeight = $0 }
         .animation(.easeInOut(duration: 0.25), value: phase == nil)
         .animation(.easeInOut(duration: 0.25), value: viewModel.commandHeard == nil)
-        .padding(.horizontal, Metrics.gutter)
-        .padding(.top, Metrics.blockGap)
     }
 
     /// #237: the listen bar's "Turn on" / "Settings".
@@ -763,7 +779,19 @@ struct QuestionView: View {
         // (chip row + insets) on top of the question it has to show.
         let chrome = max(0, stemCardHeight - stemRegionHeight)
         let natural = stemContentHeight + chrome
-        let floor = max(baseFloor, min(natural, screenHeight * Metrics.stemMaxShare))
+        // #249.2: and never more than what is left once the options (all four,
+        // when they fit), the strip and the footer have their room. A long
+        // question scrolls inside its card; the options never have to.
+        var share = min(natural, screenHeight * Metrics.stemMaxShare)
+        if mcqBodyHeight > 0, optionsHeight > 0 {
+            let others = Metrics.blockGap + provenanceHeight + listenRowHeight
+                + optionsHeight + Metrics.blockGap + mcqFooterHeight
+            let budget = mcqBodyHeight - others
+            // Only when that really lets all options in. At large text they
+            // cannot fit anyway, and the whole question stays in view (#188 G9).
+            if budget >= baseFloor { share = min(share, budget) }
+        }
+        let floor = max(baseFloor, share)
         let fill = deckIdentity(question).style
         return questionCard(question) {
             GeometryReader { geo in

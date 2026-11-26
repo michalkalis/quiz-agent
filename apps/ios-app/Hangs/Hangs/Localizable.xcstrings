@@ -13144,29 +13144,6 @@
         }
       }
     },
-    "Read aloud on this phone" : {
-      "comment" : "Hra spolu (#230): guest's speaker button, reads each question on their own phone",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Čti nahlas na tomto mobilu"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Čítaj nahlas na tomto mobile"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Читай уголос на цьому телефоні"
-          }
-        }
-      }
-    },
     "On" : {
       "comment" : "Hra spolu (#230): state of the guest's read-aloud button",
       "localizations" : {
@@ -22462,52 +22439,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "після читання"
-          }
-        }
-      }
-    },
-    "Stay" : {
-      "comment" : "Hra spolu (#224.4): host button next to Next, keeps the game on this reveal",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zůstaň"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zostaň"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Залишся"
-          }
-        }
-      }
-    },
-    "Resume" : {
-      "comment" : "Hra spolu (#224.4): host button that ends the pause",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokračuj"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pokračuj"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Продовж"
           }
         }
       }

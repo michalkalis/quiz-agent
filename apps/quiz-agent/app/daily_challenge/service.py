@@ -30,6 +30,7 @@ from ..serializers import correct_option_key
 from ..usage.entitlement import account_is_entitled
 from ..shared_quiz.store import person_ids
 from . import copy
+from .reward import bonus_allowance
 from .rules import (
     MIN_CROWD,
     MAX_SPOKEN_LINES,
@@ -310,16 +311,16 @@ class DailyChallengeService:
         if play.finished_at is None:
             return DailyChallengeState(status="in_progress", **base)
         if extra["bonus_offer"] is not None:
-            base["bonus_left"] = self._bonus_left(play, offer)
+            base["bonus_left"] = self._bonus_left(play)
         return DailyChallengeState(
             status="played", summary=await self._summary(play, set_ids), **base
         )
 
     @staticmethod
-    def _bonus_left(play: DailyChallengePlay, offer: int) -> int:
+    def _bonus_left(play: DailyChallengePlay) -> int:
         if play.bonus_expires_at is None or play.bonus_expires_at <= utcnow():
             return 0
-        return max(0, offer - play.bonus_used)
+        return max(0, bonus_allowance(play.score) - play.bonus_used)
 
     async def _summary(
         self, play: DailyChallengePlay, set_ids: List[str]

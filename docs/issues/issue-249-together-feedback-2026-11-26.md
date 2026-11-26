@@ -1,6 +1,6 @@
 # #249 — Hra spolu a zdieľanie: poznámky z testu 2026-11-26
 
-**Triage:** enhancement · in-progress (rozhodnuté body sa robia, zvyšok čaká na founderove odpovede)
+**Triage:** enhancement · in-progress (všetko rozhodnuté 2026-11-26, stavia sa)
 **Founder:** 2026-11-26, test hry spolu + solo obrazoviek (TF 1.3) · stránka /decide session quiz-agent-cf
 **Nadväzuje:** #212 — hra spolu v jednej miestnosti, #230 — hra spolu na diaľku, #232 — zdieľanie kvízu odkazom, #242 — extra kategórie, #205 — denná výzva
 
@@ -20,9 +20,15 @@
 
 - 1, 6 (zoznam), 7, 5b (rozpísaná odpoveď sa pri konci času odošle; server má 2 s rezervu).
 
-## Čaká na foundera (stránka /decide)
+## Rozhodnutia foundera 2026-11-26 (stránka /decide, session quiz-agent-cf)
 
-`timer` (2), `pause` (3, kto), `guest_audio` (4, predvolené), `voice` (5), `new_badge` (6), `share_daily` (9), `share_early` (8).
+- **2 čas:** pásik pod otázkou ako v hre sám.
+- **3 pauza:** len hostiteľ; „pozor na správne umiestnenie tlačidla, ideálne ako u single hry“.
+- **4 čítanie u hosťa:** predvolene podľa siete (na diaľku zapnuté, v tej istej sieti vypnuté), reproduktor ako v hre sám u každého hráča.
+- **5 hlas:** mikrofón pre všetkých, vždy zapnutý (bez nastavenia); „tlačidlá ako u single módu, nech sa zbytočne nemení layout“. Prepis rovnakou cestou ako v hre sám (prepis na serveri, malý náklad za odpoveď), nie v telefóne: tá je overená na odpovede, rozpoznávanie v telefóne slúži len na povely.
+- **6 štítok:** drobný sivý riadok „Nová · do …“. Dátum ide zo servera: keď kategória po 22. 12. ostáva (founder: napr. Harry Potter nemusí zmiznúť), dátum sa posunie; rozhodnutie o pokračovaní je v #242 (krok 242.6, pred 23. 12.).
+- **9 zdieľanie dennej výzvy:** text + odkaz s obrázkovým náhľadom; „B je ale krajšie“ → náhľad odkazu = pekná karta so skóre v štýle B.
+- **8:** zdieľať len dohrané kolo (bez zmeny).
 
 ## Zistenia
 
@@ -38,4 +44,6 @@
 | 249.1 | Výber kategórií: zvislý zoznam (solo) + priamo v okne „Čo hráme“ | [ ] |
 | 249.2 | A až D: menšia medzera otázka ↔ možnosti | [ ] |
 | 249.3 | Hra spolu: rozpísaná odpoveď sa pošle pri konci času | [ ] |
-| 249.4 | Podľa odpovedí: čas (2), pauza (3), čítanie u hosťa (4), hlas (5), zdieľanie (8, 9) | [ ] |
+| 249.4 | Hra spolu, horná lišta ako v hre sám: reproduktor u každého, pauza hostiteľa aj počas otázky (server zastaví spoločný čas), čítanie u hosťa predvolene podľa siete | [ ] |
+| 249.5 | Hra spolu, spodok ako v hre sám: tlačidlá odpovede (hlas + písanie), čas ako pásik pod otázkou; prepis hlasu na serveri | [ ] |
+| 249.6 | Denná výzva: text + samostatný odkaz, náhľad odkazu = karta so skóre | [ ] |

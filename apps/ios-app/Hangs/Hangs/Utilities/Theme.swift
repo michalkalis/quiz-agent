@@ -224,6 +224,18 @@ extension Theme.Hangs {
         ]
     }
 
+    /// #249.6: the daily share card (link preview picture). Fixed in both
+    /// modes: it is read in a chat on someone else's phone.
+    enum ShareCard {
+        static let gradientStart = Color(hex: Palette.violet)
+        static let gradientEnd = Color(hex: Palette.cobalt)
+        static let right = Color(hex: Palette.mint)
+        static let wrong = Color(hex: Palette.mandarin)
+        static let hook = Color(hex: Palette.yellow)
+        static let glyph = Color(hex: Palette.ink)
+        static let text = Color(hex: Palette.white)
+    }
+
     /// #194 B1: category colours (founder rounds 2–4). Each card carries its
     /// category's fill with the text colour measured for it; dark mode takes
     /// slightly deeper fills so white text keeps its contrast.

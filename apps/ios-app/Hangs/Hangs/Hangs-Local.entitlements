@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:trubbo.app</string>
+		<string>applinks:api.trubbo.app</string>
 	</array>
 	<key>com.apple.developer.applesignin</key>
 	<array>

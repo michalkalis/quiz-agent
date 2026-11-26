@@ -1,32 +1,35 @@
 //
-//  ShareTextItem.swift
+//  ShareLinkItem.swift
 //  Hangs
 //
-//  #232: a message for the share sheet whose header shows the Trubbo mark, a
-//  clean title and the link, instead of the first words of the message and a
-//  blank icon.
+//  #232 / #249.6: the link of a shared quiz as its own share item, next to
+//  the message text. Two items (a String and this URL) are what lets chat
+//  apps (iMessage, WhatsApp, Messenger) show the text and a rich link
+//  preview; one long string with the link inside turns into a .txt file in
+//  some of them. The share sheet's header shows the Trubbo mark, a clean
+//  title, the link and, for a daily challenge, the score card.
 //
 
 import LinkPresentation
 import UIKit
 
-final class ShareTextItem: NSObject, UIActivityItemSource {
-    let text: String
+final class ShareLinkItem: NSObject, UIActivityItemSource {
+    let url: URL
     private let title: String
-    private let url: URL
+    private let image: UIImage?
 
-    init(text: String, title: String, url: URL) {
-        self.text = text
-        self.title = title
+    init(url: URL, title: String, image: UIImage? = nil) {
         self.url = url
+        self.title = title
+        self.image = image
     }
 
     func activityViewControllerPlaceholderItem(_: UIActivityViewController) -> Any {
-        text
+        url
     }
 
     func activityViewController(_: UIActivityViewController, itemForActivityType _: UIActivity.ActivityType?) -> Any? {
-        text
+        url
     }
 
     func activityViewControllerLinkMetadata(_: UIActivityViewController) -> LPLinkMetadata? {
@@ -36,6 +39,9 @@ final class ShareTextItem: NSObject, UIActivityItemSource {
         metadata.url = url
         if let mark = UIImage(named: "TrubboMascot") {
             metadata.iconProvider = NSItemProvider(object: mark)
+        }
+        if let image {
+            metadata.imageProvider = NSItemProvider(object: image)
         }
         return metadata
     }

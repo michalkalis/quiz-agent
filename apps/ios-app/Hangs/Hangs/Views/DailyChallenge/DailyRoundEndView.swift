@@ -223,7 +223,7 @@ struct DailyRoundEndView: View {
 
     private func shareWithLink() {
         let content = content
-        share.send { content.shareText(link: $0.url) }
+        share.send(message: { _ in content.inviteText }, card: { _ in content.shareCard() })
     }
 
     private static func shareModel(_ viewModel: QuizViewModel) -> SharedQuizShareModel {

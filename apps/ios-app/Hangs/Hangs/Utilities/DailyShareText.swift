@@ -11,8 +11,10 @@
 //      Lepšie skóre ako 64 % z 12 hráčov.
 //      trubbo.app
 //
-//  #232 (daily text B): with a shared link, an invite line and the link
-//  replace "trubbo.app", so a friend plays the same questions.
+//  #232 (daily text B): with a shared link, an invite line replaces
+//  "trubbo.app". #249.6: the link itself is never inside this text; it goes
+//  to the share sheet as its own item, so chat apps show a preview card
+//  instead of turning a long string into a file.
 //
 
 import Foundation
@@ -25,7 +27,7 @@ nonisolated enum DailyShareText {
         score: Int,
         total: Int,
         rank: String?,
-        link: URL? = nil
+        invite: Bool = false
     ) -> String {
         let tiles = paddedMarks(marks, total: total).map { mark in
             switch mark {
@@ -39,9 +41,8 @@ nonisolated enum DailyShareText {
             "\(tiles.joined()) \(score)/\(total)",
         ]
         if let rank, !rank.isEmpty { lines.append(rank) }
-        if let link {
+        if invite {
             lines.append(SharedQuizMessage.dailyInvite(questionCount: total))
-            lines.append(link.absoluteString)
         } else {
             lines.append("trubbo.app")
         }
@@ -55,7 +56,7 @@ nonisolated enum DailyShareText {
 
     /// Hardcoded per quiz language, not from the string catalog: the catalog
     /// follows the interface language, the share text follows the quiz.
-    private static func challengeName(language: String) -> String {
+    static func challengeName(language: String) -> String {
         switch language {
         case "sk": "denná výzva"
         case "cs": "denní výzva"

@@ -19,7 +19,7 @@ nonisolated struct SharedQuizCreated: Decodable, Sendable, Equatable {
     let categories: [String]
     let questionCount: Int
 
-    var url: URL { SharedQuizLink.url(token: token) }
+    var url: URL { SharedQuizLink.url(token: token, kind: kind) }
 
     enum CodingKeys: String, CodingKey {
         case token, kind, language, title, categories

@@ -12,10 +12,16 @@ import Foundation
 /// App Store; with the app it is a universal link.
 nonisolated enum SharedQuizLink {
     static let pageURL = "https://trubbo.app/play"
+    /// #249.6: a daily challenge's link opens on the backend, which answers
+    /// chat apps with the score card (trubbo.app is static and cannot carry
+    /// one share's score). Also a universal link; a browser without the app is
+    /// sent on to the static page.
+    static let cardPageURL = "https://api.trubbo.app/play"
+    static let cardHost = "api.trubbo.app"
     static let tokenQueryItem = "s"
 
-    static func url(token: String) -> URL {
-        var components = URLComponents(string: pageURL)
+    static func url(token: String, kind: String? = nil) -> URL {
+        var components = URLComponents(string: kind == "daily" ? cardPageURL : pageURL)
         components?.queryItems = [URLQueryItem(name: tokenQueryItem, value: token)]
         return components?.url ?? URL(fileURLWithPath: "/")
     }
@@ -24,7 +30,7 @@ nonisolated enum SharedQuizLink {
     /// else. The token's shape matches the server's (8–64 of A–Z a–z 0–9 _ -).
     static func token(from url: URL) -> String? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.scheme == "https", components.host == "trubbo.app",
+              components.scheme == "https", components.host == "trubbo.app" || components.host == cardHost,
               components.path == "/play" || components.path == "/play/",
               let token = components.queryItems?.first(where: { $0.name == tokenQueryItem })?.value,
               isToken(token)

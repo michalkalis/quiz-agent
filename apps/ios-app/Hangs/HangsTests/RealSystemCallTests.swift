@@ -146,12 +146,12 @@ struct RealSystemCallTests {
 
     @Test("the real share sheet reads the shared quiz's preview without trapping", .timeLimit(.minutes(1)))
     func shareSheetReadsPreview() async throws {
-        // Sharing a quiz hands ShareTextItem to UIKit, which asks it for the
+        // Sharing a quiz hands ShareLinkItem to UIKit, which asks it for the
         // header (title, link, icon) on a thread it does not document. The
-        // probe has ShareTextItem's shape (main-actor class, Objective-C
+        // probe has ShareLinkItem's shape (main-actor class, Objective-C
         // methods iOS calls) and forwards to the real item, so it also tells
         // whether iOS asked at all.
-        let item = ShareTextItem(text: "Play: \(Self.link)", title: "Quiz", url: URL(string: Self.link)!)
+        let item = ShareLinkItem(url: URL(string: Self.link)!, title: "Quiz")
         let probe = ShareItemProbe(item)
 
         ShareSheetPresenter.present([probe])
@@ -203,10 +203,10 @@ struct RealSystemCallTests {
 
 /// Forwards to the real item and notes the header request.
 private final class ShareItemProbe: NSObject, UIActivityItemSource {
-    private let item: ShareTextItem
+    private let item: ShareLinkItem
     private(set) var previewAsked = false
 
-    init(_ item: ShareTextItem) { self.item = item }
+    init(_ item: ShareLinkItem) { self.item = item }
 
     func activityViewControllerPlaceholderItem(_ controller: UIActivityViewController) -> Any {
         item.activityViewControllerPlaceholderItem(controller)

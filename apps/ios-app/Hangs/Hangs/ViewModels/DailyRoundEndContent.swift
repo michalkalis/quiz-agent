@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct DailyRoundEndContent: Equatable {
     let marks: [Bool?]
@@ -37,8 +38,14 @@ struct DailyRoundEndContent: Equatable {
         shareText = DailyShareText.make(day: day, language: language, marks: marks, score: score, total: total, rank: rank)
     }
 
-    /// #232: the same text with an invite line and the shared link.
-    func shareText(link: URL) -> String {
-        DailyShareText.make(day: day, language: language, marks: marks, score: score, total: total, rank: rank, link: link)
+    /// #232: the same text with an invite line; the link travels as its own
+    /// share item (#249.6).
+    var inviteText: String {
+        DailyShareText.make(day: day, language: language, marks: marks, score: score, total: total, rank: rank, invite: true)
+    }
+
+    /// #249.6: the score card for the share sheet's link header.
+    @MainActor func shareCard() -> UIImage? {
+        DailyShareCardView.image(day: day, language: language, marks: marks, score: score, total: total)
     }
 }

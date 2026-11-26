@@ -256,18 +256,24 @@ struct PaywallView: View {
     private var limitMessage: String {
         if let limit = limitError {
             if !limit.upgradeAvailable {
-                return String(localized: "You've used all \(plusAllowance) Trubbo Plus questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+                return String(localized: "You've used all \(plusMonthlyQuestions) Trubbo Plus questions this month.", bundle: .interface, locale: allowanceLocale, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
             }
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "\(plusAllowance) questions a month", bundle: .interface, locale: .interface, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
+        return String(localized: "\(plusMonthlyQuestions) questions a month", bundle: .interface, locale: allowanceLocale, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
     }
 
-    /// The allowance grouped the way the interface language writes it
-    /// ("1 000", "1,000"). The language alone decides, not the phone's region,
-    /// so the text matches its translation on every phone.
-    private var plusAllowance: String {
-        plusMonthlyQuestions.formatted(.number.locale(Locale(identifier: InterfaceLanguage.code)))
+    /// The interface language alone, not the phone's region, groups the
+    /// allowance ("1 000", "1,000") so the number matches its translation.
+    private var allowanceLocale: Locale {
+        Locale(identifier: InterfaceLanguage.code)
+    }
+
+    /// The plan card line. A resource, not a `Text` key: `Text` resolves it in
+    /// the screen's locale with both the plural form and digit grouping
+    /// ("1 000 otázok"), where a key would print the number bare ("1000").
+    static func planLine(questions: Int, price: String) -> LocalizedStringResource {
+        LocalizedStringResource("\(questions) questions a month for \(price)", comment: "Paywall plan card line: the Trubbo Plus allowance and its monthly price")
     }
 
     // MARK: - Plan picker
@@ -293,7 +299,7 @@ struct PaywallView: View {
             if subscriptionOffered, let monthly = storeManager.offerings?.monthly {
                 planCard(
                     title: "Trubbo Plus",
-                    price: "\(plusMonthlyQuestions, format: .number) questions a month for \(monthly.displayPrice)",
+                    price: Self.planLine(questions: plusMonthlyQuestions, price: monthly.displayPrice),
                     plan: .monthly,
                     isSelected: effectivePlan == .monthly
                 ) {
@@ -328,7 +334,7 @@ struct PaywallView: View {
 
     private func planCard(
         title: LocalizedStringKey,
-        price: LocalizedStringKey,
+        price: LocalizedStringResource,
         plan: PaywallPlan,
         isSelected: Bool,
         action: @escaping () -> Void

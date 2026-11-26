@@ -185,6 +185,35 @@ struct PaywallViewNormalStructureTests {
         }
     }
 
+    // The server may send any allowance, so the noun must follow the number:
+    // "1 otázka", "3 otázky", "1 000 otázok" in Slovak; Ukrainian also turns
+    // back to "питання" at 21. A single fixed form reads as broken grammar on
+    // the screen that asks for money. 1 001 stays "otázok": Slovak's "one"
+    // form is for exactly 1.
+    @Test("The Plus allowance takes the plural form its number needs", arguments: [
+        ("sk", 1, "1 otázka mesačne", "1 otázka mesačne za 4,99 €", "Tento mesiac už máš za sebou 1 otázku Trubbo Plus."),
+        ("sk", 3, "3 otázky mesačne", "3 otázky mesačne za 4,99 €", "Tento mesiac už máš za sebou všetky 3 otázky Trubbo Plus."),
+        ("sk", 1000, "1 000 otázok mesačne", "1 000 otázok mesačne za 4,99 €", "Tento mesiac už máš za sebou všetkých 1 000 otázok Trubbo Plus."),
+        ("sk", 1001, "1 001 otázok mesačne", "1 001 otázok mesačne za 4,99 €", "Tento mesiac už máš za sebou všetkých 1 001 otázok Trubbo Plus."),
+        ("uk", 21, "21 питання на місяць", "21 питання на місяць за 4,99 €", "Цього місяця 21 питання Trubbo Plus уже використано."),
+        ("uk", 25, "25 питань на місяць", "25 питань на місяць за 4,99 €", "Цього місяця всі 25 питань Trubbo Plus уже використано."),
+    ])
+    func plusAllowancePlural(language: String, count: Int, subtitle: String, planCard: String, spent: String) throws {
+        let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))
+        let bundle = try #require(Bundle(path: path))
+        let locale = Locale(identifier: language)
+        let price = "4,99 €"
+        // Both languages group digits with a no-break space; compare on plain spaces.
+        func plain(_ text: String) -> String {
+            text.replacingOccurrences(of: "\u{202F}", with: " ").replacingOccurrences(of: "\u{00A0}", with: " ")
+        }
+        #expect(plain(String(localized: "\(count) questions a month", bundle: bundle, locale: locale)) == subtitle)
+        var line = PaywallView.planLine(questions: count, price: price)
+        line.locale = locale
+        #expect(plain(String(localized: line)) == planCard)
+        #expect(plain(String(localized: "You've used all \(count) Trubbo Plus questions this month.", bundle: bundle, locale: locale)) == spent)
+    }
+
     @Test("Countdown pill renders when limitError has a resetDate")
     func countdownPillRenders() async throws {
         let manager = await makeStoreManager(offerings: makeFullOfferings(), hasAttemptedLoad: true)

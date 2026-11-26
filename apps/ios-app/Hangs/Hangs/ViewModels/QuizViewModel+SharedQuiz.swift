@@ -59,7 +59,7 @@ extension QuizViewModel {
     func sendPack(packId: String) -> Task<Void, Never> {
         let share = SharedQuizShareModel(network: networkService, source: .pack(packId))
         return Task {
-            await share.send { SharedQuizMessage.pack(questionCount: $0.questionCount, url: $0.url) }.value
+            await share.send { SharedQuizMessage.pack(questionCount: $0.questionCount) }.value
             if let failure = share.failureMessage { sharedQuizNotice = failure }
         }
     }

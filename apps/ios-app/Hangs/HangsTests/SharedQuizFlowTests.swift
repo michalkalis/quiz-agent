@@ -190,11 +190,11 @@ struct SharedQuizFlowTests {
     func sendCreatesOnce() async {
         let network = MockNetworkService()
         network.stubbedShareCreated = created
-        var shared: [ShareTextItem] = []
+        var shared: [[Any]] = []
         let model = SharedQuizShareModel(
             network: network, source: .session("s_mine"), displayName: "Michal", present: { shared.append($0) }
         )
-        let message: (SharedQuizCreated) -> String = { SharedQuizMessage.round(questionCount: $0.questionCount, score: "7", url: $0.url) }
+        let message: (SharedQuizCreated) -> String = { SharedQuizMessage.round(questionCount: $0.questionCount, score: "7") }
 
         await model.send(message: message).value
         await model.send(message: message).value
@@ -203,7 +203,14 @@ struct SharedQuizFlowTests {
         #expect(network.createSharedQuizCalls.first?.sessionId == "s_mine")
         #expect(network.createSharedQuizCalls.first?.displayName == "Michal")
         #expect(shared.count == 2)
-        #expect(shared.first?.text.hasSuffix("\nhttps://trubbo.app/play?s=\(created.token)") == true)
+        // #249.6: text and link are two items, so chat apps show a link preview
+        // and never turn one long string into a .txt file.
+        let items = shared.first
+        #expect(items?.count == 2)
+        let text = items?.first as? String
+        #expect(text?.contains("https://") == false, "the link is its own item, never inside the text")
+        let link = (items?.last as? ShareLinkItem)?.activityViewController(UIActivityViewController(activityItems: [], applicationActivities: nil), itemForActivityType: nil)
+        #expect(link as? URL == URL(string: "https://trubbo.app/play?s=\(created.token)"))
         #expect(model.token == created.token)
     }
 
@@ -211,11 +218,12 @@ struct SharedQuizFlowTests {
     @MainActor
     func shareHeader() throws {
         let url = try #require(URL(string: "https://trubbo.app/play?s=K7m2Qx"))
-        let item = ShareTextItem(text: "Play my quiz…\n\(url.absoluteString)", title: "Space · Trubbo", url: url)
+        let item = ShareLinkItem(url: url, title: "Space · Trubbo", image: UIImage())
         let metadata = try #require(item.activityViewControllerLinkMetadata(UIActivityViewController(activityItems: [], applicationActivities: nil)))
         #expect(metadata.title == "Space · Trubbo")
         #expect(metadata.url == url)
         #expect(metadata.iconProvider != nil, "without an icon the header shows a blank square")
+        #expect(metadata.imageProvider != nil, "the daily's score card is the header picture")
     }
 
     @Test("a failed link says so and opens no sheet")
@@ -256,15 +264,58 @@ struct SharedQuizFlowTests {
         #expect(results.players[1].isYou)
     }
 
-    @Test("the daily text with a link invites to the same questions instead of naming the site")
-    func dailyTextWithLink() {
+    @Test("the daily invite text asks for the same questions instead of naming the site, and holds no link")
+    func dailyInviteText() {
         let day = DailyChallengeDay(year: 2026, month: 11, day: 14)
-        let url = SharedQuizLink.url(token: created.token)
         let plain = DailyShareText.make(day: day, language: "en", marks: [true, false], score: 1, total: 5, rank: nil)
-        let linked = DailyShareText.make(day: day, language: "en", marks: [true, false], score: 1, total: 5, rank: nil, link: url)
+        let invite = DailyShareText.make(day: day, language: "en", marks: [true, false], score: 1, total: 5, rank: nil, invite: true)
         #expect(plain.hasSuffix("trubbo.app"))
-        #expect(linked.hasSuffix("\n" + url.absoluteString))
-        #expect(!linked.contains("\ntrubbo.app\n"))
+        #expect(invite.hasSuffix("Play the same 5 questions"))
+        #expect(!invite.contains("https://"), "the link is a separate share item (#249.6)")
+        #expect(invite.contains("✅❌⬜⬜⬜ 1/5"), "the spoiler-free mark line stays in the message")
+    }
+
+    @Test("a daily's link opens on the backend page that carries the score card; other links stay on trubbo.app")
+    func dailyLinkHost() throws {
+        let daily = SharedQuizCreated(token: created.token, kind: "daily", language: "sk", title: nil, categories: [], questionCount: 5)
+        #expect(daily.url.absoluteString == "https://api.trubbo.app/play?s=\(created.token)")
+        #expect(created.url.host == "trubbo.app")
+        // The app still opens it as a quiz link (universal link on either host).
+        #expect(SharedQuizLink.token(from: daily.url) == created.token)
+    }
+
+    // WHY (#235): the daily share waits on the server for the link. Slow, the
+    // button must show it is working and the sheet must still come; failing,
+    // the player gets a clear message and no sheet, never an endless wait.
+    @Test("slow link creation: busy while in flight, then the sheet gets text and link")
+    func dailySendSlow() async {
+        let network = MockNetworkService()
+        network.stubbedShareCreated = SharedQuizCreated(token: created.token, kind: "daily", language: "sk", title: nil, categories: [], questionCount: 5)
+        let hold = network.hold(.createSharedQuiz)
+        var shared: [[Any]] = []
+        let model = SharedQuizShareModel(network: network, source: .session("s"), displayName: "Jana", present: { shared.append($0) })
+
+        let task = model.send(message: { _ in "text" }, card: { _ in nil })
+        await pumpUntil({ hold.heldCount == 1 }, "the call never reached the mock")
+        #expect(model.isCreating, "the share button shows it is working")
+        #expect(shared.isEmpty)
+
+        hold.release()
+        await task.value
+        #expect(!model.isCreating)
+        #expect(shared.count == 1)
+    }
+
+    @Test("failed link creation (offline): a clear message, no sheet, the button is usable again")
+    func dailySendOffline() async {
+        let network = MockNetworkService()
+        network.setNetworkCondition(.offline, for: [.createSharedQuiz])
+        var presented = false
+        let model = SharedQuizShareModel(network: network, source: .session("s"), displayName: nil, present: { _ in presented = true })
+        await model.send(message: { _ in "text" }).value
+        #expect(!presented)
+        #expect(model.failureMessage != nil)
+        #expect(!model.isCreating, "the player can tap Share again")
     }
 
     // MARK: - What we play (5A)

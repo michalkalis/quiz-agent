@@ -169,7 +169,7 @@ struct RoundCompleteView: View {
 
     private func sendToFriend() {
         let score = summary.displayScore
-        share.send { SharedQuizMessage.round(questionCount: $0.questionCount, score: score, url: $0.url) }
+        share.send { SharedQuizMessage.round(questionCount: $0.questionCount, score: score) }
     }
 
     /// The share sheet's title: the pack's name, else the round's one category.

@@ -12,6 +12,7 @@
 import Combine
 import Foundation
 import os
+import UIKit
 
 @MainActor
 final class SharedQuizShareModel: ObservableObject {
@@ -52,7 +53,7 @@ final class SharedQuizShareModel: ObservableObject {
     private let source: Source?
     private let displayName: String?
     private let previewTopic: (SharedQuizCreated) -> String?
-    private let present: (ShareTextItem) -> Void
+    private let present: ([Any]) -> Void
     private var loadTask: Task<Void, Never>?
     private var created: SharedQuizCreated?
 
@@ -67,7 +68,7 @@ final class SharedQuizShareModel: ObservableObject {
         token: String? = nil,
         displayName: String? = PlayerNameStore().playerName(accountName: KeychainTokenStore().load()?.accountName),
         previewTopic: @escaping (SharedQuizCreated) -> String? = { $0.title },
-        present: @escaping (ShareTextItem) -> Void = { ShareSheetPresenter.present([$0]) }
+        present: @escaping ([Any]) -> Void = { ShareSheetPresenter.present($0) }
     ) {
         self.network = network
         self.source = source
@@ -84,11 +85,15 @@ final class SharedQuizShareModel: ObservableObject {
         return nil
     }
 
-    /// Creates the link (once) and opens the share sheet with `message`
-    /// (text B) built for it.
+    /// Creates the link (once) and opens the share sheet with two items, the
+    /// `message` (text B, no link in it) and the link itself, so chat apps
+    /// make a link preview. `card` is the picture of the link's header.
     @discardableResult
-    func send(message: @escaping (SharedQuizCreated) -> String) -> Task<Void, Never> {
-        Task { await performSend(message: message) }
+    func send(
+        message: @escaping (SharedQuizCreated) -> String,
+        card: @escaping (SharedQuizCreated) -> UIImage? = { _ in nil }
+    ) -> Task<Void, Never> {
+        Task { await performSend(message: message, card: card) }
     }
 
     /// The comparison again (the screen appears, the app returns to the
@@ -101,13 +106,14 @@ final class SharedQuizShareModel: ObservableObject {
         return task
     }
 
-    private func performSend(message: (SharedQuizCreated) -> String) async {
+    private func performSend(message: (SharedQuizCreated) -> String, card: (SharedQuizCreated) -> UIImage?) async {
         guard status != .creating else { return }
         status = .creating
         do {
             let created = try await createdLink()
             status = .idle
-            present(ShareTextItem(text: message(created), title: SharedQuizMessage.previewTitle(topic: previewTopic(created)), url: created.url))
+            let title = SharedQuizMessage.previewTitle(topic: previewTopic(created))
+            present([message(created), ShareLinkItem(url: created.url, title: title, image: card(created))])
             await performLoad()
         } catch {
             Logger.network.error("Shared quiz link failed: \(error, privacy: .public)")

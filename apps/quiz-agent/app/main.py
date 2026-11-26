@@ -87,6 +87,7 @@ from .usage.tracker import (
     UsageTracker,
 )
 from .api import rest, admin
+from .api.routes import share_card as share_card_routes
 from .api.routes import shared_quiz as shared_quiz_routes
 from .api.routes import webhooks
 from .quiz.flow import QuizFlowService
@@ -563,6 +564,9 @@ app.include_router(admin.router)
 # RevenueCat webhook — mounted at the app root (no /api/v1) to match the URL
 # registered in the RevenueCat dashboard: https://<host>/webhooks/revenuecat.
 app.include_router(webhooks.router)
+# #249.6: the shared daily link's page + score card, at the root (no /api/v1):
+# trubbo.app is static, so the preview tags come from here.
+app.include_router(share_card_routes.router)
 
 
 @app.get("/api/v1/admin/health")

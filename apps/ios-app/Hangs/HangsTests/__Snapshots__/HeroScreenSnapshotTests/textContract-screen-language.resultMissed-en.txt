@@ -1,10 +1,9 @@
 # texts
 0/10
 Wrong
+Somewhere on the Rhône, I think Lyon or maybe Marseille
 Correct answer
 Paris
-Your answer
-Somewhere on the Rhône, I think Lyon or maybe Marseille
 why
 Paris has been the capital of France since the 10th century.
 Show question
@@ -15,8 +14,8 @@ Settings
 question.progress
 question.counter
 result.verdict
-result.answer
 result.said
+result.answer
 result.explanation
 result.explanationRead
 result.metaRow

@@ -284,8 +284,9 @@ struct ResultView: View {
         guard let said = viewModel.resultEvaluation?.userAnswer,
               !said.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         switch verdict {
-        case .incorrect, .neutral: return .missed(said)
-        case .correct: return heardDiffers(said) ? .heard(said) : nil
+        // #249: an option key reads as the card's "C — text", like the answer.
+        case .incorrect, .neutral: return .missed(mcqLabelled(said))
+        case .correct: return heardDiffers(said) ? .heard(mcqLabelled(said)) : nil
         case .skipped: return nil
         }
     }
@@ -333,7 +334,11 @@ struct ResultView: View {
     /// the answer on screen.
     private var reviewBadge: String? {
         guard debugSurfaces else { return nil }
-        return (viewModel.resultQuestion ?? viewModel.currentQuestion)?.reviewBadge
+        let badge = (viewModel.resultQuestion ?? viewModel.currentQuestion)?.reviewBadge
+        // #249 (founder 2026-11-26): a vouched question's silent green dot
+        // read as an unexplained element; the result shows only a badge that
+        // asks for a check. The question screen keeps the dot.
+        return badge == "approved" ? nil : badge
     }
 
     /// The gate's objection, one line. Only ever sent by the backend for the

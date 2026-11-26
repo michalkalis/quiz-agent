@@ -1,7 +1,6 @@
 # texts
 0/10
 Správne
-Správna odpoveď
 Paris
 prečo
 Paris has been the capital of France since the 10th century.

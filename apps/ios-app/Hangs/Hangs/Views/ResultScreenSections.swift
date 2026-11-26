@@ -50,35 +50,30 @@ enum ResultVerdict {
 
 // MARK: - Verdict label (#248.2, variant A "verdict as the headline")
 
-/// The verdict, the headline of the result card: a large bold word with a small
-/// glyph. Green for right, the miss pink for wrong, muted for a skip.
+/// The verdict over the answer: a small bold word with its glyph (#250,
+/// variant A: the player's answer is the headline now, founder 2026-11-26).
+/// Green for right, the miss pink for wrong, muted for a skip.
 struct ResultVerdictLabel: View {
     let verdict: ResultVerdict
     /// #240.9: right answers in a row this round, said beside "Correct" from 3.
     var streak: Int? = nil
 
-    private enum Metrics {
-        static let wordSize: CGFloat = 30
-    }
-
     var body: some View {
         if let word = verdict.word, let symbol = verdict.symbol {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Hangs.Spacing.xs) {
                 Image(systemName: symbol)
-                    .font(.hangsBody.weight(.bold))
                     .accessibilityHidden(true)
                 Text(word)
-                    .font(.hangsDisplay(Metrics.wordSize))
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("result.verdict")
                 if let streak {
                     Text(verbatim: "·")
                         .accessibilityHidden(true)
                     Text("\(streak) in a row")
-                        .font(.hangsBody.weight(.semibold))
                         .accessibilityIdentifier("result.streak")
                 }
             }
+            .font(.hangsBody.weight(.semibold))
             .foregroundStyle(color)
             .lineLimit(1)
             .minimumScaleFactor(0.6)

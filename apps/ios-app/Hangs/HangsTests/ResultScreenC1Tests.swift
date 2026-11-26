@@ -63,11 +63,12 @@ struct ResultScreenC1Tests {
         let view = ResultView(viewModel: makeViewModel(accepted("solo", correct: "Soľ")))
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
+            // #250 variant A: what was heard is the headline; the question's
+            // own answer sits under it as "exactly: …", never replaced by it.
             let answer = try tree.find(viewWithAccessibilityIdentifier: "result.answer")
-            #expect(try answer.text().string() == "Soľ")
-            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
-            #expect(throws: Never.self, "#248.2: \"Your answer\" labels the differently worded answer") {
-                try tree.find(text: "Your answer")
+            #expect(try answer.text().string() == "exactly: Soľ")
+            #expect(throws: (any Error).self, "#250: a right answer needs no \"Correct answer\" label") {
+                try tree.find(text: "Correct answer")
             }
             #expect(throws: Never.self, "what the player said stays visible, quietly") {
                 try tree.find(viewWithAccessibilityIdentifier: "result.heard")

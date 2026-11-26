@@ -91,9 +91,75 @@ struct ResultViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "checkmark" })
             }
-            // TF build 90 (C1): the question's answer, under the same label on every verdict.
-            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
+            // #250 (variant A): a right answer said word for word is the
+            // headline by itself, with no "Correct answer" label to repeat it.
+            #expect(throws: (any Error).self) { try tree.find(text: "Correct answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
+        }
+    }
+
+    // MARK: - #250 variant A: the player's answer is the headline
+
+    /// WHY (founder, TF 1.3 b93): "nie je jasné, čo je moja odpoveď a čo
+    /// správna". On a miss the player's own answer leads, struck, and the
+    /// correct one follows under its label; a right answer heard differently
+    /// shows the exact wording small under it.
+    @Test("a miss leads with the player's answer, the correct one under its label")
+    func missLeadsWithPlayersAnswer() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Saturn", result: .incorrect, points: 0,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            let said = try tree.find(viewWithAccessibilityIdentifier: "result.said")
+            let answer = try tree.find(viewWithAccessibilityIdentifier: "result.answer")
+            #expect(try said.text().string() == "Saturn")
+            #expect(try answer.text().string() == "Uranus")
+            #expect(throws: Never.self) { try tree.find(text: "Correct answer") }
+            #expect(throws: (any Error).self, "the old small 'Your answer' row is back") {
+                try tree.find(text: "Your answer")
+            }
+        }
+    }
+
+    @Test("a right answer heard differently shows the exact wording under it")
+    func heardDifferentlyShowsExactWording() async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Eva Farna", result: .correct, points: 1,
+            correctAnswer: "Ewa Farná", questionId: "q_test", explanation: nil
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation))
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect(try tree.find(viewWithAccessibilityIdentifier: "result.heard").text().string() == "Eva Farna")
+            #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "result.answer") }
+        }
+    }
+
+    /// WHY (founder 2026-11-26): the silent green dot of an approved question
+    /// read as an unexplained element on the result. A badge asking for a
+    /// check stays, it carries words.
+    @Test("the result hides the approved dot, keeps a badge that asks for a check", arguments: ["approved", "pending_review"])
+    func approvedDotHiddenOnResult(badge: String) async throws {
+        let evaluation = Evaluation(
+            userAnswer: "Uranus", result: .correct, points: 1,
+            correctAnswer: "Uranus", questionId: "q_test", explanation: nil
+        )
+        let question = Question(
+            id: "q_test", question: "Which planet rotates on its side?", type: .text,
+            possibleAnswers: nil, difficulty: "medium", topic: "Astronomy", category: "adults",
+            sourceUrl: nil, sourceExcerpt: nil, mediaUrl: nil, imageSubtype: nil,
+            explanation: nil, generatedBy: nil, reviewBadge: badge
+        )
+        let view = ResultView(viewModel: makeViewModel(evaluation: evaluation, question: question), debugSurfaces: true)
+
+        try await ViewHosting.host(view) {
+            let shown = (try? view.inspect().find(viewWithAccessibilityIdentifier: "result.reviewBadge")) != nil
+            #expect(shown == (badge != "approved"))
         }
     }
 

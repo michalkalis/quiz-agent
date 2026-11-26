@@ -1,10 +1,9 @@
 # texts
 0/10
 Неправильно
+Somewhere on the Rhône, I think Lyon or maybe Marseille
 Правильна відповідь
 Paris
-Твоя відповідь
-Somewhere on the Rhône, I think Lyon or maybe Marseille
 чому
 Paris has been the capital of France since the 10th century.
 Покажи питання
@@ -15,8 +14,8 @@ Paris has been the capital of France since the 10th century.
 question.progress
 question.counter
 result.verdict
-result.answer
 result.said
+result.answer
 result.explanation
 result.explanationRead
 result.metaRow

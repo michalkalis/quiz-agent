@@ -5979,6 +5979,29 @@
         }
       }
     },
+    "exactly: %@" : {
+      "comment" : "#250 result: under a right answer worded differently, the exact correct answer",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "přesně: %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "presne: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "точно: %@"
+          }
+        }
+      }
+    },
     "Explorer" : {
       "comment" : "Recap player type (#213.5), shown big on the last story slide: a player still trying the quiz out",
       "localizations" : {

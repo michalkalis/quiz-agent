@@ -49,22 +49,13 @@ struct ResultAnswerPanel: View {
         static let blockGap = Theme.Hangs.Spacing.sm
         static let labelGap = Theme.Hangs.Spacing.xxs
         static let fadeHeight: CGFloat = 18
+        /// The headline answer, as large as the shared answer headline.
+        static let answerSize: CGFloat = 34
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ResultAnswerHeadline(
-                label: answerLabel,
-                text: answerText,
-                isRecap: isRecap,
-                isCorrect: isCorrect,
-                identifier: "result.answer"
-            )
-
-            if let saidLine {
-                said(saidLine)
-                    .padding(.top, Metrics.blockGap)
-            }
+            answerBlock
 
             if let explanation {
                 HangsDivider()
@@ -88,6 +79,68 @@ struct ResultAnswerPanel: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// #250 (founder 2026-11-26, variant A): the player's own answer is the
+    /// headline, green when right, struck in the miss colour when wrong; the
+    /// correct answer follows it, smaller. A skip and the recap keep the
+    /// correct answer (or the stem) as the headline.
+    @ViewBuilder private var answerBlock: some View {
+        switch (isRecap, saidLine) {
+        case let (false, .missed(said)?):
+            yours(said, line: .missed(said))
+            VStack(alignment: .leading, spacing: Metrics.labelGap) {
+                HangsSectionLabel(text: answerLabel)
+                Text(answerText)
+                    .font(.hangsHeading)
+                    .foregroundStyle(Theme.Hangs.Colors.ink)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.6)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("result.answer")
+            }
+            .padding(.top, Metrics.blockGap)
+        case let (false, .heard(said)?):
+            yours(said, line: .heard(said))
+            Text("exactly: \(answerText)")
+                .font(.hangsBody)
+                .foregroundStyle(Theme.Hangs.Colors.muted)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("result.answer")
+                .padding(.top, Metrics.labelGap)
+        case (false, nil) where isCorrect:
+            yours(answerText, line: nil)
+        default:
+            ResultAnswerHeadline(
+                label: answerLabel,
+                text: answerText,
+                isRecap: isRecap,
+                isCorrect: isCorrect,
+                identifier: "result.answer"
+            )
+            if let saidLine {
+                said(saidLine)
+                    .padding(.top, Metrics.blockGap)
+            }
+        }
+    }
+
+    /// The headline answer the player gave; `line` nil = it is the correct
+    /// answer word for word (the identifier then stays the answer's).
+    private func yours(_ answer: String, line: SaidLine?) -> some View {
+        let missed = if case .missed = line { true } else { false }
+        return Text(verbatim: answer)
+            .font(.hangsDisplay(Metrics.answerSize))
+            .strikethrough(missed, pattern: .solid)
+            .foregroundStyle(missed ? Theme.Hangs.Colors.missText : Theme.Hangs.Colors.successText)
+            .multilineTextAlignment(.leading)
+            .lineLimit(3)
+            .minimumScaleFactor(0.5)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityLabel(Text("Your answer"))
+            .accessibilityValue(Text(verbatim: answer))
+            .accessibilityIdentifier(line?.identifier ?? "result.answer")
     }
 
     /// "Your answer" and what the player said below it, smaller and muted:

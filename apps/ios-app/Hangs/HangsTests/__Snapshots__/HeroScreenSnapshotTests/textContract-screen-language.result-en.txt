@@ -1,7 +1,6 @@
 # texts
 0/10
 Correct
-Correct answer
 Paris
 why
 Paris has been the capital of France since the 10th century.

@@ -74,7 +74,7 @@ struct DailyCrowdStripInspectorTests {
         }
     }
 
-    @Test("the strip sits in the card's bottom row, after the answer and what was said")
+    @Test("the strip sits in the card's bottom row, after what was said and the answer")
     func stripPosition() async throws {
         let view = ResultView(viewModel: resultViewModel(result: .incorrect, said: "Sýria", crowd: DailyChallengeFixtures.hard))
         try await ViewHosting.host(view) {
@@ -82,7 +82,8 @@ struct DailyCrowdStripInspectorTests {
             let answer = try #require(order.firstIndex(of: "Libanon"))
             let strip = try #require(order.firstIndex(of: DailyChallengeFixtures.hard.text))
             let said = try #require(order.firstIndex(where: { $0.contains("Sýria") }))
-            #expect(answer < said && said < strip, "#224 calm result: answer, what was said, then the strip in the bottom row — got \(order)")
+            // #250 variant A: the player's answer is the headline, the correct one below it.
+            #expect(said < answer && answer < strip, "#224 calm result: what was said, the answer, then the strip in the bottom row — got \(order)")
         }
     }
 

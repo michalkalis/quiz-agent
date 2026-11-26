@@ -8,8 +8,6 @@
 60 s
 Власний
 Час на відповідь
-Читати питання вголос
-
 Коли показувати відповіді
 After each question
 Коли показувати відповіді
@@ -18,5 +16,4 @@ After each question
 # identifiers
 room.rules.done
 room.rules.sheet.time
-room.rules.sheet.readsAloud
 room.rules.sheet.reveal

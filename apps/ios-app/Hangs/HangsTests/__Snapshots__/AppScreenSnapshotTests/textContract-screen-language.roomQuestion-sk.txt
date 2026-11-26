@@ -1,5 +1,4 @@
 # texts
-Hra spolu
 1/2
 M
 Michal
@@ -20,12 +19,12 @@ Neptune
 Ostatní uvidia tvoju odpoveď až po otázke.
 # identifiers
 room.close
+question.mute
 question.progress
 question.counter
 room.question.players
 room.question.timer
 question.category
-room.guestReadAloud
 question.text
 mcq.option.a
 mcq.option.b

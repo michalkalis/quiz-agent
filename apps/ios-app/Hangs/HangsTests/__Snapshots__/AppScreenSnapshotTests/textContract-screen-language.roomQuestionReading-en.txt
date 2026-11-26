@@ -1,5 +1,4 @@
 # texts
-Play together
 1/2
 M
 Michal
@@ -20,13 +19,13 @@ Neptune
 The others see your answer after the question.
 # identifiers
 room.close
+question.mute
 question.progress
 question.counter
 room.question.players
 room.question.timer
 room.question.readingProgress
 question.category
-room.guestReadAloud
 question.text
 mcq.option.a
 mcq.option.b

@@ -8,8 +8,6 @@ Answer time
 60 s
 Custom
 Answer time
-Read questions aloud
-
 When to show answers
 After each question
 When to show answers
@@ -18,5 +16,4 @@ Changes apply from the next question. When to show answers can only be changed b
 # identifiers
 room.rules.done
 room.rules.sheet.time
-room.rules.sheet.readsAloud
 room.rules.sheet.reveal

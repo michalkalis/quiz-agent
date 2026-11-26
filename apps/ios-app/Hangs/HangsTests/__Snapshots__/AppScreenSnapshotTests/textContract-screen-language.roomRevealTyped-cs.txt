@@ -1,5 +1,5 @@
 # texts
-Hra spolu
+Pravidla hry
 2/2
 Science & Nature
 What is the capital of Australia?
@@ -18,9 +18,11 @@ Sydney
 Proč
 Mock explanation.
 Dál
-Zůstaň
 # identifiers
 room.close
+question.mute
+question.pause
+room.moreMenu
 room.rules.open
 question.progress
 question.counter
@@ -30,4 +32,3 @@ room.reveal.count
 room.reveal.row.p_you
 room.reveal.row.p_other
 room.next
-room.pause

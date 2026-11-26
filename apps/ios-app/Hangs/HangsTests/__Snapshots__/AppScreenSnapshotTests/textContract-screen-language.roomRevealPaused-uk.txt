@@ -1,5 +1,4 @@
 # texts
-Гра разом
 1/2
 Science & Nature
 Which planet has the most known moons?
@@ -20,6 +19,7 @@ Mock explanation.
 Ведучий поставив паузу
 # identifiers
 room.close
+question.mute
 question.progress
 question.counter
 deck.category

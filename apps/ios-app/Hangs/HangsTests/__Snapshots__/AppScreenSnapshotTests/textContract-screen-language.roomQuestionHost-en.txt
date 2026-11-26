@@ -1,5 +1,5 @@
 # texts
-Play together
+Game rules
 1/2
 M
 Michal
@@ -20,6 +20,9 @@ Neptune
 The others see your answer after the question.
 # identifiers
 room.close
+question.mute
+question.pause
+room.moreMenu
 room.rules.open
 question.progress
 question.counter

@@ -1,5 +1,5 @@
 # texts
-Hra spolu
+Pravidla hry
 1/2
 Science & Nature
 Which planet has the most known moons?
@@ -19,9 +19,11 @@ nikdo
 Proč
 Mock explanation.
 Dál
-Zůstaň
 # identifiers
 room.close
+question.mute
+question.pause
+room.moreMenu
 room.rules.open
 question.progress
 question.counter
@@ -32,4 +34,3 @@ room.reveal.option.b
 room.reveal.option.c
 room.reveal.option.d
 room.next
-room.pause

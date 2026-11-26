@@ -11,8 +11,8 @@ import SwiftUI
 
 /// Every player gets the speaker (reading questions aloud on this phone); the
 /// host also gets pause, which stops the answer time for everyone, and the ⋯
-/// with the game rules. A guest keeps the empty ⋯ slot, so the speaker sits
-/// where it sits on the host's phone and in the solo quiz.
+/// with the game rules. A guest keeps the empty ⋯ slot, so the speaker
+/// stays in the pill's place, not at the screen edge.
 struct RoomGameControls: View {
     @ObservedObject var viewModel: RoomViewModel
     let openRules: () -> Void

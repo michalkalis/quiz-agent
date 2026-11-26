@@ -1,0 +1,39 @@
+# texts
+Game rules
+1/2
+M
+Michal
+J
+Jana
+20 s
+to answer
+Paused for everyone
+SCIENCE & NATURE
+Which planet has the most known moons?
+A
+Jupiter
+B
+Saturn
+C
+Uranus
+D
+Neptune
+The others see your answer after the question.
+# identifiers
+room.close
+question.mute
+question.pause
+room.moreMenu
+room.rules.open
+question.progress
+question.counter
+room.question.players
+room.question.timer
+room.question.paused
+question.category
+room.readAgain
+question.text
+mcq.option.a
+mcq.option.b
+mcq.option.c
+mcq.option.d

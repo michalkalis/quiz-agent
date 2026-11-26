@@ -1,5 +1,4 @@
 # texts
-Hra spolu
 1/2
 M
 Michal
@@ -16,12 +15,12 @@ Odpověď mají: Michal, Peťo
 Kontrolujeme odpovědi…
 # identifiers
 room.close
+question.mute
 question.progress
 question.counter
 room.question.players
 room.question.timer
 question.category
-room.guestReadAloud
 question.text
 room.answer.locked
 room.answer.answeredBy

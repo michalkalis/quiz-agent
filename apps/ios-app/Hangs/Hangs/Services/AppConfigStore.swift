@@ -8,7 +8,8 @@
 //  app release. #214 adds an optional update nudge on Home and a full-screen
 //  maintenance message.
 //
-//  Fails open by design: until a fetch succeeds the app runs on
+//  Fails open by design: until a fetch succeeds the app runs on the config it
+//  fetched last time (kept on the phone, remote config 2026-11-26), else on
 //  `RemoteAppConfig.permissive`, and a failed fetch keeps whatever was last
 //  known. This endpoint must never be the reason someone cannot play.
 //
@@ -32,10 +33,17 @@ final class AppConfigStore: ObservableObject {
 
     private static let dismissedNoticeKey = "dismissedAppNotice"
     private static let dismissedRecommendedVersionKey = "dismissedRecommendedVersion"
+    private static let lastConfigKey = "lastAppConfig"
+
+    /// What the paywall names while no server has sent the Plus allowance.
+    static let defaultPlusMonthlyQuestions = 1000
 
     private let fetch: Fetch
     private let storefront: StorefrontLookup
     private let defaults: UserDefaults
+    /// Off for UI tests and seeded debug launches, whose fake configs must
+    /// not outlive the run.
+    private let remembersConfig: Bool
     private let appVersion: String
     private let interfaceLanguage: () -> String
     private var languageCode: String { interfaceLanguage() }
@@ -69,6 +77,8 @@ final class AppConfigStore: ObservableObject {
     var maintenanceMessage: String? { config.maintenanceMessage?.text(for: languageCode) }
 
     var ordersEnabled: Bool { config.ordersEnabled }
+
+    var plusMonthlyQuestions: Int { config.plusMonthlyQuestions ?? Self.defaultPlusMonthlyQuestions }
 
     /// #212: the Together button on Home. #217: in the App Store build it also
     /// needs its own switch, so the feature can stay hidden from the public
@@ -118,9 +128,11 @@ final class AppConfigStore: ObservableObject {
         isAppStoreBuild: Bool = BuildChannel.isAppStoreBuild,
         sendsTestFlightChannel: Bool = BuildChannel.debugSurfacesEnabled(),
         storefront: @escaping StorefrontLookup = AppConfigStore.liveStorefront,
+        remembersConfig: Bool = AppConfigStore.remembersConfigByDefault,
         languageCode: @autoclosure @escaping () -> String = InterfaceLanguage.code
     ) {
         self.fetch = fetch
+        self.remembersConfig = remembersConfig
         self.storefront = storefront
         self.sendsTestFlightChannel = sendsTestFlightChannel
         self.defaults = defaults
@@ -138,12 +150,50 @@ final class AppConfigStore: ObservableObject {
         #endif
         dismissedNotice = defaults.string(forKey: Self.dismissedNoticeKey)
         dismissedRecommendedVersion = defaults.string(forKey: Self.dismissedRecommendedVersionKey)
+        if remembersConfig, let remembered = Self.remembered(in: defaults) {
+            config = remembered
+        }
+    }
+
+    /// The last config the server sent, so a launch without signal (tunnel,
+    /// flight) shows the switched-on features instead of hiding them until
+    /// the fetch lands. Maintenance is never restored: an old maintenance
+    /// flag must not block a player the server would let in.
+    private static func remembered(in defaults: UserDefaults) -> RemoteAppConfig? {
+        guard let data = defaults.data(forKey: lastConfigKey),
+              let config = try? JSONDecoder().decode(RemoteAppConfig.self, from: data)
+        else { return nil }
+        return config.withoutMaintenance
+    }
+
+    private func remember(_ config: RemoteAppConfig) {
+        guard remembersConfig else { return }
+        // A config that cannot be encoded is simply not remembered: the next
+        // launch falls back to the defaults, exactly the behaviour before.
+        guard let data = try? JSONEncoder().encode(config) else { return }
+        defaults.set(data, forKey: Self.lastConfigKey)
+    }
+
+    static var remembersConfigByDefault: Bool {
+        #if DEBUG
+            // Unit tests opt in per store: a config one test fetched must not
+            // reach the next test's AppState through `.standard`.
+            if UITestSupport.isUITesting
+                || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+                || debugSeed(arguments: CommandLine.arguments) != nil
+            {
+                return false
+            }
+        #endif
+        return true
     }
 
     /// Best-effort fetch at launch and on every return to the foreground.
     func refresh() async {
         do {
-            config = try await fetch()
+            let fetched = try await fetch()
+            config = fetched
+            remember(fetched)
         } catch {
             Logger.network.info("app-config fetch skipped: \(error.localizedDescription, privacy: .public)")
         }

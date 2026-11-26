@@ -74,6 +74,9 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
     let familyModeHiddenStorefronts: [String]
     /// #242: the free rotating extra categories on Home. Off unless the server says on.
     let extraCategoriesEnabled: Bool
+    /// The Trubbo Plus monthly allowance the server enforces, for the paywall
+    /// copy. Nil from a server that does not send it; the app then names 1,000.
+    let plusMonthlyQuestions: Int?
 
     /// What the app assumes until (or unless) a fetch succeeds.
     static let permissive = RemoteAppConfig(
@@ -82,6 +85,30 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         ordersEnabled: true,
         notice: nil
     )
+
+    /// This config with maintenance off (for a config restored from disk).
+    var withoutMaintenance: RemoteAppConfig {
+        RemoteAppConfig(
+            minVersionAppStore: minVersionAppStore,
+            minVersionTestflight: minVersionTestflight,
+            ordersEnabled: ordersEnabled,
+            notice: notice,
+            voiceExperiment: voiceExperiment,
+            dailyChallengeEnabled: dailyChallengeEnabled,
+            recommendedVersionAppStore: recommendedVersionAppStore,
+            recommendedVersionTestflight: recommendedVersionTestflight,
+            maintenanceEnabled: false,
+            maintenanceMessage: nil,
+            multiplayerEnabled: multiplayerEnabled,
+            multiplayerEnabledAppStore: multiplayerEnabledAppStore,
+            sharedQuizEnabled: sharedQuizEnabled,
+            familyModeEnabled: familyModeEnabled,
+            familyModeEnabledAppStore: familyModeEnabledAppStore,
+            familyModeHiddenStorefronts: familyModeHiddenStorefronts,
+            extraCategoriesEnabled: extraCategoriesEnabled,
+            plusMonthlyQuestions: plusMonthlyQuestions
+        )
+    }
 
     enum CodingKeys: String, CodingKey {
         case minVersionAppStore = "min_version_app_store"
@@ -101,6 +128,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         case familyModeEnabledAppStore = "family_mode_enabled_app_store"
         case familyModeHiddenStorefronts = "family_mode_hidden_storefronts"
         case extraCategoriesEnabled = "extra_categories_enabled"
+        case plusMonthlyQuestions = "plus_monthly_questions"
     }
 
     init(
@@ -120,7 +148,8 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         familyModeEnabled: Bool = false,
         familyModeEnabledAppStore: Bool = false,
         familyModeHiddenStorefronts: [String] = [],
-        extraCategoriesEnabled: Bool = false
+        extraCategoriesEnabled: Bool = false,
+        plusMonthlyQuestions: Int? = nil
     ) {
         self.minVersionAppStore = minVersionAppStore
         self.minVersionTestflight = minVersionTestflight
@@ -139,6 +168,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         self.familyModeEnabledAppStore = familyModeEnabledAppStore
         self.familyModeHiddenStorefronts = familyModeHiddenStorefronts
         self.extraCategoriesEnabled = extraCategoriesEnabled
+        self.plusMonthlyQuestions = plusMonthlyQuestions
     }
 
     init(from decoder: Decoder) throws {
@@ -161,5 +191,7 @@ nonisolated struct RemoteAppConfig: Codable, Sendable, Equatable {
         familyModeEnabledAppStore = (try? container.decodeIfPresent(Bool.self, forKey: .familyModeEnabledAppStore)) ?? false
         familyModeHiddenStorefronts = (try? container.decodeIfPresent([String].self, forKey: .familyModeHiddenStorefronts)) ?? []
         extraCategoriesEnabled = (try? container.decodeIfPresent(Bool.self, forKey: .extraCategoriesEnabled)) ?? false
+        // A nonsense number is dropped, never shown on the paywall.
+        plusMonthlyQuestions = (try? container.decodeIfPresent(Int.self, forKey: .plusMonthlyQuestions)).flatMap { $0 > 0 ? $0 : nil }
     }
 }

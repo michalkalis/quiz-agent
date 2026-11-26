@@ -1982,48 +1982,268 @@
         }
       }
     },
-    "1,000 questions a month" : {
+    "%lld questions a month" : {
       "comment" : "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 000 otázek měsíčně"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázka měsíčně"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázky měsíčně"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázky měsíčně"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázek měsíčně"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld question a month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld questions a month"
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 000 otázok mesačne"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázka mesačne"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázky mesačne"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázky mesačne"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld otázok mesačne"
+                }
+              }
+            }
           }
         },
         "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 000 питань на місяць"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld питання на місяць"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld питання на місяць"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld питань на місяць"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld питання на місяць"
+                }
+              }
+            }
           }
         }
       }
     },
-    "1,000 questions a month for %@" : {
+    "%lld questions a month for %@" : {
       "comment" : "Paywall plan card line: the Trubbo Plus allowance and its monthly price",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázek měsíčně za %@"
+            "value" : "%#@questions@ měsíčně za %2$@"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázek"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@questions@ a month for %2$@"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld question"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld questions"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 otázok mesačne za %@"
+            "value" : "%#@questions@ mesačne za %2$@"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázka"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázky"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázky"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld otázok"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 000 питань на місяць за %@"
+            "value" : "%#@questions@ на місяць за %2$@"
+          },
+          "substitutions" : {
+            "questions" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld питання"
+                    }
+                  },
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld питання"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld питань"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%lld питання"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -19406,25 +19626,115 @@
         }
       }
     },
-    "You've used all 1,000 Trubbo Plus questions this month." : {
+    "You've used all %lld Trubbo Plus questions this month." : {
       "comment" : "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance",
       "localizations" : {
         "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tento měsíc už máš za sebou všech 1 000 otázek Trubbo Plus."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou %lld otázku Trubbo Plus."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všechny %lld otázky Trubbo Plus."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všech %lld otázek Trubbo Plus."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento měsíc už máš za sebou všech %lld otázek Trubbo Plus."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You've used your %lld Trubbo Plus question this month."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "You've used all %lld Trubbo Plus questions this month."
+                }
+              }
+            }
           }
         },
         "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tento mesiac už máš za sebou všetkých 1 000 otázok Trubbo Plus."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou %lld otázku Trubbo Plus."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetky %lld otázky Trubbo Plus."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetkých %lld otázok Trubbo Plus."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tento mesiac už máš za sebou všetkých %lld otázok Trubbo Plus."
+                }
+              }
+            }
           }
         },
         "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Цього місяця всі 1 000 питань Trubbo Plus уже використано."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Цього місяця %lld питання Trubbo Plus уже використано."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Цього місяця всі %lld питання Trubbo Plus уже використано."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Цього місяця всі %lld питань Trubbo Plus уже використано."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Цього місяця всі %lld питання Trubbo Plus уже використано."
+                }
+              }
+            }
           }
         }
       }

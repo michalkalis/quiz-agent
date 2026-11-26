@@ -16,6 +16,18 @@ import UIKit
 struct DailyShareCardView: View {
     static let size = CGSize(width: 1200, height: 630)
 
+    /// Card-pixel measures (the card is drawn at 1200 x 630, not in screen points).
+    private enum Metrics {
+        static let leading: CGFloat = 80
+        static let top: CGFloat = 52
+        static let labelGap: CGFloat = 8
+        static let scoreGap: CGFloat = 4
+        static let tilesGap: CGFloat = 14
+        static let hookGap: CGFloat = 28
+        static let tileSpacing: CGFloat = 16
+        static let cardRadius: CGFloat = 30
+    }
+
     let day: DailyChallengeDay
     let language: String
     let marks: [Bool?]
@@ -37,23 +49,23 @@ struct DailyShareCardView: View {
                 Text(verbatim: "\(DailyShareText.challengeName(language: language)) \(day.label(languageCode: language))".uppercased())
                     .font(face(34, .bold))
                     .tracking(2)
-                    .padding(.top, 8)
+                    .padding(.top, Metrics.labelGap)
                 Text(verbatim: "\(score)/\(total)")
                     .font(face(220, .heavy))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .frame(height: 200, alignment: .top)
-                    .padding(.top, 4)
+                    .padding(.top, Metrics.scoreGap)
                 tiles
-                    .padding(.top, 14)
+                    .padding(.top, Metrics.tilesGap)
                 Text(verbatim: Self.hook(language: language))
                     .font(face(56, .heavy))
                     .foregroundStyle(Theme.Hangs.ShareCard.hook)
-                    .padding(.top, 28)
+                    .padding(.top, Metrics.hookGap)
             }
             .foregroundStyle(Theme.Hangs.ShareCard.text)
-            .padding(.leading, 80)
-            .padding(.top, 52)
+            .padding(.leading, Metrics.leading)
+            .padding(.top, Metrics.top)
         }
         .frame(width: Self.size.width, height: Self.size.height)
         .clipped()
@@ -62,7 +74,7 @@ struct DailyShareCardView: View {
     private var tiles: some View {
         let shown = Array(marks.prefix(10))
         let side = min(92, (700 - 16 * CGFloat(max(shown.count - 1, 0))) / CGFloat(max(shown.count, 1)))
-        return HStack(spacing: 16) {
+        return HStack(spacing: Metrics.tileSpacing) {
             ForEach(Array(shown.enumerated()), id: \.offset) { _, mark in
                 tile(mark, side: side)
             }
@@ -86,12 +98,12 @@ struct DailyShareCardView: View {
     /// Two tilted cards on the right, as on the app's other share pictures.
     private var decoration: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
                 .fill(Theme.Hangs.ShareCard.right)
                 .frame(width: 330, height: 440)
                 .rotationEffect(.degrees(8))
                 .position(x: 985, y: 560)
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.cardRadius, style: .continuous)
                 .fill(Theme.Hangs.ShareCard.wrong)
                 .frame(width: 330, height: 440)
                 .rotationEffect(.degrees(-12))

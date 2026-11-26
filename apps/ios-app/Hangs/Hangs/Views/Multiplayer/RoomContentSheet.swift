@@ -2,8 +2,9 @@
 //  RoomContentSheet.swift
 //  Hangs
 //
-//  #232 (founder 2026-11-14, variant 5A): "What we play" — the categories
-//  from Home, or one of the host's custom packs. A pack still being made
+//  #232 (founder 2026-11-14, variant 5A): "What we play" — categories, or one
+//  of the host's custom packs. #249.1: the categories are chosen right here as
+//  the same vertical list as solo (the room's own choice, never solo's). A pack still being made
 //  shows how far it is and cannot be picked yet.
 //
 
@@ -19,11 +20,13 @@ struct RoomContentSheet: View {
     @ObservedObject var viewModel: RoomViewModel
     @ObservedObject var packs: MyPacksViewModel
     @State private var picked: RoomContent
+    @State private var pickedCategories: [String]
 
     init(viewModel: RoomViewModel, packs: MyPacksViewModel) {
         self.viewModel = viewModel
         self.packs = packs
         _picked = State(initialValue: viewModel.content)
+        _pickedCategories = State(initialValue: viewModel.offeredCategories)
     }
 
     var body: some View {
@@ -44,11 +47,8 @@ struct RoomContentSheet: View {
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.md) {
-                    HangsSectionLabel(text: "Quiz")
-                    HangsCard {
-                        option(.home, title: Text("Categories from Home"), detail: nil)
-                            .accessibilityIdentifier("room.content.home")
-                    }
+                    HangsSectionLabel(text: "Categories")
+                    CategoryListView(categories: categoriesBinding, extras: viewModel.extraCategories(), showsSelection: picked == .categories)
                     if !packRows.isEmpty {
                         HangsSectionLabel(text: "My packs")
                         HangsCard {
@@ -69,8 +69,19 @@ struct RoomContentSheet: View {
             .scrollBounceBehavior(.basedOnSize)
         }
         .padding(Theme.Hangs.Spacing.md)
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .task { await packs.refresh() }
+    }
+
+    /// A tap on a category picks the categories over a pack (mutually exclusive).
+    private var categoriesBinding: Binding<[String]> {
+        Binding(
+            get: { pickedCategories },
+            set: {
+                pickedCategories = $0
+                picked = .categories
+            }
+        )
     }
 
     /// Delivered packs and packs still being made; failed orders stay out.
@@ -127,6 +138,7 @@ struct RoomContentSheet: View {
     private func done() {
         let choice = picked
         dismiss()
-        Task { await viewModel.play(choice) }
+        let categories = pickedCategories
+        Task { await viewModel.play(choice, categories: categories) }
     }
 }

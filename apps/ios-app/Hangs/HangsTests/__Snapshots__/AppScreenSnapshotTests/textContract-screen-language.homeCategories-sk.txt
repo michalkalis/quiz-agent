@@ -8,6 +8,8 @@ Movies & Music
 Sports
 Food & Drink
 Pop Culture
+Decades and music
+Nová · do M12 22
 Otázky pre miestnych
 To, čo vie len ten, kto v danej krajine alebo meste žije. Napríklad linky MHD.
 
@@ -21,5 +23,6 @@ home.category.movies-music
 home.category.sports
 home.category.food-everyday
 home.category.entertainment
+home.category.extra-decades
 home.categories.localQuestions
 home.categories.done

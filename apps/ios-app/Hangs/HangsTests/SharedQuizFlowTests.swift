@@ -300,7 +300,7 @@ struct SharedQuizFlowTests {
         await model.play(.pack(id: "p1", title: "Bridges"))
 
         #expect(!model.canChangeContent)
-        #expect(model.content == .home)
+        #expect(model.content == .categories)
         #expect(rooms.moves == [nil])
     }
 }

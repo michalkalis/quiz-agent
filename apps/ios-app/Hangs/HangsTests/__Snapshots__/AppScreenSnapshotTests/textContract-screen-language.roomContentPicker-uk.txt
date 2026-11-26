@@ -2,8 +2,15 @@
 Скасуй
 У що граємо
 Готово
-Вікторина
-Категорії з головної
+Категорії
+All Categories
+Science & Nature
+History
+Geography
+Movies & Music
+Sports
+Food & Drink
+Pop Culture
 Мої набори
 Famous bridges of the world and the engineers who built them
 history
@@ -12,6 +19,13 @@ history
 # identifiers
 room.content.cancel
 room.content.done
-room.content.home
+home.category.all
+home.category.science-nature
+home.category.history
+home.category.geography-world
+home.category.movies-music
+home.category.sports
+home.category.food-everyday
+home.category.entertainment
 room.content.pack.11111111-1111-1111-1111-111111111111
 room.content.pack.99999999-9999-9999-9999-999999999999

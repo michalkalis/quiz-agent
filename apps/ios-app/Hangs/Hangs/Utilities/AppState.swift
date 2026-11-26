@@ -423,6 +423,7 @@ final class AppState: ObservableObject {
             settingsStore: roomSettingsStore,
             analytics: analytics,
             packsEnabled: { [appConfig] in appConfig.sharedQuizEnabled },
+            extraCategories: { [quiz] in quiz.extraCatalog },
             pendingLeaves: pendingRoomLeaves
         )
     }

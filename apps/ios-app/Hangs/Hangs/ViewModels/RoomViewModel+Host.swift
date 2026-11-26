@@ -80,7 +80,7 @@ extension RoomViewModel {
             maxQuestions: solo.numberOfQuestions,
             difficulty: solo.difficulty,
             language: Language.selectable(solo.language).id,
-            categories: solo.categories,
+            categories: offeredCategories,
             userId: deviceId,
             includeImages: MultiplayerSettings.includeImageQuestions,
             skipLocalQuestions: !solo.includeLocalQuestions,

@@ -59,7 +59,10 @@ SERVER_EVENTS: dict[str, frozenset[str]] = {
     ),
     # #240: reason = why the voice answer was turned away (see the doc);
     # transcript_chars = its length, never the text.
-    "transcription_failed": frozenset({"reason", "question_id", "transcript_chars"}),
+    # #249.5: multiplayer + room_id when the answer came from a game together.
+    "transcription_failed": frozenset(
+        {"reason", "question_id", "transcript_chars", "multiplayer", "room_id"}
+    ),
     # #212.5: game together. Under the host (created, finished) or the
     # guest (joined; via = nearby | qr | link).
     "room_created": frozenset({"room_id"}),

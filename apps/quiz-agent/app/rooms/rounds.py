@@ -16,6 +16,10 @@ from ..config import get_settings
 # moment to arrive. The question closes only after this grace.
 ANSWER_GRACE = timedelta(seconds=2)
 
+# #249.5: how long a recording received in time may hold the close while the
+# server transcribes it. Past this (a crashed request) it no longer counts.
+VOICE_PENDING_MAX = timedelta(seconds=30)
+
 
 def now() -> datetime:
     return datetime.now(timezone.utc)
@@ -91,20 +95,34 @@ def accepts_answers(game: RoomGame, rnd: RoomRound, at: datetime) -> bool:
     return not rnd.closed and game_time(rnd, at) < deadline(game, rnd) + ANSWER_GRACE
 
 
+def voice_pending(rnd: RoomRound, at: datetime) -> bool:
+    """#249.5: a recording that arrived in time is still being transcribed."""
+    return any(at - t < VOICE_PENDING_MAX for t in rnd.voice_pending.values())
+
+
+def voice_pending_for(rnd: RoomRound, participant_id: str, at: datetime) -> bool:
+    held = rnd.voice_pending.get(participant_id)
+    return held is not None and at - held < VOICE_PENDING_MAX
+
+
 def close_due(session: QuizSession, at: datetime) -> bool:
     game = session.room_game
     rnd = game.current if game else None
     # #249.4: a paused question never closes, not even with every answer in.
     if rnd is None or rnd.closed or rnd.paused_at is not None:
         return False
-    return all_answered(session, rnd) or not accepts_answers(game, rnd, at)
+    if all_answered(session, rnd):
+        return True
+    return not accepts_answers(game, rnd, at) and not voice_pending(rnd, at)
 
 
 def phase(session: QuizSession, rnd: RoomRound, at: datetime) -> str:
     """reading → answering → grading → revealed."""
     if rnd.closed:
         return "revealed"
-    if close_due(session, at):
+    # Time up with a recording still being transcribed is "grading" too: no
+    # new answer is taken, the close only waits for that one.
+    if close_due(session, at) or not accepts_answers(session.room_game, rnd, at):
         return "grading"
     if rnd.opened_at is None and game_time(rnd, at) < clock_start(rnd):
         return "reading"

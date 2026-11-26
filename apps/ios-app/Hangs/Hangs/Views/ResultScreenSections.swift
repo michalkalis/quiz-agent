@@ -50,7 +50,7 @@ enum ResultVerdict {
 
 // MARK: - Verdict label (#248.2, variant A "verdict as the headline")
 
-/// The verdict over the answer: a small bold word with its glyph (#249,
+/// The verdict over the answer: a small bold word with its glyph (#250,
 /// variant A: the player's answer is the headline now, founder 2026-11-26).
 /// Green for right, the miss pink for wrong, muted for a skip.
 struct ResultVerdictLabel: View {

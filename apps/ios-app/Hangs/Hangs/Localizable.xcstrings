@@ -6026,7 +6026,7 @@
       }
     },
     "exactly: %@" : {
-      "comment" : "#249 result: under a right answer worded differently, the exact correct answer",
+      "comment" : "#250 result: under a right answer worded differently, the exact correct answer",
       "localizations" : {
         "cs" : {
           "stringUnit" : {

@@ -91,14 +91,14 @@ struct ResultViewInspectorTests {
             #expect(throws: Never.self) {
                 try tree.find(ViewType.Image.self, where: { try $0.actualImage().name() == "checkmark" })
             }
-            // #249 (variant A): a right answer said word for word is the
+            // #250 (variant A): a right answer said word for word is the
             // headline by itself, with no "Correct answer" label to repeat it.
             #expect(throws: (any Error).self) { try tree.find(text: "Correct answer") }
             #expect(throws: Never.self) { try tree.find(text: "Uranus") }
         }
     }
 
-    // MARK: - #249 variant A: the player's answer is the headline
+    // MARK: - #250 variant A: the player's answer is the headline
 
     /// WHY (founder, TF 1.3 b93): "nie je jasné, čo je moja odpoveď a čo
     /// správna". On a miss the player's own answer leads, struck, and the

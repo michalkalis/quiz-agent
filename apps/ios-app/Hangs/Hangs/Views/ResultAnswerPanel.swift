@@ -81,7 +81,7 @@ struct ResultAnswerPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// #249 (founder 2026-11-26, variant A): the player's own answer is the
+    /// #250 (founder 2026-11-26, variant A): the player's own answer is the
     /// headline, green when right, struck in the miss colour when wrong; the
     /// correct answer follows it, smaller. A skip and the recap keep the
     /// correct answer (or the stem) as the headline.

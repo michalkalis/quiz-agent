@@ -2645,29 +2645,6 @@
         }
       }
     },
-    "Answer time starts after reading" : {
-      "comment" : "Hra spolu (#240.9): the host's phone reads the question aloud, a bar under it moves",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Čas na odpověď začne po přečtení"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Čas na odpoveď začne po prečítaní"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Час на відповідь почнеться після прочитання"
-          }
-        }
-      }
-    },
     "Answered: %@" : {
       "comment" : "Hra spolu (#240.9): who already answered the open question (names joined), never what",
       "localizations" : {
@@ -16864,6 +16841,29 @@
         }
       }
     },
+    "Your answer didn't go through. Try again or type it." : {
+      "comment" : "Hra spolu (#249.5): the spoken answer could not be sent (offline, server error); the question is still open",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpověď se neodeslala. Zkus to znovu nebo ji napiš."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpoveď sa neodoslala. Skús to znova alebo ju napíš."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповідь не надіслалася. Спробуй ще раз або напиши її."
+          }
+        }
+      }
+    },
     "Your answers and pack topics are processed by third-party AI services. By continuing, you agree." : {
       "localizations" : {
         "cs" : {
@@ -18249,29 +18249,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Краще пиши відповіді"
-          }
-        }
-      }
-    },
-    "Type your answer" : {
-      "comment" : "Hra spolu (#212)",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napíš odpoveď"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Napiš odpověď"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Напиши відповідь"
           }
         }
       }
@@ -22370,52 +22347,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Питання"
-          }
-        }
-      }
-    },
-    "to answer" : {
-      "comment" : "Hra spolu (#224.4): under the seconds left on the question screen",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "na odpověď"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "na odpoveď"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "на відповідь"
-          }
-        }
-      }
-    },
-    "after reading" : {
-      "comment" : "Hra spolu (#224.4): under the answer time before the host finished reading",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "po přečtení"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "po prečítaní"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "після читання"
           }
         }
       }

@@ -59,7 +59,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         room.nextButton.tap()
 
         // Question 2 (typed).
-        XCTAssertTrue(room.answerField.waitForExistence(timeout: 10), "RS-28: answer field missing on question 2")
+        XCTAssertTrue(room.typeButton.waitForExistence(timeout: 10), "RS-28: Type missing on question 2")
         room.typeAnswer("Canberra")
         XCTAssertTrue(room.revealAnswer.waitForExistence(timeout: 10), "RS-28: reveal missing after question 2")
         room.nextButton.tap()
@@ -149,7 +149,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         XCTAssertFalse(room.nextButton.exists, "RS-29: a guest must not move the game on")
 
         try await client.roomHostMovesOn()
-        XCTAssertTrue(room.answerField.waitForExistence(timeout: 10), "RS-29: question 2 missing")
+        XCTAssertTrue(room.typeButton.waitForExistence(timeout: 10), "RS-29: question 2 missing")
         room.typeAnswer("Sydney")
         XCTAssertTrue(room.revealAnswer.waitForExistence(timeout: 10), "RS-29: reveal missing after question 2")
 
@@ -215,7 +215,7 @@ final nonisolated class RSRoomTests: XCTestCase {
         try await client.roomHostMovesOn()
         app.activate()
 
-        XCTAssertTrue(room.answerField.waitForExistence(timeout: 10), "RS-42: the guest is not on question 2 after coming back")
+        XCTAssertTrue(room.typeButton.waitForExistence(timeout: 10), "RS-42: the guest is not on question 2 after coming back")
         XCTAssertFalse(room.revealAnswer.exists, "RS-42: the stale reveal of question 1 is still on screen")
         XCTAssertFalse(room.waitingForHost.exists, "RS-42: the guest still waits for a host who moved on")
         RSFlow.assertAlive(app, "RS-42")

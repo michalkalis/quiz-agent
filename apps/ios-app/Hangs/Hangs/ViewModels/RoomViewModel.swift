@@ -66,6 +66,15 @@ final class RoomViewModel: ObservableObject, Identifiable {
     @Published var guestReadsAloud = false
     /// Guest: what the join said about the host's network (#249.4), for analytics.
     private(set) var joinedOnHostNetwork: Bool?
+    /// #249.5: the spoken answer to the open question (solo's Answer / Stop).
+    @Published var voicePhase: VoicePhase = .idle
+    /// #249.5: why the last spoken answer did not land (shown under the controls).
+    @Published var voiceNote: VoiceNote?
+    /// #249.5: the player refused the microphone this game (typing still works).
+    @Published var micRefused = false
+    /// #249.5: the PCM of the recording in progress; the tap appends on an audio thread.
+    let voicePCM = OSAllocatedUnfairLock<Data>(initialState: Data())
+    var voiceQuestionId: String?
     /// Host without an account name: asked once before the room exists.
     @Published var isAskingHostName = false
 
@@ -103,8 +112,6 @@ final class RoomViewModel: ObservableObject, Identifiable {
     private(set) var answerDeadline: AnyClock<Duration>.Instant?
     /// The whole answer window of the open question, for the countdown bar.
     private(set) var answerWindowSeconds: Int?
-    /// #240.9: when this phone first saw the open question being read aloud.
-    private(set) var readingSince: AnyClock<Duration>.Instant?
     /// #240.9: the host's phone reported how this game ended (once per game).
     var closeReported = false
     private var awayReported: Set<String> = []
@@ -209,7 +216,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// The answer field and the options take input.
     var canAnswer: Bool {
         guard let round, round.phase == .reading || round.phase == .answering,
-              round.yourAnswer == nil, submittingAnswer == nil
+              round.yourAnswer == nil, submittingAnswer == nil, voicePhase != .sending
         else { return false }
         return secondsLeft().map { $0 > 0 } ?? true
     }
@@ -324,6 +331,13 @@ final class RoomViewModel: ObservableObject, Identifiable {
     /// tap right at the end) or already in. A failure stays silent on purpose:
     /// the screen already says "Time's up" and the next poll brings the reveal.
     func sendDraftAtTimeout(questionId: String) async {
+        // #249.5: like solo, a recording running at zero is stopped and sent;
+        // it is the answer, never a typed draft next to it.
+        if voicePhase == .recording, voiceQuestionId == questionId {
+            await stopRecordingAndSend()
+            return
+        }
+        guard voicePhase == .idle else { return }
         let text = typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, let roomId = state?.roomId, let round,
               round.questionId == questionId, round.phase == .answering,
@@ -416,7 +430,6 @@ final class RoomViewModel: ObservableObject, Identifiable {
     func moveToRoom(_ room: RoomCreated) {
         created = room
         state = nil
-        readingSince = nil
     }
 
     func stopAll() {
@@ -429,6 +442,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         draftWatcher?.cancel()
         draftWatcherQuestionId = nil
         autoAdvanceLeft = nil
+        cancelRecording()
     }
 
     // MARK: - Polling
@@ -478,11 +492,10 @@ final class RoomViewModel: ObservableObject, Identifiable {
         if let round = new.round {
             if round.questionId != previousQuestionId {
                 typedAnswer = ""
+                voiceNote = nil
                 draftWatcherQuestionId = nil
                 answerWindowSeconds = nil
-                readingSince = nil
             }
-            if round.phase == .reading, readingSince == nil { readingSince = clock.now }
             answerDeadline = round.phase == .answering
                 ? round.remainingMs.map { clock.now.advanced(by: .milliseconds($0)) }
                 : nil

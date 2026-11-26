@@ -5,7 +5,7 @@
 //  #240.9 (founder 2026-11-18): no silent waiting in a game together. Why it
 //  matters: guests used to look at a still screen while the host's phone read
 //  the question (up to 45 s) and at "Question closed" while the answers were
-//  checked, with no sign anything was happening. Now the reading moves a bar,
+//  checked, with no sign anything was happening. Now the reading shows solo's bar,
 //  the waiting player sees who answered (never what), grading says so, and a
 //  question the judge could not check says it counts for nobody instead of a
 //  silent zero. The reveal taps once, like the solo result.
@@ -37,34 +37,25 @@ struct RoomWaitingTests {
         return model
     }
 
-    @Test("While the host's phone reads, the bar moves with time, stops short of full and goes when answering opens")
-    func readingProgress() async {
+    // #249.5: the reading is solo's bar state ("Reading the question"), then
+    // the answer time drains in the same bar; it goes once this player answered.
+    @Test("While the host's phone reads, the bar says so, then counts the answer time down")
+    func readingThenCountdown() async {
         let model = await guest()
         defer { model.stopAll() }
         rooms.beginGame()
         await model.refresh()
         #expect(model.round?.phase == .reading)
-        #expect(model.readingProgress() == 0)
-
-        await clock.advance(by: .seconds(2))
-        let early = model.readingProgress() ?? 0
-        #expect(early > 0, "a still bar is the silent wait the founder saw")
-
-        await clock.advance(by: .seconds(60))
-        #expect(model.readingProgress() == RoomViewModel.readingCap, "the bar must not claim the time already started")
+        #expect(model.listenPhase == .readingQuestion, "a still screen while the host reads is the silent wait")
 
         rooms.hostOpens()
         await model.refresh()
-        #expect(model.readingProgress() == nil)
-    }
+        #expect(model.listenPhase == .thinking(remaining: 20, total: 20))
+        await clock.advance(by: .seconds(5))
+        #expect(model.listenPhase == .thinking(remaining: 15, total: 20))
 
-    @Test("A long question gets more reading time than a short one, within bounds")
-    func readingEstimate() {
-        let short = RoomViewModel.readingEstimate(for: nil)
-        #expect(short == .seconds(3))
-        let long = RoomViewModel.readingEstimate(for: QuizResponse.previewStartQuiz.currentQuestion)
-        #expect(long > short)
-        #expect(long <= .seconds(30))
+        await model.submitOption(key: "b")
+        #expect(model.listenPhase == nil, "the time is the others' once this player answered")
     }
 
     @Test("A player who answered sees who else did, then that the answers are being checked, then the reveal")

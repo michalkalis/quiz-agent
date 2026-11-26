@@ -105,6 +105,29 @@ extension NetworkService: RoomServiceProtocol {
         return try JSONDecoder().decode(RoomState.self, from: data)
     }
 
+    func answerByVoice(roomId: String, questionId: String, audioWAV: Data) async throws -> RoomState {
+        let path = "/api/v1/rooms/\(roomId)/answer/voice"
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        // The server holds the question for a recording in transcription up
+        // to 30 s; past that a late reply would not count anyway.
+        request.timeoutInterval = 30
+        var body = Data()
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"question_id\"\r\n\r\n".utf8))
+        body.append(Data(questionId.utf8))
+        body.append(Data("\r\n--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"audio\"; filename=\"answer.wav\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/wav\r\n\r\n".utf8))
+        body.append(audioWAV)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        request.httpBody = body
+        let data = try await performRequestData(request, endpointPath: "/api/v1/rooms/{id}/answer/voice")
+        return try JSONDecoder().decode(RoomState.self, from: data)
+    }
+
     func reportAway(roomId: String, questionId: String) async throws {
         _ = try await roomRequest(
             "POST",

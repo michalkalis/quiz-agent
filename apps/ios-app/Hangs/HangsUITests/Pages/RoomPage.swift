@@ -20,6 +20,9 @@ struct RoomPage {
     var startButton: XCUIElement { app.buttons["room.start"] }
     var renameCard: XCUIElement { app.buttons["room.lobby.rename"] }
     var questionText: XCUIElement { app.descendants(matching: .any)["question.text"] }
+    /// #249.5: a typed-answer question shows solo's Answer (voice) and Type;
+    /// the field appears once Type is tapped.
+    var typeButton: XCUIElement { app.buttons["room.answer.type"] }
     var answerField: XCUIElement { app.textFields["room.answer.field"] }
     var sendButton: XCUIElement { app.buttons["room.answer.send"] }
     /// The reveal's "Correct: n/m" line: on every reveal, A–D and typed (#224.4).
@@ -73,6 +76,8 @@ struct RoomPage {
     }
 
     func typeAnswer(_ text: String) {
+        if !answerField.exists { typeButton.tap() }
+        XCTAssertTrue(answerField.waitForExistence(timeout: 5), "the typed field did not open")
         answerField.tap()
         answerField.typeText(text)
         sendButton.tap()

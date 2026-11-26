@@ -1020,7 +1020,7 @@ to the question the room is on, not the stale reveal.
 **Steps:** launch with `--app-config-multiplayer`; POST `/room/join?text=mock-token`,
 `/room/start`; tap option B; press Home; POST `/room/next`; bring the app back.
 
-**Asserts:** `room.answer.field` (question 2) present; `room.reveal.count`
+**Asserts:** `room.answer.type` (question 2, #249.5) present; `room.reveal.count`
 and `room.waitingForHost` absent. App alive.
 
 ---

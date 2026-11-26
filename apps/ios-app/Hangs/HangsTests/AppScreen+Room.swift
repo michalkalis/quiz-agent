@@ -21,7 +21,7 @@ extension AppScreen {
         // The reveal and final screens show the per-question reveal; the
         // lobbies and the rules sheet show the defaults.
         let settings = [.roomReveal, .roomRevealTyped, .roomRevealPaused, .roomRevealCancelled, .roomFinal, .roomFinalExpanded, .roomFinalGuest].contains(self) ? MultiplayerSettings(revealMode: .question) : MultiplayerSettings()
-        let model = Self.roomModel(rooms, guestName: [.roomLobbyGuest, .roomQuestion, .roomRevealPaused, .roomQuestionReading, .roomQuestionGrading, .roomFinalGuest].contains(self) ? "Peťo" : nil, settings: settings)
+        let model = Self.roomModel(rooms, guestName: [.roomLobbyGuest, .roomQuestion, .roomRevealPaused, .roomQuestionReading, .roomQuestionGrading, .roomFinalGuest, .roomQuestionPaused].contains(self) ? "Peťo" : nil, settings: settings)
         switch self {
         case .roomLobbyHost:
             await model.beginHosting()
@@ -39,6 +39,17 @@ extension AppScreen {
             await model.beginHosting()
             await model.startGame()
             await model.readTask?.value
+        case .roomQuestionPaused:
+            await model.join(.token(MockRoomService.token))
+            rooms.hostStarts()
+            await model.refresh()
+            rooms.hostPauses(true)
+            await model.refresh()
+        case .roomQuestionPausedHost:
+            await model.beginHosting()
+            await model.startGame()
+            await model.readTask?.value
+            await model.togglePause()
         case .roomRevealPaused:
             await model.join(.token(MockRoomService.token))
             rooms.hostStarts()

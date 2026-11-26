@@ -5768,6 +5768,52 @@
         }
       }
     },
+    "Paused by the host %@" : {
+      "comment" : "Hra spolu: a guest sees the host paused the open question; %@ = the host's name",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauzu dal hostitel %@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauzu dal hostiteľ %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Паузу поставив ведучий %@"
+          }
+        }
+      }
+    },
+    "Paused for everyone" : {
+      "comment" : "Hra spolu: the host paused the open question; its time stands still for everyone",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauza pro všechny"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauza pre všetkých"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза для всіх"
+          }
+        }
+      }
+    },
     "Pop Culture" : {
       "comment" : "Quiz category option",
       "localizations" : {

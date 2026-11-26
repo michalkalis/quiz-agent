@@ -28,6 +28,8 @@
         }
 
         var nearby: [NearbyRoom] = []
+        /// #249.4: what the join reply says about the host's network (nil = unknown).
+        var sameNetwork: Bool?
         var createError: Error?
         var joinError: Error?
         /// When set, every poll fails with it (connection loss, a removed player's 404).
@@ -158,7 +160,9 @@
                 players[i] = .init(participantId: you.participantId, displayName: displayName, color: you.color, isHost: false, score: you.score)
             }
             bump()
-            return state(full: true)
+            var joined = state(full: true)
+            joined.sameNetwork = sameNetwork
+            return joined
         }
 
         func removePlayer(roomId _: String, participantId: String) async throws {
@@ -220,9 +224,12 @@
         }
 
         /// The other players' answers arrive: the question closes (or is graded first).
+        /// #249.4: a paused question waits for the resume, like the server.
         func othersAnswer() {
             roundAnswers[Self.otherId] = script[index].otherAnswer
-            if holdGrading {
+            if holding {
+                bump()
+            } else if holdGrading {
                 phase = .grading
                 bump()
             } else {
@@ -242,11 +249,20 @@
 
         func setPaused(roomId _: String, paused: Bool) async throws -> RoomState {
             try await conditions.simulateNetwork(.setPaused)
-            guard phase == .revealed else { throw NetworkError.serverError(statusCode: 409, message: "Nothing to pause") }
+            // #249.4: the reveal and an open question pause; not while answers are checked.
+            guard status == .playing, phase != .grading else {
+                throw NetworkError.serverError(statusCode: 409, message: "Nothing to pause")
+            }
             pauseCalls.append(paused)
+            setHolding(paused)
+            return state(full: true)
+        }
+
+        private func setHolding(_ paused: Bool) {
             holding = paused
             bump()
-            return state(full: true)
+            // Every answer came in during the pause: the question closes on the resume.
+            if !paused, phase != .revealed, roundAnswers.count >= players.count { close() }
         }
 
         func nextQuestion(roomId _: String) async throws -> RoomState {
@@ -289,11 +305,10 @@
             bump()
         }
 
-        /// A guest's host stays on the reveal (or resumes).
+        /// A guest's host stays on the reveal or pauses the open question (or resumes).
         func hostPauses(_ paused: Bool) {
-            guard phase == .revealed else { return }
-            holding = paused
-            bump()
+            guard status == .playing, phase != .grading else { return }
+            setHolding(paused)
         }
 
         private func advance() {
@@ -363,7 +378,7 @@
                     let right = answer.lowercased() == item.correctKey
                     return RoomState.Result(participantId: pid, answer: answer, result: right ? "correct" : "incorrect", points: right ? 1 : 0)
                 } : nil,
-                paused: holding && phase == .revealed ? true : nil,
+                paused: holding && phase != .grading ? true : nil,
                 cancelled: revealed && isCancelled ? true : nil
             )
         }

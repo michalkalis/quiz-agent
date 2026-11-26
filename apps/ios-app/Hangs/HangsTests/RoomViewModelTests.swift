@@ -38,8 +38,10 @@ struct RoomViewModelTests {
         accountName: String? = "Michal Kalis",
         solo: QuizSettings = .default,
         settings: MultiplayerSettings = Self.perQuestion,
-        analytics: AnalyticsClient = NoopAnalyticsClient()
+        analytics: AnalyticsClient = NoopAnalyticsClient(),
+        rooms custom: MockRoomService? = nil
     ) -> RoomViewModel {
+        let rooms = custom ?? rooms
         network.mockSession = QuizResponse.previewStartQuiz.session
         network.mockResponse = .previewStartQuiz
         network.onStartQuiz = { [rooms] in rooms.beginGame() }
@@ -309,18 +311,38 @@ struct RoomViewModelTests {
 
     private let audioPath = "/api/v1/rooms/\(MockRoomService.roomId)/question/audio?question_id=mq1"
 
-    @Test("Only a link join reads aloud by default: a friend in another city has no host in the room to listen to")
+    // WHY (#249.4, founder 2026-11-26): the network decides, not how the
+    // guest got in: a link opened on the sofa next to the host must stay
+    // quiet (the host's phone reads), a QR scanned over a video call must
+    // read aloud (no host in the room). Unknown means away: silence there is
+    // a game the guest cannot hear.
+    @Test("Reading aloud on a guest's phone defaults by network: off next to the host, on elsewhere or when unknown")
     func guestReadDefaults() async {
-        for (invite, expected) in [
-            (RoomInvite.token(MockRoomService.token), true),
-            (.qr(MockRoomService.token), false),
-            (.nearby(NearbyRoom(roomId: "r", hostName: "M", hostColor: nil, playerCount: 1)), false),
-        ] {
-            let model = makeModel()
-            await model.join(invite)
-            model.stopAll()
-            #expect(model.guestReadsAloud == expected, "\(invite.via)")
+        let nearby = RoomInvite.nearby(NearbyRoom(roomId: "r", hostName: "M", hostColor: nil, playerCount: 1))
+        for invite in [RoomInvite.token(MockRoomService.token), .qr(MockRoomService.token), nearby] {
+            for (sameNetwork, expected) in [(Bool?.some(true), false), (false, true), (nil, true)] {
+                let rooms = MockRoomService()
+                rooms.sameNetwork = sameNetwork
+                let model = makeModel(rooms: rooms)
+                await model.join(invite)
+                model.stopAll()
+                #expect(model.guestReadsAloud == expected, "\(invite.via), same network \(String(describing: sameNetwork))")
+            }
         }
+    }
+
+    // WHY: the default is only a start; a guest who switched the speaker must
+    // not have it flipped back by a later join reply (a rename rejoins).
+    @Test("The guest's own speaker choice holds for the rest of the game")
+    func guestChoiceWins() async {
+        rooms.sameNetwork = false
+        let model = makeModel()
+        await model.join(.qr(MockRoomService.token))
+        defer { model.stopAll() }
+        #expect(model.guestReadsAloud)
+        await model.setGuestReadsAloud(false)
+        await model.rename(to: "Peter")
+        #expect(!model.guestReadsAloud)
     }
 
     @Test("The guest's phone downloads the room audio once per question, even though it polls every second")
@@ -342,8 +364,9 @@ struct RoomViewModelTests {
         #expect(audio.setupAudioSessionCallCount == 0, "the ducking recording session is for the host's quiz")
     }
 
-    @Test("A guest next to the host (QR) stays silent: the host's phone already reads the question")
+    @Test("A guest next to the host stays silent: the host's phone already reads the question")
     func guestQrSilent() async {
+        rooms.sameNetwork = true
         let model = makeModel()
         await model.join(.qr(MockRoomService.token))
         defer { model.stopAll() }
@@ -376,11 +399,15 @@ struct RoomViewModelTests {
         await model.setGuestReadsAloud(true)
         await model.guestReadTask?.value
         #expect(network.downloadedAudioPaths == [audioPath], "this question was already read once")
-        #expect(analytics.events == [.roomGuestReadAloud(on: false, via: "link"), .roomGuestReadAloud(on: true, via: "link")])
+        #expect(analytics.events == [
+            .roomGuestReadAloud(on: false, via: "link", sameNetwork: "unknown"),
+            .roomGuestReadAloud(on: true, via: "link", sameNetwork: "unknown"),
+        ])
     }
 
     @Test("A guest who turns reading on later reads the question that is open, ")
     func guestTurnsOnLater() async {
+        rooms.sameNetwork = true
         let model = makeModel()
         await model.join(.qr(MockRoomService.token))
         defer { model.stopAll() }

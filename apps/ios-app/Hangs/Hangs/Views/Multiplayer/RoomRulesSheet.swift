@@ -2,9 +2,9 @@
 //  RoomRulesSheet.swift
 //  Hangs
 //
-//  #213.8: the host changes the rules mid-game, under the gear. The answer
-//  time and reading aloud apply from the next question; the reveal is fixed
-//  once the game has started.
+//  #213.8: the host changes the rules mid-game, under ⋯ (#249.4). The answer
+//  time applies from the next question; the reveal is fixed once the game
+//  has started; reading aloud is the top bar's speaker mid-game.
 //
 
 import SwiftUI
@@ -46,9 +46,12 @@ struct RoomRulesSheet: View {
             }
             HangsCard {
                 VStack(spacing: 0) {
-                    HangsToggleRow(label: "Read questions aloud", isOn: readsAloud)
-                        .accessibilityIdentifier("room.rules.sheet.readsAloud")
-                    HangsDivider()
+                    // #249.4: mid-game the speaker in the top bar switches it, as in solo.
+                    if !isPlaying {
+                        HangsToggleRow(label: "Read questions aloud", isOn: readsAloud)
+                            .accessibilityIdentifier("room.rules.sheet.readsAloud")
+                        HangsDivider()
+                    }
                     if viewModel.canChangeRevealMode {
                         revealMenu
                     } else {
@@ -79,6 +82,8 @@ struct RoomRulesSheet: View {
         .padding(Theme.Hangs.Spacing.md)
         .presentationDetents([.medium])
     }
+
+    private var isPlaying: Bool { viewModel.state?.status == .playing }
 
     /// Outside the server's range, so it never collides with a real value.
     private static let customTag = 0

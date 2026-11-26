@@ -162,13 +162,14 @@ extension RoomViewModel {
 
     /// Reads the question aloud again; the answer time keeps running.
     func readAgain() {
-        guard isHost, settings.readsAloud, !isReadingAloud else { return }
+        guard isHost, settings.readsAloud, !isReadingAloud, !isPaused else { return }
         Task { await readAloud() }
     }
 
     func hostReact(to state: RoomState) {
         guard state.status == .playing, let round = state.round else { return }
-        if round.phase == .reading, readQuestionId != round.questionId {
+        // #249.4: a pause while reading stopped the clip; the resume reads it again.
+        if round.phase == .reading, !round.isPaused, readQuestionId != round.questionId {
             readQuestionId = round.questionId
             readTask?.cancel()
             readTask = Task { await readAloudAndOpen(questionId: round.questionId) }
@@ -183,26 +184,44 @@ extension RoomViewModel {
         state?.revealMode == .round ? Self.roundModePauseSeconds : autoAdvanceSeconds
     }
 
+    /// #249.4: the host's pause button in the top bar works while the
+    /// question is read, while it is answered and on the reveal; not while the
+    /// answers are being checked. A paused game always keeps its way back.
+    var canTogglePause: Bool {
+        guard isHost, let round, !isChangingPause, !isWorking else { return false }
+        return round.isPaused || round.phase != .grading
+    }
+
     /// #224.4: stay on this reveal (the countdown stops, guests are told) or
     /// let the game go on (the countdown starts over). "Next" still moves on.
+    /// #249.4: an open question pauses too: the server stops its time for
+    /// everyone; a clip being read stops and is read again on the resume.
     func togglePause() async {
-        guard isHost, !isChangingPause, !isWorking, let roomId = created?.roomId,
-              let round, round.phase == .revealed
-        else { return }
+        guard canTogglePause, let roomId = created?.roomId, let round else { return }
         let pause = !round.isPaused
+        let revealed = round.phase == .revealed
         isChangingPause = true
         defer { isChangingPause = false }
-        if pause {
+        if pause, revealed {
             advanceTask?.cancel()
             autoAdvanceLeft = nil
+        } else if pause {
+            if round.phase == .reading {
+                readTask?.cancel()
+                readQuestionId = nil
+            }
+            if isReadingAloud { await audio.stopPlayback() }
         }
         do {
             try apply(await rooms.setPaused(roomId: roomId, paused: pause))
-            if !pause { scheduleAutoAdvance(after: revealSeconds(for: state)) }
-            analytics.track(.roomPauseChanged(paused: pause, question: round.number))
+            if !pause, revealed { scheduleAutoAdvance(after: revealSeconds(for: state)) }
+            analytics.track(.roomPauseChanged(paused: pause, question: round.number, phase: round.phase.rawValue))
         } catch {
-            if pause { scheduleAutoAdvance(after: revealSeconds(for: state)) }
+            if pause, revealed { scheduleAutoAdvance(after: revealSeconds(for: state)) }
             await refresh()
+            // A clip stopped for a pause that never landed is read again
+            // (an unchanged poll would not get to `hostReact`).
+            if let state { hostReact(to: state) }
             errorMessage = Self.genericMessage
         }
     }

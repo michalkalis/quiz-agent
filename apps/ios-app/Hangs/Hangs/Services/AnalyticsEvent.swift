@@ -59,9 +59,11 @@ enum AnalyticsEvent: Equatable {
     /// #213.8: the host changed a rule of a game together; `value` as sent
     /// ("round", "45", "true").
     /// #224.4: the host stayed on a reveal (paused) or let the game go on.
-    case roomPauseChanged(paused: Bool, question: Int)
+    /// #249.4: `phase` = reading, answering or revealed (an open question pauses too).
+    case roomPauseChanged(paused: Bool, question: Int, phase: String)
     /// #230.2: a guest switched reading aloud on their own phone on or off; `via` is nearby, qr or link.
-    case roomGuestReadAloud(on: Bool, via: String)
+    /// #249.4: `sameNetwork` = the join found the guest on the host's network (true / false / unknown).
+    case roomGuestReadAloud(on: Bool, via: String, sameNetwork: String)
     /// #240.9: the host's phone closed a game together (once per game);
     /// `questions` = the questions served so far.
     case roomClosed(reason: RoomCloseReason, players: Int, questions: Int)
@@ -228,10 +230,10 @@ enum AnalyticsEvent: Equatable {
             []
         case let .homeRoundLengthChanged(questions):
             [("questions", .int(questions))]
-        case let .roomPauseChanged(paused, question):
-            [("paused", .bool(paused)), ("question", .int(question))]
-        case let .roomGuestReadAloud(on, via):
-            [("on", .bool(on)), ("via", .string(via))]
+        case let .roomPauseChanged(paused, question, phase):
+            [("paused", .bool(paused)), ("question", .int(question)), ("phase", .string(phase))]
+        case let .roomGuestReadAloud(on, via, sameNetwork):
+            [("on", .bool(on)), ("via", .string(via)), ("same_network", .string(sameNetwork))]
         case let .roomClosed(reason, players, questions):
             [("reason", .string(reason.rawValue)), ("players", .int(players)), ("questions", .int(questions))]
         case let .roomRankingShared(role, players):

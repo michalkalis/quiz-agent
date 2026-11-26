@@ -12,9 +12,10 @@ import Foundation
 import os
 
 extension RoomViewModel {
-    /// The host can still pick what the room plays.
+    /// The host can still pick what the room plays. #249.1: the categories are
+    /// always on offer; only the packs depend on `packsEnabled`.
     var canChangeContent: Bool {
-        isHost && packsEnabled() && state?.status == .lobby
+        isHost && state?.status == .lobby
     }
 
     /// The room's categories, minus an extra the server no longer lists, so a

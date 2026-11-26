@@ -30,7 +30,7 @@ struct RoomLobbyHostView: View {
                             .foregroundStyle(Theme.Hangs.Colors.sectionLabel)
                     }
                     playerList
-                    if let packs, viewModel.packsEnabled() {
+                    if let packs {
                         contentRow(packs)
                     }
                     rulesRow

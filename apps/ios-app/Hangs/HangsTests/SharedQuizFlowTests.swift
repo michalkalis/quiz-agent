@@ -82,14 +82,22 @@ struct SharedQuizFlowTests {
         #expect(!config.sharedQuizEnabled)
     }
 
-    @Test("switch off: the host has no pack choice")
-    func switchOffHidesRoomContent() async {
+    @Test("switch off: the host still picks categories, the room plays them")
+    func switchOffKeepsCategoryChoice() async {
+        // #249.1: the packs switch hides only the packs; a game together always
+        // lets the host choose what categories the friends play.
         let rooms = MockRoomService()
         rooms.hostAlone = true
-        let model = RoomViewModel(rooms: rooms, network: Fixtures.makeFullMockNetwork(), audio: MockAudioService(), solo: .default, deviceId: "d", accountName: "Michal", clock: AnyClock(TestClock()))
+        let network = Fixtures.makeFullMockNetwork()
+        let model = RoomViewModel(rooms: rooms, network: network, audio: MockAudioService(), solo: .default, deviceId: "d", accountName: "Michal", clock: AnyClock(TestClock()))
         await model.beginHosting()
         defer { model.stopAll() }
-        #expect(!model.canChangeContent)
+        #expect(model.canChangeContent)
+
+        await model.play(.categories, categories: ["sports"])
+
+        #expect(network.capturedCategories == ["sports"])
+        #expect(network.capturedPackId == nil)
     }
 
     // MARK: - The friend plays

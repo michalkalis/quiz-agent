@@ -70,7 +70,7 @@ struct RoomContentSheet: View {
         }
         .padding(Theme.Hangs.Spacing.md)
         .presentationDetents([.large])
-        .task { await packs.refresh() }
+        .task { if viewModel.packsEnabled() { await packs.refresh() } }
     }
 
     /// A tap on a category picks the categories over a pack (mutually exclusive).
@@ -86,7 +86,8 @@ struct RoomContentSheet: View {
 
     /// Delivered packs and packs still being made; failed orders stay out.
     private var packRows: [OrderSnapshot] {
-        packs.orders.filter { $0.isPlayable || !$0.isTerminal }
+        guard viewModel.packsEnabled() else { return [] }
+        return packs.orders.filter { $0.isPlayable || !$0.isTerminal }
     }
 
     @ViewBuilder private func packOption(_ order: OrderSnapshot) -> some View {

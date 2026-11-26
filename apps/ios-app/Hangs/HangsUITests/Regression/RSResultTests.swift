@@ -161,7 +161,7 @@ final nonisolated class RSResultTests: XCTestCase {
 
     // MARK: RS-16 — Read-aloud on the result does not advance
 
-    // Regression guarded (#59.7): "hear it" must not jump to the next question,
+    // Regression guarded (#59.7): reading the explanation must not jump to the next question,
     // and the result waits while it is read. The spoken verdict's download is
     // held until the test has tapped, so the result's countdown (3 s after the
     // verdict since #240.9, which made the old 1.5 s wall-clock check race it)
@@ -180,10 +180,13 @@ final nonisolated class RSResultTests: XCTestCase {
         result.waitForResult(timeout: 15)
         let verdictBefore = result.verdict.label
 
-        XCTAssertTrue(result.hearItButton.waitForExistence(timeout: 3), "RS-16: result.hearIt missing")
-        result.hearItButton.tap()
+        // #249: the explanation reads itself by default, so "hear it" is gone;
+        // a tap on the explanation text is the replay.
+        XCTAssertFalse(result.hearItButton.exists, "RS-16: 'hear it' beside an explanation that reads itself")
+        XCTAssertTrue(result.explanationReadButton.waitForExistence(timeout: 3), "RS-16: result.explanationRead missing")
+        result.explanationReadButton.tap()
         let held = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Continue"), object: result.pauseButton)
-        XCTAssertEqual(XCTWaiter.wait(for: [held], timeout: 3), .completed, "RS-16: 'hear it' did not hold the result")
+        XCTAssertEqual(XCTWaiter.wait(for: [held], timeout: 3), .completed, "RS-16: reading the explanation did not hold the result")
 
         try await client.releaseNetwork() // the verdict plays; a held result starts no countdown
         XCTAssertTrue(result.continueButton.exists, "RS-16: read-aloud left the result screen")

@@ -183,7 +183,8 @@ struct ResultView: View {
                     explanation: explanationText,
                     saidLine: saidLine,
                     hearItFailed: viewModel.readAloudFailure == .explanation,
-                    onHearIt: viewModel.isSilentMode ? nil : { if let explanationText { viewModel.readExplanationAloud(explanationText) } }
+                    onHearIt: viewModel.isSilentMode ? nil : { if let explanationText { viewModel.readExplanationAloud(explanationText) } },
+                    showsHearItChip: !viewModel.readsExplanationOnResult
                 )
                 ResultMetaRow(
                     sourceDomain: sourceDomain,

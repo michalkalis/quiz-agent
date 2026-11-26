@@ -4,7 +4,6 @@ Correct
 Correct answer
 Paris
 why
-hear it
 Paris has been the capital of France since the 10th century.
 Show question
 source
@@ -15,7 +14,6 @@ question.progress
 question.counter
 result.verdict
 result.answer
-result.hearIt
 result.explanation
 result.explanationRead
 result.metaRow

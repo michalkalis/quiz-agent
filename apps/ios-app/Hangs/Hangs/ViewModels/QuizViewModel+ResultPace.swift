@@ -50,6 +50,52 @@ extension QuizViewModel {
         return pace
     }
 
+    /// #249 (founder 2026-11-26): the result reads its explanation after the
+    /// verdict by default. Quick quiz, read-aloud off and silent mode skip it;
+    /// the result then offers "hear it" instead.
+    var readsExplanationOnResult: Bool {
+        !settings.quickGame && !isSilentMode && !isAudioMuted
+    }
+
+    /// The verdict, then (with `readsExplanationOnResult`) the explanation,
+    /// then the pace. The explanation is fetched while the verdict plays, so it
+    /// follows without a gap; the countdown bar stays held full while it is
+    /// read, and a touch holds the result as during the verdict.
+    func speakResultThenPace(_ audio: AudioInfo?, explanation: String?) async -> Int? {
+        let text = explanation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard readsExplanationOnResult, !text.isEmpty else { return await playVerdictThenPace(audio) }
+        let language = currentSession?.language ?? settings.language
+        let fetch = Task { [networkService] in
+            var clips: [Data] = []
+            for chunk in Self.splitForTTS(text) {
+                guard let clip = try? await networkService.synthesizeSpeech(text: chunk, language: language) else {
+                    return (clips, true)
+                }
+                clips.append(clip)
+            }
+            return (clips, false)
+        }
+        let verdictPace = await playVerdictThenPace(audio)
+        guard !Task.isCancelled, quizState.isShowingResult, !isAudioMuted else {
+            fetch.cancel()
+            return verdictPace
+        }
+        let spokenPace = resultPaceSeconds(afterSpokenVerdict: true)
+        isAwaitingSpokenVerdict = spokenPace != nil
+        defer { isAwaitingSpokenVerdict = false }
+        let (clips, failed) = await fetch.value
+        var outcome = ReadAloudOutcome()
+        outcome.failed = failed
+        for clip in clips {
+            guard !Task.isCancelled, quizState.isShowingResult, !isAudioMuted else { break }
+            await audioDeviceState.playAppSpeech(clip)
+            outcome.played = true
+        }
+        // A fetch that failed shows the note and "hear it" to try again.
+        if quizState.isShowingResult { noteReadAloud(.explanation, outcome) }
+        return outcome.played ? spokenPace : verdictPace
+    }
+
     /// #243.8 (founder 2026-11-24): the seconds the result counts down
     /// before it moves on, or nil when it waits for "next". "Right after the
     /// verdict" is a short beat after a spoken verdict and a reading pause

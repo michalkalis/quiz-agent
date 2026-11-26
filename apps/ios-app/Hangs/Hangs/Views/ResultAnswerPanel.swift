@@ -41,6 +41,9 @@ struct ResultAnswerPanel: View {
 
     /// nil = no "hear it": a silent quiz (founder 2026-11-22) reads nothing.
     let onHearIt: (() -> Void)?
+    /// #249: false while the result reads the explanation by itself; the
+    /// text stays tappable to hear it again.
+    var showsHearItChip = true
 
     private enum Metrics {
         static let blockGap = Theme.Hangs.Spacing.sm
@@ -69,7 +72,7 @@ struct ResultAnswerPanel: View {
                 HStack {
                     HangsSectionLabel(text: "why")
                     Spacer()
-                    if let onHearIt {
+                    if let onHearIt, showsHearItChip || hearItFailed {
                         hearItControl(onHearIt)
                     }
                 }

@@ -114,6 +114,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
     var questionAudioPath: String?
     var guestReadTask: Task<Void, Never>?
     var guestReadQuestionId: String?
+    private var draftWatcher: Task<Void, Never>?
+    private var draftWatcherQuestionId: String?
 
     static let pollInterval: Duration = .seconds(1)
     static let nearbyInterval: Duration = .seconds(3)
@@ -302,6 +304,45 @@ final class RoomViewModel: ObservableObject, Identifiable {
 
     static let maxAnswerLength = 200
 
+    /// #249.3: the answer time ran out with text typed but not sent: send it
+    /// once, inside the server's grace. Never when an answer is in flight (a
+    /// tap right at the end) or already in. A failure stays silent on purpose:
+    /// the screen already says "Time's up" and the next poll brings the reveal.
+    func sendDraftAtTimeout(questionId: String) async {
+        let text = typedAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, let roomId = state?.roomId, let round,
+              round.questionId == questionId, round.phase == .answering,
+              round.yourAnswer == nil, submittingAnswer == nil, !hasLeft,
+              questionsById[questionId]?.isMultipleChoice != true
+        else { return }
+        let answer = String(text.prefix(scalars: Self.maxAnswerLength))
+        submittingAnswer = answer
+        defer { submittingAnswer = nil }
+        do {
+            try apply(await rooms.answer(roomId: roomId, questionId: questionId, answer: answer))
+        } catch {
+            await refresh()
+        }
+    }
+
+    /// Waits for the open question's answer deadline (which each poll may
+    /// move) and then sends the draft. One watcher per question.
+    private func watchDraftDeadline(questionId: String) {
+        guard draftWatcherQuestionId != questionId else { return }
+        draftWatcherQuestionId = questionId
+        draftWatcher?.cancel()
+        draftWatcher = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                guard let deadline = answerDeadline, round?.questionId == questionId else { return }
+                if clock.now >= deadline {
+                    await sendDraftAtTimeout(questionId: questionId)
+                    return
+                }
+                do { try await clock.sleep(until: deadline) } catch { return }
+            }
+        }
+    }
+
     private func submit(_ answer: String) async {
         guard canAnswer, let roomId = state?.roomId, let round else { return }
         submittingAnswer = answer
@@ -370,6 +411,8 @@ final class RoomViewModel: ObservableObject, Identifiable {
         readTask?.cancel()
         guestReadTask?.cancel()
         advanceTask?.cancel()
+        draftWatcher?.cancel()
+        draftWatcherQuestionId = nil
         autoAdvanceLeft = nil
     }
 
@@ -420,6 +463,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
         if let round = new.round {
             if round.questionId != previousQuestionId {
                 typedAnswer = ""
+                draftWatcherQuestionId = nil
                 answerWindowSeconds = nil
                 readingSince = nil
             }
@@ -427,6 +471,7 @@ final class RoomViewModel: ObservableObject, Identifiable {
             answerDeadline = round.phase == .answering
                 ? round.remainingMs.map { clock.now.advanced(by: .milliseconds($0)) }
                 : nil
+            if round.phase == .answering, round.yourAnswer == nil { watchDraftDeadline(questionId: round.questionId) }
             if answerWindowSeconds == nil, round.phase == .answering, let ms = round.remainingMs {
                 answerWindowSeconds = max(1, (ms + 999) / 1000)
             }

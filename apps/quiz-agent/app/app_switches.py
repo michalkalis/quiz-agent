@@ -68,7 +68,16 @@ BUILD_KEYS = ("daily_challenge_beta_min_build",)
 # #236: App Store countries (StoreKit ``Storefront.countryCode``, ISO 3166-1
 # alpha-3 such as "USA") where the app hides family mode; stored comma-joined.
 LIST_KEYS = ("family_mode_hidden_storefronts",)
-KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS, *BUILD_KEYS, *LIST_KEYS)
+# Monthly allowances (``usage.tracker``), changed live instead of through an
+# env change that restarts the server. Lowest allowed value per key: a free
+# allowance of 0 would be a hard paywall, Plus 0 would lock out subscribers.
+INT_KEYS = {
+    "free_monthly_questions": 1,
+    "free_monthly_voice_answers": 0,
+    "plus_monthly_questions": 1,
+}
+INT_MAX = 100_000
+KEYS = (*VERSION_KEYS, *BOOL_KEYS, *NOTICE_KEYS, *BUILD_KEYS, *LIST_KEYS, *INT_KEYS)
 _STOREFRONT_RE = re.compile(r"[A-Z]{3}")
 
 _cache: tuple[float, dict[str, str | None]] | None = None
@@ -96,6 +105,13 @@ def encode(key: str, value: Any) -> str | None:
         return "true" if value else "false"
     if key in LIST_KEYS:
         return _encode_storefronts(key, value)
+    if key in INT_KEYS:
+        # bool is an int in Python; refuse it so `true` is never served as 1.
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(f"{key} must be a whole number (reset = env default)")
+        if not INT_KEYS[key] <= value <= INT_MAX:
+            raise ValueError(f"{key} must be {INT_KEYS[key]}..{INT_MAX}, got {value}")
+        return str(value)
     if value is None:
         return None
     if not isinstance(value, str):
@@ -126,6 +142,13 @@ def _encode_storefronts(key: str, value: Any) -> str | None:
 
 
 def env_values(settings: Settings) -> dict[str, Any]:
+    # Lazy: the tracker reads these switches, so a top-level import would loop.
+    from .usage.tracker import (
+        FREE_MONTHLY_LIMIT,
+        FREE_MONTHLY_VOICE_LIMIT,
+        SUBSCRIBER_MONTHLY_LIMIT,
+    )
+
     return {
         "min_version_app_store": settings.min_app_version_app_store,
         "min_version_testflight": settings.min_app_version_testflight,
@@ -162,6 +185,9 @@ def env_values(settings: Settings) -> dict[str, Any]:
         "maintenance_cs": None,
         "maintenance_en": None,
         "maintenance_uk": None,
+        "free_monthly_questions": FREE_MONTHLY_LIMIT,
+        "free_monthly_voice_answers": FREE_MONTHLY_VOICE_LIMIT,
+        "plus_monthly_questions": SUBSCRIBER_MONTHLY_LIMIT,
     }
 
 
@@ -183,6 +209,9 @@ def effective(settings: Settings, overrides: dict[str, str | None]) -> dict[str,
             out[key] = raw == "true"
         elif key in LIST_KEYS:
             out[key] = raw.split(",") if raw else []
+        elif key in INT_KEYS:
+            if raw is not None and raw.isdigit():
+                out[key] = int(raw)
         elif key in out:
             out[key] = raw
     return out

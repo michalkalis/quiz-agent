@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import date, datetime, timezone
+from typing import Any
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -31,6 +32,7 @@ from sqlalchemy import func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from .. import app_switches
 from ..config import get_settings
 from ..daily_challenge.reward import bonus_allowance_sql
 from ..db.models import CreditLedger, DailyChallengePlay, DailyUsage
@@ -88,15 +90,20 @@ class UsageTracker:
     def __init__(
         self,
         sessionmaker: async_sessionmaker[AsyncSession],
-        monthly_limit: int = FREE_MONTHLY_LIMIT,
+        monthly_limit: int | None = None,
         now: Callable[[], datetime] | None = None,
-        subscriber_monthly_limit: int = SUBSCRIBER_MONTHLY_LIMIT,
-        voice_monthly_limit: int = FREE_MONTHLY_VOICE_LIMIT,
+        subscriber_monthly_limit: int | None = None,
+        voice_monthly_limit: int | None = None,
     ) -> None:
         self._sessionmaker = sessionmaker
-        self.monthly_limit = monthly_limit
-        self.subscriber_monthly_limit = subscriber_monthly_limit
-        self.voice_monthly_limit = voice_monthly_limit
+        # A limit left at None is live: the admin switch of the same name, else
+        # the env default (``app_switches``), so the founder changes it without
+        # a restart. Tests pin a value by passing it.
+        self._fixed_limits = {
+            "free_monthly_questions": monthly_limit,
+            "plus_monthly_questions": subscriber_monthly_limit,
+            "free_monthly_voice_answers": voice_monthly_limit,
+        }
         # #180 track C: the ONE time source for the quota gate. Each public call
         # reads it once and threads that instant through the month window, the
         # subscription expiry check and ``resets_at`` — so a request straddling
@@ -108,11 +115,23 @@ class UsageTracker:
     def _now(self) -> datetime:
         return self._injected_now() if self._injected_now else _utcnow()
 
-    def _limit_for(self, entitled: bool) -> int:
+    async def _limits(self) -> dict[str, int]:
+        """The three monthly allowances in force now (cached, fail open to env)."""
+        fixed = self._fixed_limits
+        live: dict[str, Any] = {}
+        if any(v is None for v in fixed.values()):
+            live = app_switches.effective(
+                get_settings(), await app_switches.cached_overrides(self._sessionmaker)
+            )
+        return {k: live[k] if v is None else v for k, v in fixed.items()}
+
+    @staticmethod
+    def _limit_for(entitled: bool, limits: dict[str, int]) -> int:
         """The monthly allowance that applies right now. There is ONE counter
         per account, so a subscription lapsing mid-month swaps the 1,000 limit
         for the free one against the same count (intended, #199)."""
-        return self.subscriber_monthly_limit if entitled else self.monthly_limit
+        key = "plus_monthly_questions" if entitled else "free_monthly_questions"
+        return limits[key]
 
     async def _read_month(
         self, session: AsyncSession, subject_id: str, now: datetime
@@ -211,10 +230,11 @@ class UsageTracker:
         ``daily_usage.is_premium`` is no longer read — entitlement comes solely
         from the ``subscription`` table (default-deny on a null account)."""
         now = self._now()
+        limits = await self._limits()
         async with self._sessionmaker() as session:
             entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
-            remaining = max(0, self._limit_for(entitled) - count)
+            remaining = max(0, self._limit_for(entitled, limits) - count)
             if not entitled:
                 bonus = await self._bonus_left(session, subject_id, now)
                 if bonus > 0:
@@ -243,6 +263,7 @@ class UsageTracker:
         Because the debit is one guarded write and the path is re-derived here,
         a pre-record 500 (question retrieval, ``quiz.py:96``) debits nothing."""
         now = self._now()
+        limits = await self._limits()
         async with self._sessionmaker() as session:
             entitled = await account_is_entitled(session, subject_id, now=now)
             count, _ = await self._read_month(session, subject_id, now)
@@ -251,7 +272,7 @@ class UsageTracker:
                 # counter and credits stay untouched.
                 await session.commit()
                 return count
-            limit = self._limit_for(entitled)
+            limit = self._limit_for(entitled, limits)
             if count < limit:
                 stmt = (
                     pg_insert(DailyUsage)
@@ -287,13 +308,14 @@ class UsageTracker:
         A free player past the voice limit is still allowed the answer it was
         already charged for (``key``), so a retry is never refused."""
         now = self._now()
+        limits = await self._limits()
         async with self._sessionmaker() as session:
             used = await voice_allowance.voice_answers_since(
                 session, subject_id, _month_start(now)
             )
             if not await voice_allowance.voice_is_limited(session, subject_id, now):
                 return VoiceCheck(True, used, None, _next_reset(now))
-            limit = self.voice_monthly_limit
+            limit = limits["free_monthly_voice_answers"]
             allowed = used < limit or await voice_allowance.already_charged(
                 session, subject_id, key
             )
@@ -402,6 +424,7 @@ class UsageTracker:
         reports unlimited (``None``), as before. 2026-11-21 adds the free voice
         allowance: ``voice_answers_used`` / ``_limit`` / ``_remaining``."""
         now = self._now()
+        limits = await self._limits()
         async with self._sessionmaker() as session:
             count, premium = await self._read_month(session, subject_id, now)
             entitled = await account_is_entitled(session, subject_id, now=now)
@@ -415,7 +438,9 @@ class UsageTracker:
         # The same rule as the gate: only a free player without pack credits
         # has a voice limit (null = not limited).
         voice_limit = (
-            self.voice_monthly_limit if not entitled and credit_balance <= 0 else None
+            limits["free_monthly_voice_answers"]
+            if not entitled and credit_balance <= 0
+            else None
         )
         voice = {
             "voice_answers_used": voice_used,
@@ -437,7 +462,7 @@ class UsageTracker:
                 "plan": plan,
                 **voice,
             }
-        limit = self._limit_for(entitled)
+        limit = self._limit_for(entitled, limits)
         return {
             "user_id": subject_id,
             "is_premium": premium,

@@ -73,6 +73,8 @@ async def test_defaults_never_block_or_hide_anything():
         "family_mode_hidden_storefronts": [],
         # #242: extra categories stay hidden until switched on in the DB.
         "extra_categories_enabled": False,
+        # The Plus allowance the paywall names = the one the gate enforces.
+        "plus_monthly_questions": 1000,
     }
     # Public and cacheable: hit at every launch/foreground, no per-user data.
     assert cache_control == "public, max-age=60"

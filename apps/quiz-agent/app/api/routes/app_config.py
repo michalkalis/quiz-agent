@@ -89,6 +89,9 @@ class AppConfigResponse(BaseModel):
     # #242: free rotating extra categories (DB switch, off); the list itself
     # is ``GET /categories/extra``.
     extra_categories_enabled: bool = False
+    # The Trubbo Plus monthly allowance, for the paywall copy: it must name the
+    # number the server enforces (admin switch ``plus_monthly_questions``).
+    plus_monthly_questions: int = 1000
 
 
 @router.get("/app-config", response_model=AppConfigResponse)
@@ -120,6 +123,7 @@ async def get_app_config(
         family_mode_enabled_app_store=switches["family_mode_enabled_app_store"],
         family_mode_hidden_storefronts=switches["family_mode_hidden_storefronts"],
         extra_categories_enabled=switches["extra_categories_enabled"],
+        plus_monthly_questions=switches["plus_monthly_questions"],
     )
     return JSONResponse(
         _without_blank_uk(config.model_dump(mode="json")),

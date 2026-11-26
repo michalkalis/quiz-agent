@@ -256,17 +256,11 @@ struct PaywallView: View {
     private var limitMessage: String {
         if let limit = limitError {
             if !limit.upgradeAvailable {
-                return String(localized: "You've used all \(plusMonthlyQuestions) Trubbo Plus questions this month.", bundle: .interface, locale: allowanceLocale, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
+                return String(localized: "You've used all \(plusMonthlyQuestions) Trubbo Plus questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when a Trubbo Plus subscriber spent the month's allowance")
             }
             return String(localized: "You've used all \(limit.questionsLimit) free questions this month.", bundle: .interface, locale: .interface, comment: "Paywall subtitle when the monthly free-question limit is known")
         }
-        return String(localized: "\(plusMonthlyQuestions) questions a month", bundle: .interface, locale: allowanceLocale, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
-    }
-
-    /// The interface language alone, not the phone's region, groups the
-    /// allowance ("1 000", "1,000") so the number matches its translation.
-    private var allowanceLocale: Locale {
-        Locale(identifier: InterfaceLanguage.code)
+        return String(localized: "\(plusMonthlyQuestions) questions a month", bundle: .interface, locale: .interface, comment: "Paywall subtitle when opened proactively from Home/Settings (quota not hit): the Trubbo Plus allowance")
     }
 
     /// The plan card line. A resource, not a `Text` key: `Text` resolves it in

@@ -1,5 +1,7 @@
-Nový vzhled: hra je rychleji po ruce a výsledky jsou klidnější.
-Rychlý kvíz spustíš jedním ťuknutím, kategorie si vybereš ťuknutím.
-U vlastního balíčku si zvolíš obtížnost: lehká, střední, těžká nebo mix.
-Nákupy a postup jdou s tvým Apple účtem, nepřijdeš o ně ani na novém telefonu.
-Spousta drobných oprav a vylepšení.
+Denní výzva: každý den nový kvíz. Když ho dohraješ, dostaneš na ten den otázky navíc.
+Pošli kvíz kamarádovi. Zahraje si stejné otázky a výsledky porovnáte.
+Hra spolu: hlasem může odpovídat každý a další kvíz spustíte ve stejné místnosti.
+Výsledek ukáže nejdřív tvou odpověď, potom správnou, a vysvětlení přečte nahlas.
+Režim Bez zvuku: tichý kvíz, odpovědi píšeš nebo ťukáš.
+Češtinu teď čte rodilý český hlas.
+Nové kategorie zdarma, které pravidelně obměňujeme, a spousta drobných oprav.

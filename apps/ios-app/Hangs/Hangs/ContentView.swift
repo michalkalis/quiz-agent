@@ -261,30 +261,6 @@ struct ContentView: View {
         }
     }
 
-    /// The quiz's own screens, cross-faded as its state moves on.
-    @ViewBuilder
-    private var quizScreens: some View {
-        Group {
-            switch viewModel.quizScreen {
-            case .home:
-                EmptyView()
-            case .question:
-                QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
-            case .result:
-                ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
-            case .setRecap:
-                SetRecapView(viewModel: viewModel)
-            case .completion:
-                CompletionView(viewModel: viewModel)
-            case .dailyEnd:
-                DailyRoundEndView(viewModel: viewModel)
-            case let .error(model):
-                ErrorView(viewModel: viewModel, model: model)
-            }
-        }
-        .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
-    }
-
     @ViewBuilder
     private var mainContent: some View {
         // #213.4 (founder 2026-10-28, bar B): Play and Profile; #216.2 (founder
@@ -293,12 +269,9 @@ struct ContentView: View {
         TabView(selection: $navModel.selectedTab) {
             Tab("Play", systemImage: "play.circle", value: AppTab.play) {
                 NavigationStack(path: $navModel.path) {
-                    // #251 (founder TF 2026-11-27): the quiz opened over Home
-                    // with no motion. It now rises from the bottom like the
-                    // full-screen sheet it reads as, and sinks back on close;
-                    // inside the quiz the screens keep their cross-fade.
-                    ZStack {
-                        if viewModel.quizScreen == .home {
+                    Group {
+                        switch viewModel.quizScreen {
+                        case .home:
                             HomeView(
                                 viewModel: viewModel,
                                 myPacks: appState.myPacksViewModel,
@@ -308,13 +281,21 @@ struct ContentView: View {
                                 onCreatePack: presentOrderFlow,
                                 onOpenSettings: openSettingsFromHome
                             )
-                        } else {
-                            quizScreens
-                                .zIndex(1)
-                                .transition(reduceMotion ? .opacity : .move(edge: .bottom))
+                        case .question:
+                            QuestionView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .result:
+                            ResultView(viewModel: viewModel, ratingEntry: ratingEntry)
+                        case .setRecap:
+                            SetRecapView(viewModel: viewModel)
+                        case .completion:
+                            CompletionView(viewModel: viewModel)
+                        case .dailyEnd:
+                            DailyRoundEndView(viewModel: viewModel)
+                        case let .error(model):
+                            ErrorView(viewModel: viewModel, model: model)
                         }
                     }
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: viewModel.quizScreen == .home)
+                    .animation(reduceMotion ? nil : .easeInOut, value: viewModel.quizState)
                     .toolbar(viewModel.quizScreen.showsTabBar ? .visible : .hidden, for: .tabBar)
                     // #111: single route table for the root stack's push chain —
                     // replaces the 4 imperative NavigationLink destinations.

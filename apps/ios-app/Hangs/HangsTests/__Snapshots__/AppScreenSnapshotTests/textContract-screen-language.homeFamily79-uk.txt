@@ -18,9 +18,9 @@ Superschopnosti zvierat
 English
 Slovenčina
 Čeština
-Мова вікторини
+Мова
 Slovenčina
-Мова вікторини
+Мова
 Slovenčina
 4–6
 7–9
@@ -37,9 +37,14 @@ Superschopnosti zvierat
 LEGO
 Тема
 LEGO
-Без звуку
-Питання читаєш, відповіді пишеш
-
+Аудіогра
+Питання звучать уголос, відповідаєш голосом
+Текстова гра
+Без звуку: читаєш питання, відповідь пишеш або обираєш
+Режим звуку
+Audio game
+Режим звуку
+Audio game
 trubbo
 Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
@@ -65,6 +70,8 @@ home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

@@ -14,9 +14,27 @@ struct HomePage {
         app.buttons["home.startQuiz"]
     }
 
-    /// "No sound" (founder 2026-11-22): the silent mode switch under Quick quiz.
-    var silentModeSwitch: XCUIElement {
-        app.switches["home.silentMode"].firstMatch
+    /// #252: "Sound mode", a menu of Audio game / Text game (was the "No
+    /// sound" switch).
+    var soundModeMenu: XCUIElement {
+        app.buttons["home.silentMode"].firstMatch
+    }
+
+    /// #252: "Game mode", a menu of Quick game / With explanations (was the
+    /// "Quick quiz" switch).
+    var gameModeMenu: XCUIElement {
+        app.buttons["home.quickGame"].firstMatch
+    }
+
+    /// Opens a Home picker menu and taps one of its options.
+    func choose(_ option: String, in menu: XCUIElement, scenario: String) {
+        if !menu.isHittable { app.swipeUp() }
+        XCTAssertTrue(menu.waitForExistence(timeout: 3), "\(scenario): \(menu) missing")
+        menu.tap()
+        let item = app.buttons[option].firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 3), "\(scenario): menu option \(option) missing")
+        item.tap()
+        if !startQuizButton.isHittable { app.swipeDown() }
     }
 
     /// TestFlight build 90 (Home A1): the gear at the top opens Settings.

@@ -578,11 +578,33 @@ struct ResultViewInspectorTests {
 
     // MARK: - #250: "hear it" only when the result does not read by itself
 
-    /// WHY (founder 2026-11-26): the explanation is read aloud after the verdict
-    /// by default, so a "hear it" button beside it only repeats what is already
-    /// playing. Quick quiz skips the read; there the button is the way to hear it.
-    @Test("'hear it' is hidden while the result reads its explanation, shown in Quick quiz", arguments: [false, true])
-    func hearItOnlyWithoutAutoRead(quickGame: Bool) async throws {
+    /// #250: with explanations the result reads its explanation by itself, so
+    /// a "hear it" button beside it would only repeat what is already playing.
+    @Test("'hear it' is hidden while the result reads its explanation")
+    func hearItHiddenDuringAutoRead() async throws {
+        let why = "Paris has been the capital since the 10th century."
+        let evaluation = Evaluation(
+            userAnswer: "Paris", result: .correct, points: 1.0,
+            correctAnswer: "Paris", questionId: "q_test", explanation: why
+        )
+        let vm = makeViewModel(evaluation: evaluation, question: makeQuestion(explanation: why))
+        let view = ResultView(viewModel: vm)
+
+        try await ViewHosting.host(view) {
+            let tree = try view.inspect()
+            #expect((try? tree.find(viewWithAccessibilityIdentifier: "result.hearIt")) == nil)
+            #expect(throws: Never.self, "a tap on the text still reads it") {
+                try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead")
+            }
+        }
+    }
+
+    /// #252 (founder 2026-11-27): the Home "Game mode" promises that a quick
+    /// game shows only right or wrong, and "With explanations" adds the
+    /// explanation and its source. If the quick result kept them, the two
+    /// modes would look the same and the menu would describe nothing real.
+    @Test("Quick game hides the explanation and the source; with explanations shows both", arguments: [false, true])
+    func quickGameShowsOnlyTheVerdict(quickGame: Bool) async throws {
         let why = "Paris has been the capital since the 10th century."
         let evaluation = Evaluation(
             userAnswer: "Paris", result: .correct, points: 1.0,
@@ -594,10 +616,12 @@ struct ResultViewInspectorTests {
 
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
-            let chip = try? tree.find(viewWithAccessibilityIdentifier: "result.hearIt")
-            #expect((chip != nil) == quickGame)
-            #expect(throws: Never.self, "a tap on the text still reads it") {
-                try tree.find(viewWithAccessibilityIdentifier: "result.explanationRead")
+            let explanation = try? tree.find(viewWithAccessibilityIdentifier: "result.explanation")
+            let source = try? tree.find(viewWithAccessibilityIdentifier: "result.source")
+            #expect((explanation == nil) == quickGame)
+            #expect((source == nil) == quickGame)
+            #expect(throws: Never.self, "the verdict stays in both modes") {
+                try tree.find(viewWithAccessibilityIdentifier: "result.verdict")
             }
         }
     }

@@ -101,13 +101,7 @@ final nonisolated class RSResultTests: XCTestCase {
         let app = RSFlow.launch()
         let home = HomePage(app: app)
         home.assertVisible()
-        let quickGame = app.switches["home.quickGame"].firstMatch
-        if !quickGame.isHittable { app.swipeUp() }
-        XCTAssertTrue(quickGame.waitForExistence(timeout: 3), "RS-46: home.quickGame missing")
-        quickGame.tap()
-        if quickGame.value as? String != "1" { quickGame.switches.firstMatch.tap() }
-        XCTAssertEqual(quickGame.value as? String, "1", "RS-46: quick game did not turn on")
-        if !home.startQuizButton.isHittable { app.swipeDown() }
+        home.choose("home.gameMode.quick", in: home.gameModeMenu, scenario: "RS-46")
 
         let question = RSFlow.startQuiz(app)
         question.textInputToggle.tap()
@@ -122,7 +116,7 @@ final nonisolated class RSResultTests: XCTestCase {
 
     // MARK: RS-48 — A silent quiz is answered by typing, without a time limit
 
-    // Founder 2026-11-22 ("No sound"): with the Home switch on, the question
+    // Founder 2026-11-22 ("No sound", since #252 "Text game"): with it chosen on Home, the question
     // opens with the typed field ready and no Answer button, no countdown
     // moves it on by itself, the typed answer reaches the result, and the
     // result offers nothing to hear.
@@ -131,13 +125,7 @@ final nonisolated class RSResultTests: XCTestCase {
         let app = RSFlow.launch()
         let home = HomePage(app: app)
         home.assertVisible()
-        let silent = home.silentModeSwitch
-        if !silent.isHittable { app.swipeUp() }
-        XCTAssertTrue(silent.waitForExistence(timeout: 3), "RS-48: home.silentMode missing")
-        silent.tap()
-        if silent.value as? String != "1" { silent.switches.firstMatch.tap() }
-        XCTAssertEqual(silent.value as? String, "1", "RS-48: No sound did not turn on")
-        if !home.startQuizButton.isHittable { app.swipeDown() }
+        home.choose("home.soundMode.text", in: home.soundModeMenu, scenario: "RS-48")
 
         let question = RSFlow.startQuiz(app)
         XCTAssertTrue(question.textField.waitForExistence(timeout: 3), "RS-48: the typed field is not open at once")

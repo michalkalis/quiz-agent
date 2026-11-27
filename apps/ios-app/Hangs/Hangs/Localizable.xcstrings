@@ -2406,29 +2406,6 @@
         }
       }
     },
-    "After \"Next\": next question, no explanation" : {
-      "comment" : "Home: subtitle of the Quick game row",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Po „Ďalšia“ hneď ďalšia otázka, bez vysvetlenia"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Po „Další“ hned další otázka, bez vysvětlení"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Після «Пропусти» одразу наступне питання, без пояснення"
-          }
-        }
-      }
-    },
     "Age" : {
       "comment" : "#236 family mode „S deťmi“: Home pill caption, replaces Difficulty",
       "localizations" : {
@@ -5316,7 +5293,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Щоденний виклик"
+            "value" : "Щоденний челендж"
           }
         }
       }
@@ -7403,29 +7380,6 @@
         }
       }
     },
-    "Games on this Wi-Fi" : {
-      "comment" : "Hra spolu (#212)",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hry na tejto Wi-Fi"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hry na této Wi-Fi"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ігри в цій мережі Wi-Fi"
-          }
-        }
-      }
-    },
     "Geography" : {
       "comment" : "Quiz category option",
       "localizations" : {
@@ -8535,29 +8489,6 @@
         }
       }
     },
-    "Join the host's Wi-Fi and the game shows up here. Or scan the QR code on the host's phone with your camera." : {
-      "comment" : "Hra spolu (#212)",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pripoj sa na Wi-Fi hostiteľa a hra sa tu ukáže. Alebo naskenuj QR kód z jeho telefónu."
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Připoj se k Wi-Fi hostitele a hra se tu ukáže. Nebo naskenuj QR kód z jeho telefonu."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Підключись до Wi-Fi ведучого, і гра з'явиться тут. Або відскануй камерою QR-код з телефона ведучого."
-          }
-        }
-      }
-    },
     "Keep playing" : {
       "comment" : "Profile stat card (#213.4): locked card with an unknown requirement",
       "localizations" : {
@@ -8995,29 +8926,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Найдовша серія"
-          }
-        }
-      }
-    },
-    "Looking for games on this Wi-Fi…" : {
-      "comment" : "Hra spolu (#212)",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hľadám hry na tejto Wi-Fi…"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hledám hry na této Wi-Fi…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шукаю ігри в цій мережі Wi-Fi…"
           }
         }
       }
@@ -9894,29 +9802,6 @@
         }
       }
     },
-    "No game on this Wi-Fi yet. A game started here shows up by itself. Or scan the QR code on the host's phone with your camera." : {
-      "comment" : "Hra spolu (#212)",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Na tejto Wi-Fi zatiaľ nikto nehrá. Hra, ktorú tu niekto založí, sa ukáže sama. Alebo naskenuj QR kód z telefónu hostiteľa."
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Na této Wi-Fi zatím nikdo nehraje. Hra, kterou tu někdo založí, se ukáže sama. Nebo naskenuj QR kód z telefonu hostitele."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "У цій мережі Wi-Fi поки ніхто не грає. Гра, яку тут хтось створить, з'явиться сама. Або відскануй камерою QR-код з телефона ведучого."
-          }
-        }
-      }
-    },
     "No internet connection" : {
       "comment" : "Error title: device is offline",
       "localizations" : {
@@ -10123,29 +10008,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збережену вікторину не знайдено"
-          }
-        }
-      }
-    },
-    "No sound" : {
-      "comment" : "Home: toggle row under Quick quiz; silent mode, no read aloud, no microphone",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bez zvuku"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bez zvuku"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Без звуку"
           }
         }
       }
@@ -12953,25 +12815,439 @@
         }
       }
     },
-    "Quick quiz" : {
-      "comment" : "Home: toggle row under the quiz pickers",
+    "Category" : {
+      "comment" : "Home: label above the category deck",
       "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rýchly kvíz"
-          }
-        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rychlý kvíz"
+            "value" : "Kategorie"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kategória"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Швидка вікторина"
+            "value" : "Категорія"
+          }
+        }
+      }
+    },
+    "Game mode" : {
+      "comment" : "Home: row that picks quick game or with explanations",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herní režim"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herný režim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим гри"
+          }
+        }
+      }
+    },
+    "Quick game" : {
+      "comment" : "Home game mode option: right or wrong only, no explanation",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rychlá hra"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rýchla hra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Швидка гра"
+          }
+        }
+      }
+    },
+    "Only right or wrong, your score at the end" : {
+      "comment" : "Home game mode menu: what the quick game shows",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jen správně, nebo špatně, skóre na konci"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Len správne alebo nesprávne, skóre na konci"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише правильно чи ні, рахунок у кінці"
+          }
+        }
+      }
+    },
+    "With explanations" : {
+      "comment" : "Home game mode option: each answer shows its explanation and source",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S vysvětlením"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S vysvetlením"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З поясненнями"
+          }
+        }
+      }
+    },
+    "Every answer with an explanation and its source" : {
+      "comment" : "Home game mode menu: what the explained game shows",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ke každé odpovědi vysvětlení a zdroj"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ku každej odpovedi vysvetlenie a zdroj"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До кожної відповіді пояснення і джерело"
+          }
+        }
+      }
+    },
+    "Sound mode" : {
+      "comment" : "Home: row that picks audio game or text game",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim zvuku"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim zvuku"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим звуку"
+          }
+        }
+      }
+    },
+    "Audio game" : {
+      "comment" : "Home sound mode option: questions read aloud, answers by voice",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio hra"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio hra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудіогра"
+          }
+        }
+      }
+    },
+    "Questions read aloud, you answer by voice" : {
+      "comment" : "Home sound mode menu: what the audio game does",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky zní nahlas, odpovídáš hlasem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otázky znejú nahlas, odpovedáš hlasom"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питання звучать уголос, відповідаєш голосом"
+          }
+        }
+      }
+    },
+    "Text game" : {
+      "comment" : "Home sound mode option: no sound, the player reads and types or taps",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Písemná hra"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Písomná hra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текстова гра"
+          }
+        }
+      }
+    },
+    "No sound: read the questions, type or pick the answer" : {
+      "comment" : "Home sound mode menu: what the text game does",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku: otázky čteš, odpověď napíšeš nebo vybereš"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez zvuku: otázky čítaš, odpoveď napíšeš alebo vyberieš"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без звуку: читаєш питання, відповідь пишеш або обираєш"
+          }
+        }
+      }
+    },
+    "How it works" : {
+      "comment" : "Play together: label above the numbered steps",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak to funguje"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ako to funguje"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як це працює"
+          }
+        }
+      }
+    },
+    "Everyone connects to the same Wi-Fi." : {
+      "comment" : "Play together step 1",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všichni se připojí ke stejné Wi-Fi."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Všetci sa pripoja na tú istú Wi-Fi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі підключаються до однієї мережі Wi-Fi."
+          }
+        }
+      }
+    },
+    "Everyone opens Trubbo on their phone and taps Together." : {
+      "comment" : "Play together step 2; Together is the tab name",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každý si v telefonu otevře Trubbo a klepne na Spolu."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Každý si v telefóne otvorí Trubbo a klepne na Spolu."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен відкриває Trubbo на своєму телефоні й торкається «Разом»."
+          }
+        }
+      }
+    },
+    "One player taps Host a game. The others tap Join below, or scan the QR code on the host's phone." : {
+      "comment" : "Play together step 3; Host a game and Join are button names",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeden z vás klepne na Založ hru. Ostatní klepnou níže na Přidej se nebo naskenují QR kód z telefonu hostitele."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeden z vás klepne na Založ hru. Ostatní klepnú nižšie na Pridaj sa alebo naskenujú QR kód z telefónu hostiteľa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хтось один торкається «Створи гру». Інші торкаються «Приєднуйся» нижче або сканують QR-код з телефона ведучого."
+          }
+        }
+      }
+    },
+    "The host starts the game and moves it on after each question." : {
+      "comment" : "Play together step 4",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostitel spustí hru a po každé otázce ji posune dál."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hostiteľ spustí hru a po každej otázke ju posunie ďalej."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ведучий запускає гру і після кожного питання переходить до наступного."
+          }
+        }
+      }
+    },
+    "Looking for games…" : {
+      "comment" : "Play together: searching for games nearby",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hledám hry…"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hľadám hry…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукаю ігри…"
+          }
+        }
+      }
+    },
+    "You're not on Wi-Fi. Connect to the host's Wi-Fi and the game shows up here." : {
+      "comment" : "Play together: the phone is not on Wi-Fi",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nejsi na Wi-Fi. Připoj se k Wi-Fi hostitele a hra se tu ukáže."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie si na Wi-Fi. Pripoj sa na Wi-Fi hostiteľa a hra sa tu ukáže."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ти не в мережі Wi-Fi. Підключись до Wi-Fi ведучого, і гра з'явиться тут."
+          }
+        }
+      }
+    },
+    "No game here yet. The host's game shows up here by itself." : {
+      "comment" : "Play together: no game found nearby",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatím tu není žádná hra. Hra hostitele se tu ukáže sama."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatiaľ tu nie je žiadna hra. Hra hostiteľa sa tu ukáže sama."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тут поки немає гри. Гра ведучого з'явиться тут сама."
           }
         }
       }
@@ -13181,29 +13457,6 @@
         }
       }
     },
-    "Read the questions, type the answers" : {
-      "comment" : "Home: subtitle of the No sound row",
-      "localizations" : {
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázky čítaš, odpovede píšeš"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otázky čteš, odpovědi píšeš"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Питання читаєш, відповіді пишеш"
-          }
-        }
-      }
-    },
     "Remove from crew" : {
       "comment" : "Denná výzva: partia (#239)",
       "localizations" : {
@@ -13290,7 +13543,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Випадкова"
+            "value" : "Випадкова складність"
           }
         }
       }
@@ -13405,7 +13658,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Надішли виклик другові. Хто його зіграє, буде з тобою в таблиці весь тиждень."
+            "value" : "Надішли челендж другові. Хто його зіграє, буде з тобою в таблиці весь тиждень."
           }
         }
       }
@@ -20906,7 +21159,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "щоденний виклик · %@"
+            "value" : "щоденний челендж · %@"
           }
         }
       }
@@ -22909,7 +23162,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Щоденний виклик · готово"
+            "value" : "Щоденний челендж · готово"
           }
         }
       }

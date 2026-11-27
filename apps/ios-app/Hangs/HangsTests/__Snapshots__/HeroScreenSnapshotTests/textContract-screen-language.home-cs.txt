@@ -1,5 +1,5 @@
 # texts
-Kvíz
+Kategorie
 Vyber více
 All Categories
 8 otázek
@@ -28,10 +28,18 @@ Pop Culture
 English
 Slovenčina
 Čeština
-Jazyk kvízu
+Jazyk
 English
-Jazyk kvízu
+Jazyk
 English
+Rychlá hra
+Jen správně, nebo špatně, skóre na konci
+S vysvětlením
+Ke každé odpovědi vysvětlení a zdroj
+Herní režim
+With explanations
+Herní režim
+With explanations
 Easy
 Medium
 Hard
@@ -48,12 +56,14 @@ Počet otázek
 8
 Počet otázek
 8
-Rychlý kvíz
-Po „Další“ hned další otázka, bez vysvětlení
-
-Bez zvuku
-Otázky čteš, odpovědi píšeš
-
+Audio hra
+Otázky zní nahlas, odpovídáš hlasem
+Písemná hra
+Bez zvuku: otázky čteš, odpověď napíšeš nebo vybereš
+Režim zvuku
+Audio game
+Režim zvuku
+Audio game
 trubbo
 Nastavení
 Start
@@ -68,6 +78,9 @@ home-language-menu
 home.language.en
 home.language.sk
 home.language.cs
+home.quickGame
+home.gameMode.quick
+home.gameMode.explained
 home-difficulty-menu
 home.difficulty.easy
 home.difficulty.medium
@@ -78,7 +91,8 @@ home.questionCount.5
 home.questionCount.8
 home.questionCount.10
 home.questionCount.15
-home.quickGame
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.startQuiz

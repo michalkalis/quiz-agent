@@ -241,6 +241,6 @@ def comparison_text(standing: Standing, language: str) -> Optional[str]:
     return {
         "sk": "Ťažká výzva.",
         "cs": "Těžká výzva.",
-        "uk": "Складний виклик.",
+        "uk": "Складний челендж.",
         "en": "Tough challenge.",
     }[lang]

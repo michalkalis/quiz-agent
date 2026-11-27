@@ -311,9 +311,16 @@ struct ResultView: View {
         viewModel.resultQuestion?.question ?? viewModel.currentQuestion?.question
     }
 
+    /// #252 (founder 2026-11-27): the quick game shows only right or wrong.
+    /// A recap row the player opened on purpose keeps its explanation.
+    private var showsWhyAndSource: Bool {
+        isRecap || viewModel.resultShowsExplanation
+    }
+
     /// Inline explanation source: the question's `explanation`, falling back to
     /// the evaluation's. Empty/nil hides the whole "why" block on BOTH outcomes.
     private var explanationText: String? {
+        guard showsWhyAndSource else { return nil }
         let raw = viewModel.resultQuestion?.explanation
             ?? viewModel.currentQuestion?.explanation
             ?? viewModel.resultEvaluation?.explanation
@@ -325,7 +332,8 @@ struct ResultView: View {
     /// source line is gated on the URL only, never on correctness (issue #127
     /// root cause 1: the old `if isCorrect` gate dies).
     private var sourceDomain: String? {
-        HangsSourceLink.domain(
+        guard showsWhyAndSource else { return nil }
+        return HangsSourceLink.domain(
             from: viewModel.resultQuestion?.sourceUrl ?? viewModel.currentQuestion?.sourceUrl
         )
     }

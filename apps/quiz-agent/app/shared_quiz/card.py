@@ -56,10 +56,10 @@ _WORDS = {
         "description": "Same questions. Can you beat it?",
     },
     "uk": {
-        "challenge": "щоденний виклик",
+        "challenge": "щоденний челендж",
         "hook": "Зможеш більше?",
         "title": "{name}: сьогодні {score} з {total}",
-        "title_anon": "Щоденний виклик: {score} з {total}",
+        "title_anon": "Щоденний челендж: {score} з {total}",
         "description": "Ті самі питання. Зможеш більше?",
     },
 }
@@ -121,7 +121,7 @@ def og_title(data: CardData) -> str:
         return {
             "sk": "Denná výzva v Trubbe",
             "cs": "Denní výzva v Trubbu",
-            "uk": "Щоденний виклик у Trubbo",
+            "uk": "Щоденний челендж у Trubbo",
         }.get(data.language, "Daily challenge in Trubbo")
     fields = {"score": score_text(data.score), "total": data.total}
     name = clean_name(data.name)

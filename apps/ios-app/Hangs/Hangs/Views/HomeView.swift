@@ -257,7 +257,8 @@ struct HomeView: View {
         } else {
             VStack(alignment: .leading, spacing: Theme.Hangs.Spacing.sm) {
                 HStack(alignment: .firstTextBaseline) {
-                    sectionLabel("Quiz")
+                    // #252 (founder 2026-11-27): the deck picks a category.
+                    sectionLabel("Category")
                     Spacer(minLength: Theme.Hangs.Spacing.sm)
                     // #224.6 (canvas C4): the deck steps one category per tap, so
                     // the multi-select picker gets its own entry beside the label.
@@ -306,25 +307,79 @@ struct HomeView: View {
         }
     }
 
-    /// #224.8 (canvas D2): "Quick quiz", the last row of the list. Off = today's flow.
-    private var quickGameRow: some View {
-        HangsToggleRow(
-            label: "Quick quiz",
-            subtitle: "After \"Next\": next question, no explanation",
-            isOn: Binding(get: { viewModel.settings.quickGame }, set: { viewModel.setQuickGame($0) })
-        )
+    /// #252 (founder 2026-11-27): "Game mode" right under the language, a
+    /// choice of two explained in the menu. Quick = the #224.8 quick quiz.
+    private var gameModeMenu: some View {
+        Menu {
+            choiceButton(
+                "Quick game",
+                detail: "Only right or wrong, your score at the end",
+                isSelected: viewModel.settings.quickGame,
+                identifier: "home.gameMode.quick"
+            ) { viewModel.setQuickGame(true) }
+            choiceButton(
+                "With explanations",
+                detail: "Every answer with an explanation and its source",
+                isSelected: !viewModel.settings.quickGame,
+                identifier: "home.gameMode.explained"
+            ) { viewModel.setQuickGame(false) }
+        } label: {
+            HangsConfigRowLabel(
+                label: "Game mode",
+                value: viewModel.settings.quickGame
+                    ? String(localized: "Quick game", bundle: .interface, locale: .interface, comment: "Home game mode option: right or wrong only, no explanation")
+                    : String(localized: "With explanations", bundle: .interface, locale: .interface, comment: "Home game mode option: each answer shows its explanation and source")
+            )
+        }
         .accessibilityIdentifier("home.quickGame")
     }
 
-    /// Founder 2026-11-22: "No sound", directly under "Quick quiz". Also in the
-    /// family list: a round with kids plays on the same question screen.
+    /// #252 (founder 2026-11-27): "Sound mode", the old "No sound" switch as a
+    /// choice of two. Also in the family list: a round with kids plays on the
+    /// same question screen.
     private var silentModeRow: some View {
-        HangsToggleRow(
-            label: "No sound",
-            subtitle: "Read the questions, type the answers",
-            isOn: Binding(get: { viewModel.settings.silentMode }, set: { viewModel.setSilentMode($0) })
-        )
+        Menu {
+            choiceButton(
+                "Audio game",
+                detail: "Questions read aloud, you answer by voice",
+                isSelected: !viewModel.settings.silentMode,
+                identifier: "home.soundMode.audio"
+            ) { viewModel.setSilentMode(false) }
+            choiceButton(
+                "Text game",
+                detail: "No sound: read the questions, type or pick the answer",
+                isSelected: viewModel.settings.silentMode,
+                identifier: "home.soundMode.text"
+            ) { viewModel.setSilentMode(true) }
+        } label: {
+            HangsConfigRowLabel(
+                label: "Sound mode",
+                value: viewModel.settings.silentMode
+                    ? String(localized: "Text game", bundle: .interface, locale: .interface, comment: "Home sound mode option: no sound, the player reads and types or taps")
+                    : String(localized: "Audio game", bundle: .interface, locale: .interface, comment: "Home sound mode option: questions read aloud, answers by voice")
+            )
+        }
         .accessibilityIdentifier("home.silentMode")
+    }
+
+    /// A menu option with a short explanation under its title; the active one
+    /// carries the checkmark like every other Home picker.
+    private func choiceButton(
+        _ title: LocalizedStringKey,
+        detail: LocalizedStringKey,
+        isSelected: Bool,
+        identifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            if isSelected {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
+            }
+            Text(detail)
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     private var settingsButton: some View {
@@ -442,6 +497,8 @@ struct HomeView: View {
                     hairline
                     silentModeRow
                 } else {
+                    gameModeMenu
+                    hairline
                     difficultyMenu
                     hairline
                     if dynamicTypeSize.isAccessibilitySize {
@@ -449,8 +506,6 @@ struct HomeView: View {
                         hairline
                     }
                     questionCountMenu
-                    hairline
-                    quickGameRow
                     hairline
                     silentModeRow
                 }
@@ -478,10 +533,10 @@ struct HomeView: View {
                 .accessibilityIdentifier("home.language.\(language.id)")
             }
         } label: {
-            // #130: same scope wording as Settings — this picks the quiz
-            // content language, not the interface language.
+            // #252 (founder 2026-11-27): plain "Language" on Home; Settings
+            // keeps "Quiz language" beside the app language (#130).
             HangsConfigRowLabel(
-                label: "Quiz language",
+                label: "Language",
                 value: Language.selectable(viewModel.settings.language).nativeName
             )
         }

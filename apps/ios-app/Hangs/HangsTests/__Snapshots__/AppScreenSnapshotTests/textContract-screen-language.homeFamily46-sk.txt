@@ -15,9 +15,9 @@ Tvoje telo
 English
 Slovenčina
 Čeština
-Jazyk kvízu
+Jazyk
 Slovenčina
-Jazyk kvízu
+Jazyk
 Slovenčina
 4–6
 7–9
@@ -33,9 +33,14 @@ Téma
 Dinosaury
 Téma
 Dinosaury
-Bez zvuku
-Otázky čítaš, odpovede píšeš
-
+Audio hra
+Otázky znejú nahlas, odpovedáš hlasom
+Písomná hra
+Bez zvuku: otázky čítaš, odpoveď napíšeš alebo vyberieš
+Režim zvuku
+Audio game
+Režim zvuku
+Audio game
 trubbo
 Nastavenia
 Odpovedáš ty, deti hádajú s tebou.
@@ -60,6 +65,8 @@ home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

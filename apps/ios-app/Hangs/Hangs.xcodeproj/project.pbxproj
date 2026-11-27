@@ -176,6 +176,7 @@
 				5004B4962EF874800068C8D1 /* Sources */,
 				5004B4972EF874800068C8D1 /* Frameworks */,
 				5004B4982EF874800068C8D1 /* Resources */,
+				A7F3C2B1D4E5F60718293A4B /* Strip store-hidden localizations */,
 				1CD75A3248DE471983916F2D /* Upload Debug Symbols to Sentry */,
 			);
 			buildRules = (
@@ -324,6 +325,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A7F3C2B1D4E5F60718293A4B /* Strip store-hidden localizations */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Strip store-hidden localizations";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Founder 2026-11-27: Ukrainian stays in the TestFlight beta but not in the App Store.\n# The App Store lists the languages it finds as .lproj folders in the app, so the\n# store variant (APP_STORE_VARIANT=YES) drops uk.lproj before signing.\n# LanguageAvailability.storeHiddenCodes hides uk from the pickers in the same build.\n[ \"$APP_STORE_VARIANT\" = \"YES\" ] || exit 0\nfor code in uk; do\n  dir=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/${code}.lproj\"\n  if [ -d \"$dir\" ]; then rm -rf \"$dir\"; echo \"info: removed ${code}.lproj from the App Store build\"; fi\n  if [ -e \"$dir\" ]; then echo \"error: ${code}.lproj still in the App Store build\"; exit 1; fi\ndone\n";
+		};
 		1CD75A3248DE471983916F2D /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

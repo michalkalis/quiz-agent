@@ -129,6 +129,25 @@ struct LanguagePickerTests {
         #expect(LanguageAvailability(defaults: defaults).quizCodes == ["en", "sk", "cs", "pl"])
     }
 
+    @Test("The App Store build never offers Ukrainian, even when the server lists it")
+    func testStoreBuildHidesUkrainian() throws {
+        // Founder 2026-11-27: uk stays in the beta, not in the store. The server
+        // list is shared by both apps, so the store binary must drop it itself;
+        // a uk phone then falls back to English instead of a uk quiz.
+        let defaults = try makeIsolatedDefaults()
+        let server = ServableLanguages(quiz: ["en", "sk", "cs", "uk"], packOrder: ["en", "sk", "cs", "uk"])
+        let store = LanguageAvailability(defaults: defaults, hiddenCodes: LanguageAvailability.storeHiddenCodes)
+        store.store(server)
+
+        #expect(store.quizCodes == ["en", "sk", "cs"])
+        #expect(store.packOrderCodes == ["en", "sk", "cs"])
+        #expect(Language.selectable("uk", in: Language.selectableLanguages(in: store.quizCodes)) == Language.default)
+
+        // The beta reads the same server list and keeps uk.
+        let beta = LanguageAvailability(defaults: defaults, hiddenCodes: [])
+        #expect(beta.quizCodes.contains("uk"))
+    }
+
     @Test("An empty server list is ignored — a picker with no options is worse than a stale one")
     func testEmptyListDoesNotWipeTheCache() throws {
         let store = try makeIsolatedStore()

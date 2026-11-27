@@ -15,7 +15,7 @@ Dashboard of all `issue-NN-*.md` files. Updated by hand whenever a `**Triage:**`
 | # | Title | Triage | TODO | Notes |
 |---|---|---|---|---|
 | 250 | [Výsledok otázky: prehľadnosť a vysvetlenie nahlas](issue-250-result-readability-and-explanation-voice.md) | enhancement · in-progress | `[~]` #250 | 2026-11-26: TF b93; vysvetlenie nahlas v PR, vzhľad čaká na rozhodnutie foundera |
-| 249 | [Hra spolu a zdieľanie: poznámky z testu](issue-249-together-feedback-2026-11-26.md) | enhancement · in-progress | `[~]` #249 | 2026-11-26: 9 poznámok foundera, všetko zlúčené a nasadené; zostáva test na telefóne |
+| 249 | [Hra spolu a zdieľanie: poznámky z testu](issue-249-together-feedback-2026-11-26.md) | enhancement · in-progress | `[~]` #249 | 2026-11-26: 9 poznámok foundera, všetko zlúčené a nasadené; 11-27 otestované v TF 94 („zdá sa byť OK“), drobné poznámky prídu |
 | 248 | [Výsledok otázky a koniec kvízu: upratať](issue-248-result-and-round-end-cleanup.md) | enhancement · in-progress | `[~]` #248 | 2026-11-25: rozhodnutia foundera po TF b92; 248.0 v PR #985 (pauza pred „Premýšľaj“) |
 | 243 | [TF test 2026-11-22/23: hlasová navigácia, potvrdenie, výsledky](issue-243-tf-feedback-2026-11-23.md) | enhancement · ready-for-agent | `[ ]` #243 | 2026-11-24: founder rozhodol 6 otázok (fázy hlasom, ticho → premýšľanie, potvrdenie len znova, kratšie vysvetlenia, koniec „Znova, alebo domov?“, predvoľby); 13 krokov |
 | 242 | [Extra kategórie zadarmo na striedačku](issue-242-extra-categories-rotation.md) | enhancement · ready-for-agent | `[~]` #242 | 2026-11-22: tri kategórie naraz, mesačná výmena; rozpracované oddelenie extra otázok, potom katalóg |

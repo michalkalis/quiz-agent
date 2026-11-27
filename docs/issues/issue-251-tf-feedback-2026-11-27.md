@@ -19,6 +19,6 @@
 
 - [x] 251.1 — body 1 + 3 (časovanie hlasu a odpočtu na výsledku) — PR #1014
 - [x] 251.2 — bod 4 (zoznam otázok v dennej výzve) — PR #1014, len pre kolo hrané na tomto telefóne
-- [x] 251.3 — body 5 + 6 (vysunutie zdola, „Odmena: dnes ešte N otázok navyše“) — PR #1014; animáciu ešte overiť na simulátore
-- [ ] snímky dennej výzvy a Home s odmenou nahrať na iPhone 18 Pro (lokálny disk bol plný)
+- [x] 251.3 — bod 6 „Odmena: dnes ešte N otázok navyše“ — PR #1014 (snímky na iPhone 18 Pro hotové)
+- [ ] 251.5 — bod 5 animácia po Štart: vysunutie ako zmena obrazovky skúsené a vyhodené (lišta je v systémovej navigácii, ostala hore; zatvorenie sa nezasunulo). Čaká na výber foundera: A okno cez celú obrazovku (presunúť okná, ktoré sa otvárajú počas kvízu) / B priblíženie a prelínanie / C nič
 - [ ] 251.4 — bod 2 podľa výberu foundera (rozhodovacia stránka 11-27: vzhľad, kedy, hlasová nápoveda, povel „pauza“, text odmeny)

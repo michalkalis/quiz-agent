@@ -83,6 +83,7 @@ struct ResultView: View {
                     countdownRemaining: viewModel.isAwaitingSpokenVerdict
                         ? viewModel.autoAdvanceTotal : viewModel.autoAdvanceCountdown,
                     countdownTotal: viewModel.autoAdvanceTotal,
+                    countdownHeld: viewModel.isAwaitingSpokenVerdict,
                     onNext: { viewModel.continueToNext() }
                 )
             }

@@ -12,7 +12,7 @@ struct DailyBonusLeftLine: View {
     let left: Int
 
     var body: some View {
-        Text("You have \(left) extra questions today.")
+        Text("Reward: \(left) extra questions left today.")
             .font(.hangsBody)
             .foregroundStyle(Theme.Hangs.Colors.muted)
             .lineLimit(1)

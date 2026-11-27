@@ -19,8 +19,8 @@ extension AppScreen {
 
     func makeDaily() async -> AnyView {
         switch self {
-        case .dailyEndGood: Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, bonusLeft: 10, crew: Self.crew)
-        case .dailyEndWeak: Self.roundEnd(marks: DailyChallengeFixtures.weakMarks)
+        case .dailyEndGood: await Self.roundEnd(marks: DailyChallengeFixtures.goodMarks, bonusLeft: 10, crew: Self.crew)
+        case .dailyEndWeak: await Self.roundEnd(marks: DailyChallengeFixtures.weakMarks)
         case .homeDaily: await Self.home(state: nil)
         case .homeDailyPlayed: await Self.home(state: Self.played(DailyChallengeFixtures.goodMarks))
         case .homeDailyOffer:
@@ -58,7 +58,16 @@ extension AppScreen {
         DailyCrewMember(memberId: "m-2", name: "Mama", points: 90, today: 0, days: 2, place: 3, isYou: false),
     ])
 
-    private static func roundEnd(marks: [Bool?], bonusLeft: Int? = nil, crew: DailyCrew? = nil) -> AnyView {
+    /// #251: the day's five questions, answered as the marks say.
+    private static let questions: [(text: String, answer: String, wrong: String)] = [
+        ("Ktoré mesto je hlavným mestom Kanady?", "Ottawa", "Toronto"),
+        ("Koľko strún má klasické husle?", "Štyri", "Päť"),
+        ("Ktorá rieka preteká Budapešťou?", "Dunaj", "Váh"),
+        ("Ktorá planéta je najbližšie k Slnku?", "Merkúr", "Venuša"),
+        ("Z ktorej krajiny pochádza pizza?", "Taliansko", "Grécko"),
+    ]
+
+    private static func roundEnd(marks: [Bool?], bonusLeft: Int? = nil, crew: DailyCrew? = nil) async -> AnyView {
         // #248.3: the good day earned the reward line; the weak one did not.
         let base = played(marks)
         let state = bonusLeft == nil ? base : DailyChallengeState(
@@ -66,6 +75,11 @@ extension AppScreen {
             bonusOffer: 10, bonusLeft: bonusLeft, daysPlayed: 1
         )
         let vm = Fixtures.makeViewModel(clock: AnyClock(TestClock()))
+        await fillLedger(vm, rounds: zip(marks, questions).enumerated().map { index, pair in
+            let (mark, q) = pair
+            let result: Evaluation.EvaluationResult = mark == nil ? .skipped : mark == true ? .correct : .incorrect
+            return (index + 1, q.text, q.answer, result, mark == false ? q.wrong : (mark == true ? q.answer : ""), "geography-world")
+        })
         vm.activeDaily = DailyRound(day: day, language: "sk", state: state)
         vm.quizState = .finished
         let network = network(state)

@@ -13,6 +13,7 @@
 //  were when the screen opened (#240, 240.9); only what is still missing is
 //  fetched. The week's crew table (#239) shows when the player has a crew.
 //  Share sends the tiles and the score without the answers (#205.6).
+//  #251: under the comparison, the round's questions with the answers.
 //
 
 import SwiftUI
@@ -97,6 +98,15 @@ struct DailyRoundEndView: View {
                             .foregroundStyle(Theme.Hangs.Colors.muted)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("daily.comparison")
+                    }
+                    // #251: the round's questions with what the player said and
+                    // the right answer (this phone's round only: a challenge
+                    // played elsewhere has no list here).
+                    if !viewModel.recapEntries.isEmpty {
+                        HangsSectionLabel(text: "Questions")
+                            .padding(.top, Theme.Hangs.Spacing.xs)
+                        RecapAnswerList(viewModel: viewModel)
+                            .accessibilityIdentifier("daily.questions")
                     }
                     // The invite card is gone (#248.3): the top-bar Share icon
                     // invites; the card draws only a crew that exists.

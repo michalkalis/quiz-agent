@@ -256,9 +256,11 @@ extension AudioDeviceState {
         await run.value
     }
 
-    /// Play feedback audio from URL, returning the playback duration
-    func playFeedbackAudio(from urlString: String) async -> TimeInterval {
-        await withCommandWindowClosed {
+    /// Play feedback audio from URL, returning the playback duration.
+    /// `rearmListener: false` leaves the command window closed after it: the
+    /// caller plays more app speech straight after and re-arms itself (#251).
+    func playFeedbackAudio(from urlString: String, rearmListener: Bool = true) async -> TimeInterval {
+        await withCommandWindowClosed(rearm: rearmListener) {
             do {
                 let audioData = try await networkService.downloadAudio(from: urlString)
                 let duration = try await audioService.playOpusAudio(audioData)
@@ -272,8 +274,9 @@ extension AudioDeviceState {
     }
 
     /// Play feedback audio from base64 string, returning the playback duration
-    func playFeedbackAudioBase64(_ base64: String) async -> TimeInterval {
-        await withCommandWindowClosed {
+    /// (`rearmListener` as in `playFeedbackAudio(from:rearmListener:)`).
+    func playFeedbackAudioBase64(_ base64: String, rearmListener: Bool = true) async -> TimeInterval {
+        await withCommandWindowClosed(rearm: rearmListener) {
             do {
                 let duration = try await audioService.playOpusAudioFromBase64(base64)
                 return duration
@@ -305,13 +308,19 @@ extension AudioDeviceState {
     /// "you said proud answer proud" and "he is proud of you" are the app
     /// hearing itself. Mirrors what `playQuestionAudio` already does for the
     /// question read: flag + tear the listener down, play, then re-arm.
-    private func withCommandWindowClosed(_ play: () async -> TimeInterval) async -> TimeInterval {
+    ///
+    /// #251 (founder TF 2026-11-27, "pauza medzi odpoveďou a vysvetlením je
+    /// zbytočne dlhá"): `rearm: false` when the explanation follows the
+    /// verdict. Starting the recognizer only to tear it down for the next clip
+    /// put its whole start-up between the two lines.
+    private func withCommandWindowClosed(rearm: Bool, _ play: () async -> TimeInterval) async -> TimeInterval {
         setPlayingFeedbackTTS(true)
         stopSilenceDetectionListening()
 
         let duration = await play()
 
         setPlayingFeedbackTTS(false)
+        guard rearm else { return duration }
         // Auto-advance can start the NEXT question's read while long feedback is
         // still playing; that read owns the engine (and stopped it on the way
         // in), so re-arming here would put the mic live under question TTS.

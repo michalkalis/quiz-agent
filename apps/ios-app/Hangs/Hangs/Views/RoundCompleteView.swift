@@ -37,8 +37,6 @@ struct RoundCompleteView: View {
     @ObservedObject var viewModel: QuizViewModel
     /// #232: this round's link and comparison (sender or friend).
     @StateObject private var share: SharedQuizShareModel
-    @State private var expandedEntryId: Int?
-    @State private var sourceSheet: RecapSource?
     let route: Route
     let summary: QuizCompleteSummary
     /// Free questions left when the upsell applies (score route only).
@@ -112,7 +110,7 @@ struct RoundCompleteView: View {
                     if !viewModel.recapEntries.isEmpty {
                         listHeader
                             .padding(.top, Theme.Hangs.Spacing.xs)
-                        answerList
+                        RecapAnswerList(viewModel: viewModel)
                     }
                 }
                 .padding(.horizontal, Theme.Hangs.Spacing.md)
@@ -127,15 +125,6 @@ struct RoundCompleteView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active, showsSharing { share.loadResults() }
-        }
-        .sheet(item: $sourceSheet) { source in
-            SourceWebView(
-                url: source.id,
-                isPresented: Binding(
-                    get: { sourceSheet != nil },
-                    set: { if !$0 { sourceSheet = nil } }
-                )
-            )
         }
     }
 
@@ -344,40 +333,6 @@ struct RoundCompleteView: View {
 
     private var summaryTitle: LocalizedStringKey {
         viewModel.isNarratingRecap ? "Stop summary" : "Play summary"
-    }
-
-    private var answerList: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(viewModel.recapEntries.enumerated()), id: \.element.id) { index, entry in
-                if index > 0 {
-                    Rectangle()
-                        .fill(Theme.Hangs.Colors.hairline)
-                        .frame(height: 1)
-                        .padding(.leading, SetRecapRow.groupDividerInset)
-                }
-                SetRecapRow(
-                    entry: entry,
-                    isExpanded: expandedEntryId == entry.id,
-                    hearItDisabled: viewModel.isAudioMuted,
-                    hearItFailed: viewModel.readAloudFailure == .recapEntry(entry.id),
-                    onToggle: { toggle(entry.id) },
-                    onHearIt: { viewModel.playRecapEntryExplanation(entry) },
-                    onOpenSource: { sourceSheet = RecapSource(id: $0) }
-                )
-            }
-        }
-        .background(
-            RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous)
-                .fill(Theme.Hangs.Colors.bgCard)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Hangs.Radius.card, style: .continuous))
-        .hangsShadow(Theme.Hangs.Shadow.card)
-    }
-
-    private func toggle(_ id: Int) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            expandedEntryId = expandedEntryId == id ? nil : id
-        }
     }
 
     // MARK: - Footer

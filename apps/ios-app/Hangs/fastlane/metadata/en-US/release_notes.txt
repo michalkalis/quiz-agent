@@ -1,5 +1,6 @@
-New look: the game is quicker to reach and results are calmer.
-Start a Quick quiz with one tap and pick categories with a tap.
-Choose the difficulty of your custom pack: easy, medium, hard or mix.
-Purchases and progress follow your Apple account, even on a new phone.
-Lots of small fixes and improvements.
+Daily challenge: a new quiz every day. Finish it and you get extra questions for that day.
+Send a quiz to a friend. They play the same questions and you compare results.
+Play together: everyone can answer by voice, and the next quiz starts in the same room.
+The result shows your answer first, then the correct one, and reads the explanation aloud.
+No sound mode: a quiet quiz where you type or tap your answers.
+New free categories that change regularly, plus lots of small fixes.

@@ -59,20 +59,36 @@ nonisolated final class LanguageAvailability: @unchecked Sendable {
     private static let quizKey = "servableQuizLanguages"
     private static let packOrderKey = "servablePackOrderLanguages"
 
-    private let defaults: UserDefaults
+    /// Languages the App Store variant never offers, whatever the server lists.
+    /// Founder 2026-11-27: Ukrainian stays in the TestFlight beta but is not yet
+    /// good enough for the store. The server list is global (it cannot tell the
+    /// two apps apart), so the store binary drops these itself; the build also
+    /// strips their `.lproj` so the store listing does not name the language.
+    static let storeHiddenCodes: Set<String> = ["uk"]
 
-    init(defaults: UserDefaults = .standard) {
+    private let defaults: UserDefaults
+    private let hiddenCodes: Set<String>
+
+    init(
+        defaults: UserDefaults = .standard,
+        hiddenCodes: Set<String> = BuildChannel.isAppStoreBuild ? LanguageAvailability.storeHiddenCodes : []
+    ) {
         self.defaults = defaults
+        self.hiddenCodes = hiddenCodes
     }
 
     /// Codes the quiz picker may offer (Home + Settings).
     var quizCodes: [String] {
-        cached(Self.quizKey) ?? Self.fallbackQuizCodes
+        offered(cached(Self.quizKey) ?? Self.fallbackQuizCodes)
     }
 
     /// Codes the custom-pack order form may offer.
     var packOrderCodes: [String] {
-        cached(Self.packOrderKey) ?? Self.fallbackPackOrderCodes
+        offered(cached(Self.packOrderKey) ?? Self.fallbackPackOrderCodes)
+    }
+
+    private func offered(_ codes: [String]) -> [String] {
+        codes.filter { !hiddenCodes.contains($0) }
     }
 
     private func cached(_ key: String) -> [String]? {

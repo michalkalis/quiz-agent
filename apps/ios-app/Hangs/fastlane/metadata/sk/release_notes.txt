@@ -1,6 +1,6 @@
-Denná výzva: každý deň nový kvíz. Keď ho dohráš, dostaneš na ten deň otázky navyše.
+Denná výzva: každý deň nový kvíz. Keď ho dohráš, dostaneš otázky navyše, ktoré platia do polnoci.
 Pošli kvíz kamarátovi. Zahrá si tie isté otázky a výsledky porovnáte.
 Hra spolu: hlasom môže odpovedať každý a ďalší kvíz spustíte v tej istej miestnosti.
 Výsledok ukáže najprv tvoju odpoveď, potom správnu, a vysvetlenie prečíta nahlas.
-Režim Bez zvuku: tichý kvíz, odpovede píšeš alebo ťukáš.
+Režim Bez zvuku: tichý kvíz, odpovede píšeš.
 Nové kategórie zadarmo, ktoré pravidelne obmieňame, a kopa drobných opráv.

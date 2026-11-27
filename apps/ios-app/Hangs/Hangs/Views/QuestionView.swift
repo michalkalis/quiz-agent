@@ -705,7 +705,7 @@ struct QuestionView: View {
                     feedback: viewModel.voiceFeedbackPhase,
                     recognizingWord: viewModel.recognizingWord,
                     heard: viewModel.commandHeard,
-                    showsWords: viewModel.questionStripShowsWords,
+                    showsWords: viewModel.questionStripShowsWords(for: phase),
                     size: size,
                     language: viewModel.commandLanguage,
                     speechHeard: viewModel.isHearingAnswer,

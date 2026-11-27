@@ -535,6 +535,10 @@ final class QuizViewModel: ObservableObject {
 
     @Published var quizStats: QuizStats = .empty
 
+    /// #251: which of the player's quizzes this is (finished ones + 1), taken
+    /// at its start, for the think-phase hint schedule (`ThinkCommandHints`).
+    var thinkHintQuizOrdinal = 1
+
     /// Streak value immediately before the last recorded answer — captured because
     /// `quizStats.currentStreak` is already 0 by the time ResultView renders an
     /// incorrect answer (54.11).
@@ -1548,6 +1552,7 @@ final class QuizViewModel: ObservableObject {
             nextQuestion = nil
             awaitingNextQuestion = response.awaitingQuestion
             trackQuizContext(entryPoint: entryPoint)
+            thinkHintQuizOrdinal = quizStats.totalQuizzes + 1
             if pack == nil, daily == nil, shared == nil, activeFamily == nil { trackExtraCategoryStart() }
 
             // #182: a pack whose first question is not persisted yet — wait for

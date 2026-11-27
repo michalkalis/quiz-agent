@@ -67,11 +67,33 @@ extension QuizViewModel {
     /// nil when it is not on screen (`QuestionListenPhase.strip`), for the
     /// bar phase the screen derived. Both question types ask this one function.
     func questionStripPhase(_ phase: QuestionListenPhase?) -> QuestionListenPhase? {
-        QuestionListenPhase.strip(
+        let thinkWords: Bool = if case .thinking = phase { thinkStripShowsWords } else { false }
+        return QuestionListenPhase.strip(
             phase,
             hasCommandsAccessory: phase.flatMap { commandsAccessory(for: $0) } != nil,
-            commandsListening: commandListenerHint != nil
+            commandsListening: commandListenerHint != nil || thinkWords
         )
+    }
+
+    /// Whether the strip names the command words in `phase`. #251 (founder
+    /// 2026-11-27, "tak ako ukazujeme aj iné pri iných fázach"): during Think
+    /// they follow the teaching schedule and show from the window's start.
+    func questionStripShowsWords(for phase: QuestionListenPhase) -> Bool {
+        if case .thinking = phase { return thinkStripShowsWords }
+        return questionStripShowsWords
+    }
+
+    /// #251: the think window's words. They do not wait for the live mic,
+    /// which comes up only after the spoken "Premýšľaj" and the recognizer's
+    /// start-up, too late in a 10 s window; the strip's dots still say when it
+    /// listens. Never with commands off, unavailable, or the hints switched off.
+    var thinkStripShowsWords: Bool {
+        showsVoiceHints
+            && settings.voiceCommandsEnabled
+            && voiceCommandCoordinator.commandAvailability == .ready
+            && !isPaused
+            && !isSilentMode
+            && ThinkCommandHints.showsWords(quizOrdinal: thinkHintQuizOrdinal, questionNumber: questionScreenNumber)
     }
 
     /// #243.6 (founder 2026-11-24): the strip names the command words whenever

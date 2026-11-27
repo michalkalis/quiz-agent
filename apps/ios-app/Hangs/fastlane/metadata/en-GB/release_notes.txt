@@ -1,6 +1,6 @@
-Daily challenge: a new quiz every day. Finish it and you get extra questions for that day.
+Daily challenge: a new quiz every day. Finish it and you get extra questions that last until midnight.
 Send a quiz to a friend. They play the same questions and you compare results.
 Play together: everyone can answer by voice, and the next quiz starts in the same room.
 The result shows your answer first, then the correct one, and reads the explanation aloud.
-No sound mode: a quiet quiz where you type or tap your answers.
+No sound mode: a quiet quiz where you type your answers.
 New free categories that change regularly, plus lots of small fixes.

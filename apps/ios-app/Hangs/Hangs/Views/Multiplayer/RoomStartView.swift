@@ -49,7 +49,7 @@ struct RoomStartView: View {
                     step(1, "Everyone connects to the same Wi-Fi.")
                     step(2, "Everyone opens Trubbo on their phone and taps Together.")
                     step(3, "One player taps Host a game. The others tap Join below, or scan the QR code on the host's phone.")
-                    step(4, "The host starts the game. Everyone answers on their own phone.")
+                    step(4, "The host starts the game and moves it on after each question.")
                 }
                 .padding(Theme.Hangs.Spacing.md)
             }

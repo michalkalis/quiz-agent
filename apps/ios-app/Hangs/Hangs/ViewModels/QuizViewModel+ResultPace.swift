@@ -17,11 +17,13 @@ extension QuizViewModel {
     /// verdict is waited for (at most `Config.spokenVerdictWaitCap`; past that
     /// it keeps playing under the countdown), then the Settings pace
     /// (`resultPaceSeconds`). Muted or no audio: the countdown starts at once.
-    func playVerdictThenPace(_ audio: AudioInfo?) async -> Int? {
+    /// `rearmListener: false` keeps the command window closed after the
+    /// verdict, for a caller that speaks more straight after (#251).
+    func playVerdictThenPace(_ audio: AudioInfo?, rearmListener: Bool = true) async -> Int? {
         // Read aloud off, or silent mode, speaks no verdict (founder
         // 2026-11-22); the result keeps its pause and auto-advance.
         guard !isAudioMuted else { return resultPaceSeconds(afterSpokenVerdict: false) }
-        let playback = Task { await playFeedback(audio) }
+        let playback = Task { await playFeedback(audio, rearmListener: rearmListener) }
         guard hasFeedbackAudio(audio) else { return resultPaceSeconds(afterSpokenVerdict: false) }
         // #243.8: no countdown follows, so none is shown or held while the
         // verdict plays; the "next" window opens once it has ended.
@@ -58,26 +60,30 @@ extension QuizViewModel {
     }
 
     /// The verdict, then (with `readsExplanationOnResult`) the explanation,
-    /// then the pace. The explanation is fetched while the verdict plays, so it
-    /// follows without a gap; the countdown bar stays held full while it is
-    /// read, and a touch holds the result as during the verdict.
+    /// then the pace. The explanation is fetched from the moment the answer is
+    /// sent (#251), so it follows the verdict without a gap; the command
+    /// window stays closed between the two. The countdown bar stays held full
+    /// while it is read, and a touch holds the result as during the verdict.
     func speakResultThenPace(_ audio: AudioInfo?, explanation: String?) async -> Int? {
         let text = explanation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard readsExplanationOnResult, !text.isEmpty else { return await playVerdictThenPace(audio) }
-        let language = currentSession?.language ?? settings.language
-        let fetch = Task { [networkService] in
-            var clips: [Data] = []
-            for chunk in Self.splitForTTS(text) {
-                guard let clip = try? await networkService.synthesizeSpeech(text: chunk, language: language) else {
-                    return (clips, true)
-                }
-                clips.append(clip)
-            }
-            return (clips, false)
+        let prefetched = explanationSpeechPrefetch
+        explanationSpeechPrefetch = nil
+        guard readsExplanationOnResult, !text.isEmpty else {
+            prefetched?.task.cancel()
+            return await playVerdictThenPace(audio)
         }
-        let verdictPace = await playVerdictThenPace(audio)
+        let fetch: Task<([Data], Bool), Never>
+        if let prefetched, prefetched.text == text {
+            fetch = prefetched.task
+        } else {
+            prefetched?.task.cancel()
+            fetch = fetchExplanationSpeech(text)
+        }
+        let verdictPace = await playVerdictThenPace(audio, rearmListener: false)
         guard !Task.isCancelled, quizState.isShowingResult, !isAudioMuted else {
             fetch.cancel()
+            // The verdict's own tail would have re-armed here.
+            await audioDeviceState.startSilenceDetectionListening()
             return verdictPace
         }
         let spokenPace = resultPaceSeconds(afterSpokenVerdict: true)
@@ -93,7 +99,36 @@ extension QuizViewModel {
         }
         // A fetch that failed shows the note and "hear it" to try again.
         if quizState.isShowingResult { noteReadAloud(.explanation, outcome) }
+        // Nothing followed the verdict: re-arm as its own tail would have.
+        if !outcome.played { await audioDeviceState.startSilenceDetectionListening() }
         return outcome.played ? spokenPace : verdictPace
+    }
+
+    /// #251: start fetching the current question's explanation speech as the
+    /// answer is sent, so it is ready when the verdict ends. The result uses it
+    /// when the explanation it reads is the same text; otherwise it fetches
+    /// its own. Quick quiz, read-aloud off and silent mode fetch nothing.
+    func prefetchExplanationSpeech() {
+        let text = currentQuestion?.explanation?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard readsExplanationOnResult, !text.isEmpty else { return }
+        if explanationSpeechPrefetch?.text == text { return }
+        explanationSpeechPrefetch?.task.cancel()
+        explanationSpeechPrefetch = ExplanationSpeechPrefetch(text: text, task: fetchExplanationSpeech(text))
+    }
+
+    /// The explanation's clips, and whether a chunk failed to synthesize.
+    private func fetchExplanationSpeech(_ text: String) -> Task<([Data], Bool), Never> {
+        let language = currentSession?.language ?? settings.language
+        return Task { [networkService] in
+            var clips: [Data] = []
+            for chunk in Self.splitForTTS(text) {
+                guard let clip = try? await networkService.synthesizeSpeech(text: chunk, language: language) else {
+                    return (clips, true)
+                }
+                clips.append(clip)
+            }
+            return (clips, false)
+        }
     }
 
     /// #243.8 (founder 2026-11-24): the seconds the result counts down
@@ -129,12 +164,18 @@ extension QuizViewModel {
     }
 
     /// Base64 (enhanced feedback) before the URL (generic feedback).
-    private func playFeedback(_ audio: AudioInfo?) async -> TimeInterval {
+    private func playFeedback(_ audio: AudioInfo?, rearmListener: Bool) async -> TimeInterval {
         if let base64 = audio?.feedbackAudioBase64 {
-            return await audioDeviceState.playFeedbackAudioBase64(base64)
+            return await audioDeviceState.playFeedbackAudioBase64(base64, rearmListener: rearmListener)
         } else if let feedbackUrl = audio?.feedbackUrl {
-            return await audioDeviceState.playFeedbackAudio(from: feedbackUrl)
+            return await audioDeviceState.playFeedbackAudio(from: feedbackUrl, rearmListener: rearmListener)
         }
         return 0
     }
+}
+
+/// #251: an explanation's speech fetched ahead of the result.
+struct ExplanationSpeechPrefetch {
+    let text: String
+    let task: Task<([Data], Bool), Never>
 }

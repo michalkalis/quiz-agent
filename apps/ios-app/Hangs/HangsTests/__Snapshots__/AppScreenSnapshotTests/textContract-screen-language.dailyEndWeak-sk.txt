@@ -3,6 +3,17 @@ Denná výzva · hotovo
 1
 z 5
 Ťažká výzva.
+Otázky
+Ktoré mesto je hlavným mestom Kanady?
+Ottawa
+Koľko strún má klasické husle?
+Štyri
+Ktorá rieka preteká Budapešťou?
+Dunaj
+Ktorá planéta je najbližšie k Slnku?
+Merkúr
+Z ktorej krajiny pochádza pizza?
+Taliansko
 Ďalší kvíz
 Úvod
 # identifiers
@@ -12,5 +23,11 @@ daily.share
 daily.score
 daily.tiles
 daily.comparison
+daily.questions
+recap.row.1
+recap.row.2
+recap.row.3
+recap.row.4
+recap.row.5
 daily.nextQuiz
 daily.home

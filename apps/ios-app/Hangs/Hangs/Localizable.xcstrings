@@ -6895,7 +6895,7 @@
         }
       }
     },
-    "You have %lld extra questions today." : {
+    "Reward: %lld extra questions left today." : {
       "localizations" : {
         "cs" : {
           "variations" : {
@@ -6903,25 +6903,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázky navíc."
+                  "value" : "Odměna: dnes ještě %lld otázky navíc."
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázky navíc."
+                  "value" : "Odměna: dnes ještě %lld otázky navíc."
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázku navíc."
+                  "value" : "Odměna: dnes ještě %lld otázka navíc."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázek navíc."
+                  "value" : "Odměna: dnes ještě %lld otázek navíc."
                 }
               }
             }
@@ -6933,13 +6933,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "You have %lld extra question today."
+                  "value" : "Reward: %lld extra question left today."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "You have %lld extra questions today."
+                  "value" : "Reward: %lld extra questions left today."
                 }
               }
             }
@@ -6951,25 +6951,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázky navyše."
+                  "value" : "Odmena: dnes ešte %lld otázky navyše."
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázky navyše."
+                  "value" : "Odmena: dnes ešte %lld otázky navyše."
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázku navyše."
+                  "value" : "Odmena: dnes ešte %lld otázka navyše."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Dnes máš %lld otázok navyše."
+                  "value" : "Odmena: dnes ešte %lld otázok navyše."
                 }
               }
             }
@@ -6981,25 +6981,25 @@
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Сьогодні в тебе ще %lld питання."
+                  "value" : "Нагорода: сьогодні ще %lld питання."
                 }
               },
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Сьогодні в тебе ще %lld питань."
+                  "value" : "Нагорода: сьогодні ще %lld питань."
                 }
               },
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Сьогодні в тебе ще %lld питання."
+                  "value" : "Нагорода: сьогодні ще %lld питання."
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Сьогодні в тебе ще %lld питання."
+                  "value" : "Нагорода: сьогодні ще %lld питання."
                 }
               }
             }

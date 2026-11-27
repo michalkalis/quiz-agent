@@ -85,13 +85,13 @@ extension AppScreen {
         return AnyView(SetRecapView(viewModel: vm))
     }
 
-    private typealias Round = (
+    typealias Round = (
         number: Int, text: String, answer: String,
         result: Evaluation.EvaluationResult, said: String, category: String
     )
 
     /// Fills the recap ledger through the real capture path (`handleQuizResponse`).
-    private static func fillLedger(_ vm: QuizViewModel, rounds: [Round]) async {
+    static func fillLedger(_ vm: QuizViewModel, rounds: [Round]) async {
         let reveal = vm.settings.answerRevealMode
         vm.settings.answerRevealMode = .endOfSet
         vm.currentSession = Fixtures.makeQuizSession()

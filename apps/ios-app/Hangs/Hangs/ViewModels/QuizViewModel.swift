@@ -545,6 +545,10 @@ final class QuizViewModel: ObservableObject {
     /// a tap or STAY holds it as it would the countdown.
     @Published var isAwaitingSpokenVerdict = false
 
+    /// #251: the explanation's speech, fetched once the answer is sent so the
+    /// result reads it right after the verdict (`prefetchExplanationSpeech`).
+    var explanationSpeechPrefetch: ExplanationSpeechPrefetch?
+
     // MARK: - Quiz Settings
 
     @Published var settings: QuizSettings = .default
@@ -622,6 +626,8 @@ final class QuizViewModel: ObservableObject {
 
         Logger.quiz.info("State: \(from) → \(to) [\(caller, privacy: .public)]")
         quizState = newState
+        // #251: the answer is on its way; its explanation's speech starts now.
+        if to == "processing" { prefetchExplanationSpeech() }
         quizEndCommandsArmed = false
         roundEndLineStarted = false
         resultNextCommandArmed = false

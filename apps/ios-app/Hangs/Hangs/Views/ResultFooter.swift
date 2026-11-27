@@ -15,8 +15,15 @@ struct ResultFooter: View {
     let autoAdvanceActive: Bool
     let countdownRemaining: Int
     let countdownTotal: Int
+    /// #251 (founder TF 2026-11-27): the countdown is held while the verdict
+    /// and explanation are read. "3s" then promised a move the app was not
+    /// making; the seconds show once they really count down.
+    var countdownHeld: Bool = false
 
     let onNext: () -> Void
+
+    /// Whether the button shows the seconds left.
+    var showsSeconds: Bool { autoAdvanceActive && !countdownHeld }
 
     var body: some View {
         // #174: "Next" — the title IS the voice command (founder
@@ -28,9 +35,10 @@ struct ResultFooter: View {
             trailingIcon: "arrow.right",
             countdownSecondsRemaining: autoAdvanceActive ? countdownRemaining : nil,
             countdownTotal: countdownTotal,
+            showsCountdownSeconds: showsSeconds,
             action: onNext
         )
-        .accessibilityLabel(autoAdvanceActive
+        .accessibilityLabel(showsSeconds
             ? Text("Next question, auto-advancing in \(countdownRemaining) seconds", comment: "Accessibility label for the next-question button while auto-advance counts down")
             : Text("Next", comment: "Accessibility label for the next-question button"))
         .accessibilityIdentifier("result.continue")

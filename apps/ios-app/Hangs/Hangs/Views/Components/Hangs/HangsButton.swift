@@ -43,6 +43,9 @@ struct HangsPrimaryButton: View {
     var countdownSecondsRemaining: Int? = nil
     /// Full countdown duration the fill fraction is computed against.
     var countdownTotal: Int = 0
+    /// #251: `false` while the countdown is held (the app is still speaking):
+    /// the fill stays, the "Ns" chip waits until the seconds really run.
+    var showsCountdownSeconds: Bool = true
     /// #198: a fill other than the ink action, under white text — only the
     /// question screen's Stop (`Colors.listenStrong`, canvas Bg-Question).
     var tint: Color? = nil
@@ -113,7 +116,7 @@ struct HangsPrimaryButton: View {
                     Image(systemName: trailingIcon)
                         .font(.system(size: 15, weight: .semibold))
                 }
-                if isCountingDown, let remaining = countdownSecondsRemaining {
+                if isCountingDown, showsCountdownSeconds, let remaining = countdownSecondsRemaining {
                     Text(verbatim: "\(remaining)s")
                         .font(.hangsMono(12, weight: .medium))
                         .padding(.vertical, 3)

@@ -14,5 +14,5 @@
 
 ## Kroky
 
-- [x] 252.1 — body 1–6 (appka + server), PR
+- [x] 252.1 — body 1–6 (appka + server), zlúčené 2026-11-28 (PR #1018), server nasadený
 - [ ] 252.2 — bod 7 podľa výberu foundera

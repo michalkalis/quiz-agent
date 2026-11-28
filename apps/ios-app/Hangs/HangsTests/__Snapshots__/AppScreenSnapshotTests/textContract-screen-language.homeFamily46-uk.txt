@@ -15,9 +15,9 @@ Tvoje telo
 English
 Slovenčina
 Čeština
-Мова вікторини
+Мова
 Slovenčina
-Мова вікторини
+Мова
 Slovenčina
 4–6
 7–9
@@ -33,9 +33,14 @@ Tvoje telo
 Dinosaury
 Тема
 Dinosaury
-Без звуку
-Питання читаєш, відповіді пишеш
-
+Аудіогра
+Питання звучать уголос, відповідаєш голосом
+Текстова гра
+Без звуку: читаєш питання, відповідь пишеш або обираєш
+Режим звуку
+Audio game
+Режим звуку
+Audio game
 trubbo
 Налаштування
 Відповідаєш ти, а діти вгадують разом із тобою.
@@ -60,6 +65,8 @@ home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

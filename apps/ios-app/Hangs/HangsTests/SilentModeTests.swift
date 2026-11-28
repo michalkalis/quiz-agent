@@ -267,17 +267,19 @@ struct SilentModeTests {
         }
     }
 
-    // WHY: the switch must be findable where the round is set up, also in the
-    // family list, whose rounds play on the same question screen.
-    @Test("Home shows the No sound row, also with kids")
-    func homeRow() async throws {
-        let rig = makeRig(silent: false)
+    // WHY: the choice must be findable where the round is set up, also in the
+    // family list, whose rounds play on the same question screen. #252: it is
+    // "Sound mode" now, and the row names the mode in play so the player sees
+    // a text game is on before Start.
+    @Test("Home shows the Sound mode row with the mode in play", arguments: [false, true])
+    func homeRow(silent: Bool) async throws {
+        let rig = makeRig(silent: silent)
         let view = HomeView(viewModel: rig.vm)
         try await ViewHosting.host(view) {
             let tree = try view.inspect()
             #expect(throws: Never.self) { try tree.find(viewWithAccessibilityIdentifier: "home.silentMode") }
-            #expect(throws: Never.self) { try tree.find(text: "No sound") }
-            #expect(throws: Never.self) { try tree.find(text: "Read the questions, type the answers") }
+            #expect(throws: Never.self) { try tree.find(text: "Sound mode") }
+            #expect(throws: Never.self) { try tree.find(text: silent ? "Text game" : "Audio game") }
         }
     }
 

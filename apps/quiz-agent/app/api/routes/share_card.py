@@ -51,7 +51,7 @@ _OPEN = {
 _ALT = {
     "sk": "Skóre dennej výzvy v Trubbe",
     "cs": "Skóre denní výzvy v Trubbu",
-    "uk": "Результат щоденного виклику в Trubbo",
+    "uk": "Результат щоденного челенджу в Trubbo",
 }
 
 # Same file as apps/website/public/.well-known/apple-app-site-association

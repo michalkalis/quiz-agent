@@ -15,9 +15,9 @@ Tvoje telo
 English
 Slovenčina
 Čeština
-Quiz language
+Language
 Slovenčina
-Quiz language
+Language
 Slovenčina
 4–6
 7–9
@@ -33,9 +33,14 @@ Topic
 Dinosaury
 Topic
 Dinosaury
-No sound
-Read the questions, type the answers
-
+Audio game
+Questions read aloud, you answer by voice
+Text game
+No sound: read the questions, type or pick the answer
+Sound mode
+Audio game
+Sound mode
+Audio game
 trubbo
 Settings
 You answer, the kids guess along with you.
@@ -60,6 +65,8 @@ home.topic.family-dinosaurs
 home.topic.family-gross-but-true
 home.topic.family-your-body
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

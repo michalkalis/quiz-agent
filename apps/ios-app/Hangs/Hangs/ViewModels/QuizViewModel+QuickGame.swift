@@ -24,6 +24,13 @@ extension QuizViewModel {
         settings.quickGame && activeDaily == nil && !isFamilySession && evaluation.result == .skipped
     }
 
+    /// #252 (founder 2026-11-27): "Quick game" shows only whether the answer
+    /// was right; "With explanations" adds the explanation and its source. The
+    /// daily challenge and a family round keep both, as for the skip above.
+    var resultShowsExplanation: Bool {
+        !settings.quickGame || activeDaily != nil || isFamilySession
+    }
+
     func showQuickSkipNote(_ correctAnswer: String) {
         let answer = correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !answer.isEmpty else { return }
@@ -36,7 +43,7 @@ extension QuizViewModel {
         }, key: .quickSkipNote)
     }
 
-    /// The Home "Quick quiz" row.
+    /// The Home "Game mode" menu.
     func setQuickGame(_ on: Bool) {
         guard settings.quickGame != on else { return }
         settings.quickGame = on

@@ -12,9 +12,9 @@ Harry Potter
 English
 Slovenčina
 Čeština
-Quiz language
+Language
 Slovenčina
-Quiz language
+Language
 Slovenčina
 4–6
 7–9
@@ -29,9 +29,14 @@ Topic
 Harry Potter
 Topic
 Harry Potter
-No sound
-Read the questions, type the answers
-
+Audio game
+Questions read aloud, you answer by voice
+Text game
+No sound: read the questions, type or pick the answer
+Sound mode
+Audio game
+Sound mode
+Audio game
 trubbo
 Settings
 You answer, the kids guess along with you.
@@ -55,6 +60,8 @@ home.topic.menu
 home.topic.family-harry-potter
 home.topic.family-spies-and-codes
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

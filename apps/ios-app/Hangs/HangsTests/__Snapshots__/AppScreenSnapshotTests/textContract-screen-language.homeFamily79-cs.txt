@@ -18,9 +18,9 @@ Superschopnosti zvierat
 English
 Slovenčina
 Čeština
-Jazyk kvízu
+Jazyk
 Slovenčina
-Jazyk kvízu
+Jazyk
 Slovenčina
 4–6
 7–9
@@ -37,9 +37,14 @@ Téma
 LEGO
 Téma
 LEGO
-Bez zvuku
-Otázky čteš, odpovědi píšeš
-
+Audio hra
+Otázky zní nahlas, odpovídáš hlasem
+Písemná hra
+Bez zvuku: otázky čteš, odpověď napíšeš nebo vybereš
+Režim zvuku
+Audio game
+Režim zvuku
+Audio game
 trubbo
 Nastavení
 Odpovídáš ty, děti hádají s tebou.
@@ -65,6 +70,8 @@ home.topic.family-minecraft
 home.topic.family-how-things-are-made
 home.topic.family-animal-superpowers
 home.silentMode
+home.soundMode.audio
+home.soundMode.text
 home.settings
 home.family.adultAnswers
 home.startFamily

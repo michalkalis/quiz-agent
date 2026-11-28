@@ -3,6 +3,9 @@
 SCIENCE & NATURE
 Which statement about how the human body grows is correct?
 PREMÝŠĽAJ, POČÚVAM O 27 S
+“answer”
+“repeat”
+“next”
 A
 Hair on the head grows roughly 1.25 centimetres every month, a little faster in summer
 B
@@ -21,6 +24,7 @@ question.replayGlyph
 question.replay
 question.text
 listen-bar
+listen-bar.commands
 listen-bar.dismiss
 mcq.option.a
 mcq.option.b
